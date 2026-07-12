@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tinker RL — static defense walkthrough</title>
+  <style>
+    :root { color-scheme: dark; --bg:#07111f; --panel:#0f1d31; --line:#294767; --text:#eef6ff; --muted:#a9b9cb; --green:#62d39b; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:17px/1.45 Inter,system-ui,-apple-system,sans-serif; }
+    main { max-width:1280px; margin:auto; padding:42px 30px 70px; }
+    h1 { margin:0; font-size:40px; letter-spacing:-.03em; }
+    .lede { color:var(--muted); margin:8px 0 30px; }
+    article { margin:0 0 34px; padding:20px; background:var(--panel); border:1px solid var(--line); border-radius:16px; }
+    .step { color:var(--green); font-size:13px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+    h2 { margin:4px 0 5px; font-size:25px; }
+    p { color:var(--muted); margin:0 0 16px; }
+    img { display:block; width:100%; height:auto; border-radius:10px; border:1px solid var(--line); background:white; }
+    .note { border-left:4px solid #f7c66a; padding:14px 18px; background:#142236; border-radius:8px; }
+  </style>
+</head>
+<body><main>
+  <h1>Static evidence walkthrough</h1>
+  <p class="lede">Seven verified frames. Use this if the Space, W&amp;B, or video playback is unavailable.</p>
+
+  <article><div class="step">01 · Hosted tool use</div><h2>The model emits a structured tool call</h2><p>Qwen2.5-7B selects <code>get_stock_price</code> with symbol <code>AAPL</code>; inference ran through the Hugging Face Router.</p><img src="01_hf_tool_call_result.png" alt="Hosted Qwen structured tool call"></article>
+  <article><div class="step">02 · Hosted mathematics</div><h2>Compact arithmetic returns 691</h2><p>Qwen2.5-Math-7B executes the arithmetic rather than selecting a tool.</p><img src="02_hf_math_691.png" alt="Hosted Qwen Math result 691"></article>
+  <article><div class="step">03 · Hosted reasoning</div><h2>The multi-step word problem returns 14</h2><p>DeepSeek-R1-Distill-Qwen-7B produces a worked result through a separate hosted provider.</p><img src="03_hf_math_14.png" alt="Hosted DeepSeek word problem result 14"></article>
+  <article><div class="step">04 · Matched budget, G=2</div><h2>Reward can look solved after the learning signal collapses</h2><p>At 2,560 sampled rollouts, reward and ZVF both reach 1.0. The estimator has lost within-group contrast.</p><img src="04_wandb_g2_signal_collapse.png" alt="W and B G2 matched-budget evidence"></article>
+  <article><div class="step">05 · Matched budget, G=16</div><h2>The larger group retains estimator contrast</h2><p>Under the same rollout budget, final ZVF is 0.25. Compare the paired runs rather than reward alone.</p><img src="05_wandb_g16_contrast.png" alt="W and B G16 matched-budget evidence"></article>
+  <article><div class="step">06 · Run hygiene</div><h2>A plausible label does not establish the implemented loss</h2><p>The preserved invalid arm is audit evidence, not a valid Dr.GRPO result.</p><img src="06_invalid_run_preserved.png" alt="Preserved invalid P4 run"></article>
+  <article><div class="step">07 · Corrected run</div><h2>Source inspection and provenance change which run supports the claim</h2><p>The corrected Dr.GRPO arm has a complete history and the repaired loss semantics.</p><img src="07_corrected_drgrpo_run.png" alt="Corrected DrGRPO run"></article>
+
+  <p class="note"><strong>Defense-safe wording:</strong> exact completion-length contraction is approximately 3.8–12.2%; say “roughly 4–12%.”</p>
+</main></body></html>

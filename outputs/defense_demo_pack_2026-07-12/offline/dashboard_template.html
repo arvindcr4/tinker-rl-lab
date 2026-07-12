@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TinkerRL Offline Defense Evidence</title>
+  <style>
+    :root { --ink:#17223b; --blue:#1545a0; --pale:#eff5ff; --green:#137554; --line:#d8e2f0; --muted:#5d6b82; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif; color:var(--ink); background:#f6f8fc; }
+    header { color:white; background:linear-gradient(120deg,#0d2f73,#1d62c8); padding:34px max(24px,calc((100vw - 1180px)/2)); }
+    header h1 { margin:0 0 8px; font-size:clamp(28px,4vw,48px); }
+    header p { margin:0; max-width:850px; color:#dfeaff; font-size:17px; }
+    main { max-width:1180px; margin:24px auto 60px; padding:0 20px; }
+    .status { display:flex; align-items:center; gap:12px; background:#e9f8f2; color:var(--green); border:1px solid #b8e4d4; border-radius:14px; padding:16px 20px; font-weight:750; }
+    .dot { width:13px; height:13px; border-radius:50%; background:#18a875; box-shadow:0 0 0 5px #c8eee1; }
+    .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin:18px 0; }
+    .card { background:white; border:1px solid var(--line); border-radius:14px; padding:20px; box-shadow:0 3px 12px #0c2f6a0b; }
+    .metric { color:var(--blue); font-size:34px; line-height:1; font-weight:800; }
+    .label { color:var(--muted); margin-top:8px; }
+    h2 { margin:30px 0 12px; color:#113b86; }
+    h3 { margin:0 0 12px; }
+    table { width:100%; border-collapse:collapse; background:white; border-radius:12px; overflow:hidden; }
+    th,td { padding:11px 12px; border-bottom:1px solid var(--line); text-align:left; font-variant-numeric:tabular-nums; }
+    th { background:var(--pale); color:#153f87; }
+    tr:last-child td { border-bottom:0; }
+    .figure { background:white; border:1px solid var(--line); border-radius:14px; padding:14px; margin:14px 0; }
+    .figure img { display:block; width:100%; height:auto; border-radius:8px; }
+    .callout { border-left:5px solid #e4a116; background:#fff8e8; padding:14px 18px; border-radius:8px; }
+    code { background:#edf1f7; padding:2px 5px; border-radius:5px; }
+    details { margin-top:16px; }
+    pre { white-space:pre-wrap; word-break:break-word; background:#0f1d36; color:#dce8ff; padding:16px; border-radius:10px; max-height:420px; overflow:auto; }
+    footer { color:var(--muted); font-size:14px; margin-top:30px; }
+    @media (max-width:760px) { .grid { grid-template-columns:1fr; } table { font-size:13px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TinkerRL Offline Evidence Dashboard</h1>
+    <p>Defense fail-safe: copied local artifacts, deterministic recomputation, no model endpoint, no W&amp;B API, and no internet connection.</p>
+  </header>
+  <main>
+    <div class="status"><span class="dot"></span><span id="status">Evidence checks loaded</span></div>
+    <div class="grid">
+      <div class="card"><div class="metric" id="budget">2,560</div><div class="label">matched rollouts per Claim 2 arm</div></div>
+      <div class="card"><div class="metric" id="p4range">3.8–12.2%</div><div class="label">P4 completion-length contraction</div></div>
+      <div class="card"><div class="metric" id="audit">983 ≠ 70+</div><div class="label">different run-count inclusion rules</div></div>
+    </div>
+
+    <h2>Claim 2 — matched-budget G=2 versus G=16</h2>
+    <div class="callout">At the same rollout budget, G=2 gets 160 optimizer steps and reaches a high-reward, high-ZVF all-correct wall. G=16 gets 20 optimizer steps and remains mid-learning. This is a two-seed trajectory observation, not a universal optimum.</div>
+    <table id="claim2"><thead><tr><th>Run</th><th>G</th><th>Seed</th><th>Steps</th><th>Budget</th><th>Late reward</th><th>Late ZVF</th></tr></thead><tbody></tbody></table>
+    <div class="figure"><img src="../assets/wandb_claim2_matched_budget.png" alt="Exported W&B matched-budget comparison"></div>
+
+    <h2>P4 — corrected GRPO versus Dr.GRPO panel</h2>
+    <p>Audited definition: percentage contraction from the first-5 mean completion length to the last-10 mean. Every corrected arm contracts; the exact extrema round to <strong>3.8–12.2%</strong>.</p>
+    <table id="p4"><thead><tr><th>Run</th><th>Loss</th><th>Seed</th><th>First-5</th><th>Last-10</th><th>Contraction</th><th>Late ZVF</th></tr></thead><tbody></tbody></table>
+
+    <h2>Run hygiene — why 983 and 70+ are both correct</h2>
+    <div class="grid">
+      <div class="card"><div class="metric">983</div><div class="label">all Tinker training-client objects, including evaluation bootstraps, retries, probes, aborted arms, and shared-org activity</div></div>
+      <div class="card"><div class="metric">70+</div><div class="label">curated cross-library telemetry corpus used by the papers</div></div>
+      <div class="card"><div class="metric">19</div><div class="label">claim-critical gold rows in <code>key_runs</code></div></div>
+    </div>
+    <div class="figure"><img src="../assets/wandb_run_hygiene.png" alt="Exported W&B run hygiene figure"></div>
+
+    <h2>Synthetic ZVF sanity check</h2>
+    <p>The didactic four-group fixture recomputes ZVF=0.5 and gradient utilization=0.5. It demonstrates arithmetic only; it is not a training result.</p>
+    <details><summary>Show complete machine-readable report</summary><pre id="raw"></pre></details>
+    <footer>Generated locally by <code>run_checks.py</code>. All evidence bytes are covered by <code>data/manifest.json</code>.</footer>
+  </main>
+  <script>
+    const report = __REPORT_JSON__;
+    document.querySelector('#status').textContent = `PASS — ${report.manifest.file_count} artifacts verified by SHA-256; all four evidence checks reproduced`;
+    document.querySelector('#budget').textContent = report.claim2.matched_rollout_budget.toLocaleString();
+    const range = report.p4.exact_contraction_range_pct;
+    document.querySelector('#p4range').textContent = `${range[0].toFixed(1)}–${range[1].toFixed(1)}%`;
+    document.querySelector('#audit').textContent = `${report.run_audit.tinker_run_objects} ≠ ${report.run_audit.curated_cross_library_claim.split(' ')[0]}`;
+    const c2body = document.querySelector('#claim2 tbody');
+    report.claim2.rows.forEach(row => c2body.insertAdjacentHTML('beforeend', `<tr><td>${row.run}</td><td>${row.group_size}</td><td>${row.seed}</td><td>${row.steps}</td><td>${row.rollout_budget.toLocaleString()}</td><td>${row.late_reward_mean.toFixed(4)}</td><td>${row.late_zvf_mean.toFixed(3)}</td></tr>`));
+    const p4body = document.querySelector('#p4 tbody');
+    report.p4.rows.forEach(row => p4body.insertAdjacentHTML('beforeend', `<tr><td>${row.run}</td><td>${row.algorithm}</td><td>${row.seed}</td><td>${row.first5_mean_length.toFixed(1)}</td><td>${row.last10_mean_length.toFixed(1)}</td><td>${row.contraction_pct.toFixed(2)}%</td><td>${row.late_zvf_mean.toFixed(3)}</td></tr>`));
+    document.querySelector('#raw').textContent = JSON.stringify(report, null, 2);
+  </script>
+</body>
+</html>

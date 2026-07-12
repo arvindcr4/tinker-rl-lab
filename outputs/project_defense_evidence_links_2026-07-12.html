@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Project Defense — Live Evidence Links</title>
+  <style>
+    :root { color-scheme: dark; --bg:#07111f; --card:#0f1d31; --line:#253a55; --text:#eef6ff; --muted:#9cb0c8; --blue:#63b3ff; --green:#62d39b; --amber:#f7c66a; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(circle at 80% 0%,#17365c 0,#07111f 42%); color:var(--text); font:16px/1.45 Inter,system-ui,-apple-system,sans-serif; }
+    main { max-width:1180px; margin:0 auto; padding:52px 36px 70px; }
+    h1 { margin:0 0 10px; font-size:42px; letter-spacing:-.03em; }
+    .sub { color:var(--muted); font-size:18px; margin-bottom:34px; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+    section { background:rgba(15,29,49,.94); border:1px solid var(--line); border-radius:18px; padding:22px; }
+    h2 { margin:0 0 6px; font-size:21px; }
+    .tag { display:inline-block; color:var(--green); font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; margin-bottom:12px; }
+    .tag.login { color:var(--amber); }
+    p { color:var(--muted); margin:4px 0 16px; }
+    a { display:block; margin:9px 0; padding:12px 14px; border-radius:11px; color:var(--text); background:#152a45; border:1px solid #294767; text-decoration:none; font-weight:700; }
+    a:hover { background:#1c385c; border-color:var(--blue); }
+    a span { display:block; margin-top:3px; color:var(--muted); font-size:13px; font-weight:500; }
+    .note { margin-top:24px; padding:16px 18px; border-left:4px solid var(--amber); background:#142236; color:#d5e2f1; border-radius:8px; }
+    @media (max-width:800px) { .grid { grid-template-columns:1fr; } main { padding:30px 20px; } h1 { font-size:32px; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Project Defense — Live Evidence</h1>
+  <div class="sub">Open only what the panel asks for. Start with Hugging Face, then the paired W&amp;B runs, then infrastructure evidence.</div>
+
+  <div class="grid">
+    <section>
+      <div class="tag">Live model artifact</div>
+      <h2>Hugging Face</h2>
+      <p>Published weights used for the base-versus-adapter tool-call demo.</p>
+      <a href="https://huggingface.co/arvindcr4/tool-call-lora-qwen0.5b" target="_blank" rel="noreferrer">Tool-call LoRA — Qwen 0.5B<span>Show adapter files, model card, and base-model lineage.</span></a>
+      <a href="https://huggingface.co/Qwen/Qwen2-0.5B-Instruct" target="_blank" rel="noreferrer">Base model — Qwen2 0.5B Instruct<span>The unadapted baseline used in the before/after comparison.</span></a>
+      <a href="https://huggingface.co/spaces/arvindcr4/tinkerrl-bench-demo" target="_blank" rel="noreferrer">TinkerRL benchmark Space<span>Public artifact browser; use the recorded live-inference demo if the Space is cold.</span></a>
+    </section>
+
+    <section>
+      <div class="tag">Claim-critical traces</div>
+      <h2>Weights &amp; Biases</h2>
+      <p>Matched rollout budget: compare the small-group reward/ZVF trajectory against the larger-group arm.</p>
+      <a href="https://wandb.ai/arvindcr4-pes-university/zvf-training/runs/pob7nd05" target="_blank" rel="noreferrer">E-R2b — G=2, seed 123<span>Reward rises, but zero-verifier failures climb toward the wall.</span></a>
+      <a href="https://wandb.ai/arvindcr4-pes-university/zvf-training/runs/tiicy3km" target="_blank" rel="noreferrer">E-R2b — G=16, seed 123<span>Lower ZVF and healthier learning signal under the same rollout budget.</span></a>
+      <a href="https://wandb.ai/arvindcr4-pes-university/zvf-training" target="_blank" rel="noreferrer">Full zvf-training project<span>Use only if the panel asks for the wider run set.</span></a>
+    </section>
+
+    <section>
+      <div class="tag login">Account view — login may be required</div>
+      <h2>Modal</h2>
+      <p>H100-backed evaluation and cross-library baseline execution.</p>
+      <a href="https://modal.com/apps/arvindcr4/main" target="_blank" rel="noreferrer">Modal Apps dashboard<span>Show the authenticated account-level execution surface.</span></a>
+      <a href="https://github.com/arvindcr4/tinker-rl-lab/blob/main/zvf-program/experiments-next/results/passk_modal_qwen3-8b_base_gsm8k_p200_n32_s42.json" target="_blank" rel="noreferrer">Modal vLLM result — GSM8K, seed 42<span>Public immutable result: pass@1 30.6%, pass@8 77.8%, pass@32 89.0%.</span></a>
+      <a href="https://github.com/arvindcr4/tinker-rl-lab/blob/main/platform_hybrid/experiments/results/modal_results_all.json" target="_blank" rel="noreferrer">Modal H100 cross-library results<span>TRL GRPO, SB3 PPO, CleanRL PPO, and Tianshou PPO evidence.</span></a>
+    </section>
+
+    <section>
+      <div class="tag login">Account view — login may be required</div>
+      <h2>Lightning AI</h2>
+      <p>Independent vLLM backend used to reproduce the MBPP pass@k panel.</p>
+      <a href="https://lightning.ai/arvindcr4-org/my-studios" target="_blank" rel="noreferrer">Lightning — My Studios<span>Show the authenticated workspace surface.</span></a>
+      <a href="https://github.com/arvindcr4/tinker-rl-lab/blob/main/zvf-program/experiments-next/results/passk_lightning_qwen3-8b_base_mbpp_p200_n32_s42.json" target="_blank" rel="noreferrer">Lightning vLLM result — MBPP, seed 42<span>Public immutable result: pass@1 7.2%, pass@8 14.3%, pass@32 16.5%.</span></a>
+    </section>
+
+    <section>
+      <div class="tag">Independent notebook backend</div>
+      <h2>Google Colab</h2>
+      <p>Notebook-backed evaluation and experiment packs; separate from the managed Tinker training runs.</p>
+      <a href="https://github.com/arvindcr4/tinker-rl-lab/blob/main/platform_colab/ppo_reinforce_baselines_colab.ipynb" target="_blank" rel="noreferrer">Colab PPO / REINFORCE notebook<span>Open in GitHub, then use “Open in Colab” when needed.</span></a>
+      <a href="https://github.com/arvindcr4/tinker-rl-lab/blob/main/zvf-program/experiments-next/results/passk_colab_qwen3-8b_base_mbpp_p200_n32_s43.json" target="_blank" rel="noreferrer">Colab vLLM result — MBPP, seed 43<span>Public immutable result: pass@1 6.3%, pass@8 14.1%, pass@32 19.0%.</span></a>
+    </section>
+
+    <section>
+      <div class="tag">Local audit artifacts</div>
+      <h2>Provenance &amp; fallback</h2>
+      <p>Use these when connectivity or platform authentication slows the live walkthrough.</p>
+      <a href="tinker_runs_audit_2026-07-12.xlsx">Open the run-audit workbook<span>Start at key_runs, then insights, then external_runs.</span></a>
+      <a href="project_defense_live_hf_wandb_demo_2026-07-12.mp4">Play the 91-second demo<span>Real published-weight inference plus W&amp;B-linked evidence.</span></a>
+    </section>
+  </div>
+
+  <div class="note"><strong>Defense-safe wording:</strong> Modal, Lightning, and Colab have completed result artifacts. Vast.ai has runner scaffolding only; do not present it as a completed run.</div>
+</main>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tinker RL — defense demo pack</title>
+  <style>
+    :root { color-scheme:dark; --bg:#07111f; --card:#0f1d31; --line:#294767; --text:#eef6ff; --muted:#a9b9cb; --blue:#63b3ff; --green:#62d39b; --amber:#f7c66a; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(circle at 85% 0,#17365c 0,var(--bg) 40%); color:var(--text); font:16px/1.45 Inter,system-ui,-apple-system,sans-serif; }
+    main { max-width:1200px; margin:auto; padding:48px 30px 70px; }
+    h1 { margin:0 0 8px; font-size:42px; letter-spacing:-.035em; }
+    .lede { color:var(--muted); font-size:18px; margin:0 0 30px; }
+    .ladder { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+    section { background:rgba(15,29,49,.95); border:1px solid var(--line); border-radius:18px; padding:22px; }
+    .tier { color:var(--green); font-size:12px; font-weight:900; letter-spacing:.1em; text-transform:uppercase; }
+    h2 { margin:5px 0 8px; font-size:24px; }
+    p { color:var(--muted); }
+    a.button { display:block; margin:10px 0; padding:12px 14px; border:1px solid #355a80; border-radius:10px; background:#152a45; color:var(--text); text-decoration:none; font-weight:750; }
+    a.button:hover { border-color:var(--blue); }
+    video { width:100%; border-radius:10px; border:1px solid var(--line); background:black; margin-top:10px; }
+    .note { margin-top:22px; padding:15px 18px; border-left:4px solid var(--amber); background:#142236; border-radius:8px; }
+    code { color:#d7eaff; }
+    @media(max-width:800px){ .ladder{grid-template-columns:1fr} h1{font-size:34px} }
+  </style>
+</head>
+<body><main>
+  <h1>Tinker RL defense demo pack</h1>
+  <p class="lede">Use the highest available tier. Each lower tier remains independent of the one above it.</p>
+  <div class="ladder">
+    <section>
+      <div class="tier">Tier 1 · Live</div>
+      <h2>Hugging Face Space</h2>
+      <p>Hosted tool selection, hosted mathematics, frozen W&amp;B figures, and an offline provenance verifier.</p>
+      <a class="button" href="https://arvindcr4-tinkerrl-bench-demo.hf.space" target="_blank" rel="noreferrer">Open the live defense Space ↗</a>
+      <a class="button" href="https://huggingface.co/spaces/arvindcr4/tinkerrl-bench-demo" target="_blank" rel="noreferrer">Open the Space repository ↗</a>
+    </section>
+    <section>
+      <div class="tier">Tier 2 · Recorded</div>
+      <h2>Captioned MP4 fallbacks</h2>
+      <p>Both videos are H.264, 1600×900, and self-explanatory without audio.</p>
+      <video controls preload="metadata" src="hf_hosted_tool_math_captioned.mp4"></video>
+      <video controls preload="metadata" src="wandb_claims_captioned.mp4"></video>
+    </section>
+    <section>
+      <div class="tier">Tier 3 · Static</div>
+      <h2>Seven-frame evidence sequence</h2>
+      <p>Tool call → two mathematics examples → matched-budget G=2/G=16 → invalid/corrected run hygiene.</p>
+      <a class="button" href="static_screenshots/index.html">Open the static walkthrough →</a>
+      <a class="button" href="static_screenshots/contact_sheet.png">Open the single-page contact sheet →</a>
+    </section>
+    <section>
+      <div class="tier">Tier 4 · Offline</div>
+      <h2>Notebook, CLI, and dashboard</h2>
+      <p>Recomputes the audited numbers from bundled local inputs and checks all artifact hashes.</p>
+      <a class="button" href="offline/output/dashboard.html">Open the generated offline dashboard →</a>
+      <a class="button" href="offline/offline_defense_demo.ipynb">Open the executed notebook →</a>
+      <a class="button" href="offline/output/report.json">Open the machine-readable PASS report →</a>
+      <p>One click on macOS: <code>run_offline_dashboard.command</code></p>
+    </section>
+  </div>
+  <p class="note"><strong>Presentation:</strong> open <code>PESU_MTech_Phase1_Session1_Review_ArvindCR_complete_demo_pack.pptx</code>. Defense-safe wording for P4 is “roughly 4–12%” (exact audited range 3.7627–12.1950%).</p>
+</main></body></html>

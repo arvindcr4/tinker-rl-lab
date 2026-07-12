@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TinkerRL Offline Defense Evidence</title>
+  <style>
+    :root { --ink:#17223b; --blue:#1545a0; --pale:#eff5ff; --green:#137554; --line:#d8e2f0; --muted:#5d6b82; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif; color:var(--ink); background:#f6f8fc; }
+    header { color:white; background:linear-gradient(120deg,#0d2f73,#1d62c8); padding:34px max(24px,calc((100vw - 1180px)/2)); }
+    header h1 { margin:0 0 8px; font-size:clamp(28px,4vw,48px); }
+    header p { margin:0; max-width:850px; color:#dfeaff; font-size:17px; }
+    main { max-width:1180px; margin:24px auto 60px; padding:0 20px; }
+    .status { display:flex; align-items:center; gap:12px; background:#e9f8f2; color:var(--green); border:1px solid #b8e4d4; border-radius:14px; padding:16px 20px; font-weight:750; }
+    .dot { width:13px; height:13px; border-radius:50%; background:#18a875; box-shadow:0 0 0 5px #c8eee1; }
+    .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin:18px 0; }
+    .card { background:white; border:1px solid var(--line); border-radius:14px; padding:20px; box-shadow:0 3px 12px #0c2f6a0b; }
+    .metric { color:var(--blue); font-size:34px; line-height:1; font-weight:800; }
+    .label { color:var(--muted); margin-top:8px; }
+    h2 { margin:30px 0 12px; color:#113b86; }
+    h3 { margin:0 0 12px; }
+    table { width:100%; border-collapse:collapse; background:white; border-radius:12px; overflow:hidden; }
+    th,td { padding:11px 12px; border-bottom:1px solid var(--line); text-align:left; font-variant-numeric:tabular-nums; }
+    th { background:var(--pale); color:#153f87; }
+    tr:last-child td { border-bottom:0; }
+    .figure { background:white; border:1px solid var(--line); border-radius:14px; padding:14px; margin:14px 0; }
+    .figure img { display:block; width:100%; height:auto; border-radius:8px; }
+    .callout { border-left:5px solid #e4a116; background:#fff8e8; padding:14px 18px; border-radius:8px; }
+    code { background:#edf1f7; padding:2px 5px; border-radius:5px; }
+    details { margin-top:16px; }
+    pre { white-space:pre-wrap; word-break:break-word; background:#0f1d36; color:#dce8ff; padding:16px; border-radius:10px; max-height:420px; overflow:auto; }
+    footer { color:var(--muted); font-size:14px; margin-top:30px; }
+    @media (max-width:760px) { .grid { grid-template-columns:1fr; } table { font-size:13px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TinkerRL Offline Evidence Dashboard</h1>
+    <p>Defense fail-safe: copied local artifacts, deterministic recomputation, no model endpoint, no W&amp;B API, and no internet connection.</p>
+  </header>
+  <main>
+    <div class="status"><span class="dot"></span><span id="status">Evidence checks loaded</span></div>
+    <div class="grid">
+      <div class="card"><div class="metric" id="budget">2,560</div><div class="label">matched rollouts per Claim 2 arm</div></div>
+      <div class="card"><div class="metric" id="p4range">3.8–12.2%</div><div class="label">P4 completion-length contraction</div></div>
+      <div class="card"><div class="metric" id="audit">983 ≠ 70+</div><div class="label">different run-count inclusion rules</div></div>
+    </div>
+
+    <h2>Claim 2 — matched-budget G=2 versus G=16</h2>
+    <div class="callout">At the same rollout budget, G=2 gets 160 optimizer steps and reaches a high-reward, high-ZVF all-correct wall. G=16 gets 20 optimizer steps and remains mid-learning. This is a two-seed trajectory observation, not a universal optimum.</div>
+    <table id="claim2"><thead><tr><th>Run</th><th>G</th><th>Seed</th><th>Steps</th><th>Budget</th><th>Late reward</th><th>Late ZVF</th></tr></thead><tbody></tbody></table>
+    <div class="figure"><img src="../assets/wandb_claim2_matched_budget.png" alt="Exported W&B matched-budget comparison"></div>
+
+    <h2>P4 — corrected GRPO versus Dr.GRPO panel</h2>
+    <p>Audited definition: percentage contraction from the first-5 mean completion length to the last-10 mean. Every corrected arm contracts; the exact extrema round to <strong>3.8–12.2%</strong>.</p>
+    <table id="p4"><thead><tr><th>Run</th><th>Loss</th><th>Seed</th><th>First-5</th><th>Last-10</th><th>Contraction</th><th>Late ZVF</th></tr></thead><tbody></tbody></table>
+
+    <h2>Run hygiene — why 983 and 70+ are both correct</h2>
+    <div class="grid">
+      <div class="card"><div class="metric">983</div><div class="label">all Tinker training-client objects, including evaluation bootstraps, retries, probes, aborted arms, and shared-org activity</div></div>
+      <div class="card"><div class="metric">70+</div><div class="label">curated cross-library telemetry corpus used by the papers</div></div>
+      <div class="card"><div class="metric">19</div><div class="label">claim-critical gold rows in <code>key_runs</code></div></div>
+    </div>
+    <div class="figure"><img src="../assets/wandb_run_hygiene.png" alt="Exported W&B run hygiene figure"></div>
+
+    <h2>Synthetic ZVF sanity check</h2>
+    <p>The didactic four-group fixture recomputes ZVF=0.5 and gradient utilization=0.5. It demonstrates arithmetic only; it is not a training result.</p>
+    <details><summary>Show complete machine-readable report</summary><pre id="raw"></pre></details>
+    <footer>Generated locally by <code>run_checks.py</code>. All evidence bytes are covered by <code>data/manifest.json</code>.</footer>
+  </main>
+  <script>
+    const report = {"status": "PASS", "manifest": {"status": "PASS", "file_count": 14, "files": [{"path": "offline_demo.json", "sha256": "40469ebebfb58b29326794f66025bc11e973e6e33ec2926970c9c3d3234ab652"}, {"path": "tinker_runs_audit_2026-07-12.xlsx", "sha256": "09b3c989cd70bd6b2808ed99154a4e9bcd0fac0faa5a91c025aa8aa51afe7af7"}, {"path": "../assets/wandb_claim2_matched_budget.png", "sha256": "aa214d9430bfaf5c7a596f6af7d1cfb8ce1a0d83b7c1a5dffbdbc3f943c3de6b"}, {"path": "../assets/wandb_run_hygiene.png", "sha256": "8e54c61e2d782559ee679b3db5b00382db74ac38235615336bbf5be6652c5c2f"}, {"path": "raw/er2b_g16_s123.json", "sha256": "ce1d070dfd946172535161daf86c930cf807197ec7cf1cdef32e402a976dd49f"}, {"path": "raw/er2b_g16_s456.json", "sha256": "3bdd1fcade3f784316890f8939581fdd42491665fc572673442fc392a30b26c5"}, {"path": "raw/er2b_g2_s123.json", "sha256": "c11b946355a9073e115e6f7b14f94ffdbb1a5be5b9d7bdf4adb0489f6f6d4f91"}, {"path": "raw/er2b_g2_s456.json", "sha256": "7214d9a2d532219827e7bbfeba9a62dbf7bfe0a6dc66bb180043ef6e79661ba2"}, {"path": "raw/p4uncap_drgrpo_s123.json", "sha256": "91c5c2eae1c05b44364f091de7cdf99947d18d596449a611f98fdcdf3b3571f0"}, {"path": "raw/p4uncap_drgrpo_s42.json", "sha256": "5947f9da435bf0aa17e4634db0ef397301cd25a64efc676f03a3e252a20b038d"}, {"path": "raw/p4uncap_drgrpo_s456.json", "sha256": "bb9e32c902a780486dbc6bc5a29b6ff6c26f5bc0bed8e16c119bd925598a9436"}, {"path": "raw/p4uncap_grpo_s123.json", "sha256": "4140b3d05f7f81a3c1f4a379ddff998e52c2909dd17055edd34db1beb1c6aeb0"}, {"path": "raw/p4uncap_grpo_s42.json", "sha256": "012561ea8d1f378ddc1034d24d31ca7f222644e2bfd7a6d47a0fd8fbe19a01ee"}, {"path": "raw/p4uncap_grpo_s456.json", "sha256": "b67cf11e059609722b6396ba761fa9c4e0cbf6ac15f26da8a13359093de4a67b"}]}, "synthetic_fixture": {"status": "PASS", "groups": [{"id": "mixed-binary", "mean": 0.5, "zero_variance": false}, {"id": "all-incorrect", "mean": 0.0, "zero_variance": true}, {"id": "all-correct", "mean": 1.0, "zero_variance": true}, {"id": "graded", "mean": 0.5, "zero_variance": false}], "zvf": 0.5, "gradient_utilization": 0.5, "scope_notice": "Synthetic didactic fixture. It demonstrates metric computation only and is not a training run, benchmark result, or performance claim."}, "claim2": {"status": "PASS", "matched_rollout_budget": 2560, "rows": [{"run": "er2b_g2_s123", "group_size": 2, "seed": 123, "steps": 160, "rollout_budget": 2560, "late_reward_mean": 0.9, "late_zvf_mean": 0.975, "late_zvf_min": 0.875, "late_zvf_max": 1.0}, {"run": "er2b_g2_s456", "group_size": 2, "seed": 456, "steps": 160, "rollout_budget": 2560, "late_reward_mean": 0.9625, "late_zvf_mean": 0.975, "late_zvf_min": 0.75, "late_zvf_max": 1.0}, {"run": "er2b_g16_s123", "group_size": 16, "seed": 123, "steps": 20, "rollout_budget": 2560, "late_reward_mean": 0.321875, "late_zvf_mean": 0.15, "late_zvf_min": 0.0, "late_zvf_max": 0.25}, {"run": "er2b_g16_s456", "group_size": 16, "seed": 456, "steps": 20, "rollout_budget": 2560, "late_reward_mean": 0.3890625, "late_zvf_mean": 0.1, "late_zvf_min": 0.0, "late_zvf_max": 0.375}], "summary": {"g2_late_reward_range": [0.9, 0.9625], "g2_late_zvf_mean_range": [0.975, 0.975], "g16_late_reward_range": [0.321875, 0.3890625], "g16_late_zvf_mean_range": [0.1, 0.15]}, "interpretation": "At equal 2,560-rollout budgets, G=2 receives 160 optimizer steps and reaches the all-correct high-ZVF wall; G=16 receives 20 steps and remains mid-learning. This is a two-seed trajectory observation, not a universal group-size optimum."}, "p4": {"status": "PASS", "rows": [{"run": "p4uncap_drgrpo_s123", "algorithm": "Dr.GRPO", "seed": 123, "first5_mean_length": 972.375, "last10_mean_length": 902.040625, "contraction_pct": 7.233256202596737, "late_zvf_mean": 0.725}, {"run": "p4uncap_drgrpo_s42", "algorithm": "Dr.GRPO", "seed": 42, "first5_mean_length": 999.43125, "last10_mean_length": 931.375, "contraction_pct": 6.809497901931722, "late_zvf_mean": 0.45}, {"run": "p4uncap_drgrpo_s456", "algorithm": "Dr.GRPO", "seed": 456, "first5_mean_length": 1000.20625, "last10_mean_length": 878.23125, "contraction_pct": 12.194984784388211, "late_zvf_mean": 0.7}, {"run": "p4uncap_grpo_s123", "algorithm": "GRPO", "seed": 123, "first5_mean_length": 980.50625, "last10_mean_length": 943.6125, "contraction_pct": 3.762724612923178, "late_zvf_mean": 0.475}, {"run": "p4uncap_grpo_s42", "algorithm": "GRPO", "seed": 42, "first5_mean_length": 1004.05, "last10_mean_length": 904.978125, "contraction_pct": 9.867225237786961, "late_zvf_mean": 0.475}, {"run": "p4uncap_grpo_s456", "algorithm": "GRPO", "seed": 456, "first5_mean_length": 995.725, "last10_mean_length": 900.090625, "contraction_pct": 9.604496723492929, "late_zvf_mean": 0.55}], "exact_contraction_range_pct": [3.762724612923178, 12.194984784388211], "defense_wording": "Completion length contracted by approximately 3.8-12.2% in all six corrected arms (first-5 mean to last-10 mean).", "interpretation": "Both loss forms compress at this scale; the panel does not support a length-inflation claim. n=3 seeds per loss and 30 steps remain important limits."}, "run_audit": {"status": "PASS", "tinker_run_objects": 983, "claim_critical_gold_rows": 19, "curated_cross_library_claim": "70+ logged runs", "reconciliation": "The papers' \"70+ logged runs\" counts the curated cross-library telemetry corpus (7 RL libraries, full per-step ZVF/GU traces). The Tinker console counts 983 training-run objects: one is created on EVERY create_lora_training_client call, including evaluation sampler bootstraps, retries, probes, aborted arms, and capstone-group runs on the shared org account.", "plain_english": "983 is the broad infrastructure object count; 70+ is the curated cross-library telemetry corpus. They have different inclusion rules and are not competing totals."}, "scope": "Offline recomputation of copied project artifacts; no network, model inference, or new training is performed."};
+    document.querySelector('#status').textContent = `PASS — ${report.manifest.file_count} artifacts verified by SHA-256; all four evidence checks reproduced`;
+    document.querySelector('#budget').textContent = report.claim2.matched_rollout_budget.toLocaleString();
+    const range = report.p4.exact_contraction_range_pct;
+    document.querySelector('#p4range').textContent = `${range[0].toFixed(1)}–${range[1].toFixed(1)}%`;
+    document.querySelector('#audit').textContent = `${report.run_audit.tinker_run_objects} ≠ ${report.run_audit.curated_cross_library_claim.split(' ')[0]}`;
+    const c2body = document.querySelector('#claim2 tbody');
+    report.claim2.rows.forEach(row => c2body.insertAdjacentHTML('beforeend', `<tr><td>${row.run}</td><td>${row.group_size}</td><td>${row.seed}</td><td>${row.steps}</td><td>${row.rollout_budget.toLocaleString()}</td><td>${row.late_reward_mean.toFixed(4)}</td><td>${row.late_zvf_mean.toFixed(3)}</td></tr>`));
+    const p4body = document.querySelector('#p4 tbody');
+    report.p4.rows.forEach(row => p4body.insertAdjacentHTML('beforeend', `<tr><td>${row.run}</td><td>${row.algorithm}</td><td>${row.seed}</td><td>${row.first5_mean_length.toFixed(1)}</td><td>${row.last10_mean_length.toFixed(1)}</td><td>${row.contraction_pct.toFixed(2)}%</td><td>${row.late_zvf_mean.toFixed(3)}</td></tr>`));
+    document.querySelector('#raw').textContent = JSON.stringify(report, null, 2);
+  </script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+{
+  "status": "PASS",
+  "manifest": {
+    "status": "PASS",
+    "file_count": 14,
+    "files": [
+      {
+        "path": "offline_demo.json",
+        "sha256": "40469ebebfb58b29326794f66025bc11e973e6e33ec2926970c9c3d3234ab652"
+      },
+      {
+        "path": "tinker_runs_audit_2026-07-12.xlsx",
+        "sha256": "09b3c989cd70bd6b2808ed99154a4e9bcd0fac0faa5a91c025aa8aa51afe7af7"
+      },
+      {
+        "path": "../assets/wandb_claim2_matched_budget.png",
+        "sha256": "aa214d9430bfaf5c7a596f6af7d1cfb8ce1a0d83b7c1a5dffbdbc3f943c3de6b"
+      },
+      {
+        "path": "../assets/wandb_run_hygiene.png",
+        "sha256": "8e54c61e2d782559ee679b3db5b00382db74ac38235615336bbf5be6652c5c2f"
+      },
+      {
+        "path": "raw/er2b_g16_s123.json",
+        "sha256": "ce1d070dfd946172535161daf86c930cf807197ec7cf1cdef32e402a976dd49f"
+      },
+      {
+        "path": "raw/er2b_g16_s456.json",
+        "sha256": "3bdd1fcade3f784316890f8939581fdd42491665fc572673442fc392a30b26c5"
+      },
+      {
+        "path": "raw/er2b_g2_s123.json",
+        "sha256": "c11b946355a9073e115e6f7b14f94ffdbb1a5be5b9d7bdf4adb0489f6f6d4f91"
+      },
+      {
+        "path": "raw/er2b_g2_s456.json",
+        "sha256": "7214d9a2d532219827e7bbfeba9a62dbf7bfe0a6dc66bb180043ef6e79661ba2"
+      },
+      {
+        "path": "raw/p4uncap_drgrpo_s123.json",
+        "sha256": "91c5c2eae1c05b44364f091de7cdf99947d18d596449a611f98fdcdf3b3571f0"
+      },
+      {
+        "path": "raw/p4uncap_drgrpo_s42.json",
+        "sha256": "5947f9da435bf0aa17e4634db0ef397301cd25a64efc676f03a3e252a20b038d"
+      },
+      {
+        "path": "raw/p4uncap_drgrpo_s456.json",
+        "sha256": "bb9e32c902a780486dbc6bc5a29b6ff6c26f5bc0bed8e16c119bd925598a9436"
+      },
+      {
+        "path": "raw/p4uncap_grpo_s123.json",
+        "sha256": "4140b3d05f7f81a3c1f4a379ddff998e52c2909dd17055edd34db1beb1c6aeb0"
+      },
+      {
+        "path": "raw/p4uncap_grpo_s42.json",
+        "sha256": "012561ea8d1f378ddc1034d24d31ca7f222644e2bfd7a6d47a0fd8fbe19a01ee"
+      },
+      {
+        "path": "raw/p4uncap_grpo_s456.json",
+        "sha256": "b67cf11e059609722b6396ba761fa9c4e0cbf6ac15f26da8a13359093de4a67b"
+      }
+    ]
+  },
+  "synthetic_fixture": {
+    "status": "PASS",
+    "groups": [
+      {
+        "id": "mixed-binary",
+        "mean": 0.5,
+        "zero_variance": false
+      },
+      {
+        "id": "all-incorrect",
+        "mean": 0.0,
+        "zero_variance": true
+      },
+      {
+        "id": "all-correct",
+        "mean": 1.0,
+        "zero_variance": true
+      },
+      {
+        "id": "graded",
+        "mean": 0.5,
+        "zero_variance": false
+      }
+    ],
+    "zvf": 0.5,
+    "gradient_utilization": 0.5,
+    "scope_notice": "Synthetic didactic fixture. It demonstrates metric computation only and is not a training run, benchmark result, or performance claim."
+  },
+  "claim2": {
+    "status": "PASS",
+    "matched_rollout_budget": 2560,
+    "rows": [
+      {
+        "run": "er2b_g2_s123",
+        "group_size": 2,
+        "seed": 123,
+        "steps": 160,
+        "rollout_budget": 2560,
+        "late_reward_mean": 0.9,
+        "late_zvf_mean": 0.975,
+        "late_zvf_min": 0.875,
+        "late_zvf_max": 1.0
+      },
+      {
+        "run": "er2b_g2_s456",
+        "group_size": 2,
+        "seed": 456,
+        "steps": 160,
+        "rollout_budget": 2560,
+        "late_reward_mean": 0.9625,
+        "late_zvf_mean": 0.975,
+        "late_zvf_min": 0.75,
+        "late_zvf_max": 1.0
+      },
+      {
+        "run": "er2b_g16_s123",
+        "group_size": 16,
+        "seed": 123,
+        "steps": 20,
+        "rollout_budget": 2560,
+        "late_reward_mean": 0.321875,
+        "late_zvf_mean": 0.15,
+        "late_zvf_min": 0.0,
+        "late_zvf_max": 0.25
+      },
+      {
+        "run": "er2b_g16_s456",
+        "group_size": 16,
+        "seed": 456,
+        "steps": 20,
+        "rollout_budget": 2560,
+        "late_reward_mean": 0.3890625,
+        "late_zvf_mean": 0.1,
+        "late_zvf_min": 0.0,
+        "late_zvf_max": 0.375
+      }
+    ],
+    "summary": {
+      "g2_late_reward_range": [
+        0.9,
+        0.9625
+      ],
+      "g2_late_zvf_mean_range": [
+        0.975,
+        0.975
+      ],
+      "g16_late_reward_range": [
+        0.321875,
+        0.3890625
+      ],
+      "g16_late_zvf_mean_range": [
+        0.1,
+        0.15
+      ]
+    },
+    "interpretation": "At equal 2,560-rollout budgets, G=2 receives 160 optimizer steps and reaches the all-correct high-ZVF wall; G=16 receives 20 steps and remains mid-learning. This is a two-seed trajectory observation, not a universal group-size optimum."
+  },
+  "p4": {
+    "status": "PASS",
+    "rows": [
+      {
+        "run": "p4uncap_drgrpo_s123",
+        "algorithm": "Dr.GRPO",
+        "seed": 123,
+        "first5_mean_length": 972.375,
+        "last10_mean_length": 902.040625,
+        "contraction_pct": 7.233256202596737,
+        "late_zvf_mean": 0.725
+      },
+      {
+        "run": "p4uncap_drgrpo_s42",
+        "algorithm": "Dr.GRPO",
+        "seed": 42,
+        "first5_mean_length": 999.43125,
+        "last10_mean_length": 931.375,
+        "contraction_pct": 6.809497901931722,
+        "late_zvf_mean": 0.45
+      },
+      {
+        "run": "p4uncap_drgrpo_s456",
+        "algorithm": "Dr.GRPO",
+        "seed": 456,
+        "first5_mean_length": 1000.20625,
+        "last10_mean_length": 878.23125,
+        "contraction_pct": 12.194984784388211,
+        "late_zvf_mean": 0.7
+      },
+      {
+        "run": "p4uncap_grpo_s123",
+        "algorithm": "GRPO",
+        "seed": 123,
+        "first5_mean_length": 980.50625,
+        "last10_mean_length": 943.6125,
+        "contraction_pct": 3.762724612923178,
+        "late_zvf_mean": 0.475
+      },
+      {
+        "run": "p4uncap_grpo_s42",
+        "algorithm": "GRPO",
+        "seed": 42,
+        "first5_mean_length": 1004.05,
+        "last10_mean_length": 904.978125,
+        "contraction_pct": 9.867225237786961,
+        "late_zvf_mean": 0.475
+      },
+      {
+        "run": "p4uncap_grpo_s456",
+        "algorithm": "GRPO",
+        "seed": 456,
+        "first5_mean_length": 995.725,
+        "last10_mean_length": 900.090625,
+        "contraction_pct": 9.604496723492929,
+        "late_zvf_mean": 0.55
+      }
+    ],
+    "exact_contraction_range_pct": [
+      3.762724612923178,
+      12.194984784388211
+    ],
+    "defense_wording": "Completion length contracted by approximately 3.8-12.2% in all six corrected arms (first-5 mean to last-10 mean).",
+    "interpretation": "Both loss forms compress at this scale; the panel does not support a length-inflation claim. n=3 seeds per loss and 30 steps remain important limits."
+  },
+  "run_audit": {
+    "status": "PASS",
+    "tinker_run_objects": 983,
+    "claim_critical_gold_rows": 19,
+    "curated_cross_library_claim": "70+ logged runs",
+    "reconciliation": "The papers' \"70+ logged runs\" counts the curated cross-library telemetry corpus (7 RL libraries, full per-step ZVF/GU traces). The Tinker console counts 983 training-run objects: one is created on EVERY create_lora_training_client call, including evaluation sampler bootstraps, retries, probes, aborted arms, and capstone-group runs on the shared org account.",
+    "plain_english": "983 is the broad infrastructure object count; 70+ is the curated cross-library telemetry corpus. They have different inclusion rules and are not competing totals."
+  },
+  "scope": "Offline recomputation of copied project artifacts; no network, model inference, or new training is performed."
+}

@@ -1,0 +1,15 @@
+1
+00:00:00,000 --> 00:00:04,800
+Three hosted Hugging Face calls. No model weights are downloaded locally.
+
+2
+00:00:04,800 --> 00:00:15,500
+Tool use: Qwen selects get_stock_price and emits the structured argument AAPL.
+
+3
+00:00:15,500 --> 00:00:29,000
+Mathematics: Qwen2.5-Math computes 48 x 17 - 125 and returns 691.
+
+4
+00:00:29,000 --> 00:00:44,520
+Multi-step reasoning: DeepSeek-R1-Distill-Qwen solves the word problem and returns 14.

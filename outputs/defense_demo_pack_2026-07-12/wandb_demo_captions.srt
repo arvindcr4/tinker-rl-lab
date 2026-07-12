@@ -1,0 +1,19 @@
+1
+00:00:00,000 --> 00:00:07,000
+Matched budget, G=2: reward reaches 1.0, but ZVF also reaches 1.0. The within-group signal has vanished.
+
+2
+00:00:07,000 --> 00:00:14,000
+Matched budget, G=16: final ZVF is 0.25. The larger group retains estimator contrast.
+
+3
+00:00:14,000 --> 00:00:26,000
+Replication runs check that the conclusion is not tied to one seed. Read reward together with ZVF.
+
+4
+00:00:26,000 --> 00:00:32,000
+Run hygiene: the preserved invalid arm is audit evidence, not a valid Dr.GRPO result.
+
+5
+00:00:32,000 --> 00:00:38,120
+The corrected Dr.GRPO arm has complete history and repaired loss semantics.

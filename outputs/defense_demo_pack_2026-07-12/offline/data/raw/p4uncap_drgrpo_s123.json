@@ -1,0 +1,306 @@
+{
+  "tag": "p4uncap_drgrpo_s123",
+  "status": "completed",
+  "model": "Qwen/Qwen3-8B",
+  "model_short": "qwen3-8b",
+  "task": "gsm8k",
+  "seed": 123,
+  "rank": 4,
+  "group_size": 8,
+  "batch": 4,
+  "lr": 3e-05,
+  "temperature": 1.0,
+  "steps": 30,
+  "loss": "drgrpo",
+  "started_at": "2026-07-11T12:37:24.774056+00:00",
+  "output_path": "experiments/tinker-runs/results/p4uncap_drgrpo_s123.json",
+  "wandb_run_id": "ttkmo2e5",
+  "run_id": "7050a18c-ee6e-5e47-830a-a56836a10498:train:0",
+  "initial_sampler": "tinker://7050a18c-ee6e-5e47-830a-a56836a10498:train:0/sampler_weights/s0",
+  "reward_trace": [
+    0.5625,
+    0.71875,
+    0.65625,
+    0.5,
+    0.6875,
+    0.78125,
+    0.8125,
+    0.46875,
+    0.25,
+    0.75,
+    0.75,
+    0.6875,
+    0.28125,
+    0.59375,
+    0.84375,
+    0.78125,
+    0.71875,
+    0.53125,
+    0.375,
+    0.75,
+    0.875,
+    0.5,
+    0.9375,
+    0.875,
+    0.5625,
+    0.6875,
+    0.5625,
+    1.0,
+    0.78125,
+    1.0
+  ],
+  "step_log": [
+    {
+      "step": 1,
+      "reward": 0.5625,
+      "loss": -1.0441150665283203,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 955.46875
+    },
+    {
+      "step": 2,
+      "reward": 0.71875,
+      "loss": 0.5306706428527832,
+      "zvf": 0.75,
+      "gu": 0.25,
+      "mean_comp_len": 964.8125
+    },
+    {
+      "step": 3,
+      "reward": 0.65625,
+      "loss": -2.745494842529297,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 994.03125
+    },
+    {
+      "step": 4,
+      "reward": 0.5,
+      "loss": -1.4300673007965088,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 970.5625
+    },
+    {
+      "step": 5,
+      "reward": 0.6875,
+      "loss": -0.752471923828125,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 977.0
+    },
+    {
+      "step": 6,
+      "reward": 0.78125,
+      "loss": -3.0209426879882812,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 1011.15625
+    },
+    {
+      "step": 7,
+      "reward": 0.8125,
+      "loss": -2.7847986221313477,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 899.65625
+    },
+    {
+      "step": 8,
+      "reward": 0.46875,
+      "loss": -1.3488845825195312,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 1024.0
+    },
+    {
+      "step": 9,
+      "reward": 0.25,
+      "loss": -2.519550323486328,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 1024.0
+    },
+    {
+      "step": 10,
+      "reward": 0.75,
+      "loss": 0.1850261688232422,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 941.875
+    },
+    {
+      "step": 11,
+      "reward": 0.75,
+      "loss": -2.5684986114501953,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 975.09375
+    },
+    {
+      "step": 12,
+      "reward": 0.6875,
+      "loss": -2.090517044067383,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 963.5625
+    },
+    {
+      "step": 13,
+      "reward": 0.28125,
+      "loss": -1.7302193641662598,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 1024.0
+    },
+    {
+      "step": 14,
+      "reward": 0.59375,
+      "loss": -1.117598533630371,
+      "zvf": 0.75,
+      "gu": 0.25,
+      "mean_comp_len": 949.46875
+    },
+    {
+      "step": 15,
+      "reward": 0.84375,
+      "loss": -1.0358171463012695,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 975.9375
+    },
+    {
+      "step": 16,
+      "reward": 0.78125,
+      "loss": 0.13399314880371094,
+      "zvf": 0.75,
+      "gu": 0.25,
+      "mean_comp_len": 900.96875
+    },
+    {
+      "step": 17,
+      "reward": 0.71875,
+      "loss": -2.109361171722412,
+      "zvf": 0.75,
+      "gu": 0.25,
+      "mean_comp_len": 917.53125
+    },
+    {
+      "step": 18,
+      "reward": 0.53125,
+      "loss": -2.2760772705078125,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 862.96875
+    },
+    {
+      "step": 19,
+      "reward": 0.375,
+      "loss": -5.029383182525635,
+      "zvf": 0.0,
+      "gu": 1.0,
+      "mean_comp_len": 1020.1875
+    },
+    {
+      "step": 20,
+      "reward": 0.75,
+      "loss": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0,
+      "mean_comp_len": 961.71875
+    },
+    {
+      "step": 21,
+      "reward": 0.875,
+      "loss": -1.117868423461914,
+      "zvf": 0.75,
+      "gu": 0.25,
+      "mean_comp_len": 871.8125
+    },
+    {
+      "step": 22,
+      "reward": 0.5,
+      "loss": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0,
+      "mean_comp_len": 946.53125
+    },
+    {
+      "step": 23,
+      "reward": 0.9375,
+      "loss": -1.4862346649169922,
+      "zvf": 0.75,
+      "gu": 0.25,
+      "mean_comp_len": 913.375
+    },
+    {
+      "step": 24,
+      "reward": 0.875,
+      "loss": -2.6049304008483887,
+      "zvf": 0.25,
+      "gu": 0.75,
+      "mean_comp_len": 1000.9375
+    },
+    {
+      "step": 25,
+      "reward": 0.5625,
+      "loss": -1.085296630859375,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 969.0625
+    },
+    {
+      "step": 26,
+      "reward": 0.6875,
+      "loss": -1.0674705505371094,
+      "zvf": 0.75,
+      "gu": 0.25,
+      "mean_comp_len": 993.625
+    },
+    {
+      "step": 27,
+      "reward": 0.5625,
+      "loss": -0.5079517364501953,
+      "zvf": 0.75,
+      "gu": 0.25,
+      "mean_comp_len": 829.84375
+    },
+    {
+      "step": 28,
+      "reward": 1.0,
+      "loss": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0,
+      "mean_comp_len": 874.625
+    },
+    {
+      "step": 29,
+      "reward": 0.78125,
+      "loss": -2.0599613189697266,
+      "zvf": 0.5,
+      "gu": 0.5,
+      "mean_comp_len": 850.0
+    },
+    {
+      "step": 30,
+      "reward": 1.0,
+      "loss": 0.0,
+      "zvf": 1.0,
+      "gu": 0.0,
+      "mean_comp_len": 770.59375
+    }
+  ],
+  "last_updated_at": "2026-07-11T13:07:50.123026+00:00",
+  "latest_sampler": "tinker://7050a18c-ee6e-5e47-830a-a56836a10498:train:0/sampler_weights/s30",
+  "train_state_path": "tinker://7050a18c-ee6e-5e47-830a-a56836a10498:train:0/weights/state_s30",
+  "train_state_step": 30,
+  "checkpoint": "tinker://7050a18c-ee6e-5e47-830a-a56836a10498:train:0/sampler_weights/final",
+  "first5_avg": 0.625,
+  "last10_avg": 0.778125,
+  "peak_reward": 1.0,
+  "zero_reward_pct": 0.0,
+  "zero_loss_pct": 13.333333333333334,
+  "wall_clock_sec": 1826.493726015091,
+  "completed_at": "2026-07-11T13:07:51.267910+00:00"
+}

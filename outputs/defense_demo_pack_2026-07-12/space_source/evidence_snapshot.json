@@ -1,0 +1,38 @@
+{
+  "snapshot_date": "2026-07-12",
+  "project": "arvindcr4-pes-university/zvf-training",
+  "audit": {
+    "account_object_count": 983,
+    "curated_telemetry_runs_minimum": 70,
+    "curated_telemetry_label": "70+",
+    "gold_rows": 19,
+    "reconciliation": "983 is the account-level object count; 70+ is the curated run set with usable telemetry; 19 gold rows are the claim-critical evidence subset. These are different audit layers, not contradictory run totals."
+  },
+  "claim_2_matched_budget": [
+    {
+      "label": "E-R2b G=2 seed=123",
+      "group_size": 2,
+      "run_id": "pob7nd05",
+      "url": "https://wandb.ai/arvindcr4-pes-university/zvf-training/runs/pob7nd05",
+      "interpretation": "Reward rises, but zero-verifier failures climb toward the wall."
+    },
+    {
+      "label": "E-R2b G=16 seed=123",
+      "group_size": 16,
+      "run_id": "tiicy3km",
+      "url": "https://wandb.ai/arvindcr4-pes-university/zvf-training/runs/tiicy3km",
+      "interpretation": "Lower ZVF and a healthier learning signal under the same rollout budget."
+    }
+  ],
+  "artifacts": {
+    "tool_call_lora": "https://huggingface.co/arvindcr4/tool-call-lora-qwen2.5-7b",
+    "math_model": "https://huggingface.co/arvindcr4/gsm8k-qwen3-4b",
+    "benchmark_space": "https://huggingface.co/spaces/arvindcr4/tinkerrl-bench-demo",
+    "repository": "https://github.com/arvindcr4/tinker-rl-lab"
+  },
+  "external_evidence": {
+    "modal_gsm8k": "https://github.com/arvindcr4/tinker-rl-lab/blob/main/zvf-program/experiments-next/results/passk_modal_qwen3-8b_base_gsm8k_p200_n32_s42.json",
+    "lightning_mbpp": "https://github.com/arvindcr4/tinker-rl-lab/blob/main/zvf-program/experiments-next/results/passk_lightning_qwen3-8b_base_mbpp_p200_n32_s42.json",
+    "colab_notebook": "https://github.com/arvindcr4/tinker-rl-lab/blob/main/platform_colab/ppo_reinforce_baselines_colab.ipynb"
+  }
+}

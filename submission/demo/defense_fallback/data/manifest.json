@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "created_for": "PESU MTech defense offline fallback, 2026-07-12",
+  "files": {
+    "offline_demo.json": "40469ebebfb58b29326794f66025bc11e973e6e33ec2926970c9c3d3234ab652",
+    "tinker_runs_audit_2026-07-12.xlsx": "09b3c989cd70bd6b2808ed99154a4e9bcd0fac0faa5a91c025aa8aa51afe7af7",
+    "../assets/wandb_claim2_matched_budget.png": "aa214d9430bfaf5c7a596f6af7d1cfb8ce1a0d83b7c1a5dffbdbc3f943c3de6b",
+    "../assets/wandb_run_hygiene.png": "8e54c61e2d782559ee679b3db5b00382db74ac38235615336bbf5be6652c5c2f",
+    "raw/er2b_g16_s123.json": "ce1d070dfd946172535161daf86c930cf807197ec7cf1cdef32e402a976dd49f",
+    "raw/er2b_g16_s456.json": "3bdd1fcade3f784316890f8939581fdd42491665fc572673442fc392a30b26c5",
+    "raw/er2b_g2_s123.json": "c11b946355a9073e115e6f7b14f94ffdbb1a5be5b9d7bdf4adb0489f6f6d4f91",
+    "raw/er2b_g2_s456.json": "7214d9a2d532219827e7bbfeba9a62dbf7bfe0a6dc66bb180043ef6e79661ba2",
+    "raw/p4uncap_drgrpo_s123.json": "91c5c2eae1c05b44364f091de7cdf99947d18d596449a611f98fdcdf3b3571f0",
+    "raw/p4uncap_drgrpo_s42.json": "5947f9da435bf0aa17e4634db0ef397301cd25a64efc676f03a3e252a20b038d",
+    "raw/p4uncap_drgrpo_s456.json": "bb9e32c902a780486dbc6bc5a29b6ff6c26f5bc0bed8e16c119bd925598a9436",
+    "raw/p4uncap_grpo_s123.json": "4140b3d05f7f81a3c1f4a379ddff998e52c2909dd17055edd34db1beb1c6aeb0",
+    "raw/p4uncap_grpo_s42.json": "012561ea8d1f378ddc1034d24d31ca7f222644e2bfd7a6d47a0fd8fbe19a01ee",
+    "raw/p4uncap_grpo_s456.json": "b67cf11e059609722b6396ba761fa9c4e0cbf6ac15f26da8a13359093de4a67b"
+  }
+}

@@ -77,7 +77,7 @@ bullets(slide('Base Paper & My Understanding of It', 2, notes=
   "has a structural blind spot — identical rewards zero out every advantage. Secondary anchor: Dr.GRPO "
   "(Liu et al., 2025) which critiques GRPO's normalisation terms — my Result 4 tests it head-on."), [
     ('Base paper — GRPO, from "DeepSeekMath" (Shao et al., 2024; basis of DeepSeek-R1): replaces PPO\'s learned critic with a group-relative baseline — sample G completions per prompt, advantage = own reward − group mean.', True),
-    ('Why it matters: critic-free means cheap and stable at LLM scale with verifiable (binary) rewards; it is now the default RL post-training family (DAPO, GSPO, Dr.GRPO, GRESO...).', False),
+    ('Why it matters: critic-free means cheap and stable at LLM scale with verifiable (binary) rewards; it is now the default RL post-training family. The study runs GRPO against PPO, REINFORCE, DPO, GSPO, Dr.GRPO and audited variant labels (slide 5).', False),
     ('My understanding — the structural blind spot: if all G completions earn the SAME reward (all-correct or all-wrong), every centred advantage is exactly zero: the group consumes compute but contributes zero gradient. The reward curve cannot show this; it can read "success" precisely while learning has stopped.', True),
     ('Secondary anchor — Dr.GRPO (Liu et al., 2025): claims GRPO\'s per-length/std normalisation biases updates toward verbosity. I test this claim under controlled conditions (Result 4).', False),
     ('Thesis position: measure the blind spot (Zero-Variance Fraction, ZVF), calibrate it, budget it, and show what it changes in practice.', True),
@@ -105,8 +105,28 @@ bullets(slide('Overall Architecture', 4, notes=
     ('Audit layer — 983 Tinker runs enumerated and classified; 19 claim-critical runs identified, each linked to its W&B page, checkpoint, and result JSON (workbook in outputs/).', False),
 ])
 
-# ------------------------------------------- 5 What I implemented (attribution)
-bullets(slide('What I Implemented (Sem-4 Solo, on the Sem-3 Foundation)', 5, notes=
+# ------------------------------------------------- 5 Algorithms & methods run
+s = slide('Not Only GRPO — Algorithms & Methods Run', 5, notes=
+  "(1 min) Fast table walk. GRPO is the base paper, not the boundary: PPO ran as the value-based control "
+  "on three open libraries plus the bench; GSPO head-to-head against GRPO on the same stack; Dr.GRPO in the "
+  "six-arm loss panel; DPO/IDPO through the unified script generator; REINFORCE and SFT/distillation as "
+  "baselines; and the DAPO label audit plus the AERO/AREAL/GIFT traces feed the reproducibility results. "
+  "Every row has runnable artifacts in the repo.")
+table(s, [
+    ['algorithm / method', 'where it ran', 'role in the study'],
+    ['GRPO (base paper)', 'Tinker fleets (Qwen3-8B), TRL on Modal H100, open trainers', 'primary subject — all ZVF claims'],
+    ['Dr.GRPO', 'Tinker, six-arm uncapped panel, 3 seeds/loss', 'length-bias critique test (Result 4)'],
+    ['GSPO', 'Tinker, same-stack head-to-head vs GRPO (G=8)', 'sequence-level IS ratio control'],
+    ['PPO', 'SB3 / CleanRL / Tianshou (Modal H100) + bench arm (HF: tinker-rl-bench-ppo_*)', 'value-based baseline family (RQ1)'],
+    ['REINFORCE', 'Colab baselines notebook', 'simplest policy-gradient control'],
+    ['DPO / IDPO', 'TRL via unified script generator (platform_local)', 'preference optimisation, no rollouts'],
+    ['SFT + off-policy distillation', 'capstone tool-call LoRAs; Llama-3.2-1B distillation probe', 'non-RL baselines and adapters'],
+    ['"DAPO" (label audit)', 'open trainer w/ dynamic sampling vs closed-stack surrogate', 'label-flip evidence: ZVF 0.00 vs 0.55-0.58'],
+    ['AERO / AREAL / GIFT + adaptive-G', 'open-stack method traces; 4-arm audit pilot (T4)', 'P2 collapse panel, P8 detector, survival-audit pilot'],
+], col_widths=[2.9, 5.1, 3.5], size=12, top=1.3)
+
+# ------------------------------------------- 6 What I implemented (attribution)
+bullets(slide('What I Implemented (Sem-4 Solo, on the Sem-3 Foundation)', 6, notes=
   "(1.5 min) Attribution first: Sem 3 was the group capstone — the multi-framework bench and survey, frozen at "
   "tag capstone-final-2026-04-25. Everything on this slide is Sem-4 solo work. Be specific: these are files "
   "and packages he can open, not concepts."), [
@@ -119,7 +139,7 @@ bullets(slide('What I Implemented (Sem-4 Solo, on the Sem-3 Foundation)', 5, not
 ])
 
 # ------------------------------------------------------- 6 Result 1: Claim 1
-s = slide('Result 1 — ZVF Sees What the Reward Curve Cannot (Claim 1)', 6, notes=
+s = slide('Result 1 — ZVF Sees What the Reward Curve Cannot (Claim 1)', 7, notes=
   "(2 min) THE core result. Walk the table: late in training the G=2 arms read reward ~1.0 — by the reward "
   "axis, perfect. ZVF says 75-100% of groups are all-correct: zero gradient. Same budget, G=16 arms are "
   "mid-learning with ZVF under 0.25 and signal intact. Read as a pair, (reward, ZVF) separates 'policy is good' "
@@ -136,7 +156,7 @@ bullets(s, [
 ], top=3.15)
 
 # ------------------------------------------------------- 7 Result 2: Claim 2
-bullets(slide('Result 2 — Group Size Is a Schedule Variable (Claim 2)', 7, notes=
+bullets(slide('Result 2 — Group Size Is a Schedule Variable (Claim 2)', 8, notes=
   "(2 min) The decisive experiment design point: hold the ROLLOUT BUDGET fixed, not the step count. "
   "Small G converts the budget into more optimiser steps early — then exhausts its own signal as accuracy "
   "rises (the p->1 wall of the kernel). Large G pays for contrast it doesn't need early and retains signal late. "
@@ -149,7 +169,7 @@ bullets(slide('Result 2 — Group Size Is a Schedule Variable (Claim 2)', 7, not
 ])
 
 # ------------------------------------------------- 8 Result 3: theory calibrated
-bullets(slide('Result 3 — The Estimator Is Calibrated, the Budget Is Exact', 8, notes=
+bullets(slide('Result 3 — The Estimator Is Calibrated, the Budget Is Exact', 9, notes=
   "(2 min) Three theory results, each validated on real 512-prompt pools. T1: Wilson interval covers 0.95-0.98 "
   "in every tested setting — report which ZVF the interval covers under curriculum ordering. T2: geometric "
   "waiting-time budget N = G ln(delta)/ln(ZVF) matched observed quantiles at ratio 1.00 in all six difficulty "
@@ -163,7 +183,7 @@ bullets(slide('Result 3 — The Estimator Is Calibrated, the Budget Is Exact', 8
 ])
 
 # --------------------------------------- 9 Result 4: loss panel + the incident
-bullets(slide('Result 4 — GRPO vs Dr.GRPO: No Footprint at This Scale (+ the Incident)', 9, notes=
+bullets(slide('Result 4 — GRPO vs Dr.GRPO: No Footprint at This Scale (+ the Incident)', 10, notes=
   "(2 min) Tests the base-paper critique directly. Six uncapped arms (1,024 tokens), 3 seeds per loss: "
   "completion lengths SHRINK 6-12% in all six arms — no verbosity trap at this scale — and no late-ZVF "
   "separation. Then own the incident proudly: the first panel was invalid because a documented --loss flag "
@@ -177,7 +197,7 @@ bullets(slide('Result 4 — GRPO vs Dr.GRPO: No Footprint at This Scale (+ the I
 ])
 
 # ------------------------------------------- 10 Result 5: reproducibility results
-bullets(slide('Result 5 — Reproducibility: Measured Flips, and the Standard They Justify', 10, notes=
+bullets(slide('Result 5 — Reproducibility: Measured Flips, and the Standard They Justify', 11, notes=
   "(1.5 min) Three measured instances, each a lever that flipped a result: 17x reward span from an undisclosed "
   "backend swap that also bundled a checkpoint change; the same 'DAPO' label yielding ZVF 0.00 on an open "
   "trainer vs 0.55-0.58 on a closed stack; and reward micro-jitter below the verifier's resolution collapsing "
@@ -190,7 +210,7 @@ bullets(slide('Result 5 — Reproducibility: Measured Flips, and the Standard Th
 ])
 
 # ------------------------------------------- 11 Result 6: held-out evaluation
-bullets(slide('Result 6 — Held-Out Evaluation: Gains, Transfer, and an Honest Boundary', 11, notes=
+bullets(slide('Result 6 — Held-Out Evaluation: Gains, Transfer, and an Honest Boundary', 12, notes=
   "(1.5 min) RQ4. Base Qwen3-8B on GSM8K: pass@1 30.4% but pass@32 91% — the base model already solves "
   "almost everything at k=32, so GSM8K alone cannot demonstrate capability expansion; that scope discipline "
   "is itself a finding. Post-RL adapters: zero forgetting on MBPP and a +1.5-2.5 point pass@32 frontier "
@@ -204,7 +224,7 @@ bullets(slide('Result 6 — Held-Out Evaluation: Gains, Transfer, and an Honest 
 ])
 
 # ---------------------------------------------------- 12 Scale & evidence trail
-bullets(slide('Implementation Scale & Evidence Trail (audited 12 Jul)', 12, notes=
+bullets(slide('Implementation Scale & Evidence Trail (audited 12 Jul)', 13, notes=
   "(1 min) Fast slide. 983 runs on the Tinker account — audited and classified this morning; the thesis "
   "claims rest on 19 identified claim-critical runs, each linked to W&B and its artifact. If asked about "
   "any number: the workbook key_runs sheet has the run id, checkpoint, W&B link, and result JSON."), [
@@ -215,7 +235,7 @@ bullets(slide('Implementation Scale & Evidence Trail (audited 12 Jul)', 12, note
 ])
 
 # ------------------------------------------------------------------ 13 Demo
-bullets(slide('Demo (Live)', 13, notes=
+bullets(slide('Demo (Live)', 14, notes=
   "(1.5 min + live demo) Run the one-command offline demo FIRST — it cannot fail on the network. "
   "./submission/demo/demo.sh: mechanism fixture (4 groups, ZVF=0.5, GU=0.5), recorded artifact (80 rewards, "
   "mean 0.6875, ZVF 0.30), SHA-256 integrity check, HTML dashboard. Then if time and connectivity allow: "
@@ -228,7 +248,7 @@ bullets(slide('Demo (Live)', 13, notes=
 ])
 
 # ------------------------------------------------- 14 Limitations & close
-bullets(slide('Scope, Limitations & Roadmap', 14, notes=
+bullets(slide('Scope, Limitations & Roadmap', 15, notes=
   "(1 min) Close with the honesty that survives cross-examination: one model, one task family, one managed "
   "API, 1-3 seeds — the claims are stated at the stack level and nowhere above it. Roadmap is gated: "
   "diagnostic paper publishable now; controller paper gated on a pre-registered compute-matched win; "

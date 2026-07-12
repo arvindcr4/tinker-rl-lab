@@ -161,8 +161,10 @@ s2 = slide('Base Paper & My Understanding of It', 2, notes=
   "(2 min) Base paper: GRPO from DeepSeekMath (Shao et al., 2024), the algorithm behind DeepSeek-R1. "
   "Explain the mechanism from first principles: no critic; sample G completions per prompt; each advantage "
   "is its reward minus the group mean. My understanding goes one step further than the paper: that subtraction "
-  "has a structural blind spot — identical rewards zero out every advantage. Secondary anchor: Dr.GRPO "
-  "(Liu et al., 2025) which critiques GRPO's normalisation terms — my Result 4 tests it head-on.")
+  "has a structural blind spot — identical rewards zero out every advantage. Sell it with the basketball "
+  "analogy at the bottom: drills, shots, a coach who only compares shots within a drill; all-makes drills "
+  "teach nothing precisely when the scoreboard looks perfect - that is the whole thesis in one image. "
+  "Secondary anchor: Dr.GRPO (Liu et al., 2025) which critiques GRPO's normalisation terms — Result 4 tests it.")
 _S2_BULLETS = [
     ('Base paper — GRPO, from "DeepSeekMath" (Shao et al., 2024; basis of DeepSeek-R1): replaces PPO\'s learned critic with a group-relative baseline — sample G completions per prompt, advantage = own reward − group mean.', True),
     ('Why it matters: critic-free means cheap and stable at LLM scale with verifiable (binary) rewards; it is now the default RL post-training family. The study runs GRPO against PPO, REINFORCE, DPO, GSPO, Dr.GRPO and audited variant labels (slide 5).', False),
@@ -191,6 +193,12 @@ arrow(s2, dx+2.6, 3.47, dx+3.15, 3.47)
 box(s2, 'A = 0,0,0,0\nzero gradient', dx+3.2, 3.17, 1.15, 0.62, fill=RED, size=9)
 tb = s2.shapes.add_textbox(Inches(dx), Inches(4.0), Inches(4.35), Inches(1.1))
 para(tb.text_frame, 'A_i = r_i − mean(r): identical rewards zero every advantage.\nThe reward curve still reads 1.0 — training has silently stopped.', size=10.5, color=MUTED, first=True)
+
+# the basketball analogy (lay explanation of the blind spot)
+ab = s2.shapes.add_textbox(Inches(0.8), Inches(5.35), Inches(12.0), Inches(1.6))
+tfa = ab.text_frame; tfa.word_wrap = True
+para(tfa, 'Basketball analogy:', size=13, color=GOLD, bold=True, first=True)
+para(tfa, 'Each prompt is a shooting drill; the G completions are G shots at the same basket. GRPO has no absolute standard (no critic) — the coach grades each shot only against the others in that drill. Mixed makes and misses → he can tell what worked. All makes or all misses → nothing to compare, the drill taught zero. As the player improves, more drills end all-makes: practice silently stops teaching exactly when the scoreboard looks best. ZVF counts the dead drills; more shots per drill (bigger G) keeps the contrast alive longer.', size=12.5, color=INK)
 
 # ---------------------------------------------------------- 3 Problem & RQs
 bullets(slide('Problem & Research Questions', 3, notes=

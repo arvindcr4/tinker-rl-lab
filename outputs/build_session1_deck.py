@@ -101,6 +101,7 @@ bullets(slide('Infrastructure & Evidence Scale (audited 12 Jul)', 8), [
     ('983 training runs logged on the managed Tinker API to date — 26 base models spanning 0.6B → 1T parameters (Qwen3-8B is the workhorse).', True),
     ('Multi-backend evaluation fabric already proven: Modal, Lightning AI, and Colab (vLLM) pass@k panels + 4 cross-library H100 training baselines (TRL/SB3/CleanRL/Tianshou).', False),
     ('Full telemetry trail: 1,034 W&B runs across 17 projects; 49 HuggingFace artifact repos (published LoRA adapters).', False),
+    ('zvf-triage — packaged library built for this program (Apache-2.0): drop-in ZVF triage callback that classifies the starvation regime, adapts group size, drops dead prompts, and auto-stops doomed runs; integrations for veRL, OpenRLHF, and NeMo-RL with a full test suite.', True),
     ('Run-level audit discipline: every claim-critical run is identified, checkpointed, and linked to its W&B page and result artifact (audit workbook in outputs/).', False),
     ('Why it matters for this plan: the de-confound pillars are feasible in one semester because the instrumentation and multi-backend plumbing already exist.', True),
 ])

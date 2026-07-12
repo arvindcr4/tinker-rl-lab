@@ -48,8 +48,8 @@ fig.tight_layout(); fig.savefig('outputs/deck_assets/budget_traj.png'); plt.clos
 import subprocess
 VIDEO = 'outputs/project_defense_live_hf_wandb_demo_2026-07-12.mp4'
 POSTER = 'outputs/deck_assets/demo_poster.png'
-if os.path.exists(VIDEO) and not os.path.exists(POSTER):
-    subprocess.run(['ffmpeg', '-y', '-i', VIDEO, '-vf', 'select=eq(n\\,30)', '-vframes', '1', POSTER],
+if os.path.exists(VIDEO):
+    subprocess.run(['ffmpeg', '-y', '-ss', '75', '-i', VIDEO, '-vframes', '1', POSTER],
                    capture_output=True)
 FALLBACK = 'thesis/viva/demo_walkthrough.mp4'
 FPOSTER = 'outputs/deck_assets/walkthrough_poster.png'
@@ -164,7 +164,7 @@ s2 = slide('Base Paper & My Understanding of It', 2, notes=
   "has a structural blind spot — identical rewards zero out every advantage. Sell it with the basketball "
   "analogy at the bottom: drills, shots, a coach who only compares shots within a drill; all-makes drills "
   "teach nothing precisely when the scoreboard looks perfect - that is the whole thesis in one image. "
-  "Secondary anchor: Dr.GRPO (Liu et al., 2025) which critiques GRPO's normalisation terms — Result 4 tests it.")
+  "Secondary anchor: Dr.GRPO (Liu et al., 2025) which critiques GRPO's normalisation terms — Result 4 tests it. If asked about std-normalisation: base GRPO also divides by the group std; with identical rewards the numerator is zero either way, so the blind spot is identical — and the panels also test the normalisation-free Dr.GRPO form directly.")
 _S2_BULLETS = [
     ('Base paper — GRPO, from "DeepSeekMath" (Shao et al., 2024; basis of DeepSeek-R1): replaces PPO\'s learned critic with a group-relative baseline — sample G completions per prompt, advantage = own reward − group mean.', True),
     ('Why it matters: critic-free means cheap and stable at LLM scale with verifiable (binary) rewards; it is now the default RL post-training family. The study runs GRPO against PPO, REINFORCE, DPO, GSPO, Dr.GRPO and audited variant labels (slide 5).', False),
@@ -184,7 +184,7 @@ para(tb.text_frame, 'group with contrast', size=11, color=INK, bold=True, first=
 for i, r in enumerate([1, 0, 1, 0]):
     box(s2, str(r), dx + i*0.62, 2.0, 0.5, 0.5, fill=BLUE if r else GRAY, size=13)
 arrow(s2, dx+2.6, 2.25, dx+3.15, 2.25)
-box(s2, 'A = ±0.5\ngradient flows', dx+3.2, 1.95, 1.15, 0.62, fill=GREEN, size=9)
+box(s2, 'A ≠ 0\ngradient flows', dx+3.2, 1.95, 1.15, 0.62, fill=GREEN, size=9)
 tb = s2.shapes.add_textbox(Inches(dx), Inches(2.85), Inches(4.3), Inches(0.35))
 para(tb.text_frame, 'all-correct group (the blind spot)', size=11, color=INK, bold=True, first=True)
 for i, r in enumerate([1, 1, 1, 1]):
@@ -192,7 +192,7 @@ for i, r in enumerate([1, 1, 1, 1]):
 arrow(s2, dx+2.6, 3.47, dx+3.15, 3.47)
 box(s2, 'A = 0,0,0,0\nzero gradient', dx+3.2, 3.17, 1.15, 0.62, fill=RED, size=9)
 tb = s2.shapes.add_textbox(Inches(dx), Inches(4.0), Inches(4.35), Inches(1.1))
-para(tb.text_frame, 'A_i = r_i − mean(r): identical rewards zero every advantage.\nThe reward curve still reads 1.0 — training has silently stopped.', size=10.5, color=MUTED, first=True)
+para(tb.text_frame, 'A_i = r_i − mean(r) (the original also divides by the group std — the zero/nonzero structure is identical). Identical rewards zero every advantage; the reward curve still reads 1.0 while training has silently stopped.', size=10.5, color=MUTED, first=True)
 
 # the basketball analogy (lay explanation of the blind spot)
 ab = s2.shapes.add_textbox(Inches(0.8), Inches(5.35), Inches(12.0), Inches(1.6))
@@ -202,7 +202,7 @@ para(tfa, 'Each prompt is a shooting drill; the G completions are G shots at the
 
 # ---------------------------------------------------------- 3 Problem & RQs
 bullets(slide('Problem & Research Questions', 3, notes=
-  "(1 min) Compress. Two facts motivate everything: starvation is invisible in reward curves, and "
+  "(45 s) Compress. Two facts motivate everything: starvation is invisible in reward curves, and "
   "published comparisons are stack-conditioned. Then read the four RQs quickly."), [
     ('Signal starvation is silent: mean reward reads "success" exactly when the all-correct wall starves training. You need a second coordinate.', True),
     ('The reproducibility anchor: the SAME RL training, run by different people in different environments, can produce wildly different results — measured here as a 17× final-reward span from one undisclosed backend+checkpoint swap. Unless the details of what actually ran are reported, comparisons are meaningless.', True),
@@ -211,7 +211,7 @@ bullets(slide('Problem & Research Questions', 3, notes=
 
 # ---------------------------------------------------------- 4 Architecture
 s4 = slide('Overall Architecture', 4, notes=
-  "(1.5 min) Walk the four layers left to right: training on the managed Tinker API (LoRA, closed loss "
+  "(1.25 min) Walk the four layers left to right: training on the managed Tinker API (LoRA, closed loss "
   "kernel — an audit constraint I exploit deliberately); evaluation on three vLLM backends so no single "
   "backend's quirks own the numbers; telemetry: per-step ZVF/GU next to reward, mirrored to W&B; and the "
   "audit layer: run manifests, checkpoint/resume, the runs-audit workbook. Everything downstream cites this.")
@@ -232,7 +232,7 @@ para(tb.text_frame, 'Design rule: no number enters a paper without a path back t
 
 # ------------------------------------------------- 5 Algorithms & methods run
 s = slide('Not Only GRPO — Algorithms & Methods Run, and Why', 5, notes=
-  "(1 min) Fast table walk — lead with the WHY column: each method answers a specific question the thesis "
+  "(45 s) Fast table walk — lead with the WHY column: each method answers a specific question the thesis "
   "needed closed. PPO answers 'was the critic needed?'; GSPO isolates one knob on the same stack; Dr.GRPO "
   "tests the base paper's strongest critique; DPO is the no-rollouts counterfactual (no groups, so no ZVF "
   "by construction); REINFORCE and SFT are floors; the DAPO audit and the AERO/AREAL/GIFT traces exist to "
@@ -247,7 +247,7 @@ table(s, [
     ['DPO / IDPO', 'TRL via unified script generator (platform_local)', 'The counterfactual family: preference optimisation without rollouts has no groups - no ZVF by construction'],
     ['SFT + off-policy distillation', 'capstone tool-call LoRAs; Llama-3.2-1B distillation probe', 'Non-RL control: how much of the gain needs RL at all?'],
     ['"DAPO" (label audit)', 'open trainer w/ dynamic sampling vs closed-stack surrogate', 'How much does a method NAME underdetermine the executed update? Measured: ZVF 0.00 vs 0.55-0.58 under one label'],
-    ['AERO / AREAL / GIFT + adaptive-G', 'open-stack method traces; 4-arm audit pilot (T4)', 'Can telemetry alone distinguish method variants (P8 detector), and is collapse universal across them? (P2 panel)'],
+    ['AERO / AREAL / GIFT (traces); audit pilot: GRPO / Dr.GRPO / DAPO / adaptive-G', 'open-stack method traces; 4-arm single-stack audit pilot (T4)', 'Can telemetry alone distinguish method variants (P8 detector)? Is collapse universal across them (P2)? Does the survival protocol work end-to-end (pilot)?'],
 ], col_widths=[2.5, 3.9, 5.1], size=11, top=1.3)
 
 # ------------------------------------------- 6 What I implemented (attribution)
@@ -259,7 +259,7 @@ bullets(slide('What I Implemented (Sem-4 Solo, on the Sem-3 Foundation)', 6, not
   "xLAM-60k was the capstone SFT corpus. MATH-500/MBPP/HumanEval are evaluation-only - never trained on. "
   "Sem-3 credit line if asked: 79 logged runs across 7 libraries, submitted to NeurIPS 2026 Main Track as "
   "'A Unified Benchmark for RL Post-Training of Language Models' (group work, 8 authors); Sem 4 is solo."), [
-    ('Datasets used for finetuning — RL: GSM8K train split (openai/gsm8k "main"; 512-prompt pools, 32 rollouts/prompt, binary boxed-answer reward) and synthetic arithmetic (easy/medium) for the 0.5B-1.5B short-horizon panels and small-model sweeps. SFT (capstone): Salesforce xLAM-Function-Calling-60k (tool-call LoRAs, Qwen 0.5B-7B).', True),
+    ('Datasets used for finetuning — RL: GSM8K train split (openai/gsm8k "main"; 512-prompt train pool, binary boxed-answer reward; training samples G completions/prompt per step, and the same pool is offline-characterised at 32 rollouts/prompt for the estimation studies) + synthetic arithmetic (easy/medium) for the 0.5B-1.5B panels. SFT (capstone): Salesforce xLAM-Function-Calling-60k (tool-call LoRAs, Qwen 0.5B-7B).', True),
     ('Evaluation-only — never trained on: GSM8K test (1,319 problems, disjoint from the reward environment), MATH-500, MBPP, HumanEval. Held-out discipline is an explicit reporting-standard item.', True),
     ('Inherited (Sem 3, Group 6): TinkerRL-Bench — 79 logged GRPO-style runs across 7 RL libraries (0.6B–671B), submitted to NeurIPS 2026 Main Track as "A Unified Benchmark for RL Post-Training of Language Models"; plus literature survey and baseline GRPO runs. Frozen at tag capstone-final-2026-04-25.', True),
     ('ZVF measurement stack: per-step ZVF/GU telemetry in the trainer, calibrated confidence intervals (Wilson), waiting-time reliability budget, stratified batch analysis.', True),
@@ -293,7 +293,11 @@ s8 = slide('Result 2 — Group Size Is a Schedule Variable (Claim 2)', 8, notes=
   "Small G converts the budget into more optimiser steps early — then exhausts its own signal as accuracy "
   "rises (the p->1 wall of the kernel). Large G pays for contrast it doesn't need early and retains signal late. "
   "So group size controls WHICH END of training starves — a schedule question, not a constant. The naive "
-  "static sweep is confounded by what the budget is held in — I show both views.")
+  "static sweep is confounded by what the budget is held in — I show both views. ANTICIPATED ATTACK: "
+  "'G=16 only avoids the wall because it has not learned the task yet.' Answer: exactly — and that is the "
+  "claim. At a FIXED budget, G chooses which end starves: G=2 spends its final steps on dead groups while "
+  "reading reward 1.0; G=16 keeps every update signal-bearing. No winner is declared; the pair tells you "
+  "where the budget went.")
 bullets(s8, [
     ('Design: matched budget of 2,560 rollouts per arm — G=2×160 steps vs G=16×20 steps (batch 8, 512-token completions, LoRA rank 4, seeds 123/456).', True),
     ('Finding: G=2 races to reward ≈1.0 on the sampled pool, then terminates inside the all-correct zero-variance wall; G=16 ends mid-learning with ZVF ≤ 0.25 and signal intact.', True),
@@ -304,29 +308,29 @@ s8.shapes.add_picture('outputs/deck_assets/budget_traj.png', Inches(8.25), Inche
 
 # ------------------------------------------------- 8 Result 3: theory calibrated
 bullets(slide('Result 3 — The Estimator Is Calibrated, the Budget Is Exact', 9, notes=
-  "(2 min) Three theory results, each validated on real 512-prompt pools. T1: Wilson interval covers 0.95-0.98 "
+  "(1.5 min) Three theory results, each validated on real 512-prompt pools. T1: Wilson interval covers 0.95-0.98 "
   "in every tested setting — report which ZVF the interval covers under curriculum ordering. T2: geometric "
   "waiting-time budget N = G ln(delta)/ln(ZVF) matched observed quantiles at ratio 1.00 in all six difficulty "
   "strata — hardest stratum needs 160 rollouts for a 90%-guaranteed informative group. T3 is the honest one: "
   "our signal-per-rollout objective turns out to have a UNIVERSAL argmax G* in {2,3} for every prior — an "
-  "algebraic identity, found by external review of our own theory. We report it as a negative result."), [
+  "algebraic identity, found by external review of our own theory. We report it as a negative result. ANTICIPATED ATTACK: Wilson assumes iid — answer: under curriculum ordering the interval stays calibrated for the LOCAL stage-level ZVF (0.944), and stratified batch composition restores global validity (0.996); the requirement is labelling WHICH estimand the interval covers."), [
     ('T1 (calibration): ZVF_t is an unbiased binomial-proportion estimator; Wilson CI covers 0.95–0.98 in every tested setting (Wald marginal at m=32). Curriculum ordering is an estimand-labelling requirement, not an invalidation.', True),
-    ('T2 (reliability budget): rollouts-to-next-informative-group is geometric; N(ZVF)=G⌈ln δ/ln ZVF⌉ matched observed quantiles at ratio 1.00 across all six difficulty strata (hardest: ZVF=0.886 ⇒ 160 rollouts). A budget, NOT an impossibility bound.', True),
-    ('T3 (honest negative): the signal-per-rollout objective satisfies J(2)=J(3) for EVERY difficulty prior — its argmax is universally {2,3}, so it cannot yield a data-adaptive G. Found by adversarial review; reported as a result, not buried.', True),
+    ('T2 (reliability budget): rollouts-to-next-informative-group is geometric; N(ZVF)=G⌈ln δ/ln ZVF⌉ matched observed quantiles at ratio 1.00 across all six difficulty strata (hardest: ZVF=0.886 ⇒ 160 rollouts) — both quantiles are integer counts of G-rollout groups, so exact agreement is attainable, not a suspicious continuous fit. A budget, NOT an impossibility bound.', True),
+    ('T3 (honest negative): the signal-per-rollout objective satisfies J(2)=J(3) for EVERY difficulty prior — its argmax is universally {2,3}, so it cannot yield a data-adaptive G — per-rollout accounting ALWAYS favours tiny groups, which is exactly why Result 2 treats G as a schedule, not a static optimum. Found by adversarial review; reported as a result, not buried.', True),
     ('Two earlier statement errors (a quantifier confusion in T2; a GU sign slip) were caught by external review, corrected, re-validated — and are documented in the thesis as part of the method.', False),
 ])
 
 # --------------------------------------- 9 Result 4: loss panel + the incident
 bullets(slide('Result 4 — GRPO vs Dr.GRPO: No Footprint at This Scale (+ the Incident)', 10, notes=
   "(2 min) Tests the base-paper critique directly. Six uncapped arms (1,024 tokens), 3 seeds per loss: "
-  "completion lengths SHRINK 6-12% in all six arms — no verbosity trap at this scale — and no late-ZVF "
+  "completion lengths SHRINK 3.8-12.2% in all six arms — no verbosity trap at this scale — and no late-ZVF "
   "separation. Then own the incident proudly: the first panel was invalid because a documented --loss flag "
   "was never wired to the loss; no output-level trace revealed it — only reading the runner did. We "
   "invalidated loudly, preserved artifacts under .invalid names, reran same-day, and one conclusion REVERSED. "
   "That incident is now a case study and the seed of the reporting standard.", ), [
-    ('Six-arm uncapped panel (Qwen3-8B, 1,024-token cap, 3 seeds/loss): GRPO lengths 1004→905, 981→944, 996→900; Dr.GRPO 999→931, 972→902, 1000→878 — lengths SHRINK 6–12% in every arm; no length inflation, no late-ZVF separation between losses.', True),
+    ('Six-arm uncapped panel (Qwen3-8B, 1,024-token cap, 3 seeds/loss): GRPO lengths 1004→905, 981→944, 996→900; Dr.GRPO 999→931, 972→902, 1000→878 — lengths SHRINK 3.8–12.2% in every arm; no length inflation, no late-ZVF separation between losses.', True),
     ('Reading: at this scale the loss-form choice has no observable footprint on length or ZVF — evidence about reporting, not superiority. Comparisons between these losses measure stack noise unless controlled far more tightly than the labels suggest.', False),
-    ('The incident: the first panel ran with a documented --loss drgrpo flag that was never wired in — both "arms" silently trained identical GRPO. Caught only by reading the runner; artifacts preserved under .invalid_actually_grpo names; corrected rerun REVERSED one conclusion.', True),
+    ('The incident: the first panel ran with a documented --loss drgrpo flag that was never wired in — both "arms" silently trained identical GRPO. Caught only by reading OUR client-side runner script (the managed loss kernel stays closed — the flag died in our code before reaching it); artifacts preserved under .invalid_actually_grpo names; corrected rerun REVERSED one conclusion.', True),
     ('Response became protocol: invalidate loudly → preserve → rerun → record. This failure is a first-class result feeding the reproducibility standard (Result 5).', False),
 ])
 
@@ -347,21 +351,21 @@ bullets(slide('Result 5 — Setting the Standard: What Must Be Reported When Tra
 
 # ------------------------------------------- 11 Result 6: held-out evaluation
 bullets(slide('Result 6 — Held-Out Evaluation: Gains, Transfer, and an Honest Boundary', 12, notes=
-  "(1.5 min) RQ4. Base Qwen3-8B on GSM8K: pass@1 30.4% but pass@32 91% — the base model already solves "
+  "(1.25 min) RQ4. Base Qwen3-8B on GSM8K: pass@1 30.4% but pass@32 91% — the base model already solves "
   "almost everything at k=32, so GSM8K alone cannot demonstrate capability expansion; that scope discipline "
   "is itself a finding. Post-RL adapters: zero forgetting on MBPP and a +1.5-2.5 point pass@32 frontier "
   "improvement, within noise at single-seed — exactly why the standard mandates pass@k curves with CIs. "
   "MATH-500 partial: GSM8K-trained gains do NOT replicate on hard math — distribution sharpening, "
   "not capability expansion."), [
-    ('Baseline capability (200 problems, n=32, clustered bootstrap): pass@1 30.4% [27.5, 33.1] but pass@32 91.0% — GSM8K is nearly saturated at k=32; ~9 points of headroom bounds what training can claim here.', True),
-    ('Transfer: post-RL adapters show zero forgetting and mild positive transfer on MBPP (pass@32 within noise of or above base for all G); pass@1-only reporting would misread the G=2 arm as a regression.', False),
+    ('Baseline capability (deterministic first-200 test slice, n=32, clustered bootstrap): pass@1 30.4% [27.5, 33.1] but pass@32 91.0% — corroborated on the 512-prompt train pool (30.3%). GSM8K is nearly saturated at k=32; ~9 points of headroom bounds what training can claim here.', True),
+    ('Transfer: post-RL adapters show zero forgetting and mild positive transfer on MBPP (pass@32 within noise of or above base for all G); pass@1-only reporting would misread the G=2 arm as a regression (all pass@1 deltas −0.5 to +1.9pp, within single-seed noise).', False),
     ('Hard-task boundary (MATH-500, partial): GSM8K-trained frontier gains do not carry — consistent with distribution sharpening rather than capability expansion. Stated as a non-claim in the thesis.', True),
-    ('Cross-scale observations (the 79-run cross-library corpus, 7 libraries, 0.6B–671B): scale does not uniformly reduce ZVF; starvation is (difficulty × G × phase) geometry, not something scale buys you out of.', False),
+    ('Cross-scale observations (the 79-run cross-library corpus, 7 libraries, 0.6B–671B — frontier entries are single-seed LoRA case studies via the managed API): scale does not uniformly reduce ZVF; starvation is (difficulty × G × phase) geometry. Observations, never claims (scope slide).', False),
 ])
 
 # ---------------------------------------------------- 12 Scale & evidence trail
 s13 = slide('Implementation Scale & Evidence Trail (audited 12 Jul)', 13, notes=
-  "(1 min) Fast slide. 983 runs on the Tinker account — audited and classified this morning; the thesis "
+  "(45 s) Fast slide. 983 runs on the Tinker account — audited and classified this morning; the thesis "
   "claims rest on 19 identified claim-critical runs, each linked to W&B and its artifact. If asked about "
   "any number: the workbook key_runs sheet has the run id, checkpoint, W&B link, and result JSON.")
 _S13_BULLETS = [
@@ -382,7 +386,7 @@ para(tb.text_frame, 'tinker_runs_audit_2026-07-12.xlsx — embedded copy (983 ru
 
 # ------------------------------------------------------------------ 13 Demo
 s14 = slide('Demo (Live)', 14, notes=
-  "(1.5 min + live demo) Run the one-command offline demo FIRST — it cannot fail on the network. "
+  "(1 min + live demo) Run the one-command offline demo FIRST — it cannot fail on the network. "
   "./submission/demo/demo.sh: mechanism fixture (4 groups, ZVF=0.5, GU=0.5), recorded artifact (80 rewards, "
   "mean 0.6875, ZVF 0.30), SHA-256 integrity check, HTML dashboard. Then if time and connectivity allow: "
   "the W&B zvf-training panel with live E-R2b curves, and the audit workbook key_runs sheet. "
@@ -421,7 +425,7 @@ linkline(tf, 'GitHub: arvindcr4/tinker-rl-lab (code, artifacts, audit workbook)'
 
 # ------------------------------------------------- 14 Limitations & close
 bullets(slide('Scope, Limitations & Roadmap', 15, notes=
-  "(1 min) Close with the honesty that survives cross-examination: one model, one task family, one managed "
+  "(45 s) Close with the honesty that survives cross-examination: one model, one task family, one managed "
   "API, 1-3 seeds — the claims are stated at the stack level and nowhere above it. Roadmap is gated: "
   "diagnostic paper publishable now; controller paper gated on a pre-registered compute-matched win; "
   "survival audit gated on an open stack. Then stop talking and invite questions."), [

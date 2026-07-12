@@ -27,7 +27,7 @@ Scope is stated honestly everywhere: Qwen3-8B, GSM8K, Tinker managed API
    demonstration that ZVF carries information mean reward cannot.
 2. **Loss-form panel (corrected).** Six uncapped 1,024-token arms, 3 seeds per
    loss: no length inflation in either GRPO or Dr.GRPO (all arms *shrink*
-   6–12%), and no late-ZVF separation between the losses at this scale.
+   3.8–12.2%), and no late-ZVF separation between the losses at this scale.
 3. **Theory checks (with today's corrections owned openly).** ZVF's
    confidence interval is calibrated (Wilson, all tested settings). The
    geometric waiting-time quantile G·⌈ln δ/ln ZVF⌉ matched the observed

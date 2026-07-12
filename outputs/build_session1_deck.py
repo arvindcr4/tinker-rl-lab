@@ -331,18 +331,19 @@ bullets(slide('Result 4 — GRPO vs Dr.GRPO: No Footprint at This Scale (+ the I
 ])
 
 # ------------------------------------------- 10 Result 5: reproducibility results
-bullets(slide('Result 5 — Reproducibility: Measured Flips, and the Standard They Justify', 11, notes=
+bullets(slide('Result 5 — Setting the Standard: What Must Be Reported When Training', 11, notes=
   "(1.5 min) Three measured instances, each a lever that flipped a result: 17x reward span from an undisclosed "
   "backend swap that also bundled a checkpoint change; the same 'DAPO' label yielding ZVF 0.00 on an open "
   "trainer vs 0.55-0.58 on a closed stack; and reward micro-jitter below the verifier's resolution collapsing "
   "batch ZVF 0.158 to 0. Every item of the 8-item MIN-REPORT-RL standard exists because one of these levers "
-  "moved a result in OUR OWN data — not from taste."), [
+  "moved a result in OUR OWN data — not from taste. Land the framing: this project SETS THE STANDARD for what to report when training - walk the 8 items fast, then say every one earned its place by flipping a result here."), [
     ('Anchor: same algorithm, same task, different environment or different hands → wildly different results. The fix is not more compute — it is reporting the details of what actually ran. Three measured instances from our own data:', True),
     ('Backend swap (undisclosed, bundled a base-checkpoint change): final training reward moved across a 17× span — 85.6% vs 5.0% — under the same label.', True),
     ('Same "DAPO" label: mean ZVF 0.00 on an open trainer with true dynamic sampling vs 0.55–0.58 on a closed stack running an asymmetric-clip surrogate.', True),
     ('Reward-parser sensitivity: micro-jitter ε~U(0,1e-4) below verifier resolution collapses batch ZVF 0.158 → 0.000 — reported ZVF must name its verifier.', False),
-    ('Deliverables: MIN-REPORT-RL (8-item minimum reportable stack — every item justified by a measured flip), GRPO-Registry (machine-readable catalog, 20 seed entries), stackdiff (pairwise flip-risk verdicts R0–R5).', True),
-], size=14)
+    ('The contribution: MIN-REPORT-RL sets the standard for what details every RL training report must include — plus GRPO-Registry (machine-readable stack catalog, 20 seed entries) and stackdiff (pairwise flip-risk verdicts R0–R5) to enforce it mechanically.', True),
+    ('The 8 items: ① loss form (ratio/clip/mask/normalisation) ② reference policy & KL handling ③ sampler/backend/precision incl. base-checkpoint identity ④ per-step ZVF/GU trajectory ⑤ group-size schedule ⑥ held-out split disjoint from the reward environment ⑦ decontamination + parser-robustness probe ⑧ held-out pass@k curves, not just pass@1. Every item earned its place by flipping a result in our own corpus.', False),
+], size=13)
 
 # ------------------------------------------- 11 Result 6: held-out evaluation
 bullets(slide('Result 6 — Held-Out Evaluation: Gains, Transfer, and an Honest Boundary', 12, notes=

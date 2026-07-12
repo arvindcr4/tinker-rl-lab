@@ -1,19 +1,24 @@
 \chapter{Claim-to-Artifact Map}
 \label{app:artifacts}
 
+\begin{sloppypar}
 Every quantitative claim in this thesis traces to a version-controlled
-artifact in \texttt{arvindcr4/tinker-rl-lab} (result JSONs; W\&B mirrors in
-the \texttt{zvf-training}, \texttt{zvf-experiments-next}, and
+artifact in \texttt{arvindcr4/}\allowbreak\texttt{tinker-rl-lab}
+(result JSONs; W\&B mirrors in
+the \texttt{zvf-training}, \allowbreak\texttt{zvf-experiments-next}, and
 \texttt{modal-open-stack} projects).
+\end{sloppypar}
 
 \begin{center}
-\small
-\begin{tabular}{@{}p{6.2cm}p{7.2cm}@{}}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}p{6.2cm}p{9.2cm}@{}}
 \toprule
 Claim / number & Primary artifact(s)\\
 \midrule
 GSM8K base pass@\{1,8,32\} $=30.4/79.7/91.0\%$ &
-\texttt{experiments-next/results/passk\_qwen3-8b\_base\_test\_p200\_n32\_s42.json}\\
+\texttt{experiments-next/results/}\newline
+\texttt{passk\_qwen3-8b\_base\_test\_p200\_n32\_s42.json}\\
 Train-pool rollout quality (\ZVF{} $10.86\%$ etc.) &
 \texttt{quality\_pool\_qwen3-8b\_train\_n512\_r32\_s42.json}\\
 T1 coverage (Wilson $0.95$--$0.98$; curriculum collapse) &
@@ -25,7 +30,8 @@ T3 universality ($J(2){=}J(3)$) &
 Claim 2 matched-budget panel (E-R2b) &
 \texttt{tinker-runs/results/er2b\_\{g2,g16\}\_s\{123,456\}.json}\\
 Loss-form panel (E-P4, corrected; 6 arms) &
-\texttt{tinker-runs/results/p4uncap\_\{grpo,drgrpo\}\_s\{42,123,456\}.json}\\
+\texttt{tinker-runs/results/}\newline
+\texttt{p4uncap\_\{grpo,drgrpo\}\_s\{42,123,456\}.json}\\
 Invalid first panel (preserved) &
 \texttt{p4uncap\_drgrpo\_*.invalid\_actually\_grpo.json}\\
 MBPP transfer; base-vs-post-RL pass@$k$ frontier &
@@ -41,7 +47,7 @@ commits \texttt{4847764}, \texttt{1959eff}, \texttt{212ff0e}; fleet logs\\
 Audit-round fixes (2026-07-11) &
 commits \texttt{5486ae2}, \texttt{acc08eb}\\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{center}
 
 \paragraph{Reproduction.} \texttt{REPRODUCE.md} at the repository root

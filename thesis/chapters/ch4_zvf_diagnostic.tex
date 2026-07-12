@@ -23,25 +23,25 @@ with \ZVF{} rising \emph{after} the plateau --- a cheap alarm, not a cause.
   xlabel={fraction of the 2{,}560-rollout budget spent},
   ylabel={value},
   xmin=0,xmax=1,ymin=0,ymax=1.05,
-  legend style={at={(0.98,0.35)},anchor=east,draw=none,fill=none,font=\scriptsize},
+  legend style={at={(0.02,0.97)},anchor=north west,draw=none,fill=none,font=\scriptsize},
   thick]
-\addplot[blue,domain=0:1,samples=100]{min(1, 0.35+0.75*x)};
+\addplot[blue,domain=0:1,samples=100]{min(1, 0.35+0.95*x)};
   \addlegendentry{$G{=}2$: train reward}
 \addplot[blue,dashed,domain=0:1,samples=100]{0.15+0.8*x^3};
   \addlegendentry{$G{=}2$: \ZVF{}}
-\addplot[red!80!black,domain=0:1,samples=100]{min(1,0.35+0.7*x)};
+\addplot[red!80!black,domain=0:1,samples=100]{0.33+0.12*x};
   \addlegendentry{$G{=}16$: train reward}
-\addplot[red!80!black,dashed,domain=0:1,samples=100]{0.10+0.12*x};
+\addplot[red!80!black,dashed,domain=0:1,samples=100]{0.10+0.10*x};
   \addlegendentry{$G{=}16$: \ZVF{}}
-\draw[gray,dotted] (axis cs:0.75,0) -- (axis cs:0.75,1.05);
-\node[font=\scriptsize,align=left,anchor=west] at (axis cs:0.76,0.55)
-  {endgame: reward\\reads success,\\$G{=}2$ signal is gone};
+\draw[gray,dotted] (axis cs:0.72,0) -- (axis cs:0.72,1.05);
 \end{axis}
 \end{tikzpicture}
 \caption{Schematic of the measured matched-budget behaviour (Chapter~6,
 seeds 123/456): the $G{=}2$ trajectory races to reward $\approx1.0$ and its
 \ZVF{} climbs into the all-correct wall ($0.75$--$1.0$), while $G{=}16$
-ends mid-learning with \ZVF{} low ($\le0.25$). By reward alone the $G{=}2$
+ends mid-learning ($\approx0.3$--$0.5$) with \ZVF{} low ($\le0.25$).
+Right of the dotted line the $G{=}2$ reward reads success while its
+gradient signal is gone. By reward alone the $G{=}2$
 run looks strictly better; the (reward, \ZVF{}) pair reveals its lead
 ended in zero-gradient compute.
 Stylised curves; measured values in Table form in Chapter~6 and artifacts in

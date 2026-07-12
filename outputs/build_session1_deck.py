@@ -248,10 +248,12 @@ bullets(slide('What I Implemented (Sem-4 Solo, on the Sem-3 Foundation)', 6, not
   "tag capstone-final-2026-04-25. Everything on this slide is Sem-4 solo work. Be specific: these are files "
   "and packages he can open, not concepts. Datasets first if he asks what you trained ON: GSM8K train "
   "split with binary boxed-answer rewards is the finetuning task; synthetic arithmetic for the small panels; "
-  "xLAM-60k was the capstone SFT corpus. MATH-500/MBPP/HumanEval are evaluation-only - never trained on."), [
+  "xLAM-60k was the capstone SFT corpus. MATH-500/MBPP/HumanEval are evaluation-only - never trained on. "
+  "Sem-3 credit line if asked: 79 logged runs across 7 libraries, submitted to NeurIPS 2026 Main Track as "
+  "'A Unified Benchmark for RL Post-Training of Language Models' (group work, 8 authors); Sem 4 is solo."), [
     ('Datasets used for finetuning — RL: GSM8K train split (openai/gsm8k "main"; 512-prompt pools, 32 rollouts/prompt, binary boxed-answer reward) and synthetic arithmetic (easy/medium) for the 0.5B-1.5B short-horizon panels and small-model sweeps. SFT (capstone): Salesforce xLAM-Function-Calling-60k (tool-call LoRAs, Qwen 0.5B-7B).', True),
     ('Evaluation-only — never trained on: GSM8K test (1,319 problems, disjoint from the reward environment), MATH-500, MBPP, HumanEval. Held-out discipline is an explicit reporting-standard item.', True),
-    ('Inherited (Sem 3, Group 6): multi-framework benchmark scaffold (TinkerRL-Bench), literature survey, baseline GRPO runs. Frozen at tag capstone-final-2026-04-25.', False),
+    ('Inherited (Sem 3, Group 6): TinkerRL-Bench — 79 logged GRPO-style runs across 7 RL libraries (0.6B–671B), submitted to NeurIPS 2026 Main Track as "A Unified Benchmark for RL Post-Training of Language Models"; plus literature survey and baseline GRPO runs. Frozen at tag capstone-final-2026-04-25.', True),
     ('ZVF measurement stack: per-step ZVF/GU telemetry in the trainer, calibrated confidence intervals (Wilson), waiting-time reliability budget, stratified batch analysis.', True),
     ('Experiment infrastructure: matched-budget runner with --resume (state + optimiser + RNG fast-forward), per-(step,prompt) seeding, W&B resume; loss-form panel runner (GRPO vs Dr.GRPO).', True),
     ('zvf-triage: packaged library (callback, controller, regime classifier, framework adapters, 82-test suite) — publication to PyPI staged.', True),
@@ -344,7 +346,7 @@ bullets(slide('Result 6 — Held-Out Evaluation: Gains, Transfer, and an Honest 
     ('Baseline capability (200 problems, n=32, clustered bootstrap): pass@1 30.4% [27.5, 33.1] but pass@32 91.0% — GSM8K is nearly saturated at k=32; ~9 points of headroom bounds what training can claim here.', True),
     ('Transfer: post-RL adapters show zero forgetting and mild positive transfer on MBPP (pass@32 within noise of or above base for all G); pass@1-only reporting would misread the G=2 arm as a regression.', False),
     ('Hard-task boundary (MATH-500, partial): GSM8K-trained frontier gains do not carry — consistent with distribution sharpening rather than capability expansion. Stated as a non-claim in the thesis.', True),
-    ('Cross-scale observations (70+ curated runs, 7 libraries, 0.6B–671B): scale does not uniformly reduce ZVF; starvation is (difficulty × G × phase) geometry, not something scale buys you out of.', False),
+    ('Cross-scale observations (the 79-run cross-library corpus, 7 libraries, 0.6B–671B): scale does not uniformly reduce ZVF; starvation is (difficulty × G × phase) geometry, not something scale buys you out of.', False),
 ])
 
 # ---------------------------------------------------- 12 Scale & evidence trail

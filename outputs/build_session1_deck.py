@@ -219,7 +219,7 @@ LY = 1.35; LH = 1.02; LW = 6.4; LX = 0.9
 box(s4, 'TRAINING — Tinker managed API\nLoRA rank-4 GRPO / Dr.GRPO fleets · full-state checkpoint · kill-and-resume (verified live)', LX, LY, LW, LH, size=11)
 box(s4, 'TELEMETRY — per-step (reward, ZVF, GU)\nlogged beside every reward point · parser v2 with false-positive audit', LX, LY+1.22, LW, LH, size=11)
 box(s4, 'EVALUATION — vLLM pass@k harness\nModal · Lightning AI · Colab — three independent backends · clustered bootstrap CIs', LX, LY+2.44, LW, LH, size=11)
-box(s4, 'AUDIT TRAIL — 983 runs enumerated & classified\n19 claim-critical runs linked: W&B page + checkpoint + result JSON', LX, LY+3.66, LW, LH, size=11)
+box(s4, 'AUDIT TRAIL — 983 Tinker runs + external Modal / Lightning AI / Colab runs\n(26 pass@k evals · 4 H100 cross-library baselines · Colab experiment packs)\n19 claim-critical runs linked: W&B page + checkpoint + result JSON', LX, LY+3.66, LW, LH+0.12, size=9.5)
 for k in range(3):
     arrow(s4, LX+LW/2, LY+LH+1.22*k, LX+LW/2, LY+1.22*(k+1))
 RX = 8.1; RW = 4.6

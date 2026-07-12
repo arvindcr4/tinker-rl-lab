@@ -44,6 +44,14 @@ ax.legend(fontsize=7.5, loc='upper left'); ax.tick_params(labelsize=8)
 ax.set_title('Same budget, opposite endings (schematic of measured runs)', fontsize=9.5)
 fig.tight_layout(); fig.savefig('outputs/deck_assets/budget_traj.png'); plt.close(fig)
 
+# poster frame for the opening demo video
+import subprocess
+VIDEO = 'outputs/project_defense_live_hf_wandb_demo_2026-07-12.mp4'
+POSTER = 'outputs/deck_assets/demo_poster.png'
+if os.path.exists(VIDEO) and not os.path.exists(POSTER):
+    subprocess.run(['ffmpeg', '-y', '-i', VIDEO, '-vf', 'select=eq(n\\,30)', '-vframes', '1', POSTER],
+                   capture_output=True)
+
 BLUE = RGBColor(0x1F, 0x4E, 0x79); INK = RGBColor(0x21, 0x21, 0x21)
 MUTED = RGBColor(0x5A, 0x5A, 0x5A); WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 GOLD = RGBColor(0x8A, 0x6D, 0x00)
@@ -104,6 +112,21 @@ def table(s, rows, top=1.35, left=0.9, width=11.5, col_widths=None, size=13):
                     r.font.size = Pt(size); r.font.name = 'Calibri'
                     r.font.bold = (ri == 0); r.font.color.rgb = INK if ri else WHITE
     return t
+
+# ------------------------------------------------------- 0 Opening demo video
+if os.path.exists(VIDEO):
+    sv = slide(notes="(optional 90 s) Recorded live demo: HuggingFace adapter repos + W&B zvf-training "
+                     "panel walkthrough, captured 12 Jul. Click to play. Use while people settle, or skip "
+                     "straight to the title if he wants to start immediately - the live demo slot is slide 14.")
+    tb = sv.shapes.add_textbox(Inches(0.6), Inches(0.22), Inches(12.1), Inches(0.6))
+    para(tb.text_frame, 'Opening demo — live HuggingFace + W&B walkthrough (recorded today, 91 s)',
+         size=20, color=BLUE, bold=True, align=PP_ALIGN.CENTER, first=True)
+    sv.shapes.add_movie(VIDEO, Inches(1.57), Inches(0.95), Inches(10.2), Inches(5.74),
+                        poster_frame_image=POSTER if os.path.exists(POSTER) else None,
+                        mime_type='video/mp4')
+    tb = sv.shapes.add_textbox(Inches(0.6), Inches(6.85), Inches(12.1), Inches(0.45))
+    para(tb.text_frame, 'Click to play — embedded in the deck; no network needed.',
+         size=12, color=MUTED, align=PP_ALIGN.CENTER, first=True)
 
 # ---------------------------------------------------------------- 1 Title
 s = slide(notes="(1 min) Read the title, then decode it in one breath: GRPO trains on groups; "

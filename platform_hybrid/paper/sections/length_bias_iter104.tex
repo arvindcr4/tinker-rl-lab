@@ -8,10 +8,10 @@
 \label{sec:length-bias-iter104}
 
 \paragraph{Motivation.}
-Iter~\ref{sec:length-bias-iter96} (ICCA) showed that Dr.GRPO significantly
+Iter~96 (ICCA, \S\ref{sec:lb-iter96}) showed that Dr.GRPO significantly
 severs the backward \emph{innovation-space} coupling $R\to L$ on GSM8K CoT
-($\Delta = -0.103$, $p<0.001$, $n=3$ seeds). Iter~\ref{sec:length-bias-iter100}
-(VAR(1) FEVD) confirmed that the bivariate forecast-error share attributable
+($\Delta = -0.103$, $p<0.001$, $n=3$ seeds). Iter~100
+(VAR(1) FEVD, \S\ref{sec:lb-iter100}) confirmed that the bivariate forecast-error share attributable
 to cross-shocks shrinks across horizons on arithmetic\_easy. Both iters left
 an open question: \emph{across the reward distribution, where does the
 severship actually operate?} A uniform debiasing model would predict the
@@ -97,7 +97,7 @@ mild attenuation of the existing low-reward concentration.
 
 \paragraph{Interpretation.}
 Three observations constrain the Dr.GRPO mechanism beyond the ICCA
-result of iter~\ref{sec:length-bias-iter96}:
+result of iter~96 (\S\ref{sec:lb-iter96}):
 
 \begin{enumerate}
 \item Dr.GRPO's debiasing is not a uniform level shift on $|CCF_{R\to L}|$;

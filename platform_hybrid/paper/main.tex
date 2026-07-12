@@ -39,12 +39,54 @@
 \usepackage{enumitem}
 \usepackage{tikz}
 \usetikzlibrary{positioning, fit, arrows.meta, backgrounds, calc, shadows, shapes.geometric, shapes.misc, decorations.pathreplacing}
+% Sections use bare underscores in text (e.g. R_max, collapse_only); make _ robust in text
+% (same as sections/_shared_preamble.tex, which is why the P1-P8 wrappers build clean)
+\usepackage[strings]{underscore}
+\usepackage{colortbl} % sections use \rowcolor
 
 % Custom commands
 \newcommand{\tinker}{\textsc{Tinker}}
 \newcommand{\atropos}{\textsc{Atropos}}
 \newcommand{\grpo}{\textsc{Grpo}}
 \newcommand{\ours}{\textsc{TinkerRL-Bench}}
+
+% Macros used by shared sections (mirrors sections/_shared_preamble.tex; \providecommand
+% so a later canonical definition wins)
+\providecommand{\E}{\mathbb{E}}
+\providecommand{\task}{\textsf{task}}
+\providecommand{\algo}{\textsf{algo}}
+\providecommand{\seed}{\textsf{seed}}
+\providecommand{\tplat}{T_{\text{plat}}}
+\providecommand{\zvf}{\ensuremath{\widetilde{\mathrm{ZVF}}}}
+\providecommand{\meanZVF}{\ensuremath{\overline{\mathrm{ZVF}}}}
+\providecommand{\ZVFaero}{\ensuremath{\mathrm{ZVF}_{\text{AERO}}}}
+\providecommand{\ZVFgrpo}{\ensuremath{\mathrm{ZVF}_{\text{GRPO}}}}
+\providecommand{\textscript}[1]{\texttt{#1}}
+\providecommand{\signature}{\ensuremath{\mathcal{S}}}
+\providecommand{\etal}{\emph{et al.}}
+\providecommand{\note}[1]{\footnote{#1}}
+\DeclareMathOperator*{\argmax}{arg\,max}
+% Raw Unicode math symbols appear in some auto-drafted sections
+\DeclareUnicodeCharacter{0394}{\ensuremath{\Delta}}
+\DeclareUnicodeCharacter{03B4}{\ensuremath{\delta}}
+\DeclareUnicodeCharacter{00D7}{\ensuremath{\times}}
+\DeclareUnicodeCharacter{2264}{\ensuremath{\leq}}
+\DeclareUnicodeCharacter{2265}{\ensuremath{\geq}}
+\DeclareUnicodeCharacter{2248}{\ensuremath{\approx}}
+\graphicspath{{figures/}{./}}
+
+% The group-size pillar sections were consolidated into paper_P3_group_size, so
+% some shared sections carry refs whose labels only exist there. Resolve any
+% still-dangling ones to the literal "P3" (i.e. "see the P3 pillar paper")
+% instead of printing "??". No-ops if the label is defined.
+\AtBeginDocument{%
+  \ifcsname r@sec:group-size\endcsname\else\newlabel{sec:group-size}{{P3}{}{}{}{}}\fi
+  \ifcsname r@sec:group-size-iter79\endcsname\else\newlabel{sec:group-size-iter79}{{P3}{}{}{}{}}\fi
+  \ifcsname r@sec:group-size-iter83\endcsname\else\newlabel{sec:group-size-iter83}{{P3}{}{}{}{}}\fi
+  \ifcsname r@tab:groupsize-g4-g32\endcsname\else\newlabel{tab:groupsize-g4-g32}{{P3}{}{}{}{}}\fi
+  \ifcsname r@tab:groupsize-snr\endcsname\else\newlabel{tab:groupsize-snr}{{P3}{}{}{}{}}\fi
+  \ifcsname r@tab:groupsize-summary\endcsname\else\newlabel{tab:groupsize-summary}{{P3}{}{}{}{}}\fi
+}
 
 \title{A Unified Benchmark for RL Post-Training of Language Models}
 
@@ -823,7 +865,7 @@ We analyze reward learning dynamics across all 44 experiments by fitting two par
 models to each reward trace $\{R(t)\}_{t=1}^{T}$.
 
 \paragraph{Exponential Saturation Model.}
-Motivated by prior work on neural scaling laws~\cite{nimmaturi2025scalinglaws}, we adopt:
+Motivated by prior work on neural scaling laws~\cite{nimmaturi2025predictive}, we adopt:
 \begin{equation}
   \label{eq:exp_sat}
   R(t) = R_{\max}\!\left(1 - e^{-k\,(t - t_0)}\right),
@@ -844,7 +886,7 @@ this sample. Qwen3-MoE has the highest single-run saturation fit
 descriptive fit-quality result rather than architecture-specific evidence.
 
 \paragraph{Three-Phase Learning Dynamics.}
-Following~\citet{nimmaturi2025scalinglaws}, 15 of 28 experiments (53.6\%)
+Following~\citet{nimmaturi2025predictive}, 15 of 28 experiments (53.6\%)
 satisfy a three-phase criterion (slow start~$\to$ rapid improvement~$\to$
 saturation). The fraction rises to \textbf{73\%} for LLM fine-tuning
 experiments, which is directionally consistent with that template rather than
@@ -2151,7 +2193,7 @@ or as a direct calibration target without showing incremental value beyond
 reward mean, entropy, advantage variance, and KL.
 
 \paragraph{Scaling laws: exponential saturation and its limits.}
-\citet{nimmaturi2025scalinglaws} derive a three-phase exponential saturation
+\citet{nimmaturi2025predictive} derive a three-phase exponential saturation
 law for GRPO, finding that 80\% of training steps contribute marginally and
 proposing early stopping.
 We recover a three-phase-looking pattern in 73\% of LLM fine-tuning
@@ -2234,6 +2276,8 @@ broader Hugging Face ecosystem.
 
 % =============================================================================
 \appendix
+% More than 26 appendix sections: \Alph overflows ("Counter too large"), so use A1, A2, ...
+\renewcommand{\thesection}{A\arabic{section}}
 % =============================================================================
 
 \section{Compute Resources}

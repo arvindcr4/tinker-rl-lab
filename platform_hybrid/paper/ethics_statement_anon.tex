@@ -57,8 +57,11 @@ signal, which itself requires expertise and labelled data.
 GRPO, like all policy-gradient RL from a proxy reward, is vulnerable to
 reward hacking: the model learns to exploit idiosyncrasies of the reward
 function rather than solve the intended task \cite{skalse2022specificationgaming,
-krakovna2020specification}. Our length-bias analysis
-(Section~\ref{sec:length_bias}) and the verbosity-trap finding in 4/11
+krakovna2020specification}. Our length-bias analysis%
+% sec:length_bias only exists in the full-paper wrappers (main_anon/main_eai);
+% variants such as main_dnb share this file without that section
+\ifcsname r@sec:length_bias\endcsname\ (Section~\ref{sec:length_bias})\fi{}
+and the verbosity-trap finding in 4/11
 GRPO runs are concrete demonstrations of this failure mode in our own data.
 Users who apply our scripts to under-specified reward functions in
 production settings (e.g., a custom ``helpfulness'' classifier) may observe

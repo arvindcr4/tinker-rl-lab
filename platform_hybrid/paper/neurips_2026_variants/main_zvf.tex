@@ -141,7 +141,7 @@ operational action in each regime.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{figures/v2/zvf_sentinel.pdf}
+\includegraphics[width=\linewidth]{figures/v2/zvf_sentinel.png}
 \caption{\textbf{ZVF as a per-step zero-gradient sentinel.}
 \textbf{(a)}~Tool-use ZVF traces for Qwen3-32B/tool\_use and
 Llama-3.1-8B/tool\_use sit at $\mathrm{ZVF}_t = 1$ from step~1 onward
@@ -419,7 +419,7 @@ rawness, and release them as follows.
         the released code. Each row is
         \texttt{\{step, zvf, gu, n\_groups, K, framework\}} and is the
         same artifact format defined in Appendix~\ref{sec:appendix:zvf-pipeline}
-        and produced by \texttt{platform_modal/scripts/zvf\_compute\_cross\_framework.py}.
+        and produced by \texttt{platform\_modal/scripts/zvf\_compute\_cross\_framework.py}.
   \item \textbf{Step-level aggregate logs (per-step).} Released for
         \emph{every} reported run: mean reward, peak reward, last-10
         average, surrogate loss, and reward trace. These are the

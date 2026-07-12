@@ -165,7 +165,7 @@ is in the position paper and summarized here.
   \minreport{} minimum-reportable-stack standard.}
 \label{tab:stack-schema}
 \small
-\begin{tabular}{@{}lp{0.55\linewidth}l@{}}
+\begin{tabular}{@{}lp{0.40\linewidth}p{0.36\linewidth}@{}}
 \toprule
 \textbf{JSON key} & \textbf{What to report} & \textbf{Flip mechanism}\\
 \midrule
@@ -199,7 +199,7 @@ per-step group rewards can emit it with a few lines of code. The companion
 % =============================================================================
 
 The variant-delta schema records what changed relative to a declared baseline.
-A delta record is 	extbf{not} a full stack record; it is a patch. For example,
+A delta record is \textbf{not} a full stack record; it is a patch. For example,
 DAPO's delta record says ``relative to a vanilla \grpo{} baseline, change the
 clip bound to be asymmetric and add dynamic sampling,'' while the full stack
 record still has to report the sampler, the reference/KL handling, the
@@ -254,7 +254,7 @@ them.
 % =============================================================================
 
 Table~\ref{tab:catalog} is the current seed catalog. We include the best
-available description of each variant's defining delta, but we do 	extbf{not}
+available description of each variant's defining delta, but we do \textbf{not}
 fabricate stack details. Unknown stack settings are marked \todo{} so that a
 reader can see exactly what is still unspecified. The catalog is versioned;
 as papers release more detail, \todo{} cells are replaced with concrete values.
@@ -426,6 +426,7 @@ reviewer or re-implementer is:
 \end{enumerate}
 
 \subsection{Mechanical checks with \texttt{grpo-stackdiff}}
+\label{sec:mechanical}
 
 The registry's records are designed to be consumed by the companion
 \texttt{grpo-stackdiff} CLI \cite{minreportrl2026}. Given two
@@ -456,7 +457,7 @@ package contains a \texttt{MinReportGRPOTrainer} (or an
 \texttt{enable\_min\_report\_rl} adapter for existing trainers), a
 reward-tensor hook, and stable JSON schemas for run-start and step events
 \cite{minreportrl2026}. The emitted manifest uses exactly the seven-item schema
-of \S\ref{sec:stack}, so a training run can populate a registry record with no
+of \S\ref{sec:stack-schema}, so a training run can populate a registry record with no
 manual transcription.
 
 \paragraph{\texttt{grpo-stackdiff}.} The companion CLI takes two registry

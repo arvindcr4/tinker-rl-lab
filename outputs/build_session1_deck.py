@@ -205,7 +205,7 @@ bullets(slide('Problem & Research Questions', 3, notes=
   "(1 min) Compress. Two facts motivate everything: starvation is invisible in reward curves, and "
   "published comparisons are stack-conditioned. Then read the four RQs quickly."), [
     ('Signal starvation is silent: mean reward reads "success" exactly when the all-correct wall starves training. You need a second coordinate.', True),
-    ('Published results are stack-conditioned: same label, different stacks, different outcomes (measured: a 17× final-reward span from an undisclosed backend+checkpoint swap).', True),
+    ('The reproducibility anchor: the SAME RL training, run by different people in different environments, can produce wildly different results — measured here as a 17× final-reward span from one undisclosed backend+checkpoint swap. Unless the details of what actually ran are reported, comparisons are meaningless.', True),
     ('RQ1 same-stack control · RQ2 ZVF as practical diagnostic · RQ3 group size G as the starvation dial · RQ4 do training gains survive held-out evaluation?', False),
 ])
 
@@ -337,11 +337,12 @@ bullets(slide('Result 5 — Reproducibility: Measured Flips, and the Standard Th
   "trainer vs 0.55-0.58 on a closed stack; and reward micro-jitter below the verifier's resolution collapsing "
   "batch ZVF 0.158 to 0. Every item of the 8-item MIN-REPORT-RL standard exists because one of these levers "
   "moved a result in OUR OWN data — not from taste."), [
+    ('Anchor: same algorithm, same task, different environment or different hands → wildly different results. The fix is not more compute — it is reporting the details of what actually ran. Three measured instances from our own data:', True),
     ('Backend swap (undisclosed, bundled a base-checkpoint change): final training reward moved across a 17× span — 85.6% vs 5.0% — under the same label.', True),
     ('Same "DAPO" label: mean ZVF 0.00 on an open trainer with true dynamic sampling vs 0.55–0.58 on a closed stack running an asymmetric-clip surrogate.', True),
     ('Reward-parser sensitivity: micro-jitter ε~U(0,1e-4) below verifier resolution collapses batch ZVF 0.158 → 0.000 — reported ZVF must name its verifier.', False),
     ('Deliverables: MIN-REPORT-RL (8-item minimum reportable stack — every item justified by a measured flip), GRPO-Registry (machine-readable catalog, 20 seed entries), stackdiff (pairwise flip-risk verdicts R0–R5).', True),
-])
+], size=14)
 
 # ------------------------------------------- 11 Result 6: held-out evaluation
 bullets(slide('Result 6 — Held-Out Evaluation: Gains, Transfer, and an Honest Boundary', 12, notes=

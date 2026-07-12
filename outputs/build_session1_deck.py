@@ -307,15 +307,25 @@ bullets(slide('Result 6 — Held-Out Evaluation: Gains, Transfer, and an Honest 
 ])
 
 # ---------------------------------------------------- 12 Scale & evidence trail
-bullets(slide('Implementation Scale & Evidence Trail (audited 12 Jul)', 13, notes=
+s13 = slide('Implementation Scale & Evidence Trail (audited 12 Jul)', 13, notes=
   "(1 min) Fast slide. 983 runs on the Tinker account — audited and classified this morning; the thesis "
   "claims rest on 19 identified claim-critical runs, each linked to W&B and its artifact. If asked about "
-  "any number: the workbook key_runs sheet has the run id, checkpoint, W&B link, and result JSON."), [
+  "any number: the workbook key_runs sheet has the run id, checkpoint, W&B link, and result JSON.")
+_S13_BULLETS = [
     ('983 Tinker training runs enumerated via REST API — 26 base models, 0.6B → 1T; all 65 corrupted runs predate June 8; every thesis-supporting run is clean and checkpointed.', True),
     ('External backends: Modal / Lightning AI / Colab pass@k panels (26 runs) + 4 cross-library H100 baselines; 1,034 W&B runs across 17 projects; 49 HuggingFace artifact repos.', False),
     ('zvf-triage: 82/82 tests green; wheel + sdist built, twine-checked; PyPI publication staged.', False),
-    ('Traceability: 19 claim-critical runs highlighted in the audit workbook, each with W&B link + checkpoint + result artifact (outputs/tinker_runs_audit_2026-07-12.xlsx).', True),
-])
+    ('Traceability: 19 claim-critical runs highlighted in the audit workbook, each with W&B link + checkpoint + result artifact — embedded below (double-click to open).', True),
+]
+bullets(s13, _S13_BULLETS, size=14)
+
+# embed the audit workbook as a real OLE object (opens in Excel on double-click)
+from pptx.enum.shapes import PROG_ID
+s13.shapes.add_ole_object(
+    'outputs/tinker_runs_audit_2026-07-12.xlsx', PROG_ID.XLSX,
+    left=Inches(0.95), top=Inches(5.15), icon_width=Inches(0.85), icon_height=Inches(0.95))
+tb = s13.shapes.add_textbox(Inches(1.95), Inches(5.3), Inches(10.5), Inches(0.8))
+para(tb.text_frame, 'tinker_runs_audit_2026-07-12.xlsx — embedded copy (983 runs · key_runs · external_runs · wandb_runs · hf_artifacts · insights). Canonical file: outputs/ in the repo.', size=12, color=MUTED, first=True)
 
 # ------------------------------------------------------------------ 13 Demo
 bullets(slide('Demo (Live)', 14, notes=

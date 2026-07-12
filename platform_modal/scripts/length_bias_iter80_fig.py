@@ -13,7 +13,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-W = "/home/claude/tinker-rl-lab-minimax"
+W = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(W, "experiments", "results")
 FIG = os.path.join(W, "figures")
 BURN = 2

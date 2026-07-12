@@ -51,6 +51,11 @@ POSTER = 'outputs/deck_assets/demo_poster.png'
 if os.path.exists(VIDEO) and not os.path.exists(POSTER):
     subprocess.run(['ffmpeg', '-y', '-i', VIDEO, '-vf', 'select=eq(n\\,30)', '-vframes', '1', POSTER],
                    capture_output=True)
+FALLBACK = 'thesis/viva/demo_walkthrough.mp4'
+FPOSTER = 'outputs/deck_assets/walkthrough_poster.png'
+if os.path.exists(FALLBACK) and not os.path.exists(FPOSTER):
+    subprocess.run(['ffmpeg', '-y', '-i', FALLBACK, '-vf', 'select=eq(n\\,30)', '-vframes', '1', FPOSTER],
+                   capture_output=True)
 
 BLUE = RGBColor(0x1F, 0x4E, 0x79); INK = RGBColor(0x21, 0x21, 0x21)
 MUTED = RGBColor(0x5A, 0x5A, 0x5A); WHITE = RGBColor(0xFF, 0xFF, 0xFF)
@@ -370,9 +375,16 @@ _S14_BULLETS = [
     ('One command, fully offline: ./submission/demo/demo.sh — mechanism fixture (4 groups → ZVF=0.500, GU=0.500), recorded artifact check (80 rewards, mean 0.6875, ZVF 0.3000), SHA-256 integrity, JSON + HTML dashboard. Status: PASS (re-verified today).', True),
     ('Live artifact tour: W&B zvf-training — the (reward, ZVF) pair diverging on the real E-R2b arms; audit workbook key_runs sheet — every claim-critical run traceable in two clicks.', False),
     ('zvf-triage quickstart: pip-installable package, examples/quickstart.py — the diagnostic as a reusable library, not a one-off script.', False),
-    ('Fallback if connectivity fails: 86-second recorded walkthrough (thesis/viva/demo_walkthrough.mp4).', False),
+    ('Fallback if connectivity fails: the 86-second recorded walkthrough — embedded on this slide (right), plays offline.', False),
 ]
-bullets(s14, _S14_BULLETS, size=14)
+bullets(s14, _S14_BULLETS, size=14, width=7.4)
+if os.path.exists(FALLBACK):
+    # 1728x1122 -> keep aspect (h = w * 1122/1728)
+    s14.shapes.add_movie(FALLBACK, Inches(8.45), Inches(1.2), Inches(4.3), Inches(2.79),
+                         poster_frame_image=FPOSTER if os.path.exists(FPOSTER) else None,
+                         mime_type='video/mp4')
+    tbv = s14.shapes.add_textbox(Inches(8.45), Inches(4.02), Inches(4.3), Inches(0.4))
+    para(tbv.text_frame, 'embedded fallback: 86 s recorded walkthrough (click to play)', size=10.5, color=MUTED, align=PP_ALIGN.CENTER, first=True)
 
 # click-to-open evidence links (live during Q&A)
 tb = s14.shapes.add_textbox(Inches(0.85), Inches(4.55), Inches(11.8), Inches(2.3))

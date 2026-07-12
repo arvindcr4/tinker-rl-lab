@@ -246,14 +246,18 @@ table(s, [
 bullets(slide('What I Implemented (Sem-4 Solo, on the Sem-3 Foundation)', 6, notes=
   "(1.5 min) Attribution first: Sem 3 was the group capstone — the multi-framework bench and survey, frozen at "
   "tag capstone-final-2026-04-25. Everything on this slide is Sem-4 solo work. Be specific: these are files "
-  "and packages he can open, not concepts."), [
+  "and packages he can open, not concepts. Datasets first if he asks what you trained ON: GSM8K train "
+  "split with binary boxed-answer rewards is the finetuning task; synthetic arithmetic for the small panels; "
+  "xLAM-60k was the capstone SFT corpus. MATH-500/MBPP/HumanEval are evaluation-only - never trained on."), [
+    ('Datasets used for finetuning — RL: GSM8K train split (openai/gsm8k "main"; 512-prompt pools, 32 rollouts/prompt, binary boxed-answer reward) and synthetic arithmetic (easy/medium) for the 0.5B-1.5B short-horizon panels and small-model sweeps. SFT (capstone): Salesforce xLAM-Function-Calling-60k (tool-call LoRAs, Qwen 0.5B-7B).', True),
+    ('Evaluation-only — never trained on: GSM8K test (1,319 problems, disjoint from the reward environment), MATH-500, MBPP, HumanEval. Held-out discipline is an explicit reporting-standard item.', True),
     ('Inherited (Sem 3, Group 6): multi-framework benchmark scaffold (TinkerRL-Bench), literature survey, baseline GRPO runs. Frozen at tag capstone-final-2026-04-25.', False),
     ('ZVF measurement stack: per-step ZVF/GU telemetry in the trainer, calibrated confidence intervals (Wilson), waiting-time reliability budget, stratified batch analysis.', True),
     ('Experiment infrastructure: matched-budget runner with --resume (state + optimiser + RNG fast-forward), per-(step,prompt) seeding, W&B resume; loss-form panel runner (GRPO vs Dr.GRPO).', True),
     ('zvf-triage: packaged library (callback, controller, regime classifier, framework adapters, 82-test suite) — publication to PyPI staged.', True),
     ('Standards & tooling: MIN-REPORT-RL 8-item reporting standard, GRPO-Registry (machine-readable stack catalog), stackdiff flip-risk grader, run-audit workbook.', False),
     ('Theory: T1 estimator calibration, T2 reliability budget, T3 optimal-G analysis — plus two corrections found by external adversarial review, adopted and reported openly.', False),
-])
+], size=13, top=1.15)
 
 # ------------------------------------------------------- 6 Result 1: Claim 1
 s = slide('Result 1 — ZVF Sees What the Reward Curve Cannot (Claim 1)', 7, notes=

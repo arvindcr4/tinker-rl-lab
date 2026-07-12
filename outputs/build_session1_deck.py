@@ -106,24 +106,24 @@ bullets(slide('Overall Architecture', 4, notes=
 ])
 
 # ------------------------------------------------- 5 Algorithms & methods run
-s = slide('Not Only GRPO — Algorithms & Methods Run', 5, notes=
-  "(1 min) Fast table walk. GRPO is the base paper, not the boundary: PPO ran as the value-based control "
-  "on three open libraries plus the bench; GSPO head-to-head against GRPO on the same stack; Dr.GRPO in the "
-  "six-arm loss panel; DPO/IDPO through the unified script generator; REINFORCE and SFT/distillation as "
-  "baselines; and the DAPO label audit plus the AERO/AREAL/GIFT traces feed the reproducibility results. "
-  "Every row has runnable artifacts in the repo.")
+s = slide('Not Only GRPO — Algorithms & Methods Run, and Why', 5, notes=
+  "(1 min) Fast table walk — lead with the WHY column: each method answers a specific question the thesis "
+  "needed closed. PPO answers 'was the critic needed?'; GSPO isolates one knob on the same stack; Dr.GRPO "
+  "tests the base paper's strongest critique; DPO is the no-rollouts counterfactual (no groups, so no ZVF "
+  "by construction); REINFORCE and SFT are floors; the DAPO audit and the AERO/AREAL/GIFT traces exist to "
+  "measure how much a method LABEL underdetermines what actually ran. Every row has runnable artifacts.")
 table(s, [
-    ['algorithm / method', 'where it ran', 'role in the study'],
-    ['GRPO (base paper)', 'Tinker fleets (Qwen3-8B), TRL on Modal H100, open trainers', 'primary subject — all ZVF claims'],
-    ['Dr.GRPO', 'Tinker, six-arm uncapped panel, 3 seeds/loss', 'length-bias critique test (Result 4)'],
-    ['GSPO', 'Tinker, same-stack head-to-head vs GRPO (G=8)', 'sequence-level IS ratio control'],
-    ['PPO', 'SB3 / CleanRL / Tianshou (Modal H100) + bench arm (HF: tinker-rl-bench-ppo_*)', 'value-based baseline family (RQ1)'],
-    ['REINFORCE', 'Colab baselines notebook', 'simplest policy-gradient control'],
-    ['DPO / IDPO', 'TRL via unified script generator (platform_local)', 'preference optimisation, no rollouts'],
-    ['SFT + off-policy distillation', 'capstone tool-call LoRAs; Llama-3.2-1B distillation probe', 'non-RL baselines and adapters'],
-    ['"DAPO" (label audit)', 'open trainer w/ dynamic sampling vs closed-stack surrogate', 'label-flip evidence: ZVF 0.00 vs 0.55-0.58'],
-    ['AERO / AREAL / GIFT + adaptive-G', 'open-stack method traces; 4-arm audit pilot (T4)', 'P2 collapse panel, P8 detector, survival-audit pilot'],
-], col_widths=[2.9, 5.1, 3.5], size=12, top=1.3)
+    ['algorithm / method', 'where it ran', 'why it was run (question it answers)'],
+    ['GRPO (base paper)', 'Tinker fleets (Qwen3-8B); TRL on Modal H100; open trainers', 'The subject: does its group-relative update starve, when, and how do you see it? (Claims 1-2)'],
+    ['Dr.GRPO', 'Tinker, six-arm uncapped panel, 3 seeds/loss', "Test the base paper's strongest critique: does the length-bias fix change length/ZVF at our scale? (No footprint - Result 4)"],
+    ['GSPO', 'Tinker, same-stack head-to-head vs GRPO (G=8)', 'Isolate ONE knob (token- vs sequence-level IS ratio) with everything else fixed - the same-stack control discipline (RQ1)'],
+    ['PPO', 'SB3 / CleanRL / Tianshou (Modal H100) + bench arm (HF: tinker-rl-bench-ppo_*)', 'Was dropping the critic actually free? Value-based baseline + cross-library reproducibility anchor (RQ1)'],
+    ['REINFORCE', 'Colab baselines notebook', 'Simplest policy gradient: a floor showing gains are not just any-PG artifacts'],
+    ['DPO / IDPO', 'TRL via unified script generator (platform_local)', 'The counterfactual family: preference optimisation without rollouts has no groups - no ZVF by construction'],
+    ['SFT + off-policy distillation', 'capstone tool-call LoRAs; Llama-3.2-1B distillation probe', 'Non-RL control: how much of the gain needs RL at all?'],
+    ['"DAPO" (label audit)', 'open trainer w/ dynamic sampling vs closed-stack surrogate', 'How much does a method NAME underdetermine the executed update? Measured: ZVF 0.00 vs 0.55-0.58 under one label'],
+    ['AERO / AREAL / GIFT + adaptive-G', 'open-stack method traces; 4-arm audit pilot (T4)', 'Can telemetry alone distinguish method variants (P8 detector), and is collapse universal across them? (P2 panel)'],
+], col_widths=[2.5, 3.9, 5.1], size=11, top=1.3)
 
 # ------------------------------------------- 6 What I implemented (attribution)
 bullets(slide('What I Implemented (Sem-4 Solo, on the Sem-3 Foundation)', 6, notes=

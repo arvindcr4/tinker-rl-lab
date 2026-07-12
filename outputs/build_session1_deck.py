@@ -66,6 +66,15 @@ def para(tf, text, size=16, color=INK, bold=False, bullet=False, align=PP_ALIGN.
     p.alignment = align; p.space_after = Pt(7)
     return p
 
+def linkline(tf, label, url, size=13, first=False):
+    p = tf.paragraphs[0] if first and not tf.paragraphs[0].runs else tf.add_paragraph()
+    r = p.add_run(); r.text = '\u2197  ' + label
+    r.font.size = Pt(size); r.font.color.rgb = RGBColor(0x0B, 0x5C, 0xAB)
+    r.font.underline = True; r.font.name = 'Calibri'
+    r.hyperlink.address = url
+    p.space_after = Pt(6)
+    return p
+
 def slide(title=None, page=None, notes=None):
     s = prs.slides.add_slide(BLANK)
     if title:
@@ -351,17 +360,36 @@ tb = s13.shapes.add_textbox(Inches(1.95), Inches(5.3), Inches(10.5), Inches(0.8)
 para(tb.text_frame, 'tinker_runs_audit_2026-07-12.xlsx — embedded copy (983 runs · key_runs · external_runs · wandb_runs · hf_artifacts · insights). Canonical file: outputs/ in the repo.', size=12, color=MUTED, first=True)
 
 # ------------------------------------------------------------------ 13 Demo
-bullets(slide('Demo (Live)', 14, notes=
+s14 = slide('Demo (Live)', 14, notes=
   "(1.5 min + live demo) Run the one-command offline demo FIRST — it cannot fail on the network. "
   "./submission/demo/demo.sh: mechanism fixture (4 groups, ZVF=0.5, GU=0.5), recorded artifact (80 rewards, "
   "mean 0.6875, ZVF 0.30), SHA-256 integrity check, HTML dashboard. Then if time and connectivity allow: "
   "the W&B zvf-training panel with live E-R2b curves, and the audit workbook key_runs sheet. "
-  "Fallback: the 86-second recorded walkthrough. Verified PASS this morning."), [
+  "Fallback: the 86-second recorded walkthrough. Verified PASS this morning.")
+_S14_BULLETS = [
     ('One command, fully offline: ./submission/demo/demo.sh — mechanism fixture (4 groups → ZVF=0.500, GU=0.500), recorded artifact check (80 rewards, mean 0.6875, ZVF 0.3000), SHA-256 integrity, JSON + HTML dashboard. Status: PASS (re-verified today).', True),
     ('Live artifact tour: W&B zvf-training — the (reward, ZVF) pair diverging on the real E-R2b arms; audit workbook key_runs sheet — every claim-critical run traceable in two clicks.', False),
     ('zvf-triage quickstart: pip-installable package, examples/quickstart.py — the diagnostic as a reusable library, not a one-off script.', False),
     ('Fallback if connectivity fails: 86-second recorded walkthrough (thesis/viva/demo_walkthrough.mp4).', False),
-])
+]
+bullets(s14, _S14_BULLETS, size=14)
+
+# click-to-open evidence links (live during Q&A)
+tb = s14.shapes.add_textbox(Inches(0.85), Inches(4.55), Inches(11.8), Inches(2.3))
+tf = tb.text_frame; tf.word_wrap = True
+para(tf, 'Click-to-open evidence (live):', size=14, bold=True, first=True)
+linkline(tf, 'W&B: E-R2b G=2 arm — reward hits ~1.0 while ZVF climbs into the wall (er2b_g2_s123)',
+         'https://wandb.ai/arvindcr4-pes-university/zvf-training/runs/pob7nd05')
+linkline(tf, 'W&B: E-R2b G=16 arm — mid-learning, ZVF low, signal intact (er2b_g16_s123)',
+         'https://wandb.ai/arvindcr4-pes-university/zvf-training/runs/tiicy3km')
+linkline(tf, 'W&B: the invalidated P4 arm, preserved (p4uncap_drgrpo_s42.invalid_actually_grpo)',
+         'https://wandb.ai/arvindcr4-pes-university/zvf-training/runs/kmqjbhwn')
+linkline(tf, 'W&B: full zvf-training project (45 runs)',
+         'https://wandb.ai/arvindcr4-pes-university/zvf-training')
+linkline(tf, 'HuggingFace: published bench adapters (e.g. tinker-rl-bench-ppo_gsm8k_Qwen3-8B_s42)',
+         'https://huggingface.co/arvindcr4/tinker-rl-bench-ppo_gsm8k_Qwen3-8B_s42')
+linkline(tf, 'GitHub: arvindcr4/tinker-rl-lab (code, artifacts, audit workbook)',
+         'https://github.com/arvindcr4/tinker-rl-lab')
 
 # ------------------------------------------------- 14 Limitations & close
 bullets(slide('Scope, Limitations & Roadmap', 15, notes=
@@ -379,7 +407,12 @@ s = slide(notes="Thank the panel. Repo and email on screen. Offer the audit work
 tb = s.shapes.add_textbox(Inches(1.0), Inches(2.7), Inches(11.3), Inches(2.0))
 tf = tb.text_frame
 para(tf, 'Thank you — Questions', size=30, color=BLUE, bold=True, align=PP_ALIGN.CENTER, first=True)
-para(tf, 'github.com/arvindcr4/tinker-rl-lab  ·  arvindcr4@gmail.com', size=15, color=MUTED, align=PP_ALIGN.CENTER)
+pcl = para(tf, '', size=15, color=MUTED, align=PP_ALIGN.CENTER)
+r = pcl.add_run(); r.text = 'github.com/arvindcr4/tinker-rl-lab'
+r.font.size = Pt(15); r.font.color.rgb = RGBColor(0x0B,0x5C,0xAB); r.font.underline = True; r.font.name='Calibri'
+r.hyperlink.address = 'https://github.com/arvindcr4/tinker-rl-lab'
+r = pcl.add_run(); r.text = '   ·   arvindcr4@gmail.com'
+r.font.size = Pt(15); r.font.color.rgb = MUTED; r.font.name='Calibri'
 
 prs.save('outputs/PESU_MTech_Phase1_Session1_Review_ArvindCR.pptx')
 print('slides:', len(prs.slides._sldIdLst))

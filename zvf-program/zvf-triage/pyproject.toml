@@ -9,7 +9,7 @@ description = "Zero-Variance Fraction (ZVF) triage callback for GRPO-style RL fi
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "Apache-2.0" }
-authors = [{ name = "ZVF Program" }]
+authors = [{ name = "Arvind C R", email = "arvindcr4@gmail.com" }]
 keywords = [
     "grpo",
     "rlhf",
@@ -42,13 +42,10 @@ dependencies = [
 ]
 
 [project.urls]
-# TODO: replace these placeholders with the real project URLs before publishing
-# to PyPI. They intentionally point at a reserved-invalid domain so a broken
-# link can never be mistaken for a live one.
-Homepage = "https://example.invalid/TODO-set-zvf-triage-homepage"
-Repository = "https://example.invalid/TODO-set-zvf-triage-repo"
-Issues = "https://example.invalid/TODO-set-zvf-triage-repo/issues"
-Changelog = "https://example.invalid/TODO-set-zvf-triage-repo/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/arvindcr4/tinker-rl-lab/tree/main/zvf-program/zvf-triage"
+Repository = "https://github.com/arvindcr4/tinker-rl-lab"
+Issues = "https://github.com/arvindcr4/tinker-rl-lab/issues"
+Changelog = "https://github.com/arvindcr4/tinker-rl-lab/blob/main/zvf-program/zvf-triage/CHANGELOG.md"
 
 [project.optional-dependencies]
 # Framework adapters. The core package never imports these at module load time;

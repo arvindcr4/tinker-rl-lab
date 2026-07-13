@@ -1,0 +1,96 @@
+{
+  "generated_at": "2026-07-13",
+  "sources": [
+    "platform_hybrid/experiments/results/zvf_iter46_per_prompt_isog.tsv",
+    "platform_hybrid/experiments/results/p5p8/p7_iter203_emp_per_obs.tsv",
+    "platform_hybrid/experiments/results/berkeley/passk_reliability_curve.tsv"
+  ],
+  "duality": {
+    "n_prompt_seed_tasks": 505,
+    "mean_p": 0.6742574257425743,
+    "identity_max_abs_error": 1.1102230246251565e-16,
+    "best_k_yield_per_rollout": 2,
+    "best_k_yield_over_sqrt_k": 4,
+    "bootstrap_best_k_counts": {
+      "4": 5000
+    },
+    "g4_minus_g5_point": 0.0017673099999999664,
+    "g4_minus_g5_ci95": [
+      0.0008181645494553247,
+      0.0027043823439167336
+    ]
+  },
+  "polarization": [
+    {
+      "cohort": "observed_middle",
+      "n": 505,
+      "mean_p": 0.674257426,
+      "variance_p": 0.036899201,
+      "k": 5,
+      "pass_power_k": 0.235313733,
+      "fail_power_k": 0.032655984,
+      "zvf": 0.267969717,
+      "contrastive_yield": 0.732030283
+    },
+    {
+      "cohort": "equal_mean_polarized",
+      "n": 1000,
+      "mean_p": 0.674292079,
+      "variance_p": 0.114009059,
+      "k": 5,
+      "pass_power_k": 0.519727813,
+      "fail_power_k": 0.067913083,
+      "zvf": 0.587640896,
+      "contrastive_yield": 0.412359104
+    }
+  ],
+  "controller": {
+    "all_correct": {
+      "n_fires": 1723,
+      "share_of_fires": 0.9228709159078736,
+      "mean_recovered_contrast": 0.513058618637841
+    },
+    "all_wrong": {
+      "n_fires": 144,
+      "share_of_fires": 0.0771290840921264,
+      "mean_recovered_contrast": 0.6336805556527777
+    },
+    "counterfactual_all_wrong_only": {
+      "escalation_overhead_removed_fraction": 0.9228709159078736,
+      "status": "experiment proposal; performance preservation is not established by this audit"
+    },
+    "source_rows": 2560,
+    "fired_rows": 1867
+  },
+  "data_quality": {
+    "prompt_source": {
+      "source_rows": 2525,
+      "unique_prompt_seed_keys": 505,
+      "duplicate_rows_from_repeated_group_settings": 2020,
+      "conflicting_p_x_within_key": 0
+    },
+    "existing_curve_crosscheck": {
+      "rows_compared": 9,
+      "max_abs_pass_power_diff": 4.425999999974062e-06,
+      "max_abs_pass_at_diff": 4.015999999995579e-06,
+      "tolerance_note": "existing curve is rounded to 5 decimal places"
+    },
+    "controller_expected_shape": {
+      "expected_rows": 2560,
+      "observed_rows": 2560,
+      "complete": true
+    }
+  },
+  "claim_boundaries": {
+    "descriptive": [
+      "pass@k - pass^k equals 1 - ZVF algebraically and numerically",
+      "G=4 maximizes contrastive_yield/sqrt(G) in the 505-task uncertain-middle cohort",
+      "92.3% of empirical controller fires are all-correct observations"
+    ],
+    "not_established": [
+      "causal improvement in held-out accuracy",
+      "global G=4 optimality outside the uncertain-middle cohort",
+      "performance preservation under an all-wrong-only controller"
+    ]
+  }
+}

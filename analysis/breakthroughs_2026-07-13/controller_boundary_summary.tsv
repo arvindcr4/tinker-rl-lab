@@ -1,0 +1,3 @@
+boundary	n_fires	share_of_fires	mean_recovered_contrast	mean_cost_ratio
+all_correct	1723	0.9228709159078736	0.513058618637841	2.0162507256006963
+all_wrong	144	0.0771290840921264	0.6336805556527777	2.0

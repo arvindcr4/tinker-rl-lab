@@ -1,0 +1,9 @@
+method	boundary	n_fires	mean_chosen_g	mean_recovered_contrast	mean_cost_ratio
+aero	all_correct	427	16.0	0.529566745	2.0
+aero	all_wrong	34	16.0	0.643382353	2.0
+areal	all_correct	414	16.0	0.560084541	2.0
+areal	all_wrong	38	16.0	0.690789474	2.0
+gift	all_correct	455	16.492308	0.453021978	2.061538462
+gift	all_wrong	38	16.0	0.585526316	2.0
+grpo	all_correct	427	16.0	0.514929742	2.0
+grpo	all_wrong	34	16.0	0.613970588	2.0

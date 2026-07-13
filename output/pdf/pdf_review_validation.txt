@@ -1,0 +1,18 @@
+Repository PDF visual-review validation
+=======================================
+
+Project PDFs inventoried: 99
+Project PDF pages inventoried: 2199
+Text-bearing PDFs reviewed: 44
+Text-bearing pages rendered and reviewed: 2144
+Rendered PNG files found: 2144
+Plot-only PDFs previewed and skipped: 55
+Final report reviewed-PDF headings: 44
+Validation result: PASS
+
+All gates passed:
+- Current project PDF discovery exactly matches the inventory.
+- Every inventoried PDF is classified as visually reviewed or previewed plot-only.
+- Every text-bearing PDF has one report section with findings or an explicit no-bug confirmation.
+- Every manifest page has a rendered PNG and all counts agree.
+- Every original PDF hash and page count matches the inventory baseline.

@@ -16,8 +16,9 @@ A confound vector is a class of undisclosed stack variation capable of
 carrying a flip. Our taxonomy has five, each anchored to documented evidence:
 \begin{description}[leftmargin=1.5em, itemsep=2pt, topsep=2pt]
 \item[V1 --- Numerics and serving.] Backend, sampling engine, kernels,
-precision, decoding parameters. Documented magnitude: $17\times$
-(\secref{sec:p5-exhibit-backend}). The dominant vector in our corpus.
+precision, decoding parameters. These fields co-varied with base-checkpoint
+identity in the $17\times$ under-specification exhibit
+(\secref{sec:p5-exhibit-backend}); no vector-specific effect size is identified.
 \item[V2 --- Objective semantics under a shared label.] Loss-form divergence
 hidden by a common name: clip asymmetry, dynamic sampling, normalization,
 ratio level. Documented magnitude: qualitative telemetry inversion (mean ZVF
@@ -47,10 +48,10 @@ hochlehnert2025sober, zhang2024benchvariance}.
 \label{sec:p5-grades}
 Given two runs' manifests (\secref{sec:p5-toolchain}), we grade the risk that
 a comparison between them is confounded. The grade is determined by the most
-severe difference found across the seven items of
+severe difference found across the seven run-manifest fields of
 \tableref{tab:p5-minreport}.
 \begin{description}[leftmargin=1.5em, itemsep=2pt, topsep=2pt]
-\item[R0 --- Replicate.] All seven items identical; runs differ at most in
+\item[R0 --- Replicate.] All seven manifest fields identical; runs differ at most in
 hardware instance. Comparison measures noise floor.
 \item[R1 --- Seed-only.] Items identical; seeds differ under a declared seed
 policy. Comparison is the intended unit of statistical analysis
@@ -61,14 +62,15 @@ reported knobs (learning rate, steps, $G$ with fixed schedule form).
 Comparable, with the knob difference stated as a caveat or bridged by a
 matched run.
 \item[R3 --- Stack-vector.] At least one V1/V3/V4/V5 vector differs
-(backend, precision, parser, split, schedule form). Documented flip
-magnitudes reach $17\times$; algorithmic conclusions require a bridging run
+(backend, precision, parser, split, schedule form). Same-label stack swings in
+our corpus reach $17\times$, but the largest exhibit is multi-confound;
+algorithmic conclusions require a bridging run
 on a common stack before they are admissible.
 \item[R4 --- Label collision.] The same algorithm label with different
 objective semantics (V2): the comparison is between stacks wearing one name.
 Verdict: \textsc{not-comparable}; the label must be split (e.g.,
 ``DAPO(dynamic-sampling)'' vs.\ ``DAPO(clip-surrogate)'').
-\item[R5 --- Undeclared.] One or more of the seven items is missing from
+\item[R5 --- Undeclared.] One or more of the seven manifest fields is missing from
 either manifest. Verdict: \textsc{unverifiable}; no grade can be assigned,
 which is itself the finding.
 \end{description}

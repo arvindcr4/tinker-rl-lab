@@ -12,7 +12,7 @@ checkable claim; a stack that says nothing is not. The auditor badge
 (Section~\ref{sec:p6-query}) scores exactly this distinction: reporting
 coverage, not configuration virtue.
 
-\subsection{Stack Records: the Seven-Item MIN-REPORT Block}
+\subsection{Stack Records: the Seven-Field MIN-REPORT Run Manifest}
 \label{sec:p6-schema-stack}
 A \texttt{stack} record describes one deployed GRPO-family training stack. Its
 core is the \texttt{min_report} object, one sub-object per item of the
@@ -27,8 +27,8 @@ MIN-REPORT-RL minimum reportable stack:
         coefficient $\beta$, and the estimator/surrogate used.
   \item \textbf{sampler_backend}: backend identity, numeric precision, sampler
         parameters (temperature, top-$p$), and the \textbf{base-checkpoint
-        identity (revision/hash)}---the axis along which our backend-swap audit
-        produced the $85.6\%$-vs-$5.0\%$ swing. We require the base-checkpoint
+        identity (revision/hash)}---a confound revealed by our nominal
+        backend comparison, which spanned $85.6\%$ versus $5.0\%$. We require the base-checkpoint
         field explicitly because that audit revealed the managed backend had
         silently pinned a different base checkpoint, so a stack record without it
         cannot distinguish a framework effect from a model swap.
@@ -44,6 +44,10 @@ MIN-REPORT-RL minimum reportable stack:
   \item \textbf{decontamination}: decontamination performed, and whether a
         parser-robustness probe was run against the reward extractor.
 \end{enumerate}
+
+This seven-field object is the run-manifest portion of the eight-item standard;
+item~8 (held-out pass@$k$ curves) belongs to the evaluation report and may be
+attached under outcomes rather than being known at run start.
 
 Around the \texttt{min_report} block sit provenance
 (\texttt{source_artifacts}, W\&B project, date), identity

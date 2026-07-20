@@ -104,7 +104,7 @@
 % =============================================================================
 % Title and Authors
 % =============================================================================
-\title{A Unified Benchmark for RL Post-Training of Language Models}
+\title{An Evidence-Tiered Audit of RL Post-Training Implementations}
 
 % For anonymous submission, authors are hidden automatically with the
 % "anonymous" option in \documentclass
@@ -199,8 +199,9 @@ checkpoint's pre-RL held-out accuracy is small and not statistically
 significant (83.3\% vs.\ 82.0\%, $p{=}0.26$). Third, implementation and
 stack choices are a substantial source of cross-library performance variance,
 though we do not claim they account for the majority of it absent a fully
-matched variance decomposition. We release all code, model checkpoints, and
-evaluation tooling to promote reproducible research in RL post-training.
+matched variance decomposition. We release code, evaluation tooling, and
+checkpoints where licensing and the managed backend permit; closed-backend base
+weights are not reproducible artifacts.
 
 \textbf{Code:} \url{https://anonymous.4open.science/r/tinker-rl-lab} \quad
 \textbf{Models:} \url{https://anonymous.4open.science/r/tinker-rl-lab}
@@ -226,6 +227,13 @@ evaluation tooling to promote reproducible research in RL post-training.
 \section{Introduction}
 \label{sec:intro}
 % =============================================================================
+
+\paragraph{Scope within the program.}
+This is the compact ACM venue derivative of the benchmark artifact. It is
+canonical for the cross-library implementation comparison, not for the ZVF
+theory, adaptive-controller proposal, or the new PPO/SAO synthesis. Those
+questions are handled by focused companion papers; results are not pooled across
+them as if they were independent replications.
 
 Reinforcement learning from human feedback (RLHF) and its variants---including
 GRPO~\cite{shao2024deepseekmath}, DPO~\cite{rafailov2024direct}, and knowledge

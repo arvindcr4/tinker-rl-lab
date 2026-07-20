@@ -8,9 +8,9 @@ and a label without its stack is not a reproducible experimental
 specification. Three exhibits motivate the reporting standard. First, a \emph{nominally} matched-configuration backend
 audit---every labeled knob (group size, LoRA setup, learning rate, data, prompt
 template, decoding, and seed) harmonized across frameworks, though as we disclose
-the managed backend was \emph{not} matched at the base-checkpoint level---moved
-final training reward from $5.0\%$ to $85.6\%$ when the training backend was exchanged: a $17\times$ swing
-produced without touching a single labeled algorithmic knob (the managed backend
+the managed backend was \emph{not} matched at the base-checkpoint level---spanned
+final training rewards from $5.0\%$ to $85.6\%$: a $17\times$ same-label swing
+that cannot be assigned to the backend (the managed stack
 also silently pinned a different base checkpoint, and that undisclosed bundling
 is itself part of the exhibit). Second, the same label denotes different
 experiments across stacks: ``DAPO'' run on an open trainer with true dynamic

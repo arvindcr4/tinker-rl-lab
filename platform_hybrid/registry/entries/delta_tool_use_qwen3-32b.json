@@ -12,7 +12,7 @@
   "deltas": [
     {
       "component": "task_substitution",
-      "field": "see note",
+      "field": "task",
       "change": "GRPO base loss-form retargeted to BFCL tool-use task (sparse 0/1 outcome reward) instead of GSM8K; no algorithmic delta vs GRPO is claimed at iter-138 \u2014 this entry is a coverage record, not a variant claim"
     }
   ],

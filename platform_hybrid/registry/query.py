@@ -33,6 +33,11 @@ def load(kind=None):
     recs = {}
     for p in sorted((HERE / "entries").glob("*.json")):
         r = json.loads(p.read_text())
+        # Amendment sidecars intentionally do not implement the registry-record
+        # schema.  They live next to records for provenance, so ignore them in
+        # commands that enumerate queryable stack/delta records.
+        if "record_type" not in r or "id" not in r:
+            continue
         if kind is None or r["record_type"] == kind:
             recs[r["id"]] = r
     return recs
@@ -174,11 +179,6 @@ def cmd_drift(args):
     """Iter-42: walk every delta_*.json component's `field:` claim, classify
     it against the actual schema MIN-REPORT surface. Verdict counts and
     per-row table mirror scripts/p5p8/p6_delta_field_drift_audit.py."""
-    import importlib.util
-    audit = pathlib.Path(__file__).resolve().parents[1] / "scripts/p5p8" / "p6_delta_field_drift_audit.py"
-    spec = importlib.util.spec_from_file_location("audit", audit)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
     schema = json.load(open(HERE / "schema.json"))
     defs = schema.get("$defs", {})
 
@@ -225,6 +225,8 @@ def cmd_drift(args):
                 v, r = "EMPTY", "no field declared"
             elif field == "see delta-list and citation":
                 v, r = "SEE_CITATION", "deferred to source paper"
+            elif field == "task":
+                v, r = "OUT_OF_SCOPE", "top-level task field, not a MIN-REPORT loss lever"
             elif "." not in field:
                 v, r = "AMBIGUOUS_REFERENCE", f"block-only reference: {field!r}"
             else:
@@ -236,10 +238,12 @@ def cmd_drift(args):
                 else:
                     v, r = "OK", f"{block}.{leaf}"
             counts[v] = counts.get(v, 0) + 1
-            if v not in ("OK", "SEE_CITATION"):
+            if v not in ("OK", "SEE_CITATION", "OUT_OF_SCOPE"):
                 drifts.append((d["id"], comp, field, v, r))
     print(f"delta-schema drift audit (iter-42): {n_rows} (delta, component) pairs")
-    drift_n = sum(c for k, c in counts.items() if k not in ("OK", "SEE_CITATION"))
+    drift_n = sum(
+        c for k, c in counts.items() if k not in ("OK", "SEE_CITATION", "OUT_OF_SCOPE")
+    )
     print(f"  drift rate: {drift_n/max(1,n_rows):.3f}  ({drift_n}/{n_rows})")
     print()
     print(f"  {'verdict':24s} count")
@@ -259,20 +263,22 @@ def cmd_claim_validation(args):
     Verdict codes: SUPPORTS / NEUTRAL / CONTRADICTS / UNCLAIMED."""
     from collections import Counter
     counts = Counter()
-    for p in sorted((HERE / "entries").glob("delta_*.json")):
-        rec = json.load(open(p))
+    records = load("variant_delta")
+    for rec in records.values():
         rows = rec.get("claim_validation", []) or []
         if args.delta and rec["id"] != args.delta:
             continue
         for r in rows:
             counts[r["verdict"]] += 1
             if args.delta:
+                def number(value):
+                    return "NR" if value is None else f"{value:+.4f}"
                 print(f"  {rec['id']:18s} {r['metric']:18s} {r['panel']:24s} "
                       f"verdict={r['verdict']:11s} "
-                      f"observed={r['observed_delta']:+.4f} "
-                      f"CI=[{r['ci_low']:+.4f},{r['ci_high']:+.4f}]")
+                      f"observed={number(r['observed_delta'])} "
+                      f"CI=[{number(r.get('ci_low'))},{number(r.get('ci_high'))}]")
     if not args.delta:
-        print(f"=== Iter 46 P6 — claim-validation verdict counts (across all {len(list((HERE / 'entries').glob('delta_*.json')))} delta_*.json) ===")
+        print(f"=== Iter 46 P6 — claim-validation verdict counts (across all {len(records)} variant-delta records) ===")
         for k, n in sorted(counts.items()):
             print(f"  {k:12s} {n}")
     return 0
@@ -289,15 +295,21 @@ def cmd_validate(_):
         return 2
     schema = json.load(open(HERE / "schema.json"))
     fails = 0
-    for p in sorted((HERE / "entries").glob("*.json")):
+    paths = sorted((HERE / "entries").glob("*.json"))
+    queryable = 0
+    for p in paths:
         rec = json.loads(p.read_text())
+        if "record_type" not in rec:
+            print(f"SKIP  {p.name}  provenance sidecar")
+            continue
+        queryable += 1
         try:
             jsonschema.validate(rec, schema)
             print(f"PASS  {p.name}")
         except jsonschema.ValidationError as e:
             fails += 1
             print(f"FAIL  {p.name}  {str(e.message)[:140]}")
-    print(f"--- {len(list((HERE / 'entries').glob('*.json'))) - fails}/{len(list((HERE / 'entries').glob('*.json')))} pass ---")
+    print(f"--- {queryable - fails}/{queryable} queryable records pass ---")
     return 1 if fails else 0
 
 
@@ -306,8 +318,10 @@ def cmd_health(_):
     full coverage + null-rate + verdict-signature audit. Passes the exit
     code through unchanged so CI sees schema failures."""
     import subprocess
-    target = (HERE / ".." / "scripts" / "p5p8" / "p6_registry_health.py").resolve()
-    rc = subprocess.run([sys.executable, str(target)]).returncode
+    target = (
+        HERE.parents[1] / "platform_modal/scripts/p5p8/p6_registry_health.py"
+    ).resolve()
+    rc = subprocess.run([sys.executable, str(target)], cwd=HERE.parent).returncode
     return rc
 
 
@@ -338,13 +352,19 @@ def cmd_validate_strict(args):
     schema_fails = []
     for p in sorted((HERE / "entries").glob("*.json")):
         rec = json.loads(p.read_text())
+        if "record_type" not in rec:
+            continue
         try:
             jsonschema.validate(rec, schema)
         except jsonschema.ValidationError as e:
             schema_fails.append((p.name, str(e.message)[:140]))
     # Second: shell out to p6_iter118_strict_validator.py for orphan/source checks.
-    target = (HERE / ".." / "scripts" / "p5p8" / "p6_iter118_strict_validator.py").resolve()
-    rc = subprocess.run([sys.executable, str(target)], capture_output=True, text=True)
+    target = (
+        HERE.parents[1] / "platform_modal/scripts/p5p8/p6_iter118_strict_validator.py"
+    ).resolve()
+    rc = subprocess.run(
+        [sys.executable, str(target)], cwd=HERE.parent, capture_output=True, text=True
+    )
     sys.stdout.write(rc.stdout)
     # Parse the JSON the script wrote.
     audit_json = HERE / ".." / "experiments" / "results" / "p5p8" / "p6_iter118_strict_audit.json"
@@ -382,8 +402,10 @@ def cmd_measured_coverage(args):
     if not audit_path.exists():
         # Self-rerun if no cache: shell out to the script.
         import subprocess
-        target = (HERE / ".." / "scripts" / "p5p8" / "p6_measured_coverage.py").resolve()
-        subprocess.run([sys.executable, str(target)], check=True)
+        target = (
+            HERE.parents[1] / "platform_modal/scripts/p5p8/p6_measured_coverage.py"
+        ).resolve()
+        subprocess.run([sys.executable, str(target)], cwd=HERE.parent, check=True)
     audit = json.load(open(audit_path))
     if args.delta:
         rows = [r for r in audit["per_entry"] if r["delta_id"] == args.delta]
@@ -444,8 +466,10 @@ def cmd_coverage(args):
     audit_path = audit_path.resolve()
     if not audit_path.exists():
         import subprocess
-        target = (HERE / ".." / "scripts" / "p5p8" / "p6_outcomes_coverage_block.py").resolve()
-        subprocess.run([sys.executable, str(target)], check=True)
+        target = (
+            HERE.parents[1] / "platform_modal/scripts/p5p8/p6_outcomes_coverage_block.py"
+        ).resolve()
+        subprocess.run([sys.executable, str(target)], cwd=HERE.parent, check=True)
     # parse the TSV
     with audit_path.open() as fh:
         header = fh.readline().rstrip("\n").split("\t")
@@ -504,8 +528,10 @@ def cmd_antiherding(args):
     audit_path = audit_path.resolve()
     if not audit_path.exists():
         import subprocess
-        target = (HERE / ".." / "scripts" / "p5p8" / "p6_zvf_antiherding.py").resolve()
-        subprocess.run([sys.executable, str(target)], check=True)
+        target = (
+            HERE.parents[1] / "platform_modal/scripts/p5p8/p6_zvf_antiherding.py"
+        ).resolve()
+        subprocess.run([sys.executable, str(target)], cwd=HERE.parent, check=True)
     with audit_path.open() as fh:
         header = fh.readline().rstrip("\n").split("\t")
         idx = {h: i for i, h in enumerate(header)}

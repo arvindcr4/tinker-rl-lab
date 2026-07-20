@@ -1,0 +1,192 @@
+{
+  "audit_record": {
+    "arm": "dapo",
+    "collapse": false,
+    "heldout_n": 8,
+    "heldout_score": 0.5,
+    "last10_reward": 0.5,
+    "manifest_path": "run_manifest.json",
+    "mean_gu": 1.0,
+    "mean_zvf": 0.0,
+    "rollouts": 48,
+    "seed": 11,
+    "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+    "treatment_changes": [
+      "clip_bounds",
+      "dynamic_sampling"
+    ],
+    "wall_clock_seconds": 523.7193677359999
+  },
+  "completed_at": "2026-07-15T11:16:52+00:00",
+  "evidence_class": "preflight-not-evidence",
+  "heldout_trace": [
+    {
+      "completion_sha256": "a6714a668c419005bfde57a243ad98aabe3d69be36822ac0989d0fa21eb9d4cf",
+      "correct": true,
+      "index": 0,
+      "prediction": 18,
+      "target": 18
+    },
+    {
+      "completion_sha256": "41224bf01d6664f68b64679219f8127657ae452d0a50d71374d7895fba411366",
+      "correct": true,
+      "index": 1,
+      "prediction": 3,
+      "target": 3
+    },
+    {
+      "completion_sha256": "dc1e38452a7065c1d74463b7d49bfa1968b3464082a4e4d3df27c37a51623ed5",
+      "correct": false,
+      "index": 2,
+      "prediction": null,
+      "target": 70000
+    },
+    {
+      "completion_sha256": "4c4a334da19fc04b2fe878445ea454fdb5f51b2ad4fee4391c8e060d579292bd",
+      "correct": true,
+      "index": 3,
+      "prediction": 540,
+      "target": 540
+    },
+    {
+      "completion_sha256": "ef35063f3f79cc141c9cc2bfb01c4f2a5c27221c3571858d6103e5b710fc4d03",
+      "correct": false,
+      "index": 4,
+      "prediction": null,
+      "target": 20
+    },
+    {
+      "completion_sha256": "11e4d31463c777cd4aec367c04886d50c31470eaae884dafa28b2153e41ef720",
+      "correct": false,
+      "index": 5,
+      "prediction": null,
+      "target": 64
+    },
+    {
+      "completion_sha256": "0911e13bb15156732d4b0fb5b85c912af579996dc8504bc306c9b0f9249454e1",
+      "correct": true,
+      "index": 6,
+      "prediction": 260,
+      "target": 260
+    },
+    {
+      "completion_sha256": "73ac987a7c26ab417b7328f170be85af948198cdb928a5d4147b05ec6003f7a6",
+      "correct": false,
+      "index": 7,
+      "prediction": null,
+      "target": 160
+    }
+  ],
+  "remote_checkpoint_steps": [
+    1
+  ],
+  "resume": {
+    "resumed_from_path": null,
+    "resumed_from_step": 0
+  },
+  "run_config": {
+    "dataset": "openai/gsm8k",
+    "dataset_revision": "740312add88f781978c0658806c59bc2815b9866",
+    "heldout_n": 8,
+    "max_completion_length": 1024,
+    "max_steps": 1,
+    "mode": "preflight",
+    "model": "Qwen/Qwen3-8B",
+    "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "save_steps": 1,
+    "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+    "treatment_changes": [
+      "clip_bounds",
+      "dynamic_sampling"
+    ],
+    "treatment_overrides": {
+      "epsilon": 0.2,
+      "epsilon_high": 0.28,
+      "importance_sampling_level": "token",
+      "loss_type": "grpo",
+      "scale_rewards": "group"
+    },
+    "treatment_runtime": {
+      "dynamic_sampling": "filter_zero_variance_and_refill",
+      "epsilon_high": 0.28,
+      "epsilon_low": 0.2,
+      "max_generation_batches": 10,
+      "maximum_rollouts_per_step": 16,
+      "num_generations": 4,
+      "unique_prompts_per_step": 4
+    },
+    "unit_fingerprint": "cae89db8436d688fd02c45a764508a8798093064b5e454c00fe0e91b513c5658"
+  },
+  "runtime_versions": {
+    "cuda": "12.8",
+    "datasets": "4.8.5",
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "huggingface_hub": "1.20.1",
+    "peft": "0.19.1",
+    "torch": "2.11.0+cu128",
+    "torchao": "0.17.0",
+    "transformers": "5.13.1",
+    "trl": "1.8.0",
+    "wandb": "0.28.0"
+  },
+  "schema_version": "e1-colab-confirmatory-run-v1",
+  "started_at": "2026-07-15T11:08:08+00:00",
+  "telemetry": {
+    "first_five_reward": 0.5,
+    "first_five_zvf": 0.0,
+    "gu": [
+      1.0
+    ],
+    "reward": [
+      0.5
+    ],
+    "trainer_log_history": [
+      {
+        "clip_ratio/high_max": 0.0,
+        "clip_ratio/high_mean": 0.0,
+        "clip_ratio/low_mean": 0.0,
+        "clip_ratio/low_min": 0.0,
+        "clip_ratio/region_mean": 0.0,
+        "completions/clipped_ratio": 0.25,
+        "completions/max_length": 1024.0,
+        "completions/max_terminated_length": 1017.0,
+        "completions/mean_length": 754.875,
+        "completions/mean_terminated_length": 665.1666870117188,
+        "completions/min_length": 299.0,
+        "completions/min_terminated_length": 299.0,
+        "dapo/eligible_groups": 4.0,
+        "dapo/generation_batches": 3.0,
+        "dapo/rollouts_cumulative": 48.0,
+        "entropy": 0.1698845624923706,
+        "epoch": 0.0005353319057815846,
+        "frac_reward_zero_std": 0.0,
+        "grad_norm": 0.0733131542801857,
+        "learning_rate": 1e-06,
+        "loss": 7.450580596923828e-09,
+        "num_tokens": 13646.0,
+        "reward": 0.5,
+        "reward_std": 0.5163977794943223,
+        "rewards/gsm8k_exact_reward/mean": 0.5,
+        "rewards/gsm8k_exact_reward/std": 0.5163977794943223,
+        "step": 1,
+        "step_time": 355.02266396699997
+      },
+      {
+        "epoch": 0.0005353319057815846,
+        "step": 1,
+        "total_flos": 0.0,
+        "train_loss": 7.450580596923828e-09,
+        "train_runtime": 366.6761,
+        "train_samples_per_second": 0.044,
+        "train_steps_per_second": 0.003
+      }
+    ],
+    "zvf": [
+      0.0
+    ]
+  },
+  "wandb": {
+    "run_id": "cae89db8",
+    "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/cae89db8"
+  }
+}

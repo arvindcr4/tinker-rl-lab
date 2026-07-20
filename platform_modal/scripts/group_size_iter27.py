@@ -48,9 +48,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
+ROOT = REPO_ROOT / "platform_hybrid"
 RES = ROOT / "experiments" / "results"
-FIG = ROOT / "figures"
+FIG = ROOT / "paper" / "figures"
 
 G_VALUES = [2, 4, 8, 16]
 G_BROADER = [4, 32]
@@ -352,7 +353,7 @@ def build_figure(per_g: pd.DataFrame) -> Path:
                 yerr=[meas_rows["retention"] - meas_rows["retention_ci_low"],
                       meas_rows["retention_ci_high"] - meas_rows["retention"]],
                 fmt="o-", color="#1f77b4", capsize=4, linewidth=2, markersize=8,
-                label="measured G=4 vs G=32 (iter7)")
+                label="reconstructed G=4 vs G=32 (iter7)")
     # Iter19 fit extrapolation
     if len(fit_rows) > 0:
         ax.plot(fit_rows["T_tokens"] / 1e6, fit_rows["retention"], "v--",
@@ -370,8 +371,12 @@ def build_figure(per_g: pd.DataFrame) -> Path:
     ax = axes[1, 1]
     # The accuracy surface from group_size_effect.tsv (Qwen3-8B / GSM8K rows)
     eff = pd.read_csv(RES / "group_size_effect.tsv", sep="\t")
-    keep = eff[eff["source"].str.startswith("qwen3-8b_gsm8k_")].copy()
-    keep["T_M"] = keep["source"].str.extract(r"T(\d+)$").astype(int)
+    if "source" in eff.columns:
+        keep = eff[eff["source"].str.startswith("qwen3-8b_gsm8k_")].copy()
+        keep["T_M"] = keep["source"].str.extract(r"T(\d+)$").astype(int)
+    else:
+        keep = pd.read_csv(RES / "group_size_token_normalized.tsv", sep="\t")
+        keep["T_M"] = (keep["budget_tokens"] / 1_000_000).astype(int)
     pivot = keep.pivot(index="G", columns="T_M", values="heldout_acc_mean")
     pivot = pivot.reindex([4, 8, 16, 32, 64])
     pivot = pivot.reindex(columns=[1, 4, 16, 64])
@@ -390,7 +395,7 @@ def build_figure(per_g: pd.DataFrame) -> Path:
                         color=color, fontsize=9)
     ax.set_xlabel("Token budget T")
     ax.set_ylabel("Group size G")
-    ax.set_title("(D) Accuracy(T, G) — G_optimal depends on T")
+    ax.set_title("(D) Illustrative Accuracy(T, G) reconstruction")
     plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04, label="heldout acc")
 
     fig.suptitle("Iter 27 — Pillar 3 unified synthesis: "

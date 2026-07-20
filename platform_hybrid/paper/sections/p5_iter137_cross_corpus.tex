@@ -2,6 +2,10 @@
 \section{Exhibit: MIN-REPORT v2.2 Cross-Corpus Portability (iter 137)}
 \label{sec:p5-iter137-cross-corpus}
 
+\noindent\textbf{Historical-schema note.} This exhibit evaluates a legacy
+experimental 18-field v2.2 research schema. It is retained as an ablation and
+does not redefine the current eight-item MIN-REPORT standard.
+
 Prior MIN-REPORT audits (iter-105 row 121, iter-113 row 127a, iter-117 row
 132, iter-121 row 137) all measured coverage on the
 \texttt{mega\_20260704} corpus (n=98 manifests)---the corpus for which
@@ -60,7 +64,7 @@ n2\_reward\_tensor\_resume & 160 & 2 & 0 & 1 & 4 & 3 & 8 & \textbf{7/18} (38.9\,
     \texttt{n2\_manifest.json} with model\_family, rollout\_temperature,
     decontam, sampler\_backend, advantage\_baseline, token\_mask,
     kl\_beta, heldout\_split, reward\_model\_signature.
-  \item \textbf{H4 PASS} 14/18 items (77.8\,\%) have corpus-differentiated
+  \item \textbf{H4 PASS} 14/18 legacy fields (77.8\,\%) have corpus-differentiated
     encoding mode; only 4/18 (Items 3, 5, 10, 11) are corpus-uniform
     (3 AB/AB/AB and 1 EX/EX/EX). Shannon entropy per item: median 0.355,
     max 0.613 (Items 1, 8).
@@ -93,9 +97,9 @@ different shapes} (full manifests vs. partial seeds vs. bare tensors) and
 finds that:
 
 \begin{itemize}
-  \item The standard is \textbf{not corpus-uniform}: 14/18 items have
+  \item The experimental schema is \textbf{not corpus-uniform}: 14/18 fields have
     corpus-differentiated encoding mode. Reviewers who generalize ``the
-    MIN-REPORT standard requires X'' must scope X to a specific corpus
+    this experimental schema requires X'' must scope X to a specific corpus
     type.
   \item \textbf{N2 is closer to mega than n10 is} (7/18 vs 3/18 recoverable),
     even though N2 has no manifest at all---the reward tensor compensates.

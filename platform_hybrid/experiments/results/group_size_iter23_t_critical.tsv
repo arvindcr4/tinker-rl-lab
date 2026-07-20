@@ -1,5 +1,5 @@
 model	a_hat	tau_hat_tokens	abs_delta_threshold	T_critical_tokens	T_ci_low	T_ci_high	interpretation
-|Δ(T)| = 0.395*(1 - exp(-T/1.210e+07))	0.3	12097810.2	0.01	410135.0	238958.0	887036.0	At T_c≈0.41M tokens, G=4 is statistically separable from G=32 (1pp).
-|Δ(T)| = 0.395*(1 - exp(-T/1.210e+07))	0.3	12097810.2	0.03	1274632.0	742641.0	2756763.0	At T_c≈1.27M tokens, G=4 is practically separable (3pp).
-|Δ(T)| = 0.395*(1 - exp(-T/1.210e+07))	0.3	12097810.2	0.05	2205692.0	1285107.0	4770452.0	At T_c≈2.21M tokens, G=4 falls 5pp behind G=32; the canonical Wu-equivalence threshold.
-|Δ(T)| = 0.395*(1 - exp(-T/1.210e+07))	0.3	12097810.2	0.1	4905240.0	1285107.0	4770452.0	At T_c≈4.91M tokens, G=4 is materially worse (10pp).
+|Δ(T)| = 0.300*(1 - exp(-T/1.210e+07))	0.3	12097810.2	0.01	410135.0	238958.0	887036.0	The reconstruction crosses a 1pp G=4/G=32 gap near T_c≈0.41M tokens.
+|Δ(T)| = 0.300*(1 - exp(-T/1.210e+07))	0.3	12097810.2	0.03	1274632.0	742641.0	2756763.0	The reconstruction crosses a 3pp G=4/G=32 gap near T_c≈1.27M tokens.
+|Δ(T)| = 0.300*(1 - exp(-T/1.210e+07))	0.3	12097810.2	0.05	2205692.0	1285107.0	4770452.0	The reconstruction crosses a 5pp G=4/G=32 gap near T_c≈2.21M tokens.
+|Δ(T)| = 0.300*(1 - exp(-T/1.210e+07))	0.3	12097810.2	0.1	4905240.0	2857951.0	10609014.0	The reconstruction crosses a 10pp G=4/G=32 gap near T_c≈4.91M tokens.

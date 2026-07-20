@@ -1,0 +1,180 @@
+{
+  "accelerator": "A100",
+  "amendment_sha256": "5d51996b2344b12d513f370753d23ca2ab4c4b88cae36a22bed0ecfc10b76588",
+  "arm": "dapo",
+  "completed_at": "2026-07-16T16:28:00+00:00",
+  "environment_check_sha256": "1d7cc4005be76979bce8eb82f2d1a771fa6e24d542144cf2ffad3b34c4fdc0ea",
+  "evidence_class": "confirmatory",
+  "failed_step": null,
+  "fingerprint": "a4c73e0ea84744fba5a919ca2365a0cea5ad0adacbdc3802050996b1b454934e",
+  "hf_repo": "arvindcr4/tinker-rl-lab-e1-dapo-s53-a4c73e0e",
+  "log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/colab-e1-confirmatory/logs/e1__dapo__s53__a4c73e0ea847.log",
+  "mode": "confirmatory",
+  "payload": {
+    "audit_record": {
+      "arm": "dapo",
+      "collapse": false,
+      "heldout_n": 500,
+      "heldout_score": 0.636,
+      "last10_reward": 0.51875,
+      "manifest_path": "run_manifest.json",
+      "mean_gu": 1.0,
+      "mean_zvf": 0.0,
+      "rollouts": 1664,
+      "seed": 53,
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "treatment_changes": [
+        "clip_bounds",
+        "dynamic_sampling"
+      ],
+      "wall_clock_seconds": 18206.637767341002
+    },
+    "evidence_class": "confirmatory",
+    "remote": {
+      "hf_checkpoint_steps": [
+        5,
+        10,
+        15,
+        20,
+        25,
+        30
+      ],
+      "hf_checkpoint_url": "https://huggingface.co/arvindcr4/tinker-rl-lab-e1-dapo-s53-a4c73e0e/tree/194c9d2ea0d72cb93c751a314bbec9cbdcf7b5c0",
+      "hf_commit": "194c9d2ea0d72cb93c751a314bbec9cbdcf7b5c0",
+      "hf_final_adapter_path": "final/adapter_model.safetensors",
+      "hf_manifest_path": "run_manifest.json",
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-dapo-s53-a4c73e0e",
+      "wandb_run_id": "a4c73e0e",
+      "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/a4c73e0e"
+    },
+    "resume": {
+      "resumed_from_path": null,
+      "resumed_from_step": 0
+    },
+    "run_config": {
+      "dataset": "openai/gsm8k",
+      "dataset_revision": "740312add88f781978c0658806c59bc2815b9866",
+      "eval_batch_size": 8,
+      "evaluation_progress_save_every": 16,
+      "heldout_n": 500,
+      "max_completion_length": 1024,
+      "max_steps": 30,
+      "mode": "confirmatory",
+      "model": "Qwen/Qwen3-8B",
+      "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "save_steps": 5,
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "treatment_changes": [
+        "clip_bounds",
+        "dynamic_sampling"
+      ],
+      "treatment_overrides": {
+        "epsilon": 0.2,
+        "epsilon_high": 0.28,
+        "importance_sampling_level": "token",
+        "loss_type": "grpo",
+        "scale_rewards": "group"
+      },
+      "treatment_runtime": {
+        "dynamic_sampling": "filter_zero_variance_and_refill",
+        "epsilon_high": 0.28,
+        "epsilon_low": 0.2,
+        "max_generation_batches": 10,
+        "maximum_rollouts_per_step": 16,
+        "num_generations": 4,
+        "unique_prompts_per_step": 4
+      },
+      "unit_fingerprint": "a4c73e0ea84744fba5a919ca2365a0cea5ad0adacbdc3802050996b1b454934e"
+    },
+    "runtime_versions": {
+      "cuda": "12.8",
+      "datasets": "4.8.5",
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "huggingface_hub": "1.20.1",
+      "peft": "0.19.1",
+      "torch": "2.11.0+cu128",
+      "torchao": "0.17.0",
+      "transformers": "5.13.1",
+      "trl": "1.8.0",
+      "wandb": "0.28.0"
+    },
+    "schema_version": "e1-colab-result-v1",
+    "status": "completed"
+  },
+  "remote_verification": {
+    "hf_checkpoint_steps": [
+      5,
+      10,
+      15,
+      20,
+      25,
+      30
+    ],
+    "hf_commit": "194c9d2ea0d72cb93c751a314bbec9cbdcf7b5c0",
+    "hf_repo": "arvindcr4/tinker-rl-lab-e1-dapo-s53-a4c73e0e",
+    "verified_at": "2026-07-16T16:28:11+00:00",
+    "wandb": {
+      "run_id": "a4c73e0e",
+      "state": "finished",
+      "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/a4c73e0e"
+    }
+  },
+  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/colab-e1-confirmatory/requests/e1__dapo__s53__a4c73e0ea847.json",
+  "return_code": 0,
+  "run_config": {
+    "heldout_n": 500,
+    "max_completion_length": 1024,
+    "max_steps": 30,
+    "save_steps": 5
+  },
+  "runtime_packages": [
+    "trl==1.8.0",
+    "transformers==5.13.1",
+    "datasets==4.8.5",
+    "peft==0.19.1",
+    "torchao==0.17.0",
+    "wandb==0.28.0"
+  ],
+  "schema_version": "colab-e1-confirmatory-unit-v1",
+  "script": "zvf-program/colab-experiments/e1_grpo_confirmatory.py",
+  "script_sha256": "986811e3e78fe86ffcbede4a98599ada167ff1975b3341eef391eb2b2e7fe8c6",
+  "secure_exec_sha256": "253d3b276564c127501a58b971d6f6c0ba458afed16b05a88be26cae9bcfec89",
+  "seed": 53,
+  "session": "e1-con-dapo-s53-a4c73e",
+  "source_snapshots": {
+    "zvf-program/audit/preregistration_colab_a100_amendment.json": {
+      "sha256": "5d51996b2344b12d513f370753d23ca2ab4c4b88cae36a22bed0ecfc10b76588",
+      "snapshot": "sources/5d51996b2344b12d513f370753d23ca2ab4c4b88cae36a22bed0ecfc10b76588"
+    },
+    "zvf-program/audit/preregistration_e1_treatments.json": {
+      "sha256": "8e4279e55130ef9371329aea30f59193ea0bd1d221ec7ea6c94af269460628a5",
+      "snapshot": "sources/8e4279e55130ef9371329aea30f59193ea0bd1d221ec7ea6c94af269460628a5"
+    },
+    "zvf-program/colab-experiments/e1_grpo_confirmatory.py": {
+      "sha256": "986811e3e78fe86ffcbede4a98599ada167ff1975b3341eef391eb2b2e7fe8c6",
+      "snapshot": "sources/986811e3e78fe86ffcbede4a98599ada167ff1975b3341eef391eb2b2e7fe8c6"
+    },
+    "zvf-program/colab-experiments/secure_exec_confirmatory.py": {
+      "sha256": "253d3b276564c127501a58b971d6f6c0ba458afed16b05a88be26cae9bcfec89",
+      "snapshot": "sources/253d3b276564c127501a58b971d6f6c0ba458afed16b05a88be26cae9bcfec89"
+    },
+    "zvf-program/colab-experiments/verify_colab_e1_environment.py": {
+      "sha256": "1d7cc4005be76979bce8eb82f2d1a771fa6e24d542144cf2ffad3b34c4fdc0ea",
+      "snapshot": "sources/1d7cc4005be76979bce8eb82f2d1a771fa6e24d542144cf2ffad3b34c4fdc0ea"
+    }
+  },
+  "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+  "started_at": "2026-07-16T11:22:41+00:00",
+  "status": "completed",
+  "tracking": {
+    "hf_repo_prefix": "arvindcr4/tinker-rl-lab-e1",
+    "wandb_entity": null,
+    "wandb_group": "e1-qwen3-8b-gsm8k",
+    "wandb_project": "tinker-rl-lab"
+  },
+  "treatment_spec_sha256": "8e4279e55130ef9371329aea30f59193ea0bd1d221ec7ea6c94af269460628a5",
+  "validated_outputs": {
+    "audit_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/full/dapo-seed-53.json",
+    "manifest_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/full/manifests/dapo-seed-53.json"
+  }
+}

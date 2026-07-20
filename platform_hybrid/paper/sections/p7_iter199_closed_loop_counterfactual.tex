@@ -1,15 +1,17 @@
-% §4.23 -- Iter 199 -- Closed-Loop Trajectory Counterfactual: projected (zvf_t, contrast_t, cost_t) over 40 steps under four policies on the real N2 panel
+% §4.23 -- Iter 199 -- Frozen-p counterfactual projection over 40 logged steps
 \label{sec:p7-closed-loop-counterfactual}
 
 The prior veins of Pillar~3 measured the iter-119 C4 controller at a single
 fired step in isolation: iter-179 reported the static-$G=16$ contrast-restoration
 on fired prompts; iter-192 reported the per-prompt cost-effective optimum
-$G_N^*$. iter-199 closes the \textbf{fourth open sub-vein of brief (a)}: a
-\textbf{closed-loop trajectory simulation}. We ask what the trajectory of
+$G_N^*$. Iter-199 is a \textbf{frozen-$p$ counterfactual projection}, not a
+closed-loop training experiment. We ask what the diagnostic trajectory of
 $\bigl(\zvf_t,\ \mathrm{contrast}_t,\ \mathrm{cost}_t\bigr)$ over the full
 $40$-step training path would have looked like under four controller policies,
-using the exact per-prompt $k_p(t=0)$ from the $N2$ reward tensors as the
-latent $p_i$ fixed for all $t$.
+using the per-prompt $k_p(t=0)$ from the $N2$ reward tensors as a latent
+$p_i$ fixed for all $t$. Because the policy, prompt distribution, and success
+probabilities do not respond to the simulated actions, the exercise cannot
+estimate held-out learning or controller feedback stability.
 
 \subsubsection*{Forward simulation under fixed latent $p_i$}
 
@@ -35,15 +37,19 @@ and the cost-per-step is
 $\mathrm{cost}_t = G_t / G_{\text{base}} \in \{1,\ 1.5,\ 2\}$ for the three
 policies.
 
-\subsubsection*{Headline results: 4/4 falsifiable hypotheses PASS}
+\subsubsection*{Proxy-objective results under the frozen-$p$ assumptions}
 
-The 40-step trajectories give paired per-step signals for each comparison. We
-report bootstrap percentile $95\%$ CIs ($B=2000$, seed=20260706) on the
-40-step per-method differences:
+The 40 logged steps give paired proxy values for each comparison. We report
+bootstrap percentile $95\%$ CIs ($B=2000$, seed=20260706) on the 40-step
+per-method differences. These intervals condition on the frozen projection and
+do not include uncertainty from policy learning or feedback:
 
 \begin{table}[h]
 \centering\small
-\caption{iter-199 closed-loop trajectory, mean over 40 steps on N2 four-method same-stack panel. CIs over $n=40$ per-method steps, $B=2000$, seed=20260706. \textbf{All 4 PASS verdicts have CI95 disjoint from zero.}}
+\caption{Iter-199 frozen-$p$ diagnostic projection, mean over 40 logged steps
+on the N2 four-method panel. CIs quantify resampling uncertainty of the chosen
+proxy under the fixed projection; they do not cover model learning or policy
+feedback.}
 \label{tab:iter199-trajectory}
 \vspace{2pt}
 \begin{tabular}{l c c c c c c c}
@@ -108,7 +114,8 @@ The five falsifiable hypotheses:
   mean contrast than AG8 on all four methods ($\mathrm{CI_{hi}}<0$).
   The HYB controller trades $1$–$3$ percentage points of mean contrast
   for $20$–$25\%$ fewer rollouts, and emerges as the
-  \textbf{highest net-benefit policy on every method}.
+  \textbf{highest proxy score on every method}; this is not empirical
+  dominance in held-out reward.
 \end{enumerate}
 
 \subsubsection*{Pareto frontier on the $(\overline{\mathrm{cost}},\ \overline{\mathrm{contrast}})$ plane}
@@ -128,8 +135,8 @@ The four policies trace out a Pareto frontier:
   percentage points less contrast restored.
 \end{itemize}
 The dominant operating point depends on the practitioner's tolerance for
-contrast loss vs rollout savings. The headline recommendation of iter-199 is
-\textbf{AG\_HYB}: it dominates the per-step net-benefit metric
+contrast loss vs rollout savings. Under the declared projection, AG\_HYB has
+the highest per-step net-benefit proxy
 ($\Delta = \mathrm{contrast\ gain} - 0.5 \times \mathrm{cost\ inflation}$)
 on every method, with pooled mean $\Delta_{\text{AG\_HYB}}=+0.343$ —
 strictly positive with CI95 disjoint from zero across all four methods
@@ -138,7 +145,7 @@ individually.
 \subsubsection*{What the negative H5 confirms}
 
 The deliberate failure of H5 (HYB has \emph{less} mean contrast than AG8) is
-the empirical proof of the iter-192 cost-effective optimum: when a fired
+consistent with the iter-192 cost-effective proxy optimum: when a fired
 prompt is contrast-class, the cost-effective ratio peaks at $G_N=12$ — paying
 $16$ for the same marginal contrast is over-spending. iter-199 lifts this
 from a per-prompt finding (iter-192) into a per-step trajectory finding: the
@@ -156,13 +163,13 @@ $\gamma^*=0$ (Berkeley row 19) fire rules are \textbf{structurally
 disjoint} at the step level — they encode orthogonal algebraic reductions of
 the same latent signal-starvation condition. iter-199 closes the loop on the
 Adaptive-G rule alone: even at $50$–$75\%$ of the static-$G=16$ upper bound,
-the AG8 / AG\_HYB controller delivers
+the AG8 / AG\_HYB projection yields
 $\Delta_{\text{per-step}} \in [0.17,\ 0.34]$ with CI95 disjoint from zero.
 The iter-195 reconciliation (the three rules are three projections of one
-latent signal) and iter-199 (one of those projections, projected onto a
-40-step trajectory, dominates the static oracle) are the two complementary
-halves of the Pillar-3 closed-loop story: \emph{theoretical
-cross-paradigm disagreement} plus \emph{operational per-policy dominance}.
+latent signal) and iter-199 (one of those projections, evaluated on a
+40-step frozen-$p$ diagnostic path, scores above the static reference under a
+chosen net-benefit proxy) are complementary diagnostic analyses, not evidence
+of operational policy dominance.
 
 \subsubsection*{Reproducibility}
 

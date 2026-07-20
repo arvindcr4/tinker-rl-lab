@@ -1,0 +1,98 @@
+{
+  "accelerator": "T4",
+  "arm": "grpo",
+  "evidence_class": "pilot-not-confirmatory",
+  "execution_plan": [
+    [
+      "colab",
+      "--auth=oauth2",
+      "new",
+      "--gpu",
+      "T4",
+      "--session",
+      "e1p-grpo-s11-891206"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1p-grpo-s11-891206",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/e3_open_audit.py",
+      "/content/e3_open_audit.py"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1p-grpo-s11-891206",
+      "<ephemeral-secret-file>",
+      "/content/.tinker-run-secrets.json"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1p-grpo-s11-891206",
+      "<ephemeral-request-file>",
+      "/content/tinker-unit-request.json"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "install",
+      "--session",
+      "e1p-grpo-s11-891206",
+      "wandb==0.25.1"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "exec",
+      "--session",
+      "e1p-grpo-s11-891206",
+      "--file",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/secure_exec.py",
+      "--timeout",
+      "1800"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "stop",
+      "--session",
+      "e1p-grpo-s11-891206"
+    ]
+  ],
+  "fingerprint": "891206ab71a33ac41a0eaffc2ad0561bdf4c68c423eb441631f617b779487b1f",
+  "hf_path": "e1-pilot/grpo/seed-11/891206ab71a3",
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "remote_tracking": {
+    "hf_repo": "arvindcr4/tinker-rl-lab-colab-obligations",
+    "required": true,
+    "wandb_entity": null,
+    "wandb_group": "e1-open-audit-tracked-smoke",
+    "wandb_project": "tinker-rl-lab"
+  },
+  "run_config": {
+    "batch": 3,
+    "g0": 4,
+    "gmax": 10,
+    "heldout_n": 2,
+    "inner": 2,
+    "learning_rate": 2e-06,
+    "max_new": 40,
+    "steps": 1
+  },
+  "schema_version": "colab-e1-pilot-unit-v1",
+  "script": "zvf-program/colab-experiments/e3_open_audit.py",
+  "script_sha256": "7ca7806eeccdbca350b9f52f0e35070d5206ee653e30a400157de6463e5f0a7b",
+  "secure_exec_sha256": "e04571d5f474ce2bfcba97e6778e4117ec38de115c59706f1c7dc5361226eef4",
+  "seed": 11,
+  "session": "e1p-grpo-s11-891206",
+  "status": "launching",
+  "updated_at": "2026-07-15T01:08:29+00:00",
+  "wandb_run_name": "e1p-grpo-s11-891206ab"
+}

@@ -12,7 +12,8 @@ and variant deltas. This directory is the deliverable of the resource paper
     implementation status;
   - `variant_delta`: the set of changes a named variant (DAPO, Dr. GRPO,
     GSPO, ...) makes to base GRPO, verified against the source paper.
-- `entries/*.json` — 31 records (20 stack + 11 variant-delta). Iter 6 added
+- `entries/*.json` — 46 queryable records (28 stack + 18 variant-delta), plus
+  two provenance amendment sidecars. Iter 6 added
   the 8 GRPO-family methods present in the worktree
   (aero/gift/areal/ngrpo/cppo/mcgrpo/es/scafgrpo); iter 15 verified the 8 new
   citations.
@@ -36,12 +37,13 @@ They are now closed:
    enumerates every `registry/entries/delta_*.json` stem. When a new delta
    is added, run
    `python3 scripts/p5p8/regenerate_schema_delta_enum.py` to refresh
-   the enum and re-validate all 31 entries.
+  the enum and re-validate all queryable entries.
 
-The iter-26 stress test (`scripts/p5p8/registry_stress_test.py`) applies
-3,230 adversarial perturbations across 13 categories × 31 entries × 10
-mutations and reports a 100.0% recovery rate (95% paired bootstrap CI
-[1.000, 1.000]) on the bumped schema.
+The iter-26 stress test (`scripts/p5p8/registry_stress_test.py`) applied
+3,230 adversarial perturbations to the then-current 31-entry snapshot
+(13 categories × 31 entries × 10 mutations) and reported a 100.0% recovery
+rate (95% paired bootstrap CI [1.000, 1.000]) on the bumped schema. This
+historical result does not imply that later entries were in that snapshot.
 
 ## Field convention
 
@@ -63,7 +65,8 @@ python3 registry/query.py claim-validation            # iter-46: (delta, metric,
 
 ```bash
 python3 -c "import json, glob, jsonschema; s=json.load(open('registry/schema.json')); \
-  [jsonschema.validate(json.load(open(p)), s) for p in glob.glob('registry/entries/*.json')]"
+  ds=[json.load(open(p)) for p in glob.glob('registry/entries/*.json')]; \
+  [jsonschema.validate(d, s) for d in ds if d.get('record_type')]"
 ```
 
 ## Seed-entry provenance

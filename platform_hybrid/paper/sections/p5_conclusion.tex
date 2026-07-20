@@ -3,8 +3,10 @@
 \label{sec:p5-conclusion}
 The evidence pattern is consistent and, we argue, sufficient to change reporting
 policy: on a fixed stack, four algorithm labels landed within $0.034$ reward
-of one another; across stacks, a backend swap alone moved reward by $0.794$
-and a single label produced opposite telemetry signatures. RL-for-LLM results
+of one another; across under-specified stacks, a nominal backend comparison
+that also changed the base checkpoint moved reward by $0.794$, and a single
+label produced opposite telemetry signatures. The former is not a backend
+causal estimate; both are evidence that RL-for-LLM results
 are stack-conditioned. The community's papers should say so, in a form
 machines can check.
 
@@ -12,8 +14,9 @@ Our call to action is addressed to venues, because venues set the price of
 non-disclosure:
 \begin{enumerate}[leftmargin=1.5em, itemsep=2pt, topsep=2pt]
 \item \textbf{Require the manifest.} Any paper whose contribution depends on
-an RL-for-LLM comparison should attach one eight-item manifest
-(\tableref{tab:p5-minreport}) per compared run, as supplementary JSON.
+an RL-for-LLM comparison should attach the seven-field run manifest and the
+eighth evaluation report (pass@$k$; \tableref{tab:p5-minreport}) per compared
+run as supplementary JSON.
 Auto-emission (\secref{sec:p5-toolchain}) makes this a one-line cost for
 open trainers; for closed stacks, ``provider-internal, version-dated'' is an
 acceptable and informative value---the point is that conditioning be
@@ -36,5 +39,6 @@ right, as evaluation-harness versioning now does
 The deep-RL community needed a reporting reckoning \citep{henderson2018deep}, a
 statistics paper \citep{colas2019hitchhiker, agarwal2021deep}, and a decade
 to converge on reporting norms. RL-for-LLMs can shortcut that decade: the
-confounds are already documented, the manifest is seven items, and the
-enforcement is a diff. Report the stack, not the label.
+confounds are already documented, the run manifest is seven fields, the
+evaluation requirement is the eighth item, and enforcement is a diff. Report
+the stack, not the label.

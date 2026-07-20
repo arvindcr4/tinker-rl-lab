@@ -3,8 +3,9 @@
 Our companion Pillar-2 paper characterized the Zero-Variance Fraction
 (ZVF)---the share of GRPO groups whose completions all receive the same
 reward---as a deliberately \emph{descriptive} diagnostic of signal starvation.
-This paper is the interventional sequel: we ask whether ZVF can be predicted
-from first principles and, once predicted, \emph{controlled}. This does not
+This paper is a retrospective controller audit and a prospective intervention
+plan: we ask which ZVF-derived quantities are mechanistically predictable and
+whether they are ready to control rollout allocation. This does not
 overturn Pillar-2's restraint---we \emph{test} ZVF's predictive value through
 falsifiable predictions (T1--T3 below) rather than assume it, and we flag where
 that value rests on the weakest evidence (the causal gradient link is toy-scale
@@ -34,6 +35,13 @@ to $0.000$ while leaving PCD unchanged. We then operationalize the theory as a
 group size on ZVF spikes. In a four-arm open-trainer audit, adaptive-$G$
 matches the best fixed-recipe held-out gain ($+0.575$) at $186$ rollouts,
 while DAPO-style dynamic sampling drives ZVF to $0.00$ at $+45\%$ rollout
-cost---an accuracy-versus-compute trade the controller navigates explicitly.
-All interventional results are single-task, small-$n$, and scoped accordingly.
+cost---an accuracy-versus-compute trade, not a controller win. In the larger
+2,560-observation controller trace, 1,723 of 1,867 escalation events (92.3\%)
+occur on all-correct groups and only 144 on all-wrong groups. This asymmetry
+shows that a symmetric ZVF trigger mostly spends on solved prompts; deleting
+those fires is only a counterfactual proposal because performance preservation
+has not been measured. No result here establishes prospective superiority over
+static $G{=}16$, Dr.~GRPO, or dynamic sampling. All intervention evidence is
+single-task, small-$n$, or retrospective, and the paper ends with the matched-
+budget, multi-seed test required to earn control authority.
 \end{abstract}

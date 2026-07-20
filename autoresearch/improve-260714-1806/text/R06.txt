@@ -1,0 +1,707 @@
+
+[PAGE 1]
+Min-Report-RL: Reporting the Stack, Not the Label
+ A Community Minimum-Reportable-Stack Standard and Reproducibility-Audit Protocol
+                  for Group-Relative RL Post-Training of LLMs
+
+                                                  Arvind C R∗
+                                                PES University
+                                             arvindcr4@gmail.com
+
+                                                   July 14, 2026
+
+
+
+                                                      Abstract
+              Reinforcement-learning post-training of large language models is reported as though an
+          algorithm label—PPO, GRPO, DPO, and the growing GRPO family (DAPO, GSPO, Dr.GRPO,
+          M-GRPO, GRESO, EDGE-GRPO, DARS, TreePo, . . . )—fixes the experiment. It does not. In
+          an audit of a group-relative RL runner, nominally identical visible “GRPO” configurations (same
+          advertised model family, group size, learning rate, dataset, seed, and step budget) produced
+          last-10 training reward of 84.4% on one backend and 5.0% on another—a ∼ 17× gap [2] with no
+          visible hyperparameter difference. Provenance inspection later showed that the managed stack
+          also pinned a different base checkpoint. The 17× number is therefore an under-specification
+          exhibit, not a backend causal estimate: the label was held constant; the stack and model identity
+          were not. We argue that this stack-conditioning is not an exotic edge case but the default state of
+          the field, and that the literature’s current reporting norms make it structurally impossible to tell
+          whether a claimed algorithmic gain survives a change of backend, sampler, reference-policy/KL
+          handling, LoRA configuration, or reward parser.
+              This position paper proposes Min-Report-RL: an eight-item minimum-reportable-stack
+          checklist that every GRPO-family paper should satisfy—seven run-manifest fields plus held-out
+          pass@k reporting—where each item is included precisely because it is a documented lever that
+          can flip a head-to-head comparison. We then propose a concrete reproducibility-audit protocol—
+          re-implement DAPO, GSPO, Dr.GRPO, and AERO inside one controlled language-model stack
+          and report which claimed gains survive; M-GRPO is assigned to a separate agentic stratum
+          because its hierarchy is not a minimal arithmetic-trainer hook. We specify the locked treatment
+          matrix and verdict rules without printing unexecuted result cells. We close with an adoption
+          path for getting TRL, verl, and OpenRLHF to log the Min-Report-RL fields by default, and
+          with responses to the obvious objections. We do not claim that any specific GRPO variant is
+          overstated; we claim that, under current reporting, the field cannot know, and that this is fixable
+          with a few lines of telemetry.
+
+
+1        Introduction: The Telemetry and Reporting Gap
+Scope note (2026-07-11 canonicalization). This document is the condensed community-position
+statement of the Min-Report-RL standard. The full-length treatment — the measured exhibits, live-
+corpus coupling analysis, threat model with flip-risk grades, toolchain, and verifier implementation —
+is the Pillar-5 paper “Report the Stack, Not the Label: RL-for-LLM Results Are Stack-Conditioned”
+    ∗
+        Pillar 4 of the ZVF Program.
+
+
+
+                                                           1
+
+[PAGE 2]
+(platform_hybrid/paper/paper_P5_minreport). The two documents share the same eight-item
+standard; the Pillar-5 paper is canonical for evidence, this one for the community-facing statement.
+    A reader of the 2023–2026 RL-for-LLM literature could be forgiven for believing that “we trained
+with GRPO” is a complete experimental description. It is not. The same three-letter label is attached
+to runs that differ in their loss form (is there a PPO ratio? a clip? a completion-only token mask?),
+their reference-policy and KL handling (frozen reference? KL penalty in the loss, or in the reward,
+or absent?), their sampler and backend (vLLM vs. a managed inference API; bf16 vs. fp32 logits),
+their group-size schedule, and the parser that converts a generation into a scalar reward. Each of
+these is, individually, sufficient to move a result. Together they form a treatment that the algorithm
+label does not name.
+    This is the LLM-post-training analogue of the deep-RL reproducibility crisis documented a
+decade ago [3, 5], now recurring one abstraction level up. The earlier crisis was about code-level
+and hyperparameter variance within a single algorithm; the present one is worse, because the “stack”
+spans a managed API whose loss we cannot inspect, a tokenizer and chat template that silently
+change the prompt, a sampler whose numerics differ from the trainer’s, and a reward parser that
+can reward a format artifact instead of a correct answer.
+
+The concrete trigger. In an audit of a critic-free group-relative runner [2], we attempted a
+deliberately boring comparison: hold the visible GRPO configuration fixed—Qwen3-8B-family,
+group size G = 8, learning rate 10−5 , GSM8K, 30 steps, seed 42—and change the launch stack. A
+managed runner reached 84.4% last-10 training reward; TRL on an H100 reached 5.0% [2]. No
+visible hyperparameter explains the gap, and the managed run later proved to use a different base
+checkpoint. What differs is everything the label omits: checkpoint and tokenizer identity, prompt
+construction, sampler behavior, loss masking, KL/reference handling, optimizer defaults, LoRA
+target modules, precision, rollout plumbing, checkpoint selection, and the evaluator. The comparison
+is not evidence that one backend is better; it is evidence that “the GRPO config” was under-specified.
+If a nominal backend comparison can span a 17× result while also changing the base checkpoint,
+then a head-to-head between two GRPO variants—each implemented in its own stack—tells us
+almost nothing about the variants.
+
+The family is growing faster than its reporting. The TMLR survey of agentic RL [10]
+now catalogs, in a single comparison table, more than twenty GRPO-family variants—and a
+striking fraction of them (DAPO’s dynamic sampling, GRESO’s pre-rollout filtering, EDGE-GRPO’s
+advantage collapse mitigation, DARS’s difficulty-aware reallocation) intervene on the same underlying
+lever: the fraction of groups whose identical rewards contribute zero gradient, i.e. the quantity
+Zvf measures. Not one of the cataloged variant papers reports a per-step dead-group trajectory
+or the stack fields below, so their relative standings are, under current norms, unattributable. The
+same survey’s mechanistic synthesis supplies a second indictment of current reporting: roughly
+two-thirds of the RL-for-reasoning studies it reviews report only pass@1, although pass@k curves
+are what distinguish a model whose solution distribution was sharpened from one whose solution
+support expanded. A variant can “win” at pass@1 by concentrating probability on already-reachable
+solutions while strictly shrinking the set of problems it can solve at pass@32. Under pass@1-only
+reporting, these two outcomes—one an optimization of sampling, the other a capability change—are
+indistinguishable. This motivates the eighth item of the standard.
+
+Why this is a reporting problem, not just a science problem. The gap above is not a bug to
+be fixed by a better trainer; it is information that is routinely not logged. Most papers do not report
+
+
+                                                  2
+
+[PAGE 3]
+whether the KL term was in the loss or the reward, whether the token mask was completion-only,
+what the sampler precision was, or what the per-step group-size schedule looked like. They also
+rarely report the per-step optimization telemetry—in our framework, the Zero-Variance Fraction
+(Zvf) and Gradient Utilization (Gu)—that would reveal whether a run had any usable learning
+signal at all [2]. A field cannot audit what it does not record. The fix is cheap: a small, fixed set of
+fields, logged by default.
+
+Scope and provenance of the worked numbers. The concrete numbers in this paper used
+as motivating examples (84.4%/ 5.0%/ 17× in the audit; 61.6–89.6% prompt-token loss magnitude;
+82.0% → 83.3% held-out control at p = 0.26; 95.0–98.1%/ 95.0% Llama-3.3-70B run) are inherited
+from the audit paper that motivated this position piece [2]. A reader who wants to verify the numbers
+should consult that paper; this manuscript presents them as illustrative of the kind of stack-driven
+flip, not as re-derivable from a fresh run. The shared bibliography records the companion as a
+working paper until a stable public identifier is assigned. We do not claim that any specific number
+here is independently verifiable against the present manuscript’s experimental record.
+
+Contributions. This paper makes three:
+
+ 1. The stack-conditioning thesis, sharpened into a reporting standard. We restate and
+    extend the audit finding that algorithm labels are under-specified treatments (§2), and convert it
+    into Min-Report-RL: an eight-item minimum-reportable-stack checklist in which every item is
+    justified by a mechanism through which it can flip a comparison (§3).
+ 2. A controlled reproducibility-audit protocol. We specify a single-stack re-implementation of
+    DAPO, GSPO, Dr.GRPO, and AERO, with a pre-registered analysis that reports which claimed
+    gains survive when the stack is held fixed (§4); M-GRPO is evaluated separately in an agentic
+    environment.
+ 3. An adoption path. We describe concrete, low-friction changes to TRL, verl, and OpenRLHF
+    so that the Min-Report-RL fields are emitted by default, plus a venue checklist (§5).
+
+
+2    The Stack-Conditioning Problem
+Thesis. Algorithm rankings in RL post-training are stack-conditioned. A claim of the form “method
+A beats method B” is, in current practice, a claim about two full stacks SA and SB that happen to
+be tagged A and B. The quantities that determine the outcome—backend and sampler numerics, the
+exact loss form (ratio, clip, token mask), reference-policy and KL handling, LoRA target modules and
+rank, precision, the reward parser, the group-size schedule, checkpoint selection, and the evaluation
+harness—are co-determinants of the result, and they are typically confounded with the label. In a
+one-way variance decomposition over a heterogeneous run corpus, the framework/library factor and
+the training-algorithm factor each explain roughly half of the variance in the outcome (η 2 ≈ 0.55 for
+both), but these factors are themselves confounded with model, backend, reward, hardware, and
+task [2]. “Algorithm” and “stack” are not separable in the existing literature because nobody reports
+the stack.
+
+A comparison that flips. Consider the minimal worked example from the audit. The visible
+GRPO configuration is matched exactly:
+
+
+
+                                                   3
+
+[PAGE 4]
+Visible config (held constant)     Backend S1     Backend S2
+             Advertised model family            Qwen3-8B       Qwen3-8B
+             Exact base checkpoint              not matched; recovered only after the run
+             Group size G                       8              8
+             Learning rate                      10−5           10−5
+             Dataset / split                    GSM8K-500      GSM8K-500
+             Steps                              30             30
+             Seed                               42             42
+             Last-10 training reward            84.4%          5.0%
+
+A naïve reader concludes “S1 ’s GRPO is 17× better.” The correct reading is that the two rows
+are different treatments wearing the same label : the loss form, token mask, KL/reference handling,
+sampler precision, LoRA targets, optimizer defaults, and reward parser were never held fixed because
+they were never reported, hence never matched. Flip any one of them and the ranking can invert.
+This is the entire problem in one table: the label is constant, the conclusion is determined by the
+unreported stack.
+
+Why the GRPO family makes this acute. The methods this paper targets—DAPO, GSPO,
+Dr.GRPO, M-GRPO, and the broader variance-mitigation line (AERO, CPPO, NGRPO, Scaf-
+GRPO) [4, 6–9, 11–13]—are typically defined as small deltas on a base GRPO loop: a changed
+advantage normalization, a clip-bound tweak, a token mask, a length penalty, an exploration bonus,
+an adaptive group size. The size of the claimed improvement is frequently smaller than the stack
+effect demonstrated above. When the treatment effect you are trying to measure is 2–5 points and
+the nuisance effect of an unreported stack difference is tens of points, an uncontrolled head-to-head
+is not measuring the method. The GRPO family is exactly the regime in which stack-conditioning is
+most likely to masquerade as algorithmic progress.
+
+
+3    The Min-Report-RL Standard
+Min-Report-RL is a minimum-reportable-stack: the smallest set of fields such that, if two GRPO-
+family papers both report them, a reader can tell whether their comparison is confounded. Each
+item below is included because there is a known mechanism by which it can flip a comparison; an
+item that could not change a ranking would not earn its place on a minimum list.
+
+1. Loss form. Report: whether the update uses a PPO-style importance ratio wi,t = πθ /πθold ;
+whether and how it is clipped (and the clip bounds, including asymmetric DAPO-style “clip-
+higher”); whether the token mask is completion-only or whole-sequence; and whether advantages are
+normalized per-group, per-batch, or with a running estimate. Why it can flip: the choice of token
+mask changes the objective. In one diagnostic, 61.6–89.6% of the full-sequence loss magnitude (raw
+NLL composition) came from prompt tokens rather than completion tokens [2]; a whole-sequence
+mask and a completion-only mask are therefore different objectives sharing a name. (Caveat, added
+2026-07-11: under exactly group-centered advantages the prompt-token gradient contributions cancel
+within each group, so this figure quantifies objective composition, not gradient leakage — a distinction
+that is itself rarely reported.) Dr.GRPO’s contribution is precisely a change to length/normalization
+in the loss [7]; GSPO changes the importance-sampling granularity [13]. If the baseline’s loss form is
+unreported, the variant’s gain is unattributable. The stake is not hypothetical: in our own companion
+panel, a documented-but-unwired loss flag left six “GRPO vs. Dr.GRPO” arms silently training the
+
+
+                                                   4
+
+[PAGE 5]
+identical objective, and no reward, length, or ZVF trace revealed it — only reading the runner did.
+Loss form must be reported and verified, not inferred from plausible-looking outputs.
+
+2. Reference policy and KL handling. Report: whether a frozen reference policy is retained;
+whether the KL term sits in the loss or is folded into the reward ; the KL coefficient and its schedule;
+and whether KL is estimated forward or reverse, per-token or per-sequence. Why it can flip: KL
+placement changes the effective objective and the steady-state exploration. A runner that drops the
+reference policy entirely (one optimizer step per rollout, no frozen reference) is not doing the same
+thing as a KL-regularized GRPO, even at matched learning rate [2]. Methods that add a second
+anchor (for example, an additional KL or SFT-reference term) change steady-state Zvf and must be
+recalibrated, not compared blind. The anchor, placement, and coefficient must therefore be reported
+explicitly.
+
+3. Sampler, backend, and precision. Report: the rollout engine (vLLM, SGLang, a managed
+API, the trainer’s own generate; decoding parameters (temperature, top-p, max_tokens; logit
+precision in the sampler vs. the trainer (bf16 / fp16 / fp32); and whether sampler and trainer share
+the same tokenizer and chat template. Why it can flip: the sampler defines the rollout distribution
+that the group-relative update consumes. A managed, closed-source runner and an open vLLM
+path can yield order-of-magnitude different training-reward trajectories under similar visible configs.
+In our 17× exhibit the backend, sampler, and base checkpoint co-varied, so the exhibit motivates
+reporting but does not identify a backend mechanism. Sampler precision can shift the probability of
+mixed-reward groups, and hence the available gradient.
+
+4. Per-step Zvf and Gu trajectory. Report: the per-step Zero-Variance Fraction Zvf (fraction
+of prompts whose G completions all receive identical reward, contributing zero gradient) and
+Gradient Utilization Gu = 1 − Zvf, logged for every training step. Why it can flip: Zvf/Gu is the
+telemetry that reveals
+                 P  whether a run had      any learning signal at all. The mixed-group probability
+P (usable) ≈ N1 x 1 − (1 − px )G − pG    x shows that a group-relative update only has signal when
+sampled groups contain reward diversity [2]. A method can “win” a comparison purely because its
+stack happened to produce lower Zvf (more usable groups), not because its algorithmic idea is
+better. Without the Zvf/Gu trajectory, a collapsed run and a saturated run are indistinguishable
+from their final reward. A fixed first-five-step rule (Zvf ≥ 80% with reward ≤ 5%) is a cheap collapse
+triage; reporting the trajectory lets a reader apply it.
+
+5. Group-size schedule (fixed or adaptive). Report: the group size G at every step, and the
+rule that changes it if it is adaptive (e.g. AERO-style doubling/halving on a rolling Zvf estimate).
+Why it can flip: G directly controls the mixed-group probability above and is one of the strongest
+single knobs we measured—an ablation on Qwen3-8B/GSM8K moved last-10 reward across a wide
+band as G went 2 → 4 → 8 → 16 [2]. An adaptive-G method (AERO) compared against a fixed-G
+baseline is partly being credited for spending more compute on hard prompts, an effect that must
+be separated from the algorithmic claim [12].
+
+6. Held-out split distinct from the reward environment. Report: a held-out evaluation
+slice that is disjoint from the training prompts and scored by a harness, with sample size and a
+confidence interval, reported separately from online training reward. Why it can flip: online training
+reward is dynamics evidence, not capability evidence. In the audit, a clean paired control improved
+only 82.0% → 83.3% (p = 0.26) [2] on held-out GSM8K despite training reward near saturation; and
+
+
+                                                   5
+
+[PAGE 6]
+selecting checkpoints by training reward produced an 87–95% “capability” band that is a selection
+artifact, not a causal lift [2]. A variant that reports only training reward can show a large apparent
+gain that vanishes held-out. Four Llama-3.3-70B seeds ranged 95.0–98.1% on training last-10 yet all
+landed on 95.0% held-out [2]—last-10 variance was sampling noise, not generalization.
+
+7. Decontamination probe results. Report: the outcome of an explicit train/test contamination
+check (n-gram or embedding overlap between training prompts and the held-out / benchmark slice),
+and the parser’s behavior on adversarial format-only inputs. Why it can flip: verifiable rewards do
+not eliminate reward hacking; parser artifacts, format shortcuts, length effects, and train-prompt
+overfitting can all inflate a reward without capability gain [2]. If the benchmark slice overlaps the
+reward environment, a “gain” may be memorization; if the parser rewards a format token, a “gain”
+may be a shortcut. A contamination/parser probe is the minimum evidence that the reported
+number measures the thing it claims to measure.
+
+8. Pass@k curves alongside pass@1. Report: held-out pass@k at k ∈ {1, 8, 32} (or a stated
+subset with justification), with the sampling temperature and completion budget used for the estimate.
+Why it can flip: pass@1 conflates two different improvements—sharpening the output distribution
+over solutions the base model could already reach, and expanding the set of reachable solutions. The
+agentic-RL survey’s synthesis [10] finds that roughly two-thirds of RL-for-reasoning papers report
+only pass@1, while the studies that do report pass@k frontiers repeatedly find base models matching
+or overtaking their RL-tuned counterparts at large k—i.e., the “gain” was distribution sharpening.
+A GRPO-variant comparison scored at pass@1 alone can therefore rank the method that sharpens
+above the method that generalizes, and the ranking can invert at k = 32. Because group-relative
+training acts directly on the sampling distribution, this is not an exotic failure mode for the GRPO
+family; it is the expected one.
+
+Summary table. Table 1 collects the standard. The companion CHECKLIST.md provides a fillable
+appendix template.
+
+3.1    Measured stack effects (new evidence, 2026-07)
+Three of the standard’s items now carry quantified first-party evidence from the companion experi-
+ments suite (zvf-program/experiments-next/results/), replacing argument by anecdote.
+
+Item 3, measured: the sampler moves frontier metrics. Holding model, prompts (200
+GSM8K test problems), temperature, seed, and parser byte-identical, and swapping only the
+sampling backend:
+
+                     Backend                          pass@1   pass@8   pass@32
+                     Managed (Tinker) sampler         30.4%    79.7%    91.0%
+                     vLLM 0.24 on A100                30.6%    77.8%    89.0%
+
+Point estimates are backend-robust (+0.2 at pass@1) while the pass@32 frontier shifts by 2.0 points
+and individual problems move by up to |11|/32 solutions. Any cross-paper comparison of frontier
+metrics that does not report the sampler is therefore confounded at the ∼2-point scale — the same
+scale as many claimed algorithmic gains.
+
+
+
+                                                  6
+
+[PAGE 7]
+Table 1: The Min-Report-RL minimum-reportable-stack. Each item is on the list because it is a
+documented lever that can flip a head-to-head comparison.
+      #    Field                               Flip mechanism (why it is mandatory)
+       1   Loss form (ratio / clip / token   Token mask reassigns gradient across prompt vs. com-
+           mask / advantage norm.)           pletion tokens; clip and norm. are the actual variant
+                                             deltas.
+       2   Reference policy + KL handling KL placement (loss vs. reward) and a frozen-vs-absent
+                                             reference change the objective and exploration.
+       3   Sampler / backend / precision     The sampler defines the rollout distribution; these fields
+                                             co-varied with checkpoint identity in the 17× under-
+                                             specification exhibit [2].
+       4   Per-step Zvf / Gu trajectory      Reveals whether the run had usable learning signal;
+                                             separates collapse from saturation.
+       5   Group-size schedule (fixed / G sets the mixed-group probability; adaptive-G con-
+           adaptive)                         founds compute with algorithm.
+       6   Held-out split ̸= reward environ- Training reward is not capability; selection-by-reward
+           ment                              inflates apparent gains.
+       7   Decontamination probe results     Verifiable         rewards           still         admit
+                                             parser/format/length/overlap hacking.
+       8   Pass@k curves alongside pass@1 Pass@1-only scoring cannot distinguish distribution
+                                             sharpening from capability gain; rankings can invert at
+                                             large k.
+
+
+Item 1, measured: silent export/loader incompatibilities. Evaluating LoRA adapters trained
+on a managed stack inside an open inference stack required reverse-engineering two undocumented
+format deltas: target_modules="all-linear" (PEFT shorthand the open loader rejects) and
+the unembedding trained under model.unembed_tokens (the open loader accepts only lm_head).
+Without remapping, every cross-stack evaluation of these 21 public adapters fails — loudly in our
+harness, but a wrapper that silently skipped the adapter would have produced base-model numbers
+labeled as post-RL results. This is precisely the class of confound item 1 exists to surface.
+
+Item 8, exemplified: the panel pass@1 alone would misreport. A matched base-vs-post-RL
+panel (four adapters trained at G ∈ {2, 4, 16, 32}; one stack; same problems) shows pass@1 deltas
+scattered from −0.5 to +1.9 points — under pass@1-only reporting, the G=2 arm would be called
+a regression. The pass@32 frontier tells the opposite, consistent story: all four arms improve by
++1.5 to +2.5 points. Neither reading reaches significance at a single training seed (the deltas sit
+within the measured sampler and eval-seed noise bands above), which is itself the point: without
+pass@k curves and stated noise bands, this panel supports any narrative a reader prefers.
+With them, it supports exactly one claim: a small, directionally consistent frontier shift requiring
+multi-seed replication.
+
+
+4    Proposed Reproducibility Audit
+The Min-Report-RL standard tells authors what to report. The audit tells the community what
+to check : which claimed GRPO-family gains survive when the stack is held fixed?
+
+Design. Re-implement four prominent minimal-delta variants—DAPO, GSPO, Dr.GRPO, and
+AERO [7, 9, 12, 13]—as declared overrides on a single shared trainer. M-GRPO [4] changes
+
+                                                     7
+
+[PAGE 8]
+Table 2: Preregistered single-stack treatment matrix. The first five rows share one language-
+model trainer. M-GRPO changes the environment and credit structure, so it is a separate agentic
+stratum rather than a misleading “minimal hook” in the arithmetic audit.
+        Arm          Only permitted treatment change                     Group schedule
+        GRPO         none (reference arm)                                fixed G = 8
+        DAPO         asymmetric clip plus dynamic resampling             reported realized G/rollouts
+        GSPO         sequence-level rather than token-level IS ratio     fixed G = 8
+        Dr.GRPO      remove within-group standard-deviation nor-         fixed G = 8
+                     malization
+        AERO         adaptive rollout allocation, selective rejection,   full schedule reported
+                     posterior state
+        M-GRPO       hierarchical planner/sub-agent credit assign-       separate agentic stratum
+                     ment
+
+
+planner/sub-agent credit and is audited in a separate agentic stratum. Everything in the Min-
+Report-RL list except the variant’s defining delta is held identical across arms: the same base
+checkpoint and tokenizer, the same vLLM sampler and precision, the same reference-policy/KL
+handling, the same LoRA targets and rank, the same optimizer, the same reward parser, the same
+group-size schedule (where the variant does not itself change it), the same held-out slice, and
+the same evaluation harness and seed sweep. Only the named hook differs (loss form, advantage
+normalization, clip rule, masking, or group-sizing). This is the same methodology already validated
+for the variance-mitigation head-to-head, where AERO/CPPO/NGRPO/Scaf-GRPO were each
+implemented as one hook on a shared GRPO trainer with tokenizer, sampler, optimizer, LoRA
+adapters, evaluation harness, and seed sweep held identical [2].
+
+Two readings per variant. For each variant we report (i) its result as published (its own stack,
+its own numbers) and (ii) its result in the controlled stack. The quantity of interest is the survival of
+the claimed gain: the controlled-stack delta relative to the shared GRPO baseline, with a confidence
+interval and a survival verdict (survives / shrinks / disappears / reverses).
+
+Pre-registration. The arm list, the shared stack specification, the held-out slice, the seed set, and
+the survival thresholds are fixed before any controlled run is scored, to avoid the selection-by-reward
+over-optimism the audit itself warns against [2]. Every arm reports the full Min-Report-RL block.
+
+Locked audit matrix. The position paper does not print empty result tables. It locks the
+treatment matrix in Table 2; the companion audit generates result and telemetry tables only after
+every preregistered arm is complete.
+
+Preregistered statistical protocol. The independent unit is a seed, not a per-step reward. The
+full audit uses eight seeds {11, 23, 37, 53, 71, 89, 107, 131} per core arm and a fixed held-out set of 500
+prompts. The primary estimand is the paired seed-level held-out delta relative to GRPO at the fixed
+final checkpoint; training last-10 reward, Zvf/Gu, collapse rate, realized rollouts, and wall-clock
+time are secondary. We report a paired bootstrap 95% CI and Benjamini–Hochberg-adjusted tests
+over the four core comparisons.
+     Let r = ∆controlled /∆published only when model, task, split, and metric are compatible. A variant
+retains its published effect if the controlled 95% CI excludes zero and its lower bound implies r ≥ 0.5.
+
+
+                                                       8
+
+[PAGE 9]
+It survives if that CI excludes zero but no compatible published delta exists or the half-gain rule
+fails; it reverses if the upper CI is below zero; otherwise it is inconclusive. “Disappears” requires an
+equivalence test whose entire 90% CI lies inside [−m, m] for the locked absolute held-out margin
+m = 0.01. Before scoring, the analysis reports the seed-level standard deviation and achieved
+minimum detectable effect; if the MDE exceeds m, disappearance is unavailable and the verdict
+remains inconclusive. These rules are mirrored in the machine-readable preregistration beside the
+companion audit.
+
+Honest scoping. The audit’s deliverable is not “method X is fake.” It is a survival map: for each
+variant, the fraction of its claimed gain that persists when the stack is the same. Some gains will
+survive (they are real algorithmic contributions); some will shrink (they were partly stack); some
+may disappear (they were stack). All three outcomes are informative, and reporting them is the
+contribution.
+
+
+5    Adoption Path
+A standard nobody can comply with cheaply will not be adopted. Min-Report-RL is designed so
+that the marginal cost to an author is close to zero if the trainers log it by default.
+
+Make the trainers emit it. The seven run-manifest fields are already computable inside every
+major open trainer; pass@k is a post-training evaluation artifact. The marginal work is to write the
+manifest once, in a stable schema, to compute Zvf/Gu from the grouped reward tensor that GRPO
+already materializes.
+
+   A concrete TRL plugin proposal: trl-min-report-rl. We specify a small TRL extension
+that would make adoption automatic. For every GRPOTrainer.train() call it would emit a run-start
+JSON block containing the seven manifest fields, then log per-step Zvf/Gu from the actual grouped
+rewards used by GRPO. This package is not yet released; its proposed shape is:
+trl_min_report_rl/
+  __init__.py
+  config.py              # MinReportRLConfig dataclass + CLI flags
+  callback.py            # run-start manifest + finalization
+  grpo_mixin.py          # reward-tensor hook
+  emitter.py             # JSONL + stdout + logger adapters
+  schema/
+    grpo_run_start.v0.1.json
+    grpo_step.v0.1.json
+The public API is a single extra argument to GRPOConfig:
+args = GRPOConfig(..., report_min_report_rl=True)
+trainer = MinReportGRPOTrainer(
+    model=model, args=args, reward_funcs=[reward_fn],
+    train_dataset=train_ds, eval_dataset=heldout_ds,
+    processing_class=tokenizer, min_report_rl=MinReportRLConfig(...))
+A no-subclass adapter, enable_min_report_rl(trainer, config), is a proposed compatibility
+surface for existing code.
+
+                                                   9
+
+[PAGE 10]
+The critical hook is on_grpo_rewards_computed, called after reward functions return and
+after distributed gather, but before advantage normalization. It receives rewards_per_func,
+reward_weights, and num_generations, and computes
+                           N
+                         1 X 
+                  ZVFt =                                         GUt = 1 − ZVFt ,
+                                                            
+                             1 Var(rx,1 , . . . , rx,G ) = 0 ,
+                         N
+                              x=1
+
+where unusable (all-NaN) groups are counted as zero-variance. The hook logs both human-readable
+scalars (min_report_rl/zvf, min_report_rl/gu, min_report_rl/usable_groups) and a per-step
+JSON event.
+
+   Upstream surface. The cleanest upstream TRL change adds three elements to GRPOConfig:
+report_min_report_rl, min_report_rl_strict, and min_report_rl_output_dir; plus two trainer
+methods (_emit_min_report_rl_run_start and _emit_min_report_rl_step) and the reward-path
+hook call. That is the “few lines of telemetry” version of the standard.
+
+    Run-start manifest. The first line of min_report_rl.jsonl is a JSON object whose min_reportable_stack
+field contains the seven run-manifest items. The eighth standard item, pass@k alongside pass@1,
+belongs in the evaluation report. A manifest fragment is shown in Listing 1; the full schema is in the
+GRPO-Reg catalog paper [1].
+                  Listing 1: Fragment of the min_report_rl run-start manifest.
+{
+    "event": "min_report_rl.run_start",
+    "min_reportable_stack": {
+      "1_loss_form": {"status":"known", "loss_type":"dapo", ...},
+      "2_reference_policy_kl": {"status":"known", "kl": {"enabled":false}},
+      "3_sampler_backend_precision": {"rollout_engine":"vllm", ...},
+      "4_zvf_gu_trajectory": {"enabled":true, "basis":"weighted_reward", ...},
+      "5_group_size_schedule": {"train_num_generations":8, ...},
+      "6_heldout_split": {"heldout_dataset_id":"gsm8k:test:500", ...},
+      "7_decontamination_probes": {"ngram_overlap":{"passed":true}, ...}
+    }
+}
+
+
+    Other trainers. verl’s actor/rollout separation makes sampler, precision, and group-size
+schedule first-class; OpenRLHF’s reference-model and KL options map directly onto item 2. Both
+can emit the same manifest block and per-step telemetry using the same shared emitter. The schema
+is trainer-agnostic; only the source of each field changes.
+
+Enforcement and audit tooling. The same manifests feed the implemented platform_hybrid/
+registry/query.pystackdiff command (§7), which compares registry entries and flags label-flip
+risk. The implemented registry/provenance/minreport.pyverify command grades generated
+provenance records. A future literature-scale Auditor would score an existing paper or repo against
+the eight-item checklist, assigns a 0–100 reproducibility-auditable badge, and produces a reviewer-
+facing summary [2]. The audit paper’s locked aggregator turns the controlled single-stack audit of §4
+into a fail-closed result validator. A full launcher would lock the shared stack, expand each variant
+as a declared hook, and compute verdicts from paired seed-level held-out deltas [2]. Together these
+tools turn the abstract standard into a mechanical check that venues and reviewers can run in CI.
+
+                                                  10
+
+[PAGE 11]
+Make the venues ask for it. Add a Min-Report-RL block to the reproducibility checklist for
+the RL-for-LLM track, analogous to the existing NeurIPS/ICML reproducibility checklists. The
+companion CHECKLIST.md is written to be dropped verbatim into a paper’s appendix.
+
+Make it auditable post hoc. For already-published work, the same JSON block can be recon-
+structed from release artifacts where they exist. The audit of §4 doubles as a demonstration: it
+re-derives the Min-Report-RL block for the controlled arms and shows the format is sufficient to
+detect confounded comparisons.
+
+
+6    Objections and Responses
+“This is just ‘report your hyperparameters.’ ” No. Hyperparameter tables already exist and
+the 17× gap [2] occurred despite similar visible recipes because checkpoint and stack identity were
+not actually matched. Min-Report-RL names the fields that hyperparameter tables systematically
+omit—loss form, KL placement, sampler precision, per-step Zvf/Gu, group-size schedule, held-out
+disjointness, contamination probe—precisely because each is a demonstrated flip lever, not a tuning
+knob.
+
+“Eight items is too many / too few.” Each item earns its place by a flip mechanism (§3);
+removing any one reopens a known confound. The list is a minimum, not a maximum: authors may
+report more. We deliberately stop at eight because that is the set that, in our audit and in the
+survey-documented pass@k reporting gap [10], was sufficient to explain the comparisons that flipped.
+If the audit surfaces a ninth recurring confound, the versioned standard will extend the list only
+with an explicit flip mechanism and migration note.
+
+“Re-implementations are unfaithful, so the audit is unfair.” The audit reports both
+readings (published and controlled) and frames the result as survival, not refutation. An unfaithful
+re-implementation is itself a finding: if a variant’s gain depends on an unstated stack detail that a
+careful re-implementer cannot reproduce from the paper, that is a reporting failure the standard is
+designed to surface. We will publish every arm’s full Min-Report-RL block so disagreements are
+about specific fields, not vibes.
+
+“Closed/managed backends can’t comply.” Partly true, and that is the point: a closed runner
+cannot expose its loss form or KL handling, so results from it should be scoped as “this platform’s
+implementation,” not “GRPO” [2]. The standard makes that scoping explicit rather than letting a
+closed-stack number stand in for an algorithm.
+
+“Zvf/Gu is your own metric; why mandate it?” Zvf/Gu is one cheap instantiation of
+a necessary quantity—did the run have usable group-relative signal? —and we accept substitutes.
+Under dense process rewards or scaffolded exploration, Zvf degenerates and should be replaced by
+per-step reward variance or a gradient-norm-variance surrogate [2]. Item 4 mandates a usable-signal
+trajectory, of which Zvf/Gu is the default; the point is that some such telemetry must be reported.
+
+
+7    Companion Tooling: grpo-stackdiff
+A standard is easier to adopt if reviewers can check it mechanically. The current reference com-
+mand, python3platform_hybrid/registry/query.pystackdiff<entry-a><entry-b>, consumes
+
+                                                 11
+
+[PAGE 12]
+two registry records and reports R0–R5 label-flip risk. We also sketch a richer version that would
+consume arbitrary Min-Report-RL manifests and use the L0–L7 taxonomy below. Neither com-
+mand is a replacement for the audit of §4; it is an enforcement layer that tells a reviewer, in seconds,
+whether a head-to-head is stack-comparable.
+
+Manifest contract. Each run is a YAML/JSON block containing the eight Min-Report-RL
+fields, plus run identity (trainer, version, seed, hardware), model and tokenizer hashes, LoRA
+configuration, optimizer settings, and results. The schema is the JSON block proposed in §5.
+
+Diff taxonomy. Every field difference receives three labels:
+
+ • Lever. One of eight lever groups: L0 run identity/provenance, L1 loss form, L2 reference
+   policy and KL handling, L3 sampler/backend/ precision, L4 usable-signal telemetry (Zvf/Gu),
+   L5 group-size schedule, L6 held-out evaluation and checkpoint selection, L7 decontamination and
+   parser robustness.
+ • Diff kind. EQUAL, COSMETIC, PROVENANCE, PARAMETRIC, SCHEDULE, SEMAN-
+   TIC_OBJECTIVE, DISTRIBUTIONAL, TELEMETRY, MISSING, OPAQUE, DERIVED, or
+   INVALID_TARGET.
+ • Role. TREATMENT_DELTA if the user declares it as the algorithmic delta being tested;
+   NUISANCE_DELTA if it is an uncontrolled stack difference; COVERAGE_GAP if the field is
+   missing; INVALIDATOR if the comparison target is not common.
+
+Flip-risk classes. The tool compares each nuisance difference to the reported comparison margin
+and classifies the overall risk as one of:
+
+                Class               Meaning
+                R0 same             No meaningful difference.
+                R1 cosmetic         Version string or comment only.
+                R2 small            Estimated effect < 25% of the comparison margin.
+                R3 material         Effect 25–100% of the margin; can shrink a claim.
+                R4 flip_capable     Effect bound ext>= margin; can flip the ranking.
+                R5 invalidating     The comparison target is not common.
+                RU unknown          Missing or opaque evidence; comparison unverifiable.
+
+
+Verdict and CI integration. The tool emits a deterministic verdict (STACK_MATCHED, STACK_MATERIAL,
+STACK_CONFOUNDED, UNVERIFIABLE, or INVALID_COMPARISON) and an exit code, so a paper’s repro-
+ducibility workflow can fail a comparison that is flip-capable. Example:
+
+python3 platform_hybrid/registry/query.py stackdiff \
+  colab-open_dapo_e3 tinker_dapo_qwen3.5-4b_gsm8k
+
+Role in the Min-Report-RL ecosystem. Authors emit the JSON block; venues ask for it;
+reviewers run the reference stackdiff command. The cost to an author is still a few lines of telemetry;
+the cost to a reviewer is one command. The tool turns the abstract stack-conditioning thesis of §2
+into a concrete, reproducible check.
+
+
+
+
+                                                  12
+
+[PAGE 13]
+8    Conclusion
+The RL-for-LLM literature is in a position the deep-RL community has seen before: a three-letter
+label is doing the work of a full experimental specification, and the unreported remainder of the stack
+can move a result by more than the algorithmic effect anyone is trying to claim. We have argued that
+this stack-conditioning is the default, demonstrated it with an under-specified same-label comparison
+that differs by 17×, and proposed two coupled remedies: an eight-item minimum-reportable standard
+(Min-Report-RL): seven manifest fields that expose known confounds plus a pass@k evaluation
+artifact, and a controlled single-stack audit of DAPO, GSPO, Dr.GRPO, and M-GRPO that reports
+which claimed gains survive. Neither remedy requires new science—only a few fields of telemetry and
+the discipline to log them. The cost is a JSON block; the payoff is a literature whose comparisons
+one can actually trust.
+
+
+References
+ [1] Arvind C R and the ZVF Program. GRPO-Registry: A living catalog of stack fields and variant
+     deltas. Companion working paper in the Tinker RL Lab manuscript bundle, 2026.
+
+ [2] Arvind C R and the ZVF Program. Reward contrast, not algorithm labels: Auditing signal
+     starvation in group-relative reinforcement learning. Companion working paper in the Tinker
+     RL Lab manuscript bundle, 2026.
+
+ [3] Peter Henderson, Riashat Islam, Philip Bachman, Joelle Pineau, Doina Precup, and David
+     Meger. Deep reinforcement learning that matters. In Proceedings of the AAAI Conference on
+     Artificial Intelligence, volume 32, 2018. doi: 10.1609/aaai.v32i1.11694.
+
+ [4] Haoyang Hong, Jiajun Yin, Yuan Wang, Jingnan Liu, Zhe Chen, Ailing Yu, Ji Li, Zhiling
+     Ye, Hansong Xiao, Yefei Chen, Hualei Zhou, Yun Yue, Minghui Yang, Chunxiao Guo, Junwei
+     Liu, Peng Wei, and Jinjie Gu. Multi-agent deep research: Training multi-agent systems with
+     M-GRPO. arXiv preprint, 2025. doi: 10.48550/arXiv.2511.13288. arXiv:2511.13288.
+
+ [5] Riashat Islam, Peter Henderson, Maziar Gomrokchi, and Doina Precup. Reproducibility
+     of benchmarked deep reinforcement learning tasks for continuous control. In ICML 2017
+     Workshop on Reproducibility in Machine Learning, 2017. doi: 10.48550/arXiv.1708.04133.
+     arXiv:1708.04133.
+
+ [6] Zhihang Lin, Mingbao Lin, Yuan Xie, and Rongrong Ji. CPPO: Accelerating the training
+     of group relative policy optimization-based reasoning models. arXiv preprint, 2025. doi:
+     10.48550/arXiv.2503.22342. arXiv:2503.22342.
+
+ [7] Zichen Liu, Changyu Chen, Wenjun Li, Penghui Qi, Tianyu Pang, Chao Du, Wee Sun Lee, and
+     Min Lin. Understanding R1-Zero-Like training: A critical perspective. arXiv preprint, 2025.
+     doi: 10.48550/arXiv.2503.20783. arXiv:2503.20783; introduces Dr. GRPO.
+
+ [8] Gongrui Nan et al. NGRPO: Negative-enhanced group relative policy optimization. arXiv
+     preprint, 2025. doi: 10.48550/arXiv.2509.18851. arXiv:2509.18851.
+
+ [9] Qiying Yu, Zheng Zhang, Ruofei Zhu, Yufeng Yuan, Xiaochen Zuo, Yu Yue, Weinan Dai, Tiantian
+     Fan, Gaohong Liu, Lingjun Liu, et al. DAPO: An open-source LLM reinforcement learning
+     system at scale. arXiv preprint, 2025. doi: 10.48550/arXiv.2503.14476. arXiv:2503.14476.
+
+
+                                                  13
+
+[PAGE 14]
+[10] Guibin Zhang, Hejia Geng, Xiaohang Yu, Zhenfei Yin, Zaibin Zhang, Zelin Tan, Heng Zhou,
+     Zhongzhi Li, Xiangyuan Xue, Yijiang Li, Yifan Zhou, Yang Chen, Chen Zhang, Yutao Fan,
+     Zihu Wang, Songtao Huang, Francisco Piedrahita-Velez, Yue Liao, Hongru Wang, Mengyue
+     Yang, Heng Ji, Jun Wang, Shuicheng Yan, Philip Torr, and Lei Bai. The landscape of agentic
+     reinforcement learning for LLMs: A survey. Transactions on Machine Learning Research, 2026.
+     doi: 10.48550/arXiv.2509.02547. arXiv:2509.02547; accepted by TMLR.
+
+[11] Xichen Zhang et al. Scaf-GRPO: Scaffolded group relative policy optimization for enhancing
+     LLM reasoning. arXiv preprint, 2025. doi: 10.48550/arXiv.2510.19807. arXiv:2510.19807.
+
+[12] Zhi Zhang, Zhen Han, Costas Mavromatis, Qi Zhu, Yunyi Zhang, Sheng Guan, Dingmin Wang,
+     Xiong Zhou, Shuai Wang, Soji Adeshina, Vassilis Ioannidis, and Huzefa Rangwala. Train less,
+     learn more: Adaptive efficient rollout optimization for group-based reinforcement learning.
+     arXiv preprint, 2026. doi: 10.48550/arXiv.2602.14338. arXiv:2602.14338; introduces AERO.
+
+[13] Chujie Zheng, Shixuan Liu, Mingze Li, Xiong-Hui Chen, Bowen Yu, Chang Gao, Kai Dang,
+     Yuqiong Liu, Rui Men, An Yang, Jingren Zhou, Jianwei Zhou, and Junyang Lin. Group sequence
+     policy optimization. arXiv preprint, 2025. doi: 10.48550/arXiv.2507.18071. arXiv:2507.18071;
+     GSPO.
+
+
+
+
+                                               14

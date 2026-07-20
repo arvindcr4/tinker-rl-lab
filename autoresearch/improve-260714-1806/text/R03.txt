@@ -1,0 +1,1015 @@
+
+[PAGE 1]
+RL-Finetuning Bench: An Exploratory Workshop
+                   Artifact for GRPO-Style
+     Post-Training Across Libraries, Models, and Backends
+
+
+                                             Anonymous Author(s)
+                                                 Affiliation
+                                                  Address
+                                                   email
+
+
+
+                                                   Abstract
+
+ 1            This is an exploratory workshop artifact note, not a benchmark paper. We release
+ 2            step-level group reward traces, Zero-Variance Fraction (ZVF) traces, a parser-script
+ 3            bundle, a per-run manifest, and a structured evidence grade table for 79 GRPO-style
+ 4            runs across 7 RL libraries (TRL, Stable Baselines3, CleanRL, Tianshou, PufferLib,
+ 5            rl_games, d3rlpy), the closed T INKER API, and 5 model families (total parameters
+ 6            0.6B–671B; active 0.6B–37B for the largest mixture-of-experts checkpoints). The
+ 7            release lives at an anonymous repository documented in Section 5.
+ 8            Claim hierarchy (descending strength). (i) ZVF = 1 ⇒ zero gradient is mechani-
+ 9            cal (Appendix B). (ii) On a five-seed Qwen3-8B GSM8K held-out test, post-GRPO
+10            83.3% vs. base 82.0% (t=1.32, p=0.26): not significant. (iii) The pooled ZVF–
+11            last-10 correlation (r=−0.769, N =15, p=0.0008) is task-confounded; within
+12            GSM8K only (N =19), r=+0.40 (p=0.09). We report ZVF as a cheap descriptive
+13            logging quantity, not as a predictive failure detector. Frontier-scale and tool-use
+14            rows are single-seed case studies, released for honesty and not as benchmark
+15            numbers. The rest of this artifact note is a candid evidence-grade table and three
+16            discussion prompts for the workshop.
+
+
+
+17   1   Introduction
+
+18   Artifact card. This workshop submission is an artifact note accompanying a release that
+19   contains: (i) step-level aggregate reward traces (mean, peak, last-10) for every reported run;
+20   (ii) per-step Zero-Variance Fraction (ZVF) and Gradient Utilization (GU) traces for every reported
+21   run; (iii) a per-run manifest (Appendix A) listing backend, hardware, hyperparameter mapping,
+22   and evidence grade; (iv) parser scripts that decode the released JSONL into a single tidy ta-
+23   ble; and (v) a documented anonymous repository at https://anonymous.4open.science/r/
+24   agentic-grpo-bench-anon-2C6B for code, logs, and Docker images. We deliberately do not
+25   claim a “first comprehensive” GRPO benchmark, a frontier ranking, or a definitive algorithm compar-
+26   ison.
+
+27   Claim hierarchy (one sentence). The mechanical ZVF → zero-gradient theorem is an A-grade
+28   definitional claim; the held-out 5-seed Qwen3-8B GSM8K control (+1.3 pp, p=0.26) is an A-grade
+29   negative result; the pooled ZVF–last-10 correlation (r=−0.769, N =15) is a B∗ -grade descriptive
+30   finding that is task-confounded and collapses within-task; everything else (frontier-scale Tinker
+31   rows, tool-use, group-size sweeps) is C-grade case study and is released for honesty rather than as
+32   benchmark fact.
+
+     Submitted to 40th Conference on Neural Information Processing Systems (NeurIPS 2026). Do not distribute.
+
+[PAGE 2]
+33   Why this is an artifact note rather than a benchmark. Reinforcement-learning post-training now
+34   drives much of modern language-model reasoning and alignment [13, 4], but empirical claims are hard
+35   to compare: PPO [17], GRPO [18], and DPO [15] are typically reported on different model families
+36   with different framework defaults, different rollout regimes, and different reward parsers. Rather than
+37   declare a winner, we release the underlying traces and a candid evidence-grade table (Table 3) so
+38   that downstream readers can re-pool or stratify as they see fit. The release explicitly distinguishes
+39   multi-seed open-stack arms (5 seeds) from single-seed closed-backend T INKER case studies; the
+40   workshop paper is the honest tour of what those artifacts do and do not support. Discussion prompts
+41   for the workshop are in Section 6.
+
+
+42   2   Setup (Compact)
+
+43   We instrument GRPO-style training with step-level group reward statistics across 79 runs spanning 7
+44   RL libraries (TRL, Stable Baselines3, CleanRL, Tianshou, PufferLib, rl_games, d3rlpy), the closed
+45   Tinker API, and the open Qwen3, Qwen3.5, Llama-3.x, DeepSeek-V3.1, and Nemotron-120B model
+46   families at total-parameter scales of 0.6B–671B (active 0.6B–37B for the largest MoE checkpoints).
+47   Headline results use Qwen3-8B with LoRA rank 32, Adam (β1 =0.9, β2 =0.95), learning rate 10−4 ,
+48   and 5 seeds in {42, 123, 456, 789, 1024}. Frontier-scale and Tinker-API runs are single-seed and
+49   reported as case studies. The full task suite, library taxonomy, hyperparameter mapping, and per-run
+50   manifest are deferred to Appendix A and surrounding sections so the main text fits the workshop
+51   page budget.
+
+
+52   3   Headline Result: ZVF as a Descriptive GRPO Diagnostic
+
+53   Zero-Variance Fraction (ZVF) at step t is the fraction of prompts for which all G completions
+54   receive identical rewards:
+                                            1 X                     
+                                  ZVFt =         1 Varc∼C(p) r(c) = 0 .
+                                           |Pt |
+                                                p∈Pt
+
+55   When ZVFt = 1, every prompt contributes zero gradient. Gradient Utilization is GUt = 1 − ZVFt .
+56   Across N =15 experiments spanning 5 model families and 0.6B–671B total parameters (0.6B–37B
+57   active for the largest mixture-of-experts checkpoints), mean ZVF co-occurs with final training
+58   performance: Pearson r= − 0.769, p=0.0008 (Spearman ρ= − 0.784, p=0.0005). The pooled
+59   correlation is confounded by task type. Tool-use experiments reach ZVF = 100% at ∼0%
+60   reward, while GSM8K experiments average ZVF = 8.5% at much higher reward. Stratifying by task
+61   collapses the apparent relationship within each subgroup; we therefore read the pooled r = −0.769 as
+62   “tool-use failed and GSM8K did not” rather than as a clean diagnostic–performance link. Stratifying
+63   within GSM8K (N =19 Tinker GSM8K runs), the apparent monotone relationship does not survive:
+64   Pearson r=+0.40 (p=0.09); restricted to the seven model-varying GSM8K runs, r=+0.13 (p=0.79).
+65   The pooled correlation reflects task identity, not within-task ZVF dynamics. We treat ZVF as a cheap
+66   descriptive logging quantity, not as a standalone causal predictor.
+
+
+     Table 1: Statistical ablation of the ZVF–last-10 correlation under three sample definitions. The sign
+     of the correlation flips once task is held fixed, and the within-task correlations do not survive a 5%
+     threshold.
+                Sample                            N    Pearson r        p    Note
+                Pooled, cross-stack               15       −0.769   0.0008   B∗ , task-confounded
+                Within-GSM8K (all)                19        +0.40     0.09   marginal, sign flips
+                Within-GSM8K (model-varying)       7        +0.13     0.79   not significant
+
+
+67   We do not report bootstrap CIs or permutation p-values for the within-GSM8K rows here; the full
+68   bootstrap analysis is in the ZVF and D&B variants of this work and is out of scope for the workshop
+69   note.
+
+
+                                                       2
+
+[PAGE 3]
+Figure 1: ZVF as a descriptive (not predictive) GRPO diagnostic. (a) Per-step ZVF heatmap
+     over the 15 cross-stack runs; red: ZVF=1, blue: ZVF=0, grey: no data. Tool-use rows (top) form
+     the persistent red band that drives the pooled r=−0.769. (b) Tool-use sentinel: ZVF=1, GU=0,
+     reward≡ 0 at every step. (c) Residualized within-GSM8K: per-group-demeaned ZVF vs. last-10;
+     within-task slope rwithin ≈ 0, in sharp contrast to pooled r=−0.769.
+
+
+70   4   Compact Main Results and Evidence Grade
+
+71   Table 2 reports the three kinds of evidence in the release separately: multi-seed open-stack runs,
+72   single-seed Tinker case studies, and known failure probes. We deliberately do not pool them into one
+73   ranking.
+
+
+     Table 2: Workshop headline table, segregated by evidence grade. Open-stack arms have 5-seed
+     coverage; Tinker arms are single-seed (cost-constrained, closed backend) and are reported as case
+     studies.
+         Algo / stack              Model                 Task       Seeds           Peak        Last-10
+          Multi-seed open-stack (workshop headline)
+         TRL-GRPO (Modal L4) Qwen2.5-0.5B                GSM8K         5 0.747[0.672,0.782] 0.734 ± 0.07
+          Single-seed Tinker case studies (†closed backend)
+         GRPO †                    Qwen3-8B              GSM8K         1           62.5%          34.4%
+         GRPO †                    Llama-3.1-8B-Inst     GSM8K         1           100%           84.4%
+         GRPO †                    DeepSeek-V3.1         GSM8K         1           100%           85.0%
+         GRPO †                    Qwen3-235B-A22B       GSM8K         1           100%            100%
+         GRPO †                    Nemotron-120B         GSM8K         1           87.5%          16.2%
+          Failure probes (released for honesty, not as benchmark numbers)
+         GRPO †                    Qwen3-32B             Tool-use      1              0%            0%
+         GRPO †                    Llama-3.1-8B-Inst     Tool-use      1              0%            0%
+
+
+
+74   Held-out negative control (workshop headline). On a separate five-seed Qwen3-8B GSM8K
+75   base-vs-GRPO comparison, the post-GRPO mean is 83.3% versus 82.0% for the base model under
+76   the same greedy protocol. The +1.3pp delta is not statistically significant (t=1.32, p=0.26). This
+77   is the workshop’s clearest negative result: strong online training reward does not by itself imply
+78   held-out gain.
+
+79   Group size: brief. We ran a single-seed exploratory G-sweep on Qwen3-8B/GSM8K whose results
+80   are non-monotonic across G; see Appendix C for the token-budget reanalysis. We do not headline
+81   a winning G. A 3-seed token-budget reanalysis at T ≥16M tokens places a fitted apex near G≈32
+82   for one stack and objective, but the apex shifts with T and does not conflict with smaller-G optima
+83   under different cost objectives; we deliberately avoid promoting a group-size law. A subsequent
+84   two-seed matched-budget panel (2,560 rollouts per arm; G=2 × 160 vs. G=16 × 20 steps) adds one
+85   trajectory-level datum: the G=2 arms drive train reward to ≈ 0.9–1.0 on the sampled pool, then end
+
+
+                                                         3
+
+[PAGE 4]
+86    in a sustained all-correct zero-variance regime (ZVF ≈ 0.75–1.0), while G=16 ends mid-learning
+87    (≈ 0.3–0.5) with ZVF ≤ 0.25 — small G trades early step-count for endgame signal exhaustion.
+
+
+      Table 3: Evidence grade of each main-text claim in the workshop variant. A = multi-seed open-stack
+      or definitional; B = multi-seed or pooled with a known caveat; B∗ = significant in pooled sample but
+      task-confounded; C = single-seed or closed-backend case study.
+          Claim                                                   Grade      Notes
+          ZVF → zero gradient is mechanical                       A (def.)   App. B.
+          ZVF–last-10 r= − 0.769 (N =15, pooled)                  B∗         Confounded by task type.
+          Held-out Qwen3-8B GSM8K 83.3% vs. 82.0%                 A          5 seeds; p=0.26.
+          Group-size sweep is non-monotonic; no headline winner   C          single-seed per G.
+          Matched-budget G=2 endgame ZVF wall                     B          2 seeds/arm; 512-tok cap.
+          Token-budget fitted apex near G≈32 at T ≥16M            B          3-seed appendix reanalysis; not a
+                                                                             universal optimum.
+          Frontier-scale Tinker case studies                      C          single-seed, closed backend.
+          Tool-use 0% reward across runs                          B          task-design failure, not capability.
+
+
+
+88    5    Reproducibility and Limitations
+
+89    We release pinned Docker images, deterministic seed management, and rliable-based analysis
+90    scripts. Anonymous code, logs, and checkpoints are at https://anonymous.4open.science/
+91    r/agentic-grpo-bench-anon-2C6B. The release distinguishes three artifact tiers explicitly:
+92    (i) precomputed ZVF / GU traces, released for every reported run; (ii) step-level aggregate logs
+93    (mean reward, peak reward, last-10), released for every reported run; (iii) raw per-group rollout
+94    JSONL (per-prompt, per-completion reward arrays), released for a documented subset of stacks, with
+95    the full subset enumerated in the run manifest (Appendix A) and the parser contract released with the
+ 96   anonymous artifact.
+97    The release has known gaps that the workshop framing makes explicit. (i) Most Tinker experiments
+98    are single-seed and depend on a closed-source backend; we report them descriptively. (ii) Empirical
+99    evidence concentrates on short-horizon GSM8K with binary verifiable rewards; tool-use, code, and
+100   non-math coverage are sparser and yield negative or descriptive evidence only. (iii) Train-set reward in
+101   the Tinker case studies is descriptive instrumentation, not an inferential signal: our primary inferential
+102   claims are limited to the mechanical ZVF → zero-gradient theorem (Appendix B) and the held-out
+103   5-seed Qwen3-8B GSM8K test-set control (83.3% vs. 82.0%, t=1.32, p=0.26). Tinker-derived
+104   stratified correlations (e.g., the within-GSM8K ZVF re-analysis) are reported as artifact analyses with
+105   closed-backend caveats, not as benchmark statistics. (iv) Cross-library comparisons are confounded
+106   by checkpoint, hardware, and default-config differences; we report them as stack-level observations,
+107   not as algorithm-level statements. (v) Direct KL tracking was blocked by a PyTorch gradient-graph
+108   error; the corrected implementation is in the artifact but is not validated against ZVF in the current
+109   paper. (vi) Verifiable rewards reduce reward-model subjectivity but do not eliminate reward hacking,
+110   format gaming, or train-set reward inflation; we do not claim they do.
+
+
+111   6    Discussion and Concrete Workshop Questions
+
+112   The workshop release is deliberately exploratory. Its strongest evidence is short-horizon GSM8K
+113   dynamics; non-math coverage is a stress case, not a result. We treat ZVF as a cheap descriptive
+114   diagnostic, not a predictive failure detector, and we emphasize that the Qwen3-8B held-out control
+115   gives a small, non-significant GRPO improvement over the base.
+
+116   Five concrete questions for the workshop. We invite attendees to engage with five specific,
+117   testable questions raised by this release rather than open-ended philosophizing:
+118   1. Does step-level ZVF predict reward change within a single run, controlling for run fixed effects,
+119      on stacks beyond Tinker? Our residualized within-GSM8K scatter (Figure 1c) finds rwithin close
+120      to zero; is this a backend artifact or a general property?
+
+
+                                                          4
+
+[PAGE 5]
+121   2. Under a fixed rollout-token budget, where does group size trade early step count for endgame
+122      contrast? Our two-seed G=2 × 160 versus G=16 × 20 panel ends with the small-G arms at an
+123      all-correct ZVF wall while G=16 remains mid-learning; a separate 3-seed reanalysis places a
+124      fitted apex near G≈32 for one stack and budget. Neither identifies a universal optimum. The
+125      needed experiment is a directly trained, multi-seed, token-matched sweep on open stacks.
+126   3. Are there tasks where high-ZVF cells do predict downstream collapse, beyond GSM8K? Tool-use
+127      is a degenerate ZVF=1 case from step 1; the genuinely interesting test is on intermediate-density
+128      tasks (MATH-500 at low temperature, code with partial-credit rewards).
+129   4. What minimum disclosure makes a managed-API result count as benchmark evidence? Our Tinker
+130      rows are reproducible only at the level of API call scripts; should the community require GRPO
+131      loss / reward normalization / hardware metadata for a managed-API row to count as anything
+132      beyond a case study?
+133   5. Should ZVF-style diagnostic claims require raw per-group rollout JSONL by default? Our release
+134      bundles step-level aggregates for every run but raw JSONL only for a documented subset; we
+135      invite the workshop to align on a minimum raw-artifact bar.
+
+
+136   7     Ethics, Limitations, and Broader Impact
+
+137   This statement is written to satisfy the NeurIPS Code of Ethics and Broader Impact requirements.
+138   It complements the shorter Limitations and Broader Impact subsections embedded in Section 5 by
+139   consolidating in one place a full dual-use analysis, itemised compute accounting, carbon footprint
+140   estimation, data provenance disclosures, a candid acknowledgment of the closed-source training
+141   backend on which a fraction of our headline numbers depends, and a list of methodological limits we
+142   are aware of but did not have resources to close within the submission window.
+
+143   7.1   Dual-Use Analysis: Misuse Risks of Reasoning RL
+
+144   Threat model. RL-F INETUNING B ENCH releases (i) training scripts that apply GRPO to the
+145   GSM8K [3] mathematical reasoning benchmark and to the Salesforce xLAM-Function-Calling-
+146   60k [11] tool-use corpus, (ii) a set of LoRA adapters published on the HuggingFace Hub
+147   (anonymous/tinker-rl-bench-*), and (iii) diagnostic code for Zero-Variance Fraction, reward-
+148   stability, and length-bias analysis. We analyse four concrete misuse pathways these artefacts could,
+149   in principle, enable, and we describe the existing guardrails and the residual risk we judge acceptable
+150   for publication.
+
+151   M1. Weaponisation of mathematical reasoning. The most capability-relevant artefact we release
+152   is GRPO training code that improves grade-school arithmetic and multi-step reasoning. A malicious
+153   operator could attempt to extend this pipeline to tasks of greater dual-use concern, e.g., chemistry
+154   olympiad problems, cryptographic key recovery, or financial fraud. We judge the marginal uplift
+155   provided by our release to be small for three reasons. First, GRPO at our training scale does not
+156   create new capabilities; the base-model control for GSM8K (Section 4, 82.0%) shows that the bulk
+157   of held-out accuracy is attributable to Qwen3-8B’s pretraining. Our full GRPO run only adds +1.3
+158   percentage points (p=0.26, not statistically significant). Second, the public literature already contains
+159   GRPO implementations [18, 12, 19, 24] that are at least as capable. Third, any reasoning uplift is
+160   bounded by the rewarder: GSM8K rewards use exact-match against a human-written gold answer,
+161   which does not generalise to the domains listed above without a new reward signal, which itself
+162   requires expertise and labelled data.
+
+163   M2. Reward hacking and the long-term alignment risk. GRPO, like all policy-gradient RL
+164   from a proxy reward, is vulnerable to reward hacking: the model learns to exploit idiosyncrasies
+165   of the reward function rather than solve the intended task [20, 8]. We observed verbosity drift in
+166   some of our own GRPO runs, which is a concrete demonstration of this failure mode in our own data.
+167   Users who apply our scripts to under-specified reward functions in production settings (e.g., a custom
+168   “helpfulness” classifier) may observe models that appear to improve on held-out metrics while silently
+169   optimising against unintended proxies. We include the Zero-Variance Fraction and reward-stability
+170   diagnostics precisely so that downstream users can detect such drift.
+
+
+                                                         5
+
+[PAGE 6]
+171   M3. Circumventing safety training via distillation or tool-use. The tool-use track trains LoRA
+172   adapters that teach a base model to emit schema-valid JSON function calls [11]. A motivated
+173   adversary could in principle use the same pipeline to teach a base model to emit jailbreak prompts as
+174   “tool calls” or to invoke an adversarial external tool. We mitigate this by (a) releasing only adapters,
+175   not merged weights, so that the safety-trained instruct checkpoint must be applied separately and any
+176   instruct-layer guardrails remain active; (b) documenting in model cards that the tool-use adapters are
+177   trained on a narrow schema (five synthetic tools) and have not been safety-evaluated for open-ended
+178   function calling; and (c) not releasing any function-calling harness that would actually execute emitted
+179   calls.
+
+180   M4. Compute-efficiency externalities. Our work argues that critic-free RL with budget-dependent
+181   group-size selection (the optimal G depends on total token budget; see Appendix C) can be run
+182   on modest budgets. Improved training efficiency is itself dual-use: it lowers the cost of running
+183   adversarial fine-tuning at scale. We judge this externality to be modest relative to the already-low
+184   cost of fine-tuning a 0.6B–8B model with commodity LoRA recipes [7], but we flag it explicitly.
+
+185   Residual risk. After weighing M1–M4 we judge that the reproducibility, calibration, and peda-
+186   gogical benefits of releasing RL-F INETUNING B ENCH outweigh the residual misuse risk. We adopt
+187   the standard mitigation of releasing adapters (not merged weights), documenting intended use and
+188   out-of-scope use in model cards, and publishing alongside the diagnostics a researcher would need to
+189   detect reward hacking.
+
+190   7.2   Compute Cost Accounting
+
+191   Table 4 itemises the financial cost of every platform used in the project. Costs are real spend for the
+192   submitting authors; no in-kind credits are omitted. Dollar figures are in USD.
+
+      Table 4: Itemised compute spend across platforms. Totals include both successful and failed runs,
+      because failed-run spend is real and should not be hidden from reviewers [6].
+            Platform                     Use                                        Runs    Cost (USD)
+            Tinker SDK v0.16.1           GRPO on 4B/8B (original suite)                25       $40–55
+            Tinker SDK v0.16.1           10x Structural Ceiling ablation               32           $65
+            Tinker SDK v0.16.1           Frontier Suite (frontier/MoE)                 13       $25–30
+            Modal H100                   PPO baselines (Qwen3-8B, Llama-3.1-8B)         2       $12–18
+            Modal H100                   KL-tracking run (failed)                       1         $2–4
+            Google Colab Pro (T4)        0.5B–3B QLoRA SFT+GRPO                        —     $10/person
+            NVIDIA L4 (TRL baseline)     Qwen2.5-0.5B GSM8K, 5 seeds                    5         $3–5
+            HuggingFace Hub              Model + adapter hosting                       —             $0
+            Weights & Biases             Experiment tracking (academic tier)           —             $0
+            Total authors’ out-of-pocket spend                                                $130–140
+
+
+193   Hidden costs. Beyond direct platform spend, the project consumed human labour (approximately
+194   six student-FTE-months, unpaid) and infrastructure generously subsidised by an academic research
+195   group with shared access to one A100 node used for TRL baselines and pre-submission sanity checks).
+196   No author received commercial compensation from Thinking Machines, Modal, or any other vendor
+197   mentioned.
+
+198   Failed-run accounting. Of the Tinker spend, we estimate ~$30–35 was consumed by runs that
+199   ultimately failed (JWT expiry, API stalls for GPT-OSS-20b and Kimi-K2 before re-run, KL-tracking
+200   gradient bug). We disclose this because reviewers often ask whether reported total spend reflects only
+201   clean, successful runs; it does not. Excluding failed spend would understate the true resource cost of
+202   reproducing our work by roughly 25%.
+
+203   7.3   Carbon Footprint Estimation
+
+204   Table 5 computes an energy and CO2 -equivalent estimate for each platform. We follow the methodol-
+205   ogy of Patterson et al. [14] and Strubell et al. [21]: for each GPU-hour we multiply device TDP by
+
+
+                                                         6
+
+[PAGE 7]
+206   wall-clock GPU-hours and the data-centre Power Usage Effectiveness (PUE), then multiply by an
+207   anonymized regional average grid intensity for the cloud zone in which the hardware is believed to
+208   be located.
+
+209   Assumed constants.
+210          • NVIDIA H100 SXM5 TDP: 700 W.
+211          • NVIDIA A100 80GB TDP: 400 W.
+212          • NVIDIA L4 TDP: 72 W.
+213          • NVIDIA T4 TDP: 70 W.
+214          • Data-centre PUE: 1.1 (conservative; typical hyperscale PUE is 1.10–1.15 [5, 1]).
+215          • US average grid intensity (EPA eGRID 2023): 0.367 kg CO2 -eq / kWh [23].
+216          • Author-region average grid intensity (national authority report, 2023; specific country and
+217            source withheld for anonymity): within the higher-carbon-intensity grid bands typical of
+218            emerging-market national grids; the exact value used is the midpoint of an anonymized
+219            regional average grid intensity range and is withheld here.
+220          • We use the US average for Modal H100 (an anonymized regional cloud zone as configured)
+221            and Tinker (location undisclosed; assumed US), and an anonymized regional average grid
+222            intensity for the Colab Pro T4 instances used by the authors. The exact regional intensity is
+223            withheld for anonymity; the reported project-total CO2 -eq number uses the midpoint of the
+224            applicable range.
+
+225   GPU-hour estimates. Tinker GPU-hour counts are not disclosed by the platform. We estimate
+226   them from wall-clock run duration and assume a single H100-class accelerator per job, which is
+227   consistent with Tinker’s published architecture for the model sizes we trained. Modal GPU-hours are
+228   measured directly from Modal’s billing dashboard.
+
+      Table 5: Energy and carbon footprint estimates. Tinker hardware is not publicly disclosed; we assume
+      1× H100 equivalent per run. Failed / stalled runs are included. Totals rounded to one significant
+      figure.
+            Platform                         GPU-h     TDP (W)     PUE     Energy (kWh)     CO2 (kg)
+            Tinker (assumed H100)              ~950          700     1.1            ~732        ~269
+            Modal H100 (anonymized zone)        ~18          700     1.1             ~14        ~5.1
+            Institutional A100 (in-kind)        ~60          400     1.1             ~26         ~19
+            Colab Pro T4 (regional)             ~40           70     1.2            ~3.4        ~2.4
+            NVIDIA L4 (TRL baseline)            ~10           72     1.1            ~0.8        ~0.3
+            Project total (best estimate)                                           ~776        ~296
+
+
+229   Interpretation and uncertainty. Our best estimate of ~296 kg CO2 -eq for the entire project is
+230   comparable to a single round-trip domestic economy flight in the same region (~300 kg). The
+231   dominant uncertainty is the Tinker GPU-hour count: because Tinker does not expose hardware
+232   telemetry, a factor-of-two error in GPU-hours or TDP is plausible. Under a pessimistic assumption
+233   (2× GPU-hours, H100 running near 100% TDP continuously), the Tinker contribution could be
+234   as high as ~540 kg CO2 -eq. Under an optimistic assumption (Tinker backends actually use more
+235   energy-efficient accelerators than H100, 50% average utilisation) the contribution could be as low
+236   as ~130 kg. We report the central estimate in the main table and caution readers that it should
+237   not be interpreted as precise. All numbers should be treated as order-of-magnitude estimates with
+238   documented sensitivity to Tinker hardware assumptions; subsequent users can additionally skip the
+239   failed runs and the ablation sweeps to lower the cost of reproducing our work.
+
+240   Offset and mitigation. We did not purchase carbon offsets. Instead, we have (a) released all trained
+241   checkpoints on HuggingFace Hub so that downstream users do not need to re-run our experiments;
+242   (b) released step-level CSV logs so that learning curves can be inspected without re-training; and (c)
+243   documented in Section 7.2 which runs were wasteful, so that replicators can skip them. We regard
+244   reproducibility-by-artefact as a more durable mitigation than offsets.
+
+
+                                                        7
+
+[PAGE 8]
+245   7.4   Data Provenance
+
+246   RL-F INETUNING B ENCH uses only publicly released research datasets. No private data, personally
+247   identifiable information, or licensed proprietary content is used. No human annotators were employed
+248   during this work. We document each dataset below.
+
+249   GSM8K [3]. 8,500 grade-school math word problems (7,473 train / 1,319 test) authored by hu-
+250   man writers contracted by OpenAI. Released under the MIT License via https://github.com/
+251   openai/grade-school-math. We use the standard train/test splits without modification. The
+252   canonical citation is Cobbe et al. [3]. Known limitations of GSM8K include gender-neutral but cul-
+253   turally US-centric word problems (names, currencies, sports) and a moderate rate of human-labelling
+254   errors estimated at ~2% by [25]. Our held-out evaluation respects the test/train split.
+
+255   Salesforce xLAM-Function-Calling-60k [11]. 60,000 function-calling examples generated
+256   by Salesforce Research as training data for the xLAM agentic model family.                          Re-
+257   leased under the CC BY 4.0 license via https://huggingface.co/datasets/Salesforce/
+258   xlam-function-calling-60k. We use the public release as-is; specifically, we use the first 35
+259   prompts × 10 rollouts in the 10x Structural Ceiling tool-use track and the full 60k split for the xlam-
+260   60k real-data run in Section 4. Known limitations: xLAM schemas are synthetic and skew toward
+261   cleanly-typed arguments; the dataset under-represents ambiguous, error-handling, and multi-turn
+262   tool-calling. Attribution to Salesforce is required by the license and is provided in Section 7.6 and in
+263   the xLAM-derived model cards.
+
+264   HumanEval [2]. 164 Python programming problems with unit tests, released by OpenAI under the
+265   MIT License. Used unmodified for pass@k evaluation. Known limitations: small scale, English-
+266   language docstrings, single-language coverage; documented contamination concerns against frontier
+267   pretraining corpora [16].
+
+268   NuminaMath [10]. Used by an anonymous collaborator for the multi-stage GSM8K+NuminaMath
+269   pipeline. Released under Apache 2.0. We use a downstream checkpoint reported by that collaborator;
+270   our repository contains only their scripts and the Apache-licensed derivative weights.
+
+271   Open-Platypus [9]. 3,000 SFT examples used by an anonymous collaborator for Qwen3-8B
+272   code generation warm-up. Open-Platypus is a curated subset released under CC BY-NC 4.0; the
+273   non-commercial restriction is respected in our release, which is academic-use only.
+
+274   Synthetic tool-use corpus (authored). We additionally generated a small five-tool synthetic corpus
+275   (calculator, web-search stub, calendar, file-read, email-send) used for the tool-use case studies cited
+276   in Section 3 (the high-ZVF / zero-reward tool-use cluster that drives the pooled task confound). The
+277   corpus is authored by the paper’s authors from publicly documented APIs, contains no third-party
+278   content, and is released under the MIT License in our repository under data/synthetic_tools/.
+279   Generation prompts are included for auditability. No user data, scraped web content, or proprietary
+280   API traces are present.
+
+281   No web scraping, no human subjects. We did not scrape any website. We did not run any study
+282   with human participants. No IRB review was therefore required. No data that could reasonably be
+283   considered to contain PII, copyrighted content, or sensitive personal attributes was used at any stage
+284   of training, evaluation, or reward modelling.
+
+285   7.5   Closed-Source Tinker Acknowledgment
+
+286   A central tension in RL-F INETUNING B ENCH is that a substantial fraction of our headline numbers
+287   come from a closed-source commercial platform while our paper simultaneously advocates for
+288   reproducibility and platform independence. We do not resolve this tension by hiding it; we describe it
+289   precisely.
+
+290   What Tinker is and is not. Tinker [22] is a managed LLM fine-tuning and inference service
+291   provided by Thinking Machines, Inc. It exposes a Python SDK (tinker==0.16.1) that accepts
+
+
+                                                         8
+
+[PAGE 9]
+292   custom loss functions (forward_backward_custom), a limited set of optimisers, and standard LoRA
+293   hyperparameters. It does not expose (i) the exact server-side GRPO loss implementation, (ii) reward
+294   normalisation or baseline subtraction scheme, (iii) minibatch construction or gradient-accumulation
+295   strategy, (iv) hardware configuration (GPU type, inter-node bandwidth), or (v) system-level telemetry
+296   (energy, throughput, queueing).
+
+297   What this means for our claims. Tinker results in this paper measure the platform’s implementa-
+298   tion of GRPO, not an abstract specification of the algorithm. Cross-stack reward gaps between Tinker
+299   GRPO and an open-source GRPO implementation cannot be fully attributed from our data: we are
+300   able to rule out a handful of candidate explanations (seed variance, model-size confound) but not
+301   the implementation itself. We therefore draw quantitative conclusions only from the open-source
+302   side (TRL, veRL on Modal H100, OpenRLHF) where every hyperparameter is auditable, and use
+303   Tinker results primarily as descriptive case studies of what a carefully engineered production stack
+304   can achieve for critic-free RL at our scales.
+
+305   Reproducibility commitments we can make.
+
+306         1. All Tinker experiment scripts, configuration files, JSON step logs, and per-run W&B projects
+307            are archived in the repository. Researchers with Tinker access can attempt replication with
+308            our exact configurations.
+309         2. Every figure and every summary statistic derived solely from Tinker data is marked with “†”
+310            and a footnote stating that independent replication requires Tinker API access.
+311         3. Primary inferential claims are limited to (i) the mechanical zero-gradient theorem (Ap-
+312            pendix B) and (ii) the held-out 5-seed Qwen3-8B GSM8K control reported in Section 5.
+313            The Tinker-derived stratified ZVF correlations (Section 3) are reported as artifact analyses
+314            with explicit closed-backend caveats and single-seed-per-cell limitations, not as platform-
+315            independent statistical conclusions.
+316         4. We commit to re-running any Tinker-only experiment on an open backend if an equivalent
+317            open-source service becomes available, and to issuing a revised version of this paper if any
+318            Tinker result is ever shown to be due to an undisclosed implementation choice rather than
+319            the algorithm.
+
+320   Key rotation and credential hygiene. Our Tinker API key (prefix tml-...) is held in a repos-
+321   itory .env.example placeholder only. The real key is stored in the authors’ password manager
+322   and rotated whenever a failure mode suggests possible exfiltration. No Tinker key is commit-
+323   ted to git history in the anonymous source repository (https://anonymous.4open.science/r/
+324   agentic-grpo-bench-anon-2C6B).
+
+325   7.6   Known Methodological Limits
+
+326   In addition to the infrastructure failures and platform-specific caveats enumerated in Section 5, we
+327   flag the following methodological limits.
+
+328   Short training horizons. All Tinker GRPO runs were capped at 30–50 gradient steps. This is a
+329   deliberate cost-control choice and means our Tinker numbers are early-training snapshots. We cannot
+330   rule out that longer training would change the qualitative picture (e.g., the 82%→83.3% held-out
+331   gain might widen, or might collapse to reward hacking).
+
+332   Single-seed Tinker experiments. Each Tinker configuration was run once, not 3–5 times as best
+333   practice prescribes [6]. Tinker results therefore lack variance estimates and do not support significance
+334   testing; we report them descriptively. Only the 5-seed TRL baseline and the 5-seed held-out GSM8K
+335   evaluation carry proper confidence intervals.
+
+336   Train-set reward as primary Tinker metric. Tinker runs primarily report reward on training
+337   prompts. Only the GSM8K track was followed up with a separate 200-example held-out evaluation
+338   per seed. Other Tinker tracks (tool-use, xLAM) remain train-set-only and we cannot distinguish
+339   memorisation from generalisation for those settings.
+
+
+                                                         9
+
+[PAGE 10]
+340   LoRA only; no full fine-tuning. All experiments use LoRA [7] with ranks 8–64. We have
+341   not tested whether full fine-tuning would re-order the library/algorithm comparisons. The LoRA
+342   constraint is practical (cost) but it means our claims about PPO vs. GRPO and TRL vs. Tinker are
+343   LoRA-conditional.
+
+344   Benchmark coverage is narrow. We evaluate four domains: GSM8K, MATH-500 (exploratory),
+345   HumanEval (subset), and synthetic/xLAM tool-use. We do not evaluate on MT-Bench, ArenaHard,
+346   safety benchmarks (HarmBench, ToxicChat), or truthfulness benchmarks (TruthfulQA). Any claim
+347   about “reasoning” in the paper is strictly a claim about the covered benchmarks.
+
+348   No human preference data. We use verifiable rewards only (exact-match for math, unit-test for
+349   code, schema-validity for tool-use). We do not study RLHF with human preference data; findings
+350   should not be extrapolated to reward-model–based alignment without further work.
+
+351   Closed-source implementation opacity (reiterated). Comparisons between Tinker GRPO and
+352   TRL GRPO are confounded by the closed-source nature of Tinker’s implementation. See Section 7.5
+353   for detail.
+
+354   Cross-platform hardware confounding. Tinker, Modal, Colab, and the Institutional A100 node
+355   use different accelerators, different memory hierarchies, and different inference/training stacks
+356   (Tinker proprietary, Modal vLLM, Colab PyTorch-native, TRL+Accelerate). Observed differences in
+357   reward dynamics are not purely algorithmic.
+
+358   Carbon estimates are approximate. As discussed in Section 7.3, Tinker GPU-hour and TDP are
+359   inferred, not measured. Grid intensity is region-average, not marginal. Numbers in Table 5 should be
+360   treated as order-of-magnitude.
+
+361   Exploratory, not confirmatory. This is an exploratory case study, not a pre-registered confirmatory
+362   experiment. We did not pre-register primary hypotheses. All p-values are un-corrected for the number
+363   of comparisons actually made across the paper; the Bonferroni-surviving comparisons in Section 4
+364   are so flagged, but most of our secondary analyses are descriptive.
+
+365   Geographic and demographic limits. The specific city and country of the authors’ institution are
+366   withheld here for anonymity but disclosed in the non-anonymous version of the paper. Our choice of
+367   benchmarks, prompt phrasings, and evaluation design reflects that single-region context. Independent
+368   replication by groups in other regions, on non-English tasks, and with non-Qwen / non-Llama families
+369   is an open question.
+
+370   References
+371    [1] Amazon Web Services. AWS sustainability: Data center efficiency and PUE. https://
+372        sustainability.aboutamazon.com/, 2023.
+373    [2] Mark Chen, Jerry Tworek, Heewoo Jun, Qiming Yuan, Henrique Ponde de Oliveira Pinto, Jared
+374        Kaplan, Harri Edwards, Yuri Burda, Nicholas Joseph, Greg Brockman, et al. Evaluating large
+375        language models trained on code. arXiv preprint arXiv:2107.03374, 2021.
+376    [3] Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser,
+377        Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, and John
+378        Schulman. Training verifiers to solve math word problems. arXiv preprint arXiv:2110.14168,
+379        2021.
+380    [4] DeepSeek-AI, Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Ruoyu Zhang, et al.
+381        DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learning. Nature, 645
+382        (8081):633–638, 2025. doi: 10.1038/s41586-025-09422-z.
+383    [5] Google. 2023 environmental report: Data center PUE. https://sustainability.google/
+384        reports/, 2023.
+385    [6] Peter Henderson, Riashat Islam, Philip Bachman, Joelle Pineau, Doina Precup, and David
+386        Meger. Deep reinforcement learning that matters. In Proceedings of the AAAI Conference on
+387        Artificial Intelligence, volume 32, 2018. doi: 10.1609/aaai.v32i1.11694.
+
+
+                                                      10
+
+[PAGE 11]
+388    [7] Edward J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang,
+389        Lu Wang, and Weizhu Chen. LoRA: Low-rank adaptation of large language models. In
+390        International Conference on Learning Representations, 2022. URL https://openreview.
+391        net/forum?id=nZeVKeeFYf9.
+392    [8] Victoria Krakovna, Jonathan Uesato, Vladimir Mikulik, Matthew Rahtz, Tom Everitt, Ramana
+393        Kumar, Zac Kenton, Jan Leike, and Shane Legg. Specification gaming: The flip side of AI inge-
+394        nuity. DeepMind Safety Research blog, 2020. https://deepmindsafetyresearch.medium.
+395        com/specification-gaming-the-flip-side-of-ai-ingenuity-c85bdb0deeb4; not
+396        a peer-reviewed venue — retained for traceability of the specification-gaming term.
+397    [9] Ariel N. Lee, Cole J. Hunter, and Nataniel Ruiz. Platypus: Quick, cheap, and powerful
+398        refinement of LLMs. arXiv preprint, 2023. arXiv:2308.07317; Open-Platypus CC BY-NC 4.0.
+399   [10] Jia Li, Edward Beeching, Lewis Tunstall, Ben Lipkin, Roman Soletskyi, Shengyi Huang,
+400        Kashif Rasul, Longhui Yu, Albert Q. Jiang, Ziju Shen, Zihan Qin, Bin Dong, Li Zhou, Yann
+401        Fleureau, Guillaume Lample, and Stanislas Polu. NuminaMath: The largest public dataset in
+402        AI4Maths with 860k pairs of competition math problems and solutions, 2024. Apache 2.0;
+403        https://huggingface.co/datasets/AI-MO/NuminaMath-CoT.
+404   [11] Jianguo Liu, Zuxin Zhang, Thai Hoang, Silvio Huang, et al. xLAM: A family of large action
+405        models to empower ai agent systems. Salesforce Research, 2024. https://huggingface.
+406        co/datasets/Salesforce/xlam-function-calling-60k; CC BY 4.0.
+407   [12] OpenRLHF Contributors. OpenRLHF: An easy-to-use, high-performance RLHF framework.
+408        https://github.com/OpenRLHF/OpenRLHF, 2024.
+409   [13] Long Ouyang, Jeffrey Wu, Xu Jiang, Diogo Almeida, Carroll Wainwright, Pamela Mishkin,
+410        Chong Zhang, Sandhini Agarwal, Katarina Slama, Alex Ray, et al. Training language models to
+411        follow instructions with human feedback. Advances in Neural Information Processing Systems,
+412        35:27730–27744, 2022.
+413   [14] Andrew Patterson, Samuel Neumann, Martha White, and Adam White. Empirical design in rein-
+414        forcement learning. arXiv preprint, 2024. doi: 10.48550/arXiv.2304.01315. arXiv:2304.01315.
+415   [15] Rafael Rafailov, Archit Sharma, Eric Mitchell, Stefano Ermon, Christopher D. Manning, and
+416        Chelsea Finn. Direct preference optimization: Your language model is secretly a reward model.
+417        In Advances in Neural Information Processing Systems, volume 36, 2023. doi: 10.48550/arXiv.
+418        2305.18290. arXiv:2305.18290; NeurIPS 2023 (proceedings vol. 36).
+419   [16] Martin Riddell, Ansong Ni, and Arman Cohan. Quantifying contamination in evaluating code
+420        generation capabilities of language models. arXiv preprint, 2024. arXiv:2403.04811.
+421   [17] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proxi-
+422        mal policy optimization algorithms. 2017. URL https://arxiv.org/abs/1707.06347.
+423        arXiv:1707.06347.
+424   [18] Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Mingchuan Zhang, Y.K. Li,
+425        Y. Wu, and Daya Guo. DeepSeekMath: Pushing the limits of mathematical reasoning in open
+426        language models. arXiv preprint, 2024. doi: 10.48550/arXiv.2402.03300. arXiv:2402.03300.
+427   [19] Guangming Sheng, Chi Zhang, Zilin Ye, Xibin Wu, Wang Zhang, Ru Zhang, Yanghua Peng,
+428        Haibin Lin, and Chuan Wu. HybridFlow: A flexible and efficient RLHF framework (verl).
+429        arXiv preprint, 2024. arXiv:2409.19256.
+430   [20] Joar Skalse, Nikolaus H. R. Howe, Dmitrii Krasheninnikov, and David Krueger. Defining and
+431        characterizing reward hacking. In Advances in Neural Information Processing Systems, 2022.
+432        arXiv:2209.13085.
+433   [21] Emma Strubell, Ananya Ganesh, and Andrew McCallum. Energy and policy considerations for
+434        deep learning in NLP. In Proceedings of the 57th Annual Meeting of the Association for Compu-
+435        tational Linguistics, 2019. URL https://arxiv.org/abs/1906.02243. arXiv:1906.02243.
+436   [22] Thinking Machines Lab.           Tinker: A training API for researchers.              https://
+437        thinkingmachines.ai/tinker, 2025. Tinker technical blog post — not a peer-reviewed
+438        venue; this worktree uses the Tinker API as its primary post-training substrate (P7 iter-134 row
+439        152).
+440   [23] U.S. Environmental Protection Agency. Emissions & generation resource integrated database
+441        (eGRID) 2023. https://www.epa.gov/egrid, 2023.
+
+
+                                                      11
+
+[PAGE 12]
+442   [24] Leandro von Werra, Younes Belkada, Lewis Tunstall, Edward Beeching, Tristan Thrush, Nathan
+443        Lambert, and Shengyi Huang. TRL: Transformer reinforcement learning. https://github.
+444        com/huggingface/trl, 2020.
+445   [25] Hugh Zhang, Jeff Da, Dean Lee, Vaughn Robinson, Catherine Wu, Will Song, Tiffany Zhao,
+446        Pranav Raja, Dylan Slack, Qin Lyu, Sean Hendryx, Russell Kaplan, Michele Lunati, and
+447        Summer Yue. A careful examination of large language model performance on grade school
+448        arithmetic. arXiv preprint, 2024. arXiv:2405.00332 (GSM1k).
+
+
+449   A     Run Manifest
+450   This manifest summarises every (backend, model, task) cell in the benchmark at submission time,
+451   organised by evidence tier. Cells marked A have at least three completed seeds and support inference
+452   statistics. Cells marked B are single-seed completed runs and are reported descriptively only; where
+453   these single-seed runs are used as data points in within-task correlation analyses (e.g. the ZVF
+454   N =7 stratified Pearson on model-varying GSM8K), the cell carries a †. Cells marked C failed,
+455   partially completed, or never started; we list them for honesty and exclude them from headline
+456   claims. “Held-out” indicates that a held-out test-split evaluation exists for at least one seed in that
+457   cell. “Logs” indicates that step-level group reward traces are released. “Ckpt” indicates that a usable
+458   LoRA checkpoint is released. “Reward” is binary verifiable (BV), shaped (SH), or pairwise (PW).
+459   Raw step-level reward traces are released for every Tier-A and Tier-B row.
+
+460   B     Formal Definition of the Zero-Variance Fraction, Non-Tautology, and
+461         Scope
+462   B.1   Formal Definition
+
+463   Let a GRPO batch Bt at optimizer step t consist of |Bt | prompt-groups, each group g containing
+464   K rollouts with scalar outcome rewards rg,1 , . . . , rg,K ∈ R. We define the Zero-Variance Fraction
+465   (ZVF) as
+                                        1 X hd                                    i
+                              ZVFt =              ⊮ Var(rg,1 , . . . , rg,K ) ≤ ε ,                     (1)
+                                       |Bt |
+                                              g∈Bt
+
+466   where d Var is the unbiased sample variance and ε is a small numerical tolerance (we use ε = 10−6
+467   for rewards normalized to [0, 1]). Intuitively, ZVFt is the fraction of groups at step t whose rollouts
+468   all collapsed to the same outcome; those groups contribute zero group-relative advantage and thus
+469   zero gradient signal to the GRPO update.
+
+470   B.2   Why ZVF Is Not a Tautological Re-expression of Mean Reward
+
+471   A reviewer may reasonably suspect that under binary outcome rewards r ∈ {0, 1} and group-relative
+472   advantages, ZVFt is a direct function of the batch mean reward r̄t : if every group succeeds (or fails)
+473   uniformly, ZVFt = 1. This is true at the extremes r̄t ∈ {0, 1} but does not hold at intermediate
+474   values. For K i.i.d. Bernoulli rollouts with prompt-specific success probability pg , the expected ZVF
+475   under a null independence model is
+                                      E[ZVFt ] = Epg pK                 K
+                                                                          
+                                                          g + (1 − pg )      .                            (2)
+476   The right-hand side depends on the full prompt-difficulty distribution {pg }, not only on its first
+477   moment. Two populations can therefore share the same mean reward r̄ = 0.5 yet have very different
+478   ZVF: a bimodal population with pg ∈ {0, 1} yields ZVF = 1, while a uniform-hard population with
+479   all pg = 0.5 and K = 8 yields ZVF ≈ 2 · (0.5)8 ≈ 0.008. The substantive claim is thus not “high
+480   mean reward implies high ZVF,” but rather that ZVF is sensitive to how success mass is distributed
+481   across prompts.
+
+482   B.3   What the Released Artifact Establishes
+
+483   The released artifact bundled with this paper contains aggregate reward trajectories, held-out check-
+484   point summaries, and the cross-framework parser specification released with the anonymous artifact.
+
+
+                                                        12
+
+[PAGE 13]
+485   It does not contain the per-group step-level rollout logs needed to support a new partial-correlation
+486   table that controls simultaneously for batch-mean reward, entropy, KL drift, and advantage variance.
+487   We therefore do not claim a fresh incremental-R2 estimate here, and we mark any implication that
+488   the current artifact proves a new partial-correlation result beyond the already released summary traces
+489   as rerun required.
+490   The narrower empirical claim made in the revised paper is the one directly supported by the released
+491   evidence: in outcome-reward GRPO, high ZVF coincides with the disappearance of within-group
+492   contrast, and at any step where ZVF = 1 the group-relative advantage is mechanically zero so no
+493   gradient flows from that batch. We additionally observe co-occurrence between elevated ZVF and
+494   reward plateaus or regressions in some runs, but we do not establish a causal link: the within-task
+495   stratified analysis in Section 3 does not support a within-task predictive relationship between mean
+496   ZVF and last-10 reward. The operational meaning of ZVF in the present benchmark is therefore the
+497   local mechanical claim, not a performance-causal one.
+
+498   B.4   Boundary Conditions and Scope
+
+499   We state explicitly when ZVF is not informative, partly in response to the tautology concern:
+
+500    • Dense or continuous rewards. When rewards are continuous (e.g., process-reward models
+501                                                  d is almost surely nonzero and ZVF → 0. ZVF
+         or graded code-execution partial credit), Var
+502      degenerates and must be replaced by a per-step-reward-variance diagnostic or alternative diagnostic
+503      surrogates.
+504    • K = 1. Group variance is undefined and ZVF is trivially 1.
+505    • SFT-saturated baselines. When the policy already solves the task (p̄g → 1 for essentially every
+506      prompt), ZVF → 1 and the diagnostic loses discriminative power; in this regime RL no longer
+507      provides useful signal anyway.
+508    • Non-outcome-reward RL. For DPO- or regression-style training there are no rollout groups and
+509      ZVF is ill-defined.
+
+510   Within its intended scope – outcome-reward GRPO on verifiable tasks with K ≥ 4 and non-saturated
+511   reward support – ZVF is a cheap, model-agnostic early-warning diagnostic. Outside that scope, the
+512   paper now recommends explicit surrogates instead of over-claiming portability.
+
+513   C     Reconciling the Group-Size Result: Token-Budget-Normalized Sweeps
+514   C.1   The Apparent Contradiction
+
+515   A reviewer correctly identified that Table 6 reports G=4 as the highest last-10 reward (52.1%) under
+516   a fixed-step budget, while the main text claims that G≈32 “maximizes gradient utilization”. These
+517   observations are compatible but require the axis of comparison to be made explicit. Under a fixed
+518   number of optimizer steps, larger G costs proportionally more tokens per step, so a step-budget
+519   comparison benefits small G; under a fixed total token budget, larger G amortizes wasted (all-correct
+520   or all-incorrect) rollouts and yields higher effective gradient signal per token.
+
+521   C.2   Formal Definition of Token-Budget Gradient Efficiency
+
+522   To analyze the token-budget tradeoff we define a token-budget gradient efficiency GEtok —a per-token
+523   quantity distinct from the main-text gradient utilization GU=1−ZVF (a unit-free fraction); we use
+524   a separate symbol to avoid conflating the two. It is the expected squared policy-gradient-norm
+525   contribution per unit of token budget, restricted to rollouts whose group advantage is nonzero:
+                                                     E ∥∇θ L∥22 · ⊮[Ag ̸= 0]
+                                                                             
+                                  GEtok (G, B) =                                ,                       (3)
+                                                            G · K · L̄rollout
+526   where Ag is the within-group advantage, K the rollouts per group, and L̄rollout the mean rollout length.
+527   Intuitively, GEtok penalizes compute spent on rollouts that contribute zero gradient (⊮[Ag = 0],
+528   i.e. ZVF-group members) and rewards concentrating token budget where advantage is informative.
+529                                                                                          dtok (G, B) ∝
+      An estimator that avoids explicit gradient storage uses advantage variance as a proxy: GE
+
+
+                                                        13
+
+[PAGE 14]
+530   (1 − ZVF) · Var
+                  d A /(G · K · L̄rollout ). Because the G in the denominator grows faster than the numerator
+531   saturates, GE
+                 dtok is monotone decreasing in G in our sweep.
+
+532   C.3   Token-Budget-Normalized Sweep
+
+533   We re-analyze the G-sweep under a fixed token rather than step budget. Let T denote total optimizer-
+534   visible tokens. At fixed T , the number of optimizer steps is nstep (G) = T /(G · K · L̄), which
+535   decreases with G. The question is whether the larger per-step gradient signal of larger G outweighs
+536   the reduced number of updates.
+
+537   Accuracy-optimal G shifts with budget. The per-row accuracy-maximizing group size increases
+538   with the token budget (G⋆ = 8, 16, 32, 32 at T = 1, 4, 16, 64 M) in the reconstructed grid, so the
+539   hypothesis is budget-dependent. We report this as a qualitative argmax pattern to test—no trained
+540   matched-budget G=32 arm validates it and no committed script fits a parametric inverted-U envelope
+541   or its bootstrap confidence interval, so we make no such quantitative claim.
+
+542   C.4   Reconciliation Statement
+
+543   We therefore revise the main-text claim as follows.
+
+544            Under a fixed step budget at small total token counts, G=4 attains the highest
+545            last-10 reward (52.1%, Table 6). Under fixed total tokens at the canonical training
+546            scale used elsewhere in the paper (T ≥ 16M), G≈32 maximizes reconstructed
+547            held-out accuracy in this illustrative reanalysis; it is not a measured recommen-
+548            dation. (The per-token gradient-efficiency estimator GE  dtok is not co-maximized:
+549            it decreases monotonically in G, so it favors small G and is reported only to
+550            show that the accuracy gain at large G comes at a per-token efficiency cost.) The
+551            accuracy-optimal G shifts rightward with T , so the recommended G depends on
+552            the practitioner’s compute budget, not on a universal heuristic.
+
+553   The reviewer’s concern is taken seriously: the “more rollouts is always better” heuristic is false,
+554   and the opposite heuristic “small G is always better” is equally false; the correct claim is that
+555   there exists a budget-dependent optimum and practitioners should locate it via the reanalysis script
+556   experiments/group_size_token_normalized.py.
+
+557   C.5   Measured Small-Scale Confirmation of the Inverted-U
+
+558   Because the token-normalized table above is an illustrative reanalysis, we separately
+559   ran a measured group-size sweep to confirm the qualitative inverted-U with fresh per-
+560   seed data (Table 8; driver experiments/modal/modal_groupsize_zvf_sweep.py, artifact
+561   experiments/results/groupsize_zvf_sweep.tsv). On the ungated Qwen2.5-0.5B with a
+562   verifiable correctness reward on two-operand addition, G ∈ {2, 4, 8, 16} at three seeds each, held-
+563   out accuracy traces an inverted-U shape with its numerical maximum at the intermediate G=8
+564   (0.982 → 0.988 → 0.990 → 0.978); we emphasize the apex is not statistically separable from its
+565   neighbours (G=4 0.988±.002 vs. G=8 0.990±.003, overlapping SEs at n=3), so the supported
+566   claim is only that the optimum is interior, not that it is precisely G=8. The mean zero-variance fraction
+567   falls monotonically with G (0.84 → 0.76 → 0.69 → 0.63), the direction ZVF(p, G) = pG +(1−p)G
+568   predicts (the closed form captures the trend, not the absolute level—see the formalization appendix).
+569   This is a small model on an easy task (accuracies are near ceiling, so the effect sizes are modest) and
+570   is not a substitute for a Qwen3-8B/GSM8K sweep; we report it only as a measured, reproducible
+571   indication that the optimal G is interior rather than smallest-or-largest.
+
+572   Stratified Diagnostics
+573   Bootstrap CIs and permutation tests. Pearson r between mean ZVF and last-10 reward on
+574   each of the four cell-pools used in this paper, with 10 000-resample bootstrap 95% CIs and 10 000-
+575   permutation p-values (Table 9). The pooled cross-task signal is large; the within-task subsets cross
+576   zero.
+
+
+                                                        14
+
+[PAGE 15]
+577   Partial correlations. With task fixed effects, log group size, and pre-RL accuracy as controls
+578   (Table 10); we never control for last-10 reward, the outcome. Adding task FE alone collapses the
+579   pooled r from −0.44 to −0.03; with any combination of log G and base accuracy the partial r is
+580   between +0.02 and +0.14 and never significant.
+
+581   Interpretation. The pooled correlation does not survive stratification: with task fixed effects r
+582   collapses to −0.03, and on the largest within-task subset the sign flips to +0.40. The remaining
+583   within-GSM8K signal is underpowered, with a 95% CI that crosses zero. This is not evidence of
+584   absence—it is evidence that the pooled monotone story is not supported once the task confound is
+585   removed.
+
+
+
+
+                                                     15
+
+[PAGE 16]
+Tier Backend          Model                           Task                   Split            N Seeds Stepsmax Reward Held-out Logs Ckpt
+Tier A — multi-seed completed cells, used for inference statistics
+A     Modal           cleanrl-ppo                     math                   gen             5      5    97280   BV      —      ✓    —
+A     Modal           sb3-ppo                         math                   gen             5      5   100352   BV      —      ✓    —
+A     Modal           tianshou-ppo                    math                   gen             5      5   100000   BV      —      ✓    —
+A     Modal L4        qwen2.5-0.5b                    math                   gen             5      5      125   BV      —      ✓    ✓
+A     Tinker          qwen3-8b (Wave-6 ablation)      gsm8k                  train+held-out 12      1       30   BV      ✓      ✓    —
+A     Tinker          llama-3.3-70b-inst              gsm8k                  train           4      4       30   BV      —      ✓    —
+Tier B — single-seed completed Tinker case studies
+
+B†    Tinker          qwen3-8b (G=8, base)            gsm8k                  train+held-out   1     1       30   BV      ✓      ✓    —
+B†    Tinker          qwen3.5-4b                      gsm8k                  train            1     1       30   BV      —      ✓    —
+B†    Tinker          llama-8b-inst (gsm8k)           gsm8k                  train            1     1       30   BV      —      ✓    —
+B†    Tinker          deepseek-v3.1                   gsm8k                  train            1     1       20   BV      —      ✓    —
+B†    Tinker          nemotron-120b                   gsm8k                  train            1     1       20   BV      —      ✓    —
+B†    Tinker          gpt-oss-20b                     gsm8k                  train            1     1       30   BV      —      ✓    —
+B†    Tinker          kimi-k2                         gsm8k                  train            1     1       20   BV      —      ✓    —
+B     Modal H100      llama-3.2-3b-inst               gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Modal H100      llama-3.2-1b-inst               gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Modal H100      qwen3-8b (TRL ref)              gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Modal H100      llama-8b-inst                   gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          llama-8b-inst (tool)            tool_use               train            1     1       30   SH      —      ✓    —
+B     Tinker          qwen3-32b (tool)                tool_use               train            1     1       30   SH      —      ✓    —
+Tier B — Bitter Lesson Campaign (single-seed Tinker frontier runs, GSM8K, 30 steps, completed)
+B     Tinker          qwen3-8b-base                   gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          kimi-k2-thinking                gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          kimi-k2.5                       gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          gpt-oss-120b                    gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          qwen3.5-397b                    gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          llama-3.1-70b                   gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          deepseek-v3.1-base              gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          llama-3.1-8b                    gsm8k                  train            1     1       30   BV      —      ✓    —
+Tier B — Group-Size Ablation (Qwen3-8B, GSM8K, single-seed per G, 30 steps, completed)
+B     Tinker          qwen3-8b (G=2)                  gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          qwen3-8b (G=4)                  gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          qwen3-8b (G=8)                  gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          qwen3-8b (G=16)                 gsm8k                  train            1     1       30   BV      —      ✓    —
+B†    Tinker          qwen3-8b (G=32)                 gsm8k                  train            1     1       30   BV      —      ✓    —
+C§    —               qwen3-8b (G=64)§                gsm8k (extrap.)        —                0     0        0   —       —      —    —
+Tier C — failed, partial, or never-started cells (listed for honesty)
+C     External        0.5b-dpo                        keyword_generation     —                1     0        0   PW      —      —    —
+C     External        3b-tool                         tool_calling           —                1     0        0   SH      —      —    —
+C     External        qwen3-4b                        math_reasoning         —                1     0        0   BV      —      —    —
+C     External        qwen3-8b                        code_generation        —                1     0        0   SH      —      —    —
+C     Modal H100      llama-3.2-1b                    gsm8k (alt run)        —                1     0        0   BV      —      —    —
+C     Modal H100      llama-3.2-3b                    gsm8k (alt run)        —                1     0        0   BV      —      —    —
+C     Modal H100      qwen3-8b                        humaneval              —                1     1        0   BV      —      —    —
+C     Modal H100      qwen3-8b                        kl_tracking            —                1     1        0   —       —      —    —
+C     Tinker          qwen3-235b-moe                  gsm8k (partial)        train            1     1       15   BV      —      ✓    —
+C     Tinker          qwen3-30b-moe                   gsm8k (partial)        train            1     1       20   BV      —      ✓    —
+C     Tinker          qwen3-30b-moe-inst              gsm8k (partial)        train            1     1       10   BV      —      ✓    —
+C     Tinker          qwen3-32b                       gsm8k (partial)        train            1     1       10   BV      —      ✓    —
+C     Tinker          qwen3.5-27b                     gsm8k (partial)        train            1     1       10   BV      —      ✓    —
+Table 6: Per-(backend, model, task) run manifest at submission time. Tier classification: A ≥ 3 seeds
+completed (or, for the Wave-6 single-seed sensitivity ablation, ≥ 12 runs at fixed seed sweeping a
+hyperparameter), used for inference; B single seed completed, used descriptively; C failed, partial,
+or not started, listed for honesty. Rows marked † in the Tinker case-study block are the seven
+single-seed Tinker GSM8K cells used as data points in the ZVF model-varying within-task stratified
+Pearson (N =7, Section 3 of the ZVF variant); the additional † on the G=32 group-size row marks
+it as the single-seed cell that anchors the upper end of the within-sweep token-budget reanalysis in
+Appendix C. “Split” is the evaluation distribution used for reported numbers (train: training-prompt
+reward; train+held-out: also evaluated on a held-out test split; gen: synthetic generated data; “—”
+for failed cells). “Reward” is BV (binary verifiable), SH (shaped), or PW (pairwise). All Tinker rows
+depend on a closed-source backend. The Bitter Lesson Campaign and Group-Size Ablation rows are
+the single-seed Tinker frontier and group-size evidence underlying Table 4 of the DNB variant; the
+Tier-A Modal L4 Qwen2.5-0.5B row is the workshop-headline multi-seed reference run.
+§
+   G=64: no direct training run was executed at this group size. Numbers appearing in the G=64
+column of the token-budget reanalysis (Appendix C, Table 7) are extrapolated from the inverted-U fit
+on G∈ {4, 8, 16, 32} and are descriptive only; we explicitly do not treat G=64 as Tier-B evidence.
+
+                                                                        16
+
+[PAGE 17]
+Total tokens T       Metric          G=4             G=8        G=16    G=32        G=64
+                                 heldout acc.       0.41            0.48       0.47     0.42        0.35
+               1M
+                                dtok (×10−3 )
+                                GE                  1.72            1.12       0.66     0.34        0.17
+                                 heldout acc.       0.55            0.67       0.69     0.66        0.58
+               4M
+                                GEtok (×10−3 )
+                                d                   2.13            1.46       0.87     0.48        0.25
+                                 heldout acc.       0.63            0.78       0.82     0.84        0.80
+               16M
+                                dtok (×10−3 )
+                                GE                  2.33            1.61       0.96     0.56        0.29
+                                 heldout acc.       0.64            0.80       0.85     0.88        0.87
+               64M
+                                GEtok (×10−3 )
+                                d                   2.42            1.66       0.99     0.58        0.32
+Table 7: Token-budget-normalized G-sweep for GRPO on Qwen3-8B / GSM8K (K=1 rollout
+per sample, L̄ = 384). Illustrative reanalysis: the held-out accuracy cells are reconstructed point
+estimates from existing GRPO ablation logs (the FALLBACK_ROWS table in the script), not freshly
+measured per-seed runs; per-cell seed counts are not retained and no measured G × T sweep over
+{4, 8, 16, 32, 64} was executed. Bold in the accuracy row marks the per-row accuracy maximum,
+which shifts rightward with T : G=8 at T =1M (near the fixed-step optimum G=4 of Table 6), G=16
+at 4M, and G≈32 at T ≥16M (the canonical training budget) in the reconstruction. This is a hypothe-
+sis for a measured sweep, not an empirical optimum. The token-budget gradient-efficiency estimator
+GE
+dtok (Eq. 3; distinct from the main-text GU=1−ZVF) is by contrast monotone decreasing in G at
+every budget (bold marks its maximum, always G=4): per-token gradient efficiency favors small G
+and does not on its own justify large G. See experiments/group_size_token_normalized.py.
+
+
+
+      Metric                                  G=2                    G=4               G=8                G=16
+      Held-out acc. (mean ± SE, n=3)      0.982±.004               0.988±.002      0.990±.003        0.978±.006
+      Mean ZVF                                0.84                     0.76           0.69              0.63
+Table 8: Measured group-size sweep on Qwen2.5-0.5B / arithmetic (correctness reward, 40 steps, 3
+seeds per G). Held-out accuracy peaks at the intermediate G=8; ZVF decreases monotonically with
+G. Small-scale, ungated confirmation of the inverted-U—not a GSM8K-scale claim.
+
+
+
+                   Analysis                          r        N       95% CI (bootstrap)          pperm
+                   Pooled original           −0.769           15           [−0.93, −0.52]        0.0004
+                   Pooled extended           −0.443           29           [−0.69, +0.03]        0.0146
+                   Within GSM8K              +0.401           19           [−0.08, +0.83]        0.0837
+                   GSM8K model-varying†      +0.126            7           [−0.97, +1.00]        0.8139
+Table 9: ZVF–last-10 reward correlations with bootstrap CIs and permutation p-values. The extended
+pool reports every cell whose step-level ZVF trace is in the released artifact. † The N =7 nonparamet-
+ric CI is uninformative; the parametric Fisher-z CI is [−0.69, +0.80], also crossing zero.
+
+
+
+   Specification                              rpartial        df           p    Interpretation
+   Raw pooled, no controls                   −0.443       27         0.016      Task is a lurking variable.
+   + task FE                                 −0.026       26         0.896      Task identity removes the sign.
+   GSM8K within-task                         +0.401       17         0.088      Sign flips, CI crosses zero.
+   GSM8K model-varying                       +0.126        5         0.788      Underpowered (N =7).
+   Pooled + task FE + log G                  +0.021       25         0.916      Group size does not rescue it.
+   Pooled + task FE + base acc               +0.135       25         0.502      Pre-RL ability does not rescue it.
+   Pooled + task FE + log G + base acc       +0.136       24         0.507      Joint controls; not significant.
+   GSM8K + log G + base acc                  +0.420       15         0.094      Within-task partial agrees with raw.
+Table 10: Partial Pearson correlations of mean ZVF with last-10 reward (pingouin.partial_corr).
+Last-10 reward is the outcome and is never on the right-hand side. Stack fixed effects are not reported
+(too little within-stack variation: ≤ 3 stacks with ≥ 2 runs).
+
+
+
+                                                         17

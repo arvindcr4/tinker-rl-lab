@@ -17,7 +17,7 @@
     },
     {
       "component": "gae_lambda",
-      "field": "loss_form.advantage_lambda",
+      "field": "see delta-list and citation",
       "change": "lambda in (0,1] GAE bias-variance trade-off; typical value 0.95. GRPO has no lambda (group mean is the baseline; advantage is r - mean(r_group))."
     },
     {
@@ -27,7 +27,7 @@
     },
     {
       "component": "epoch_k",
-      "field": "loss_form.epochs_per_prompt",
+      "field": "see delta-list and citation",
       "change": "K=4 epochs over the same rollout buffer per gradient step (canonical leaf pinned at epochs_per_prompt=4); GRPO uses K=1 by default."
     }
   ],

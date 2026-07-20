@@ -1,21 +1,21 @@
 {
-  "n_entries": 35,
-  "n_stacks": 20,
-  "n_deltas": 15,
+  "n_entries": 46,
+  "n_stacks": 28,
+  "n_deltas": 18,
   "schema_patched": false,
   "n_entries_patched": 0,
   "stack_means": {
-    "min_report_coverage": 0.75,
-    "declared_deltas_coverage": 0.375,
-    "measured_coverage": 0.36,
+    "min_report_coverage": 0.6888,
+    "declared_deltas_coverage": 0.3393,
+    "measured_coverage": 0.2571,
     "n_with_ci_method": 7
   },
   "delta_means": {
-    "measured_coverage": 1.6333
+    "measured_coverage": 0.6667
   },
   "claim_without_evidence": {
-    "n_total": 14,
+    "n_total": 22,
     "n_with_measured_rows": 8,
-    "n_without_measured_rows": 6
+    "n_without_measured_rows": 14
   }
 }

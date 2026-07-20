@@ -30,6 +30,14 @@ linking the diagnostic to the fraction of the batch that carries signal; and (iv
 cross-examination that identifies ZVF's central failure---aliasing mastery with
 incapacity---and motivates magnitude- and sign-aware replacements.
 
+\paragraph{Exact accounting, bounded interpretation.}
+For a binary-reward prompt with success probability $p$, pass@$G$ is
+$1-(1-p)^G$ and unanimous success is $p^G$. Their gap is therefore
+$1-p^G-(1-p)^G=1-\mathrm{ZVF}$. The checked-in 505-task audit reproduces this
+identity to $1.11\times10^{-16}$. This is useful because it tells us exactly
+what ZVF measures---contrastive group yield---and exactly what it does not:
+held-out improvement, gradient direction, or causal value of an intervention.
+
 \subsection{Related Work}
 \label{sec:p2-related}
 Reward sparsity and vanishing advantages are recurring obstacles in RL from

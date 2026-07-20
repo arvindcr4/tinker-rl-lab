@@ -1,0 +1,124 @@
+{
+  "environment_check_sha256": "1d7cc4005be76979bce8eb82f2d1a771fa6e24d542144cf2ffad3b34c4fdc0ea",
+  "eval_batch_size": 8,
+  "evaluator_sha256": "4caad0ce6e17275180b9bb3918c3f36fbeea10f353b756b9109dbebebd5fc11b",
+  "execution_plan": [
+    [
+      "colab",
+      "--auth=oauth2",
+      "new",
+      "--gpu",
+      "A100",
+      "--session",
+      "e1-eval-grpo-s37-2c05e9"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1-eval-grpo-s37-2c05e9",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/e1_grpo_confirmatory.py",
+      "/content/e1_grpo_confirmatory.py"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1-eval-grpo-s37-2c05e9",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/e1_evaluate_checkpoint.py",
+      "/content/e1_evaluate_checkpoint.py"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "install",
+      "--session",
+      "e1-eval-grpo-s37-2c05e9",
+      "trl==1.8.0",
+      "transformers==5.13.1",
+      "datasets==4.8.5",
+      "peft==0.19.1",
+      "torchao==0.17.0",
+      "wandb==0.28.0"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "exec",
+      "--session",
+      "e1-eval-grpo-s37-2c05e9",
+      "--file",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/verify_colab_e1_environment.py",
+      "--timeout",
+      "120"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1-eval-grpo-s37-2c05e9",
+      "<ephemeral-secret-file>",
+      "/content/.e1-eval-secrets.json"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1-eval-grpo-s37-2c05e9",
+      "<ephemeral-request-file>",
+      "/content/e1-evaluation-request.json"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "exec",
+      "--session",
+      "e1-eval-grpo-s37-2c05e9",
+      "--file",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/secure_exec_evaluation.py",
+      "--timeout",
+      "21600"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "stop",
+      "--session",
+      "e1-eval-grpo-s37-2c05e9"
+    ]
+  ],
+  "hf_repo": "arvindcr4/tinker-rl-lab-e1-grpo-s37-54592080",
+  "progress_save_every": 16,
+  "recovery_fingerprint": "2c05e9472240b11522970463912c9c85a7e0509d6c1c120c759894fd17570e51",
+  "schema_version": "e1-evaluation-recovery-v1",
+  "secure_exec_sha256": "84ec72e7364b780d2a7a169aa406dc59f0880f7c9cf5f5fcfdaa553332f5f2e7",
+  "session": "e1-eval-grpo-s37-2c05e9",
+  "source_request": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/colab-e1-confirmatory/requests/e1__grpo__s37__5459208036f6.json",
+  "source_snapshots": {
+    "zvf-program/colab-experiments/e1_evaluate_checkpoint.py": {
+      "sha256": "4caad0ce6e17275180b9bb3918c3f36fbeea10f353b756b9109dbebebd5fc11b",
+      "snapshot": "sources/4caad0ce6e17275180b9bb3918c3f36fbeea10f353b756b9109dbebebd5fc11b"
+    },
+    "zvf-program/colab-experiments/e1_grpo_confirmatory.py": {
+      "sha256": "18616147b462e01a225f748adf9142eeaffd214ec098015f89f9db22b581e03a",
+      "snapshot": "sources/18616147b462e01a225f748adf9142eeaffd214ec098015f89f9db22b581e03a"
+    },
+    "zvf-program/colab-experiments/secure_exec_evaluation.py": {
+      "sha256": "84ec72e7364b780d2a7a169aa406dc59f0880f7c9cf5f5fcfdaa553332f5f2e7",
+      "snapshot": "sources/84ec72e7364b780d2a7a169aa406dc59f0880f7c9cf5f5fcfdaa553332f5f2e7"
+    },
+    "zvf-program/colab-experiments/verify_colab_e1_environment.py": {
+      "sha256": "1d7cc4005be76979bce8eb82f2d1a771fa6e24d542144cf2ffad3b34c4fdc0ea",
+      "snapshot": "sources/1d7cc4005be76979bce8eb82f2d1a771fa6e24d542144cf2ffad3b34c4fdc0ea"
+    }
+  },
+  "source_unit_fingerprint": "5459208036f61aadd88ff6aa7f0b634eba94cc073a57a224d7962b26276c98da",
+  "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+  "status": "dry-run",
+  "training_helpers_sha256": "18616147b462e01a225f748adf9142eeaffd214ec098015f89f9db22b581e03a",
+  "updated_at": "2026-07-15T11:44:55+00:00"
+}

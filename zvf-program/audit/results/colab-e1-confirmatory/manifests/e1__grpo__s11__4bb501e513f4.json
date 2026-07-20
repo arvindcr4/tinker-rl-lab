@@ -1,0 +1,166 @@
+{
+  "audit_record": {
+    "arm": "grpo",
+    "collapse": false,
+    "heldout_n": 8,
+    "heldout_score": 0.5,
+    "last10_reward": 0.75,
+    "manifest_path": "run_manifest.json",
+    "mean_gu": 0.5,
+    "mean_zvf": 0.5,
+    "rollouts": 16,
+    "seed": 11,
+    "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+    "treatment_changes": [],
+    "wall_clock_seconds": 304.31681777200004
+  },
+  "completed_at": "2026-07-15T02:16:03+00:00",
+  "evidence_class": "preflight-not-evidence",
+  "heldout_trace": [
+    {
+      "completion_sha256": "7a62f17e9917b63a1f5b7ddb294dd58e7f60ee45e08a85e21adb35a4bda002ed",
+      "correct": true,
+      "index": 0,
+      "prediction": 18,
+      "target": 18
+    },
+    {
+      "completion_sha256": "9217422b808b4115fc5baea9f15241f28fb6598285e5f12a98e90d814b05d85e",
+      "correct": true,
+      "index": 1,
+      "prediction": 3,
+      "target": 3
+    },
+    {
+      "completion_sha256": "4698540cbf9bc0b58149d016b1227c5dd528ae87e4b095d272bb5409977b917d",
+      "correct": false,
+      "index": 2,
+      "prediction": null,
+      "target": 70000
+    },
+    {
+      "completion_sha256": "15e63398a3fa4b277da04f8c9ed2aceee89644f786410e04c5a275a061e8989f",
+      "correct": true,
+      "index": 3,
+      "prediction": 540,
+      "target": 540
+    },
+    {
+      "completion_sha256": "e2997e7d208df84677cf567608cd6fedc227dc848a6508b4c7d5fbd62d3b4619",
+      "correct": false,
+      "index": 4,
+      "prediction": null,
+      "target": 20
+    },
+    {
+      "completion_sha256": "c6fcc038ca6b6374acb58bd4e574a3bced9433639d06e0a94cf4bbf62824d013",
+      "correct": false,
+      "index": 5,
+      "prediction": null,
+      "target": 64
+    },
+    {
+      "completion_sha256": "e1615a1b27a486ebc2e143ab9b2f207ebd7ef416b39b3f1a321735b0f3a7ada4",
+      "correct": true,
+      "index": 6,
+      "prediction": 260,
+      "target": 260
+    },
+    {
+      "completion_sha256": "c2870b7dc3c68a15a463bd5ac855bb95d8f2857587675aedd88bd78a676b95c0",
+      "correct": false,
+      "index": 7,
+      "prediction": null,
+      "target": 160
+    }
+  ],
+  "remote_checkpoint_steps": [
+    1
+  ],
+  "resume": {
+    "resumed_from_path": null,
+    "resumed_from_step": 0
+  },
+  "run_config": {
+    "dataset": "openai/gsm8k",
+    "dataset_revision": "740312add88f781978c0658806c59bc2815b9866",
+    "heldout_n": 8,
+    "max_completion_length": 1024,
+    "max_steps": 1,
+    "mode": "preflight",
+    "model": "Qwen/Qwen3-8B",
+    "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "save_steps": 1,
+    "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+    "unit_fingerprint": "4bb501e513f437740d09e56901831732128c403a09d052d7787b9b7efa9cf526"
+  },
+  "runtime_versions": {
+    "cuda": "12.8",
+    "datasets": "4.8.5",
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "huggingface_hub": "1.20.1",
+    "peft": "0.19.1",
+    "torch": "2.11.0+cu128",
+    "torchao": "0.17.0",
+    "transformers": "5.13.1",
+    "trl": "1.8.0",
+    "wandb": "0.28.0"
+  },
+  "schema_version": "e1-colab-confirmatory-run-v1",
+  "started_at": "2026-07-15T02:10:59+00:00",
+  "telemetry": {
+    "first_five_reward": 0.75,
+    "first_five_zvf": 0.5,
+    "gu": [
+      0.5
+    ],
+    "reward": [
+      0.75
+    ],
+    "trainer_log_history": [
+      {
+        "clip_ratio/high_max": 0.0,
+        "clip_ratio/high_mean": 0.0,
+        "clip_ratio/low_mean": 0.0,
+        "clip_ratio/low_min": 0.0,
+        "clip_ratio/region_mean": 0.0,
+        "completions/clipped_ratio": 0.25,
+        "completions/max_length": 1024.0,
+        "completions/max_terminated_length": 1017.0,
+        "completions/mean_length": 754.875,
+        "completions/mean_terminated_length": 665.1666870117188,
+        "completions/min_length": 299.0,
+        "completions/min_terminated_length": 299.0,
+        "entropy": 0.167550478130579,
+        "epoch": 0.0005353319057815846,
+        "frac_reward_zero_std": 0.5,
+        "grad_norm": 0.0532449334859848,
+        "learning_rate": 1e-06,
+        "loss": 0.0,
+        "num_tokens": 13646.0,
+        "reward": 0.75,
+        "reward_std": 0.44721361994743347,
+        "rewards/gsm8k_exact_reward/mean": 0.75,
+        "rewards/gsm8k_exact_reward/std": 0.44721361994743347,
+        "step": 1,
+        "step_time": 119.972189764
+      },
+      {
+        "epoch": 0.0005353319057815846,
+        "step": 1,
+        "total_flos": 0.0,
+        "train_loss": 0.0,
+        "train_runtime": 141.6121,
+        "train_samples_per_second": 0.113,
+        "train_steps_per_second": 0.007
+      }
+    ],
+    "zvf": [
+      0.5
+    ]
+  },
+  "wandb": {
+    "run_id": "4bb501e5",
+    "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/4bb501e5"
+  }
+}

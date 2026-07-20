@@ -96,9 +96,11 @@ Unused (candidates for deletion): 34
 - `tikz/reward_flow_preview.png`
 - `tikz/taxonomy_preview.png`
 
-**Actually deleted: 22** (non-`.tex`, non-v2 assets).
+**Actually deleted: 26** (unused assets, including the four duplicate
+TikZ sources formerly kept under `figures/`).
 
 - `figures/architecture_preview.png`
+- `figures/architecture.tex`
 - `figures/comparison_bars.png`
 - `figures/group_size_zvf.png`
 - `figures/kl_proxy_analysis.png`
@@ -106,15 +108,18 @@ Unused (candidates for deletion): 34
 - `figures/old_trl_seeds.png`
 - `figures/performance_profiles.png`
 - `figures/pipeline_preview.png`
+- `figures/pipeline.tex`
 - `figures/ppo_vs_grpo_comparison.png`
 - `figures/ppo_vs_grpo_detail.pdf`
 - `figures/ppo_vs_grpo_detail.png`
 - `figures/reward_flow_preview.png`
+- `figures/reward_flow.tex`
 - `figures/scaling_params.png`
 - `figures/scaling_plot.pdf`
 - `figures/scaling_plot.png`
 - `figures/sensitivity_heatmap.png`
 - `figures/taxonomy_preview.png`
+- `figures/taxonomy.tex`
 - `tikz/architecture.pdf`
 - `tikz/architecture_preview-1.png`
 - `tikz/pipeline_preview-1.png`

@@ -12,8 +12,9 @@ stack-conditioning: how much variance does the algorithm axis explain
 how much does each stack axis explain \emph{across the same algorithm}?
 Previous rows answer one half of the question each: iter 85 row 101 /
 iter 89 reports $\eta^2_{\mathrm{algo}}$ on the N2 same-stack panel
-(point estimate and bootstrap CI), and iter 49 row 60 reports 8-item
-MIN-REPORT coverage on the 32-cell mega panel. Iter 161 closes the
+(point estimate and bootstrap CI), and iter 49 row 60 reports coverage for a
+historical eight-field experimental schema on the 32-cell mega panel. That
+schema predates, and is distinct from, the current pass@$k$ Item~8. Iter 161 closes the
 remaining gap with a single decomposition that places both halves on
 the same scale.
 
@@ -91,7 +92,7 @@ must include at least \texttt{model} + \texttt{task\_slice} + $G$;
 $T$ can be omitted from the headline stack when only two values are
 sampled, but should be reported as a paired-cell counterfactual
 otherwise. This is the same operational rule iter 49 row 60 derived
-from the 8-item MIN-REPORT coverage audit on the 32-cell panel; iter
+from the historical eight-field coverage audit on the 32-cell panel; iter
 161 confirms the rule on the 98-cell follow-up with a single
 side-by-side decomposition.
 
@@ -102,7 +103,8 @@ the iter 85 point estimate ($\eta^2_{\mathrm{algo}}=0.0075$ on
 \texttt{reward\_mean}) and joins it to the stack axes. The iter 89
 bootstrap CI is consistent (UB 0.0244 on \texttt{reward\_mean}, well
 below the 0.05 strict threshold).
-\textbf{(ii) P5 iter 49 row 60} --- iter 60's 8-item MIN-REPORT
+\textbf{(ii) P5 iter 49 row 60} --- iter 60's historical eight-field
+experimental coverage result
 coverage is preserved on the 98-cell panel (iter 161's
 $\eta^2_{\mathrm{union}}=0.9967$ is the formal ANOVA-style restatement
 of the same observation).

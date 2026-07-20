@@ -201,9 +201,10 @@ We ran a single-seed exploratory $G$-sweep on Qwen3-8B/GSM8K whose results
 are non-monotonic across $G$; see
 Appendix~\ref{sec:appendix:group-size-reconcile} for the token-budget
 reanalysis. \textbf{We do not headline a winning $G$.} A 3-seed
-token-budget reanalysis at $T{\ge}16$M tokens places the optimum near
-$G{\approx}32$, but the inverted-U apex shifts with $T$; we deliberately
-avoid promoting a group-size law. A subsequent two-seed matched-budget
+token-budget reanalysis at $T{\ge}16$M tokens places a fitted apex near
+$G{\approx}32$ for one stack and objective, but the apex shifts with $T$ and
+does not conflict with smaller-$G$ optima under different cost objectives; we
+deliberately avoid promoting a group-size law. A subsequent two-seed matched-budget
 panel (2{,}560 rollouts per arm; $G{=}2\times160$ vs.\ $G{=}16\times20$
 steps) adds one trajectory-level datum: the $G{=}2$ arms drive train
 reward to $\approx0.9$--$1.0$ on the sampled pool, then end in a sustained
@@ -230,7 +231,8 @@ ZVF--last-10 $r{=}-0.769$ ($N{=}15$, pooled) & B$^{*}$ & Confounded by task type
 Held-out Qwen3-8B GSM8K $83.3\%$ vs.\ $82.0\%$ & A & 5 seeds; $p{=}0.26$. \\
 Group-size sweep is non-monotonic; no headline winner & C & single-seed per $G$. \\
 Matched-budget $G{=}2$ endgame ZVF wall & B & 2 seeds/arm; 512-tok cap. \\
-Token-budget $G{\approx}32$ at $T{\ge}16$M & B & 3-seed appendix reanalysis. \\
+Token-budget fitted apex near $G{\approx}32$ at $T{\ge}16$M & B &
+3-seed appendix reanalysis; not a universal optimum. \\
 Frontier-scale Tinker case studies & C & single-seed, closed backend. \\
 Tool-use $0\%$ reward across runs & B & task-design failure, not capability. \\
 \bottomrule
@@ -293,7 +295,7 @@ ecosystem.
 \end{ack}
 
 \bibliographystyle{plainnat}
-\bibliography{references}
+\bibliography{../references}
 
 % =============================================================================
 \appendix
@@ -306,7 +308,7 @@ ecosystem.
 
 \input{sections/run_manifest}
 \input{sections/appendix_zvf_formalization}
-\input{sections/group_size_reconcile}
+\input{../sections/group_size_reconcile}
 
 % Tier 2 stratified diagnostics: bootstrap CIs + partial-correlation table.
 \input{sections/stratified_diagnostics}

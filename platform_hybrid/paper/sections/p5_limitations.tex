@@ -3,7 +3,7 @@
 \label{sec:p5-limitations}
 Position papers owe their readers an honest account of the evidence's edges;
 five limitations are load-bearing here. First, the headline exhibits
-(the $17\times$ backend flip, the cross-stack DAPO telemetry flip, the
+(the $17\times$ under-specified same-label comparison, the cross-stack DAPO telemetry flip, the
 12-cell head-to-head, and the 368-run audit) are internal program records:
 they were run under a declared protocol and are summarized faithfully, but
 they have not undergone the full artifact-release pipeline of the \ours{}
@@ -14,8 +14,9 @@ validation behind item 4's theory ($\mathrm{corr} = +0.71$ between gradient
 norm and $p(1-p)$) is toy-scale---a 0.5B model on synthetic arithmetic with
 an open backward pass---and is directional evidence only; we do not report it
 as an effect size. Third, our evidence is concentrated on GSM8K-style
-verifiable-reward tasks and the GRPO family; the seven items were chosen for
-that regime, and reward-model-based RLHF stacks may need additional items
+verifiable-reward tasks and the GRPO family; the eight-item standard (seven
+run-manifest fields plus pass@$k$ reporting) was chosen for that regime, and
+reward-model-based RLHF stacks may need additional items
 (reward-model version and training data at minimum). Fourth, the flip-risk
 grades encode a conservative ordering (label collision graded above generic
 stack divergence) that we have validated on our own audits but not against a

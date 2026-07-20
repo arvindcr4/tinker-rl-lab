@@ -1,0 +1,44 @@
+{
+  "arm": "dapo",
+  "collapse": false,
+  "evidence_class": "confirmatory",
+  "fingerprint": "c0d5392102e924b472aa166a306b6eedabbd35e236ffe27b1b9e9477e157290b",
+  "heldout_n": 500,
+  "heldout_score": 0.624,
+  "last10_reward": 0.55,
+  "manifest_path": "manifests/dapo-seed-23.json",
+  "mean_gu": 1.0,
+  "mean_zvf": 0.0,
+  "remote": {
+    "hf_commit": "08d3a34da45050b1d4787de45e5d493555fb464c",
+    "hf_repo": "arvindcr4/tinker-rl-lab-e1-dapo-s23-c0d53921",
+    "wandb_run_id": "c0d53921",
+    "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/c0d53921"
+  },
+  "remote_verification": {
+    "hf_checkpoint_steps": [
+      5,
+      10,
+      15,
+      20,
+      25,
+      30
+    ],
+    "hf_commit": "08d3a34da45050b1d4787de45e5d493555fb464c",
+    "hf_repo": "arvindcr4/tinker-rl-lab-e1-dapo-s23-c0d53921",
+    "verified_at": "2026-07-16T20:03:52+00:00",
+    "wandb": {
+      "run_id": "c0d53921",
+      "state": "finished",
+      "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/c0d53921"
+    }
+  },
+  "rollouts": 2112,
+  "seed": 23,
+  "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+  "treatment_changes": [
+    "clip_bounds",
+    "dynamic_sampling"
+  ],
+  "wall_clock_seconds": 11717.900963733
+}

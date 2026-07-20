@@ -1,4 +1,5 @@
 %REVIEW-ADDR: W13-zvf-pipeline-underspecified
+\providecommand{\artifactstatusword}{released}
 \section{Cross-Framework ZVF Computation Pipeline}
 \label{sec:appendix:zvf-pipeline}
 
@@ -54,7 +55,7 @@ that range before thresholding.
 
 \subsection{Cross-Framework Consistency Check}
 
-The current anonymous artifact ships the parser contract, the
+The current \artifactstatusword{} artifact ships the parser contract, the
 cross-framework summary in
 \texttt{experiments/results/framework\_comparison.json}, and the measured
 Tinker/TRL reward traces used elsewhere in the paper. It does
@@ -72,7 +73,7 @@ framework-specific reinterpretation.
 To recompute ZVF from raw logs end-to-end:
 \begin{verbatim}
 # Replace <raw-log> with the framework's emitted per-rollout trace.
-# The anonymous bundle ships the parser and summary outputs; the full
+# The accompanying bundle ships the parser and summary outputs; the full
 # raw logs remain in the experiment workspace used to generate them.
 
 # TRL

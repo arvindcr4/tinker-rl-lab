@@ -34,7 +34,8 @@ except ImportError:
           file=sys.stderr)
     sys.exit(2)
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
+REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
+ROOT = REPO_ROOT / "platform_hybrid"
 REG = ROOT / "registry"
 SCHEMA = json.load(open(REG / "schema.json"))
 OUT = ROOT / "experiments" / "results" / "p5p8"
@@ -47,6 +48,8 @@ stacks = {}
 deltas = {}
 for p in sorted((REG / "entries").glob("*.json")):
     rec = json.loads(p.read_text())
+    if "record_type" not in rec:
+        continue
     if rec["record_type"] == "stack":
         stacks[rec["id"]] = rec
     elif rec["record_type"] == "variant_delta":
@@ -164,7 +167,8 @@ cols = ["entry_id", "record_type", "framework", "openness", "label_claimed",
 with open(OUT / "p6_registry_health.tsv", "w") as f:
     f.write("\t".join(cols) + "\n")
     for r in rows:
-        f.write("\t".join(str(r.get(c, "")) for c in cols) + "\n")
+        values = [r.get(c, "NR") for c in cols]
+        f.write("\t".join("NR" if value == "" else str(value) for value in values) + "\n")
 
 # -------------------------------------------------------------------------
 # 4. Framework × method coverage grid
@@ -188,7 +192,8 @@ with open(OUT / "p6_registry_health_coverage.tsv", "w") as f:
     for fw in frameworks:
         for m in methods:
             hits = grid[(fw, m)]
-            f.write(f"{fw}\t{m}\t{len(hits)}\t{','.join(hits)}\n")
+            entry_ids = ",".join(hits) or "NONE"
+            f.write(f"{fw}\t{m}\t{len(hits)}\t{entry_ids}\n")
 
 # -------------------------------------------------------------------------
 # 5. Headline summary

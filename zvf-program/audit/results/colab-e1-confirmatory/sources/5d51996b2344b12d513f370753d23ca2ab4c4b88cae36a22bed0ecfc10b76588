@@ -1,0 +1,93 @@
+{
+  "schema_version": "grpo-survival-audit-colab-a100-amendment-v1",
+  "amends": "zvf-program/audit/preregistration.json",
+  "locked_at": "2026-07-15",
+  "scope": "Operational details omitted from the frozen core contract; no frozen core field is changed.",
+  "evidence_boundary": {
+    "preflight": "Infrastructure-only and excluded from confirmatory aggregation.",
+    "confirmatory": "Only records produced with mode=confirmatory and the exact frozen 30-step/500-heldout contract may enter results/full."
+  },
+  "data": {
+    "dataset": "openai/gsm8k",
+    "configuration": "main",
+    "revision": "740312add88f781978c0658806c59bc2815b9866",
+    "train_split": "train",
+    "heldout_split": "test",
+    "heldout_selection": "first 500 rows in the pinned test split, identical for every arm and seed"
+  },
+  "model": {
+    "id": "Qwen/Qwen3-8B",
+    "revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "dtype": "bfloat16",
+    "attention": "sdpa",
+    "chat_template_kwargs": {
+      "enable_thinking": true
+    }
+  },
+  "peft": {
+    "method": "LoRA",
+    "r": 16,
+    "alpha": 32,
+    "dropout": 0.0,
+    "target_modules": "all-linear",
+    "task_type": "CAUSAL_LM"
+  },
+  "optimizer_and_schedule": {
+    "optimizer": "adamw_torch_fused",
+    "learning_rate": 1e-06,
+    "scheduler": "linear",
+    "warmup_steps": 0,
+    "weight_decay": 0.0,
+    "max_grad_norm": 1.0
+  },
+  "sampling_and_batching": {
+    "per_device_train_batch_size": 4,
+    "gradient_accumulation_steps": 4,
+    "num_generations": 4,
+    "generation_batch_size": 16,
+    "unique_prompts_per_optimizer_step": 4,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "top_k": 0,
+    "max_completion_length": 1024,
+    "mask_truncated_completions": false
+  },
+  "baseline_grpo": {
+    "loss_type": "grpo",
+    "scale_rewards": "group",
+    "importance_sampling_level": "token",
+    "beta": 0.0,
+    "num_iterations": 1,
+    "epsilon": 0.2,
+    "epsilon_high": 0.2,
+    "reward": "binary exact match of the integer after the final #### marker"
+  },
+  "telemetry": {
+    "logging_steps": 1,
+    "zvf": "TRL frac_reward_zero_std: fraction of prompt groups whose completion rewards have zero standard deviation",
+    "gu": "1 - ZVF",
+    "collapse": "mean ZVF over the first five optimizer steps >= 0.80 and mean reward over those steps <= 0.05",
+    "last10_reward": "mean TRL reward over the final ten optimizer-step log records, or all records when fewer than ten exist",
+    "required_sinks": [
+      "Weights & Biases",
+      "Hugging Face model repository"
+    ]
+  },
+  "checkpointing": {
+    "save_steps": 5,
+    "remote_layout": "one private Hugging Face model repository per arm/seed/fingerprint",
+    "contents": "every Trainer checkpoint including optimizer, scheduler, trainer state and RNG state; final LoRA adapter; run manifest",
+    "resume": "download the greatest remotely completed checkpoint step and pass it to Trainer.train(resume_from_checkpoint=...)"
+  },
+  "runtime": {
+    "accelerator": "Google Colab A100",
+    "python_packages": {
+      "trl": "1.8.0",
+      "transformers": "5.13.1",
+      "datasets": "4.8.5",
+      "peft": "0.19.1",
+      "torchao": "0.17.0",
+      "wandb": "0.28.0"
+    }
+  }
+}

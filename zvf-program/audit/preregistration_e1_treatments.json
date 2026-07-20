@@ -1,0 +1,115 @@
+{
+  "schema_version": "grpo-survival-audit-treatment-lock-v1",
+  "locked_at": "2026-07-15",
+  "amends": "zvf-program/audit/preregistration.json",
+  "scope": "Exact operational definitions for the already-frozen allowed_changes fields. This lock does not alter the model, task, seeds, steps, held-out set, optimizer, baseline, or any allowed_changes list.",
+  "shared_invariants": {
+    "unique_prompts_per_optimizer_step": 4,
+    "maximum_rollouts_per_optimizer_step": 16,
+    "reward": "binary exact match of the integer after the final #### marker",
+    "beta": 0.0,
+    "num_iterations": 1,
+    "epsilon_low": 0.2,
+    "resume_randomness": "All stochastic selection uses the Python RNG captured by the Trainer RNG checkpoint. No uncheckpointed private RNG is permitted."
+  },
+  "arms": {
+    "grpo": {
+      "treatment_changes": [],
+      "mechanics": {
+        "epsilon_high": 0.2,
+        "importance_sampling_level": "token",
+        "scale_rewards": "group",
+        "loss_type": "grpo",
+        "num_generations": 4
+      }
+    },
+    "dapo": {
+      "treatment_changes": [
+        "clip_bounds",
+        "dynamic_sampling"
+      ],
+      "mechanics": {
+        "epsilon_high": 0.28,
+        "eligibility": "A prompt group is eligible iff its four binary rewards have non-zero variance.",
+        "refill": "Discard ineligible prompt groups and draw fresh prompt groups until four eligible groups are available for the optimizer step.",
+        "max_generation_batches": 10,
+        "failure_policy": "Fail the unit closed if four eligible groups cannot be collected within ten generation batches.",
+        "loss_type": "grpo",
+        "importance_sampling_level": "token",
+        "scale_rewards": "group"
+      },
+      "source": {
+        "paper": "https://arxiv.org/abs/2503.14476",
+        "reference_implementation": "https://github.com/BytedTsinghua-SIA/DAPO",
+        "note": "The finite ten-batch fail-closed cap follows the official verl filter_groups.max_num_gen_batches recipe."
+      }
+    },
+    "gspo": {
+      "treatment_changes": [
+        "importance_ratio_granularity",
+        "clip_granularity"
+      ],
+      "mechanics": {
+        "sequence_log_ratio": "sum_t(mask_t * (log pi_theta_t - log pi_old_t)) / sum_t(mask_t)",
+        "sequence_ratio": "exp(sequence_log_ratio)",
+        "clipping": "One scalar sequence ratio is clipped to [0.8, 1.2] and applied uniformly to every token in that completion.",
+        "loss_type": "grpo",
+        "importance_sampling_level": "sequence",
+        "scale_rewards": "group"
+      },
+      "source": {
+        "paper": "https://arxiv.org/abs/2507.18071",
+        "trl_mapping": "TRL 1.8.0 GRPOConfig(loss_type='grpo', importance_sampling_level='sequence')"
+      }
+    },
+    "drgrpo": {
+      "treatment_changes": [
+        "advantage_normalization"
+      ],
+      "mechanics": {
+        "advantage": "reward - within_group_mean_reward",
+        "std_division": false,
+        "length_normalization": "unchanged from the frozen GRPO baseline",
+        "loss_type": "grpo",
+        "importance_sampling_level": "token",
+        "scale_rewards": "none"
+      },
+      "source": {
+        "paper": "https://arxiv.org/abs/2503.20783",
+        "note": "The frozen arm isolates advantage_normalization only; it is intentionally not the paper's additional loss-length normalization removal."
+      }
+    },
+    "aero": {
+      "treatment_changes": [
+        "rollout_allocation",
+        "selective_rejection",
+        "posterior_state"
+      ],
+      "mechanics": {
+        "nominal_total_budget_per_prompt": 4,
+        "exploration_rollouts_per_prompt": 3,
+        "global_rescue_budget_per_step": 4,
+        "maximum_rollouts_for_one_rescue_prompt": 7,
+        "rescue_increment": 1,
+        "rescue_success_threshold": 0,
+        "rescue_rule": "Only all-fail exploration groups enter round-robin rescue; stop allocating to a prompt after its first success or when the global budget is exhausted.",
+        "partial_rule": "For 0 < success_rate < 0.5, retain every correct rollout and uniformly retain k times as many incorrect rollouts without replacement.",
+        "rejection_ratio_k": 1,
+        "high_rule": "For 0.5 <= success_rate < 1, retain all exploration rollouts.",
+        "zero_advantage_rule": "For an all-fail group that remains unrescued or an all-correct group, uniformly retain one rollout and use the Beta-Binomial posterior advantage.",
+        "posterior_prior": {
+          "alpha": 1.0,
+          "beta": 1.0
+        },
+        "posterior_mean": "(successes + alpha) / (observations + alpha + beta), using every generated exploration and rescue observation for that prompt before curation",
+        "posterior_advantage": "(reward - posterior_mean) / sqrt(posterior_mean * (1 - posterior_mean))",
+        "padding": "The fixed-shape TRL batch is padded to four slots per prompt; padded slots have None reward, zero advantage, and zero token mask.",
+        "discrete_scaling_note": "The published 16-total/8-explore AERO recipe is mapped to the frozen four-rollout ceiling. Three exploration samples are the smallest discrete choice that leaves rescue budget and makes the selective-rejection stratum non-empty."
+      },
+      "source": {
+        "paper": "https://arxiv.org/abs/2602.14338",
+        "published_parameters": "n_total=16, n_explore=8, delta_n=2, S=0, k=1, Beta(1,1)"
+      }
+    }
+  }
+}

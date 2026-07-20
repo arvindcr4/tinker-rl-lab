@@ -23,12 +23,13 @@ matters on canonical training budgets?}''  The earlier iterations of
 this section already produced fragmented answers: iter~3 measured the
 Qwen2.5-0.5B / arithmetic sweep with a flat reward-vs-G profile
 (retention in $[97.6\%,\,106.8\%]$ vs G=2); iter~7 extended the test
-to T$\in\{1,4,16,64\}$\,M on Qwen3-8B / GSM8K and observed retention
-falling monotonically from $97.6\%$ to $72.7\%$; iter~11 sharpened
+to an illustrative Qwen3-8B/GSM8K reconstruction at
+T$\in\{1,4,16,64\}$\,M, where retention falls from $97.6\%$ to
+$72.7\%$; iter~11 sharpened
 this with per-step $\delta_\text{div}$, Iso-G sizing, and convergence
 analysis; iter~15 added TOST, Cohen's $d$, and SNR; iter~19 fit a
 saturating-exponential retention curve. Iter~27 synthesizes all of
-these into a single four-panel figure and one operational prescription.
+these into a single four-panel figure and a preregistered decision rule.
 
 \paragraph{Canonical reward-vs-G plot.}
 Figure~\ref{fig:group-size-iter27}A plots the measured last-10-step
@@ -86,12 +87,13 @@ Figure~\ref{fig:group-size-iter27}C plots retention $R(T) =
 illustrative reanalysis at four budgets, with three bands:
 
 \begin{enumerate}
-  \item \textbf{Wu~2025 constant band} (gray, R$ = 0.976$). This is
-        the published canonical claim---the 2-GRPO$\,\sim\,$16-GRPO
-        retention is \emph{flat in $T$}. We plot it as a constant for
-        direct visual comparison.
-  \item \textbf{Measured G=4 vs G=32} (blue, with bootstrap CI).
-        This is the iter~7 broader-scale measurement extended by
+  \item \textbf{Wu~2025 reference line} (gray, R$ = 0.976$). This is
+        the published point estimate for the reported 2-GRPO versus
+        16-GRPO setting. We extend it horizontally only as a visual
+        reference; Wu et al.\ did not claim invariance over token budget.
+  \item \textbf{Reconstructed G=4 vs G=32} (blue, with bootstrap CI
+        conditional on the reconstruction). This is the iter~7
+        broader-scale reanalysis extended by
         iter~15 and iter~19: R$(1\,\text{M}) = 0.976$ (consistent with
         Wu), R$(4\,\text{M}) = 0.833$, R$(16\,\text{M}) = 0.750$,
         R$(64\,\text{M}) = 0.727$.
@@ -100,20 +102,23 @@ illustrative reanalysis at four budgets, with three bands:
         e^{-T/5.76\,\text{M}}$ with $R^2 = 0.948$ on the four
         measurements. We extrapolate to $T{=}256\,$M and $T{=}1024\,$M
         where $R$ asymptotes to $0.729$ (95\% CI $[0.712,\,0.745]$).
+        This is extrapolation of reconstructed points, not a measured
+        learning curve.
 \end{enumerate}
 
-The Wu~2025 constant band and the measured G=4 vs G=32 curve
+The Wu~2025 reference line and the reconstructed G=4 vs G=32 curve
 \emph{cross at $T{=}1\,$M} and \emph{diverge by 25\,pp at $T{=}64\,$M}:
 the Wu claim is correct on the easy regime it was calibrated for
 (2-GRPO vs 16-GRPO at small budget and easy tasks) but
-\emph{systematically over-predicts retention for G=4 vs G=32 at
-canonical training budgets on hard reasoning tasks}.
+\emph{over-predicts retention relative to this reconstruction for G=4 vs
+G=32 at canonical budgets}. A directly trained matched-budget sweep is
+required before transferring that discrepancy to hard reasoning tasks.
 
-\paragraph{Accuracy(T, G) and the G-optimal prescription.}
-Figure~\ref{fig:group-size-iter27}D is the canonical accuracy
-heatmap from the existing
-\texttt{group\_size\_effect.tsv} on Qwen3-8B / GSM8K. The G-optimal
-choice varies with budget:
+\paragraph{Illustrative accuracy$(T,G)$ and candidate decision points.}
+Figure~\ref{fig:group-size-iter27}D is the illustrative accuracy
+heatmap from
+\texttt{group\_size\_token\_normalized.tsv}. The within-grid argmax
+varies with budget:
 
 \begin{itemize}
   \item $T{=}1\,$M: $G^\star = 8$ at $0.48$ (vs $G{=}32$ at $0.42$)
@@ -122,14 +127,12 @@ choice varies with budget:
   \item $T{=}64\,$M: $G^\star = 32$ at $0.88$ (vs $G{=}16$ at $0.85$)
 \end{itemize}
 
-The G-vs-G swing grows monotonically with budget: $7$\,pp at $T{=}1\,$M,
-$3$\,pp at $T{=}4\,$M, $2$\,pp at $T{=}16\,$M, and $3$\,pp at
-$T{=}64\,$M. The Wu~2025 DPO-equivalence claim is \emph{only true at
-the lowest budget}; at canonical training budgets ($T \ge 4\,$M),
-G=4 vs G=32 has $24$--$27$\,pp retention gaps and a $T$-dependent
-optimum that exceeds G=16 at large $T$.
+Within the reconstruction, the identity of the cell-wise argmax varies with
+budget.  This does not test Wu et al.'s 2-versus-16 claim, because both the
+group-size pair and the experimental provenance differ.  Its role is to
+specify which direct matched-budget comparisons would be most informative.
 
-\paragraph{Verdict and operational prescription.}
+\paragraph{Evidence boundary and next experiment.}
 Across the four panels of Figure~\ref{fig:group-size-iter27}:
 
 \begin{enumerate}
@@ -137,33 +140,22 @@ Across the four panels of Figure~\ref{fig:group-size-iter27}:
         (Panel~A). All $G\in\{2,4,8,16\}$ meet the Wu~97.6\%
         retention bar with CIs that include 1.0. This is the
         contrastive-DPO regime Wu et~al.\ describe.
-  \item \textbf{SNR scales sub-$\sqrt{G}$ but above flat}
-        (Panel~B). Pure DPO-equivalence (flat) is rejected; pure MC
-        variance reduction ($\sqrt{G}$) is also rejected; the data
-        sit in between with a convex shape consistent with
-        contrast-quality improvement plus entropy-collapse bounding.
-  \item \textbf{Retention is not constant in $T$ for G=4 vs G=32}
-        (Panel~C). The Wu constant band and our measured band cross
-        at $T{\approx}1\,$M and diverge by $25$\,pp at $T{=}64\,$M.
-        A simple two-parameter exponential captures the saturation.
-  \item \textbf{The G-optimal is budget-dependent}
-        (Panel~D). $G^\star$ rises from $8$ at $T{=}1\,$M to $32$
-        at $T{\ge}16\,$M on hard reasoning; the G-vs-G swing grows
-        with budget. The Wu~2025 operational claim is calibrated to
-        a regime (small $T$, easy task) that does not match canonical
-        training.
+  \item \textbf{SNR lies between two reference curves}
+        (Panel~B). With three seeds per group, this is descriptive evidence,
+        not a rejection of either asymptotic law.
+  \item \textbf{The reconstruction is budget-dependent}
+        (Panels~C--D). Its retention curve and cell-wise argmax motivate a
+        direct group-size-by-budget experiment; they do not establish a
+        learning-curve law.
 \end{enumerate}
 
-\paragraph{Operational prescription (frontier synthesis + iter27 data).}
-On hard reasoning at canonical budgets, set $G{=}32$ at $T \ge 16\,$M
-tokens; at smaller budgets, halve $G$ for every halving of $T$ above
-$1\,$M. On easy near-ceiling tasks, $G{=}2$ is sufficient (and
-preferable for rollout cost). The DPO-equivalence claim is
-\emph{necessary but not sufficient}: it describes the variance
-structure of GRPO within a group but not the budget scaling of the
-learning signal across groups. Practitioners who adopt Wu~2025's
-G=2 on the strength of the headline alone will leave 24--27\,pp of
-absolute accuracy on the table at canonical budgets on hard tasks.
+\paragraph{Preregistered decision rule.}
+The next experiment should compare $G\in\{2,8,16,32\}$ at fixed generated-token
+budgets and at least three independent seeds.  Select a larger group only if
+its held-out gain survives the matched-token comparison and exceeds its
+rollout-cost penalty; otherwise retain the smallest statistically
+non-inferior group.  The present evidence supports $G{=}2$ on the measured
+easy near-ceiling sweep and makes no universal recommendation for hard tasks.
 
 \begin{figure}[htbp]
 \centering
@@ -179,14 +171,14 @@ band at 97.6\% of the $G{=}2$ baseline.
 (purple) and the $\sqrt{G}$ MC-variance reference (red). Measured SNR
 is sub-$\sqrt{G}$ but above flat, consistent with the iter~11
 entropy-collapse bounding.
-\emph{(C)} Retention vs token budget on Qwen3-8B / GSM8K. The Wu
-constant band (gray, R$=0.976$) and the measured G=4 vs G=32 curve
+\emph{(C)} Illustrative retention vs token budget for Qwen3-8B/GSM8K. The Wu
+reference line (gray, R$=0.976$) and the reconstructed G=4 vs G=32 curve
 (blue) cross at $T{=}1\,$M and diverge by $25$\,pp at $T{=}64\,$M.
 The orange extension is the iter-19 saturating-exponential fit
 $R_\infty + (R_0 - R_\infty)\,e^{-T/\tau}$ with $R_\infty{=}0.729$
 (95\% CI $[0.712,\,0.745]$) and $\tau{=}5.76\,$M.
-\emph{(D)} Canonical accuracy(T, G) heatmap from
-\texttt{group\_size\_effect.tsv}; the $G$-optimal choice varies from
+\emph{(D)} Illustrative accuracy$(T,G)$ heatmap from
+\texttt{group\_size\_token\_normalized.tsv}; the within-grid argmax varies from
 $8$ at $T{=}1\,$M to $32$ at $T \ge 16\,$M. Source:
 \texttt{figures/group\_size\_iter27.pdf}.}
 \label{fig:group-size-iter27}
@@ -194,8 +186,8 @@ $8$ at $T{=}1\,$M to $32$ at $T \ge 16\,$M. Source:
 
 \paragraph{Reproducibility (iter 27).}
 The iter 27 artifacts are produced by
-\texttt{scripts/group\_size\_iter27.py} (driver) and
-\texttt{scripts/group\_size\_iter27\_extend.py} (TSV extension)
+\texttt{platform\_modal/scripts/group\_size\_iter27.py} (driver) and
+\texttt{platform\_modal/scripts/group\_size\_iter27\_extend.py} (TSV extension)
 from the existing TSVs
 (\texttt{group\_size\_iter15\_equivalence.tsv},
 \texttt{group\_size\_iter15\_snr.tsv},
@@ -205,11 +197,8 @@ from the existing TSVs
 of measured or illustrative-reanalysis data with bootstrap CIs
 ($B{=}5000$, seed 20260702).  The driver writes two TSVs
 (\texttt{group\_size\_iter27\_synthesis.tsv} with 4 rows and
-\texttt{group\_size\_iter27\_dpo\_bands.tsv} with 12 rows), extends
-\texttt{group\_size\_effect.tsv} by 12 rows (4 measured per-$G$
-canonical + 8 illustrative G=4/G=32 per-$T$ at $T\in\{1,4,16,64\}$\,M),
-and produces a four-panel figure
-(\texttt{figures/group\_size\_iter27.pdf}, 33\,KB; matching
-\texttt{.png}, 247\,KB).
+\texttt{group\_size\_iter27\_dpo\_bands.tsv} with 12 rows), reads the
+illustrative grid from \texttt{group\_size\_token\_normalized.tsv}, and
+produces the PDF and PNG versions of the four-panel figure.
 
 % End of iter 27 elevation.

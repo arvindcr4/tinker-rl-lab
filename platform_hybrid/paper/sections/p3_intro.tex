@@ -21,15 +21,24 @@ mixed-reward groups.
 We study $G$ as one pillar of \ours{}, a controlled benchmark of 70+ runs across
 seven RL libraries and five model families ($0.6$B--$\sim$671B) on GSM8K
 \citep{cobbe2021training}, HumanEval~\citep{chen2021codex}, and tool-use tasks. Our
-contributions are: (i) an illustrative reconstruction showing the effect of $G$ is non-monotone,
-with intermediate sizes often best and no universal optimum, illustrated by a
-$G{=}4$ versus $G{=}32$ comparison with near-complete reward retention and an
-estimated signal-to-noise ratio that grows at only $\approx 52\%$ of the $\sqrt{G}$ ideal;
+contributions are: (i) measured $G\in\{2,4,8,16\}$ sweeps showing that the effect
+of $G$ is regime-dependent, with no universal optimum, plus an explicitly
+\emph{reconstructed} $G\in\{4,8,16,32,64\}$ token-budget grid retained only as a
+hypothesis generator; the measured signal-to-noise ratio grows at only
+$\approx 52\%$ of the $\sqrt{G}$ ideal;
 (ii) an explicit validation, via observable signatures in logged diagnostics, that the group-centered
 update is an all-pairs preference contrast---the ``GRPO is secretly DPO'' bridge;
 and (iii) equivalence and difficulty-stratified analyses (TOST) that separate a
 variance-reduction reading of the $G$ effect from a preference-density one. We make
 no claim that any single $G$ or algorithm is universally superior.
+
+\paragraph{Evidence boundary for $G{=}32$.}
+Every $G{=}32$ number in the token-budget grid is a joint-fit reconstruction,
+not the outcome of a directly trained matched-budget arm. It may motivate the
+next sweep, but it cannot establish that $G{=}32$ is optimal. The strongest
+direct comparisons in this paper stop at $G{=}16$; the separate 505-task
+utility audit selects $G{=}4$ only under its declared
+$(1-\mathrm{ZVF})/\sqrt{G}$ objective and cohort.
 
 \subsection{Related Work}
 \label{sec:p3-related}

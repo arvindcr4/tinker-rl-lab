@@ -60,8 +60,8 @@ highest rung triggered:
   \item \textbf{R0} --- identical manifests.
   \item \textbf{R1} --- nuisance-only differences (metadata, logging).
   \item \textbf{R2} --- runtime differences: backend, precision, reference
-        placement. Not benign---our backend-swap audit sits here---but
-        auditable.
+        placement. Not benign---our same-label audit contains R2 differences
+        plus a base-checkpoint mismatch---but auditable when fully reported.
   \item \textbf{R3} --- loss-form or KL-handling differences: the update rule
         itself differs.
   \item \textbf{R4} --- the variant-delta sets differ: a technique credited to
@@ -72,13 +72,14 @@ highest rung triggered:
         at least one side, so the flip risk cannot even be bounded.
 \end{itemize}
 
-The ladder is intentionally a \emph{risk} scale, not an effect-size scale: R2
-differences produced our largest observed swing ($17\times$), but they are
-diagnosable from the manifests; R5 says the manifests themselves are
+The ladder is intentionally a \emph{risk} scale, not an effect-size scale: our
+largest observed same-label swing ($17\times$) contained R2 differences and a
+checkpoint mismatch, so it cannot estimate an R2 effect. Such differences are
+diagnosable from complete manifests; R5 says the manifests themselves are
 insufficient. When the verdict reaches R4 or above, the CLI prints an explicit
 warning that outcome differences must not be attributed to the shared
 algorithm label. A companion spec-level tool family (a trainer plugin that
-auto-emits the seven-item manifest during training, and a LeverTrace check
+auto-emits the seven-field run manifest during training, and a LeverTrace check
 that asks whether a cited paper actually reports the lever it is credited for)
 shares this ladder; only \texttt{stackdiff} and the badge are implemented in
 the shipped CLI, and we scope claims accordingly.

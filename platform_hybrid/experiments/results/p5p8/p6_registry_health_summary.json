@@ -1,17 +1,17 @@
 {
   "badge_max": 96,
   "badge_min": 43,
-  "cells_with_entry": 112,
+  "cells_with_entry": 133,
   "claim_validation_distribution": {
-    "CONTRADICTS": 3,
+    "CONTRADICTS": 1,
     "NEUTRAL": 6,
-    "SUPPORTS": 10,
-    "UNCLAIMED": 8
+    "SUPPORTS": 12,
+    "UNCLAIMED": 19
   },
-  "claim_validation_significant_share": 0.4815,
-  "claim_validation_total": 27,
-  "coverage_rate": 0.6914,
-  "framework_x_method_cells": 162,
+  "claim_validation_significant_share": 0.3421,
+  "claim_validation_total": 38,
+  "coverage_rate": 0.6717,
+  "framework_x_method_cells": 198,
   "frameworks": [
     "colab-open-trainer",
     "openrlhf",
@@ -21,15 +21,15 @@
     "worktree-zvf130-batch"
   ],
   "frameworks_count": 6,
-  "mean_min_report_badge": 61.42,
+  "mean_min_report_badge": 59.29,
   "mean_null_rate_per_item": {
-    "decontamination": 0.8333,
-    "group_size_schedule": 0.4306,
-    "heldout_split": 0.0,
-    "loss_form": 0.7179,
-    "reference_kl": 0.5972,
-    "sampler_backend": 0.0417,
-    "telemetry": 0.0833
+    "decontamination": 0.8571,
+    "group_size_schedule": 0.4643,
+    "heldout_split": 0.0357,
+    "loss_form": 0.7225,
+    "reference_kl": 0.631,
+    "sampler_backend": 0.0714,
+    "telemetry": 0.0714
   },
   "methods": [
     "aero",
@@ -49,8 +49,11 @@
     "delta_mcgrpo",
     "delta_ngrpo",
     "delta_ppo",
+    "delta_ppo_reinforce",
     "delta_reinforce",
     "delta_scafgrpo",
+    "delta_tool_use_llama-8b-inst",
+    "delta_tool_use_qwen3-32b",
     "drgrpo",
     "es",
     "gift",
@@ -58,48 +61,51 @@
     "gspo",
     "mcgrpo",
     "ngrpo",
-    "scafgrpo"
+    "ppo-reinforce",
+    "scafgrpo",
+    "tool_use_llama-8b-inst",
+    "tool_use_qwen3-32b"
   ],
-  "methods_count": 27,
-  "n_delta_records": 15,
-  "n_entries_total": 39,
-  "n_stack_records": 24,
+  "methods_count": 33,
+  "n_delta_records": 18,
+  "n_entries_total": 46,
+  "n_stack_records": 28,
   "schema_fail_count": 0,
   "schema_fail_ids": [],
-  "schema_pass_count": 39,
+  "schema_pass_count": 46,
   "stacks_with_ci_method": 7,
-  "stacks_with_outcomes": 24,
+  "stacks_with_outcomes": 28,
   "top5_null_fields": [
     {
       "item": "decontamination",
-      "mean_null_rate": 0.8333
+      "mean_null_rate": 0.8571
     },
     {
       "item": "loss_form",
-      "mean_null_rate": 0.7179
+      "mean_null_rate": 0.7225
     },
     {
       "item": "reference_kl",
-      "mean_null_rate": 0.5972
+      "mean_null_rate": 0.631
     },
     {
       "item": "group_size_schedule",
-      "mean_null_rate": 0.4306
+      "mean_null_rate": 0.4643
     },
     {
-      "item": "telemetry",
-      "mean_null_rate": 0.0833
+      "item": "sampler_backend",
+      "mean_null_rate": 0.0714
     }
   ],
   "verdict_signature_clusters": {
-    "13255b77ea": [
+    "4e06ada8d9": [
       "delta_cppo",
       "delta_es",
       "delta_mcgrpo",
       "delta_ngrpo",
       "delta_scafgrpo"
     ],
-    "c6f8df4ce9": [
+    "5ab4b423fd": [
       "delta_aero",
       "delta_areal"
     ],
@@ -108,7 +114,10 @@
       "delta_gspo",
       "delta_liteppo",
       "delta_ppo",
-      "delta_reinforce"
+      "delta_ppo_reinforce",
+      "delta_reinforce",
+      "delta_tool_use_llama-8b-inst",
+      "delta_tool_use_qwen3-32b"
     ]
   }
 }

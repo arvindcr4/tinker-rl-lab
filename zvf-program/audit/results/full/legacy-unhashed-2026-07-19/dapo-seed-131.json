@@ -1,0 +1,62 @@
+{
+  "arm": "dapo",
+  "collapse": false,
+  "correction": {
+    "corrected_at": "2026-07-17T11:11:15+00:00",
+    "corrected_rollouts": 1728,
+    "original_rollouts": 480,
+    "schema_version": "e1-post-acceptance-correction-v1",
+    "source_hf_commit": "54f3f542420ded840965eabc7a338ec0c663c692"
+  },
+  "evidence_class": "confirmatory",
+  "fingerprint": "95076dd53e5c338c61f9b9ff1b5cfbf1bad8925f5142318469dc29a60d2a25e3",
+  "heldout_n": 500,
+  "heldout_score": 0.632,
+  "last10_reward": 0.6125,
+  "manifest_path": "manifests/dapo-seed-131.json",
+  "mean_gu": 1.0,
+  "mean_zvf": 0.0,
+  "remote": {
+    "hf_checkpoint_steps": [
+      5,
+      10,
+      15,
+      20,
+      25,
+      30
+    ],
+    "hf_checkpoint_url": "https://huggingface.co/arvindcr4/tinker-rl-lab-e1-dapo-s131-95076dd5/tree/f34a67a1348a1f556e0f1ba78c2812cadf06e5ed",
+    "hf_commit": "f34a67a1348a1f556e0f1ba78c2812cadf06e5ed",
+    "hf_final_adapter_path": "final/adapter_model.safetensors",
+    "hf_manifest_path": "run_manifest.json",
+    "hf_repo": "arvindcr4/tinker-rl-lab-e1-dapo-s131-95076dd5",
+    "wandb_run_id": "95076dd5",
+    "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/95076dd5"
+  },
+  "remote_verification": {
+    "hf_checkpoint_steps": [
+      5,
+      10,
+      15,
+      20,
+      25,
+      30
+    ],
+    "hf_commit": "f34a67a1348a1f556e0f1ba78c2812cadf06e5ed",
+    "hf_repo": "arvindcr4/tinker-rl-lab-e1-dapo-s131-95076dd5",
+    "verified_at": "2026-07-17T11:12:47+00:00",
+    "wandb": {
+      "run_id": "95076dd5",
+      "state": "finished",
+      "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/95076dd5"
+    }
+  },
+  "rollouts": 1728,
+  "seed": 131,
+  "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+  "treatment_changes": [
+    "clip_bounds",
+    "dynamic_sampling"
+  ],
+  "wall_clock_seconds": 18683.536580063996
+}

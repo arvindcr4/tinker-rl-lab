@@ -234,7 +234,7 @@ contradicting the stratified within-task null.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\textwidth]{figures/v2/zvf_correlation}
+\includegraphics[width=\textwidth]{../figures/v2/zvf_correlation}
 \caption{\textbf{Left:} Pooled ZVF vs.\ final performance scatter
 ($r = -0.769$, $p = 0.0008$, $N{=}15$). The apparent strong negative
 correlation is task-confounded: the upper-right tool-use cluster sits at
@@ -388,7 +388,7 @@ ecosystem. Institutional support statements are redacted for blind review.
 % =============================================================================
 
 \bibliographystyle{plainnat}
-\bibliography{references}
+\bibliography{../references}
 
 % =============================================================================
 \appendix
@@ -400,8 +400,11 @@ ecosystem. Institutional support statements are redacted for blind review.
 % platform_modal/scripts/reviewer_response_score.sh (registry at platform_hybrid/paper/reviewer_points.yaml).
 % =============================================================================
 \input{sections/appendix_zvf_formalization}
-\input{sections/zvf_pipeline_spec}
-\input{sections/group_size_reconcile}
+\begingroup
+\newcommand{\artifactstatusword}{anonymous}
+\input{../sections/zvf_pipeline_spec}
+\endgroup
+\input{../sections/group_size_reconcile}
 \input{sections/run_manifest}
 
 % =============================================================================
@@ -594,7 +597,7 @@ Section~\ref{sec:zvf-stratification}, do not predict last-10 reward.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.95\linewidth]{figures/v2/kl_proxy.pdf}
+\includegraphics[width=0.95\linewidth]{figures/v2/kl_proxy.png}
 \caption{\textbf{Reward-trajectory instability proxies from step-level telemetry
 (symptom-level signals; not a per-token KL substitute, and not a substitute
 for the per-step ZVF sentinel of Figure~\ref{fig:zvf-sentinel}).}
@@ -611,7 +614,7 @@ unavailable; we do not claim they substitute for distributional divergence.}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\textwidth]{figures/v2/zvf_heatmap}
+\includegraphics[width=\textwidth]{../figures/v2/zvf_heatmap}
 \caption{Per-step ZVF heatmap. Red: ZVF$=1$ (zero gradient that step);
 blue: ZVF$=0$ (gradient flows); grey: no data. Every Tinker tool-use run
 sits in the persistent red band from step 1 onwards: this is the regime

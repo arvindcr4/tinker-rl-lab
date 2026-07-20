@@ -1,0 +1,68 @@
+{
+  "accelerator": "A100",
+  "amendment_sha256": "5d51996b2344b12d513f370753d23ca2ab4c4b88cae36a22bed0ecfc10b76588",
+  "arm": "dapo",
+  "completed_at": "2026-07-15T11:05:16+00:00",
+  "environment_check_sha256": "1d7cc4005be76979bce8eb82f2d1a771fa6e24d542144cf2ffad3b34c4fdc0ea",
+  "error": "Colab output did not contain an E1_RESULT record",
+  "evidence_class": "preflight-not-evidence",
+  "failed_step": null,
+  "fingerprint": "b0047cb00f493c58ec1651a5bea89b97f0daa0a97987396eef3efe44b136f5c0",
+  "hf_repo": "arvindcr4/tinker-rl-lab-e1-dapo-s11-b0047cb0",
+  "log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/colab-e1-confirmatory/logs/e1__dapo__s11__b0047cb00f49.log",
+  "mode": "preflight",
+  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/colab-e1-confirmatory/requests/e1__dapo__s11__b0047cb00f49.json",
+  "return_code": 0,
+  "run_config": {
+    "heldout_n": 8,
+    "max_completion_length": 1024,
+    "max_steps": 1,
+    "save_steps": 1
+  },
+  "runtime_packages": [
+    "trl==1.8.0",
+    "transformers==5.13.1",
+    "datasets==4.8.5",
+    "peft==0.19.1",
+    "torchao==0.17.0",
+    "wandb==0.28.0"
+  ],
+  "schema_version": "colab-e1-confirmatory-unit-v1",
+  "script": "zvf-program/colab-experiments/e1_grpo_confirmatory.py",
+  "script_sha256": "167c4d28b21dc3dab2fbd79840abe6936e92a9d20c319838bd08bf610992a415",
+  "secure_exec_sha256": "253d3b276564c127501a58b971d6f6c0ba458afed16b05a88be26cae9bcfec89",
+  "seed": 11,
+  "session": "e1-pre-dapo-s11-b0047c",
+  "source_snapshots": {
+    "zvf-program/audit/preregistration_colab_a100_amendment.json": {
+      "sha256": "5d51996b2344b12d513f370753d23ca2ab4c4b88cae36a22bed0ecfc10b76588",
+      "snapshot": "sources/5d51996b2344b12d513f370753d23ca2ab4c4b88cae36a22bed0ecfc10b76588"
+    },
+    "zvf-program/audit/preregistration_e1_treatments.json": {
+      "sha256": "8e4279e55130ef9371329aea30f59193ea0bd1d221ec7ea6c94af269460628a5",
+      "snapshot": "sources/8e4279e55130ef9371329aea30f59193ea0bd1d221ec7ea6c94af269460628a5"
+    },
+    "zvf-program/colab-experiments/e1_grpo_confirmatory.py": {
+      "sha256": "167c4d28b21dc3dab2fbd79840abe6936e92a9d20c319838bd08bf610992a415",
+      "snapshot": "sources/167c4d28b21dc3dab2fbd79840abe6936e92a9d20c319838bd08bf610992a415"
+    },
+    "zvf-program/colab-experiments/secure_exec_confirmatory.py": {
+      "sha256": "253d3b276564c127501a58b971d6f6c0ba458afed16b05a88be26cae9bcfec89",
+      "snapshot": "sources/253d3b276564c127501a58b971d6f6c0ba458afed16b05a88be26cae9bcfec89"
+    },
+    "zvf-program/colab-experiments/verify_colab_e1_environment.py": {
+      "sha256": "1d7cc4005be76979bce8eb82f2d1a771fa6e24d542144cf2ffad3b34c4fdc0ea",
+      "snapshot": "sources/1d7cc4005be76979bce8eb82f2d1a771fa6e24d542144cf2ffad3b34c4fdc0ea"
+    }
+  },
+  "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+  "started_at": "2026-07-15T10:57:38+00:00",
+  "status": "failed",
+  "tracking": {
+    "hf_repo_prefix": "arvindcr4/tinker-rl-lab-e1",
+    "wandb_entity": null,
+    "wandb_group": "e1-qwen3-8b-gsm8k",
+    "wandb_project": "tinker-rl-lab"
+  },
+  "treatment_spec_sha256": "8e4279e55130ef9371329aea30f59193ea0bd1d221ec7ea6c94af269460628a5"
+}

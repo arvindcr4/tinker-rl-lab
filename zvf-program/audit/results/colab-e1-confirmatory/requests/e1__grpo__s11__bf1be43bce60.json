@@ -1,0 +1,122 @@
+{
+  "accelerator": "A100",
+  "amendment_sha256": "d0680654b23945bc361748635651225f08c6c3b598c697fa14ba79d5f2dbcde6",
+  "arm": "grpo",
+  "environment_check_sha256": "4c7ef87bd1cfac4ebd318d632ad01f9f80fe9a763cd1fd8f3b8c73a5fc2565c6",
+  "evidence_class": "preflight-not-evidence",
+  "execution_plan": [
+    [
+      "colab",
+      "--auth=oauth2",
+      "new",
+      "--gpu",
+      "A100",
+      "--session",
+      "e1-pre-grpo-s11-bf1be4"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1-pre-grpo-s11-bf1be4",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/e1_grpo_confirmatory.py",
+      "/content/e1_grpo_confirmatory.py"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "install",
+      "--session",
+      "e1-pre-grpo-s11-bf1be4",
+      "trl==1.8.0",
+      "transformers==5.13.1",
+      "datasets==4.8.5",
+      "peft==0.19.1",
+      "trackio==0.31.2",
+      "wandb==0.28.0"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "exec",
+      "--session",
+      "e1-pre-grpo-s11-bf1be4",
+      "--file",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/verify_colab_e1_environment.py",
+      "--timeout",
+      "120"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1-pre-grpo-s11-bf1be4",
+      "<ephemeral-secret-file>",
+      "/content/.e1-run-secrets.json"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1-pre-grpo-s11-bf1be4",
+      "<ephemeral-request-file>",
+      "/content/e1-confirmatory-request.json"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "exec",
+      "--session",
+      "e1-pre-grpo-s11-bf1be4",
+      "--file",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/secure_exec_confirmatory.py",
+      "--timeout",
+      "21600"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "stop",
+      "--session",
+      "e1-pre-grpo-s11-bf1be4"
+    ]
+  ],
+  "fingerprint": "bf1be43bce606c1986e229589a0fe2357fb1784088834e2c99f6e4c9aca78469",
+  "hf_repo": "arvindcr4/tinker-rl-lab-e1-grpo-s11-bf1be43b",
+  "mode": "preflight",
+  "run_config": {
+    "heldout_n": 8,
+    "max_completion_length": 1024,
+    "max_steps": 1,
+    "save_steps": 1
+  },
+  "runtime_packages": [
+    "trl==1.8.0",
+    "transformers==5.13.1",
+    "datasets==4.8.5",
+    "peft==0.19.1",
+    "trackio==0.31.2",
+    "wandb==0.28.0"
+  ],
+  "schema_version": "colab-e1-confirmatory-unit-v1",
+  "script": "zvf-program/colab-experiments/e1_grpo_confirmatory.py",
+  "script_sha256": "b34fae5a8b95f9891610299b7807c789fc3dce380246c8dc6ceebde1ba96a09c",
+  "secure_exec_sha256": "253d3b276564c127501a58b971d6f6c0ba458afed16b05a88be26cae9bcfec89",
+  "seed": 11,
+  "session": "e1-pre-grpo-s11-bf1be4",
+  "stack_fingerprint": "e8d2b194707921fb13ba8bf26db927a91b3b4c1bc083eac6df6a7b8c8b6bf095",
+  "status": "launching",
+  "tracking": {
+    "hf_repo_prefix": "arvindcr4/tinker-rl-lab-e1",
+    "trackio_project": "tinker-rl-lab-e1",
+    "trackio_space_id": "arvindcr4/trackio",
+    "wandb_entity": null,
+    "wandb_group": "e1-qwen3-8b-gsm8k",
+    "wandb_project": "tinker-rl-lab"
+  },
+  "updated_at": "2026-07-15T02:03:44+00:00",
+  "wandb_run_name": "e1-preflight-grpo-s11-bf1be43b"
+}

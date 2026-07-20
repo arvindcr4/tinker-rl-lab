@@ -62,11 +62,11 @@
 \input{sections/abstract_anon}
 
 % Introduction reframed around F1--F5 (see sections/intro.tex)
-\input{sections/intro_anon}
+\input{sections/intro}
 
 % =============================================================================
 % Related Work (v2)
-\input{sections/related_work_v2_anon}
+\input{sections/related_work_v2}
 
 % =============================================================================
 % =============================================================================
@@ -2054,7 +2054,7 @@ Connecting our behavioral proxy metrics to this parameter-level analysis is a
 natural and important next step.
 
 % Conclusion reframed around F1--F5 (see sections/conclusion.tex)
-\input{sections/conclusion_anon}
+\input{sections/conclusion}
 
 % Ethics, Limitations, and Broader Impact (Task 10)
 \input{ethics_statement_anon}
@@ -2176,7 +2176,7 @@ and \texttt{BENCHMARKS\_COMPARISON.md} for the full comparison table with existi
 % Task 6: Statistical rigor pass --- updated Tables 1--4 with 95% bootstrap CI,
 % Cohen's d, and Bonferroni-corrected p-values + Appendix G (Statistical Protocol).
 % Source: experiments/compute_statistics.py -> experiments/render_stat_rigor_tex.py
-\input{sections/stat_rigor_updates_anon}
+\input{sections/stat_rigor_updates}
 
 % =============================================================================
 % Reviewer-Response Appendix Block
@@ -2187,7 +2187,10 @@ and \texttt{BENCHMARKS\_COMPARISON.md} for the full comparison table with existi
 \input{sections/appendix_zvf_formalization}
 \input{sections/zvf}
 \input{sections/zvf_counterfactual_appendix}
+\begingroup
+\newcommand{\artifactstatusword}{anonymous}
 \input{sections/zvf_pipeline_spec}
+\endgroup
 \input{sections/zvf_gradient}
 \input{sections/zvf_scaling}
 \input{sections/zvf_iter22}

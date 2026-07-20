@@ -42,6 +42,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.distributions.categorical import Categorical
 from utils.seed import set_global_seed, get_seed_from_args
+from experiments.signal_starvation.metrics import ppo_gate, signal_metrics
 
 
 @dataclass
@@ -273,6 +274,7 @@ def main():
         # PPO update
         b_inds = np.arange(batch_size)
         clipfracs = []
+        signal_batches = []
         for epoch in range(args.update_epochs):
             np.random.shuffle(b_inds)
             for start in range(0, batch_size, minibatch_size):
@@ -293,6 +295,20 @@ def main():
                 mb_advantages = b_advantages[mb_inds]
                 if args.norm_adv:
                     mb_advantages = (mb_advantages - mb_advantages.mean()) / (mb_advantages.std() + 1e-8)
+
+                # Detached reward-signal diagnostics. These are coefficient
+                # metrics, not a claim about the full optimizer-preconditioned
+                # gradient or about language-model PPO performance.
+                with torch.no_grad():
+                    ratios_list = ratio.detach().cpu().tolist()
+                    advantages_list = mb_advantages.detach().cpu().tolist()
+                    gates = [
+                        ppo_gate(r, a, args.clip_coef)
+                        for r, a in zip(ratios_list, advantages_list)
+                    ]
+                    signal_batches.append(
+                        signal_metrics(ratios_list, advantages_list, gates)
+                    )
 
                 # Policy loss
                 pg_loss1 = -mb_advantages * ratio
@@ -330,12 +346,19 @@ def main():
             avg_reward = np.mean(episode_rewards) if episode_rewards else 0
             sps = int(global_step / (time.time() - start_time))
             print(f"Step {global_step:>6} | Accuracy: {accuracy:5.1f}% | Reward: {avg_reward:.3f} | SPS: {sps}")
+            mean_pam = np.mean([item["pam"] for item in signal_batches])
+            mean_gsr = np.mean([item["gsr"] for item in signal_batches])
+            mean_egm = np.mean([item["egm"] for item in signal_batches])
+            print(f"  Signal | PAM: {mean_pam:.6f} | GSR: {mean_gsr:.4f} | EGM: {mean_egm:.6f}")
             
             if args.track:
                 wandb.log({
                     "custom/accuracy": accuracy,
                     "custom/reward": avg_reward,
                     "custom/sps": sps,
+                    "signal/pam": mean_pam,
+                    "signal/gsr": mean_gsr,
+                    "signal/egm": mean_egm,
                     "step": global_step,
                 })
                 

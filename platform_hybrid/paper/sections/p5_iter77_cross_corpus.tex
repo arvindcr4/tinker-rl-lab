@@ -1,8 +1,8 @@
 % P5 cross-corpus portability test (iter 77, JOB A)
-\section{Cross-Corpus Portability of the Seven-Item MIN-REPORT}
+\section{Cross-Corpus Portability of the Seven-Field MIN-REPORT Run Manifest}
 \label{sec:p5-cross-corpus}
 
-The seven-item MIN-REPORT standard of \secref{sec:p5-stack} was
+The seven-field run-manifest portion of the MIN-REPORT standard in \secref{sec:p5-stack} was
 validated on a single corpus (the 98-cell mega campaign of
 \secref{sec:p5-exhibit-coverage}). A remaining question is whether
 the standard \emph{generalizes} across the heterogeneous experiment
@@ -12,7 +12,7 @@ for one campaign. We answer with a portability test
 \texttt{experiments/results/p5p8/p5\_cross\_corpus\_portability.*}).
 
 \paragraph{Method.}
-Apply the seven MIN-REPORT items to seven internal corpora and
+Apply the seven MIN-REPORT run-manifest fields to seven internal corpora and
 measure, for each, (a) per-item coverage, (b) per-item variance,
 (c) total bits, (d) mean Hamming discrimination across random record
 pairs (B=2000 bootstrap, seed 20260705), and (e) a STRONG /
@@ -24,14 +24,14 @@ N2 four-method same-stack tensors (C2); the N10 2-algo $\times$
 per-stratum AUROC).
 
 \paragraph{Verdict rule.}
-STRONG iff $\geq 5$ of 7 items populate \emph{and} $\geq 1$ carries
+STRONG iff $\geq 5$ of 7 manifest fields populate \emph{and} $\geq 1$ carries
 variance; PORTABLE iff $\geq 3$ populate \emph{and} $\geq 1$
 varies; LIMITED iff $\geq 1$ populates \emph{and} $\geq 1$ varies;
 NULL otherwise.
 
 \begin{table}[t]
 \centering
-\caption{Cross-corpus portability of the seven-item MIN-REPORT
+\caption{Cross-corpus portability of the seven-field MIN-REPORT run manifest
 fingerprint. $n$ = number of manifest records; pop = number of
 items populated; var = number of items with $\geq 2$ unique values;
 $H$ = mean Hamming distance across bootstrap pairs with 95\% CI.}

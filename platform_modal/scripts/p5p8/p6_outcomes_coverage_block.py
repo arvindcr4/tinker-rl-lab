@@ -49,7 +49,7 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parent.parent
+ROOT = HERE.parents[2] / "platform_hybrid"
 REGISTRY = ROOT / "registry"
 SCHEMA = REGISTRY / "schema.json"
 ENTRIES_DIR = REGISTRY / "entries"
@@ -129,7 +129,9 @@ def coverage_measured(entry: dict) -> tuple[float, int, int]:
         n_pop = sum(1 for m in measured if isinstance(m, dict)
                     and is_populated(m.get("metric"))
                     and is_populated(m.get("delta")))
-        return n_pop / n_total, n_pop, n_total
+        # Multiple panels can measure the same declared component. Coverage is
+        # a fraction and must stay in [0, 1]; counts remain available beside it.
+        return min(1.0, n_pop / n_total), n_pop, n_total
     # stack record
     out = entry.get("outcomes") or {}
     fields = ("mean_last10_train_reward", "mean_zvf", "heldout_delta",
@@ -251,12 +253,14 @@ def main():
     per_entry = []
     for entry_path in sorted(ENTRIES_DIR.glob("*.json")):
         entry = load_json(entry_path)
+        if "record_type" not in entry:
+            continue
         cov = compute_entry_coverage(entry)
         cov_row = {"entry_id": entry_path.stem, **cov}
         per_entry.append(cov_row)
         if patch_entry(entry_path):
             n_patched += 1
-    print(f"entries patched: {n_patched}/31")
+    print(f"entries patched: {n_patched}/{len(per_entry)} queryable records")
 
     # Aggregate stats
     stacks = [r for r in per_entry if r["record_type"] == "stack"]

@@ -1,0 +1,48 @@
+{
+  "confirmatory_contract": "zvf-program/audit/preregistration.json",
+  "created_at": "2026-07-15T01:11:06+00:00",
+  "evidence_class": "pilot-not-confirmatory",
+  "requested_units": [
+    {
+      "arm": "grpo",
+      "seed": 11
+    },
+    {
+      "arm": "drgrpo",
+      "seed": 11
+    },
+    {
+      "arm": "dapo",
+      "seed": 11
+    },
+    {
+      "arm": "grpo_adaptiveG",
+      "seed": 11
+    }
+  ],
+  "schema_version": "colab-e1-pilot-campaign-v1",
+  "script_sha256": "7ca7806eeccdbca350b9f52f0e35070d5206ee653e30a400157de6463e5f0a7b",
+  "unit_status": [
+    {
+      "result_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/colab-e1-pilot/results/e3_open_audit__grpo__s11.json",
+      "status": "completed",
+      "unit": "e3_open_audit__grpo__s11"
+    },
+    {
+      "result_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/colab-e1-pilot/results/e3_open_audit__drgrpo__s11.json",
+      "status": "completed",
+      "unit": "e3_open_audit__drgrpo__s11"
+    },
+    {
+      "result_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/colab-e1-pilot/results/e3_open_audit__dapo__s11.json",
+      "status": "completed",
+      "unit": "e3_open_audit__dapo__s11"
+    },
+    {
+      "result_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/colab-e1-pilot/results/e3_open_audit__grpo_adaptiveG__s11.json",
+      "status": "completed",
+      "unit": "e3_open_audit__grpo_adaptiveG__s11"
+    }
+  ],
+  "updated_at": "2026-07-15T01:29:20+00:00"
+}

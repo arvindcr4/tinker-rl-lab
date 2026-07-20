@@ -17,10 +17,12 @@ does this stack actually make to base GRPO, and which of them does my launcher
 actually execute?}
 
 This gap is not cosmetic. Across the \ours{} program we repeatedly measured the
-same algorithm label producing different updates. Holding model, group size,
-learning rate, data, and seed fixed and swapping only the backend moved final
-GSM8K reward from $85.6\%$ to $5.0\%$---a $17\times$ swing under an identical
-label. Running ``DAPO'' on an open Colab trainer whose dynamic sampling
+same algorithm label producing different updates. Holding the visible group
+size, learning rate, data, seed, and label fixed while changing stacks moved
+final GSM8K reward from $85.6\%$ to $5.0\%$. The audit later found that the
+managed stack had also pinned a different base checkpoint, so the $17\times$
+swing is an under-specification exhibit, not a backend-only causal effect.
+Running ``DAPO'' on an open Colab trainer whose dynamic sampling
 demonstrably filters zero-variance groups produced mean ZVF $0.00$; running
 ``DAPO'' on a closed managed stack, where only an asymmetric-clip surrogate is
 user-settable, produced mean ZVF $0.58$. Same label, opposite telemetry. When
@@ -31,11 +33,13 @@ different directions.
 
 We respond with a \emph{resource}, not another variant:
 \textsc{GRPO-Registry}, a machine-readable catalog with two record types.
-A \emph{stack record} describes one deployed training stack via the seven-item
-minimum reportable stack (MIN-REPORT-RL): (1) loss form, (2) reference policy
+A \emph{stack record} describes one deployed training stack via the seven-field
+run-manifest block of the eight-item MIN-REPORT-RL standard: (1) loss form, (2) reference policy
 and KL handling, (3) sampler/backend/precision, (4) per-step ZVF/GU telemetry,
 (5) group-size schedule, (6) held-out split disjoint from the reward
-environment, and (7) decontamination plus parser-robustness probes. A
+environment, and (7) decontamination plus parser-robustness probes. The
+standard's eighth item, held-out pass@$k$, is an evaluation-report field rather
+than run-start stack identity. A
 \emph{variant-delta record} pins down, component by component, what a named
 variant changes relative to base GRPO, verified against the source paper; stack
 records then declare per-component implementation status

@@ -27,7 +27,7 @@
     },
     {
       "component": "epoch_k",
-      "field": "loss_form.epochs_per_prompt",
+      "field": "see delta-list and citation",
       "change": "K=1 epoch (single pass over rollout buffer per gradient step) \u2014 REINFORCE-default, NOT PPO-default K=4. The 4-wandb-run population all use max_steps=30 with no explicit K override; the canonical leaf is epochs_per_prompt=1."
     }
   ],

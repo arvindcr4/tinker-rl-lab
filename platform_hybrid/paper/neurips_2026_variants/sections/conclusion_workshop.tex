@@ -22,12 +22,13 @@ by this release rather than open-ended philosophizing:
         Our residualized within-GSM8K scatter
         (Figure~\ref{fig:workshop-killer}c) finds $r_{\mathrm{within}}$
         close to zero; is this a backend artifact or a general property?
-  \item What is the inverted-U apex location for token-budget--matched
-        group-size sweeps across more open stacks (TRL, OpenRLHF, veRL,
-        SkyRL) at $T{\geq}16$M tokens? Our 3-seed reanalysis
-        (Appendix~\ref{sec:appendix:group-size-reconcile}) puts the
-        apex near $G{\approx}32$ for one stack/model; the apex's
-        \emph{transferability} is the open question.
+  \item Under a fixed rollout-token budget, where does group size trade early
+        step count for endgame contrast? Our two-seed $G{=}2\times160$ versus
+        $G{=}16\times20$ panel ends with the small-$G$ arms at an all-correct
+        ZVF wall while $G{=}16$ remains mid-learning; a separate 3-seed
+        reanalysis places a fitted apex near $G{\approx}32$ for one stack and
+        budget. Neither identifies a universal optimum. The needed experiment
+        is a directly trained, multi-seed, token-matched sweep on open stacks.
   \item Are there tasks where high-ZVF cells \emph{do} predict downstream
         collapse, beyond GSM8K? Tool-use is a degenerate $\mathrm{ZVF}{=}1$
         case from step 1; the genuinely interesting test is on

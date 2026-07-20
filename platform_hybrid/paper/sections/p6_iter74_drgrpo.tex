@@ -53,7 +53,7 @@ claim\_validation rows (all on the same panel
 \texttt{length\_bias\_iter60\_grpo\_vs\_drgrpo\_paired}):
 
 \begin{table}[h]
-\centering\small
+\centering\scriptsize
 \caption{Iter-74 measured evidence for \texttt{delta\_drgrpo} on the
 \texttt{length\_bias\_iter60\_grpo\_vs\_drgrpo\_paired} panel
 (Welch pooled-task CI, $B=4{,}000$, $\text{seed}=20260705$, 2 tasks).
@@ -94,7 +94,7 @@ would ground the entry; ``Closest proxy'' names the closest existing
 repository data (most are N2-same-stack-isolated run on the canonical
 40-step paired tensor).}
 \label{tab:p6-zero-evidence-audit}
-\begin{tabular}{l c l p{4.2cm} p{3.6cm}}
+\begin{tabular}{@{}p{0.13\linewidth} c p{0.18\linewidth} p{0.27\linewidth} p{0.27\linewidth}@{}}
 \toprule
 delta\_id & $n_{\text{comp}}$ & core claim (one-line) & Needed panel & Closest proxy \\
 \midrule
@@ -144,18 +144,18 @@ are the experimental-design extension to the N2 panel that would
 close the registry to 14/14 entries grounded in measured evidence.
 
 \paragraph{Reproduction.}
-\begin{verbatim}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
 python3 scripts/p5p8/p6_drgrpo_measured_evidence.py   # exit 0; patches delta_drgrpo.json
 python3 scripts/p5p8/p6_zero_evidence_audit.py       # exit 0; 4-row audit + summary
 python3 registry/query.py validate                   # 34/34 PASS
-\end{verbatim}
-Outputs: $\texttt{experiments/results/p5p8/p6\_drgrpo\_measured.tsv}$
-(per-task $\times$ per-metric rows); $\texttt{p6\_zero\_evidence\_audit.tsv}$
+\end{lstlisting}
+Outputs: \path{experiments/results/p5p8/p6_drgrpo_measured.tsv}
+(per-task $\times$ per-metric rows); \path{p6_zero_evidence_audit.tsv}
 (4 rows: dapo/gspo/liteppo/reinforce characterisation);
-$\texttt{p6\_registry\_evidence\_summary.tsv}$ (14 rows: per-delta
-evidence tally); $\texttt{p6\_zero\_evidence\_audit\_summary.json}$
-(machine-readable headline). Sidecar: $\texttt{registry/entries/
-delta\_drgrpo.json}$ is patched (additive: 3 measured rows, 3 expected\_effects,
+\path{p6_registry_evidence_summary.tsv} (14 rows: per-delta
+evidence tally); \path{p6_zero_evidence_audit_summary.json}
+(machine-readable headline). Sidecar: \path{registry/entries/delta_drgrpo.json}
+is patched (additive: 3 measured rows, 3 expected effects,
 3 claim\_validation rows).
 
 \paragraph{Backward compatibility.}

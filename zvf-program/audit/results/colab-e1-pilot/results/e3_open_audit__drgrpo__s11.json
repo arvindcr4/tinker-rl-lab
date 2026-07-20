@@ -1,0 +1,157 @@
+{
+  "accelerator": "T4",
+  "arm": "drgrpo",
+  "completed_at": "2026-07-15T01:19:42+00:00",
+  "evidence_class": "pilot-not-confirmatory",
+  "execution_plan": [
+    [
+      "colab",
+      "--auth=oauth2",
+      "new",
+      "--gpu",
+      "T4",
+      "--session",
+      "e1p-drgrpo-s11-2da2b1"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1p-drgrpo-s11-2da2b1",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/e3_open_audit.py",
+      "/content/e3_open_audit.py"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1p-drgrpo-s11-2da2b1",
+      "<ephemeral-secret-file>",
+      "/content/.tinker-run-secrets.json"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1p-drgrpo-s11-2da2b1",
+      "<ephemeral-request-file>",
+      "/content/tinker-unit-request.json"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "install",
+      "--session",
+      "e1p-drgrpo-s11-2da2b1",
+      "wandb==0.25.1"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "exec",
+      "--session",
+      "e1p-drgrpo-s11-2da2b1",
+      "--file",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/secure_exec.py",
+      "--timeout",
+      "2400"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "stop",
+      "--session",
+      "e1p-drgrpo-s11-2da2b1"
+    ]
+  ],
+  "fingerprint": "2da2b1c7205d1fc4101ad80f0e29211fae81d207b7d1e3fa7fbfb8d1c94a766f",
+  "log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/colab-e1-pilot/logs/e3_open_audit__drgrpo__s11__2da2b1c7205d.log",
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "payload": {
+    "arms": [
+      "drgrpo"
+    ],
+    "by_arm": {
+      "drgrpo": {
+        "mean_heldout_delta": 0.5,
+        "mean_rollouts": 120,
+        "mean_zvf": 0.133
+      }
+    },
+    "experiment": "E3_open_audit",
+    "model": "Qwen/Qwen2.5-0.5B-Instruct",
+    "run_config": {
+      "batch": 3,
+      "device": "cuda",
+      "dtype": "torch.bfloat16",
+      "g0": 4,
+      "gmax": 10,
+      "heldout_n": 20,
+      "inner": 2,
+      "learning_rate": 2e-06,
+      "max_new": 40,
+      "steps": 10
+    },
+    "seeds": [
+      11
+    ],
+    "units": [
+      {
+        "arm": "drgrpo",
+        "final_G": 4,
+        "heldout_delta": 0.5,
+        "heldout_post": 1.0,
+        "heldout_pre": 0.5,
+        "hf_checkpoint_url": "https://huggingface.co/arvindcr4/tinker-rl-lab-colab-obligations/tree/main/e1-pilot/drgrpo/seed-11/2da2b1c7205d",
+        "hf_commit": "760fda1f4f0d33585e15fcd8ee340bf21611c510",
+        "hf_path": "e1-pilot/drgrpo/seed-11/2da2b1c7205d",
+        "hf_repo": "arvindcr4/tinker-rl-lab-colab-obligations",
+        "mean_zvf": 0.133,
+        "seed": 11,
+        "total_rollouts": 120,
+        "wandb_run_id": "gr89mjo2",
+        "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/gr89mjo2"
+      }
+    ]
+  },
+  "remote_tracking": {
+    "hf_repo": "arvindcr4/tinker-rl-lab-colab-obligations",
+    "required": true,
+    "wandb_entity": null,
+    "wandb_group": "e1-open-audit-pilot",
+    "wandb_project": "tinker-rl-lab"
+  },
+  "remote_verification": {
+    "hf_commit": "760fda1f4f0d33585e15fcd8ee340bf21611c510",
+    "hf_manifest": "e1-pilot/drgrpo/seed-11/2da2b1c7205d/run_manifest.json",
+    "hf_model": "e1-pilot/drgrpo/seed-11/2da2b1c7205d/model.safetensors",
+    "verified_at": "2026-07-15T01:32:29+00:00",
+    "wandb": {
+      "run_id": "gr89mjo2",
+      "state": "finished",
+      "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/gr89mjo2"
+    }
+  },
+  "return_code": 0,
+  "run_config": {
+    "batch": 3,
+    "g0": 4,
+    "gmax": 10,
+    "heldout_n": 20,
+    "inner": 2,
+    "learning_rate": 2e-06,
+    "max_new": 40,
+    "steps": 10
+  },
+  "schema_version": "colab-e1-pilot-unit-v1",
+  "script": "zvf-program/colab-experiments/e3_open_audit.py",
+  "script_sha256": "7ca7806eeccdbca350b9f52f0e35070d5206ee653e30a400157de6463e5f0a7b",
+  "secure_exec_sha256": "ecc853a3a60d7e8aa90facb89bd72993564294f9dcd856b48f9dfa7bf41a68c6",
+  "seed": 11,
+  "session": "e1p-drgrpo-s11-2da2b1",
+  "started_at": "2026-07-15T01:15:30+00:00",
+  "status": "completed"
+}

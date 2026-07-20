@@ -13,7 +13,7 @@ already been exercised and which are design targets.
 \paragraph{\texttt{trl-min-report-rl} (manifest emitter).} A trainer plugin
 (reference target: a TRL~\citep{vonwerra2022trl} callback, with adapters for
 other frameworks in \tableref{tab:implementations}) that auto-emits the
-seven-item manifest as JSON at run start and appends the per-step ZVF/GU
+seven-field run manifest as JSON at run start and appends the per-step ZVF/GU
 trajectory (item 4) during training. The author never writes the manifest by
 hand; it is generated from the same objects the trainer actually executes,
 closing the gap between what a paper says and what the code did. Appendix

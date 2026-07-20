@@ -1,0 +1,374 @@
+
+[PAGE 1]
+GRPO-Survival-Audit: A Single-Stack Survival Protocol for
+                 the GRPO Family
+                      Holding the Stack Fixed So Algorithmic Gains Can Be Seen
+
+                                                 Arvind C R∗
+                                               PES University
+                                            arvindcr4@gmail.com
+
+                                                  July 19, 2026
+
+
+                                                     Abstract
+              The GRPO-family literature reports head-to-head comparisons in which each variant runs
+          in its own trainer, sampler, and evaluation harness. Because the “stack”—loss form, refer-
+          ence/KL handling, sampler precision, group-size schedule, Zvf/Gu trajectory, held-out split,
+          and parser—is a documented flip lever [2], such comparisons confound algorithmic innovation
+          with implementation differences. This paper proposes GRPO-Survival-Audit, a single-stack
+          reproducibility-audit protocol in which DAPO, GSPO, Dr.GRPO, and AERO are re-implemented
+          as declared overrides on one shared language-model trainer. M-GRPO is assigned to a separate
+          agentic stratum because hierarchical credit assignment changes the environment and trajectory
+          schema. We specify the shared stack, the pre-registration rules, the survival-verdict logic, the
+          statistical protocol, and the role of the companion grpo-stackdiff tool in verifying that arms
+          are stack-matched. We also report a small open-source pilot on Qwen2.5-0.5B-Instruct (two
+          seeds, T4 GPU) that demonstrates the protocol’s feasibility and produces concrete Zvf and
+          held-out-delta observations. The full-scale frozen audit is complete: all 40 arm–seed units inde-
+          pendently pass the local, W&B, private-Hub checkpoint, stack-fingerprint, treatment-fingerprint,
+          and 500-row held-out gates. Against the shared GRPO reference, DAPO’s controlled delta is
+          +0.0015 (paired 95% CI [−0.0040, 0.00725]) and receives the preregistered DISAPPEARS verdict.
+          GSPO, Dr.GRPO, and AERO receive INCONCLUSIVE verdicts; none of the five arms collapsed.
+          These results are a stack-controlled survival audit, not a universal capability leaderboard.
+
+
+1        Introduction: The Need for a Survival Audit
+A typical GRPO-family paper compares a new variant against “GRPO” by running each in a different
+codebase. The new variant may change the clip rule, the advantage normalization, or the group-size
+schedule; the baseline may use a different token mask, KL placement, sampler precision, or reward
+parser [2, 3]. The result is a comparison of two stacks SA and SB that happen to be tagged “A” and
+“B”. The algorithmic delta and the stack delta are inseparable.
+     The Min-Report-RL position paper [2] proposes an eight-item standard—seven run-manifest
+fields plus held-out pass@k reporting—so that future papers expose the stack. The GRPO-Registry
+catalog [1] records each variant’s self-declared delta relative to a baseline. This paper closes the loop:
+it specifies a controlled, single-stack re-implementation protocol that asks, for each variant, what
+fraction of its claimed gain survives when the stack is held fixed? We call the answer the variant’s
+survival.
+    ∗
+        Pillar 3 of the ZVF Program.
+
+
+                                                         1
+
+[PAGE 2]
+What survival is not. A low survival verdict does not mean a variant is “fake.” It means the
+variant’s published gain was partly or wholly a stack effect under the audited stack. A high survival
+verdict is evidence that the algorithmic idea is robust. Both outcomes are useful.
+
+A live specimen. While assembling this audit’s own pilot, our trainer shipped exactly the failure
+the protocol targets: a –loss drgrpo flag whose commit message claimed it toggled the advantage
+normalization, but which was never wired into the loss — so a six-arm GRPO-vs-Dr.GRPO panel
+silently compared GRPO with GRPO, and its committed “finding” stood until the runner was read
+line by line. No output-level check caught it: rewards, lengths, and ZVF traces all looked plausible.
+The panel was invalidated, the artifacts preserved under explicit .invalid_actually_grpo.json
+names, and the corrected rerun (2026-07-11) reversed one of the two claims. Stack identity cannot
+be certified from results; it must be certified from the stack (§5).
+
+Contributions.
+
+1. A concrete single-stack audit protocol with shared-stack constraints, arm definitions, and pre-
+   registration rules (§2).
+2. A survival-verdict logic and statistical protocol that treat seed as the independent unit (§3–4).
+3. Integration with grpo-stackdiff to verify stack identity across arms before any result is trusted
+   (§5).
+4. A small open-source pilot (§7) that exercises the protocol on four arms and shows that the
+   required telemetry is obtainable from a standard GRPO trainer.
+5. A fail-closed execution snapshot: all eight independently reconciled GRPO and GSPO seed
+   records, DAPO seeds 11, 23, 53, 71, 89, 107, and 131, Dr.GRPO seeds 11, 37, 53, 71, 89, 107,
+   and 131, AERO seeds 11, 23, 37, 53, 71, 89, and 107, three explicitly missing units, and no
+   premature arm-level verdict.
+
+
+2    Audit Design
+Shared stack. Every arm uses the same:
+
+ • base checkpoint and tokenizer revision,
+ • LoRA target modules, rank, alpha, and dropout (if LoRA is used),
+ • optimizer, learning-rate schedule, and gradient clipping,
+ • rollout engine (vLLM), decoding parameters, sampler/trainer precision,
+ • reference-policy and KL handling (placement, coefficient, schedule, estimator),
+ • token mask and advantage normalization (unless the variant explicitly changes one of these),
+ • reward parser and held-out evaluation harness,
+ • prompt distribution and train/test split.
+
+The only permitted differences are the variant’s declared algorithmic deltas.
+
+
+
+
+                                                 2
+
+[PAGE 3]
+Arms. The primary arms are:
+
+ • GRPO (baseline): vanilla per-token GRPO with the shared stack.
+ • DAPO: asymmetric clip-higher + dynamic sampling [8].
+ • GSPO: sequence-level importance-sampling ratio [11].
+ • Dr.GRPO: removal of within-group standard-deviation and length-dependent normalization [6].
+ • AERO: adaptive rollout allocation, selective rejection, and posterior-guided avoidance of zero-
+   advantage groups [10].
+
+Optional secondary arms (CPPO [5], NGRPO [7], Scaf-GRPO [9]) are added if compute permits;
+each would be implemented as a declared hook on the same shared trainer. M-GRPO [4] is audited
+separately on an agentic task with a hierarchical trajectory schema; pooling it with arithmetic
+arms would violate the stack-lock requirement. Its separate frozen contract is zvf-program/audit/
+preregistration_mgrpo.json.
+
+Pre-registration. The full audit is locked to Qwen3-8B, GSM8K, 30 training steps, batch
+size 4, 1,024-token completions, a fixed held-out set of 500 prompts, and eight paired seeds
+{11, 23, 37, 53, 71, 89, 107, 131}. The checkpoint is the fixed final step, not the best training-reward
+checkpoint. The primary estimand is the seed-paired held-out delta relative to GRPO; training
+reward, Zvf/Gu, realized rollouts, and wall-clock time are secondary. The machine-readable record
+is audit/preregistration.json; any change after a scored run requires a new version and is not
+pooled with this study. Pre-registration prevents the selection-by-reward bias that the audit is
+designed to diagnose [3].
+
+Hook interface. A variant is added by implementing a small hook object with the following
+interface:
+
+class VariantHook:
+    def on_group_rewards(self, rewards: Tensor) -> Tensor:
+        # optionally transform per-prompt group rewards
+        return rewards
+    def on_advantage(self, advantage: Tensor) -> Tensor:
+        # optionally transform advantages
+        return advantage
+    def on_loss(self, loss_terms: Tensor, mask: Tensor) -> Tensor:
+        # optionally modify loss terms
+        return loss_terms
+    def group_size_rule(self, step: int, zvf: float) -> int:
+        # return G for this step; default is fixed G
+        return self.G
+
+All hooks are loaded into the same trainer binary, so infrastructure differences are impossible.
+
+
+3    Survival Verdicts
+For each variant we report two numbers when they are metric-compatible:
+
+
+                                                   3
+
+[PAGE 4]
+• Published ∆: the gain claimed in the original paper, used quantitatively only when model, task,
+   split, and metric match the controlled audit. Otherwise it is contextual metadata.
+ • Controlled ∆: the gain in the shared stack vs. the shared GRPO baseline, with a 95% confidence
+   interval across seeds.
+
+The audit verdict is then:
+       Verdict        Rule
+       Retains        Controlled CI excludes zero and its lower bound is at least 50% of a metric-
+                      compatible published ∆.
+       Survives       Controlled CI excludes zero, but the published effect is not metric-compatible
+                      or the half-gain rule fails.
+       Disappears     The 90% CI lies inside a preregistered equivalence margin.
+       Reverses       Controlled 95% CI is entirely negative.
+       Inconclusive   Every other outcome, including inadequate power.
+
+The 50% retention threshold is a preregistered convention, not a comparison between incommensurate
+benchmark deltas. The equivalence margin is 0.01 in absolute held-out success. Sensitivity analyses
+at 0.005 and 0.02 are secondary.
+
+
+4    Statistical Protocol
+The independent unit is a seed, not a training step. Training rewards are autocorrelated within
+a trace, so inferential claims are made only across the seed sweep. For each metric we report the
+mean and standard error across seeds, with bootstrap 95% confidence intervals. We control the
+false-discovery rate across the pre-registered survival tests using Benjamini–Hochberg. Single-seed
+arms are reported as descriptive only.
+    The chosen seed count is S = 8 per core arm. The achieved minimum detectable effect is
+computed from the seed-level standard deviation before verdicts are assigned. If the MDE exceeds
+the equivalence margin m, the audit cannot claim disappearance; it reports INCONCLUSIVE.
+
+
+5    Using grpo-stackdiff to Verify Stack Identity
+Before interpreting any survival result, we verify that the arms are stack-matched. The imple-
+mented registry CLI command platform_hybrid/registry/query.pystackdiff [2] takes two Min-
+Report-RL registry records and reports whether any unapproved lever differs. The audit proceeds
+only if every pairwise comparison returns STACK_MATCHED (or STACK_MATERIAL for levers the protocol
+explicitly tolerates).
+    If a hook inadvertently changes a non-target lever—for example, a dynamic sampling rule that also
+changes the effective tokenizer chat template because it filters on string prefixes—grpo-stackdiff
+flags it as a DISTRIBUTIONAL or SEMANTIC_OBJECTIVE diff. The hook must then be rewritten
+so that only the declared delta remains. This check is the difference between a “single-trainer” audit
+and a genuinely “single-stack” audit.
+
+
+6    Locked Outputs and Execution Status
+The locked output schema contains one row per arm and seed plus two generated tables: (i) controlled
+held-out delta, paired 95% CI, achieved MDE, and verdict; and (ii) last-10 reward, late Zvf/Gu,
+
+                                                    4
+
+[PAGE 5]
+Table 1: Frozen E1 stack-controlled results. Deltas and confidence intervals are paired by seed
+against GRPO; MDE is the achieved 80%-power minimum detectable effect.
+           Arm                 ∆   95% CI low      95% CI high     MDE80      Verdict
+           DAPO          +0.0015        −0.0040         +0.00725    0.00859   DISAPPEARS
+           GSPO          +0.0055         0.0000         +0.01225    0.00940   INCONCLUSIVE
+           Dr.GRPO       −0.0015       −0.00875         +0.00750    0.01252   INCONCLUSIVE
+           AERO         −0.00025       −0.00675         +0.00675    0.01040   INCONCLUSIVE
+
+
+collapse rate, realized rollout count, group schedule, and wall-clock time. The aggregator refuses
+to emit a verdict unless all eight core seeds are present, the manifest stack lock passes, and every
+metric has the preregistered held-out size. As of 2026-07-19, the locked directory contains all eight
+independently accepted records for each of GRPO, DAPO, GSPO, Dr.GRPO, and AERO each
+with 500 held-out examples. The GRPO held-out exact matches are respectively 0.646, 0.636, 0.634,
+0.634, 0.634, 0.620, 0.634, and 0.622; DAPO seeds 11, 23, 37, 53, 71, 89, 107, and 131 achieve 0.648,
+0.624, 0.628, 0.636, 0.634, 0.636, 0.634, and 0.632; GSPO seeds 11, 23, 37, 53, 71, 89, 107, and 131
+achieve 0.640, 0.638, 0.642, 0.632, 0.638, 0.646, 0.640, and 0.628; and Dr.GRPO seeds 11, 23, 37, 53,
+71, 89, 107, and 131 achieve 0.642, 0.626, 0.622, 0.636, 0.620, 0.628, 0.628, and 0.646; AERO seeds
+11, 23, 37, 53, 71, 89, 107, and 131 achieve 0.630, 0.628, 0.636, 0.632, 0.632, 0.630, 0.630, and 0.640.
+Each accepted record reconciles a finished W&B run, a private Hugging Face repository with full
+checkpoints at steps 5, 10, 15, 20, 25, and 30, the frozen stack and treatment fingerprints, and the
+500-row evaluation trace. The aggregator therefore reports COMPLETE and emits all four preregistered
+paired verdicts:
+    All observed collapse rates are zero. DAPO is the sole arm whose result meets the preregistered
+disappearance rule; the other three intervals do not justify either disappearance or survival under
+this eight-seed design. The descriptive pilot below remains separately labelled infrastructure
+evidence. The frozen contract and aggregator are zvf-program/audit/preregistration.json and
+zvf-program/audit/aggregate_audit.py.
+    For DAPO seed 131, post-acceptance review found a recovery-finalizer bookkeeping defect
+that had hardcoded the secondary rollout count to 480. The held-out trace and model artifacts
+were unaffected. The accepted manifest now derives 1,728 generated rollouts from the immutable
+checkpoint-30 trainer state, preserves the frozen treatment fields, and carries an explicit correction
+receipt mirrored in W&B and the private Hub repository.
+    For GSPO seed 71, the same older evaluation-only finalizer omitted the frozen treatment
+fields from run_config; its rollout count, training, and held-out evidence were already correct. A
+provenance-only correction restores those fields and records a receipt mirrored in W&B and the
+private Hub repository. The corrected local and remote manifests are byte-identical.
+    For AERO seed 37, the recovered 500-row evaluation was complete before an evaluation-only
+finalizer rejected the checkpoint’s cumulative rollout count. The defect applied the fixed-arm
+minimum of 480 to AERO, whose frozen three-initial-plus-one-rescue design generates 12–16 real
+rollouts per step. The accepted 30-step telemetry value of 436 lies within the correct 360–480
+bound. The correction changed only the recovery finalizer and its failure classifier; no training or
+held-out example was regenerated. Independent read-back verifies W&B run 7547ba19, private Hub
+commit 613d3f70cc0fb89eae5775a398d6f66136d14f49, all six checkpoint trees, the byte-identical
+local/remote manifest, frozen fingerprints, and 500 contiguous hashed held-out rows with 318 correct.
+
+
+
+
+                                                   5
+
+[PAGE 6]
+Table 2: Pilot results (Qwen2.5-0.5B-Instruct, 2 seeds, T4). Mean held-out ∆, mean Zvf,
+and mean rollouts per arm.
+                  Arm                 Held-out ∆      Mean Zvf     Mean rollouts
+                  GRPO (baseline)         0.500         0.250            120
+                  Dr.GRPO                 0.575         0.267            120
+                  DAPO                    0.550         0.000            174
+                  GRPO adaptive-G         0.575         0.233            186
+
+
+7    Open-Source Pilot
+We ran a small pilot on a single T4 GPU to validate that the required telemetry can be extracted from
+a standard GRPO trainer and that the protocol produces informative stack-controlled observations.
+The pilot is not the full-scale audit; it uses a small model and only two seeds.
+
+Setup. Model: Qwen/Qwen2.5-0.5B-Instruct with full-model updates; seeds {0, 1}; ten training
+steps; three prompts per batch; initial group size G0 = 4; maximum generation length 40 tokens; and
+a seed-specific held-out set of 20 generated integer-addition prompts. Arms are GRPO, Dr.GRPO,
+DAPO, and an adaptive-G GRPO baseline. The shared implementation keeps tokenizer, sampler,
+reward parser, prompt generator, optimizer settings, and evaluation procedure fixed across arms.
+These small synthetic held-out sets make the pilot a telemetry smoke test, not a language-model
+capability benchmark.
+
+Pilot results. Table 2 shows mean held-out delta, mean Zvf, and mean rollouts per arm. Even
+at this scale, the stack-controlled observations are informative: DAPO reports zero Zvf but spends
+more rollouts (174 vs. 120), while adaptive-G matches Dr.GRPO’s held-out delta with a different
+Zvf and rollout budget.
+
+Interpretation. This two-seed pilot is descriptive and cannot rank the arms. It shows that the
+same held-out delta can arrive through different signal-budget paths. DAPO’s zero recorded Zvf is
+mechanical: its resampling loop rejects flat groups before an optimizer step, spending 174 rather
+than 120 rollouts. Adaptive-G reaches the same descriptive delta as Dr.GRPO while spending 186
+rollouts. The comparison therefore validates telemetry and budget accounting only; it is not evidence
+that one method learns better.
+
+
+8    Limitations and Extensions
+Scope. The audit tests survival under one shared stack. A variant that survives here may still
+fail under a different stack; the audit does not claim universal robustness. It claims only that the
+published gain is not purely an artifact of the original stack.
+
+Faithfulness of re-implementation. A variant may depend on an unreported implementation
+detail. If a careful re-implementation cannot reproduce the original result from the paper, that is
+itself a finding about reporting quality, but it is not a finding about the method’s intrinsic value.
+We report both readings and publish every arm’s full Min-Report-RL block.
+
+
+
+
+                                                  6
+
+[PAGE 7]
+Extensions. The protocol generalizes to any family of methods that are small deltas on a base
+loop. The same hook interface can accommodate future variants; the same grpo-stackdiff check
+can verify that each new hook changes only its declared levers.
+
+
+9    Conclusion
+The GRPO family needs a way to separate algorithmic gains from stack effects. The Min-Report-
+RL standard tells authors what to report; the GRPO-Registry catalog records each variant’s
+declared delta; and the GRPO-Survival-Audit protocol reported here specifies how to hold the
+stack fixed so that those deltas can be tested fairly. The frozen multi-seed audit is complete: all 40
+units passed the evidence gates, DAPO’s reported advantage disappears under the shared stack, and
+GSPO, Dr.GRPO, and AERO remain inconclusive at eight paired seeds. The protocol, telemetry
+pilot, machine-readable preregistration, complete execution record, and grpo-stackdiff verification
+step together they make it operational to ask of a GRPO-family result not “did it win?” but “did it
+survive?”
+
+
+References
+ [1] Arvind C R and the ZVF Program. GRPO-Registry: A living catalog of stack fields and variant
+     deltas. Companion working paper in the Tinker RL Lab manuscript bundle, 2026.
+
+ [2] Arvind C R and the ZVF Program. MIN-REPORT-RL: Reporting the stack, not the label.
+     Companion position paper in the Tinker RL Lab manuscript bundle, 2026.
+
+ [3] Arvind C R and the ZVF Program. Reward contrast, not algorithm labels: Auditing signal
+     starvation in group-relative reinforcement learning. Companion working paper in the Tinker
+     RL Lab manuscript bundle, 2026.
+
+ [4] Haoyang Hong, Jiajun Yin, Yuan Wang, Jingnan Liu, Zhe Chen, Ailing Yu, Ji Li, Zhiling
+     Ye, Hansong Xiao, Yefei Chen, Hualei Zhou, Yun Yue, Minghui Yang, Chunxiao Guo, Junwei
+     Liu, Peng Wei, and Jinjie Gu. Multi-agent deep research: Training multi-agent systems with
+     M-GRPO. arXiv preprint, 2025. doi: 10.48550/arXiv.2511.13288. arXiv:2511.13288.
+
+ [5] Zhihang Lin, Mingbao Lin, Yuan Xie, and Rongrong Ji. CPPO: Accelerating the training
+     of group relative policy optimization-based reasoning models. arXiv preprint, 2025. doi:
+     10.48550/arXiv.2503.22342. arXiv:2503.22342.
+
+ [6] Zichen Liu, Changyu Chen, Wenjun Li, Penghui Qi, Tianyu Pang, Chao Du, Wee Sun Lee, and
+     Min Lin. Understanding R1-Zero-Like training: A critical perspective. arXiv preprint, 2025.
+     doi: 10.48550/arXiv.2503.20783. arXiv:2503.20783; introduces Dr. GRPO.
+
+ [7] Gongrui Nan et al. NGRPO: Negative-enhanced group relative policy optimization. arXiv
+     preprint, 2025. doi: 10.48550/arXiv.2509.18851. arXiv:2509.18851.
+
+ [8] Qiying Yu, Zheng Zhang, Ruofei Zhu, Yufeng Yuan, Xiaochen Zuo, Yu Yue, Weinan Dai, Tiantian
+     Fan, Gaohong Liu, Lingjun Liu, et al. DAPO: An open-source LLM reinforcement learning
+     system at scale. arXiv preprint, 2025. doi: 10.48550/arXiv.2503.14476. arXiv:2503.14476.
+
+ [9] Xichen Zhang et al. Scaf-GRPO: Scaffolded group relative policy optimization for enhancing
+     LLM reasoning. arXiv preprint, 2025. doi: 10.48550/arXiv.2510.19807. arXiv:2510.19807.
+
+                                                  7
+
+[PAGE 8]
+[10] Zhi Zhang, Zhen Han, Costas Mavromatis, Qi Zhu, Yunyi Zhang, Sheng Guan, Dingmin Wang,
+     Xiong Zhou, Shuai Wang, Soji Adeshina, Vassilis Ioannidis, and Huzefa Rangwala. Train less,
+     learn more: Adaptive efficient rollout optimization for group-based reinforcement learning.
+     arXiv preprint, 2026. doi: 10.48550/arXiv.2602.14338. arXiv:2602.14338; introduces AERO.
+
+[11] Chujie Zheng, Shixuan Liu, Mingze Li, Xiong-Hui Chen, Bowen Yu, Chang Gao, Kai Dang,
+     Yuqiong Liu, Rui Men, An Yang, Jingren Zhou, Jianwei Zhou, and Junyang Lin. Group sequence
+     policy optimization. arXiv preprint, 2025. doi: 10.48550/arXiv.2507.18071. arXiv:2507.18071;
+     GSPO.
+
+
+
+
+                                               8

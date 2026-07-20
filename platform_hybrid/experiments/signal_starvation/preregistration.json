@@ -1,0 +1,34 @@
+{
+  "schema_version": "signal-starvation-ppo-sao-v1",
+  "status": "instrumentation-ready-confirmatory-runs-not-started",
+  "frozen_at": "2026-07-14",
+  "hypotheses": {
+    "H1": "Within algorithm and phase, root EGM improves paired out-of-sample prediction of sampled gradient-update norm over reward, raw advantage variance, and clip fraction.",
+    "H2": "At matched rollout tokens and environment calls, failure-only retry plus solved retirement improves held-out success per million action tokens over symmetric low-signal resampling.",
+    "H3": "For high-PAM/low-GSR roots, fresh-policy recollection improves stability-adjusted held-out success over wider PPO or DIS clipping at matched generated tokens.",
+    "H4": "Root-level routing reduces the association between chunk count and selection probability while preserving or improving held-out reward."
+  },
+  "arms": ["base", "symmetric", "failure-only", "boundary-aware", "full-triage"],
+  "grpo_ppo_cell": {
+    "model": "Qwen/Qwen3-8B",
+    "task": "GSM8K",
+    "lora_rank": 4,
+    "seeds": [11, 23, 37, 53, 71],
+    "shared": ["initialization", "split", "tokenizer", "reward", "maximum_length"]
+  },
+  "sao_agentic_cell": {
+    "model": "open Qwen3-30B-A3B checkpoint or uniformly downsized preregistered substitute",
+    "task": "public SWE-Bench Verified split",
+    "scaffold": "fixed across arms",
+    "seeds": [11, 23, 37, 53, 71]
+  },
+  "primary_budget": ["generated_action_tokens", "environment_calls"],
+  "primary_endpoint": "heldout_success_per_million_generated_action_tokens",
+  "analysis": [
+    "seed-paired differences",
+    "prompt-clustered bootstrap confidence intervals",
+    "intention-to-route analysis",
+    "as-routed analysis"
+  ],
+  "evidence_boundary": "Existing arithmetic PPO runs are instrumentation smoke tests only; they are not evidence for language-model PPO, SAO, or GLM-5.2."
+}

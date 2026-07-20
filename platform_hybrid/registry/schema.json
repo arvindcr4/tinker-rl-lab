@@ -384,6 +384,10 @@
         },
         "notes": {
           "$ref": "#/$defs/nullable_string"
+        },
+        "n_mismatch_audit": {
+          "$ref": "#/$defs/nullable_integer",
+          "description": "Optional count of mismatches found by a record-specific provenance audit."
         }
       },
       "additionalProperties": false
@@ -1071,6 +1075,10 @@
         "synth_from_agg": {
           "$ref": "#/$defs/nullable_boolean",
           "description": "iter-122: True if this row was synthesized from an aggregate (point) statistic rather than per-seed data. CI is then not meaningful. Set true by scripts/p5p8/p6_iter118_zvf130_deltas_backfill.py when it backfills a measured row from mag_mean / mean_zvf aggregates whose per-seed sd was not stored."
+        },
+        "notes": {
+          "$ref": "#/$defs/nullable_string",
+          "description": "Optional machine-generation or backfill note for this validation row."
         }
       }
     },

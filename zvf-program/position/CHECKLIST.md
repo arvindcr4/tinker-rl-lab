@@ -1,30 +1,32 @@
 # MIN-REPORT-RL — Author Checklist
 
 A copy-pasteable minimum-reportable-stack for **any GRPO-family RL post-training paper**
-(GRPO, DAPO, GSPO, Dr.GRPO, MAD-GRPO, AERO, CPPO, NGRPO, Scaf-GRPO, GRESO, EDGE-GRPO,
+(GRPO, DAPO, GSPO, Dr.GRPO, M-GRPO, AERO, CPPO, NGRPO, Scaf-GRPO, GRESO, EDGE-GRPO,
 DARS, TreePo, …).
 
 **Why this exists.** Algorithm labels are under-specified treatments. In a controlled audit,
-a *nominally identical* GRPO config (same model, group size, learning rate, dataset, seed,
-step budget) produced **84.4%** [TODO:trace to v1 audit citation] last-10 training reward on one backend and **5.0%** [TODO:trace to v1 audit citation] on
-another — a ~17× gap [TODO:trace to v1 audit citation] with **no visible hyperparameter difference**. The label was constant;
-the stack was not. Each item below is on the list because it is a **documented lever that can
-flip a head-to-head comparison**. If two papers both report these eight fields, a reader can
-tell whether their comparison is confounded.
+a same-label GRPO comparison produced **84.4%** last-10 training reward in one
+stack and **5.0%**
+in another. The visible recipe looked similar, but the stacks also differed in
+base checkpoint and backend, so the ~17× gap is evidence of under-specification,
+not a backend-only causal effect. The seven manifest fields below expose such
+confounds; the eighth item makes endpoint evaluation harder to game. If two
+papers report the complete standard, a reader can tell whether their comparison
+is aligned.
 
-Report all eight. They are a *minimum*, not a maximum.
+Report all eight: seven run-manifest fields plus pass@k alongside pass@1. They
+are a *minimum*, not a maximum.
 
 **Provenance / scope of the worked numbers in this checklist.** The concrete
 numbers used as motivating examples below (61.6–89.6% prompt-token
-loss magnitude; the 17× matched-config gap; the 82.0→83.3% held-out
+loss magnitude; the 17× under-specification gap; the 82.0→83.3% held-out
 control at p=0.26; the 95.0–98.1% / 95.0% Llama-3.3-70B run)
 are inherited from the v1 audit paper that motivated this position
-piece. **[TODO:trace to v1 audit citation]** A reader who wants to
-verify the numbers should consult that paper; this checklist presents
-them as illustrative of the *kind* of stack-driven flip, not as
-re-derivable from a fresh run. Once the v1 audit paper is in
-citation scope, the references go in the `\bibliography{...}` and
-the [TODO:trace] markers are replaced with real `\cite{}` keys.
+piece. They are traceable to the companion audit source
+[`springer_main.tex`](../../platform_hybrid/paper/springer_main.tex), and the
+position paper cites the canonical `zvfaudit2026` bibliography record. This
+checklist presents them as illustrative of the *kind* of stack-driven flip,
+not as re-derived from a fresh run.
 
 ---
 
@@ -34,7 +36,7 @@ the [TODO:trace] markers are replaced with real `\cite{}` keys.
 - **Report:** PPO importance ratio used? (yes/no). Clipped? bounds (incl. asymmetric
   "clip-higher")? Token mask: completion-only or whole-sequence? Advantage normalization:
   per-group / per-batch / running estimate?
-- **Why it can flip:** the token mask changes the *objective*. In one diagnostic [TODO:trace to v1 audit citation], **61.6–89.6%**
+- **Why it can flip:** the token mask changes the *objective*. In one diagnostic, **61.6–89.6%**
   of full-sequence *loss magnitude* (raw NLL composition) came from *prompt* tokens, not completion tokens — a
   whole-sequence and a completion-only mask are different objectives sharing a name. (Caveat 2026-07-11:
   under exactly group-centered advantages, prompt-token *gradient* contributions cancel within each group —
@@ -60,7 +62,9 @@ the [TODO:trace] markers are replaced with real `\cite{}` keys.
   params (temperature, top-p, max_tokens). Logit precision in sampler vs. trainer
   (bf16/fp16/fp32). Same tokenizer + chat template in sampler and trainer? (yes/no).
 - **Why it can flip:** the sampler *defines* the rollout distribution the group-relative update
-  consumes. A managed runner vs. an open vLLM path gave the **17×** [TODO:trace to v1 audit citation] matched-config gap. Sampler
+  consumes. Backend, sampler, and base checkpoint co-varied in the **17×**
+  under-specification exhibit, so it motivates
+  disclosure but is not a backend effect estimate. Sampler
   precision shifts the probability of mixed-reward groups, hence available gradient.
 - **Good:** "vLLM 0.x rollouts, bf16; trainer logits bf16; temp 0.8, top-p 1.0, max_tokens 512;
   identical tokenizer/chat template across both."
@@ -97,12 +101,12 @@ the [TODO:trace] markers are replaced with real `\cite{}` keys.
 - **Report:** a held-out slice **disjoint** from training prompts, scored by a harness, with N
   and a CI, reported **separately** from online training reward.
 - **Why it can flip:** training reward is dynamics, not capability. A clean paired control
-  improved only **82.0% → 83.3% (p=0.26)** [TODO:trace to v1 audit citation] despite near-saturated training reward; selecting
+  improved only **82.0% → 83.3% (p=0.26)** despite near-saturated training reward; selecting
   checkpoints by training reward produced a spurious 87–95% "capability" band. Four 70B seeds
-  ranged 95.0–98.1% on training last-10 [TODO:trace to v1 audit citation] yet all landed on 95.0% held-out (sampling noise, not
+  ranged 95.0–98.1% on training last-10 yet all landed on 95.0% held-out (sampling noise, not
   generalization).
-- **Good:** "Held-out = 500 GSM8K test problems, seed 0, disjoint from every training batch;
-  base 82.0% → post 83.3% [TODO:trace to v1 audit citation], Wilson 95% CI, paired per-prompt p=0.54 [TODO:trace to v1 audit citation]."</update>
+- **Good:** "Held-out = 200 GSM8K test problems per seed, five seeds, disjoint
+  from every training batch; base 82.0% → post 83.3%, paired test p=0.26."
 - **Bad:** Reporting training-set reward as the capability number; "accuracy 94%" with no split
   stated.
 

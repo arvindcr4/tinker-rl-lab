@@ -16,14 +16,16 @@ from __future__ import annotations
 
 import json
 import math
+import os
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
+ROOT = REPO_ROOT / "platform_hybrid"
 RES = ROOT / "experiments" / "results"
-FIG = ROOT / "figures"
+FIG = ROOT / "paper" / "figures"
 
 
 # ---------------------------------------------------------------------------
@@ -37,6 +39,15 @@ def load_g4_vs_g32() -> pd.DataFrame:
 def load_effect_surface() -> pd.DataFrame:
     """Long-form (source, G, T, acc) from group_size_effect.tsv."""
     df = pd.read_csv(RES / "group_size_effect.tsv", sep="\t")
+    if "source" not in df.columns:
+        # The current artifact is a compact summary table.  The measured
+        # token-normalized surface remains available as the canonical input.
+        df = pd.read_csv(RES / "group_size_token_normalized.tsv", sep="\t")
+        return df.rename(columns={"budget_tokens": "T_tokens",
+                                  "heldout_acc_mean": "acc",
+                                  "heldout_acc_ci_low": "acc_lo",
+                                  "heldout_acc_ci_high": "acc_hi"})[
+            ["G", "T_tokens", "acc", "acc_lo", "acc_hi"]]
     keep = df[df.source.str.startswith("qwen3-8b_gsm8k_")].copy()
     keep["T_tokens"] = keep.source.str.extract(r"T(\d+)$").astype(int)
     keep = keep.rename(columns={"heldout_acc_mean": "acc",
@@ -59,8 +70,8 @@ def fit_t_critical(g4_vs_g32: pd.DataFrame) -> pd.DataFrame:
 
     The shape we expect is monotone increasing from near 0 toward |Δ_inf|.
     Use scipy-free exponential fit via log-linearization on the noise-free
-    observed delta (since these are CIs from a paired bootstrap, the SE on the
-    mean delta is small relative to the gap).
+    reconstructed delta (the stored intervals are conditional bootstrap
+    intervals on the reconstructed grid, not fresh-run uncertainty).
 
     Returns one row per threshold with T_critical (with bootstrap CI).
     """
@@ -91,9 +102,9 @@ def fit_t_critical(g4_vs_g32: pd.DataFrame) -> pd.DataFrame:
             return math.inf  # asymptote never reached
         return float(-tau_hat * math.log(1.0 - threshold / a_hat))
 
-    # Bootstrap CI via paired resampling of the 4 measured points
+    # Conditional parametric bootstrap around the 4 reconstructed points.
     rng = np.random.default_rng(23)
-    boot_Ts = {0.01: [], 0.03: [], 0.05: []}
+    boot_Ts = {0.01: [], 0.03: [], 0.05: [], 0.10: []}
     for _ in range(2000):
         # resample deltas within their per-point CIs (parametric bootstrap)
         sigma = (df["diff_ci_high"] - df["diff_ci_low"]).to_numpy() / 4.0  # ~SE
@@ -115,9 +126,9 @@ def fit_t_critical(g4_vs_g32: pd.DataFrame) -> pd.DataFrame:
     rows = []
     for thr in (0.01, 0.03, 0.05, 0.10):
         T_c = T_of(thr)
-        bvals = np.array(boot_Ts[thr]) if thr in boot_Ts else np.array(boot_Ts[0.05])
+        bvals = np.array(boot_Ts[thr])
         rows.append({
-            "model": "|Δ(T)| = 0.395*(1 - exp(-T/%.3e))" % tau_hat,
+            "model": "|Δ(T)| = %.3f*(1 - exp(-T/%.3e))" % (a_hat, tau_hat),
             "a_hat": round(a_hat, 6),
             "tau_hat_tokens": round(tau_hat, 1),
             "abs_delta_threshold": thr,
@@ -131,14 +142,14 @@ def fit_t_critical(g4_vs_g32: pd.DataFrame) -> pd.DataFrame:
 
 def _interpret_T_crit(thr, T_c):
     if not math.isfinite(T_c):
-        return f"threshold {thr:.0%} not reached — Wu invariance holds at all measured T"
+        return f"threshold {thr:.0%} not reached inside the reconstructed T grid"
     if thr == 0.05:
-        return f"At T_c≈{T_c/1e6:.2f}M tokens, G=4 falls 5pp behind G=32; the canonical Wu-equivalence threshold."
+        return f"The reconstruction crosses a 5pp G=4/G=32 gap near T_c≈{T_c/1e6:.2f}M tokens."
     if thr == 0.01:
-        return f"At T_c≈{T_c/1e6:.2f}M tokens, G=4 is statistically separable from G=32 (1pp)."
+        return f"The reconstruction crosses a 1pp G=4/G=32 gap near T_c≈{T_c/1e6:.2f}M tokens."
     if thr == 0.03:
-        return f"At T_c≈{T_c/1e6:.2f}M tokens, G=4 is practically separable (3pp)."
-    return f"At T_c≈{T_c/1e6:.2f}M tokens, G=4 is materially worse (10pp)."
+        return f"The reconstruction crosses a 3pp G=4/G=32 gap near T_c≈{T_c/1e6:.2f}M tokens."
+    return f"The reconstruction crosses a 10pp G=4/G=32 gap near T_c≈{T_c/1e6:.2f}M tokens."
 
 
 # ---------------------------------------------------------------------------
@@ -162,13 +173,13 @@ def build_phase_grid(effect: pd.DataFrame) -> pd.DataFrame:
         y = Acc[Gs == G, :].flatten()
         # use numpy interp on log-T
         yi = np.interp(logT_grid, logT_obs, y)
-        # CI: simple +/− 1pp widening from the closest measurement
+        # Display band: simple +/− 1pp widening from the closest input grid cell.
         idx = int(np.argmin(np.abs(Ts - 0.5e6)))
         for logt, acc in zip(logT_grid, yi):
             interp.append({"G": int(G),
                            "T_tokens": float(np.exp(logt)),
                            "acc_pred": float(acc),
-                           "is_measured": bool(np.any(np.isclose(Ts, np.exp(logt), rtol=0.1)))})
+                           "is_input_grid_point": bool(np.any(np.isclose(Ts, np.exp(logt), rtol=0.1)))})
     return pd.DataFrame(interp)
 
 
@@ -177,7 +188,7 @@ def build_phase_grid(effect: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 def pareto_frontier(effect: pd.DataFrame) -> pd.DataFrame:
-    """At every measured T, find the G that Pareto-dominates the others in
+    """At every input-grid T, find the G that Pareto-dominates the others in
     (acc, T) coordinates. Then compute compute-optimal G*(T)."""
     rows = []
     for T in sorted(effect.T_tokens.unique()):
@@ -234,6 +245,30 @@ def pareto_crossings(effect: pd.DataFrame) -> pd.DataFrame:
             "delta_pct": round(float(diffs[-1] - diffs[0]) * 100, 2),
         })
     return pd.DataFrame(rows).sort_values(["G_a", "G_b"]).reset_index(drop=True)
+
+
+def write_crossings_tex(crossings: pd.DataFrame, path: Path) -> None:
+    """Write the compact TeX table consumed by group_size_iter23.tex."""
+    lines = [
+        r"\begin{tabular}{rrrrr}",
+        r"\toprule",
+        r"$G_a$ & $G_b$ & $\Delta_{1\mathrm{M}}$ (pp) & "
+        r"$\Delta_{64\mathrm{M}}$ (pp) & $T_{\mathrm{cross}}$ (M) \\",
+        r"\midrule",
+    ]
+    for row in crossings.itertuples(index=False):
+        crossing = (
+            "---"
+            if pd.isna(row.T_crossover_tokens)
+            else f"{float(row.T_crossover_tokens) / 1e6:.2f}"
+        )
+        lines.append(
+            f"{int(row.G_a)} & {int(row.G_b)} & "
+            f"{float(row.diff_T1M_pct):+.1f} & "
+            f"{float(row.diff_T64M_pct):+.1f} & {crossing} " + r"\\"
+        )
+    lines.extend([r"\bottomrule", r"\end{tabular}"])
+    path.write_text("\n".join(lines) + "\n")
 
 
 # ---------------------------------------------------------------------------
@@ -357,6 +392,10 @@ def main():
     # Deliverable 3b: Pareto crossings
     crossings = pareto_crossings(effect)
     crossings.to_csv(out_dir / "group_size_iter23_crossings.tsv", sep="\t", index=False)
+    write_crossings_tex(
+        crossings,
+        out_dir / "group_size_iter23_crossings.tsv_typesetter",
+    )
     print(f"[iter23] Wrote group_size_iter23_crossings.tsv  ({len(crossings)} pairs)")
 
     # Deliverable 4: anti-herding
@@ -383,7 +422,8 @@ def main():
                        np.abs(g4_g32["diff_a_minus_b"]),
                        yerr=[np.maximum(np.abs(g4_g32["diff_a_minus_b"]) - np.abs(g4_g32["diff_ci_low"]), 0.005),
                              np.maximum(np.abs(g4_g32["diff_ci_high"]) - np.abs(g4_g32["diff_a_minus_b"]), 0.005)],
-                       fmt="o", color="#2c3e50", capsize=3, label="measured Δ(G=4 − G=32)")
+                       fmt="o", color="#2c3e50", capsize=3,
+                       label="reconstructed Δ(G=4 − G=32)")
         T_dense = np.geomspace(5e5, 1e8, 200)
         a_hat = float(t_crit.iloc[0].a_hat)
         tau_hat = float(t_crit.iloc[0].tau_hat_tokens)
@@ -401,7 +441,7 @@ def main():
         ax[0].set_xscale("log")
         ax[0].set_xlabel("Training tokens (M)")
         ax[0].set_ylabel("|Δ accuracy|: |acc(G=4) − acc(G=32)|")
-        ax[0].set_title("(a)  T_critical: where Wu's G≈G breaks")
+        ax[0].set_title("(a)  Conditional T_critical in reconstruction")
         ax[0].legend(loc="lower right", fontsize=8)
         ax[0].set_ylim(-0.02, 0.40)
         ax[0].grid(alpha=0.3)
@@ -439,7 +479,7 @@ def main():
         ax[2].set_xscale("log")
         ax[2].set_xlabel("Training tokens (M)")
         ax[2].set_ylabel("Group size G")
-        ax[2].set_title("(c)  Phase diagram: acc(T, G) (Qwen3-8B, GSM8K)")
+        ax[2].set_title("(c)  Illustrative acc(T, G) reconstruction")
         ax[2].legend(loc="lower right", fontsize=8, ncol=2)
         ax[2].grid(alpha=0.3)
 
@@ -447,7 +487,7 @@ def main():
         ax[3].plot(anti.p_eff, anti.delta_div_needed_total,
                    "-", color="#8e44ad", lw=2, label=r"$\delta_{div}$ needed for ZVF(G=4)→ZVF(G=32)")
         ax[3].axhline(0.23, ls="--", color="#c0392b",
-                      label=r"$\delta_{div}^{obs}$ ceiling (frontier measurement)")
+                      label=r"$\delta_{div}$ proxy ceiling")
         ax[3].axhline(0.45, ls=":", color="#16a085",
                       label=r"$\delta_{div}^{stretch}$ (decoding penalty limit)")
         ax[3].fill_between(anti.p_eff, 0, anti.delta_div_needed_total,
@@ -466,10 +506,8 @@ def main():
         plt.tight_layout()
         fig_path = fig_dir / "group_size_iter23.pdf"
         plt.savefig(fig_path, bbox_inches="tight")
-        plt.savefig(ROOT / "paper" / "figures" / "group_size_iter23.pdf",
-                    bbox_inches="tight")
         plt.close()
-        print(f"[iter23] Wrote {fig_path} and paper/figures/group_size_iter23.pdf")
+        print(f"[iter23] Wrote {fig_path}")
     except Exception as e:
         print(f"[iter23] Figure skipped: {e}")
 
@@ -532,10 +570,13 @@ def main():
         "platform_hybrid/experiments/results/group_size_iter23_antiherding.tsv"
     )  # noqa: E501
 
-    with findings_path.open("a") as f:
-        for r in rows_out:
-            f.write(json.dumps(r) + "\n")
-    print(f"[iter23] Appended {len(rows_out)} findings to findings_ledger.jsonl")
+    if os.environ.get("TINKER_SKIP_LEDGER"):
+        print("[iter23] Skipped findings ledger update (TINKER_SKIP_LEDGER set)")
+    else:
+        with findings_path.open("a") as f:
+            for r in rows_out:
+                f.write(json.dumps(r) + "\n")
+        print(f"[iter23] Appended {len(rows_out)} findings to findings_ledger.jsonl")
 
 
 if __name__ == "__main__":

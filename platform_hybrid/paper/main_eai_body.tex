@@ -1786,7 +1786,7 @@ math, or tool-use claims.
 
 \paragraph{Length bias and reward hacking are not fully measured.}
 Prior work shows that GRPO-like objectives can be sensitive to length bias and
-verbosity-trap dynamics~\citep{liu2025grpo_dpo,wang2025madgrpo}.  Our telemetry
+verbosity-trap dynamics~\citep{tong2025drgrpo}.  Our telemetry
 flags peak-to-tail reward regressions and verbosity-trap-like trajectories, but
 we do not uniformly log response length, direct KL, or long-horizon behavior
 across all runs.  Thus the current data can show reward instability and motivate
@@ -2053,4 +2053,3 @@ could reveal whether the small subnetwork they identify has higher KL per
 parameter, potentially explaining why moderate-sized models sometimes exhibit reward collapse consistent with drift (rather than direct evidence of catastrophic drift, which would require direct KL or policy-distance telemetry we do not have) despite updating only 5--30\% of weights.
 Connecting our behavioral proxy metrics to this parameter-level analysis is a
 natural and important next step.
-

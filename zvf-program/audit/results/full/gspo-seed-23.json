@@ -1,0 +1,55 @@
+{
+  "arm": "gspo",
+  "collapse": false,
+  "evidence_class": "confirmatory",
+  "fingerprint": "1c16ac079438f8ece3deaeb3c1e7ec5491d5e89ce71d6a53b094c9bbf24898e9",
+  "heldout_n": 500,
+  "heldout_score": 0.638,
+  "last10_reward": 0.73125,
+  "manifest_path": "manifests/gspo-seed-23.json",
+  "mean_gu": 0.32499999999999996,
+  "mean_zvf": 0.675,
+  "remote": {
+    "hf_checkpoint_steps": [
+      5,
+      10,
+      15,
+      20,
+      25,
+      30
+    ],
+    "hf_checkpoint_url": "https://huggingface.co/arvindcr4/tinker-rl-lab-e1-gspo-s23-1c16ac07/tree/d1a6f1879bdee3eb41f65cdfc1ce34606641d828",
+    "hf_commit": "d1a6f1879bdee3eb41f65cdfc1ce34606641d828",
+    "hf_final_adapter_path": "final/adapter_model.safetensors",
+    "hf_manifest_path": "run_manifest.json",
+    "hf_repo": "arvindcr4/tinker-rl-lab-e1-gspo-s23-1c16ac07",
+    "wandb_run_id": "1c16ac07",
+    "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/1c16ac07"
+  },
+  "remote_verification": {
+    "hf_checkpoint_steps": [
+      5,
+      10,
+      15,
+      20,
+      25,
+      30
+    ],
+    "hf_commit": "d1a6f1879bdee3eb41f65cdfc1ce34606641d828",
+    "hf_repo": "arvindcr4/tinker-rl-lab-e1-gspo-s23-1c16ac07",
+    "verified_at": "2026-07-18T17:36:07+00:00",
+    "wandb": {
+      "run_id": "1c16ac07",
+      "state": "finished",
+      "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/1c16ac07"
+    }
+  },
+  "rollouts": 480,
+  "seed": 23,
+  "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+  "treatment_changes": [
+    "importance_ratio_granularity",
+    "clip_granularity"
+  ],
+  "wall_clock_seconds": 10210.870298117
+}

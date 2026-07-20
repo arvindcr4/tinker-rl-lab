@@ -39,7 +39,7 @@ from collections import defaultdict
 import jsonschema  # only used for safety; not required to load entries
 
 HERE = pathlib.Path(__file__).resolve().parent
-WORKTREE = HERE.parent.parent
+WORKTREE = HERE.parents[2] / "platform_hybrid"
 TENSOR_DIR = WORKTREE / "experiments" / "results" / "n2_reward_tensor_resume"
 ENTRIES = WORKTREE / "registry" / "entries"
 SCHEMA = WORKTREE / "registry" / "schema.json"

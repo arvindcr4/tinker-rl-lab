@@ -2,19 +2,29 @@
 \section{Evidence: The Stack Moves More Than the Label}
 \label{sec:p5-evidence}
 
-\subsection{Exhibit 1: A 17$\times$ Flip from Swapping Only the Backend}
+\paragraph{Versioning note.}
+The frozen manifest corpus predates the evaluation-report addition to
+MIN-REPORT-RL.  Accordingly, the audits below score the standard's first seven
+\emph{run-manifest fields}; the current standard adds pass@$k$ curves as
+Item~8 (\secref{sec:p5-stack}).  Exhibits~18--20 also evaluate a historical
+continuous-telemetry extension.  That experiment is reported as an optional
+extension and must not be read as redefining the current Item~8.
+
+\subsection{Exhibit 1: A 17$\times$ Same-Label Flip from an Under-Specified Stack}
 \label{sec:p5-exhibit-backend}
-In a backend-swap audit (Stratum B), we held the model, group size $G$, learning
-rate, dataset, prompt template, and random seed fixed, and exchanged only the
-training backend. Final reward moved from $5.0\%$ on one backend to $85.6\%$ on
-the other---a $17\times$ ratio produced by zero algorithmic changes. Nothing in
-the run's algorithm label, hyperparameter table, or seed disclosure would let a
-reader anticipate this; the difference lives entirely in the substrate
-(sampling engine, numerics/precision, loss implementation details, and masking
-conventions). For calibration, this single infrastructure swing is an order of
+In a nominal backend audit (Stratum B), we held group size $G$, learning rate,
+dataset, prompt template, and random seed fixed. Final reward moved from $5.0\%$
+on one stack to $85.6\%$ on the other. Subsequent provenance inspection showed
+that the managed stack had silently pinned a different base checkpoint; managed
+defaults in sampling, precision, masking, and loss implementation could also
+differ. The $17\times$ ratio is therefore \emph{not} a backend-only causal
+estimate. It is the sharper reporting failure: the visible ``same GRPO config''
+did not identify the model or update substrate actually compared. Nothing in the
+algorithm label, surface hyperparameter table, or seed disclosure exposed this
+bundling. For calibration, this same-label stack swing is an order of
 magnitude larger than any label-vs-label gap we measured
 (\secref{sec:p5-exhibit-h2h}), and is consistent with the broader observation
-that seemingly minor evaluation and serving details shift LLM results by
+that evaluation, model-identity, and serving details shift LLM results by
 margins that would be headline findings if attributed to algorithms
 \citep{biderman2024lessons, hochlehnert2025sober}.
 
@@ -140,14 +150,15 @@ To stress-test the standard at scale, we audited every manifest in the frozen
 \texttt{experiments/results/mega\_20260704/manifests/} ($n=98$ cells; the live
 directory has since grown, so figures here and in Exhibits~7--20 are against the
 released $n=98$ snapshot) for
-the seven MIN-REPORT items of \secref{sec:p5-stack} using
+the seven MIN-REPORT run-manifest fields of \secref{sec:p5-stack} using
 \texttt{scripts/p5p8/minreport\_coverage.py}; full table at
 \texttt{experiments/results/p5p8/minreport\_field\_coverage.tsv}:
 
 \begin{table}[t]
 \centering
-\caption{Per-item coverage of the seven-item MIN-REPORT standard against
-$n=98$ live mega-campaign manifests. All seven items are 100\% present
+\caption{Per-field coverage of the seven-field run-manifest portion of the
+eight-item MIN-REPORT standard against
+$n=98$ live mega-campaign manifests. All seven manifest fields are 100\% present
 \emph{as keys}, but Item 2 (Reference policy \& KL) reports a concrete
 \texttt{kl-*} value in $0/98$ ($0.0\%$)---the corpus is uniformly
 sampling-only with no KL regulariser, but the value \texttt{"n/a"} is
@@ -240,19 +251,19 @@ algorithm axis was $\le 6.3\%$ on N2 (4 methods, same stack), and on the
 is absorbed into the model\_family or task\_slice cells. What matters for
 reported outcomes is which model and which task, not which loss form.
 
-The structural consequence for MIN-REPORT is that the seven items of
+The structural consequence for MIN-REPORT is that the seven run-manifest fields of
 \secref{sec:p5-stack} currently span only two of the five axes that
 explain the data (Item~5 captures $G$; Item~6 captures the held-out split
 but not the task slice). A natural extension---recommended for future
 work---is to add an explicit \texttt{model\_family} and
-\texttt{task\_slice} declaration alongside the existing seven items, so
+\texttt{task\_slice} declaration alongside the existing seven manifest fields, so
 that the audit of \secref{sec:p5-exhibit-coverage} can detect the two
 axes that explain the most variance in \texttt{reward} and \texttt{len}.
 
 \subsection{Exhibit 8: The MIN-REPORT-RL Auditor Prototype at $n=103$}
 \label{sec:p5-exhibit-auditor}
-To close the gap between ``we ask for seven items'' and ``we can verify
-that seven items were reported,'' we prototyped the
+To close the gap between ``we ask for seven manifest fields'' and ``we can verify
+that seven manifest fields were reported,'' we prototyped the
 \textsc{Min-Report-RL Auditor} of \secref{sec:p5-toolchain} and ran it
 across every manifest in the repository
 ($n=103$ = $98$ mega-campaign manifests $+5$ quick $2026$-$07$-$04$
@@ -417,7 +428,7 @@ the telemetry variance budget.
 
 The second observation is that \textbf{the four-method last-10 reward
 spread CI is $[+0.016, +0.098]$}, an order of magnitude tighter than
-the $17{\times}$ backend-swap ratio of Exhibit~1. Even at the $95\%$
+the $17{\times}$ under-specification ratio of Exhibit~1. Even at the $95\%$
 upper bound the spread is $< 10$ pp of reward, and the Exhibit~3
 point estimate of $0.034$ sits comfortably inside the CI. The
 bootstrap also confirms the Exhibit~3 qualitative reading: the four
@@ -470,8 +481,8 @@ via Item 7); the other $12$ axes have \emph{no} MIN-REPORT item.
 audit. The un-weighted mean gap-score across the $15$ axes is
 $0.933$.
 
-\paragraph{Reading.} The audit confirms that the seven-item
-MIN-REPORT was never intended to substitute for Mitchell's model
+\paragraph{Reading.} The audit confirms that the seven-field MIN-REPORT
+run manifest was never intended to substitute for Mitchell's model
 cards or Gebru's datasheets; the two general-purpose standards remain
 necessary for any RL-for-LLM training run that wants to report
 intended use, training data, ethical considerations, caveats,
@@ -494,7 +505,7 @@ Outputs:
 \begin{table}[t]
 \centering
 \caption{MIN-REPORT$\times$(Mitchell/Gebru) axis coverage on
-$n{=}103$ manifests. The seven MIN-REPORT items were never meant to
+$n{=}103$ manifests. The seven MIN-REPORT run-manifest fields were never meant to
 substitute for the two general-purpose reporting standards: $14/15$
 external axes have zero coverage on the repository manifests, and only
 $3/15$ have a hand-mapped partial MIN-REPORT item. The single axis
@@ -537,16 +548,16 @@ glance at how rigorously each item is validated on the live corpus
 gets none from either---the auditor collapses the per-item structure,
 and the coverage TSVs are textual. This exhibit adds the missing
 visualization: a three-bar (validated vs missing vs honest-n/a)
-chart of the seven items, computed on the same $98$-cell corpus.
+chart of the seven manifest fields, computed on the same $98$-cell corpus.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.95\linewidth]{p5_minreport_per_item.pdf}
+\includegraphics[width=0.95\linewidth]{p5_minreport_per_item.png}
 \caption{Per-MIN-REPORT-item validation rate across the $98$ live
 mega cells (2026-07-04). Green: percentage of cells carrying a
 validated entry for the item. Red: percentage of cells with the key
 \emph{missing}. Gray: percentage of cells carrying an honest
-\texttt{n/a-*} declaration. Six of seven items are fully validated
+\texttt{n/a-*} declaration. Six of seven manifest fields are fully validated
 ($\ge 99$\%); one item (\#2: Reference policy \& KL) is fully missing
 on this corpus. See \texttt{experiments/results/p5p8/p5\_exhibit\_a\_data.tsv}
 for the underlying numbers.}
@@ -556,7 +567,7 @@ for the underlying numbers.}
 The exhibit makes two reviewer-facing facts visible at a glance:
 
 \begin{enumerate}
-\item \textbf{Six of seven items are validated on $\ge 99\%$ of the
+\item \textbf{Six of seven manifest fields are validated on $\ge 99\%$ of the
 $98$ cells}. The corpus does report what MIN-REPORT asks for, on
 every other axis.
 \item \textbf{One item — the reference-policy / KL coefficient pair —
@@ -596,7 +607,7 @@ G / temperature / seed?}
 \begin{table}[t]
 \centering
 \caption{$\eta^{2}$ of per-cell \texttt{item\_score} across stack axes
-on $n{=}98$ mega_20260704 manifests, 7 items $\times$ 5 stack axes
+on $n{=}98$ mega_20260704 manifests, 7 manifest fields $\times$ 5 stack axes
 (plus reward and ZVF quartiles as outcome-stratified sanity checks).
 NaN entries (items 1--6 on every axis) are \emph{not} missing values:
 they are the strongest possible stack-invariance signal --- every cell
@@ -720,7 +731,7 @@ $+$seed (nuisance) & $-0.015$ $[-0.022,-0.006]$ & $-0.004$ $[-0.006,-0.002]$ \\
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.98\linewidth]{p5_field_sufficiency.pdf}
+\includegraphics[width=0.98\linewidth]{p5_field_sufficiency.png}
 \caption{Regret of omission $\Delta R^{2}$ per disclosed stack field, both
 telemetry channels, with paired bootstrap 95\% CIs. Blue bars are
 load-bearing (CI excludes $0$); grey are not. The load-bearing set is
@@ -764,7 +775,7 @@ choices---not the nominal algorithm---govern reported RL outcomes.
 \subsection{Exhibit 14: Claim-measurement alignment — the corpus is honest on every declared stack axis}
 \label{sec:p5-exhibit-claim-measurement}
 The auditor of \secref{sec:p5-exhibit-auditor} measures whether the
-manifest \emph{declares} the seven MIN-REPORT items; Exhibit~13 measures
+manifest \emph{declares} the seven MIN-REPORT run-manifest fields; Exhibit~13 measures
 whether the disclosed fields \emph{predict} the telemetry; this exhibit
 measures the strongest property: whether the disclosed values
 \emph{match} the measured telemetry pointwise.
@@ -939,7 +950,7 @@ writes only to the three worklist entries; subsequent runs of
 \texttt{registry\_validate.py} reproduce the MATCH-climb and
 schema-PASS results stated above.
 
-\subsection{Exhibit 16: MIN-REPORT Field Discriminative Entropy --- four of seven items are informatively vacuous at $n{=}98$}
+\subsection{Exhibit 16: MIN-REPORT Field Discriminative Entropy --- four of seven manifest fields are informatively vacuous at $n{=}98$}
 \label{sec:p5-exhibit-discriminative-entropy}
 The iter-1/iter-9/iter-13/iter-20/iter-21/iter-29 audits (items~01, 14,
 18, 27, 28, 37) all measure \emph{coverage} or \emph{truthfulness};
@@ -991,7 +1002,7 @@ Item~6 (\texttt{heldout\_split}) and item~7
 \centering\small
 \caption{MIN-REPORT field discriminative entropy at $n{=}98$ mega
 manifests. $H$ in bits; \emph{gap} = Exhibit-11 validation $-$
-$\min(1, H/2.5)$. Four of seven items are VACUOUS; items 3 and 7 are
+$\min(1, H/2.5)$. Four of seven manifest fields are VACUOUS; fields 3 and 7 are
 VACUOUS yet score $\geq 50\%$ on Exhibit~11. Per-row audit in
 \texttt{experiments/results/p5p8/p5\_field\_discriminative\_entropy.tsv}.}
 \label{tab:p5-discriminative-entropy}
@@ -1046,7 +1057,7 @@ that could move an outcome.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.85\linewidth]{p5_field_discriminative_entropy.pdf}
+\includegraphics[width=0.85\linewidth]{p5_field_discriminative_entropy.png}
 \caption{Shannon entropy $H$ in bits for the 7 MIN-REPORT items at
 $n{=}98$ mega cells. Coloured by 4-level class (VACUOUS, LOW, MEDIUM,
 HIGH); the dashed line at $H=2.5$ marks the HIGH threshold; the dotted
@@ -1062,7 +1073,7 @@ value for those items.}
 
 Exhibits~11 (\emph{coverage}),~14 (\emph{truthfulness}),~16
 (\emph{entropy}) all measure whether the manifest \emph{declares} the
-seven MIN-REPORT items; Exhibit~13 (\emph{predictive-sufficiency})
+seven MIN-REPORT run-manifest fields; Exhibit~13 (\emph{predictive-sufficiency})
 measures how much \texttt{cells.tsv} stack columns drive outcomes. Exhibit~17
 closes the synthesis note from iter~40 ("adding the manifest-alone
 predictive axis"): the natural audit scenario is a reviewer handed
@@ -1173,7 +1184,7 @@ from the manifest) jointly carry $\eta^2{=}0.453$ on mean\_reward.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.85\linewidth]{p5_manifest_r2_gap.pdf}
+\includegraphics[width=0.85\linewidth]{p5_manifest_r2_gap.png}
 \caption{Manifest-alone vs \texttt{cells.tsv}-alone $R^2$ on $n{=}98$ mega
 cells, in-sample linear regression. The manifest is essentially
 self-sufficient for ZVF ($R^2\,{=}\,0.776$) but loses $46$ percentage
@@ -1220,7 +1231,8 @@ measured-telemetry + run-level fields already present in
 \texttt{sampled\_tokens}) would lift the per-cell C beyond the
 current ceiling and break the per-axis uniformity that prevents any
 correlation measurement. This is the structural confirmation of
-iter-32's recommendation to expand MIN-REPORT from 7 items to 18.
+iter-32's historical recommendation to expand the run manifest from 7 fields
+to a legacy experimental 18-field schema.
 
 \begin{table}[t]
 \centering\small
@@ -1228,7 +1240,7 @@ iter-32's recommendation to expand MIN-REPORT from 7 items to 18.
 ``constant'' indicates the axis has zero variance across the corpus,
 which makes Pearson $r$ undefined. The result confirms iter-50's NaN
 correlations were not a statistical artefact but a structural property
-of the 7-item MIN-REPORT standard on the current 98-cell corpus.}
+of the seven-field MIN-REPORT run manifest on the current 98-cell corpus.}
 \label{tab:p5-3axis-degenerate}
 \begin{tabular}{lrll}
 \toprule
@@ -1255,10 +1267,10 @@ B (registry match) vs C (per-cell entropy)   &  30 & undefined & B constant at 0
 \subsection{Exhibit 18: Sub-field coverage and minimum-viable-extension (MVE) on the 98-cell mega corpus}
 \label{sec:p5-subfield-audit}
 
-Exhibit~6 stress-tested the seven MIN-REPORT items at the
+Exhibit~6 stress-tested the seven MIN-REPORT run-manifest fields at the
 \emph{top-level}-key granularity and found 100\% key presence on every
 item but 0\% parsed-out values on the loss-form, reference-policy, and
-KL sub-fields. This exhibit moves one level deeper: the seven items of
+KL sub-fields. This exhibit moves one level deeper: the seven manifest fields of
 \tableref{tab:p5-minreport} decompose into \textbf{22 sub-fields}
 (ratio level, clip low/high, token mask, advantage normalization, dynamic
 sampling, reference snapshot, KL coefficient, KL estimator, sampler
@@ -1326,7 +1338,7 @@ informationally distinguish cells. Across the 22 sub-fields,
 ($41\%$) are information-bearing.
 
 \begin{figure}[t]
-\centering\includegraphics[width=0.95\linewidth]{p5_minreport_subfield_audit.pdf}
+\centering\includegraphics[width=0.95\linewidth]{../experiments/results/p5p8/figures/p5_minreport_subfield_audit.png}
 \caption{Per-sub-field coverage (left) and minimum-viable-extension lift
 (right) on the $n{=}98$ cell mega corpus. Left: 9 sub-fields have
 $0\%$ coverage (grey), 4 are vacuous at $100\%$ coverage with $H{=}0$
@@ -1340,7 +1352,7 @@ incremental lift because they are already captured in Items 5 and 6.}
 \end{figure}
 
 The second part of this exhibit measures the gap between the current
-seven-item standard and the information it actually carries at the
+seven-field run manifest and the information it actually carries at the
 \emph{cell} (joined) level. Two baselines are computed:
 \begin{itemize}
 \item \textbf{Raw}---joined string including \texttt{per\_step\_zvf\_path}.
@@ -1348,7 +1360,7 @@ seven-item standard and the information it actually carries at the
   \texttt{per\_step\_zvf\_path}, which carries one unique path per cell
   and would otherwise dominate any distinctness statistic.
 \end{itemize}
-On the raw baseline the seven items yield $98/98$ distinct profiles
+On the raw baseline the seven manifest fields yield $98/98$ distinct profiles
 ($H{=}6.6147$ bits, i.e., the maximum $\log_2 98$); on the content
 baseline they yield only \textbf{$15/98$ distinct profiles}
 ($H{=}3.7780$ bits). The 5.6-fold ratio between the two baselines is
@@ -1367,9 +1379,9 @@ identifiable. Ranked lower:
 $\texttt{mean\_reward}$ (+52 profiles), \texttt{pcd} (+51),
 \texttt{zvf} (+40), \texttt{seed} (+15), \texttt{model\_family}
 (+13), \texttt{temperature} (+12). The fields already implicit in the
-seven items (\texttt{task\_slice}, $G$, \texttt{n\_groups},
+seven manifest fields (\texttt{task\_slice}, $G$, \texttt{n\_groups},
 \texttt{sample\_errors}) contribute \textbf{0 incremental profiles}
-beyond the content baseline, confirming that the current seven items
+beyond the content baseline, confirming that the seven run-manifest fields
 exhaust the categorical stack information but \emph{miss the
 continuous-telemetry layer} that dominates run-to-run variance.
 
@@ -1380,7 +1392,7 @@ baseline of $15/98$ distinct MIN-REPORT profiles. Rank 1--12 by
 $\Delta$ distinct. Adding a single continuous-telemetry field (rank 1)
 lifts the distinct profile count to $98/98$. Repeated noise from the
 \texttt{cells.tsv} categorical columns (ranks 9--12) is already
-captured by the existing seven items.}
+captured by the existing seven manifest fields.}
 \label{tab:p5-mve}
 \begin{tabular}{@{}clrrr@{}}
 \toprule
@@ -1403,7 +1415,7 @@ Rank & Extension field & $\Delta$ distinct & Cumul.\ distinct & Cumul.\ lift \% 
 \end{table}
 
 \paragraph{Actionable recommendation.}
-The current seven MIN-REPORT items are sufficient for the categorical
+The seven MIN-REPORT run-manifest fields are sufficient for the categorical
 stack axes (\textit{what} model, \textit{what} task, \textit{what}
 group-size schedule, \textit{what} held-out split). They are
 \emph{incomplete} for the continuous-telemetry layer (\textit{how
@@ -1415,9 +1427,10 @@ recommend the maintainers of the MIN-REPORT-RL standard accept the
 \textbf{continuous-telemetry layer} (\texttt{mean\_reward},
 \texttt{zvf}, \texttt{pcd}, \texttt{mean\_completion\_len},
 \texttt{std\_completion\_len}) as a \emph{recommended but not yet
-required} eighth item. This recommendation is a sharp quantification
-of the iter-32 expansion-to-18-items suggestion, restricted to the
-five sub-fields that measurably break the iter-52 per-cell vacuum.
+required} telemetry extension. This recommendation is a sharp quantification
+of the legacy iter-32 expansion-to-18-fields suggestion, restricted to the
+five sub-fields that measurably break the iter-52 per-cell vacuum. It is
+orthogonal to the current standard's Item~8, which reports pass@$k$ curves.
 
 \paragraph{Reproduction.}
 \texttt{python3 scripts/p5p8/p5\_minreport\_subfield\_audit.py}
@@ -1447,10 +1460,10 @@ by reading the actual measured values from
 on the canonical auditor formula.
 
 \textbf{Method.} For each of the 98 mega manifests we (i) score the
-7-item MIN-REPORT using the iter-13 auditor formula
+seven-field MIN-REPORT run manifest using the iter-13 auditor formula
 ($\sum_{i=1}^{7} w_i \cdot \mathrm{base}_i \cdot \mathrm{sub\_frac}_i$,
-weights summing to $100$), and (ii) score the 8-item MIN-REPORT with
-the continuous-telemetry item-8 (weight $w_8$) added, where item-8
+weights summing to $100$), and (ii) score a historical candidate
+telemetry extension (weight $w_T$), whose
 sub-field coverage is the number of populated numeric values among
 the 5 MVE fields. We compute per-cell $\Delta\mathrm{badge} =
 \mathrm{augmented} - \mathrm{baseline}$ and report the mean $\Delta$
@@ -1462,22 +1475,23 @@ canonical mega corpus have \emph{all five} MVE fields populated in
 has a non-empty numeric value for each of mean\_reward, zvf, pcd,
 mean\_completion\_len, std\_completion\_len). The MVE extension
 therefore delivers a \emph{constant} badge uplift on every cell:
-$\Delta = +20.00$ at full weight ($w_8 = 20$) and
-$\Delta = +10.00$ at half weight ($w_8 = 10$). The $95\%$ bootstrap CI
+$\Delta = +20.00$ at full weight ($w_T = 20$) and
+$\Delta = +10.00$ at half weight ($w_T = 10$). The $95\%$ bootstrap CI
 collapses to $[+20.00, +20.00]$ (and $[+10.00, +10.00]$ at half
 weight)---degenerate because there is no variance.
 
 \begin{table}[t]
 \centering
 \small
-\caption{Empirical badge uplift from adding the iter-53 MVE
-continuous-telemetry item-8 to the 7-item MIN-REPORT. Every cell in
+\caption{Empirical badge uplift from adding the iter-53 candidate
+continuous-telemetry extension to the seven-field MIN-REPORT run manifest.
+Every cell in
 the 98-cell corpus already populates all five MVE fields in
 \texttt{cells.tsv}, so the uplift is deterministic (CI collapses).}
 \label{tab:p5-mve-empirical}
 \begin{tabular}{lcccccc}
 \toprule
-Scenario & $w_8$ & Baseline & Augmented & $\Delta$ & 95\% CI & Excl.\ 0 \\
+Scenario & $w_T$ & Baseline & Augmented & $\Delta$ & 95\% CI & Excl.\ 0 \\
 \midrule
 Full weight  & $20$ & $90.0$ & $110.0$ & $+20.0$ & $[+20.0, +20.0]$ & \textbf{YES} \\
 Half weight  & $10$ & $90.0$ & $100.0$ & $+10.0$ & $[+10.0, +10.0]$ & \textbf{YES} \\
@@ -1491,7 +1505,7 @@ schema bump that delivers a deterministic $+20$ badge uplift on every
 one of the 98 mega cells, because every cell already populates all
 five MVE fields in the canonical telemetry table. The
 iter-52 honest-but-vacuous diagnosis was a structural artifact of
-the 7-item MIN-REPORT's dependence on structured-string items that
+the seven-field MIN-REPORT run manifest's dependence on structured-string fields that
 collapse to a single value; the fix is the one-item continuous-telemetry
 extension.
 
@@ -1510,7 +1524,7 @@ cores). Outputs:
 baseline + augmented + low-weight),
 \texttt{p5\_mve\_empirical\_summary.json}.
 
-\subsection{Exhibit 20: Item-8 MVE field-level distributional sanity audit}
+\subsection{Exhibit 20: Candidate telemetry-extension field-level distributional sanity audit}
 \label{sec:p5-mve-field-audit}
 
 Exhibit 19 (\secref{sec:p5-mve-empirical}) validated the iter-53
@@ -1520,8 +1534,8 @@ $15 \rightarrow 98$ and delivering a deterministic $+20$ badge
 uplift. This exhibit moves \emph{one level deeper}, from the aggregate
 5-tuple to per-field distributional sanity: does each of the 5 MVE
 fields carry independent information, and is the per-field
-stack-conditioning strong enough to license the 8-item MIN-REPORT
-standard at field-level granularity?
+stack-conditioning strong enough to license the candidate telemetry
+extension at field-level granularity?
 
 \textbf{Method.} On the 98-cell mega corpus, for each of the 5 MVE
 fields
@@ -1584,7 +1598,7 @@ $0.002\,[0.000,0.061]$ \\
 $0.50$.} $\mathrm{zvf}$ leads with $0.927$ (task + G dominate), then
 $\mathrm{pcd}$ $0.784$, $\mathrm{mean\_reward}$ $0.756$,
 $\mathrm{mean\_comp\_len}$ $0.734$, $\mathrm{std\_comp\_len}$
-$0.731$. The 8-item MIN-REPORT stack conditioning is preserved at
+$0.731$. The candidate telemetry extension's stack conditioning is preserved at
 per-field granularity: each field is at least $73\%$ stack-explained,
 and every field's upper CI bound on the dominant axis is
 $>\!0.50$.
@@ -1646,8 +1660,8 @@ at zvf $\geq 0.95$ (saturated).
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.92\linewidth]{p5_mve_field_dist.pdf}
-\caption{Item-8 MVE field-level audit on the 98 mega cells. Top-left
+\includegraphics[width=0.92\linewidth]{p5_mve_field_dist.png}
+\caption{Candidate telemetry-extension MVE field-level audit on the 98 mega cells. Top-left
 4 panels: histograms of the 4 bounded MVE fields
 ($\mathrm{mean\_reward}, \mathrm{zvf}, \mathrm{pcd},
 \mathrm{mean\_completion\_len}, \mathrm{std\_completion\_len}$);
@@ -1664,10 +1678,10 @@ stack axis, and each with $\geq 73\%$ stack conditioning on the 98-cell
 mega corpus. The 5-tuple achieves $100\%$ per-cell uniqueness;
 $\mathrm{humaneval\_subset}$ reduces the 5-tuple to a 2-tuple on 34
 cells, but the remaining 64 cells preserve the full 5-tuple
-information. The 8-item MIN-REPORT standard is therefore
-\emph{field-heterogeneous} in the strongest sense: item-8 is
-load-bearing, and the load is unevenly distributed across its 5
-sub-fields.
+information. The candidate telemetry extension is therefore
+\emph{field-heterogeneous} in the strongest sense: its five-field block is
+load-bearing in this diagnostic, and the load is unevenly distributed across
+those fields. This does not evaluate the current standard's pass@$k$ Item~8.
 
 \textbf{Cross-coupling.} This exhibit closes iter-53 \#64
 sub-field MVE at the per-FIELD level, sharpens iter-56 \#67

@@ -41,11 +41,13 @@ ZVF with rising reward is the expected saturation endgame, not an
 emergency.
 
 \paragraph{Rule 4: never compare controllers across stacks.} The
-backend-swap audit ($85.6\%$ vs $5.0\%$ with everything but the backend
-fixed) and the DAPO label flip (mean ZVF $0.58$ closed vs $0.00$ open under
+under-specified same-label comparison ($85.6\%$ vs $5.0\%$, with backend and
+base checkpoint both differing) and the DAPO label flip (mean ZVF $0.58$
+closed vs $0.00$ open under
 the same name) mean a controller evaluated on one stack has not been
 evaluated at all until the stack is reported. Controller comparisons should
-ship the 7-item minimum stack report of the companion papers---loss form,
+ship the seven-field run manifest of the companion papers' eight-item
+minimum reporting standard---loss form,
 reference-policy/KL handling, sampler/backend/precision, per-step ZVF/GU
 trajectory, group-size schedule, held-out split, and
 decontamination/parser probes---with the group-size \emph{schedule} (item

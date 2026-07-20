@@ -18,11 +18,16 @@ import json
 import pathlib
 import sys
 
-WORKTREE = pathlib.Path("/home/claude/tinker-rl-lab-minimax")
-REGISTRY = WORKTREE / "registry"
-RESULTS = WORKTREE / "experiments" / "results" / "p5p8"
+WORKTREE = pathlib.Path(__file__).resolve().parents[3]
+PROJECT_ROOT = WORKTREE / "platform_hybrid"
+REGISTRY = PROJECT_ROOT / "registry"
+RESULTS = PROJECT_ROOT / "experiments" / "results" / "p5p8"
 
-DELTAS = {p.stem for p in (REGISTRY / "entries").glob("delta_*.json")}
+DELTAS = {
+    p.stem
+    for p in (REGISTRY / "entries").glob("delta_*.json")
+    if json.loads(p.read_text()).get("record_type") == "variant_delta"
+}
 MIN_REPORT_ITEMS = ["loss_form", "reference_kl", "sampler_backend",
                     "telemetry", "group_size_schedule", "heldout_split",
                     "decontamination"]
@@ -43,6 +48,14 @@ def fully_unknown(mr_item):
     if not leaves_it:
         return False
     return all(v is None for _, v in leaves_it)
+
+
+def source_exists(raw_path):
+    """Registry sources may be repo-root- or platform_hybrid-relative."""
+    path = pathlib.Path(raw_path)
+    if path.is_absolute():
+        return path.exists()
+    return (WORKTREE / path).exists() or (PROJECT_ROOT / path).exists()
 
 
 def main():
@@ -115,7 +128,7 @@ def main():
         rec = json.loads(p.read_text())
         for m in rec.get("measured", []):
             src = m.get("source")
-            if src and not (WORKTREE / src).exists():
+            if src and not source_exists(src):
                 findings.append({
                     "kind": "missing_source",
                     "entry": p.stem,
@@ -153,7 +166,7 @@ def main():
         "n_stack_entries": sum(
             1 for p in (REGISTRY / "entries").glob("*.json")
             if json.loads(p.read_text()).get("record_type") == "stack"),
-        "audit_date": "2026-07-05",
+        "audit_date": "2026-07-14",
         "audit_source": "platform_modal/scripts/p5p8/p6_iter118_strict_validator.py",
     }
     out_path = RESULTS / "p6_iter118_strict_audit.json"

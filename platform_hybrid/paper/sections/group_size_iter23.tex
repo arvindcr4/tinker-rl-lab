@@ -11,29 +11,35 @@ benefit over $G\!=\!4$?'' from point estimates to a four-axis decomposition:
 \begin{enumerate}\itemsep1pt
 \item a continuous $T_\text{crit}$ estimate (when does $G\!=\!4$ cease to be
       equivalent to $G\!=\!32$ on a paired metric);
-\item the full accuracy$(T, G)$ phase diagram from the Qwen3-8B / GSM8K sweep;
-\item the compute-optimal $G^\star(T)$ Pareto frontier;
+\item an illustrative accuracy$(T, G)$ phase diagram reconstructed for
+      Qwen3-8B / GSM8K;
+\item the within-reconstruction argmax $G^\star(T)$ frontier;
 \item an analytical simulation of how much diversity amplification
       $\delta_\text{div}$ is required at $G\!=\!4$ to recover the
       $G\!=\!32$ contrastive yield.
 \end{enumerate}
 
 \paragraph{$T_\text{crit}$ for $G=4$ vs $G=32$.}
-Fitting $|\Delta(T)| = a \cdot (1 - e^{-T/\tau})$ to the four paired measurements
+Fitting $|\Delta(T)| = a \cdot (1 - e^{-T/\tau})$ to four reconstructed
+budget points
 yields $\hat a=0.30$, $\hat\tau \!\approx\! 12.1$M tokens.
 The 5pp-equivalence breaking threshold falls at
 $T_\text{crit}^{5\%}\!=\!2.21$M tokens
 (bootstrap 95\% CI: $[1.29\text{M}, 4.77\text{M}]$).  At $T\!=\!1$M, the
 canonical comparison holds ($|\Delta|\!\le\!1$pp); at $T\!=\!4$M it breaks.
-Numerically: the boundary between ``Wu-equivalence operational'' and
-``$G$ matters'' sits between $1$M and $2$M tokens for Qwen3-8B / GSM8K.
+Numerically, this reconstruction places the boundary between
+``Wu-equivalence operational'' and ``$G$ matters'' between $1$M and $2$M
+tokens.  It is a hypothesis for a matched-budget Qwen3-8B/GSM8K sweep, not a
+measured learning-curve transition.
 
 \paragraph{Phase diagram and Pareto frontier.}
-Table~\ref{tab:p3-pareto} shows the per-budget compute-optimal $G^\star(T)$.
+Table~\ref{tab:p3-pareto} shows the per-budget argmax inside the reconstructed
+grid.  It must not be read as a deployment optimum.
 
 \begin{table}[h!]
 \centering
-\caption{Compute-optimal $G^\star(T)$ on Qwen3-8B / GSM8K, paired bootstrap 95\% CI.}
+\caption{Within-reconstruction $G^\star(T)$ on Qwen3-8B / GSM8K, with
+conditional bootstrap 95\% intervals.}
 \label{tab:p3-pareto}
 \small
 \begin{tabular}{rccc}
@@ -46,27 +52,25 @@ $T$ (tokens) & $G^\star(T)$ & acc($G^\star$) & CI \\ \hline
 \end{tabular}
 \end{table}
 
-Three regimes emerge cleanly:\ (i) the early-training
-inverted-U apex at $G^\star\!\approx\!8$ collapses to $G^\star\!\approx\!16$
-by $T\!=\!4$M tokens (Wu's claim zone);\ (ii) by $T\!=\!16$M tokens the
-optimum has shifted to $G^\star\!\approx\!32$;\ (iii) past $T\!=\!16$M, the
-optimum saturates at $G^\star\!\approx\!32$ ($G\!=\!64$ is statistically
-indistinguishable from $G\!=\!32$ at $T\!=\!64$M, an inverted-U on the upper
-arm).  This makes the resolution of the Wu 2025 result
-explicit: the equivalence $G\!\approx\!32$ holds only inside the small-compute
-region $T\!\lesssim\!2$M.
+The reconstructed surface suggests three regimes: an early argmax near
+$G{=}8$, a shift toward $G{=}16$ at $T{=}4$M, and an argmax near $G{=}32$ at
+the two largest budgets.  These are candidate operating points for the
+matched-token experiment.  They neither establish statistical
+indistinguishability of $G{=}32$ and $G{=}64$ nor resolve the Wu et al.\ result
+outside the setting that paper actually tested.
 
 \paragraph{Crossover matrix.}
-Table~\ref{tab:p3-crossings} runs paired-bootstrap pair-tests across
-$\{(G_a, G_b)\}$ at every measured $T$.
-The most consequential crossover is $G\!=\!4\!\to\!G\!=\!32$ at $\sim\!1.1$M tokens
-($\Delta_\text{pp}=+23$ppt gap by $T\!=\!64$M).
+Table~\ref{tab:p3-crossings} applies paired-bootstrap calculations to the
+reconstructed grid.  Conditional on that grid, the largest contrast is the
+$G{=}4$ versus $G{=}32$ comparison at $T{=}64$M.  Because the inputs are not
+direct matched-budget runs, these intervals quantify reconstruction
+uncertainty only.
 
 \begin{table}[h!]
 \centering
-\caption{Paired-$\Delta_\text{pp}=\text{acc}(G_b)-\text{acc}(G_a)$ on Qwen3-8B / GSM8K
-across compute budgets; the $T_\text{cross}$ column locates the first
-$\geq\!2$pp separation in log-T.}
+\caption{Conditional $\Delta_\text{pp}=\text{acc}(G_b)-\text{acc}(G_a)$ in the
+reconstructed Qwen3-8B/GSM8K grid; $T_\text{cross}$ is an interpolated
+threshold, not an observed training transition.}
 \label{tab:p3-crossings}
 \small
 \IfFileExists{../experiments/results/group_size_iter23_crossings.tsv_typesetter}{\input{../experiments/results/group_size_iter23_crossings.tsv_typesetter}}{}
@@ -82,11 +86,10 @@ $p_\text{eff}\!\in\![0.60, 0.98]$ we obtain:\newline
 \textbf{feasible} ($\delta'\!\le\!0.23$): $p_\text{eff}\!\le\!0.68$ ($\sim\!23\%$ of frontier);\newline
 \textbf{stretch via decoding penalty} ($0.23\!<\!\delta'\!\le\!0.45$): $p_\text{eff}\!\in\!(0.68, 0.83]$ ($\sim\!33\%$);\newline
 \textbf{infeasible} ($\delta'\!>\!0.45$): $p_\text{eff}\!>\!0.83$ ($\sim\!44\%$).
-The natural $\delta_\text{div}$ ceiling ($\sim\!0.23$, observed on the
-Pillar 2 sweep) cannot close the $G\!=\!4\!\mid\!G\!=\!32$ gap once prompts
-enter the high-skill regime, which is exactly where late-training
-optimisation concentrates.  This is the operational reason that
-$G^\star\!\approx\!32$ is empirically Pareto-optimal at large $T$.
+Under this proxy, the Pillar-2 diversity value ($\sim\!0.23$) does not close
+the modeled $G{=}4\mid G{=}32$ contrastive-yield gap in the high-$p$ region.
+This is a mechanism hypothesis for why a larger group might help late in
+training; it is not evidence that $G{=}32$ is empirically Pareto-optimal.
 
 \paragraph{Figure.}
 Figure~\ref{fig:p3-iter23} packs the four artifacts above into a single 4-panel view:\ (a)
@@ -103,8 +106,8 @@ $T_\text{crit}^{1\%}\!=\!0.41$M, $T_\text{crit}^{3\%}\!=\!1.27$M,
 $T_\text{crit}^{5\%}\!=\!2.21$M, $T_\text{crit}^{10\%}\!=\!4.91$M.
 \textbf{(b)}\ Per-pair $\Delta_\text{pp}$ at $T\!=\!64$M tokens; positive bars mark
 pairs where the larger $G_b$ wins (\textit{frontier synthesis}).
-\textbf{(c)}\ acc$(T, G)$ phase diagram on Qwen3-8B / GSM8K; iso-acc contours
-from the dense grid. \textbf{(d)}\ $\delta_\text{div}$ amplification required
+\textbf{(c)}\ illustrative acc$(T,G)$ reconstruction for Qwen3-8B/GSM8K;
+iso-acc contours interpolate the grid. \textbf{(d)}\ $\delta_\text{div}$ amplification required
 for $\text{ZVF}(G\!=\!4)\!\to\!\text{ZVF}(G\!=\!32)$ vs.\ $p_\text{eff}$, with the
 $\delta_\text{div}\!\le\!0.23$ natural ceiling and the $\delta_\text{div}\!\le\!0.45$
 stretch (decoding penalty) limits.}
@@ -112,20 +115,18 @@ stretch (decoding penalty) limits.}
 \end{figure}
 
 \paragraph{Headline.}
-The Wu et al.\ 2025 $G\!\approx\!G^\prime$ equivalence is a
-\emph{transient} at the start of training, not a steady-state
-property. Once $T \gtrsim 2$M tokens (Qwen3-8B / GSM8K), $G\!=\!4$ and
-$G\!=\!32$ diverge at $>5$pp and the gap widens monotonically with $T$.
-The Pareto-optimal $G^\star(T)$ climbs from 8 to 32 across the first
-$16$M tokens, then plateaus.  Closing the gap at $G\!=\!4$ would need
-controlled sampling diversity $\delta_\text{div}$ beyond the natural ceiling
-for $\sim\!77\%$ of the learning frontier — a decoding-side intervention,
-not a statistics-side one.
+The reconstruction predicts that $G{=}4$ and $G{=}32$ separate as token
+budget grows, while the proxy model predicts that a bounded diversity lever
+will not reproduce the larger group's contrastive yield over much of the
+high-$p$ region.  The publishable claim is therefore a preregistered
+interaction---group size by token budget---to be tested with direct runs,
+not a universal $G{=}32$ recommendation.
 
 \paragraph{Inputs and reproducibility.}
 All four artifacts in Table~\ref{tab:p3-pareto}, Table~\ref{tab:p3-crossings},
 the $\delta_\text{div}$ summary, and Figure~\ref{fig:p3-iter23} are generated by
-\texttt{scripts/group\_size\_iter23.py} on a single CPU.  Pre-existing inputs are
+\texttt{platform\_modal/scripts/group\_size\_iter23.py} on a single CPU.
+Pre-existing inputs are
 \texttt{group\_size\_g4\_vs\_g32\_broader\_scale.tsv} (Pillar-3 retention sweep)
-and \texttt{group\_size\_effect.tsv} (Qwen3-8B / GSM8K 5$\times$4 grid).
+and \texttt{group\_size\_token\_normalized.tsv} (the illustrative 5$\times$4 grid).
 Total runtime $\!\approx\!5$s; total wall-clock for prior runs is unchanged.

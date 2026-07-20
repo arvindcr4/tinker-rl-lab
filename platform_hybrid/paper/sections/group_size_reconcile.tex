@@ -79,7 +79,9 @@ measured $G\times T$ sweep over $\{4,8,16,32,64\}$ was executed. Bold in the
 accuracy row marks the per-row accuracy maximum, which shifts rightward with
 $T$: $G{=}8$ at $T{=}1\text{M}$ (near the fixed-\emph{step} optimum $G{=}4$ of
 Table~6), $G{=}16$ at $4\text{M}$, and
-$G{\approx}32$ at $T{\ge}16\text{M}$ (the canonical training budget). The
+$G{\approx}32$ at $T{\ge}16\text{M}$ (the canonical training budget) \emph{in
+the reconstruction}. This is a hypothesis for a measured sweep, not an
+empirical optimum. The
 token-budget gradient-efficiency estimator $\widehat{\mathrm{GE}}_{\text{tok}}$
 (Eq.~\ref{eq:gu}; distinct from the main-text $\mathrm{GU}{=}1{-}\mathrm{ZVF}$)
 is by contrast \emph{monotone decreasing} in $G$ at every budget (bold marks its
@@ -91,9 +93,10 @@ maximum, always $G{=}4$): per-token gradient efficiency favors small $G$ and doe
 
 \paragraph{Accuracy-optimal $G$ shifts with budget.}
 The per-row accuracy-maximizing group size increases with the token budget
-($G^\star = 8, 16, 32, 32$ at $T = 1, 4, 16, 64\,\text{M}$), so there is no
-single universal $G^\star$; the optimum is budget-dependent. We report this as a
-qualitative argmax pattern only---no committed script fits a parametric
+($G^\star = 8, 16, 32, 32$ at $T = 1, 4, 16, 64\,\text{M}$) in the reconstructed
+grid, so the hypothesis is budget-dependent. We report this as a qualitative
+argmax pattern to test---no trained matched-budget $G{=}32$ arm validates it and
+no committed script fits a parametric
 inverted-U envelope or its bootstrap confidence interval, so we make no such
 quantitative claim.
 
@@ -105,7 +108,8 @@ Under a fixed \emph{step} budget at small total token counts,
 $G{=}4$ attains the highest last-10 reward ($52.1\%$, Table~6).
 Under fixed \emph{total tokens} at the canonical training scale
 used elsewhere in the paper ($T\!\ge\!16$M), $G{\approx}32$
-maximizes held-out accuracy in this illustrative reanalysis. (The
+maximizes reconstructed held-out accuracy in this illustrative reanalysis; it
+is not a measured recommendation. (The
 per-token gradient-efficiency estimator $\widehat{\mathrm{GE}}_{\text{tok}}$ is
 \emph{not} co-maximized: it decreases monotonically in $G$, so it favors small
 $G$ and is reported only to show that the accuracy gain at large $G$ comes at a

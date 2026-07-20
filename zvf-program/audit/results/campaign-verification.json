@@ -1,0 +1,1985 @@
+{
+  "errors": [],
+  "locally_validated_units": 40,
+  "remotely_verified_units": 40,
+  "required_units": 40,
+  "status": "COMPLETE",
+  "units": [
+    {
+      "heldout_correct": 315,
+      "heldout_rows": 500,
+      "heldout_score": 0.63,
+      "hf_commit": "42980267a519c028dd0e5a0592c0a106933fb0b7",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-aero-s107-853facf3",
+      "manifest_path": "zvf-program/audit/results/full/manifests/aero-seed-107.json",
+      "manifest_sha256": "8da9d6a49ae2961bcc291ad2c12164b0c83a69ff0bed7564431d04f4347a7632",
+      "record_path": "zvf-program/audit/results/full/aero-seed-107.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "rollout_allocation",
+        "selective_rejection",
+        "posterior_state"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "aero/seed-107",
+      "unit_fingerprint": "853facf3202b3c8f81ddbeb25b6cdbce69f0d08b9cfb31398fcc139c232ded71",
+      "wandb": {
+        "run_id": "853facf3",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/853facf3"
+      }
+    },
+    {
+      "heldout_correct": 315,
+      "heldout_rows": 500,
+      "heldout_score": 0.63,
+      "hf_commit": "2affa816a79574e2c6e9b38915b2f58daf5fd9cf",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-aero-s11-0d4c16f9",
+      "manifest_path": "zvf-program/audit/results/full/manifests/aero-seed-11.json",
+      "manifest_sha256": "6b90234b69904322fd7b0888c4d58d3815b03c47ce725722f81fefcc81330232",
+      "record_path": "zvf-program/audit/results/full/aero-seed-11.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "rollout_allocation",
+        "selective_rejection",
+        "posterior_state"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "aero/seed-11",
+      "unit_fingerprint": "0d4c16f9d77c3863b06735fd4cb2c8a4affbfc4edfe2532bc35bfc44ca7561fb",
+      "wandb": {
+        "run_id": "0d4c16f9",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/0d4c16f9"
+      }
+    },
+    {
+      "heldout_correct": 320,
+      "heldout_rows": 500,
+      "heldout_score": 0.64,
+      "hf_commit": "ec9931f7fe85e6b180dbb85d6c20c3e1646f5272",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-aero-s131-bdb898f5",
+      "manifest_path": "zvf-program/audit/results/full/manifests/aero-seed-131.json",
+      "manifest_sha256": "7f8f939913d2518af19194576ac18651d06f1ac26f120c653fba120446561697",
+      "record_path": "zvf-program/audit/results/full/aero-seed-131.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "rollout_allocation",
+        "selective_rejection",
+        "posterior_state"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "aero/seed-131",
+      "unit_fingerprint": "bdb898f5e12986a946ca90f40a1a952ef37e6db40bd39fb1c3e92391b76228ac",
+      "wandb": {
+        "run_id": "bdb898f5",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/bdb898f5"
+      }
+    },
+    {
+      "heldout_correct": 314,
+      "heldout_rows": 500,
+      "heldout_score": 0.628,
+      "hf_commit": "92123d35e401ff9c6c42494a383116cfbd91479e",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-aero-s23-3573a421",
+      "manifest_path": "zvf-program/audit/results/full/manifests/aero-seed-23.json",
+      "manifest_sha256": "9d6e845f532ab3def16f69c95bbe41fa582d620ae620eed298b9bdee1ac37890",
+      "record_path": "zvf-program/audit/results/full/aero-seed-23.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "rollout_allocation",
+        "selective_rejection",
+        "posterior_state"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "aero/seed-23",
+      "unit_fingerprint": "3573a421e57755d2196ba12f6c634be191c033b197a940b7c509cf6f6df74f1d",
+      "wandb": {
+        "run_id": "3573a421",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/3573a421"
+      }
+    },
+    {
+      "heldout_correct": 318,
+      "heldout_rows": 500,
+      "heldout_score": 0.636,
+      "hf_commit": "613d3f70cc0fb89eae5775a398d6f66136d14f49",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-aero-s37-7547ba19",
+      "manifest_path": "zvf-program/audit/results/full/manifests/aero-seed-37.json",
+      "manifest_sha256": "396fd76becf54c622ba0dee34e12ae6de29ded659dc640eb1ef62d16c95fb044",
+      "record_path": "zvf-program/audit/results/full/aero-seed-37.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "rollout_allocation",
+        "selective_rejection",
+        "posterior_state"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "aero/seed-37",
+      "unit_fingerprint": "7547ba194cc459fda76781723343875d28cb0d9549ac81c5a83fd2a8a3a996b9",
+      "wandb": {
+        "run_id": "7547ba19",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/7547ba19"
+      }
+    },
+    {
+      "heldout_correct": 316,
+      "heldout_rows": 500,
+      "heldout_score": 0.632,
+      "hf_commit": "448707a7a1dce3f705204d90d06598a971cfbed2",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-aero-s53-bd8d23f9",
+      "manifest_path": "zvf-program/audit/results/full/manifests/aero-seed-53.json",
+      "manifest_sha256": "c011fab69d3277d9bdfd5073ce1247ebef73261ec1879498cf0340b20c9c7d87",
+      "record_path": "zvf-program/audit/results/full/aero-seed-53.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "rollout_allocation",
+        "selective_rejection",
+        "posterior_state"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "aero/seed-53",
+      "unit_fingerprint": "bd8d23f9d454639f6e118a6b5a00e891619f4d0b71d66db2f3494174f0bc1b9b",
+      "wandb": {
+        "run_id": "bd8d23f9",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/bd8d23f9"
+      }
+    },
+    {
+      "heldout_correct": 316,
+      "heldout_rows": 500,
+      "heldout_score": 0.632,
+      "hf_commit": "5168da9f98c37cd432e60b14443436daaaed6951",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-aero-s71-c73138a3",
+      "manifest_path": "zvf-program/audit/results/full/manifests/aero-seed-71.json",
+      "manifest_sha256": "83e0048dea28a5ae689402228edbc6bfa6b68631c5f36be3cdb397c1d2eb634d",
+      "record_path": "zvf-program/audit/results/full/aero-seed-71.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "rollout_allocation",
+        "selective_rejection",
+        "posterior_state"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "aero/seed-71",
+      "unit_fingerprint": "c73138a35898430abdedf1226065576bda48e03558c74ff7e62f8a8a9ec6b7e8",
+      "wandb": {
+        "run_id": "c73138a3",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/c73138a3"
+      }
+    },
+    {
+      "heldout_correct": 315,
+      "heldout_rows": 500,
+      "heldout_score": 0.63,
+      "hf_commit": "43421d47afa9a82453e883508a634f55ff770f14",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-aero-s89-201279c6",
+      "manifest_path": "zvf-program/audit/results/full/manifests/aero-seed-89.json",
+      "manifest_sha256": "1ecc0af8f374cf430375ae5db3ae6422678fd413b01c59143c6e44a6d59713d9",
+      "record_path": "zvf-program/audit/results/full/aero-seed-89.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "rollout_allocation",
+        "selective_rejection",
+        "posterior_state"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "aero/seed-89",
+      "unit_fingerprint": "201279c694b28333ce2e9947514351a552a8025e2d31a1f39c5630a9291bc84c",
+      "wandb": {
+        "run_id": "201279c6",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/201279c6"
+      }
+    },
+    {
+      "heldout_correct": 317,
+      "heldout_rows": 500,
+      "heldout_score": 0.634,
+      "hf_commit": "6e60484cfd40dd1d6b17ee92b18af93e12f7a011",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-dapo-s107-f56135ec",
+      "manifest_path": "zvf-program/audit/results/full/manifests/dapo-seed-107.json",
+      "manifest_sha256": "292fe62f4a41d59202c2f8653b95cb1d3e2bea69dccd887bece324d886292828",
+      "record_path": "zvf-program/audit/results/full/dapo-seed-107.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "clip_bounds",
+        "dynamic_sampling"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "dapo/seed-107",
+      "unit_fingerprint": "f56135ecc96fc57eed81dcc19237b5136e7f304c9e3ae05f702ed9d8958c0ef1",
+      "wandb": {
+        "run_id": "f56135ec",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/f56135ec"
+      }
+    },
+    {
+      "heldout_correct": 324,
+      "heldout_rows": 500,
+      "heldout_score": 0.648,
+      "hf_commit": "33f158dfabf2ab0056cc213eb9c43755f5941eef",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-dapo-s11-e629158e",
+      "manifest_path": "zvf-program/audit/results/full/manifests/dapo-seed-11.json",
+      "manifest_sha256": "574d49ef22f7a2c026fcde252806a2c99674eaa24339db1457dd41ae5b309d38",
+      "record_path": "zvf-program/audit/results/full/dapo-seed-11.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "clip_bounds",
+        "dynamic_sampling"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "dapo/seed-11",
+      "unit_fingerprint": "e629158e48d9db298e38e72b815d39707ed10b7768f506d500a72fd137ac0456",
+      "wandb": {
+        "run_id": "e629158e",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/e629158e"
+      }
+    },
+    {
+      "heldout_correct": 316,
+      "heldout_rows": 500,
+      "heldout_score": 0.632,
+      "hf_commit": "39f916902470b3b800af5c8d60d398a164cd2b95",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-dapo-s131-95076dd5",
+      "manifest_path": "zvf-program/audit/results/full/manifests/dapo-seed-131.json",
+      "manifest_sha256": "6bc9e1a4dc58881c58125ae59137dd9c388dc5763fcfa4f7885d4e09ae224382",
+      "record_path": "zvf-program/audit/results/full/dapo-seed-131.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "clip_bounds",
+        "dynamic_sampling"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "dapo/seed-131",
+      "unit_fingerprint": "95076dd53e5c338c61f9b9ff1b5cfbf1bad8925f5142318469dc29a60d2a25e3",
+      "wandb": {
+        "run_id": "95076dd5",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/95076dd5"
+      }
+    },
+    {
+      "heldout_correct": 312,
+      "heldout_rows": 500,
+      "heldout_score": 0.624,
+      "hf_commit": "08d3a34da45050b1d4787de45e5d493555fb464c",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-dapo-s23-c0d53921",
+      "manifest_path": "zvf-program/audit/results/full/manifests/dapo-seed-23.json",
+      "manifest_sha256": "77df845b9fa787dd1a902fdc0886b7dd79ee5936e5c0eb02520f55f3c352f25b",
+      "record_path": "zvf-program/audit/results/full/dapo-seed-23.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "clip_bounds",
+        "dynamic_sampling"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "dapo/seed-23",
+      "unit_fingerprint": "c0d5392102e924b472aa166a306b6eedabbd35e236ffe27b1b9e9477e157290b",
+      "wandb": {
+        "run_id": "c0d53921",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/c0d53921"
+      }
+    },
+    {
+      "heldout_correct": 314,
+      "heldout_rows": 500,
+      "heldout_score": 0.628,
+      "hf_commit": "bb7fb354be9f02461e94f69d226b3566e8417368",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-dapo-s37-605e7589",
+      "manifest_path": "zvf-program/audit/results/full/manifests/dapo-seed-37.json",
+      "manifest_sha256": "15448dfcde4a095d782b82fa259bb2fcc318a66e780389a0fa987e10d5b1038e",
+      "record_path": "zvf-program/audit/results/full/dapo-seed-37.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "clip_bounds",
+        "dynamic_sampling"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "dapo/seed-37",
+      "unit_fingerprint": "605e75895782b241432eadb6f03f351658b26025f6fdffaeeb3b26a1f0961ec7",
+      "wandb": {
+        "run_id": "605e7589",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/605e7589"
+      }
+    },
+    {
+      "heldout_correct": 318,
+      "heldout_rows": 500,
+      "heldout_score": 0.636,
+      "hf_commit": "194c9d2ea0d72cb93c751a314bbec9cbdcf7b5c0",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-dapo-s53-a4c73e0e",
+      "manifest_path": "zvf-program/audit/results/full/manifests/dapo-seed-53.json",
+      "manifest_sha256": "a43b707956dc3f8c41b7072bb90245b204a059aad2241ed8327e971d58786ab2",
+      "record_path": "zvf-program/audit/results/full/dapo-seed-53.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "clip_bounds",
+        "dynamic_sampling"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "dapo/seed-53",
+      "unit_fingerprint": "a4c73e0ea84744fba5a919ca2365a0cea5ad0adacbdc3802050996b1b454934e",
+      "wandb": {
+        "run_id": "a4c73e0e",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/a4c73e0e"
+      }
+    },
+    {
+      "heldout_correct": 317,
+      "heldout_rows": 500,
+      "heldout_score": 0.634,
+      "hf_commit": "59406ac609a1c7539b68891f1bb639f8e8893dc9",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-dapo-s71-98b3f510",
+      "manifest_path": "zvf-program/audit/results/full/manifests/dapo-seed-71.json",
+      "manifest_sha256": "a16d28c619a22b82919a3e013f0773e8f69481e72945f8b1eb9b8d86f29b4212",
+      "record_path": "zvf-program/audit/results/full/dapo-seed-71.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "clip_bounds",
+        "dynamic_sampling"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "dapo/seed-71",
+      "unit_fingerprint": "98b3f510540224004fff9f0881e4fd30569b964fa2ef627d851be1ccee4d4c12",
+      "wandb": {
+        "run_id": "98b3f510",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/98b3f510"
+      }
+    },
+    {
+      "heldout_correct": 318,
+      "heldout_rows": 500,
+      "heldout_score": 0.636,
+      "hf_commit": "c290319779e45c6ca690d17fd666faa7a8e73813",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-dapo-s89-c0e809d5",
+      "manifest_path": "zvf-program/audit/results/full/manifests/dapo-seed-89.json",
+      "manifest_sha256": "00acc74a8e34667104139bd525cd02d580a3158b604991c0f458d85034e4c559",
+      "record_path": "zvf-program/audit/results/full/dapo-seed-89.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "clip_bounds",
+        "dynamic_sampling"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "dapo/seed-89",
+      "unit_fingerprint": "c0e809d5c0b5c6ea8a79a0c6c0b9474dd5d7b2753d66826b9ba23ad1afbda7ef",
+      "wandb": {
+        "run_id": "c0e809d5",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/c0e809d5"
+      }
+    },
+    {
+      "heldout_correct": 314,
+      "heldout_rows": 500,
+      "heldout_score": 0.628,
+      "hf_commit": "8978e087b78f65f607f809f67bd7cffb89a5f381",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-drgrpo-s107-e033d448",
+      "manifest_path": "zvf-program/audit/results/full/manifests/drgrpo-seed-107.json",
+      "manifest_sha256": "8635f37d7a5b88625ad96ecfe00314b977f83587c62a7a93b766ae07f65d716c",
+      "record_path": "zvf-program/audit/results/full/drgrpo-seed-107.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "advantage_normalization"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "drgrpo/seed-107",
+      "unit_fingerprint": "e033d448036a391b724b43ea86d8f1d5480f4b2b9a305f4315d45b0343236b32",
+      "wandb": {
+        "run_id": "e033d448",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/e033d448"
+      }
+    },
+    {
+      "heldout_correct": 321,
+      "heldout_rows": 500,
+      "heldout_score": 0.642,
+      "hf_commit": "dbcd0740bc95d0500713dfbcd19e667cdd8555a3",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-drgrpo-s11-52417d14",
+      "manifest_path": "zvf-program/audit/results/full/manifests/drgrpo-seed-11.json",
+      "manifest_sha256": "ddd3fccd38e3544876024fbd87a6f22d46c9a18d211196c637754a728750cff1",
+      "record_path": "zvf-program/audit/results/full/drgrpo-seed-11.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "advantage_normalization"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "drgrpo/seed-11",
+      "unit_fingerprint": "52417d146fb6038bf2b6fa5777201486c19713c2ef916ebc34af8018ccb520d1",
+      "wandb": {
+        "run_id": "52417d14",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/52417d14"
+      }
+    },
+    {
+      "heldout_correct": 323,
+      "heldout_rows": 500,
+      "heldout_score": 0.646,
+      "hf_commit": "4b05547ae98a97a5cf069249e3a642e9b600e057",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-drgrpo-s131-31ef6f34",
+      "manifest_path": "zvf-program/audit/results/full/manifests/drgrpo-seed-131.json",
+      "manifest_sha256": "1317c3b7aab4b020d6a22663cca69dcb312b3468d2de0a5717bb87e9fe2e82d9",
+      "record_path": "zvf-program/audit/results/full/drgrpo-seed-131.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "advantage_normalization"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "drgrpo/seed-131",
+      "unit_fingerprint": "31ef6f34d6ea751852af0bb757ffda30f1e0a5671e0f119cda80333273fd4cff",
+      "wandb": {
+        "run_id": "31ef6f34",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/31ef6f34"
+      }
+    },
+    {
+      "heldout_correct": 313,
+      "heldout_rows": 500,
+      "heldout_score": 0.626,
+      "hf_commit": "4318ffd9026b64749561c033ab7c0f3e3841cb84",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-drgrpo-s23-63941052",
+      "manifest_path": "zvf-program/audit/results/full/manifests/drgrpo-seed-23.json",
+      "manifest_sha256": "3057541e3364213fa2ee36dfdfde995cf78b59c49fecfa50665739dcdb8a07de",
+      "record_path": "zvf-program/audit/results/full/drgrpo-seed-23.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "advantage_normalization"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "drgrpo/seed-23",
+      "unit_fingerprint": "639410528cf73937cbe04bef50f61dfe7ccda5636ec45654b9d999858103a3fc",
+      "wandb": {
+        "run_id": "63941052",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/63941052"
+      }
+    },
+    {
+      "heldout_correct": 311,
+      "heldout_rows": 500,
+      "heldout_score": 0.622,
+      "hf_commit": "26e36e5e915f05922d9792014e2afecd18f6f364",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-drgrpo-s37-5610e4f2",
+      "manifest_path": "zvf-program/audit/results/full/manifests/drgrpo-seed-37.json",
+      "manifest_sha256": "54524d1884404201e5ba3abc9302e0f0e6cb43f34a926857e2161cfe28057810",
+      "record_path": "zvf-program/audit/results/full/drgrpo-seed-37.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "advantage_normalization"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "drgrpo/seed-37",
+      "unit_fingerprint": "5610e4f2d5f61f8ddd2a20f4f4788a7887a9884ace29a0409a1efff3ff819e14",
+      "wandb": {
+        "run_id": "5610e4f2",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/5610e4f2"
+      }
+    },
+    {
+      "heldout_correct": 318,
+      "heldout_rows": 500,
+      "heldout_score": 0.636,
+      "hf_commit": "5bef04e01ba9345493e014b5ea301f295122d378",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-drgrpo-s53-1215e9cb",
+      "manifest_path": "zvf-program/audit/results/full/manifests/drgrpo-seed-53.json",
+      "manifest_sha256": "affd54d90c9554e8c48b23aed0a4f9b56cc8cbb695c5d0fbff88d2d5be3438ba",
+      "record_path": "zvf-program/audit/results/full/drgrpo-seed-53.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "advantage_normalization"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "drgrpo/seed-53",
+      "unit_fingerprint": "1215e9cb8ce271161b54903e2c5bed54f41a48b1533fe833ab22c5a2e11076df",
+      "wandb": {
+        "run_id": "1215e9cb",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/1215e9cb"
+      }
+    },
+    {
+      "heldout_correct": 310,
+      "heldout_rows": 500,
+      "heldout_score": 0.62,
+      "hf_commit": "a8cd65ea26f03909ab84b2f5f3601b64ba0ae0c5",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-drgrpo-s71-918b9a8a",
+      "manifest_path": "zvf-program/audit/results/full/manifests/drgrpo-seed-71.json",
+      "manifest_sha256": "f14913a185c50ec86ce553437a4b5425a494072c8de0a6c1202c090b346ac920",
+      "record_path": "zvf-program/audit/results/full/drgrpo-seed-71.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "advantage_normalization"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "drgrpo/seed-71",
+      "unit_fingerprint": "918b9a8aadadbcee59d6e2b3a263bae0f9bb8c3c3cd36592981b3161aa911e65",
+      "wandb": {
+        "run_id": "918b9a8a",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/918b9a8a"
+      }
+    },
+    {
+      "heldout_correct": 314,
+      "heldout_rows": 500,
+      "heldout_score": 0.628,
+      "hf_commit": "1977a08e30b30ca0db3a48f3bafaebfc2beb22cc",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-drgrpo-s89-faea790b",
+      "manifest_path": "zvf-program/audit/results/full/manifests/drgrpo-seed-89.json",
+      "manifest_sha256": "288db59166691625277d7062559ed8fa522443b17af218f65afa04a338b61b6e",
+      "record_path": "zvf-program/audit/results/full/drgrpo-seed-89.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "advantage_normalization"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "drgrpo/seed-89",
+      "unit_fingerprint": "faea790b05ce6159b94b060f94d2df1ed377ac0f28099bcde9ecfb201dfdf9ec",
+      "wandb": {
+        "run_id": "faea790b",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/faea790b"
+      }
+    },
+    {
+      "heldout_correct": 317,
+      "heldout_rows": 500,
+      "heldout_score": 0.634,
+      "hf_commit": "ffcbfffd322a181e82c0d3a552ec611432dce471",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-grpo-s107-5f0a7bf0",
+      "manifest_path": "zvf-program/audit/results/full/manifests/grpo-seed-107.json",
+      "manifest_sha256": "792e11fff9154c6d421322d065ef1c3be296054426fe5ed3c4a212cb97103dc0",
+      "record_path": "zvf-program/audit/results/full/grpo-seed-107.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [],
+      "unique_completion_hashes": 500,
+      "unit": "grpo/seed-107",
+      "unit_fingerprint": "5f0a7bf0a5702d389e8a362fe43980b27f5eaf559c85ec6070090b54a8ae94ec",
+      "wandb": {
+        "run_id": "5f0a7bf0",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/5f0a7bf0"
+      }
+    },
+    {
+      "heldout_correct": 325,
+      "heldout_rows": 500,
+      "heldout_score": 0.65,
+      "hf_commit": "b39028ea32b042247e7ecd3ee228b8b302c55226",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-grpo-s11-78393a67",
+      "manifest_path": "zvf-program/audit/results/full/manifests/grpo-seed-11.json",
+      "manifest_sha256": "b08c10604b0222b5296fb4345931401d9e5ac207cfc2260108786d3904a3f343",
+      "record_path": "zvf-program/audit/results/full/grpo-seed-11.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [],
+      "unique_completion_hashes": 500,
+      "unit": "grpo/seed-11",
+      "unit_fingerprint": "78393a67980d2f869a9a84e1c9f2042c4eb4419f4187b1c7b9c45e83d28e418e",
+      "wandb": {
+        "run_id": "78393a67",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/78393a67"
+      }
+    },
+    {
+      "heldout_correct": 311,
+      "heldout_rows": 500,
+      "heldout_score": 0.622,
+      "hf_commit": "7786d5e9452729bed8d029bc2e69cfe0f89e1d06",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-grpo-s131-6dd77cf1",
+      "manifest_path": "zvf-program/audit/results/full/manifests/grpo-seed-131.json",
+      "manifest_sha256": "48cb5135f2fbc1215e1d6b7e4427d8f31c33229e3db01424ae4034b252aae585",
+      "record_path": "zvf-program/audit/results/full/grpo-seed-131.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [],
+      "unique_completion_hashes": 500,
+      "unit": "grpo/seed-131",
+      "unit_fingerprint": "6dd77cf14a7487c8575a6de90023e99ede46b3ffe515d16ce163810408bf8c5a",
+      "wandb": {
+        "run_id": "6dd77cf1",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/6dd77cf1"
+      }
+    },
+    {
+      "heldout_correct": 318,
+      "heldout_rows": 500,
+      "heldout_score": 0.636,
+      "hf_commit": "de7dc778c41231ddd5b2cff77f127f54746040f0",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-grpo-s23-0057b069",
+      "manifest_path": "zvf-program/audit/results/full/manifests/grpo-seed-23.json",
+      "manifest_sha256": "94ec60547d9083f6811db116d88c1972385c946131c2c8b6d820a3754c350a84",
+      "record_path": "zvf-program/audit/results/full/grpo-seed-23.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [],
+      "unique_completion_hashes": 500,
+      "unit": "grpo/seed-23",
+      "unit_fingerprint": "0057b06939f7cbfcd9d63cb2e4f03156bdf82c55be83d3121d9e34f223960ef2",
+      "wandb": {
+        "run_id": "0057b069",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/0057b069"
+      }
+    },
+    {
+      "heldout_correct": 317,
+      "heldout_rows": 500,
+      "heldout_score": 0.634,
+      "hf_commit": "2755e14f26f2712480893285bcbb1bceb5315053",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-grpo-s37-54592080",
+      "manifest_path": "zvf-program/audit/results/full/manifests/grpo-seed-37.json",
+      "manifest_sha256": "6686450e9699f1b9b38aeac6f1cddecb1b24f6137c5eeac72f07c8a06ee45253",
+      "record_path": "zvf-program/audit/results/full/grpo-seed-37.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [],
+      "unique_completion_hashes": 500,
+      "unit": "grpo/seed-37",
+      "unit_fingerprint": "5459208036f61aadd88ff6aa7f0b634eba94cc073a57a224d7962b26276c98da",
+      "wandb": {
+        "run_id": "54592080",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/54592080"
+      }
+    },
+    {
+      "heldout_correct": 317,
+      "heldout_rows": 500,
+      "heldout_score": 0.634,
+      "hf_commit": "0a41458340579fe11166157338e8990a3567c801",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-grpo-s53-c13bbc2b",
+      "manifest_path": "zvf-program/audit/results/full/manifests/grpo-seed-53.json",
+      "manifest_sha256": "bacc32bf5abe0f26be171b458ec54ea84a50f79eeefc4b1b9f35d4a189cf1772",
+      "record_path": "zvf-program/audit/results/full/grpo-seed-53.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [],
+      "unique_completion_hashes": 500,
+      "unit": "grpo/seed-53",
+      "unit_fingerprint": "c13bbc2b1c7ec8ccc1d8a8641b3d41ed39a2c59e382a250c5372cdb8c5b9dbad",
+      "wandb": {
+        "run_id": "c13bbc2b",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/c13bbc2b"
+      }
+    },
+    {
+      "heldout_correct": 317,
+      "heldout_rows": 500,
+      "heldout_score": 0.634,
+      "hf_commit": "821fa6b4504a4d0a5737f450d28e56cc94506ad3",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-grpo-s71-f6d81075",
+      "manifest_path": "zvf-program/audit/results/full/manifests/grpo-seed-71.json",
+      "manifest_sha256": "d4a9084a0dd669ff789895a8b4b852f1575ece65b35a1040253d9559a8029296",
+      "record_path": "zvf-program/audit/results/full/grpo-seed-71.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [],
+      "unique_completion_hashes": 500,
+      "unit": "grpo/seed-71",
+      "unit_fingerprint": "f6d810750a44b0aa0a747bf9eb29f72ff040b3601f1470b7d6fc427f657d9607",
+      "wandb": {
+        "run_id": "f6d81075",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/f6d81075"
+      }
+    },
+    {
+      "heldout_correct": 310,
+      "heldout_rows": 500,
+      "heldout_score": 0.62,
+      "hf_commit": "f88da35f8939dc7ff74ed0b37a004fa8c78379a8",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-grpo-s89-2d3a2e89",
+      "manifest_path": "zvf-program/audit/results/full/manifests/grpo-seed-89.json",
+      "manifest_sha256": "e6dae29a67c3caff4ca29bc6e23cb3997d6f3cade66c9589a2e12763986eeb7b",
+      "record_path": "zvf-program/audit/results/full/grpo-seed-89.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [],
+      "unique_completion_hashes": 500,
+      "unit": "grpo/seed-89",
+      "unit_fingerprint": "2d3a2e89259584f60eae7397b793c3110f6221a072efa80889e4598c88817126",
+      "wandb": {
+        "run_id": "2d3a2e89",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/2d3a2e89"
+      }
+    },
+    {
+      "heldout_correct": 320,
+      "heldout_rows": 500,
+      "heldout_score": 0.64,
+      "hf_commit": "2b521a728689e87afc7ac027108a4e3725468820",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-gspo-s107-879174ca",
+      "manifest_path": "zvf-program/audit/results/full/manifests/gspo-seed-107.json",
+      "manifest_sha256": "6e13f004d298df6c74b031a5881bcaab501e0da8da2420addd4503aa528b7875",
+      "record_path": "zvf-program/audit/results/full/gspo-seed-107.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "importance_ratio_granularity",
+        "clip_granularity"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "gspo/seed-107",
+      "unit_fingerprint": "879174ca49d05cc031a7276949f8b11667fe41c05e35a07d1be25eecc37f749b",
+      "wandb": {
+        "run_id": "879174ca",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/879174ca"
+      }
+    },
+    {
+      "heldout_correct": 320,
+      "heldout_rows": 500,
+      "heldout_score": 0.64,
+      "hf_commit": "f064274b7c79372fe3fa1501737ae8a5398bec07",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-gspo-s11-5f4fc0d3",
+      "manifest_path": "zvf-program/audit/results/full/manifests/gspo-seed-11.json",
+      "manifest_sha256": "bf40c2437315d306ff7d22737d3d750e7950969b9c8ff9612d7f5add4acdc592",
+      "record_path": "zvf-program/audit/results/full/gspo-seed-11.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "importance_ratio_granularity",
+        "clip_granularity"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "gspo/seed-11",
+      "unit_fingerprint": "5f4fc0d351c6e624690e92cd4b8e3c9fac7018e374532ad6329339f2716d251a",
+      "wandb": {
+        "run_id": "5f4fc0d3",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/5f4fc0d3"
+      }
+    },
+    {
+      "heldout_correct": 314,
+      "heldout_rows": 500,
+      "heldout_score": 0.628,
+      "hf_commit": "5753775e1976d3441f8643fff2dc852a53e16da3",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-gspo-s131-726607de",
+      "manifest_path": "zvf-program/audit/results/full/manifests/gspo-seed-131.json",
+      "manifest_sha256": "f167e8395c1257a2654238a9b938420462ace0ce80f45e8d6df7737eeabd7cbc",
+      "record_path": "zvf-program/audit/results/full/gspo-seed-131.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "importance_ratio_granularity",
+        "clip_granularity"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "gspo/seed-131",
+      "unit_fingerprint": "726607de1629a8db25cee7a5641d7d9183fc6410954ee5501084e931ddcba90c",
+      "wandb": {
+        "run_id": "726607de",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/726607de"
+      }
+    },
+    {
+      "heldout_correct": 319,
+      "heldout_rows": 500,
+      "heldout_score": 0.638,
+      "hf_commit": "d1a6f1879bdee3eb41f65cdfc1ce34606641d828",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-gspo-s23-1c16ac07",
+      "manifest_path": "zvf-program/audit/results/full/manifests/gspo-seed-23.json",
+      "manifest_sha256": "2eff8815f458788ba09895d40012b6c9a0ff9877be8791f6649e8f216d88cea2",
+      "record_path": "zvf-program/audit/results/full/gspo-seed-23.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "importance_ratio_granularity",
+        "clip_granularity"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "gspo/seed-23",
+      "unit_fingerprint": "1c16ac079438f8ece3deaeb3c1e7ec5491d5e89ce71d6a53b094c9bbf24898e9",
+      "wandb": {
+        "run_id": "1c16ac07",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/1c16ac07"
+      }
+    },
+    {
+      "heldout_correct": 321,
+      "heldout_rows": 500,
+      "heldout_score": 0.642,
+      "hf_commit": "a9c9ee88756d4c10e67925964f7b4a3662e354ad",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-gspo-s37-60e5b791",
+      "manifest_path": "zvf-program/audit/results/full/manifests/gspo-seed-37.json",
+      "manifest_sha256": "73ff2239a2ac7fe3f7618afca53e937be018222014162a91a6d4b5d2395204d9",
+      "record_path": "zvf-program/audit/results/full/gspo-seed-37.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "importance_ratio_granularity",
+        "clip_granularity"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "gspo/seed-37",
+      "unit_fingerprint": "60e5b791330c4f442831c701fb1d7fc61f84a0d1eb741fb3fc2ec3a9cb3f7544",
+      "wandb": {
+        "run_id": "60e5b791",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/60e5b791"
+      }
+    },
+    {
+      "heldout_correct": 316,
+      "heldout_rows": 500,
+      "heldout_score": 0.632,
+      "hf_commit": "6b58a60fb73d0ac1f34e77e52aac9083877fb7b7",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-gspo-s53-ada5a2c2",
+      "manifest_path": "zvf-program/audit/results/full/manifests/gspo-seed-53.json",
+      "manifest_sha256": "ad6de89244fde05c7b69975bf81ae65459c0580e8980674e82ec3b4b7729133f",
+      "record_path": "zvf-program/audit/results/full/gspo-seed-53.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "importance_ratio_granularity",
+        "clip_granularity"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "gspo/seed-53",
+      "unit_fingerprint": "ada5a2c239e6db8f7b66e95dc24e9ebee6fd6809137aa260a5cc943ddda9de07",
+      "wandb": {
+        "run_id": "ada5a2c2",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/ada5a2c2"
+      }
+    },
+    {
+      "heldout_correct": 319,
+      "heldout_rows": 500,
+      "heldout_score": 0.638,
+      "hf_commit": "c0c0b968a61a9ade251b5b7e6ece3119197dc1b1",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-gspo-s71-10ef44ab",
+      "manifest_path": "zvf-program/audit/results/full/manifests/gspo-seed-71.json",
+      "manifest_sha256": "0243e256a3cdae62d30cad889f8bdf19bfe6d7cc2862edc60edffc23586ac3ed",
+      "record_path": "zvf-program/audit/results/full/gspo-seed-71.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "importance_ratio_granularity",
+        "clip_granularity"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "gspo/seed-71",
+      "unit_fingerprint": "10ef44ab1343ac2bf09f00724c887b3946be9773800a06aac9a430032d92ae3c",
+      "wandb": {
+        "run_id": "10ef44ab",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/10ef44ab"
+      }
+    },
+    {
+      "heldout_correct": 323,
+      "heldout_rows": 500,
+      "heldout_score": 0.646,
+      "hf_commit": "40695b92925a2a11cf2a63fe6bfa3b65715004c6",
+      "hf_private": true,
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-gspo-s89-3ec7b7f9",
+      "manifest_path": "zvf-program/audit/results/full/manifests/gspo-seed-89.json",
+      "manifest_sha256": "d8b6130c3da1984974b544432a76b786f12468d66994491166fb97efcaacb5c7",
+      "record_path": "zvf-program/audit/results/full/gspo-seed-89.json",
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "trainer_states": {
+        "10": {
+          "global_step": 10,
+          "max_steps": 30
+        },
+        "15": {
+          "global_step": 15,
+          "max_steps": 30
+        },
+        "20": {
+          "global_step": 20,
+          "max_steps": 30
+        },
+        "25": {
+          "global_step": 25,
+          "max_steps": 30
+        },
+        "30": {
+          "global_step": 30,
+          "max_steps": 30
+        },
+        "5": {
+          "global_step": 5,
+          "max_steps": 30
+        }
+      },
+      "treatment_changes": [
+        "importance_ratio_granularity",
+        "clip_granularity"
+      ],
+      "unique_completion_hashes": 500,
+      "unit": "gspo/seed-89",
+      "unit_fingerprint": "3ec7b7f9dc88d5f0d9016255a04c54ba88d8b2b07885545820f68059d94b28e8",
+      "wandb": {
+        "run_id": "3ec7b7f9",
+        "state": "finished",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/3ec7b7f9"
+      }
+    }
+  ]
+}

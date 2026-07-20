@@ -11,5 +11,9 @@ delta_gspo	0	0	0	0	0	0	0	0
 delta_liteppo	0	0	0	0	0	0	0	0
 delta_mcgrpo	0	0	0	0	0	0	1	1
 delta_ngrpo	0	0	0	0	0	0	1	1
+delta_ppo	0	0	0	0	0	0	0	0
+delta_ppo_reinforce	0	0	0	0	0	0	0	0
 delta_reinforce	0	0	0	0	0	0	0	0
 delta_scafgrpo	0	0	0	0	0	0	1	1
+delta_tool_use_llama-8b-inst	0	0	0	0	0	0	0	0
+delta_tool_use_qwen3-32b	0	0	0	0	0	0	0	0

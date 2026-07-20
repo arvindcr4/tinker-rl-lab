@@ -1,0 +1,129 @@
+{
+  "environment_check_sha256": "1d7cc4005be76979bce8eb82f2d1a771fa6e24d542144cf2ffad3b34c4fdc0ea",
+  "eval_batch_size": 8,
+  "evaluator_sha256": "f6b9846031eccba3098272e75a6331f0ed71c51d027fad8d3ee4a9a2e19b95c6",
+  "execution_plan": [
+    [
+      "colab",
+      "--auth=oauth2",
+      "new",
+      "--gpu",
+      "A100",
+      "--session",
+      "e1-eval-gspo-s11-483157"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1-eval-gspo-s11-483157",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/e1_grpo_confirmatory.py",
+      "/content/e1_grpo_confirmatory.py"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1-eval-gspo-s11-483157",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/e1_evaluate_checkpoint.py",
+      "/content/e1_evaluate_checkpoint.py"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "install",
+      "--session",
+      "e1-eval-gspo-s11-483157",
+      "trl==1.8.0",
+      "transformers==5.13.1",
+      "datasets==4.8.5",
+      "peft==0.19.1",
+      "torchao==0.17.0",
+      "wandb==0.28.0"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "exec",
+      "--session",
+      "e1-eval-gspo-s11-483157",
+      "--file",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/verify_colab_e1_environment.py",
+      "--timeout",
+      "120"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1-eval-gspo-s11-483157",
+      "<ephemeral-secret-file>",
+      "/content/.e1-eval-secrets.json"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1-eval-gspo-s11-483157",
+      "<ephemeral-request-file>",
+      "/content/e1-evaluation-request.json"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "exec",
+      "--session",
+      "e1-eval-gspo-s11-483157",
+      "--file",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/secure_exec_evaluation.py",
+      "--timeout",
+      "21600"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "stop",
+      "--session",
+      "e1-eval-gspo-s11-483157"
+    ]
+  ],
+  "hf_repo": "arvindcr4/tinker-rl-lab-e1-gspo-s11-5f4fc0d3",
+  "launcher_retry_policy": {
+    "exec_attempts": 3,
+    "exec_retry_seconds": 60,
+    "preserve_session": true
+  },
+  "progress_save_every": 16,
+  "recovery_fingerprint": "483157cfde9c4087364990dc4a9f1b1e2f7d9c28f58dfc3f30736decebc531db",
+  "schema_version": "e1-evaluation-recovery-v1",
+  "secure_exec_sha256": "84ec72e7364b780d2a7a169aa406dc59f0880f7c9cf5f5fcfdaa553332f5f2e7",
+  "session": "e1-eval-gspo-s11-483157",
+  "source_request": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/colab-e1-confirmatory/requests/e1__gspo__s11__5f4fc0d351c6.json",
+  "source_snapshots": {
+    "zvf-program/colab-experiments/e1_evaluate_checkpoint.py": {
+      "sha256": "f6b9846031eccba3098272e75a6331f0ed71c51d027fad8d3ee4a9a2e19b95c6",
+      "snapshot": "sources/f6b9846031eccba3098272e75a6331f0ed71c51d027fad8d3ee4a9a2e19b95c6"
+    },
+    "zvf-program/colab-experiments/e1_grpo_confirmatory.py": {
+      "sha256": "986811e3e78fe86ffcbede4a98599ada167ff1975b3341eef391eb2b2e7fe8c6",
+      "snapshot": "sources/986811e3e78fe86ffcbede4a98599ada167ff1975b3341eef391eb2b2e7fe8c6"
+    },
+    "zvf-program/colab-experiments/secure_exec_evaluation.py": {
+      "sha256": "84ec72e7364b780d2a7a169aa406dc59f0880f7c9cf5f5fcfdaa553332f5f2e7",
+      "snapshot": "sources/84ec72e7364b780d2a7a169aa406dc59f0880f7c9cf5f5fcfdaa553332f5f2e7"
+    },
+    "zvf-program/colab-experiments/verify_colab_e1_environment.py": {
+      "sha256": "1d7cc4005be76979bce8eb82f2d1a771fa6e24d542144cf2ffad3b34c4fdc0ea",
+      "snapshot": "sources/1d7cc4005be76979bce8eb82f2d1a771fa6e24d542144cf2ffad3b34c4fdc0ea"
+    }
+  },
+  "source_unit_fingerprint": "5f4fc0d351c6e624690e92cd4b8e3c9fac7018e374532ad6329339f2716d251a",
+  "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+  "status": "launching",
+  "training_helpers_sha256": "986811e3e78fe86ffcbede4a98599ada167ff1975b3341eef391eb2b2e7fe8c6",
+  "updated_at": "2026-07-17T07:28:02+00:00"
+}

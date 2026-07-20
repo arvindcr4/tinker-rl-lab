@@ -1,0 +1,90 @@
+{
+  "schema_version": "grpo-survival-audit-v1",
+  "status": "preregistered-not-run",
+  "frozen_at": "2026-07-14",
+  "core_stratum": {
+    "model": "Qwen/Qwen3-8B",
+    "task": "GSM8K",
+    "train_steps": 30,
+    "batch_prompts": 4,
+    "max_new_tokens": 1024,
+    "heldout": {
+      "split": "GSM8K test",
+      "n": 500,
+      "checkpoint": "final"
+    },
+    "seeds": [11, 23, 37, 53, 71, 89, 107, 131],
+    "baseline_arm": "grpo",
+    "arms": {
+      "grpo": {
+        "allowed_changes": [],
+        "published_delta": null,
+        "published_metric": null
+      },
+      "dapo": {
+        "allowed_changes": ["clip_bounds", "dynamic_sampling"],
+        "published_delta": null,
+        "published_metric": null
+      },
+      "gspo": {
+        "allowed_changes": ["importance_ratio_granularity", "clip_granularity"],
+        "published_delta": null,
+        "published_metric": null
+      },
+      "drgrpo": {
+        "allowed_changes": ["advantage_normalization"],
+        "published_delta": null,
+        "published_metric": null
+      },
+      "aero": {
+        "allowed_changes": ["rollout_allocation", "selective_rejection", "posterior_state"],
+        "published_delta": null,
+        "published_metric": null
+      }
+    }
+  },
+  "agentic_stratum": {
+    "arm": "mgrpo",
+    "status": "separately-preregistered-not-run",
+    "preregistration": "zvf-program/audit/preregistration_mgrpo.json",
+    "reason": "Hierarchical planner/sub-agent credit changes the execution unit and cannot be isolated by a minimal arithmetic hook in the core stratum."
+  },
+  "primary_metric": "paired seed-level heldout_score difference versus grpo",
+  "secondary_metrics": [
+    "last10_reward",
+    "mean_zvf",
+    "mean_gu",
+    "collapse",
+    "rollouts",
+    "wall_clock_seconds"
+  ],
+  "analysis": {
+    "confidence_interval": "paired seed bootstrap, 10000 resamples, RNG seed 20260714",
+    "equivalence_margin": 0.01,
+    "mde_power": 0.8,
+    "mde_alpha": 0.05,
+    "multiple_testing": "Benjamini-Hochberg over four core arm-versus-GRPO tests",
+    "verdicts": {
+      "RETAINS": "95% CI excludes zero and its lower bound is at least 50% of a metric-compatible published delta",
+      "SURVIVES": "95% CI excludes zero but no metric-compatible published delta exists or the half-gain rule fails",
+      "DISAPPEARS": "90% CI lies inside the equivalence margin and achieved 80%-power MDE does not exceed that margin",
+      "REVERSES": "95% CI upper bound is below zero",
+      "INCONCLUSIVE": "all other outcomes, including inadequate power"
+    }
+  },
+  "required_result_fields": [
+    "arm",
+    "seed",
+    "heldout_n",
+    "heldout_score",
+    "last10_reward",
+    "mean_zvf",
+    "mean_gu",
+    "collapse",
+    "rollouts",
+    "wall_clock_seconds",
+    "stack_fingerprint",
+    "treatment_changes",
+    "manifest_path"
+  ]
+}

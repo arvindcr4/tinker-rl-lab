@@ -1,0 +1,4 @@
+platform_hybrid/paper/sections/group_size_iter27.tex:93:  \item \textbf{Measured G=4 vs G=32} (blue, with bootstrap CI).
+platform_hybrid/paper/sections/group_size_iter27.tex:105:The Wu~2025 constant band and the measured G=4 vs G=32 curve
+platform_hybrid/paper/sections/group_size_iter27.tex:183:constant band (gray, R$=0.976$) and the measured G=4 vs G=32 curve
+platform_hybrid/paper/sections/p5_conclusion.tex:42:confounds are already documented, the run manifest is seven fields, the

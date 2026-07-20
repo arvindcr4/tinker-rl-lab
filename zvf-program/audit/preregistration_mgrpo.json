@@ -1,0 +1,43 @@
+{
+  "schema_version": "mgrpo-agentic-audit-v1",
+  "status": "preregistered-not-run",
+  "frozen_at": "2026-07-14",
+  "source_method": {
+    "name": "M-GRPO",
+    "paper": "Multi-Agent Deep Research: Training Multi-Agent Systems with M-GRPO",
+    "arxiv": "2511.13288"
+  },
+  "scope_reason": "M-GRPO changes planner/sub-agent credit, trajectory alignment, execution frequency, and cross-server coordination. It is therefore audited as a complete agentic recipe, not mislabeled as a minimal arithmetic loss hook.",
+  "shared_stack": {
+    "planner_initialization": "Qwen/Qwen3-8B",
+    "subagent_initialization": "Qwen/Qwen3-8B with independent adapter state",
+    "task": "GAIA public validation subset",
+    "scaffold": "one fixed planner plus fixed multi-turn tool-executor interface",
+    "maximum_generated_action_tokens_per_arm": 5000000,
+    "maximum_environment_calls_per_arm": 10000,
+    "seeds": [11, 23, 37, 53, 71]
+  },
+  "arms": {
+    "single_agent_grpo": "one trainable policy handles planning and tools",
+    "multi_agent_frozen_subagents": "train planner with GRPO; sub-agent policies frozen",
+    "mgrpo": "train planner and sub-agent policies with hierarchical group-relative credit, trajectory alignment, and the declared decoupled update protocol"
+  },
+  "primary_endpoint": "heldout task success per million generated action tokens",
+  "secondary_endpoints": [
+    "heldout task success",
+    "tool-call validity",
+    "planner and sub-agent effective gradient mass",
+    "environment calls",
+    "wall-clock time",
+    "cross-server synchronization bytes",
+    "collapse or reward-hack incidence"
+  ],
+  "analysis": {
+    "unit": "seed",
+    "comparison": "paired seed-level arm differences",
+    "interval": "prompt-clustered bootstrap 95% confidence interval",
+    "multiplicity": "Holm correction for the two M-GRPO-versus-control primary comparisons",
+    "refusal_rule": "No verdict unless all three arms and all five seeds pass manifest and budget checks."
+  },
+  "execution_blocker": "Requires a multi-agent training implementation, sandboxed tool environment, and accelerator budget; none is claimed in this repository revision."
+}

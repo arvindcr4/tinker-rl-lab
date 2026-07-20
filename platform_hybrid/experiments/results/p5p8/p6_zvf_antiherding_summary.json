@@ -6,7 +6,7 @@
   "ci_level": 0.95,
   "n_boot": 4000,
   "audit_date": "2026-07-05",
-  "audit_source": "scripts/p5p8/p6_zvf_antiherding.py",
+  "audit_source": "platform_modal/scripts/p5p8/p6_zvf_antiherding.py",
   "per_method": [
     {
       "method": "grpo",

@@ -35,7 +35,8 @@ reported result. Provenance strata as defined in \secref{sec:p5-results}.}
     \citep{shao2024deepseekmath, yu2025dapo}; silently alters the objective \\
 3 & Sampler / backend / precision & Training backend, sampling engine,
     precision, decoding parameters &
-    $17\times$ outcome flip from a backend swap alone
+    $17\times$ same-label outcome flip from a nominal backend comparison
+    that also bundled a different base checkpoint
     (\secref{sec:p5-exhibit-backend}) \\
 4 & Per-step ZVF/GU trajectory & Per-step zero-variance fraction and gradient
     utilization $\mathrm{GU} = 1-\mathrm{ZVF}$ &
@@ -88,14 +89,18 @@ cheap to report (three fields) and its omission is unrecoverable post hoc.
 
 \subsection{Item 3: Sampler, Backend, and Precision}
 \label{sec:p5-item3}
-Exhibit 1 is the lever: a backend swap alone produced the largest effect in
-our entire corpus ($5.0\% \to 85.6\%$). Serving engines differ in kernel
+Exhibit 1 is the lever: a nominal backend comparison produced the largest
+same-label swing in our corpus ($5.0\% \to 85.6\%$), but provenance inspection
+also found a different base checkpoint. The number is thus evidence that item~3
+must record both backend and checkpoint identity, not evidence that the backend
+alone caused the gap. Serving engines differ in kernel
 selection, batching, and numerics \citep{kwon2023vllm, zheng2024sglang,
 dao2022flashattention}, and in on-policy RL these differences compound: the
 sampler's distribution \emph{is} the data distribution. A closed backend is
 not disqualifying---but it must be named, versioned where possible, and its
 precision and decoding parameters stated, so that a reader knows the result is
-conditioned on it.
+conditioned on it; the exact base checkpoint and revision must be reported in
+the same record.
 
 \subsection{Item 4: The Per-Step ZVF/GU Trajectory}
 \label{sec:p5-item4}
@@ -221,7 +226,7 @@ sampling temperature and completion budget used for the estimate.
 
 \subsection{Live-Corpus Coupling: How the MIN-REPORT Fingerprint Relates to Measured Telemetry}
 \label{sec:p5-live-coupling}
-The first seven items above form the manifest fingerprint used in this
+The first seven items above form the seven-field run-manifest fingerprint used in this
 coupling analysis (item 8 is an evaluation-report requirement rather than
 a manifest field, and postdates the corpus below); the question a
 reviewer will ask is whether the resulting manifest \emph{actually predicts}
@@ -231,8 +236,8 @@ the measured telemetry on a live corpus. We test this on the
 \texttt{cells.tsv}; analysed by
 \texttt{scripts/p5p8/p5\_manifest\_outcome\_coupling.py}, see
 \texttt{experiments/results/p5p8/p5\_manifest\_outcome\_coupling\.*}). On
-the live corpus, the 7-item manifest fingerprint carries a total of
-$11.4$ bits of cross-cell information; four of the seven items
+the live corpus, the seven-field manifest fingerprint carries a total of
+$11.4$ bits of cross-cell information; four of the seven fields
 (\textit{loss\_form}, \textit{ref\_policy\_kl},
 \textit{sampler\_backend\_precision}, and the per-cell
 \textit{per\_step\_zvf\_path}, which is unique-per-cell and thus
@@ -244,7 +249,7 @@ therefore constant across cells and cannot discriminate seed-pair
 reward dispersion within a cell-group (Spearman $\rho = +0.000$, CI
 $[+0.000, +0.000]$, $n=48$ pairs); but the manifest \emph{fingerprint as a
 whole} is a strong predictor of joint measured telemetry. Across
-$2000$ sampled cell-pairs, the Hamming distance on the 7-item manifest
+$2000$ sampled cell-pairs, the Hamming distance on the seven-field manifest
 predicts the absolute difference on ZVF (Spearman $\rho = +0.529$,
 close-vs-far permutation $p \le 10^{-3}$), on PCD
 ($\rho = +0.541$, $p \le 10^{-3}$), and on mean-reward

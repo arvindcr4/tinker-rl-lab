@@ -1,0 +1,621 @@
+
+[PAGE 1]
+GRPO-Registry: A Living Catalog of Stack Fields and Variant
+                        Deltas
+                      Toward Machine-Readable Reporting for the GRPO Family
+
+                                                  Arvind C R∗
+                                                PES University
+                                             arvindcr4@gmail.com
+
+                                                   July 14, 2026
+
+
+
+                                                      Abstract
+              The GRPO family of reinforcement-learning post-training methods is now large enough that
+          no single paper can keep its variants straight. Each new variant—DAPO, GSPO, Dr.GRPO,
+          M-GRPO, AERO, CPPO, NGRPO, Scaf-GRPO, and others—is reported as a small algorithmic
+          delta, but the delta is almost always confounded with changes in loss form, sampler, reference
+          policy / KL handling, group-size schedule, and precision. We introduce GRPO-Registry,
+          a living catalog that (i) fixes the seven-field run-manifest schema drawn from the eight-item
+          Min-Report-RL standard (whose eighth item is held-out pass@k reporting), (ii) defines a
+          machine-readable “variant-delta” schema that records exactly what changed relative to a declared
+          baseline, and (iii) seeds the catalog with the best currently available descriptions of the most
+          discussed variants. The goal is not to arbitrate priority but to give reviewers and re-implementers
+          a shared worksheet: for any comparison, read the two stack records, read the two variant records,
+          and see whether the claimed gain is still attributable once the stack is held fixed. We release
+          the schema as JSON and propose a lightweight update protocol so the catalog can stay current
+          without a new paper for every new variant.
+
+
+1        Introduction: Why a Registry?
+Scope note (2026-07-11 canonicalization). This document is the condensed “living catalog” statement
+ of the GRPO-Registry concept. The full treatment — machine-readable schema, population
+ and query auditor, measured-evidence tiers, and claim-validation verdicts — is the Pillar-6 paper
+“GRPO-Registry: A Machine-Readable Catalog of Group-Relative RL Stacks and Their Variant Deltas”
+(platform_hybrid/paper/paper_P6_registry). The Pillar-6 paper is canonical for the registry’s
+ content and evidence; this one for the catalog-as-community-resource framing.
+      A reviewer reading six recent GRPO papers can reasonably conclude that each paper compares
+ against “GRPO.” But the word “GRPO” is attached to different loss forms (ratio + clip, ratio +
+ no clip, completion-only mask, whole-sequence mask), different reference-policy and KL treatments
+(frozen reference with KL penalty in the loss, frozen reference with KL in the reward, no reference
+ at all), different samplers and precisions (vLLM bf16, vLLM fp32, managed API), and different
+ group-size schedules (fixed G = 8, adaptive, dynamic sampling) [2, 4, 8, 12, 18]. When the baseline
+ is itself a moving target, a reported delta of +2 points is uninterpretable.
+    ∗
+        Companion to the ZVF Program Min-Report-RL position paper.
+
+
+
+                                                          1
+
+[PAGE 2]
+Table 1: The GRPO-Registry stack schema. Each field is one run-manifest item of the Min-
+Report-RL standard; pass@k is the separate evaluation item.
+ JSON key           What to report                                Flip mechanism
+ loss_form          Ratio? Clip? Asymmetric clip? Token             Reassigns gradient; DAPO, GSPO,
+                    mask? Advantage norm.?                          Dr.GRPO deltas live here.
+ reference_kl       Frozen ref? KL in loss / reward / absent?       Changes objective and exploration; no-
+                    Coefficient                                     ref vs. KL are different methods.
+ sampler_backend    Engine, decoding params, precision, tok-        Backend, sampler, and checkpoint
+                    enizer match                                    identity co-varied in a ∼17× under-
+                                                                    specification exhibit [2].
+ zvf_gu             Per-step Zvf and Gu trajectory                  Reveals whether the run had usable
+                                                                    group-relative signal.
+ group_schedule     Fixed or adaptive G; if adaptive, rule          G controls mixed-group probability;
+                                                                    adaptive-G confounds compute.
+ held_out           Disjoint eval slice, n, CI, reported separately Training reward is dynamics evidence,
+                                                                    not capability evidence.
+ decontamination    Overlap probe + parser behavior on format- Verifiable         rewards      still admit
+                    only inputs                                     parser/format/overlap hacking.
+
+
+    The position paper Min-Report-RL [1] argues that the first fix is a short, mandatory list of
+stack fields every paper must report. That fixes the “what is the treatment?” problem for a single
+paper. It does not, by itself, fix the cross-paper comparison problem: a reader still has to open every
+paper, extract the seven fields by hand, and decide which variant is which. GRPO-Registry is
+that extraction, maintained as a shared artifact.
+
+What the registry is. GRPO-Registry has three parts:
+
+1. A stack schema (§2), the seven Min-Report-RL fields, expressed as a JSON object any
+   trainer can emit.
+2. A variant-delta schema (§3) that records, relative to a named baseline, which knobs the
+   variant touches.
+3. A catalog of variants (§4) populated with the best available descriptions of the major GRPO
+   variants; source- unreported settings are marked nr rather than guessed.
+
+What the registry is not. It is not a leaderboard. It does not score variants. It is a structured
+worksheet for de-confounding comparisons: aid the reader in asking “did method A beat method B,
+or did stack SA beat stack SB ?” [2].
+
+
+2    The Stack Schema
+The stack schema is the seven-field run-manifest portion of the eight-item Min-Report-RL checklist
+[1], reformatted as named JSON fields. Held-out pass@k is an evaluation report rather than a
+run-start stack field. Table 1 gives the human-readable mapping. The key design choice is that each
+field is included because it is a documented lever that can flip a comparison; the justification is in
+the position paper and summarized here.
+
+
+
+                                                   2
+
+[PAGE 3]
+Table 2: The GRPO-Registry variant-delta schema. Each field records a change relative to the
+variant’s declared baseline. “null” means the variant does not change that field.
+     JSON key                 Meaning
+     variant_name            Canonical short name (e.g., “DAPO”).
+     baseline                The baseline the variant claims to improve (usually “GRPO”).
+     loss_change             Change to the objective (ratio, clip, token mask, normalization).
+     clip_rule               New clip bound or asymmetric rule, if any.
+     sampling_change         Change to rollout sampling or group construction (dynamic, filter, . . . ).
+     group_size_rule         Fixed / adaptive; if adaptive, the rule.
+     advantage_norm          How advantages are normalized (per-group, per-batch, running).
+     reference_kl_change     Any change to reference policy or KL handling.
+     extra_regularizer       Additional penalty or bonus (length, diversity, entropy, . . . ).
+     rollout_change          Change to generation parameters or decoding.
+     other_notes             Anything else that defines the variant.
+
+
+    The schema is intentionally small. A trainer that already logs its config and per-step group
+rewards can emit it with a few lines of code. The companion Min-Report-RL paper proposes
+default emitters for TRL, verl, and OpenRLHF [1].
+
+
+3    The Variant-Delta Schema
+The variant-delta schema records what changed relative to a declared baseline. A delta record is
+not a full stack record; it is a patch. For example, DAPO’s delta record says “relative to a vanilla
+GRPO baseline, change the clip bound to be asymmetric and add dynamic sampling,” while the
+full stack record still has to report the sampler, the reference/KL handling, the precision, and so
+on. This separation keeps the catalog compact and forces authors to state both the variant and the
+stack it ran on.
+    Table 2 lists the delta fields. They are chosen to cover the dimensions on which the current
+GRPO variants actually differ.
+    A variant record is therefore a pair:
+
+                           variant record = ⟨stack schema, delta schema⟩.
+
+A fair head-to-head between two variants is a comparison of two such pairs in which the stack
+schemas are identical except where the delta explicitly changes them.
+
+
+4    Catalog of GRPO Variants
+Table 4 is the current seed catalog. We include the best available description of each variant’s
+defining delta, but we do not fabricate stack details. Source-unreported stack settings are marked
+nr (“not reported”) so that a reader can see exactly what is unspecified. The catalog is versioned; as
+papers release more detail, nr cells are replaced with concrete, cited values.
+
+
+
+
+                                                    3
+
+[PAGE 4]
+Table 3: Seed catalog of GRPO-family variants. Each row
+             describes the variant’s delta relative to its baseline. nr means
+             the source does not report enough detail to populate the field.
+
+Variant        Baseline         Loss   /        clip   Sampling / Extra regularizer
+                                change                 G change   / notes
+GRPO           —                Per-token group-       Fixed group     KL term placement
+(baseline)                      relative objective;    G in the        varies by implemen-
+                                ratio, clip, and       canonical       tation [2].
+                                token mask are         formulation
+                                implementation
+                                fields      rather
+                                than     universal
+                                constants
+DAPO           GRPO             Asymmetric             Dynamic       Adds per-token loss-
+                                clip-higher lower      sampling:     clip asymmetry [12].
+                                bound                  group con-
+                                                       structed
+                                                       from     fil-
+                                                       tered      /
+                                                       top-k com-
+                                                       pletions
+GSPO           GRPO             Sequence-level         Group size      Changes
+                                importance-            is not the      importance-
+                                sampling     ratio     defining        sampling     granu-
+                                and sequence-level     delta;    re-   larity [18].
+                                clipping    rather     port     per
+                                than token-level       run
+                                ratio/clipping
+Dr.GRPO        GRPO             Removes        the     Group size      Changes length bias
+                                within-group           is not the      in     normalization
+                                standard-              defining        [8].       Measured
+                                deviation divisor      delta;    re-   delta        (Qwen3-
+                                and     associated     port     per    8B/GSM8K, 1024-
+                                length-dependent       run             tok, 3 seeds/loss):
+                                normalization                          no length inflation
+                                                                       in either loss and no
+                                                                       late-ZVF separation
+                                                                       — Tier C.
+                                                                Continued on next page
+
+
+
+
+                                            4
+
+[PAGE 5]
+Table 3 – continued
+Variant     Baseline     Loss   /       clip   Sampling / Extra regularizer
+                         change                G change   / notes
+
+M-GRPO      GRPO         Hierarchical          Trajectory-     Multi-agent systems
+                         group-relative        aligned         [4].
+                         credit assignment     batches
+                         for planner and       with
+                         sub-agent policies    variable
+                                               sub-agent
+                                               invocations
+AERO        GRPO         Base loss is not      Adaptive        Avoids both wasted
+                         the defining delta;   rollout allo-   easy-prompt roll-
+                         exact implementa-     cation with     outs and dead-zone
+                         tion must be re-      selective re-   rejection [16].
+                         ported                jection and
+                                               Bayesian
+                                               posterior
+                                               state
+CPPO        PPO / GRPO   Clip-pruned objec-    Group size Pruning changes the
+                         tive: tokens with     is not the effective sample [6].
+                         large ratios are      defining
+                         dropped instead of    delta;    re-
+                         clipped               port     per
+                                               run
+NGRPO       GRPO         Normalized      re-   Group size      Normalization is the
+                         ward/advantage        is not the      entire delta [9].
+                         transform; exact      defining
+                         convention must       delta; nr
+                         be copied from        in       the
+                         the cited release     paper-level
+                                               record
+Scaf-GRPO   GRPO         Incorporates scaf-    Group size      Scaffolded     hints
+                         folded exploration    is not the      shape the rollout
+                         signal into the       defining        distribution [14].
+                         advantage; exact      delta; nr
+                         weighting must be     in       the
+                         recorded from the     paper-level
+                         release               record
+                                                        Continued on next page
+
+
+
+
+                                    5
+
+[PAGE 6]
+Table 3 – continued
+Variant   Baseline   Loss   /       clip   Sampling / Extra regularizer
+                     change                G change   / notes
+
+GRESO     GRPO       Loss change is not    Pre-rollout     Acts on the dead-
+                     the defining delta    filtering:      group phenomenon
+                                           prompts         before sampling; the
+                                           predicted to    prediction rule is it-
+                                           yield zero-     self a stack compo-
+                                           gradient        nent [13, 19].
+                                           (single-
+                                           outcome)
+                                           groups are
+                                           skipped
+                                           before any
+                                           rollout    is
+                                           spent
+EDGE-     GRPO       Entropy-driven        Group-size      Explicitly framed as
+GRPO                 advantage reshap-     setting   is    mitigating advan-
+                     ing + guided error    nr in the       tage collapse — the
+                     correction            paper-level     same phenomenon
+                                           record          Zvf        measures
+                                                           [13, 15].
+DARS      GRPO       Loss change is not    Multi-stage     Difficulty-aware roll-
+                     the defining delta    rollout         out budget; con-
+                                           sampling        founds compute allo-
+                                           that reallo-    cation with the algo-
+                                           cates com-      rithmic claim unless
+                                           pute from       reported [11, 13].
+                                           medium-
+                                           difficulty to
+                                           the hardest
+                                           prompts
+TreePo    GRPO       Loss change is not    Self-guided     Compute-reduction
+                     the defining delta    policy roll-    delta; group con-
+                                           out     over    struction     differs
+                                           a       tree    from i.i.d. sampling
+                                           structure       [5, 13].
+                                           to reduce
+                                           rollout
+                                           compute
+                                                    Continued on next page
+
+
+
+
+                                6
+
+[PAGE 7]
+Table 3 – continued
+       Variant        Baseline          Loss   /       clip   Sampling / Extra regularizer
+                                        change                G change   / notes
+
+       ReCode  / GRPO                   Adds a learned        Group-size     Changes     reward
+       CG-GRPO                          reasoning-process     setting   is   density while us-
+                                        reward      gated     nr in the      ing the execution
+                                        by      execution     paper-level    outcome as a hard
+                                        correctness           record         anti-hacking gate
+                                                                             [3, 13].
+       Skywork-       GRPO              Hybrid rule- and      Selective      Buffer selection is
+       R1V2                             model-based           sample         a direct intervention
+                                        reward signal         buffer         on group reward di-
+                                                              replays        versity [10, 13].
+                                                              informative
+                                                              (mixed-
+                                                              reward)
+                                                              samples
+       GMPO           GRPO              Geometric mean        Group-size     Aggregation change
+                                        aggregation      in   setting   is   alters which groups
+                                        place of arithmetic   nr in the      register as zero-
+                                        aggregation           paper-level    variance [13, 17].
+                                                              record
+       ProRL          GRPO              Base loss retained;   Group-size     Reference-policy
+                                        the defining delta    setting   is   reset during pro-
+                                        is      prolonged-    nr in the      longed     training;
+                                        training reference    paper-level    changes KL anchor
+                                        management            record         identity    mid-run
+                                                                             — a stack field the
+                                                                             label omits [7, 13].
+
+
+
+Reading the table. A cell marked nr is not a weakness of the registry; it is a weakness of the
+underlying paper’s reporting. The registry surfaces it so that a re-implementer knows what still has
+to be reverse engineered. A fair comparison between, say, DAPO and Dr.GRPO requires not only
+the delta rows above but also the full stack records of the two original runs; only then can one tell
+whether the reported gap is a stack effect.
+
+The dead-group lever is now the most-attacked knob in the family. The TMLR survey of
+agentic RL [13] consolidates, in a single comparison table, more than twenty GRPO-family variants
+— and a striking fraction of them (DAPO’s dynamic sampling, GRESO’s pre-rollout filtering, EDGE-
+GRPO’s advantage collapse mitigation, DARS’s difficulty-aware reallocation, Skywork-R1V2’s
+selective buffer, TreePo’s rollout pruning) intervene, each with a different heuristic, on precisely the
+phenomenon Zvf measures: groups whose identical rewards contribute zero gradient. We take the
+survey’s adoption of the term advantage collapse as confirmation that the field has converged on
+the phenomenon; what it has not converged on is a calibrated way to measure it, which is exactly
+
+                                                   7
+
+[PAGE 8]
+the telemetry this registry and the Min-Report-RL standard demand. None of the variant papers
+above reports a per-step dead-group trajectory, so their relative gains on this axis are currently
+unattributable.
+
+
+5     How to Use the Registry to Flag Confounded Comparisons
+The registry is a worksheet, not an oracle. The recommended workflow for a reviewer or re-
+implementer is:
+
+1. Extract the stack record for each paper. If a paper does not report one of the seven fields,
+   mark it nr.
+2. Extract the variant-delta record for the method claimed. If the paper does not explicitly
+   state what changed relative to its baseline, the delta is itself nr.
+3. Align baselines. The comparison is only meaningful if both variants declare the same baseline
+   (usually vanilla GRPO).
+4. Check for stack confounds. Any stack field that differs between the two papers and is not
+   part of either variant’s declared delta is a confound.
+5. Check for delta overlap. If variant A changes the clip rule and variant B also changes the
+   clip rule, a head-to-head is comparing two clip rules, not “method A vs. method B.”
+6. Look at Zvf / Gu. If one paper reports high Zvf (low usable signal) and the other reports
+   low Zvf, the comparison is confounded by signal availability, not algorithmic quality.
+
+5.1   Mechanical checks with grpo-stackdiff
+The registry’s records are consumed by the implemented command python3platform_hybrid/
+registry/query.pystackdiff<entry-a><entry-b> [1]. It compares sampler/backend fields, loss
+and reference KL fields, and declared variant-delta status. The current implementation emits the
+R0–R5 ladder: identical, nuisance-only, runtime, loss/KL, variant-delta, or unauditable due to an
+unreported value. R4 and R5 return nonzero exit codes, so CI can block a label-flip-risk comparison.
+The richer L0–L7 diff-kind and treatment-role taxonomy described in the Min-Report-RL position
+paper remains a version-2 design, not a released capability.
+    A confounded comparison is not wrong; it is underspecified. The registry makes the underspecifi-
+cation explicit so that the community can decide whether the available evidence is sufficient.
+
+
+6     Tooling Ecosystem: From Records to Executable Checks
+The registry is the static worksheet. Two reference commands are implemented; the trainer adapters
+and literature-scale automation below remain integration targets.
+
+Trainer emitters (planned). A TRL/verl/OpenRLHF adapter should emit the run-start manifest
+and per-step Zvf/Gu telemetry automatically. No standalone trl-min-report-rl package is
+released in this repository; the current executable emitter is the trainer-agnostic platform_hybrid/
+registry/provenance/minreport.pygenerate command.
+
+
+
+
+                                                 8
+
+[PAGE 9]
+grpo-stackdiff (implemented). The registry/query.pystackdiff command takes two reg-
+     istry entry IDs and emits the R0–R5 comparison described in §5.1.
+
+     MIN-REPORT-RL verifier (partly implemented). The registry/provenance/minreport.pyverify
+     command checks a generated record’s seven fields, live code hash, seeds, held-out evidence, and
+     uncertainty reporting. A future literature Auditor would scan a paper PDF, code release, and log
+     artifacts; extract evidence for the seven Min-Report-RL items; assigns a 0–10 score per item and
+     a normalized 0–100 badge (Complete / Usable / Partial / Not Auditable / Non-compliant); and
+     produces a reviewer-facing summary with quoted evidence, missing fields, and contradiction warnings
+     [2]. It is the post-hoc enforcement layer: it tells authors exactly which fields to add before the paper
+     is reproducibility-auditable.
+
+     Controlled-audit runner (protocol plus refusing aggregator). The Min-Report-RL stan-
+     dard and registry enable a preregistered controlled audit. The frozen contract and result validator
+     are released as zvf-program/audit/preregistration.json and zvf-program/audit/aggregate_
+     audit.py; the expensive arm launcher is not yet executed. The full runner design freezes a shared
+     stack, expands each variant as a declared hook, runs paired seeds, and applies held-out verdicts ([2];
+     full protocol in the audit paper). Its target outputs (Tables A–H of the runner specification) include
+     the pre-registration bundle, stack-lock table, arm registry, run ledger, survival table, telemetry
+     summary, decontamination probes, and artifact index.
+          The implemented commands currently close manifest generation, verification, registry querying,
+     stack comparison, and refusal of incomplete audit results. Automatic trainer integration, PDF
+     extraction, and full compute orchestration remain named obligations rather than implied releases.
+
+
+     7     Machine-Readable Schema
+     Listing 1 gives the JSON schema for a complete GRPO-Registry record. A record contains one
+     stack object, one baseline object, and one delta object. The schema is intentionally flat: it should
+     be easy to generate from a trainer’s config and to diff with standard tools.
+
+     Listing 1: JSON schema for a GRPO-Registry record. Required fields are marked required; all
+     others may be null when not applicable.
+1    {
+2        " version " : " grpo - registry - v0 .1 " ,
+3        " record_type " : " v a r i a n t _s t a c k _ r e c o r d " ,
+4        " variant " : {
+5           " name " : " DAPO " ,
+6           " paper_doi_or_url " : " https : // arxiv . org / abs /2503.14476 " ,
+7           " baseline " : " GRPO "
+8        },
+9        " stack " : {
+10          " loss_form " : {
+11             " ratio " : true ,
+12             " clip_bounds " : [ 0.2 , 0.2 ] ,
+13             " clip_asymmetric " : true ,
+14             " token_mask " : " completion - only " ,
+15             " advantage_norm " : " per - group "
+16          },
+17          " reference_kl " : {
+
+
+                                                       9
+
+[PAGE 10]
+18            " frozen_reference " : true ,
+19            " kl_placement " : " loss " ,
+20            " kl_coefficient " : 0.01 ,
+21            " kl_schedule " : " constant "
+22         },
+23         " sampler_backend " : {
+24            " engine " : " vLLM " ,
+25            " temperature " : 1.0 ,
+26            " top_p " : 1.0 ,
+27            " max_tokens " : 4096 ,
+28            " logit_precision " : " bf16 " ,
+29            " t o k e n i z e r _ m a t c h e s _ t r a i n e r " : true
+30         },
+31         " zvf_gu " : {
+32            " per_step_zvf " : [ 0.95 , 0.92 , ... ] ,
+33            " per_step_gu " : [ 0.05 , 0.08 , ... ]
+34         },
+35         " group_schedule " : {
+36            " type " : " fixed " ,
+37            " fixed_size " : 8
+38         },
+39         " held_out " : {
+40            " split " : " gsm8k - test " ,
+41            " n " : 1319 ,
+42            " metric " : " pass@1 " ,
+43            " value " : 0.55 ,
+44            " ci_95 " : [ 0.52 , 0.58 ]
+45         },
+46         " decontamination " : {
+47            " overlap_check " : "n - gram -8 " ,
+48            " overlap_rate " : 0.02 ,
+49            " parser_probe " : " format - only " ,
+50            " par ser_prob e_pass " : false
+51         }
+52       },
+53       " delta " : {
+54          " loss_change " : " asymmetric clip - higher " ,
+55          " clip_rule " : " lower =0.2 , upper =0.28 " ,
+56          " sampling_change " : " dynamic top - k group construction " ,
+57          " group_size_rule " : null ,
+58          " advantage_norm " : null ,
+59          " r ef e r en c e_ k l _c h an g e " : null ,
+60          " e xtra_reg ularizer " : null ,
+61          " rollout_change " : null ,
+62          " other_notes " : " DAPO paper introduces clip - higher + dynamic sampling . "
+63       }
+64   }
+
+         The schema is maintained at https://github.com/arvindcr4/tinker-rl-lab. We welcome
+     pull requests that fill nr cells or add new variants, provided each entry cites the source paper and
+     does not invent unreported stack details.
+         The run-start manifest emitted by trl-min-report-rl (§6) is a strict superset of this record: it
+     adds run identity, software versions, hardware, integrity hashes, and a per-step telemetry stream. A
+
+
+                                                                   10
+
+[PAGE 11]
+registry record can therefore be generated automatically from the first line of min_report_rl.jsonl.
+
+
+8    Living-Update Protocol
+A registry that requires a new paper for every new variant will quickly become stale. We propose a
+lightweight update protocol:
+1. Versioned releases. The catalog is released as a versioned JSON file (e.g., grpo-registry-v0.1.json).
+   Each release has a changelog.
+2. Source requirement. Every entry must cite a specific paper, preprint, or code release. No
+   entry may be added purely from a blog post or social-media summary.
+3. Uncertainty marking. Unknown fields are recorded as null with a source_note explaining
+   what was not reported. This preserves the honesty of the catalog.
+4. Community curation. Changes are proposed via pull request and reviewed by at least one
+   maintainer for source fidelity.
+    The protocol mirrors existing living artifacts such as the Papers With Code leaderboards, but it
+is organized around stack fields rather than final scores.
+
+
+9    Conclusion
+The GRPO family has outgrown its own label. The registry proposed here is a small, practical step
+toward a literature in which the treatment—both the stack and the declared algorithmic delta—is
+reported clearly enough to compare across papers. It does not replace the Min-Report-RL standard;
+it depends on it. It also does not replace controlled re-implementations; it makes the need for
+them visible earlier. The implemented minreport.py and query.py stackdiff commands move
+the registry beyond a static worksheet, while the audit aggregator refuses incomplete evidence. The
+immediate next step is to extend full stack coverage and ship default trainer emitters; automated
+PDF auditing and full-scale paired training remain future engineering work.
+
+
+References
+ [1] Arvind C R and the ZVF Program. MIN-REPORT-RL: Reporting the stack, not the label.
+     Companion position paper in the Tinker RL Lab manuscript bundle, 2026.
+ [2] Arvind C R and the ZVF Program. Reward contrast, not algorithm labels: Auditing signal
+     starvation in group-relative reinforcement learning. Companion working paper in the Tinker
+     RL Lab manuscript bundle, 2026.
+ [3] Lishui Fan, Yu Zhang, Mouxiang Chen, and Zhongxin Liu. ReCode: Reinforcing code generation
+     with reasoning-process rewards. In Proceedings of the 64th Annual Meeting of the Association for
+     Computational Linguistics, 2026. doi: 10.48550/arXiv.2508.05170. arXiv:2508.05170; introduces
+     Consistency-Gated GRPO.
+ [4] Haoyang Hong, Jiajun Yin, Yuan Wang, Jingnan Liu, Zhe Chen, Ailing Yu, Ji Li, Zhiling
+     Ye, Hansong Xiao, Yefei Chen, Hualei Zhou, Yun Yue, Minghui Yang, Chunxiao Guo, Junwei
+     Liu, Peng Wei, and Jinjie Gu. Multi-agent deep research: Training multi-agent systems with
+     M-GRPO. arXiv preprint, 2025. doi: 10.48550/arXiv.2511.13288. arXiv:2511.13288.
+
+                                                 11
+
+[PAGE 12]
+[5] Yizhi Li, Qingshui Gu, Zhoufutu Wen, Ziniu Li, Tianshun Xing, Shuyue Guo, Tianyu Zheng,
+     Xin Zhou, Xingwei Qu, Wangchunshu Zhou, Zheng Zhang, Wei Shen, Qian Liu, Chenghua Lin,
+     Jian Yang, Ge Zhang, and Wenhao Huang. TreePO: Bridging the gap of policy optimization
+     and efficacy and inference efficiency with heuristic tree-based modeling. arXiv preprint, 2025.
+     doi: 10.48550/arXiv.2508.17445. arXiv:2508.17445.
+ [6] Zhihang Lin, Mingbao Lin, Yuan Xie, and Rongrong Ji. CPPO: Accelerating the training
+     of group relative policy optimization-based reasoning models. arXiv preprint, 2025. doi:
+     10.48550/arXiv.2503.22342. arXiv:2503.22342.
+ [7] Mingjie Liu, Shizhe Diao, Ximing Lu, Jian Hu, Xin Dong, Yejin Choi, Jan Kautz, and Yi Dong.
+     ProRL: Prolonged reinforcement learning expands reasoning boundaries in large language models.
+     arXiv preprint, 2025. doi: 10.48550/arXiv.2505.24864. arXiv:2505.24864.
+ [8] Zichen Liu, Changyu Chen, Wenjun Li, Penghui Qi, Tianyu Pang, Chao Du, Wee Sun Lee, and
+     Min Lin. Understanding R1-Zero-Like training: A critical perspective. arXiv preprint, 2025.
+     doi: 10.48550/arXiv.2503.20783. arXiv:2503.20783; introduces Dr. GRPO.
+ [9] Gongrui Nan et al. NGRPO: Negative-enhanced group relative policy optimization. arXiv
+     preprint, 2025. doi: 10.48550/arXiv.2509.18851. arXiv:2509.18851.
+[10] Peiyu Wang, Yichen Wei, Yi Peng, Xiaokun Wang, Weijie Qiu, Wei Shen, Tianyidan Xie,
+     Jiangbo Pei, Jianhao Zhang, Yunzhuo Hao, Xuchen Song, Yang Liu, and Yahui Zhou. Skywork
+     R1V2: Multimodal hybrid reinforcement learning for reasoning. arXiv preprint, 2025. doi:
+     10.48550/arXiv.2504.16656. arXiv:2504.16656.
+[11] Zhicheng Yang, Zhijiang Guo, Yinya Huang, Yongxin Wang, Dongchun Xie, Hanhui Li, Yiwei
+     Wang, Xiaodan Liang, and Jing Tang. Depth-breadth synergy in RLVR: Unlocking LLM
+     reasoning gains with adaptive exploration. arXiv preprint, 2025. doi: 10.48550/arXiv.2508.13755.
+     arXiv:2508.13755; introduces DARS.
+[12] Qiying Yu, Zheng Zhang, Ruofei Zhu, Yufeng Yuan, Xiaochen Zuo, Yu Yue, Weinan Dai, Tiantian
+     Fan, Gaohong Liu, Lingjun Liu, et al. DAPO: An open-source LLM reinforcement learning
+     system at scale. arXiv preprint, 2025. doi: 10.48550/arXiv.2503.14476. arXiv:2503.14476.
+[13] Guibin Zhang, Hejia Geng, Xiaohang Yu, Zhenfei Yin, Zaibin Zhang, Zelin Tan, Heng Zhou,
+     Zhongzhi Li, Xiangyuan Xue, Yijiang Li, Yifan Zhou, Yang Chen, Chen Zhang, Yutao Fan,
+     Zihu Wang, Songtao Huang, Francisco Piedrahita-Velez, Yue Liao, Hongru Wang, Mengyue
+     Yang, Heng Ji, Jun Wang, Shuicheng Yan, Philip Torr, and Lei Bai. The landscape of agentic
+     reinforcement learning for LLMs: A survey. Transactions on Machine Learning Research, 2026.
+     doi: 10.48550/arXiv.2509.02547. arXiv:2509.02547; accepted by TMLR.
+[14] Xichen Zhang et al. Scaf-GRPO: Scaffolded group relative policy optimization for enhancing
+     LLM reasoning. arXiv preprint, 2025. doi: 10.48550/arXiv.2510.19807. arXiv:2510.19807.
+[15] Xingjian Zhang, Siwei Wen, Wenjun Wu, and Lei Huang. EDGE-GRPO: Entropy-driven GRPO
+     with guided error correction for advantage diversity. arXiv preprint, 2025. doi: 10.48550/arXiv.
+     2507.21848. arXiv:2507.21848.
+[16] Zhi Zhang, Zhen Han, Costas Mavromatis, Qi Zhu, Yunyi Zhang, Sheng Guan, Dingmin Wang,
+     Xiong Zhou, Shuai Wang, Soji Adeshina, Vassilis Ioannidis, and Huzefa Rangwala. Train less,
+     learn more: Adaptive efficient rollout optimization for group-based reinforcement learning.
+     arXiv preprint, 2026. doi: 10.48550/arXiv.2602.14338. arXiv:2602.14338; introduces AERO.
+
+                                                 12
+
+[PAGE 13]
+[17] Yuzhong Zhao, Yue Liu, Junpeng Liu, Jingye Chen, Xun Wu, Yaru Hao, Tengchao Lv, Shaohan
+     Huang, Lei Cui, Qixiang Ye, Fang Wan, and Furu Wei. Geometric-mean policy optimization.
+     arXiv preprint, 2025. doi: 10.48550/arXiv.2507.20673. arXiv:2507.20673; GMPO.
+
+[18] Chujie Zheng, Shixuan Liu, Mingze Li, Xiong-Hui Chen, Bowen Yu, Chang Gao, Kai Dang,
+     Yuqiong Liu, Rui Men, An Yang, Jingren Zhou, Jianwei Zhou, and Junyang Lin. Group sequence
+     policy optimization. arXiv preprint, 2025. doi: 10.48550/arXiv.2507.18071. arXiv:2507.18071;
+     GSPO.
+
+[19] Haizhong Zheng, Yang Zhou, Brian R. Bartoldson, Bhavya Kailkhura, Fan Lai, Jiawei Zhao,
+     and Beidi Chen. Act only when it pays: Efficient reinforcement learning for LLM reasoning
+     via selective rollouts. arXiv preprint, 2025. doi: 10.48550/arXiv.2506.02177. arXiv:2506.02177;
+     introduces GRESO.
+
+
+
+
+                                                13

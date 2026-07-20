@@ -1,0 +1,245 @@
+{
+  "completed_at": "2026-07-19T18:29:38+00:00",
+  "environment_check_sha256": "1d7cc4005be76979bce8eb82f2d1a771fa6e24d542144cf2ffad3b34c4fdc0ea",
+  "eval_batch_size": 8,
+  "evaluator_sha256": "08b0bb62af09149bd5910f210c7b026e2fd64dbbf612f01f2954636922540555",
+  "execution_plan": [
+    [
+      "colab",
+      "--auth=oauth2",
+      "new",
+      "--gpu",
+      "A100",
+      "--session",
+      "e1-eval-grpo-s11-94a863"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1-eval-grpo-s11-94a863",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/e1_grpo_confirmatory.py",
+      "/content/e1_grpo_confirmatory.py"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1-eval-grpo-s11-94a863",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/e1_evaluate_checkpoint.py",
+      "/content/e1_evaluate_checkpoint.py"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "install",
+      "--session",
+      "e1-eval-grpo-s11-94a863",
+      "trl==1.8.0",
+      "transformers==5.13.1",
+      "datasets==4.8.5",
+      "peft==0.19.1",
+      "torchao==0.17.0",
+      "wandb==0.28.0"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "exec",
+      "--session",
+      "e1-eval-grpo-s11-94a863",
+      "--file",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/verify_colab_e1_environment.py",
+      "--timeout",
+      "120"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1-eval-grpo-s11-94a863",
+      "<ephemeral-secret-file>",
+      "/content/.e1-eval-secrets.json"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "e1-eval-grpo-s11-94a863",
+      "<ephemeral-request-file>",
+      "/content/e1-evaluation-request.json"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "exec",
+      "--session",
+      "e1-eval-grpo-s11-94a863",
+      "--file",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/colab-experiments/secure_exec_evaluation.py",
+      "--timeout",
+      "21600"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "stop",
+      "--session",
+      "e1-eval-grpo-s11-94a863"
+    ]
+  ],
+  "failed_step": null,
+  "fingerprint": "78393a67980d2f869a9a84e1c9f2042c4eb4419f4187b1c7b9c45e83d28e418e",
+  "hf_repo": "arvindcr4/tinker-rl-lab-e1-grpo-s11-78393a67",
+  "launcher_retry_policy": {
+    "exec_attempts": 3,
+    "exec_retry_seconds": 60,
+    "preserve_session": true
+  },
+  "log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/colab-e1-confirmatory/logs/e1__grpo__s11__eval__94a863e81581.log",
+  "payload": {
+    "audit_record": {
+      "arm": "grpo",
+      "collapse": false,
+      "heldout_n": 500,
+      "heldout_score": 0.65,
+      "last10_reward": 0.6875,
+      "manifest_path": "run_manifest.json",
+      "mean_gu": 0.30000000000000004,
+      "mean_zvf": 0.7,
+      "rollouts": 480,
+      "seed": 11,
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "treatment_changes": [],
+      "wall_clock_seconds": 16356.127968248007
+    },
+    "evidence_class": "confirmatory",
+    "remote": {
+      "hf_checkpoint_steps": [
+        5,
+        10,
+        15,
+        20,
+        25,
+        30
+      ],
+      "hf_checkpoint_url": "https://huggingface.co/arvindcr4/tinker-rl-lab-e1-grpo-s11-78393a67/tree/b39028ea32b042247e7ecd3ee228b8b302c55226",
+      "hf_commit": "b39028ea32b042247e7ecd3ee228b8b302c55226",
+      "hf_final_adapter_path": "final/adapter_model.safetensors",
+      "hf_manifest_path": "run_manifest.json",
+      "hf_repo": "arvindcr4/tinker-rl-lab-e1-grpo-s11-78393a67",
+      "wandb_run_id": "78393a67",
+      "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/78393a67"
+    },
+    "resume": {
+      "resumed_from_path": "checkpoints/checkpoint-30",
+      "resumed_from_step": 30
+    },
+    "run_config": {
+      "dataset": "openai/gsm8k",
+      "dataset_revision": "740312add88f781978c0658806c59bc2815b9866",
+      "eval_batch_size": 8,
+      "evaluation_progress_save_every": 16,
+      "evaluation_recovery": {
+        "batch_size": 8,
+        "cache_implementation": "dynamic",
+        "progress_save_every": 16,
+        "source_checkpoint": "checkpoints/checkpoint-30"
+      },
+      "heldout_n": 500,
+      "max_completion_length": 1024,
+      "max_steps": 30,
+      "mode": "confirmatory",
+      "model": "Qwen/Qwen3-8B",
+      "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "save_steps": 5,
+      "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+      "treatment_changes": [],
+      "treatment_overrides": {
+        "epsilon": 0.2,
+        "epsilon_high": 0.2,
+        "importance_sampling_level": "token",
+        "loss_type": "grpo",
+        "scale_rewards": "group"
+      },
+      "treatment_runtime": {
+        "maximum_rollouts_per_step": 16,
+        "num_generations": 4,
+        "unique_prompts_per_step": 4
+      },
+      "unit_fingerprint": "78393a67980d2f869a9a84e1c9f2042c4eb4419f4187b1c7b9c45e83d28e418e"
+    },
+    "runtime_versions": {
+      "cuda": "12.8",
+      "datasets": "4.8.5",
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "huggingface_hub": "1.23.0",
+      "peft": "0.19.1",
+      "torch": "2.11.0+cu128",
+      "torchao": "0.17.0",
+      "transformers": "5.13.1",
+      "trl": "1.8.0",
+      "wandb": "0.28.0"
+    },
+    "schema_version": "e1-colab-result-v1",
+    "status": "completed"
+  },
+  "progress_save_every": 16,
+  "recovery_fingerprint": "94a863e815816f439eafb9e1d54d73e32c10661a454a44e70bb68b1747d17dca",
+  "remote_verification": {
+    "hf_checkpoint_steps": [
+      5,
+      10,
+      15,
+      20,
+      25,
+      30
+    ],
+    "hf_commit": "b39028ea32b042247e7ecd3ee228b8b302c55226",
+    "hf_repo": "arvindcr4/tinker-rl-lab-e1-grpo-s11-78393a67",
+    "verified_at": "2026-07-19T18:29:58+00:00",
+    "wandb": {
+      "run_id": "78393a67",
+      "state": "finished",
+      "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/78393a67"
+    }
+  },
+  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/colab-e1-confirmatory/requests/e1__grpo__s11__eval__94a863e81581.json",
+  "return_code": 0,
+  "schema_version": "e1-evaluation-recovery-v1",
+  "secure_exec_sha256": "84ec72e7364b780d2a7a169aa406dc59f0880f7c9cf5f5fcfdaa553332f5f2e7",
+  "session": "e1-eval-grpo-s11-94a863",
+  "source_request": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/colab-e1-confirmatory/requests/e1__grpo__s11__78393a67980d.json",
+  "source_snapshots": {
+    "zvf-program/colab-experiments/e1_evaluate_checkpoint.py": {
+      "sha256": "08b0bb62af09149bd5910f210c7b026e2fd64dbbf612f01f2954636922540555",
+      "snapshot": "sources/08b0bb62af09149bd5910f210c7b026e2fd64dbbf612f01f2954636922540555"
+    },
+    "zvf-program/colab-experiments/e1_grpo_confirmatory.py": {
+      "sha256": "986811e3e78fe86ffcbede4a98599ada167ff1975b3341eef391eb2b2e7fe8c6",
+      "snapshot": "sources/986811e3e78fe86ffcbede4a98599ada167ff1975b3341eef391eb2b2e7fe8c6"
+    },
+    "zvf-program/colab-experiments/secure_exec_evaluation.py": {
+      "sha256": "84ec72e7364b780d2a7a169aa406dc59f0880f7c9cf5f5fcfdaa553332f5f2e7",
+      "snapshot": "sources/84ec72e7364b780d2a7a169aa406dc59f0880f7c9cf5f5fcfdaa553332f5f2e7"
+    },
+    "zvf-program/colab-experiments/verify_colab_e1_environment.py": {
+      "sha256": "1d7cc4005be76979bce8eb82f2d1a771fa6e24d542144cf2ffad3b34c4fdc0ea",
+      "snapshot": "sources/1d7cc4005be76979bce8eb82f2d1a771fa6e24d542144cf2ffad3b34c4fdc0ea"
+    }
+  },
+  "source_unit_fingerprint": "78393a67980d2f869a9a84e1c9f2042c4eb4419f4187b1c7b9c45e83d28e418e",
+  "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+  "started_at": "2026-07-19T16:42:54+00:00",
+  "status": "completed",
+  "training_helpers_sha256": "986811e3e78fe86ffcbede4a98599ada167ff1975b3341eef391eb2b2e7fe8c6",
+  "updated_at": "2026-07-19T16:42:54+00:00",
+  "validated_outputs": {
+    "audit_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/full/grpo-seed-11.json",
+    "manifest_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/audit/results/full/manifests/grpo-seed-11.json"
+  }
+}

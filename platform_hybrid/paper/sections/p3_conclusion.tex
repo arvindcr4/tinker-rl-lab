@@ -14,9 +14,10 @@ $G$ axis dominates the variance budget ($\eta^2{=}0.54$ on terminal accuracy,
 $0.63$ on gradient norm; Cohen's $d{=}-1.47$ for $G{=}2{\to}16$;
 \texttt{experiments/results/berkeley/unpacking\_dpo\_ppo\_factorization.json}).
 An independent Miller-style error-bars audit \citep{miller2024erroreval} of the
-four Pillar-3 headline claims sharpens the same scoping: the
-$G{=}4/G{=}32$ GU-ratio (audit H1, bootstrap CI $[4.16, 4.82]$) and the
-negative retention-vs-$T$ slope (H2, CI $[-0.237, -0.038]$) are DECISIVE,
+four Pillar-3 computed contrasts sharpens their numerical precision, not their
+provenance: the $G{=}4/G{=}32$ GU-ratio (audit H1, bootstrap CI
+$[4.16, 4.82]$) and the negative retention-vs-$T$ slope (H2, CI
+$[-0.237, -0.038]$) are precise \emph{within the reconstructed grid},
 whereas the SNR-slope-vs-theory comparison (H3; CI $[+0.148, +0.583]$
 contains the theoretical $+0.500$) and the native-Wu $G{=}2 \approx G{=}16$
 equivalence claim (H4; $n{=}3$ paired seeds, equivalence region straddled)
@@ -45,11 +46,12 @@ Second, a Dualformer-style fast/slow/auto reading of
 $G$~\citep{su2024dualformer} suggests the non-monotone landscape is
 exploitable: a difficulty-gated allocation rule (predicted accuracy
 $\geq 0.85 \to G{=}2$, down to $G{=}32$ otherwise) attains mean
-$G_{\mathrm{auto}} = 7.0$ on the 20-cell joint-fit grid --- a $56.2\%$
+$G_{\mathrm{auto}} = 7.0$ on the 20-cell joint-fit grid --- a projected $56.2\%$
 rollout saving versus always-$G{=}16$ and a further $\approx 42\%$ versus
-the measured $G^\ast(T)$ schedule (mean $G{=}12.0$, itself a $25\%$
+the reconstructed $G^\ast(T)$ schedule (mean $G{=}12.0$, itself a projected $25\%$
 saving versus always-$G{=}16$) --- with 5/20 cells under-predicting by more than 5\,pp,
-attributable to joint-fit residual noise rather than the allocation rule
+consistent with joint-fit residual noise but not attributable without a
+prospective allocation experiment
 (\texttt{experiments/results/berkeley/dualformer\_compute\_savings.tsv}).
 
 The all-pairs contrast identity is an exact algebraic rewriting whose
@@ -70,8 +72,9 @@ Group size in GRPO is best understood not as a variance knob to be maximized but
 a dial on how much implicit preference signal each prompt contributes. On our
 benchmark its effect is non-monotone with no universal optimum, held-out
 accuracy is retained almost completely across $G{=}2$ to $G{=}16$ on the
-measured near-ceiling task (while the illustrative GSM8K reanalysis falls to
-about $73\%$ $G{=}4$/$G{=}32$ retention at $T{=}64$M), and the signal-to-noise ratio grows
+measured near-ceiling task. The illustrative reconstructed GSM8K grid falls to
+about $73\%$ $G{=}4$/$G{=}32$ retention at $T{=}64$M, but no directly trained
+matched-budget $G{=}32$ arm validates that projection. The signal-to-noise ratio grows
 far more slowly than $\sqrt{G}$---all consistent with a contrast-density rather than
 a pure-variance account, and with the exact sense in which the group-centered update
 is an all-pairs preference contrast. The clean causal test, and matched-budget

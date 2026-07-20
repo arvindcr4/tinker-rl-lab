@@ -21,9 +21,9 @@ import datetime as _dt
 import json
 import pathlib
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
-ENTRIES = ROOT / "registry" / "entries"
-AUDIT = ROOT / "registry" / "measured_block_audit.json"
+ROOT = pathlib.Path(__file__).resolve().parents[3]
+ENTRIES = ROOT / "platform_hybrid/registry/entries"
+AUDIT = ROOT / "platform_hybrid/registry/measured_block_audit.json"
 N2_METRICS_TSV = ROOT / "platform_hybrid/experiments/results/n2_reward_tensor_resume/n2_metrics.tsv"
 Z130_TSV = ROOT / "platform_hybrid/experiments/results/zvf_iter130_method_risk.tsv"
 OUT = ROOT / "platform_hybrid/experiments/results/p5p8"
@@ -46,9 +46,11 @@ def _age_days(path: pathlib.Path) -> float:
 
 
 def _resolve(source: str) -> tuple[str, float]:
-    """Resolve source path (relative to repo root) and return (status, age_days)."""
-    p = ROOT / source
-    if not p.exists():
+    """Resolve repo-root- or platform_hybrid-relative artifact paths."""
+    raw = pathlib.Path(source)
+    candidates = [raw] if raw.is_absolute() else [ROOT / raw, ROOT / "platform_hybrid" / raw]
+    p = next((candidate for candidate in candidates if candidate.exists()), None)
+    if p is None:
         return "missing", float("inf")
     return "ok", round(_age_days(p), 3)
 
@@ -70,7 +72,11 @@ def _sign(x):
 
 
 def main():
-    delta_files = sorted(ENTRIES.glob("delta_*.json"))
+    delta_files = [
+        path
+        for path in sorted(ENTRIES.glob("delta_*.json"))
+        if json.loads(path.read_text()).get("record_type") == "variant_delta"
+    ]
     summary = {
         "n_entries": len(delta_files),
         "per_entry": [],
@@ -140,7 +146,7 @@ def main():
             "n_src_missing": len(src_missing),
             "panels": ";".join(sorted({m.get("panel", "") for m in m_rows})),
             "metrics": ";".join(sorted({m.get("metric", "") for m in m_rows})),
-            "citation_arxiv": rec.get("citation", {}).get("arxiv", ""),
+            "citation_arxiv": rec.get("citation", {}).get("arxiv") or "NR",
         }
         summary["per_entry"].append(per_entry_row)
         if src_missing:
@@ -151,7 +157,7 @@ def main():
         if len(m_rows) == 0 and rec.get("deltas"):
             summary["empty_measured_gap"].append({
                 "delta_id": eid, "name": rec.get("name", ""),
-                "arxiv": rec.get("citation", {}).get("arxiv", ""),
+                "arxiv": rec.get("citation", {}).get("arxiv") or "NR",
                 "n_components": len(rec.get("deltas", [])),
                 "gap_class": "n2_panel_only",
             })
@@ -191,14 +197,19 @@ def main():
     tsv_path = OUT / "p6_measured_coverage.tsv"
     per_rows = summary["per_entry"]
     with open(tsv_path, "w", newline="") as f:
-        w = csv.DictWriter(f, delimiter="\t", fieldnames=list(per_rows[0].keys()))
+        w = csv.DictWriter(
+            f,
+            delimiter="\t",
+            fieldnames=list(per_rows[0].keys()),
+            lineterminator="\n",
+        )
         w.writeheader()
         w.writerows(per_rows)
 
     # Write panel × metric grid TSV
     grid_path = OUT / "p6_measured_coverage_grid.tsv"
     with open(grid_path, "w", newline="") as f:
-        w = csv.writer(f, delimiter="\t")
+        w = csv.writer(f, delimiter="\t", lineterminator="\n")
         w.writerow(["delta_id"] + [f"{pn}|{mn}" for pn in KNOWN_PANELS for mn in KNOWN_METRICS])
         for eid, g in summary["panel_metric_grid"].items():
             row = [eid]
@@ -210,7 +221,7 @@ def main():
     # Write cross-panel agreement TSV
     x_path = OUT / "p6_measured_cross_panel.tsv"
     with open(x_path, "w", newline="") as f:
-        w = csv.writer(f, delimiter="\t")
+        w = csv.writer(f, delimiter="\t", lineterminator="\n")
         w.writerow(["delta_id", "n2_zvf_delta", "zvf130_risk_delta", "same_sign",
                     "n2_significant", "zvf130_significant"])
         for r in summary["cross_panel_agreement"]:

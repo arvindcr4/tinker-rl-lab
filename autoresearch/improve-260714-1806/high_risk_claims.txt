@@ -1,0 +1,131 @@
+zvf-program/audit/reproducibility_audit.tex:81:seven-item minimum-reportable-stack standard so that future papers expose the
+zvf-program/registry/grpo_registry.tex:89:\grpoReg{}, a living catalog that (i) fixes a common seven-item
+zvf-program/registry/grpo_registry.tex:156:The stack schema is the seven-item \minreport{} checklist \cite{minreportrl2026},
+zvf-program/registry/grpo_registry.tex:459:\cite{minreportrl2026}. The emitted manifest uses exactly the seven-item schema
+platform_hybrid/paper/main.tex:660:that any one framework is algorithmically superior. Fully matched
+platform_hybrid/paper/main.tex:1617:\emph{token} budget the accuracy-optimal $G$ shifts rightward to $G{\approx}32$;
+platform_hybrid/paper/main.tex:1619:finding across regimes is an inverted-U---intermediate $G$ outperforms the
+platform_hybrid/paper/sections/p6_conclusion.tex:32:carries the seven-item minimum reportable stack and per-component
+platform_hybrid/paper/unified_signal_starvation/main.tex:575:For high-PAM/low-GSR roots, fresh-policy recollection should outperform wider
+platform_hybrid/paper/unified_signal_starvation/main.tex:803:diagnostic should earn control authority through prospective evidence rather
+platform_hybrid/paper/unified_signal_starvation/main.tex:804:than through an appealing retrospective decomposition.
+platform_hybrid/paper/sections/p6_abstract.tex:18:eight-item MIN-REPORT-RL block (loss form; reference policy and KL handling;
+platform_hybrid/paper/neurips_2026_variants/main_zvf.tex:344:Token-budget-normalized $G{\approx}32$ optimum at $T\!\ge\!16$M &
+platform_hybrid/paper/acm_main.tex:196:superiority. Second, although online GSM8K training reward improves with GRPO,
+platform_hybrid/paper/acm_main.tex:670:evidence that any one algorithm is superior. Second, trainability in our
+platform_hybrid/paper/sections/p7_iter203_empirical_gprime.tex:90:\item \textbf{Paired-prompt proxy.}  $G'=16$ on a single prompt is not what
+platform_hybrid/paper/sections/p6_schema.tex:15:\subsection{Stack Records: the Seven-Item MIN-REPORT Block}
+zvf-program/position/min_report_rl.tex:75:This position paper proposes \minreport{}: an eight-item
+zvf-program/position/min_report_rl.tex:102:share the same eight-item standard; the Pillar-5 paper is canonical for
+zvf-program/position/min_report_rl.tex:197:        it into \minreport{}: an eight-item minimum-reportable-stack checklist
+zvf-program/position/min_report_rl.tex:436:Holding model, prompts (200 GSM8K test problems), temperature, seed, and
+zvf-program/position/min_report_rl.tex:662:\texttt{min\_reportable\_stack} field contains the eight items. A fragment is
+zvf-program/position/min_report_rl.tex:693:Auditor} scores an existing paper or repo against the eight-item checklist,
+zvf-program/position/min_report_rl.tex:727:\paragraph{``Eight items is too many / too few.''}
+zvf-program/position/min_report_rl.tex:841:eight-item minimum-reportable-stack (\minreport{}), where every item is a
+platform_hybrid/paper/sections/p5_stack.tex:4:\section{The Eight-Item Minimum Reportable Stack}
+platform_hybrid/paper/sections/p5_stack.tex:17:\caption{The eight-item minimum reportable stack. Each item earns its place
+platform_hybrid/paper/sections/p5_stack.tex:38:    $17\times$ outcome flip from a backend swap alone
+platform_hybrid/paper/sections/p5_stack.tex:91:Exhibit 1 is the lever: a backend swap alone produced the largest effect in
+platform_hybrid/paper/sections/p5_stack.tex:224:The first seven items above form the manifest fingerprint used in this
+platform_hybrid/paper/sections/p5_stack.tex:235:$11.4$ bits of cross-cell information; four of the seven items
+platform_hybrid/paper/sections/p6_intro.tex:20:same algorithm label producing different updates. Holding model, group size,
+platform_hybrid/paper/sections/p6_intro.tex:21:learning rate, data, and seed fixed and swapping only the backend moved final
+platform_hybrid/paper/sections/p6_intro.tex:34:A \emph{stack record} describes one deployed training stack via the seven-item
+platform_hybrid/paper/sections/p5_toolchain.tex:16:seven-item manifest as JSON at run start and appends the per-step ZVF/GU
+platform_hybrid/paper/sections/p6_iter86_cross_stack_matrix.tex:137:      axis (paired-prompt at cell level, paired-step at step level).
+platform_hybrid/paper/main_eai_body.tex:1646:    \item We do not claim canonical GRPO superiority or that this runner represents canonical GRPO as a mathematical object.
+platform_hybrid/paper/main_eai_body.tex:1651:    \item We do not claim PPO-vs-GRPO algorithm superiority rankings.
+platform_hybrid/paper/main_eai_body.tex:1655:    \item We do not claim Dense models outperform MoE architectures at matched active parameters. The Dense vs MoE comparison is confounded by base vs instruct initialization; the architecture effect cannot be isolated from the initialization effect.
+platform_hybrid/paper/sections/p5_abstract.tex:24:propose an eight-item \emph{minimum reportable
+platform_hybrid/paper/sections/p7_controller.tex:77:the controller is \emph{competitive with, not superior to}, the best fixed
+platform_hybrid/paper/sections/p7_controller.tex:1330:unified Hybrid is Pareto-superior to zvf-triage on a real evidence
+platform_hybrid/paper/sections/p7_controller.tex:1398:Pareto-superior to zvf-triage on saturation-band panels (\texttt{gift}:
+platform_hybrid/paper/sections/p7_controller.tex:2241:($\leq 290$ LoC, stdlib only, paired-prompt bootstrap);
+platform_hybrid/paper/sections/p7_controller.tex:2246:Paired-prompt bootstrap $B{=}2000$, $\alpha{=}0.05$,
+platform_hybrid/paper/sections/p7_controller.tex:2316:Paired-prompt bootstrap ($B{=}2000$, $\alpha{=}0.05$, seed $20260705$)
+platform_hybrid/paper/sections/p5_iter165_per_step_trajectory.tex:9:The pooled iter-161 row 176 headline --- $\eta^2(\texttt{method} \to \texttt{reward\_mean}){=}0.0075$ on the 160-row N2 panel --- is a single number over 40 training steps. The open question is whether that number is \emph{trajectory-stationary} (the algorithm axis is a constant latent structure) or \emph{trajectory-trending} (the algorithm axis emerges or decays as training proceeds). Iter 165 tests this by computing per-step $\eta^2(\texttt{method}|\texttt{step})$ on the 4 method $\times$ 16 prompt $= 64$ obs per step per channel, with paired-prompt bootstrap CIs ($B{=}2000$, seed 20260705).
+platform_hybrid/paper/neurips_2026_variants/main_workshop.tex:205:$G{\approx}32$, but the inverted-U apex shifts with $T$; we deliberately
+platform_hybrid/paper/neurips_2026_variants/main_workshop.tex:233:Token-budget $G{\approx}32$ at $T{\ge}16$M & B & 3-seed appendix reanalysis. \\
+platform_hybrid/paper/sections/conclusion.tex:20:justify a universal optimum or a general superiority claim for any one
+platform_hybrid/paper/sections/synth_iter164_thirteen_domain_density.tex:4:% reward tensors (2560 cells = 4 × 40 × 16). H1-H4 4/4 PASS — sharpest
+platform_hybrid/paper/sections/synth_iter164_thirteen_domain_density.tex:26:\paragraph{Headline findings (4/4 PASS, all structural).}
+platform_hybrid/paper/sections/p5_conclusion.tex:6:of one another; across stacks, a backend swap alone moved reward by $0.794$
+platform_hybrid/paper/sections/p5_conclusion.tex:15:an RL-for-LLM comparison should attach one eight-item manifest
+platform_hybrid/paper/sections/p5_conclusion.tex:39:confounds are already documented, the manifest is seven items, and the
+platform_hybrid/paper/paper.tex:1691:    \item We do not claim canonical GRPO superiority or that this runner represents canonical GRPO.
+platform_hybrid/paper/paper.tex:1696:    \item We do not claim PPO-vs-GRPO algorithm superiority rankings.
+platform_hybrid/paper/paper.tex:1700:    \item We do not claim Dense models outperform MoE architectures at matched active parameters. The Dense vs MoE comparison is confounded by base vs instruct initialization; the architecture effect cannot be isolated from the initialization effect.
+platform_hybrid/paper/sections/p8_related.tex:8:models still outperform deep learning on medium-sized tabular benchmarks,
+platform_hybrid/paper/sections/zvf_iter46.tex:141:\caption{Pre-registered predictions for the Iso-G analysis. 4/4 pass
+platform_hybrid/paper/sections/p7_limitations.tex:21:superiority.
+platform_hybrid/paper/sections/group_size_reconcile.tex:11:claims that $G{\approx}32$ ``maximizes gradient utilization''. These
+platform_hybrid/paper/sections/group_size_reconcile.tex:82:$G{\approx}32$ at $T{\ge}16\text{M}$ (the canonical training budget). The
+platform_hybrid/paper/sections/group_size_reconcile.tex:107:used elsewhere in the paper ($T\!\ge\!16$M), $G{\approx}32$
+platform_hybrid/paper/sections/p6_query_auditor.tex:81:auto-emits the seven-item manifest during training, and a LeverTrace check
+platform_hybrid/paper/sections/p3_intro.tex:32:no claim that any single $G$ or algorithm is universally superior.
+platform_hybrid/paper/sections/frontier_synthesis_group_size.tex:100:predicts that $G{\approx}32$ is the first genuinely DPO-equivalent
+platform_hybrid/paper/sections/p6_related_resources.tex:23:executable reference for a task family, and its retrospective
+platform_hybrid/paper/sections/p4_conclusion.tex:35:outperform its pre-RL checkpoint on held-out GSM8K; in the Qwen2.5-1.5B
+platform_hybrid/paper/sections/p4_conclusion.tex:36:comparison, Dr.\,GRPO does not outperform GRPO at our seed budget; and under the
+platform_hybrid/paper/sections/frontier_synthesis_length_bias.tex:75:universal held-out superiority --- exactly the posture Sec.~\ref{sec:length-bias-pillar}
+platform_hybrid/paper/sections/p5_iter157_v24_self_app.tex:39:\textbf{Four hypotheses (4/4 PASS).}
+platform_hybrid/paper/sections/statistical_rigor_addendum.tex:163:heterogeneity this paper documents, \emph{not} an algorithmic superiority of
+platform_hybrid/paper/sections/p4_results_intro.tex:25:gradient bias rather than universal held-out superiority. We then turn the null into
+platform_hybrid/paper/sections/p5_intro.tex:4:When a paper reports that ``DAPO outperforms GRPO,'' the named algorithm is a
+platform_hybrid/paper/sections/p5_intro.tex:45:\item \textbf{The eight-item minimum reportable stack} (\secref{sec:p5-stack}):
+platform_hybrid/paper/sections/p7_iter147_unified_per_prompt.tex:92:      ADAPTIVE\_PP\_ORACLE), but no dynamic controller strictly dominates the static
+platform_hybrid/paper/sections/synth_iter156_eleven_domain_density.tex:78:\subsubsection{4 falsifiable headlines settled (4/4 PASS)}
+platform_hybrid/paper/neurips_2026_variants/sections/conclusion_workshop.tex:29:        apex near $G{\approx}32$ for one stack/model; the apex's
+platform_hybrid/paper/sections/p8_evidence.tex:878:sensor$+$raw \emph{outperforms} the LLM-only surrogate at $11/25$
+platform_hybrid/paper/sections/p5_iter77_cross_corpus.tex:2:\section{Cross-Corpus Portability of the Seven-Item MIN-REPORT}
+platform_hybrid/paper/sections/p5_iter77_cross_corpus.tex:5:The seven-item MIN-REPORT standard of \secref{sec:p5-stack} was
+platform_hybrid/paper/sections/p5_iter77_cross_corpus.tex:34:\caption{Cross-corpus portability of the seven-item MIN-REPORT
+platform_hybrid/paper/neurips_2026_variants/sections/related_work_v2.tex:94:showed that step-level process reward models can outperform outcome reward
+platform_hybrid/paper/sections/group_size.tex:82:short horizons, $G{\approx}32$ at the canonical training scale
+platform_hybrid/paper/sections/group_size.tex:296:``$G{\approx}32$ at canonical scale'' in
+platform_hybrid/paper/sections/group_size.tex:331:        the $T{=}4\,$M scale, and $G{\approx}32$ at the canonical
+platform_hybrid/paper/sections/group_size.tex:442:$G{\approx}32$ in this regime, and treat $G{=}4$ as a short-budget/debugging
+platform_hybrid/paper/sections/p5_iter137_cross_corpus.tex:49:\subsection*{Falsifiable hypotheses (4/4 PASS)}
+platform_hybrid/paper/sections/p7_results_intro.tex:29:stack itself dominates: an audit holding model, $G$, learning rate, data,
+platform_hybrid/paper/sections/p7_results_intro.tex:30:and seed fixed while swapping only the backend moved final reward from
+platform_hybrid/paper/sections/p5_limitations.tex:17:verifiable-reward tasks and the GRPO family; the seven items were chosen for
+platform_hybrid/paper/neurips_2026_variants/sections/conclusion.tex:20:justify a universal optimum or a general superiority claim for any one
+platform_hybrid/paper/neurips_2026_variants/sections/base_vs_instruct_paired.tex:75:        outperforms instruct.
+platform_hybrid/paper/sections/related_work_v2_anon.tex:95:that step-level PRMs dramatically outperform outcome reward models on GSM8K
+platform_hybrid/paper/sections/p5_iter193_algo_vs_stack_ratio.tex:51:insufficient report and MIN-REPORT enumerates seven items. Data and audit
+platform_hybrid/paper/sections/p5_related.tex:6:statement of the same eight-item standard exists as the ZVF-program
+platform_hybrid/paper/sections/p5_related.tex:66:4/4 pass year + 5-gram title + author-family-overlap$\geq 0.6$ vs the
+platform_hybrid/paper/sections/p5_results_intro.tex:23:into a standard---the eight-item minimum reportable stack---where each item is
+platform_hybrid/paper/sections/p3_results_intro.tex:6:The dependence is non-monotone. Intermediate group sizes often outperform the
+platform_hybrid/paper/sections/p5_verifier_impl.tex:8:seven-item block from a descriptive checklist into an automated gate. This is
+platform_hybrid/paper/sections/p5_evidence.tex:5:\subsection{Exhibit 1: A 17$\times$ Flip from Swapping Only the Backend}
+platform_hybrid/paper/sections/p5_evidence.tex:149:\caption{Per-item coverage of the seven-item MIN-REPORT standard against
+platform_hybrid/paper/sections/p5_evidence.tex:150:$n=98$ live mega-campaign manifests. All seven items are 100\% present
+platform_hybrid/paper/sections/p5_evidence.tex:243:The structural consequence for MIN-REPORT is that the seven items of
+platform_hybrid/paper/sections/p5_evidence.tex:248:\texttt{task\_slice} declaration alongside the existing seven items, so
+platform_hybrid/paper/sections/p5_evidence.tex:254:To close the gap between ``we ask for seven items'' and ``we can verify
+platform_hybrid/paper/sections/p5_evidence.tex:255:that seven items were reported,'' we prototyped the
+platform_hybrid/paper/sections/p5_evidence.tex:473:\paragraph{Reading.} The audit confirms that the seven-item
+platform_hybrid/paper/sections/p5_evidence.tex:540:chart of the seven items, computed on the same $98$-cell corpus.
+platform_hybrid/paper/sections/p5_evidence.tex:549:\texttt{n/a-*} declaration. Six of seven items are fully validated
+platform_hybrid/paper/sections/p5_evidence.tex:559:\item \textbf{Six of seven items are validated on $\ge 99\%$ of the
+platform_hybrid/paper/sections/p5_evidence.tex:942:\subsection{Exhibit 16: MIN-REPORT Field Discriminative Entropy --- four of seven items are informatively vacuous at $n{=}98$}
+platform_hybrid/paper/sections/p5_evidence.tex:994:$\min(1, H/2.5)$. Four of seven items are VACUOUS; items 3 and 7 are
+platform_hybrid/paper/sections/p5_evidence.tex:1261:KL sub-fields. This exhibit moves one level deeper: the seven items of
+platform_hybrid/paper/sections/p5_evidence.tex:1343:seven-item standard and the information it actually carries at the
+platform_hybrid/paper/sections/p5_evidence.tex:1351:On the raw baseline the seven items yield $98/98$ distinct profiles
+platform_hybrid/paper/sections/p5_evidence.tex:1370:seven items (\texttt{task\_slice}, $G$, \texttt{n\_groups},
+platform_hybrid/paper/sections/p5_evidence.tex:1372:beyond the content baseline, confirming that the current seven items
+platform_hybrid/paper/sections/p5_evidence.tex:1383:captured by the existing seven items.}
+platform_hybrid/paper/sections/conclusion_anon.tex:20:justify a universal optimum or a general superiority claim for any one
+platform_hybrid/paper/sections/p5_threatmodel.tex:50:severe difference found across the seven items of
+platform_hybrid/paper/sections/p5_threatmodel.tex:53:\item[R0 --- Replicate.] All seven items identical; runs differ at most in
+platform_hybrid/paper/sections/p5_threatmodel.tex:71:\item[R5 --- Undeclared.] One or more of the seven items is missing from
+platform_hybrid/paper/sections/related_work_v2.tex:95:that step-level PRMs dramatically outperform outcome reward models on GSM8K
+platform_hybrid/paper/sections/p7_iter199_closed_loop_counterfactual.tex:163:40-step trajectory, dominates the static oracle) are the two complementary
+platform_hybrid/paper/sections/p6_registry_health.tex:94:on six of the seven items and 75\% on the seventh (the four missing
+platform_hybrid/paper/sections/p6_registry_health.tex:137:schema would have \emph{caught} a prospective contributor's erroneous
+platform_hybrid/paper/sections/p6_registry_health.tex:212:Every prospective contributor's erroneous edit now fails schema
+platform_hybrid/paper/neurips_2026_variants/sections/group_size_reconcile.tex:13:re-analysis of the same logs reports $G{\approx}32$ as the highest held-out
+platform_hybrid/paper/neurips_2026_variants/sections/group_size_reconcile.tex:116:used elsewhere in the paper ($T\!\ge\!16$M), $G{\approx}32$

@@ -4,14 +4,18 @@ Left: stacked ZVF-/ZVF+ per run, sorted by raw ZVF, annotated by outcome.
 Right: ZVF- vs raw ZVF as failure separators (unhealthy vs healthy strips).
 """
 import csv
+from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
-RES = "platform_hybrid/experiments/results"
+ROOT = Path(__file__).resolve().parents[2]
+RES = ROOT / "platform_hybrid" / "experiments" / "results"
+OUT = ROOT / "platform_hybrid" / "paper" / "figures"
+OUT.mkdir(parents=True, exist_ok=True)
 rows = []
-with open(f"{RES}/zvf_signed_summary.tsv") as fh:
+with open(RES / "zvf_signed_summary.tsv") as fh:
     for line in fh:
         if line.startswith("#") or line.startswith("source"):
             continue
@@ -61,6 +65,6 @@ ax2.set_title("Failure separability", fontsize=9)
 ax2.legend(fontsize=7, loc="upper left")
 ax2.set_ylim(-0.03, 1.05)
 fig.tight_layout()
-fig.savefig("figures/zvf_signed_decomposition.pdf", bbox_inches="tight")
-fig.savefig("figures/zvf_signed_decomposition.png", dpi=130, bbox_inches="tight")
-print("wrote figures/zvf_signed_decomposition.{pdf,png}")
+fig.savefig(OUT / "zvf_signed_decomposition.pdf", bbox_inches="tight")
+fig.savefig(OUT / "zvf_signed_decomposition.png", dpi=130, bbox_inches="tight")
+print(f"wrote {OUT}/zvf_signed_decomposition.{{pdf,png}}")

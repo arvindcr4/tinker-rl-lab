@@ -1,5 +1,5 @@
 {
-  "n_findings": 51,
+  "n_findings": 61,
   "findings": [
     {
       "kind": "fully_unknown_item",
@@ -108,6 +108,20 @@
     },
     {
       "kind": "fully_unknown_item",
+      "entry": "wandb_ppo_reinforce_llama318b-inst_gsm8k",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "wandb_ppo_reinforce_qwen38b_gsm8k",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
       "entry": "zvf130_aero",
       "item": "loss_form",
       "severity": "info",
@@ -354,13 +368,69 @@
     {
       "kind": "fully_unknown_item",
       "entry": "zvf130_scafgrpo",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_tool_use_llama-8b-inst",
+      "item": "loss_form",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.loss_form"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_tool_use_llama-8b-inst",
+      "item": "reference_kl",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.reference_kl"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_tool_use_llama-8b-inst",
+      "item": "group_size_schedule",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.group_size_schedule"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_tool_use_llama-8b-inst",
+      "item": "decontamination",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.decontamination"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_tool_use_qwen3-32b",
+      "item": "loss_form",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.loss_form"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_tool_use_qwen3-32b",
+      "item": "reference_kl",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.reference_kl"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_tool_use_qwen3-32b",
+      "item": "group_size_schedule",
+      "severity": "info",
+      "fix": "populate at least one leaf of min_report.group_size_schedule"
+    },
+    {
+      "kind": "fully_unknown_item",
+      "entry": "zvf130_tool_use_qwen3-32b",
       "item": "decontamination",
       "severity": "info",
       "fix": "populate at least one leaf of min_report.decontamination"
     }
   ],
-  "n_deltas": 15,
-  "n_stack_entries": 24,
-  "audit_date": "2026-07-05",
-  "audit_source": "scripts/p5p8/p6_iter118_strict_validator.py"
+  "n_deltas": 18,
+  "n_stack_entries": 28,
+  "audit_date": "2026-07-14",
+  "audit_source": "platform_modal/scripts/p5p8/p6_iter118_strict_validator.py"
 }

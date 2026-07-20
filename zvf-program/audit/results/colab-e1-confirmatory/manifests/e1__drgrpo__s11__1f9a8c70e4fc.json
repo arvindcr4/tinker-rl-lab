@@ -1,0 +1,185 @@
+{
+  "audit_record": {
+    "arm": "drgrpo",
+    "collapse": false,
+    "heldout_n": 8,
+    "heldout_score": 0.625,
+    "last10_reward": 0.75,
+    "manifest_path": "run_manifest.json",
+    "mean_gu": 0.5,
+    "mean_zvf": 0.5,
+    "rollouts": 16,
+    "seed": 11,
+    "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+    "treatment_changes": [
+      "advantage_normalization"
+    ],
+    "wall_clock_seconds": 292.42118637399994
+  },
+  "completed_at": "2026-07-15T10:56:31+00:00",
+  "evidence_class": "preflight-not-evidence",
+  "heldout_trace": [
+    {
+      "completion_sha256": "09bb7226007cc2078ba6ccd70d5e2856a9f10b225c24e9dee4f86d46b10da08b",
+      "correct": true,
+      "index": 0,
+      "prediction": 18,
+      "target": 18
+    },
+    {
+      "completion_sha256": "9217422b808b4115fc5baea9f15241f28fb6598285e5f12a98e90d814b05d85e",
+      "correct": true,
+      "index": 1,
+      "prediction": 3,
+      "target": 3
+    },
+    {
+      "completion_sha256": "537227fe8ce2d26150c9d0d301a4d178985fb11b3dcbd671d9bf6cb952c4b69d",
+      "correct": false,
+      "index": 2,
+      "prediction": null,
+      "target": 70000
+    },
+    {
+      "completion_sha256": "305a1165095afc53676bcaefcdf46917d5d179d0bdcc077cc6762009f627a01a",
+      "correct": true,
+      "index": 3,
+      "prediction": 540,
+      "target": 540
+    },
+    {
+      "completion_sha256": "472937093bbe8423b59a5e6aa579851f39aa097129a750187d21fd0685da5978",
+      "correct": true,
+      "index": 4,
+      "prediction": 20,
+      "target": 20
+    },
+    {
+      "completion_sha256": "e8221e6fc8dae91e3b42c584a081c94b6cac4f39a5f1e490cde07f3ab38a1d4a",
+      "correct": false,
+      "index": 5,
+      "prediction": null,
+      "target": 64
+    },
+    {
+      "completion_sha256": "f89b4c189c54d7a4deffbd02514468f6bcd294086fadc881d22bec97e822c055",
+      "correct": true,
+      "index": 6,
+      "prediction": 260,
+      "target": 260
+    },
+    {
+      "completion_sha256": "95a3f6d798df569a7e9fc5f036ccd48a293606b9f55b47b31ad17a332017d8d6",
+      "correct": false,
+      "index": 7,
+      "prediction": null,
+      "target": 160
+    }
+  ],
+  "remote_checkpoint_steps": [
+    1
+  ],
+  "resume": {
+    "resumed_from_path": null,
+    "resumed_from_step": 0
+  },
+  "run_config": {
+    "dataset": "openai/gsm8k",
+    "dataset_revision": "740312add88f781978c0658806c59bc2815b9866",
+    "heldout_n": 8,
+    "max_completion_length": 1024,
+    "max_steps": 1,
+    "mode": "preflight",
+    "model": "Qwen/Qwen3-8B",
+    "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "save_steps": 1,
+    "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+    "treatment_changes": [
+      "advantage_normalization"
+    ],
+    "treatment_overrides": {
+      "epsilon": 0.2,
+      "epsilon_high": 0.2,
+      "importance_sampling_level": "token",
+      "loss_type": "grpo",
+      "scale_rewards": "none"
+    },
+    "treatment_runtime": {
+      "advantage": "reward_minus_group_mean",
+      "divide_by_std": false,
+      "maximum_rollouts_per_step": 16,
+      "num_generations": 4,
+      "unique_prompts_per_step": 4
+    },
+    "unit_fingerprint": "1f9a8c70e4fcded00e49d6e722bb362c157406161e5eb173552ac8fb4c6a2c2a"
+  },
+  "runtime_versions": {
+    "cuda": "12.8",
+    "datasets": "4.8.5",
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "huggingface_hub": "1.20.1",
+    "peft": "0.19.1",
+    "torch": "2.11.0+cu128",
+    "torchao": "0.17.0",
+    "transformers": "5.13.1",
+    "trl": "1.8.0",
+    "wandb": "0.28.0"
+  },
+  "schema_version": "e1-colab-confirmatory-run-v1",
+  "started_at": "2026-07-15T10:51:39+00:00",
+  "telemetry": {
+    "first_five_reward": 0.75,
+    "first_five_zvf": 0.5,
+    "gu": [
+      0.5
+    ],
+    "reward": [
+      0.75
+    ],
+    "trainer_log_history": [
+      {
+        "clip_ratio/high_max": 0.0,
+        "clip_ratio/high_mean": 0.0,
+        "clip_ratio/low_mean": 0.0,
+        "clip_ratio/low_min": 0.0,
+        "clip_ratio/region_mean": 0.0,
+        "completions/clipped_ratio": 0.25,
+        "completions/max_length": 1024.0,
+        "completions/max_terminated_length": 1017.0,
+        "completions/mean_length": 754.875,
+        "completions/mean_terminated_length": 665.1666870117188,
+        "completions/min_length": 299.0,
+        "completions/min_terminated_length": 299.0,
+        "entropy": 0.167550478130579,
+        "epoch": 0.0005353319057815846,
+        "frac_reward_zero_std": 0.5,
+        "grad_norm": 0.030010221526026726,
+        "learning_rate": 1e-06,
+        "loss": 0.0,
+        "num_tokens": 13646.0,
+        "reward": 0.75,
+        "reward_std": 0.44721361994743347,
+        "rewards/gsm8k_exact_reward/mean": 0.75,
+        "rewards/gsm8k_exact_reward/std": 0.44721361994743347,
+        "step": 1,
+        "step_time": 119.17772617499992
+      },
+      {
+        "epoch": 0.0005353319057815846,
+        "step": 1,
+        "total_flos": 0.0,
+        "train_loss": 0.0,
+        "train_runtime": 129.3691,
+        "train_samples_per_second": 0.124,
+        "train_steps_per_second": 0.008
+      }
+    ],
+    "zvf": [
+      0.5
+    ]
+  },
+  "wandb": {
+    "run_id": "1f9a8c70",
+    "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/1f9a8c70"
+  }
+}

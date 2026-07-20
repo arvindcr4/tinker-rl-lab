@@ -1,5 +1,63 @@
 # Per-Pillar Standalone Papers (P1–P8)
 
+## Program-wide consistency revision — 18 documents (2026-07-14)
+
+The repository now contains 17 existing manuscripts plus the new synthesis
+`unified_signal_starvation/main.tex`. They are **not 18 independent evidence
+sources**: venue variants and the long compendium reuse runs, tables, and prose.
+The canonical evidence hierarchy remains thesis-first:
+
+1. Per-step ZVF is a mechanical diagnostic of contrastive group yield. For
+   binary rewards, `pass@G - p^G = 1 - ZVF`; the 505-task audit reproduces the
+   identity to `1.11e-16`.
+2. The strongest group-size comparison is the matched-token, two-seed
+   `G=2 x 160` versus `G=16 x 20` panel (2,560 rollouts per arm). It shows an
+   all-correct ZVF wall for small `G`; it does not identify a universal optimum.
+3. The conditional `(1-ZVF)/sqrt(G)` utility audit selects `G=4` on its
+   505-task cohort. Fitted or reconstructed `G≈32` results use different
+   objectives and budgets and are hypotheses, not contradictions or universal
+   prescriptions.
+4. Adaptive `G` is not promoted: 92.3% of logged escalation fires are on
+   all-correct groups, the frozen-`p` replay is not closed-loop learning, and
+   cross-prompt pooling is not a valid larger-within-prompt-group
+   counterfactual. Promotion requires a seed-paired, fixed-token bakeoff against
+   static `G=16` and naive boundary heuristics.
+5. The `17x` same-label stack comparison also changed the base checkpoint. It
+   is evidence of under-specification, not a backend-only causal effect.
+6. MIN-REPORT-RL is an eight-item standard: seven run-manifest fields plus
+   held-out pass@k reporting. The registry's run-start JSON intentionally has
+   seven fields; pass@k belongs to the evaluation report.
+7. PPO/SAO routing in `unified_signal_starvation` is a method proposal. Its GRPO
+   facts reuse companion artifacts, and PPO/SAO benefits remain unmeasured.
+8. P8 fraud is parked outside the ZVF thesis; it demonstrates measurement
+   discipline but contributes no RL evidence.
+
+Canonical document roster:
+
+| ID | Source | Role after revision |
+|---|---|---|
+| P01 | `paper_P1_scaling.tex` | limits/identifiability audit, not a positive scaling law |
+| P02 | `paper_P2_zvf.tex` | descriptive ZVF diagnostic and exact accounting |
+| P03 | `paper_P3_group_size.tex` | measured bounds plus explicitly reconstructed hypotheses |
+| P04 | `paper_P4_length_bias.tex` | bounded null under a 200-token cap |
+| P05 | `paper_P5_minreport.tex` | canonical evidence for the eight-item reporting standard |
+| P06 | `paper_P6_registry.tex` | canonical seven-field run-manifest registry plus evaluation linkage |
+| P07 | `paper_P7_zvf_controller.tex` | retrospective audit and prospective controller test plan |
+| P08 | `paper_P8_fraud.tex` | parked cross-domain side study |
+| R01 | `acm_main.tex` | compact cross-library venue derivative |
+| R02 | `neurips_2026_variants/main_zvf.tex` | focused ZVF sentinel/stratification paper |
+| R03 | `neurips_2026_variants/main_workshop.tex` | exploratory artifact note |
+| R04 | `neurips_2026_variants/main_dnb.tex` | tiered dataset/benchmark artifact paper |
+| R05 | `zvf-program/theory/zvf_theory.tex` | calibration and reliability proof sketches; no adaptive set-point |
+| R06 | `zvf-program/position/min_report_rl.tex` | condensed community position statement |
+| R07 | `zvf-program/registry/grpo_registry.tex` | condensed living-catalog statement |
+| R08 | `zvf-program/audit/reproducibility_audit.tex` | survival-audit protocol and descriptive pilot |
+| U01 | `main.tex` | long evidence compendium, not a venue submission |
+| N01 | `unified_signal_starvation/main.tex` | GRPO/PPO/SAO diagnostic and controller proposal |
+
+The older plans below are retained as history. Where they disagree with this
+section, this section is canonical.
+
 ## Consolidation plan v3 — THESIS-FIRST (2026-07-11, after adversarial council review)
 
 v2's "2+1" was reviewed adversarially by a three-model council (Gemini 3.1 Pro,
@@ -73,7 +131,7 @@ Tight policy paper (review: the earlier plan was overstuffed).
 - Base: `neurips_2026_variants/main_dnb.tex` — with the ZVF diagnostic narrative
   scrubbed out (cross-cite A instead), per review, so C does not cannibalize A
 - Flagship use-case: `zvf-program/audit/reproducibility_audit.tex` (single-stack
-  survival protocol — re-implement DAPO/GSPO/Dr.GRPO/MAD-GRPO on the bench and
+  survival protocol — re-implement DAPO/GSPO/Dr.GRPO/M-GRPO on the bench and
   measure which claimed gains survive)
 - Results appendix: `paper_P1_scaling`'s scaling analysis
 - Retire: `main.tex` (734 errors) — after a detex/visual-diff salvage pass to
@@ -129,31 +187,24 @@ limitations → conclusion → `statistical_rigor_addendum` → bibliography.
 `sections/p{1..4}_{abstract,intro,results_intro,conclusion}.tex` — all verified:
 balanced braces, even `$`, and every citation resolves to `references.bib`.
 
-## Compile status — ALL FOUR BUILD CLEANLY (0 LaTeX errors), with real figures
-Built with TeX Live 2025 (`pdflatex` + `bibtex`):
+## Compile status — ALL FOUR BUILD CLEANLY
+Reverified with TeX Live 2026 (`pdflatex` + `bibtex`):
 
 | Paper | Pages | Errors | Undefined cites | Undefined refs |
 |---|---|---|---|---|
-| paper_P1_scaling.pdf | 35 | 0 | 0 | 11 |
-| paper_P2_zvf.pdf | 41 | 0 | 0 | 11 |
-| paper_P3_group_size.pdf | 45 | 0 | 0 | 7 |
-| paper_P4_length_bias.pdf | 35 | 0 | 0 | 18 |
+| paper_P1_scaling.pdf | 45 | 0 | 0 | 0 |
+| paper_P2_zvf.pdf | 44 | 0 | 0 | 0 |
+| paper_P3_group_size.pdf | 24 | 0 | 0 | 0 |
+| paper_P4_length_bias.pdf | 44 | 0 | 0 | 0 |
 
-**All undefined citations resolved (0 `[?]` across all four).** The last two were
-LLM-hallucinated keys with no matching paper: `lin2025taker` was replaced with the real
-source of the G=32-vs-G=4 question — Tan et al. 2025, "Scaling Behaviors of LLM RL
-Post-Training" (arXiv:2509.25300); `shen2025mad` was unfindable and dropped, leaving its
-real co-citation `singhal2023drdrpo` (Singhal et al. 2023 length correlations).
+All active citation keys and cross-references resolve. Unverifiable inherited keys were
+removed or replaced only after the cited primary paper was identified.
 
-- **Figures: regenerated.** 19/20 plotting scripts re-ran from the `experiments/results/` TSVs
-  (matplotlib); all 25 figures the papers reference now render as real plots (0 placeholder boxes).
-  One script (`group_size_iter27.py`) fails on a data-reshape and keeps its placeholder.
-- **Bibliography: 10 of 12 undefined citations resolved.** Added `kaplan2020scaling`,
-  `burnham2002model`, `gptoss`, `qwen3moe`, `kimi2025k2`, `kimi2025thinking`, `kimi`,
-  `singhal2023drdrpo`, and self-refs `frontier2026`, `tinker-rl-lab-iter25`. **Still `[?]`
-  (not fabricated — need author-supplied metadata):** `shen2025mad` (P4), `lin2025taker` (P3).
-- **Undefined refs** are cross-references to labels in *other* pillars or main.tex-only sections
-  (an inherent artifact of splitting one combined paper into four); render as `??`, non-fatal.
+- **Figures:** active figure paths resolve, including the repaired group-size generators.
+  Conditional fallback boxes remain in source for portability but are not rendered when the
+  checked-in assets are present.
+- **Bibliography:** all four roots use the canonical `references.bib`; no venue-local copy is
+  needed.
 
 ## Build
 ```
@@ -177,16 +228,9 @@ The upstream sections had never been compiled (main.tex itself failed with 386 e
   generated TSV, `\verb` inside captions / spanning lines (zvf sections), and a mis-nested
   `\end{figure}` in `length_bias` (a figure wrapped a table + another figure).
 
-## Known residual issues (inherited from the combined paper, shared with main.tex)
-1. **~35 placeholder figures** — the `*_iter*.tex` sections use `[Figure placeholder:
-   … pending regeneration]` boxes. The plotting scripts (`scripts/*_fig.py`,
-   `scripts/*_iter*.py`) regenerate them from the TSVs in `experiments/results/`;
-   matplotlib is available.
-2. **~6–10 "??" cross-references per paper** — labels that live in other pillars or
-   in main.tex-only sections (e.g. `app:compute`, `sec:frontier`, cross-pillar
-   `sec:zvf`). Cosmetic; do not block compilation. Resolve by localizing those refs
-   or including the referenced section.
-3. **10 undefined citations** (inherited, need author-supplied metadata):
-   `frontier2026, gptoss, kimi, kimi2025k2, kimi2025thinking, lin2025taker,
-   qwen3moe, shen2025mad, singhal2023drdrpo, tinker-rl-lab-iter25`.
-   Added this round: `kaplan2020scaling`, `burnham2002model`.
+## Remaining submission gates
+
+The PDFs are mechanically clean, but the scientific gates remain: matched multi-seed
+cross-scale evidence for P1, direct gradient geometry for P2, a direct token-matched
+group-size sweep for P3, and an uncapped long-horizon mediation study for P4. These are
+evidence limitations, not missing assets, references, or bibliography entries.

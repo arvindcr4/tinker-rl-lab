@@ -16,6 +16,11 @@ early-phase $0.04$--$0.13$ for variance-mitigation GRPO and the largest group si
 with smaller groups starting higher at $0.25$--$0.61$; lag-1 autocorrelation $\approx 0.94$) and mechanically
 coupled to reward sparsity, group size, and baseline accuracy. A concluding
 cross-examination shows ZVF's core weakness is that it aliases mastery with
-incapacity, and motivates magnitude- and sign-aware replacements. We release code,
+incapacity. On 505 unique prompt-seed tasks we additionally verify the exact
+binary-reward accounting identity
+$\operatorname{pass@}G-p^G=1-\mathrm{ZVF}$ to numerical error
+$1.11\times10^{-16}$: ZVF is the complement of contrastive group yield, not an
+independent performance predictor. This identity sharpens the diagnostic's
+interpretation and motivates magnitude- and sign-aware replacements. We release code,
 logs, and per-group reward tensors.
 \end{abstract}

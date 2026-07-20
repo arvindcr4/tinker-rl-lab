@@ -25,9 +25,11 @@ DAPO~\citep{yu2025dapo}, Dr.GRPO~\citep{tong2025drgrpo}, and
 GSPO~\citep{qwen2025gspo} are real and sometimes consequential. We claim that on
 the evidence available to us the stack's contribution to reported outcomes is at
 least as large as the label's, and that the community's reporting conventions are
-calibrated to the wrong term. A $17\times$ outcome swing from swapping only the
-backend (\secref{sec:p5-evidence}) dwarfs every label-vs-label gap in our
-corpus; a label can even invert its own telemetry when re-implemented on a
+calibrated to the wrong term. A $17\times$ same-label outcome swing from a
+nominal backend comparison (\secref{sec:p5-evidence}) dwarfs every label-vs-label
+gap in our corpus. That comparison also bundled a different base checkpoint, so
+it is evidence of \emph{under-specification}, not a backend causal effect; a label
+can even invert its own telemetry when re-implemented on a
 different stack. Deep RL went through this reckoning once
 already~\citep{henderson2018deep, colas2019hitchhiker, agarwal2021deep};
 RL-for-LLMs has re-created the conditions with a larger and less inspectable
@@ -37,7 +39,8 @@ Our contributions are deliberately those of a position paper: evidence, a
 standard, a threat model, and enforcement machinery.
 \begin{enumerate}[leftmargin=1.5em, itemsep=1pt, topsep=2pt]
 \item \textbf{Evidence} (\secref{sec:p5-evidence}): four exhibits---a
-$17\times$ backend flip under otherwise identical configuration; a cross-stack
+$17\times$ same-label stack flip whose backend and base checkpoint were not both
+matched; a cross-stack
 label flip in which ``DAPO'' yields mean ZVF $0.00$ on one stack and $0.58$ on
 another; a 12-cell head-to-head in which four labeled algorithms on one fixed
 stack land within noise; and cross-library ZVF variation from the companion

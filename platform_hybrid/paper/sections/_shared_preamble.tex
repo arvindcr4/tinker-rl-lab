@@ -47,13 +47,15 @@
 % while preserving math subscripts. Load late.
 \usepackage[strings]{underscore}
 
-% Many figure PDFs are pending regeneration; make \includegraphics degrade to a
-% placeholder box instead of a fatal "file not found" error.
+% Resolve both explicit paths and the canonical figures/ directory before
+% degrading to a visible missing-artifact box. \IfFileExists alone does not
+% honor \graphicspath, which previously hid checked-in figures in pillar PDFs.
 \usepackage{letltxmacro}
 \LetLtxMacro{\origincludegraphics}{\includegraphics}
 \renewcommand{\includegraphics}[2][]{%
   \IfFileExists{#2}{\origincludegraphics[#1]{#2}}%
-  {\fbox{\parbox{0.7\linewidth}{\centering\small\textit{[figure \texttt{\detokenize{#2}} pending regeneration]}}}}}
+  {\IfFileExists{figures/#2}{\origincludegraphics[#1]{figures/#2}}%
+  {\fbox{\parbox{0.7\linewidth}{\centering\small\textit{[missing figure artifact: \texttt{\detokenize{#2}}]}}}}}}
 
 % Math operators + stray Unicode math chars used by some sections
 \DeclareMathOperator*{\argmax}{arg\,max}

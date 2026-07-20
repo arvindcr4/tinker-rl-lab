@@ -190,7 +190,10 @@ def verify(record, strict=False):
     )
     # score
     total = sum(w for _, w, _ in checks)
-    got = sum(w for lvl, w, _ in checks if lvl == "PASS" or (lvl == "WARN" and not strict))
+    # A warning identifies missing evidence and therefore cannot earn badge
+    # credit. ``strict`` controls process failure below; it must not silently
+    # change the scientific completeness score.
+    got = sum(w for lvl, w, _ in checks if lvl == "PASS")
     pct = 100 * got / total
     grade = (
         "A" if pct >= 90 else "B" if pct >= 75 else "C" if pct >= 60 else "D" if pct >= 45 else "F"
@@ -224,5 +227,5 @@ if __name__ == "__main__":
             print(f"  {mark} [{c['level']:4}] {c['msg']}")
         print(f"\n  SCORE: {rep['score_pct']}%  ->  GRADE {rep['grade']}\n")
         json.dump(rep, open(a.record.replace(".json", ".audit.json"), "w"), indent=2)
-        if a.strict and rep["score_pct"] < 75:
-            sys.exit("Grade below B. Publish rejected.")
+        if a.strict and any(check["level"] != "PASS" for check in rep["checks"]):
+            sys.exit("Strict verification rejected WARN/FAIL evidence gaps.")

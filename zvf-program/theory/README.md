@@ -2,11 +2,11 @@
 
 The formal proof paper `zvf_theory.tex` (and its compiled `zvf_theory.pdf`).
 
-**Status: DRAFT / SKELETON.** Every theorem in the paper is a proof
-sketch, not a proof. The authoritative gap ledger is `THEORY_NOTES.md`;
-inline `% TODO(proof-gap:)` comments and `\GAP{...}` markers in the .tex
-mirror the rows in that ledger. Nothing here should be cited as "proven"
-until the gaps below are discharged by the author.
+**Status: CONDITIONAL THEORY NOTE.** T1--T3 now have complete proofs under
+their explicit assumptions. `THEORY_NOTES.md` records the proof audit and the
+remaining research extensions. The results must still be cited with their
+scope: i.i.d. prompt groups, binary deterministic rewards, non-degenerate
+difficulty support, and the declared T3 proxy objective.
 
 ## Compiling
 
@@ -16,9 +16,9 @@ pdflatex zvf_theory.tex
 pdflatex zvf_theory.tex   # second pass for cross-references
 ```
 
-Exit code 0, 8 pages. The 0.008 worked example inherited verbatim from
-the Pillar-1 audit (p=0.5, K=8 => ZVF ~ 2 * (0.5)^8) is the only concrete
-number in the paper; all other quantities are algebraic.
+The current PDF and page count are recorded by the corpus inventory. Numerical
+claims in the empirical-validation section point to checked-in artifacts; the
+theorems themselves are algebraic.
 
 ## What's here
 
@@ -29,7 +29,7 @@ number in the paper; all other quantities are algebraic.
 | `zvf_theory.log` | pdflatex log; not committed clean, kept for the last compile's diagnostics. |
 | `zvf_theory.aux` | pdflatex aux file; regenerated each compile. |
 | `zvf_theory.out` | pdflatex hyperref output. |
-| `THEORY_NOTES.md` | **The gap ledger.** Read this first; it is more honest than the .tex about which theorems are sketches. |
+| `THEORY_NOTES.md` | Proof-audit ledger, assumptions, and research extensions. |
 
 ## What ties this to the rest of the program
 

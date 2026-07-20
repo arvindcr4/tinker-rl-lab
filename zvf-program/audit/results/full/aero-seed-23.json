@@ -1,0 +1,45 @@
+{
+  "arm": "aero",
+  "collapse": false,
+  "evidence_class": "confirmatory",
+  "fingerprint": "3573a421e57755d2196ba12f6c634be191c033b197a940b7c509cf6f6df74f1d",
+  "heldout_n": 500,
+  "heldout_score": 0.628,
+  "last10_reward": 0.7235714285714285,
+  "manifest_path": "manifests/aero-seed-23.json",
+  "mean_gu": 0.23333333333333328,
+  "mean_zvf": 0.7666666666666667,
+  "remote": {
+    "hf_commit": "92123d35e401ff9c6c42494a383116cfbd91479e",
+    "hf_repo": "arvindcr4/tinker-rl-lab-e1-aero-s23-3573a421",
+    "wandb_run_id": "3573a421",
+    "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/3573a421"
+  },
+  "remote_verification": {
+    "hf_checkpoint_steps": [
+      5,
+      10,
+      15,
+      20,
+      25,
+      30
+    ],
+    "hf_commit": "92123d35e401ff9c6c42494a383116cfbd91479e",
+    "hf_repo": "arvindcr4/tinker-rl-lab-e1-aero-s23-3573a421",
+    "verified_at": "2026-07-18T12:19:12+00:00",
+    "wandb": {
+      "run_id": "3573a421",
+      "state": "finished",
+      "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/3573a421"
+    }
+  },
+  "rollouts": 425,
+  "seed": 23,
+  "stack_fingerprint": "4737be74fdc97dd400b846e93c6b0c03f443ee65da2cc89697bf5b078d16aa0d",
+  "treatment_changes": [
+    "rollout_allocation",
+    "selective_rejection",
+    "posterior_state"
+  ],
+  "wall_clock_seconds": 14201.005799962999
+}

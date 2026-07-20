@@ -1,0 +1,35 @@
+{
+  "schema_version": "e1-executed-source-provenance-v1",
+  "unit_fingerprint": "78393a67980d2f869a9a84e1c9f2042c4eb4419f4187b1c7b9c45e83d28e418e",
+  "executed": {
+    "training_script_sha256": "3300415bdcdc92d4cd440de6b4cd6746e67cdc6b0e102baf370e0e2eba75c583",
+    "evaluation_script_sha256": "1e93196ca6a01baa05899b4aaba7d2638b8ce26d82c35d29fdd3b42b817f9bd1",
+    "training_secure_exec_sha256": "253d3b276564c127501a58b971d6f6c0ba458afed16b05a88be26cae9bcfec89",
+    "evaluation_secure_exec_sha256": "84ec72e7364b780d2a7a169aa406dc59f0880f7c9cf5f5fcfdaa553332f5f2e7",
+    "environment_check_sha256": "1d7cc4005be76979bce8eb82f2d1a771fa6e24d542144cf2ffad3b34c4fdc0ea"
+  },
+  "recorded_fingerprints": {
+    "training_unit": "78393a67980d2f869a9a84e1c9f2042c4eb4419f4187b1c7b9c45e83d28e418e",
+    "evaluation_batch_4": "3c9807fefd61158d269d3ededa5d05870b70c5b6d3f4878a5f5fe942aeb72365",
+    "evaluation_batch_8": "f3235a710aa97e1ac4ce5d3b35ff5283ab03534e8f78438ee52e6e8b9bc3f844"
+  },
+  "post_run_review_base": {
+    "training_script_sha256": "8ffdac75bffbf1ac60ea6b9d881bfbf261f16d8d2311315d40f2c1747508ec23",
+    "evaluation_script_sha256": "87dc9b74fb7b9f9392e577c88c9dc442da660ed7bef3feb4364ceefbe25c2c6e"
+  },
+  "reconstruction": {
+    "method": "Reverse only the post-run review edits in memory, hash the reconstructed bytes, then recompute the canonical JSON fingerprints used by the launchers.",
+    "training_reversal": [
+      "remove cache_implementation=dynamic from held-out generate",
+      "remove the pre-evaluation gradient-checkpointing disable and model-level use_cache enable block"
+    ],
+    "evaluation_reversal": [
+      "remove validate_progress and its math import",
+      "restore the original minimal fingerprint compatibility check and root argument"
+    ],
+    "training_hash_matches_recorded_request": true,
+    "evaluation_batch_4_fingerprint_matches_recorded_request": true,
+    "evaluation_batch_8_fingerprint_matches_recorded_request": true
+  },
+  "boundary": "The original launcher schema stored the training source hash directly and cryptographically committed the evaluator hash inside each recovery fingerprint, but did not retain content-addressed source copies. Future launcher requests include deduplicated source_snapshots entries."
+}

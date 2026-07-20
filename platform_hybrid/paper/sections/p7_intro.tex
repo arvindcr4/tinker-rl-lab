@@ -11,9 +11,9 @@ deliberately stopped at description: ZVF tracks collapse, drifts upward, and
 is mechanically entangled with accuracy and group size, so Pillar~2 declined
 to promote it to a predictive or causal statistic. A companion
 theorem-level treatment of the same quantities --- identifiability, CI
-calibration, the wasted-compute floor, and the closed-form $G^\star$ ---
-appears in the ZVF-program theory paper \emph{``Identifiable, Calibrated,
-and Optimal Control of the Zero-Variance Fraction in Group-Relative RL''}
+calibration, the reliability budget, and the limits of the proposed
+signal-per-rollout objective --- appears in the ZVF-program theory paper
+\emph{``Calibrating the Zero-Variance Fraction in Group-Relative RL''}
 (\texttt{zvf-program/theory/zvf\_theory.tex}); this paper is canonical for
 the controller engineering, that one for the theory.
 
@@ -60,7 +60,9 @@ explicitly; and
 (v) design rules for when and how to escalate $G$.
 Throughout we keep the Pillar-2 discipline: toy-scale results are marked
 directional, and every interventional claim is scoped to the single task and
-small $n$ on which it was measured.
+small $n$ on which it was measured. The word \emph{controller} names the
+implemented policy, not an established improvement: the decisive static-
+$G{=}16$ matched-token bakeoff remains unrun.
 
 \subsection{Related Work}
 \label{sec:p7-related}

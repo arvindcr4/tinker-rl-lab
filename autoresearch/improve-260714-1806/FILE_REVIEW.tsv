@@ -1,0 +1,329 @@
+path	kind	consumers	consumer_count	lines	bytes	sha256	sections	labels	citation_keys	unresolved_citations	todo_lines	placeholder_lines	claim_risk_lines	missing_input_hooks	mechanical_status
+platform_hybrid/experiments/results/group_size_iter23_crossings.tsv_typesetter	shared	P03,U01	2	16	490	1121921ede92cbd80a2e381b89c07a3eb4a465150909b994d1fa1a9e8a04fce5	0	0	0					0	screened
+platform_hybrid/paper/acm_main.tex	root	R01	1	726	33257	9b72a6b69d33d2e3f93517727868a636c014ff91fe9b996cc9d29eec5f57e53b	26	29	15			218	178,191,196,234,277,285,345,346,347,348,349,358,362,435,442,447,461,462,463,587,673,674,675,678,683	0	attention
+platform_hybrid/paper/ethics_statement.tex	paper-specific	U01	1	449	24177	1b12bbbfa0df01d0955081af2741ca36712c1f0335bdb79c2afb799911ac5395	7	9	22			360	43,48,122,212,259,385,400	0	attention
+platform_hybrid/paper/main.tex	root	U01	1	2752	142551	89d6021a3c2eb9fe9048cc00df260b1aa8ccbc39b60d4ae198b45c7fe37798f5	48	77	16			225,654,725,739,864,923,936,977,1003,1282,1344,1549,1561,1615,1991,2362,2379	161,226,239,240,241,242,243,252,257,348,476,487,491,498,502,505,520,536,539,557,563,618,620,621,670,678,679,689,696,710,711,712,892,939,1092,1239,1240,1243,1244,1246,1249,1260,1261,1263,1269,1272,1279,1280,1282,1284,1285,1288,1290,1292,1293,1296,1301,1313,1327,1328,1347,1355,1358,1361,1363,1365,1366,1368,1376,1380,1390,1392,1395,1452,1458,1462,1513,1519,1576,1591,1626,1630,1683,1704,1708,1709,1728,1733,1759,1773,1778,1839,1948,1964,1975,1978,1979,1993,2088,2091,2092,2096,2106,2120,2130,2148,2158,2165,2169,2177,2180,2184,2185,2188,2228,2278,2319,2367,2368,2466	0	attention
+platform_hybrid/paper/neurips_2026_variants/ethics_statement_anon.tex	paper-specific	R04	1	6	352	15b36023b04f2f43d3abc93125978b5c7b58907a63b0f1e81d1cd7f5d11125c6	0	0	0					0	screened
+platform_hybrid/paper/neurips_2026_variants/ethics_statement_zvf.tex	shared	R02,R03,R04	3	466	25267	2c103fe45a2d621c0dc519a89f18a431edc0110d6f50c9b7962b272a252cc8f2	7	9	21			376	43,47,84,123,221,269,401,416	0	attention
+platform_hybrid/paper/neurips_2026_variants/main_dnb.tex	root	R04	1	295	13168	092ed89f320b7157d871828b69a08204845e6b6253bb9be39b8c603f3fb2bbff	6	8	0				122,157,179	0	screened
+platform_hybrid/paper/neurips_2026_variants/main_workshop.tex	root	R03	1	316	14598	02e43dc6da781c2c52752b121eca0cbd1b6b675fea984b00fac7d3b1714da384	4	10	0				109,195	0	screened
+platform_hybrid/paper/neurips_2026_variants/main_zvf.tex	root	R02	1	635	31948	b03a2fc061338e6bc30ceedcf129294dec3cc3a4d69a361264ad95c50b074cbe	10	20	2				183,383,556,562	0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/abstract_dnb.tex	paper-specific	R04	1	38	2260	e30cf4684829b232cd8115b3a56a6956b45dd99462a725f08e00590c43c997bc	0	0	0				33	0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/abstract_workshop.tex	paper-specific	R03	1	32	1856	540c2b4e27b3fbdb554c11e2179b1c997590f453ebcaf3ad1ad66569a11e4f83	0	0	0					0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/abstract_zvf.tex	paper-specific	R02	1	31	2122	a9cfe9364028e7beadcb4ebf74a5c6dc09a70ab1da3c26928cabceace260d56f	0	0	0					0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/appendix_full_results_dnb.tex	paper-specific	R04	1	156	7804	315e70cbfc9f6b518769d9828da8c3a0628cb06937c73f65cf7edf9a7f89b067	1	4	0				34,76,87,129,142,144,145	0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/appendix_zvf_formalization.tex	shared	R02,R03,R04	3	90	5140	f2de8c2db391ab4d61f85055ddbb3a92d6850565de12dd1a39a25871b0348835	5	2	0				37,50,54,58,63,64,67,88	0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/artifact_card_dnb.tex	paper-specific	R04	1	44	3584	fe4434c1ca80d9af2152ed87810ddf92e5eb7a96622d7346b8eb3c4244c2e522	0	1	0				21,22,23	0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/checklist_anon.tex	paper-specific	R04	1	417	22638	c01c718fbe51ef3d061383b9c0292dcf3dda8f5f4d6891f5e88ae7dc9fafa3da	1	0	4				89,283	0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/claims_tier_dnb.tex	paper-specific	R04	1	57	2805	3b80cdcd1638a8c51a5c50e5f9ade45e8a463dae5d078294bde0cb13b2fac255	0	1	0					0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/conclusion_dnb.tex	paper-specific	R04	1	17	1059	967094e1e391cdf7cb816dca9365f86ec3f1ac46c761eadd28030830a024605a	1	1	0				8,11,13,14	0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/conclusion_workshop.tex	paper-specific	R03	1	46	2900	9cdf777ed7c1f271de7be15dc01e51465bbbac8f7fbc5babf292a6aab7969811	1	1	0					0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/conclusion_zvf.tex	paper-specific	R02	1	50	2933	5575a5e2b37ce8f3e7acd00192ff1f088321b16f836a9159618f7c80e9e847f0	1	1	0				49	0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/intro_dnb.tex	paper-specific	R04	1	67	3820	4808ae2ee72cececb7cd2214a95173d23a5719d69788bbe4aeedc1e41ded1aa5	1	1	5				12,19,31,49,52	0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/intro_workshop.tex	paper-specific	R03	1	47	2825	a5dd15570e470a283a37f2a41a3b035f139fdc2a1ddfd84e1acbbb957e16d985	1	1	5				21,37,46	0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/intro_zvf.tex	paper-specific	R02	1	84	5244	94266cedc8dae6dce073b1fb4743b66bb54e031d2fe4080660ffe3e5ad559768	1	1	3				12,62	0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/related_work_zvf.tex	paper-specific	R02	1	88	5317	4a88a7560d89f051df93d0f41e7a2f6b42f60261180356bbdff3028f45a5ca3a	3	3	26				29,76,86	0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/reproducibility_card_dnb.tex	paper-specific	R04	1	54	3051	5f5c37653b9c043e3fff1e1fc681209bb8a0102fe2dce707160d6d7b52fdce26	1	1	0					0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/run_manifest.tex	shared	R02,R03,R04	3	130	10483	ee14a0a9e84a7b9d52c2a11dd84c9683eabe2837017fa03e5b78fcb8932ee7c6	1	2	0				20,42,43,44,82,111	0	screened
+platform_hybrid/paper/neurips_2026_variants/sections/stratified_diagnostics.tex	shared	R02,R03,R04	3	74	4014	216f975ad94da6ab02199a8ff0a69c0f5a1c3b768103a0be41012d3334e44310	1	3	0				73	0	screened
+platform_hybrid/paper/paper_P1_scaling.tex	root	P01	1	36	1516	261a9c22230450a2faffa685e9855982e1885a7bf570cbf791913008939e60f2	0	0	0					0	screened
+platform_hybrid/paper/paper_P2_zvf.tex	root	P02	1	42	1550	4c63ebf50e500479bf5cd65f1d19f7d6afe9ea4be4a0277218ead04e2122706d	0	0	0					0	screened
+platform_hybrid/paper/paper_P3_group_size.tex	root	P03	1	34	1596	1fb900ba38af6eddfa0cd84847fc2eeb98e24f6c37e12c40a61402cfaecf98b5	0	0	0					0	screened
+platform_hybrid/paper/paper_P4_length_bias.tex	root	P04	1	42	1676	ca6b17c03f7970a085d04579b9d0c18b082ef9d4fe5365d79994e2ac87a5aee9	0	0	0					0	screened
+platform_hybrid/paper/paper_P5_minreport.tex	root	P05	1	58	2597	105c4965b950a06c957531548f952e40154d23b71a5d93c8458ccb614b00f755	0	0	0					0	screened
+platform_hybrid/paper/paper_P6_registry.tex	root	P06	1	56	2391	965f0f01ac11da5d7a02c07bc6871f498616e29c4dbf1da79c5cb379efc2487e	0	0	0					0	screened
+platform_hybrid/paper/paper_P7_zvf_controller.tex	root	P07	1	54	2313	9ff2337ee8e975484439fe6347b22fc017e02cbc65724a4cd3f9ba519f4a7e65	0	0	0					0	screened
+platform_hybrid/paper/paper_P8_fraud.tex	root	P08	1	70	3118	4be86b0f388ad77408297cde4f484bb2108f65789bc7f06076abfb52c0480fe9	0	0	0					0	screened
+platform_hybrid/paper/sections/_shared_author.tex	shared	P01,P02,P03,P04,P05,P06,P07,P08	8	10	249	56f12882c48dac6cb44589a96657de3ff143e16806cff0530a8104b2c6eb986f	0	0	0					0	screened
+platform_hybrid/paper/sections/_shared_methods.tex	shared	P01,P02,P03,P04,P05,P06,P07	7	378	17982	28797353023a96ca77dc17d5eed0efc4ae8609c517a0a2bb570c4008e4f6d72d	11	10	3			53	54,67,68,69,70,71,80,85,179,307,318,322,329,333,336,351,367,370	0	attention
+platform_hybrid/paper/sections/_shared_preamble.tex	shared	P01,P02,P03,P04,P05,P06,P07,P08	8	86	3482	53b5c8e5bb535ab84af132a355ae7b17bf30efc5b37ed1dec1e54a5ecee1430b	0	0	0					0	screened
+platform_hybrid/paper/sections/abstract.tex	paper-specific	U01	1	38	2384	dc5897c82a683c36b011632014ac78c9ac28b665596377c3a896a32bdf72a1e5	0	0	0				8,19,23,28,33	0	screened
+platform_hybrid/paper/sections/appendix_zvf_formalization.tex	shared	P02,U01	2	155	9423	a31b0ca598fb7f6853c2e116e63f1cc69c24499f832d1b97b04b1ba336bb95af	6	3	0				37,51,61,114,153	0	screened
+platform_hybrid/paper/sections/base_vs_instruct_paired.tex	paper-specific	U01	1	105	5702	100acb7acc796b83ddeb620e4c32d218b06e36222d5e38a698e5ca854eacf1b0	1	2	0			90	78	0	attention
+platform_hybrid/paper/sections/cdh_echo_synthesis.tex	shared	P03,P04	2	74	3761	3b0db2613c3956ced858e26b75d519c3c4ea95bc53960ec16ed3bffb48fea5b8	1	1	0				26,49,71	0	screened
+platform_hybrid/paper/sections/checklist.tex	paper-specific	U01	1	384	20245	68626ee033c0b65e3cdc990d8fed71f3c10dd743da9267fc58a27690cd54aac8	1	0	4				28,31,34,89	0	screened
+platform_hybrid/paper/sections/conclusion.tex	paper-specific	U01	1	37	2304	e2aa1ef0c066e3543e5cf8f54bfb794651223c211bdf4c8f6aecdb5cc5b1485f	1	1	0				12,14,20,21,27,34	0	screened
+platform_hybrid/paper/sections/critic_degeneracy_hypothesis.tex	paper-specific	P03	1	112	6257	be5773edc00597b694579876078535f3a9ddeb6af9b24c96fc2334e304ab5eda	1	1	0				26,31,36,46,47,48,49,53,54,55,59,63,65,66,67,69,80,87,89,95,97,102,110	0	screened
+platform_hybrid/paper/sections/extended_related_work.tex	paper-specific	U01	1	70	3452	3b96137ee2ddc09d9b750c7cad55062ed25f2cc473cd68d466f3213a5805d6c3	2	3	1					0	screened
+platform_hybrid/paper/sections/figures_regeneration_note.tex	paper-specific	U01	1	24	1507	e558975aa5df42edbc6987bcdc7d370734558875ab4431d274c90468835141f0	0	0	0			4,23		0	attention
+platform_hybrid/paper/sections/framework_configs_appendix.tex	paper-specific	U01	1	122	6378	190aa4cd4a653a6824e2e841bbc450b0b54fdcc975d03dc9fc06b56368b1412e	7	2	0			75,105		0	attention
+platform_hybrid/paper/sections/frontier_scope_clarification.tex	paper-specific	U01	1	132	7543	ddb4a6251ab72f0bf24ea6838154d1e8ca35c3ac30a41ab7bf9c34a94e4d14cb	5	2	0				13,60,70	0	screened
+platform_hybrid/paper/sections/frontier_synthesis_group_size.tex	shared	P03,U01	2	178	10226	666ce585b2bd2fd46a73cfeace9b8442991429a16c1477f1e698cd91ba997e3b	1	5	0				43,95,100,103,118,119,126,138,161,172	0	screened
+platform_hybrid/paper/sections/frontier_synthesis_length_bias.tex	shared	P04,U01	2	142	9520	b86cdc6b522a529caddd9dcc61fe182dbfdd8db785b18060f97e5bdc94545a37	1	1	0				75,78,82,86	0	screened
+platform_hybrid/paper/sections/frontier_synthesis_scaling.tex	shared	P01,U01	2	153	9168	80caf2cce70d0855bb64da5a603b4d65044bcc627bfd0971d7d7f6271bb80495	1	6	0				76,85,86,89,94,96,97,107,119	0	screened
+platform_hybrid/paper/sections/frontier_synthesis_zvf.tex	shared	P02,U01	2	142	8258	1f4f973c02be605f122e87ff704bbc21886dfef19fc5cc9c6231baf1e49bd0da	1	4	0				37,91,121	0	screened
+platform_hybrid/paper/sections/group_size.tex	paper-specific	P03	1	360	19550	a3f34268594b9cff0fe302983da1efed59486139f9b64b9288b2ade7fdeb07da	1	7	1				12,18,22,112,157	0	screened
+platform_hybrid/paper/sections/group_size_iter23.tex	shared	P03,U01	2	132	6824	47989ce3a43e8b5742e025b7ab3ea9a65683fc382e4ba8f2b150b6e973e071cd	1	4	1				22,92	0	screened
+platform_hybrid/paper/sections/group_size_iter27.tex	shared	P03,U01	2	204	10972	0b23325c055e32dc693212fbbb58c3e677ad5cdd613a3f1699171abea66a2423	1	3	1				21,94,109,114,157,175	0	screened
+platform_hybrid/paper/sections/group_size_reconcile.tex	shared	P03,R02,R03,R04,U01	5	166	9317	408234d8eda69bf5167c940b1099181175926a7d08b7e83ca697f3ceb43e227f	6	5	0				94,116,121,140,148	0	screened
+platform_hybrid/paper/sections/heldout_stratified.tex	paper-specific	U01	1	86	4221	50ee88a83150afaf932d7f8a85680803fc81f2af39e326e9433d156204317168	5	2	0				56,67,69	0	screened
+platform_hybrid/paper/sections/intro.tex	paper-specific	U01	1	67	4152	e1047813a57bdb1a99de6def0fcad5c4d194c1233635659e0fa7f3c61cee9692	1	1	5				12,30,34,46,54,57,63	0	screened
+platform_hybrid/paper/sections/length_bias.tex	shared	P04,U01	2	963	50780	429cb0b373ee20fefb0076eebbbb6b0321488deb1b12368bf522833bbd68acf6	3	17	3				21,46,155,197,315,319,345,443,463,469,496,519,527,567,605,691,748,777,895,906,915,957,959	0	screened
+platform_hybrid/paper/sections/length_bias_iter100.tex	paper-specific	U01	1	217	12180	ed774e615928c289275b8c0e7a967456f0b610b7ba0b7294673d5a3d520fee07	1	5	0				67,215	0	screened
+platform_hybrid/paper/sections/length_bias_iter104.tex	paper-specific	U01	1	157	7890	ffa8f041f44f6923a44828fb0d342a67a87a6808a936ecdf09af7515480d963d	1	3	0					0	screened
+platform_hybrid/paper/sections/length_bias_iter108.tex	paper-specific	U01	1	213	10959	ed0aa1732154ba971be1ec84b0f9cbed37a5c8762ca4d596915c3c06bdb4ecd0	1	4	0				20,22,50,64,138,192	0	screened
+platform_hybrid/paper/sections/length_bias_iter112.tex	paper-specific	U01	1	175	8942	4a244b62f1c983b7e9ea843fa8b5ede9060c9d48fd8356433efdfc09e84a00b0	1	3	0				18	0	screened
+platform_hybrid/paper/sections/length_bias_iter116.tex	paper-specific	U01	1	215	11207	612c46cdbde8b46227743c5c34c6874d186d04fd95dc2fb91ee97b460399b2ac	1	3	0				76	0	screened
+platform_hybrid/paper/sections/length_bias_iter124.tex	paper-specific	U01	1	239	12913	36aca28fd517ebb7fd21b415c50432b3800242354083cd050eba1c141dd32769	1	3	0				89,117,147,180	0	screened
+platform_hybrid/paper/sections/length_bias_iter128.tex	paper-specific	P04	1	99	5164	c98ca3c5514ff76d74634fdfa46df00eb6c3d03f577976a4be0d5a36b14f0139	1	1	0				24,26	0	screened
+platform_hybrid/paper/sections/length_bias_iter132.tex	paper-specific	P04	1	121	6099	80990f27313df5467761bb7e7e52e559b402fb5c35288403448862eabdc513dc	1	1	0				14,38,39,42	0	screened
+platform_hybrid/paper/sections/length_bias_iter136.tex	paper-specific	P04	1	140	7147	68e713d28d81243c9927bb5ad713eb981350443bd7be56fa04bc2f4cd03420ce	1	1	0				27	0	screened
+platform_hybrid/paper/sections/length_bias_iter28.tex	shared	P04,U01	2	158	8377	b261780a07e095c7622c6f5265c688c868101361a1f2c2e9085b2e02b6b9c439	1	3	1				87,114	0	screened
+platform_hybrid/paper/sections/length_bias_iter32.tex	shared	P04,U01	2	115	6225	36c8d243e921a92fdc39f9b640fcd3da1aa10f126f39cee59072988c70551fda	1	3	2				14,16,26,36,41,97,111	0	screened
+platform_hybrid/paper/sections/length_bias_iter36.tex	shared	P04,U01	2	165	8379	6ece79209d340dea95f25fbf327351b8ed16e31efea5747daebb72d47be62694	1	4	1				62,76,120,122,125,132,133	0	screened
+platform_hybrid/paper/sections/length_bias_iter40.tex	shared	P04,U01	2	179	9362	b906aafa3d9be54bedf1f7beadd8daef8c7a3121e94589114de65eb4bfa179ed	1	4	0				16,36,56,85,94,103	0	screened
+platform_hybrid/paper/sections/length_bias_iter44.tex	shared	P04,U01	2	125	7235	6a9c8e347f4f5efe2f2d5f8bcb9d7e58cbbf4769573e90e16feb9761d2eb4438	1	3	0				40,51	0	screened
+platform_hybrid/paper/sections/length_bias_iter48.tex	shared	P04,U01	2	93	5492	38ae146173c5e142de38e3a8c3794c6f0351347b7ba1973d4aabc52308dd627f	1	2	0				26	0	screened
+platform_hybrid/paper/sections/length_bias_iter52.tex	shared	P04,U01	2	101	6051	8cf43e74522a2829aba16c7ab0b0ae351ddac72322a82bc089a0c57ff200fc5d	1	1	0				59	0	screened
+platform_hybrid/paper/sections/length_bias_iter56.tex	shared	P04,U01	2	95	5400	8c47f08c4b301a7a4445449e1df720ccc5b61d69bcac9f4fc569130e00192484	1	1	0					0	screened
+platform_hybrid/paper/sections/length_bias_iter60.tex	shared	P04,U01	2	129	6974	1aeb39ab4a0581617f2cd6cdb1d3d389048c1376f8a09b897c8c4b7d2be6cf08	1	2	0				50,52,91	0	screened
+platform_hybrid/paper/sections/length_bias_iter64.tex	shared	P04,U01	2	101	5684	51ea2275adcc5e32770dfcdd13eeafbe9dd16a5b5521dfc02c15c9305f839ca8	1	3	0					0	screened
+platform_hybrid/paper/sections/length_bias_iter68.tex	shared	P04,U01	2	141	7706	f947b6fd15966820b787e8cd6f256179138a8591d7252060961900ac40b6d6ad	1	2	0				68,85,88,119	0	screened
+platform_hybrid/paper/sections/length_bias_iter72.tex	shared	P04,U01	2	117	6756	7f120af854c678ba2030f96cd09ea78c2eb14c2aca21c8fac222043b498acb47	1	2	0				79,87	0	screened
+platform_hybrid/paper/sections/length_bias_iter76.tex	shared	P04,U01	2	169	9037	b987c98a3c91db82b2c11418abc6c48755486d034644958c1cec4928f5507b61	1	4	0				18,45	0	screened
+platform_hybrid/paper/sections/length_bias_iter80.tex	shared	P04,U01	2	105	6111	320bc21291137dd218e601f77c3e08fae865357e6e64c06726843cdba2b93de2	1	3	1				45,69	0	screened
+platform_hybrid/paper/sections/length_bias_iter84.tex	paper-specific	U01	1	140	8203	24731ebb784180871f9d3a3590667ac3ebce697b54d8cd477a193d4deea889d7	1	5	1				25,42,111,121,137	0	screened
+platform_hybrid/paper/sections/length_bias_iter88.tex	paper-specific	U01	1	196	11145	518ed4083f3d0ce41dad134fa878aea2ec45fedc73796432b6f0236b73b1637b	1	5	1					0	screened
+platform_hybrid/paper/sections/length_bias_iter96.tex	paper-specific	U01	1	164	9059	66e5ad21b36b5e1174def98eda3d2d70f5146fc3b3fd6edf56c0e87ee1e20e93	1	4	0				45	0	screened
+platform_hybrid/paper/sections/length_bias_react_shaping.tex	paper-specific	P04	1	75	3899	49a7463401ba1a2883a2257228b3de9c1a43a0419724992247713096450e05c4	1	1	1				39,55	0	screened
+platform_hybrid/paper/sections/p1_abstract.tex	paper-specific	P01	1	32	2346	55533d5835bfe1ed5352eb0bb4ab76c7630556e50e9a1471b0c62da81257d1e7	0	0	0					0	screened
+platform_hybrid/paper/sections/p1_conclusion.tex	paper-specific	P01	1	33	2242	b2d472f410e774f7b81ded37710d7e4e345cd430f6700105c7e93e371fd8019b	2	2	0					0	screened
+platform_hybrid/paper/sections/p1_intro.tex	paper-specific	P01	1	51	3617	b22013be91afe782cdbd8752106f72c5a6ce2d404fb67f91950c18c510a21103	2	2	12				6,26	0	screened
+platform_hybrid/paper/sections/p1_results_intro.tex	paper-specific	P01	1	27	1848	d83f94452783c21a05649f2ea54448a46458e9ee215dabf306e9e23ff3a24477	1	1	0				14	0	screened
+platform_hybrid/paper/sections/p2_abstract.tex	paper-specific	P02	1	26	1806	16b3a04a4669a2fd1bd01645bbdf8ff3892691427fc4bd87bc6092bc9aac99f7	0	0	0				10	0	screened
+platform_hybrid/paper/sections/p2_conclusion.tex	paper-specific	P02	1	33	2197	69adcc53896ba5d403c059d5f9d93f2a73f9a9790311a46c7ff3146d4a034689	2	2	0				5,10,13,29	0	screened
+platform_hybrid/paper/sections/p2_intro.tex	paper-specific	P02	1	50	3406	7ae4f56afbc87c6aede42216af3d7d122c4c7cb6905e8d1b274e5213da059e40	2	2	12				19,39,45	0	screened
+platform_hybrid/paper/sections/p2_results_intro.tex	paper-specific	P02	1	27	1865	f5a41c325be8a9145aab27e2053cb52ad772013b9d8d76060e2b6b723d1bacec	1	1	0				10,14,23	0	screened
+platform_hybrid/paper/sections/p3_abstract.tex	paper-specific	P03	1	35	2503	04fc4fa130cfad8e187f8f418f1d10cf2b298df58648279178d36b016c2ded62	0	0	0				9	0	screened
+platform_hybrid/paper/sections/p3_conclusion.tex	paper-specific	P03	1	91	5961	57ccf729ab4207194957ebee9e5982ae0fba87e0f6870d0795857b43ee3231d5	2	2	7				6,12,15,32,38,80	0	screened
+platform_hybrid/paper/sections/p3_intro.tex	paper-specific	P03	1	52	3361	d8fd405b581de46bd79104c14888d50457be42c79298591dba178166da3f7703	2	2	13				33,38,46	0	screened
+platform_hybrid/paper/sections/p3_results_intro.tex	paper-specific	P03	1	31	2114	c9d138d6a64a1f1e5b8cb6d1f9fa7d088c899b88cf171e33fccea77ceba48e9f	1	1	0				6	0	screened
+platform_hybrid/paper/sections/p4_abstract.tex	paper-specific	P04	1	22	1596	b70c89cd5ae2d947b33cff0e10db8aa34c4f064866f01dcdf339a44330b1f8e3	0	0	0				20	0	screened
+platform_hybrid/paper/sections/p4_conclusion.tex	paper-specific	P04	1	44	2868	591dd4a7f25e203e761024acbdf8b5b7fadba05ce9153f87f069da3220cd4956	2	2	1				18,35,36,41	0	screened
+platform_hybrid/paper/sections/p4_intro.tex	paper-specific	P04	1	50	3334	03cfe70d00d4fe9bde630e36f3846a6907301fc40fae34ba1299c145d906592d	2	2	10				25,32,33	0	screened
+platform_hybrid/paper/sections/p4_results_intro.tex	paper-specific	P04	1	32	2202	70901c41cff3af51f1c0a288aa4397dbf870ebc865ae4370f4c53254345e76cd	1	1	0				4,7,25,29	0	screened
+platform_hybrid/paper/sections/p5_abstract.tex	paper-specific	P05	1	37	2695	79061e75fea9637f86e7a2e856eda156818ec2807c3d38030bf7b42d7bd34cb1	0	0	0				8,19	0	screened
+platform_hybrid/paper/sections/p5_conclusion.tex	paper-specific	P05	1	44	2665	3eee13ab4e2b18e67689810905ca2359fea5ee99d1e30ca265f311fd7fd551ec	1	1	6				8,9,26,32	0	screened
+platform_hybrid/paper/sections/p5_evidence.tex	paper-specific	P05	1	1861	97156	f7aa746756c616b8dec37e3c4414e404b07daa44e6df39ba18b6858070669df4	23	48	6				7,20,42,96,214,349,419,575,1563,1603,1607,1722,1741,1748,1753,1756,1774,1778,1779,1789,1805,1832,1835,1838,1841,1845	0	screened
+platform_hybrid/paper/sections/p5_intro.tex	paper-specific	P05	1	64	4152	25f6cd4b4fb5888b9ecf2d35a902c9e7076ed643c7b5a230fcd188cb61b3549a	1	1	17				4,31	0	screened
+platform_hybrid/paper/sections/p5_iter101_zvf130_eta2.tex	paper-specific	P05	1	128	6816	2f2d93fcac3d45ee66aa77aff66a745bd3ede23b4ec30400b23f7f9512567c8f	1	1	0				66	0	screened
+platform_hybrid/paper/sections/p5_iter105_live_field_coverage.tex	paper-specific	P05	1	114	6167	05a3e3c9b700eca596c6b7baef02f25d75d5f51381e2c8dc564850d7b26c8e1b	1	2	0					0	screened
+platform_hybrid/paper/sections/p5_iter113_v22_recovery.tex	paper-specific	P05	1	172	8612	2d83d921ecbfe8566e908de71d6ed2e635ba570a78ce942c56fb1d54014e0e2b	7	2	0				8,154	0	screened
+platform_hybrid/paper/sections/p5_iter121_value_correctness.tex	paper-specific	P05	1	121	6181	f16b4751e3f5779f3f4c8504f2026c75ae91f875ebcfae1062afbf999d1aeb53	7	2	0					0	screened
+platform_hybrid/paper/sections/p5_iter125_chained_eta2.tex	paper-specific	P05	1	128	6945	5542e6552ed203584b378a509fd494c4f15743e604ff504bb627af76d8db446f	4	5	0				22,31,33,59,124	0	screened
+platform_hybrid/paper/sections/p5_iter133_n10_eta2.tex	paper-specific	P05	1	127	6826	cea71f2da0e6a5259c8b461546ecbe8060a877828004a7181348cd59bb9eb926	4	5	0				10,38,39,47,50,71	0	screened
+platform_hybrid/paper/sections/p5_iter137_cross_corpus.tex	paper-specific	P05	1	129	6227	e43db7494f74c303c6c2a376249ebc7e80e9f1fc43fe45003f2592fc4cbd60ba	7	2	0					0	screened
+platform_hybrid/paper/sections/p5_iter141_algorithm_axis.tex	paper-specific	P05	1	233	9928	1f733d36325d5044bc36fa6de035143dedc0525c04be510ec1ca699a27be5ae1	8	4	0				25,202,213	0	screened
+platform_hybrid/paper/sections/p5_iter145_schema_groundtruth.tex	paper-specific	P05	1	184	10244	01cddaf473269ac6261dc318bfa92f51db86d43428d67fdcb7fb20f0917f7501	7	2	0				171	0	screened
+platform_hybrid/paper/sections/p5_iter153_v24_spec.tex	paper-specific	P05	1	61	2941	a49869d4c15c4bfb59650d6172e3fc10bf00ce5d234aad3aa2031297eb8021c0	1	2	0					0	screened
+platform_hybrid/paper/sections/p5_iter157_v24_self_app.tex	paper-specific	P05	1	88	4914	c1ad2f14a7bce89f97a09903ca59b31785afdd092df10514d499eb966db8c674	1	2	0					0	screened
+platform_hybrid/paper/sections/p5_iter161_stack_factorization.tex	paper-specific	P05	1	142	8612	af8d05587d6218c9780005018cef72f147feb427bc8687d82f357a0d92426e22	6	7	0					0	screened
+platform_hybrid/paper/sections/p5_iter165_per_step_trajectory.tex	paper-specific	P05	1	69	8513	ba9b162d3c00ce406188301b6f210d3a9586c42c64641292defde305f2c52474	7	3	0				21	0	screened
+platform_hybrid/paper/sections/p5_iter169_manifest_audit.tex	paper-specific	P05	1	42	7496	96371476e4ecce41c6fc35c06f44d54d79b9dc843bef52e6bae22c1ac1c9c547	5	5	0					0	screened
+platform_hybrid/paper/sections/p5_iter173_headline_cis.tex	paper-specific	P05	1	101	5563	dd3ed3a914a1a8a1b331a660f4ee7c386ba5c725c2916aad23536b33ef5eb7eb	1	1	0				59	0	screened
+platform_hybrid/paper/sections/p5_iter177_forward_compat.tex	paper-specific	P05	1	101	4785	45e2a4e4411be44d007d603ada77ac37727000ed931db2b13abc445d3589c4aa	1	3	0				47	0	screened
+platform_hybrid/paper/sections/p5_iter181_v25_rollout.tex	paper-specific	P05	1	167	9278	090cba111d8bf2cfc4964c750e2eccedb40c3dee14156fabb4a23168f15e0b5c	1	4	0				99	0	screened
+platform_hybrid/paper/sections/p5_iter185_cross_corpus.tex	paper-specific	P05	1	101	6072	a199fc658183d0672360a5f4ba79860346f454121ce19bc968b89b573d7f6057	1	1	0					0	screened
+platform_hybrid/paper/sections/p5_iter193_algo_vs_stack_ratio.tex	paper-specific	P05	1	53	3085	1de96a925e29ca26b4ba799ba9bc6b76e00370b57bc484cf9cbc9f14ac9f41c0	1	2	0					0	screened
+platform_hybrid/paper/sections/p5_iter201_task_stratified_ratio.tex	paper-specific	P05	1	88	4896	a2566768dd5b401f211f8ff5232fdc8de29f503973351ba8328fad1b601b618a	1	2	0				88	0	screened
+platform_hybrid/paper/sections/p5_iter77_cross_corpus.tex	paper-specific	P05	1	85	4518	7fbb78c39e80d1f7636e20921efcd818ed97ae1830a94bb3dead72d0df17bb7a	1	2	0					0	screened
+platform_hybrid/paper/sections/p5_iter80_delta_div.tex	paper-specific	P05	1	105	5434	808fa40dca999c8a5b0e34215d66e3a46a64fa771c5e4ec6021e9170a5025f35	7	3	0				61	0	screened
+platform_hybrid/paper/sections/p5_iter81_yield_axes.tex	paper-specific	P05	1	145	8255	3d91ef527d32ac508d98997b63ab974f86b5d8927ad975355460d2c801770c45	9	4	0				9,114	0	screened
+platform_hybrid/paper/sections/p5_iter85_ivison_unpacking.tex	paper-specific	P05	1	126	6855	ed0caf4d479dc29d7a916d0fa7c932e4a4f041e0401636ffdade4eb519159133	7	8	0				11,15,110	0	screened
+platform_hybrid/paper/sections/p5_iter89_n2_bootstrap.tex	paper-specific	P05	1	170	8956	c1b3166fe013f7b6a792339ba7cfcbb46156bc974e28f1e991a8258b5a02b0b5	8	10	0				137	0	screened
+platform_hybrid/paper/sections/p5_iter93_mega_eta2_bootstrap.tex	paper-specific	P05	1	90	5056	8fb6905639dd486e3307f55d9b8f898303856cd8c1e9f990f1ab2bb913dcce77	1	1	0				32	0	screened
+platform_hybrid/paper/sections/p5_iter97_schema_mismatch.tex	paper-specific	P05	1	110	6077	be18bebbb6c8127b1e4cbc14019cfbd0e5c578adf8df65aee91b27f1046c36bc	1	1	0					0	screened
+platform_hybrid/paper/sections/p5_limitations.tex	paper-specific	P05	1	30	2081	8cf42e665d9aad7d7236d1a0ed593242cc468ed9e9df51b6345f48425df2d130	1	1	0				5	0	screened
+platform_hybrid/paper/sections/p5_related.tex	paper-specific	P05	1	106	6975	05092c39b5391f35aa017c10eed7ad93bb9238a4e8700e988366ed65cfd3eb5f	1	1	30				55,57	0	screened
+platform_hybrid/paper/sections/p5_results_intro.tex	paper-specific	P05	1	30	2061	8ae07830409be5a95db7e6cc50727542b25b376ad8671d7ff94b9c69a1665437	1	1	1				10	0	screened
+platform_hybrid/paper/sections/p5_stack.tex	paper-specific	P05	1	312	17252	ba8138b3b3a9f62b71032e1c189052f7be9ce21b3716c1a3d9c2aab3a6fa2f95	11	14	17				29,69,108,219,222,229,281,301,310	0	screened
+platform_hybrid/paper/sections/p5_threatmodel.tex	paper-specific	P05	1	83	5023	ec697d565768326ca84809bd1441b6a5687c5ebf58c9fc4925855269f49e56df	3	3	9				77	0	screened
+platform_hybrid/paper/sections/p5_toolchain.tex	paper-specific	P05	1	67	4165	26a1513cecbef51beabc29430afdc0ac7b9a33ab5d3dd37c63780a72878a7566	2	2	2				49,55,62	0	screened
+platform_hybrid/paper/sections/p5_verifier_impl.tex	paper-specific	P05	1	55	3679	e58331f9917c1f060a25200f4e32bfd838de9f2a2819b5e95607b3e3908af38d	1	1	0					0	screened
+platform_hybrid/paper/sections/p5_worked_example.tex	paper-specific	P05	1	128	5186	b20daede459b036c21dd147533b5512c167efe3535b2857c1bb28920bea0d056	4	4	0				127	0	screened
+platform_hybrid/paper/sections/p6_abstract.tex	paper-specific	P06	1	33	2335	e1a67aa95c03adabeb25afb157e52360670dff108456ab02a7f8fed91cd39213	0	0	0					0	screened
+platform_hybrid/paper/sections/p6_appendix_artifact.tex	paper-specific	P06	1	98	4694	e8e0f6edc19f64f7df6534988a8192fff620631f8ca12217e108a3857c947b11	4	4	1					0	screened
+platform_hybrid/paper/sections/p6_conclusion.tex	paper-specific	P06	1	40	2565	860c7aa3f8e4ab6d832e51aaf17f15d77cefed355f64c5502fee960b5c37df9c	2	2	0				4,29	0	screened
+platform_hybrid/paper/sections/p6_controller_pipeline.tex	paper-specific	P06	1	79	4787	7916d7d2978a8258e12834d88661717083a144024044110128452b0405d4fd36	0	0	0				55,58	0	screened
+platform_hybrid/paper/sections/p6_governance.tex	paper-specific	P06	1	54	3098	ee383a19ca019d897fb05585fe69b2e20b8775a9f4c99149d305499ac51259d9	1	1	1					0	screened
+platform_hybrid/paper/sections/p6_intro.tex	paper-specific	P06	1	77	4824	1d0af384e586bb061e37c7e82b41cf15662e47a90f63211ea4c6451f2f5320d2	2	2	22				11,24,28	0	screened
+platform_hybrid/paper/sections/p6_iter100_coverage_closure.tex	paper-specific	P06	1	85	4546	5f2c691e4e946030dea5f6f366c07749d46f8427712132de2d6cd28b05fea4e5	1	2	0					0	screened
+platform_hybrid/paper/sections/p6_iter106_claim_evidence_ledger.tex	paper-specific	P06	1	135	8329	68ba5871b9468e4026e51504ffb8fe649c49b49eafd1cecb619d0c761f681714	1	1	0				36,63,70,72,74,76,80,83,123,132	0	screened
+platform_hybrid/paper/sections/p6_iter118_claim_xref_coverage_strict.tex	paper-specific	P06	1	135	8001	6959a9bbc2d93d62e100142650123f637097819f3366a1f31cee28607f43ec27	1	1	0				24,33,44,52,55,76	0	screened
+platform_hybrid/paper/sections/p6_iter122_validate_strict_crossentry.tex	paper-specific	P06	1	130	7822	ed3e3ae1b4f5b75954df70391729b07a66d0fa4c42c93c13e30866a51c7bcaca	1	1	0			73,77,81,85,86,114,123,126	32,80	0	attention
+platform_hybrid/paper/sections/p6_iter126_measured_evidence_tier.tex	paper-specific	P06	1	124	6454	19a9d27a992818525718c96c11378192a6f30c3a7cd2deeb1bd46406a1e7a804	1	2	0				54,56,62,63,74,113,121	0	screened
+platform_hybrid/paper/sections/p6_iter134_field_completeness.tex	paper-specific	P06	1	205	9507	0a56b1de1ea722f381722b98888861218258ab51f775d738d8c84e8b1ac43c54	8	11	0				100,123,124,127,129,146,148,188,190	0	screened
+platform_hybrid/paper/sections/p6_iter138_missing_method_entries.tex	paper-specific	P06	1	124	6279	74595ac105b35cdff4c3fd35369fcb9cfaefb5d01731ce1816f288b6573aa73b	1	1	0					0	screened
+platform_hybrid/paper/sections/p6_iter142_verdict_aggregate.tex	paper-specific	P06	1	224	12021	3d6d3ab8a3d13f4787cda60e3900d1d7b11f88aaaef935b30924d13c7dbf392c	1	3	0				47,49,54,56,57,58,64,66,70,76,77,80,81,82,84,85,95,98,99,101,111,113,134,148,152,153,167,171,190,195,208,216	0	screened
+platform_hybrid/paper/sections/p6_iter150_n2_recompute_prose_vs_measured.tex	paper-specific	P06	1	152	7663	9caf84e413746de3017e1672e25967f536809f827119d4dfcecbbe04e41b29d3	1	3	0				122,137,145,151	0	screened
+platform_hybrid/paper/sections/p6_iter190_raw_recompute_audit.tex	paper-specific	P06	1	203	10659	24e6806e5dd5cc82f22f1e1244870db1ce5f55e2d04d414cac3ec594d9d7907e	7	3	0				35,37,48,60,77,101,120,131,133,135,136,137,139,141,143,144,145,146,147,150,151,153,169,170,179,197,198	0	screened
+platform_hybrid/paper/sections/p6_iter74_drgrpo.tex	paper-specific	P06	1	166	9154	dc91e267d4c189c6f1f0a740e5050fa10368519277de2ebd1397222c95bd27aa	1	3	0			8,84	9,29,31,41,43,60,103,109,123,129,142,154	0	attention
+platform_hybrid/paper/sections/p6_iter78_field_coverage.tex	paper-specific	P06	1	92	5084	4eb6ff59bdf63b2a4a568eac0ff47f06274a8ae1b3a10c0a66f4ebffce331f91	1	1	0				2,13,14,15,21,24,30,34,36,45,46,47,59,70,78	0	screened
+platform_hybrid/paper/sections/p6_iter82_window_sensitivity.tex	paper-specific	P06	1	91	5088	da1062c699a5eb736b91b911746fc61445e12ba68dca121ea761046770912d11	1	1	0				76,78	0	screened
+platform_hybrid/paper/sections/p6_iter86_cross_stack_matrix.tex	paper-specific	P06	1	153	7849	69d800a123da727ef5f40f21b8f6ca2b4bf75e78fd5a920b47fe601628aad53f	6	3	0				122	0	screened
+platform_hybrid/paper/sections/p6_iter90_zvf130_measured_audit.tex	paper-specific	P06	1	121	7424	fca368536d25a657b3d913b2c4c38ec46775f8168a17602b1752e2bf51ef616e	1	1	0				18,35,47,63,64,67	0	screened
+platform_hybrid/paper/sections/p6_iter94_schema_validator.tex	paper-specific	P06	1	166	10437	46f994613792b0e759c0077f977bb927e603ec772d44896e5f598add3f52dec2	1	1	0			44,153	61,62,131,134	0	attention
+platform_hybrid/paper/sections/p6_joint_controller_extension.tex	paper-specific	P06	1	76	3830	d4b088485a1002d11dc2399595caceed0c99ef81f4e4ae5a3719d329232bac9d	4	3	0					0	screened
+platform_hybrid/paper/sections/p6_measured_claimed.tex	paper-specific	P06	1	147	7687	71c720b541f3b90e8731e888bfe1eedb4752d0e4ca14c6350231fe9fdb29b3ee	6	2	0				12,37,38,66,95,107,112,114,125	0	screened
+platform_hybrid/paper/sections/p6_measured_coverage.tex	paper-specific	P06	1	157	8236	e3902541ccdeb1b7d559037af1d3616ea56dea966546ef28d19caa5c9be39ab8	1	2	0			33,98	36,38,68,74,97,106,118,129	0	attention
+platform_hybrid/paper/sections/p6_measured_evidence.tex	paper-specific	P06	1	86	4970	258e9938809872a2fa3bbbaa79580571496c9ae431b5c027e835b19ef8c669b2	4	2	0				33,68	0	screened
+platform_hybrid/paper/sections/p6_missing_deltas.tex	paper-specific	P06	1	151	7691	7ac9486e6b08e1432ff0e27e4d6f96eecb9419ad60f81e5bf4931e97663598d3	1	2	0			15,41,93,118	38,40,42,71,72,83,103,112,122,126,131	0	attention
+platform_hybrid/paper/sections/p6_population.tex	paper-specific	P06	1	118	6897	cfab05bcde6420d5f2da835ec862d083fee59b5d7d545680d33d7c2da7c2a21b	1	2	0			67	50,93,96,99	0	attention
+platform_hybrid/paper/sections/p6_query_auditor.tex	paper-specific	P06	1	85	4400	74376f00ba9829f69a3cc527e41cdf5cb0aa0f52e5c79d1a7922ba65a77376ed	4	5	0				42	0	screened
+platform_hybrid/paper/sections/p6_registry_health.tex	paper-specific	P06	1	855	45576	89033159b32df04f4e54eae240604965f544d1f439011167a0d5a896f3d7ca7c	12	14	0				31,50,123,126,127,277,286,310,313,337,338,356,400,407,535,622,731	0	screened
+platform_hybrid/paper/sections/p6_related_resources.tex	paper-specific	P06	1	61	3654	942e0e9ce32b6b533fa94cc7f7055aeb08a93907392cea6dd43bc3c0afc92868	1	1	6					0	screened
+platform_hybrid/paper/sections/p6_results_intro.tex	paper-specific	P06	1	33	1845	cb12f49295a2de0c56d43d75d6d4a27b6b925ae85c49c2f662ad3e262426cf1a	1	1	0					0	screened
+platform_hybrid/paper/sections/p6_schema.tex	paper-specific	P06	1	126	7161	ce74dbb68413b80b30ae123636e9d4c62ddc3c84d35fea67afcf3a43fde13b8c	4	4	3					0	screened
+platform_hybrid/paper/sections/p6_schema_extension.tex	paper-specific	P06	1	334	17948	155a574ac2067af2aa6e94ec9c4098ec62d724b89ebee6de5f5fcd0ba15fe9cd	3	7	0			326	163,213,261	0	attention
+platform_hybrid/paper/sections/p6_synthesis.tex	paper-specific	P06	1	46	2874	cdefa159dc1794273301e780be7857cbf7905cca1dcc61ff63bd6e68c5273890	1	1	0					0	screened
+platform_hybrid/paper/sections/p6_worked_examples.tex	paper-specific	P06	1	69	3857	68921fdbac83349f420bcf951806d25a5748e755abed07123361f1c7f5a3c7d6	3	3	0				64	0	screened
+platform_hybrid/paper/sections/p7_abstract.tex	paper-specific	P07	1	47	3387	5005a408842269175ca8a534242cb29e8c3117c783d9d26864e6b7dff83aa4b6	0	0	0				11,43	0	screened
+platform_hybrid/paper/sections/p7_appendix_derivations.tex	paper-specific	P07	1	119	6113	5fb5c76541d9d1e6f5475452356d1f3b38f4e10ec3c8bf0b8f798552dc681f25	7	7	2					0	screened
+platform_hybrid/paper/sections/p7_conclusion.tex	paper-specific	P07	1	27	1745	94679ffe342d6accaad1f41702291050c12eed3d7726aa6e6c0f15dfa69037aa	1	1	0				19,23	0	screened
+platform_hybrid/paper/sections/p7_controller.tex	paper-specific	P07	1	2364	121463	1de8431cdfaec44dded9c516c410a2e400b4a4e0e28d13a4821a5f2c6a87857b	23	54	5				24,64,77,231,232,240,456,457,489,498,523,531,608,616,975,1031,1152,1171,1289,1316,1330,1331,1375,1399,1444,1466,1538,1703,2158,2193,2303	0	screened
+platform_hybrid/paper/sections/p7_design_rules.tex	paper-specific	P07	1	77	4575	c6edcdd4aa3ef57a826ea52578ae88db6bde772485c172adcd061d6520f01327	1	1	0				4,5,74	0	screened
+platform_hybrid/paper/sections/p7_e1_validation.tex	paper-specific	P07	1	37	2207	c60b6541b3ce2208c61254c5fb846250bba0d789de5460a81e749effc3363869	1	2	0				31	0	screened
+platform_hybrid/paper/sections/p7_intro.tex	paper-specific	P07	1	89	5618	f800aabb5610148356d197f4c0d157e344272a978302f08fee8932aeedcf5dd6	2	2	11				12,20	0	screened
+platform_hybrid/paper/sections/p7_iter103_unified_controller.tex	paper-specific	P07	1	152	7296	52f58952df73b5ea9a7e2d2831105d8da7c35f97943d896dc0a8d65f066a8695	5	3	2				19	0	screened
+platform_hybrid/paper/sections/p7_iter107_tautransfer.tex	paper-specific	P07	1	162	6860	9a7fc8a391159ba233cf134084b8cd472ab00cc86a5823c1c74ad350e6feda9d	7	5	0				115,159	0	screened
+platform_hybrid/paper/sections/p7_iter115_adaptive_gstar_n10_multiseed.tex	paper-specific	P07	1	86	4544	2a8cd5f311d67ab1c88527c0b0a56cfb7a3abbfc8af0d5482c478042ca01656b	2	1	0				21,58,63	0	screened
+platform_hybrid/paper/sections/p7_iter119_calibrated_controller_unification.tex	paper-specific	P07	1	153	8293	8db5f88f5c1875f6a3750ccbcb1f0039310ca0061442d06ea5944e53bcd1fa4e	5	1	0				50,53,99,115,144	0	screened
+platform_hybrid/paper/sections/p7_iter127_method_axis_ccc.tex	paper-specific	P07	1	124	6197	52645138638d85f346eb5b6aaff1359feef6fb4dd37280ce0ca62a9dfe0b608c	3	1	0					0	screened
+platform_hybrid/paper/sections/p7_iter131_per_prompt_adaptive_gstar.tex	paper-specific	P07	1	151	7367	96ee8fb96aadde9a9582f08845a43e4f672e064e7d2e2ec36c9847cb5fca7b3b	1	4	0					0	screened
+platform_hybrid/paper/sections/p7_iter135_tau_stability.tex	paper-specific	P07	1	132	7172	084045b2ce1c2f4a361f471b91d62f5eea94657785b4eaa0fa8791f5cd41f03e	1	1	0					0	screened
+platform_hybrid/paper/sections/p7_iter139_predictive_validity.tex	paper-specific	P07	1	85	4800	0189fe3a7fdc2fe51de4af9546fe0058fc04ce7d1042c965432b8d066555a062	1	1	0					0	screened
+platform_hybrid/paper/sections/p7_iter143_decision_concordance.tex	paper-specific	P07	1	130	6569	ddab70b6e68e74f1f840c528e8ccf3dfb415454548c2a161236e2c6237e491b9	1	2	0					0	screened
+platform_hybrid/paper/sections/p7_iter147_unified_per_prompt.tex	paper-specific	P07	1	213	11860	2219235b02af35f98ae91ec70ca4f72c1819e362566f60a05daa011d43b9e812	8	3	0				37	0	screened
+platform_hybrid/paper/sections/p7_iter159_pareto_permethod_ci.tex	paper-specific	P07	1	290	15255	8233f9075be0ab1d32926905cb9c3e29ec3fa5a5fca7b7f77b2268a71a000aff	9	5	0				13,14,133,150,155	0	screened
+platform_hybrid/paper/sections/p7_iter167_oracle_regret.tex	paper-specific	P07	1	161	8855	d241ff28421d8cfdc5d8568c0c6d4b8939be7a9cd716f4f60d6abccc79bf2f72	7	2	0				12,80,94	0	screened
+platform_hybrid/paper/sections/p7_iter175_calibrated_hybrid.tex	paper-specific	P07	1	193	9653	c05f4b5c75ad9e519fa9cf7ab7e551d88bdb5680029cefffd6ef8044f1c99376	8	3	0				16,44,80,122,124,155	0	screened
+platform_hybrid/paper/sections/p7_iter192_perfire_optimal_gn.tex	paper-specific	P07	1	225	11360	ed7185b2f3ef7816941058170d36cc1255b8eb98e171db78f463347090c94966	6	2	0				30,76,105,130,131,215	0	screened
+platform_hybrid/paper/sections/p7_iter195_unified_concordance.tex	paper-specific	P07	1	128	6007	7c3b5dbcd74df8c1b1c255654aae4f7df7570de0cff971bc87e624722a8edc43	5	2	0					0	screened
+platform_hybrid/paper/sections/p7_iter199_closed_loop_counterfactual.tex	paper-specific	P07	1	183	10130	c6ee9214845c83ede294e16148c592ef41e53793ed27e1b11a5c8565b49fe190	6	3	0				2,8,137	0	screened
+platform_hybrid/paper/sections/p7_iter203_empirical_gprime.tex	paper-specific	P07	1	45	2460	16394effa62bbc66a6b48af90ec1ed83341752620f14eb7bbdef55b602d3fefa	1	1	0				27,33	0	screened
+platform_hybrid/paper/sections/p7_iter79_multitrigger.tex	paper-specific	P07	1	197	10308	929f1e427d69b4576e1e8c304ba2d9f7a97963a2bdae51dafedfbc6014cbb9d1	1	3	0				116,175	0	screened
+platform_hybrid/paper/sections/p7_iter83_iso_g.tex	paper-specific	P07	1	163	8251	554c10c6b8b9795c7076abb513d03bbb12e77f75b62960b4da7eb0bc95bc1e33	1	4	0				115	0	screened
+platform_hybrid/paper/sections/p7_iter87_hysteresis.tex	paper-specific	P07	1	155	8075	cc4f3ce63712f577fd0a434f5859d267689f3a1f180ba71d29335bae32c84bd1	1	2	0				57	0	screened
+platform_hybrid/paper/sections/p7_iter88_hysteresis_n10.tex	paper-specific	P07	1	105	5018	0179ab1686baf29aa29ecc6d2a398e60c03fdaf37c5e0b21946c5dadd698a1f5	4	3	0				48	0	screened
+platform_hybrid/paper/sections/p7_iter91_perfire_gain.tex	paper-specific	P07	1	178	9147	fdb77eb5264119433ee5c4cde59e3919dc05cf3499092776255c85961e554705	1	3	2				120,158,169	0	screened
+platform_hybrid/paper/sections/p7_iter92_asymmetric_hysteresis.tex	paper-specific	P07	1	144	7386	93d87f7826e17d084badab2eb0393b67590e2bfd5abfbf0e0afa5fb0f2b37204	1	2	0				77,105,138	0	screened
+platform_hybrid/paper/sections/p7_limitations.tex	paper-specific	P07	1	95	5220	ed2c2e87d570eb4ecfcb4d4973d88d67a9180752e40578055615709a27a7a340	3	3	5			53	29,38	0	attention
+platform_hybrid/paper/sections/p7_results_intro.tex	paper-specific	P07	1	36	2295	c2b163d7b63f5c05e80d04081b664e309910d76898e97ef6c7921e0e2b2d9b18	1	1	0				4,17,21,32	0	screened
+platform_hybrid/paper/sections/p7_synthesis.tex	paper-specific	P07	1	48	2916	1c93216c93775ead2e7e0466ce469e536c8b3f8f2260c1772b1807df7cd0cb03	1	1	0				39	0	screened
+platform_hybrid/paper/sections/p7_theory.tex	paper-specific	P07	1	131	6378	4742c4de94f27a05f99ef30fb57c9fa2d4adc8bbdfdad0b945b7fbc547364657	5	9	0				23,61,126	0	screened
+platform_hybrid/paper/sections/p7_ushape.tex	paper-specific	P07	1	99	5136	f5af34a2f6a64af0f268bd7df6050f6c9660caa2394da2dfbcc1a5d977b53c06	4	6	0				44	0	screened
+platform_hybrid/paper/sections/p8_abstract.tex	paper-specific	P08	1	34	2456	6341700d2b5eb14112fd4829646d3ed62d3636204dc3ad10dfd07e5c4e45172f	0	0	0				25	0	screened
+platform_hybrid/paper/sections/p8_architecture.tex	paper-specific	P08	1	106	6008	44bfbbf76aa9cbbc1fa7722c4ea80cd271092f851b8f5a551403b13062d78ac2	1	2	4				61	0	screened
+platform_hybrid/paper/sections/p8_compliance.tex	paper-specific	P08	1	68	4207	a8b56c2b6651886799de786e4a2ab06b88de7b6f10a3c5c399aa2c6db3809c2a	3	3	5				37,49	0	screened
+platform_hybrid/paper/sections/p8_cost_optimal.tex	paper-specific	P08	1	105	5394	48c93f7c23a3d3ff0bd17130a556e0bf2595c16fa96c1fc0bd203065551aad1e	1	4	0				3,4,11,27,30,33,61,66,82,84,92	0	screened
+platform_hybrid/paper/sections/p8_decision_disagreement.tex	paper-specific	P08	1	160	8068	a1b7af23d50b62708e168396ad62fa8cfafe9cd2db843f23e82e89b965d91e0c	6	7	0				131	0	screened
+platform_hybrid/paper/sections/p8_evidence.tex	paper-specific	P08	1	2005	106074	13fb65bd7b730115e72d8e7afe0eb68a3a6fec5d7bfd4cb40602c786512e305e	22	45	0				85,92,239,373,440,523,656,675,795,833,839,878,911,954,967,1041,1047,1051,1058,1161,1320,1719,1943,1972,1989	0	screened
+platform_hybrid/paper/sections/p8_evidence_noise.tex	paper-specific	P08	1	179	8665	0d2f8db309a49a4af293c39b22badc0c5d705d00fcd05e7fffc13d2c70455c1a	4	4	0					0	screened
+platform_hybrid/paper/sections/p8_future.tex	paper-specific	P08	1	36	2107	5137c461d35e634a271b0bd8f871c19463c10d52c66a4612ebf18b0457b658f5	1	1	4				9	0	screened
+platform_hybrid/paper/sections/p8_intro.tex	paper-specific	P08	1	85	5328	3e57745267981a984b971df3820fe32442e1bd14b52289baebece720ce6d62af	1	1	8				39,68	0	screened
+platform_hybrid/paper/sections/p8_iter104_isotonic_recalibration.tex	paper-specific	P08	1	137	6747	76d6847b3914e7c21ec8183cc5a4e869881a3ce8a7c5e782881b82656bf75151	5	3	0					0	screened
+platform_hybrid/paper/sections/p8_iter108_cost_decision_cis.tex	paper-specific	P08	1	122	6011	b5764587eb8356c1dce6087f7cd29b3cc8fa9bc0645ef258c50ae237be8e0dcb	1	2	0				101	0	screened
+platform_hybrid/paper/sections/p8_iter112_cost_cis_realistic_rates.tex	paper-specific	P08	1	100	5296	6dbfcbee29571f940174c89525799a26281dd8e7bcb6cf128122df580129003b	6	1	0				100	0	screened
+platform_hybrid/paper/sections/p8_iter116_llm_cost_sweep.tex	paper-specific	P08	1	76	4051	2d7c58b25e0b03220452d497f30ff086d5fcd471655931230cceab6b85d98397	5	1	0				63,76	0	screened
+platform_hybrid/paper/sections/p8_iter120_vstat_ablation.tex	paper-specific	P08	1	78	4479	b0428e0e8bb0aa478e764b0e61550390d18856b416aa87a9219f177cffade8e5	7	1	0					0	screened
+platform_hybrid/paper/sections/p8_iter124_cost_accounting.tex	paper-specific	P08	1	79	4442	1fa7265ebedfeb7a0e7355e77d41b4a6d69c4fa5f55568ca163161bf19feb24a	6	1	0					0	screened
+platform_hybrid/paper/sections/p8_iter132_mislabel.tex	paper-specific	P08	1	130	6955	39c446809b480bfacead9515114abe38802ae1bbbbbf1a1adf55188a1ffcdcdd	6	2	0					0	screened
+platform_hybrid/paper/sections/p8_iter136_cal_realistic.tex	paper-specific	P08	1	106	5565	4f39d3d39def3c0a4f99aae4268a3f2d67c275eb1ddff80772c46c8dc718164d	5	1	0				17,72	0	screened
+platform_hybrid/paper/sections/p8_iter140_sensor_feat_realistic.tex	paper-specific	P08	1	131	6272	e00be477108770a1d5f64e0ff94bd6d3bc6eea5f86660e7125b3ed9c84548fd1	3	2	0					0	screened
+platform_hybrid/paper/sections/p8_iter156_disagreement_escalation.tex	paper-specific	P08	1	131	7197	246beada048990d6ce70a005aed50b702aac861af4b699048799e260409e8736	3	0	0					0	screened
+platform_hybrid/paper/sections/p8_iter160_operating_point_utility.tex	paper-specific	P08	1	183	9990	ad6795192dbe454836950bfb7bef51131d9a03cfac59df061bcf6476bbdbbbb5	6	1	0				72,115,137,148,153	0	screened
+platform_hybrid/paper/sections/p8_iter164_breakeven_tier.tex	paper-specific	P08	1	88	4834	86b043c1fa44a8a313c7000b475f7e5c0a88968205fd032bf81c622e2d880c41	1	1	0				86	0	screened
+platform_hybrid/paper/sections/p8_iter168_vmean_threshold.tex	paper-specific	P08	1	150	8327	1adc44cbfbdceeb45809ba2b16a2c4daa123696c79895da680f991fabdf35847	5	0	0				67,88,92	0	screened
+platform_hybrid/paper/sections/p8_iter172_vstat_ensemble.tex	paper-specific	P08	1	154	8765	997cab1bf49cd1486f1d210f2606a1d6e079e96c7b78bb40766118721152ba75	5	1	0				59,61,124	0	screened
+platform_hybrid/paper/sections/p8_iter176_sensor_scribe_scorer.tex	paper-specific	P08	1	104	5182	5131151e38d0e1443fe945fdb7d635d903a048b84358818066af8da3d7189440	2	3	0					0	screened
+platform_hybrid/paper/sections/p8_iter180_calibration_slope_curvature.tex	paper-specific	P08	1	142	6978	d589f653d4e4c6732762d6ddfdb6181b6ab0e27069077a58bda43f1671df3cf4	4	3	0					0	screened
+platform_hybrid/paper/sections/p8_iter192_vmean_decile_audit.tex	paper-specific	P08	1	154	8896	1ce6be28ae0a3f44bf1fda40b3f974b6a589d2c083a8c66719f3fd515390a05e	6	7	0					0	screened
+platform_hybrid/paper/sections/p8_iter204_decile_cost_savings.tex	paper-specific	P08	1	164	9290	6581dbf0005b6648f475a08033b252ab6c1278d94a6320d1940df2911a0f891e	6	7	0				40,141	0	screened
+platform_hybrid/paper/sections/p8_iter80_score_gradient.tex	paper-specific	P08	1	157	8431	af73987870f663e1a20d031e6c4d9690b15bf438c8e3314c207dd79864b4861a	5	7	0					0	screened
+platform_hybrid/paper/sections/p8_iter84_cohort_calibration.tex	paper-specific	P08	1	138	7455	1587c1db4ddb69039422179cfa1b728ad5521b3f0ab6522236b6c0ed530da93d	5	3	0				127	0	screened
+platform_hybrid/paper/sections/p8_iter88_noise_cost_frontier.tex	paper-specific	P08	1	147	6956	b2e16b4ac24d224add6fe459d4b0b3171a1fc36c58a11149209fba8b128e3896	5	3	0					0	screened
+platform_hybrid/paper/sections/p8_limitations.tex	paper-specific	P08	1	54	3204	3caef49c18d3f07eedd0dd62f2a08755a0a64a6ee6bd891214afedc39688bee7	1	1	2					0	screened
+platform_hybrid/paper/sections/p8_noisy_sensor.tex	paper-specific	P08	1	125	6326	bedd9b6221a1335637e82561adfdd2faa2e0d44ee3db17480741db9d0bd6a267	1	4	0				4,7,13,26,57,95,107,115,116	0	screened
+platform_hybrid/paper/sections/p8_related.tex	paper-specific	P08	1	54	3304	8fe6c445f3943b517a5dadc608ac1c416c408e7eaa150d0e231070c0ae70b066	1	1	11				8,44	0	screened
+platform_hybrid/paper/sections/p8_reproducible_detector.tex	paper-specific	P08	1	80	4331	97a8fe360647a7629f2bf1be0b5ce1d4520e0ca698205f3b85b3e46e50b4722c	1	2	0					0	screened
+platform_hybrid/paper/sections/p8_scorer.tex	paper-specific	P08	1	85	4771	08af65f43c09565c76d4e63ce10b05d6ad3af073cd01b2c8b56f0c984744ee25	1	2	5				38	0	screened
+platform_hybrid/paper/sections/p8_setup.tex	paper-specific	P08	1	79	4903	3f538519e4ab5f1378a971313bb9c503187eacdfa064c6a977b3a5c602bfad36	1	1	4				70,75	0	screened
+platform_hybrid/paper/sections/p8_taxonomy.tex	paper-specific	P08	1	97	6046	0dd9a5231d2340946f1cf7275e2e99b8cfd6aed241ed0462668b28c090033510	5	5	10				17,53,57	0	screened
+platform_hybrid/paper/sections/related_work_v2.tex	shared	R04,U01	2	240	15408	7d2cc6cdd798aa576d3d91e8f92425c3a477bbdfdbf1b6dcd4d0f362dff07720	6	6	131				28,41,53,74,95,153,173,175,179,215,235	0	screened
+platform_hybrid/paper/sections/robustness_smallscale_nulls.tex	paper-specific	P03	1	102	5399	4b9ab612c3a84d7e35e24f4fec6f96926be1e6aca6d45934fd4104650c2090ac	1	2	0				54	0	screened
+platform_hybrid/paper/sections/scaling_law_iter101.tex	paper-specific	U01	1	190	9983	bc246bfb2b3a6f20f9e25be5ce218b7c8d1e403019b2eb80d1fd8c3016c0a8c5	0	4	0				38	0	screened
+platform_hybrid/paper/sections/scaling_law_iter105.tex	paper-specific	U01	1	199	11150	4f840be5241ad03ae155debb2e6f27acc25b1c76f99d9abc045b3e4c37fe2365	2	2	0				41,101	0	screened
+platform_hybrid/paper/sections/scaling_law_iter109.tex	paper-specific	U01	1	277	18051	7ec75fcfba42ae033d30d84686eda027a4e07aab650236a916d307773c516f25	2	6	0				119	0	screened
+platform_hybrid/paper/sections/scaling_law_iter29.tex	shared	P01,U01	2	138	7051	411e2fc69023eb684a6c2db517e391163d86d3feb4803dc112057f87a495ca1b	1	3	1				2,23,29,42,43,45,60,67,77,87,91,103,113,117,128,129	0	screened
+platform_hybrid/paper/sections/scaling_law_iter33.tex	shared	P01,U01	2	177	8990	719e38a84b575afa0a6a367173f6609ef2edfe2702a9aa2a7bd73956732633a7	1	2	1					0	screened
+platform_hybrid/paper/sections/scaling_law_iter37.tex	shared	P01,U01	2	159	8479	18ac5f560e1d4bce65b08cc7d6a99d4bbaf5def04d089544a27406414cc76cd8	1	1	0				40,41,42,77,78,79,82,157	0	screened
+platform_hybrid/paper/sections/scaling_law_iter41.tex	shared	P01,U01	2	32	2722	99469adeba93aab3baf394b27d0825a85ed38622cc1b2865d0dfca9deab55258	1	1	0				30	0	screened
+platform_hybrid/paper/sections/scaling_law_iter45.tex	shared	P01,U01	2	56	3219	18837c6727a476e148817970a040afc645c847e3a7891e40f4c9553273993eaf	1	1	0					0	screened
+platform_hybrid/paper/sections/scaling_law_iter49.tex	shared	P01,U01	2	61	5356	99a6742c10812bbb972ffef4b35eacae6e153c303355766c033be0b12bbd9caa	1	1	0				51,57	0	screened
+platform_hybrid/paper/sections/scaling_law_iter53.tex	shared	P01,U01	2	68	4552	681da0a3a14910451deed9911630393c6cd28267e335cc2626528f077e20f6d9	1	1	0				35,40	0	screened
+platform_hybrid/paper/sections/scaling_law_iter61.tex	shared	P01,U01	2	236	11736	0336f96e5f82d4fdad2eff0f4b5617415ce813a1407d71a9f0482ef431b08e69	0	7	0				202	0	screened
+platform_hybrid/paper/sections/scaling_law_iter65.tex	shared	P01,U01	2	174	7585	3cbf59809206b3f9fd30fe58a9cfc90acae274b3b295cae371631d51cb082fb4	0	6	1				140	0	screened
+platform_hybrid/paper/sections/scaling_law_iter69.tex	paper-specific	U01	1	170	7905	c588bf0f72f7ee5b67fe9da58ede7e7517c82d20df894da3aff712b6195a3a52	0	4	0				26,47,136	0	screened
+platform_hybrid/paper/sections/scaling_law_iter81.tex	paper-specific	U01	1	161	8668	c526e5f9d1d4de51f62943791c8915d9baff540568f5d6b4d30e7d57e1a87c1e	0	8	0					0	screened
+platform_hybrid/paper/sections/scaling_law_iter85.tex	paper-specific	U01	1	167	8316	0dd6dca2bf8e3a5453982357a42caf860321e7a52e52c5037f30cc62931e3a46	0	7	0				31,49,146,150	0	screened
+platform_hybrid/paper/sections/scaling_law_iter89.tex	paper-specific	U01	1	140	7153	19f4227d63099b43c343e256f666c19fb257788eabd454089775db56903074a0	0	8	1				12,55,78,114	0	screened
+platform_hybrid/paper/sections/scaling_law_iter93.tex	paper-specific	U01	1	151	7811	872b7265d142baf7484651a40b426e0dd2344f011ef4e4ef6c335e9cc7d4cf25	0	7	1				13,51,55,62	0	screened
+platform_hybrid/paper/sections/scaling_law_iter97.tex	paper-specific	U01	1	151	7259	444a38980073ac6d623d3a32ae8278c3c6977685ed8895ec9a1e8c40be51ffdf	0	4	0				26,48,80,82,151	0	screened
+platform_hybrid/paper/sections/scaling_laws.tex	shared	P01,U01	2	1990	99046	bf6c49532a0d1644486498e3d9b0b86fd38870db455f0c96b05b83370b447abd	0	85	8				26,269,362,475,481,489,492,502,510,518,533,556,600,601,620,948,997,1032,1089,1152,1190,1234,1412,1530,1562	0	screened
+platform_hybrid/paper/sections/scaling_passk_ci.tex	paper-specific	P01	1	120	6641	0af7396c1a28deb75c9ee4f7c77f7e7acfdc3b155d5f0a58f5f0d2bc24b26bca	1	2	5				27,29	0	screened
+platform_hybrid/paper/sections/stat_rigor_updates.tex	paper-specific	U01	1	251	18140	6021e2960a155d9e69ad75f51c5fdc8cc9da062a11f7598cf967b89621e7e7bb	7	6	0				12,24,39,40,61,62,63,93,94,99,116,157,164,171,206,207,208,217,218,219,220,223,224,226,227,228,229,230,234,235,236,239,241	0	screened
+platform_hybrid/paper/sections/statistical_rigor_addendum.tex	paper-specific	U01	1	272	14400	fcf35d156e165aff0f0f2256810060860bd933c4462326d139e7e731d6802b1f	6	10	1				26,63,67,70,79,110,131,147,157,159,163,164,165,195,196,198,214,253,254	0	screened
+platform_hybrid/paper/sections/synth_iter112_cost_rate_envelope.tex	paper-specific	P08	1	88	3952	63eb12001ab486c8ef8487351e92e845acd18ab193f4c6fdd4e8fb29cc037c8b	4	2	0				48,58,68,72,74	0	screened
+platform_hybrid/paper/sections/synth_iter116_cost_cube_envelope.tex	paper-specific	P08	1	72	3638	c2f765b3d8d2d5629711100f0c644dd27eeb337ecebee8c472d86ebc0fc291b6	5	1	0				17,55	0	screened
+platform_hybrid/paper/sections/synth_iter120_score_stream_universality.tex	paper-specific	P08	1	70	4021	a9ba75a02b89bd396904edb0d687e5d6d8ca86817e3daeb07e42028b480d56b4	6	1	0					0	screened
+platform_hybrid/paper/sections/synth_iter124_three_domain_density.tex	paper-specific	P08	1	85	4573	c8b2a0d2dc2a3e91e24427014eb4f8bec8d3bfa02151c864e5fbb00892b53dea	7	1	0					0	screened
+platform_hybrid/paper/sections/synth_iter132_four_domain_density.tex	paper-specific	P08	1	137	6848	d10efbe3da14c0db4460cea77a44a17f57062faa4882cf545bf46cd77e6fd13f	6	3	0				88	0	screened
+platform_hybrid/paper/sections/synth_iter136_five_domain_density.tex	paper-specific	P08	1	106	5308	22ada480fee8eced5ceec30c8898f0828c6273b6442f06d5b22f1a54adad6afc	6	2	0					0	screened
+platform_hybrid/paper/sections/synth_iter140_six_domain_density.tex	paper-specific	P08	1	113	5273	63b261a7dd7bb0a7a495bbeead25c9eee152d2dd59c4ead320079998cdd3fff6	3	2	0					0	screened
+platform_hybrid/paper/sections/synth_iter156_eleven_domain_density.tex	paper-specific	P08	1	125	5986	d2df718de480889f3814761c93f19cd018d5a52e6cd3b7d2b86371a321d932f2	5	2	0					0	screened
+platform_hybrid/paper/sections/synth_iter160_twelve_domain_density.tex	paper-specific	P08	1	146	6825	4072cdc2846a49c5cc905b37e3be4806b40aa85e7e23f87ad8cbe052de5664f5	6	1	0				96	0	screened
+platform_hybrid/paper/sections/synth_iter164_thirteen_domain_density.tex	paper-specific	P08	1	79	4199	84292c5dba1c1aa226bc6d50ea50ade6c841090e4017a4e3111a6971e5d982a9	1	1	0				63	0	screened
+platform_hybrid/paper/sections/synth_iter168_twelve_domain_density.tex	paper-specific	P08	1	154	7890	ab8efeeedd45081445a599b3d7a33bb61c19d3184581f2caecfd7301e407f54d	6	0	0					0	screened
+platform_hybrid/paper/sections/synth_iter172_fifteen_domain_density.tex	paper-specific	P08	1	134	6828	086bc214adf8879186720f8c8f555f5b58d1107eb55b717d13305b63c610ef24	5	0	0					0	screened
+platform_hybrid/paper/sections/synth_iter176_sixteen_domain_density.tex	paper-specific	P08	1	120	6222	84eb92fb74f391ca2d4f42d43ecbd04dd17462d569304625b378eb50c054f6ae	2	2	0					0	screened
+platform_hybrid/paper/sections/synth_iter180_seventeen_domain_density.tex	paper-specific	P08	1	154	7187	3ffcbb69735a36958698fdae3e20e4dc12b3294abbe441192ebb9e378488b2bb	4	3	0					0	screened
+platform_hybrid/paper/sections/synth_iter192_d20_decision_concordance.tex	paper-specific	P08	1	173	8110	6be139970c139037c3b4fb1354b48b856da7d10b581e9c3f22214774a8e77124	5	7	0				99,100,102	0	screened
+platform_hybrid/paper/sections/synth_iter204_d23_perstep_transfer.tex	paper-specific	P08	1	139	7513	e61bca5fdc5e5e5e5998c37bfb09b87387e0fbace260063b94ae48690599bab5	6	7	0				17,34	0	screened
+platform_hybrid/paper/sections/tool_use_code_expanded.tex	paper-specific	U01	1	230	12627	7a2fcc5ab10675398aa62e8f49d7789ef288c5bbe6c2cf54f9705ec921e07b26	6	8	0				80,97,148,222	0	screened
+platform_hybrid/paper/sections/variance_mitigation_comparison.tex	paper-specific	U01	1	352	18675	d10f7de4e6bad5e1ede0925f94073b45a7f449965347cb0ce669ee3177090d0d	8	12	8				18,27,45,46,127,135,147,156,178,215,264,272,285	0	screened
+platform_hybrid/paper/sections/zvf.tex	shared	P02,U01	2	290	14771	8cd544b1f967d7504699d6f3cd7c9f8bdaffb8f2e0c60366e7504ca826b72137	5	6	1				33,60,80,90,105,113,122,128,139,170,202,235,257,281,290	0	screened
+platform_hybrid/paper/sections/zvf_counterfactual_appendix.tex	shared	P02,U01	2	101	4804	3c0e2d3071e7ea517bea861579cf90b483e13dc89d95101635d0e9d5a92bbdc6	5	2	0					0	screened
+platform_hybrid/paper/sections/zvf_cross_experiment_diagnostic.tex	shared	P02,U01	2	441	21562	059a108e053968f9bf78c1b15445531209a310ebeeb7a6f514905f1112ebfab3	9	15	1				180,222,339	0	screened
+platform_hybrid/paper/sections/zvf_dynamics.tex	shared	P02,U01	2	222	11355	80531e0e0f6dadf27be9effc711650760e677b86e9e0df564744babb73390bae	6	4	0				42,64,85,87,102,136,137,144,214	0	screened
+platform_hybrid/paper/sections/zvf_eval_protocol.tex	paper-specific	P02	1	40	2512	23e973bf1ffb4fc384fcfeb99780db4a116fa8b1b9e45d55a228837bdd25b7e2	1	1	3				26,27	0	screened
+platform_hybrid/paper/sections/zvf_gradient.tex	shared	P02,U01	2	48	2115	c6c73f6dbd898039f1e130cda1401c6e8bb8069dc30b5cf6c89c5e3cada20db8	0	1	0					0	screened
+platform_hybrid/paper/sections/zvf_inference_baselines.tex	paper-specific	P02	1	48	3077	553424b3fd4d9d42769b31dc5437acc41ec476ce4d7a57bc853ebed5624936d4	1	1	4				39,40	0	screened
+platform_hybrid/paper/sections/zvf_iter102.tex	paper-specific	U01	1	148	7711	0ad72ce8d19fe674a37ff54a5ce49f49c2a2fc1befd5ab4bfba8be413972d274	1	4	1				52	0	screened
+platform_hybrid/paper/sections/zvf_iter106.tex	paper-specific	U01	1	131	7295	4e19f56a68c2a14428017f80ba4fd79869144faa053fae0290e0854cc04fe055	1	2	0				68,69,111	0	screened
+platform_hybrid/paper/sections/zvf_iter110.tex	paper-specific	U01	1	199	9943	4f2e8e80f6bac93b9fed2df72584c648f4e048af6667411f587395a3b15ce9de	1	3	0				86,96,126,139,153,189	0	screened
+platform_hybrid/paper/sections/zvf_iter114.tex	paper-specific	U01	1	155	7796	4eab414bdde39022c0a4708e64695343a75d2d0c79b37b9d660e513e9b69d6f6	1	3	0				87,134	0	screened
+platform_hybrid/paper/sections/zvf_iter118.tex	paper-specific	U01	1	97	4976	3a5dfc1d65af91e8be97d6adc5faab8fc08874b983c66b916e1d1a1bd8a9dcae	1	2	0				12,13,19,33,58,83,89	0	screened
+platform_hybrid/paper/sections/zvf_iter122.tex	paper-specific	U01	1	165	8525	006947b42d949ba65cf67a94d93b9538d340e319f11996541b703ef9815bc30c	1	3	0				15,145	0	screened
+platform_hybrid/paper/sections/zvf_iter22.tex	shared	P02,U01	2	247	12252	7c6fe527904213b40ec850b5fccaaa3df22bf66e219bd9d880d76dbf079a359c	4	8	0				62,73,111,129,131,132,133,134,148,159,228,234	0	screened
+platform_hybrid/paper/sections/zvf_iter30.tex	shared	P02,U01	2	181	9380	f7549188adf16e7e4bf83d4d8d05ff0ca9b6982f503e0d38fe5d93942f4fdafd	6	8	0				136	0	screened
+platform_hybrid/paper/sections/zvf_iter34.tex	shared	P02,U01	2	211	9933	c70707302343a062b7782c9705f47417e07b15e286d80428a173ac59c7623e36	7	7	0				49,127	0	screened
+platform_hybrid/paper/sections/zvf_iter38.tex	shared	P02,U01	2	173	8265	b1ed2a16a739fad693cc8b22c766e4c02c39dd32d06a1ebd2c3bc53d9d7cfb21	3	5	0				55	0	screened
+platform_hybrid/paper/sections/zvf_iter42.tex	shared	P02,U01	2	114	6276	02ee1bbfd6169fc99682def6229042fe13790257d1146145b5af1b264e77716c	1	1	0				17,23,29,65,72,79,85	0	screened
+platform_hybrid/paper/sections/zvf_iter46.tex	shared	P02,U01	2	189	9699	74b4d17aaa8e8ef49b7e7df68301325d3ad5d2efd4f424f0835a9d472bfa82cd	3	5	0				38,124,142,163,173	0	screened
+platform_hybrid/paper/sections/zvf_iter50.tex	shared	P02,U01	2	144	7853	55ad0f529568b85b8aa47af3efbbf21c49a5c7d596987a5811de6c59b7f758d6	1	2	0				18,19,56,82,110	0	screened
+platform_hybrid/paper/sections/zvf_iter58.tex	shared	P02,U01	2	151	8648	cd0f54507bd4a07b84d5eeb9de36846c38fcd0efe9fbc30cb79b90687ad0c6bf	1	3	0				28,98	0	screened
+platform_hybrid/paper/sections/zvf_iter62.tex	shared	P02,U01	2	166	8765	df70f3191604c4a53e5d2ad3cd986372cff19664f571f442614593abf08d438e	1	4	0				25,56,134	0	screened
+platform_hybrid/paper/sections/zvf_iter70.tex	paper-specific	U01	1	175	9073	7cd9c08874099b0abd371a852b93c509df50b7ad32a8ce9b135408dd94ad883a	1	4	0				38,66,95,103,112,120,122,123,143	0	screened
+platform_hybrid/paper/sections/zvf_iter74.tex	paper-specific	U01	1	137	6981	d95079edda35595b188b8c9653f5b73129b1479349557d0bdd41c4638600dd4d	1	4	0				51,70,85,110	0	screened
+platform_hybrid/paper/sections/zvf_iter82.tex	paper-specific	U01	1	126	6232	8a8244a7722a4a67f3288b4d457885cc023af85f28e770368100e488b83172bc	1	4	0				20,41,79,86,112	0	screened
+platform_hybrid/paper/sections/zvf_iter86.tex	paper-specific	U01	1	153	7648	6dc0c7f2b15cccb8d28016bf629e03e9ff7cd2e8620b6ceb637c37d259bad8af	1	3	0				100,124	0	screened
+platform_hybrid/paper/sections/zvf_iter90.tex	paper-specific	U01	1	116	5714	1f9de900e8d2540119f7171ea6d887d50ee04ded359eb5ad4a9e1f541d40186b	1	1	0				18,50,72,97	0	screened
+platform_hybrid/paper/sections/zvf_iter94.tex	paper-specific	U01	1	136	7199	a68f4fe0362eaeabe22e4c077711f0d3e93fa78270a4009321267f3c737f53b9	1	2	0				89,95	0	screened
+platform_hybrid/paper/sections/zvf_iter98.tex	paper-specific	U01	1	149	7648	0d6a5feebbd4c02fcad7cebd613ffb6695aa7f3b471155308c38d44ed7cc6f89	1	4	0				112	0	screened
+platform_hybrid/paper/sections/zvf_pipeline_spec.tex	shared	P02,R02,R04,U01	4	102	4519	c75e4165b0b46f6aa12f6a2198cd5fb52c270e73a44aababe1349af2e6a8a383	6	2	0					0	screened
+platform_hybrid/paper/sections/zvf_scaling.tex	shared	P02,U01	2	69	4436	5c770a7cdd17d7c13495dcac933c458d8528bb3d0af187d92b5d63fc808c6408	1	4	0				62	0	screened
+platform_hybrid/paper/unified_signal_starvation/main.tex	root	N01	1	810	37276	4d146eee51df150b6097ab1af083209fde7dd55bd5493c152b3cb648eb2baf55	34	30	14				39,40,51,66,68,74,88,91,108,110,112,115,129,139,147,152,181,186,188,191,194,198,200,206,208,213,215,218,222,224,225,227,325,326,327,333,334,335,388,436,439,444,446,467,520,549,553,576,577,600,603,604,627,628,639,645,647,657,671,678,686,698,700,704,749,751,761,764,768,769,787	0	screened
+zvf-program/audit/reproducibility_audit.tex	root	R08	1	444	23386	19038519df5ac52381b558c5ba3673719483dc519303333a20a628451c6f7009	9	7	11				163	0	screened
+zvf-program/position/min_report_rl.tex	root	R06	1	838	47122	f387e2945258ac5c762f9a4d1acd44eeedac6e209a2e24b10386a665a57400ec	9	11	13				51,60,103,126,152,256,258,281,342,364,428,469,473,474,500,524,641,666	0	screened
+zvf-program/registry/grpo_registry.tex	root	R07	1	632	29596	192b02c46fad2475d5ab044aa831a4eb0d664da5907f7da77671f21fb7c0dac8	10	13	19				76,120,314,317,584	0	screened
+zvf-program/theory/zvf_theory.tex	root	R05	1	774	42211	28d4dc8ef97eaf8c1d453ba1ef56da5ca1f3947146b5afa54ea8c87af5c652d6	8	33	9				137,141,234,343,355,358,367,368,386,390,392,397,399,465,478,484,512,534,543,594,596,598,608,644,653,656,663,674,744	0	screened

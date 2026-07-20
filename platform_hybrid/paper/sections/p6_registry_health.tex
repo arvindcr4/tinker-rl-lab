@@ -91,7 +91,7 @@ decontamination      &   8 /  40 &  20\% & only the four \texttt{colab-open} arm
 \subsection{Per-framework breakdown}
 The same audit exposes a sharp openness gradient. Among the 20 stack
 records, the four \texttt{colab-open-trainer} arms achieve 100\% coverage
-on six of the seven items and 75\% on the seventh (the four missing
+on six of the seven run-manifest fields and 75\% on the seventh (the four missing
 leaves are \texttt{sampler\_backend.precision}---a field the toy harness
 did not pin). The five \texttt{repository-zvf130-batch} entries fill 0/30
 leaves on \texttt{loss\_form} and 0/15 on \texttt{reference\_kl} because

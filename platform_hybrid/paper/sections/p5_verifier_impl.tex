@@ -5,7 +5,7 @@ The toolchain of \secref{sec:p5-toolchain} is a specification; a standard is
 only enforceable once a machine can reject a non-compliant run without a human
 in the loop. We therefore implement a reference verifier
 (\texttt{registry/provenance/minreport.py}, stdlib-only) that turns the
-seven-item block from a descriptive checklist into an automated gate. This is
+seven-field run-manifest block from a descriptive checklist into an automated gate. This is
 the load-bearing distinction from the GRPO-Registry of \tableref{tab:implementations}
 and the P6 catalog: a registry \emph{catalogs} what a run declares; the verifier
 \emph{recomputes} and \emph{rejects}.
@@ -24,7 +24,7 @@ task.
 
 \paragraph{Three grading axes.} \texttt{minreport.py verify} scores a run on a
 weighted rubric and returns a reproducibility badge \textbf{A--F}.
-\emph{Completeness}: all seven MIN-REPORT items are present and non-null.
+\emph{Completeness}: all seven MIN-REPORT run-manifest fields are present and non-null.
 \emph{Integrity}: the provenance hashes exist and, crucially, the recorded
 \texttt{code\_hash} is \emph{recomputed against the live source file}, catching
 code drift between the run and the claim. \emph{Rigor}: the check hard-\textsc{fails}

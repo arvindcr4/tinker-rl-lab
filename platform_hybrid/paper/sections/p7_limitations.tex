@@ -7,6 +7,14 @@
 Every interventional claim in this paper is bounded by four limitations,
 stated in load-bearing order.
 
+\emph{No prospective controller advantage.} The long controller sections are
+retrospective replay, analytic projection, or proxy optimization. Iter-199
+freezes each prompt's step-0 success estimate, so it is not a closed learning
+loop. Iter-203 pools rewards from different prompts and therefore cannot emulate
+a larger within-prompt GRPO group. Neither analysis estimates held-out policy
+improvement. The required promotion test is a seed-paired, fixed-token comparison
+against static $G{=}16$ and naive boundary heuristics.
+
 \emph{Single task.} The E3 audit and the E1 gradient probe each run on one
 task family (GSM8K-style and synthetic arithmetic respectively). The theory
 is task-agnostic, but the controller's measured competitiveness is not: on

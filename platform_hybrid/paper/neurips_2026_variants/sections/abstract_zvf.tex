@@ -8,7 +8,10 @@ Zero-Variance Fraction (ZVF) is a per-step sentinel for zero reward-gradient
 contribution under group-relative policy advantages, not a cross-task
 predictor of GRPO performance. When every rollout in a GRPO group receives
 the same scalar reward, the group-relative advantage is zero and the prompt
-contributes no gradient; ZVF measures the share of groups in this regime.
+contributes no gradient; ZVF measures the share of groups in this regime. For
+binary rewards the accounting is exact:
+$\operatorname{pass@}G-p^G=1-\mathrm{ZVF}$, so ZVF's complement is
+contrastive group yield rather than an independent performance statistic.
 We make two paired claims about how to use this quantity. \emph{Positive:}
 per-step ZVF (and its complement $\mathrm{GU}_t = 1-\mathrm{ZVF}_t$) is a
 mechanically interpretable online utilization meter that, paired with batch

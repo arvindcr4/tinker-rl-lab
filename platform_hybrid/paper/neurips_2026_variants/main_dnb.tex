@@ -67,7 +67,7 @@
 % -----------------------------------------------------------------------------
 % Related work
 % -----------------------------------------------------------------------------
-\input{sections/related_work_v2_anon}
+\input{../sections/related_work_v2}
 
 % -----------------------------------------------------------------------------
 \section{Artifact Design}
@@ -190,7 +190,7 @@ $\mathrm{ZVF}\le0.25$ throughout. Artifacts:
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/v2/zvf_correlation}
+\includegraphics[width=\textwidth]{../figures/v2/zvf_correlation}
 \caption{\textbf{Left:} pooled ZVF vs.\ final performance scatter
 ($r = -0.769$, $p = 0.0008$, $N{=}15$); the apparent strong negative
 correlation is task-confounded (tool-use cluster at
@@ -248,7 +248,7 @@ as stack-level rather than algorithm-level statements.
 % =============================================================================
 
 \bibliographystyle{plainnat}
-\bibliography{references}
+\bibliography{../references}
 
 % =============================================================================
 \appendix
@@ -268,10 +268,13 @@ as stack-level rather than algorithm-level statements.
 
 % Cross-stack hyperparameter mappings, reward verification details,
 % library taxonomy, and floor/ceiling baselines.
-\input{sections/zvf_pipeline_spec}
+\begingroup
+\newcommand{\artifactstatusword}{anonymous}
+\input{../sections/zvf_pipeline_spec}
+\endgroup
 
 % Group-size reconciliation under token-budget normalisation.
-\input{sections/group_size_reconcile}
+\input{../sections/group_size_reconcile}
 
 % Ethics, dual-use, compute accounting, carbon, data provenance,
 % closed-backend acknowledgement, methodological limits. Moved out of

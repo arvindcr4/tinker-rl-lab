@@ -1,0 +1,927 @@
+#!/usr/bin/env python3
+"""Run one resumable Qwen3-8B/GSM8K E1 arm/seed unit on Colab.
+
+The launcher supplies credentials out of band.  This script logs every
+optimizer step to W&B, synchronously uploads every Trainer
+checkpoint to a private Hugging Face repository, restores the greatest valid
+remote checkpoint on retry, performs the locked held-out evaluation, and emits
+one machine-readable ``E1_RESULT`` line.
+"""
+
+from __future__ import annotations
+
+import argparse
+import copy
+from datetime import datetime, timezone
+import hashlib
+from importlib import metadata
+import json
+import math
+import os
+from pathlib import Path
+import random
+import re
+import statistics
+import tempfile
+import time
+from typing import Any
+
+
+MODEL_ID = "Qwen/Qwen3-8B"
+MODEL_REVISION = "b968826d9c46dd6066d109eabc6255188de91218"
+DATASET_ID = "openai/gsm8k"
+DATASET_REVISION = "740312add88f781978c0658806c59bc2815b9866"
+TREATMENT_CHANGES = {
+    "grpo": [],
+    "dapo": ["clip_bounds", "dynamic_sampling"],
+    "gspo": ["importance_ratio_granularity", "clip_granularity"],
+    "drgrpo": ["advantage_normalization"],
+    "aero": ["rollout_allocation", "selective_rejection", "posterior_state"],
+}
+
+
+def arm_training_overrides(arm: str) -> dict[str, Any]:
+    """Return only frozen treatment-controlled TRL arguments for ``arm``."""
+    overrides = {
+        "epsilon": 0.2,
+        "epsilon_high": 0.2,
+        "importance_sampling_level": "token",
+        "scale_rewards": "group",
+        "loss_type": "grpo",
+    }
+    if arm == "dapo":
+        overrides["epsilon_high"] = 0.28
+    elif arm == "gspo":
+        overrides["importance_sampling_level"] = "sequence"
+    elif arm == "drgrpo":
+        overrides["scale_rewards"] = "none"
+    elif arm not in TREATMENT_CHANGES:
+        raise ValueError(f"unknown E1 arm: {arm}")
+    return overrides
+
+
+def dapo_group_is_eligible(advantages: list[float], *, atol: float = 1e-8) -> bool:
+    """DAPO keeps only prompt groups with non-zero reward variance."""
+    return any(abs(value) > atol for value in advantages)
+
+
+def aero_posterior_advantages(
+    rewards: list[float],
+    *,
+    alpha: float = 1.0,
+    beta: float = 1.0,
+    posterior_successes: int | None = None,
+    posterior_observations: int | None = None,
+) -> list[float]:
+    """Compute the locked AERO advantage, including Beta posterior dead-zone rescue."""
+    if not rewards:
+        raise ValueError("AERO requires at least one active rollout")
+    if any(reward not in (0.0, 1.0) for reward in rewards):
+        raise ValueError("AERO is locked to binary verifiable rewards")
+    if len(set(rewards)) > 1:
+        mean = statistics.fmean(rewards)
+        std = statistics.stdev(rewards)
+        return [(reward - mean) / (std + 1e-4) for reward in rewards]
+    successes = sum(rewards) if posterior_successes is None else posterior_successes
+    observations = len(rewards) if posterior_observations is None else posterior_observations
+    if not 0 <= successes <= observations or observations <= 0:
+        raise ValueError("invalid AERO posterior counts")
+    posterior_mean = (successes + alpha) / (observations + alpha + beta)
+    posterior_std = math.sqrt(posterior_mean * (1.0 - posterior_mean))
+    return [(reward - posterior_mean) / (posterior_std + 1e-4) for reward in rewards]
+
+
+def aero_curate_indices(
+    initial_rewards: list[float],
+    rescue_rewards: list[float],
+    *,
+    chooser: Any = random.choice,
+) -> tuple[list[tuple[str, int]], str]:
+    """Return retained AERO rollout indices and the applied strategy label."""
+    if len(initial_rewards) != 3:
+        raise ValueError("locked AERO exploration size is three")
+    if any(reward not in (0.0, 1.0) for reward in initial_rewards + rescue_rewards):
+        raise ValueError("AERO is locked to binary verifiable rewards")
+    correct = [index for index, reward in enumerate(initial_rewards) if reward == 1.0]
+    incorrect = [index for index, reward in enumerate(initial_rewards) if reward == 0.0]
+    if not correct:
+        rescue_success = next(
+            (index for index, reward in enumerate(rescue_rewards) if reward == 1.0), None
+        )
+        if rescue_success is not None:
+            return [("initial", chooser(incorrect)), ("rescue", rescue_success)], "rescued"
+        pool = [("initial", index) for index in incorrect] + [
+            ("rescue", index) for index, reward in enumerate(rescue_rewards) if reward == 0.0
+        ]
+        return [chooser(pool)], "posterior_all_fail"
+    if len(correct) == len(initial_rewards):
+        return [("initial", chooser(correct))], "posterior_all_correct"
+    success_rate = len(correct) / len(initial_rewards)
+    if success_rate < 0.5:
+        retained = [("initial", index) for index in correct]
+        retained.append(("initial", chooser(incorrect)))
+        return retained, "selective_rejection"
+    return [("initial", index) for index in range(len(initial_rewards))], "high_success"
+
+
+def patch_binary_reward_metrics(
+    trainer: Any,
+    mode: str,
+    grouped_rewards: list[list[float]],
+) -> None:
+    """Make standard TRL reward/ZVF telemetry describe the batch actually optimized."""
+    flattened = [reward for group in grouped_rewards for reward in group]
+    zero_fraction = statistics.fmean(float(len(set(group)) == 1) for group in grouped_rewards)
+    reward_mean = statistics.fmean(flattened)
+    reward_std = statistics.stdev(flattened) if len(flattened) > 1 else 0.0
+    patches = {
+        "reward": reward_mean,
+        "reward_std": reward_std,
+        "frac_reward_zero_std": zero_fraction,
+        "rewards/gsm8k_exact_reward/mean": reward_mean,
+        "rewards/gsm8k_exact_reward/std": reward_std,
+    }
+    for key, value in patches.items():
+        series = trainer._metrics[mode][key]
+        if series:
+            series[-1] = value
+        else:
+            series.append(value)
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--arm", choices=tuple(TREATMENT_CHANGES), default="grpo")
+    parser.add_argument("--seed", type=int, required=True)
+    parser.add_argument("--mode", choices=("preflight", "confirmatory"), required=True)
+    parser.add_argument("--max-steps", type=int, required=True)
+    parser.add_argument("--heldout-n", type=int, required=True)
+    parser.add_argument("--max-completion-length", type=int, default=1024)
+    parser.add_argument("--save-steps", type=int, default=5)
+    parser.add_argument("--unit-fingerprint", required=True)
+    parser.add_argument("--stack-fingerprint", required=True)
+    parser.add_argument("--hf-repo", required=True)
+    parser.add_argument("--wandb-project", required=True)
+    parser.add_argument("--wandb-entity")
+    parser.add_argument("--wandb-group", required=True)
+    parser.add_argument("--wandb-run-name", required=True)
+    parser.add_argument("--eval-batch-size", type=int, default=8)
+    return parser.parse_args(argv)
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def canonical_hash(payload: dict[str, Any]) -> str:
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def parse_marked_integer(text: str) -> int | None:
+    """Return the first integer after the final GSM8K ``####`` marker."""
+    if "####" not in text:
+        return None
+    tail = text.rsplit("####", 1)[1]
+    match = re.search(r"-?\d[\d,]*", tail)
+    if not match:
+        return None
+    try:
+        return int(match.group(0).replace(",", ""))
+    except ValueError:
+        return None
+
+
+def completion_text(completion: Any) -> str:
+    if isinstance(completion, str):
+        return completion
+    if isinstance(completion, list) and completion:
+        last = completion[-1]
+        if isinstance(last, dict):
+            return str(last.get("content", ""))
+    if isinstance(completion, dict):
+        return str(completion.get("content", ""))
+    return str(completion)
+
+
+def gsm8k_exact_reward(
+    completions: list[Any],
+    answer: list[str],
+    aero_active: list[bool] | None = None,
+    aero_reward: list[float | None] | None = None,
+    **_: Any,
+) -> list[float | None]:
+    rewards: list[float | None] = []
+    for index, (completion, gold) in enumerate(zip(completions, answer, strict=True)):
+        if aero_active is not None and not aero_active[index]:
+            rewards.append(None)
+            continue
+        if aero_reward is not None and aero_reward[index] is not None:
+            rewards.append(float(aero_reward[index]))
+            continue
+        prediction = parse_marked_integer(completion_text(completion))
+        target = parse_marked_integer(gold)
+        rewards.append(float(prediction is not None and prediction == target))
+    return rewards
+
+
+def require_environment() -> None:
+    missing = [key for key in ("HF_TOKEN", "WANDB_API_KEY") if not os.environ.get(key)]
+    if missing:
+        raise SystemExit("missing required secret environment: " + ", ".join(missing))
+
+
+def configure_tracking(args: argparse.Namespace) -> None:
+    os.environ.update(
+        {
+            "WANDB_PROJECT": args.wandb_project,
+            "WANDB_GROUP": args.wandb_group,
+            "WANDB_NAME": args.wandb_run_name,
+            "WANDB_RUN_ID": args.unit_fingerprint[:8],
+            "WANDB_RESUME": "allow",
+            "WANDB_JOB_TYPE": args.arm,
+            "WANDB_TAGS": f"colab,e1,{args.mode},{args.arm},qwen3-8b,gsm8k",
+            "WANDB_MODE": "online",
+            "WANDB_SILENT": "true",
+            "HF_HUB_ENABLE_HF_TRANSFER": "0",
+            "TOKENIZERS_PARALLELISM": "false",
+        }
+    )
+    if args.wandb_entity:
+        os.environ["WANDB_ENTITY"] = args.wandb_entity
+
+
+def prompt_for(question: str) -> list[dict[str, str]]:
+    return [
+        {
+            "role": "user",
+            "content": (
+                "Solve this math problem. Show your reasoning, then end your response "
+                "with exactly `#### <integer>`.\n\n" + question
+            ),
+        }
+    ]
+
+
+def package_versions(torch_module: Any) -> dict[str, Any]:
+    names = ("trl", "transformers", "datasets", "peft", "torchao", "wandb", "huggingface_hub")
+    versions = {}
+    for name in names:
+        try:
+            versions[name] = metadata.version(name)
+        except metadata.PackageNotFoundError:
+            versions[name] = "missing"
+    versions.update(
+        {
+            "torch": torch_module.__version__,
+            "cuda": torch_module.version.cuda,
+            "gpu": torch_module.cuda.get_device_name(0) if torch_module.cuda.is_available() else "none",
+        }
+    )
+    return versions
+
+
+def metric_series(history: list[dict[str, Any]], *names: str) -> list[float]:
+    values: list[float] = []
+    for record in history:
+        value = next((record[name] for name in names if name in record), None)
+        if isinstance(value, (int, float)) and math.isfinite(value):
+            values.append(float(value))
+    return values
+
+
+def greatest_remote_checkpoint(api: Any, repo_id: str) -> tuple[int, str] | None:
+    try:
+        files = api.list_repo_files(repo_id=repo_id, repo_type="model")
+    except Exception as exc:  # The repo normally does not exist on the first attempt.
+        if type(exc).__name__ in {"RepositoryNotFoundError", "HfHubHTTPError"}:
+            return None
+        raise
+    checkpoints: dict[int, str] = {}
+    pattern = re.compile(r"^checkpoints/(checkpoint-(\d+))/trainer_state\.json$")
+    for filename in files:
+        match = pattern.match(filename)
+        if match:
+            checkpoints[int(match.group(2))] = match.group(1)
+    if not checkpoints:
+        return None
+    step = max(checkpoints)
+    return step, f"checkpoints/{checkpoints[step]}"
+
+
+def download_resume_checkpoint(api: Any, repo_id: str, root: Path) -> tuple[int, Path] | None:
+    remote = greatest_remote_checkpoint(api, repo_id)
+    if remote is None:
+        return None
+    from huggingface_hub import snapshot_download
+
+    step, prefix = remote
+    snapshot_download(
+        repo_id=repo_id,
+        repo_type="model",
+        local_dir=root,
+        allow_patterns=[f"{prefix}/*", f"{prefix}/**"],
+        token=os.environ["HF_TOKEN"],
+    )
+    checkpoint = root / prefix
+    if not (checkpoint / "trainer_state.json").is_file():
+        raise RuntimeError(f"downloaded checkpoint is incomplete: {checkpoint}")
+    return step, checkpoint
+
+
+def remote_checkpoint_steps(api: Any, repo_id: str) -> list[int]:
+    try:
+        files = api.list_repo_files(repo_id=repo_id, repo_type="model")
+    except Exception:
+        return []
+    pattern = re.compile(r"^checkpoints/checkpoint-(\d+)/trainer_state\.json$")
+    return sorted({int(match.group(1)) for name in files if (match := pattern.match(name))})
+
+
+def heldout_accuracy(
+    model: Any,
+    tokenizer: Any,
+    rows: Any,
+    *,
+    batch_size: int,
+    max_new_tokens: int,
+    torch_module: Any,
+) -> tuple[float, list[dict[str, Any]]]:
+    model.eval()
+    correct = 0
+    trace: list[dict[str, Any]] = []
+    for start in range(0, len(rows), batch_size):
+        batch = rows.select(range(start, min(start + batch_size, len(rows))))
+        prompts = [
+            tokenizer.apply_chat_template(
+                prompt_for(question),
+                tokenize=False,
+                add_generation_prompt=True,
+                enable_thinking=True,
+            )
+            for question in batch["question"]
+        ]
+        encoded = tokenizer(prompts, return_tensors="pt", padding=True).to(model.device)
+        with torch_module.inference_mode():
+            generated = model.generate(
+                **encoded,
+                do_sample=False,
+                max_new_tokens=max_new_tokens,
+                pad_token_id=tokenizer.pad_token_id,
+                use_cache=True,
+                cache_implementation="dynamic",
+            )
+        completion_ids = generated[:, encoded.input_ids.shape[1] :]
+        completions = tokenizer.batch_decode(completion_ids, skip_special_tokens=True)
+        for offset, (text, gold) in enumerate(zip(completions, batch["answer"], strict=True)):
+            prediction = parse_marked_integer(text)
+            target = parse_marked_integer(gold)
+            is_correct = prediction is not None and prediction == target
+            correct += int(is_correct)
+            trace.append(
+                {
+                    "index": start + offset,
+                    "prediction": prediction,
+                    "target": target,
+                    "correct": is_correct,
+                    "completion_sha256": hashlib.sha256(text.encode()).hexdigest(),
+                }
+            )
+        print(f"[eval] {min(start + batch_size, len(rows))}/{len(rows)}", flush=True)
+    return correct / len(rows), trace
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    require_environment()
+    configure_tracking(args)
+    if args.mode == "confirmatory" and (args.max_steps != 30 or args.heldout_n != 500):
+        raise SystemExit("confirmatory mode requires max_steps=30 and heldout_n=500")
+    if args.max_steps <= 0 or args.heldout_n <= 0 or args.save_steps <= 0:
+        raise SystemExit("steps, heldout size, and save cadence must be positive")
+
+    import torch
+    from datasets import load_dataset
+    from huggingface_hub import HfApi
+    from peft import LoraConfig
+    from transformers import AutoTokenizer, TrainerCallback
+    from trl import GRPOConfig, GRPOTrainer
+    import wandb
+
+    if not torch.cuda.is_available() or not torch.cuda.is_bf16_supported():
+        raise RuntimeError("E1 requires a CUDA accelerator with bfloat16 support")
+
+    api = HfApi(token=os.environ["HF_TOKEN"])
+    api.create_repo(repo_id=args.hf_repo, repo_type="model", private=True, exist_ok=True)
+    runtime_versions = package_versions(torch)
+    started_at = utc_now()
+    wall_start = time.monotonic()
+
+    dataset = load_dataset(
+        DATASET_ID,
+        "main",
+        revision=DATASET_REVISION,
+        trust_remote_code=False,
+    )
+    train_dataset = dataset["train"].map(lambda row: {"prompt": prompt_for(row["question"])})
+    heldout = dataset["test"].select(range(args.heldout_n))
+
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, revision=MODEL_REVISION)
+    tokenizer.padding_side = "left"
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    output_dir = Path("/content/e1-output")
+    resume_root = Path("/content/e1-resume")
+    resume = download_resume_checkpoint(api, args.hf_repo, resume_root)
+    resume_step = resume[0] if resume else 0
+    resume_path = str(resume[1]) if resume else None
+    if resume:
+        print(f"[resume] remote checkpoint step={resume_step} path={resume_path}", flush=True)
+
+    def history_cumulative(state: Any, key: str) -> int:
+        values = [row[key] for row in state.log_history if isinstance(row.get(key), (int, float))]
+        return int(max(values, default=0))
+
+    class DAPOTrainer(GRPOTrainer):
+        """TRL GRPO with DAPO's filter-and-refill dynamic prompt sampling."""
+
+        max_generation_batches = 10
+
+        def _candidate_inputs(self, group_count: int) -> list[dict[str, Any]]:
+            rows: list[dict[str, Any]] = []
+            for _ in range(group_count):
+                row = dict(self.train_dataset[random.randrange(len(self.train_dataset))])
+                rows.extend(copy.deepcopy(row) for _ in range(self.num_generations))
+            return rows
+
+        def _generate_and_score_completions(self, inputs: list[dict[str, Any]]) -> dict[str, Any]:
+            if len(inputs) % self.num_generations:
+                raise RuntimeError("DAPO received a non-integral prompt-group batch")
+            mode = "train" if self.model.training else "eval"
+            initial = super()._generate_and_score_completions(inputs)
+            if mode != "train":
+                return initial
+
+            if not hasattr(self, "_dapo_rollouts"):
+                self._dapo_rollouts = history_cumulative(self.state, "dapo/rollouts_cumulative")
+            self._dapo_rollouts += len(inputs)
+            target_groups = len(inputs) // self.num_generations
+            accepted: list[tuple[dict[str, Any], int, int]] = []
+
+            def collect(batch: dict[str, Any]) -> None:
+                advantages = batch["advantages"].detach().float().cpu().tolist()
+                for group_index in range(len(advantages) // self.num_generations):
+                    start = group_index * self.num_generations
+                    end = start + self.num_generations
+                    if dapo_group_is_eligible(advantages[start:end]):
+                        accepted.append((batch, start, end))
+                        if len(accepted) == target_groups:
+                            return
+
+            collect(initial)
+            generation_batches = 1
+            while len(accepted) < target_groups and generation_batches < self.max_generation_batches:
+                candidate_inputs = self._candidate_inputs(target_groups)
+                metrics_snapshot = copy.deepcopy(self._metrics[mode])
+                logs_snapshot = copy.deepcopy(self._logs)
+                tokens_snapshot = self.state.num_input_tokens_seen
+                candidate = super()._generate_and_score_completions(candidate_inputs)
+                self._metrics[mode].clear()
+                self._metrics[mode].update(metrics_snapshot)
+                self._logs.clear()
+                self._logs.update(logs_snapshot)
+                self.state.num_input_tokens_seen = tokens_snapshot
+                generation_batches += 1
+                self._dapo_rollouts += len(candidate_inputs)
+                collect(candidate)
+
+            if len(accepted) < target_groups:
+                raise RuntimeError(
+                    "DAPO dynamic sampling failed closed: "
+                    f"collected {len(accepted)}/{target_groups} eligible groups after "
+                    f"{generation_batches} generation batches"
+                )
+
+            accepted = accepted[:target_groups]
+            combined = dict(initial)
+            for key, value in initial.items():
+                if torch.is_tensor(value) and value.ndim > 0 and value.shape[0] == len(inputs):
+                    combined[key] = torch.cat(
+                        [batch[key][start:end] for batch, start, end in accepted], dim=0
+                    )
+            combined["num_items_in_batch"] = combined["completion_mask"].sum()
+            grouped_rewards = [
+                [
+                    float(value > 0.0)
+                    for value in batch["advantages"][start:end].detach().float().cpu().tolist()
+                ]
+                for batch, start, end in accepted
+            ]
+            patch_binary_reward_metrics(self, mode, grouped_rewards)
+            self._metrics[mode]["dapo/generation_batches"].append(float(generation_batches))
+            self._metrics[mode]["dapo/rollouts_cumulative"].append(float(self._dapo_rollouts))
+            self._metrics[mode]["dapo/eligible_groups"].append(float(target_groups))
+            return combined
+
+    def prompt_key(prompt: Any) -> str:
+        return json.dumps(prompt, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+    answer_by_prompt = {
+        prompt_key(row["prompt"]): row["answer"]
+        for row in train_dataset
+    }
+
+    def aero_rollout(prompts: list[Any], trainer: Any) -> dict[str, Any]:
+        group_size = trainer.num_generations
+        if group_size != 4 or len(prompts) % group_size:
+            raise RuntimeError("AERO requires four fixed output slots per prompt")
+        unique_prompts: list[Any] = []
+        for start in range(0, len(prompts), group_size):
+            group = prompts[start : start + group_size]
+            keys = {prompt_key(prompt) for prompt in group}
+            if len(keys) != 1:
+                raise RuntimeError("AERO input rows are not contiguous prompt groups")
+            unique_prompts.append(group[0])
+
+        def tokens(value: Any) -> list[int]:
+            return value.tolist() if hasattr(value, "tolist") else list(value)
+
+        def generate_round(group_indices: list[int]) -> list[tuple[list[int], list[int], float]]:
+            selected_prompts = [unique_prompts[index] for index in group_indices]
+            prompt_ids, images, fields = trainer._tokenize_prompts(selected_prompts)
+            completion_ids, _ = trainer._generate_single_turn(prompt_ids, images, fields)
+            results: list[tuple[list[int], list[int], float]] = []
+            for group_index, prompt_tokens, completion_tokens in zip(
+                group_indices, prompt_ids, completion_ids, strict=True
+            ):
+                completion_tokens = tokens(completion_tokens)
+                text = trainer.processing_class.decode(completion_tokens, skip_special_tokens=True)
+                gold = answer_by_prompt[prompt_key(unique_prompts[group_index])]
+                prediction = parse_marked_integer(text)
+                target = parse_marked_integer(gold)
+                reward = float(prediction is not None and prediction == target)
+                results.append((tokens(prompt_tokens), completion_tokens, reward))
+            return results
+
+        group_count = len(unique_prompts)
+        initial: list[list[tuple[list[int], list[int], float]]] = [
+            [] for _ in range(group_count)
+        ]
+        for _ in range(3):
+            for group_index, entry in zip(
+                range(group_count), generate_round(list(range(group_count))), strict=True
+            ):
+                initial[group_index].append(entry)
+
+        rescue: list[list[tuple[list[int], list[int], float]]] = [
+            [] for _ in range(group_count)
+        ]
+        queue = [
+            group_index
+            for group_index, entries in enumerate(initial)
+            if not any(entry[2] == 1.0 for entry in entries)
+        ]
+        random.shuffle(queue)
+        rescue_budget = group_count
+        while queue and rescue_budget > 0:
+            batch_indices = queue[: min(len(queue), rescue_budget)]
+            queue = queue[len(batch_indices) :]
+            generated = generate_round(batch_indices)
+            rescue_budget -= len(generated)
+            for group_index, entry in zip(batch_indices, generated, strict=True):
+                rescue[group_index].append(entry)
+                if entry[2] == 0.0:
+                    queue.append(group_index)
+
+        output_prompt_ids: list[list[int]] = []
+        output_completion_ids: list[list[int]] = []
+        output_rewards: list[float | None] = []
+        output_active: list[bool] = []
+        output_masks: list[list[int]] = []
+        strategy_counts: dict[str, int] = {}
+        active_count = 0
+        for group_index in range(group_count):
+            initial_rewards = [entry[2] for entry in initial[group_index]]
+            rescue_rewards = [entry[2] for entry in rescue[group_index]]
+            retained, strategy = aero_curate_indices(initial_rewards, rescue_rewards)
+            strategy_counts[strategy] = strategy_counts.get(strategy, 0) + 1
+            retained_entries = [
+                initial[group_index][index] if source == "initial" else rescue[group_index][index]
+                for source, index in retained
+            ]
+            active_count += len(retained_entries)
+            prompt_tokens = initial[group_index][0][0]
+            for _, completion_tokens, reward in retained_entries:
+                output_prompt_ids.append(prompt_tokens)
+                output_completion_ids.append(completion_tokens)
+                output_rewards.append(reward)
+                output_active.append(True)
+                output_masks.append([1] * len(completion_tokens))
+            for _ in range(group_size - len(retained_entries)):
+                output_prompt_ids.append(prompt_tokens)
+                output_completion_ids.append([trainer._tokenizer.eos_token_id])
+                output_rewards.append(None)
+                output_active.append(False)
+                output_masks.append([0])
+
+        if not hasattr(trainer, "_aero_rollouts"):
+            trainer._aero_rollouts = history_cumulative(trainer.state, "aero/rollouts_cumulative")
+        generated_rollouts = group_count * 3 + sum(len(entries) for entries in rescue)
+        trainer._aero_rollouts += generated_rollouts
+        trainer._aero_last_rewards = output_rewards
+        trainer._aero_last_active = output_active
+        trainer._aero_last_posterior_counts = [
+            (
+                int(sum(entry[2] for entry in initial[group_index] + rescue[group_index])),
+                len(initial[group_index]) + len(rescue[group_index]),
+            )
+            for group_index in range(group_count)
+        ]
+        trainer._aero_last_stats = {
+            "generated_rollouts": generated_rollouts,
+            "active_rollouts": active_count,
+            "rejected_rollouts": generated_rollouts - active_count,
+            "rollouts_cumulative": trainer._aero_rollouts,
+            **{f"strategy_{key}": value for key, value in strategy_counts.items()},
+        }
+        return {
+            "prompt_ids": output_prompt_ids,
+            "completion_ids": output_completion_ids,
+            "logprobs": None,
+            "env_mask": output_masks,
+            "aero_active": output_active,
+            "aero_reward": output_rewards,
+        }
+
+    class AEROTrainer(GRPOTrainer):
+        """TRL GRPO with the locked two-stage AERO rollout and posterior advantage."""
+
+        def _generate_and_score_completions(self, inputs: list[dict[str, Any]]) -> dict[str, Any]:
+            output = super()._generate_and_score_completions(inputs)
+            mode = "train" if self.model.training else "eval"
+            if mode != "train":
+                return output
+            rewards = self._aero_last_rewards
+            active = self._aero_last_active
+            advantages = torch.zeros_like(output["advantages"])
+            grouped_rewards: list[list[float]] = []
+            posterior_groups = 0
+            for group_index, start in enumerate(range(0, len(rewards), self.num_generations)):
+                indices = [
+                    index
+                    for index in range(start, start + self.num_generations)
+                    if active[index]
+                ]
+                group_rewards = [float(rewards[index]) for index in indices]
+                grouped_rewards.append(group_rewards)
+                if len(set(group_rewards)) == 1:
+                    posterior_groups += 1
+                successes, observations = self._aero_last_posterior_counts[group_index]
+                group_advantages = aero_posterior_advantages(
+                    group_rewards,
+                    posterior_successes=successes,
+                    posterior_observations=observations,
+                )
+                for index, value in zip(indices, group_advantages, strict=True):
+                    advantages[index] = value
+            output["advantages"] = advantages
+            patch_binary_reward_metrics(self, mode, grouped_rewards)
+            stats = self._aero_last_stats
+            for key, value in stats.items():
+                self._metrics[mode][f"aero/{key}"].append(float(value))
+            self._metrics[mode]["aero/posterior_groups"].append(float(posterior_groups))
+            return output
+
+    class HubCheckpointCallback(TrainerCallback):
+        def on_save(self, training_args: Any, state: Any, control: Any, **_: Any) -> Any:
+            checkpoint = Path(training_args.output_dir) / f"checkpoint-{state.global_step}"
+            required = checkpoint / "trainer_state.json"
+            if not required.is_file():
+                raise RuntimeError(f"Trainer checkpoint is incomplete at on_save: {checkpoint}")
+            commit = api.upload_folder(
+                repo_id=args.hf_repo,
+                repo_type="model",
+                folder_path=checkpoint,
+                path_in_repo=f"checkpoints/{checkpoint.name}",
+                commit_message=f"E1 {args.mode} {args.arm} seed {args.seed} step {state.global_step}",
+            )
+            print(f"[hf-checkpoint] step={state.global_step} commit={commit.oid}", flush=True)
+            return control
+
+    save_steps = 1 if args.mode == "preflight" else args.save_steps
+    treatment_overrides = arm_training_overrides(args.arm)
+    training_args = GRPOConfig(
+        output_dir=str(output_dir),
+        run_name=args.wandb_run_name,
+        report_to=["wandb"],
+        model_init_kwargs={
+            "revision": MODEL_REVISION,
+            "dtype": "bfloat16",
+            "attn_implementation": "sdpa",
+        },
+        per_device_train_batch_size=4,
+        gradient_accumulation_steps=4,
+        generation_batch_size=16,
+        num_generations=4,
+        max_steps=args.max_steps,
+        max_completion_length=args.max_completion_length,
+        learning_rate=1e-6,
+        lr_scheduler_type="linear",
+        warmup_steps=0,
+        optim="adamw_torch_fused",
+        weight_decay=0.0,
+        max_grad_norm=1.0,
+        bf16=True,
+        tf32=True,
+        gradient_checkpointing=True,
+        gradient_checkpointing_kwargs={"use_reentrant": False},
+        use_cache=False,
+        temperature=1.0,
+        top_p=1.0,
+        top_k=0,
+        chat_template_kwargs={"enable_thinking": True},
+        beta=0.0,
+        num_iterations=1,
+        mask_truncated_completions=False,
+        logging_strategy="steps",
+        logging_steps=1,
+        logging_first_step=True,
+        save_strategy="steps",
+        save_steps=save_steps,
+        save_total_limit=None,
+        push_to_hub=False,
+        seed=args.seed,
+        data_seed=args.seed,
+        shuffle_dataset=True,
+        remove_unused_columns=False,
+        disable_tqdm=False,
+        **treatment_overrides,
+    )
+    peft_config = LoraConfig(
+        r=16,
+        lora_alpha=32,
+        lora_dropout=0.0,
+        target_modules="all-linear",
+        task_type="CAUSAL_LM",
+        bias="none",
+    )
+    trainer_class = {
+        "dapo": DAPOTrainer,
+        "aero": AEROTrainer,
+    }.get(args.arm, GRPOTrainer)
+    trainer_kwargs: dict[str, Any] = {}
+    if args.arm == "aero":
+        trainer_kwargs["rollout_func"] = aero_rollout
+    trainer = trainer_class(
+        model=MODEL_ID,
+        args=training_args,
+        train_dataset=train_dataset,
+        reward_funcs=gsm8k_exact_reward,
+        processing_class=tokenizer,
+        peft_config=peft_config,
+        callbacks=[HubCheckpointCallback()],
+        **trainer_kwargs,
+    )
+
+    try:
+        trainer.train(resume_from_checkpoint=resume_path)
+        history = trainer.state.log_history
+        rewards = metric_series(history, "reward", "train/reward")
+        zvf = metric_series(history, "frac_reward_zero_std", "train/frac_reward_zero_std")
+        if not rewards or not zvf:
+            raise RuntimeError(
+                "required GRPO telemetry missing from Trainer history: "
+                f"reward={len(rewards)} zvf={len(zvf)} keys={sorted({key for row in history for key in row})}"
+            )
+
+        # GRPO training disables the KV cache for gradient checkpointing.  A
+        # generation kwarg alone does not reliably override that model-level
+        # state, and can make the long held-out pass pathologically slow.
+        trainer.model.gradient_checkpointing_disable()
+        trainer.model.config.use_cache = True
+        trainer.model.generation_config.use_cache = True
+        torch.cuda.empty_cache()
+        heldout_score, heldout_trace = heldout_accuracy(
+            trainer.model,
+            tokenizer,
+            heldout,
+            batch_size=args.eval_batch_size,
+            max_new_tokens=args.max_completion_length,
+            torch_module=torch,
+        )
+        first_five_reward = statistics.fmean(rewards[:5])
+        first_five_zvf = statistics.fmean(zvf[:5])
+        mean_zvf = statistics.fmean(zvf)
+        wall_clock_seconds = time.monotonic() - wall_start
+        wandb_run = wandb.run
+        if wandb_run is None:
+            raise RuntimeError("W&B integration did not create a run")
+
+        audit_record = {
+            "arm": args.arm,
+            "seed": args.seed,
+            "heldout_n": args.heldout_n,
+            "heldout_score": heldout_score,
+            "last10_reward": statistics.fmean(rewards[-10:]),
+            "mean_zvf": mean_zvf,
+            "mean_gu": 1.0 - mean_zvf,
+            "collapse": first_five_zvf >= 0.80 and first_five_reward <= 0.05,
+            "rollouts": int(
+                getattr(
+                    trainer,
+                    "_dapo_rollouts",
+                    getattr(trainer, "_aero_rollouts", trainer.state.global_step * 16),
+                )
+            ),
+            "wall_clock_seconds": wall_clock_seconds,
+            "stack_fingerprint": args.stack_fingerprint,
+            "treatment_changes": TREATMENT_CHANGES[args.arm],
+            "manifest_path": "run_manifest.json",
+        }
+        telemetry = {
+            "reward": rewards,
+            "zvf": zvf,
+            "gu": [1.0 - value for value in zvf],
+            "first_five_reward": first_five_reward,
+            "first_five_zvf": first_five_zvf,
+            "trainer_log_history": history,
+        }
+        run_config = {
+            "mode": args.mode,
+            "model": MODEL_ID,
+            "model_revision": MODEL_REVISION,
+            "dataset": DATASET_ID,
+            "dataset_revision": DATASET_REVISION,
+            "max_steps": args.max_steps,
+            "heldout_n": args.heldout_n,
+            "max_completion_length": args.max_completion_length,
+            "save_steps": save_steps,
+            "unit_fingerprint": args.unit_fingerprint,
+            "stack_fingerprint": args.stack_fingerprint,
+            "treatment_overrides": treatment_overrides,
+            "treatment_changes": TREATMENT_CHANGES[args.arm],
+        }
+        manifest = {
+            "schema_version": "e1-colab-confirmatory-run-v1",
+            "evidence_class": "confirmatory" if args.mode == "confirmatory" else "preflight-not-evidence",
+            "started_at": started_at,
+            "completed_at": utc_now(),
+            "audit_record": audit_record,
+            "run_config": run_config,
+            "runtime_versions": runtime_versions,
+            "resume": {"resumed_from_step": resume_step, "resumed_from_path": resume_path},
+            "remote_checkpoint_steps": remote_checkpoint_steps(api, args.hf_repo),
+            "telemetry": telemetry,
+            "heldout_trace": heldout_trace,
+            "wandb": {"run_id": wandb_run.id, "run_url": wandb_run.url},
+        }
+
+        with tempfile.TemporaryDirectory(prefix="e1-final-") as tmp:
+            staging = Path(tmp)
+            final_dir = staging / "final"
+            trainer.save_model(str(final_dir))
+            tokenizer.save_pretrained(final_dir)
+            (staging / "run_manifest.json").write_text(
+                json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            commit = api.upload_folder(
+                repo_id=args.hf_repo,
+                repo_type="model",
+                folder_path=staging,
+                path_in_repo=".",
+                commit_message=f"Complete E1 {args.mode} {args.arm} seed {args.seed}",
+            )
+
+        remote = {
+            "hf_repo": args.hf_repo,
+            "hf_commit": commit.oid,
+            "hf_checkpoint_url": f"https://huggingface.co/{args.hf_repo}/tree/{commit.oid}",
+            "hf_manifest_path": "run_manifest.json",
+            "hf_final_adapter_path": "final/adapter_model.safetensors",
+            "hf_checkpoint_steps": remote_checkpoint_steps(api, args.hf_repo),
+            "wandb_run_id": wandb_run.id,
+            "wandb_run_url": wandb_run.url,
+        }
+        wandb_run.summary.update({**audit_record, **remote})
+        wandb.finish(exit_code=0)
+        result = {
+            "schema_version": "e1-colab-result-v1",
+            "status": "completed",
+            "evidence_class": manifest["evidence_class"],
+            "audit_record": audit_record,
+            "remote": remote,
+            "run_config": run_config,
+            "runtime_versions": runtime_versions,
+            "resume": manifest["resume"],
+        }
+        print("E1_RESULT " + json.dumps(result, sort_keys=True), flush=True)
+        return 0
+    except BaseException:
+        if wandb.run is not None:
+            wandb.finish(exit_code=1)
+        raise
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

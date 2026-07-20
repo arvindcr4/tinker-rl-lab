@@ -88,7 +88,7 @@
   \ifcsname r@tab:groupsize-summary\endcsname\else\newlabel{tab:groupsize-summary}{{P3}{}{}{}{}}\fi
 }
 
-\title{A Unified Benchmark for RL Post-Training of Language Models}
+\title{An Evidence-Tiered Compendium of RL Post-Training Audits}
 
 % For submission, use anonymous authors:
 % \author{Anonymous Authors}
@@ -150,6 +150,16 @@
 % =============================================================================
 % Abstract reframed around F1--F5 (see sections/abstract.tex)
 \input{sections/abstract}
+
+\paragraph{Document status and canonical scope.}
+This file is the program's long-form evidence compendium, not a single venue
+submission and not an independent experiment. It aggregates the benchmark
+substrate and historical analysis modules, some of which also appear in focused
+companion papers. Shared rows must not be meta-analyzed as independent
+replications. The canonical thesis-level evidence is the per-step ZVF diagnostic
+and the matched-token $G{=}2\times160$ versus $G{=}16\times20$ comparison;
+adaptive control, PPO, and SAO remain prospective extensions unless explicitly
+backed by their own held-out runs.
 
 % Introduction reframed around F1--F5 (see sections/intro.tex)
 \input{sections/intro}
@@ -723,8 +733,8 @@ data from Modal GPU runs (NVIDIA L4/T4).}
 % Figure 6: Performance profiles
 \begin{figure}[t]
 \centering
-\IfFileExists{figures/v2/performance_profiles.pdf}{%
-\includegraphics[width=0.85\linewidth]{figures/v2/performance_profiles.pdf}%
+\IfFileExists{figures/v2/performance_profiles.png}{%
+\includegraphics[width=0.85\linewidth]{figures/v2/performance_profiles.png}%
 }{%
 \fbox{\parbox{0.80\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: performance\_profiles.pdf pending regeneration. See \texttt{scripts/make\_paper\_figures.py::fig\_performance\_profiles}.]}\vspace{1em}}}%
 }
@@ -907,8 +917,8 @@ converge.
 
 \begin{figure}[htbp]
 \centering
-\IfFileExists{figures/v2/scaling_law_figure.pdf}{%
-\includegraphics[width=0.85\linewidth]{figures/v2/scaling_law_figure.pdf}%
+\IfFileExists{figures/v2/scaling_law_figure.png}{%
+\includegraphics[width=0.85\linewidth]{figures/v2/scaling_law_figure.png}%
 }{%
 \fbox{\parbox{0.80\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: scaling\_law\_figure.pdf pending regeneration. See \texttt{paper/sections/scaling.tex}.]}\vspace{1em}}}%
 }
@@ -920,8 +930,8 @@ DeepSeek and Qwen3-MoE show the strongest saturation behavior.}
 
 \begin{figure}[htbp]
 \centering
-\IfFileExists{figures/v2/scaling_params_figure.pdf}{%
-\includegraphics[width=0.85\linewidth]{figures/v2/scaling_params_figure.pdf}%
+\IfFileExists{figures/v2/scaling_params_figure.png}{%
+\includegraphics[width=0.85\linewidth]{figures/v2/scaling_params_figure.png}%
 }{%
 \fbox{\parbox{0.80\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: scaling\_params\_figure.pdf pending regeneration. See \texttt{paper/sections/scaling.tex}.]}\vspace{1em}}}%
 }
@@ -987,8 +997,8 @@ artifact bundle.
 
 \begin{figure}[htbp]
 \centering
-\IfFileExists{figures/wave6_sensitivity.pdf}{%
-\includegraphics[width=\linewidth]{figures/wave6_sensitivity.pdf}%
+\IfFileExists{figures/wave6_sensitivity.png}{%
+\includegraphics[width=\linewidth]{figures/wave6_sensitivity.png}%
 }{%
 \fbox{\parbox{0.95\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: wave6\_sensitivity.pdf pending regeneration. See \texttt{paper/figures/wave6\_sensitivity.py}.]}\vspace{1em}}}%
 }
@@ -1328,8 +1338,8 @@ Tinker-managed vs TRL (LLM-native launchers) & $20$ & $5$ & $1.17$ & $[0.13, 2.2
 
 \begin{figure}[htbp]
 \centering
-\IfFileExists{figures/v2/effect_sizes_forest.pdf}{%
-\includegraphics[width=0.85\linewidth]{figures/v2/effect_sizes_forest.pdf}%
+\IfFileExists{figures/v2/effect_sizes_forest.png}{%
+\includegraphics[width=0.85\linewidth]{figures/v2/effect_sizes_forest.png}%
 }{%
 \fbox{\parbox{0.80\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: effect\_sizes\_forest.pdf pending regeneration. See \texttt{paper/sections/effect\_sizes.tex}.]}\vspace{1em}}}%
 }
@@ -1533,8 +1543,8 @@ applies whether the wall is all-incorrect or all-correct.
 
 \begin{figure}[htbp]
 \centering
-\IfFileExists{figures/v2/zvf_heatmap.pdf}{%
-\includegraphics[width=\textwidth]{figures/v2/zvf_heatmap.pdf}%
+\IfFileExists{figures/v2/zvf_heatmap.png}{%
+\includegraphics[width=\textwidth]{figures/v2/zvf_heatmap.png}%
 }{%
 \fbox{\parbox{\textwidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: zvf\_heatmap.pdf pending regeneration. See \texttt{paper/sections/zvf.tex}.]}\vspace{1em}}}%
 }
@@ -1613,9 +1623,10 @@ reward, aggregated across the \texttt{campaign\_v2\_w2\_*},
 reward rises monotonically up to $G{=}8$ (0.50, 0.75, 0.81, 0.72,
 0.45), the last-10 average in this short 30-step fixed-step-budget run peaks at
 $G{=}4$ (0.52). We do not read this single short-horizon run as identifying a
-universal optimal group size: the optimum is budget-dependent (under a fixed
-\emph{token} budget the accuracy-optimal $G$ shifts rightward to $G{\approx}32$;
-Appendix~\ref{sec:appendix:group-size-reconcile}). The consistent qualitative
+universal optimal group size. A separate token-budget reanalysis fits an apex
+near $G{\approx}32$ for one stack and budget, while a different conditional
+signal-per-cost objective selects $G{=}4$; neither is a universal optimum
+(Appendix~\ref{sec:appendix:group-size-reconcile}). The consistent qualitative
 finding across regimes is an inverted-U---intermediate $G$ outperforms the
 smallest and largest settings---not a single best $G$.}
 \label{fig:group_size_zvf}
@@ -1760,8 +1771,11 @@ condition.
 \paragraph{Group Size Ablation.}
 We swept group size $G \in \{2, 4, 8, 16\}$ on Qwen3-8B (Table~\ref{tab:main_results}, Group Size block).
 Optimal last-10 performance occurs at the intermediate $G{=}4$ (52.1\%); $G{=}2$ (37.5\%), $G{=}8$ (34.4\%), and $G{=}16$ (38.0\%) are lower --- an inverted-U consistent with the measured group-size sweep (Appendix~\ref{sec:appendix:group-size-measured}).
-This inverted-U pattern suggests a fundamental tension: too few samples ($G{=}2$) provide insufficient diversity for meaningful advantage estimation, while too many ($G{=}16$) dilute the signal from correct completions.
-At $G{=}16$ the model must distribute attention across 16 samples, where the majority are likely incorrect, leading to noisy gradient estimates that impede learning.
+This inverted-U pattern is descriptive. The current sweep does not isolate why
+the endpoints underperform: optimizer-step count, prompt difficulty, contrast
+yield, and gradient variance all change with $G$. In particular, GRPO does not
+``distribute attention across samples''; the earlier mechanistic wording was
+unsupported and has been removed.
 
 % =============================================================================
 \section{Reproducibility}
@@ -1971,8 +1985,8 @@ natural next ablation regardless of the algorithmic contrast.
 
 \begin{figure}[htbp]
 \centering
-\IfFileExists{figures/v2/reward_stability.pdf}{%
-\includegraphics[width=0.85\linewidth]{figures/v2/reward_stability.pdf}%
+\IfFileExists{figures/v2/reward_stability.png}{%
+\includegraphics[width=0.85\linewidth]{figures/v2/reward_stability.png}%
 }{%
 \fbox{\parbox{0.80\linewidth}{\centering\small\vspace{1em}\textit{[Figure placeholder: reward\_stability.pdf pending regeneration. See \texttt{paper/sections/reward\_stability.tex}.]}\vspace{1em}}}%
 }
@@ -2411,25 +2425,8 @@ and \texttt{BENCHMARKS\_COMPARISON.md} for the full comparison table with existi
 \input{sections/group_size_reconcile}
 \input{sections/group_size_iter23}
 \input{sections/group_size_iter27}
-\input{sections/group_size_iter31}
-\input{sections/group_size_iter35}
-\input{sections/group_size_iter39}
-\input{sections/group_size_iter43}
-\input{sections/group_size_iter47}
-\input{sections/group_size_iter51}
-\input{sections/group_size_iter55}
-\input{sections/group_size_iter59}
-\input{sections/group_size_iter63}
-\input{sections/group_size_iter67}
-\input{sections/group_size_iter71}
-\input{sections/group_size_iter87}
-\input{sections/group_size_iter99}
-\input{sections/group_size_iter103}
-\input{sections/group_size_iter107}
-\input{sections/group_size_iter111}
-\input{sections/group_size_iter115}
-\input{sections/group_size_iter119}
-\input{sections/group_size_iter127}
+% Legacy reconstructed-grid iterations are consolidated in the four includes
+% above; their scripts and result artifacts remain the provenance record.
 \input{sections/frontier_synthesis_group_size}
 \input{sections/framework_configs_appendix}
 \input{sections/stat_rigor_updates}

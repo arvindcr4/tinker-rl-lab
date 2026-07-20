@@ -85,5 +85,15 @@
       "parser_robustness_probe": null
     }
   },
-  "notes": "Iter-182 vein (d) prototype: stack entry for the Qwen/Qwen3-8B ppo_reinforce run (ri2pajjl). Only wandb-managed fields are populated; the per-step ZVF/gu telemetry is null because the wandb inventory does not expose it. The 2-run Qwen3-8B + 2-run Llama-3.1-8B-Instruct panel are cross-stack relative to the registry's tinker_*_qwen3.5-4b_gsm8k entries (different model family AND different sampler). The pair {ri2pajjl, vrb9zxql} and {wni44rkq, dshd5xxm} share seed=42 but different wandb ids (each a separate finished run)."
+  "notes": "Iter-182 vein (d) prototype: stack entry for the Qwen/Qwen3-8B ppo_reinforce run (ri2pajjl). Only wandb-managed fields are populated; the per-step ZVF/gu telemetry is null because the wandb inventory does not expose it. The 2-run Qwen3-8B + 2-run Llama-3.1-8B-Instruct panel are cross-stack relative to the registry's tinker_*_qwen3.5-4b_gsm8k entries (different model family AND different sampler). The pair {ri2pajjl, vrb9zxql} and {wni44rkq, dshd5xxm} share seed=42 but different wandb ids (each a separate finished run).",
+  "outcomes": {
+    "coverage": {
+      "min_report_coverage": 0.8571,
+      "declared_deltas_coverage": 1.0,
+      "measured_coverage": 0.0,
+      "ci_method_present": false,
+      "audit_source": "platform_modal/scripts/p5p8/p6_outcomes_coverage_block.py",
+      "audit_date": "2026-07-05"
+    }
+  }
 }

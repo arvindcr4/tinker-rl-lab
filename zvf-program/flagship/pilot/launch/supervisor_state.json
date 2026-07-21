@@ -4,8 +4,8 @@
       "acceptance_path": null,
       "attempts": 3,
       "last_error": "launcher exited 1",
-      "pid": 16155,
-      "status": "running"
+      "pid": null,
+      "status": "failed_infrastructure"
     },
     "corpus__balanced_equal_length__s23": {
       "acceptance_path": null,

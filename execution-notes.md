@@ -453,3 +453,79 @@ locked until A100 assignment succeeds again.
   and A100 session `fpcorp-bala-s11-e22e` remain healthy; the HF dataset
   remains the zero-payload skeleton until all 100 groups complete, as
   designed.
+- Evidence pass (2026-07-21T10:45Z): local flagship suite triage. A naive
+  `.venv` pytest run reports 130 passed / 26 failed; every failure is
+  environment-gating, not a code defect. (a) 24 `test_verl_adapter.py`
+  cases fail closed with `VerlPinError: external verl is unavailable` —
+  by design they require the frozen Python 3.11 environment
+  (`verl==0.3.0.post1 torch==2.4.0 transformers==4.45.2`) run from outside
+  the repository per `zvf-program/flagship/s1/README.md`; this Mac's `.venv`
+  is Python 3.12. (b) `test_runtime_pins_are_exact_and_complete` fails on
+  numpy `2.4.4` vs pinned `2.2.6` — local env drift, not source change.
+  (c) `test_native_condition_matches_pinned_trl_dapo` fails closed with
+  `TRLPinError` outside the pinned `uv run --with trl==1.2.0 --with
+  transformers==5.5.4` env. Re-running the documented TRL harness command
+  passes all TRL cases; the only errors are the same 24 fail-closed verl
+  cases. Frozen receipts `trl_receipt.json`, `verl_receipt.json`, and
+  `implementation_freeze.json` (`S1_PASS`, fixture digest
+  `c35916cf…8ae9b`, 14 intended cases per stack, 36 controller cases)
+  remain the authoritative conformance evidence from 2026-07-20. The verl
+  py3.11 harness and full pinned-env re-run are queued for the pre-Done
+  completion audit; no source change indicated.
+- Attempt 3 cleared the group-40 frozen profiler: group 40 committed at
+  160,423 cumulative charged tokens with selected-length CV `0`
+  (2026-07-21T10:54:37Z), after a normal ~13-minute buffered profiler
+  window, and advanced to group 43 at 172,174 cumulative charged tokens
+  (10:56:41Z) with W&B `hge0xhav` `running` and a current heartbeat
+  (10:57Z). Launcher PID 16155 and A100 session `fpcorp-bala-s11-e22e`
+  remain healthy. A supervisor-terminal scrollback line (`corpus log must
+  contain exactly one result line; found 0`) was inspected and confirmed
+  to be residue from attempt 2's exit, not a new failure — the fail-closed
+  result-line check in `launcher.py` fires only after the remote script
+  exits, and attempt 3's launcher is still running. Next frozen profiler
+  boundary: group 60; group 80 remains the boundary where attempts 1 and
+  2 lost their VMs.
+- Attempt 3 cleared the group-60 frozen profiler: buffered rows flushed
+  after the normal profiler window, with group 66 committed at 260,853
+  cumulative charged tokens and selected-length CV `0`
+  (2026-07-21T11:24:12Z) and W&B `hge0xhav` `running` with a current
+  heartbeat (11:24:56Z). Launcher PID 16155 and A100 session
+  `fpcorp-bala-s11-e22e` remain healthy; the HF dataset remains the
+  zero-payload skeleton until all 100 groups complete, as designed. Next
+  frozen profiler boundary: group 80 — the boundary where attempts 1 and
+  2 lost their VMs.
+- Attempt 3 cleared the group-80 frozen profiler — the boundary where
+  attempts 1 and 2 both lost their VMs — and advanced to group 90 at
+  357,375 cumulative charged tokens with selected-length CV `0`
+  (2026-07-21T11:52:39Z), W&B `hge0xhav` `running` with a current
+  heartbeat (11:53:42Z). Launcher PID 16155 and A100 session
+  `fpcorp-bala-s11-e22e` remain healthy. Ten groups remain plus the
+  group-100 frozen profiler window before payload upload to the private
+  HF dataset and the supervisor verifier receipt.
+- HARD STOP (2026-07-21T12:15Z): attempt 3 — the final guarded attempt
+  for `corpus__balanced_equal_length__s11` — lost its Colab VM during
+  the group-100 frozen profiler window. W&B `hge0xhav` is `crashed`
+  with last row group 99 at 393,714 cumulative charged tokens
+  (2026-07-21T11:58:51Z), heartbeat frozen at 12:12:46Z; the A100
+  session is gone (`colab sessions`: none), launcher PID 16155 is dead,
+  and the supervisor recorded `failed_infrastructure` with
+  `attempts=3`, `last_error="launcher exited 1"`. This is the third
+  infrastructure loss for this corpus block and exhausts the
+  three-attempt policy — no relaunch without an explicit user decision.
+  Loss pattern across all three attempts: attempt 1 (`ujryg527`,
+  created 05:34:46Z) died at the group-80 profiler boundary with last
+  row group 78 at 309,364 tokens; attempt 2 (`lwjtk9dk`, created
+  07:30:23Z) died during the group-100 profiler with last row group 99
+  at 393,714 tokens; attempt 3 (`hge0xhav`, created 09:52:41Z) died at
+  the identical point — group 99, 393,714 tokens — confirming
+  deterministic replay and implicating the long group-100 profiler
+  burst (~12–14 min of uninterrupted A100 compute beginning ~2h20m
+  into the session) as the common loss window. Every run died at
+  roughly 2h20m–2h25m of wall-clock session time, consistent with
+  per-session runtime reclamation rather than credit exhaustion
+  (credits were reloaded and tokens flowed until sudden death). The
+  corpus carries no partial checkpoint by frozen design, so each loss
+  forces full regeneration (~2h30m per attempt). All six corpus blocks
+  are now `failed_infrastructure` at their attempt caps; the 24
+  `fpilot__*` units remain gated. Awaiting user direction; see the
+  report in-thread for the decision options.

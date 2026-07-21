@@ -1,6 +1,6 @@
 # Remaining obligations and closure ledger
 
-Date: 2026-07-19
+Date: 2026-07-20
 Scope: 18 canonical manuscripts, their included source closure, companion
 registry/audit tooling, and the new GRPO/PPO/SAO synthesis.
 
@@ -899,6 +899,27 @@ all reconcile. The full verifier now reports 40/40 with zero errors; the frozen
 aggregate reports `COMPLETE` and emits DAPO `DISAPPEARS`, with GSPO, Dr.GRPO,
 and AERO `INCONCLUSIVE`.
 
+## Flagship conformance-screening update (2026-07-21)
+
+The successor flagship route is separately frozen under
+`zvf-program/flagship/pilot_preregistration.json`. Its non-scientific A100
+smoke is accepted. The six immutable corpus jobs have no acceptance receipts,
+so the dependency graph correctly leaves all 24 scientific screening units
+pending. After the latest Colab reload, six independent pre-VM corpus
+allocations returned `TooManyAssignmentsError` with
+`variant=GPU&accelerator=A100: Precondition Failed`, even though both Colab
+session-list surfaces report no active session. The supervisor stopped after
+three guarded attempts per corpus; no local flagship process remains, no
+scientific unit ran, and no confirmatory compute is authorized. This is a
+provider-side infrastructure stop, not a failed scientific attempt.
+
+At 2026-07-21 11:20 IST, the user confirmed renewed Colab access. A single
+guarded reset of balanced-regime seed 11 obtained an A100, passed the frozen
+runtime check, and started corpus W&B run `ujryg527`. Its first profiled group
+completed with 4,096 charged tokens and subsequent unprofiled groups began
+advancing. The other five corpora remain stopped and all 24 scientific units
+remain pending until their exact corpus dependency is independently accepted.
+
 ## Remaining empirical obligations
 
 These require accelerator time, an external environment/data source, or both.
@@ -913,6 +934,7 @@ They are deliberately not replaced with toy numbers.
 | E5 | Direct group-size and scaling confirmations | P01/P03 protocols and current reconstructed/direct provenance labels | Multi-seed token-matched direct G sweep including G=32 and matched cross-scale cells | GPU budget |
 | E6 | Length-bias external validity | P04 capped null-test protocol | Uncapped or long-horizon multi-seed mediation study | GPU budget and longer generation policy |
 | E7 | Fraud side-study external validity | P08 parked scope and honest synthetic/noisy-sensor analysis | Real, cross-institution or temporally held-out fraud data under approval | Data access, privacy/ethics approval |
+| E8 | Open-stack flagship conformance screening | Frozen 24-unit protocol, accepted A100 smoke, six corpus jobs, remote trainer/verifier, and go/kill evaluator | Six independently accepted immutable corpora, then all 24 paired scientific units and the preregistered screening verdict; confirmatory matrix remains forbidden until a go verdict | Capacity restored for one guarded slot; balanced seed-11 corpus is live under W&B `ujryg527`, while the other five corpora and all scientific units remain fail-closed pending independent acceptance |
 
 ## Remaining release and ecosystem obligations
 
@@ -932,7 +954,8 @@ python3 -m unittest platform_hybrid/experiments/signal_starvation/test_metrics.p
 python3 zvf-program/audit/test_aggregate_audit.py
 python3 zvf-program/audit/aggregate_audit.py \
   --input-dir zvf-program/audit/results/full \
-  --output zvf-program/audit/results/audit.json
+  --output zvf-program/audit/results/audit.json \
+  --tex-output zvf-program/audit/results/audit_results.tex
 python3 zvf-program/audit/verify_colab_e1_campaign.py \
   --output zvf-program/audit/results/campaign-verification.json
 
@@ -946,6 +969,6 @@ python3 autoresearch/improve-260714-1806/self_review_corpus.py
 ```
 
 Only after all eight hash-complete seed records for every arm are present may
-the audit aggregator print `COMPLETE` and emit frozen paired verdicts. It
-currently refuses the one remaining legacy record, as required by the passing
-safety tests.
+the audit aggregator print `COMPLETE` and emit frozen paired verdicts. All 40
+records now pass that gate; incomplete fixtures remain fail-closed in the
+passing safety tests.

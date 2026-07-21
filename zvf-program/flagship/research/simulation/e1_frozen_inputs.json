@@ -1,0 +1,43 @@
+{
+  "experiment": "E1_grad_signal",
+  "model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "n_steps": 30,
+  "pearson_gradnorm_vs_p1mp": 0.71,
+  "pearson_gradnorm_vs_GU": 0.63,
+  "pearson_gradnorm_vs_ERF": 0.169,
+  "by_difficulty": {
+    "trivial": {
+      "mean_p": 0.458,
+      "mean_ZVF": 0.083,
+      "mean_grad_norm": 12026.64
+    },
+    "easy": {
+      "mean_p": 0.298,
+      "mean_ZVF": 0.125,
+      "mean_grad_norm": 10606.18
+    },
+    "medium": {
+      "mean_p": 0.382,
+      "mean_ZVF": 0.042,
+      "mean_grad_norm": 12248.5
+    },
+    "hard": {
+      "mean_p": 0.264,
+      "mean_ZVF": 0.125,
+      "mean_grad_norm": 10433.37
+    },
+    "impossible": {
+      "mean_p": 0.264,
+      "mean_ZVF": 0.125,
+      "mean_grad_norm": 10344.65
+    }
+  },
+  "source_path": "zvf-program/colab-experiments/results/e1_grad_signal.json",
+  "source_sha256": "86e4b17d48a5bf81ab71a4f97132e8ea8df1ed843849aa79fd39e1c618d3bf6a",
+  "use_constraint": "synthetic calibration input only; not pooled with or counted as confirmation for this simulation"
+}

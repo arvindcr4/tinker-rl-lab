@@ -91,7 +91,7 @@
 | R05 | `zvf-program/theory/zvf_theory.tex` | conditional theory | discharged the enumerated proof gaps, added an exact Clopper--Pearson bound, and proved the proxy optimum | prospective empirical validation; richer control objective |
 | R06 | `zvf-program/position/min_report_rl.tex` | condensed position | corrected 17x interpretation, 7+1 standard, authorship, audit rules, and released-vs-planned tooling claims | controlled audit; external adoption submissions |
 | R07 | `zvf-program/registry/grpo_registry.tex` | living catalog | aligned variant definitions with primary sources and distinguished implemented commands from planned adapters | external entries, unknown-field backfill, schema adoption |
-| R08 | `zvf-program/audit/reproducibility_audit.tex` | survival protocol | added frozen machine contracts and a fail-closed aggregator; pilot remains descriptive | full open-stack multi-seed audit |
+| R08 | `zvf-program/audit/reproducibility_audit.tex` | completed single-stack survival audit | completed and independently reconciled all 40 frozen E1 units; DAPO `DISAPPEARS`, while GSPO, Dr.GRPO, and AERO remain `INCONCLUSIVE` | open-stack replication, objective-differential tests, longer-horizon external validity |
 | U01 | `platform_hybrid/paper/main.tex` | long compendium | labeled non-independent compendium; removed unsupported group-size mechanism | split/archive the 239-page iteration history |
 | N01 | `platform_hybrid/paper/unified_signal_starvation/main.tex` | GRPO/PPO/SAO synthesis | added executable PPO/SAO gates, PAM/GSR/EGM/root-ZUF metrics, trace validation, tests, and a frozen contract | execute matched-budget PPO/SAO runs |
 
@@ -103,7 +103,9 @@
 - Best near-term paper: focused ZVF sentinel/stratification scope (R02), unless
   the adaptive-controller bakeoff succeeds.
 - Do not submit P07 as an adaptive-control win before the fixed-token bakeoff.
-- Do not present R08 placeholder tables as results.
+- Treat R08's 40/40 E1 table as a bounded Qwen3-8B/GSM8K/Tinker result, not a
+  universal ranking; main-track claims still require open-stack and
+  longer-horizon external validity.
 - Treat U01 as an internal compendium and source archive, not a 237-page venue
   manuscript.
 - Keep N01 as a methods paper until PPO and SAO outcomes exist.

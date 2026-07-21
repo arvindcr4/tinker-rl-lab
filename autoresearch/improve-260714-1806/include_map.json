@@ -420,7 +420,8 @@
   "R08": {
     "root": "zvf-program/audit/reproducibility_audit.tex",
     "files": [
-      "zvf-program/audit/reproducibility_audit.tex"
+      "zvf-program/audit/reproducibility_audit.tex",
+      "zvf-program/audit/results/audit_results.tex"
     ],
     "missing": [],
     "latexpand_warning": null

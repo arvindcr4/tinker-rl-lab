@@ -1,0 +1,1664 @@
+{
+  "controller_action_ontology": {
+    "keep": "keep",
+    "recheck": "recheck",
+    "retry": "escalate",
+    "stop_collecting": "drop"
+  },
+  "controller_actions_observed": [
+    "drop",
+    "escalate",
+    "keep",
+    "recheck"
+  ],
+  "controller_matrix": [
+    {
+      "case": "all_wrong",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "static_g8",
+        "group_size": 8,
+        "reason": "fixed",
+        "wilson_high": 0.6576197724933469,
+        "wilson_low": 0.0
+      },
+      "policy": "static_g8",
+      "status": "observed"
+    },
+    {
+      "case": "all_correct",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "static_g8",
+        "group_size": 8,
+        "reason": "fixed",
+        "wilson_high": 1.0,
+        "wilson_low": 0.34238022750665303
+      },
+      "policy": "static_g8",
+      "status": "observed"
+    },
+    {
+      "case": "mixed",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "static_g8",
+        "group_size": 8,
+        "reason": "fixed",
+        "wilson_high": 0.9054687942657693,
+        "wilson_low": 0.09453120573423074
+      },
+      "policy": "static_g8",
+      "status": "observed"
+    },
+    {
+      "case": "noisy",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "static_g8",
+        "group_size": 0,
+        "reason": "noisy reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "static_g8",
+      "status": "noisy"
+    },
+    {
+      "case": "missing",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "static_g8",
+        "group_size": 0,
+        "reason": "missing reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "static_g8",
+      "status": "missing"
+    },
+    {
+      "case": "delayed",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "static_g8",
+        "group_size": 0,
+        "reason": "delayed reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "static_g8",
+      "status": "delayed"
+    },
+    {
+      "case": "all_wrong",
+      "charged_rollouts": 16,
+      "decision": {
+        "action": "keep",
+        "arm": "static_g16",
+        "group_size": 16,
+        "reason": "fixed",
+        "wilson_high": 0.6576197724933469,
+        "wilson_low": 0.0
+      },
+      "policy": "static_g16",
+      "status": "observed"
+    },
+    {
+      "case": "all_correct",
+      "charged_rollouts": 16,
+      "decision": {
+        "action": "keep",
+        "arm": "static_g16",
+        "group_size": 16,
+        "reason": "fixed",
+        "wilson_high": 1.0,
+        "wilson_low": 0.34238022750665303
+      },
+      "policy": "static_g16",
+      "status": "observed"
+    },
+    {
+      "case": "mixed",
+      "charged_rollouts": 16,
+      "decision": {
+        "action": "keep",
+        "arm": "static_g16",
+        "group_size": 16,
+        "reason": "fixed",
+        "wilson_high": 0.9054687942657693,
+        "wilson_low": 0.09453120573423074
+      },
+      "policy": "static_g16",
+      "status": "observed"
+    },
+    {
+      "case": "noisy",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "static_g16",
+        "group_size": 0,
+        "reason": "noisy reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "static_g16",
+      "status": "noisy"
+    },
+    {
+      "case": "missing",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "static_g16",
+        "group_size": 0,
+        "reason": "missing reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "static_g16",
+      "status": "missing"
+    },
+    {
+      "case": "delayed",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "static_g16",
+        "group_size": 0,
+        "reason": "delayed reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "static_g16",
+      "status": "delayed"
+    },
+    {
+      "case": "all_wrong",
+      "charged_rollouts": 16,
+      "decision": {
+        "action": "escalate",
+        "arm": "symmetric_zvf",
+        "group_size": 16,
+        "reason": "zero variance",
+        "wilson_high": 0.6576197724933469,
+        "wilson_low": 0.0
+      },
+      "policy": "symmetric_zvf",
+      "status": "observed"
+    },
+    {
+      "case": "all_correct",
+      "charged_rollouts": 16,
+      "decision": {
+        "action": "escalate",
+        "arm": "symmetric_zvf",
+        "group_size": 16,
+        "reason": "zero variance",
+        "wilson_high": 1.0,
+        "wilson_low": 0.34238022750665303
+      },
+      "policy": "symmetric_zvf",
+      "status": "observed"
+    },
+    {
+      "case": "mixed",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "symmetric_zvf",
+        "group_size": 8,
+        "reason": "informative",
+        "wilson_high": 0.9054687942657693,
+        "wilson_low": 0.09453120573423074
+      },
+      "policy": "symmetric_zvf",
+      "status": "observed"
+    },
+    {
+      "case": "noisy",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "symmetric_zvf",
+        "group_size": 0,
+        "reason": "noisy reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "symmetric_zvf",
+      "status": "noisy"
+    },
+    {
+      "case": "missing",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "symmetric_zvf",
+        "group_size": 0,
+        "reason": "missing reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "symmetric_zvf",
+      "status": "missing"
+    },
+    {
+      "case": "delayed",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "symmetric_zvf",
+        "group_size": 0,
+        "reason": "delayed reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "symmetric_zvf",
+      "status": "delayed"
+    },
+    {
+      "case": "all_wrong",
+      "charged_rollouts": 16,
+      "decision": {
+        "action": "escalate",
+        "arm": "failure_only",
+        "group_size": 16,
+        "reason": "all wrong",
+        "wilson_high": 0.6576197724933469,
+        "wilson_low": 0.0
+      },
+      "policy": "failure_only",
+      "status": "observed"
+    },
+    {
+      "case": "all_correct",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "failure_only",
+        "group_size": 8,
+        "reason": "informative",
+        "wilson_high": 1.0,
+        "wilson_low": 0.34238022750665303
+      },
+      "policy": "failure_only",
+      "status": "observed"
+    },
+    {
+      "case": "mixed",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "failure_only",
+        "group_size": 8,
+        "reason": "informative",
+        "wilson_high": 0.9054687942657693,
+        "wilson_low": 0.09453120573423074
+      },
+      "policy": "failure_only",
+      "status": "observed"
+    },
+    {
+      "case": "noisy",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "failure_only",
+        "group_size": 0,
+        "reason": "noisy reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "failure_only",
+      "status": "noisy"
+    },
+    {
+      "case": "missing",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "failure_only",
+        "group_size": 0,
+        "reason": "missing reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "failure_only",
+      "status": "missing"
+    },
+    {
+      "case": "delayed",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "failure_only",
+        "group_size": 0,
+        "reason": "delayed reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "failure_only",
+      "status": "delayed"
+    },
+    {
+      "case": "all_wrong",
+      "charged_rollouts": 16,
+      "decision": {
+        "action": "escalate",
+        "arm": "boundary_aware",
+        "group_size": 16,
+        "reason": "recoverable failure",
+        "wilson_high": 0.6576197724933469,
+        "wilson_low": 0.0
+      },
+      "policy": "boundary_aware",
+      "status": "observed"
+    },
+    {
+      "case": "all_correct",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "drop",
+        "arm": "boundary_aware",
+        "group_size": 0,
+        "reason": "mastered",
+        "wilson_high": 1.0,
+        "wilson_low": 0.34238022750665303
+      },
+      "policy": "boundary_aware",
+      "status": "observed"
+    },
+    {
+      "case": "mixed",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "boundary_aware",
+        "group_size": 8,
+        "reason": "informative",
+        "wilson_high": 0.9054687942657693,
+        "wilson_low": 0.09453120573423074
+      },
+      "policy": "boundary_aware",
+      "status": "observed"
+    },
+    {
+      "case": "noisy",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "boundary_aware",
+        "group_size": 0,
+        "reason": "noisy reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "boundary_aware",
+      "status": "noisy"
+    },
+    {
+      "case": "missing",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "boundary_aware",
+        "group_size": 0,
+        "reason": "missing reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "boundary_aware",
+      "status": "missing"
+    },
+    {
+      "case": "delayed",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "boundary_aware",
+        "group_size": 0,
+        "reason": "delayed reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "boundary_aware",
+      "status": "delayed"
+    },
+    {
+      "case": "all_wrong",
+      "charged_rollouts": 16,
+      "decision": {
+        "action": "escalate",
+        "arm": "full_triage",
+        "group_size": 16,
+        "reason": "recoverable failure",
+        "wilson_high": 0.6576197724933469,
+        "wilson_low": 0.0
+      },
+      "policy": "full_triage",
+      "status": "observed"
+    },
+    {
+      "case": "all_correct",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "full_triage",
+        "group_size": 8,
+        "reason": "insufficient confidence",
+        "wilson_high": 1.0,
+        "wilson_low": 0.34238022750665303
+      },
+      "policy": "full_triage",
+      "status": "observed"
+    },
+    {
+      "case": "mixed",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "full_triage",
+        "group_size": 8,
+        "reason": "informative",
+        "wilson_high": 0.9054687942657693,
+        "wilson_low": 0.09453120573423074
+      },
+      "policy": "full_triage",
+      "status": "observed"
+    },
+    {
+      "case": "noisy",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "full_triage",
+        "group_size": 0,
+        "reason": "noisy reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "full_triage",
+      "status": "noisy"
+    },
+    {
+      "case": "missing",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "full_triage",
+        "group_size": 0,
+        "reason": "missing reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "full_triage",
+      "status": "missing"
+    },
+    {
+      "case": "delayed",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "full_triage",
+        "group_size": 0,
+        "reason": "delayed reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "full_triage",
+      "status": "delayed"
+    }
+  ],
+  "fixture_digest": "c35916cf7db0b6c7ff6d0e35925a165b304fc78ff3d63845b9a853ca8af8ae9b",
+  "intended_cases": [
+    {
+      "actual_loss": -0.008411263377749223,
+      "actual_semantics": "intended_trl_s1_adapter",
+      "arm": "grpo",
+      "config": {
+        "arm": "grpo",
+        "epsilon_high": 0.2,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "token",
+        "loss_type": "grpo",
+        "max_completion_length": 2,
+        "scale_rewards": "canonical_s1_precomputed"
+      },
+      "conforms": true,
+      "expected_loss": -0.008411263377749223,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        }
+      ],
+      "fixture": "base",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned TRL loss kernel",
+        "TRL grpo reduction is used to preserve canonical per-completion means"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": 0.0,
+      "actual_semantics": "intended_trl_s1_adapter",
+      "arm": "grpo",
+      "config": {
+        "arm": "grpo",
+        "epsilon_high": 0.2,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "token",
+        "loss_type": "grpo",
+        "max_completion_length": 2,
+        "scale_rewards": "canonical_s1_precomputed"
+      },
+      "conforms": true,
+      "expected_loss": 0.0,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        }
+      ],
+      "fixture": "all_wrong",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned TRL loss kernel",
+        "TRL grpo reduction is used to preserve canonical per-completion means"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": 0.0,
+      "actual_semantics": "intended_trl_s1_adapter",
+      "arm": "grpo",
+      "config": {
+        "arm": "grpo",
+        "epsilon_high": 0.2,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "token",
+        "loss_type": "grpo",
+        "max_completion_length": 2,
+        "scale_rewards": "canonical_s1_precomputed"
+      },
+      "conforms": true,
+      "expected_loss": 0.0,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        }
+      ],
+      "fixture": "all_correct",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned TRL loss kernel",
+        "TRL grpo reduction is used to preserve canonical per-completion means"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.008411263377749223,
+      "actual_semantics": "intended_trl_s1_adapter",
+      "arm": "grpo",
+      "config": {
+        "arm": "grpo",
+        "epsilon_high": 0.2,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "token",
+        "loss_type": "grpo",
+        "max_completion_length": 2,
+        "scale_rewards": "canonical_s1_precomputed"
+      },
+      "conforms": true,
+      "expected_loss": -0.008411263377749223,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        }
+      ],
+      "fixture": "graded",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned TRL loss kernel",
+        "TRL grpo reduction is used to preserve canonical per-completion means"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.008411263377749223,
+      "actual_semantics": "intended_trl_s1_adapter",
+      "arm": "grpo",
+      "config": {
+        "arm": "grpo",
+        "epsilon_high": 0.2,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "token",
+        "loss_type": "grpo",
+        "max_completion_length": 2,
+        "scale_rewards": "canonical_s1_precomputed"
+      },
+      "conforms": true,
+      "expected_loss": -0.008411263377749223,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        }
+      ],
+      "fixture": "translated",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned TRL loss kernel",
+        "TRL grpo reduction is used to preserve canonical per-completion means"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.05306248610643971,
+      "actual_semantics": "intended_trl_s1_adapter",
+      "arm": "grpo",
+      "config": {
+        "arm": "grpo",
+        "epsilon_high": 0.2,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "token",
+        "loss_type": "grpo",
+        "max_completion_length": 2,
+        "scale_rewards": "canonical_s1_precomputed"
+      },
+      "conforms": true,
+      "expected_loss": -0.05306248610643971,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        }
+      ],
+      "fixture": "low_clip",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned TRL loss kernel",
+        "TRL grpo reduction is used to preserve canonical per-completion means"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.06720462173017072,
+      "actual_semantics": "intended_trl_s1_adapter",
+      "arm": "dapo",
+      "config": {
+        "arm": "dapo",
+        "epsilon_high": 0.28,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "token",
+        "loss_type": "grpo",
+        "max_completion_length": 2,
+        "scale_rewards": "canonical_s1_precomputed"
+      },
+      "conforms": true,
+      "expected_loss": -0.06720462173017072,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        }
+      ],
+      "fixture": "dapo_clip",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned TRL loss kernel",
+        "TRL grpo reduction is used to preserve canonical per-completion means"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.05306248610643971,
+      "actual_semantics": "intended_trl_s1_adapter",
+      "arm": "dapo",
+      "config": {
+        "arm": "dapo",
+        "epsilon_high": 0.28,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "token",
+        "loss_type": "grpo",
+        "max_completion_length": 2,
+        "scale_rewards": "canonical_s1_precomputed"
+      },
+      "conforms": true,
+      "expected_loss": -0.05306248610643971,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        }
+      ],
+      "fixture": "low_clip",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned TRL loss kernel",
+        "TRL grpo reduction is used to preserve canonical per-completion means"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.008621501164478906,
+      "actual_semantics": "intended_trl_s1_adapter",
+      "arm": "gspo",
+      "config": {
+        "arm": "gspo",
+        "epsilon_high": 0.2,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "sequence",
+        "loss_type": "grpo",
+        "max_completion_length": 2,
+        "scale_rewards": "canonical_s1_precomputed"
+      },
+      "conforms": true,
+      "expected_loss": -0.008621501164478906,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        }
+      ],
+      "fixture": "base",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned TRL loss kernel",
+        "TRL grpo reduction is used to preserve canonical per-completion means"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.02358004819475708,
+      "actual_semantics": "intended_trl_s1_adapter",
+      "arm": "gspo",
+      "config": {
+        "arm": "gspo",
+        "epsilon_high": 0.2,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "sequence",
+        "loss_type": "grpo",
+        "max_completion_length": 2,
+        "scale_rewards": "canonical_s1_precomputed"
+      },
+      "conforms": true,
+      "expected_loss": -0.02358004819475708,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        }
+      ],
+      "fixture": "zero_mask",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned TRL loss kernel",
+        "TRL grpo reduction is used to preserve canonical per-completion means"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.005947661372752544,
+      "actual_semantics": "intended_trl_s1_adapter",
+      "arm": "drgrpo",
+      "config": {
+        "arm": "drgrpo",
+        "epsilon_high": 0.2,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "token",
+        "loss_type": "grpo",
+        "max_completion_length": 2,
+        "scale_rewards": "canonical_s1_precomputed"
+      },
+      "conforms": true,
+      "expected_loss": -0.005947661372752544,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        }
+      ],
+      "fixture": "base",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned TRL loss kernel",
+        "TRL grpo reduction is used to preserve canonical per-completion means"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.005947661372752544,
+      "actual_semantics": "intended_trl_s1_adapter",
+      "arm": "drgrpo",
+      "config": {
+        "arm": "drgrpo",
+        "epsilon_high": 0.2,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "token",
+        "loss_type": "grpo",
+        "max_completion_length": 2,
+        "scale_rewards": "canonical_s1_precomputed"
+      },
+      "conforms": true,
+      "expected_loss": -0.005947661372752544,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        }
+      ],
+      "fixture": "translated",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned TRL loss kernel",
+        "TRL grpo reduction is used to preserve canonical per-completion means"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": 0.005319750054649741,
+      "actual_semantics": "intended_trl_s1_adapter",
+      "arm": "aero",
+      "config": {
+        "arm": "aero",
+        "epsilon_high": 0.2,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "token",
+        "loss_type": "grpo",
+        "max_completion_length": 2,
+        "scale_rewards": "canonical_s1_precomputed"
+      },
+      "conforms": true,
+      "expected_loss": 0.005319750054649741,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        }
+      ],
+      "fixture": "aero_posterior",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned TRL loss kernel",
+        "TRL grpo reduction is used to preserve canonical per-completion means"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": 0.012394511559150908,
+      "actual_semantics": "intended_trl_s1_adapter",
+      "arm": "grpo",
+      "config": {
+        "arm": "grpo",
+        "epsilon_high": 0.2,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "token",
+        "loss_type": "grpo",
+        "max_completion_length": 2,
+        "scale_rewards": "canonical_s1_precomputed"
+      },
+      "conforms": true,
+      "expected_loss": 0.012394511559150908,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        }
+      ],
+      "fixture": "base_selected_0_1_3",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned TRL loss kernel",
+        "TRL grpo reduction is used to preserve canonical per-completion means"
+      ],
+      "verdict": "PASS"
+    }
+  ],
+  "native_cases": [
+    {
+      "actual_loss": -0.008410074013676105,
+      "actual_semantics": "native_trl_1.2.0",
+      "arm": "grpo",
+      "config": {
+        "arm": "grpo",
+        "epsilon_high": 0.2,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "token",
+        "loss_type": "grpo",
+        "max_completion_length": 2,
+        "scale_rewards": "group"
+      },
+      "conforms": false,
+      "expected_loss": -0.008411263377749223,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": false,
+          "field": "advantages",
+          "max_abs_error": 9.998585986403796e-05,
+          "max_rel_error": 0.0001414013590652582
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": false,
+          "field": "surrogate",
+          "max_abs_error": 0.00011050146454061327,
+          "max_rel_error": 0.00014140135906537515
+        },
+        {
+          "agrees": false,
+          "field": "loss",
+          "max_abs_error": 1.1893640731175381e-06,
+          "max_rel_error": 0.00014140135907096053
+        },
+        {
+          "agrees": false,
+          "field": "gradient",
+          "max_abs_error": 2.499646496600949e-05,
+          "max_rel_error": 0.00014140135906537515
+        }
+      ],
+      "fixture": "base",
+      "formula_notes": [
+        "TRL divides centered group rewards by sample_std + 1e-4; the canonical reference uses sample_std"
+      ],
+      "verdict": "MATERIAL_DIFFERENCE"
+    },
+    {
+      "actual_loss": 0.052486820967939184,
+      "actual_semantics": "native_trl_1.2.0",
+      "arm": "dapo",
+      "config": {
+        "arm": "dapo",
+        "epsilon_high": 0.28,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "token",
+        "loss_type": "dapo",
+        "max_completion_length": 2,
+        "scale_rewards": "group"
+      },
+      "conforms": false,
+      "expected_loss": -0.06720462173017072,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": false,
+          "field": "advantages",
+          "max_abs_error": 9.998585986403796e-05,
+          "max_rel_error": 0.0001414013590652582
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": false,
+          "field": "surrogate",
+          "max_abs_error": 0.00012798190062590642,
+          "max_rel_error": 0.00014140135906537515
+        },
+        {
+          "agrees": false,
+          "field": "loss",
+          "max_abs_error": 0.11969144269810991,
+          "max_rel_error": 1.7810001695817277
+        },
+        {
+          "agrees": false,
+          "field": "gradient",
+          "max_abs_error": 0.013939104264734423,
+          "max_rel_error": 0.14269554130392534
+        }
+      ],
+      "fixture": "dapo_clip",
+      "formula_notes": [
+        "TRL divides centered group rewards by sample_std + 1e-4; the canonical reference uses sample_std",
+        "TRL DAPO divides the masked token-loss sum by global active tokens; the canonical reference averages completion means"
+      ],
+      "verdict": "MATERIAL_DIFFERENCE"
+    },
+    {
+      "actual_loss": -0.008620282072497043,
+      "actual_semantics": "native_trl_1.2.0",
+      "arm": "gspo",
+      "config": {
+        "arm": "gspo",
+        "epsilon_high": 0.2,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "sequence",
+        "loss_type": "grpo",
+        "max_completion_length": 2,
+        "scale_rewards": "group"
+      },
+      "conforms": false,
+      "expected_loss": -0.008621501164478906,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": false,
+          "field": "advantages",
+          "max_abs_error": 9.998585986403796e-05,
+          "max_rel_error": 0.0001414013590652582
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": false,
+          "field": "surrogate",
+          "max_abs_error": 0.00010511224452136592,
+          "max_rel_error": 0.00014140135906528473
+        },
+        {
+          "agrees": false,
+          "field": "loss",
+          "max_abs_error": 1.2190919818633184e-06,
+          "max_rel_error": 0.00014140135906796014
+        },
+        {
+          "agrees": false,
+          "field": "gradient",
+          "max_abs_error": 2.499646496600949e-05,
+          "max_rel_error": 0.00014140135906528473
+        }
+      ],
+      "fixture": "base",
+      "formula_notes": [
+        "TRL divides centered group rewards by sample_std + 1e-4; the canonical reference uses sample_std",
+        "TRL 1.2.0 represents GSPO as loss_type='grpo' with importance_sampling_level='sequence'"
+      ],
+      "verdict": "MATERIAL_DIFFERENCE"
+    },
+    {
+      "actual_loss": 0.0565523386272475,
+      "actual_semantics": "native_trl_1.2.0",
+      "arm": "drgrpo",
+      "config": {
+        "arm": "drgrpo",
+        "epsilon_high": 0.2,
+        "epsilon_low": 0.2,
+        "importance_sampling_level": "token",
+        "loss_type": "dr_grpo",
+        "max_completion_length": 2,
+        "scale_rewards": "none"
+      },
+      "conforms": false,
+      "expected_loss": -0.005947661372752544,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": false,
+          "field": "loss",
+          "max_abs_error": 0.06250000000000004,
+          "max_rel_error": 10.508331944775026
+        },
+        {
+          "agrees": false,
+          "field": "gradient",
+          "max_abs_error": 0.0625,
+          "max_rel_error": 0.5
+        }
+      ],
+      "fixture": "base",
+      "formula_notes": [
+        "TRL DrGRPO divides by batch_size * max_completion_length; the canonical reference averages completion means"
+      ],
+      "verdict": "MATERIAL_DIFFERENCE"
+    },
+    {
+      "arm": "aero",
+      "fixture": "aero_posterior",
+      "not_tested_reason": "TRL 1.2.0 exposes no native AERO posterior-advantage objective",
+      "verdict": "NOT_TESTED"
+    }
+  ],
+  "provenance": {
+    "advantage_source": "/Users/arvind/.cache/uv/archive-v0/kmVFVEmq5ZsG_6tqQE0JA/lib/python3.12/site-packages/trl/trainer/grpo_trainer.py:2133-2155",
+    "config_source": "/Users/arvind/.cache/uv/archive-v0/kmVFVEmq5ZsG_6tqQE0JA/lib/python3.12/site-packages/trl/trainer/grpo_config.py",
+    "config_source_sha256": "1c342bb4afcc56224cdec752feba1fa11d2137aa0c4fe9c15e4e03d4d711095e",
+    "cuda_available": false,
+    "device": "cpu",
+    "exercised_api": "trl.GRPOTrainer._compute_loss",
+    "locked_wheel_sha256": "f6ddfa162ac92d25973070d9e3f6cff71b32c52edc34539e4294722f9dc0a6d6",
+    "locked_wheel_url": "https://files.pythonhosted.org/packages/02/82/bad1a22ff4b21d8080f7a64d8313c1ac0e791b455b98f2efca1ef3e14b8f/trl-1.2.0-py3-none-any.whl",
+    "lockfile": "uv.lock",
+    "lockfile_sha256": "885316340b86bbfbbe94ece29d40528202690cb1911ca0a4bd69ac53430bb0ae",
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "python_version": "3.12.13",
+    "torch_version": "2.11.0",
+    "trainer_source": "/Users/arvind/.cache/uv/archive-v0/kmVFVEmq5ZsG_6tqQE0JA/lib/python3.12/site-packages/trl/trainer/grpo_trainer.py",
+    "trainer_source_sha256": "4ac442a6d117838bf26fa3b786feb092c3953b2f9212081646db7fad9b356b41",
+    "transformers_version": "5.5.4",
+    "trl_version": "1.2.0"
+  },
+  "schema_version": 1,
+  "source_hashes": {
+    "S1_AMENDMENT.md": "867443969c9c6de58271aaa12d2e84873bef561d8442db5c2190ab0ad5e3f49d",
+    "fixtures.py": "06a2ceade09675f5fd46c779b6005ab1aef07655486466a893344ddf722368f3",
+    "receipt.py": "d2f03654049bb493416209738adde8146187e11736569287554771108404bcc6",
+    "reference.py": "52c7e6fbb0f701f819e3c822b54c16eb8501fab3cdd0f2135b45b15840bbe7dd",
+    "test_receipts.py": "0edc00ab003c04e0b4fbf11d1ea24f221939c06d57b914b69c8e9e0f27e291a5",
+    "test_reference.py": "caec06118cf3fb9328322022e718c0e96078e4182a5ac78ec125713723b48e06",
+    "test_trl_adapter.py": "d509f41e1c717ec67b309cd9048ac2f8d343f85459ed87c06c6c8fa0153b4f97",
+    "trl_adapter.py": "bd615fc8bbe1c5c32c19e305d979958c29e9e018dd4cc3a93461f60d7864f4b9"
+  },
+  "stack": "trl",
+  "status": "PASS",
+  "tolerances": {
+    "atol": 1e-08,
+    "dtype": "float64",
+    "rtol": 1e-06
+  }
+}

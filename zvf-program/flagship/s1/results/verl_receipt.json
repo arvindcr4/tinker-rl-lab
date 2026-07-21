@@ -1,0 +1,1517 @@
+{
+  "controller_action_ontology": {
+    "keep": "keep",
+    "recheck": "recheck",
+    "retry": "escalate",
+    "stop_collecting": "drop"
+  },
+  "controller_actions_observed": [
+    "drop",
+    "escalate",
+    "keep",
+    "recheck"
+  ],
+  "controller_matrix": [
+    {
+      "case": "all_wrong",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "static_g8",
+        "group_size": 8,
+        "reason": "fixed",
+        "wilson_high": 0.6576197724933469,
+        "wilson_low": 0.0
+      },
+      "policy": "static_g8",
+      "status": "observed"
+    },
+    {
+      "case": "all_correct",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "static_g8",
+        "group_size": 8,
+        "reason": "fixed",
+        "wilson_high": 1.0,
+        "wilson_low": 0.34238022750665303
+      },
+      "policy": "static_g8",
+      "status": "observed"
+    },
+    {
+      "case": "mixed",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "static_g8",
+        "group_size": 8,
+        "reason": "fixed",
+        "wilson_high": 0.9054687942657693,
+        "wilson_low": 0.09453120573423074
+      },
+      "policy": "static_g8",
+      "status": "observed"
+    },
+    {
+      "case": "noisy",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "static_g8",
+        "group_size": 0,
+        "reason": "noisy reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "static_g8",
+      "status": "noisy"
+    },
+    {
+      "case": "missing",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "static_g8",
+        "group_size": 0,
+        "reason": "missing reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "static_g8",
+      "status": "missing"
+    },
+    {
+      "case": "delayed",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "static_g8",
+        "group_size": 0,
+        "reason": "delayed reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "static_g8",
+      "status": "delayed"
+    },
+    {
+      "case": "all_wrong",
+      "charged_rollouts": 16,
+      "decision": {
+        "action": "keep",
+        "arm": "static_g16",
+        "group_size": 16,
+        "reason": "fixed",
+        "wilson_high": 0.6576197724933469,
+        "wilson_low": 0.0
+      },
+      "policy": "static_g16",
+      "status": "observed"
+    },
+    {
+      "case": "all_correct",
+      "charged_rollouts": 16,
+      "decision": {
+        "action": "keep",
+        "arm": "static_g16",
+        "group_size": 16,
+        "reason": "fixed",
+        "wilson_high": 1.0,
+        "wilson_low": 0.34238022750665303
+      },
+      "policy": "static_g16",
+      "status": "observed"
+    },
+    {
+      "case": "mixed",
+      "charged_rollouts": 16,
+      "decision": {
+        "action": "keep",
+        "arm": "static_g16",
+        "group_size": 16,
+        "reason": "fixed",
+        "wilson_high": 0.9054687942657693,
+        "wilson_low": 0.09453120573423074
+      },
+      "policy": "static_g16",
+      "status": "observed"
+    },
+    {
+      "case": "noisy",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "static_g16",
+        "group_size": 0,
+        "reason": "noisy reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "static_g16",
+      "status": "noisy"
+    },
+    {
+      "case": "missing",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "static_g16",
+        "group_size": 0,
+        "reason": "missing reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "static_g16",
+      "status": "missing"
+    },
+    {
+      "case": "delayed",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "static_g16",
+        "group_size": 0,
+        "reason": "delayed reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "static_g16",
+      "status": "delayed"
+    },
+    {
+      "case": "all_wrong",
+      "charged_rollouts": 16,
+      "decision": {
+        "action": "escalate",
+        "arm": "symmetric_zvf",
+        "group_size": 16,
+        "reason": "zero variance",
+        "wilson_high": 0.6576197724933469,
+        "wilson_low": 0.0
+      },
+      "policy": "symmetric_zvf",
+      "status": "observed"
+    },
+    {
+      "case": "all_correct",
+      "charged_rollouts": 16,
+      "decision": {
+        "action": "escalate",
+        "arm": "symmetric_zvf",
+        "group_size": 16,
+        "reason": "zero variance",
+        "wilson_high": 1.0,
+        "wilson_low": 0.34238022750665303
+      },
+      "policy": "symmetric_zvf",
+      "status": "observed"
+    },
+    {
+      "case": "mixed",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "symmetric_zvf",
+        "group_size": 8,
+        "reason": "informative",
+        "wilson_high": 0.9054687942657693,
+        "wilson_low": 0.09453120573423074
+      },
+      "policy": "symmetric_zvf",
+      "status": "observed"
+    },
+    {
+      "case": "noisy",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "symmetric_zvf",
+        "group_size": 0,
+        "reason": "noisy reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "symmetric_zvf",
+      "status": "noisy"
+    },
+    {
+      "case": "missing",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "symmetric_zvf",
+        "group_size": 0,
+        "reason": "missing reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "symmetric_zvf",
+      "status": "missing"
+    },
+    {
+      "case": "delayed",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "symmetric_zvf",
+        "group_size": 0,
+        "reason": "delayed reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "symmetric_zvf",
+      "status": "delayed"
+    },
+    {
+      "case": "all_wrong",
+      "charged_rollouts": 16,
+      "decision": {
+        "action": "escalate",
+        "arm": "failure_only",
+        "group_size": 16,
+        "reason": "all wrong",
+        "wilson_high": 0.6576197724933469,
+        "wilson_low": 0.0
+      },
+      "policy": "failure_only",
+      "status": "observed"
+    },
+    {
+      "case": "all_correct",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "failure_only",
+        "group_size": 8,
+        "reason": "informative",
+        "wilson_high": 1.0,
+        "wilson_low": 0.34238022750665303
+      },
+      "policy": "failure_only",
+      "status": "observed"
+    },
+    {
+      "case": "mixed",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "failure_only",
+        "group_size": 8,
+        "reason": "informative",
+        "wilson_high": 0.9054687942657693,
+        "wilson_low": 0.09453120573423074
+      },
+      "policy": "failure_only",
+      "status": "observed"
+    },
+    {
+      "case": "noisy",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "failure_only",
+        "group_size": 0,
+        "reason": "noisy reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "failure_only",
+      "status": "noisy"
+    },
+    {
+      "case": "missing",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "failure_only",
+        "group_size": 0,
+        "reason": "missing reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "failure_only",
+      "status": "missing"
+    },
+    {
+      "case": "delayed",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "failure_only",
+        "group_size": 0,
+        "reason": "delayed reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "failure_only",
+      "status": "delayed"
+    },
+    {
+      "case": "all_wrong",
+      "charged_rollouts": 16,
+      "decision": {
+        "action": "escalate",
+        "arm": "boundary_aware",
+        "group_size": 16,
+        "reason": "recoverable failure",
+        "wilson_high": 0.6576197724933469,
+        "wilson_low": 0.0
+      },
+      "policy": "boundary_aware",
+      "status": "observed"
+    },
+    {
+      "case": "all_correct",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "drop",
+        "arm": "boundary_aware",
+        "group_size": 0,
+        "reason": "mastered",
+        "wilson_high": 1.0,
+        "wilson_low": 0.34238022750665303
+      },
+      "policy": "boundary_aware",
+      "status": "observed"
+    },
+    {
+      "case": "mixed",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "boundary_aware",
+        "group_size": 8,
+        "reason": "informative",
+        "wilson_high": 0.9054687942657693,
+        "wilson_low": 0.09453120573423074
+      },
+      "policy": "boundary_aware",
+      "status": "observed"
+    },
+    {
+      "case": "noisy",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "boundary_aware",
+        "group_size": 0,
+        "reason": "noisy reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "boundary_aware",
+      "status": "noisy"
+    },
+    {
+      "case": "missing",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "boundary_aware",
+        "group_size": 0,
+        "reason": "missing reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "boundary_aware",
+      "status": "missing"
+    },
+    {
+      "case": "delayed",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "boundary_aware",
+        "group_size": 0,
+        "reason": "delayed reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "boundary_aware",
+      "status": "delayed"
+    },
+    {
+      "case": "all_wrong",
+      "charged_rollouts": 16,
+      "decision": {
+        "action": "escalate",
+        "arm": "full_triage",
+        "group_size": 16,
+        "reason": "recoverable failure",
+        "wilson_high": 0.6576197724933469,
+        "wilson_low": 0.0
+      },
+      "policy": "full_triage",
+      "status": "observed"
+    },
+    {
+      "case": "all_correct",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "full_triage",
+        "group_size": 8,
+        "reason": "insufficient confidence",
+        "wilson_high": 1.0,
+        "wilson_low": 0.34238022750665303
+      },
+      "policy": "full_triage",
+      "status": "observed"
+    },
+    {
+      "case": "mixed",
+      "charged_rollouts": 8,
+      "decision": {
+        "action": "keep",
+        "arm": "full_triage",
+        "group_size": 8,
+        "reason": "informative",
+        "wilson_high": 0.9054687942657693,
+        "wilson_low": 0.09453120573423074
+      },
+      "policy": "full_triage",
+      "status": "observed"
+    },
+    {
+      "case": "noisy",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "full_triage",
+        "group_size": 0,
+        "reason": "noisy reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "full_triage",
+      "status": "noisy"
+    },
+    {
+      "case": "missing",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "full_triage",
+        "group_size": 0,
+        "reason": "missing reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "full_triage",
+      "status": "missing"
+    },
+    {
+      "case": "delayed",
+      "charged_rollouts": 0,
+      "decision": {
+        "action": "recheck",
+        "arm": "full_triage",
+        "group_size": 0,
+        "reason": "delayed reward must resolve before objective evaluation",
+        "wilson_high": 1.0,
+        "wilson_low": 0.0
+      },
+      "policy": "full_triage",
+      "status": "delayed"
+    }
+  ],
+  "fixture_digest": "c35916cf7db0b6c7ff6d0e35925a165b304fc78ff3d63845b9a853ca8af8ae9b",
+  "intended_cases": [
+    {
+      "actual_loss": -0.008411262451809398,
+      "actual_semantics": "intended_verl_s1_adapter",
+      "arm": "grpo",
+      "config": {
+        "advantage_epsilon": 0.0,
+        "arm": "grpo",
+        "cliprange": 0.2,
+        "group_id_type": "canonical_group_matrix",
+        "reduction": "per_completion_masked_mean_then_batch_mean"
+      },
+      "conforms": true,
+      "expected_loss": -0.008411263377749167,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 9.259397693028859e-10,
+          "max_rel_error": 1.1008331658622548e-07
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 1.7677669328364232e-09,
+          "max_rel_error": 9.999999886127832e-09
+        }
+      ],
+      "fixture": "base",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned verl tensor reduction",
+        "verl.utils.torch_functional.masked_mean is applied per completion before the batch mean"
+      ],
+      "not_tested_reason": null,
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": 0.0,
+      "actual_semantics": "intended_verl_s1_adapter",
+      "arm": "grpo",
+      "config": {
+        "advantage_epsilon": 0.0,
+        "arm": "grpo",
+        "cliprange": 0.2,
+        "group_id_type": "canonical_group_matrix",
+        "reduction": "per_completion_masked_mean_then_batch_mean"
+      },
+      "conforms": true,
+      "expected_loss": 0.0,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        }
+      ],
+      "fixture": "all_wrong",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned verl tensor reduction",
+        "verl.utils.torch_functional.masked_mean is applied per completion before the batch mean"
+      ],
+      "not_tested_reason": null,
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": 0.0,
+      "actual_semantics": "intended_verl_s1_adapter",
+      "arm": "grpo",
+      "config": {
+        "advantage_epsilon": 0.0,
+        "arm": "grpo",
+        "cliprange": 0.2,
+        "group_id_type": "canonical_group_matrix",
+        "reduction": "per_completion_masked_mean_then_batch_mean"
+      },
+      "conforms": true,
+      "expected_loss": 0.0,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        }
+      ],
+      "fixture": "all_correct",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned verl tensor reduction",
+        "verl.utils.torch_functional.masked_mean is applied per completion before the batch mean"
+      ],
+      "not_tested_reason": null,
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.008411262451809398,
+      "actual_semantics": "intended_verl_s1_adapter",
+      "arm": "grpo",
+      "config": {
+        "advantage_epsilon": 0.0,
+        "arm": "grpo",
+        "cliprange": 0.2,
+        "group_id_type": "canonical_group_matrix",
+        "reduction": "per_completion_masked_mean_then_batch_mean"
+      },
+      "conforms": true,
+      "expected_loss": -0.008411263377749167,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 9.259397693028859e-10,
+          "max_rel_error": 1.1008331658622548e-07
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 1.7677669328364232e-09,
+          "max_rel_error": 9.999999886127832e-09
+        }
+      ],
+      "fixture": "graded",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned verl tensor reduction",
+        "verl.utils.torch_functional.masked_mean is applied per completion before the batch mean"
+      ],
+      "not_tested_reason": null,
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.008411262451809398,
+      "actual_semantics": "intended_verl_s1_adapter",
+      "arm": "grpo",
+      "config": {
+        "advantage_epsilon": 0.0,
+        "arm": "grpo",
+        "cliprange": 0.2,
+        "group_id_type": "canonical_group_matrix",
+        "reduction": "per_completion_masked_mean_then_batch_mean"
+      },
+      "conforms": true,
+      "expected_loss": -0.008411263377749167,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 9.259397693028859e-10,
+          "max_rel_error": 1.1008331658622548e-07
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 1.7677669328364232e-09,
+          "max_rel_error": 9.999999886127832e-09
+        }
+      ],
+      "fixture": "translated",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned verl tensor reduction",
+        "verl.utils.torch_functional.masked_mean is applied per completion before the batch mean"
+      ],
+      "not_tested_reason": null,
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.053062484957243805,
+      "actual_semantics": "intended_verl_s1_adapter",
+      "arm": "grpo",
+      "config": {
+        "advantage_epsilon": 0.0,
+        "arm": "grpo",
+        "cliprange": 0.2,
+        "group_id_type": "canonical_group_matrix",
+        "reduction": "per_completion_masked_mean_then_batch_mean"
+      },
+      "conforms": true,
+      "expected_loss": -0.05306248610643971,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 1.1491959051035394e-09,
+          "max_rel_error": 2.165740788696427e-08
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 1.7677669328364232e-09,
+          "max_rel_error": 9.999999886127832e-09
+        }
+      ],
+      "fixture": "low_clip",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned verl tensor reduction",
+        "verl.utils.torch_functional.masked_mean is applied per completion before the batch mean"
+      ],
+      "not_tested_reason": null,
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.06720462026277674,
+      "actual_semantics": "intended_verl_s1_adapter",
+      "arm": "dapo",
+      "config": {
+        "advantage_epsilon": 0.0,
+        "arm": "dapo",
+        "cliprange": 0.28,
+        "group_id_type": "canonical_group_matrix",
+        "reduction": "per_completion_masked_mean_then_batch_mean"
+      },
+      "conforms": true,
+      "expected_loss": -0.06720462173017067,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 1.467393928589189e-09,
+          "max_rel_error": 2.1834717476438396e-08
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 4.884211507460989e-10,
+          "max_rel_error": 4.999999943063916e-09
+        }
+      ],
+      "fixture": "dapo_clip",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned verl tensor reduction",
+        "verl.utils.torch_functional.masked_mean is applied per completion before the batch mean"
+      ],
+      "not_tested_reason": null,
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.053062484957243805,
+      "actual_semantics": "intended_verl_s1_adapter",
+      "arm": "dapo",
+      "config": {
+        "advantage_epsilon": 0.0,
+        "arm": "dapo",
+        "cliprange": 0.28,
+        "group_id_type": "canonical_group_matrix",
+        "reduction": "per_completion_masked_mean_then_batch_mean"
+      },
+      "conforms": true,
+      "expected_loss": -0.05306248610643971,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 1.1491959051035394e-09,
+          "max_rel_error": 2.165740788696427e-08
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 1.7677669328364232e-09,
+          "max_rel_error": 9.999999886127832e-09
+        }
+      ],
+      "fixture": "low_clip",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned verl tensor reduction",
+        "verl.utils.torch_functional.masked_mean is applied per completion before the batch mean"
+      ],
+      "not_tested_reason": null,
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.008621500237487922,
+      "actual_semantics": "intended_verl_s1_adapter",
+      "arm": "gspo",
+      "config": {
+        "advantage_epsilon": 0.0,
+        "arm": "gspo",
+        "cliprange": 0.2,
+        "group_id_type": "canonical_group_matrix",
+        "reduction": "per_completion_masked_mean_then_batch_mean"
+      },
+      "conforms": true,
+      "expected_loss": -0.008621501164478906,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 9.269909839737522e-10,
+          "max_rel_error": 1.075208326588193e-07
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 1.7677669328364232e-09,
+          "max_rel_error": 9.999999886127832e-09
+        }
+      ],
+      "fixture": "base",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned verl tensor reduction",
+        "verl.utils.torch_functional.masked_mean is applied per completion before the batch mean"
+      ],
+      "not_tested_reason": null,
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.023580048076856836,
+      "actual_semantics": "intended_verl_s1_adapter",
+      "arm": "gspo",
+      "config": {
+        "advantage_epsilon": 0.0,
+        "arm": "gspo",
+        "cliprange": 0.2,
+        "group_id_type": "canonical_group_matrix",
+        "reduction": "per_completion_masked_mean_then_batch_mean"
+      },
+      "conforms": true,
+      "expected_loss": -0.02358004819475708,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 1.1790024512237096e-10,
+          "max_rel_error": 5.000000175936263e-09
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 6.194674218029661e-10,
+          "max_rel_error": 4.999999899447608e-09
+        }
+      ],
+      "fixture": "zero_mask",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned verl tensor reduction",
+        "verl.utils.torch_functional.masked_mean is applied per completion before the batch mean"
+      ],
+      "not_tested_reason": null,
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.005947660718014225,
+      "actual_semantics": "intended_verl_s1_adapter",
+      "arm": "drgrpo",
+      "config": {
+        "advantage_epsilon": 0.0,
+        "arm": "drgrpo",
+        "cliprange": 0.2,
+        "group_id_type": "canonical_group_matrix",
+        "reduction": "per_completion_masked_mean_then_batch_mean"
+      },
+      "conforms": true,
+      "expected_loss": -0.005947661372752516,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 6.54738291361312e-10,
+          "max_rel_error": 1.1008331684127233e-07
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 1.2499999785253735e-09,
+          "max_rel_error": 9.999999828202988e-09
+        }
+      ],
+      "fixture": "base",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned verl tensor reduction",
+        "verl.utils.torch_functional.masked_mean is applied per completion before the batch mean"
+      ],
+      "not_tested_reason": null,
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": -0.005947660718014225,
+      "actual_semantics": "intended_verl_s1_adapter",
+      "arm": "drgrpo",
+      "config": {
+        "advantage_epsilon": 0.0,
+        "arm": "drgrpo",
+        "cliprange": 0.2,
+        "group_id_type": "canonical_group_matrix",
+        "reduction": "per_completion_masked_mean_then_batch_mean"
+      },
+      "conforms": true,
+      "expected_loss": -0.005947661372752516,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 6.54738291361312e-10,
+          "max_rel_error": 1.1008331684127233e-07
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 1.2499999785253735e-09,
+          "max_rel_error": 9.999999828202988e-09
+        }
+      ],
+      "fixture": "translated",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned verl tensor reduction",
+        "verl.utils.torch_functional.masked_mean is applied per completion before the batch mean"
+      ],
+      "not_tested_reason": null,
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": 0.005319749469034019,
+      "actual_semantics": "intended_verl_s1_adapter",
+      "arm": "aero",
+      "config": {
+        "advantage_epsilon": 0.0,
+        "arm": "aero",
+        "cliprange": 0.2,
+        "group_id_type": "canonical_group_matrix",
+        "reduction": "per_completion_masked_mean_then_batch_mean"
+      },
+      "conforms": true,
+      "expected_loss": 0.005319750054649727,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 5.856157087036351e-10,
+          "max_rel_error": 1.1008331269093699e-07
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 1.1180339709593312e-09,
+          "max_rel_error": 9.999999840876361e-09
+        }
+      ],
+      "fixture": "aero_posterior",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned verl tensor reduction",
+        "verl.utils.torch_functional.masked_mean is applied per completion before the batch mean"
+      ],
+      "not_tested_reason": null,
+      "verdict": "PASS"
+    },
+    {
+      "actual_loss": 0.01239451267568962,
+      "actual_semantics": "intended_verl_s1_adapter",
+      "arm": "grpo",
+      "config": {
+        "advantage_epsilon": 0.0,
+        "arm": "grpo",
+        "cliprange": 0.2,
+        "group_id_type": "canonical_group_matrix",
+        "reduction": "per_completion_masked_mean_then_batch_mean"
+      },
+      "conforms": true,
+      "expected_loss": 0.012394511559150908,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": true,
+          "field": "advantages",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "surrogate",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "loss",
+          "max_abs_error": 1.1165387121814252e-09,
+          "max_rel_error": 9.008331686593015e-08
+        },
+        {
+          "agrees": true,
+          "field": "gradient",
+          "max_abs_error": 2.357022577115231e-09,
+          "max_rel_error": 9.999999886127832e-09
+        }
+      ],
+      "fixture": "base_selected_0_1_3",
+      "formula_notes": [
+        "canonical S1 advantages are injected before the pinned verl tensor reduction",
+        "verl.utils.torch_functional.masked_mean is applied per completion before the batch mean"
+      ],
+      "not_tested_reason": null,
+      "verdict": "PASS"
+    }
+  ],
+  "native_cases": [
+    {
+      "actual_loss": 0.09140225263062761,
+      "actual_semantics": "native_verl_0.3.0.post1",
+      "arm": "grpo",
+      "config": {
+        "advantage_epsilon": 1e-06,
+        "arm": "grpo",
+        "cliprange": 0.2,
+        "group_id_type": "stable_python_string",
+        "reduction": "global_masked_token_mean"
+      },
+      "conforms": false,
+      "expected_loss": -0.008411263377749167,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [
+        {
+          "agrees": false,
+          "field": "advantages",
+          "max_abs_error": 9.99998585826667e-07,
+          "max_rel_error": 1.414211562429988e-06
+        },
+        {
+          "agrees": true,
+          "field": "ratios",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": true,
+          "field": "mask",
+          "max_abs_error": 0.0,
+          "max_rel_error": 0.0
+        },
+        {
+          "agrees": false,
+          "field": "surrogate",
+          "max_abs_error": 1.1051693552532882e-06,
+          "max_rel_error": 1.4142115625334867e-06
+        },
+        {
+          "agrees": false,
+          "field": "loss",
+          "max_abs_error": 0.09981351600837678,
+          "max_rel_error": 11.86664969645578
+        },
+        {
+          "agrees": false,
+          "field": "gradient",
+          "max_abs_error": 0.07576158384266393,
+          "max_rel_error": 0.42857223750864676
+        }
+      ],
+      "fixture": "base",
+      "formula_notes": [
+        "native verl divides centered group rewards by sample_std + 1e-6; canonical uses sample_std",
+        "native verl reduces the PPO surrogate with one global masked-token mean; canonical averages completion means",
+        "stable Python string group IDs are required because tensor scalar IDs fail native dictionary lookup"
+      ],
+      "not_tested_reason": null,
+      "verdict": "MATERIAL_DIFFERENCE"
+    },
+    {
+      "actual_loss": null,
+      "actual_semantics": "native_verl_0.3.0.post1",
+      "arm": "dapo",
+      "config": null,
+      "conforms": false,
+      "expected_loss": null,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [],
+      "fixture": "dapo_clip",
+      "formula_notes": [],
+      "not_tested_reason": "native verl 0.3.0.post1 exposes no dapo objective kernel",
+      "verdict": "NOT_TESTED"
+    },
+    {
+      "actual_loss": null,
+      "actual_semantics": "native_verl_0.3.0.post1",
+      "arm": "gspo",
+      "config": null,
+      "conforms": false,
+      "expected_loss": null,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [],
+      "fixture": "base",
+      "formula_notes": [],
+      "not_tested_reason": "native verl 0.3.0.post1 exposes no gspo objective kernel",
+      "verdict": "NOT_TESTED"
+    },
+    {
+      "actual_loss": null,
+      "actual_semantics": "native_verl_0.3.0.post1",
+      "arm": "drgrpo",
+      "config": null,
+      "conforms": false,
+      "expected_loss": null,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [],
+      "fixture": "base",
+      "formula_notes": [],
+      "not_tested_reason": "native verl 0.3.0.post1 exposes no drgrpo objective kernel",
+      "verdict": "NOT_TESTED"
+    },
+    {
+      "actual_loss": null,
+      "actual_semantics": "native_verl_0.3.0.post1",
+      "arm": "aero",
+      "config": null,
+      "conforms": false,
+      "expected_loss": null,
+      "expected_semantics": "canonical_s1_reference",
+      "fields": [],
+      "fixture": "aero_posterior",
+      "formula_notes": [],
+      "not_tested_reason": "native verl 0.3.0.post1 exposes no aero objective kernel",
+      "verdict": "NOT_TESTED"
+    }
+  ],
+  "provenance": {
+    "core_algos_sha256": "74d680b9186690a7788157679725bc351a5436b6419ff8c7a2b570bc4cbf13ee",
+    "core_algos_source": "/private/tmp/tinker-s1-verl-py311/lib/python3.11/site-packages/verl/trainer/ppo/core_algos.py",
+    "cuda_available": false,
+    "device": "cpu",
+    "exercised_advantage_api": "verl.trainer.ppo.core_algos.compute_grpo_outcome_advantage",
+    "exercised_loss_api": "verl.trainer.ppo.core_algos.compute_policy_loss",
+    "metadata_sha256": "4d4c5ca3b2bfe5f37487292ca8407e6963ac6555bfb861c2ac78d4b39f3e0d96",
+    "metadata_source": "/tmp/tinker-s1-verl-py311/lib/python3.11/site-packages/verl-0.3.0.post1.dist-info/METADATA",
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "python_version": "3.11.15",
+    "torch_functional_sha256": "e2dd02383718c856053f1e70f74311b11b92ece40a034f97645c6f7db7310db6",
+    "torch_functional_source": "/private/tmp/tinker-s1-verl-py311/lib/python3.11/site-packages/verl/utils/torch_functional.py",
+    "torch_version": "2.4.0",
+    "transformers_version": "4.45.2",
+    "verl_version": "0.3.0.post1"
+  },
+  "schema_version": 1,
+  "source_hashes": {
+    "S1_AMENDMENT.md": "867443969c9c6de58271aaa12d2e84873bef561d8442db5c2190ab0ad5e3f49d",
+    "fixtures.py": "06a2ceade09675f5fd46c779b6005ab1aef07655486466a893344ddf722368f3",
+    "receipt.py": "d2f03654049bb493416209738adde8146187e11736569287554771108404bcc6",
+    "reference.py": "52c7e6fbb0f701f819e3c822b54c16eb8501fab3cdd0f2135b45b15840bbe7dd",
+    "test_receipts.py": "0edc00ab003c04e0b4fbf11d1ea24f221939c06d57b914b69c8e9e0f27e291a5",
+    "test_reference.py": "caec06118cf3fb9328322022e718c0e96078e4182a5ac78ec125713723b48e06",
+    "test_verl_adapter.py": "39733197fae7f072ddb0d6af7604d4c427b3c664a89b61fb2d233ab0b5e50d97",
+    "verl_adapter.py": "890e3292ea104ecf308597a7dd2feaaca281b2544e5ad58cc491fe89716ce802"
+  },
+  "stack": "verl",
+  "status": "PASS",
+  "tolerances": {
+    "atol": 1e-08,
+    "dtype": "float64",
+    "rtol": 1e-06
+  }
+}

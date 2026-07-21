@@ -6112,7 +6112,7 @@ References
 # R08: Reproducibility audit
 
 
-Root: `zvf-program/audit/reproducibility_audit.tex`  Pages: 8  Words: 2998
+Root: `zvf-program/audit/reproducibility_audit.tex`  Pages: 8  Words: 2993
 
 
 [PAGE 1]
@@ -6120,11 +6120,11 @@ GRPO-Survival-Audit: A Single-Stack Survival Protocol for
                  the GRPO Family
                       Holding the Stack Fixed So Algorithmic Gains Can Be Seen
 
-                                                 Arvind C R∗
-                                               PES University
-                                            arvindcr4@gmail.com
+                                                  Arvind C R∗
+                                                PES University
+                                             arvindcr4@gmail.com
 
-                                                  July 19, 2026
+                                                  July 20, 2026
 
 
                                                      Abstract
@@ -6137,15 +6137,15 @@ GRPO-Survival-Audit: A Single-Stack Survival Protocol for
           as declared overrides on one shared language-model trainer. M-GRPO is assigned to a separate
           agentic stratum because hierarchical credit assignment changes the environment and trajectory
           schema. We specify the shared stack, the pre-registration rules, the survival-verdict logic, the
-          statistical protocol, and the role of the companion grpo-stackdiff tool in verifying that arms
-          are stack-matched. We also report a small open-source pilot on Qwen2.5-0.5B-Instruct (two
-          seeds, T4 GPU) that demonstrates the protocol’s feasibility and produces concrete Zvf and
-          held-out-delta observations. The full-scale frozen audit is complete: all 40 arm–seed units inde-
-          pendently pass the local, W&B, private-Hub checkpoint, stack-fingerprint, treatment-fingerprint,
-          and 500-row held-out gates. Against the shared GRPO reference, DAPO’s controlled delta is
-          +0.0015 (paired 95% CI [−0.0040, 0.00725]) and receives the preregistered DISAPPEARS verdict.
-          GSPO, Dr.GRPO, and AERO receive INCONCLUSIVE verdicts; none of the five arms collapsed.
-          These results are a stack-controlled survival audit, not a universal capability leaderboard.
+          statistical protocol, and the role of the companion grpo-stackdiff tool in verifying that arms are
+          stack-matched. We also report a small open-source pilot on Qwen2.5-0.5B-Instruct (two seeds, T4
+          GPU) that demonstrates the protocol’s feasibility and produces concrete Zvf and held-out-delta
+          observations. The full-scale frozen audit is complete: all 40 arm–seed units independently pass
+          the local, W&B, private-Hub checkpoint, stack-fingerprint, treatment-fingerprint, and 500-row
+          held-out gates. Against the shared GRPO reference, DAPO’s controlled delta is +0.00100
+          (paired 95% CI [−0.00450, +0.00675]) and receives the preregistered DISAPPEARS verdict. GSPO,
+          Dr.GRPO, and AERO receive INCONCLUSIVE verdicts; none of the five arms collapsed. These
+          results are a stack-controlled survival audit, not a universal capability leaderboard.
 
 
 1        Introduction: The Need for a Survival Audit
@@ -6164,7 +6164,7 @@ survival.
         Pillar 3 of the ZVF Program.
 
 
-                                                         1
+                                                          1
 
 [PAGE 6]
 Table 2: Pilot results (Qwen2.5-0.5B-Instruct, 2 seeds, T4). Mean held-out ∆, mean Zvf,

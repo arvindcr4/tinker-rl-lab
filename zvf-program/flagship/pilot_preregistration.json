@@ -1,0 +1,272 @@
+{
+  "schema_version": 1,
+  "locked_at": "2026-07-20",
+  "status": "ready_to_run",
+  "title": "Causal training consequences of GRPO semantic non-conformance",
+  "parent_protocol": {
+    "path": "zvf-program/flagship/preregistration.json",
+    "sha256": "68237294a2cce2a0cddb5a1a413a5f954434aca1a9d1a44d806f0145c2a5171e"
+  },
+  "s1_freeze": {
+    "path": "zvf-program/flagship/s1/results/implementation_freeze.json",
+    "sha256": "a785ceadc143ff7449070a64f0cecd8bd858b62c561bb19260e51e9f40a69ace",
+    "required_status": "S1_PASS"
+  },
+  "theory_gate": {
+    "decision": "supporting_only",
+    "audit_path": "zvf-program/flagship/theory/NOVELTY_AUDIT.md",
+    "audit_sha256": "809b1bd9ebba58f447c6a0172a396348b96a47cc6862f0b921f1984c1192dea7",
+    "reason": "Verifier false negatives, format sensitivity, and dynamic secondary verification are occupied by prior work; the action-reversal bound is retained only as motivation."
+  },
+  "central_question": "Do the material native-versus-intended objective semantics discovered in S1 change gradient direction and short-run learning under matched generated-token and FLOP budgets, or are they harmless rescalings?",
+  "hypotheses": {
+    "H0": "After matching generated tokens, optimizer settings, and active completions, native and intended semantics differ only numerically or by a scalar that does not change normalized gradient direction or held-out learning-curve AUC.",
+    "H1": "Completion-selection and reduction semantics change per-example weighting, producing a reproducible gradient-direction difference and a corresponding learning-curve difference in the filtered variable-length regime.",
+    "H2": "The reward-standardization epsilon alone is practically equivalent to the intended implementation at the prespecified gradient and learning margins.",
+    "H3": "The S1 fixture classification prospectively predicts a regime interaction: equivalence in the balanced equal-length control and material divergence in the filtered variable-length regime."
+  },
+  "falsifiers": [
+    "Native and intended normalized gradients are equivalent in the positive-control regime.",
+    "Any loss difference collapses to a constant scalar with cosine similarity inside the negative-control margin.",
+    "The gradient discrepancy does not yield a direction-consistent held-out AUC difference across all three screening seeds.",
+    "The epsilon-only ablation is as large as the reduction-only ablation, invalidating the prespecified causal attribution.",
+    "Matched token or FLOP accounting cannot be verified from immutable run records."
+  ],
+  "runtime": {
+    "primary_stack": "trl==1.2.0, transformers==5.5.4",
+    "python": ">=3.11,<3.13",
+    "model": {
+      "id": "Qwen/Qwen3-1.7B",
+      "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e"
+    },
+    "accelerator": "A100 only",
+    "group_size": 8,
+    "steps": 100,
+    "checkpoint_steps": [20, 40, 60, 80, 100],
+    "screening_seeds": [11, 23, 37],
+    "confirmatory_seeds": [53, 71, 89, 107, 131],
+    "package_pins": [
+      "trl==1.2.0",
+      "transformers==5.5.4",
+      "torch==2.7.1",
+      "datasets==4.8.4",
+      "peft==0.19.1",
+      "huggingface-hub==1.11.0",
+      "accelerate==1.13.0",
+      "wandb==0.21.0",
+      "numpy==2.2.6"
+    ],
+    "execution_contract": {
+      "design": "shared_frozen_offpolicy_replay",
+      "preflight": "One non-scientific A100 job must resolve the exact stack, load the frozen model revision, generate one balanced eight-candidate group, compute old log-probabilities, profile positive FLOPs for policy forward, selected optimizer backward, and intended/native diagnostic backward, and apply one intended_full update. It writes no W&B or Hugging Face evidence. Failure blocks all six corpus jobs and all 24 scientific units.",
+      "objective_arm": "dapo",
+      "clip_epsilon_low": 0.2,
+      "clip_epsilon_high": 0.28,
+      "accepted_groups_per_corpus": 100,
+      "corpora": "One immutable corpus per regime and screening seed; all four conditions consume the same ordered corpus and initial adapter state.",
+      "generated_candidates_per_group": {
+        "balanced_equal_length": 8,
+        "filtered_variable_length": 16
+      },
+      "charged_generated_token_ceiling": 819200,
+      "matched_budget_horizon_rule": "Each corpus must contain exactly 100 accepted prompt groups. Every generated candidate token is charged, including the eight unused candidates in the filtered 16-candidate pool. The complete corpus ledger is conservatively charged identically to each of its four condition runs. A corpus that cannot satisfy all 100 groups within 819200 generated tokens is infrastructure-invalid and blocks the matched four-condition block; it is not shortened or used as evidence.",
+      "train_split": {
+        "balanced_equal_length": "openai/gsm8k main train, all 7473 rows eligible",
+        "filtered_variable_length": "HuggingFaceH4/MATH-500 test indices 128..499, 372 rows eligible"
+      },
+      "train_order_hash": {
+        "algorithm": "datasets 4.8.4 plus numpy 2.2.6 Generator(PCG64(seed)).permutation over eligible integer row indices; first 100 rows; SHA-256 over canonical JSONL with position, source index, and bound prompt/answer fields",
+        "balanced_equal_length": {
+          "11": "cb3faa668e0c88acb46f98e77b0c334dbdbed830ce186987e5a7384474b8e50b",
+          "23": "3d809c203ef5a88a6a34a190af6392a0a9f10d98f8e2bd1b89828135ca8eab84",
+          "37": "6d578369d3cf3f2c6b68fad2728afcad20a2cd013983b6eb99402cead9d4b752"
+        },
+        "filtered_variable_length": {
+          "11": "3a4bbe243efed286d500fbcee80a5c8e96101eeffd8447ab8611774377c0d653",
+          "23": "5d2489ee8e67f49fc0b40f2d4311933f091dd9f7d0f8f28abcc19728329c9490",
+          "37": "4e062de0d13f7f12dac3a3b02da49502fcc9478ea3e3574a0ae3863abea17c2f"
+        }
+      },
+      "heldout_split": {
+        "balanced_equal_length": "openai/gsm8k main test indices 0..127 in source order",
+        "filtered_variable_length": "HuggingFaceH4/MATH-500 test indices 0..127 in source order"
+      },
+      "heldout_n": 128,
+      "per_device_train_batch_size": 8,
+      "gradient_accumulation_steps": 1,
+      "generation_batch_size": {
+        "balanced_equal_length": 8,
+        "filtered_variable_length": 16
+      },
+      "max_prompt_length": 1024,
+      "max_completion_length": 512,
+      "learning_rate": 1e-6,
+      "optimizer": "adamw_torch_fused",
+      "lr_scheduler_type": "linear",
+      "warmup_steps": 0,
+      "weight_decay": 0.0,
+      "max_grad_norm": 1.0,
+      "beta": 0.0,
+      "lora": {
+        "r": 16,
+        "alpha": 32,
+        "dropout": 0.0,
+        "target_modules": "all-linear",
+        "bias": "none"
+      },
+      "decoding": {
+        "replay": {
+          "do_sample": true,
+          "temperature": 1.0,
+          "top_p": 1.0,
+          "top_k": 0,
+          "enable_thinking": true
+        },
+        "heldout": {
+          "do_sample": false,
+          "temperature": 0.0,
+          "top_p": 1.0,
+          "top_k": 0,
+          "enable_thinking": true
+        },
+        "evaluation_steps": [0, 20, 40, 60, 80, 100],
+        "evaluation_generation_is_measurement_overhead": true
+      },
+      "replay_gradient_steps": {
+        "start": 1,
+        "stop": 100,
+        "stride": 1,
+        "count": 100
+      },
+      "selection_mask_algorithm": "Balanced: keep all eight rows, right-pad with EOS to the group maximum and mark all padded optimization positions active. Filtered: generate exactly 16 candidates, choose the lexicographically first six-index subset with maximal population completion-length CV, require CV>=0.35, then add the first two unused pool indices as inactive zero-mask rows; charge all 16 candidates.",
+      "flop_counter": {
+        "implementation": "torch.profiler.profile with CPU and CUDA activities, record_shapes=true, with_flops=true; sum finite positive event FLOPs separately for replay generation, policy/reference forward, diagnostic backward, and optimizer backward",
+        "profiled_steps": [1, 20, 40, 60, 80, 100],
+        "all_step_ledger": "token counts, active/padded optimization tokens, CUDA elapsed time, and profiler-calibrated extrapolation are recorded for every step",
+        "fail_closed": "Missing or zero profiler coverage for any required phase invalidates the unit as infrastructure evidence."
+      },
+      "checkpoint_resume_contract": "At steps 20/40/60/80/100 atomically upload adapter, optimizer, scheduler, RNG states, replay cursor, corpus fingerprint, condition state, token/FLOP ledger, and source manifest to the private unit repository. Resume only from the greatest checkpoint whose full manifest and source/corpus fingerprints match byte-for-byte; otherwise fail closed.",
+      "tracking": {
+        "wandb_project": "tinker-rl-lab",
+        "wandb_entity": null,
+        "wandb_corpus_group": "flagship-s1-conformance-corpora",
+        "wandb_unit_group": "flagship-s1-conformance-screening",
+        "hugging_face_private": true
+      },
+      "reward_parsers": {
+        "balanced_equal_length": "strict final GSM8K #### integer match",
+        "filtered_variable_length": "strict normalized final boxed-answer match; equivalent forms not credited and reported as a lower bound"
+      }
+    }
+  },
+  "conditions": {
+    "intended_full": "Canonical S1 DAPO advantages, selected-row removal, per-completion reduction, and token-level importance ratio with asymmetric 0.2/0.28 clipping.",
+    "native_trl": "Unmodified pinned TRL 1.2.0 DAPO advantage and global-active-token loss semantics.",
+    "epsilon_only": "TRL sample_std+1e-4 reward scaling with canonical selected-row and per-completion reduction.",
+    "reduction_only": "Canonical selected-row advantages with native zero-masked-row inclusion and DAPO global-active-token reduction."
+  },
+  "regimes": {
+    "balanced_equal_length": {
+      "task": "gsm8k_binary",
+      "dataset": "openai/gsm8k",
+      "dataset_revision": "740312add88f781978c0658806c59bc2815b9866",
+      "dataset_split": "main/train for replay and main/test[0:128] for held-out",
+      "source_ordered_row_sha256": {
+        "train": "aad96f855a7cc398cd3fa7939c22d0a1cf55f38c0f4412134608e7a14f72246d",
+        "test": "f4ca992541f6689d61a22030fbd271663f67870b93cdd4ae532012d2812486bb"
+      },
+      "purpose": "negative control",
+      "constraints": "Equal completion token counts within each group, no controller-selected zero rows, and identical active completion count across conditions."
+    },
+    "filtered_variable_length": {
+      "task": "math500_sparse",
+      "dataset": "HuggingFaceH4/MATH-500",
+      "dataset_revision": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "dataset_split": "test[128:500] for replay and test[0:128] for held-out",
+      "source_ordered_row_sha256": {
+        "test": "b343daa1979cc875dd7fdfda3b82e0a532d68dfde5da81f61cd8e6405bef4d9e"
+      },
+      "purpose": "positive control",
+      "constraints": "Deterministic frozen selection masks zero exactly two of eight completion rows and active completion-length coefficient of variation is at least 0.35 before truncation."
+    }
+  },
+  "unit_count": {
+    "conditions": 4,
+    "regimes": 2,
+    "seeds": 3,
+    "total": 24
+  },
+  "matched_compute": {
+    "primary_budget": "fixed charged generated-token ceiling per run",
+    "charged_tokens": "All generated completion tokens, including masked, rejected, calibration, and failed-parser completions.",
+    "flops": "Measured generation, policy/reference forward, and backward FLOPs; report both total and per optimizer step.",
+    "frozen_fields": [
+      "prompt split and order",
+      "model revision and tokenizer",
+      "optimizer and scheduler",
+      "LoRA configuration",
+      "maximum prompt and completion lengths",
+      "number and placement of optimizer updates",
+      "evaluation prompts and decoding",
+      "checkpoint cadence"
+    ],
+    "fail_closed": "A run with unverifiable charged-token or FLOP accounting is infrastructure-invalid and is resumed or replaced with the same seed; it is not a scientific observation."
+  },
+  "measurements": {
+    "primary_mechanism": "Per-run fraction of prespecified replay checkpoints whose native-versus-intended normalized gradient cosine is <=0.99 and relative L2 difference is >=0.05 on the identical minibatch.",
+    "negative_control_equivalence": "At least 95% of replay checkpoints have cosine >=0.999 and relative L2 difference <=0.01.",
+    "learning": "Seed-paired held-out pass@1 learning-curve AUC at the common charged-token ceiling.",
+    "final_quality": "Seed-paired held-out pass@1 at the common charged-token ceiling.",
+    "efficiency": "Measured FLOPs and charged tokens to the intended_full median final-quality target.",
+    "useful_gradient": "Fraction of charged completion tokens contributing nonzero finite gradient after the frozen treatment mask."
+  },
+  "screening_gate": {
+    "mechanism_reference_condition": "intended_full",
+    "gradient_effect_metric": "Within the intended_full trajectory, the native effect is the mean checkpoint cosine loss 1-cos(g_intended,g_native). Within each ablation trajectory, its selected-gradient effect is mean 1-cos(g_selected,g_intended). reduction_only reproduces the native effect when its seed-paired ratio is at least 0.80; epsilon_only must satisfy the negative-control cosine and relative-L2 margins at at least 95 of 100 steps.",
+    "learning_auc_formula": "Trapezoidal pass@1 area over evaluation steps 0,20,40,60,80,100 divided by 100; condition differences are paired within regime and seed.",
+    "mechanism": "In filtered_variable_length, all three seeds must have at least 20 of 100 replay checkpoints meeting both primary gradient-discrepancy thresholds; balanced_equal_length must satisfy the negative-control equivalence rule.",
+    "causal_attribution": "reduction_only must reproduce at least 80% of the intended_full-versus-native_trl gradient-direction effect, while epsilon_only remains inside the negative-control equivalence margin.",
+    "learning": "The intended_full-minus-native_trl AUC sign must be identical in all three seeds and the absolute paired standardized mean must be at least 0.5; final quality must remain within the task margin.",
+    "go": "Advance only if mechanism, causal attribution, learning, provenance, and matched-compute clauses all pass.",
+    "kill": "Stop the flagship training expansion if any clause fails; preserve S1 as a conformance artifact and do not spend the confirmatory matrix."
+  },
+  "non_inferiority_margins": {
+    "gsm8k_binary_pass_at_1": 0.01,
+    "math500_sparse_pass_at_1": 0.01,
+    "normalized_auc": 0.02,
+    "gradient_cosine_loss": 0.001,
+    "gradient_relative_l2": 0.01
+  },
+  "power": {
+    "screening": "Three seeds are a directional gate, not a confirmatory significance test; step-level checkpoints are summarized within run and never treated as independent replicates.",
+    "confirmatory": "Before any confirmatory allocation, estimate paired power from the screening seed-level mean and standard deviation using 100000 Monte Carlo draws from numpy PCG64 seed 20260720, n=5, two-sided Holm-adjusted alpha=0.0125. Require at least 0.80 power for the pooled AUC effect and at least 0.80 TOST power at every task-specific final-quality margin; otherwise stop because the frozen five-seed design is underpowered.",
+    "analysis_stack": ["numpy==2.2.6"],
+    "equivalence": "Equivalence claims require both gradient margins and the relevant task TOST to pass; a confidence interval crossing zero is INCONCLUSIVE."
+  },
+  "analysis": {
+    "independent_unit": "training seed within a frozen condition/regime cell",
+    "pairing": "Conditions are paired by seed, prompt order, initial adapter state, and replay minibatch.",
+    "primary_model": "Seed-level paired regime-by-condition interaction; no checkpoint-level pseudo-replication.",
+    "multiplicity": "Ordered gate for mechanism then causal attribution then learning; Holm correction applies only to confirmatory H1-H4 claims.",
+    "missingness": "Intention-to-treat for scientific runs; infrastructure failures resume exact checkpoints and do not become observations."
+  },
+  "provenance": {
+    "local": "Atomic full record with config, source hashes, token/FLOP ledger, per-step metrics, replay gradient summaries, checkpoints, and held-out evidence.",
+    "wandb": "One finished immutable run per unit with condition, regime, seed, source fingerprint, and summary endpoints.",
+    "hugging_face": "One private repository per unit with checkpoints 20/40/60/80/100, final adapter, byte-identical manifest, and held-out evidence.",
+    "acceptance": "Local, W&B, and Hugging Face identities and hashes must agree before a unit is scientific evidence."
+  },
+  "authorization": {
+    "gpu": true,
+    "authorized_at": "2026-07-20",
+    "scope": "One non-scientific A100 smoke first. Only a separately accepted smoke receipt unlocks the six corpus jobs; only an accepted matching corpus unlocks each four-condition scientific block. Maximum three concurrent Colab sessions. No confirmation jobs are authorized by this transition.",
+    "offline_gate": {
+      "pilot_tests": "73/73",
+      "preregistration_tests": "11/11",
+      "ruff": "clean",
+      "screening_manifest_sha256": "3175ce822d80adc3d13002f42c468d4a5bf56d3e8c3573bb34626f4ceba7915e",
+      "locked_launch_manifest_sha256": "fd965cc95bf95010f4ff3a0280aa4c53bbaf514a1f19023789293cdb16621252"
+    },
+    "reason": "The exact data/runtime/budget protocol, replay semantics, native/intended DAPO differentials, remote trainer, profiler ledger, checkpoint/evaluation recovery, independent W&B/Hugging Face verifier, go/kill analysis, and smoke-gated supervisor passed the offline gate."
+  }
+}

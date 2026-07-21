@@ -40,6 +40,30 @@ class StatisticsTests(unittest.TestCase):
         second = aggregate_audit.paired_bootstrap_ci([0.01, 0.02, 0.03, 0.04], 0.95)
         self.assertEqual(first, second)
 
+    def test_latex_results_are_derived_from_complete_aggregate(self):
+        report = {
+            "status": "COMPLETE",
+            "n_seeds": 8,
+            "results": {
+                arm: {
+                    "controlled_delta": 0.001,
+                    "ci95": [-0.0045, 0.00675],
+                    "achieved_mde_80": 0.008667,
+                    "verdict": "DISAPPEARS" if arm == "dapo" else "INCONCLUSIVE",
+                }
+                for arm in aggregate_audit.LATEX_ARM_NAMES
+            },
+        }
+        rendered = aggregate_audit.render_latex_results(report)
+        self.assertIn(r"\newcommand{\AuditDAPODelta}{+0.00100}", rendered)
+        self.assertIn(r"\newcommand{\AuditDAPOCILow}{-0.00450}", rendered)
+        self.assertIn(r"\newcommand{\AuditDAPOMDE}{0.00867}", rendered)
+        self.assertIn(r"\newcommand{\AuditDAPOVerdict}{DISAPPEARS}", rendered)
+
+    def test_latex_results_reject_incomplete_aggregate(self):
+        with self.assertRaisesRegex(aggregate_audit.AuditError, "COMPLETE"):
+            aggregate_audit.render_latex_results({"status": "INCOMPLETE"})
+
 
 class ContractTests(unittest.TestCase):
     def setUp(self):

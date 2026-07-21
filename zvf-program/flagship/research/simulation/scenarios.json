@@ -1,0 +1,84 @@
+{
+  "schema_version": "zvf-flagship-simulation-v1",
+  "description": "Synthetic stress-test regimes. Parameters are modelling assumptions, not measurements.",
+  "base": {
+    "batch_prompts": 48,
+    "pool_size": 480,
+    "updates_at_g16": 42,
+    "completion_tokens": 256,
+    "parameter_billions": 1.7,
+    "verifier_sensitivity": 0.99,
+    "verifier_specificity": 0.99,
+    "initial_skill": -0.2,
+    "difficulty": {"kind": "normal", "mean": 0.0, "std": 0.8},
+    "learning_rate_scale": 1.0,
+    "shift_at_update": null,
+    "difficulty_shift": 0.0
+  },
+  "regimes": {
+    "mostly_wrong": {
+      "initial_skill": -2.4,
+      "difficulty": {"kind": "normal", "mean": 0.0, "std": 0.45}
+    },
+    "transitional": {
+      "initial_skill": -0.15,
+      "difficulty": {"kind": "normal", "mean": 0.0, "std": 0.55}
+    },
+    "mostly_correct": {
+      "initial_skill": 2.1,
+      "difficulty": {"kind": "normal", "mean": 0.0, "std": 0.45}
+    },
+    "sparse_reward": {
+      "initial_skill": -3.0,
+      "difficulty": {"kind": "normal", "mean": 0.15, "std": 0.9}
+    },
+    "noisy_verifier": {
+      "initial_skill": -0.15,
+      "verifier_sensitivity": 0.82,
+      "verifier_specificity": 0.82,
+      "difficulty": {"kind": "normal", "mean": 0.0, "std": 0.55}
+    },
+    "distribution_shift": {
+      "initial_skill": -0.6,
+      "shift_at_update": 18,
+      "difficulty_shift": 1.35,
+      "difficulty": {"kind": "normal", "mean": 0.0, "std": 0.55}
+    },
+    "prompt_difficulty_mixture": {
+      "initial_skill": -0.1,
+      "difficulty": {
+        "kind": "mixture",
+        "means": [-1.4, 0.1, 1.7],
+        "stds": [0.3, 0.45, 0.4],
+        "weights": [0.25, 0.5, 0.25]
+      }
+    },
+    "compute_constrained": {
+      "initial_skill": -1.15,
+      "updates_at_g16": 18,
+      "difficulty": {"kind": "normal", "mean": 0.0, "std": 0.55}
+    }
+  },
+  "scaling_cells": {
+    "1.7B_gsm8k_like": {
+      "parameter_billions": 1.7,
+      "initial_skill": -0.35,
+      "difficulty": {"kind": "normal", "mean": 0.0, "std": 0.6}
+    },
+    "8B_gsm8k_like": {
+      "parameter_billions": 8.0,
+      "initial_skill": 0.45,
+      "difficulty": {"kind": "normal", "mean": 0.0, "std": 0.6}
+    },
+    "1.7B_math500_like": {
+      "parameter_billions": 1.7,
+      "initial_skill": -1.65,
+      "difficulty": {"kind": "normal", "mean": 0.15, "std": 0.8}
+    },
+    "8B_math500_like": {
+      "parameter_billions": 8.0,
+      "initial_skill": -0.65,
+      "difficulty": {"kind": "normal", "mean": 0.15, "std": 0.8}
+    }
+  }
+}

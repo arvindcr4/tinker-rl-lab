@@ -1,0 +1,242 @@
+{
+  "schema_version": "zvf-flagship-v1",
+  "protocol_id": "zvf-variance-starvation-controller-2026-07-20",
+  "status": "frozen-screening-not-started",
+  "frozen_at": "2026-07-20",
+  "central_question": "Does group-level variance starvation prospectively predict useful-gradient availability across stacks and reward regimes, and can a boundary-aware ZVF controller improve held-out learning utility at matched compute over static group sizes and simpler heuristics?",
+  "decision_enabled": "Decide whether the completed E1 audit can support a main-track mechanism-plus-controller paper, a mechanism-only negative-results paper, or neither.",
+  "out_of_scope": [
+    "Universal claims about every GRPO-family method",
+    "Pooling the frozen E1 outcomes with the new experiment as if they were one preregistration",
+    "Treating prompt-level rows or rollout groups as independent training replicates",
+    "Changing a primary endpoint, margin, seed, arm, or expansion gate after a scored confirmatory run",
+    "Substituting a different accelerator or framework after a scored run without creating a new protocol version"
+  ],
+  "hypotheses": {
+    "H1_mechanism": {
+      "claim": "A pre-fit variance-starvation model using prompt success probability and group size predicts held-out zero-variance and useful-gradient rates on unseen task/model/group-size cells.",
+      "falsifier": "The held-out 95% calibration interval misses the observed cell rate in more than 20% of cells, or the pooled absolute calibration error exceeds 0.05."
+    },
+    "H2_controller": {
+      "claim": "Boundary-aware control improves learning-curve AUC under the same generated-token budget and reaches a static-G16 quality target with fewer total training FLOPs.",
+      "falsifier": "The confirmatory pooled seed-paired AUC interval includes zero and the controller is not non-inferior at the final checkpoint, or its tokens/FLOPs-to-target are not lower than static G16."
+    },
+    "H3_boundary_information": {
+      "claim": "Separating all-wrong starvation from all-correct saturation adds value beyond a symmetric ZVF trigger and an all-wrong-only retry rule.",
+      "falsifier": "The full controller does not improve the preregistered utility endpoint over the best naive heuristic, or fires the same decisions in at least 95% of eligible prompt-steps."
+    },
+    "H4_stack_robustness": {
+      "claim": "After objective-level differential tests pass, the direction of the controller effect is preserved on a second open training stack.",
+      "falsifier": "The secondary-stack replication changes the sign of the primary AUC effect or fails the final-quality non-inferiority margin."
+    }
+  },
+  "frozen_sources": {
+    "models": {
+      "Qwen/Qwen3-1.7B": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e",
+      "Qwen/Qwen3-8B": "b968826d9c46dd6066d109eabc6255188de91218"
+    },
+    "datasets": {
+      "openai/gsm8k": "740312add88f781978c0658806c59bc2815b9866",
+      "HuggingFaceH4/MATH-500": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "google-research-datasets/mbpp": "4bb6404fdc6cacfda99d4ac4205087b89d32030c"
+    },
+    "stacks": {
+      "primary": {
+        "name": "trl",
+        "version": "1.2.0",
+        "transformers": "5.5.4",
+        "source": "uv.lock"
+      },
+      "secondary": {
+        "name": "verl",
+        "version": "0.3.0.post1",
+        "source": "platform_hybrid/experiments/modal/modal_grpo_verl.py"
+      }
+    },
+    "implementation_freeze": {
+      "required_before_any_gpu_run": true,
+      "required_fields": [
+        "git_commit",
+        "container_digest",
+        "cuda_version",
+        "torch_version",
+        "objective_test_digest",
+        "prompt_split_fingerprints",
+        "reward_parser_fingerprints"
+      ]
+    }
+  },
+  "tasks": {
+    "gsm8k_binary": {
+      "dataset": "openai/gsm8k",
+      "reward": "exact numeric answer",
+      "regime": "moderate-density binary verifier",
+      "heldout_n": 500,
+      "primary_metric": "pass_at_1"
+    },
+    "math500_sparse": {
+      "dataset": "HuggingFaceH4/MATH-500",
+      "reward": "symbolically normalized exact answer",
+      "regime": "hard sparse binary verifier",
+      "heldout_n": 500,
+      "primary_metric": "pass_at_1"
+    },
+    "mbpp_graded": {
+      "dataset": "google-research-datasets/mbpp",
+      "reward": "fraction of hidden unit tests passed, with all-tests-pass reported separately",
+      "regime": "graded executable verifier",
+      "heldout_n": 200,
+      "primary_metric": "all_tests_pass"
+    }
+  },
+  "arms": {
+    "static_g8": "G=8 for every prompt-step",
+    "static_g16": "G=16 for every prompt-step",
+    "symmetric_zvf": "Escalate all zero-variance groups from G=8 to G=16",
+    "failure_only": "Escalate all-wrong groups; do not spend additional rollouts on all-correct groups",
+    "boundary_aware": "Escalate all-wrong groups and retire mastered all-correct prompts using the frozen boundary thresholds",
+    "full_triage": "Boundary-aware policy plus Wilson uncertainty gating and the frozen compute-aware action rule"
+  },
+  "seeds": {
+    "screening": [
+      11,
+      23,
+      37
+    ],
+    "confirmatory": [
+      53,
+      71,
+      89,
+      107,
+      131
+    ],
+    "rule": "Screening and confirmatory training seeds are disjoint; screening outcomes may choose among preregistered arms but never enter confirmatory intervals."
+  },
+  "training": {
+    "screening_model": "Qwen/Qwen3-1.7B",
+    "confirmatory_models": [
+      "Qwen/Qwen3-1.7B",
+      "Qwen/Qwen3-8B"
+    ],
+    "screening_steps": 100,
+    "confirmatory_max_steps": 400,
+    "evaluation_steps": [
+      0,
+      25,
+      50,
+      100,
+      200,
+      300,
+      400
+    ],
+    "plateau_rule": "A run may stop after step 300 only when the two most recent held-out checkpoints improve by less than the task non-inferiority margin and the stopping decision was made without arm labels.",
+    "checkpoint_steps": [
+      25,
+      50,
+      100,
+      200,
+      300,
+      400
+    ]
+  },
+  "budgets": {
+    "primary_matching": "generated completion tokens",
+    "secondary_matching": "measured total training FLOPs including generation, policy/reference forward passes, and backward updates",
+    "requirements": [
+      "Use an identical prompt order and token ceiling within each task/model/seed cell",
+      "Record realized generated tokens, environment executions, optimizer steps, measured wall time, and peak memory",
+      "Do not compare arms when realized generated tokens differ by more than 1% unless the endpoint is explicitly tokens-to-target",
+      "Freeze per-cell token and FLOP ceilings from dry-run profiles before screening"
+    ]
+  },
+  "telemetry": [
+    "heldout_pass_at_1",
+    "heldout_pass_at_8",
+    "learning_curve_auc",
+    "tokens_to_target",
+    "flops_to_target",
+    "zero_variance_fraction",
+    "all_wrong_fraction",
+    "all_correct_fraction",
+    "useful_gradient_group_fraction",
+    "reward_entropy",
+    "clip_fraction",
+    "kl_to_reference",
+    "response_length",
+    "gradient_norm",
+    "gradient_cosine_to_float64_reference",
+    "generated_tokens",
+    "optimizer_flops",
+    "wall_clock_seconds",
+    "peak_gpu_memory"
+  ],
+  "primary_endpoints": {
+    "utility": "Seed-paired difference in held-out learning-curve AUC per fixed generated-token budget, aggregated hierarchically across task/model cells.",
+    "efficiency": "Seed-paired ratio of measured training FLOPs required to reach the static-G16 median final-quality target.",
+    "final_quality": "Seed-paired held-out pass@1 difference at the common token ceiling."
+  },
+  "non_inferiority_margins": {
+    "gsm8k_binary": 0.01,
+    "math500_sparse": 0.01,
+    "mbpp_graded": 0.02
+  },
+  "analysis": {
+    "independent_unit": "training seed within a frozen task/model/stack cell",
+    "intervals": "seed-paired bootstrap intervals with task/model cells retained as clusters; prompt-clustered intervals are secondary only",
+    "hierarchical_summary": "random-intercept model for task and model with arm-by-regime interactions",
+    "multiplicity": "Holm correction across H1-H4; no correction within a single ordered gate",
+    "equivalence": "TOST at the task-specific non-inferiority margin",
+    "missingness": "intention-to-treat; infrastructure interruptions resume exact checkpoints and do not create scientific failures",
+    "negative_result_rule": "A confidence interval crossing zero is INCONCLUSIVE, not evidence of equivalence or failure."
+  },
+  "stages": {
+    "S0_evidence_sync": {
+      "status": "complete",
+      "acceptance": "R08, audit.json, generated LaTeX macros, PDF, status, obligations, strict 40/40 verification, and corpus inventory agree."
+    },
+    "S1_objective_differential": {
+      "status": "not_started",
+      "scope": "TRL and verl on identical synthetic minibatches for GRPO and every controller action path.",
+      "acceptance": "Float64 losses, masks, importance ratios, selected group sizes, and flattened gradients agree with the canonical reference to rtol<=1e-6 and atol<=1e-8; every treatment differs from baseline on at least one targeted fixture and matches it on all frozen non-treatment fields."
+    },
+    "S2_screening": {
+      "status": "not_started",
+      "scope": "All six arms, Qwen3-1.7B, all three tasks, three screening seeds, primary stack, 100 steps.",
+      "expansion_gate": "Advance only if full_triage has positive pooled AUC difference versus static_g16 and versus the best naive arm, is within the final-quality margin on every task, and improves either useful-gradient fraction or tokens/FLOPs-to-target by at least 10%."
+    },
+    "S3_confirmatory": {
+      "status": "not_started",
+      "scope": "full_triage, static_g16, and the screening-selected naive arm; two model scales, three tasks, five disjoint confirmatory seeds, primary stack, up to 400 steps.",
+      "acceptance": "The Holm-adjusted 95% interval for pooled AUC improvement excludes zero; final quality is non-inferior in every task/model cell; measured FLOPs-to-target is lower with a 95% paired interval excluding 1.0."
+    },
+    "S4_secondary_stack": {
+      "status": "not_started",
+      "scope": "The three confirmatory arms on verl for Qwen3-1.7B, one prespecified cell from each reward regime, and the five confirmatory seeds.",
+      "acceptance": "Effect direction matches the primary stack and final quality remains within the task-specific non-inferiority margin."
+    }
+  },
+  "publication_routes": {
+    "flagship": "S1-S4 pass: mechanism plus controller paper.",
+    "mechanism_only": "H1 and H4 pass but H2 or H3 fails: predictive mechanism and negative controller result, with no controller-win claim.",
+    "bounded_negative_result": "Only S1 and a surprising, deeply analyzed falsification pass: negative-results submission or workshop artifact.",
+    "stop": "S1 fails, S2 expansion gate fails without a prospectively predictive mechanism, or confirmatory power is inadequate: do not spend the remaining matrix."
+  },
+  "provenance": {
+    "required_per_run": [
+      "local full record",
+      "immutable W&B run",
+      "private Hugging Face checkpoints and final adapter",
+      "stack and treatment fingerprints",
+      "contiguous held-out trace with unique completion hashes",
+      "exact resume receipt for any interruption"
+    ],
+    "external_release": "No public upload or submission without explicit user approval."
+  },
+  "stop_conditions": [
+    "Do not start S2 until S1 passes on both stacks.",
+    "Do not start S3 if the S2 expansion gate fails.",
+    "Do not continue after three distinct guarded attempts reproduce the same infrastructure failure.",
+    "Do not purchase additional compute or storage; pause if existing capacity is insufficient.",
+    "Do not change the protocol after a scored confirmatory run; create a new version instead."
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "allocation": {
+    "allowed": false,
+    "command": null,
+    "reason": "dry-run plans never contain an accelerator-allocation command"
+  },
+  "compute_contract": {
+    "charged_tokens": "All generated completion tokens, including masked, rejected, calibration, and failed-parser completions.",
+    "fail_closed": "A run with unverifiable charged-token or FLOP accounting is infrastructure-invalid and is resumed or replaced with the same seed; it is not a scientific observation.",
+    "flops": "Measured generation, policy/reference forward, and backward FLOPs; report both total and per optimizer step.",
+    "frozen_fields": [
+      "prompt split and order",
+      "model revision and tokenizer",
+      "optimizer and scheduler",
+      "LoRA configuration",
+      "maximum prompt and completion lengths",
+      "number and placement of optimizer updates",
+      "evaluation prompts and decoding",
+      "checkpoint cadence"
+    ],
+    "primary_budget": "fixed charged generated-token ceiling per run"
+  },
+  "condition_factors": {
+    "advantage": "trl_1_2_0_all_rows_sample_std_plus_1e-4",
+    "importance_ratio": "trl_1_2_0_dapo_token_level_asymmetric_clip",
+    "reduction": "trl_1_2_0_dapo_global_active_token_mean",
+    "selection": "retain_unselected_rows_with_zero_completion_mask"
+  },
+  "fingerprint": "e449c011fc484873bde833e561c38f8f7862718233b9724af392d9aabd064ba3",
+  "identity": {
+    "colab_session": "fpilot-nati-filt-s37-5a0be22e",
+    "corpus_hf_repo": "arvindcr4/tinker-rl-lab-flagship-pilot-corpus-filtered_variable_length-s37-5a0bbd25-e22eb646",
+    "corpus_wandb_run": "flagship-pilot-corpus-filtered_variable_length-s37-5a0bbd25-e22eb646",
+    "hf_repo": "arvindcr4/tinker-rl-lab-flagship-pilot-native_trl-filtered_variable_length-s37-5a0bbd25-e22eb646",
+    "local_record": "zvf-program/flagship/pilot/runs/fpilot__native_trl__filtered_variable_length__s37-5a0bbd25-e22eb646/full_record.json",
+    "wandb_group": "flagship-s1-conformance-screening",
+    "wandb_run": "flagship-pilot-native_trl-filtered_variable_length-s37-5a0bbd25-e22eb646"
+  },
+  "protocol": {
+    "gpu_authorized": true,
+    "path": "zvf-program/flagship/pilot_preregistration.json",
+    "sha256": "5a0bbd25e2bdf2a6e8948ea649afd2825197cf7dafda1885ac2e33e9925a00d7",
+    "source_bundle_sha256": "e22eb646ea8f41a0d50de2733174034d91ba609d112d1d0e02e6be11a393b04e",
+    "status": "ready_to_run"
+  },
+  "readiness": {
+    "authorization_blockers": [],
+    "ready": true
+  },
+  "regime_contract": {
+    "constraints": "Deterministic frozen selection masks zero exactly two of eight completion rows and active completion-length coefficient of variation is at least 0.35 before truncation.",
+    "dataset": "HuggingFaceH4/MATH-500",
+    "dataset_revision": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+    "dataset_split": "test[128:500] for replay and test[0:128] for held-out",
+    "purpose": "positive control",
+    "source_ordered_row_sha256": {
+      "test": "b343daa1979cc875dd7fdfda3b82e0a532d68dfde5da81f61cd8e6405bef4d9e"
+    },
+    "task": "math500_sparse"
+  },
+  "runtime": {
+    "accelerator": "A100 only",
+    "checkpoint_steps": [
+      20,
+      40,
+      60,
+      80,
+      100
+    ],
+    "group_size": 8,
+    "model": {
+      "id": "Qwen/Qwen3-1.7B",
+      "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e"
+    },
+    "stack": "trl==1.2.0, transformers==5.5.4",
+    "steps": 100,
+    "tracking": {
+      "hugging_face_private": true,
+      "wandb_corpus_group": "flagship-s1-conformance-corpora",
+      "wandb_entity": null,
+      "wandb_project": "tinker-rl-lab",
+      "wandb_unit_group": "flagship-s1-conformance-screening"
+    }
+  },
+  "schema_version": "flagship-pilot-screening-plan-v1",
+  "source_bindings": {
+    "zvf-program/flagship/pilot/analysis.py": "97cde69fe59186c25f307dc861fb764e9bb4ec0bc7ea2c5de82ad1574ea9832f",
+    "zvf-program/flagship/pilot/artifacts.py": "aa77832306a4a5f92f92e795ca30d31aebc1a6649323ae39351c1cd951604b62",
+    "zvf-program/flagship/pilot/bootstrap.py": "3c37bce88bb22e4bc86b4d9158312ef2278f2600e3ee6c0ed7aef2ec89217b1b",
+    "zvf-program/flagship/pilot/checkpointing.py": "e1a1e893a9ec2759c56d9974d005042e4e4112e30c9f36bb2d6b6fb01b398929",
+    "zvf-program/flagship/pilot/evaluation.py": "15a535a1d2297e512297b1ec10630cda2068464bffcdcd4a4469fb602041a5da",
+    "zvf-program/flagship/pilot/flops.py": "1a2bce24958b68b1045ed108e43a7e7fe69883d0d4ad2269788cc3beb541d347",
+    "zvf-program/flagship/pilot/launcher.py": "2aa54acdc1cefcaf6612ebceb5ec11f94c19ed8853a8cd3879a97bbc6b539c02",
+    "zvf-program/flagship/pilot/objective.py": "5962de855f85e602c9d1dc973b031caf78d91676f662a6f7ae9b9cb873e2dbb1",
+    "zvf-program/flagship/pilot/plan_screening.py": "e62641f7c4d7e03e39370b46032585ab3315f5d48ecdb3a35b59e207e4dafcf9",
+    "zvf-program/flagship/pilot/protocol.py": "8c30aeeccad912d2d719bd7fc07403745b8cc8cd50cdfcce27e1ac60e93a44c2",
+    "zvf-program/flagship/pilot/remote_core.py": "a05917ed6795bfabfbd68926a37d21fb3e2a0186eb8cad961f74a1a8cda167c9",
+    "zvf-program/flagship/pilot/remote_training.py": "735f162b75d747c331d62f3bc99d3d34614710728bb95cfee83ca1abe9bb8b00",
+    "zvf-program/flagship/pilot/remote_unit.py": "2813c5ac3a205604da1df5c24171846b2e97fef3089e42eb620b1ac27472720c",
+    "zvf-program/flagship/pilot/replay.py": "cb83cf4bb5324d4ae8171ab4c27dffe66ecb305b002d5681fa8e6f94cf90504c",
+    "zvf-program/flagship/pilot/supervisor.py": "9af08c393dcb40274d2382602153f61c0ba212b6113c5a5de004d85717c48afe",
+    "zvf-program/flagship/pilot/test_stack_differential.py": "b4ef221d985ab8854d8002da015a871a1aae8ac07b724a53fcd7a57bef0ecf85",
+    "zvf-program/flagship/pilot/training.py": "481bee4d301b590fce0301dd71e1583ee6b2b68847615fa7c410251c96b2c4e0",
+    "zvf-program/flagship/pilot/verifier.py": "098302eff4bb1f253ac02e6b22ae0a536db90033f316a25b5b2163964f170aa7",
+    "zvf-program/flagship/pilot_preregistration.json": "5a0bbd25e2bdf2a6e8948ea649afd2825197cf7dafda1885ac2e33e9925a00d7",
+    "zvf-program/flagship/preregistration.json": "68237294a2cce2a0cddb5a1a413a5f954434aca1a9d1a44d806f0145c2a5171e",
+    "zvf-program/flagship/s1/results/implementation_freeze.json": "a785ceadc143ff7449070a64f0cecd8bd858b62c561bb19260e51e9f40a69ace",
+    "zvf-program/flagship/theory/NOVELTY_AUDIT.md": "809b1bd9ebba58f447c6a0172a396348b96a47cc6862f0b921f1984c1192dea7"
+  },
+  "stage": "screening",
+  "status": "dry_run_only",
+  "unit": {
+    "condition": "native_trl",
+    "id": "fpilot__native_trl__filtered_variable_length__s37",
+    "regime": "filtered_variable_length",
+    "seed": 37
+  }
+}

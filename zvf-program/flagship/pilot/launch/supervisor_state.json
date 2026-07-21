@@ -1,0 +1,223 @@
+{
+  "jobs": {
+    "corpus__balanced_equal_length__s11": {
+      "acceptance_path": null,
+      "attempts": 3,
+      "last_error": "launcher exited 1",
+      "pid": 16155,
+      "status": "running"
+    },
+    "corpus__balanced_equal_length__s23": {
+      "acceptance_path": null,
+      "attempts": 3,
+      "last_error": "launcher exited 1",
+      "pid": null,
+      "status": "failed_infrastructure"
+    },
+    "corpus__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 3,
+      "last_error": "launcher exited 1",
+      "pid": null,
+      "status": "failed_infrastructure"
+    },
+    "corpus__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 3,
+      "last_error": "launcher exited 1",
+      "pid": null,
+      "status": "failed_infrastructure"
+    },
+    "corpus__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 3,
+      "last_error": "launcher exited 1",
+      "pid": null,
+      "status": "failed_infrastructure"
+    },
+    "corpus__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 3,
+      "last_error": "launcher exited 1",
+      "pid": null,
+      "status": "failed_infrastructure"
+    },
+    "fpilot__epsilon_only__balanced_equal_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__epsilon_only__balanced_equal_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__epsilon_only__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__epsilon_only__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__epsilon_only__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__epsilon_only__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__balanced_equal_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__balanced_equal_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__balanced_equal_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__balanced_equal_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__balanced_equal_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__balanced_equal_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "preflight__a100_stack_smoke": {
+      "acceptance_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch/acceptance/preflight__a100_stack_smoke.json",
+      "attempts": 1,
+      "last_error": null,
+      "pid": null,
+      "status": "accepted"
+    }
+  },
+  "manifest_fingerprint": "ffd319336206294ad759d85631ac2b4985bdb819f34263df51b29f889d20a199",
+  "schema_version": "flagship-pilot-supervisor-v1"
+}

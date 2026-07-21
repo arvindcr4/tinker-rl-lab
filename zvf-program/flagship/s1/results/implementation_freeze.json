@@ -1,0 +1,66 @@
+{
+  "combiner_source": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/s1/combine_receipts.py",
+    "sha256": "025fb3940a3becf499214fcea3d318fa3b40a86d16528d580a16e91a79cc5446"
+  },
+  "controller_case_count": 36,
+  "errors": [],
+  "fixture_digest": "c35916cf7db0b6c7ff6d0e35925a165b304fc78ff3d63845b9a853ca8af8ae9b",
+  "intended_case_count": {
+    "trl": 14,
+    "verl": 14
+  },
+  "native_verdicts": {
+    "trl": [
+      "MATERIAL_DIFFERENCE",
+      "MATERIAL_DIFFERENCE",
+      "MATERIAL_DIFFERENCE",
+      "MATERIAL_DIFFERENCE",
+      "NOT_TESTED"
+    ],
+    "verl": [
+      "MATERIAL_DIFFERENCE",
+      "NOT_TESTED",
+      "NOT_TESTED",
+      "NOT_TESTED",
+      "NOT_TESTED"
+    ]
+  },
+  "schema_version": 1,
+  "source_hashes": {
+    "trl": {
+      "S1_AMENDMENT.md": "867443969c9c6de58271aaa12d2e84873bef561d8442db5c2190ab0ad5e3f49d",
+      "fixtures.py": "06a2ceade09675f5fd46c779b6005ab1aef07655486466a893344ddf722368f3",
+      "receipt.py": "d2f03654049bb493416209738adde8146187e11736569287554771108404bcc6",
+      "reference.py": "52c7e6fbb0f701f819e3c822b54c16eb8501fab3cdd0f2135b45b15840bbe7dd",
+      "test_receipts.py": "0edc00ab003c04e0b4fbf11d1ea24f221939c06d57b914b69c8e9e0f27e291a5",
+      "test_reference.py": "caec06118cf3fb9328322022e718c0e96078e4182a5ac78ec125713723b48e06",
+      "test_trl_adapter.py": "d509f41e1c717ec67b309cd9048ac2f8d343f85459ed87c06c6c8fa0153b4f97",
+      "trl_adapter.py": "bd615fc8bbe1c5c32c19e305d979958c29e9e018dd4cc3a93461f60d7864f4b9"
+    },
+    "verl": {
+      "S1_AMENDMENT.md": "867443969c9c6de58271aaa12d2e84873bef561d8442db5c2190ab0ad5e3f49d",
+      "fixtures.py": "06a2ceade09675f5fd46c779b6005ab1aef07655486466a893344ddf722368f3",
+      "receipt.py": "d2f03654049bb493416209738adde8146187e11736569287554771108404bcc6",
+      "reference.py": "52c7e6fbb0f701f819e3c822b54c16eb8501fab3cdd0f2135b45b15840bbe7dd",
+      "test_receipts.py": "0edc00ab003c04e0b4fbf11d1ea24f221939c06d57b914b69c8e9e0f27e291a5",
+      "test_reference.py": "caec06118cf3fb9328322022e718c0e96078e4182a5ac78ec125713723b48e06",
+      "test_verl_adapter.py": "39733197fae7f072ddb0d6af7604d4c427b3c664a89b61fb2d233ab0b5e50d97",
+      "verl_adapter.py": "890e3292ea104ecf308597a7dd2feaaca281b2544e5ad58cc491fe89716ce802"
+    }
+  },
+  "status": "S1_PASS",
+  "tolerances": {
+    "atol": 1e-08,
+    "dtype": "float64",
+    "rtol": 1e-06
+  },
+  "trl_receipt": {
+    "path": "zvf-program/flagship/s1/results/trl_receipt.json",
+    "sha256": "6b9b62ae68a44303d6900f58e9764966380368cb73d82b335397124bbf0b74dc"
+  },
+  "verl_receipt": {
+    "path": "zvf-program/flagship/s1/results/verl_receipt.json",
+    "sha256": "3221155ea599bb29d3ae8cd98ede82fc589d9f23dcd62537e1b85b4c9ca9427f"
+  }
+}

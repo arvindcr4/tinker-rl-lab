@@ -1,9 +1,9 @@
 {
   "manuscripts": 18,
-  "closure_mentions": 413,
-  "unique_source_files": 328,
-  "source_lines": 56731,
-  "source_bytes": 3021003,
+  "closure_mentions": 414,
+  "unique_source_files": 329,
+  "source_lines": 56757,
+  "source_bytes": 3022284,
   "files_with_unresolved_citations": 0,
   "files_with_todos": 0,
   "files_with_placeholders": 16,

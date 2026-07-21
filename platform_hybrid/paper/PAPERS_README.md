@@ -51,12 +51,20 @@ Canonical document roster:
 | R05 | `zvf-program/theory/zvf_theory.tex` | calibration and reliability proof sketches; no adaptive set-point |
 | R06 | `zvf-program/position/min_report_rl.tex` | condensed community position statement |
 | R07 | `zvf-program/registry/grpo_registry.tex` | condensed living-catalog statement |
-| R08 | `zvf-program/audit/reproducibility_audit.tex` | survival-audit protocol and descriptive pilot |
+| R08 | `zvf-program/audit/reproducibility_audit.tex` | completed 40-unit single-stack survival audit; open-stack generalization remains gated |
 | U01 | `main.tex` | long evidence compendium, not a venue submission |
 | N01 | `unified_signal_starvation/main.tex` | GRPO/PPO/SAO diagnostic and controller proposal |
 
 The older plans below are retained as history. Where they disagree with this
 section, this section is canonical.
+
+**Post-E1 update (2026-07-20).** R08 is no longer a planned or placeholder
+audit: all 40 frozen Qwen3-8B/GSM8K/Tinker units independently validate, DAPO
+meets the preregistered `DISAPPEARS` rule, and GSPO, Dr.GRPO, and AERO are
+`INCONCLUSIVE`. This closes the bounded single-stack artifact but does not
+remove the main-track gate below: an archival survival claim still needs an
+open implementation, objective-differential tests, longer learning curves,
+and prospective external-validity evidence.
 
 ## Consolidation plan v3 — THESIS-FIRST (2026-07-11, after adversarial council review)
 

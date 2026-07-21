@@ -323,7 +323,8 @@ platform_hybrid/paper/sections/zvf_iter98.tex	paper-specific	U01	1	149	7648	0d6a
 platform_hybrid/paper/sections/zvf_pipeline_spec.tex	shared	P02,R02,R04,U01	4	102	4519	c75e4165b0b46f6aa12f6a2198cd5fb52c270e73a44aababe1349af2e6a8a383	6	2	0					0	screened
 platform_hybrid/paper/sections/zvf_scaling.tex	shared	P02,U01	2	69	4436	5c770a7cdd17d7c13495dcac933c458d8528bb3d0af187d92b5d63fc808c6408	1	4	0				62	0	screened
 platform_hybrid/paper/unified_signal_starvation/main.tex	root	N01	1	810	37276	4d146eee51df150b6097ab1af083209fde7dd55bd5493c152b3cb648eb2baf55	34	30	14				39,40,51,66,68,74,88,91,108,110,112,115,129,139,147,152,181,186,188,191,194,198,200,206,208,213,215,218,222,224,225,227,325,326,327,333,334,335,388,436,439,444,446,467,520,549,553,576,577,600,603,604,627,628,639,645,647,657,671,678,686,698,700,704,749,751,761,764,768,769,787	0	screened
-zvf-program/audit/reproducibility_audit.tex	root	R08	1	444	23386	19038519df5ac52381b558c5ba3673719483dc519303333a20a628451c6f7009	9	7	11				163	0	screened
+zvf-program/audit/reproducibility_audit.tex	root	R08	1	447	23742	f651fa6fca724048579345932c21dc6d5dcb5493e3deec1b5269d94def6c2fe4	9	7	11				164	0	screened
+zvf-program/audit/results/audit_results.tex	paper-specific	R08	1	23	925	171ac03bfef62a3ee05dfb9cf0f490fab27704c2576d7e3f8848c6dfdac36938	0	0	0					0	screened
 zvf-program/position/min_report_rl.tex	root	R06	1	838	47122	f387e2945258ac5c762f9a4d1acd44eeedac6e209a2e24b10386a665a57400ec	9	11	13				51,60,103,126,152,256,258,281,342,364,428,469,473,474,500,524,641,666	0	screened
 zvf-program/registry/grpo_registry.tex	root	R07	1	632	29596	192b02c46fad2475d5ab044aa831a4eb0d664da5907f7da77671f21fb7c0dac8	10	13	19				76,120,314,317,584	0	screened
 zvf-program/theory/zvf_theory.tex	root	R05	1	774	42211	28d4dc8ef97eaf8c1d453ba1ef56da5ca1f3947146b5afa54ea8c87af5c652d6	8	33	9				137,141,234,343,355,358,367,368,386,390,392,397,399,465,478,484,512,534,543,594,596,598,608,644,653,656,663,674,744	0	screened

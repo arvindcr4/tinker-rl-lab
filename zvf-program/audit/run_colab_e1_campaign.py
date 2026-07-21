@@ -34,6 +34,7 @@ EVALUATION_RUNNER = REPO_ROOT / "zvf-program" / "audit" / "run_colab_e1_evaluati
 RESUME_RUNNER = REPO_ROOT / "zvf-program" / "audit" / "run_colab_e1_resume.py"
 AGGREGATOR = REPO_ROOT / "zvf-program" / "audit" / "aggregate_audit.py"
 AGGREGATE_OUTPUT = REPO_ROOT / "zvf-program" / "audit" / "results" / "audit.json"
+AGGREGATE_TEX_OUTPUT = REPO_ROOT / "zvf-program" / "audit" / "results" / "audit_results.tex"
 FULL_RESULTS = REPO_ROOT / "zvf-program" / "audit" / "results" / "full"
 UNIT_RESULTS = (
     REPO_ROOT / "zvf-program" / "audit" / "results" / "colab-e1-confirmatory" / "results"
@@ -219,6 +220,8 @@ def regenerate_aggregate(*, validated_units: int, required_units: int) -> None:
         str(FULL_RESULTS),
         "--output",
         str(AGGREGATE_OUTPUT),
+        "--tex-output",
+        str(AGGREGATE_TEX_OUTPUT),
         "--allow-incomplete",
     ]
     completed = subprocess.run(

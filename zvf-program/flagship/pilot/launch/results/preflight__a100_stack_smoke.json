@@ -1,0 +1,8 @@
+{
+  "job_id": "preflight__a100_stack_smoke",
+  "log_path": "zvf-program/flagship/pilot/launch/logs/preflight__a100_stack_smoke.log",
+  "protocol_sha256": "5a0bbd25e2bdf2a6e8948ea649afd2825197cf7dafda1885ac2e33e9925a00d7",
+  "source_archive_sha256": "7ca4f79b89b7df38108c6a54a868fca7dc97ae8a290781035d5f0cc0994b6345",
+  "source_bindings_sha256": "616eef4030d55b2fe817317e0342229bccfd227b91459af2f272f0cd4790a019",
+  "status": "completed"
+}

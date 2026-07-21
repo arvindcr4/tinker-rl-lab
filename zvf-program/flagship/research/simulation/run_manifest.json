@@ -1,0 +1,14 @@
+{
+  "command": "python3 zvf-program/flagship/research/simulation/run_simulation.py --replicates 96 --sensitivity-replicates 36 --seed 20260720",
+  "python": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 21.0.0 (clang-2100.0.123.102)]",
+  "numpy": "2.4.3",
+  "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+  "e1_source_sha256": "86e4b17d48a5bf81ab71a4f97132e8ea8df1ed843849aa79fd39e1c618d3bf6a",
+  "scenarios_sha256": "a112a0673eb4a4cfb5abf2d3095a937cff37108c53cde482d9fb4212e2ccc3d7",
+  "outputs": [
+    "e1_frozen_inputs.json",
+    "simulation_results.json",
+    "policy_regime_summary.csv",
+    "sensitivity_summary.csv"
+  ]
+}

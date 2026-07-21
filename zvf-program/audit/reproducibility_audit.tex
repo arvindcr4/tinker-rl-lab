@@ -30,6 +30,7 @@
 \newcommand{\grpo}{\textsc{GRPO}}
 \newcommand{\audit}{\textsc{GRPO-Survival-Audit}}
 \newcommand{\grpoReg}{\textsc{GRPO-Registry}}
+\input{results/audit_results.tex}
 
 \title{\audit{}: A Single-Stack Survival Protocol for the \grpo{} Family\\
 \large Holding the Stack Fixed So Algorithmic Gains Can Be Seen}
@@ -64,9 +65,9 @@ feasibility and produces concrete \zvf{} and held-out-delta observations. The
 full-scale frozen audit is complete: all 40 arm--seed units independently pass
 the local, W\&B, private-Hub checkpoint, stack-fingerprint,
 treatment-fingerprint, and 500-row held-out gates. Against the shared GRPO
-reference, DAPO's controlled delta is $+0.0015$ (paired 95\% CI
-$[-0.0040,0.00725]$) and receives the preregistered
-\texttt{DISAPPEARS} verdict. GSPO, Dr.\grpo{}, and AERO receive
+reference, DAPO's controlled delta is $\AuditDAPODelta$ (paired 95\% CI
+$[\AuditDAPOCILow,\AuditDAPOCIHigh]$) and receives the preregistered
+\texttt{\AuditDAPOVerdict} verdict. GSPO, Dr.\grpo{}, and AERO receive
 \texttt{INCONCLUSIVE} verdicts; none of the five arms collapsed. These results
 are a stack-controlled survival audit, not a universal capability leaderboard.
 \end{abstract}
@@ -120,11 +121,11 @@ be certified from results; it must be certified from the stack
   \item A small open-source pilot (\S\ref{sec:pilot}) that exercises the
     protocol on four arms and shows that the required telemetry is obtainable
     from a standard GRPO trainer.
-  \item A fail-closed execution snapshot: all eight independently reconciled
-    GRPO and GSPO seed records, DAPO seeds 11, 23, 53, 71, 89, 107, and 131,
-    Dr.\grpo{} seeds 11, 37, 53, 71, 89, 107, and 131, AERO seeds 11, 23, 37,
-    53, 71, 89, and 107, three explicitly missing units, and no
-    premature arm-level verdict.
+  \item A complete fail-closed execution: all 40 arm--seed units independently
+    reconcile local records, finished W\&B runs, private-Hub checkpoints,
+    frozen stack and treatment fingerprints, final adapters, and contiguous
+    500-row held-out traces; the aggregate emits only the four preregistered
+    verdicts reported here.
 \end{enumerate}
 
 % =============================================================================
@@ -280,11 +281,11 @@ tables: (i) controlled held-out delta, paired 95\% CI, achieved MDE, and verdict
 and (ii) last-10 reward, late \zvf/\gu{}, collapse rate, realized rollout count,
 group schedule, and wall-clock time. The aggregator refuses to emit a verdict
 unless all eight core seeds are present, the manifest stack lock passes, and
-every metric has the preregistered held-out size. As of 2026-07-19, the locked
+every metric has the preregistered held-out size. As of 2026-07-20, the locked
 directory contains all eight independently accepted records for each of GRPO,
 DAPO, GSPO, Dr.\grpo{}, and AERO
 each with 500 held-out examples. The GRPO held-out exact matches are
-respectively 0.646, 0.636, 0.634, 0.634, 0.634, 0.620, 0.634, and 0.622; DAPO
+respectively 0.650, 0.636, 0.634, 0.634, 0.634, 0.620, 0.634, and 0.622; DAPO
 seeds 11, 23, 37, 53, 71, 89, 107, and 131 achieve 0.648, 0.624, 0.628, 0.636, 0.634,
 0.636, 0.634, and 0.632; GSPO seeds 11, 23, 37, 53, 71, 89, 107, and 131 achieve 0.640,
 0.638, 0.642, 0.632, 0.638, 0.646, 0.640, and 0.628; and Dr.\grpo{} seeds 11, 23, 37, 53, 71, 89, 107, and
@@ -308,10 +309,10 @@ verdicts:
 \textbf{Arm} & \textbf{$\Delta$} & \textbf{95\% CI low} &
 \textbf{95\% CI high} & \textbf{MDE$_{80}$} & \textbf{Verdict} \\
 \midrule
-DAPO       & $+0.0015$  & $-0.0040$  & $+0.00725$ & $0.00859$ & \texttt{DISAPPEARS} \\
-GSPO       & $+0.0055$  & $ 0.0000$  & $+0.01225$ & $0.00940$ & \texttt{INCONCLUSIVE} \\
-Dr.\grpo{} & $-0.0015$  & $-0.00875$ & $+0.00750$ & $0.01252$ & \texttt{INCONCLUSIVE} \\
-AERO       & $-0.00025$ & $-0.00675$ & $+0.00675$ & $0.01040$ & \texttt{INCONCLUSIVE} \\
+DAPO       & $\AuditDAPODelta$  & $\AuditDAPOCILow$  & $\AuditDAPOCIHigh$ & $\AuditDAPOMDE$ & \texttt{\AuditDAPOVerdict} \\
+GSPO       & $\AuditGSPODelta$  & $\AuditGSPOCILow$  & $\AuditGSPOCIHigh$ & $\AuditGSPOMDE$ & \texttt{\AuditGSPOVerdict} \\
+Dr.\grpo{} & $\AuditDrGRPODelta$ & $\AuditDrGRPOCILow$ & $\AuditDrGRPOCIHigh$ & $\AuditDrGRPOMDE$ & \texttt{\AuditDrGRPOVerdict} \\
+AERO       & $\AuditAERODelta$ & $\AuditAEROCILow$ & $\AuditAEROCIHigh$ & $\AuditAEROMDE$ & \texttt{\AuditAEROVerdict} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -331,11 +332,13 @@ derives 1,728 generated rollouts from the immutable checkpoint-30 trainer state,
 preserves the frozen treatment fields, and carries an explicit correction
 receipt mirrored in W\&B and the private Hub repository.
 
-For GSPO seed 71, the same older evaluation-only finalizer omitted the frozen
-treatment fields from \texttt{run\_config}; its rollout count, training, and
-held-out evidence were already correct. A provenance-only correction restores
-those fields and records a receipt mirrored in W\&B and the private Hub
-repository. The corrected local and remote manifests are byte-identical.
+For GSPO seed 71, an interrupted evaluation was resumed from exact checkpoint
+30 and its verified 416-row private ledger. The recovery completed indices
+416--499 without regenerating the preserved prefix, yielding 319/500 correct.
+Independent read-back verifies finished W\&B run \texttt{10ef44ab}, private-Hub
+commit \texttt{c0c0b968a61a9ade251b5b7e6ece3119197dc1b1}, all six checkpoint
+trees, the final adapter, frozen fingerprints, 500 unique valid completion
+hashes, and a byte-identical local/remote manifest.
 
 For AERO seed 37, the recovered 500-row evaluation was complete before an
 evaluation-only finalizer rejected the checkpoint's cumulative rollout count.
@@ -434,8 +437,7 @@ units passed the evidence gates, DAPO's reported advantage disappears under
 the shared stack, and GSPO, Dr.\grpo{}, and AERO remain inconclusive at eight
 paired seeds. The protocol, telemetry pilot, machine-readable preregistration,
 complete execution record, and \texttt{grpo-stackdiff} verification step
-together
-they make it operational to ask of a GRPO-family result not
+together make it operational to ask of a GRPO-family result not
 ``did it win?'' but ``did it survive?''
 
 \bibliographystyle{plainnat}

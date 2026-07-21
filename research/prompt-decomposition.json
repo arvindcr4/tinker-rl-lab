@@ -1,0 +1,65 @@
+{
+  "sub_questions": [
+    "What complete set of credible flagship research paths follows from the frozen E1 audit?",
+    "What exactly is each path, why would it matter, and what contribution would it claim?",
+    "What current primary literature and implementations most closely overlap each path?",
+    "What scientific and technical gap, if any, remains after 2025-2026 competitive work?",
+    "Which users would care about each path, what job would it solve, and what proof would adoption require?",
+    "How do the candidate methods behave across reward, difficulty, noise, shift, scale, and compute regimes?",
+    "Which option best satisfies NeurIPS, ICLR, and ICML originality, significance, rigor, and reproducibility expectations?",
+    "What is the smallest discriminating pilot, the expansion gate, and the kill criterion for each viable path?"
+  ],
+  "entities": [
+    {"name": "exact ZVF theory and prospective mechanism", "type": "candidate_path", "required_fields": ["what", "why", "prior_art", "gap", "experiment", "falsifier", "venue_fit"]},
+    {"name": "one-formula reward-aware asymmetric controller", "type": "candidate_path", "required_fields": ["what", "why", "formula", "prior_art", "gap", "experiment", "falsifier", "venue_fit"]},
+    {"name": "maximal general compute controller", "type": "candidate_path", "required_fields": ["what", "why", "architecture", "prior_art", "gap", "experiment", "falsifier", "venue_fit"]},
+    {"name": "causal objective and gradient audit", "type": "candidate_path", "required_fields": ["what", "why", "prior_art", "gap", "experiment", "falsifier", "venue_fit"]},
+    {"name": "unified theory intervention and controller", "type": "candidate_path", "required_fields": ["what", "why", "prior_art", "gap", "experiment", "falsifier", "venue_fit"]},
+    {"name": "algorithm audit benchmark", "type": "candidate_path", "required_fields": ["what", "why", "prior_art", "gap", "experiment", "falsifier", "venue_fit"]},
+    {"name": "boundary-information theorem plus causal cross-stack validation", "type": "candidate_path", "required_fields": ["what", "why", "theorem", "prior_art", "gap", "experiment", "falsifier", "venue_fit"]},
+    {"name": "fixed G8 fixed G16 symmetric ZVF failure-only boundary-aware full-triage policies", "type": "policy_set", "required_fields": ["definition", "compute", "usable_gradient_yield", "regime_wins", "regime_failures"]},
+    {"name": "NeurIPS ICLR ICML", "type": "venue_set", "required_fields": ["current_review_criteria", "best_contribution_type", "reviewer_objections"]}
+  ],
+  "required_formats": [
+    "per-option what/why/how/prior-art/gap/falsifier section",
+    "persona-by-option user-fit matrix",
+    "simulation regime and sensitivity tables",
+    "weighted decision scorecard",
+    "ranked recommendation with backup routes",
+    "stage-gated execution plan"
+  ],
+  "required_sections": [
+    "Decision context and frozen evidence",
+    "Candidate research paths",
+    "Literature and competitive landscape",
+    "User-fit investigation",
+    "Simulation and sensitivity results",
+    "Cross-option decision matrix",
+    "Recommended flagship and backup routes",
+    "Execution gates and kill criteria",
+    "Questions for the user"
+  ],
+  "required_section_headings": [
+    "## 1. Decision Context and Frozen Evidence",
+    "## 2. Candidate Research Paths: What, Why, and How",
+    "## 3. Literature, Technology Gaps, and Competitive Pressure",
+    "## 4. Repeated User-Fit Investigation",
+    "## 5. Simulation Design, Results, and Sensitivity",
+    "## 6. Cross-Option Decision Matrix",
+    "## 7. Recommended Flagship and Backup Routes",
+    "## 8. Staged Execution Plan and Kill Criteria",
+    "## 9. Decisions Needed From the User"
+  ],
+  "time_horizons": ["current through July 20 2026", "next major-conference submission cycle"],
+  "time_periods": [],
+  "scope_conditions": [
+    "Preserve the completed frozen E1 40/40 records exactly",
+    "Do not spend new GPU compute before the literature and stage gate support it",
+    "Use primary technical sources for technical claims",
+    "Treat simulated personas as simulations rather than human-subject evidence",
+    "Compare at least two open stacks two model scales and three reward regimes in any confirmatory plan"
+  ],
+  "pipeline_tier": "full",
+  "response_format": "argumentative",
+  "citation_style": "inline"
+}

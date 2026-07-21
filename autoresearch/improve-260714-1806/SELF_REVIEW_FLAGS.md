@@ -2562,7 +2562,7 @@ Consumers: N01
 
 Consumers: R08
 
-- L163 [claim] Optional secondary arms (CPPO \cite{lin2025cppo}, NGRPO
+- L164 [claim] Optional secondary arms (CPPO \cite{lin2025cppo}, NGRPO
 
 ## `zvf-program/position/min_report_rl.tex`
 

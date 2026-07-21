@@ -343,6 +343,9 @@ class E1CampaignTests(unittest.TestCase):
         command = run.call_args.args[0]
         self.assertIn("--allow-incomplete", command)
         self.assertEqual(command[command.index("--output") + 1], str(CAMPAIGN.AGGREGATE_OUTPUT))
+        self.assertEqual(
+            command[command.index("--tex-output") + 1], str(CAMPAIGN.AGGREGATE_TEX_OUTPUT)
+        )
 
         with (
             mock.patch.object(CAMPAIGN.subprocess, "run", return_value=completed),

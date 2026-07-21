@@ -529,3 +529,19 @@ locked until A100 assignment succeeds again.
   are now `failed_infrastructure` at their attempt caps; the 24
   `fpilot__*` units remain gated. Awaiting user direction; see the
   report in-thread for the decision options.
+- Evidence pass (2026-07-21T12:45Z), non-compute audit while the corpus
+  decision is pending. (a) Strict frozen-E1 campaign verification
+  re-run against current local + W&B + HF state: `COMPLETE`, 40/40
+  locally validated and remotely verified units, zero errors. (b)
+  Flagship suite invocation resolved: the checked-in tree needs
+  `python -m pytest --import-mode=importlib -o
+  consider_namespace_packages=true` from `zvf-program/flagship`
+  (theory tests use relative imports in a namespace-package directory;
+  `pilot/test_stack_differential.py` imports `s1` top-level). With that
+  invocation: 139 passed / 26 failed / 11 skipped / 98 subtests passed
+  — the identical failure set as the prior triage (24 fail-closed verl
+  py3.11 cases, 1 numpy pin drift, 1 fail-closed TRL pin), all
+  environment-gating, zero source regressions. (c) Aggregate
+  `results/audit.json` remains `COMPLETE`; R08 canonical source and PDF
+  present; failure documentation committed as `98f3c994`. The corpus
+  compute blocker is unchanged and still awaits the user's decision.

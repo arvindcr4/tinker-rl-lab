@@ -920,6 +920,28 @@ completed with 4,096 charged tokens and subsequent unprofiled groups began
 advancing. The other five corpora remain stopped and all 24 scientific units
 remain pending until their exact corpus dependency is independently accepted.
 
+That same day the balanced-regime seed-11 corpus exhausted its three guarded
+attempts without a scientific failure. Attempt 1 (`ujryg527`, started
+2026-07-21T05:34:46Z) lost its VM at the group-80 frozen profiler boundary
+with its last committed row at group 78 and 309,364 cumulative charged
+tokens. Attempt 2 (`lwjtk9dk`, started 2026-07-21T07:30:23Z) lost its VM
+during the group-100 frozen profiler with its last committed row at group 99
+and 393,714 cumulative charged tokens. Attempt 3 (`hge0xhav`, started
+2026-07-21T09:52:41Z) lost its VM at the identical point — group 99,
+393,714 charged tokens — confirming deterministic replay and implicating
+the long group-100 profiler burst beginning roughly 2h20m into each session
+as the common loss window. All three losses were provider-side session
+reclamation, not scientific outcomes; the corpus carries no partial
+checkpoint by frozen design, so each loss forces full regeneration. The
+supervisor recorded `failed_infrastructure` with the attempt budget
+exhausted, all Colab sessions are released, and no flagship process remains
+active. All six corpus jobs are now `failed_infrastructure` at their attempt
+caps and all 24 scientific units remain pending and fail-closed. Advancement
+awaits the user's decision among: a fresh guarded attempt budget as-is, a
+preregistered protocol amendment adding intermediate corpus persistence so
+regeneration resumes instead of restarting, or a pause until longer-lived
+accelerator capacity is available.
+
 ## Remaining empirical obligations
 
 These require accelerator time, an external environment/data source, or both.
@@ -934,7 +956,7 @@ They are deliberately not replaced with toy numbers.
 | E5 | Direct group-size and scaling confirmations | P01/P03 protocols and current reconstructed/direct provenance labels | Multi-seed token-matched direct G sweep including G=32 and matched cross-scale cells | GPU budget |
 | E6 | Length-bias external validity | P04 capped null-test protocol | Uncapped or long-horizon multi-seed mediation study | GPU budget and longer generation policy |
 | E7 | Fraud side-study external validity | P08 parked scope and honest synthetic/noisy-sensor analysis | Real, cross-institution or temporally held-out fraud data under approval | Data access, privacy/ethics approval |
-| E8 | Open-stack flagship conformance screening | Frozen 24-unit protocol, accepted A100 smoke, six corpus jobs, remote trainer/verifier, and go/kill evaluator | Six independently accepted immutable corpora, then all 24 paired scientific units and the preregistered screening verdict; confirmatory matrix remains forbidden until a go verdict | Capacity restored for one guarded slot; balanced seed-11 corpus is live under W&B `ujryg527`, while the other five corpora and all scientific units remain fail-closed pending independent acceptance |
+| E8 | Open-stack flagship conformance screening | Frozen 24-unit protocol, accepted A100 smoke, six corpus jobs, remote trainer/verifier, and go/kill evaluator | Six independently accepted immutable corpora, then all 24 paired scientific units and the preregistered screening verdict; confirmatory matrix remains forbidden until a go verdict | All six corpora `failed_infrastructure` at their three-attempt caps after provider-side VM reclamation (balanced seed-11 attempts `ujryg527`, `lwjtk9dk`, `hge0xhav` all lost ~2h20m into their sessions; the last two at the identical group-99 boundary, 393,714 charged tokens); all 24 scientific units remain fail-closed pending independent corpus acceptance; awaiting user decision on a fresh attempt budget, an intermediate-persistence protocol amendment, or a capacity pause |
 
 ## Remaining release and ecosystem obligations
 

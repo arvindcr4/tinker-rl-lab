@@ -545,3 +545,23 @@ locked until A100 assignment succeeds again.
   `results/audit.json` remains `COMPLETE`; R08 canonical source and PDF
   present; failure documentation committed as `98f3c994`. The corpus
   compute blocker is unchanged and still awaits the user's decision.
+- Evidence pass (2026-07-21T13:05Z), status/obligations doc sync. (a)
+  `OBLIGATIONS.md` was stale: its 2026-07-21 narrative ended at attempt 1
+  (`ujryg527`) and the E8 row still described that run as live. Appended
+  the attempt-2 (`lwjtk9dk`) and attempt-3 (`hge0xhav`) VM-loss outcomes
+  and refreshed the E8 row: all six corpora `failed_infrastructure` at
+  their three-attempt caps, all 24 scientific units fail-closed, awaiting
+  the user's decision. (b) `COLAB_EXECUTION_STATUS.md` had no flagship
+  entry; added an E8 bullet recording the three corpus attempts, the
+  identical group-99/393,714-token loss boundary for attempts 2 and 3,
+  the ~2h20m reclamation pattern, and the pending decision. (c) Verified
+  `zvf-program/flagship/preregistration.sha256` (`OK`) and re-read
+  `s1/results/implementation_freeze.json`: `S1_PASS`, fixture digest
+  `c35916cf…8ae9b`, 14 intended cases per stack, 36 controller cases;
+  native verdicts TRL 4/5 `MATERIAL_DIFFERENCE` (1 `NOT_TESTED`), verl
+  1/5 `MATERIAL_DIFFERENCE` (4 `NOT_TESTED`) — the central S1
+  cross-stack conformance finding, already frozen. (d) `PROGRAM_AUDIT.md`
+  (dated 2026-07-14) predates S1 completion; its R08 "objective-
+  differential tests" gate is now closed by the S1 receipts, noted here
+  for the pre-Done audit refresh rather than editing the dated audit
+  snapshot. The corpus compute blocker is unchanged.

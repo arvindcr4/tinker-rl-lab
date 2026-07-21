@@ -1259,6 +1259,23 @@ They do not enter `results/full` and cannot satisfy any frozen E1 arm.
   verification. `campaign-verification.json` and `audit.json` both report
   `COMPLETE`; DAPO `DISAPPEARS`, while GSPO, Dr.GRPO, and AERO are
   `INCONCLUSIVE`.
+- E8 flagship conformance screening is stopped at the infrastructure gate.
+  The balanced-regime seed-11 corpus exhausted its three guarded attempts on
+  2026-07-21 without any scientific unit running: attempt 1 (W&B `ujryg527`)
+  lost its VM at the group-80 frozen profiler boundary (last committed row
+  group 78, 309,364 cumulative charged tokens); attempt 2 (`lwjtk9dk`) lost
+  its VM during the group-100 frozen profiler (last committed row group 99,
+  393,714 charged tokens); attempt 3 (`hge0xhav`) lost its VM at the
+  identical point (group 99, 393,714 charged tokens), confirming
+  deterministic replay. Every loss occurred roughly 2h20m into the session,
+  consistent with provider-side runtime reclamation rather than credit
+  exhaustion. The frozen corpus design carries no partial checkpoint, so
+  each loss forces full regeneration. All six corpus jobs are
+  `failed_infrastructure` at their attempt caps; all 24 scientific units
+  remain pending and fail-closed; all Colab sessions are released and no
+  flagship process remains active. Advancement awaits the user's decision
+  among a fresh guarded attempt budget, a preregistered amendment adding
+  intermediate corpus persistence, or a capacity pause.
 - E2: 50 PPO/SAO jobs still require an LLM PPO stack, SWE-Bench agentic SAO
   environment, matched budgets, and W&B/HF provenance.
 - E3: 15 M-GRPO jobs still require planner/sub-agent training and a tool

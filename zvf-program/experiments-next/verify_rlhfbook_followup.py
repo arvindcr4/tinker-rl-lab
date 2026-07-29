@@ -19,6 +19,19 @@ DEFAULT_PROTOCOL = HERE / "rlhfbook_followup_preregistration.json"
 REPO_ROOT = HERE.parents[1]
 EXPECTED_BOOK_COMMIT = "3624df9ef62177c2c3d6d824f5c2bb740f31041f"
 EXPECTED_COURSE_COMMIT = "5dcc34e3b861da632371645fb05aebb12a40d23c"
+EXPECTED_BOOK_REPOSITORY = "https://github.com/natolambert/rlhf-book"
+EXPECTED_COURSE_REPOSITORY = (
+    "https://github.com/harvard-cs2824-s26/harvard-cs2824-s26.github.io"
+)
+EXPECTED_FROZEN_CAMPAIGN = "zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2"
+EXPECTED_ANSWER_CHECKS = {
+    "registered_strict_parser",
+    "independent_symbolic_or_numeric_verifier",
+}
+EXPECTED_FORMAT_PERTURBATIONS = {
+    "registered_template",
+    "semantically equivalent alternate answer template",
+}
 
 
 class FollowupContractError(RuntimeError):
@@ -45,6 +58,16 @@ def load_json(path: Path) -> Mapping[str, Any]:
     return payload
 
 
+def canonical_json_sha256(payload: Mapping[str, Any]) -> str:
+    encoded = json.dumps(
+        payload,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def _find_values(payload: Any, key: str) -> list[Any]:
     values: list[Any] = []
     if isinstance(payload, dict):
@@ -58,7 +81,7 @@ def _find_values(payload: Any, key: str) -> list[Any]:
     return values
 
 
-def verify_contract(
+def _verify_contract(
     payload: Mapping[str, Any],
     repo_root: Path,
     protocol_path: Path = DEFAULT_PROTOCOL,
@@ -70,7 +93,9 @@ def verify_contract(
     require(payload.get("status") == "proposed_not_authorized", "follow-up is not inert")
 
     book = payload["book_binding"]
+    require(isinstance(book, Mapping), "book binding is missing or malformed")
     require(book["url"] == "https://rlhfbook.com/", "book URL drift")
+    require(book["source_repository"] == EXPECTED_BOOK_REPOSITORY, "book repository drift")
     require(book["source_commit"] == EXPECTED_BOOK_COMMIT, "book commit drift")
     required_chapters = {
         "06-policy-gradients",
@@ -84,6 +109,10 @@ def verify_contract(
     course = payload.get("course_binding")
     require(isinstance(course, Mapping), "course binding is missing or malformed")
     require(course["url"] == "https://harvard-cs2824-s26.github.io/", "course URL drift")
+    require(
+        course["source_repository"] == EXPECTED_COURSE_REPOSITORY,
+        "course repository drift",
+    )
     require(course["source_commit"] == EXPECTED_COURSE_COMMIT, "course commit drift")
     required_materials = {
         "slides/lecture_15.pdf",
@@ -105,6 +134,12 @@ def verify_contract(
     )
 
     scope = payload["scope"]
+    require(isinstance(scope, Mapping), "scope is missing or malformed")
+    require(
+        isinstance(scope["objective"], str) and scope["objective"].strip(),
+        "scope objective is missing",
+    )
+    require(scope["frozen_campaign"] == EXPECTED_FROZEN_CAMPAIGN, "frozen campaign drift")
     immutable = set(scope["must_not_modify_or_relabel"])
     require(
         "zvf-program/flagship/pilot_preregistration.json" in immutable, "frozen protocol missing"
@@ -120,9 +155,11 @@ def verify_contract(
     require("off-policy replay" in scope["frozen_classification"], "r4-2 classification drift")
 
     observation = scope["live_checkout_observation"]
+    require(isinstance(observation, Mapping), "live checkout observation is malformed")
     objective_path = repo_root / observation["path"]
     require(objective_path.is_file(), "live objective source is missing")
     live_hash = sha256(objective_path)
+    require(observation["observed_sha256"] == live_hash, "recorded live objective hash drift")
     accepted_hash = observation["accepted_unit_source_sha256"]
     require(len(accepted_hash) == 64, "accepted objective hash is malformed")
 
@@ -135,6 +172,18 @@ def verify_contract(
     require(accepted_hash in recorded_hashes, "registered accepted objective hash is not evidenced")
 
     hypotheses = payload["hypotheses"]
+    require(
+        isinstance(hypotheses, list)
+        and all(
+            isinstance(item, Mapping)
+            and isinstance(item.get("id"), str)
+            and isinstance(item.get("claim"), str)
+            and item["claim"].strip()
+            and isinstance(item.get("falsified_if"), str)
+            for item in hypotheses
+        ),
+        "hypothesis is missing an id, claim, or falsifier",
+    )
     require(
         {item["id"] for item in hypotheses}
         == {
@@ -207,13 +256,33 @@ def verify_contract(
     }
     require(required_telemetry <= telemetry, "optimization or evaluation telemetry is incomplete")
 
+    conditions = payload["conditions"]
+    require(isinstance(conditions, Mapping), "conditions are missing or malformed")
+    require(
+        conditions
+        == {
+            "control": "registered_group_relative_control",
+            "baseline": "centered_reward_without_std_normalization",
+            "experimental": ["spectral_legendre", "entropic_givens"],
+            "placebo": "variance_matched_random_auxiliary_score",
+        },
+        "comparison conditions drift",
+    )
+
     evaluation = payload["evaluation_contract"]
+    require(isinstance(evaluation, Mapping), "evaluation contract is missing or malformed")
     require(evaluation["development_and_test_are_disjoint"] is True, "test leakage allowed")
     require(
         evaluation["proxy_metrics_are_not_quality_metrics"] is True, "proxy promoted to quality"
     )
-    require(len(evaluation["answer_checks"]) >= 2, "independent answer check missing")
-    require(len(evaluation["format_perturbations"]) >= 2, "format robustness check missing")
+    require(
+        set(evaluation["answer_checks"]) == EXPECTED_ANSWER_CHECKS,
+        "independent answer checks drift",
+    )
+    require(
+        set(evaluation["format_perturbations"]) == EXPECTED_FORMAT_PERTURBATIONS,
+        "format robustness checks drift",
+    )
 
     rules = payload.get("decision_rules")
     require(isinstance(rules, Mapping), "decision rules are missing or malformed")
@@ -227,6 +296,11 @@ def verify_contract(
         "does not establish global optimality" in theory_boundary,
         "small-gradient guardrail is missing",
     )
+    require(
+        "cannot support a learning" in rules["claim_boundary"],
+        "proxy-to-learning claim boundary drift",
+    )
+    require("Preserve negative results" in rules["stop"], "negative-result stop rule drift")
 
     authorization = payload["authorization"]
     require(
@@ -246,14 +320,31 @@ def verify_contract(
     require(sha256(review_zip) == expected_outer, "frozen review bundle outer digest mismatch")
 
     return {
-        "status": "POSTTRAINING_FOUNDATIONS_FOLLOWUP_CONTRACT_PASS",
-        "protocol_sha256": sha256(protocol_path),
+        "status": "POSTTRAINING_FOUNDATIONS_CONTRACT_LINT_PASS",
+        "verified_payload_sha256": canonical_json_sha256(payload),
+        "protocol_file_sha256": sha256(protocol_path),
         "live_objective_sha256": live_hash,
         "accepted_objective_sha256": accepted_hash,
         "live_checkout_matches_accepted_source": live_hash == accepted_hash,
         "frozen_review_bundle_sha256": expected_outer,
         "gpu_authorized": False,
+        "promotion_authorized": False,
     }
+
+
+def verify_contract(
+    payload: Mapping[str, Any],
+    repo_root: Path,
+    protocol_path: Path = DEFAULT_PROTOCOL,
+) -> dict[str, Any]:
+    try:
+        return _verify_contract(payload, repo_root, protocol_path)
+    except FollowupContractError:
+        raise
+    except (KeyError, TypeError, ValueError) as exc:
+        raise FollowupContractError(
+            f"protocol structure is missing or malformed: {type(exc).__name__}: {exc}"
+        ) from exc
 
 
 def deep_verify_review_bundle(repo_root: Path) -> None:

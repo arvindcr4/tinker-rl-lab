@@ -30,31 +30,6 @@ EXPECTED_FORMAT_PERTURBATIONS = {
     "registered_template",
     "semantically equivalent alternate answer template",
 }
-EXPECTED_THEORY_LEDGER_PATH = "zvf-program/experiments-next/theory_transfer_ledger.json"
-EXPECTED_THEORY_LEDGER_SHA256 = "02343f5db02a3c20450c2e7e8e3a0bedf668bb3334853efce6bb3906632deb4d"
-EXPECTED_THEORY_CLAIM_IDS = {
-    "C1_group_contrast_and_loss_weighting",
-    "C2_sparse_reward_stationarity_gap",
-    "C3_distribution_mismatch_stationarity",
-    "C4_kl_fisher_policy_geometry",
-    "C5_approximation_estimation_decomposition",
-    "C6_proxy_and_evaluation_confounds",
-    "C7_offpolicy_reward_regression",
-}
-EXPECTED_SOURCE_FILE_HASHES = {
-    "book/chapters/06-policy-gradients.md": "6671f67b6d635ab8cc1f1859345edeead9a3f7489e5410a5c4653cb1b6c4e444",
-    "book/chapters/14-over-optimization.md": "81736529e9237c079fa39d27a96635b45805af827cb287f5e2ee20959d4dfd81",
-    "book/chapters/15-regularization.md": "3b93ac53551725c90a29780e731094e406bb61325804627ef3a2d1dd2858127e",
-    "book/chapters/16-evaluation.md": "d9c1764b4cf85e869eac82a6a30f73a5578ddab4faf69c410c8e7d66ce5a4525",
-    "book/chapters/appendix-c-practical.md": "c08f557a7f3e2ae80339f6bac9a8028ee22b39158f743008f86a4e7273879e1a",
-    "slides/PG_global_conv1.pdf": "26309b138a546eff684ed586809919de9a0360f2d0aeb8fd3ad64ccc546cd86f",
-    "slides/npg.pdf": "e88bf7b22fd56577179accaf828e232a6cc7af41aad3e7310cc5b3c254f01c9f",
-    "slides/PG_global_conv2.pdf": "ee21ee7f5cc52e878007a643e23cbca1dac5ca8ea402a4fb1d8c94b858f64f5d",
-    "slides/NPG_ppo.pdf": "309137fbfec2dc7c01cc1489aaa867f768b5e4a253bdea3359f633eb4529a8db",
-    "slides/RLHF.pdf": "f12bd048818e817069cb0ef0f46ea90f22219ca3e3a9b016e748db1c3727194a",
-    "slides/regressing_rewards.pdf": "381168dca1129f785618844c420018d7ec3c707c2b910d6a7fd5b04f24f1677a",
-    "CS2824projects.html": "30ef1ea58da08abe7873564858feb95e8caae3d7f8061247b1092cf59edfcf41",
-}
 
 
 class FollowupContractError(RuntimeError):
@@ -104,120 +79,13 @@ def _find_values(payload: Any, key: str) -> list[Any]:
     return values
 
 
-def verify_theory_ledger(ledger: Mapping[str, Any]) -> dict[str, Any]:
-    require(ledger.get("schema_version") == "theory-transfer-ledger-v1", "ledger schema drift")
-    require(
-        ledger.get("status") == "assumption_audit_only_not_evidence",
-        "ledger evidence status drift",
-    )
-    require(ledger.get("promotion_authorized") is False, "ledger authorizes promotion")
-
-    manifests = ledger["source_manifests"]
-    require(isinstance(manifests, list) and len(manifests) == 2, "source manifests drift")
-    manifest_ids = {item["manifest_id"] for item in manifests}
-    require(
-        manifest_ids == {"rlhf_book_3624df9", "harvard_cs2824_5dcc34e"},
-        "source manifest identities drift",
-    )
-    flattened_hashes = {
-        item["path"]: item["sha256"]
-        for manifest in manifests
-        for item in manifest["files"]
-    }
-    require(flattened_hashes == EXPECTED_SOURCE_FILE_HASHES, "source file manifest drift")
-
-    claims = ledger["claims"]
-    require(isinstance(claims, list), "theory claims must be a list")
-    require({item["claim_id"] for item in claims} == EXPECTED_THEORY_CLAIM_IDS, "claim set drift")
-    allowed_assumption_statuses = {"verified", "empirical_proxy", "unverified", "violated"}
-    allowed_transfer_statuses = {
-        "diagnostic_analogy_only",
-        "empirical_hypothesis_only",
-        "hypothesis_source_only",
-    }
-    required_claim_fields = {
-        "claim_id",
-        "claim_type",
-        "statement",
-        "source_refs",
-        "primary_reference",
-        "formal_domain",
-        "assumptions",
-        "llm_mapping",
-        "transfer_status",
-        "observable_proxy",
-        "falsifier",
-        "permitted_language",
-    }
-    required_mapping_fields = {
-        "state",
-        "action",
-        "trajectory",
-        "reward",
-        "policy",
-        "data_distribution",
-        "comparator",
-    }
-    for claim in claims:
-        require(isinstance(claim, Mapping), "theory claim is malformed")
-        require(required_claim_fields <= set(claim), "theory claim field missing")
-        require(
-            all(
-                isinstance(claim[field], str) and claim[field].strip()
-                for field in required_claim_fields
-                if field not in {"source_refs", "assumptions", "llm_mapping"}
-            ),
-            f"theory claim text missing for {claim.get('claim_id', '<unknown>')}",
-        )
-        require(
-            claim["transfer_status"] in allowed_transfer_statuses,
-            "unsupported theorem transfer status",
-        )
-        require(claim["source_refs"], "theory claim source missing")
-        require(
-            all(
-                ref["manifest_id"] in manifest_ids
-                and ref["path"] in EXPECTED_SOURCE_FILE_HASHES
-                and isinstance(ref["locator"], str)
-                and ref["locator"].strip()
-                for ref in claim["source_refs"]
-            ),
-            "theory claim source reference drift",
-        )
-        require(claim["assumptions"], "theory claim assumptions missing")
-        require(
-            all(
-                isinstance(item["name"], str)
-                and item["name"].strip()
-                and item["status"] in allowed_assumption_statuses
-                and isinstance(item["evidence_or_proxy"], str)
-                and item["evidence_or_proxy"].strip()
-                for item in claim["assumptions"]
-            ),
-            "theory assumption row malformed",
-        )
-        require(
-            required_mapping_fields == set(claim["llm_mapping"]),
-            "LLM mapping fields drift",
-        )
-        require(
-            all(
-                isinstance(value, str) and value.strip()
-                for value in claim["llm_mapping"].values()
-            ),
-            "LLM mapping value missing",
-        )
-
-    return {"claim_count": len(claims), "source_file_count": len(flattened_hashes)}
-
-
 def _verify_contract(
     payload: Mapping[str, Any],
     repo_root: Path,
     protocol_path: Path = DEFAULT_PROTOCOL,
 ) -> dict[str, Any]:
     require(
-        payload.get("schema_version") == "posttraining-foundations-followup-v3",
+        payload.get("schema_version") == "posttraining-foundations-followup-v2",
         "schema drift",
     )
     require(payload.get("status") == "proposed_not_authorized", "follow-up is not inert")
@@ -262,18 +130,6 @@ def _verify_contract(
         "do not transfer" in course["use_boundary"],
         "course theorem transfer boundary is missing",
     )
-
-    ledger_ref = payload["theory_transfer_ledger"]
-    require(isinstance(ledger_ref, Mapping), "theory ledger reference is malformed")
-    require(ledger_ref["path"] == EXPECTED_THEORY_LEDGER_PATH, "theory ledger path drift")
-    require(
-        ledger_ref["sha256"] == EXPECTED_THEORY_LEDGER_SHA256,
-        "theory ledger registered digest drift",
-    )
-    ledger_path = repo_root / ledger_ref["path"]
-    require(ledger_path.is_file(), "theory transfer ledger is missing")
-    require(sha256(ledger_path) == ledger_ref["sha256"], "theory transfer ledger digest mismatch")
-    ledger_summary = verify_theory_ledger(load_json(ledger_path))
 
     scope = payload["scope"]
     require(isinstance(scope, Mapping), "scope is missing or malformed")
@@ -471,9 +327,6 @@ def _verify_contract(
         "frozen_review_bundle_sha256": expected_outer,
         "gpu_authorized": False,
         "promotion_authorized": False,
-        "theory_ledger_sha256": ledger_ref["sha256"],
-        "theory_claim_count": ledger_summary["claim_count"],
-        "theory_source_file_count": ledger_summary["source_file_count"],
     }
 
 

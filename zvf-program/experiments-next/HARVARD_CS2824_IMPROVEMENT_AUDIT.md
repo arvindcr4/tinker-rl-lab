@@ -15,7 +15,7 @@ The course changes the next experiment from a signal-injection study into an ass
 4. Does the update satisfy an empirical policy-space trust region, beyond merely using a clipped surrogate?
 5. Is the remaining effect larger than optimization, estimation, approximation, and verifier error?
 
-These obligations are encoded in [`rlhfbook_followup_preregistration.json`](rlhfbook_followup_preregistration.json). They do not authorize a run.
+These obligations are encoded in [`rlhfbook_followup_preregistration.json`](rlhfbook_followup_preregistration.json), [`theory_transfer_ledger.json`](theory_transfer_ledger.json), and [`offline_falsification_packet.json`](offline_falsification_packet.json). They do not authorize a run.
 
 ## Source boundary
 
@@ -68,20 +68,20 @@ The exact MDP occupancy coefficient is generally unavailable for an LLM. The reg
 
 ### Distribution shift and trust region
 
-Each training row must bind `sampler_policy_version` and `data_policy_lag_steps`. Report policy-ratio quantiles, maximum importance weight, effective sample size, approximate KL to the old/data policy, KL to the initial reference, and `fisher_quadratic_step`.
+Each training row must bind `sampler_policy_version` and `data_policy_lag_steps`. Report policy-ratio quantiles, maximum importance weight, effective sample size, approximate KL to the old/data policy, KL to the initial reference, and `fisher_quadratic_step`. Match prompt schedules, initial checkpoints, task mixtures, and charged-token budgets across arms; retain arm-specific completion hashes because genuinely on-policy completions should diverge with the policies.
 
 The run amendment must set numerical stop thresholds before execution. Clipping is retained as an algorithm detail, not treated as evidence that the actual policy update stayed inside a trust region. A fixed-replay result remains off-policy replay evidence and cannot be relabeled as on-policy learning.
 
 ### Error budget
 
-The final table must separate:
+The final table must separate, without directly comparing or summing quantities that have incompatible estimands or units:
 
 - optimization error: registered loss/gradient/convergence diagnostics at the chosen compute budget;
 - estimation error: paired-seed and sampled-evaluation uncertainty;
 - approximation error: held-out residual or misspecification test for the auxiliary/regression model class;
 - verifier error: independent-checker disagreement and audited false-positive/false-negative rates.
 
-If the claimed effect is not larger than each unresolved component, the outcome remains inconclusive.
+Each component receives its own registered diagnostic or uncertainty statement. A common-unit bound may be reported only if a derivation maps every component to that estimand; otherwise the components remain a structured limitation analysis.
 
 ### Comparator discipline
 
@@ -104,4 +104,4 @@ python3 zvf-program/experiments-next/verify_rlhfbook_followup.py
 python3 -m pytest -q tests/test_rlhfbook_followup.py
 ```
 
-The verifier pins both web resources, enforces the foundations stage and new diagnostics, verifies the frozen review-bundle digest, and reports the live-versus-accepted objective hash distinction. It performs no training and makes no external changes.
+The verifier pins both web resources, enforces the theory ledger and offline packet, verifies the frozen review-bundle digest, and reports the live-versus-accepted objective hash distinction. Its success status is a contract-lint pass, not a stage result or promotion authorization. It performs no training and makes no external changes.

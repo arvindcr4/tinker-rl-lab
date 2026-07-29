@@ -1,0 +1,138 @@
+{
+  "schema_version": "offline-falsification-packet-v1",
+  "status": "not_run",
+  "scope": "offline_s0_s2_only",
+  "gpu_authorized": false,
+  "external_run_authorized": false,
+  "promotion_authorized": false,
+  "theory_claim_ids": [
+    "C1_group_contrast_and_loss_weighting",
+    "C2_sparse_reward_stationarity_gap",
+    "C3_distribution_mismatch_stationarity",
+    "C5_approximation_estimation_decomposition",
+    "C6_proxy_and_evaluation_confounds"
+  ],
+  "label_contract": {
+    "unit": "completion",
+    "registered_reward_name": "R",
+    "independent_target_name": "Y_ind",
+    "independence_requirement": "Y_ind is produced by a checker that is not used to optimize the policy or construct the auxiliary score.",
+    "blinding": "The checker receives completion text and task metadata but not arm, auxiliary score, terminal reward, seed, or checkpoint selection status.",
+    "adjudication": "Disagreements between the registered parser and independent checker are adjudicated on a preregistered stratified sample by a blinded third procedure; raw and adjudicated labels are both retained.",
+    "one_class_rule": "If Y_ind has fewer than two classes in any required terminal-reward stratum on the untouched test split, that stratum is NOT_IDENTIFIABLE and cannot pass. It is never imputed or silently pooled away."
+  },
+  "data_contract": {
+    "cluster_unit": "prompt_id",
+    "split_method": "hash-partition prompt_id into development and untouched test before fitting any calibration model",
+    "development_fraction": 0.7,
+    "untouched_test_fraction": 0.3,
+    "cross_fit_folds_within_development": 5,
+    "minimum_groups_per_terminal_reward_stratum": 2000,
+    "required_terminal_reward_strata": [
+      "all_correct_R",
+      "all_wrong_R"
+    ],
+    "required_hashes_before_analysis": [
+      "prompt_manifest_sha256",
+      "completion_manifest_sha256",
+      "registered_reward_sha256",
+      "independent_checker_sha256",
+      "independent_label_manifest_sha256",
+      "split_manifest_sha256",
+      "auxiliary_score_implementation_sha256"
+    ]
+  },
+  "primary_analysis": {
+    "estimand": "For each auxiliary arm, prompt-clustered untouched-test mean log-loss reduction in nats per completion from adding the cross-fitted auxiliary score to the registered control model.",
+    "control_model_features": [
+      "completion_length",
+      "token_entropy",
+      "task",
+      "model_scale",
+      "terminal_reward_stratum",
+      "registered_interactions"
+    ],
+    "candidate_model_addition": "one preregistered standardized auxiliary score and its terminal-reward-stratum interaction",
+    "placebo": "variance-matched random auxiliary score generated independently inside each development fold with seed 20260729",
+    "minimum_meaningful_log_loss_reduction_nats_per_completion": 0.01,
+    "bootstrap": {
+      "unit": "prompt_id",
+      "replicates": 10000,
+      "seed": 20260729,
+      "familywise_confidence_level": 0.95,
+      "armwise_confidence_level": 0.975,
+      "multiplicity_rule": "Bonferroni across the two confirmatory auxiliary arms"
+    },
+    "arm_pass_rule": "Both-class support must hold in every required stratum; the armwise lower confidence bound for log-loss reduction must exceed 0.01 nats per completion; and the arm must beat its variance-matched placebo under the same bound.",
+    "secondary_metrics": [
+      "stratum-specific AUC only when Y_ind has both classes",
+      "calibration slope and intercept",
+      "Brier-score reduction",
+      "parser-checker disagreement rate"
+    ]
+  },
+  "power_gate": {
+    "target_power": 0.8,
+    "familywise_alpha": 0.05,
+    "target_effect_nats_per_completion": 0.01,
+    "variance_source": "blinded development-only pilot with prompt-cluster resampling",
+    "required_output": "power_receipt.json containing the estimated intracluster correlation, effective prompt count, required prompt count, and achieved power",
+    "decision_rule": "If achieved power is below 0.8 at the frozen feasible sample budget, S2 is NOT_FEASIBLE and training remains blocked."
+  },
+  "stage_receipts": [
+    {
+      "stage_id": "S0_isolation",
+      "status": "not_run",
+      "path": "zvf-program/experiments-next/receipts/S0_isolation.json",
+      "required_fields": [
+        "protocol_sha256",
+        "theory_ledger_sha256",
+        "source_namespace",
+        "artifact_root",
+        "run_identity_prefix",
+        "frozen_r4_2_untouched"
+      ]
+    },
+    {
+      "stage_id": "S1_foundations_mapping",
+      "status": "not_run",
+      "path": "zvf-program/experiments-next/receipts/S1_foundations_mapping.json",
+      "required_fields": [
+        "theory_claim_ids",
+        "source_file_hashes",
+        "assumption_statuses",
+        "unverified_assumptions",
+        "permitted_claim_language"
+      ]
+    },
+    {
+      "stage_id": "S2_offline_alignment",
+      "status": "not_run",
+      "path": "zvf-program/experiments-next/receipts/S2_offline_alignment.json",
+      "required_fields": [
+        "input_hashes",
+        "class_counts_by_stratum",
+        "cross_fit_receipt",
+        "power_receipt",
+        "bootstrap_receipt",
+        "placebo_receipt",
+        "arm_decisions",
+        "overall_decision"
+      ]
+    }
+  ],
+  "training_amendment_boundary": {
+    "status": "required_before_s3_s5",
+    "must_specify": [
+      "numerical_empirical_KL_stop",
+      "numerical_effective_sample_size_stop",
+      "numerical_policy_ratio_tail_stop",
+      "numerical_fisher_quadratic_step_stop",
+      "maximum_sampler_policy_lag_steps",
+      "learning_curve_AUC_horizon_and_grid",
+      "paired_seed_power_analysis",
+      "checkpoint_selection_rule"
+    ],
+    "matched_input_rule": "Use byte-identical prompt schedules, initial checkpoint hashes, task mixtures, and charged-token budgets across arms. Fresh on-policy arms must retain arm-specific completion-manifest hashes; realized completions are not required or expected to be byte-identical after policies diverge."
+  }
+}

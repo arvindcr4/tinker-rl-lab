@@ -39,6 +39,10 @@
     "path": "zvf-program/experiments-next/theory_transfer_ledger.json",
     "sha256": "02343f5db02a3c20450c2e7e8e3a0bedf668bb3334853efce6bb3906632deb4d"
   },
+  "offline_falsification_packet": {
+    "path": "zvf-program/experiments-next/offline_falsification_packet.json",
+    "sha256": "fda64baca5c4971ee0978499df322963afa687c6fdf5908324245ef27857bd31"
+  },
   "scope": {
     "objective": "Determine whether spectral or entropic auxiliary signals add calibrated information beyond terminal reward, increase independently verified rewarding-trajectory coverage, and improve held-out reasoning under matched cost, without proxy exploitation, unsupported theorem transfer, length artifacts, or policy-distribution confounds.",
     "frozen_campaign": "zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2",
@@ -59,8 +63,8 @@
   "hypotheses": [
     {
       "id": "H1_alignment",
-      "claim": "Within all-correct and all-wrong terminal-reward strata, the auxiliary score predicts independent correctness labels after controlling for completion length, token entropy, task, and model scale.",
-      "falsified_if": "The stratified bootstrap AUC interval includes 0.5, the effect disappears under controls, or a variance-matched placebo performs equivalently."
+      "claim": "The auxiliary score produces cross-fitted untouched-test log-loss reduction for the independent completion-level target Y_ind beyond length, token entropy, task, model scale, terminal-reward stratum, and a variance-matched placebo.",
+      "falsified_if": "Any required stratum has one-class Y_ind and is therefore NOT_IDENTIFIABLE, the prompt-clustered armwise lower confidence bound does not exceed 0.01 nats per completion, or the variance-matched placebo performs equivalently."
     },
     {
       "id": "H2_learning",
@@ -89,8 +93,8 @@
     },
     {
       "id": "H7_error_attribution",
-      "claim": "The reported gain remains after separately bounding optimization, statistical-estimation, function-approximation, and answer-verification error.",
-      "falsified_if": "The effect is no larger than any unresolved error component or changes sign under the independent verifier."
+      "claim": "Optimization diagnostics, statistical uncertainty, function-class residuals, and answer-verification disagreement are reported separately against their own registered estimands and units.",
+      "falsified_if": "Incompatible error proxies are combined into a common-unit bound without a derivation, a required component is omitted, or the quality effect changes sign under the independent verifier."
     }
   ],
   "stages": [
@@ -107,16 +111,16 @@
     {
       "id": "S2_offline_alignment",
       "gate": "Test auxiliary-score calibration on independently labeled homogeneous groups before any training allocation.",
-      "evidence": "At least 2000 all-correct and 2000 all-wrong groups per task/model stratum, stratified bootstrap intervals, length/entropy controls, and a variance-matched placebo."
+      "evidence": "A verified S2 receipt under offline_falsification_packet.json: completion-level Y_ind distinct from R, prompt-clustered cross-fitting and 10000-replicate bootstrap, at least 2000 groups per required terminal-reward stratum, 0.01-nat minimum effect, power at least 0.8, multiplicity control, variance-matched placebo, and NOT_IDENTIFIABLE for any one-class stratum."
     },
     {
       "id": "S3_positive_control_feasibility",
       "gate": "Construct a genuinely variable-length corpus without weakening the failed r4-2 gate.",
-      "evidence": "Selected-row length CV at least 0.35, completion cap-hit rate at most 0.05, EOS and parse rates reported, and byte-identical realized corpora across arms."
+      "evidence": "Selected-row length CV at least 0.35, completion cap-hit rate at most 0.05, EOS and parse rates reported, byte-identical prompt schedules and initial checkpoint hashes across arms, and arm-specific completion-manifest hashes for fresh on-policy collection."
     },
     {
       "id": "S4_matched_training",
-      "gate": "Run fresh on-policy training only after S1, S2, and S3 pass; identify the actual sampler policy and constrain policy-space drift rather than relying on clipping alone.",
+      "gate": "Run fresh on-policy training only after S1, S2, and S3 pass and a separate training amendment fixes every numerical drift, lag, analysis-horizon, seed-power, and checkpoint-selection threshold; identify the actual sampler policy and constrain policy-space drift rather than relying on clipping alone.",
       "evidence": "At least five paired seeds for the group-relative control, a centered-reward baseline, spectral arm, entropic arm, and variance-matched placebo at no more than 0.01 relative charged-token or FLOP imbalance; empirical KL stop rule, sampler-policy version and lag, policy-ratio tails, effective sample size, and Fisher-quadratic step diagnostic."
     },
     {
@@ -195,6 +199,7 @@
       "S5_robust_evaluation"
     ],
     "allocation": "No GPU training is authorized by this file. Each stage must pass before the next allocation is requested.",
+    "promotion": "A contract-lint pass is not a stage pass or evidence-promotion decision. Promotion remains false until hashed stage receipts pass under a separately authorized amendment.",
     "claim_boundary": "Synthetic nonzero advantages, nonzero gradients, timing estimates, or dashboard traces cannot support a learning, correctness, or reward-recovery claim.",
     "theory_boundary": "Every theorem-derived statement must name its formal domain and assumptions. Tabular or function-approximation results may be used as analogies or diagnostic motivation until the LLM mapping and assumptions are verified. Small gradient, low loss, or a clipped surrogate alone does not establish global optimality or a trust region.",
     "stop": "Stop on an unmapped theoretical assumption, failed calibration, absent rewarding-trajectory coverage, infeasible variable-length control, parser-specific gains, proxy/quality divergence, excessive drift, clip saturation, effective-sample-size collapse, cap exploitation, provenance mismatch, or repeated validation failure. Preserve negative results."

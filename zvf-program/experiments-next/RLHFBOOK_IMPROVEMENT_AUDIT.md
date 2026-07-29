@@ -54,7 +54,7 @@ Before an optimization claim enters the experiment, bind it to an exact result a
 
 ### 1. Offline alignment gate
 
-This is the cheapest decisive test for spectral/entropic work. Build independently labeled all-correct and all-wrong groups, then test whether the auxiliary score adds out-of-sample information after controlling for length, token entropy, task, and model scale. Require a stratified bootstrap AUC interval excluding `0.5` and beat a variance-matched random auxiliary score. Failure is a useful negative result and blocks training.
+This is the cheapest decisive test for spectral/entropic work. Build independently labeled all-correct and all-wrong terminal-reward groups, then test whether the auxiliary score adds out-of-sample information after controlling for length, token entropy, task, model scale, and reward stratum. The primary estimand is prompt-clustered, cross-fitted untouched-test log-loss reduction, with a `0.01`-nat minimum effect and a variance-matched placebo. AUC is secondary and is computed only where the independent target has both classes; a one-class required stratum is `NOT_IDENTIFIABLE`, never a pass. The exact split, bootstrap, multiplicity, power, and receipt rules are frozen in [`offline_falsification_packet.json`](offline_falsification_packet.json). Failure is a useful negative result and blocks training.
 
 The current synthetic harness cannot pass this gate because it has no independent correctness label, no held-out model behavior, and no placebo.
 

@@ -32,6 +32,8 @@ EXPECTED_FORMAT_PERTURBATIONS = {
 }
 EXPECTED_THEORY_LEDGER_PATH = "zvf-program/experiments-next/theory_transfer_ledger.json"
 EXPECTED_THEORY_LEDGER_SHA256 = "02343f5db02a3c20450c2e7e8e3a0bedf668bb3334853efce6bb3906632deb4d"
+EXPECTED_OFFLINE_PACKET_PATH = "zvf-program/experiments-next/offline_falsification_packet.json"
+EXPECTED_OFFLINE_PACKET_SHA256 = "fda64baca5c4971ee0978499df322963afa687c6fdf5908324245ef27857bd31"
 EXPECTED_THEORY_CLAIM_IDS = {
     "C1_group_contrast_and_loss_weighting",
     "C2_sparse_reward_stationarity_gap",
@@ -208,6 +210,122 @@ def verify_theory_ledger(ledger: Mapping[str, Any]) -> dict[str, Any]:
     return {"claim_count": len(claims), "source_file_count": len(flattened_hashes)}
 
 
+def verify_offline_packet(packet: Mapping[str, Any]) -> dict[str, Any]:
+    require(
+        packet.get("schema_version") == "offline-falsification-packet-v1",
+        "offline packet schema drift",
+    )
+    require(packet.get("status") == "not_run", "offline packet is not prospective")
+    require(packet.get("scope") == "offline_s0_s2_only", "offline packet scope drift")
+    require(packet.get("gpu_authorized") is False, "offline packet authorizes GPU execution")
+    require(
+        packet.get("external_run_authorized") is False,
+        "offline packet authorizes external execution",
+    )
+    require(packet.get("promotion_authorized") is False, "offline packet authorizes promotion")
+    require(
+        set(packet["theory_claim_ids"]) <= EXPECTED_THEORY_CLAIM_IDS,
+        "offline packet references an unknown theory claim",
+    )
+
+    labels = packet["label_contract"]
+    require(labels["unit"] == "completion", "independent label unit drift")
+    require(
+        labels["registered_reward_name"] == "R" and labels["independent_target_name"] == "Y_ind",
+        "registered reward and independent target drift",
+    )
+    require(
+        "not used to optimize" in labels["independence_requirement"], "label independence drift"
+    )
+    require("not arm" in labels["blinding"], "label blinding drift")
+    require(
+        "NOT_IDENTIFIABLE" in labels["one_class_rule"] and "never" in labels["one_class_rule"],
+        "one-class non-identifiability rule drift",
+    )
+
+    data = packet["data_contract"]
+    require(data["cluster_unit"] == "prompt_id", "cluster unit drift")
+    require(
+        data["development_fraction"] + data["untouched_test_fraction"] == 1.0,
+        "offline split fractions drift",
+    )
+    require(data["cross_fit_folds_within_development"] == 5, "cross-fit fold count drift")
+    require(
+        data["minimum_groups_per_terminal_reward_stratum"] == 2000,
+        "offline minimum group count drift",
+    )
+    require(
+        set(data["required_terminal_reward_strata"]) == {"all_correct_R", "all_wrong_R"},
+        "terminal-reward strata drift",
+    )
+    required_hashes = {
+        "prompt_manifest_sha256",
+        "completion_manifest_sha256",
+        "registered_reward_sha256",
+        "independent_checker_sha256",
+        "independent_label_manifest_sha256",
+        "split_manifest_sha256",
+        "auxiliary_score_implementation_sha256",
+    }
+    require(
+        set(data["required_hashes_before_analysis"]) == required_hashes,
+        "offline input hash contract drift",
+    )
+
+    analysis = packet["primary_analysis"]
+    require(
+        analysis["minimum_meaningful_log_loss_reduction_nats_per_completion"] == 0.01,
+        "minimum meaningful effect drift",
+    )
+    bootstrap = analysis["bootstrap"]
+    require(bootstrap["unit"] == "prompt_id", "bootstrap unit drift")
+    require(bootstrap["replicates"] == 10000, "bootstrap replicate count drift")
+    require(bootstrap["seed"] == 20260729, "bootstrap seed drift")
+    require(bootstrap["familywise_confidence_level"] == 0.95, "familywise level drift")
+    require(bootstrap["armwise_confidence_level"] == 0.975, "armwise level drift")
+    require("Bonferroni" in bootstrap["multiplicity_rule"], "multiplicity rule drift")
+    require(
+        "NOT_IDENTIFIABLE" not in analysis["arm_pass_rule"]
+        and "Both-class support" in analysis["arm_pass_rule"],
+        "arm pass rule permits non-identifiable strata",
+    )
+
+    power = packet["power_gate"]
+    require(power["target_power"] == 0.8, "power target drift")
+    require(power["familywise_alpha"] == 0.05, "power alpha drift")
+    require(power["target_effect_nats_per_completion"] == 0.01, "power effect drift")
+    require("NOT_FEASIBLE" in power["decision_rule"], "power infeasibility rule drift")
+
+    receipts = packet["stage_receipts"]
+    require(
+        [item["stage_id"] for item in receipts]
+        == [
+            "S0_isolation",
+            "S1_foundations_mapping",
+            "S2_offline_alignment",
+        ],
+        "offline receipt stage order drift",
+    )
+    require(all(item["status"] == "not_run" for item in receipts), "stage result fabricated")
+    require(
+        all(item["required_fields"] and item["path"].endswith(".json") for item in receipts),
+        "stage receipt schema missing",
+    )
+
+    amendment = packet["training_amendment_boundary"]
+    require(
+        amendment["status"] == "required_before_s3_s5",
+        "training amendment boundary drift",
+    )
+    require(len(amendment["must_specify"]) == 8, "training amendment threshold set drift")
+    require(
+        "byte-identical prompt schedules" in amendment["matched_input_rule"]
+        and "arm-specific completion-manifest hashes" in amendment["matched_input_rule"],
+        "on-policy matched-input rule drift",
+    )
+    return {"status": packet["status"], "stage_count": len(receipts)}
+
+
 def _verify_contract(
     payload: Mapping[str, Any],
     repo_root: Path,
@@ -271,6 +389,18 @@ def _verify_contract(
     require(ledger_path.is_file(), "theory transfer ledger is missing")
     require(sha256(ledger_path) == ledger_ref["sha256"], "theory transfer ledger digest mismatch")
     ledger_summary = verify_theory_ledger(load_json(ledger_path))
+
+    packet_ref = payload["offline_falsification_packet"]
+    require(isinstance(packet_ref, Mapping), "offline packet reference is malformed")
+    require(packet_ref["path"] == EXPECTED_OFFLINE_PACKET_PATH, "offline packet path drift")
+    require(
+        packet_ref["sha256"] == EXPECTED_OFFLINE_PACKET_SHA256,
+        "offline packet registered digest drift",
+    )
+    packet_path = repo_root / packet_ref["path"]
+    require(packet_path.is_file(), "offline falsification packet is missing")
+    require(sha256(packet_path) == packet_ref["sha256"], "offline packet digest mismatch")
+    packet_summary = verify_offline_packet(load_json(packet_path))
 
     scope = payload["scope"]
     require(isinstance(scope, Mapping), "scope is missing or malformed")
@@ -471,6 +601,9 @@ def _verify_contract(
         "theory_ledger_sha256": ledger_ref["sha256"],
         "theory_claim_count": ledger_summary["claim_count"],
         "theory_source_file_count": ledger_summary["source_file_count"],
+        "offline_packet_sha256": packet_ref["sha256"],
+        "offline_packet_status": packet_summary["status"],
+        "offline_stage_count": packet_summary["stage_count"],
     }
 
 

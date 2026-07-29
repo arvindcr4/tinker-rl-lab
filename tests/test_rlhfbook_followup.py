@@ -12,6 +12,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 VERIFIER_PATH = REPO_ROOT / "zvf-program/experiments-next/verify_rlhfbook_followup.py"
 PROTOCOL_PATH = REPO_ROOT / "zvf-program/experiments-next/rlhfbook_followup_preregistration.json"
 THEORY_LEDGER_PATH = REPO_ROOT / "zvf-program/experiments-next/theory_transfer_ledger.json"
+OFFLINE_PACKET_PATH = REPO_ROOT / "zvf-program/experiments-next/offline_falsification_packet.json"
 
 
 def load_verifier():
@@ -33,6 +34,8 @@ def test_followup_contract_is_inert_and_evidence_bounded() -> None:
     assert result["verified_payload_sha256"] == verifier.canonical_json_sha256(payload)
     assert result["theory_claim_count"] == 7
     assert result["theory_source_file_count"] == 12
+    assert result["offline_packet_status"] == "not_run"
+    assert result["offline_stage_count"] == 3
     assert isinstance(result["live_checkout_matches_accepted_source"], bool)
     assert result["live_checkout_matches_accepted_source"] is (
         result["live_objective_sha256"] == result["accepted_objective_sha256"]
@@ -147,3 +150,41 @@ def test_theory_ledger_source_manifest_is_exact() -> None:
 
     with pytest.raises(verifier.FollowupContractError):
         verifier.verify_theory_ledger(candidate)
+
+
+def test_offline_packet_is_decision_complete_but_inert() -> None:
+    verifier = load_verifier()
+    packet = json.loads(OFFLINE_PACKET_PATH.read_text(encoding="utf-8"))
+
+    assert verifier.verify_offline_packet(packet) == {"status": "not_run", "stage_count": 3}
+    assert (
+        packet["label_contract"]["registered_reward_name"]
+        != packet["label_contract"]["independent_target_name"]
+    )
+    assert packet["training_amendment_boundary"]["status"] == "required_before_s3_s5"
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda packet: packet.__setitem__("status", "passed"),
+        lambda packet: packet["label_contract"].__setitem__(
+            "one_class_rule", "Pool one-class strata into the aggregate."
+        ),
+        lambda packet: packet["primary_analysis"].__setitem__(
+            "minimum_meaningful_log_loss_reduction_nats_per_completion", 0.0
+        ),
+        lambda packet: packet["stage_receipts"][2].__setitem__("status", "passed"),
+        lambda packet: packet["training_amendment_boundary"].__setitem__(
+            "matched_input_rule", "Require byte-identical realized completions."
+        ),
+    ],
+)
+def test_offline_packet_rejects_undefined_or_fabricated_decisions(mutation) -> None:
+    verifier = load_verifier()
+    packet = json.loads(OFFLINE_PACKET_PATH.read_text(encoding="utf-8"))
+    candidate = copy.deepcopy(packet)
+    mutation(candidate)
+
+    with pytest.raises(verifier.FollowupContractError):
+        verifier.verify_offline_packet(candidate)

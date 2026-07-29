@@ -1,0 +1,8 @@
+{
+  "job_id": "preflight__a100_stack_smoke",
+  "log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume/logs/preflight__a100_stack_smoke.log",
+  "protocol_sha256": "ee126c9e908a7ea5d9f758752f98a006db014a6933e9cd194176562d2f571c70",
+  "source_archive_sha256": "b33cfeb727223a0a42b2535cb0384b6dbe058514978b81addb722e8d9a832aeb",
+  "source_bindings_sha256": "57daa0d1bdcad391747f2bb5f6fda59e3bb4ae57d02a30c6231f2c102b6097ef",
+  "status": "completed"
+}

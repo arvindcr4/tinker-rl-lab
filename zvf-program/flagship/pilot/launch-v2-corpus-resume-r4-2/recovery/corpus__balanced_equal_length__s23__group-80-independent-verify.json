@@ -1,0 +1,77 @@
+{
+  "status": "independently_verified",
+  "job_id": "corpus__balanced_equal_length__s23",
+  "schema_version": "flagship-pilot-corpus-checkpoint-independent-verify-v1",
+  "repo": "arvindcr4/tinker-rl-lab-flagship-pilot-corpus-balanced_equal_length-s23-04d20f71-10e481a8",
+  "private": true,
+  "hf_commit": "a06e8cdd56974b8a4d8e201603cfee4891fb1fda",
+  "repo_info_sha": "a06e8cdd56974b8a4d8e201603cfee4891fb1fda",
+  "completed_groups": 80,
+  "fingerprint": "bd28125f67d244f9b939cf935508f25c38896cf27620be8809cad0a6817efaa9",
+  "charged_generated_tokens": 320513,
+  "resume_count": 2,
+  "protocol_sha256": "04d20f712f652f80754fa4c8c0a3f48d4d2f1c5d716b3981746322c938b21970",
+  "accelerator": "NVIDIA A100-SXM4-40GB",
+  "runtime_versions": {
+    "accelerate": "1.13.0",
+    "datasets": "4.8.4",
+    "huggingface-hub": "1.11.0",
+    "numpy": "2.2.6",
+    "peft": "0.19.1",
+    "python": "3.12.13",
+    "torch": "2.7.1",
+    "transformers": "5.5.4",
+    "trl": "1.2.0",
+    "wandb": "0.21.0"
+  },
+  "attempts": [
+    {
+      "completed_through": 20,
+      "run_id": "ge121gt6",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/ge121gt6",
+      "start_group": 0
+    },
+    {
+      "completed_through": 60,
+      "run_id": "ncpafe25",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/ncpafe25",
+      "start_group": 20
+    },
+    {
+      "completed_through": 80,
+      "run_id": "k1uazlrj",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/k1uazlrj",
+      "start_group": 60
+    }
+  ],
+  "artifact_file_count": 81,
+  "group_artifact_count": 80,
+  "flop_ledger": {
+    "profiled_generated_tokens": 19773,
+    "profiled_generation_flops": 83302960322440.0,
+    "profiled_steps": [
+      1,
+      20,
+      40,
+      60,
+      80
+    ]
+  },
+  "status_field": "partial",
+  "source_manifest_entry_count": 14,
+  "all_artifact_sha256_matched": true,
+  "wandb_reconcile": {
+    "run_id": "k1uazlrj",
+    "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/k1uazlrj",
+    "run_state": "running",
+    "checkpoint_group": 80,
+    "checkpoint_commit": "a06e8cdd56974b8a4d8e201603cfee4891fb1fda",
+    "checkpoint_fingerprint": "bd28125f67d244f9b939cf935508f25c38896cf27620be8809cad0a6817efaa9",
+    "last_observed_group_after_checkpoint": 82,
+    "last_observed_tokens_after_checkpoint": 328705,
+    "note": "Group-80 immutable commit independently verified. Post-group-80 rows (if any) are not a higher accepted checkpoint until final completion/acceptance."
+  },
+  "verified_at": "2026-07-22T15:49:56.837542+00:00",
+  "counts_as_acceptance": false,
+  "note": "Partial group-80 checkpoint only; full corpus acceptance requires completed_groups=100 and finished local+W&B+HF reconciliation."
+}

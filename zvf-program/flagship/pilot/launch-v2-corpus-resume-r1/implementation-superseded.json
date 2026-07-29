@@ -1,0 +1,13 @@
+{
+  "accepted_r1_corpus": "corpus__balanced_equal_length__s11",
+  "accepted_r1_scientific_units": 0,
+  "failed_unit_recovery_records": [
+    "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r1/recovery/fpilot__intended_full__balanced_equal_length__s11__attempt-1-first-backward-overflow.json",
+    "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r1/recovery/fpilot__native_trl__balanced_equal_length__s11__attempt-1-first-backward-overflow.json"
+  ],
+  "implementation_revision": "A1-R1-complete-source-bundle-and-preserve-attempt-logs",
+  "reason": "both first unit jobs failed identically during checkpointed SDPA backward; r1 corpus and unit evidence remain immutable and are not pooled with the corrected revision",
+  "schema_version": "flagship-pilot-implementation-supersession-v1",
+  "status": "superseded_no_further_launches",
+  "superseded_at": "2026-07-22T08:21:46.570437+00:00"
+}

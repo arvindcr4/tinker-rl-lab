@@ -1,0 +1,77 @@
+{
+  "all_file_sha256_matched": true,
+  "condition": "reduction_only",
+  "corpus_commit": "664b9189dec25ded62bd74166a8dab0bf5727589",
+  "corpus_fingerprint": "bf54deaf4a62b0cffc69e40452d8133eba206163bcff44c1b6c1c6c83918e225",
+  "counts_as_acceptance": false,
+  "evaluation_steps": [
+    0,
+    20
+  ],
+  "expected_unit_fingerprint_from_manifest": "920fb29bdc1e58783991e412c04309195da426965859a99ffc0d0d2e73d9dd6c",
+  "file_count": 10,
+  "fingerprint": "e1cdc651a578fd7bf32058f4a0f2e2152021d3f8292bcf5ca9885169df151913",
+  "gradient_receipt_count": 20,
+  "head_sha": "92257b94274c3410171e72bb18bbc83c262f5c65",
+  "hf_commit": "92257b94274c3410171e72bb18bbc83c262f5c65",
+  "job_id": "fpilot__reduction_only__balanced_equal_length__s23",
+  "note": "Partial unit checkpoint only; not unit acceptance. Live run may continue beyond this boundary.",
+  "private": true,
+  "protocol_sha256": "87d929d0a3af789d3ba3ee10a1f4c3e83572ecec7cc4efa28ca032008f88fbc4",
+  "raw_manifest_keys": [
+    "condition",
+    "corpus_fingerprint",
+    "evaluation_steps",
+    "files",
+    "fingerprint",
+    "gradient_receipt_count",
+    "protocol_sha256",
+    "regime",
+    "replay_cursor",
+    "schema_version",
+    "seed",
+    "step",
+    "token_flop_ledger",
+    "unit_fingerprint"
+  ],
+  "regime": "balanced_equal_length",
+  "replay_cursor": 20,
+  "repo": "arvindcr4/tinker-rl-lab-flagship-pilot-reduction_only-balanced_equal_length-s23-87d929d0-005d3f82",
+  "schema_version": "flagship-pilot-unit-checkpoint-independent-verify-v1",
+  "seed": 23,
+  "status": "independently_verified_partial_checkpoint",
+  "step": 20,
+  "token_flop_ledger": {
+    "charged_generated_tokens": 400448,
+    "diagnostic_backward_flops": 1302822690739149.0,
+    "extrapolation_scale": 10.13888888888889,
+    "optimizer_backward_flops": 651411345369493.4,
+    "policy_forward_flops": 348248528289163.06,
+    "profiled_active_tokens": 8192,
+    "profiled_padded_tokens": 9504,
+    "profiled_phase_flops": {
+      "diagnostic_backward": 128497580456464.0,
+      "optimizer_backward": 64248790228224.0,
+      "policy_forward": 34347800050438.0
+    },
+    "profiled_steps": [
+      1,
+      20
+    ],
+    "total_active_tokens": 81920,
+    "total_padded_tokens": 96360
+  },
+  "unit_fingerprint": "920fb29bdc1e58783991e412c04309195da426965859a99ffc0d0d2e73d9dd6c",
+  "verified_at": "2026-07-23T02:56:56.772673+00:00",
+  "wandb_reconcile": {
+    "checkpoint_commit": "92257b94274c3410171e72bb18bbc83c262f5c65",
+    "checkpoint_fingerprint": "e1cdc651a578fd7bf32058f4a0f2e2152021d3f8292bcf5ca9885169df151913",
+    "checkpoint_step": 20,
+    "last_observed_step_after_checkpoint": 39,
+    "note": "Step-20 immutable commit independently verified. Later steps are not a higher accepted checkpoint until full unit acceptance.",
+    "run_id": "920fb29b",
+    "run_state": "running",
+    "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/920fb29b"
+  },
+  "wandb_run": "920fb29b"
+}

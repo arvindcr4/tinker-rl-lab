@@ -1,0 +1,22 @@
+{
+  "acceptance_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r1/acceptance/corpus__balanced_equal_length__s11.json",
+  "attempt": 1,
+  "corpus_fingerprint": "8b24a0520a97f0d5101c2662a1e3e369e8342c1759c9963a0ccb909b01525589",
+  "duplicate_launch_performed": false,
+  "hf_commit": "91ec135ce5ffd562d991e535a16cae28c6552389",
+  "job_id": "corpus__balanced_equal_length__s11",
+  "local_controller_alive": false,
+  "reason": "local launcher exited while remote Colab execution survived; adopted after exact remote verification without relaunch",
+  "remote_session": "fpcorp-bala-s11-6ba0",
+  "schema_version": "flagship-pilot-controller-adoption-v1",
+  "stale_local_pid": 86887,
+  "status": "accepted_remote_completion",
+  "verified_at": "2026-07-22T07:49:27.415784+00:00",
+  "wandb": {
+    "entity": "arvindcr4-pes-university",
+    "heartbeat_at": "2026-07-22T07:47:49Z",
+    "project": "tinker-rl-lab",
+    "run_id": "b8eoqd09",
+    "state": "finished"
+  }
+}

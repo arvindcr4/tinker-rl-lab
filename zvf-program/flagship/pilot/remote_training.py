@@ -65,7 +65,12 @@ def download_corpus(
 
     repo = plan["identity"]["corpus_hf_repo"]
     info = api.repo_info(repo_id=repo, repo_type="dataset")
-    revision = str(info.sha)
+    corpus_binding = plan["corpus_binding"]
+    revision = (
+        str(corpus_binding["hf_commit"])
+        if corpus_binding["status"] == "accepted_complete"
+        else str(info.sha)
+    )
     root = Path(
         snapshot_download(
             repo_id=repo,
@@ -254,9 +259,7 @@ def _evaluation(
         )
     finally:
         model.config.use_cache = False
-        model.gradient_checkpointing_enable(
-            gradient_checkpointing_kwargs={"use_reentrant": False}
-        )
+        model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
         model.train()
         torch.cuda.empty_cache()
     return {
@@ -411,7 +414,13 @@ def train_unit(
             step=0,
         )
         evaluations.append(initial)
-        run.log({"eval/accuracy": initial["accuracy"], "eval/generated_tokens": initial["generated_tokens"]}, step=0)
+        run.log(
+            {
+                "eval/accuracy": initial["accuracy"],
+                "eval/generated_tokens": initial["generated_tokens"],
+            },
+            step=0,
+        )
 
     try:
         for step in range(start_step + 1, 101):
@@ -444,15 +453,21 @@ def train_unit(
                 phase_flops=profiler.phase_flops if profiler.enabled else None,
             )
             receipts.append(receipt.as_record())
-            run.log(
-                {
-                    "train/selected_loss": receipt.selected_loss,
-                    "mechanism/gradient_cosine": receipt.gradient_cosine,
-                    "mechanism/gradient_relative_l2": receipt.gradient_relative_l2,
-                    "mechanism/active_tokens": receipt.active_tokens,
-                },
-                step=step,
-            )
+            mechanism_log = {
+                "train/selected_loss": receipt.selected_loss,
+                "mechanism/gradient_relation": receipt.gradient_relation,
+                "mechanism/gradient_joint_zero": int(receipt.gradient_relation == "joint_zero"),
+                "mechanism/gradient_one_sided_zero": int(
+                    receipt.gradient_relation in {"intended_zero", "native_zero"}
+                ),
+                "mechanism/optimizer_no_op": int(receipt.optimizer_update == "no_op_zero_gradient"),
+                "mechanism/active_tokens": receipt.active_tokens,
+            }
+            if receipt.gradient_cosine is not None:
+                mechanism_log["mechanism/gradient_cosine"] = receipt.gradient_cosine
+            if receipt.gradient_relative_l2 is not None:
+                mechanism_log["mechanism/gradient_relative_l2"] = receipt.gradient_relative_l2
+            run.log(mechanism_log, step=step)
             if step in CHECKPOINT_STEPS:
                 evaluation = _evaluation(
                     model=model,

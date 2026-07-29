@@ -1,0 +1,12 @@
+{
+  "schema_version": "flagship-pilot-live-poll-v1",
+  "polled_at": "2026-07-22T16:11:20.914592+00:00",
+  "corpus_group": 98,
+  "charged_generated_tokens": 392256,
+  "highest_verified_partial_groups": 80,
+  "epsilon_step": 39,
+  "epsilon_verified_partial_step": 20,
+  "reduction_step": 39,
+  "reduction_verified_partial_step": 20,
+  "counts_as_acceptance": false
+}

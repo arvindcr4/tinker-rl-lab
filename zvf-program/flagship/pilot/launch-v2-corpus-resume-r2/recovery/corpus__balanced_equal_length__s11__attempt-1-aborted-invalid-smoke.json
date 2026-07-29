@@ -1,0 +1,17 @@
+{
+  "attempt": 1,
+  "group_count": 0,
+  "hugging_face": {
+    "exists": false,
+    "repo": "arvindcr4/tinker-rl-lab-flagship-pilot-corpus-balanced_equal_length-s11-adc79c08-aa127b3f"
+  },
+  "job_id": "corpus__balanced_equal_length__s11",
+  "protocol_sha256": "adc79c088ef34d70e3f229204901ccecf7dcfde92f7af407761bc61cfa35fe33",
+  "reason": "r2 preflight acceptance was invalidated for out-of-range cosine diagnostics",
+  "recorded_at": "2026-07-22T08:40:34.414978+00:00",
+  "schema_version": "flagship-pilot-aborted-dependent-job-v1",
+  "scientific_work_initialized": false,
+  "source_bindings_sha256": "aa127b3fc75b8bfe6fd0555f6d40724f48372cec82689f2492aba32306d670c7",
+  "status": "aborted_before_scientific_initialization",
+  "wandb_matching_runs": []
+}

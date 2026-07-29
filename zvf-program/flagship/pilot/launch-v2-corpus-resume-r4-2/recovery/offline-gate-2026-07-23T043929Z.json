@@ -1,0 +1,16 @@
+{
+  "context": "post-wave-5 launch-halt integrity confirmation (filtered-regime decision pending)",
+  "note": "Frozen revision-7 pilot source integrity reconfirmed while the filtered-regime decision is pending; no source was modified by any campaign state update.",
+  "pilot_tests": {
+    "command": "PYTHONPATH=zvf-program/flagship uv run --isolated --no-project --python 3.12 --with trl==1.2.0 --with transformers==5.5.4 --with torch==2.7.1 --with datasets==4.8.4 --with peft==0.19.1 --with huggingface-hub==1.11.0 --with accelerate==1.13.0 --with wandb==0.21.0 --with numpy==2.2.6 --with pytest==9.1.1 python -m pytest -q zvf-program/flagship/pilot",
+    "result": "104 passed, 2 warnings in 21.23s",
+    "status": "pass"
+  },
+  "ran_at": "2026-07-23T04:39:29.783363+00:00",
+  "ruff_check": {
+    "command": "uvx ruff check zvf-program/flagship/pilot",
+    "result": "All checks passed!",
+    "status": "pass"
+  },
+  "schema_version": "flagship-pilot-offline-gate-v1"
+}

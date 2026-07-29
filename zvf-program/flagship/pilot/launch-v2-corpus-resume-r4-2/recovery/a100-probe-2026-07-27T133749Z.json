@@ -1,0 +1,28 @@
+{
+  "schema_version": "flagship-pilot-capacity-probe-v1",
+  "recorded_at": "2026-07-27T13:37:49Z",
+  "control_surface": "launch-v2-corpus-resume-r4-2",
+  "probe": {
+    "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-20260727",
+    "exit_code": 1,
+    "session": "fprobe-r4-2-capacity-20260727",
+    "status": "rejected",
+    "provider_literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account."
+  },
+  "live_state": {
+    "active_colab_sessions_before": 0,
+    "active_colab_sessions_after": 0,
+    "jobs_launched": [],
+    "scientific_attempts_consumed": 0,
+    "accelerator_substitution": false
+  },
+  "monitor_cleanup": {
+    "label": "ai.openai.codex.flagship-s37-quota-retry",
+    "prior_runs": 4806,
+    "prior_last_exit_code": 127,
+    "failure": "/tmp/s37_quota_retry.sh did not exist",
+    "action": "launchctl bootout",
+    "verified_absent": true
+  },
+  "next_action": "Probe A100 again after quota or entitlement changes; only then resume the staged balanced-s37 jobs under the existing three-session ceiling."
+}

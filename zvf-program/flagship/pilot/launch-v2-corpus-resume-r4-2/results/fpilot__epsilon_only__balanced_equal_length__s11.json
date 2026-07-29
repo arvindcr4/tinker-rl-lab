@@ -1,0 +1,8 @@
+{
+  "job_id": "fpilot__epsilon_only__balanced_equal_length__s11",
+  "log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/logs/fpilot__epsilon_only__balanced_equal_length__s11.log",
+  "protocol_sha256": "87d929d0a3af789d3ba3ee10a1f4c3e83572ecec7cc4efa28ca032008f88fbc4",
+  "source_archive_sha256": "9ac2421102e05a210b275de5f5c361f015df354e2467bc9af6becc5e629f2d1d",
+  "source_bindings_sha256": "005d3f8242b992cf70af2944c2b3f63351f5d3e00e95cdc5caeb40d1261b0918",
+  "status": "completed"
+}

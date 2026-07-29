@@ -31,9 +31,7 @@ class PilotProtocolTests(unittest.TestCase):
         for regime in REGIME_ORDER:
             for seed in (11, 23, 37):
                 observed = [
-                    unit.condition
-                    for unit in units
-                    if unit.regime == regime and unit.seed == seed
+                    unit.condition for unit in units if unit.regime == regime and unit.seed == seed
                 ]
                 self.assertEqual(observed, list(CONDITION_ORDER))
 
@@ -70,16 +68,14 @@ class PilotProtocolTests(unittest.TestCase):
         self.assertTrue(all(protocol_suffix in plan["identity"]["hf_repo"] for plan in plans))
         self.assertTrue(
             all(
-                plan["protocol"]["source_bundle_sha256"][:8]
-                in plan["identity"]["hf_repo"]
+                plan["protocol"]["source_bundle_sha256"][:8] in plan["identity"]["hf_repo"]
                 for plan in plans
             )
         )
         block = [
             plan
             for plan in plans
-            if plan["unit"]["regime"] == "balanced_equal_length"
-            and plan["unit"]["seed"] == 11
+            if plan["unit"]["regime"] == "balanced_equal_length" and plan["unit"]["seed"] == 11
         ]
         self.assertEqual(len(block), 4)
         self.assertEqual(len({plan["identity"]["corpus_hf_repo"] for plan in block}), 1)
@@ -89,6 +85,23 @@ class PilotProtocolTests(unittest.TestCase):
         plan = build_manifest()["units"][0]
         self.assertIn("zvf-program/flagship/pilot/protocol.py", plan["source_bindings"])
         self.assertIn("zvf-program/flagship/pilot/plan_screening.py", plan["source_bindings"])
+        self.assertIn(
+            "zvf-program/flagship/pilot/provenance/r3-corpus-bindings.json",
+            plan["source_bindings"],
+        )
+
+    def test_corpus_and_unit_sources_are_separately_bound(self) -> None:
+        plan = build_manifest()["units"][0]
+        binding = plan["corpus_binding"]
+        self.assertEqual(binding["status"], "accepted_complete")
+        self.assertEqual(binding["completed_groups"], 100)
+        self.assertNotEqual(
+            binding["source_bindings_sha256"],
+            plan["protocol"]["source_bundle_sha256"],
+        )
+        seed_23 = self.protocol.corpus_binding("balanced_equal_length", 23)
+        self.assertEqual(seed_23["status"], "verified_prefix")
+        self.assertEqual(seed_23["completed_groups"], 20)
 
     def test_unit_plan_rejects_out_of_matrix_values(self) -> None:
         with self.assertRaisesRegex(ProtocolError, "unknown pilot condition"):
@@ -109,11 +122,14 @@ class PilotProtocolTests(unittest.TestCase):
             for path in unit_files:
                 plan = json.loads(path.read_text())
                 self.assertEqual(path.stem, plan["unit"]["id"])
-                self.assertEqual(plan["fingerprint"], next(
-                    unit["fingerprint"]
-                    for unit in manifest["units"]
-                    if unit["unit"]["id"] == path.stem
-                ))
+                self.assertEqual(
+                    plan["fingerprint"],
+                    next(
+                        unit["fingerprint"]
+                        for unit in manifest["units"]
+                        if unit["unit"]["id"] == path.stem
+                    ),
+                )
 
 
 if __name__ == "__main__":

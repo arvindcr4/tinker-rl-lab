@@ -1,7 +1,95 @@
 {
   "schema_version": 1,
+  "protocol_version": 2,
+  "implementation_revision": 7,
   "locked_at": "2026-07-20",
+  "amended_at": "2026-07-22",
+  "amendment": {
+    "id": "A1-corpus-intermediate-persistence",
+    "authorized_by_user": true,
+    "authorized_at": "2026-07-22",
+    "reason": "Three guarded version-1 corpus attempts were reclaimed by the provider before the final atomic upload; attempts 2 and 3 ended at the identical group-99 boundary after 393714 charged tokens. The amendment changes only infrastructure persistence and retry semantics, not the model, data, prompt order, decoding, profiler cadence, treatment, budget, acceptance checks, or scientific estimands.",
+    "previous_protocol_sha256": "5a0bbd25e2bdf2a6e8948ea649afd2825197cf7dafda1885ac2e33e9925a00d7",
+    "previous_protocol_git_commit": "296f0342d552e2ef9569701ca9299a3ffaa84c6c",
+    "prior_attempts": [
+      {
+        "wandb_run_id": "ujryg527",
+        "last_complete_group": 78,
+        "charged_generated_tokens": 309364,
+        "outcome": "failed_infrastructure"
+      },
+      {
+        "wandb_run_id": "lwjtk9dk",
+        "last_complete_group": 99,
+        "charged_generated_tokens": 393714,
+        "outcome": "failed_infrastructure"
+      },
+      {
+        "wandb_run_id": "hge0xhav",
+        "last_complete_group": 99,
+        "charged_generated_tokens": 393714,
+        "outcome": "failed_infrastructure"
+      }
+    ],
+    "evidence_treatment": "The three version-1 attempts remain immutable infrastructure evidence and are never pooled with version-2 scientific units. Version 2 uses new protocol- and source-scoped W&B/Hugging Face identities.",
+    "control_plane_corrections": [
+      {
+        "id": "A1-R1-complete-source-bundle-and-preserve-attempt-logs",
+        "recorded_at": "2026-07-22",
+        "observation": "The first version-2 corpus launch created only its private Hub skeleton and never initialized W&B. Startup source validation exposed that runtime_install.py was listed in the runtime source manifest but omitted from the content-addressed source bundle. The prior supervisor then began attempt 2 and overwrote the canonical attempt-1 log before inspection.",
+        "correction": "Bind runtime_install.py into every source archive. Archive every attempt log/result immutably before any retry. Retry automatically only when the archived log contains a recognized provider-infrastructure signature; every other nonzero launcher exit becomes failed_validation and stops the DAG.",
+        "scientific_effect": "None. No corpus group, W&B corpus run, checkpoint, accepted corpus, or scientific unit was produced. The stale version-2 launch directory is preserved; revision 2 uses new source-scoped identities and a fresh smoke."
+      },
+      {
+        "id": "A1-R2-hold-deterministic-sdpa-through-checkpoint-backward",
+        "recorded_at": "2026-07-22",
+        "observation": "The first two revision-2 scientific units, W&B runs 275344ae and 92a856a4, produced the same step-0 evaluation and then failed before step 1 with RuntimeError: value cannot be converted to type int64_t without overflow. Preserved Colab traceback frames localized the failure to Qwen3 grouped-query SDPA during the first gradient-checkpoint recomputation. The training forward was already pinned to deterministic SDPA math, but that context exited before autograd recomputed the forward. Separately, balanced seed-23 corpus attempt 1 lost its Colab control channel before W&B initialization with the exact provider literal Connection was lost.; the frozen retry allowlist omitted that signature and required an audited manual reclassification.",
+        "correction": "Hold SDPBackend.MATH around every torch.autograd.grad call so checkpoint recomputation cannot escape the deterministic attention backend. Bind a regression test that asserts the backward context, recognize the exact Connection was lost. provider signature for attempt-bounded automatic retry, preserve the failed runs and their private-Hub skeletons as infrastructure-only evidence, and use plans-v2-corpus-resume-r2 plus launch-v2-corpus-resume-r2 with fresh source-scoped identities and a fresh A100 smoke.",
+        "scientific_effect": "None. Both failed units stopped before the first optimizer step and published no checkpoint or final artifact; their step-0 metrics are excluded. The previously accepted revision-2 corpus is also excluded from revision 3 because its source manifest binds the superseded training implementation. No revision-2 artifact is pooled with revision 3, and every corpus is rebuilt under the corrected source hash."
+      },
+      {
+        "id": "A1-R3-bound-cosine-diagnostics-and-verifiers",
+        "recorded_at": "2026-07-22",
+        "observation": "The fresh revision-3 non-scientific A100 smoke completed the corrected checkpoint backward but emitted gradient_cosine=1.00221848487854 and selected_vs_intended_cosine=1.0022610425949097, outside the mathematical cosine range [-1,1]. The receipt path accumulated dot products and norms in float32, and the preflight verifier checked only finiteness, so it accepted an invalid diagnostic receipt and queued the first corpus.",
+        "correction": "Accumulate flattened diagnostic vectors, norms, dot products, and relative-L2 distances in float64; reject cosine values beyond a 1e-12 roundoff tolerance and clamp only within that tolerance. Require both cosine fields to be in [-1,1], both relative-L2 fields to be non-negative, and all gradient norms to be positive in the preflight verifier and every full-record gradient receipt. Bind regression tests for low-precision identical vectors and both positive and negative out-of-range receipts. Preserve the superseded r2 directory and use plans-v2-corpus-resume-r3 plus launch-v2-corpus-resume-r3 with fresh source-scoped identities and a fresh A100 smoke.",
+        "scientific_effect": "None. The invalid receipt came from a non-scientific smoke. Its automatically queued balanced seed-11 corpus was stopped during runtime installation, before W&B initialization, Hugging Face repository creation, replay-group generation, or scientific unit initialization. No revision-2 artifact or failed smoke is accepted or pooled with implementation revision 4."
+      },
+      {
+        "id": "A1-R4-explicit-degenerate-gradient-relations-with-corpus-reuse",
+        "recorded_at": "2026-07-22",
+        "authorized_by_user": true,
+        "observation": "The independently accepted revision-4 balanced seed-11 corpus contains 59 all-zero-reward groups, 3 all-one-reward groups, and 38 mixed groups. Both the intended_full and native_trl revision-4 scientific runs produced the same accepted step-0 evaluation and then failed before optimizer step 1 because group 0 induces exactly joint-zero intended and native gradients while the receipt contract incorrectly required every norm to be positive and every cosine to be numeric. W&B runs 22107a6b and 07c23895 are preserved as failed implementation evidence.",
+        "correction": "Represent intended-versus-native and selected-versus-intended gradient relations explicitly as nonzero, joint_zero, or a named one-sided-zero relation. A comparison involving any zero vector has null cosine and null relative-L2 diagnostics. Joint-zero is scored as zero semantic effect and equivalence; one-sided-zero is scored as maximal divergence; nonzero comparisons retain the frozen cosine and relative-L2 thresholds. A selected zero gradient emits a complete receipt, performs a true no-op optimizer update, and still advances the frozen scheduler step. No replay group is dropped, reordered, regenerated, or selectively filtered.",
+        "corpus_reuse": "Reuse the immutable revision-4 corpora under separately bound corpus-generator and revision-7 unit-training provenance. The accepted balanced seed-11 corpus is consumed at its verified final commit. Balanced seed-23 resumes only from its verified group-20 prefix. The remaining four corpora are generated with the frozen revision-4 corpus source archive. Corpus identities, data, generation, ordering, decoding, token/FLOP budgets, and acceptance rules remain unchanged.",
+        "scientific_effect": "This authorized amendment defines the previously missing mathematical treatment of genuine zero-gradient replay steps. It changes no reward, prompt, model, ordering, decoding, nonzero threshold, learning estimand, or matched-compute rule. Failed revision-4 unit runs remain excluded; accepted revision-4 corpus infrastructure is reused only through the explicit frozen binding."
+      },
+      {
+        "id": "A1-R4.1-package-frozen-archives-for-remote-validation",
+        "recorded_at": "2026-07-22",
+        "authorized_under": "A1-R4-explicit-degenerate-gradient-relations-with-corpus-reuse",
+        "observation": "The first revision-5 non-scientific smoke installed the exact runtime pins, then stopped during remote environment validation before model loading because the revision-5 source bundle carried the frozen corpus binding JSON but omitted the two frozen archive files that the fail-closed protocol validator requires to exist and hash locally. No W&B run, Hugging Face repository, replay group, model update, or scientific evidence was created.",
+        "correction": "Include the already content-addressed r3 corpus-runtime and full-control-plane archives in every revision-6 source bundle and runtime source manifest. Preserve the failed revision-5 launch directory and use new r4-1 plan, launch, source, and session identities with a fresh A100 smoke. Corpus jobs still execute the exact frozen r3 full-control-plane archive; unit jobs execute only the new revision-6 training code.",
+        "scientific_effect": "None. This is a source-packaging completeness correction required for remote validation of the already authorized frozen corpus reuse. It changes no corpus bytes, scientific treatment, threshold, optimizer semantics, data order, model, decoding, budget, or estimand."
+      },
+      {
+        "id": "A1-R4.2-exact-identical-gradient-diagnostics",
+        "recorded_at": "2026-07-22",
+        "authorized_under": "A1-R4-explicit-degenerate-gradient-relations-with-corpus-reuse",
+        "observation": "Revision-6 intended_full W&B run a0a67b52 passed the frozen step-0 evaluation and emitted the required step-1 joint_zero receipt with optimizer_no_op=1. At step 2 its selected and intended gradient vectors were byte-identical and nonzero, but separate float64 dot/norm reductions produced selected_vs_intended_cosine=1.000000000002599, exceeding the 1e-12 tolerance. The run failed before checkpoint 20. Native run 87ba3535 independently emitted joint-zero receipts at steps 1, 4, 5, and 6 and valid nonzero receipts at steps 2 and 3 before being stopped because its revision-6 source cannot be pooled after correction.",
+        "correction": "When two stored nonzero diagnostic vectors are exactly elementwise equal, emit the mathematical identity cosine=1 and relative_l2=0 without performing roundoff-prone reductions. Zero-vector relations remain explicit and null; non-identical nonzero comparisons retain the frozen float64 computation, 1e-12 bound, and scientific thresholds. Preserve all revision-6 W&B and launch evidence, use fresh r4-2 unit identities, and require a new A100 smoke.",
+        "scientific_effect": "None. Exact equality proves the angle and distance algebraically; this correction removes only contradictory floating-point reduction error. It changes no corpus, gradient, optimizer update, scheduler step, treatment, threshold, model, data order, decoding, budget, or estimand."
+      }
+    ]
+  },
   "status": "ready_to_run",
+  "corpus_reuse_binding": {
+    "path": "zvf-program/flagship/pilot/provenance/r3-corpus-bindings.json",
+    "sha256": "e1efa5ce7bcae97201d5fc2a949f8b3cae03b10c4f62f8b9f6300ccd74001c8c",
+    "frozen_protocol_sha256": "04d20f712f652f80754fa4c8c0a3f48d4d2f1c5d716b3981746322c938b21970",
+    "frozen_source_bindings_sha256": "10e481a8a3d77a336fc150c53e90fb1df9baed26aa5c43c58fa548e9105aba83",
+    "frozen_source_archive_path": "zvf-program/flagship/pilot/provenance/r3-control-source.tar.gz",
+    "frozen_source_archive_sha256": "f04aff3fb8ef87be2bc885263750c2cc0b6be6bd71fcc8b02ab5be8f116fac31"
+  },
   "title": "Causal training consequences of GRPO semantic non-conformance",
   "parent_protocol": {
     "path": "zvf-program/flagship/preregistration.json",
@@ -138,6 +226,16 @@
         "stride": 1,
         "count": 100
       },
+      "gradient_relation_contract": {
+        "categories": ["nonzero", "joint_zero", "one_sided_zero"],
+        "receipt_labels": {
+          "intended_vs_native": ["nonzero", "joint_zero", "intended_zero", "native_zero"],
+          "selected_vs_intended": ["nonzero", "joint_zero", "selected_zero", "intended_zero"]
+        },
+        "zero_vector_diagnostics": "If either vector norm is exactly zero, cosine and relative L2 are both null; no numeric angle or distance is fabricated.",
+        "scoring": "joint_zero is zero semantic effect and qualifies as equivalence; either one-sided-zero label is maximal divergence and never qualifies as equivalence; nonzero comparisons use the frozen cosine and relative-L2 thresholds unchanged.",
+        "optimizer": "A selected zero gradient emits its receipt and skips optimizer.step so AdamW state and parameters are unchanged; scheduler.step still advances once at the frozen step."
+      },
       "selection_mask_algorithm": "Balanced: keep all eight rows, right-pad with EOS to the group maximum and mark all padded optimization positions active. Filtered: generate exactly 16 candidates, choose the lexicographically first six-index subset with maximal population completion-length CV, require CV>=0.35, then add the first two unused pool indices as inactive zero-mask rows; charge all 16 candidates.",
       "flop_counter": {
         "implementation": "torch.profiler.profile with CPU and CUDA activities, record_shapes=true, with_flops=true; sum finite positive event FLOPs separately for replay generation, policy/reference forward, diagnostic backward, and optimizer backward",
@@ -146,6 +244,18 @@
         "fail_closed": "Missing or zero profiler coverage for any required phase invalidates the unit as infrastructure evidence."
       },
       "checkpoint_resume_contract": "At steps 20/40/60/80/100 atomically upload adapter, optimizer, scheduler, RNG states, replay cursor, corpus fingerprint, condition state, token/FLOP ledger, and source manifest to the private unit repository. Resume only from the greatest checkpoint whose full manifest and source/corpus fingerprints match byte-for-byte; otherwise fail closed.",
+      "corpus_checkpoint_resume_contract": {
+        "schema_version": "flagship-pilot-corpus-checkpoint-v1",
+        "checkpoint_groups": [20, 40, 60, 80],
+        "storage_prefix": "resume/",
+        "attempt_limit": 3,
+        "max_parallel_corpus_sessions": 1,
+        "atomicity": "Each checkpoint is one immutable private Hugging Face dataset commit containing the complete accepted group prefix, source manifest, token/FLOP prefix ledger, attempt ledger, and a content-addressed checkpoint manifest. An interrupted upload cannot replace the preceding valid commit.",
+        "resume_validation": "Before generating another group, download the latest resume/ prefix and require exact protocol, model revision, dataset revision, train-order hash, runtime pins, accelerator, source hashes, per-group fingerprints, source-row indices, artifact hashes, profiler prefix, token ledger, and checkpoint fingerprint. Select no partial or mismatched prefix; fail closed instead.",
+        "determinism": "Each group uses a scoped seed derived only from the frozen seed and absolute group index, so resuming from a validated prefix does not change any generated group. The final corpus retains exactly 100 groups and the original token/FLOP budget.",
+        "completion": "The final corpus remains non-scientific infrastructure until all 100 groups, required profiler points, complete artifact hashes, a finished final W&B attempt, and an independently verified private-Hub final manifest agree.",
+        "retry_scope": "Version-1 failures are preserved and excluded. Version 2 authorizes at most three A100 VM attempts per corpus job, always resuming the greatest compatible prefix; accelerator substitution and confirmatory jobs remain forbidden."
+      },
       "tracking": {
         "wandb_project": "tinker-rl-lab",
         "wandb_entity": null,
@@ -213,8 +323,8 @@
     "fail_closed": "A run with unverifiable charged-token or FLOP accounting is infrastructure-invalid and is resumed or replaced with the same seed; it is not a scientific observation."
   },
   "measurements": {
-    "primary_mechanism": "Per-run fraction of prespecified replay checkpoints whose native-versus-intended normalized gradient cosine is <=0.99 and relative L2 difference is >=0.05 on the identical minibatch.",
-    "negative_control_equivalence": "At least 95% of replay checkpoints have cosine >=0.999 and relative L2 difference <=0.01.",
+    "primary_mechanism": "Per-run fraction of prespecified replay checkpoints that are one-sided-zero or, for nonzero pairs, have native-versus-intended normalized gradient cosine <=0.99 and relative L2 difference >=0.05 on the identical minibatch. Joint-zero does not qualify as divergence.",
+    "negative_control_equivalence": "At least 95% of replay checkpoints are joint-zero or, for nonzero pairs, have cosine >=0.999 and relative L2 difference <=0.01. One-sided-zero never qualifies as equivalence.",
     "learning": "Seed-paired held-out pass@1 learning-curve AUC at the common charged-token ceiling.",
     "final_quality": "Seed-paired held-out pass@1 at the common charged-token ceiling.",
     "efficiency": "Measured FLOPs and charged tokens to the intended_full median final-quality target.",
@@ -222,9 +332,9 @@
   },
   "screening_gate": {
     "mechanism_reference_condition": "intended_full",
-    "gradient_effect_metric": "Within the intended_full trajectory, the native effect is the mean checkpoint cosine loss 1-cos(g_intended,g_native). Within each ablation trajectory, its selected-gradient effect is mean 1-cos(g_selected,g_intended). reduction_only reproduces the native effect when its seed-paired ratio is at least 0.80; epsilon_only must satisfy the negative-control cosine and relative-L2 margins at at least 95 of 100 steps.",
+    "gradient_effect_metric": "Within the intended_full trajectory, the native effect is the mean checkpoint relation effect: 1-cos(g_intended,g_native) for nonzero pairs, 0 for joint-zero, and 1 for one-sided-zero. Within each ablation trajectory, its selected-gradient effect uses the same mapping against g_intended. reduction_only reproduces the native effect when its seed-paired ratio is at least 0.80; epsilon_only must satisfy joint-zero or the frozen nonzero negative-control margins at at least 95 of 100 steps.",
     "learning_auc_formula": "Trapezoidal pass@1 area over evaluation steps 0,20,40,60,80,100 divided by 100; condition differences are paired within regime and seed.",
-    "mechanism": "In filtered_variable_length, all three seeds must have at least 20 of 100 replay checkpoints meeting both primary gradient-discrepancy thresholds; balanced_equal_length must satisfy the negative-control equivalence rule.",
+    "mechanism": "In filtered_variable_length, all three seeds must have at least 20 of 100 replay checkpoints that are one-sided-zero or meet both frozen nonzero gradient-discrepancy thresholds; balanced_equal_length must satisfy the joint-zero-or-nonzero negative-control equivalence rule.",
     "causal_attribution": "reduction_only must reproduce at least 80% of the intended_full-versus-native_trl gradient-direction effect, while epsilon_only remains inside the negative-control equivalence margin.",
     "learning": "The intended_full-minus-native_trl AUC sign must be identical in all three seeds and the absolute paired standardized mean must be at least 0.5; final quality must remain within the task margin.",
     "go": "Advance only if mechanism, causal attribution, learning, provenance, and matched-compute clauses all pass.",
@@ -251,22 +361,22 @@
     "missingness": "Intention-to-treat for scientific runs; infrastructure failures resume exact checkpoints and do not become observations."
   },
   "provenance": {
-    "local": "Atomic full record with config, source hashes, token/FLOP ledger, per-step metrics, replay gradient summaries, checkpoints, and held-out evidence.",
-    "wandb": "One finished immutable run per unit with condition, regime, seed, source fingerprint, and summary endpoints.",
-    "hugging_face": "One private repository per unit with checkpoints 20/40/60/80/100, final adapter, byte-identical manifest, and held-out evidence.",
+    "local": "Atomic full record with config, source hashes, token/FLOP ledger, per-step metrics, replay gradient summaries, checkpoints, held-out evidence, and the versioned corpus-resume attempt ledger.",
+    "wandb": "One immutable run per corpus VM attempt and one finished immutable run per accepted unit, all bound to condition, regime, seed, protocol/source fingerprint, resume boundary, and summary endpoints. Crashed corpus attempts remain provenance but are not scientific observations.",
+    "hugging_face": "One private dataset repository per corpus with immutable resume-prefix commits at groups 20/40/60/80 and one final corpus commit; one private model repository per unit with checkpoints 20/40/60/80/100, final adapter, byte-identical manifest, and held-out evidence.",
     "acceptance": "Local, W&B, and Hugging Face identities and hashes must agree before a unit is scientific evidence."
   },
   "authorization": {
     "gpu": true,
-    "authorized_at": "2026-07-20",
-    "scope": "One non-scientific A100 smoke first. Only a separately accepted smoke receipt unlocks the six corpus jobs; only an accepted matching corpus unlocks each four-condition scientific block. Maximum three concurrent Colab sessions. No confirmation jobs are authorized by this transition.",
+    "authorized_at": "2026-07-22",
+    "scope": "A fresh implementation-revision-7 non-scientific A100 smoke must pass before any scientific unit. The six immutable revision-4 corpus identities are reused under their frozen generator provenance: balanced seed-11 at its independently accepted final commit, balanced seed-23 from its greatest independently verified prefix, and the remaining four through the frozen revision-4 corpus archive. Revision 7 authorizes the 24 screening units only after their matching corpus is independently accepted. At most three A100 VM attempts per incomplete corpus, one corpus session at a time, and no confirmatory jobs or accelerator substitutions are authorized.",
     "offline_gate": {
-      "pilot_tests": "73/73",
-      "preregistration_tests": "11/11",
-      "ruff": "clean",
-      "screening_manifest_sha256": "3175ce822d80adc3d13002f42c468d4a5bf56d3e8c3573bb34626f4ceba7915e",
-      "locked_launch_manifest_sha256": "fd965cc95bf95010f4ff3a0280aa4c53bbaf514a1f19023789293cdb16621252"
+      "pilot_tests": "104/104 under Python 3.12.13 with the exact TRL 1.2.0 / Transformers 5.5.4 / Torch 2.7.1 / Datasets 4.8.4 / Hugging Face Hub 1.11.0 / W&B 0.21.0 / NumPy 2.2.6 pins",
+      "preregistration_tests": "12/12, for 116/116 across the complete pinned pilot plus preregistration suite",
+      "corpus_resume_targeted_tests": "70/70 focused revision-7 training/objective/artifact/analysis/protocol/launcher/supervisor/remote-unit/verifier tests under the exact pinned Python 3.12 environment, including explicit zero relations, null zero-vector diagnostics, exact identical-vector diagnostics, true no-op optimizer behavior, frozen scheduler advancement, source-scoped corpus reuse, remote archive packaging, deterministic SDPA checkpoint-backward, and bounded nonzero cosine regressions",
+      "ruff": "Check and format verification clean across every changed Python file",
+      "manifest_generation": "Version-2 screening and launch manifests must be generated only after this amended protocol is locked; their protocol/source hashes are verified independently and are not self-referential protocol fields."
     },
-    "reason": "The exact data/runtime/budget protocol, replay semantics, native/intended DAPO differentials, remote trainer, profiler ledger, checkpoint/evaluation recovery, independent W&B/Hugging Face verifier, go/kill analysis, and smoke-gated supervisor passed the offline gate."
+    "reason": "The user explicitly authorized A1-R4 with corpus reuse after the accepted corpus exposed genuine zero-gradient groups that the prior receipt schema could not represent. The amendment defines zero-gradient receipts and scoring while preserving every corpus group and all nonzero scientific thresholds."
   }
 }

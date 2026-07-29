@@ -28,7 +28,9 @@ def _full_record(record: Mapping[str, Any]) -> Mapping[str, Any]:
     raise AnalysisContractError("unknown screening record schema")
 
 
-def _record_map(records: Sequence[Mapping[str, Any]]) -> dict[tuple[str, str, int], Mapping[str, Any]]:
+def _record_map(
+    records: Sequence[Mapping[str, Any]],
+) -> dict[tuple[str, str, int], Mapping[str, Any]]:
     mapped: dict[tuple[str, str, int], Mapping[str, Any]] = {}
     for source in records:
         record = _full_record(source)
@@ -81,6 +83,74 @@ def _standardized_mean(values: Sequence[float]) -> float:
     return abs(mean) / sd
 
 
+def _comparison(
+    receipt: Mapping[str, Any], *, selected_vs_intended: bool = False
+) -> tuple[str, float | None, float | None]:
+    prefix = "selected_vs_intended_" if selected_vs_intended else "gradient_"
+    relation = receipt.get(f"{prefix}relation")
+    allowed = (
+        {"nonzero", "joint_zero", "selected_zero", "intended_zero"}
+        if selected_vs_intended
+        else {"nonzero", "joint_zero", "intended_zero", "native_zero"}
+    )
+    if relation not in allowed:
+        raise AnalysisContractError(f"invalid gradient relation: {relation}")
+    cosine = receipt.get(f"{prefix}cosine")
+    relative_l2 = receipt.get(f"{prefix}relative_l2")
+    if relation == "nonzero":
+        if not all(
+            isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+            for value in (cosine, relative_l2)
+        ):
+            raise AnalysisContractError("nonzero gradient comparison lacks finite diagnostics")
+        return relation, float(cosine), float(relative_l2)
+    if cosine is not None or relative_l2 is not None:
+        raise AnalysisContractError("zero-vector gradient comparison has fabricated diagnostics")
+    return str(relation), None, None
+
+
+def _comparison_effect(receipt: Mapping[str, Any], *, selected_vs_intended: bool = False) -> float:
+    relation, cosine, _ = _comparison(receipt, selected_vs_intended=selected_vs_intended)
+    if relation == "joint_zero":
+        return 0.0
+    if relation == "nonzero":
+        assert cosine is not None
+        return 1.0 - cosine
+    return 1.0
+
+
+def _comparison_equivalent(
+    receipt: Mapping[str, Any], *, selected_vs_intended: bool = False
+) -> bool:
+    relation, cosine, relative_l2 = _comparison(receipt, selected_vs_intended=selected_vs_intended)
+    if relation == "joint_zero":
+        return True
+    if relation != "nonzero":
+        return False
+    assert cosine is not None and relative_l2 is not None
+    return cosine >= 0.999 and relative_l2 <= 0.01
+
+
+def _comparison_diverges(receipt: Mapping[str, Any]) -> bool:
+    relation, cosine, relative_l2 = _comparison(receipt)
+    if relation == "joint_zero":
+        return False
+    if relation != "nonzero":
+        return True
+    assert cosine is not None and relative_l2 is not None
+    return cosine <= 0.99 and relative_l2 >= 0.05
+
+
+def _relation_counts(
+    receipts: Sequence[Mapping[str, Any]], *, selected_vs_intended: bool = False
+) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for receipt in receipts:
+        relation, _, _ = _comparison(receipt, selected_vs_intended=selected_vs_intended)
+        counts[relation] = counts.get(relation, 0) + 1
+    return dict(sorted(counts.items()))
+
+
 def screening_gate(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     mapped = _record_map(records)
     mechanism: dict[str, Any] = {}
@@ -91,22 +161,15 @@ def screening_gate(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
             reference = mapped[("intended_full", regime, seed)]
             receipts = _receipts(reference)
             if regime == "filtered_variable_length":
-                qualifying = sum(
-                    float(item["gradient_cosine"]) <= 0.99
-                    and float(item["gradient_relative_l2"]) >= 0.05
-                    for item in receipts
-                )
+                qualifying = sum(_comparison_diverges(item) for item in receipts)
                 passed = qualifying >= 20
             else:
-                qualifying = sum(
-                    float(item["gradient_cosine"]) >= 0.999
-                    and float(item["gradient_relative_l2"]) <= 0.01
-                    for item in receipts
-                )
+                qualifying = sum(_comparison_equivalent(item) for item in receipts)
                 passed = qualifying >= 95
             mechanism[regime][str(seed)] = {
                 "qualifying_steps": qualifying,
                 "required_steps": 20 if regime == "filtered_variable_length" else 95,
+                "gradient_relation_counts": _relation_counts(receipts),
                 "pass": passed,
             }
             mechanism_pass &= passed
@@ -114,34 +177,30 @@ def screening_gate(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     attribution: dict[str, Any] = {}
     attribution_pass = True
     for seed in SCREENING_SEEDS:
-        intended_receipts = _receipts(
-            mapped[("intended_full", "filtered_variable_length", seed)]
-        )
-        reduction_receipts = _receipts(
-            mapped[("reduction_only", "filtered_variable_length", seed)]
-        )
-        epsilon_receipts = _receipts(
-            mapped[("epsilon_only", "filtered_variable_length", seed)]
-        )
-        native_effect = statistics.fmean(
-            1.0 - float(item["gradient_cosine"]) for item in intended_receipts
-        )
+        intended_receipts = _receipts(mapped[("intended_full", "filtered_variable_length", seed)])
+        reduction_receipts = _receipts(mapped[("reduction_only", "filtered_variable_length", seed)])
+        epsilon_receipts = _receipts(mapped[("epsilon_only", "filtered_variable_length", seed)])
+        native_effect = statistics.fmean(_comparison_effect(item) for item in intended_receipts)
         reduction_effect = statistics.fmean(
-            1.0 - float(item["selected_vs_intended_cosine"])
-            for item in reduction_receipts
+            _comparison_effect(item, selected_vs_intended=True) for item in reduction_receipts
         )
         ratio = reduction_effect / native_effect if native_effect > 1e-12 else 0.0
         epsilon_equivalent = sum(
-            float(item["selected_vs_intended_cosine"]) >= 0.999
-            and float(item["selected_vs_intended_relative_l2"]) <= 0.01
-            for item in epsilon_receipts
+            _comparison_equivalent(item, selected_vs_intended=True) for item in epsilon_receipts
         )
         passed = ratio >= 0.80 and epsilon_equivalent >= 95
         attribution[str(seed)] = {
-            "native_cosine_loss": native_effect,
-            "reduction_cosine_loss": reduction_effect,
+            "native_relation_effect": native_effect,
+            "reduction_relation_effect": reduction_effect,
             "reproduction_ratio": ratio,
             "epsilon_equivalent_steps": epsilon_equivalent,
+            "native_gradient_relation_counts": _relation_counts(intended_receipts),
+            "reduction_gradient_relation_counts": _relation_counts(
+                reduction_receipts, selected_vs_intended=True
+            ),
+            "epsilon_gradient_relation_counts": _relation_counts(
+                epsilon_receipts, selected_vs_intended=True
+            ),
             "pass": passed,
         }
         attribution_pass &= passed
@@ -154,8 +213,7 @@ def screening_gate(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
             block = [mapped[(condition, regime, seed)] for condition in CONDITION_ORDER]
             corpus_fingerprints = {record["corpus_fingerprint"] for record in block}
             token_charges = {
-                int(record["token_flop_ledger"]["charged_generated_tokens"])
-                for record in block
+                int(record["token_flop_ledger"]["charged_generated_tokens"]) for record in block
             }
             matched_compute_pass &= len(corpus_fingerprints) == 1 and len(token_charges) == 1
             intended = mapped[("intended_full", regime, seed)]
@@ -175,20 +233,13 @@ def screening_gate(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         abs(value) <= 0.02 for value in auc_differences["balanced_equal_length"]
     ) and all(abs(value) <= 0.01 for value in final_differences["balanced_equal_length"])
     final_noninferiority = all(
-        value >= -0.01
-        for regime in REGIME_ORDER
-        for value in final_differences[regime]
+        value >= -0.01 for regime in REGIME_ORDER for value in final_differences[regime]
     )
     learning_pass = filtered_learning_pass and balanced_equivalence and final_noninferiority
 
-    go = (
-        mechanism_pass
-        and attribution_pass
-        and learning_pass
-        and matched_compute_pass
-    )
+    go = mechanism_pass and attribution_pass and learning_pass and matched_compute_pass
     return {
-        "schema_version": "flagship-pilot-screening-gate-v1",
+        "schema_version": "flagship-pilot-screening-gate-v2",
         "verdict": "GO" if go else "KILL",
         "mechanism": mechanism,
         "mechanism_pass": mechanism_pass,
@@ -253,11 +304,7 @@ def _monte_carlo(
         lower_t[valid] = (simulated_mean[valid] + equivalence_margin) / standard_error[valid]
         upper_t[valid] = (simulated_mean[valid] - equivalence_margin) / standard_error[valid]
         tost_power = float(
-            np.mean(
-                valid
-                & (lower_t > one_sided_critical)
-                & (upper_t < -one_sided_critical)
-            )
+            np.mean(valid & (lower_t > one_sided_critical) & (upper_t < -one_sided_critical))
         )
     return PowerEstimate(effect_power=effect_power, tost_power=tost_power)
 

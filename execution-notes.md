@@ -8,15 +8,19 @@ evidence supports it, a ZVF-aware compute controller.
 
 ## Current gate
 
-Stage 5 is blocked before science by fresh Colab A100 allocation failure. The
-non-scientific A100 smoke remains accepted, but a clean supervisor relaunch
-exhausted all six corpus jobs at the `colab new --gpu A100` step before any
-remote runtime install, W&B run, or Hugging Face write. All three balanced
-jobs and all three filtered jobs failed three guarded attempts each with the
-same Colab CLI exception:
-`TooManyAssignmentsError: ... accelerator=A100: Precondition Failed`. The
-preflight receipt still stands; the corpus and 24 scientific unit layers remain
-locked until A100 assignment succeeds again.
+Stage 5 is fail-closed on a newly proven joint-zero-gradient protocol
+contradiction. The first accepted r3 corpus contains 62/100 reward-degenerate
+groups (59 all-wrong and 3 all-correct). Both first scientific units completed
+the identical step-0 evaluation, then stopped before optimizer step 1 because
+r3 requires every intended/native/selected gradient norm to be positive even
+though equal rewards correctly produce zero advantages and zero gradients.
+The preregistered gate simultaneously requires 100 receipts and at least 95
+balanced-equivalence steps, so the current positive-norm/cosine-only receipt
+contract cannot complete or score the frozen corpus. All Colab sessions are
+released, the crash-looping launch agent is unloaded, and no replacement unit
+may run until an explicit joint-zero representation/scoring amendment is
+authorized. Balanced seed 23 has a separately verified group-20 prefix for
+recovery if the amendment permits corpus reuse.
 
 ## Evidence checked
 
@@ -565,3 +569,312 @@ locked until A100 assignment succeeds again.
   differential tests" gate is now closed by the S1 receipts, noted here
   for the pre-Done audit refresh rather than editing the dated audit
   snapshot. The corpus compute blocker is unchanged.
+
+## Flagship corpus-resume amendment (2026-07-22)
+
+- The user explicitly selected the intermediate-persistence route after the
+  three version-1 corpus VMs were reclaimed. Added protocol version 2 and
+  amendment `A1-corpus-intermediate-persistence`, binding the previous
+  protocol SHA-256 `5a0bbd25...a00d7` and Git commit `296f0342...a84c6c`.
+  The prior W&B runs `ujryg527`, `lwjtk9dk`, and `hge0xhav` remain immutable
+  infrastructure-only records and are never pooled with version-2 units.
+- Corpus generation now uploads one atomic private-Hub `resume/` prefix after
+  groups 20, 40, 60, and 80. Each prefix contains every accepted group file,
+  exact source hashes, cumulative token/profiler ledgers, W&B attempt ledger,
+  and a content-addressed manifest. A retry restores only the greatest prefix
+  whose protocol, model/dataset revisions, train order, runtime pins,
+  accelerator, source rows, group/artifact hashes, token ledger, profiler
+  coverage, and manifest fingerprint all match; otherwise it fails closed.
+- Group generation remains deterministic by absolute group index, and the
+  model, data, decoding, profiler points, 100-group horizon, token ceiling,
+  treatments, estimands, and A100-only rule are unchanged. The new scheduler
+  preserves version-1 control state, uses separate
+  `plans-v2-corpus-resume-r1/` and `launch-v2-corpus-resume-r1/` directories, runs
+  at most one corpus session at a time, and enforces three version-2 VM
+  attempts per job.
+- The first version-2 launch exposed a pre-scientific source-archive defect:
+  `runtime_install.py` was bound by the runtime source manifest but missing
+  from the uploaded archive. It created only a private-Hub skeleton and never
+  initialized W&B or generated a group. Implementation revision 2
+  (`A1-R1-complete-source-bundle-and-preserve-attempt-logs`) binds the missing
+  file, archives each attempt log/result before retry, and allows automatic
+  retry only for a recognized provider-infrastructure signature. All other
+  nonzero exits fail validation and stop the DAG. The original version-2
+  launch directory remains preserved as provenance.
+- Verification: the focused amendment/protocol/launcher/verifier suite passes
+  55/55 under repository Python 3.12. The complete pinned
+  pilot/preregistration suite passes 106/106 with Python
+  3.12.13, TRL 1.2.0, Transformers 5.5.4, Torch 2.7.1, Datasets 4.8.4,
+  Hugging Face Hub 1.11.0, W&B 0.21.0, and NumPy 2.2.6. Ruff check and format
+  verification are clean. Final protocol SHA-256 is
+  `5cedb119f9810a0522d91216e746613c9bb1baec18d3d329ed4e80f0eadf019e`;
+  generated screening-manifest SHA-256 is
+  `f06285dc7ad370b72f30c9be720f082f15d4398271019e55d01ae5742749a0df`;
+  generated launch-manifest SHA-256 is
+  `3d50dc6968fd76ffde6ad5d0bde9b31a594723cf15cea861790c9ed9274643ce`;
+  launch fingerprint is
+  `6adce0c03b0e58b32c3a5cf373284a322aff0b1bb03ed929b2d907c10896e032`;
+  source-binding SHA-256 is
+  `6ba055857cb1690056a30c8eb6a8a097e3fe5c66bd9623654b0ec467fab21c68`.
+- The revision-2 source-bound A100 smoke is independently accepted. The first
+  revision-2 corpus job, balanced-equal-length seed 11, completed all 100
+  deterministic groups on an A100 as W&B run `b8eoqd09`. Its first
+  immutable prefix was committed after group 20 at exact private-Hub revision
+  `46030fba999dccbabc40567ab8f605589aa6a50a`, fingerprint
+  `b1ef87db8d0adb5ca99540ef9eeaada1d9c3d99cb7e43b006f4c352010b419c7`.
+  A separate local invocation of the remote-checkpoint verifier downloaded and
+  re-hashed the source manifest plus all 20 group files, reconciled 80,081
+  charged generated tokens and 8,155 profiled tokens, and accepted the exact
+  protocol/runtime/source/order bindings. The same independent procedure then
+  accepted the replacement group-40 prefix at exact private-Hub revision
+  `55091520f883bec456fe3f3334edf68dbc770013`, fingerprint
+  `7ab66ac6e11557780060eba72ce874ec70dddb0c4c7f3565a380b7ee79457ff8`,
+  with all 40 group files, 160,423 charged tokens, 12,251 profiled tokens, one
+  attempt, and zero resumes. The group-60 replacement was independently
+  accepted at exact private-Hub revision
+  `4776e185ee8a91e924672179062380fb9423bddb`, fingerprint
+  `49cbcebe4504b7cd494a20159b48f8a8da560c36f7c342ace12c5c0b22abca00`,
+  with all 60 group files, 236,615 charged tokens, 15,644 profiled tokens, one
+  attempt, and zero resumes. The final resumable group-80 prefix was then
+  independently accepted at exact private-Hub revision
+  `2faf00b02c5c81fcdcd2c4ed9e97e5fa8b721101`, fingerprint
+  `500b462efb02e361fa3bbf0e8a3d09202dbfda8adb64c2493db150df22d9dda6`,
+  with all 80 group files, 317,482 charged tokens, 19,740 profiled tokens, one
+  attempt, and zero resumes. The final verifier independently downloaded and
+  re-hashed the 100-group corpus, source manifest, token/FLOP ledger, and the
+  referenced group-80 commit. It accepted corpus fingerprint
+  `8b24a0520a97f0d5101c2662a1e3e369e8342c1759c9963a0ccb909b01525589`
+  at exact private-Hub commit `91ec135ce5ffd562d991e535a16cae28c6552389`,
+  with 396,672 charged generated tokens and zero resumes. The foreground local
+  launcher had exited while the Colab execution survived; the stale PID and
+  exact no-duplicate remote adoption are preserved in
+  `launch-v2-corpus-resume-r1/recovery/corpus__balanced_equal_length__s11__attempt-1.json`.
+  The completed A100 session was released, and a launchd-owned supervisor
+  (label `ai.openai.codex.flagship-pilot-v2`) unlocked balanced seed 23 plus
+  the first two seed-11 scientific units.
+- The first two r1 scientific units (`intended_full` W&B `275344ae` and
+  `native_trl` W&B `92a856a4`) shared the same step-0 accuracy `0.15625` and
+  then failed before optimizer step 1. Preserved Colab tracebacks localized
+  `value cannot be converted to type int64_t without overflow` to Qwen3 SDPA
+  during gradient-checkpoint recomputation. Correction
+  `A1-R2-hold-deterministic-sdpa-through-checkpoint-backward` keeps
+  `SDPBackend.MATH` active through every `torch.autograd.grad`; both failed
+  runs, their empty private-Hub skeletons, and the previously accepted r1
+  corpus remain excluded from the corrected campaign.
+- The resulting r2 non-scientific A100 smoke completed backward but emitted
+  impossible cosines `1.00221848487854` and `1.0022610425949097`. The old
+  verifier checked finiteness but not `[-1,1]`, so r2 is preserved as
+  `superseded_no_further_launches`; its automatically queued balanced-s11
+  corpus was stopped during runtime installation before W&B, private-Hub, or
+  replay-group initialization. Implementation revision 4 correction
+  `A1-R3-bound-cosine-diagnostics-and-verifiers` now computes receipt-only
+  diagnostics in float64, tolerates/clamps only `1e-12` roundoff, and rejects
+  invalid cosine, relative-L2, or gradient-norm fields in both preflight and
+  full-record verification.
+- The exact pinned r3 gate passes 109/109 (97 pilot + 12 preregistration) and
+  the focused revision-4 gate passes 55/55; Ruff check and format verification
+  are clean across all 15 changed Python files. Protocol SHA-256 is
+  `04d20f712f652f80754fa4c8c0a3f48d4d2f1c5d716b3981746322c938b21970`,
+  screening fingerprint `9d4af2a016552a0abaef4f39e4aa9e006f0afab731517eab16a562b2da346adb`,
+  launch fingerprint `f01ad8e3991365fcf36160386b32dfdc69c034d1697773f8868b9dd5682d7de3`,
+  source-binding SHA-256
+  `10e481a8a3d77a336fc150c53e90fb1df9baed26aa5c43c58fa548e9105aba83`,
+  and deterministic source archive SHA-256
+  `f04aff3fb8ef87be2bc885263750c2cc0b6be6bd71fcc8b02ab5be8f116fac31`.
+  LaunchAgent `ai.openai.codex.flagship-pilot-v2-r3` is active with isolated
+  r3 state. Preflight attempt 1 is independently accepted on an
+  `NVIDIA A100-SXM4-40GB`: gradient cosine `0.999957795529626`,
+  selected-vs-intended cosine `0.9999999999997982`, nonnegative relative L2,
+  positive norms/FLOPs, exact runtime pins, and the exact source hashes above.
+  Its smoke session was deleted; only corpus
+  `balanced_equal_length` seed 11 attempt 1 is now running, while the other 29
+  downstream jobs remain dependency-gated at zero attempts.
+- The running r3 balanced-equal-length seed-11 corpus published its first
+  immutable prefix at group 20. A separate local verifier downloaded and
+  re-hashed `source_manifest.json` plus all 20 group artifacts and accepted
+  exact private-Hub commit `7c6d13ee7b22ef1a9ca83f2a550a43fbcff8a7e9`,
+  fingerprint `a054b9c6f1ce9a69424677f201c46c242c805bb22674e8744fedb381e3fe556b`,
+  80,081 charged generated tokens, profiler steps `[1,20]`, 8,155 profiled
+  tokens, exact A100/runtime/source/order bindings, one W&B attempt
+  (`3jpcepfy`), and zero resumes. The same A100 session and launchd-owned
+  controller remain live; this resumable prefix is infrastructure evidence,
+  not an accepted corpus or scientific observation.
+- The same r3 run published and independently passed its group-40 replacement
+  prefix at exact private-Hub commit
+  `b23d1da97dc5dadd3da6d133ba3ffb048d055af0`, fingerprint
+  `5c1a6cf763737d63efa116e1bac67a5061e06f34dbd360ae6e1fefd7b42dda3b`.
+  The verifier downloaded and re-hashed all 40 group artifacts plus the source
+  manifest, reconciling 160,423 charged tokens, profiler steps `[1,20,40]`,
+  12,251 profiled tokens, exact A100/runtime/source bindings, W&B run
+  `3jpcepfy`, one attempt, and zero resumes. W&B exposes the identical
+  checkpoint commit/fingerprint and the launchd-owned run remains live toward
+  group 60. This still does not count as a complete corpus or scientific unit.
+- The group-60 replacement is now independently verified at exact private-Hub
+  commit `a0c83171731c497ce13ae1dcc14b48b045c72956`, fingerprint
+  `dd7caf181a7463196d86d404ea21ff2fe5b88e8878f388757b70b8a268ff5790`.
+  The verifier downloaded and re-hashed the complete 60-group prefix (61
+  artifact files) and all 14 source-manifest entries, reconciling 236,615
+  charged tokens, profiler steps `[1,20,40,60]`, 15,644 profiled generated
+  tokens, 65,619,873,117,824 generation FLOPs, exact A100/runtime/source/order
+  bindings, one W&B attempt (`3jpcepfy`), and zero resumes. W&B exposes the
+  identical checkpoint commit/fingerprint and the same attempt has continued
+  through group 61 toward group 80. This remains restartable infrastructure,
+  not an accepted corpus or scientific unit.
+- The final resumable group-80 replacement independently passed at exact
+  private-Hub commit `ba2a67680eee15e956f406fd9caebc83326967cf`,
+  fingerprint
+  `c50c78dda0978525d7bf32247087850436e844b43825234d572dc5a2ed3e4b12`.
+  Independent download and re-hash covered the complete 80-group prefix (81
+  artifact files) and all 14 source-manifest entries, reconciling 317,482
+  charged tokens, profiler steps `[1,20,40,60,80]`, 19,740 profiled generated
+  tokens, 82,337,615,882,312 generation FLOPs, exact A100/runtime/source/order
+  bindings, one W&B attempt (`3jpcepfy`), and zero resumes. W&B exposes the
+  identical checkpoint commit/fingerprint and token ledger. The same attempt
+  continues toward the 100-group final record; this prefix is not an accepted
+  corpus or scientific unit.
+- Balanced-equal-length seed 11 is now the first independently accepted r3
+  corpus. The full verifier downloaded all 185 remote files and re-hashed the
+  100 group artifacts plus manifest and all 14 source entries at exact
+  private-Hub commit `2735a27d5f18bbdaaae76494a2047b39a4318e22`, corpus
+  fingerprint
+  `b09c72247b168297e73ce5edf2aad59e4496e7d78257beb252e864dd1a9587f1`.
+  It reconciled 396,672 charged tokens, profiler steps
+  `[1,20,40,60,80,100]`, 22,698 profiled generated tokens,
+  98,454,319,002,760 profiled generation FLOPs, exact group-80 checkpoint
+  commit/fingerprint, exact A100/runtime/source/order bindings, one finished
+  W&B run (`3jpcepfy`), one attempt, and zero resumes. The supervisor emitted
+  `acceptance/corpus__balanced_equal_length__s11.json` and released the Colab
+  session. The eligible count is now one r3 corpus and zero scientific units.
+  The next authorized wave contains exactly one corpus builder (balanced seed
+  23) plus the intended/native balanced-seed-11 units; all three are on A100s.
+- That first unit wave exposed a deterministic protocol contradiction before
+  optimizer step 1. W&B runs `22107a6b` (intended) and `07c23895` (native)
+  both finished `failed` after the same step-0 evaluation (`accuracy=0.15625`,
+  64,038 generated tokens). The native traceback is preserved and terminates
+  at `TrainingContractError: intended gradient norm is non-positive or
+  non-finite`. Exact replay group 1 has rewards `[0,0,0,0,0,0,0,0]`; all
+  three losses therefore have zero advantages and zero gradients. A complete
+  corpus audit found 59 all-zero, 3 all-one, and 38 mixed-reward groups. Thus
+  the r3 rule requiring positive norms at all 100 steps conflicts with genuine
+  variance starvation and with the 95/100 balanced-equivalence gate. Neither
+  failed run produced an optimizer step, checkpoint, final record, or eligible
+  scientific observation.
+- The supervisor correctly marked native as `failed_validation` and exited,
+  but crash-only launchd then retried the persistent validation failure. The
+  launch agent was unloaded; orphaned intended/native sessions were released
+  after their W&B failures, and no replacement units launched. The detached
+  balanced-seed-23 corpus was allowed to reach its first atomic recovery point,
+  then stopped. Its group-20 prefix independently verifies at private-Hub
+  commit `b1d897a968470898848ddb85ba24a334c3d59237`, fingerprint
+  `67d51945e773e9e6aa50a88f8d72a182230c2452bd0285caf00be554b1aa1764`,
+  with 80,988 charged tokens, profiler steps `[1,20]`, 7,797 profiled tokens,
+  one W&B attempt (`ge121gt6`), and zero resumes. No Colab session or local
+  controller remains. The stop propagated after W&B had logged through group
+  22 (86,052 charged tokens), but no later Hub commit exists and the orphaned
+  W&B run remains stale `running`; only the exact group-20 commit is recoverable
+  evidence. Continuing requires an explicit receipt/scoring and
+  corpus-source-reuse amendment; no such amendment has been applied.
+- The user authorized `A1-R4` with corpus reuse on 2026-07-22. Implementation
+  revision 5 now emits explicit `nonzero`, `joint_zero`, and named one-sided
+  zero relations for both gradient comparisons. Zero-vector cosine and
+  relative-L2 fields are `null`; joint-zero scores as equivalence/zero effect,
+  one-sided-zero scores as maximal divergence, and all nonzero thresholds are
+  unchanged. A selected zero gradient skips `optimizer.step()` entirely while
+  the frozen scheduler advances once, so AdamW state and parameters are a true
+  no-op. No replay group is dropped, reordered, regenerated, or filtered.
+- Corpus provenance is split from unit-training provenance in
+  `pilot/provenance/r3-corpus-bindings.json`. The exact r3 corpus runtime and
+  full control-plane archives hash to `8d8b201d3e8e914cc6c7d35f569e389b460c53e02075932c2ab4ee417a700ede`
+  and `f04aff3fb8ef87be2bc885263750c2cc0b6be6bd71fcc8b02ab5be8f116fac31`.
+  Live verification reaccepted balanced seed 11 at final commit
+  `2735a27d5f18bbdaaae76494a2047b39a4318e22` / fingerprint
+  `b09c72247b168297e73ce5edf2aad59e4496e7d78257beb252e864dd1a9587f1`
+  and balanced seed 23 at its exact group-20 commit
+  `b1d897a968470898848ddb85ba24a334c3d59237` / fingerprint
+  `67d51945e773e9e6aa50a88f8d72a182230c2452bd0285caf00be554b1aa1764`.
+  Incomplete corpus jobs use the frozen r3 archive; all 24 units use the new
+  revision-6 source bundle.
+- The final local A1-R4 gate passes 103/103 pilot tests plus 12/12
+  preregistration tests (115/115 total), with the focused correction suite
+  passing 69/69 and Ruff check/format clean across all 22 changed Python files.
+  The revision-6 protocol SHA-256 is
+  `1b001a920a042ee2a41f232175066483b4b28e5e37db2e7e9ebf48d0a561007a`.
+  Final r4 plan and launch hashes are recorded in the generated manifests
+  under `plans-v2-corpus-resume-r4-1/` and
+  `launch-v2-corpus-resume-r4-1/`.
+- The first revision-5 smoke attempt installed the exact remote pins but failed
+  closed during environment validation because the unit source bundle omitted
+  the frozen archive files whose existence the protocol itself verifies. It
+  stopped before model loading, W&B, Hugging Face, replay generation, or any
+  update. Correction `A1-R4.1-package-frozen-archives-for-remote-validation`
+  adds both already-hashed archives to the revision-6 upload and runtime source
+  manifest, preserves the failed r4 launch directory, and requires a new r4-1
+  source/session identity and fresh smoke.
+- The fresh revision-6 A100 smoke is independently accepted. It resolved the
+  exact package pins on `NVIDIA A100-SXM4-40GB`, validated the embedded frozen
+  archives remotely, and emitted a nonzero receipt with intended/native cosine
+  `0.999957795529626`, relative L2 `0.009205099545490102`,
+  selected/intended cosine `0.9999999999997982`, positive norms, positive FLOPs
+  in all required phases, and `optimizer_update=applied`. The smoke session was
+  terminated. The frozen balanced-s11 corpus was then reaccepted at its exact
+  pinned final commit/fingerprint; the supervisor released balanced-s23 corpus
+  resume plus the new intended/native balanced-s11 units under revision-6
+  source identity `c4bc5205...`.
+- Live post-smoke reconciliation: balanced seed 23 is W&B `ncpafe25`, restored
+  exactly from group 20 with `resume_count=1`, checkpoint commit
+  `b1d897a968470898848ddb85ba24a334c3d59237`, and checkpoint fingerprint
+  `67d51945e773e9e6aa50a88f8d72a182230c2452bd0285caf00be554b1aa1764`.
+  It has advanced through group 23 and 90,148 cumulative charged tokens. Two
+  pre-allocation `TooManyAssignmentsError` exits consumed local attempts 1--2;
+  its live A100 is the authorized third and final local attempt, with no
+  duplicate remote corpus run. Intended W&B `a0a67b52` is live on local
+  attempt 1; native W&B `87ba3535` is live on local attempt 2 after one
+  pre-allocation capacity rejection. Both consume the exact pinned seed-11
+  corpus and are still in the frozen step-0 evaluation before the first
+  scientific receipt.
+- Revision-6 then exposed a purely numeric diagnostic failure, not a scientific
+  divergence. Intended W&B `a0a67b52` emitted a valid step-1 `joint_zero`
+  optimizer no-op and a valid nonzero intended/native comparison at step 2,
+  but its byte-identical selected/intended vectors were reduced separately to
+  cosine `1.000000000002599` and rejected as outside `[-1,1]`. Native W&B
+  `87ba3535` independently corroborated joint-zero no-ops at steps 1 and 4--6
+  and valid nonzero receipts at steps 2--3 before its superseded source session
+  was stopped. Neither revision-6 unit is eligible under the corrected source
+  identity.
+- Authorized correction `A1-R4.2-exact-identical-gradient-diagnostics` advances
+  unit training to implementation revision 7. Exact tensor equality now emits
+  cosine `1.0` and relative L2 `0.0` directly; all zero-vector and genuinely
+  nonzero rules remain frozen. The countable local gate passes 104/104 pilot
+  tests plus 12/12 preregistration tests (116/116), the focused gate passes
+  70/70, all 22 changed Python files pass Ruff check/format, and independently
+  regenerated plans are byte-identical. Protocol SHA-256 is
+  `87d929d0a3af789d3ba3ee10a1f4c3e83572ecec7cc4efa28ca032008f88fbc4`;
+  unit source binding is
+  `005d3f8242b992cf70af2944c2b3f63351f5d3e00e95cdc5caeb40d1261b0918`.
+  Generated r4-2 plan/launch fingerprints are
+  `c6e5829410a85af9574c6b43c0a75bb5a78c5c2bd7c132637a72437ed0e3c37a`
+  and `25ef91234d58643c2d1eaea23832e0b676cb99e66ce774551b1f0ae1de9cee0d`.
+- The fresh revision-7 A100 smoke is independently accepted and its session is
+  released. It reproduces intended/native cosine `0.999957795529626`, relative
+  L2 `0.009205099545490102`, positive required phase FLOPs/norms, and an
+  applied optimizer update; its exact-equality selected/intended diagnostic is
+  now cosine `1.0`, relative L2 `0.0`. Balanced seed 11 was independently
+  reaccepted at final commit `2735a27d5f18bbdaaae76494a2047b39a4318e22`,
+  fingerprint `b09c72247b168297e73ce5edf2aad59e4496e7d78257beb252e864dd1a9587f1`.
+- The surviving balanced-seed-23 W&B run `ncpafe25` reached and independently
+  passed its group-40 private-Hub checkpoint at commit
+  `b45dc64a59a8cd7fb068d0f2182c507c34db8aec`, fingerprint
+  `1d7e72efb8df8e22beb15a9756d8255aa6b44f4f4a9f4af3d53b547143138c37`,
+  with 158,590 charged tokens. It remains the only corpus builder and has since
+  advanced through group 58 / 230,855 tokens without a duplicate. Fresh r4-2
+  intended/native seed-11 sessions `fpilot-inte-bala-s11-87d9005d` and
+  `fpilot-nati-bala-s11-87d9005d` are live on A100s. Their first detached local
+  launch exited before allocation because LaunchAgents lacked the Colab CLI
+  path. Attempt 2 allocated both A100s, but the host rebooted at 18:52:18; the
+  automatic `RunAtLoad` recovery collided with the surviving session names,
+  received capacity-only 412 errors, and stopped those attempt-2 sessions
+  before W&B/HF or scientific state. The agents are now non-RunAtLoad, and the
+  single remaining authorized allocation attempt 3 is live for both units.
+  Another host restart cannot auto-relaunch or stop them. The hard three-A100
+  and one-corpus ceilings are exact.
+  Confirmatory execution remains forbidden until a screening GO verdict.

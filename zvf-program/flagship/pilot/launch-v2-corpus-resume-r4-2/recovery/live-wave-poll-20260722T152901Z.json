@@ -1,0 +1,54 @@
+{
+  "schema_version": "flagship-pilot-live-poll-v1",
+  "polled_at": "2026-07-22T15:29:01.530042+00:00",
+  "thread_continued_from": "019f880f-c98e-7a93-a4c7-83352e8eff8a",
+  "control_surface": "launch-v2-corpus-resume-r4-2",
+  "active_jobs": {
+    "corpus__balanced_equal_length__s23": {
+      "pid": 99028,
+      "session": "fpcorp-bala-s23-10e4",
+      "endpoint": "gpu-a100-s-kkb-usc1b1-2khsjulyuc6w6",
+      "hardware": "A100",
+      "wandb_run": "k1uazlrj",
+      "wandb_state": "running",
+      "corpus_group": 66,
+      "corpus_start_group": 60,
+      "charged_generated_tokens": 263623,
+      "resume_count": 2,
+      "resumed_hf_commit": "8b1f2105bc715e5dbf9545f4bc244f3e8800e5ba",
+      "resumed_fingerprint": "a6e170736a463412b3067460f524e4e10e06ee3b0d03402861a4f106953a3308",
+      "counts_as_acceptance": false
+    },
+    "fpilot__epsilon_only__balanced_equal_length__s11": {
+      "pid": 99029,
+      "session": "fpilot-epsi-bala-s11-87d9005d",
+      "endpoint": "gpu-a100-s-kkb-usc1c1-jis2jeq1vu86",
+      "hardware": "A100",
+      "wandb_run": "1cf851c0",
+      "wandb_state": "running",
+      "training_steps_logged": 0,
+      "corpus_commit": "2735a27d5f18bbdaaae76494a2047b39a4318e22",
+      "corpus_fingerprint": "b09c72247b168297e73ce5edf2aad59e4496e7d78257beb252e864dd1a9587f1",
+      "counts_as_acceptance": false
+    },
+    "fpilot__reduction_only__balanced_equal_length__s11": {
+      "pid": 99030,
+      "session": "fpilot-redu-bala-s11-87d9005d",
+      "endpoint": "gpu-a100-s-kkb-ass1c0-2l1f11p2cwxno",
+      "hardware": "A100",
+      "wandb_run": "b2bd75df",
+      "wandb_state": "running",
+      "training_steps_logged": 0,
+      "corpus_commit": "2735a27d5f18bbdaaae76494a2047b39a4318e22",
+      "corpus_fingerprint": "b09c72247b168297e73ce5edf2aad59e4496e7d78257beb252e864dd1a9587f1",
+      "counts_as_acceptance": false
+    }
+  },
+  "ceilings": {
+    "active_a100_sessions": 3,
+    "max_parallel_sessions": 3,
+    "active_corpus_sessions": 1,
+    "max_parallel_corpus_sessions": 1
+  },
+  "note": "Live wave healthy after handoff. No acceptance. No new launches."
+}

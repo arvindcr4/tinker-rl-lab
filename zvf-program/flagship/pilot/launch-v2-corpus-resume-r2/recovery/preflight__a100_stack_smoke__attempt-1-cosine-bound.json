@@ -1,0 +1,28 @@
+{
+  "protocol_sha256": "adc79c088ef34d70e3f229204901ccecf7dcfde92f7af407761bc61cfa35fe33",
+  "receipt": {
+    "active_rows": 8,
+    "active_tokens": 4096,
+    "condition": "intended_full",
+    "gradient_cosine": 1.00221848487854,
+    "gradient_relative_l2": 0.009203068912029266,
+    "group_fingerprint": "bd38cadaff72cc2f140feb023b87408080991984aa53264992c5994bcb4f47f4",
+    "intended_gradient_norm": 0.9102776646614075,
+    "intended_loss": 0.0,
+    "native_gradient_norm": 0.9107595086097717,
+    "native_loss": -3.725290298461914e-08,
+    "optimizer_learning_rate": 9.9e-07,
+    "selected_gradient_norm": 0.9102776646614075,
+    "selected_loss": 0.0,
+    "selected_vs_intended_cosine": 1.0022610425949097,
+    "selected_vs_intended_relative_l2": 0.0,
+    "step": 1
+  },
+  "recorded_at": "2026-07-22T08:40:34.414526+00:00",
+  "schema_version": "flagship-pilot-preflight-validation-failure-v1",
+  "scientific_work_initialized": false,
+  "source_bindings_sha256": "aa127b3fc75b8bfe6fd0555f6d40724f48372cec82689f2492aba32306d670c7",
+  "status": "invalidated_no_scientific_observation",
+  "validator_gap": "r2 preflight verifier checked finiteness but not mathematical cosine bounds",
+  "violation": "gradient cosine fields must be in [-1, 1]"
+}

@@ -1,0 +1,50 @@
+{
+  "status": "independently_verified_partial_checkpoint",
+  "schema_version": "flagship-pilot-unit-checkpoint-independent-verify-v1",
+  "job_id": "fpilot__intended_full__balanced_equal_length__s11",
+  "condition": "intended_full",
+  "regime": "balanced_equal_length",
+  "seed": 11,
+  "repo": "arvindcr4/tinker-rl-lab-flagship-pilot-intended_full-balanced_equal_length-s11-87d929d0-005d3f82",
+  "private": true,
+  "hf_commit": "23de08ec44fa3e0e130e7edd9261c09ff56a1793",
+  "head_sha": "23de08ec44fa3e0e130e7edd9261c09ff56a1793",
+  "step": 40,
+  "fingerprint": "c5be4d39e1e12d59e2901d1c727bc3337668ff101b94d313a48340082571f8b8",
+  "unit_fingerprint": "8170fe5009d8d2c7ea5fdf4888865da7c974bad9176b1cef6b6e9fd74ea7577b",
+  "corpus_fingerprint": "b09c72247b168297e73ce5edf2aad59e4496e7d78257beb252e864dd1a9587f1",
+  "protocol_sha256": "87d929d0a3af789d3ba3ee10a1f4c3e83572ecec7cc4efa28ca032008f88fbc4",
+  "evaluation_steps": [
+    0,
+    20,
+    40
+  ],
+  "gradient_receipt_count": 40,
+  "replay_cursor": 40,
+  "token_flop_ledger": {
+    "charged_generated_tokens": 396672,
+    "diagnostic_backward_flops": 1310432758213379.5,
+    "extrapolation_scale": 13.453333333333333,
+    "optimizer_backward_flops": 1310432758213702.2,
+    "policy_forward_flops": 700405099702515.9,
+    "profiled_active_tokens": 12288,
+    "profiled_padded_tokens": 14400,
+    "profiled_phase_flops": {
+      "diagnostic_backward": 97405804624384.0,
+      "optimizer_backward": 97405804624408.0,
+      "policy_forward": 52061826043299.0
+    },
+    "profiled_steps": [
+      1,
+      20,
+      40
+    ],
+    "total_active_tokens": 163840,
+    "total_padded_tokens": 193728
+  },
+  "file_count": 11,
+  "all_file_sha256_matched": true,
+  "wandb_run": "8170fe50",
+  "verified_at": "2026-07-22T14:49:19.641222+00:00",
+  "note": "Partial unit checkpoint only; not unit acceptance. Live run may continue beyond this boundary."
+}

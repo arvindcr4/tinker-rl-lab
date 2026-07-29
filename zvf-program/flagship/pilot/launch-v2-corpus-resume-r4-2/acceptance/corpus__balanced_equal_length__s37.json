@@ -1,0 +1,9 @@
+{
+  "corpus_fingerprint": "673d3f27a08c650e900069ca05db23fe45407299be13b726ae81c36c96578a20",
+  "hf_commit": "b2cb4ca32e52cf61b9388d86a49701aa34df52f8",
+  "job_id": "corpus__balanced_equal_length__s37",
+  "regime": "balanced_equal_length",
+  "schema_version": "flagship-pilot-corpus-acceptance-v1",
+  "seed": 37,
+  "status": "accepted"
+}

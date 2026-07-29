@@ -8,6 +8,7 @@ from typing import Any, Mapping
 
 from .artifacts import (
     CHECKPOINT_STEPS,
+    validate_corpus_checkpoint_manifest,
     validate_checkpoint_manifest,
     validate_corpus_manifest,
     validate_full_record,
@@ -54,22 +55,26 @@ def verify_preflight_log(
         raise VerificationError(f"preflight smoke status is not passing: {smoke.get('status')}")
     versions = smoke.get("runtime_versions")
     expected_versions = expected_runtime_versions(protocol)
-    if not isinstance(versions, dict) or {
-        key: versions.get(key) for key in expected_versions
-    } != expected_versions:
+    if (
+        not isinstance(versions, dict)
+        or {key: versions.get(key) for key in expected_versions} != expected_versions
+    ):
         raise VerificationError("preflight runtime package versions do not match the protocol")
     python_version = str(versions.get("python", ""))
     match = re.fullmatch(r"(\d+)\.(\d+)(?:\.\d+)?(?:.*)?", python_version)
     if match is None or not ((3, 11) <= tuple(map(int, match.groups())) < (3, 13)):
-        raise VerificationError(f"preflight Python version is outside >=3.11,<3.13: {python_version}")
+        raise VerificationError(
+            f"preflight Python version is outside >=3.11,<3.13: {python_version}"
+        )
     accelerator = smoke.get("accelerator")
     if not isinstance(accelerator, str) or "A100" not in accelerator.upper():
         raise VerificationError(f"preflight did not run on an A100: {accelerator}")
     if not re.fullmatch(r"[0-9a-f]{64}", str(smoke.get("group_fingerprint", ""))):
         raise VerificationError("preflight group fingerprint is malformed")
-    if not isinstance(smoke.get("charged_generated_tokens"), int) or smoke[
-        "charged_generated_tokens"
-    ] <= 0:
+    if (
+        not isinstance(smoke.get("charged_generated_tokens"), int)
+        or smoke["charged_generated_tokens"] <= 0
+    ):
         raise VerificationError("preflight generated-token charge is non-positive")
     phase_flops = smoke.get("phase_flops")
     if not isinstance(phase_flops, dict):
@@ -83,6 +88,12 @@ def verify_preflight_log(
         raise VerificationError("preflight training receipt is missing")
     if receipt.get("condition") != "intended_full" or receipt.get("step") != 1:
         raise VerificationError("preflight training receipt selected the wrong condition or step")
+    if (
+        receipt.get("gradient_relation") != "nonzero"
+        or receipt.get("selected_vs_intended_relation") != "nonzero"
+        or receipt.get("optimizer_update") != "applied"
+    ):
+        raise VerificationError("preflight training receipt is degenerate or did not update")
     positive_fields = (
         "intended_gradient_norm",
         "native_gradient_norm",
@@ -105,6 +116,16 @@ def verify_preflight_log(
     for field in positive_fields:
         if receipt[field] <= 0:
             raise VerificationError(f"preflight gradient norm is non-positive: {field}")
+    for field in ("gradient_cosine", "selected_vs_intended_cosine"):
+        if not -1.0 <= receipt[field] <= 1.0:
+            raise VerificationError(
+                f"preflight receipt cosine is outside [-1, 1]: {field}={receipt[field]}"
+            )
+    for field in ("gradient_relative_l2", "selected_vs_intended_relative_l2"):
+        if receipt[field] < 0.0:
+            raise VerificationError(
+                f"preflight receipt relative L2 is negative: {field}={receipt[field]}"
+            )
     for field in ("active_rows", "active_tokens"):
         if not isinstance(receipt.get(field), int) or receipt[field] <= 0:
             raise VerificationError(f"preflight receipt count is non-positive: {field}")
@@ -128,9 +149,15 @@ def _verify_files(root: Path, files: Mapping[str, str], *, label: str) -> None:
             raise VerificationError(f"{label} file hash mismatch: {relative}")
 
 
-def _verify_source_manifest(stored: Mapping[str, str]) -> None:
+def _verify_source_manifest(
+    stored: Mapping[str, str], *, expected: Mapping[str, str] | None = None
+) -> None:
     if not stored:
         raise VerificationError("source manifest is empty")
+    if expected is not None:
+        if dict(stored) != dict(expected):
+            raise VerificationError("source manifest does not match frozen corpus binding")
+        return
     for relative, digest in stored.items():
         path = REPO_ROOT / relative
         if not path.is_file() or sha256_file(path) != digest:
@@ -167,7 +194,12 @@ def verify_corpus_remote(
     info = hf_api.repo_info(repo_id=repo, repo_type="dataset")
     if info.private is not True:
         raise VerificationError(f"corpus repository is not private: {repo}")
-    revision = str(info.sha)
+    corpus_binding = plan["corpus_binding"]
+    revision = (
+        str(corpus_binding["hf_commit"])
+        if corpus_binding["status"] == "accepted_complete"
+        else str(info.sha)
+    )
     root = Path(
         snapshot_download(
             repo_id=repo,
@@ -184,11 +216,71 @@ def verify_corpus_remote(
         seed=seed,
     )
     _verify_files(root, manifest["artifact_files"], label="corpus")
-    _verify_source_manifest(manifest["source_manifest"])
+    _verify_source_manifest(manifest["source_manifest"], expected=corpus_binding["source_manifest"])
+    if corpus_binding["status"] == "accepted_complete":
+        if manifest["fingerprint"] != corpus_binding["corpus_fingerprint"]:
+            raise VerificationError("accepted corpus fingerprint changed from frozen binding")
+    latest = manifest["corpus_resume"]["latest_checkpoint"]
+    checkpoint = _verify_corpus_checkpoint_remote(
+        repo=repo,
+        revision=latest["hf_commit"],
+        protocol=protocol,
+        regime=regime,
+        seed=seed,
+        token=hf_api.token,
+    )
+    if checkpoint["fingerprint"] != latest["fingerprint"]:
+        raise VerificationError("corpus latest checkpoint fingerprint mismatch")
+    if checkpoint["completed_groups"] != latest["completed_groups"]:
+        raise VerificationError("corpus latest checkpoint boundary mismatch")
     run = _verify_wandb_run(wandb_api, manifest["wandb"], label="corpus")
-    if run.config.get("protocol_sha256") != protocol.sha256:
+    if run.config.get("protocol_sha256") != corpus_binding["protocol_sha256"]:
         raise VerificationError("corpus W&B protocol hash mismatch")
     return manifest, root, revision
+
+
+def _verify_corpus_checkpoint_remote(
+    *,
+    repo: str,
+    revision: str,
+    protocol: PilotProtocol,
+    regime: str,
+    seed: int,
+    token: str,
+) -> dict[str, Any]:
+    from huggingface_hub import hf_hub_download
+
+    prefix = "resume"
+    manifest_path = hf_hub_download(
+        repo_id=repo,
+        repo_type="dataset",
+        revision=revision,
+        filename=f"{prefix}/corpus_checkpoint_manifest.json",
+        token=token,
+    )
+    manifest = validate_corpus_checkpoint_manifest(
+        json.loads(Path(manifest_path).read_text(encoding="utf-8")),
+        protocol=protocol,
+        regime=regime,
+        seed=seed,
+    )
+    for relative, digest in manifest["artifact_files"].items():
+        local = Path(
+            hf_hub_download(
+                repo_id=repo,
+                repo_type="dataset",
+                revision=revision,
+                filename=f"{prefix}/{relative}",
+                token=token,
+            )
+        )
+        if sha256_file(local) != digest:
+            raise VerificationError(f"corpus checkpoint remote hash mismatch: {relative}")
+    _verify_source_manifest(
+        manifest["source_manifest"],
+        expected=protocol.corpus_binding(regime, seed)["source_manifest"],
+    )
+    return manifest
 
 
 def _verify_checkpoint_remote(
@@ -299,13 +391,9 @@ def verify_unit_remote(
             source_indices=source_indices,
         )
         if summary["evidence_sha256"] != evaluation["evidence_sha256"]:
-            raise VerificationError(
-                f"held-out evidence hash mismatch at step {evaluation['step']}"
-            )
+            raise VerificationError(f"held-out evidence hash mismatch at step {evaluation['step']}")
         if summary["accuracy"] != evaluation["accuracy"]:
-            raise VerificationError(
-                f"held-out accuracy mismatch at step {evaluation['step']}"
-            )
+            raise VerificationError(f"held-out accuracy mismatch at step {evaluation['step']}")
 
     checkpoint_manifests = [
         _verify_checkpoint_remote(
@@ -336,8 +424,7 @@ def verify_unit_remote(
         "hf_latest_commit": latest_revision,
         "hf_artifact_commit": artifact_revision,
         "checkpoint_manifest_fingerprints": {
-            str(manifest["step"]): manifest["fingerprint"]
-            for manifest in checkpoint_manifests
+            str(manifest["step"]): manifest["fingerprint"] for manifest in checkpoint_manifests
         },
         "wandb_run_id": run.id,
         "final_accuracy": full_record["evaluations"][-1]["accuracy"],

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import warnings
 from contextlib import AbstractContextManager, nullcontext
 from dataclasses import asdict, dataclass
 from typing import Any, Callable, Iterable, Sequence
@@ -38,13 +39,16 @@ class StepReceipt:
     selected_loss: float
     intended_loss: float
     native_loss: float
-    gradient_cosine: float
-    gradient_relative_l2: float
+    gradient_relation: str
+    gradient_cosine: float | None
+    gradient_relative_l2: float | None
     intended_gradient_norm: float
     native_gradient_norm: float
     selected_gradient_norm: float
-    selected_vs_intended_cosine: float
-    selected_vs_intended_relative_l2: float
+    selected_vs_intended_relation: str
+    selected_vs_intended_cosine: float | None
+    selected_vs_intended_relative_l2: float | None
+    optimizer_update: str
     active_rows: int
     active_tokens: int
     optimizer_learning_rate: float
@@ -65,11 +69,7 @@ def _validate_batch(batch: ReplayBatch) -> None:
         raise TrainingContractError("replay tensors must have eight rows")
     if batch.prompt_ids.shape != batch.prompt_mask.shape:
         raise TrainingContractError("prompt IDs and masks do not align")
-    if not (
-        batch.completion_ids.shape
-        == batch.completion_mask.shape
-        == batch.old_logps.shape
-    ):
+    if not (batch.completion_ids.shape == batch.completion_mask.shape == batch.old_logps.shape):
         raise TrainingContractError("completion IDs, masks, and old log probabilities do not align")
     if batch.prompt_ids.shape[1] <= 0 or batch.completion_ids.shape[1] <= 0:
         raise TrainingContractError("prompt and completion widths must be positive")
@@ -120,12 +120,18 @@ def _gradients(
     *,
     retain_graph: bool,
 ) -> tuple[torch.Tensor, ...]:
-    values = torch.autograd.grad(
-        loss,
-        parameters,
-        retain_graph=retain_graph,
-        allow_unused=True,
-    )
+    # Gradient checkpointing recomputes the policy forward after
+    # completion_logps() has exited its SDPA context. Keep the deterministic
+    # math backend active for that recomputation as well; otherwise torch
+    # 2.7.1 can route maskless Qwen3 GQA through a fused kernel and overflow
+    # before the first optimizer step.
+    with sdpa_kernel([SDPBackend.MATH]):
+        values = torch.autograd.grad(
+            loss,
+            parameters,
+            retain_graph=retain_graph,
+            allow_unused=True,
+        )
     return tuple(
         torch.zeros_like(parameter) if value is None else value
         for parameter, value in zip(parameters, values, strict=True)
@@ -133,14 +139,93 @@ def _gradients(
 
 
 def _flatten(gradients: Iterable[torch.Tensor]) -> torch.Tensor:
-    return torch.cat(tuple(gradient.detach().float().reshape(-1).cpu() for gradient in gradients))
+    # Accumulate diagnostics in float64 on CPU. The optimizer still receives
+    # the original gradient tensors; this conversion is receipt-only and
+    # prevents low-precision dot/norm roundoff from emitting |cosine| > 1.
+    return torch.cat(tuple(gradient.detach().double().reshape(-1).cpu() for gradient in gradients))
 
 
 def _finite_norm(vector: torch.Tensor, *, label: str) -> float:
     norm = float(torch.linalg.vector_norm(vector))
-    if not math.isfinite(norm) or norm <= 0.0:
-        raise TrainingContractError(f"{label} gradient norm is non-positive or non-finite")
+    if not math.isfinite(norm) or norm < 0.0:
+        raise TrainingContractError(f"{label} gradient norm is negative or non-finite")
     return norm
+
+
+@dataclass(frozen=True, slots=True)
+class _GradientComparison:
+    relation: str
+    cosine: float | None
+    relative_l2: float | None
+
+
+def _compare_gradients(
+    left: torch.Tensor,
+    right: torch.Tensor,
+    *,
+    left_norm: float,
+    right_norm: float,
+    left_zero_relation: str,
+    right_zero_relation: str,
+    label: str,
+) -> _GradientComparison:
+    """Classify a gradient pair without inventing angles for zero vectors."""
+    if left_norm == 0.0 and right_norm == 0.0:
+        return _GradientComparison("joint_zero", None, None)
+    if left_norm == 0.0:
+        return _GradientComparison(left_zero_relation, None, None)
+    if right_norm == 0.0:
+        return _GradientComparison(right_zero_relation, None, None)
+    if torch.equal(left, right):
+        # Equality is exact at the stored-vector level. Computing dot/(norm²)
+        # with separate parallel reductions can still overshoot 1 by several
+        # ulps on a large vector, but the mathematical diagnostics here are
+        # exactly cos=1 and relative-L2=0.
+        return _GradientComparison("nonzero", 1.0, 0.0)
+    return _GradientComparison(
+        relation="nonzero",
+        cosine=_bounded_cosine(
+            left,
+            right,
+            left_norm=left_norm,
+            right_norm=right_norm,
+            label=label,
+        ),
+        relative_l2=_relative_l2(
+            left,
+            right,
+            reference_norm=left_norm,
+            label=label,
+        ),
+    )
+
+
+def _bounded_cosine(
+    left: torch.Tensor,
+    right: torch.Tensor,
+    *,
+    left_norm: float,
+    right_norm: float,
+    label: str,
+) -> float:
+    value = float(torch.dot(left, right) / (left_norm * right_norm))
+    tolerance = 1e-12
+    if not math.isfinite(value) or value < -1.0 - tolerance or value > 1.0 + tolerance:
+        raise TrainingContractError(f"{label} cosine is outside [-1, 1]: {value}")
+    return min(1.0, max(-1.0, value))
+
+
+def _relative_l2(
+    left: torch.Tensor,
+    right: torch.Tensor,
+    *,
+    reference_norm: float,
+    label: str,
+) -> float:
+    value = float(torch.linalg.vector_norm(left - right) / reference_norm)
+    if not math.isfinite(value) or value < 0.0:
+        raise TrainingContractError(f"{label} relative L2 is negative or non-finite: {value}")
+    return value
 
 
 def _assign_gradients(
@@ -206,28 +291,47 @@ def run_replay_step(
     intended_norm = _finite_norm(intended_vector, label="intended")
     native_norm = _finite_norm(native_vector, label="native")
     selected_norm = _finite_norm(selected_vector, label="selected")
-    cosine = float(torch.dot(intended_vector, native_vector) / (intended_norm * native_norm))
-    relative_l2 = float(
-        torch.linalg.vector_norm(intended_vector - native_vector) / intended_norm
+    intended_native = _compare_gradients(
+        intended_vector,
+        native_vector,
+        left_norm=intended_norm,
+        right_norm=native_norm,
+        left_zero_relation="intended_zero",
+        right_zero_relation="native_zero",
+        label="intended-vs-native",
     )
-    selected_cosine = float(
-        torch.dot(selected_vector, intended_vector) / (selected_norm * intended_norm)
+    selected_intended = _compare_gradients(
+        selected_vector,
+        intended_vector,
+        left_norm=selected_norm,
+        right_norm=intended_norm,
+        left_zero_relation="selected_zero",
+        right_zero_relation="intended_zero",
+        label="selected-vs-intended",
     )
-    selected_relative_l2 = float(
-        torch.linalg.vector_norm(selected_vector - intended_vector) / intended_norm
-    )
-    if not all(
-        math.isfinite(value)
-        for value in (cosine, relative_l2, selected_cosine, selected_relative_l2)
-    ):
-        raise TrainingContractError("gradient diagnostic is non-finite")
 
     with phase("optimizer_step"):
-        _assign_gradients(parameters, selected_gradients)
-        torch.nn.utils.clip_grad_norm_(parameters, max_grad_norm)
-        optimizer.step()
+        if selected_norm == 0.0:
+            optimizer_update = "no_op_zero_gradient"
+        else:
+            _assign_gradients(parameters, selected_gradients)
+            torch.nn.utils.clip_grad_norm_(parameters, max_grad_norm)
+            optimizer.step()
+            optimizer_update = "applied"
         if scheduler is not None:
-            scheduler.step()
+            if optimizer_update == "no_op_zero_gradient":
+                # PyTorch warns when the first scheduled step intentionally has
+                # no optimizer.step(). Advancing last_epoch is nevertheless the
+                # frozen contract, so suppress only that expected warning.
+                with warnings.catch_warnings():
+                    warnings.filterwarnings(
+                        "ignore",
+                        message=r"Detected call of `lr_scheduler.step\(\)` before",
+                        category=UserWarning,
+                    )
+                    scheduler.step()
+            else:
+                scheduler.step()
     learning_rates = {float(group["lr"]) for group in optimizer.param_groups}
     if len(learning_rates) != 1:
         raise TrainingContractError("optimizer parameter groups have inconsistent learning rates")
@@ -239,13 +343,16 @@ def run_replay_step(
         selected_loss=float(selected_loss.detach()),
         intended_loss=float(intended_loss.detach()),
         native_loss=float(native_loss.detach()),
-        gradient_cosine=cosine,
-        gradient_relative_l2=relative_l2,
+        gradient_relation=intended_native.relation,
+        gradient_cosine=intended_native.cosine,
+        gradient_relative_l2=intended_native.relative_l2,
         intended_gradient_norm=intended_norm,
         native_gradient_norm=native_norm,
         selected_gradient_norm=selected_norm,
-        selected_vs_intended_cosine=selected_cosine,
-        selected_vs_intended_relative_l2=selected_relative_l2,
+        selected_vs_intended_relation=selected_intended.relation,
+        selected_vs_intended_cosine=selected_intended.cosine,
+        selected_vs_intended_relative_l2=selected_intended.relative_l2,
+        optimizer_update=optimizer_update,
         active_rows=int(batch.active_rows.sum()),
         active_tokens=int(batch.completion_mask.sum()),
         optimizer_learning_rate=learning_rates.pop(),

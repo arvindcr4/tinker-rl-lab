@@ -21,10 +21,59 @@ from .verifier import (
 
 
 DEFAULT_STATE = DEFAULT_OUTPUT / "supervisor_state.json"
+INFRASTRUCTURE_FAILURE_MARKERS = (
+    "TooManyAssignmentsError",
+    "Precondition Failed",
+    "appears to be lost",
+    "Connection was lost.",
+    "ColabRequestError",
+    "RESOURCE_EXHAUSTED",
+    "429 Too Many Requests",
+)
 
 
 class SupervisorError(RuntimeError):
     """The persistent pilot scheduler is unauthorized or cannot make safe progress."""
+
+
+def _archive_attempt_output(*, output_dir: Path, job_id: str, attempt: int) -> dict[str, Path]:
+    archived: dict[str, Path] = {}
+    for kind, suffix in (("logs", ".log"), ("results", ".json")):
+        source = output_dir / kind / f"{job_id}{suffix}"
+        if not source.is_file():
+            continue
+        target = output_dir / "attempts" / job_id / f"attempt-{attempt}{suffix}"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        payload = source.read_bytes()
+        if target.exists():
+            if target.read_bytes() != payload:
+                raise SupervisorError(f"attempt archive collision for {job_id} attempt {attempt}")
+        else:
+            temporary = target.with_name(f".{target.name}.tmp-{os.getpid()}")
+            temporary.write_bytes(payload)
+            os.replace(temporary, target)
+        archived[kind] = target
+    return archived
+
+
+def _classify_launcher_failure(
+    *, log_path: Path | None, return_code: int, attempts: int, attempt_limit: int
+) -> tuple[str, str]:
+    text = ""
+    if log_path is not None and log_path.is_file():
+        text = log_path.read_text(encoding="utf-8", errors="replace")
+    marker = next(
+        (candidate for candidate in INFRASTRUCTURE_FAILURE_MARKERS if candidate in text),
+        None,
+    )
+    if marker is None:
+        return (
+            "failed_validation",
+            f"launcher exited {return_code} without a recognized infrastructure "
+            "signature; automatic retry is forbidden",
+        )
+    status = "pending" if attempts < attempt_limit else "failed_infrastructure"
+    return status, f"launcher exited {return_code}; infrastructure marker: {marker}"
 
 
 def initial_state(manifest: Mapping[str, Any]) -> dict[str, Any]:
@@ -54,12 +103,24 @@ def ready_jobs(
         return []
     statuses = state["jobs"]
     ready: list[str] = []
+    running_corpora = sum(
+        record["status"] == "running" and job["kind"] == "corpus"
+        for job in manifest["jobs"]
+        for record in (statuses[job["id"]],)
+    )
+    selected_corpora = 0
     for job in manifest["jobs"]:
         record = statuses[job["id"]]
         if record["status"] != "pending":
             continue
         if all(statuses[dependency]["status"] == "accepted" for dependency in job["depends_on"]):
+            if job["kind"] == "corpus" and running_corpora + selected_corpora >= int(
+                manifest["max_parallel_corpus_sessions"]
+            ):
+                continue
             ready.append(job["id"])
+            if job["kind"] == "corpus":
+                selected_corpora += 1
             if len(ready) == capacity:
                 break
     return ready
@@ -197,10 +258,17 @@ def run_supervisor(
             record = state["jobs"][job_id]
             record["pid"] = None
             del processes[job_id]
+            archived = _archive_attempt_output(
+                output_dir=output_dir,
+                job_id=job_id,
+                attempt=int(record["attempts"]),
+            )
             if return_code != 0:
-                record["last_error"] = f"launcher exited {return_code}"
-                record["status"] = (
-                    "pending" if record["attempts"] < 3 else "failed_infrastructure"
+                record["status"], record["last_error"] = _classify_launcher_failure(
+                    log_path=archived.get("logs"),
+                    return_code=return_code,
+                    attempts=int(record["attempts"]),
+                    attempt_limit=int(manifest["max_attempts_per_job"]),
                 )
                 atomic_json(state_path, state)
                 continue
@@ -218,7 +286,9 @@ def run_supervisor(
             except Exception as exc:
                 record["last_error"] = f"verification infrastructure error: {exc}"
                 record["status"] = (
-                    "pending" if record["attempts"] < 3 else "failed_infrastructure"
+                    "pending"
+                    if record["attempts"] < int(manifest["max_attempts_per_job"])
+                    else "failed_infrastructure"
                 )
             else:
                 record["status"] = "accepted"

@@ -1,0 +1,447 @@
+{
+  "metadata": {
+    "timestamp": "2026-07-27T17:15:58.659988+00:00",
+    "group_sizes": [
+      4,
+      8,
+      16
+    ],
+    "sequence_lengths": [
+      512,
+      1024,
+      2048
+    ],
+    "algorithms": [
+      "standard_grpo",
+      "spectral_legendre_grpo",
+      "entropic_givens_grpo"
+    ],
+    "total_trials": 9,
+    "num_warmup": 5,
+    "num_runs": 20
+  },
+  "summary": {
+    "average_reward_variance_recovery_ratio": {
+      "standard_grpo": 0.0,
+      "spectral_legendre_grpo": 0.09679136397941056,
+      "entropic_givens_grpo": 0.09679136397941056
+    },
+    "average_gradient_norm_retention": {
+      "standard_grpo": 0.0,
+      "spectral_legendre_grpo": 0.09726743925980898,
+      "entropic_givens_grpo": 0.09726743925980898
+    },
+    "average_flop_overhead_ratio": {
+      "standard_grpo": 1.0,
+      "spectral_legendre_grpo": 4.4814453125,
+      "entropic_givens_grpo": 5.4814453125
+    }
+  },
+  "scaling_trials": [
+    {
+      "group_size": 4,
+      "sequence_length": 512,
+      "results": {
+        "standard_grpo": {
+          "algorithm": "standard_grpo",
+          "std_advantages_normal": 1.0,
+          "std_advantages_zvf": 0.0,
+          "reward_variance_recovery_ratio": 0.0,
+          "gradient_norm_normal": 0.019178795535904503,
+          "gradient_norm_zvf": 0.0,
+          "gradient_norm_retention": 0.0,
+          "theoretical_flops": 22528,
+          "flop_overhead_ratio": 1.0,
+          "flop_overhead_percent": 0.0,
+          "execution_time_ms": 0.09262290004699025
+        },
+        "spectral_legendre_grpo": {
+          "algorithm": "spectral_legendre_grpo",
+          "std_advantages_normal": 1.0053416367635826,
+          "std_advantages_zvf": 0.0979960013679713,
+          "reward_variance_recovery_ratio": 0.09747532359590928,
+          "gradient_norm_normal": 0.019144519808006216,
+          "gradient_norm_zvf": 0.0018784798904390582,
+          "gradient_norm_retention": 0.0981210241509155,
+          "theoretical_flops": 109144,
+          "flop_overhead_ratio": 4.844815340909091,
+          "flop_overhead_percent": 384.48153409090907,
+          "execution_time_ms": 0.3946458498830907
+        },
+        "entropic_givens_grpo": {
+          "algorithm": "entropic_givens_grpo",
+          "std_advantages_normal": 1.0053416367635826,
+          "std_advantages_zvf": 0.0979960013679713,
+          "reward_variance_recovery_ratio": 0.09747532359590928,
+          "gradient_norm_normal": 0.019144519808006216,
+          "gradient_norm_zvf": 0.0018784798904390582,
+          "gradient_norm_retention": 0.0981210241509155,
+          "theoretical_flops": 131672,
+          "flop_overhead_ratio": 5.844815340909091,
+          "flop_overhead_percent": 484.48153409090907,
+          "execution_time_ms": 0.42644375025702175
+        }
+      }
+    },
+    {
+      "group_size": 4,
+      "sequence_length": 1024,
+      "results": {
+        "standard_grpo": {
+          "algorithm": "standard_grpo",
+          "std_advantages_normal": 1.0,
+          "std_advantages_zvf": 0.0,
+          "reward_variance_recovery_ratio": 0.0,
+          "gradient_norm_normal": 0.013560116478379094,
+          "gradient_norm_zvf": 0.0,
+          "gradient_norm_retention": 0.0,
+          "theoretical_flops": 45056,
+          "flop_overhead_ratio": 1.0,
+          "flop_overhead_percent": 0.0,
+          "execution_time_ms": 0.23479164992750157
+        },
+        "spectral_legendre_grpo": {
+          "algorithm": "spectral_legendre_grpo",
+          "std_advantages_normal": 1.0034169090375264,
+          "std_advantages_zvf": 0.09806699643815088,
+          "reward_variance_recovery_ratio": 0.0977330514912454,
+          "gradient_norm_normal": 0.01350958773465483,
+          "gradient_norm_zvf": 0.0013315102225310129,
+          "gradient_norm_retention": 0.09856038901286523,
+          "theoretical_flops": 217688,
+          "flop_overhead_ratio": 4.831498579545454,
+          "flop_overhead_percent": 383.14985795454544,
+          "execution_time_ms": 1.7377000000124099
+        },
+        "entropic_givens_grpo": {
+          "algorithm": "entropic_givens_grpo",
+          "std_advantages_normal": 1.0034169090375264,
+          "std_advantages_zvf": 0.09806699643815088,
+          "reward_variance_recovery_ratio": 0.0977330514912454,
+          "gradient_norm_normal": 0.01350958773465483,
+          "gradient_norm_zvf": 0.0013315102225310129,
+          "gradient_norm_retention": 0.09856038901286523,
+          "theoretical_flops": 262744,
+          "flop_overhead_ratio": 5.831498579545454,
+          "flop_overhead_percent": 483.14985795454544,
+          "execution_time_ms": 0.6360333500197157
+        }
+      }
+    },
+    {
+      "group_size": 4,
+      "sequence_length": 2048,
+      "results": {
+        "standard_grpo": {
+          "algorithm": "standard_grpo",
+          "std_advantages_normal": 1.0,
+          "std_advantages_zvf": 0.0,
+          "reward_variance_recovery_ratio": 0.0,
+          "gradient_norm_normal": 0.0095894912000571,
+          "gradient_norm_zvf": 0.0,
+          "gradient_norm_retention": 0.0,
+          "theoretical_flops": 90112,
+          "flop_overhead_ratio": 1.0,
+          "flop_overhead_percent": 0.0,
+          "execution_time_ms": 0.2382082999247359
+        },
+        "spectral_legendre_grpo": {
+          "algorithm": "spectral_legendre_grpo",
+          "std_advantages_normal": 1.0048442024182536,
+          "std_advantages_zvf": 0.09807103888199595,
+          "reward_variance_recovery_ratio": 0.09759825318788587,
+          "gradient_norm_normal": 0.009566964816484993,
+          "gradient_norm_zvf": 0.000940407576650282,
+          "gradient_norm_retention": 0.09829738006664876,
+          "theoretical_flops": 434776,
+          "flop_overhead_ratio": 4.824840198863637,
+          "flop_overhead_percent": 382.4840198863637,
+          "execution_time_ms": 0.5896187500184169
+        },
+        "entropic_givens_grpo": {
+          "algorithm": "entropic_givens_grpo",
+          "std_advantages_normal": 1.0048442024182536,
+          "std_advantages_zvf": 0.09807103888199595,
+          "reward_variance_recovery_ratio": 0.09759825318788587,
+          "gradient_norm_normal": 0.009566964816484993,
+          "gradient_norm_zvf": 0.000940407576650282,
+          "gradient_norm_retention": 0.09829738006664876,
+          "theoretical_flops": 524888,
+          "flop_overhead_ratio": 5.824840198863637,
+          "flop_overhead_percent": 482.4840198863637,
+          "execution_time_ms": 0.6795166500523919
+        }
+      }
+    },
+    {
+      "group_size": 8,
+      "sequence_length": 512,
+      "results": {
+        "standard_grpo": {
+          "algorithm": "standard_grpo",
+          "std_advantages_normal": 1.0,
+          "std_advantages_zvf": 0.0,
+          "reward_variance_recovery_ratio": 0.0,
+          "gradient_norm_normal": 0.014639535614045653,
+          "gradient_norm_zvf": 0.0,
+          "gradient_norm_retention": 0.0,
+          "theoretical_flops": 45056,
+          "flop_overhead_ratio": 1.0,
+          "flop_overhead_percent": 0.0,
+          "execution_time_ms": 0.19278335021226667
+        },
+        "spectral_legendre_grpo": {
+          "algorithm": "spectral_legendre_grpo",
+          "std_advantages_normal": 1.0025936609355348,
+          "std_advantages_zvf": 0.09712224753685889,
+          "reward_variance_recovery_ratio": 0.09687099701611189,
+          "gradient_norm_normal": 0.01462892664325487,
+          "gradient_norm_zvf": 0.0014267282429545156,
+          "gradient_norm_retention": 0.09752788278642123,
+          "theoretical_flops": 199344,
+          "flop_overhead_ratio": 4.424360795454546,
+          "flop_overhead_percent": 342.43607954545456,
+          "execution_time_ms": 0.91625835011655
+        },
+        "entropic_givens_grpo": {
+          "algorithm": "entropic_givens_grpo",
+          "std_advantages_normal": 1.0025936609355348,
+          "std_advantages_zvf": 0.09712224753685889,
+          "reward_variance_recovery_ratio": 0.09687099701611189,
+          "gradient_norm_normal": 0.01462892664325487,
+          "gradient_norm_zvf": 0.0014267282429545156,
+          "gradient_norm_retention": 0.09752788278642123,
+          "theoretical_flops": 244400,
+          "flop_overhead_ratio": 5.424360795454546,
+          "flop_overhead_percent": 442.43607954545456,
+          "execution_time_ms": 1.04599580008653
+        }
+      }
+    },
+    {
+      "group_size": 8,
+      "sequence_length": 1024,
+      "results": {
+        "standard_grpo": {
+          "algorithm": "standard_grpo",
+          "std_advantages_normal": 1.0,
+          "std_advantages_zvf": 0.0,
+          "reward_variance_recovery_ratio": 0.0,
+          "gradient_norm_normal": 0.010352983699553859,
+          "gradient_norm_zvf": 0.0,
+          "gradient_norm_retention": 0.0,
+          "theoretical_flops": 90112,
+          "flop_overhead_ratio": 1.0,
+          "flop_overhead_percent": 0.0,
+          "execution_time_ms": 0.2228917001048103
+        },
+        "spectral_legendre_grpo": {
+          "algorithm": "spectral_legendre_grpo",
+          "std_advantages_normal": 1.0043455615004977,
+          "std_advantages_zvf": 0.09713197976481115,
+          "reward_variance_recovery_ratio": 0.0967117130678563,
+          "gradient_norm_normal": 0.01036410692548647,
+          "gradient_norm_zvf": 0.0010067969868116746,
+          "gradient_norm_retention": 0.09714266690319943,
+          "theoretical_flops": 395952,
+          "flop_overhead_ratio": 4.393998579545454,
+          "flop_overhead_percent": 339.39985795454544,
+          "execution_time_ms": 0.9564291500282707
+        },
+        "entropic_givens_grpo": {
+          "algorithm": "entropic_givens_grpo",
+          "std_advantages_normal": 1.0043455615004977,
+          "std_advantages_zvf": 0.09713197976481115,
+          "reward_variance_recovery_ratio": 0.0967117130678563,
+          "gradient_norm_normal": 0.01036410692548647,
+          "gradient_norm_zvf": 0.0010067969868116746,
+          "gradient_norm_retention": 0.09714266690319943,
+          "theoretical_flops": 486064,
+          "flop_overhead_ratio": 5.393998579545454,
+          "flop_overhead_percent": 439.39985795454544,
+          "execution_time_ms": 1.1463312501291512
+        }
+      }
+    },
+    {
+      "group_size": 8,
+      "sequence_length": 2048,
+      "results": {
+        "standard_grpo": {
+          "algorithm": "standard_grpo",
+          "std_advantages_normal": 1.0,
+          "std_advantages_zvf": 0.0,
+          "reward_variance_recovery_ratio": 0.0,
+          "gradient_norm_normal": 0.007320037808800088,
+          "gradient_norm_zvf": 0.0,
+          "gradient_norm_retention": 0.0,
+          "theoretical_flops": 180224,
+          "flop_overhead_ratio": 1.0,
+          "flop_overhead_percent": 0.0,
+          "execution_time_ms": 0.2945958502095891
+        },
+        "spectral_legendre_grpo": {
+          "algorithm": "spectral_legendre_grpo",
+          "std_advantages_normal": 1.004973386129756,
+          "std_advantages_zvf": 0.09712607611708023,
+          "reward_variance_recovery_ratio": 0.09664542112017671,
+          "gradient_norm_normal": 0.0073324143956110385,
+          "gradient_norm_zvf": 0.0007112188376308435,
+          "gradient_norm_retention": 0.09699654155615613,
+          "theoretical_flops": 789168,
+          "flop_overhead_ratio": 4.378817471590909,
+          "flop_overhead_percent": 337.88174715909093,
+          "execution_time_ms": 1.082043750284356
+        },
+        "entropic_givens_grpo": {
+          "algorithm": "entropic_givens_grpo",
+          "std_advantages_normal": 1.004973386129756,
+          "std_advantages_zvf": 0.09712607611708023,
+          "reward_variance_recovery_ratio": 0.09664542112017671,
+          "gradient_norm_normal": 0.0073324143956110385,
+          "gradient_norm_zvf": 0.0007112188376308435,
+          "gradient_norm_retention": 0.09699654155615613,
+          "theoretical_flops": 969392,
+          "flop_overhead_ratio": 5.378817471590909,
+          "flop_overhead_percent": 437.88174715909093,
+          "execution_time_ms": 1.4045708001503954
+        }
+      }
+    },
+    {
+      "group_size": 16,
+      "sequence_length": 512,
+      "results": {
+        "standard_grpo": {
+          "algorithm": "standard_grpo",
+          "std_advantages_normal": 1.0,
+          "std_advantages_zvf": 0.0,
+          "reward_variance_recovery_ratio": 0.0,
+          "gradient_norm_normal": 0.010714279641223828,
+          "gradient_norm_zvf": 0.0,
+          "gradient_norm_retention": 0.0,
+          "theoretical_flops": 90112,
+          "flop_overhead_ratio": 1.0,
+          "flop_overhead_percent": 0.0,
+          "execution_time_ms": 0.21841874986421317
+        },
+        "spectral_legendre_grpo": {
+          "algorithm": "spectral_legendre_grpo",
+          "std_advantages_normal": 1.0038040942073767,
+          "std_advantages_zvf": 0.09645178616137576,
+          "reward_variance_recovery_ratio": 0.09608626495744269,
+          "gradient_norm_normal": 0.010739481155423303,
+          "gradient_norm_zvf": 0.0010355093529587655,
+          "gradient_norm_retention": 0.0964207989168868,
+          "theoretical_flops": 384352,
+          "flop_overhead_ratio": 4.265269886363637,
+          "flop_overhead_percent": 326.5269886363637,
+          "execution_time_ms": 2.763518749998184
+        },
+        "entropic_givens_grpo": {
+          "algorithm": "entropic_givens_grpo",
+          "std_advantages_normal": 1.0038040942073767,
+          "std_advantages_zvf": 0.09645178616137576,
+          "reward_variance_recovery_ratio": 0.09608626495744269,
+          "gradient_norm_normal": 0.010739481155423303,
+          "gradient_norm_zvf": 0.0010355093529587655,
+          "gradient_norm_retention": 0.0964207989168868,
+          "theoretical_flops": 474464,
+          "flop_overhead_ratio": 5.265269886363637,
+          "flop_overhead_percent": 426.5269886363637,
+          "execution_time_ms": 2.994066700193798
+        }
+      }
+    },
+    {
+      "group_size": 16,
+      "sequence_length": 1024,
+      "results": {
+        "standard_grpo": {
+          "algorithm": "standard_grpo",
+          "std_advantages_normal": 1.0,
+          "std_advantages_zvf": 0.0,
+          "reward_variance_recovery_ratio": 0.0,
+          "gradient_norm_normal": 0.007575546240249849,
+          "gradient_norm_zvf": 0.0,
+          "gradient_norm_retention": 0.0,
+          "theoretical_flops": 180224,
+          "flop_overhead_ratio": 1.0,
+          "flop_overhead_percent": 0.0,
+          "execution_time_ms": 0.3129395998257678
+        },
+        "spectral_legendre_grpo": {
+          "algorithm": "spectral_legendre_grpo",
+          "std_advantages_normal": 1.0050043052143296,
+          "std_advantages_zvf": 0.09647329124239525,
+          "reward_variance_recovery_ratio": 0.0959929134053024,
+          "gradient_norm_normal": 0.0076021626943742135,
+          "gradient_norm_zvf": 0.0007309579383871341,
+          "gradient_norm_retention": 0.09615131479993988,
+          "theoretical_flops": 757088,
+          "flop_overhead_ratio": 4.200816761363637,
+          "flop_overhead_percent": 320.0816761363637,
+          "execution_time_ms": 2.9244687499158317
+        },
+        "entropic_givens_grpo": {
+          "algorithm": "entropic_givens_grpo",
+          "std_advantages_normal": 1.0050043052143296,
+          "std_advantages_zvf": 0.09647329124239525,
+          "reward_variance_recovery_ratio": 0.0959929134053024,
+          "gradient_norm_normal": 0.0076021626943742135,
+          "gradient_norm_zvf": 0.0007309579383871341,
+          "gradient_norm_retention": 0.09615131479993988,
+          "theoretical_flops": 937312,
+          "flop_overhead_ratio": 5.200816761363637,
+          "flop_overhead_percent": 420.0816761363637,
+          "execution_time_ms": 3.2833958000992425
+        }
+      }
+    },
+    {
+      "group_size": 16,
+      "sequence_length": 2048,
+      "results": {
+        "standard_grpo": {
+          "algorithm": "standard_grpo",
+          "std_advantages_normal": 1.0,
+          "std_advantages_zvf": 0.0,
+          "reward_variance_recovery_ratio": 0.0,
+          "gradient_norm_normal": 0.005357214919380694,
+          "gradient_norm_zvf": 0.0,
+          "gradient_norm_retention": 0.0,
+          "theoretical_flops": 360448,
+          "flop_overhead_ratio": 1.0,
+          "flop_overhead_percent": 0.0,
+          "execution_time_ms": 0.5399791501986329
+        },
+        "spectral_legendre_grpo": {
+          "algorithm": "spectral_legendre_grpo",
+          "std_advantages_normal": 1.0048493376540053,
+          "std_advantages_zvf": 0.0964739148211943,
+          "reward_variance_recovery_ratio": 0.09600833797276451,
+          "gradient_norm_normal": 0.005374822183218109,
+          "gradient_norm_zvf": 0.0005169985298952496,
+          "gradient_norm_retention": 0.09618895514524782,
+          "theoretical_flops": 1502560,
+          "flop_overhead_ratio": 4.168590198863637,
+          "flop_overhead_percent": 316.8590198863637,
+          "execution_time_ms": 3.307481249794364
+        },
+        "entropic_givens_grpo": {
+          "algorithm": "entropic_givens_grpo",
+          "std_advantages_normal": 1.0048493376540053,
+          "std_advantages_zvf": 0.0964739148211943,
+          "reward_variance_recovery_ratio": 0.09600833797276451,
+          "gradient_norm_normal": 0.005374822183218109,
+          "gradient_norm_zvf": 0.0005169985298952496,
+          "gradient_norm_retention": 0.09618895514524782,
+          "theoretical_flops": 1863008,
+          "flop_overhead_ratio": 5.168590198863637,
+          "flop_overhead_percent": 416.8590198863637,
+          "execution_time_ms": 3.8048646001698216
+        }
+      }
+    }
+  ]
+}

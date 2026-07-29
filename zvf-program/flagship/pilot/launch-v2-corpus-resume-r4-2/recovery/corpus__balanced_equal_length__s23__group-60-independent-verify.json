@@ -1,0 +1,66 @@
+{
+  "status": "independently_verified",
+  "job_id": "corpus__balanced_equal_length__s23",
+  "schema_version": "flagship-pilot-corpus-checkpoint-independent-verify-v1",
+  "repo": "arvindcr4/tinker-rl-lab-flagship-pilot-corpus-balanced_equal_length-s23-04d20f71-10e481a8",
+  "private": true,
+  "hf_commit": "8b1f2105bc715e5dbf9545f4bc244f3e8800e5ba",
+  "repo_info_sha": "8b1f2105bc715e5dbf9545f4bc244f3e8800e5ba",
+  "completed_groups": 60,
+  "fingerprint": "a6e170736a463412b3067460f524e4e10e06ee3b0d03402861a4f106953a3308",
+  "charged_generated_tokens": 239047,
+  "resume_count": 1,
+  "protocol_sha256": "04d20f712f652f80754fa4c8c0a3f48d4d2f1c5d716b3981746322c938b21970",
+  "accelerator": "NVIDIA A100-SXM4-40GB",
+  "runtime_versions": {
+    "accelerate": "1.13.0",
+    "datasets": "4.8.4",
+    "huggingface-hub": "1.11.0",
+    "numpy": "2.2.6",
+    "peft": "0.19.1",
+    "python": "3.12.13",
+    "torch": "2.7.1",
+    "transformers": "5.5.4",
+    "trl": "1.2.0",
+    "wandb": "0.21.0"
+  },
+  "attempts": [
+    {
+      "completed_through": 20,
+      "run_id": "ge121gt6",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/ge121gt6",
+      "start_group": 0
+    },
+    {
+      "completed_through": 60,
+      "run_id": "ncpafe25",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/ncpafe25",
+      "start_group": 20
+    }
+  ],
+  "artifact_file_count": 61,
+  "group_artifact_count": 60,
+  "flop_ledger": {
+    "profiled_generated_tokens": 15677,
+    "profiled_generation_flops": 65764139042608.0,
+    "profiled_steps": [
+      1,
+      20,
+      40,
+      60
+    ]
+  },
+  "status_field": "partial",
+  "source_manifest_entry_count": 14,
+  "all_artifact_sha256_matched": true,
+  "wandb_reconcile": {
+    "run_id": "ncpafe25",
+    "checkpoint_group": 60,
+    "checkpoint_commit": "8b1f2105bc715e5dbf9545f4bc244f3e8800e5ba",
+    "checkpoint_fingerprint": "a6e170736a463412b3067460f524e4e10e06ee3b0d03402861a4f106953a3308",
+    "last_observed_group_after_checkpoint": 72,
+    "last_observed_tokens_after_checkpoint": 287991,
+    "run_state": "crashed",
+    "note": "Post-group-60 rows 61-72 are not an accepted higher checkpoint; only the group-60 immutable commit is independently verified."
+  }
+}

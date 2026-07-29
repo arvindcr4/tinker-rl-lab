@@ -1,0 +1,8 @@
+{
+  "job_id": "preflight__a100_stack_smoke",
+  "log_path": "pilot/launch-v2-corpus-resume-r2/logs/preflight__a100_stack_smoke.log",
+  "protocol_sha256": "adc79c088ef34d70e3f229204901ccecf7dcfde92f7af407761bc61cfa35fe33",
+  "source_archive_sha256": "3a16a718a4c203ff8b9c72dec456a83f2fd96f7de071a4450e6e45e0eb8d03ac",
+  "source_bindings_sha256": "aa127b3fc75b8bfe6fd0555f6d40724f48372cec82689f2492aba32306d670c7",
+  "status": "completed"
+}

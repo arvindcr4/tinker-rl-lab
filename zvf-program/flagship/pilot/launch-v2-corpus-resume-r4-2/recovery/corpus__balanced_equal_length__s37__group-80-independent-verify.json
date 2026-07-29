@@ -1,0 +1,64 @@
+{
+  "accelerator": "NVIDIA A100-SXM4-40GB",
+  "all_artifact_sha256_matched": true,
+  "artifact_file_count": 81,
+  "attempts": [
+    {
+      "completed_through": 80,
+      "run_id": "60bhrt9q",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/60bhrt9q",
+      "start_group": 0
+    }
+  ],
+  "charged_generated_tokens": 320208,
+  "completed_groups": 80,
+  "counts_as_acceptance": false,
+  "fingerprint": "784c6477ae2e8a0c423dcd732118bb1846a48b7dff51a8555191fca591938d5f",
+  "flop_ledger": {
+    "profiled_generated_tokens": 20480,
+    "profiled_generation_flops": 83448352155704.0,
+    "profiled_steps": [
+      1,
+      20,
+      40,
+      60,
+      80
+    ]
+  },
+  "group_artifact_count": 80,
+  "hf_commit": "25cb83c3f49146af8d3236a4bad9b881e82befe5",
+  "job_id": "corpus__balanced_equal_length__s37",
+  "note": "Partial corpus checkpoint only; not corpus acceptance. Live run may continue beyond this boundary.",
+  "private": true,
+  "protocol_sha256": "04d20f712f652f80754fa4c8c0a3f48d4d2f1c5d716b3981746322c938b21970",
+  "repo": "arvindcr4/tinker-rl-lab-flagship-pilot-corpus-balanced_equal_length-s37-04d20f71-10e481a8",
+  "repo_info_sha": "25cb83c3f49146af8d3236a4bad9b881e82befe5",
+  "resume_count": 0,
+  "runtime_versions": {
+    "accelerate": "1.13.0",
+    "datasets": "4.8.4",
+    "huggingface-hub": "1.11.0",
+    "numpy": "2.2.6",
+    "peft": "0.19.1",
+    "python": "3.12.13",
+    "torch": "2.7.1",
+    "transformers": "5.5.4",
+    "trl": "1.2.0",
+    "wandb": "0.21.0"
+  },
+  "schema_version": "flagship-pilot-corpus-checkpoint-independent-verify-v1",
+  "source_manifest_entry_count": 14,
+  "status": "independently_verified",
+  "status_field": "partial",
+  "verified_at": "2026-07-23T01:33:20.740841+00:00",
+  "wandb_reconcile": {
+    "checkpoint_commit": "25cb83c3f49146af8d3236a4bad9b881e82befe5",
+    "checkpoint_fingerprint": "784c6477ae2e8a0c423dcd732118bb1846a48b7dff51a8555191fca591938d5f",
+    "checkpoint_group": 80,
+    "last_observed_group_after_checkpoint": 93,
+    "last_observed_tokens_after_checkpoint": 372012,
+    "note": "Post-group-80 rows are not an accepted higher checkpoint; only the group-80 immutable commit is independently verified.",
+    "run_id": "60bhrt9q",
+    "run_state": "running"
+  }
+}

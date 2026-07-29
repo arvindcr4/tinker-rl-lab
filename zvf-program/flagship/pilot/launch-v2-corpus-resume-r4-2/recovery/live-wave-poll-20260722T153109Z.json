@@ -1,0 +1,30 @@
+{
+  "schema_version": "flagship-pilot-live-poll-v1",
+  "polled_at": "2026-07-22T15:31:09.273739+00:00",
+  "thread_continued_from": "019f880f-c98e-7a93-a4c7-83352e8eff8a",
+  "active_jobs": {
+    "corpus__balanced_equal_length__s23": {
+      "pid": 99028,
+      "wandb_run": "k1uazlrj",
+      "wandb_state": "running",
+      "corpus_group": 69,
+      "charged_generated_tokens": 275911,
+      "counts_as_acceptance": false
+    },
+    "fpilot__epsilon_only__balanced_equal_length__s11": {
+      "pid": 99029,
+      "wandb_run": "1cf851c0",
+      "wandb_state": "running",
+      "training_steps_logged": 0,
+      "counts_as_acceptance": false
+    },
+    "fpilot__reduction_only__balanced_equal_length__s11": {
+      "pid": 99030,
+      "wandb_run": "b2bd75df",
+      "wandb_state": "running",
+      "training_steps_logged": 0,
+      "counts_as_acceptance": false
+    }
+  },
+  "note": "Progressing; no acceptance."
+}

@@ -1,0 +1,225 @@
+{
+  "jobs": {
+    "corpus__balanced_equal_length__s11": {
+      "acceptance_path": null,
+      "attempts": 1,
+      "last_error": "aborted before scientific initialization because the dependency smoke was invalidated",
+      "pid": null,
+      "recovery_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r2/recovery/corpus__balanced_equal_length__s11__attempt-1-aborted-invalid-smoke.json",
+      "status": "failed_validation"
+    },
+    "corpus__balanced_equal_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "corpus__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "corpus__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "corpus__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "corpus__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__epsilon_only__balanced_equal_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__epsilon_only__balanced_equal_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__epsilon_only__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__epsilon_only__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__epsilon_only__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__epsilon_only__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__balanced_equal_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__balanced_equal_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__balanced_equal_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__balanced_equal_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__balanced_equal_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__balanced_equal_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "preflight__a100_stack_smoke": {
+      "acceptance_path": "pilot/launch-v2-corpus-resume-r2/acceptance/preflight__a100_stack_smoke.json",
+      "attempts": 1,
+      "last_error": "preflight receipt contains out-of-range cosine diagnostics",
+      "pid": null,
+      "recovery_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r2/recovery/preflight__a100_stack_smoke__attempt-1-cosine-bound.json",
+      "status": "failed_validation"
+    }
+  },
+  "manifest_fingerprint": "c761348b7fcdbfaf905a2d9bef1d93430339417824df6155a949a291fdcca5a5",
+  "schema_version": "flagship-pilot-supervisor-v1"
+}

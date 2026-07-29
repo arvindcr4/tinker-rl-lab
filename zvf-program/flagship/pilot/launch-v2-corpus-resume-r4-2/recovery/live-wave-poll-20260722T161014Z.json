@@ -1,0 +1,35 @@
+{
+  "schema_version": "flagship-pilot-live-poll-v1",
+  "polled_at": "2026-07-22T16:10:14.441638+00:00",
+  "thread_continued_from": "019f880f-c98e-7a93-a4c7-83352e8eff8a",
+  "material_event": "unit_step20_independently_verified_partial_checkpoints",
+  "active_jobs": {
+    "corpus__balanced_equal_length__s23": {
+      "pid": 99028,
+      "wandb_run": "k1uazlrj",
+      "live_group": 98,
+      "live_tokens": 392256,
+      "highest_verified_partial_groups": 80,
+      "counts_as_acceptance": false
+    },
+    "fpilot__epsilon_only__balanced_equal_length__s11": {
+      "pid": 99029,
+      "wandb_run": "1cf851c0",
+      "live_step": 39,
+      "highest_verified_partial_step": 20,
+      "hf_commit": "910b10feaef8eea2e0d07da852fa47272d3af8e4",
+      "fingerprint": "de1bb04acd9d5dbf695646cbf64fe6b9ab7059fa4fc654d3a74b5593f37c2bb0",
+      "counts_as_acceptance": false
+    },
+    "fpilot__reduction_only__balanced_equal_length__s11": {
+      "pid": 99030,
+      "wandb_run": "b2bd75df",
+      "live_step": 39,
+      "highest_verified_partial_step": 20,
+      "hf_commit": "56ba889ec4507a02474089756e32bc27ea68ee86",
+      "fingerprint": "0e583e92cb5868b4d8d143eaf5886fabae644d532adffeb47d6113d598bf5000",
+      "counts_as_acceptance": false
+    }
+  },
+  "note": "Step-20 unit partials verified. Seed-23 still pre-final (group 98). No acceptance."
+}

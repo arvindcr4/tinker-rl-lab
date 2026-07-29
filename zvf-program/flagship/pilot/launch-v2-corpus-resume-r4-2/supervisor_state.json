@@ -1,0 +1,670 @@
+{
+  "jobs": {
+    "corpus__balanced_equal_length__s11": {
+      "acceptance_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/acceptance/corpus__balanced_equal_length__s11.json",
+      "attempts": 1,
+      "last_error": null,
+      "pid": null,
+      "status": "accepted"
+    },
+    "corpus__balanced_equal_length__s23": {
+      "acceptance_path": "/Users/arvind/Developer/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/acceptance/corpus__balanced_equal_length__s23.json",
+      "attempts": 1,
+      "completion": {
+        "charged_generated_tokens": 400448,
+        "completed_groups": 100,
+        "counts_as_acceptance": true,
+        "fingerprint": "bf54deaf4a62b0cffc69e40452d8133eba206163bcff44c1b6c1c6c83918e225",
+        "hf_commit": "664b9189dec25ded62bd74166a8dab0bf5727589",
+        "resume_count": 2,
+        "status": "independently_verified_complete",
+        "verification_path": "/Users/arvind/Developer/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/recovery/corpus__balanced_equal_length__s23__complete-independent-verify.json",
+        "verified_at": "2026-07-22T16:14:32.102533+00:00",
+        "wandb_run": "k1uazlrj"
+      },
+      "last_error": null,
+      "live": {
+        "colab_session": "fpcorp-bala-s23-10e4",
+        "corpus_charged_generated_tokens": 400448,
+        "corpus_checkpoint_fingerprint": "bd28125f67d244f9b939cf935508f25c38896cf27620be8809cad0a6817efaa9",
+        "corpus_checkpoint_group": 80,
+        "corpus_checkpoint_hf_commit": "a06e8cdd56974b8a4d8e201603cfee4891fb1fda",
+        "corpus_group": 100,
+        "corpus_resume_count": 2,
+        "corpus_start_group": 60,
+        "endpoint": "gpu-a100-s-kkb-usc1b1-2khsjulyuc6w6",
+        "environment_validation": "pass",
+        "hardware": "NVIDIA A100-SXM4-40GB",
+        "hf_head_completed_groups": 100,
+        "hf_head_sha": "664b9189dec25ded62bd74166a8dab0bf5727589",
+        "highest_independently_verified_partial_checkpoint": {
+          "completed_groups": 80,
+          "counts_as_acceptance": false,
+          "fingerprint": "bd28125f67d244f9b939cf935508f25c38896cf27620be8809cad0a6817efaa9",
+          "hf_commit": "a06e8cdd56974b8a4d8e201603cfee4891fb1fda",
+          "verification_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/recovery/corpus__balanced_equal_length__s23__group-80-independent-verify.json"
+        },
+        "install_status": "install_pass",
+        "note": "Complete corpus independently verified (100/100 groups, commit 664b9189..., fingerprint bf54deaf..., charged 400448, resume_count 2); acceptance written. Session stopped cleanly by launcher.",
+        "phase": "completed_accepted",
+        "resume_from_group": 60,
+        "runtime_versions": {
+          "accelerate": "1.13.0",
+          "datasets": "4.8.4",
+          "huggingface-hub": "1.11.0",
+          "numpy": "2.2.6",
+          "peft": "0.19.1",
+          "python": "3.12.13",
+          "torch": "2.7.1",
+          "transformers": "5.5.4",
+          "trl": "1.2.0",
+          "wandb": "0.21.0"
+        },
+        "updated_at": "2026-07-22T23:16:38.050043+00:00",
+        "wandb_heartbeat_at": "2026-07-22T16:11:48Z",
+        "wandb_run": "k1uazlrj",
+        "wandb_state": "finished",
+        "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/k1uazlrj"
+      },
+      "pid": null,
+      "prior_resume_boundaries": [
+        {
+          "charged_generated_tokens": 239047,
+          "completed_groups": 60,
+          "fingerprint": "a6e170736a463412b3067460f524e4e10e06ee3b0d03402861a4f106953a3308",
+          "hf_commit": "8b1f2105bc715e5dbf9545f4bc244f3e8800e5ba",
+          "note": "Superseded as highest verified boundary by group-80, but remains the resume source for this wave.",
+          "prior_wandb_run": "ncpafe25",
+          "prior_wandb_state": "crashed",
+          "status": "independently_verified_partial_checkpoint",
+          "verification_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/recovery/corpus__balanced_equal_length__s23__group-60-independent-verify.json"
+        }
+      ],
+      "resume_boundary": {
+        "charged_generated_tokens": 320513,
+        "completed_groups": 80,
+        "fingerprint": "bd28125f67d244f9b939cf935508f25c38896cf27620be8809cad0a6817efaa9",
+        "hf_commit": "a06e8cdd56974b8a4d8e201603cfee4891fb1fda",
+        "note": "Highest independently verified partial checkpoint is now group-80. Rows after 80 are not a higher accepted checkpoint. Full acceptance still requires completed_groups=100 + finished local/W&B/HF reconciliation.",
+        "prior_wandb_run": "k1uazlrj",
+        "prior_wandb_state": "running",
+        "status": "independently_verified_partial_checkpoint",
+        "verification_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/recovery/corpus__balanced_equal_length__s23__group-80-independent-verify.json"
+      },
+      "status": "accepted"
+    },
+    "corpus__balanced_equal_length__s37": {
+      "acceptance_path": "acceptance/corpus__balanced_equal_length__s37.json",
+      "attempts": 2,
+      "completion": {
+        "charged_generated_tokens": 398761,
+        "completed_groups": 100,
+        "counts_as_acceptance": true,
+        "fingerprint": "673d3f27a08c650e900069ca05db23fe45407299be13b726ae81c36c96578a20",
+        "hf_commit": "b2cb4ca32e52cf61b9388d86a49701aa34df52f8",
+        "resume_count": 0,
+        "status": "independently_verified_complete",
+        "verification_path": "recovery/corpus__balanced_equal_length__s37__complete-independent-verify.json",
+        "verified_at": "2026-07-23T02:00:29.893608+00:00",
+        "wandb_run": "60bhrt9q"
+      },
+      "last_error": null,
+      "live": {
+        "colab_session": "fpcorp-bala-s37-10e4",
+        "controller": "launchd LaunchAgent RunAtLoad=false KeepAlive=false",
+        "corpus_charged_generated_tokens": 398761,
+        "corpus_checkpoint_fingerprint": "784c6477ae2e8a0c423dcd732118bb1846a48b7dff51a8555191fca591938d5f",
+        "corpus_checkpoint_group": 80,
+        "corpus_checkpoint_hf_commit": "25cb83c3f49146af8d3236a4bad9b881e82befe5",
+        "corpus_group": 100,
+        "hf_head_completed_groups": 100,
+        "hf_head_sha": "b2cb4ca32e52cf61b9388d86a49701aa34df52f8",
+        "launchd_label": "ai.openai.codex.flagship-pilot-v2-r4-2-corpus-s37",
+        "note": "Complete corpus independently verified (100/100 groups, commit b2cb4ca3..., fingerprint 673d3f27..., charged 398761, resume_count 0); acceptance written. Session stopped cleanly by launcher.",
+        "phase": "completed_accepted",
+        "updated_at": "2026-07-23T02:00:29.893608+00:00",
+        "wandb_heartbeat_at": "2026-07-23T01:32:08Z",
+        "wandb_run": "60bhrt9q",
+        "wandb_state": "finished",
+        "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/60bhrt9q"
+      },
+      "pid": null,
+      "prior_resume_boundaries": [
+        {
+          "charged_generated_tokens": 80806,
+          "completed_groups": 20,
+          "fingerprint": "4aa2d1d4b3e69d4b0ed871fe584ad5bcb0ffe422924c07f83d835fb00b0fa7c8",
+          "hf_commit": "0e23e9a2e5cad26c4c6f1ec2acc8fcb1125fbf50",
+          "note": "Highest independently verified partial checkpoint is group-20. Rows after 20 are not a higher accepted checkpoint. Full acceptance requires completed_groups=100 + finished reconciliation.",
+          "prior_wandb_run": "60bhrt9q",
+          "prior_wandb_state": "running",
+          "status": "independently_verified_partial_checkpoint",
+          "verification_path": "recovery/corpus__balanced_equal_length__s37__group-20-independent-verify.json"
+        },
+        {
+          "charged_generated_tokens": 160608,
+          "completed_groups": 40,
+          "fingerprint": "067066042dbe06cfb01f1e56b17f62ae7a20d8c80fa885936f70bd3865c40a5e",
+          "hf_commit": "336b1ccf1b2de9a4939c376562695d891040f13d",
+          "note": "Highest independently verified partial checkpoint is now group-40. Rows after 40 are not a higher accepted checkpoint.",
+          "prior_wandb_run": "60bhrt9q",
+          "prior_wandb_state": "running",
+          "status": "independently_verified_partial_checkpoint",
+          "verification_path": "recovery/corpus__balanced_equal_length__s37__group-40-independent-verify.json"
+        },
+        {
+          "charged_generated_tokens": 241357,
+          "completed_groups": 60,
+          "fingerprint": "f0414819f685a1f865cfcc563bcc3bced548b21a45e89bbee1ca9e6060ca0ead",
+          "hf_commit": "f017bb3a167e285aa98d8ec81541a600eccd7acd",
+          "note": "Highest independently verified partial checkpoint is now group-60. Rows after 60 are not a higher accepted checkpoint.",
+          "prior_wandb_run": "60bhrt9q",
+          "prior_wandb_state": "running",
+          "status": "independently_verified_partial_checkpoint",
+          "verification_path": "recovery/corpus__balanced_equal_length__s37__group-60-independent-verify.json"
+        }
+      ],
+      "resume_boundary": {
+        "charged_generated_tokens": 320208,
+        "completed_groups": 80,
+        "fingerprint": "784c6477ae2e8a0c423dcd732118bb1846a48b7dff51a8555191fca591938d5f",
+        "hf_commit": "25cb83c3f49146af8d3236a4bad9b881e82befe5",
+        "note": "Highest independently verified partial checkpoint is now group-80. Rows after 80 are not a higher accepted checkpoint. Full acceptance requires completed_groups=100 + finished reconciliation.",
+        "prior_wandb_run": "60bhrt9q",
+        "prior_wandb_state": "running",
+        "status": "independently_verified_partial_checkpoint",
+        "verification_path": "recovery/corpus__balanced_equal_length__s37__group-80-independent-verify.json"
+      },
+      "status": "accepted"
+    },
+    "corpus__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 1,
+      "last_error": "remote generator raised ReplayContractError: filtered pool maximum selected-row length CV 0.000000 is below 0.350000 (replay.py FILTERED_MIN_LENGTH_CV); launcher reported no result line; W&B usgmq1en crashed before any group; automatic retry forbidden",
+      "live": {
+        "colab_session": "fpcorp-filt-s11-10e4",
+        "note": "Deterministic scientific contract gate failed during generation; no corpus artifact produced; session stopped by launcher. Retry would reproduce identically under frozen source. Needs investigation or amendment decision; automatic retry forbidden.",
+        "phase": "failed_validation",
+        "updated_at": "2026-07-23T02:32:44.280208+00:00",
+        "wandb_run": "usgmq1en",
+        "wandb_state": "crashed"
+      },
+      "pid": null,
+      "status": "failed_validation"
+    },
+    "corpus__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "Filtered regime contract-infeasible: under the frozen registered runtime and 512-token cap, the observed seed-11 generator produced uniform-length completions (CV=0.0), below the frozen FILTERED_MIN_LENGTH_CV=0.35 threshold; downstream filtered jobs were descoped. Metadata correction 2026-07-27: an earlier descendant summary named the wrong model; preregistration and executed runtime remain Qwen/Qwen3-1.7B.",
+      "pid": null,
+      "status": "descoped_contract_infeasible"
+    },
+    "corpus__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "Filtered regime contract-infeasible: under the frozen registered runtime and 512-token cap, the observed seed-11 generator produced uniform-length completions (CV=0.0), below the frozen FILTERED_MIN_LENGTH_CV=0.35 threshold; downstream filtered jobs were descoped. Metadata correction 2026-07-27: an earlier descendant summary named the wrong model; preregistration and executed runtime remain Qwen/Qwen3-1.7B.",
+      "pid": null,
+      "status": "descoped_contract_infeasible"
+    },
+    "fpilot__epsilon_only__balanced_equal_length__s11": {
+      "acceptance": {
+        "counts_as_acceptance": true,
+        "final_accuracy": 0.1328125,
+        "hf_artifact_commit": "803546b3bd0a172e4bc6b28598b7e075eac77476",
+        "hf_latest_commit": "5ec31d9678523dcbe80e9105d9bc9e5d1857432e",
+        "schema_version": "flagship-pilot-acceptance-v1",
+        "status": "accepted",
+        "verified_at": "2026-07-22T23:16:38.050043+00:00",
+        "wandb_run_id": "1cf851c0"
+      },
+      "acceptance_path": "/Users/arvind/Developer/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/acceptance/fpilot__epsilon_only__balanced_equal_length__s11.json",
+      "attempts": 1,
+      "last_error": null,
+      "live": {
+        "checkpoint_fingerprint": "94b28c51166f4e2c71cbae637dbf1951ad9761ab04d06bf9e6fee9bfff605fc2",
+        "checkpoint_hf_commit": "803546b3bd0a172e4bc6b28598b7e075eac77476",
+        "checkpoint_step": 100,
+        "colab_session": "fpilot-epsi-bala-s11-87d9005d",
+        "corpus_commit": "2735a27d5f18bbdaaae76494a2047b39a4318e22",
+        "corpus_fingerprint": "b09c72247b168297e73ce5edf2aad59e4496e7d78257beb252e864dd1a9587f1",
+        "endpoint": "gpu-a100-s-kkb-usc1c1-jis2jeq1vu86",
+        "environment_validation": "pass",
+        "eval_accuracy": 0.1328125,
+        "hardware": "NVIDIA A100-SXM4-40GB",
+        "install_status": "install_pass",
+        "mechanism_active_tokens": 4096,
+        "note": "Full unit independently verified fail-closed (all checkpoint manifests/files, final adapter, held-out evidence, finished W&B run); acceptance written. Session stopped cleanly by launcher.",
+        "phase": "completed_accepted",
+        "training_step": 100,
+        "updated_at": "2026-07-22T23:16:38.050043+00:00",
+        "wandb_heartbeat_at": "2026-07-22T16:12:01Z",
+        "wandb_run": "1cf851c0",
+        "wandb_state": "finished",
+        "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/1cf851c0"
+      },
+      "partial_progress": {
+        "counts_as_acceptance": false,
+        "fingerprint": "de1bb04acd9d5dbf695646cbf64fe6b9ab7059fa4fc654d3a74b5593f37c2bb0",
+        "hf_commit": "910b10feaef8eea2e0d07da852fa47272d3af8e4",
+        "independently_verified_checkpoint_step": 20,
+        "last_wandb_step": 39,
+        "verification_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/recovery/fpilot__epsilon_only__balanced_equal_length__s11__step-20-independent-verify.json",
+        "wandb_run": "1cf851c0"
+      },
+      "pid": null,
+      "status": "accepted"
+    },
+    "fpilot__epsilon_only__balanced_equal_length__s23": {
+      "acceptance": {
+        "counts_as_acceptance": true,
+        "final_accuracy": 0.1328125,
+        "hf_artifact_commit": "5d769e889a503658e8785dbf2a79dceb4a439a04",
+        "schema_version": "flagship-pilot-acceptance-v1",
+        "status": "accepted",
+        "verified_at": "2026-07-23T04:29:44.090380+00:00",
+        "wandb_run_id": "c3eec6d0"
+      },
+      "acceptance_path": "acceptance/fpilot__epsilon_only__balanced_equal_length__s23.json",
+      "attempts": 1,
+      "last_error": null,
+      "live": {
+        "checkpoint_fingerprint": "12105a57a1fbe7e922f246ec38376b3d4842cf97c2d2756d4a6046d77385a5a6",
+        "checkpoint_hf_commit": "91e4bcc7106cf4564e34998b7c803b719872ad36",
+        "checkpoint_step": 100,
+        "colab_session": "fpilot-epsi-bala-s23-87d9005d",
+        "controller": "launchd LaunchAgent RunAtLoad=false KeepAlive=false",
+        "eval_accuracy": 0.1328125,
+        "launchd_label": "ai.openai.codex.flagship-pilot-v2-r4-2-epsilon-s23",
+        "note": "Full unit independently verified fail-closed; acceptance written. Session stopped cleanly by launcher.",
+        "phase": "completed_accepted",
+        "training_step": 100,
+        "updated_at": "2026-07-23T04:29:44.090380+00:00",
+        "wandb_heartbeat_at": "2026-07-23T04:03:30Z",
+        "wandb_run": "c3eec6d0",
+        "wandb_state": "finished",
+        "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/c3eec6d0"
+      },
+      "partial_progress": {
+        "counts_as_acceptance": false,
+        "fingerprint": "12105a57a1fbe7e922f246ec38376b3d4842cf97c2d2756d4a6046d77385a5a6",
+        "hf_commit": "91e4bcc7106cf4564e34998b7c803b719872ad36",
+        "independently_verified_checkpoint_step": 80,
+        "verification_path": "recovery/fpilot__epsilon_only__balanced_equal_length__s23__step-80-independent-verify.json",
+        "wandb_run": "c3eec6d0"
+      },
+      "pid": null,
+      "status": "accepted"
+    },
+    "fpilot__epsilon_only__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "First attempt: CUDA illegal memory access at step 0 (GPU contention). Retry: A100 quota rejected. Fresh capacity probe still rejected A100 at 2026-07-27T13:37:49Z; no job attempt consumed.",
+      "pid": null,
+      "status": "pending_quota_reset"
+    },
+    "fpilot__epsilon_only__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "Filtered regime contract-infeasible: under the frozen registered runtime and 512-token cap, the observed seed-11 generator produced uniform-length completions (CV=0.0), below the frozen FILTERED_MIN_LENGTH_CV=0.35 threshold; downstream filtered jobs were descoped. Metadata correction 2026-07-27: an earlier descendant summary named the wrong model; preregistration and executed runtime remain Qwen/Qwen3-1.7B.",
+      "pid": null,
+      "status": "descoped_contract_infeasible"
+    },
+    "fpilot__epsilon_only__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "Filtered regime contract-infeasible: under the frozen registered runtime and 512-token cap, the observed seed-11 generator produced uniform-length completions (CV=0.0), below the frozen FILTERED_MIN_LENGTH_CV=0.35 threshold; downstream filtered jobs were descoped. Metadata correction 2026-07-27: an earlier descendant summary named the wrong model; preregistration and executed runtime remain Qwen/Qwen3-1.7B.",
+      "pid": null,
+      "status": "descoped_contract_infeasible"
+    },
+    "fpilot__epsilon_only__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "Filtered regime contract-infeasible: under the frozen registered runtime and 512-token cap, the observed seed-11 generator produced uniform-length completions (CV=0.0), below the frozen FILTERED_MIN_LENGTH_CV=0.35 threshold; downstream filtered jobs were descoped. Metadata correction 2026-07-27: an earlier descendant summary named the wrong model; preregistration and executed runtime remain Qwen/Qwen3-1.7B.",
+      "pid": null,
+      "status": "descoped_contract_infeasible"
+    },
+    "fpilot__intended_full__balanced_equal_length__s11": {
+      "acceptance_path": null,
+      "attempts": 3,
+      "last_error": "launcher/client hung after remote A100 assignment keep-alive 404 and prune on final attempt 3; ColabRequestError/404/pruned",
+      "partial_progress": {
+        "counts_as_acceptance": false,
+        "fingerprint": "c5be4d39e1e12d59e2901d1c727bc3337668ff101b94d313a48340082571f8b8",
+        "hf_commit": "23de08ec44fa3e0e130e7edd9261c09ff56a1793",
+        "independently_verified_checkpoint_step": 40,
+        "last_wandb_step": 59,
+        "wandb_run": "8170fe50"
+      },
+      "pid": null,
+      "status": "failed_infrastructure",
+      "terminal_receipt": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/recovery/fpilot__intended_full__balanced_equal_length__s11__attempt-3-remote-prune.json"
+    },
+    "fpilot__intended_full__balanced_equal_length__s23": {
+      "acceptance": {
+        "counts_as_acceptance": true,
+        "final_accuracy": 0.15625,
+        "hf_artifact_commit": "bec743e68e369c19df461b29ff6082595bb42def",
+        "schema_version": "flagship-pilot-acceptance-v1",
+        "status": "accepted",
+        "verified_at": "2026-07-23T01:47:43.970986+00:00",
+        "wandb_run_id": "29173df6"
+      },
+      "acceptance_path": "acceptance/fpilot__intended_full__balanced_equal_length__s23.json",
+      "attempts": 2,
+      "last_error": null,
+      "live": {
+        "checkpoint_fingerprint": "92ae9ff14979828b57a8464195f035435517ac881fd505fa8ef8cdca3ac9accb",
+        "checkpoint_hf_commit": "18afc3c00cf71d45574c29d9f247ce61947ad7c6",
+        "checkpoint_step": 100,
+        "colab_session": "fpilot-inte-bala-s23-87d9005d",
+        "controller": "launchd LaunchAgent RunAtLoad=false KeepAlive=false",
+        "eval_accuracy": 0.15625,
+        "launchd_label": "ai.openai.codex.flagship-pilot-v2-r4-2-intended-s23",
+        "note": "Full unit independently verified fail-closed (all checkpoint manifests/files, final adapter, held-out evidence, finished W&B run); acceptance written. Session stopped cleanly by launcher.",
+        "phase": "completed_accepted",
+        "training_step": 100,
+        "updated_at": "2026-07-23T01:47:43.970986+00:00",
+        "wandb_heartbeat_at": "2026-07-23T00:16:50Z",
+        "wandb_run": "29173df6",
+        "wandb_state": "finished",
+        "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/29173df6"
+      },
+      "partial_progress": {
+        "counts_as_acceptance": false,
+        "fingerprint": "92ae9ff14979828b57a8464195f035435517ac881fd505fa8ef8cdca3ac9accb",
+        "hf_commit": "18afc3c00cf71d45574c29d9f247ce61947ad7c6",
+        "independently_verified_checkpoint_step": 80,
+        "verification_path": "recovery/fpilot__intended_full__balanced_equal_length__s23__step-80-independent-verify.json",
+        "wandb_run": "29173df6"
+      },
+      "pid": null,
+      "status": "accepted"
+    },
+    "fpilot__intended_full__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "Colab session expired at step 60/100 (session disconnected, exec subprocess hung). Step-60 checkpoint verified on HF. A100 quota exhausted on retry. Fresh capacity probe still rejected A100 at 2026-07-27T13:37:49Z; no job attempt consumed.",
+      "pid": null,
+      "status": "pending_quota_reset"
+    },
+    "fpilot__intended_full__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "Filtered regime contract-infeasible: under the frozen registered runtime and 512-token cap, the observed seed-11 generator produced uniform-length completions (CV=0.0), below the frozen FILTERED_MIN_LENGTH_CV=0.35 threshold; downstream filtered jobs were descoped. Metadata correction 2026-07-27: an earlier descendant summary named the wrong model; preregistration and executed runtime remain Qwen/Qwen3-1.7B.",
+      "pid": null,
+      "status": "descoped_contract_infeasible"
+    },
+    "fpilot__intended_full__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "Filtered regime contract-infeasible: under the frozen registered runtime and 512-token cap, the observed seed-11 generator produced uniform-length completions (CV=0.0), below the frozen FILTERED_MIN_LENGTH_CV=0.35 threshold; downstream filtered jobs were descoped. Metadata correction 2026-07-27: an earlier descendant summary named the wrong model; preregistration and executed runtime remain Qwen/Qwen3-1.7B.",
+      "pid": null,
+      "status": "descoped_contract_infeasible"
+    },
+    "fpilot__intended_full__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "Filtered regime contract-infeasible: under the frozen registered runtime and 512-token cap, the observed seed-11 generator produced uniform-length completions (CV=0.0), below the frozen FILTERED_MIN_LENGTH_CV=0.35 threshold; downstream filtered jobs were descoped. Metadata correction 2026-07-27: an earlier descendant summary named the wrong model; preregistration and executed runtime remain Qwen/Qwen3-1.7B.",
+      "pid": null,
+      "status": "descoped_contract_infeasible"
+    },
+    "fpilot__native_trl__balanced_equal_length__s11": {
+      "acceptance_path": null,
+      "attempts": 3,
+      "last_error": "launcher/client hung after remote A100 assignment keep-alive 404 and prune on final attempt 3; ColabRequestError/404/pruned",
+      "partial_progress": {
+        "counts_as_acceptance": false,
+        "fingerprint": "f564682d152e979b40a4bf7bb1ea421a0f184bd916a32cbc7088e5dfd6d9e2d8",
+        "hf_commit": "4b9ebcc79f86e56205c2524d0f4221facdbcc41c",
+        "independently_verified_checkpoint_step": 40,
+        "last_wandb_step": 59,
+        "wandb_run": "1724b02f"
+      },
+      "pid": null,
+      "status": "failed_infrastructure",
+      "terminal_receipt": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/recovery/fpilot__native_trl__balanced_equal_length__s11__attempt-3-remote-prune.json"
+    },
+    "fpilot__native_trl__balanced_equal_length__s23": {
+      "acceptance": {
+        "counts_as_acceptance": true,
+        "final_accuracy": 0.1328125,
+        "hf_artifact_commit": "36424ea8dcdb309daebc1e9e2c4f2133bb8fa116",
+        "schema_version": "flagship-pilot-acceptance-v1",
+        "status": "accepted",
+        "verified_at": "2026-07-23T02:00:29.893608+00:00",
+        "wandb_run_id": "f1b5321a"
+      },
+      "acceptance_path": "acceptance/fpilot__native_trl__balanced_equal_length__s23.json",
+      "attempts": 2,
+      "last_error": null,
+      "live": {
+        "checkpoint_fingerprint": "9466aa02d32f39c1817cbfd222e911018121222a9bacca16da46b62d5ea8e96b",
+        "checkpoint_hf_commit": "954819acb3992b972220a8c644249538b81c2b39",
+        "checkpoint_step": 100,
+        "colab_session": "fpilot-nati-bala-s23-87d9005d",
+        "controller": "launchd LaunchAgent RunAtLoad=false KeepAlive=false",
+        "eval_accuracy": 0.1328125,
+        "launchd_label": "ai.openai.codex.flagship-pilot-v2-r4-2-native-s23",
+        "note": "Full unit independently verified fail-closed; acceptance written. Session stopped cleanly by launcher.",
+        "phase": "completed_accepted",
+        "training_step": 100,
+        "updated_at": "2026-07-23T02:00:29.893608+00:00",
+        "wandb_heartbeat_at": "2026-07-23T00:16:50Z",
+        "wandb_run": "f1b5321a",
+        "wandb_state": "finished",
+        "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/f1b5321a"
+      },
+      "partial_progress": {
+        "counts_as_acceptance": false,
+        "fingerprint": "9466aa02d32f39c1817cbfd222e911018121222a9bacca16da46b62d5ea8e96b",
+        "hf_commit": "954819acb3992b972220a8c644249538b81c2b39",
+        "independently_verified_checkpoint_step": 80,
+        "verification_path": "recovery/fpilot__native_trl__balanced_equal_length__s23__step-80-independent-verify.json",
+        "wandb_run": "f1b5321a"
+      },
+      "pid": null,
+      "status": "accepted"
+    },
+    "fpilot__native_trl__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "First attempt: TooManyAssignmentsError (4 concurrent A100). Retry: A100 quota rejected. Fresh capacity probe still rejected A100 at 2026-07-27T13:37:49Z; no job attempt consumed.",
+      "pid": null,
+      "status": "pending_quota_reset"
+    },
+    "fpilot__native_trl__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "Filtered regime contract-infeasible: under the frozen registered runtime and 512-token cap, the observed seed-11 generator produced uniform-length completions (CV=0.0), below the frozen FILTERED_MIN_LENGTH_CV=0.35 threshold; downstream filtered jobs were descoped. Metadata correction 2026-07-27: an earlier descendant summary named the wrong model; preregistration and executed runtime remain Qwen/Qwen3-1.7B.",
+      "pid": null,
+      "status": "descoped_contract_infeasible"
+    },
+    "fpilot__native_trl__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "Filtered regime contract-infeasible: under the frozen registered runtime and 512-token cap, the observed seed-11 generator produced uniform-length completions (CV=0.0), below the frozen FILTERED_MIN_LENGTH_CV=0.35 threshold; downstream filtered jobs were descoped. Metadata correction 2026-07-27: an earlier descendant summary named the wrong model; preregistration and executed runtime remain Qwen/Qwen3-1.7B.",
+      "pid": null,
+      "status": "descoped_contract_infeasible"
+    },
+    "fpilot__native_trl__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "Filtered regime contract-infeasible: under the frozen registered runtime and 512-token cap, the observed seed-11 generator produced uniform-length completions (CV=0.0), below the frozen FILTERED_MIN_LENGTH_CV=0.35 threshold; downstream filtered jobs were descoped. Metadata correction 2026-07-27: an earlier descendant summary named the wrong model; preregistration and executed runtime remain Qwen/Qwen3-1.7B.",
+      "pid": null,
+      "status": "descoped_contract_infeasible"
+    },
+    "fpilot__reduction_only__balanced_equal_length__s11": {
+      "acceptance": {
+        "counts_as_acceptance": true,
+        "final_accuracy": 0.1484375,
+        "hf_artifact_commit": "d887b1844fdc40d016323766e3079748fa91bd53",
+        "hf_latest_commit": "276ab399c84bf0991165cb8e1f06c452e33515f5",
+        "schema_version": "flagship-pilot-acceptance-v1",
+        "status": "accepted",
+        "verified_at": "2026-07-22T23:16:38.050043+00:00",
+        "wandb_run_id": "b2bd75df"
+      },
+      "acceptance_path": "/Users/arvind/Developer/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/acceptance/fpilot__reduction_only__balanced_equal_length__s11.json",
+      "attempts": 1,
+      "last_error": null,
+      "live": {
+        "checkpoint_fingerprint": "39d89bd42017d29ceb68f3dbf784b59609d8556181163f59378b52480aacd1af",
+        "checkpoint_hf_commit": "d887b1844fdc40d016323766e3079748fa91bd53",
+        "checkpoint_step": 100,
+        "colab_session": "fpilot-redu-bala-s11-87d9005d",
+        "corpus_commit": "2735a27d5f18bbdaaae76494a2047b39a4318e22",
+        "corpus_fingerprint": "b09c72247b168297e73ce5edf2aad59e4496e7d78257beb252e864dd1a9587f1",
+        "endpoint": "gpu-a100-s-kkb-ass1c0-2l1f11p2cwxno",
+        "environment_validation": "pass",
+        "eval_accuracy": 0.1484375,
+        "hardware": "NVIDIA A100-SXM4-40GB",
+        "install_status": "install_pass",
+        "mechanism_active_tokens": 4096,
+        "note": "Full unit independently verified fail-closed (all checkpoint manifests/files, final adapter, held-out evidence, finished W&B run); acceptance written. Session stopped cleanly by launcher.",
+        "phase": "completed_accepted",
+        "training_step": 100,
+        "updated_at": "2026-07-22T23:16:38.050043+00:00",
+        "wandb_heartbeat_at": "2026-07-22T16:12:01Z",
+        "wandb_run": "b2bd75df",
+        "wandb_state": "finished",
+        "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/b2bd75df"
+      },
+      "partial_progress": {
+        "counts_as_acceptance": false,
+        "fingerprint": "0e583e92cb5868b4d8d143eaf5886fabae644d532adffeb47d6113d598bf5000",
+        "hf_commit": "56ba889ec4507a02474089756e32bc27ea68ee86",
+        "independently_verified_checkpoint_step": 20,
+        "last_wandb_step": 39,
+        "verification_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/recovery/fpilot__reduction_only__balanced_equal_length__s11__step-20-independent-verify.json",
+        "wandb_run": "b2bd75df"
+      },
+      "pid": null,
+      "status": "accepted"
+    },
+    "fpilot__reduction_only__balanced_equal_length__s23": {
+      "acceptance": {
+        "counts_as_acceptance": true,
+        "final_accuracy": 0.15625,
+        "hf_artifact_commit": "db5d04372a5ec298b78730c26ce2779052e6366c",
+        "schema_version": "flagship-pilot-acceptance-v1",
+        "status": "accepted",
+        "verified_at": "2026-07-23T04:29:44.090380+00:00",
+        "wandb_run_id": "920fb29b"
+      },
+      "acceptance_path": "acceptance/fpilot__reduction_only__balanced_equal_length__s23.json",
+      "attempts": 1,
+      "last_error": null,
+      "live": {
+        "checkpoint_fingerprint": "f6ac2e454baba33e9a9161d14752892f5982f4a841bbf006ed47d59ba56bfbeb",
+        "checkpoint_hf_commit": "b34b60a57de6e150bf7e40909510f01b8db71e73",
+        "checkpoint_step": 100,
+        "colab_session": "fpilot-redu-bala-s23-87d9005d",
+        "controller": "launchd LaunchAgent RunAtLoad=false KeepAlive=false",
+        "eval_accuracy": 0.15625,
+        "launchd_label": "ai.openai.codex.flagship-pilot-v2-r4-2-reduction-s23",
+        "note": "Full unit independently verified fail-closed; acceptance written. Session stopped cleanly by launcher.",
+        "phase": "completed_accepted",
+        "training_step": 100,
+        "updated_at": "2026-07-23T04:29:44.090380+00:00",
+        "wandb_heartbeat_at": "2026-07-23T04:03:22Z",
+        "wandb_run": "920fb29b",
+        "wandb_state": "finished",
+        "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/920fb29b"
+      },
+      "partial_progress": {
+        "counts_as_acceptance": false,
+        "fingerprint": "f6ac2e454baba33e9a9161d14752892f5982f4a841bbf006ed47d59ba56bfbeb",
+        "hf_commit": "b34b60a57de6e150bf7e40909510f01b8db71e73",
+        "independently_verified_checkpoint_step": 80,
+        "verification_path": "recovery/fpilot__reduction_only__balanced_equal_length__s23__step-80-independent-verify.json",
+        "wandb_run": "920fb29b"
+      },
+      "pid": null,
+      "status": "accepted"
+    },
+    "fpilot__reduction_only__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "Colab session expired at step 60/100 (session disconnected, exec subprocess hung). Step-60 checkpoint verified on HF. A100 quota exhausted on retry. Fresh capacity probe still rejected A100 at 2026-07-27T13:37:49Z; no job attempt consumed.",
+      "pid": null,
+      "status": "pending_quota_reset"
+    },
+    "fpilot__reduction_only__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "Filtered regime contract-infeasible: under the frozen registered runtime and 512-token cap, the observed seed-11 generator produced uniform-length completions (CV=0.0), below the frozen FILTERED_MIN_LENGTH_CV=0.35 threshold; downstream filtered jobs were descoped. Metadata correction 2026-07-27: an earlier descendant summary named the wrong model; preregistration and executed runtime remain Qwen/Qwen3-1.7B.",
+      "pid": null,
+      "status": "descoped_contract_infeasible"
+    },
+    "fpilot__reduction_only__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "Filtered regime contract-infeasible: under the frozen registered runtime and 512-token cap, the observed seed-11 generator produced uniform-length completions (CV=0.0), below the frozen FILTERED_MIN_LENGTH_CV=0.35 threshold; downstream filtered jobs were descoped. Metadata correction 2026-07-27: an earlier descendant summary named the wrong model; preregistration and executed runtime remain Qwen/Qwen3-1.7B.",
+      "pid": null,
+      "status": "descoped_contract_infeasible"
+    },
+    "fpilot__reduction_only__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": "Filtered regime contract-infeasible: under the frozen registered runtime and 512-token cap, the observed seed-11 generator produced uniform-length completions (CV=0.0), below the frozen FILTERED_MIN_LENGTH_CV=0.35 threshold; downstream filtered jobs were descoped. Metadata correction 2026-07-27: an earlier descendant summary named the wrong model; preregistration and executed runtime remain Qwen/Qwen3-1.7B.",
+      "pid": null,
+      "status": "descoped_contract_infeasible"
+    },
+    "preflight__a100_stack_smoke": {
+      "acceptance_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/acceptance/preflight__a100_stack_smoke.json",
+      "attempts": 1,
+      "last_error": null,
+      "pid": null,
+      "status": "accepted"
+    }
+  },
+  "manifest_fingerprint": "25ef91234d58643c2d1eaea23832e0b676cb99e66ce774551b1f0ae1de9cee0d",
+  "operational_notes": {
+    "active_a100_sessions": 0,
+    "active_corpus_sessions": 0,
+    "amendment": "A1-R4.2",
+    "confirmatory_execution": "forbidden_until_screening_go",
+    "control_surface": "launch-v2-corpus-resume-r4-2",
+    "corpora_accepted": 3,
+    "external_blocker": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account. Fresh probe fprobe-r4-2-capacity-20260727 at 2026-07-27T13:37:49Z; no active Colab sessions and no accelerator substitution.",
+    "implementation_revision": 7,
+    "max_parallel_corpus_sessions": 1,
+    "max_parallel_sessions": 3,
+    "metadata_correction": "2026-07-27: fourteen descoped descendant last_error summaries incorrectly named Qwen2.5-0.5B. They are corrected to model-neutral text and point here. The frozen preregistration and executed runtime identify Qwen/Qwen3-1.7B; the original seed-11 ReplayContractError, CV threshold, job statuses, and scientific artifacts are unchanged.",
+    "note": "Filtered regime is descoped_contract_infeasible. Four balanced-s37 units remain pending_quota_reset; intended_full and reduction_only retain independently verified step-60 checkpoints. Fresh A100 probe on 2026-07-27 was rejected, so no job was relaunched and no attempt was consumed. The stale missing-/tmp quota monitor was unloaded.",
+    "offline_gates": {
+      "pilot_tests": {
+        "command": "PYTHONPATH=zvf-program/flagship uv run --isolated --no-project --python 3.12 --with trl==1.2.0 --with transformers==5.5.4 --with torch==2.7.1 --with datasets==4.8.4 --with peft==0.19.1 --with huggingface-hub==1.11.0 --with accelerate==1.13.0 --with wandb==0.21.0 --with numpy==2.2.6 --with pytest==9.1.1 python -m pytest -q zvf-program/flagship/pilot",
+        "log_path": "/tmp/flagship_pilot_gate.log",
+        "result": "104 passed, 2 warnings in 21.07s",
+        "status": "pass"
+      },
+      "project_venv_unpinned_gate": {
+        "result": "2 failed under unpinned project venv (numpy 2.4.4 vs pin 2.2.6; trl missing). Not authoritative; isolated pin gate is authoritative.",
+        "status": "ignored_environment_mismatch"
+      },
+      "ruff_check": {
+        "command": "uvx ruff check zvf-program/flagship/pilot",
+        "result": "All checks passed!",
+        "status": "pass"
+      },
+      "ruff_format_check": {
+        "command": "uvx ruff format --check zvf-program/flagship/pilot",
+        "note": "Did not reformat frozen pilot source because content hashes are scientific provenance.",
+        "result": "8 files would be reformatted, 29 files already formatted",
+        "status": "informational_only_not_applied"
+      },
+      "updated_at": "2026-07-22T15:00:18.534053+00:00"
+    },
+    "plans_surface": "plans-v2-corpus-resume-r4-2",
+    "scheduler": "launchd_detached_job_controllers_RunAtLoad_false",
+    "scientific_units_accepted": 6,
+    "superseded_supervisors_contained": [
+      "ai.openai.codex.flagship-pilot-v2-r3",
+      "ai.openai.codex.flagship-pilot-v2-r4",
+      "ai.openai.codex.flagship-pilot-v2-r4-1"
+    ],
+    "updated_at": "2026-07-27T13:37:49+00:00"
+  },
+  "schema_version": "flagship-pilot-supervisor-v1"
+}

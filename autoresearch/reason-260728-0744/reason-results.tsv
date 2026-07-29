@@ -1,0 +1,5 @@
+round	timestamp	candidate_label	judge_verdict	convergence_count	description
+1	2026-07-28T07:44:00+05:30	application-framed-v8	REVISE	0	Three adversarial reviewer personas found the draft evidence-safe but too concession-heavy, insufficiently explicit about the audit decision, and incomplete on 4G4H's per-run telemetry request.
+2	2026-07-28T07:54:00+05:30	persuasive-telemetry-v9	REVISE	0	A blind evidence judge found the frozen E1 disappearance verdict used a normal-approximation MDE, omitted the preregistered multiplicity step, and failed the finite-sample MDE gate.
+3	2026-07-28T07:59:00+05:30	evidence-corrected-v10	PASS-EVIDENCE	1	All four E1 comparisons were relabeled inconclusive; Tinker linkage, DAPO treatment changes, private-artifact limits, and adoption operationalization were corrected; the evidence judge returned PASS.
+4	2026-07-28T08:02:00+05:30	persuasive-bounded-v11	PASS	3	AC and score-change judges accepted the positive-first, reviewer-specific responses after surgical wording fixes; no further additions were judged beneficial.

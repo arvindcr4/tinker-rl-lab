@@ -1,0 +1,539 @@
+% Evidence-safe revision of the July 2026 spectral/entropy manuscript.
+% This file deliberately excludes all unverified end-to-end benchmark claims.
+\pdfsuppressptexinfo=-1
+\pdfinfoomitdate=1
+\pdftrailerid{}
+
+\documentclass{article}
+
+\usepackage[preprint,nonatbib]{neurips_2026}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{xspace}
+\usepackage{hyperref}
+\usepackage{url}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!55!black,
+  citecolor=blue!55!black,
+  urlcolor=blue!55!black
+}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{remark}{Remark}
+\newcommand{\grpo}{\textsc{GRPO}\xspace}
+\newcommand{\zvf}{\textsc{ZVF}\xspace}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+
+\title{Zero Advantage Is Not Missing Information:\\
+A Mechanism Audit of Trajectory-Spectral Auxiliary Advantages}
+
+\author{%
+  Arvind C R \\
+  PES University \\
+  \texttt{arvindcr4@gmail.com}
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Group-relative policy optimization assigns zero centered advantage whenever
+every completion in a sampled group receives the same reward.  We argue that
+this is an absence of task feedback rather than hidden information.  No
+transform placed only in the forward path can restore a policy gradient once
+the centered advantage vanishes; only an explicit auxiliary advantage can,
+and that changes the objective.  We dissect one such prototype: a standardized
+score built from pairwise distances between low-order Legendre features of
+sampled trajectories, with an adaptive Givens rotation for coordinate
+elimination.  Three results are exact.  The continuous Parseval identity holds
+for the reconstructed truncated expansion, while the implemented equispaced
+rule is first-order.  The rotation preserves norm precisely because its
+subsequent projection discards nothing, removing about $10^{-17}$ of the norm
+where plain truncation removes $10^{-3}$--$10^{-2}$.  Binary verifier rewards
+impose a homogeneous-group floor of $2^{1-G}$.  On synthetic fixtures the
+coupled objective produces a gradient exactly proportional to its coupling
+weight; this is not evidence of learning.  We preregister alignment, placebo,
+paired-seed, and ablation tests and report no benchmark result.
+\end{abstract}
+
+\section{Introduction}
+
+Group Relative Policy Optimization and related critic-free objectives compare
+several completions for the same prompt and standardize their rewards within
+the sampled group \citep{shao2024deepseekmath}.  If all rewards agree, the
+centered reward term is exactly zero.  Recent work studies this phenomenon as
+gradient starvation or advantage collapse and proposes changes to sampling,
+normalization, or the objective \citep{nie2026gradient,he2026advantage}.
+
+An equal-reward group is observationally ambiguous.  All completions may be
+wrong, all may be correct, the verifier may be coarse or mistaken, or the
+completions may differ in ways irrelevant to task success.  A representation
+distance can reveal that trajectories differ, but cannot by itself reveal
+which difference is useful.  Consequently, adding such a distance to the
+advantage is a new auxiliary objective.  It is not recovery of a missing
+reward, and a nonzero gradient is not evidence that the gradient is beneficial.
+
+This paper evaluates a narrow prototype under that interpretation.  It makes
+five evidence-bounded contributions:
+
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+  \item We separate a missing reward signal from an auxiliary objective: no
+  forward-path transform can create an update when its centered advantage is
+  zero, whereas explicit auxiliary coupling changes the optimized objective.
+  \item We define a trajectory-spectral auxiliary score and locate the
+  exactness boundary between continuous Legendre identities and the implemented
+  equispaced discretization.
+  \item We audit adaptive Givens elimination and show that its projection is
+  redundant by construction: the rotation already annihilates the coordinate
+  it projects away.
+  \item We give the reusable binary-reward feasibility check
+  $\Prob(\text{homogeneous})\geq 2^{1-G}$ and state what procedural changes are
+  required for any lower reported rate.
+  \item We release traceable synthetic and audit measurements and preregister
+  alignment, placebo, paired-seed, equal-compute, and ablation gates.  We make
+  no policy-learning claim.
+\end{enumerate}
+
+\paragraph{Evidence status, stated before any result.}
+This paper contains proofs, executable modules, 16 focused unit/harness tests,
+a deterministic CPU ledger, and an independent audit covering 77 recorded
+shape, mask, quadrature, isometry, gradient, and feasibility cases.  It contains
+no language-model fine-tuning, held-out benchmark accuracy, multi-seed
+comparison, placebo condition, or calibration of the trajectory score against
+an external target.  We therefore make no benchmark-accuracy,
+sample-efficiency, deployment, mitigation, or superiority claim.
+
+\section{Related Work and Scope}
+
+\grpo removes a learned critic by constructing within-group advantages
+\citep{shao2024deepseekmath}.  DAPO combines dynamic sampling with a
+token-level loss design \citep{yu2025dapo}; recent analyses isolate
+group-variance pathologies and propose direct remedies
+\citep{nie2026gradient,he2026advantage}.  These methods motivate the problem
+but do not validate the trajectory-derived auxiliary score studied here.
+
+Orthogonal polynomial expansions are classical tools for representing
+functions on compact domains.  HiPPO and Legendre Memory Units use scaled
+Legendre projections for sequence memory, and later work studies the discrete
+basis and parallel training choices directly
+\citep{gu2020hippo,voelker2019lmu,chilkuri2021parallelizing}.  PoPE applies
+Legendre polynomials to the token axis of a language model
+\citep{aggarwal2024pope}.  The closest work by purpose uses within-group
+hidden-state distances for span-level credit assignment and, critically,
+specifies how that signal enters the advantage \citep{chen2026shear}.
+Entropy-guided advantage shaping is also an existing response to zero-variance
+prompts \citep{le2025noprompt}.  Our use is therefore a narrower recombination:
+a masked trajectory projection supplies a group-relative auxiliary score.  We
+do not claim that low modes are semantic or high modes are noise without an
+external validation target.
+
+Norm preservation through composed Givens rotations is established
+\citep{dorobantu2016dizzyrnn,jing2017eunn,frerix2019givens}.  Planar rotations
+already occur in transformer attention through rotary position embedding
+\citep{su2024roformer}, and have been used for parameter-efficient adaptation,
+compression, and transformer blocks
+\citep{ma2024qoft,su2025rotatekv,abuayyash2026threephase}.  Attention-entropy
+collapse is likewise a known transformer failure mode \citep{zhai2023entropy}.
+The implementation studied here uses a data-dependent rotation as a
+coordinate-elimination primitive, not a quantum algorithm; we therefore remove
+the earlier ``quantum-inspired'' label.  We claim no novelty for its
+constituents.  The contribution is a negative mechanism audit plus a proposed
+trajectory-spectral coupling whose usefulness remains to be tested.
+
+\section{Problem Statement and Causal Boundary}
+
+For prompt $x$, let $y_1,\ldots,y_G$ be sampled completions with scalar rewards
+$r_1,\ldots,r_G$.  On active rows, define
+\begin{equation}
+  A_i^{\mathrm{reward}}
+  = \frac{r_i-\bar r}{s_r+\epsilon},
+  \qquad
+  \bar r=\frac{1}{G}\sum_{j=1}^G r_j.
+\end{equation}
+
+\begin{proposition}[Homogeneous rewards remove the centered reward signal]
+If $r_1=\cdots=r_G$, then $A_i^{\mathrm{reward}}=0$ for every row.  Any
+score-function term weighted only by these advantages is therefore zero.
+\end{proposition}
+
+\begin{proof}
+Homogeneity gives $r_i=\bar r$ for every $i$, so every numerator is zero.
+\end{proof}
+
+For binary rewards with per-completion success probability $p$, the probability
+that an independent group is homogeneous is
+\begin{equation}
+  \Prob(\text{homogeneous}\mid p,G)=p^G+(1-p)^G.
+\end{equation}
+This identity diagnoses when reward contrast is unavailable.  It neither
+identifies the latent cause nor supplies a replacement preference.
+For binary rewards, the smallest possible homogeneous-group probability over
+$p$ is $2^{1-G}$, attained at $p=1/2$.  In particular, $G=4$ has a $12.5\%$
+floor.  Any lower reported rate must therefore use a larger group, non-binary
+rewards, dynamic rejection/resampling, or a different denominator; it cannot
+be compared to this identity without stating that procedural change.
+
+Our prototype defines a trajectory score $s_i$ and uses
+\begin{equation}
+  A_i^{\mathrm{aux}}
+  = \frac{s_i-\bar s}{s_s+\epsilon_s},
+  \qquad
+  \widetilde A_i
+  = A_i^{\mathrm{reward}}+\lambda A_i^{\mathrm{aux}}.
+  \label{eq:combined-advantage}
+\end{equation}
+Equation~\eqref{eq:combined-advantage} is an objective modification.  When
+rewards are homogeneous, it can create a nonzero update if the trajectory
+scores differ, but its direction is justified only if $s_i$ is shown to align
+with future task reward or a valid process-level target.
+
+\section{Trajectory-Spectral Auxiliary Score}
+
+Let $X_i\in\mathbb{R}^{L\times D}$ denote a completion feature sequence.  The
+artifact uses either supplied hidden states or a two-channel fixture consisting
+of token log probabilities and normalized position.  For
+$t_\ell=2\ell/(L-1)-1$ and Legendre polynomials $P_n$, it computes
+\begin{equation}
+  \widehat c_{i,n}
+  = \frac{2n+1}{L_{\mathrm{eff}}}
+    \sum_{\ell=0}^{L-1} M_{i,\ell}X_{i,\ell}P_n(t_\ell),
+  \label{eq:discrete-coeff}
+\end{equation}
+where $M$ is a completion mask.  Pairwise distance is
+\begin{equation}
+  d_N(i,j)=\sum_{n=0}^{N-1}
+  \frac{2}{2n+1}\left\|\widehat c_{i,n}-\widehat c_{j,n}\right\|_2^2,
+  \qquad
+  s_i=\frac{1}{G-1}\sum_{j\ne i}d_N(i,j).
+\end{equation}
+Throughout, $d_N$ is a squared weighted modal distance; we never take a square
+root.  This matters because rooting is a nonlinear reparameterization that
+changes the relative weight of near and far pairs, the within-group variance of
+$s_i$, and hence the update induced by any fixed $\lambda$.  In the artifact,
+$s_i$ is detached from the policy graph before it is standardized and coupled;
+a non-detached score is a different algorithm.
+
+\subsection{What is exact, and what is approximate}
+
+For arbitrary coefficient vectors $c_n$ define the reconstructed function
+$\widehat X_N(t)=\sum_{n=0}^{N-1}c_nP_n(t)$.  Orthogonality gives the exact
+identity
+\begin{equation}
+  \int_{-1}^{1}\left\|\widehat X_N(t)\right\|_2^2\,dt
+  =\sum_{n=0}^{N-1}\frac{2}{2n+1}\|c_n\|_2^2.
+  \label{eq:parseval-truncated}
+\end{equation}
+Equation~\eqref{eq:parseval-truncated} is exact for the reconstructed expansion.
+It does not imply that Eq.~\eqref{eq:discrete-coeff} equals the continuous
+projection of the unknown trajectory function.  The implemented equally
+spaced sum is neither Gauss--Legendre quadrature nor an exact discrete
+orthogonal transform.  Its approximation error depends on $L$, $N$, the mask,
+and regularity of the interpolated sequence.
+
+To expose this boundary, the independent audit measured three different
+discretization errors at $N=8$, including the coefficient error that the
+trajectory distance actually consumes.
+
+\begin{table}[t]
+\centering
+\caption{Discretization errors for the implemented equispaced rule at $N=8$.
+``Gram'' is the maximum off-diagonal deviation from the continuous Gram matrix;
+``operator'' is the relative Frobenius deviation of the code's
+analysis--synthesis operator from identity; ``coefficient'' is relative error
+against Gauss--Legendre projection.  Values are deterministic float64 CPU
+measurements, not learning results.}
+\label{tab:gram-error}
+\scriptsize
+\begin{tabular}{rcccc}
+\toprule
+Length $L$ & Gram & Operator & Coefficient & Trapezoid coefficient \\
+\midrule
+8    & .530 & 4.18   & 2.77   & 1.47 \\
+32   & .0901 & .745  & .462   & .0875 \\
+128  & .0174 & .152  & .101   & .00526 \\
+512  & .00402& .0359 & .0242  & .000325 \\
+2048 & .000983& .00885 & .00600 & .0000203 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Reporting only the Gram column would flatter the implementation.  At length
+$2048$, the code's operator still differs from identity by $0.885\%$, while the
+coefficient error is $0.600\%$.  Replacing uniform endpoint weights by
+trapezoid weights reduces the latter to $0.00203\%$, a $296\times$ improvement
+with unchanged asymptotic cost.  The implemented rectangle rule is first-order;
+the trapezoid rule is second-order.  The basis is also inadmissible when
+$N>L_{\mathrm{eff}}$: for $L=4,N=8$, the Gram matrix has rank $4$ and condition
+number $1.1\times10^{19}$.  In a separate padding-grid stress test, holding the
+effective tokens fixed while changing padded length produced coefficient
+discrepancies as large as $153\%$.  A training implementation must construct
+coordinates from active tokens, use a mask-aware discrete basis, and raise on
+rank-deficient configurations.
+
+\section{Adaptive Givens Coordinate Elimination}
+
+For coordinates $i\ne j$, let $G(i,j,\theta)$ be a planar rotation.  With
+$\theta=\operatorname{atan2}(x_j,x_i)$ and the sign convention used by the
+artifact,
+\begin{equation}
+  (Gx)_i=\sqrt{x_i^2+x_j^2},
+  \qquad
+  (Gx)_j=0.
+\end{equation}
+
+\begin{lemma}[Norm preservation of the implemented elimination]
+A Givens rotation preserves $\ell_2$ norm.  If its angle is selected as above,
+projecting coordinate $j$ to zero after the rotation leaves the norm unchanged
+in exact arithmetic because that coordinate is already zero.
+\end{lemma}
+
+\begin{proof}
+Orthogonality gives $\|Gx\|_2=\|x\|_2$.  The selected angle annihilates the
+$j$th coordinate, so the projection subtracts zero squared magnitude.  The
+same argument applies inductively when each subsequent rotation annihilates
+the coordinate it is about to discard.
+\end{proof}
+
+This lemma is narrower than a general claim about ``noise removal.''  The
+operation preserves information from the selected coordinate pair by folding
+its norm into another coordinate, but it does not establish that the pair is
+noise, preserve direction, preserve attention logits, or improve task reward.
+Moreover, the hard projection is algebraically redundant: the adaptive
+rotation has already made every projected coordinate zero.  In the audit it
+removed only floating-point residue (about $10^{-17}$ of the norm), rather
+than the roughly $10^{-3}$ removed by plain truncation.  Norm preservation is
+therefore an implementation invariant, not evidence of denoising or useful
+information preservation.
+In an independent audit over $D\in\{64,128,512,4096\}$ and
+$N_{\mathrm{noise}}\in\{1,2,4\}$, maximum relative norm error was
+$2.61\times10^{-16}$ in float64 and $1.52\times10^{-8}$ in float32.  The
+absolute float32 error stayed below $10^{-7}$ in 11 of 12 configurations and
+reached $1.20\times10^{-7}$ at $D=64,N_{\mathrm{noise}}=2$.  The projection
+removed roughly $2\times10^{-17}$ of the energy in float64, whereas truncating
+the same coordinates would remove $9.6\times10^{-4}$--$6.2\times10^{-2}$ over
+the audited grid.  Outside the required $N_{\mathrm{noise}}<D$ contract, the
+index map degenerates and measured absolute norm errors exceed $3$; an
+implementation must raise rather than continue.
+
+\section{Artifact and Synthetic Stress Tests}
+
+The artifact includes modules for the spectral projection, pairwise score,
+Givens elimination, and the modified objective.  Sixteen focused tests pass on
+CPU.  They check recurrence values, tensor shapes, nonnegative distance,
+rotation invariance, coordinate elimination, fixture construction, output
+schema, and a deterministic equal-reward stress test.
+
+The repository harness evaluates $G\in\{4,8,16\}$ and
+$L\in\{512,1024,2048\}$ on synthetic log-probability tensors.  The
+nondegenerate fixture alternates binary rewards; the homogeneous fixture sets
+every reward to one.  Because $A^{\mathrm{aux}}$ is standardized, the magnitude
+of the synthetic update is controlled directly by $\lambda$.  Reporting a
+single ``recovery percentage'' would therefore report a hyperparameter as if
+it were a property of the representation.  Table~\ref{tab:lambda} instead
+reports the audit's explicit coupling sweep.
+
+\begin{table}[t]
+\centering
+\caption{Deterministic float64 CPU measurements as a function of the auxiliary
+weight.  The homogeneous column is the gradient created when the reward
+gradient is zero.  The cosine is measured against the unmodified gradient on a
+heterogeneous control group.  Neither quantity is a learning result.}
+\label{tab:lambda}
+\small
+\begin{tabular}{lccc}
+\toprule
+$\lambda$ & Homogeneous $\|\nabla\|_2$ & Cosine vs. reward gradient & $1-\cos$ \\
+\midrule
+$0$       & $0$                  & $1.000000$ & $0$ \\
+$10^{-4}$ & $3.735\times10^{-4}$ & $1.000000$ & $1.9\times10^{-9}$ \\
+$10^{-2}$ & $3.735\times10^{-2}$ & $0.999981$ & $1.9\times10^{-5}$ \\
+$10^{-1}$ & $3.735\times10^{-1}$ & $0.998112$ & $1.9\times10^{-3}$ \\
+$1$       & $3.735$              & $0.848370$ & $1.5\times10^{-1}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The homogeneous gradient is $3.7351\lambda$ across the six audited decades,
+exactly the linear behavior Eq.~\eqref{eq:combined-advantage} predicts.  On the
+heterogeneous control, increasing auxiliary magnitude progressively rotates
+the update away from the reward-driven direction.  A second audit makes the
+causal boundary sharper: a forward-path Givens transform has cosine $0.9504$
+against the unmodified heterogeneous-group gradient, while the forward-path
+spectral transform has cosine $0.2620$.  On homogeneous groups both still
+produce exactly zero reward-weighted gradient.  Thus the forward transforms
+distort signal where it exists and cannot create it where it does not; only the
+explicit auxiliary coupling creates the update.
+
+The repository's separate nine-condition ledger was generated at the default
+$\lambda=0.1$.  It also finds identical outputs for the gated and ungated
+spectral conditions, so no present artifact demonstrates an incremental Givens
+effect.  Its analytic objective-level FLOP model estimates multi-fold rather
+than negligible overhead; end-to-end cost remains unmeasured.
+
+\paragraph{What the artifact does not show.}
+It contains no language-model fine-tuning with this objective, no held-out
+GSM8K or MATH predictions, no multi-seed accuracy comparison, no calibrated
+process target, and no evidence that the auxiliary gradient reduces regret.
+Synthetic gradient existence is therefore the endpoint of the present
+empirical claim.
+
+\section{Prospective Evaluation}
+
+A publishable mitigation claim requires a prospective experiment in which the
+trajectory score is defined before outcomes are observed.
+
+\paragraph{Primary hypotheses.}
+\textbf{H1 (alignment):} within homogeneous-reward groups, the preregistered
+score predicts a later independently measured outcome, such as verifier-
+corrected success or pass@k on a disjoint sample.
+\textbf{H2 (learning):} adding the score improves fixed held-out accuracy or
+sample efficiency at bounded KL divergence and equal rollout/token budget.
+\textbf{H3 (gating):} the Givens component adds benefit beyond the same
+spectral auxiliary without gating.
+
+\paragraph{Minimum design.}
+Use one canonical, completion-masked grpo implementation with clipping and
+reference KL; one public model family at $1$--$2$B and $7$--$8$B scales; GSM8K
+and a harder MATH subset; and a contamination control.  At both scales and on
+both tasks compare: unmodified grpo; spectral auxiliary; Givens-only; combined;
+a random score matched in within-group distribution and variance; an
+entropy-shaped advantage; a process/verifier-repair signal where available;
+and the simple alternatives of dynamic resampling and larger $G$ at equal
+tokens.  Give the baseline back the method's extra compute as a budget-matched
+control.  Freeze the sampler, reward parser, optimizer, prompts, maximum
+length, group size, evaluation set, checkpoint rule, $\lambda$ schedule, and
+token budget before inspecting outcomes.
+
+Run the cheapest decisive gate first.  From early, middle, and late frozen
+checkpoints at each scale, collect at least $2{,}000$ all-correct and $2{,}000$
+all-wrong homogeneous groups.  Without using $s_i$ to construct labels, obtain
+verifier-corrected success or disjoint-sample pass@k and test whether $s_i$
+predicts it after controlling for completion length and token entropy.  Require
+the bootstrap $95\%$ interval for AUC to exclude $0.5$ at both scales and on
+both tasks.  If this gate fails, do not train the auxiliary objective; report
+the negative alignment result.
+
+If it passes, screen with five paired seeds and expand using
+\begin{equation}
+ n\ \geq\ \frac{(z_{1-\alpha/2}+z_{1-\beta})^2s_d^2}{\delta^2}+2,
+ \label{eq:power}
+\end{equation}
+where $s_d$ is the standard deviation of within-seed differences and $\delta$
+is the preregistered smallest effect worth claiming.  With two-sided
+$\alpha=.05$ and $80\%$ power, five seeds can detect only about $1.62s_d$;
+smaller effects require expansion.  Correct the four primary contrasts with a
+Holm step-down procedure.  Report per-seed learning curves, fixed-budget
+held-out accuracy, pass@k, score calibration, reference KL, clip fraction,
+output length, GPU-hours, tokens, peak memory, all-correct/all-wrong group
+rates, and every failed or collapsed run.
+
+Before that comparison, repair and freeze the implementation contract:
+require $1\leq N_{\mathrm{noise}}<D$; build the spectral grid from unmasked
+tokens or use a discrete orthogonal basis; normalize entropy as
+$H/\log L_{\mathrm{eff}}$; compute the gate per head or token instead of from
+a batch-wide mean; and expose $\lambda A_i^{\mathrm{aux}}$ explicitly in the
+training loss.  Without the final coupling, a forward-path transform cannot
+restore a policy gradient when $A_i^{\mathrm{reward}}=0$.
+
+\paragraph{Falsification criteria.}
+Reject the mitigation claim if the score fails out-of-sample alignment, if a
+variance-matched random score performs similarly, if gains vanish under paired
+seeds, equal tokens, bounded KL, or the budget-matched baseline, if a simple
+resampling/larger-group control matches it, or if the Givens ablation adds no
+benefit.  A nonzero gradient, norm identity, or passing synthetic test is never
+a success criterion.
+
+\section{Limitations and Responsible Claiming}
+
+The auxiliary score is self-referential because it is computed from policy
+features or log probabilities.  It may reward novelty, length, formatting, or
+instability rather than correctness.  Hidden-state distances are model- and
+layer-dependent.  The equispaced Legendre approximation is sensitive to masks
+and sequence length.  The adaptive Givens transform is data dependent and may
+change directions even when it preserves norms.  Finally, the current stress
+tests use idealized tensors and cannot estimate end-to-end memory, latency, or
+learning effects.
+
+\section{Conclusion}
+
+Homogeneous rewards remove the centered reward signal.  A trajectory-derived
+score can replace that absence with an auxiliary preference, but doing so
+changes the objective and creates a new validation burden.  Our prototype has
+an executable implementation, an exact continuous identity for its
+reconstructed expansion, a norm-preserving adaptive coordinate elimination,
+and deterministic synthetic stress tests.  It does not yet have evidence of
+better policy learning.  By separating those statements and specifying
+falsification criteria, this revision turns an unsupported performance story
+into a testable methods proposal.
+
+\appendix
+\section{Claim-to-File Index}
+
+Table~\ref{tab:claim-index} maps every numerical empirical statement in the
+main text to a machine-readable field.  Audit paths are relative to the
+released 77-case audit bundle (SHA-256
+\texttt{dbd1386a29d4f413f7a5da56ba6191891915117efa5d13ff6e7eb9ad2c47e5e9});
+repository paths are relative to the artifact root.  The independent audit
+method passed its internal consistency checks; the earlier manuscript it
+audited did not.  These are separate judgments.
+
+\begin{table}[h]
+\centering
+\caption{Traceability index for the revision's empirical quantities.}
+\label{tab:claim-index}
+\scriptsize
+\begin{tabularx}{\textwidth}{p{.27\textwidth}X}
+\toprule
+Claim & Artifact pointer \\
+\midrule
+16 focused repository tests &
+\path{pilot/test_spectral_attention.py},
+\path{pilot/test_entropic_gating.py}, and
+\path{pilot/test_benchmark_spectral_harness.py} \\
+Discretization, rank, and $296\times$ trapezoid result &
+\path{results/audit_findings_summary.json}:
+\path{test2_quadrature.F2.1--F2.5}; raw rows in
+\path{results/quadrature_error.csv} and
+\path{results/projection_accuracy.csv} \\
+$153\%$ padding-grid discrepancy &
+\path{results/audit_findings_summary.json}:
+\path{test1_invariants} (maximum relative Frobenius discrepancy $1.5268$) \\
+Float32/float64 isometry, projection residue, and invalid-width failures &
+\path{results/audit_findings_summary.json}:
+\path{test3_norms.F3.1--F3.5}; raw sweep in
+\path{results/norm_loss_analysis.json} \\
+$3.7351\lambda$ sweep and heterogeneous-group cosines &
+\path{results/audit_findings_summary.json}:
+\path{test4_gradients.F4.3--F4.4}; raw variants in
+\path{results/gradient_flow_analysis.json} \\
+Binary homogeneous-group floor &
+\path{results/audit_findings_summary.json}:
+\path{test5_zvf}; raw calculations in
+\path{results/zvf_feasibility.json} \\
+Default-$\lambda=.1$ nine-condition ledger and FLOP model &
+\path{pilot/spectral_benchmark_results.json}:
+\path{metadata} and \path{summary}; generator
+\path{pilot/benchmark_spectral_harness.py} \\
+Prior-art overlaps and citation checks &
+\path{results/literature_novelty_matrix.json},
+\path{results/verified_literature_matrix.csv}, and
+\path{results/citation_live_recheck.json} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\bibliographystyle{plainnat}
+\bibliography{flagship}
+
+\end{document}

@@ -1,0 +1,57 @@
+{
+  "status": "independently_verified_complete",
+  "schema_version": "flagship-pilot-corpus-complete-independent-verify-v1",
+  "job_id": "corpus__balanced_equal_length__s23",
+  "repo": "arvindcr4/tinker-rl-lab-flagship-pilot-corpus-balanced_equal_length-s23-04d20f71-10e481a8",
+  "private": true,
+  "hf_commit": "664b9189dec25ded62bd74166a8dab0bf5727589",
+  "fingerprint": "bf54deaf4a62b0cffc69e40452d8133eba206163bcff44c1b6c1c6c83918e225",
+  "charged_generated_tokens": 400448,
+  "completed_groups": 100,
+  "group_count": 100,
+  "status_field": "complete",
+  "resume_count": 2,
+  "latest_checkpoint": {
+    "completed_groups": 80,
+    "fingerprint": "bd28125f67d244f9b939cf935508f25c38896cf27620be8809cad0a6817efaa9",
+    "hf_commit": "a06e8cdd56974b8a4d8e201603cfee4891fb1fda"
+  },
+  "wandb": {
+    "entity": "arvindcr4-pes-university",
+    "project": "tinker-rl-lab",
+    "run_id": "k1uazlrj",
+    "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/k1uazlrj"
+  },
+  "protocol_sha256": "87d929d0a3af789d3ba3ee10a1f4c3e83572ecec7cc4efa28ca032008f88fbc4",
+  "accelerator": "NVIDIA A100-SXM4-40GB",
+  "runtime_versions": {
+    "accelerate": "1.13.0",
+    "datasets": "4.8.4",
+    "huggingface-hub": "1.11.0",
+    "numpy": "2.2.6",
+    "peft": "0.19.1",
+    "python": "3.12.13",
+    "torch": "2.7.1",
+    "transformers": "5.5.4",
+    "trl": "1.2.0",
+    "wandb": "0.21.0"
+  },
+  "flop_ledger": {
+    "profiled_generated_tokens": 23869,
+    "profiled_generation_flops": 99731910731760.0,
+    "profiled_steps": [
+      1,
+      20,
+      40,
+      60,
+      80,
+      100
+    ],
+    "replay_generation_flops": 1673193019762529.8
+  },
+  "local_result_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/results/corpus__balanced_equal_length__s23.json",
+  "local_result_status": "completed",
+  "verified_at": "2026-07-22T16:14:32.102533+00:00",
+  "counts_as_acceptance": true,
+  "note": "Final seed-23 corpus independently verified against private HF + W&B + local completed result; acceptance written."
+}

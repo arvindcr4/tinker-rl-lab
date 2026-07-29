@@ -39,8 +39,10 @@ def screening_records() -> list[dict]:
                 receipts = [
                     {
                         "step": step,
+                        "gradient_relation": "nonzero",
                         "gradient_cosine": intended_native_cosine,
                         "gradient_relative_l2": intended_native_l2,
+                        "selected_vs_intended_relation": "nonzero",
                         "selected_vs_intended_cosine": selected_cosine,
                         "selected_vs_intended_relative_l2": selected_l2,
                     }
@@ -94,6 +96,52 @@ class AnalysisTests(unittest.TestCase):
         report = screening_gate(records)
         self.assertEqual(report["verdict"], "KILL")
         self.assertFalse(report["mechanism"]["filtered_variable_length"]["23"]["pass"])
+
+    def test_joint_zero_is_equivalent_and_one_sided_zero_is_maximal_divergence(self) -> None:
+        records = screening_records()
+        balanced = next(
+            item["full_record"]
+            for item in records
+            if item["full_record"]["condition"] == "intended_full"
+            and item["full_record"]["regime"] == "balanced_equal_length"
+            and item["full_record"]["seed"] == 11
+        )
+        for receipt in balanced["manifest"]["gradient_receipts"]:
+            receipt.update(
+                {
+                    "gradient_relation": "joint_zero",
+                    "gradient_cosine": None,
+                    "gradient_relative_l2": None,
+                }
+            )
+        filtered = next(
+            item["full_record"]
+            for item in records
+            if item["full_record"]["condition"] == "intended_full"
+            and item["full_record"]["regime"] == "filtered_variable_length"
+            and item["full_record"]["seed"] == 11
+        )
+        for receipt in filtered["manifest"]["gradient_receipts"][:20]:
+            receipt.update(
+                {
+                    "gradient_relation": "intended_zero",
+                    "gradient_cosine": None,
+                    "gradient_relative_l2": None,
+                }
+            )
+        report = screening_gate(records)
+        self.assertEqual(
+            report["mechanism"]["balanced_equal_length"]["11"]["gradient_relation_counts"],
+            {"joint_zero": 100},
+        )
+        self.assertTrue(report["mechanism"]["balanced_equal_length"]["11"]["pass"])
+        self.assertEqual(
+            report["mechanism"]["filtered_variable_length"]["11"]["gradient_relation_counts"][
+                "intended_zero"
+            ],
+            20,
+        )
+        self.assertGreater(report["causal_attribution"]["11"]["native_relation_effect"], 0.2)
 
     def test_gate_rejects_incomplete_or_duplicate_matrix(self) -> None:
         records = screening_records()

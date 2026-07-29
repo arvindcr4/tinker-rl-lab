@@ -5,10 +5,12 @@ import unittest
 
 from pilot.artifacts import (
     CHECKPOINT_STEPS,
+    CORPUS_CHECKPOINT_GROUPS,
     EVALUATION_STEPS,
     REQUIRED_CHECKPOINT_FILES,
     ArtifactValidationError,
     greatest_compatible_checkpoint,
+    validate_corpus_checkpoint_manifest,
     validate_checkpoint_manifest,
     validate_corpus_manifest,
     validate_full_record,
@@ -25,23 +27,26 @@ class ArtifactValidationTests(unittest.TestCase):
         self.protocol = load_protocol()
         unit = next(self.protocol.screening_units())
         self.plan = build_screening_plan(self.protocol, unit)
+        self.corpus_binding = self.protocol.corpus_binding(unit.regime, unit.seed)
         contract = self.protocol.payload["runtime"]["execution_contract"]
         regime = unit.regime
         groups = [
             {
                 "index": index,
+                "source_row_index": index,
                 "fingerprint": f"{index:064x}",
                 "active_rows": 8,
                 "selected_length_cv": 0.0,
                 "charged_generated_tokens": 64,
+                "artifact_path": f"groups/group-{index:03d}.pt",
             }
             for index in range(100)
         ]
         self.corpus = with_fingerprint(
             {
-                "schema_version": "flagship-pilot-corpus-v1",
+                "schema_version": "flagship-pilot-corpus-v2",
                 "status": "complete",
-                "protocol_sha256": self.protocol.sha256,
+                "protocol_sha256": self.corpus_binding["protocol_sha256"],
                 "regime": regime,
                 "seed": unit.seed,
                 "model": self.protocol.payload["runtime"]["model"],
@@ -52,11 +57,31 @@ class ArtifactValidationTests(unittest.TestCase):
                 "rejected_generated_tokens": 0,
                 "charged_generated_tokens": 6400,
                 "artifact_files": {"replay.jsonl": HASH, "ledger.json": HASH},
+                "source_manifest": dict(self.corpus_binding["source_manifest"]),
                 "wandb": {
                     "run_id": "corpus-run",
                     "run_url": "https://wandb.ai/entity/tinker-rl-lab/runs/corpus-run",
                     "entity": "entity",
                     "project": "tinker-rl-lab",
+                },
+                "corpus_resume": {
+                    "schema_version": "flagship-pilot-corpus-resume-v1",
+                    "enabled": True,
+                    "checkpoint_groups": list(CORPUS_CHECKPOINT_GROUPS),
+                    "resume_count": 0,
+                    "attempts": [
+                        {
+                            "run_id": "corpus-run",
+                            "run_url": "https://wandb.ai/entity/tinker-rl-lab/runs/corpus-run",
+                            "start_group": 0,
+                            "completed_through": 100,
+                        }
+                    ],
+                    "latest_checkpoint": {
+                        "completed_groups": 80,
+                        "fingerprint": HASH,
+                        "hf_commit": "b" * 40,
+                    },
                 },
             }
         )
@@ -65,6 +90,53 @@ class ArtifactValidationTests(unittest.TestCase):
             protocol=self.protocol,
             regime=regime,
             seed=unit.seed,
+        )
+
+    def corpus_checkpoint(self, completed: int = 20) -> dict[str, object]:
+        unit = self.plan["unit"]
+        contract = self.protocol.payload["runtime"]["execution_contract"]
+        regime = unit["regime"]
+        groups = copy.deepcopy(self.corpus["groups"][:completed])
+        files = {"source_manifest.json": HASH}
+        files.update({f"groups/group-{index:03d}.pt": HASH for index in range(completed)})
+        return with_fingerprint(
+            {
+                "schema_version": "flagship-pilot-corpus-checkpoint-v1",
+                "status": "partial",
+                "protocol_sha256": self.corpus_binding["protocol_sha256"],
+                "regime": regime,
+                "seed": unit["seed"],
+                "model": self.protocol.payload["runtime"]["model"],
+                "dataset": self.protocol.payload["regimes"][regime]["dataset"],
+                "dataset_revision": self.protocol.payload["regimes"][regime]["dataset_revision"],
+                "train_order_hash": contract["train_order_hash"][regime][str(unit["seed"])],
+                "completed_groups": completed,
+                "groups": groups,
+                "charged_generated_tokens": 64 * completed,
+                "flop_ledger": {
+                    "profiled_steps": [
+                        step
+                        for step in contract["flop_counter"]["profiled_steps"]
+                        if step <= completed
+                    ],
+                    "profiled_generated_tokens": 64,
+                    "profiled_generation_flops": 1.0,
+                },
+                "runtime_versions": {"torch": "2.7.1"},
+                "accelerator": "NVIDIA A100-SXM4-40GB",
+                "source_manifest": dict(self.corpus_binding["source_manifest"]),
+                "artifact_files": files,
+                "resume_count": 0,
+                "attempts": [
+                    {
+                        "run_id": "corpus-run",
+                        "run_url": "https://wandb.ai/entity/project/runs/corpus-run",
+                        "start_group": 0,
+                        "completed_through": completed,
+                    }
+                ],
+                "wall_clock_seconds": 1.0,
+            }
         )
 
     def checkpoint(self, step: int) -> dict[str, object]:
@@ -121,6 +193,34 @@ class ArtifactValidationTests(unittest.TestCase):
                     "diagnostic_backward_flops": 1.0,
                     "optimizer_backward_flops": 1.0,
                 },
+                "manifest": {
+                    "schema_version": "flagship-pilot-run-manifest-v1",
+                    "corpus_fingerprint": self.corpus["fingerprint"],
+                    "gradient_receipts": [
+                        {
+                            "step": step,
+                            "condition": unit["condition"],
+                            "group_fingerprint": self.corpus["groups"][step - 1]["fingerprint"],
+                            "selected_loss": 0.1,
+                            "intended_loss": 0.1,
+                            "native_loss": 0.2,
+                            "gradient_relation": "nonzero",
+                            "gradient_cosine": 0.9,
+                            "gradient_relative_l2": 0.1,
+                            "intended_gradient_norm": 1.0,
+                            "native_gradient_norm": 1.0,
+                            "selected_gradient_norm": 1.0,
+                            "selected_vs_intended_relation": "nonzero",
+                            "selected_vs_intended_cosine": 1.0,
+                            "selected_vs_intended_relative_l2": 0.0,
+                            "optimizer_update": "applied",
+                            "active_rows": 8,
+                            "active_tokens": 64,
+                            "optimizer_learning_rate": 1e-5,
+                        }
+                        for step in range(1, 101)
+                    ],
+                },
                 "wandb": {
                     "state": "finished",
                     "run_id": "run-123",
@@ -140,12 +240,42 @@ class ArtifactValidationTests(unittest.TestCase):
         )
 
     def test_valid_corpus_checkpoint_and_full_record_pass(self) -> None:
+        corpus_checkpoint = validate_corpus_checkpoint_manifest(
+            self.corpus_checkpoint(),
+            protocol=self.protocol,
+            regime=self.plan["unit"]["regime"],
+            seed=self.plan["unit"]["seed"],
+        )
+        self.assertEqual(corpus_checkpoint["completed_groups"], 20)
         checkpoint = validate_checkpoint_manifest(
             self.checkpoint(20), plan=self.plan, corpus=self.corpus
         )
         self.assertEqual(checkpoint["step"], 20)
         record = validate_full_record(self.full_record(), plan=self.plan, corpus=self.corpus)
         self.assertEqual(record["status"], "completed")
+
+    def test_corpus_checkpoint_rejects_tampering_and_non_cadence_prefix(self) -> None:
+        wrong_order = self.corpus_checkpoint()
+        wrong_order["train_order_hash"] = HASH
+        wrong_order = with_fingerprint(wrong_order)
+        with self.assertRaisesRegex(ArtifactValidationError, "train-order hash mismatch"):
+            validate_corpus_checkpoint_manifest(
+                wrong_order,
+                protocol=self.protocol,
+                regime=self.plan["unit"]["regime"],
+                seed=self.plan["unit"]["seed"],
+            )
+        non_cadence = self.corpus_checkpoint()
+        non_cadence["completed_groups"] = 19
+        non_cadence["groups"] = non_cadence["groups"][:19]
+        non_cadence = with_fingerprint(non_cadence)
+        with self.assertRaisesRegex(ArtifactValidationError, "amended cadence"):
+            validate_corpus_checkpoint_manifest(
+                non_cadence,
+                protocol=self.protocol,
+                regime=self.plan["unit"]["regime"],
+                seed=self.plan["unit"]["seed"],
+            )
 
     def test_corpus_rejects_stale_protocol_and_bad_ledger(self) -> None:
         stale = copy.deepcopy(self.corpus)
@@ -205,6 +335,87 @@ class ArtifactValidationTests(unittest.TestCase):
         missing = with_fingerprint(missing)
         with self.assertRaisesRegex(ArtifactValidationError, "evaluation set"):
             validate_full_record(missing, plan=self.plan, corpus=self.corpus)
+
+    def test_full_record_rejects_invalid_gradient_diagnostics(self) -> None:
+        mutations = (
+            ("gradient_cosine", 1.0001, "outside"),
+            ("selected_vs_intended_cosine", -1.0001, "outside"),
+            ("gradient_relative_l2", -0.01, "negative"),
+            ("selected_vs_intended_relative_l2", -0.01, "negative"),
+            ("selected_gradient_norm", 0.0, "inconsistent"),
+        )
+        for field, value, error in mutations:
+            with self.subTest(field=field, value=value):
+                invalid = self.full_record()
+                invalid["manifest"]["gradient_receipts"][0][field] = value
+                invalid = with_fingerprint(invalid)
+                with self.assertRaisesRegex(ArtifactValidationError, error):
+                    validate_full_record(invalid, plan=self.plan, corpus=self.corpus)
+
+    def test_full_record_accepts_explicit_joint_zero_receipt(self) -> None:
+        record = self.full_record()
+        receipt = record["manifest"]["gradient_receipts"][0]
+        receipt.update(
+            {
+                "gradient_relation": "joint_zero",
+                "gradient_cosine": None,
+                "gradient_relative_l2": None,
+                "intended_gradient_norm": 0.0,
+                "native_gradient_norm": 0.0,
+                "selected_gradient_norm": 0.0,
+                "selected_vs_intended_relation": "joint_zero",
+                "selected_vs_intended_cosine": None,
+                "selected_vs_intended_relative_l2": None,
+                "optimizer_update": "no_op_zero_gradient",
+            }
+        )
+        validated = validate_full_record(
+            with_fingerprint(record), plan=self.plan, corpus=self.corpus
+        )
+        self.assertEqual(
+            validated["manifest"]["gradient_receipts"][0]["gradient_relation"],
+            "joint_zero",
+        )
+
+    def test_full_record_rejects_fabricated_zero_vector_cosine(self) -> None:
+        record = self.full_record()
+        receipt = record["manifest"]["gradient_receipts"][0]
+        receipt.update(
+            {
+                "gradient_relation": "joint_zero",
+                "gradient_cosine": 1.0,
+                "gradient_relative_l2": 0.0,
+                "intended_gradient_norm": 0.0,
+                "native_gradient_norm": 0.0,
+            }
+        )
+        with self.assertRaisesRegex(ArtifactValidationError, "null diagnostics"):
+            validate_full_record(with_fingerprint(record), plan=self.plan, corpus=self.corpus)
+
+    def test_full_record_accepts_explicit_one_sided_zero_receipt(self) -> None:
+        record = self.full_record()
+        receipt = record["manifest"]["gradient_receipts"][0]
+        receipt.update(
+            {
+                "gradient_relation": "intended_zero",
+                "gradient_cosine": None,
+                "gradient_relative_l2": None,
+                "intended_gradient_norm": 0.0,
+                "native_gradient_norm": 1.0,
+                "selected_gradient_norm": 0.0,
+                "selected_vs_intended_relation": "joint_zero",
+                "selected_vs_intended_cosine": None,
+                "selected_vs_intended_relative_l2": None,
+                "optimizer_update": "no_op_zero_gradient",
+            }
+        )
+        validated = validate_full_record(
+            with_fingerprint(record), plan=self.plan, corpus=self.corpus
+        )
+        self.assertEqual(
+            validated["manifest"]["gradient_receipts"][0]["gradient_relation"],
+            "intended_zero",
+        )
 
 
 if __name__ == "__main__":

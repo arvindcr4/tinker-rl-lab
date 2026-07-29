@@ -1,0 +1,16 @@
+{
+  "archived_log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r1/attempts/corpus__balanced_equal_length__s23/attempt-1.log",
+  "archived_log_sha256": "5cdee8ffec7a869e4d77a76308cec73fc6e33bfa8c0a1d0192683678a192f4b3",
+  "attempt": 1,
+  "exact_provider_marker": "Connection was lost.",
+  "job_id": "corpus__balanced_equal_length__s23",
+  "protocol_changed": false,
+  "reason": "Colab exec control channel disconnected before W&B initialization; frozen local classifier omitted the exact provider literal",
+  "reclassified_at": "2026-07-22T07:56:08.873117+00:00",
+  "remote_session_state": "idle",
+  "schema_version": "flagship-pilot-provider-reclassification-v1",
+  "scientific_work_initialized": false,
+  "source_bundle_changed": false,
+  "status": "retry_authorized_existing_protocol",
+  "wandb_matching_runs": []
+}

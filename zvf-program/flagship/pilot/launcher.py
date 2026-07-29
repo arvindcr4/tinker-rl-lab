@@ -31,7 +31,7 @@ from .protocol import (
 
 BOOTSTRAP = Path(__file__).with_name("bootstrap.py")
 RUNTIME_INSTALLER = Path(__file__).with_name("runtime_install.py")
-DEFAULT_OUTPUT = Path(__file__).with_name("launch")
+DEFAULT_OUTPUT = Path(__file__).with_name("launch-v2-corpus-resume-r4-2")
 
 
 class LauncherError(RuntimeError):
@@ -99,16 +99,69 @@ def _commands(
     prefix = ["colab", f"--auth={auth}"]
     return [
         [*prefix, "new", "--gpu", "A100", "--session", session],
-        [*prefix, "upload", "--session", session, "<source-bundle>", "/content/flagship-pilot-source.tar.gz"],
+        [
+            *prefix,
+            "upload",
+            "--session",
+            session,
+            "<source-bundle>",
+            "/content/flagship-pilot-source.tar.gz",
+        ],
         [*prefix, "upload", "--session", session, str(BOOTSTRAP), "/content/flagship_bootstrap.py"],
-        [*prefix, "upload", "--session", session, "<install-request>", "/content/flagship-pilot-install.json"],
-        [*prefix, "exec", "--session", session, "--file", str(RUNTIME_INSTALLER), "--timeout", "1800"],
+        [
+            *prefix,
+            "upload",
+            "--session",
+            session,
+            "<install-request>",
+            "/content/flagship-pilot-install.json",
+        ],
+        [
+            *prefix,
+            "exec",
+            "--session",
+            session,
+            "--file",
+            str(RUNTIME_INSTALLER),
+            "--timeout",
+            "1800",
+        ],
         [*prefix, "restart-kernel", "--session", session],
-        [*prefix, "upload", "--session", session, "<environment-request>", "/content/flagship-pilot-request.json"],
+        [
+            *prefix,
+            "upload",
+            "--session",
+            session,
+            "<environment-request>",
+            "/content/flagship-pilot-request.json",
+        ],
         [*prefix, "exec", "--session", session, "--file", str(BOOTSTRAP), "--timeout", "180"],
-        [*prefix, "upload", "--session", session, "<ephemeral-secrets>", "/content/.flagship-pilot-secrets.json"],
-        [*prefix, "upload", "--session", session, "<job-request>", "/content/flagship-pilot-request.json"],
-        [*prefix, "exec", "--session", session, "--file", str(BOOTSTRAP), "--timeout", str(timeout)],
+        [
+            *prefix,
+            "upload",
+            "--session",
+            session,
+            "<ephemeral-secrets>",
+            "/content/.flagship-pilot-secrets.json",
+        ],
+        [
+            *prefix,
+            "upload",
+            "--session",
+            session,
+            "<job-request>",
+            "/content/flagship-pilot-request.json",
+        ],
+        [
+            *prefix,
+            "exec",
+            "--session",
+            session,
+            "--file",
+            str(BOOTSTRAP),
+            "--timeout",
+            str(timeout),
+        ],
         [*prefix, "stop", "--session", session],
     ]
 
@@ -124,6 +177,9 @@ def build_campaign_manifest(
     if any(plan["protocol"]["source_bundle_sha256"] != source_bindings_sha for plan in plans):
         raise LauncherError("unit plans do not share one source bundle")
     authorized = protocol.status == "ready_to_run" and protocol.gpu_authorized
+    frozen_corpus_source = protocol.payload["corpus_reuse_binding"]
+    corpus_source_bindings_sha = frozen_corpus_source["frozen_source_bindings_sha256"]
+    corpus_source_archive_sha = frozen_corpus_source["frozen_source_archive_sha256"]
     packages = list(protocol.payload["runtime"]["package_pins"])
     jobs: list[dict[str, Any]] = []
     preflight_id = "preflight__a100_stack_smoke"
@@ -135,6 +191,8 @@ def build_campaign_manifest(
             "depends_on": [],
             "session": preflight_session,
             "argv": ["smoke"],
+            "source_scope": "revision_5_unit_training",
+            "source_bindings_sha256": source_bindings_sha,
             "execution_plan": _commands(
                 session=preflight_session,
                 packages=packages,
@@ -154,7 +212,7 @@ def build_campaign_manifest(
             continue
         job_id = f"corpus__{regime}__s{seed}"
         corpus_ids[key] = job_id
-        session = f"fpcorp-{regime[:4]}-s{seed}-{source_bindings_sha[:4]}"[:40]
+        session = f"fpcorp-{regime[:4]}-s{seed}-{corpus_source_bindings_sha[:4]}"[:40]
         argv = [
             "build-corpus",
             "--regime",
@@ -171,6 +229,9 @@ def build_campaign_manifest(
                 "depends_on": [preflight_id],
                 "session": session,
                 "argv": argv,
+                "source_scope": "frozen_revision_4_corpus_generator",
+                "source_bindings_sha256": corpus_source_bindings_sha,
+                "source_archive_sha256": corpus_source_archive_sha,
                 "execution_plan": _commands(
                     session=session,
                     packages=packages,
@@ -201,6 +262,8 @@ def build_campaign_manifest(
                 "session": plan["identity"]["colab_session"],
                 "argv": argv,
                 "unit_fingerprint": plan["fingerprint"],
+                "source_scope": "revision_5_unit_training",
+                "source_bindings_sha256": source_bindings_sha,
                 "execution_plan": _commands(
                     session=plan["identity"]["colab_session"],
                     packages=packages,
@@ -216,8 +279,21 @@ def build_campaign_manifest(
         "status": "ready_to_run" if authorized else "locked_not_authorized",
         "protocol_sha256": protocol.sha256,
         "source_bindings_sha256": source_bindings_sha,
+        "unit_source_bindings_sha256": source_bindings_sha,
+        "corpus_source_bindings_sha256": corpus_source_bindings_sha,
+        "corpus_source_archive_sha256": corpus_source_archive_sha,
         "allocation_allowed": authorized,
         "max_parallel_sessions": 3,
+        "max_parallel_corpus_sessions": int(
+            protocol.payload["runtime"]["execution_contract"]["corpus_checkpoint_resume_contract"][
+                "max_parallel_corpus_sessions"
+            ]
+        ),
+        "max_attempts_per_job": int(
+            protocol.payload["runtime"]["execution_contract"]["corpus_checkpoint_resume_contract"][
+                "attempt_limit"
+            ]
+        ),
         "job_count": len(jobs),
         "preflight_job_count": sum(job["kind"] == "preflight" for job in jobs),
         "corpus_job_count": sum(job["kind"] == "corpus" for job in jobs),
@@ -246,7 +322,9 @@ def _run(command: Sequence[str], *, log: Any, retries: int = 0, backoff: float =
     for attempt in range(1, retries + 2):
         log.write(f"$ {rendered}\n")
         log.flush()
-        completed = subprocess.run(command, text=True, stdout=log, stderr=subprocess.STDOUT, check=False)
+        completed = subprocess.run(
+            command, text=True, stdout=log, stderr=subprocess.STDOUT, check=False
+        )
         if completed.returncode == 0:
             return
         if attempt > retries:
@@ -301,11 +379,27 @@ def execute_job(
     credentials = load_credentials()
     with tempfile.TemporaryDirectory(prefix="flagship-pilot-launch-") as temporary:
         staging = Path(temporary)
-        source_path = staging / "source.tar.gz"
-        source_sha = write_source_bundle(
-            source_path,
-            _plan_for_job(protocol, job)["source_bindings"],
-        )
+        if job["kind"] == "corpus":
+            source_path = (
+                REPO_ROOT / protocol.payload["corpus_reuse_binding"]["frozen_source_archive_path"]
+            )
+            source_sha = sha256_file(source_path)
+            if source_sha != job["source_archive_sha256"]:
+                raise LauncherError("frozen corpus source archive changed")
+            frozen_sources = _plan_for_job(protocol, job)["corpus_binding"]["source_manifest"]
+            for relative, path in (
+                ("zvf-program/flagship/pilot/bootstrap.py", BOOTSTRAP),
+                ("zvf-program/flagship/pilot/runtime_install.py", RUNTIME_INSTALLER),
+            ):
+                if sha256_file(path) != frozen_sources[relative]:
+                    raise LauncherError(f"external corpus bootstrap source changed: {relative}")
+        else:
+            source_path = staging / "source.tar.gz"
+            source_sha = write_source_bundle(
+                source_path,
+                _plan_for_job(protocol, job)["source_bindings"],
+            )
+        expected_source_bindings_sha = job["source_bindings_sha256"]
         install_request = staging / "install.json"
         environment_request = staging / "environment.json"
         job_request = staging / "job.json"
@@ -319,7 +413,7 @@ def execute_job(
             {
                 "argv": ["verify-environment"],
                 "source_archive_sha256": source_sha,
-                "source_bindings_sha256": manifest["source_bindings_sha256"],
+                "source_bindings_sha256": expected_source_bindings_sha,
             },
         )
         atomic_json(
@@ -327,15 +421,12 @@ def execute_job(
             {
                 "argv": job["argv"],
                 "source_archive_sha256": source_sha,
-                "source_bindings_sha256": manifest["source_bindings_sha256"],
+                "source_bindings_sha256": expected_source_bindings_sha,
             },
         )
         atomic_json(secret_path, credentials)
         secret_path.chmod(0o600)
-        commands = [
-            list(command)
-            for command in job["execution_plan"]
-        ]
+        commands = [list(command) for command in job["execution_plan"]]
         commands[1][-2] = str(source_path)
         commands[3][-2] = str(install_request)
         commands[6][-2] = str(environment_request)
@@ -374,8 +465,7 @@ def execute_job(
         ]
         if len(result_lines) != 1:
             raise LauncherError(
-                f"{job['kind']} log must contain exactly one result line; "
-                f"found {len(result_lines)}"
+                f"{job['kind']} log must contain exactly one result line; found {len(result_lines)}"
             )
     atomic_json(
         result_path,
@@ -383,7 +473,7 @@ def execute_job(
             "status": "completed",
             "job_id": job_id,
             "protocol_sha256": protocol.sha256,
-            "source_bindings_sha256": manifest["source_bindings_sha256"],
+            "source_bindings_sha256": expected_source_bindings_sha,
             "source_archive_sha256": source_sha,
             "log_path": str(log_path),
         },

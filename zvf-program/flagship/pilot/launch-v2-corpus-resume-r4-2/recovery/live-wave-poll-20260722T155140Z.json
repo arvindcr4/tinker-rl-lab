@@ -1,0 +1,35 @@
+{
+  "schema_version": "flagship-pilot-live-poll-v1",
+  "polled_at": "2026-07-22T15:51:40.232475+00:00",
+  "thread_continued_from": "019f880f-c98e-7a93-a4c7-83352e8eff8a",
+  "material_event": "seed23_group80_independently_verified_partial_checkpoint",
+  "corpus__balanced_equal_length__s23": {
+    "status": "running",
+    "pid": 99028,
+    "wandb_run": "k1uazlrj",
+    "live_group": 84,
+    "live_tokens": 336825,
+    "highest_verified_partial_checkpoint": {
+      "completed_groups": 80,
+      "hf_commit": "a06e8cdd56974b8a4d8e201603cfee4891fb1fda",
+      "fingerprint": "bd28125f67d244f9b939cf935508f25c38896cf27620be8809cad0a6817efaa9",
+      "counts_as_acceptance": false,
+      "verification_path": "recovery/corpus__balanced_equal_length__s23__group-80-independent-verify.json"
+    }
+  },
+  "fpilot__epsilon_only__balanced_equal_length__s11": {
+    "status": "running",
+    "pid": 99029,
+    "wandb_run": "1cf851c0",
+    "training_step": 19,
+    "counts_as_acceptance": false
+  },
+  "fpilot__reduction_only__balanced_equal_length__s11": {
+    "status": "running",
+    "pid": 99030,
+    "wandb_run": "b2bd75df",
+    "training_step": 19,
+    "counts_as_acceptance": false
+  },
+  "note": "Group-80 independently verified partial only. Campaign continues toward seed-23 final + unit acceptance."
+}

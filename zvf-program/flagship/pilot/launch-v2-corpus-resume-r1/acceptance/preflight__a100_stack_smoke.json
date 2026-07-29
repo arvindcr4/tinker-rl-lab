@@ -1,0 +1,48 @@
+{
+  "job_id": "preflight__a100_stack_smoke",
+  "log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r1/logs/preflight__a100_stack_smoke.log",
+  "protocol_sha256": "5cedb119f9810a0522d91216e746613c9bb1baec18d3d329ed4e80f0eadf019e",
+  "schema_version": "flagship-pilot-preflight-acceptance-v1",
+  "smoke": {
+    "accelerator": "NVIDIA A100-SXM4-40GB",
+    "charged_generated_tokens": 3674,
+    "group_fingerprint": "bd38cadaff72cc2f140feb023b87408080991984aa53264992c5994bcb4f47f4",
+    "phase_flops": {
+      "diagnostic_backward": 17521097107712.0,
+      "optimizer_backward": 17521097107720.0,
+      "policy_forward": 16814091909663.0
+    },
+    "receipt": {
+      "active_rows": 8,
+      "active_tokens": 4096,
+      "condition": "intended_full",
+      "gradient_cosine": 1.00221848487854,
+      "gradient_relative_l2": 0.009203068912029266,
+      "group_fingerprint": "bd38cadaff72cc2f140feb023b87408080991984aa53264992c5994bcb4f47f4",
+      "intended_gradient_norm": 0.9102776646614075,
+      "intended_loss": 0.0,
+      "native_gradient_norm": 0.9107595086097717,
+      "native_loss": -3.725290298461914e-08,
+      "optimizer_learning_rate": 9.9e-07,
+      "selected_gradient_norm": 0.9102776646614075,
+      "selected_loss": 0.0,
+      "selected_vs_intended_cosine": 1.0022610425949097,
+      "selected_vs_intended_relative_l2": 0.0,
+      "step": 1
+    },
+    "runtime_versions": {
+      "accelerate": "1.13.0",
+      "datasets": "4.8.4",
+      "huggingface-hub": "1.11.0",
+      "numpy": "2.2.6",
+      "peft": "0.19.1",
+      "python": "3.12.13",
+      "torch": "2.7.1",
+      "transformers": "5.5.4",
+      "trl": "1.2.0",
+      "wandb": "0.21.0"
+    },
+    "status": "smoke_pass"
+  },
+  "status": "accepted"
+}

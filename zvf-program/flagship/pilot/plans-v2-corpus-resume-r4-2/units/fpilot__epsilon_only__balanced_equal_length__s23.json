@@ -1,0 +1,157 @@
+{
+  "allocation": {
+    "allowed": false,
+    "command": null,
+    "reason": "dry-run plans never contain an accelerator-allocation command"
+  },
+  "compute_contract": {
+    "charged_tokens": "All generated completion tokens, including masked, rejected, calibration, and failed-parser completions.",
+    "fail_closed": "A run with unverifiable charged-token or FLOP accounting is infrastructure-invalid and is resumed or replaced with the same seed; it is not a scientific observation.",
+    "flops": "Measured generation, policy/reference forward, and backward FLOPs; report both total and per optimizer step.",
+    "frozen_fields": [
+      "prompt split and order",
+      "model revision and tokenizer",
+      "optimizer and scheduler",
+      "LoRA configuration",
+      "maximum prompt and completion lengths",
+      "number and placement of optimizer updates",
+      "evaluation prompts and decoding",
+      "checkpoint cadence"
+    ],
+    "primary_budget": "fixed charged generated-token ceiling per run"
+  },
+  "condition_factors": {
+    "advantage": "selected_rows_sample_std_plus_1e-4",
+    "importance_ratio": "canonical_grpo_token_level",
+    "reduction": "mean_of_per_completion_masked_token_means",
+    "selection": "remove_unselected_rows_before_advantage_and_loss"
+  },
+  "corpus_binding": {
+    "charged_tokens": 80988,
+    "completed_groups": 20,
+    "corpus_fingerprint": "67d51945e773e9e6aa50a88f8d72a182230c2452bd0285caf00be554b1aa1764",
+    "hf_commit": "b1d897a968470898848ddb85ba24a334c3d59237",
+    "hf_repo": "arvindcr4/tinker-rl-lab-flagship-pilot-corpus-balanced_equal_length-s23-04d20f71-10e481a8",
+    "protocol_sha256": "04d20f712f652f80754fa4c8c0a3f48d4d2f1c5d716b3981746322c938b21970",
+    "regime": "balanced_equal_length",
+    "seed": 23,
+    "source_archive": {
+      "path": "zvf-program/flagship/pilot/provenance/r3-control-source.tar.gz",
+      "sha256": "f04aff3fb8ef87be2bc885263750c2cc0b6be6bd71fcc8b02ab5be8f116fac31"
+    },
+    "source_bindings_sha256": "10e481a8a3d77a336fc150c53e90fb1df9baed26aa5c43c58fa548e9105aba83",
+    "source_manifest": {
+      "zvf-program/flagship/pilot/artifacts.py": "6cb2ca23beebb6450fd655853e80cfb1630ef7020f984165f082089918ae3e8e",
+      "zvf-program/flagship/pilot/bootstrap.py": "3c37bce88bb22e4bc86b4d9158312ef2278f2600e3ee6c0ed7aef2ec89217b1b",
+      "zvf-program/flagship/pilot/checkpointing.py": "e1a1e893a9ec2759c56d9974d005042e4e4112e30c9f36bb2d6b6fb01b398929",
+      "zvf-program/flagship/pilot/evaluation.py": "15a535a1d2297e512297b1ec10630cda2068464bffcdcd4a4469fb602041a5da",
+      "zvf-program/flagship/pilot/flops.py": "1a2bce24958b68b1045ed108e43a7e7fe69883d0d4ad2269788cc3beb541d347",
+      "zvf-program/flagship/pilot/objective.py": "5962de855f85e602c9d1dc973b031caf78d91676f662a6f7ae9b9cb873e2dbb1",
+      "zvf-program/flagship/pilot/protocol.py": "0f863369f910ff709855b8962c5c72045918affef53ac6bf1ca3346d32c56d3f",
+      "zvf-program/flagship/pilot/remote_core.py": "a05917ed6795bfabfbd68926a37d21fb3e2a0186eb8cad961f74a1a8cda167c9",
+      "zvf-program/flagship/pilot/remote_training.py": "735f162b75d747c331d62f3bc99d3d34614710728bb95cfee83ca1abe9bb8b00",
+      "zvf-program/flagship/pilot/remote_unit.py": "02552168a333f955a1422463f89c59a552e5bb03b603fb5b9d5ce09d9172b60c",
+      "zvf-program/flagship/pilot/replay.py": "cb83cf4bb5324d4ae8171ab4c27dffe66ecb305b002d5681fa8e6f94cf90504c",
+      "zvf-program/flagship/pilot/runtime_install.py": "387efeecbf811b86e44891194382f4c42cd9d4ab9a15651cd41abe7ae0b9e133",
+      "zvf-program/flagship/pilot/training.py": "ac22df0a90dafe42399e58324e44f1d1c2ff2c117e6ca0e2487e9d0ecdd66305",
+      "zvf-program/flagship/pilot_preregistration.json": "04d20f712f652f80754fa4c8c0a3f48d4d2f1c5d716b3981746322c938b21970"
+    },
+    "status": "verified_prefix",
+    "wandb_run_id": "ge121gt6",
+    "wandb_run_name": "flagship-pilot-corpus-balanced_equal_length-s23-04d20f71-10e481a8"
+  },
+  "fingerprint": "c3eec6d03ebeea55942768c478b3ed0644367ebccef023e84d449eee15d79ee7",
+  "identity": {
+    "colab_session": "fpilot-epsi-bala-s23-87d9005d",
+    "corpus_hf_repo": "arvindcr4/tinker-rl-lab-flagship-pilot-corpus-balanced_equal_length-s23-04d20f71-10e481a8",
+    "corpus_wandb_run": "flagship-pilot-corpus-balanced_equal_length-s23-04d20f71-10e481a8",
+    "hf_repo": "arvindcr4/tinker-rl-lab-flagship-pilot-epsilon_only-balanced_equal_length-s23-87d929d0-005d3f82",
+    "local_record": "zvf-program/flagship/pilot/runs/fpilot__epsilon_only__balanced_equal_length__s23-87d929d0-005d3f82/full_record.json",
+    "wandb_group": "flagship-s1-conformance-screening",
+    "wandb_run": "flagship-pilot-epsilon_only-balanced_equal_length-s23-87d929d0-005d3f82"
+  },
+  "protocol": {
+    "gpu_authorized": true,
+    "path": "zvf-program/flagship/pilot_preregistration.json",
+    "sha256": "87d929d0a3af789d3ba3ee10a1f4c3e83572ecec7cc4efa28ca032008f88fbc4",
+    "source_bundle_sha256": "005d3f8242b992cf70af2944c2b3f63351f5d3e00e95cdc5caeb40d1261b0918",
+    "status": "ready_to_run"
+  },
+  "readiness": {
+    "authorization_blockers": [],
+    "ready": true
+  },
+  "regime_contract": {
+    "constraints": "Equal completion token counts within each group, no controller-selected zero rows, and identical active completion count across conditions.",
+    "dataset": "openai/gsm8k",
+    "dataset_revision": "740312add88f781978c0658806c59bc2815b9866",
+    "dataset_split": "main/train for replay and main/test[0:128] for held-out",
+    "purpose": "negative control",
+    "source_ordered_row_sha256": {
+      "test": "f4ca992541f6689d61a22030fbd271663f67870b93cdd4ae532012d2812486bb",
+      "train": "aad96f855a7cc398cd3fa7939c22d0a1cf55f38c0f4412134608e7a14f72246d"
+    },
+    "task": "gsm8k_binary"
+  },
+  "runtime": {
+    "accelerator": "A100 only",
+    "checkpoint_steps": [
+      20,
+      40,
+      60,
+      80,
+      100
+    ],
+    "group_size": 8,
+    "model": {
+      "id": "Qwen/Qwen3-1.7B",
+      "revision": "70d244cc86ccca08cf5af4e1e306ecf908b1ad5e"
+    },
+    "stack": "trl==1.2.0, transformers==5.5.4",
+    "steps": 100,
+    "tracking": {
+      "hugging_face_private": true,
+      "wandb_corpus_group": "flagship-s1-conformance-corpora",
+      "wandb_entity": null,
+      "wandb_project": "tinker-rl-lab",
+      "wandb_unit_group": "flagship-s1-conformance-screening"
+    }
+  },
+  "schema_version": "flagship-pilot-screening-plan-v1",
+  "source_bindings": {
+    "zvf-program/flagship/pilot/analysis.py": "0d40f218e4e159ac1f4875ffcb67eba658c5a9e2ce73231a079640584255d17f",
+    "zvf-program/flagship/pilot/artifacts.py": "2d58d55b91798d788f93fbaddb568d608eb2ddde20b360a4f980734e6eafc480",
+    "zvf-program/flagship/pilot/bootstrap.py": "3c37bce88bb22e4bc86b4d9158312ef2278f2600e3ee6c0ed7aef2ec89217b1b",
+    "zvf-program/flagship/pilot/checkpointing.py": "e1a1e893a9ec2759c56d9974d005042e4e4112e30c9f36bb2d6b6fb01b398929",
+    "zvf-program/flagship/pilot/evaluation.py": "15a535a1d2297e512297b1ec10630cda2068464bffcdcd4a4469fb602041a5da",
+    "zvf-program/flagship/pilot/flops.py": "1a2bce24958b68b1045ed108e43a7e7fe69883d0d4ad2269788cc3beb541d347",
+    "zvf-program/flagship/pilot/launcher.py": "3a028287d67af177435192acb53026b81171ce5e35bb9eef4ea22570433ee280",
+    "zvf-program/flagship/pilot/objective.py": "980a56a1651299a5adbe7a0927c13b12d42d9d7e1a36205500a24d5eeba9b61b",
+    "zvf-program/flagship/pilot/plan_screening.py": "18db722d77d3d716030503079d423f8142394f32e50d0c35d3c9760f3768114f",
+    "zvf-program/flagship/pilot/protocol.py": "bad50373abe8055b7792b8c7342db69fa704acd3fef8639d53033573b1ecdc40",
+    "zvf-program/flagship/pilot/provenance/r3-control-source.tar.gz": "f04aff3fb8ef87be2bc885263750c2cc0b6be6bd71fcc8b02ab5be8f116fac31",
+    "zvf-program/flagship/pilot/provenance/r3-corpus-bindings.json": "e1efa5ce7bcae97201d5fc2a949f8b3cae03b10c4f62f8b9f6300ccd74001c8c",
+    "zvf-program/flagship/pilot/provenance/r3-corpus-source.tar.gz": "8d8b201d3e8e914cc6c7d35f569e389b460c53e02075932c2ab4ee417a700ede",
+    "zvf-program/flagship/pilot/remote_core.py": "97462404ab516fc641012454ec4f16d7020d8e7a16b4a918a0b8d7c7a5fdeb23",
+    "zvf-program/flagship/pilot/remote_training.py": "4c38a8b5b0f61ca8441074c170ddd4ae508c7c9511340cf05d11924d89c56f86",
+    "zvf-program/flagship/pilot/remote_unit.py": "aa576a7ef18f75e667b2d4bb59043f24a4e27fcb32a735332b914e897a0151c5",
+    "zvf-program/flagship/pilot/replay.py": "cb83cf4bb5324d4ae8171ab4c27dffe66ecb305b002d5681fa8e6f94cf90504c",
+    "zvf-program/flagship/pilot/runtime_install.py": "387efeecbf811b86e44891194382f4c42cd9d4ab9a15651cd41abe7ae0b9e133",
+    "zvf-program/flagship/pilot/supervisor.py": "566ce7edbf9bcf879d73c3bdac128fd523cea4703ac71ab8e9ed5cc6906a8784",
+    "zvf-program/flagship/pilot/test_stack_differential.py": "b4ef221d985ab8854d8002da015a871a1aae8ac07b724a53fcd7a57bef0ecf85",
+    "zvf-program/flagship/pilot/training.py": "7b738ddd8766fe8a494dab7666865e1aae8af889627ff1547a992df6ee43603f",
+    "zvf-program/flagship/pilot/verifier.py": "789d56817553ae31b6064ab999ca71eb99a42ef4a137602e9251709613556ac4",
+    "zvf-program/flagship/pilot_preregistration.json": "87d929d0a3af789d3ba3ee10a1f4c3e83572ecec7cc4efa28ca032008f88fbc4",
+    "zvf-program/flagship/preregistration.json": "68237294a2cce2a0cddb5a1a413a5f954434aca1a9d1a44d806f0145c2a5171e",
+    "zvf-program/flagship/s1/results/implementation_freeze.json": "a785ceadc143ff7449070a64f0cecd8bd858b62c561bb19260e51e9f40a69ace",
+    "zvf-program/flagship/theory/NOVELTY_AUDIT.md": "809b1bd9ebba58f447c6a0172a396348b96a47cc6862f0b921f1984c1192dea7"
+  },
+  "stage": "screening",
+  "status": "dry_run_only",
+  "unit": {
+    "condition": "epsilon_only",
+    "id": "fpilot__epsilon_only__balanced_equal_length__s23",
+    "regime": "balanced_equal_length",
+    "seed": 23
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "schema_version": "flagship-pilot-controller-adoption-v1",
+  "status": "remote_session_lost_after_partial_progress",
+  "job_id": "fpilot__native_trl__balanced_equal_length__s11",
+  "attempt": 3,
+  "attempt_limit": 3,
+  "duplicate_launch_performed": false,
+  "local_controller_alive_at_detection": true,
+  "stale_local_pids": {
+    "launcher": 55038,
+    "colab_exec": 72711
+  },
+  "remote_session": "fpilot-nati-bala-s11-87d9005d",
+  "remote_endpoint": "gpu-a100-s-kkb-usw4b0-30d3lvx1rxnp1",
+  "colab_server_sessions": [],
+  "provider_evidence": {
+    "keep_alive_404_at": "2026-07-22T14:48:42Z",
+    "session_terminated_reason": "pruned",
+    "session_terminated_at": "2026-07-22T14:49:18Z",
+    "history_tail": [
+      {
+        "timestamp": "2026-07-22T13:33:37.064854+00:00",
+        "event_type": "file_operation",
+        "op": "upload",
+        "local": "/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/flagship-pilot-launch-_0_f772k/secrets.json",
+        "remote": "/content/.flagship-pilot-secrets.json"
+      },
+      {
+        "timestamp": "2026-07-22T13:33:41.177567+00:00",
+        "event_type": "file_operation",
+        "op": "upload",
+        "local": "/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/flagship-pilot-launch-_0_f772k/job.json",
+        "remote": "/content/flagship-pilot-request.json"
+      },
+      {
+        "timestamp": "2026-07-22T14:48:42.939315+00:00",
+        "event_type": "keep_alive_error",
+        "status_code": 404,
+        "error_type": "ColabRequestError",
+        "error": "Failed to issue request GET https://colab.research.google.com/tun/m/gpu-a100-s-kkb-usw4b0-30d3lvx1rxnp1/keep-alive/: Not Found",
+        "response_body": "\n<!DOCTYPE html>\n<html lang=en>\n  <meta charset=utf-8>\n  <meta name=viewport content=\"initial-scale=1, minimum-scale=1, width=device-width\">\n  <title>Error 404 (Not Found)!!1</title>\n  <style>\n    *{margin:0;padding:0}html,code{font:15px/22px arial,sans-serif}html{background:#fff;color:#222;padding:15px}body{margin:7% auto 0;max-width:390px;min-height:180px;padding:30px 0 15px}* > body{background:url(//www.google.com/images/errors/robot.png) 100% 5px no-repeat;padding-right:205px}p{margin:11px 0 22px;overflow:hidden}ins{color:#777;text-decoration:none}a img{border:0}@media screen and (max-width:772px){body{background:none;margin-top:0;max-width:none;padding-right:0}}#logo{background:url(//www.google.com/images/logos/errorpage/error_logo-150x54.png) no-repeat;margin-left:-5px}@media only screen and (min-resolution:192dpi){#logo{background:url(//www.google.com/images/logos/errorpage/error_logo-150x54-2x.png) no-repeat 0% 0%/100% 100%;-moz-border-image:url(//www.google.com/images/logos/er",
+        "iteration": 67,
+        "consecutive_4xx": 1
+      },
+      {
+        "timestamp": "2026-07-22T14:49:18.791389+00:00",
+        "event_type": "session_terminated",
+        "reason": "pruned"
+      }
+    ],
+    "infrastructure_markers_observed": [
+      "ColabRequestError",
+      "404 Not Found",
+      "pruned"
+    ]
+  },
+  "wandb": {
+    "entity": "arvindcr4-pes-university",
+    "project": "tinker-rl-lab",
+    "run_id": "1724b02f",
+    "state_at_detection": "running_but_stale_heartbeat",
+    "last_step": 59,
+    "note": "Orphaned W&B identity after provider prune; not an accepted unit."
+  },
+  "partial_progress": {
+    "independently_verified_checkpoint_step": 40,
+    "hf_commit": "4b9ebcc79f86e56205c2524d0f4221facdbcc41c",
+    "fingerprint": "f564682d152e979b40a4bf7bb1ea421a0f184bd916a32cbc7088e5dfd6d9e2d8",
+    "verification_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/recovery/fpilot__native_trl__balanced_equal_length__s11__step-40-independent-verify.json",
+    "counts_as_acceptance": false
+  },
+  "archived_log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/attempts/fpilot__native_trl__balanced_equal_length__s11/attempt-3.log",
+  "archived_log_sha256": "152590b125320f13bb89f299d6770ad668434afc319b549e48b00ed3b2902d89",
+  "classification": {
+    "status": "failed_infrastructure",
+    "reason": "Final authorized attempt 3 lost its A100 assignment (keep-alive 404 then pruned). Partial step-40 checkpoint is preserved but unit is not accepted. Automatic further unit retries are exhausted under max_attempts_per_job=3."
+  },
+  "verified_at": "2026-07-22T14:53:02.478001+00:00"
+}

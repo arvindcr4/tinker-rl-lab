@@ -1,0 +1,57 @@
+{
+  "accelerator": "NVIDIA A100-SXM4-40GB",
+  "charged_generated_tokens": 398761,
+  "completed_groups": 100,
+  "counts_as_acceptance": true,
+  "fingerprint": "673d3f27a08c650e900069ca05db23fe45407299be13b726ae81c36c96578a20",
+  "flop_ledger": {
+    "profiled_generated_tokens": 24553,
+    "profiled_generation_flops": 100117918274672.0,
+    "profiled_steps": [
+      1,
+      20,
+      40,
+      60,
+      80,
+      100
+    ],
+    "replay_generation_flops": 1625997687008776.2
+  },
+  "group_count": 100,
+  "hf_commit": "b2cb4ca32e52cf61b9388d86a49701aa34df52f8",
+  "job_id": "corpus__balanced_equal_length__s37",
+  "latest_checkpoint": {
+    "completed_groups": 80,
+    "fingerprint": "784c6477ae2e8a0c423dcd732118bb1846a48b7dff51a8555191fca591938d5f",
+    "hf_commit": "25cb83c3f49146af8d3236a4bad9b881e82befe5"
+  },
+  "local_result_path": "/Users/arvind/Developer/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2/results/corpus__balanced_equal_length__s37.json",
+  "local_result_status": "completed",
+  "note": "Final seed-37 corpus independently verified against private HF + W&B + local completed result; acceptance written.",
+  "private": true,
+  "protocol_sha256": "04d20f712f652f80754fa4c8c0a3f48d4d2f1c5d716b3981746322c938b21970",
+  "repo": "arvindcr4/tinker-rl-lab-flagship-pilot-corpus-balanced_equal_length-s37-04d20f71-10e481a8",
+  "resume_count": 0,
+  "runtime_versions": {
+    "accelerate": "1.13.0",
+    "datasets": "4.8.4",
+    "huggingface-hub": "1.11.0",
+    "numpy": "2.2.6",
+    "peft": "0.19.1",
+    "python": "3.12.13",
+    "torch": "2.7.1",
+    "transformers": "5.5.4",
+    "trl": "1.2.0",
+    "wandb": "0.21.0"
+  },
+  "schema_version": "flagship-pilot-corpus-complete-independent-verify-v1",
+  "status": "independently_verified_complete",
+  "status_field": "complete",
+  "verified_at": "2026-07-23T01:58:58.562509+00:00",
+  "wandb": {
+    "entity": "arvindcr4-pes-university",
+    "project": "tinker-rl-lab",
+    "run_id": "60bhrt9q",
+    "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/60bhrt9q"
+  }
+}

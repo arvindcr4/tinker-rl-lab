@@ -1,0 +1,14 @@
+{
+  "accepted_corpora": 0,
+  "accepted_scientific_units": 0,
+  "implementation_revision": "A1-R2-hold-deterministic-sdpa-through-checkpoint-backward",
+  "reason": "the real A100 smoke exposed finite-precision cosine values above one and the verifier did not enforce the mathematical bound",
+  "recovery_records": [
+    "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r2/recovery/preflight__a100_stack_smoke__attempt-1-cosine-bound.json",
+    "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/pilot/launch-v2-corpus-resume-r2/recovery/corpus__balanced_equal_length__s11__attempt-1-aborted-invalid-smoke.json"
+  ],
+  "schema_version": "flagship-pilot-implementation-supersession-v1",
+  "scientific_work_initialized": false,
+  "status": "superseded_no_further_launches",
+  "superseded_at": "2026-07-22T08:40:34.415537+00:00"
+}

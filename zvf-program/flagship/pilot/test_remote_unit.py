@@ -8,7 +8,14 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from pilot.remote_unit import main, parse_args
+from pilot.protocol import load_protocol
+from pilot.remote_core import RemoteContractError
+from pilot.remote_unit import (
+    _build_corpus_checkpoint_manifest,
+    _restore_corpus_checkpoint,
+    main,
+    parse_args,
+)
 
 
 class PromptTokenTests(unittest.TestCase):
@@ -186,6 +193,129 @@ class RemoteUnitSafetyTests(unittest.TestCase):
     def test_smoke_refuses_while_locked(self) -> None:
         with self.assertRaisesRegex(SystemExit, "allocation is forbidden"):
             main(["--protocol", str(self.locked_protocol), "smoke"])
+
+
+class CorpusCheckpointTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.protocol = load_protocol()
+        self.temporary = tempfile.TemporaryDirectory()
+        self.root = Path(self.temporary.name) / "root"
+        self.root.mkdir()
+        self.sources = dict(
+            self.protocol.corpus_binding("balanced_equal_length", 11)["source_manifest"]
+        )
+        (self.root / "source_manifest.json").write_text(
+            json.dumps(self.sources, indent=2, sort_keys=True) + "\n"
+        )
+        self.records = []
+        for index in range(20):
+            path = self.root / "groups" / f"group-{index:03d}.pt"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(f"group-{index}".encode())
+            self.records.append(
+                {
+                    "index": index,
+                    "source_row_index": index,
+                    "fingerprint": f"{index + 1:064x}",
+                    "active_rows": 8,
+                    "selected_length_cv": 0.0,
+                    "charged_generated_tokens": 64,
+                    "artifact_path": f"groups/group-{index:03d}.pt",
+                }
+            )
+        self.attempts = [
+            {
+                "run_id": "run-1",
+                "run_url": "https://wandb.ai/entity/project/runs/run-1",
+                "start_group": 0,
+                "completed_through": 20,
+            }
+        ]
+
+    def tearDown(self) -> None:
+        self.temporary.cleanup()
+
+    def manifest(self) -> dict[str, object]:
+        return _build_corpus_checkpoint_manifest(
+            root=self.root,
+            protocol=self.protocol,
+            regime="balanced_equal_length",
+            seed=11,
+            group_records=self.records,
+            profiled_flops=1.0,
+            profiled_tokens=64,
+            versions={"torch": "2.7.1"},
+            accelerator="NVIDIA A100-SXM4-40GB",
+            sources=self.sources,
+            attempts=self.attempts,
+            resume_count=0,
+            wall_clock_seconds=1.0,
+        )
+
+    def snapshot(self, manifest: dict[str, object]) -> Path:
+        snapshot = Path(self.temporary.name) / "snapshot" / "resume"
+        snapshot.mkdir(parents=True, exist_ok=True)
+        for relative in manifest["artifact_files"]:
+            source = self.root / relative
+            target = snapshot / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(source.read_bytes())
+        (snapshot / "corpus_checkpoint_manifest.json").write_text(
+            json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+        )
+        return snapshot.parent
+
+    def test_checkpoint_round_trip_restores_exact_prefix(self) -> None:
+        manifest = self.manifest()
+        destination = Path(self.temporary.name) / "restored"
+        destination.mkdir()
+        restored = _restore_corpus_checkpoint(
+            snapshot_root=self.snapshot(manifest),
+            destination=destination,
+            protocol=self.protocol,
+            regime="balanced_equal_length",
+            seed=11,
+            order=list(range(100)),
+            versions={"torch": "2.7.1"},
+            accelerator="NVIDIA A100-SXM4-40GB",
+            sources=self.sources,
+        )
+        self.assertEqual(restored["completed_groups"], 20)
+        self.assertEqual((destination / "groups/group-019.pt").read_bytes(), b"group-19")
+
+    def test_checkpoint_restore_rejects_tampered_file_and_train_order(self) -> None:
+        manifest = self.manifest()
+        snapshot = self.snapshot(manifest)
+        (snapshot / "resume/groups/group-019.pt").write_bytes(b"tampered")
+        destination = Path(self.temporary.name) / "restored-tampered"
+        destination.mkdir()
+        with self.assertRaisesRegex(RemoteContractError, "file hash mismatch"):
+            _restore_corpus_checkpoint(
+                snapshot_root=snapshot,
+                destination=destination,
+                protocol=self.protocol,
+                regime="balanced_equal_length",
+                seed=11,
+                order=list(range(100)),
+                versions={"torch": "2.7.1"},
+                accelerator="NVIDIA A100-SXM4-40GB",
+                sources=self.sources,
+            )
+        clean_snapshot = self.snapshot(manifest)
+        destination = Path(self.temporary.name) / "restored-order"
+        destination.mkdir()
+        with self.assertRaisesRegex(RemoteContractError, "train order diverges"):
+            _restore_corpus_checkpoint(
+                snapshot_root=clean_snapshot,
+                destination=destination,
+                protocol=self.protocol,
+                regime="balanced_equal_length",
+                seed=11,
+                order=[999, *range(1, 100)],
+                versions={"torch": "2.7.1"},
+                accelerator="NVIDIA A100-SXM4-40GB",
+                sources=self.sources,
+            )
 
 
 if __name__ == "__main__":

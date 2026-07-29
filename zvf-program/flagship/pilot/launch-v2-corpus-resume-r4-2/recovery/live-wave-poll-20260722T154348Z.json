@@ -1,0 +1,34 @@
+{
+  "schema_version": "flagship-pilot-live-poll-v1",
+  "polled_at": "2026-07-22T15:43:48.305209+00:00",
+  "thread_continued_from": "019f880f-c98e-7a93-a4c7-83352e8eff8a",
+  "active_jobs": {
+    "corpus__balanced_equal_length__s23": {
+      "pid": 99028,
+      "wandb_run": "k1uazlrj",
+      "wandb_state": "running",
+      "corpus_group": 78,
+      "charged_generated_tokens": 312321,
+      "hf_head_sha": "8b1f2105bc715e5dbf9545f4bc244f3e8800e5ba",
+      "hf_head_completed_groups": 60,
+      "counts_as_acceptance": false
+    },
+    "fpilot__epsilon_only__balanced_equal_length__s11": {
+      "pid": 99029,
+      "wandb_run": "1cf851c0",
+      "wandb_state": "running",
+      "training_step": 8,
+      "hf_repo_head_sha": "26337eb92dd054a70137003806fb1e16b8eaea52",
+      "counts_as_acceptance": false
+    },
+    "fpilot__reduction_only__balanced_equal_length__s11": {
+      "pid": 99030,
+      "wandb_run": "b2bd75df",
+      "wandb_state": "running",
+      "training_step": 9,
+      "hf_repo_head_sha": "5d3e9386ad67dfa7d79b3a1a5ff6ad6ca9560995",
+      "counts_as_acceptance": false
+    }
+  },
+  "note": "First unit training steps observed; corpus still pre-group-80 HF checkpoint. No acceptance."
+}

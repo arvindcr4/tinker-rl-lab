@@ -1,0 +1,150 @@
+{
+  "schema_version": "rlhfbook-followup-v1",
+  "status": "proposed_not_authorized",
+  "created_on": "2026-07-29",
+  "book_binding": {
+    "title": "Reinforcement Learning from Human Feedback",
+    "url": "https://rlhfbook.com/",
+    "source_repository": "https://github.com/natolambert/rlhf-book",
+    "source_commit": "3624df9ef62177c2c3d6d824f5c2bb740f31041f",
+    "chapters": [
+      "06-policy-gradients",
+      "07-reasoning",
+      "14-over-optimization",
+      "15-regularization",
+      "16-evaluation",
+      "appendix-c-practical"
+    ]
+  },
+  "scope": {
+    "objective": "Determine whether spectral or entropic auxiliary signals add calibrated information beyond terminal reward and improve held-out reasoning under matched cost, without proxy exploitation, length artifacts, or policy-drift confounds.",
+    "frozen_campaign": "zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2",
+    "frozen_classification": "registered fixed-corpus off-policy replay conformance and feasibility study",
+    "must_not_modify_or_relabel": [
+      "zvf-program/flagship/pilot_preregistration.json",
+      "zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2",
+      "zvf-program/flagship/paper/review_bundle.zip"
+    ],
+    "live_checkout_observation": {
+      "path": "zvf-program/flagship/pilot/objective.py",
+      "observed_sha256": "20f420f3901c75bdd3d91f2796d7afe903cd6cf950172249cefe3c18ef995a0b",
+      "accepted_unit_source_sha256": "980a56a1651299a5adbe7a0927c13b12d42d9d7e1a36205500a24d5eeba9b61b",
+      "interpretation": "The live mutable checkout is not the source bound to accepted r4-2 unit receipts; the frozen review bundle remains the verification surface."
+    }
+  },
+  "central_question": "Do the proposed auxiliary trajectory scores predict independently verified correctness within homogeneous reward groups and then improve untouched held-out quality under a fresh on-policy, matched-cost protocol?",
+  "hypotheses": [
+    {
+      "id": "H1_alignment",
+      "claim": "Within all-correct and all-wrong terminal-reward strata, the auxiliary score predicts independent correctness labels after controlling for completion length, token entropy, task, and model scale.",
+      "falsified_if": "The stratified bootstrap AUC interval includes 0.5, the effect disappears under controls, or a variance-matched placebo performs equivalently."
+    },
+    {
+      "id": "H2_learning",
+      "claim": "A gated auxiliary arm improves seed-paired held-out learning-curve AUC over the registered group-relative control at matched charged tokens and measured FLOPs.",
+      "falsified_if": "The paired interval includes zero, improvement is not direction-consistent, or the effect vanishes on the untouched test set."
+    },
+    {
+      "id": "H3_robustness",
+      "claim": "Any quality gain persists under an independent answer verifier, prompt-format perturbation, and sampled pass@8 evaluation.",
+      "falsified_if": "The gain is parser-specific, format-specific, or explained by a larger inference-token budget."
+    },
+    {
+      "id": "H4_no_proxy_exploitation",
+      "claim": "Proxy improvement does not coincide with degraded held-out quality, excessive policy drift, clipping saturation, or length-cap exploitation.",
+      "falsified_if": "Proxy score rises while held-out quality falls, reference KL crosses its preregistered bound, clipping saturates, or cap-hit rate exceeds 0.05."
+    }
+  ],
+  "stages": [
+    {
+      "id": "S0_isolation",
+      "gate": "Create a fresh source namespace, protocol fingerprint, artifact root, and run identities; no accepted r4-2 source or receipt may be overwritten.",
+      "evidence": "Fresh hashes and a verifier that distinguishes the new protocol from the frozen campaign."
+    },
+    {
+      "id": "S1_offline_alignment",
+      "gate": "Test auxiliary-score calibration on independently labeled homogeneous groups before any training allocation.",
+      "evidence": "At least 2000 all-correct and 2000 all-wrong groups per task/model stratum, stratified bootstrap intervals, length/entropy controls, and a variance-matched placebo."
+    },
+    {
+      "id": "S2_positive_control_feasibility",
+      "gate": "Construct a genuinely variable-length corpus without weakening the failed r4-2 gate.",
+      "evidence": "Selected-row length CV at least 0.35, completion cap-hit rate at most 0.05, EOS and parse rates reported, and byte-identical realized corpora across arms."
+    },
+    {
+      "id": "S3_matched_training",
+      "gate": "Run fresh on-policy training only after S1 and S2 pass.",
+      "evidence": "At least five paired seeds for the group-relative control, a centered-reward baseline, spectral arm, entropic arm, and variance-matched placebo at no more than 0.01 relative charged-token or FLOP imbalance."
+    },
+    {
+      "id": "S4_robust_evaluation",
+      "gate": "Keep model selection on a development set and make the final decision on an untouched test set.",
+      "evidence": "Pass@1 and sampled pass@8, independent parser agreement, prompt-format perturbation, fixed inference-token budgets, and seed-paired confidence intervals."
+    }
+  ],
+  "conditions": {
+    "control": "registered_group_relative_control",
+    "baseline": "centered_reward_without_std_normalization",
+    "experimental": [
+      "spectral_legendre",
+      "entropic_givens"
+    ],
+    "placebo": "variance_matched_random_auxiliary_score"
+  },
+  "required_telemetry": [
+    "all_wrong_fraction",
+    "all_correct_fraction",
+    "mixed_fraction",
+    "reward_mean",
+    "reward_std",
+    "policy_ratio_q05",
+    "policy_ratio_q50",
+    "policy_ratio_q95",
+    "positive_advantage_clip_fraction",
+    "negative_advantage_clip_fraction",
+    "approx_kl_to_old_policy",
+    "kl_to_initial_reference",
+    "completion_length_mean",
+    "completion_length_p95",
+    "completion_cap_hit_rate",
+    "eos_rate",
+    "format_valid_rate",
+    "parser_disagreement_rate",
+    "charged_generated_tokens",
+    "measured_flops",
+    "heldout_pass_at_1",
+    "heldout_pass_at_8"
+  ],
+  "evaluation_contract": {
+    "development_and_test_are_disjoint": true,
+    "training_and_test_prompt_overlap_audit": "8-gram plus exact normalized prompt matching",
+    "primary_quality": "seed-paired untouched-test pass@1 learning-curve AUC",
+    "secondary_quality": "sampled pass@8 at a fixed inference-token budget",
+    "answer_checks": [
+      "registered_strict_parser",
+      "independent_symbolic_or_numeric_verifier"
+    ],
+    "format_perturbations": [
+      "registered_template",
+      "semantically equivalent alternate answer template"
+    ],
+    "proxy_metrics_are_not_quality_metrics": true
+  },
+  "decision_rules": {
+    "stage_order": [
+      "S0_isolation",
+      "S1_offline_alignment",
+      "S2_positive_control_feasibility",
+      "S3_matched_training",
+      "S4_robust_evaluation"
+    ],
+    "allocation": "No GPU training is authorized by this file. Each stage must pass before the next allocation is requested.",
+    "claim_boundary": "Synthetic nonzero advantages, nonzero gradients, timing estimates, or dashboard traces cannot support a learning, correctness, or reward-recovery claim.",
+    "stop": "Stop on failed calibration, infeasible variable-length control, parser-specific gains, proxy/quality divergence, excessive drift, clip saturation, cap exploitation, provenance mismatch, or repeated validation failure. Preserve negative results."
+  },
+  "authorization": {
+    "gpu": false,
+    "external_runs": false,
+    "amendment_required_before_execution": true
+  }
+}

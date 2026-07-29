@@ -28,6 +28,43 @@ class PilotPreregistrationTests(unittest.TestCase):
         freeze = json.loads((ROOT / self.protocol["s1_freeze"]["path"]).read_text())
         self.assertEqual(freeze["status"], self.protocol["s1_freeze"]["required_status"])
 
+    def test_versioned_zero_relation_amendment_and_corpus_reuse_are_explicit(self) -> None:
+        self.assertEqual(self.protocol["protocol_version"], 2)
+        self.assertEqual(self.protocol["implementation_revision"], 7)
+        amendment = self.protocol["amendment"]
+        self.assertEqual(amendment["id"], "A1-corpus-intermediate-persistence")
+        self.assertTrue(amendment["authorized_by_user"])
+        self.assertRegex(amendment["previous_protocol_sha256"], r"^[0-9a-f]{64}$")
+        self.assertEqual(len(amendment["prior_attempts"]), 3)
+        self.assertIn("never pooled", amendment["evidence_treatment"])
+        corrections = amendment["control_plane_corrections"]
+        r4 = corrections[-3]
+        self.assertEqual(
+            r4["id"],
+            "A1-R4-explicit-degenerate-gradient-relations-with-corpus-reuse",
+        )
+        self.assertTrue(r4["authorized_by_user"])
+        self.assertIn("joint-zero", r4["observation"])
+        self.assertIn("No replay group is dropped", r4["correction"])
+        self.assertEqual(
+            corrections[-2]["id"],
+            "A1-R4.1-package-frozen-archives-for-remote-validation",
+        )
+        self.assertEqual(corrections[-2]["authorized_under"], r4["id"])
+        self.assertIn("No W&B run", corrections[-2]["observation"])
+        self.assertEqual(
+            corrections[-1]["id"],
+            "A1-R4.2-exact-identical-gradient-diagnostics",
+        )
+        self.assertEqual(corrections[-1]["authorized_under"], r4["id"])
+        self.assertIn("1.000000000002599", corrections[-1]["observation"])
+        binding = self.protocol["corpus_reuse_binding"]
+        self.assertEqual(sha256(ROOT / binding["path"]), binding["sha256"])
+        self.assertEqual(
+            sha256(ROOT / binding["frozen_source_archive_path"]),
+            binding["frozen_source_archive_sha256"],
+        )
+
     def test_screening_matrix_is_exactly_twenty_four_units(self) -> None:
         count = self.protocol["unit_count"]
         self.assertEqual(count["conditions"] * count["regimes"] * count["seeds"], 24)
@@ -49,7 +86,7 @@ class PilotPreregistrationTests(unittest.TestCase):
         self.assertIn("gradient direction", question)
         self.assertIn("cosine", primary)
         self.assertIn("relative L2", primary)
-        self.assertIn("both primary gradient-discrepancy thresholds", mechanism)
+        self.assertIn("frozen nonzero gradient-discrepancy thresholds", mechanism)
         self.assertIn("reduction_only", self.protocol["screening_gate"]["causal_attribution"])
         self.assertIn("epsilon_only", self.protocol["screening_gate"]["causal_attribution"])
 
@@ -71,8 +108,11 @@ class PilotPreregistrationTests(unittest.TestCase):
     def test_gpu_authorization_is_smoke_scoped_and_gated(self) -> None:
         self.assertEqual(self.protocol["status"], "ready_to_run")
         self.assertTrue(self.protocol["authorization"]["gpu"])
-        self.assertIn("One non-scientific A100 smoke first", self.protocol["authorization"]["scope"])
-        self.assertIn("No confirmation jobs", self.protocol["authorization"]["scope"])
+        self.assertIn(
+            "A fresh implementation-revision-7 non-scientific A100 smoke",
+            self.protocol["authorization"]["scope"],
+        )
+        self.assertIn("no confirmatory jobs", self.protocol["authorization"]["scope"])
 
     def test_execution_contract_resolves_fixed_step_and_token_matching(self) -> None:
         contract = self.protocol["runtime"]["execution_contract"]
@@ -86,6 +126,13 @@ class PilotPreregistrationTests(unittest.TestCase):
         self.assertEqual(contract["generation_batch_size"]["filtered_variable_length"], 16)
         self.assertIn("non-scientific A100", contract["preflight"])
         self.assertIn("blocks all six corpus jobs", contract["preflight"])
+        resume = contract["corpus_checkpoint_resume_contract"]
+        self.assertEqual(resume["checkpoint_groups"], [20, 40, 60, 80])
+        self.assertEqual(resume["storage_prefix"], "resume/")
+        self.assertEqual(resume["attempt_limit"], 3)
+        self.assertEqual(resume["max_parallel_corpus_sessions"], 1)
+        self.assertIn("exact protocol", resume["resume_validation"])
+        self.assertIn("does not change any generated group", resume["determinism"])
 
     def test_dataset_revisions_and_train_orders_are_frozen(self) -> None:
         for regime in self.protocol["regimes"].values():

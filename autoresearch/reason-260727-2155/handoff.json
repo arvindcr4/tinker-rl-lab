@@ -1,0 +1,45 @@
+{
+  "workflow": "autoresearch-reason",
+  "status": "complete",
+  "verdict": "PASS",
+  "goal": "Produce a publishable-quality, evidence-grounded NeurIPS rebuttal and ACL resubmission plan for OpenReview submission 36320.",
+  "winner": {
+    "label": "persuasive-evidence-audited-v9",
+    "primary_finding": "Use reviewer-specific, acceptance-oriented replacements that foreground the submitted audit contribution, withdraw the unauditable five-seed transfer claim, answer 4G4H with exact telemetry, and treat private post-submission E1 only as inconclusive feasibility evidence.",
+    "convergence_count": 3
+  },
+  "findings": [
+    "The five W&B pairs reproduce .926 versus .921 and recomputed p=.3739. Three are zero-runtime W&B backfills; seed-45/46 have plausible source-run alignment but the backfills cannot be uniquely mapped.",
+    "The Qwen PPO .350 and .225 values are separate Modal runs and cannot share one table row without a selection rule.",
+    "The submitted early rule has only two positive failures among 22 heterogeneous runs and is not validated as a predictor or stopping rule.",
+    "The submitted runner is not standard GRPO; empirical transfer is not established.",
+    "E1 has a complete 40-unit private ledger, but a statistical re-audit found a 1.012 pp finite-sample MDE above the 1 pp gate and an unapplied multiplicity step; all four comparisons are treated as inconclusive.",
+    "A live Hugging Face audit resolves all 40 frozen E1 repository/commit pairs, six checkpoint states per unit, final adapters, and byte-matching 500-row manifests; four units lack only the evaluation-resume sidecar.",
+    "The supported use-inspired application is a pre-adoption audit of RLVR algorithm claims; no stopping-controller, deployment, or compute-saving claim is made."
+  ],
+  "outputs": [
+    "zvf-program/flagship/paper/NEURIPS_2026_OPENREVIEW_REBUTTAL_FINAL.md",
+    "zvf-program/flagship/paper/MAY_REVIEW_RESPONSE_AND_ACL_PLAN.md",
+    "autoresearch/reason-260727-2155/WANDB_EVIDENCE_AUDIT.md",
+    "autoresearch/reason-260727-2155/TINKER_HISTORY_AUDIT.md",
+    "autoresearch/reason-260727-2155/HUGGINGFACE_EVIDENCE_AUDIT.md",
+    "autoresearch/reason-260727-2155/openreview_submission_CXbcYe69BQ.pdf",
+    "autoresearch/reason-260727-2155/reason-results.tsv",
+    "autoresearch/reason-260727-2155/lineage.md",
+    "autoresearch/reason-260727-2155/summary.md"
+  ],
+  "next_actions": [
+    "Paste the four replacement texts into their corresponding OpenReview notes before the reviewer-response deadline.",
+    "Preview and re-open each saved note; do not silently delete the correction or upload a revised PDF during a response-only window.",
+    "Rotate the exposed W&B, Tinker, and Hugging Face credentials.",
+    "Use the E1 audit design, not the May omnibus, as the base for an ACL or ARR resubmission, but repair and independently verify its statistical pipeline first."
+  ],
+  "errors": 0,
+  "untested_gaps": [
+    "No OpenReview note was posted or edited.",
+    "Private W&B and Hugging Face evidence is not independently visible to reviewers unless an anonymized artifact is supplied.",
+    "Reference-KL dependence remains untested because E1 uses beta=0.",
+    "The frozen E1 aggregate still labels DAPO DISAPPEARS; that verdict is superseded by the conservative re-audit and must not be quoted.",
+    "No prospective ZVF intervention or compute-saving result exists."
+  ]
+}

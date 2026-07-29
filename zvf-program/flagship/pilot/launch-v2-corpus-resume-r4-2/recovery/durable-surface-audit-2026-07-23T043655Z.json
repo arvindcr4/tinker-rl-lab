@@ -1,0 +1,27 @@
+{
+  "accepted": [
+    "corpus__balanced_equal_length__s11",
+    "corpus__balanced_equal_length__s23",
+    "corpus__balanced_equal_length__s37",
+    "fpilot__epsilon_only__balanced_equal_length__s11",
+    "fpilot__epsilon_only__balanced_equal_length__s23",
+    "fpilot__intended_full__balanced_equal_length__s23",
+    "fpilot__native_trl__balanced_equal_length__s23",
+    "fpilot__reduction_only__balanced_equal_length__s11",
+    "fpilot__reduction_only__balanced_equal_length__s23",
+    "preflight__a100_stack_smoke"
+  ],
+  "audited_at": "2026-07-23T04:36:55.586664+00:00",
+  "failed_infrastructure": [
+    "fpilot__intended_full__balanced_equal_length__s11",
+    "fpilot__native_trl__balanced_equal_length__s11"
+  ],
+  "failed_validation": [
+    "corpus__filtered_variable_length__s11"
+  ],
+  "pending_count": 18,
+  "problems": [],
+  "schema_version": "flagship-pilot-durable-surface-audit-v1",
+  "scope": "supervisor_state.json + acceptance/ + results/ + README.md + execution-notes.md",
+  "status": "consistent"
+}

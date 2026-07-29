@@ -1,0 +1,220 @@
+{
+  "schema_version": "flagship-pilot-external-blocker-v1",
+  "status": "cleared",
+  "blocker": "colab_a100_entitlement_or_quota",
+  "literal_error": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account. Try a different one (e.g. --gpu T4) or omit --gpu/--tpu for a CPU runtime.",
+  "probe": {
+    "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity",
+    "session_created": false,
+    "exit_code": 0
+  },
+  "assignments_at_block": [],
+  "authorized_accelerator": "A100_only",
+  "substitution_authorized": false,
+  "next_actions_when_unblocked": [
+    "Resume corpus__balanced_equal_length__s23 from independently verified group-60 commit 8b1f2105bc715e5dbf9545f4bc244f3e8800e5ba",
+    "Launch fpilot__epsilon_only__balanced_equal_length__s11",
+    "Launch fpilot__reduction_only__balanced_equal_length__s11",
+    "Keep one-corpus and three-A100 ceilings; do not relaunch intended/native seed-11 (attempts exhausted)"
+  ],
+  "verified_at": "2026-07-22T14:56:37.200097+00:00",
+  "reprobes": [
+    {
+      "at": "2026-07-22T14:58:27.165180+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-3",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false
+    },
+    {
+      "at": "2026-07-22T15:00:18.534053+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-4",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false
+    },
+    {
+      "at": "2026-07-22T15:00:18.534053+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-5",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false
+    },
+    {
+      "at": "2026-07-22T15:01:00.868137+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-6",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false
+    },
+    {
+      "at": "2026-07-22T15:01:55.698942+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-7",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false,
+      "goal_turn": 3
+    },
+    {
+      "at": "2026-07-22T15:02:27.976206+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-8",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false,
+      "resumed_goal_turn": 1
+    },
+    {
+      "at": "2026-07-22T15:02:59.665679+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-9",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false,
+      "resumed_goal_turn": 2
+    },
+    {
+      "at": "2026-07-22T15:03:36.843372+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-11",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false,
+      "resumed_goal_turn": 3
+    },
+    {
+      "at": "2026-07-22T15:04:16.605695+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-12",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false,
+      "resumed_goal_turn": 1,
+      "fresh_blocked_audit_after_status_blocked": true
+    },
+    {
+      "at": "2026-07-22T15:04:46.625581+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-13",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false,
+      "resumed_goal_turn": 2,
+      "fresh_blocked_audit_after_status_blocked": true
+    },
+    {
+      "at": "2026-07-22T15:05:18.758446+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-14",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false,
+      "resumed_goal_turn": 3,
+      "fresh_blocked_audit_after_status_blocked": true
+    },
+    {
+      "at": "2026-07-22T15:05:58.967324+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-15",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false,
+      "resumed_goal_turn": 1,
+      "fresh_blocked_audit_after_status_blocked": true
+    },
+    {
+      "at": "2026-07-22T15:06:27.853794+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-16",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false,
+      "resumed_goal_turn": 2,
+      "fresh_blocked_audit_after_status_blocked": true
+    },
+    {
+      "at": "2026-07-22T15:06:59.812501+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-17",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false,
+      "resumed_goal_turn": 3,
+      "fresh_blocked_audit_after_status_blocked": true
+    },
+    {
+      "at": "2026-07-22T15:13:10.175697+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-32",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false,
+      "resumed_goal_turn": 1,
+      "fresh_blocked_audit_after_status_blocked": true
+    },
+    {
+      "at": "2026-07-22T15:13:31.196250+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-33",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false,
+      "resumed_goal_turn": 2,
+      "fresh_blocked_audit_after_status_blocked": true
+    },
+    {
+      "at": "2026-07-22T15:14:01.512383+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-34",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false,
+      "resumed_goal_turn": 3,
+      "fresh_blocked_audit_after_status_blocked": true
+    },
+    {
+      "at": "2026-07-22T15:14:38.145044+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-36",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false,
+      "resumed_goal_turn": 1,
+      "fresh_blocked_audit_after_status_blocked": true
+    },
+    {
+      "at": "2026-07-22T15:14:57.123753+00:00",
+      "command": "colab --auth=oauth2 new --gpu A100 --session fprobe-r4-2-capacity-37",
+      "literal": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "sessions": [],
+      "session_created": false,
+      "resumed_goal_turn": 2,
+      "fresh_blocked_audit_after_status_blocked": true
+    }
+  ],
+  "last_reprobed_at": "2026-07-22T15:14:57.123753+00:00",
+  "still_blocked": false,
+  "consecutive_failed_probes": 20,
+  "offline_gate_while_blocked": {
+    "schema_version": "flagship-pilot-offline-gate-v1",
+    "status": "pass",
+    "verified_at": "2026-07-22T15:00:18.534053+00:00",
+    "pilot_tests": {
+      "command": "PYTHONPATH=zvf-program/flagship uv run --isolated --no-project --python 3.12 --with trl==1.2.0 --with transformers==5.5.4 --with torch==2.7.1 --with datasets==4.8.4 --with peft==0.19.1 --with huggingface-hub==1.11.0 --with accelerate==1.13.0 --with wandb==0.21.0 --with numpy==2.2.6 --with pytest==9.1.1 python -m pytest -q zvf-program/flagship/pilot",
+      "result": "104 passed, 2 warnings in 21.07s",
+      "status": "pass",
+      "log_path": "/tmp/flagship_pilot_gate.log"
+    },
+    "ruff_check": {
+      "command": "uvx ruff check zvf-program/flagship/pilot",
+      "result": "All checks passed!",
+      "status": "pass"
+    },
+    "ruff_format_check": {
+      "command": "uvx ruff format --check zvf-program/flagship/pilot",
+      "result": "8 files would be reformatted, 29 files already formatted",
+      "status": "informational_only_not_applied",
+      "note": "Did not reformat frozen pilot source because content hashes are scientific provenance."
+    }
+  },
+  "consecutive_blocked_goal_turns": 3,
+  "blocked_status": "blocked_external_provider",
+  "resumed_blocked_audit_turn": 2,
+  "cleared_at": "2026-07-22T15:16:36.031951+00:00",
+  "clearance_evidence": {
+    "probe_sessions_ready": [
+      "fprobe-r4-2-capacity-38",
+      "fprobe-r4-2-capacity-39"
+    ],
+    "live_session_before_stop": "fprobe-r4-2-capacity-39",
+    "hardware": "A100",
+    "note": "A100 allocation succeeded after prolonged entitlement rejection. Probe stopped to free capacity for authorized jobs."
+  }
+}

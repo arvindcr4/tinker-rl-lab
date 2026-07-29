@@ -1,0 +1,11 @@
+round	timestamp	candidate_label	judge_verdict	convergence_count	description
+1	2026-07-27T21:55:00+05:30	scope-narrowing-v1	REVISE	0	Correct overall strategy, but critic found false 0.225/0.350 aggregation story and invalid same-stack pairing; exact OpenReview forum was not yet identified.
+2	2026-07-27T22:16:00+05:30	full-response-replacement-v2	WIN-90	1	Replace all four live notes; withdraw unsupported 92.6/92.1 result, quarantine PPO row, narrow claims, and answer AC directly.
+3	2026-07-27T22:45:00+05:30	claim-bounded-v3	WIN-84	2	Three judges retained the replacement strategy after removing the 12-run table from live text, qualifying the Bernoulli formula, disclosing unresolved ledger conflicts, and narrowing the ACL factorial.
+4	2026-07-27T23:05:00+05:30	guide-polished-v4	PASS	3	Three rebuttal guides were incorporated; independent judges found no stop-ship issue before the W&B credential became available.
+5	2026-07-27T23:40:00+05:30	wandb-expanded-v5	REVISE	0	W&B showed three backfilled and two live pairs in the claimed five-seed comparison and exposed a strong separate E1 audit; judges rejected wording that risked substituting a different paper.
+6	2026-07-28T00:25:00+05:30	wandb-bounded-v6	PASS-A	1	Evidence judge verified all deltas, intervals, provenance classifications, beta=0 disclosure, and the compound DAPO DISAPPEARS rule.
+7	2026-07-28T00:25:00+05:30	wandb-bounded-v6	PASS-B	2	Strategy judge accepted E1 only after it was separated from the surviving claim set and disclaimed as retrospective repair or replacement evidence.
+8	2026-07-28T00:25:00+05:30	wandb-bounded-v6	PASS-C	3	Skeptical-reviewer judge found no remaining overclaim about use-inspired application, runner transfer, or the post-submission audit.
+9	2026-07-27T23:18:00+05:30	provenance-refresh-v7	PASS	3	Read-only Tinker and Hub audits strengthened run provenance but left the five-seed transfer claim withdrawn and E1 bounded as separate post-submission evidence.
+10	2026-07-27T23:28:00+05:30	application-framed-v8	PASS	3	Reframed the supported use case as pre-adoption algorithm auditing while retaining explicit no-controller, no-deployment, no-compute-saving, and no-retrospective-repair boundaries.

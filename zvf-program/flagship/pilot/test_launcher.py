@@ -41,6 +41,8 @@ class LauncherTests(unittest.TestCase):
         self.assertEqual(manifest["preflight_job_count"], 1)
         self.assertEqual(manifest["corpus_job_count"], 6)
         self.assertEqual(manifest["unit_job_count"], 24)
+        self.assertEqual(manifest["max_parallel_corpus_sessions"], 1)
+        self.assertEqual(manifest["max_attempts_per_job"], 3)
         jobs = {job["id"]: job for job in manifest["jobs"]}
         for job in jobs.values():
             self.assertIsNotNone(job["execution_plan"])
@@ -49,9 +51,33 @@ class LauncherTests(unittest.TestCase):
                 self.assertEqual(jobs[job["depends_on"][0]]["kind"], "corpus")
             elif job["kind"] == "corpus":
                 self.assertEqual(job["depends_on"], ["preflight__a100_stack_smoke"])
+                self.assertEqual(job["source_scope"], "frozen_revision_4_corpus_generator")
+                self.assertEqual(
+                    job["source_bindings_sha256"],
+                    manifest["corpus_source_bindings_sha256"],
+                )
+                self.assertEqual(
+                    job["source_archive_sha256"],
+                    manifest["corpus_source_archive_sha256"],
+                )
+            else:
+                self.assertEqual(job["source_scope"], "revision_5_unit_training")
+        self.assertNotEqual(
+            manifest["unit_source_bindings_sha256"],
+            manifest["corpus_source_bindings_sha256"],
+        )
 
     def test_source_bundle_is_deterministic_and_contains_only_bound_files(self) -> None:
         plan = build_screening_plan(self.protocol, next(self.protocol.screening_units()))
+        self.assertIn("zvf-program/flagship/pilot/runtime_install.py", plan["source_bindings"])
+        self.assertIn(
+            "zvf-program/flagship/pilot/provenance/r3-corpus-source.tar.gz",
+            plan["source_bindings"],
+        )
+        self.assertIn(
+            "zvf-program/flagship/pilot/provenance/r3-control-source.tar.gz",
+            plan["source_bindings"],
+        )
         with tempfile.TemporaryDirectory() as temporary:
             first = Path(temporary) / "first.tar.gz"
             second = Path(temporary) / "second.tar.gz"

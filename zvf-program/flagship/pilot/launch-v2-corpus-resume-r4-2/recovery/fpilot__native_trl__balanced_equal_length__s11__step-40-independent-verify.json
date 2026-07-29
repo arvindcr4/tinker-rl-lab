@@ -1,0 +1,50 @@
+{
+  "status": "independently_verified_partial_checkpoint",
+  "schema_version": "flagship-pilot-unit-checkpoint-independent-verify-v1",
+  "job_id": "fpilot__native_trl__balanced_equal_length__s11",
+  "condition": "native_trl",
+  "regime": "balanced_equal_length",
+  "seed": 11,
+  "repo": "arvindcr4/tinker-rl-lab-flagship-pilot-native_trl-balanced_equal_length-s11-87d929d0-005d3f82",
+  "private": true,
+  "hf_commit": "4b9ebcc79f86e56205c2524d0f4221facdbcc41c",
+  "head_sha": "4b9ebcc79f86e56205c2524d0f4221facdbcc41c",
+  "step": 40,
+  "fingerprint": "f564682d152e979b40a4bf7bb1ea421a0f184bd916a32cbc7088e5dfd6d9e2d8",
+  "unit_fingerprint": "1724b02f3e514c8d3f8625750006ca7a89af5e747b773f7c26c969c69a21c0a7",
+  "corpus_fingerprint": "b09c72247b168297e73ce5edf2aad59e4496e7d78257beb252e864dd1a9587f1",
+  "protocol_sha256": "87d929d0a3af789d3ba3ee10a1f4c3e83572ecec7cc4efa28ca032008f88fbc4",
+  "evaluation_steps": [
+    0,
+    20,
+    40
+  ],
+  "gradient_receipt_count": 40,
+  "replay_cursor": 40,
+  "token_flop_ledger": {
+    "charged_generated_tokens": 396672,
+    "diagnostic_backward_flops": 1310432758213702.2,
+    "extrapolation_scale": 13.453333333333333,
+    "optimizer_backward_flops": 1310432758213379.5,
+    "policy_forward_flops": 700405099702448.6,
+    "profiled_active_tokens": 12288,
+    "profiled_padded_tokens": 14400,
+    "profiled_phase_flops": {
+      "diagnostic_backward": 97405804624408.0,
+      "optimizer_backward": 97405804624384.0,
+      "policy_forward": 52061826043294.0
+    },
+    "profiled_steps": [
+      1,
+      20,
+      40
+    ],
+    "total_active_tokens": 163840,
+    "total_padded_tokens": 193728
+  },
+  "file_count": 11,
+  "all_file_sha256_matched": true,
+  "wandb_run": "1724b02f",
+  "verified_at": "2026-07-22T14:49:40.957857+00:00",
+  "note": "Partial unit checkpoint only; not unit acceptance. Live run may continue beyond this boundary."
+}

@@ -1,0 +1,22 @@
+{
+  "schema_version": "flagship-pilot-offline-gate-v1",
+  "status": "pass",
+  "verified_at": "2026-07-22T15:00:18.534053+00:00",
+  "pilot_tests": {
+    "command": "PYTHONPATH=zvf-program/flagship uv run --isolated --no-project --python 3.12 --with trl==1.2.0 --with transformers==5.5.4 --with torch==2.7.1 --with datasets==4.8.4 --with peft==0.19.1 --with huggingface-hub==1.11.0 --with accelerate==1.13.0 --with wandb==0.21.0 --with numpy==2.2.6 --with pytest==9.1.1 python -m pytest -q zvf-program/flagship/pilot",
+    "result": "104 passed, 2 warnings in 21.07s",
+    "status": "pass",
+    "log_path": "/tmp/flagship_pilot_gate.log"
+  },
+  "ruff_check": {
+    "command": "uvx ruff check zvf-program/flagship/pilot",
+    "result": "All checks passed!",
+    "status": "pass"
+  },
+  "ruff_format_check": {
+    "command": "uvx ruff format --check zvf-program/flagship/pilot",
+    "result": "8 files would be reformatted, 29 files already formatted",
+    "status": "informational_only_not_applied",
+    "note": "Did not reformat frozen pilot source because content hashes are scientific provenance."
+  }
+}

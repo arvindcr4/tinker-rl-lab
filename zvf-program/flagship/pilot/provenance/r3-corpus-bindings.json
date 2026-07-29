@@ -1,0 +1,98 @@
+{
+  "schema_version": "flagship-pilot-frozen-corpus-bindings-v1",
+  "authorization": {
+    "amendment": "A1-R4-explicit-degenerate-gradient-relations-with-corpus-reuse",
+    "authorized_by_user": true,
+    "date": "2026-07-22"
+  },
+  "frozen_protocol_sha256": "04d20f712f652f80754fa4c8c0a3f48d4d2f1c5d716b3981746322c938b21970",
+  "frozen_source_bundle_sha256": "10e481a8a3d77a336fc150c53e90fb1df9baed26aa5c43c58fa548e9105aba83",
+  "frozen_launch_fingerprint": "f01ad8e3991365fcf36160386b32dfdc69c034d1697773f8868b9dd5682d7de3",
+  "archives": {
+    "corpus_runtime": {
+      "path": "zvf-program/flagship/pilot/provenance/r3-corpus-source.tar.gz",
+      "sha256": "8d8b201d3e8e914cc6c7d35f569e389b460c53e02075932c2ab4ee417a700ede"
+    },
+    "full_control_plane": {
+      "path": "zvf-program/flagship/pilot/provenance/r3-control-source.tar.gz",
+      "sha256": "f04aff3fb8ef87be2bc885263750c2cc0b6be6bd71fcc8b02ab5be8f116fac31"
+    }
+  },
+  "corpus_source_manifest": {
+    "zvf-program/flagship/pilot/artifacts.py": "6cb2ca23beebb6450fd655853e80cfb1630ef7020f984165f082089918ae3e8e",
+    "zvf-program/flagship/pilot/bootstrap.py": "3c37bce88bb22e4bc86b4d9158312ef2278f2600e3ee6c0ed7aef2ec89217b1b",
+    "zvf-program/flagship/pilot/checkpointing.py": "e1a1e893a9ec2759c56d9974d005042e4e4112e30c9f36bb2d6b6fb01b398929",
+    "zvf-program/flagship/pilot/evaluation.py": "15a535a1d2297e512297b1ec10630cda2068464bffcdcd4a4469fb602041a5da",
+    "zvf-program/flagship/pilot/flops.py": "1a2bce24958b68b1045ed108e43a7e7fe69883d0d4ad2269788cc3beb541d347",
+    "zvf-program/flagship/pilot/objective.py": "5962de855f85e602c9d1dc973b031caf78d91676f662a6f7ae9b9cb873e2dbb1",
+    "zvf-program/flagship/pilot/protocol.py": "0f863369f910ff709855b8962c5c72045918affef53ac6bf1ca3346d32c56d3f",
+    "zvf-program/flagship/pilot/remote_core.py": "a05917ed6795bfabfbd68926a37d21fb3e2a0186eb8cad961f74a1a8cda167c9",
+    "zvf-program/flagship/pilot/remote_training.py": "735f162b75d747c331d62f3bc99d3d34614710728bb95cfee83ca1abe9bb8b00",
+    "zvf-program/flagship/pilot/remote_unit.py": "02552168a333f955a1422463f89c59a552e5bb03b603fb5b9d5ce09d9172b60c",
+    "zvf-program/flagship/pilot/replay.py": "cb83cf4bb5324d4ae8171ab4c27dffe66ecb305b002d5681fa8e6f94cf90504c",
+    "zvf-program/flagship/pilot/runtime_install.py": "387efeecbf811b86e44891194382f4c42cd9d4ab9a15651cd41abe7ae0b9e133",
+    "zvf-program/flagship/pilot/training.py": "ac22df0a90dafe42399e58324e44f1d1c2ff2c117e6ca0e2487e9d0ecdd66305",
+    "zvf-program/flagship/pilot_preregistration.json": "04d20f712f652f80754fa4c8c0a3f48d4d2f1c5d716b3981746322c938b21970"
+  },
+  "corpora": [
+    {
+      "regime": "balanced_equal_length",
+      "seed": 11,
+      "hf_repo": "arvindcr4/tinker-rl-lab-flagship-pilot-corpus-balanced_equal_length-s11-04d20f71-10e481a8",
+      "wandb_run_name": "flagship-pilot-corpus-balanced_equal_length-s11-04d20f71-10e481a8",
+      "wandb_run_id": "3jpcepfy",
+      "status": "accepted_complete",
+      "hf_commit": "2735a27d5f18bbdaaae76494a2047b39a4318e22",
+      "corpus_fingerprint": "b09c72247b168297e73ce5edf2aad59e4496e7d78257beb252e864dd1a9587f1",
+      "completed_groups": 100,
+      "charged_tokens": 396672
+    },
+    {
+      "regime": "balanced_equal_length",
+      "seed": 23,
+      "hf_repo": "arvindcr4/tinker-rl-lab-flagship-pilot-corpus-balanced_equal_length-s23-04d20f71-10e481a8",
+      "wandb_run_name": "flagship-pilot-corpus-balanced_equal_length-s23-04d20f71-10e481a8",
+      "wandb_run_id": "ge121gt6",
+      "status": "verified_prefix",
+      "hf_commit": "b1d897a968470898848ddb85ba24a334c3d59237",
+      "corpus_fingerprint": "67d51945e773e9e6aa50a88f8d72a182230c2452bd0285caf00be554b1aa1764",
+      "completed_groups": 20,
+      "charged_tokens": 80988
+    },
+    {
+      "regime": "balanced_equal_length",
+      "seed": 37,
+      "hf_repo": "arvindcr4/tinker-rl-lab-flagship-pilot-corpus-balanced_equal_length-s37-04d20f71-10e481a8",
+      "wandb_run_name": "flagship-pilot-corpus-balanced_equal_length-s37-04d20f71-10e481a8",
+      "status": "pending"
+    },
+    {
+      "regime": "filtered_variable_length",
+      "seed": 11,
+      "hf_repo": "arvindcr4/tinker-rl-lab-flagship-pilot-corpus-filtered_variable_length-s11-04d20f71-10e481a8",
+      "wandb_run_name": "flagship-pilot-corpus-filtered_variable_length-s11-04d20f71-10e481a8",
+      "status": "pending"
+    },
+    {
+      "regime": "filtered_variable_length",
+      "seed": 23,
+      "hf_repo": "arvindcr4/tinker-rl-lab-flagship-pilot-corpus-filtered_variable_length-s23-04d20f71-10e481a8",
+      "wandb_run_name": "flagship-pilot-corpus-filtered_variable_length-s23-04d20f71-10e481a8",
+      "status": "pending"
+    },
+    {
+      "regime": "filtered_variable_length",
+      "seed": 37,
+      "hf_repo": "arvindcr4/tinker-rl-lab-flagship-pilot-corpus-filtered_variable_length-s37-04d20f71-10e481a8",
+      "wandb_run_name": "flagship-pilot-corpus-filtered_variable_length-s37-04d20f71-10e481a8",
+      "status": "pending"
+    }
+  ],
+  "reuse_contract": {
+    "drop_groups": false,
+    "reorder_groups": false,
+    "regenerate_completed_groups": false,
+    "selectively_filter_groups": false,
+    "unit_training_source_is_separate": true
+  }
+}

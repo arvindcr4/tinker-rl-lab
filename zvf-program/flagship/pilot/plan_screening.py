@@ -10,7 +10,7 @@ from typing import Sequence
 from .protocol import REPO_ROOT, build_screening_plan, canonical_fingerprint, load_protocol
 
 
-DEFAULT_OUTPUT = REPO_ROOT / "zvf-program/flagship/pilot/plans"
+DEFAULT_OUTPUT = REPO_ROOT / "zvf-program/flagship/pilot/plans-v2-corpus-resume-r4-2"
 
 
 def atomic_json(path: Path, payload: object) -> None:

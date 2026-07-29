@@ -942,6 +942,163 @@ preregistered protocol amendment adding intermediate corpus persistence so
 regeneration resumes instead of restarting, or a pause until longer-lived
 accelerator capacity is available.
 
+## Flagship corpus-resume amendment (2026-07-22)
+
+The user selected and explicitly authorized the intermediate-persistence
+route. Amendment `A1-corpus-intermediate-persistence` is now versioned inside
+`zvf-program/flagship/pilot_preregistration.json`; it binds the unmodified
+version-1 protocol by SHA-256 and Git commit and preserves all three failed W&B
+runs as infrastructure-only provenance. No frozen E1 record or scientific
+field changed.
+
+Version 2 writes atomic private-Hub corpus-prefix commits after groups 20, 40,
+60, and 80. Resume is allowed only after exact protocol, source, model,
+dataset, train-order, package, accelerator, group, artifact, token, profiler,
+and manifest validation. It retains the A100-only rule, limits each corpus job
+to three version-2 VM attempts, and limits corpus concurrency to one. The final
+corpus verifier independently re-hashes both the 100-group artifact and its
+referenced group-80 checkpoint commit before any scientific unit can unlock.
+
+The amended control plane passed 106/106 tests under the exact Python 3.12,
+TRL 1.2.0, Transformers 5.5.4, Torch 2.7.1, and NumPy 2.2.6 environment;
+the focused checkpoint/protocol/launcher/verifier suite passed 55/55 under
+repository Python 3.12. Ruff check and format verification are clean. The
+first version-2 launch then exposed a source-bundle omission before W&B or
+group generation; implementation revision 2 binds `runtime_install.py`,
+archives every attempt log/result before retry, and stops non-provider failures
+as validation failures. Versioned dry-run plans and the active launch DAG live
+under `plans-v2-corpus-resume-r1/` and `launch-v2-corpus-resume-r1/`;
+version-1 and the superseded version-2 state remain untouched. The fresh
+revision-2 non-scientific A100 smoke is accepted, and balanced-equal-length
+seed 11 completed all 100 groups as W&B run `b8eoqd09`. Its exact group-20 private-Hub commit
+`46030fba999dccbabc40567ab8f605589aa6a50a` was independently downloaded,
+re-hashed, and accepted with all 20 group files, source bindings, token/FLOP
+prefix, and fingerprint intact. The replacement group-40 prefix was likewise
+accepted at exact commit `55091520f883bec456fe3f3334edf68dbc770013`
+with all 40 group files and its 160,423-token ledger intact. The group-60
+replacement was independently accepted at exact commit
+`4776e185ee8a91e924672179062380fb9423bddb` with all 60 group files and its
+236,615-token prefix ledger intact. The final resumable group-80 prefix was
+independently accepted at exact commit
+`2faf00b02c5c81fcdcd2c4ed9e97e5fa8b721101` with all 80 group files and its
+317,482-token prefix ledger intact. The final verifier then accepted the full
+corpus at exact private-Hub commit
+`91ec135ce5ffd562d991e535a16cae28c6552389`, fingerprint
+`8b24a0520a97f0d5101c2662a1e3e369e8342c1759c9963a0ccb909b01525589`,
+after re-hashing all 100 groups, the source manifest, token/FLOP ledger, and
+the referenced checkpoint. Its 396,672 charged generated tokens and zero
+resumes reconcile with finished W&B run `b8eoqd09`. A recovery receipt records
+verified adoption after the local controller exited without launching a
+duplicate, and a launchd-owned supervisor now continues the remaining DAG.
+No version-2 scientific observation is accepted yet.
+
+The first two r1 scientific units then failed before optimizer step 1 because
+gradient-checkpoint recomputation escaped the deterministic SDPA context. The
+r2 correction held the math backend through backward, but the fresh r2
+non-scientific A100 smoke emitted impossible cosine receipts above one. Its
+queued corpus was aborted during runtime installation before W&B, private-Hub,
+or replay-group initialization. Implementation revision 4 now computes
+diagnostics in float64 and rejects out-of-range cosine, negative relative-L2,
+and non-positive gradient norms in both preflight and full-record validation.
+The exact pinned r3 gate passes 109/109 and the focused gate passes 55/55;
+protocol SHA-256 is `04d20f712f652f80754fa4c8c0a3f48d4d2f1c5d716b3981746322c938b21970`.
+LaunchAgent `ai.openai.codex.flagship-pilot-v2-r3` is active with only the new
+non-scientific smoke initially launched. Attempt 1 is independently accepted
+with bounded cosines, positive norms/FLOPs, exact A100/runtime pins, and exact
+source hashes. The smoke session was deleted and balanced-equal-length seed 11
+corpus attempt 1 is now the only running downstream job; no r3 corpus or
+scientific unit is accepted.
+
+Its first r3 immutable prefix is independently verified at group 20: exact
+private-Hub commit `7c6d13ee7b22ef1a9ca83f2a550a43fbcff8a7e9`, fingerprint
+`a054b9c6f1ce9a69424677f201c46c242c805bb22674e8744fedb381e3fe556b`,
+80,081 charged tokens, profiler steps 1/20, one W&B attempt (`3jpcepfy`), and
+zero resumes. The verifier re-hashed all 20 group files and the source
+manifest. The same A100 run continues; this prefix is resumable infrastructure
+only and does not increment the eligible corpus or unit counts.
+
+The same r3 run's group-40 replacement is independently verified at exact
+private-Hub commit `b23d1da97dc5dadd3da6d133ba3ffb048d055af0`, fingerprint
+`5c1a6cf763737d63efa116e1bac67a5061e06f34dbd360ae6e1fefd7b42dda3b`.
+The verifier re-hashed all 40 groups and source bindings and reconciled 160,423
+charged tokens, profiler steps 1/20/40, one attempt, and zero resumes with W&B
+`3jpcepfy`. The run continues toward group 60; eligible corpus/unit counts
+remain zero.
+
+The group-60 replacement is independently verified at exact private-Hub commit
+`a0c83171731c497ce13ae1dcc14b48b045c72956`, fingerprint
+`dd7caf181a7463196d86d404ea21ff2fe5b88e8878f388757b70b8a268ff5790`.
+The verifier re-hashed all 60 group files plus all 14 source entries and
+reconciled 236,615 charged tokens, profiler steps 1/20/40/60, 15,644 profiled
+tokens, exact A100/runtime bindings, one attempt, and zero resumes. W&B
+`3jpcepfy` exposes the identical commit/fingerprint and has continued through
+group 61 toward group 80. This is still a resumable prefix, so eligible corpus
+and scientific-unit counts remain zero.
+
+The final resumable group-80 replacement is independently verified at exact
+private-Hub commit `ba2a67680eee15e956f406fd9caebc83326967cf`, fingerprint
+`c50c78dda0978525d7bf32247087850436e844b43825234d572dc5a2ed3e4b12`.
+The verifier re-hashed all 80 group files, the checkpoint manifest, and all 14
+source entries, reconciling 317,482 charged tokens, profiler steps
+1/20/40/60/80, 19,740 profiled tokens, exact A100/runtime bindings, one W&B
+attempt (`3jpcepfy`), and zero resumes. W&B exposes the identical
+commit/fingerprint and token ledger. The same attempt continues toward the
+100-group final record; eligible corpus and scientific-unit counts remain zero.
+
+Balanced-equal-length seed 11 is now the first independently accepted r3
+corpus. The full verifier downloaded all 185 remote files and re-hashed the 100
+group artifacts, manifest, and all 14 source entries at exact private-Hub
+commit `2735a27d5f18bbdaaae76494a2047b39a4318e22`, corpus fingerprint
+`b09c72247b168297e73ce5edf2aad59e4496e7d78257beb252e864dd1a9587f1`.
+It reconciled 396,672 charged tokens, profiler steps 1/20/40/60/80/100, 22,698
+profiled tokens, exact group-80 checkpoint lineage, exact A100/runtime bindings,
+one finished W&B run (`3jpcepfy`), one attempt, and zero resumes. The session
+was released and the supervisor's acceptance receipt is durable. The eligible
+count is one r3 corpus and zero scientific units. Exactly one next corpus
+builder (balanced seed 23) plus the intended/native balanced-seed-11 units are
+running on A100s.
+
+The first r3 unit wave then failed closed before optimizer step 1. Intended
+W&B run `22107a6b` and native run `07c23895` both emitted the identical step-0
+evaluation (`accuracy=0.15625`, 64,038 generated tokens) and then failed. The
+preserved native traceback ends at `TrainingContractError: intended gradient
+norm is non-positive or non-finite`. This is deterministic from immutable
+replay group 1, whose eight rewards are all zero: intended, native, and
+selected advantages and gradients are therefore jointly zero. Across the
+accepted corpus, 59 groups are all-zero, 3 are all-one, and only 38 are mixed.
+The r3 positive-norm rule therefore makes 62/100 required receipts impossible,
+while the frozen gate still requires 95/100 balanced-equivalence steps. Neither
+failed unit produced an optimizer step, checkpoint, final record, or eligible
+scientific evidence.
+
+Scheduling is quiescent pending an explicit amendment. The fail-closed
+supervisor exited on native validation failure; its crash-only launch agent was
+unloaded before it could relaunch work. Both failed unit sessions are released.
+The detached balanced-seed-23 corpus reached and independently passed its first
+recovery point before being stopped: group-20 private-Hub commit
+`b1d897a968470898848ddb85ba24a334c3d59237`, fingerprint
+`67d51945e773e9e6aa50a88f8d72a182230c2452bd0285caf00be554b1aa1764`,
+80,988 charged tokens, profiler steps 1/20, one W&B attempt (`ge121gt6`), and
+zero resumes. The external stop propagated after W&B row 22 (86,052 charged
+tokens), but the Hub head remains the verified group-20 commit and the orphaned
+run is stale `running`; rows 21--22 are not recoverable evidence. No Colab
+session or local controller remains. A joint-zero receipt/scoring rule and an
+explicit decision on reuse versus rebuild of source-bound r3 corpora are
+required before replacement units can run.
+
+That amendment blocker is now resolved by the user's A1-R4 corpus-reuse
+authorization and corrections A1-R4.1/A1-R4.2. Revision-6 W&B `a0a67b52`
+failed only on exact-vector cosine roundoff (`1.000000000002599`); revision 7
+emits exact equality as cosine `1.0`, relative L2 `0.0`, without changing any
+scientific threshold. The exact local gate passes 116/116 plus 70/70 focused,
+and the revision-7 A100 smoke is independently accepted. Balanced seed 11 is
+reaccepted at its frozen final commit. Surviving seed-23 W&B `ncpafe25` passed
+the independently verified group-40 commit
+`b45dc64a59a8cd7fb068d0f2182c507c34db8aec` / fingerprint
+`1d7e72efb8df8e22beb15a9756d8255aa6b44f4f4a9f4af3d53b547143138c37`
+and is live beyond it; fresh revision-7 intended/native seed-11 units are also
+live. Confirmatory execution remains forbidden pending a screening GO verdict.
+
 ## Remaining empirical obligations
 
 These require accelerator time, an external environment/data source, or both.
@@ -956,7 +1113,7 @@ They are deliberately not replaced with toy numbers.
 | E5 | Direct group-size and scaling confirmations | P01/P03 protocols and current reconstructed/direct provenance labels | Multi-seed token-matched direct G sweep including G=32 and matched cross-scale cells | GPU budget |
 | E6 | Length-bias external validity | P04 capped null-test protocol | Uncapped or long-horizon multi-seed mediation study | GPU budget and longer generation policy |
 | E7 | Fraud side-study external validity | P08 parked scope and honest synthetic/noisy-sensor analysis | Real, cross-institution or temporally held-out fraud data under approval | Data access, privacy/ethics approval |
-| E8 | Open-stack flagship conformance screening | Frozen 24-unit protocol, accepted A100 smoke, six corpus jobs, remote trainer/verifier, and go/kill evaluator | Six independently accepted immutable corpora, then all 24 paired scientific units and the preregistered screening verdict; confirmatory matrix remains forbidden until a go verdict | All six corpora `failed_infrastructure` at their three-attempt caps after provider-side VM reclamation (balanced seed-11 attempts `ujryg527`, `lwjtk9dk`, `hge0xhav` all lost ~2h20m into their sessions; the last two at the identical group-99 boundary, 393,714 charged tokens); all 24 scientific units remain fail-closed pending independent corpus acceptance; awaiting user decision on a fresh attempt budget, an intermediate-persistence protocol amendment, or a capacity pause |
+| E8 | Open-stack flagship conformance screening | Version-2 24-unit protocol with user-authorized `A1-R4`, explicit nonzero/joint-zero/one-sided-zero receipts and scoring, true zero-gradient optimizer no-ops, separately bound frozen-r3 corpus generation, revision-7 unit training, strict resume/final verifiers, and go/kill evaluator | Six independently accepted immutable corpora; then all 24 paired scientific units and the preregistered screening verdict; confirmatory matrix remains forbidden until a go verdict | **Active under authorized corpus reuse.** Revision-7 smoke is independently accepted. Balanced-s11 is reaccepted at final commit `2735a27d5f18bbdaaae76494a2047b39a4318e22`, fingerprint `b09c72247b168297e73ce5edf2aad59e4496e7d78257beb252e864dd1a9587f1`; balanced-s23 independently passed group-40 commit `b45dc64a59a8cd7fb068d0f2182c507c34db8aec`, fingerprint `1d7e72efb8df8e22beb15a9756d8255aa6b44f4f4a9f4af3d53b547143138c37`, and is live beyond it. Revision-7 intended/native balanced-s11 units are live. Local gates pass 116/116 plus 70/70 focused; Ruff is clean. |
 
 ## Remaining release and ecosystem obligations
 

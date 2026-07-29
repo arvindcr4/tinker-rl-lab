@@ -1,0 +1,56 @@
+{
+  "accepted_scientific_observation": false,
+  "attempt": 1,
+  "checkpoint_or_final_artifact_present": false,
+  "controlled_probe": {
+    "all_finite": true,
+    "gradient_count": 392,
+    "held_through_backward": true,
+    "optimizer_step_performed": false,
+    "performed": true,
+    "sdpa_backend": "MATH",
+    "status": "pass"
+  },
+  "exception": {
+    "attention_mask": null,
+    "boundary": "step-1 selected-gradient backward, gradient-checkpoint recomputation, Qwen3 SDPA",
+    "is_causal": true,
+    "key_value_shape": [
+      8,
+      8,
+      601,
+      128
+    ],
+    "message": "value cannot be converted to type int64_t without overflow",
+    "query_shape": [
+      8,
+      16,
+      601,
+      128
+    ],
+    "type": "RuntimeError"
+  },
+  "hugging_face": {
+    "files": [
+      ".gitattributes"
+    ],
+    "private": true,
+    "repo": "arvindcr4/tinker-rl-lab-flagship-pilot-intended_full-balanced_equal_length-s11-5cedb119-6ba05585",
+    "sha": "52cbdd3a6aaeab1176529f1791efd1585ad139e5"
+  },
+  "job_id": "fpilot__intended_full__balanced_equal_length__s11",
+  "protocol_sha256": "5cedb119f9810a0522d91216e746613c9bb1baec18d3d329ed4e80f0eadf019e",
+  "recorded_at": "2026-07-22T08:21:45.088603+00:00",
+  "required_action": "supersede source bundle and rerun under a fresh implementation revision with deterministic SDPA math held through checkpoint backward",
+  "schema_version": "flagship-pilot-unit-implementation-failure-v1",
+  "source_bindings_sha256": "6ba055857cb1690056a30c8eb6a8a097e3fe5c66bd9623654b0ec467fab21c68",
+  "status": "failed_validation_no_scientific_observation",
+  "wandb": {
+    "eval_accuracy": 0.15625,
+    "eval_generated_tokens": 64038,
+    "heartbeat_at": "2026-07-22T08:12:24Z",
+    "run_id": "275344ae",
+    "state": "failed",
+    "step": 0
+  }
+}

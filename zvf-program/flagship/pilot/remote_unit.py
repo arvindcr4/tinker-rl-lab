@@ -4,12 +4,20 @@ import argparse
 import json
 import math
 import os
+import shutil
 import tempfile
 import time
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-from .artifacts import validate_corpus_manifest, with_fingerprint
+from .artifacts import (
+    CORPUS_CHECKPOINT_GROUPS,
+    ArtifactValidationError,
+    validate_corpus_checkpoint_manifest,
+    validate_corpus_manifest,
+    with_fingerprint,
+)
+from .checkpointing import atomic_json
 from .flops import PROFILED_STEPS, TorchPhaseProfiler
 from .protocol import (
     PROTOCOL_PATH,
@@ -36,7 +44,6 @@ from .remote_core import (
 from .replay import (
     ReplayCandidate,
     ReplayContractError,
-    ReplayLedger,
     balanced_equal_length_group,
     filtered_variable_length_pool,
 )
@@ -44,6 +51,8 @@ from .training import ReplayBatch, completion_logps, run_replay_step
 
 
 CORPUS_RESULT_PREFIX = "FPILOT_CORPUS_RESULT "
+CORPUS_CHECKPOINT_PREFIX = "resume"
+CORPUS_CHECKPOINT_MANIFEST = f"{CORPUS_CHECKPOINT_PREFIX}/corpus_checkpoint_manifest.json"
 
 
 def _require_credentials() -> None:
@@ -234,6 +243,281 @@ def _save_group(path: Path, *, batch: ReplayBatch, group: Any) -> None:
     torch.save(payload, path)
 
 
+def _verify_bound_files(root: Path, files: Mapping[str, str], *, label: str) -> None:
+    for relative, digest in files.items():
+        path = root / relative
+        if not path.is_file() or sha256_file(path) != digest:
+            raise RemoteContractError(f"{label} file hash mismatch: {relative}")
+
+
+def _prefix_artifact_files(root: Path, *, completed_groups: int) -> dict[str, str]:
+    expected = ["source_manifest.json"] + [
+        f"groups/group-{index:03d}.pt" for index in range(completed_groups)
+    ]
+    missing = [relative for relative in expected if not (root / relative).is_file()]
+    if missing:
+        raise RemoteContractError(
+            "corpus checkpoint prefix is missing files: " + ", ".join(missing)
+        )
+    return {relative: sha256_file(root / relative) for relative in expected}
+
+
+def _build_corpus_checkpoint_manifest(
+    *,
+    root: Path,
+    protocol: PilotProtocol,
+    regime: str,
+    seed: int,
+    group_records: Sequence[Mapping[str, Any]],
+    profiled_flops: float,
+    profiled_tokens: int,
+    versions: Mapping[str, str],
+    accelerator: str,
+    sources: Mapping[str, str],
+    attempts: Sequence[Mapping[str, Any]],
+    resume_count: int,
+    wall_clock_seconds: float,
+) -> dict[str, Any]:
+    completed_groups = len(group_records)
+    if completed_groups not in CORPUS_CHECKPOINT_GROUPS:
+        raise RemoteContractError(f"corpus checkpoint boundary is not frozen: {completed_groups}")
+    runtime = protocol.payload["runtime"]
+    contract = runtime["execution_contract"]
+    regime_contract = protocol.payload["regimes"][regime]
+    corpus_protocol_sha = protocol.corpus_binding(regime, seed)["protocol_sha256"]
+    artifact_files = _prefix_artifact_files(root, completed_groups=completed_groups)
+    manifest = with_fingerprint(
+        {
+            "schema_version": "flagship-pilot-corpus-checkpoint-v1",
+            "status": "partial",
+            "protocol_sha256": corpus_protocol_sha,
+            "regime": regime,
+            "seed": seed,
+            "model": runtime["model"],
+            "dataset": regime_contract["dataset"],
+            "dataset_revision": regime_contract["dataset_revision"],
+            "train_order_hash": contract["train_order_hash"][regime][str(seed)],
+            "completed_groups": completed_groups,
+            "groups": [dict(record) for record in group_records],
+            "charged_generated_tokens": sum(
+                int(record["charged_generated_tokens"]) for record in group_records
+            ),
+            "flop_ledger": {
+                "profiled_steps": [
+                    int(step)
+                    for step in contract["flop_counter"]["profiled_steps"]
+                    if int(step) <= completed_groups
+                ],
+                "profiled_generated_tokens": profiled_tokens,
+                "profiled_generation_flops": profiled_flops,
+            },
+            "runtime_versions": dict(versions),
+            "accelerator": accelerator,
+            "source_manifest": dict(sources),
+            "artifact_files": artifact_files,
+            "resume_count": resume_count,
+            "attempts": [dict(attempt) for attempt in attempts],
+            "wall_clock_seconds": wall_clock_seconds,
+        }
+    )
+    return validate_corpus_checkpoint_manifest(
+        manifest,
+        protocol=protocol,
+        regime=regime,
+        seed=seed,
+    )
+
+
+def _restore_corpus_checkpoint(
+    *,
+    snapshot_root: Path,
+    destination: Path,
+    protocol: PilotProtocol,
+    regime: str,
+    seed: int,
+    order: Sequence[int],
+    versions: Mapping[str, str],
+    accelerator: str,
+    sources: Mapping[str, str],
+) -> dict[str, Any]:
+    checkpoint_root = snapshot_root / CORPUS_CHECKPOINT_PREFIX
+    manifest_path = checkpoint_root / "corpus_checkpoint_manifest.json"
+    if not manifest_path.is_file():
+        raise RemoteContractError("remote corpus checkpoint manifest is missing")
+    manifest = validate_corpus_checkpoint_manifest(
+        json.loads(manifest_path.read_text(encoding="utf-8")),
+        protocol=protocol,
+        regime=regime,
+        seed=seed,
+    )
+    if manifest["runtime_versions"] != dict(versions):
+        raise RemoteContractError("corpus checkpoint runtime versions changed")
+    if manifest["accelerator"] != accelerator:
+        raise RemoteContractError("corpus checkpoint accelerator changed")
+    if manifest["source_manifest"] != dict(sources):
+        raise RemoteContractError("corpus checkpoint source manifest changed")
+    stored_sources = json.loads(
+        (checkpoint_root / "source_manifest.json").read_text(encoding="utf-8")
+    )
+    if stored_sources != dict(sources):
+        raise RemoteContractError("corpus checkpoint source file changed")
+    for index, record in enumerate(manifest["groups"]):
+        if int(record["source_row_index"]) != int(order[index]):
+            raise RemoteContractError(f"corpus checkpoint train order diverges at group {index}")
+    _verify_bound_files(
+        checkpoint_root,
+        manifest["artifact_files"],
+        label="corpus checkpoint",
+    )
+    for relative in manifest["artifact_files"]:
+        source = checkpoint_root / relative
+        target = destination / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
+    return manifest
+
+
+def _download_corpus_checkpoint(
+    *,
+    api: Any,
+    repo: str,
+    destination: Path,
+    protocol: PilotProtocol,
+    regime: str,
+    seed: int,
+    order: Sequence[int],
+    versions: Mapping[str, str],
+    accelerator: str,
+    sources: Mapping[str, str],
+) -> tuple[dict[str, Any], str] | None:
+    from huggingface_hub import snapshot_download
+
+    info = api.repo_info(repo_id=repo, repo_type="dataset")
+    revision = str(info.sha)
+    remote_files = set(
+        api.list_repo_files(
+            repo_id=repo,
+            repo_type="dataset",
+            revision=revision,
+            token=os.environ["HF_TOKEN"],
+        )
+    )
+    if CORPUS_CHECKPOINT_MANIFEST not in remote_files:
+        return None
+    snapshot = Path(
+        snapshot_download(
+            repo_id=repo,
+            repo_type="dataset",
+            revision=revision,
+            token=os.environ["HF_TOKEN"],
+            allow_patterns=f"{CORPUS_CHECKPOINT_PREFIX}/**",
+        )
+    )
+    manifest = _restore_corpus_checkpoint(
+        snapshot_root=snapshot,
+        destination=destination,
+        protocol=protocol,
+        regime=regime,
+        seed=seed,
+        order=order,
+        versions=versions,
+        accelerator=accelerator,
+        sources=sources,
+    )
+    return manifest, revision
+
+
+def _upload_corpus_checkpoint(
+    *,
+    api: Any,
+    repo: str,
+    root: Path,
+    manifest: Mapping[str, Any],
+    regime: str,
+    seed: int,
+) -> str:
+    completed_groups = int(manifest["completed_groups"])
+    with tempfile.TemporaryDirectory(prefix="flagship-corpus-checkpoint-") as temporary:
+        staging = Path(temporary)
+        for relative in manifest["artifact_files"]:
+            source = root / relative
+            target = staging / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, target)
+        atomic_json(staging / "corpus_checkpoint_manifest.json", manifest)
+        commit = api.upload_folder(
+            repo_id=repo,
+            repo_type="dataset",
+            folder_path=staging,
+            path_in_repo=CORPUS_CHECKPOINT_PREFIX,
+            commit_message=(
+                f"Checkpoint flagship pilot corpus {regime} seed {seed} "
+                f"through group {completed_groups}"
+            ),
+        )
+    return str(commit.oid)
+
+
+def _reuse_completed_corpus(
+    *,
+    api: Any,
+    repo: str,
+    protocol: PilotProtocol,
+    regime: str,
+    seed: int,
+    sources: Mapping[str, str],
+) -> dict[str, Any] | None:
+    from huggingface_hub import snapshot_download
+
+    info = api.repo_info(repo_id=repo, repo_type="dataset")
+    revision = str(info.sha)
+    remote_files = set(
+        api.list_repo_files(
+            repo_id=repo,
+            repo_type="dataset",
+            revision=revision,
+            token=os.environ["HF_TOKEN"],
+        )
+    )
+    if "corpus_manifest.json" not in remote_files:
+        return None
+    root = Path(
+        snapshot_download(
+            repo_id=repo,
+            repo_type="dataset",
+            revision=revision,
+            token=os.environ["HF_TOKEN"],
+        )
+    )
+    manifest = validate_corpus_manifest(
+        json.loads((root / "corpus_manifest.json").read_text(encoding="utf-8")),
+        protocol=protocol,
+        regime=regime,
+        seed=seed,
+    )
+    if manifest["source_manifest"] != dict(sources):
+        raise RemoteContractError("completed corpus source manifest changed")
+    stored_sources = json.loads((root / "source_manifest.json").read_text(encoding="utf-8"))
+    if stored_sources != dict(sources):
+        raise RemoteContractError("completed corpus source file changed")
+    _verify_bound_files(root, manifest["artifact_files"], label="completed corpus")
+    return {
+        "status": "completed",
+        "reused_existing": True,
+        "protocol_sha256": protocol.sha256,
+        "regime": regime,
+        "seed": seed,
+        "corpus_fingerprint": manifest["fingerprint"],
+        "charged_generated_tokens": manifest["charged_generated_tokens"],
+        "replay_generation_flops": manifest["flop_ledger"]["replay_generation_flops"],
+        "hf_repo": repo,
+        "hf_commit": revision,
+        "wandb_run_id": manifest["wandb"]["run_id"],
+        "wandb_run_url": manifest["wandb"]["run_url"],
+        "resume_count": manifest["corpus_resume"]["resume_count"],
+    }
+
+
 def build_corpus(
     *,
     protocol: PilotProtocol,
@@ -244,6 +528,10 @@ def build_corpus(
     wandb_entity: str | None,
 ) -> dict[str, Any]:
     protocol.require_gpu_authorization()
+    if int(protocol.payload["implementation_revision"]) >= 5:
+        raise RemoteContractError(
+            "revision-5 corpus generation must run from the bound frozen revision-4 archive"
+        )
     plan = build_screening_plan(
         protocol,
         PilotUnit(condition="intended_full", regime=regime, seed=seed),
@@ -255,19 +543,35 @@ def build_corpus(
         )
     _require_credentials()
 
-    import torch
-    import wandb
     from huggingface_hub import HfApi
-    from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    versions = verify_runtime_versions(protocol)
-    accelerator = require_a100(torch)
-    seed_everything(seed, torch)
     runtime = protocol.payload["runtime"]
     contract = runtime["execution_contract"]
     regime_contract = protocol.payload["regimes"][regime]
     if seed not in runtime["screening_seeds"]:
         raise RemoteContractError(f"seed is outside screening: {seed}")
+
+    api = HfApi(token=os.environ["HF_TOKEN"])
+    api.create_repo(repo_id=hf_repo, repo_type="dataset", private=True, exist_ok=True)
+    sources = source_manifest(REPO_ROOT)
+    completed = _reuse_completed_corpus(
+        api=api,
+        repo=hf_repo,
+        protocol=protocol,
+        regime=regime,
+        seed=seed,
+        sources=sources,
+    )
+    if completed is not None:
+        return completed
+
+    import torch
+    import wandb
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    versions = verify_runtime_versions(protocol)
+    accelerator = require_a100(torch)
+    seed_everything(seed, torch)
 
     dataset, train_rows = _dataset(protocol, regime)
     order = verified_train_order(train_rows, protocol=protocol, regime=regime, seed=seed)
@@ -286,30 +590,76 @@ def build_corpus(
     )
     model.eval()
 
-    api = HfApi(token=os.environ["HF_TOKEN"])
-    api.create_repo(repo_id=hf_repo, repo_type="dataset", private=True, exist_ok=True)
-    run = wandb.init(
-        project=wandb_project,
-        entity=wandb_entity,
-        group=contract["tracking"]["wandb_corpus_group"],
-        name=plan["identity"]["corpus_wandb_run"],
-        config={
-            "protocol_sha256": protocol.sha256,
-            "regime": regime,
-            "seed": seed,
-            "model": runtime["model"],
-            "dataset_revision": regime_contract["dataset_revision"],
-        },
-    )
-    started_at = time.time()
-    groups = []
-    profiled_flops = 0.0
-    profiled_tokens = 0
-    group_records: list[dict[str, Any]] = []
-
     with tempfile.TemporaryDirectory(prefix="flagship-pilot-corpus-") as temporary:
         root = Path(temporary)
-        for group_index, row_index in enumerate(order):
+        atomic_json(root / "source_manifest.json", sources)
+        restored = _download_corpus_checkpoint(
+            api=api,
+            repo=hf_repo,
+            destination=root,
+            protocol=protocol,
+            regime=regime,
+            seed=seed,
+            order=order,
+            versions=versions,
+            accelerator=accelerator,
+            sources=sources,
+        )
+        if restored is None:
+            group_records: list[dict[str, Any]] = []
+            profiled_flops = 0.0
+            profiled_tokens = 0
+            accumulated_wall_clock = 0.0
+            resume_count = 0
+            attempts: list[dict[str, Any]] = []
+            latest_checkpoint: dict[str, Any] | None = None
+        else:
+            checkpoint, checkpoint_commit = restored
+            group_records = [dict(record) for record in checkpoint["groups"]]
+            profiled_flops = float(checkpoint["flop_ledger"]["profiled_generation_flops"])
+            profiled_tokens = int(checkpoint["flop_ledger"]["profiled_generated_tokens"])
+            accumulated_wall_clock = float(checkpoint["wall_clock_seconds"])
+            resume_count = int(checkpoint["resume_count"]) + 1
+            attempts = [dict(attempt) for attempt in checkpoint["attempts"]]
+            latest_checkpoint = {
+                "completed_groups": int(checkpoint["completed_groups"]),
+                "fingerprint": checkpoint["fingerprint"],
+                "hf_commit": checkpoint_commit,
+            }
+        start_group = len(group_records)
+        if start_group not in (0, *CORPUS_CHECKPOINT_GROUPS):
+            raise RemoteContractError(f"resumed corpus prefix has invalid length: {start_group}")
+
+        run = wandb.init(
+            project=wandb_project,
+            entity=wandb_entity,
+            group=contract["tracking"]["wandb_corpus_group"],
+            name=plan["identity"]["corpus_wandb_run"],
+            config={
+                "protocol_sha256": protocol.sha256,
+                "regime": regime,
+                "seed": seed,
+                "model": runtime["model"],
+                "dataset_revision": regime_contract["dataset_revision"],
+                "corpus_resume_enabled": True,
+                "corpus_resume_count": resume_count,
+                "corpus_start_group": start_group,
+                "corpus_checkpoint_groups": list(CORPUS_CHECKPOINT_GROUPS),
+                "corpus_resumed_checkpoint": latest_checkpoint,
+            },
+        )
+        attempts.append(
+            {
+                "run_id": run.id,
+                "run_url": run.url,
+                "start_group": start_group,
+                "completed_through": start_group,
+            }
+        )
+        segment_started_at = time.time()
+
+        for group_index in range(start_group, len(order)):
+            row_index = order[group_index]
             question, answer = _row_fields(regime, train_rows[row_index])
             prompt_ids = _prompt_tokens(
                 tokenizer,
@@ -347,7 +697,6 @@ def build_corpus(
             batch, _ = _group_batch(model=model, prompt_ids=prompt_ids, group=group)
             artifact_path = root / "groups" / f"group-{group_index:03d}.pt"
             _save_group(artifact_path, batch=batch, group=group)
-            groups.append(group)
             if profiler.phase_flops:
                 profiled_flops += profiler.phase_flops["replay_generation"]
                 profiled_tokens += group.charged_generated_tokens
@@ -361,42 +710,83 @@ def build_corpus(
                 "artifact_path": str(artifact_path.relative_to(root)),
             }
             group_records.append(record)
+            attempts[-1]["completed_through"] = group_index + 1
             run.log(
                 {
                     "corpus/group": group_index + 1,
                     "corpus/charged_generated_tokens": sum(
-                        item.charged_generated_tokens for item in groups
+                        int(item["charged_generated_tokens"]) for item in group_records
                     ),
                     "corpus/selected_length_cv": group.selected_length_cv,
+                    "corpus/resume_count": resume_count,
+                    "corpus/start_group": start_group,
                 },
                 step=group_index + 1,
             )
 
-        ledger = ReplayLedger.build(groups)
+            completed_groups = group_index + 1
+            if completed_groups in CORPUS_CHECKPOINT_GROUPS:
+                checkpoint = _build_corpus_checkpoint_manifest(
+                    root=root,
+                    protocol=protocol,
+                    regime=regime,
+                    seed=seed,
+                    group_records=group_records,
+                    profiled_flops=profiled_flops,
+                    profiled_tokens=profiled_tokens,
+                    versions=versions,
+                    accelerator=accelerator,
+                    sources=sources,
+                    attempts=attempts,
+                    resume_count=resume_count,
+                    wall_clock_seconds=(accumulated_wall_clock + time.time() - segment_started_at),
+                )
+                checkpoint_commit = _upload_corpus_checkpoint(
+                    api=api,
+                    repo=hf_repo,
+                    root=root,
+                    manifest=checkpoint,
+                    regime=regime,
+                    seed=seed,
+                )
+                latest_checkpoint = {
+                    "completed_groups": completed_groups,
+                    "fingerprint": checkpoint["fingerprint"],
+                    "hf_commit": checkpoint_commit,
+                }
+                run.summary.update(
+                    {
+                        "corpus_checkpoint_group": completed_groups,
+                        "corpus_checkpoint_fingerprint": checkpoint["fingerprint"],
+                        "corpus_checkpoint_hf_commit": checkpoint_commit,
+                    }
+                )
+
+        charged_generated_tokens = sum(
+            int(record["charged_generated_tokens"]) for record in group_records
+        )
         ceiling = int(contract["charged_generated_token_ceiling"])
-        if ledger.charged_generated_tokens > ceiling:
+        if charged_generated_tokens > ceiling:
             raise RemoteContractError(
-                f"corpus charged {ledger.charged_generated_tokens} tokens above ceiling {ceiling}"
+                f"corpus charged {charged_generated_tokens} tokens above ceiling {ceiling}"
             )
         if profiled_flops <= 0 or profiled_tokens <= 0:
             raise RemoteContractError("replay generation profiler coverage is missing")
-        replay_generation_flops = profiled_flops * (
-            ledger.charged_generated_tokens / profiled_tokens
-        )
+        replay_generation_flops = profiled_flops * (charged_generated_tokens / profiled_tokens)
         if not math.isfinite(replay_generation_flops) or replay_generation_flops <= 0:
             raise RemoteContractError("replay generation FLOP extrapolation is invalid")
+        if latest_checkpoint is None:
+            raise RemoteContractError("corpus completed without a durable group-80 checkpoint")
 
-        sources = source_manifest(REPO_ROOT)
-        source_path = root / "source_manifest.json"
-        source_path.write_text(json.dumps(sources, indent=2, sort_keys=True) + "\n")
         artifact_files = {
             str(path.relative_to(root)): sha256_file(path)
             for path in sorted(root.rglob("*"))
             if path.is_file()
         }
+        attempts[-1]["completed_through"] = len(group_records)
         manifest = with_fingerprint(
             {
-                "schema_version": "flagship-pilot-corpus-v1",
+                "schema_version": "flagship-pilot-corpus-v2",
                 "status": "complete",
                 "protocol_sha256": protocol.sha256,
                 "regime": regime,
@@ -407,7 +797,7 @@ def build_corpus(
                 "train_order_hash": contract["train_order_hash"][regime][str(seed)],
                 "groups": group_records,
                 "rejected_generated_tokens": 0,
-                "charged_generated_tokens": ledger.charged_generated_tokens,
+                "charged_generated_tokens": charged_generated_tokens,
                 "flop_ledger": {
                     "profiled_steps": list(PROFILED_STEPS),
                     "profiled_generated_tokens": profiled_tokens,
@@ -418,12 +808,20 @@ def build_corpus(
                 "accelerator": accelerator,
                 "source_manifest": sources,
                 "artifact_files": artifact_files,
-                "wall_clock_seconds": time.time() - started_at,
+                "wall_clock_seconds": (accumulated_wall_clock + time.time() - segment_started_at),
                 "wandb": {
                     "run_id": run.id,
                     "run_url": run.url,
                     "entity": run.entity,
                     "project": run.project,
+                },
+                "corpus_resume": {
+                    "schema_version": "flagship-pilot-corpus-resume-v1",
+                    "enabled": True,
+                    "checkpoint_groups": list(CORPUS_CHECKPOINT_GROUPS),
+                    "resume_count": resume_count,
+                    "attempts": attempts,
+                    "latest_checkpoint": latest_checkpoint,
                 },
             }
         )
@@ -445,6 +843,7 @@ def build_corpus(
 
     result = {
         "status": "completed",
+        "reused_existing": False,
         "protocol_sha256": protocol.sha256,
         "regime": regime,
         "seed": seed,
@@ -455,6 +854,9 @@ def build_corpus(
         "hf_commit": commit.oid,
         "wandb_run_id": run.id,
         "wandb_run_url": run.url,
+        "resume_count": resume_count,
+        "resumed_from_group": start_group,
+        "latest_checkpoint": latest_checkpoint,
     }
     run.summary.update(result)
     wandb.finish(exit_code=0)
@@ -532,7 +934,9 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     subparsers.add_parser("verify-environment")
     subparsers.add_parser("smoke")
     corpus = subparsers.add_parser("build-corpus")
-    corpus.add_argument("--regime", choices=("balanced_equal_length", "filtered_variable_length"), required=True)
+    corpus.add_argument(
+        "--regime", choices=("balanced_equal_length", "filtered_variable_length"), required=True
+    )
     corpus.add_argument("--seed", type=int, required=True)
     corpus.add_argument("--hf-repo", required=True)
     corpus.add_argument("--wandb-project", default="tinker-rl-lab")
@@ -602,7 +1006,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                 wandb_project=args.wandb_project,
                 wandb_entity=args.wandb_entity,
             )
-    except (AuthorizationError, RemoteContractError, ReplayContractError) as exc:
+    except (
+        ArtifactValidationError,
+        AuthorizationError,
+        RemoteContractError,
+        ReplayContractError,
+    ) as exc:
         raise SystemExit(str(exc)) from exc
     prefix = CORPUS_RESULT_PREFIX if args.command == "build-corpus" else "FPILOT_UNIT_RESULT "
     print(prefix + json.dumps(result, sort_keys=True))

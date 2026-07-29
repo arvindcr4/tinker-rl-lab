@@ -1,0 +1,223 @@
+{
+  "jobs": {
+    "corpus__balanced_equal_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "corpus__balanced_equal_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "corpus__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "corpus__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "corpus__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "corpus__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__epsilon_only__balanced_equal_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__epsilon_only__balanced_equal_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__epsilon_only__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__epsilon_only__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__epsilon_only__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__epsilon_only__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__balanced_equal_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__balanced_equal_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__intended_full__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__balanced_equal_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__balanced_equal_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__native_trl__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__balanced_equal_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__balanced_equal_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__balanced_equal_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__filtered_variable_length__s11": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__filtered_variable_length__s23": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "fpilot__reduction_only__filtered_variable_length__s37": {
+      "acceptance_path": null,
+      "attempts": 0,
+      "last_error": null,
+      "pid": null,
+      "status": "pending"
+    },
+    "preflight__a100_stack_smoke": {
+      "acceptance_path": null,
+      "attempts": 1,
+      "last_error": "launcher exited 1 without a recognized infrastructure signature; automatic retry is forbidden",
+      "pid": null,
+      "status": "failed_validation"
+    }
+  },
+  "manifest_fingerprint": "a198ba4b5cd6fbd94d3d65648553bd4d817338d02576ed9872ac4abc6d8d5ca9",
+  "schema_version": "flagship-pilot-supervisor-v1"
+}

@@ -30,6 +30,9 @@ SOURCE_FILES = (
     "zvf-program/flagship/pilot/remote_training.py",
     "zvf-program/flagship/pilot/runtime_install.py",
     "zvf-program/flagship/pilot/bootstrap.py",
+    "zvf-program/flagship/pilot/provenance/r3-corpus-bindings.json",
+    "zvf-program/flagship/pilot/provenance/r3-corpus-source.tar.gz",
+    "zvf-program/flagship/pilot/provenance/r3-control-source.tar.gz",
 )
 
 
@@ -86,16 +89,13 @@ def normalize_math(answer: str) -> str:
 
 def math500_reward(response: str, answer: str) -> float:
     prediction = last_boxed(response)
-    return float(
-        prediction is not None and normalize_math(prediction) == normalize_math(answer)
-    )
+    return float(prediction is not None and normalize_math(prediction) == normalize_math(answer))
 
 
 def prompt_messages(regime: str, question: str) -> list[dict[str, str]]:
     if regime == "balanced_equal_length":
         instruction = (
-            "Solve the problem carefully. End with exactly one line of the form "
-            "#### <integer>."
+            "Solve the problem carefully. End with exactly one line of the form #### <integer>."
         )
     elif regime == "filtered_variable_length":
         instruction = (

@@ -1,0 +1,30 @@
+{
+  "counts_as_acceptance": false,
+  "jobs": {
+    "corpus__balanced_equal_length__s37": {
+      "charged_generated_tokens": 68534,
+      "corpus_group": 17,
+      "heartbeat": "2026-07-22T23:52:46Z",
+      "state": "running",
+      "wandb_run": "60bhrt9q"
+    },
+    "fpilot__intended_full__balanced_equal_length__s23": {
+      "eval_accuracy": 0.15625,
+      "heartbeat": "2026-07-22T23:52:49Z",
+      "mechanism_gradient_relation": "joint_zero",
+      "state": "running",
+      "training_step": 19,
+      "wandb_run": "29173df6"
+    },
+    "fpilot__native_trl__balanced_equal_length__s23": {
+      "eval_accuracy": 0.15625,
+      "heartbeat": "2026-07-22T23:52:05Z",
+      "mechanism_gradient_relation": "joint_zero",
+      "state": "running",
+      "training_step": 19,
+      "wandb_run": "f1b5321a"
+    }
+  },
+  "polled_at": "2026-07-22T23:53:19.709155+00:00",
+  "schema_version": "flagship-pilot-live-wave-poll-v1"
+}

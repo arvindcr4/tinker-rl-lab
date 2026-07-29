@@ -9,7 +9,16 @@ from unittest import mock
 
 import torch
 
-from pilot.training import ReplayBatch, TrainingContractError, completion_logps, run_replay_step
+from pilot.training import (
+    ReplayBatch,
+    TrainingContractError,
+    _bounded_cosine,
+    _compare_gradients,
+    _finite_norm,
+    _gradients,
+    completion_logps,
+    run_replay_step,
+)
 
 
 class TinyLM(torch.nn.Module):
@@ -91,6 +100,58 @@ class ReplayTrainingTests(unittest.TestCase):
         self.assertEqual(recorded, [[SDPBackend.MATH]])
         self.assertTrue(torch.isfinite(values).all())
 
+    def test_checkpoint_backward_pins_deterministic_math_attention_backend(self) -> None:
+        from torch.nn.attention import SDPBackend
+
+        recorded = []
+
+        @contextmanager
+        def recorder(backends):
+            recorded.append(list(backends))
+            yield
+
+        parameters = tuple(self.model.parameters())
+        loss = sum(parameter.square().sum() for parameter in parameters)
+        with mock.patch("pilot.training.sdpa_kernel", recorder):
+            gradients = _gradients(loss, parameters, retain_graph=False)
+        self.assertEqual(recorded, [[SDPBackend.MATH]])
+        self.assertEqual(len(gradients), len(parameters))
+        self.assertTrue(all(torch.isfinite(gradient).all() for gradient in gradients))
+
+    def test_low_precision_identical_vector_cosine_is_bounded(self) -> None:
+        low_precision = torch.linspace(0.1, 1.0, 1000, dtype=torch.float16)
+        vector = low_precision.double()
+        norm = _finite_norm(vector, label="test")
+        cosine = _bounded_cosine(
+            vector,
+            vector,
+            left_norm=norm,
+            right_norm=norm,
+            label="test-identical",
+        )
+        self.assertAlmostEqual(cosine, 1.0, places=15)
+        self.assertTrue(-1.0 <= cosine <= 1.0)
+
+    def test_exact_identical_vectors_bypass_roundoff_prone_cosine_reduction(self) -> None:
+        vector = torch.linspace(-1.0, 1.0, 100_003, dtype=torch.float64)
+        norm = _finite_norm(vector, label="test")
+        with mock.patch(
+            "pilot.training._bounded_cosine",
+            side_effect=AssertionError("exact identity must not use a reduction"),
+        ):
+            comparison = _compare_gradients(
+                vector,
+                vector.clone(),
+                left_norm=norm,
+                right_norm=norm,
+                left_zero_relation="left_zero",
+                right_zero_relation="right_zero",
+                label="test-identical",
+            )
+        self.assertEqual(comparison.relation, "nonzero")
+        self.assertEqual(comparison.cosine, 1.0)
+        self.assertEqual(comparison.relative_l2, 0.0)
+
     def test_replay_step_updates_model_and_emits_complete_receipt(self) -> None:
         before = copy.deepcopy(self.model.state_dict())
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=1e-3)
@@ -107,12 +168,18 @@ class ReplayTrainingTests(unittest.TestCase):
         )
         self.assertEqual(receipt.step, 1)
         self.assertEqual(receipt.active_rows, 6)
+        self.assertEqual(receipt.gradient_relation, "nonzero")
         self.assertTrue(-1.0 <= receipt.gradient_cosine <= 1.0)
         self.assertGreater(receipt.gradient_relative_l2, 0.0)
+        self.assertEqual(receipt.selected_vs_intended_relation, "nonzero")
         self.assertAlmostEqual(receipt.selected_vs_intended_cosine, 1.0, places=6)
         self.assertAlmostEqual(receipt.selected_vs_intended_relative_l2, 0.0, places=7)
+        self.assertEqual(receipt.optimizer_update, "applied")
         self.assertTrue(
-            any(not torch.equal(before[name], value) for name, value in self.model.state_dict().items())
+            any(
+                not torch.equal(before[name], value)
+                for name, value in self.model.state_dict().items()
+            )
         )
 
     def test_each_condition_can_apply_a_finite_update_from_identical_weights(self) -> None:
@@ -132,10 +199,41 @@ class ReplayTrainingTests(unittest.TestCase):
                     step=1,
                 )
             )
-        self.assertEqual({receipt.condition for receipt in receipts}, {
-            "intended_full", "native_trl", "epsilon_only", "reduction_only"
-        })
+        self.assertEqual(
+            {receipt.condition for receipt in receipts},
+            {"intended_full", "native_trl", "epsilon_only", "reduction_only"},
+        )
         self.assertTrue(all(receipt.selected_gradient_norm > 0 for receipt in receipts))
+
+    def test_joint_zero_receipt_is_explicit_and_optimizer_is_a_true_no_op(self) -> None:
+        zero_batch = replace(self.batch, rewards=torch.zeros(8, dtype=torch.float32))
+        before = copy.deepcopy(self.model.state_dict())
+        optimizer = torch.optim.AdamW(self.model.parameters(), lr=1e-3, weight_decay=0.1)
+        scheduler = torch.optim.lr_scheduler.LinearLR(
+            optimizer, start_factor=1.0, end_factor=0.5, total_iters=2
+        )
+        receipt = run_replay_step(
+            model=self.model,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            batch=zero_batch,
+            condition="intended_full",
+            step=1,
+        )
+        self.assertEqual(receipt.gradient_relation, "joint_zero")
+        self.assertIsNone(receipt.gradient_cosine)
+        self.assertIsNone(receipt.gradient_relative_l2)
+        self.assertEqual(receipt.selected_vs_intended_relation, "joint_zero")
+        self.assertIsNone(receipt.selected_vs_intended_cosine)
+        self.assertIsNone(receipt.selected_vs_intended_relative_l2)
+        self.assertEqual(receipt.intended_gradient_norm, 0.0)
+        self.assertEqual(receipt.native_gradient_norm, 0.0)
+        self.assertEqual(receipt.selected_gradient_norm, 0.0)
+        self.assertEqual(receipt.optimizer_update, "no_op_zero_gradient")
+        self.assertEqual(optimizer.state, {})
+        self.assertEqual(scheduler.last_epoch, 1)
+        for name, value in self.model.state_dict().items():
+            self.assertTrue(torch.equal(before[name], value), name)
 
     def test_batch_shape_and_step_fail_closed(self) -> None:
         malformed = replace(self.batch, active_rows=torch.ones(7, dtype=torch.bool))

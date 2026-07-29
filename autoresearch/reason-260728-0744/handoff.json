@@ -1,0 +1,40 @@
+{
+  "workflow": "autoresearch-reason",
+  "status": "complete",
+  "verdict": "PASS",
+  "goal": "Make the NeurIPS 36320 rebuttal maximally persuasive without exceeding the supported evidence.",
+  "winner": {
+    "label": "persuasive-bounded-v11",
+    "primary_finding": "Lead with the reviewer-recognized audit contribution, answer each reviewer concretely, and make the acceptance case independent of private post-submission E1 evidence.",
+    "convergence_count": 3
+  },
+  "findings": [
+    "The submitted introduction already contains the practitioner-facing aim; the rebuttal may operationalize it as a bounded evidence check but must not claim the adoption gate was explicitly submitted.",
+    "The five-seed 92.6/92.1 comparison is not auditable because three zero-runtime backfills lack unique upstream IDs.",
+    "The 4G4H per-seed telemetry table matches all 40 frozen records and directly answers the reviewer's missing-data request.",
+    "The frozen DAPO DISAPPEARS verdict is unsafe: finite-sample paired-t MDE is 1.012 pp and the multiplicity step was not applied, so all E1 comparisons are treated as inconclusive.",
+    "Private E1 receipts are feasibility evidence only and are not independently reviewer-verifiable without an anonymized artifact."
+  ],
+  "outputs": [
+    "zvf-program/flagship/paper/NEURIPS_2026_OPENREVIEW_REBUTTAL_FINAL.md",
+    "zvf-program/flagship/paper/MAY_REVIEW_RESPONSE_AND_ACL_PLAN.md",
+    "autoresearch/reason-260728-0744/E1_STATISTICAL_REAUDIT.md",
+    "autoresearch/reason-260728-0744/reason-results.tsv",
+    "autoresearch/reason-260728-0744/lineage.md",
+    "autoresearch/reason-260728-0744/summary.md"
+  ],
+  "next_actions": [
+    "Paste the four replacement texts into the matching OpenReview notes before the deadline.",
+    "Preview and re-open every saved note; do not upload a revised PDF during a response-only window.",
+    "Do not quote the frozen E1 DISAPPEARS label.",
+    "Repair and independently review the E1 statistical pipeline before using it in an ACL or ARR paper.",
+    "Rotate the exposed W&B, Tinker, and Hugging Face credentials."
+  ],
+  "errors": 0,
+  "untested_gaps": [
+    "No OpenReview note was posted or edited.",
+    "Private W&B and Hugging Face evidence is not independently visible to reviewers without an anonymized artifact.",
+    "Reference-KL dependence remains untested because E1 uses beta=0.",
+    "No prospective ZVF controller or compute-saving result exists."
+  ]
+}

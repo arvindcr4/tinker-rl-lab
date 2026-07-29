@@ -76,6 +76,11 @@ def test_course_foundations_are_bound_to_assumptions_and_diagnostics() -> None:
         lambda payload: payload["scope"]["must_not_modify_or_relabel"].remove(
             "zvf-program/flagship/paper/review_bundle.zip"
         ),
+        lambda payload: next(
+            stage
+            for stage in payload["stages"]
+            if stage["id"] == "S1_foundations_mapping"
+        ).__setitem__("evidence", ""),
     ],
 )
 def test_missing_foundations_sections_fail_closed(mutation) -> None:

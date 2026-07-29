@@ -1,0 +1,364 @@
+{
+  "schema_version": "theory-transfer-ledger-v1",
+  "status": "assumption_audit_only_not_evidence",
+  "promotion_authorized": false,
+  "source_manifests": [
+    {
+      "manifest_id": "rlhf_book_3624df9",
+      "repository": "https://github.com/natolambert/rlhf-book",
+      "commit": "3624df9ef62177c2c3d6d824f5c2bb740f31041f",
+      "files": [
+        {
+          "path": "book/chapters/06-policy-gradients.md",
+          "sha256": "6671f67b6d635ab8cc1f1859345edeead9a3f7489e5410a5c4653cb1b6c4e444"
+        },
+        {
+          "path": "book/chapters/14-over-optimization.md",
+          "sha256": "81736529e9237c079fa39d27a96635b45805af827cb287f5e2ee20959d4dfd81"
+        },
+        {
+          "path": "book/chapters/15-regularization.md",
+          "sha256": "3b93ac53551725c90a29780e731094e406bb61325804627ef3a2d1dd2858127e"
+        },
+        {
+          "path": "book/chapters/16-evaluation.md",
+          "sha256": "d9c1764b4cf85e869eac82a6a30f73a5578ddab4faf69c410c8e7d66ce5a4525"
+        },
+        {
+          "path": "book/chapters/appendix-c-practical.md",
+          "sha256": "c08f557a7f3e2ae80339f6bac9a8028ee22b39158f743008f86a4e7273879e1a"
+        }
+      ]
+    },
+    {
+      "manifest_id": "harvard_cs2824_5dcc34e",
+      "repository": "https://github.com/harvard-cs2824-s26/harvard-cs2824-s26.github.io",
+      "commit": "5dcc34e3b861da632371645fb05aebb12a40d23c",
+      "files": [
+        {
+          "path": "slides/PG_global_conv1.pdf",
+          "sha256": "26309b138a546eff684ed586809919de9a0360f2d0aeb8fd3ad64ccc546cd86f"
+        },
+        {
+          "path": "slides/npg.pdf",
+          "sha256": "e88bf7b22fd56577179accaf828e232a6cc7af41aad3e7310cc5b3c254f01c9f"
+        },
+        {
+          "path": "slides/PG_global_conv2.pdf",
+          "sha256": "ee21ee7f5cc52e878007a643e23cbca1dac5ca8ea402a4fb1d8c94b858f64f5d"
+        },
+        {
+          "path": "slides/NPG_ppo.pdf",
+          "sha256": "309137fbfec2dc7c01cc1489aaa867f768b5e4a253bdea3359f633eb4529a8db"
+        },
+        {
+          "path": "slides/RLHF.pdf",
+          "sha256": "f12bd048818e817069cb0ef0f46ea90f22219ca3e3a9b016e748db1c3727194a"
+        },
+        {
+          "path": "slides/regressing_rewards.pdf",
+          "sha256": "381168dca1129f785618844c420018d7ec3c707c2b910d6a7fd5b04f24f1677a"
+        },
+        {
+          "path": "CS2824projects.html",
+          "sha256": "30ef1ea58da08abe7873564858feb95e8caae3d7f8061247b1092cf59edfcf41"
+        }
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "C1_group_contrast_and_loss_weighting",
+      "claim_type": "practice_guidance",
+      "statement": "Group-relative updates require useful within-prompt reward contrast, and loss aggregation changes the weighting of variable-length completions.",
+      "source_refs": [
+        {
+          "manifest_id": "rlhf_book_3624df9",
+          "path": "book/chapters/06-policy-gradients.md",
+          "locator": "Group Relative Policy Optimization; Loss Aggregation Tradeoffs; Suggested Experiments"
+        }
+      ],
+      "primary_reference": "https://rlhfbook.com/c/06-policy-gradients",
+      "formal_domain": "autoregressive language-model policy optimization with grouped scalar completion rewards",
+      "assumptions": [
+        {
+          "name": "reward_semantics_are_fixed_across_arms",
+          "status": "unverified",
+          "evidence_or_proxy": "registered reward and independent-label hashes"
+        },
+        {
+          "name": "within_prompt_samples_follow_the_registered_sampler",
+          "status": "unverified",
+          "evidence_or_proxy": "sampler policy version and completion manifest"
+        }
+      ],
+      "llm_mapping": {
+        "state": "prompt plus generated prefix",
+        "action": "next token",
+        "trajectory": "one completion",
+        "reward": "registered terminal verifier reward R",
+        "policy": "token-generating language model",
+        "data_distribution": "registered prompt schedule and sampler policy",
+        "comparator": "matched-cost group-relative control"
+      },
+      "transfer_status": "empirical_hypothesis_only",
+      "observable_proxy": "all-wrong, all-correct, and mixed-group fractions plus mixed-group yield per charged token",
+      "falsifier": "The auxiliary signal changes gradients but does not improve independent correctness coverage or held-out quality under token-matched sampling.",
+      "permitted_language": "book-motivated diagnostic"
+    },
+    {
+      "claim_id": "C2_sparse_reward_stationarity_gap",
+      "claim_type": "theorem_analogy",
+      "statement": "A policy can have zero gradient while remaining arbitrarily suboptimal when its occupancy misses rewarding states.",
+      "source_refs": [
+        {
+          "manifest_id": "harvard_cs2824_5dcc34e",
+          "path": "slides/PG_global_conv1.pdf",
+          "locator": "Vanishing Gradients and Saddle Points; sparse-reward zero-gradient example"
+        }
+      ],
+      "primary_reference": "RL Theory Book, Chapter 9, Section 9.1, Proposition 9.1; https://rltheorybook.github.io/rltheorybook_ABJKS.pdf",
+      "formal_domain": "discounted finite MDP with direct tabular policy parameterization",
+      "assumptions": [
+        {
+          "name": "token_generation_is_a_valid_instance_of_the_formal_MDP_and_parameterization",
+          "status": "unverified",
+          "evidence_or_proxy": "explicit state/action/trajectory mapping only"
+        },
+        {
+          "name": "rewarding_trajectory_coverage_is_observable",
+          "status": "empirical_proxy",
+          "evidence_or_proxy": "independently verified correct-completion coverage"
+        }
+      ],
+      "llm_mapping": {
+        "state": "prompt plus generated prefix",
+        "action": "next token",
+        "trajectory": "completion",
+        "reward": "terminal independent correctness label Y_ind",
+        "policy": "language model",
+        "data_distribution": "prompt and completion occupancy induced by the sampler",
+        "comparator": "registered group-relative control"
+      },
+      "transfer_status": "diagnostic_analogy_only",
+      "observable_proxy": "gradient norm jointly reported with verified correct-completion coverage",
+      "falsifier": "A nonzero auxiliary gradient is treated as learning evidence without increased verified coverage or held-out quality.",
+      "permitted_language": "coverage-motivated analogy"
+    },
+    {
+      "claim_id": "C3_distribution_mismatch_stationarity",
+      "claim_type": "theorem_analogy",
+      "statement": "Stationarity-to-performance guarantees depend on coverage or a bounded distribution-mismatch coefficient.",
+      "source_refs": [
+        {
+          "manifest_id": "harvard_cs2824_5dcc34e",
+          "path": "slides/PG_global_conv1.pdf",
+          "locator": "Stationarity and Optimality; log-barrier theorem and distribution-mismatch coefficient"
+        }
+      ],
+      "primary_reference": "RL Theory Book, Chapter 9, log-barrier stationarity result; https://rltheorybook.github.io/rltheorybook_ABJKS.pdf",
+      "formal_domain": "discounted finite MDP with tabular softmax or direct policy and stated coverage measure",
+      "assumptions": [
+        {
+          "name": "finite_occupancy_ratio_or_coverage_condition",
+          "status": "unverified",
+          "evidence_or_proxy": "prompt-stratified correct-completion coverage and policy-ratio tails"
+        },
+        {
+          "name": "stated_policy_class_and_regularization_match_the_experiment",
+          "status": "violated",
+          "evidence_or_proxy": "transformer policy and PPO-style objective differ from the theorem domain"
+        }
+      ],
+      "llm_mapping": {
+        "state": "prompt-prefix pair",
+        "action": "token",
+        "trajectory": "completion",
+        "reward": "terminal verifier outcome",
+        "policy": "transformer policy",
+        "data_distribution": "sampler-policy completion distribution",
+        "comparator": "untouched-test target policy"
+      },
+      "transfer_status": "diagnostic_analogy_only",
+      "observable_proxy": "coverage strata, policy-ratio quantiles, maximum weight, and effective sample size",
+      "falsifier": "Any global-optimality or convergence statement is made without verifying the theorem's policy class and coverage assumptions.",
+      "permitted_language": "distribution-mismatch diagnostic motivation"
+    },
+    {
+      "claim_id": "C4_kl_fisher_policy_geometry",
+      "claim_type": "algorithmic_analogy",
+      "statement": "NPG and TRPO motivate controlling changes in policy space through KL and Fisher geometry rather than treating parameter distance or clipping as a trust region.",
+      "source_refs": [
+        {
+          "manifest_id": "harvard_cs2824_5dcc34e",
+          "path": "slides/npg.pdf",
+          "locator": "Trust Region Policy Optimization; KL quadratic approximation and Fisher information"
+        },
+        {
+          "manifest_id": "harvard_cs2824_5dcc34e",
+          "path": "slides/NPG_ppo.pdf",
+          "locator": "NPG, TRPO, PPO, and GRPO summary"
+        },
+        {
+          "manifest_id": "rlhf_book_3624df9",
+          "path": "book/chapters/15-regularization.md",
+          "locator": "KL Divergence in RL Optimization"
+        }
+      ],
+      "primary_reference": "Trust Region Policy Optimization, arXiv:1502.05477",
+      "formal_domain": "local constrained policy optimization under a KL approximation and stated regularity assumptions",
+      "assumptions": [
+        {
+          "name": "local_quadratic_KL_approximation_is_adequate",
+          "status": "unverified",
+          "evidence_or_proxy": "empirical KL and Fisher-quadratic step"
+        },
+        {
+          "name": "clipped_surrogate_implies_a_hard_trust_region",
+          "status": "violated",
+          "evidence_or_proxy": "explicitly prohibited inference"
+        }
+      ],
+      "llm_mapping": {
+        "state": "prompt plus prefix",
+        "action": "next token",
+        "trajectory": "completion",
+        "reward": "registered terminal reward plus any registered regularizer",
+        "policy": "learner language model",
+        "data_distribution": "actual rollout policy",
+        "comparator": "old/data policy and initial reference"
+      },
+      "transfer_status": "diagnostic_analogy_only",
+      "observable_proxy": "empirical KL, policy-ratio tails, clipping by advantage sign, and Fisher-quadratic step",
+      "falsifier": "A clipped objective is described as proving a trust region without an empirical KL stop rule.",
+      "permitted_language": "policy-geometry diagnostic motivation"
+    },
+    {
+      "claim_id": "C5_approximation_estimation_decomposition",
+      "claim_type": "theorem_analogy",
+      "statement": "Policy-optimization analyses distinguish optimization, statistical-estimation, and function-approximation error under explicit conditioning and coverage assumptions.",
+      "source_refs": [
+        {
+          "manifest_id": "harvard_cs2824_5dcc34e",
+          "path": "slides/PG_global_conv2.pdf",
+          "locator": "Q-NPG convergence with estimation error and with approximation plus estimation errors"
+        }
+      ],
+      "primary_reference": "RL Theory Book, Chapters 10-11; https://rltheorybook.github.io/rltheorybook_ABJKS.pdf",
+      "formal_domain": "NPG/Q-NPG with the stated feature class, conditioning, sampling, and comparator assumptions",
+      "assumptions": [
+        {
+          "name": "compatible_or_realizable_function_class",
+          "status": "unverified",
+          "evidence_or_proxy": "cross-fitted held-out residual diagnostics"
+        },
+        {
+          "name": "error_terms_share_the_theorem_estimand_and_units",
+          "status": "violated",
+          "evidence_or_proxy": "report components separately; do not compare raw magnitudes across incompatible units"
+        }
+      ],
+      "llm_mapping": {
+        "state": "prompt-prefix pair",
+        "action": "token",
+        "trajectory": "completion",
+        "reward": "registered outcome",
+        "policy": "transformer policy",
+        "data_distribution": "registered train/development/test distributions",
+        "comparator": "matched-cost control"
+      },
+      "transfer_status": "diagnostic_analogy_only",
+      "observable_proxy": "separate optimization diagnostics, prompt-clustered uncertainty, held-out residual checks, and verifier disagreement",
+      "falsifier": "Incompatible error proxies are summed or directly compared as if they were a theorem-derived common-unit bound.",
+      "permitted_language": "error-decomposition checklist"
+    },
+    {
+      "claim_id": "C6_proxy_and_evaluation_confounds",
+      "claim_type": "practice_guidance",
+      "statement": "Proxy objectives, prompt format, parsers, sampling, contamination, and inference-token budgets can confound apparent policy improvements.",
+      "source_refs": [
+        {
+          "manifest_id": "rlhf_book_3624df9",
+          "path": "book/chapters/14-over-optimization.md",
+          "locator": "Managing Proxy Objectives"
+        },
+        {
+          "manifest_id": "rlhf_book_3624df9",
+          "path": "book/chapters/16-evaluation.md",
+          "locator": "Prompting Formatting; unreliable external comparisons; Contamination"
+        }
+      ],
+      "primary_reference": "https://rlhfbook.com/c/14-over-optimization and https://rlhfbook.com/c/16-evaluation",
+      "formal_domain": "empirical language-model post-training and evaluation",
+      "assumptions": [
+        {
+          "name": "independent_quality_labels_are_not_the_optimized_proxy",
+          "status": "unverified",
+          "evidence_or_proxy": "checker provenance and blinding receipt"
+        },
+        {
+          "name": "inference_budgets_and_templates_are_matched",
+          "status": "unverified",
+          "evidence_or_proxy": "evaluation manifest hashes and charged inference tokens"
+        }
+      ],
+      "llm_mapping": {
+        "state": "evaluation prompt",
+        "action": "generated token",
+        "trajectory": "evaluated completion",
+        "reward": "proxy score versus independent quality target",
+        "policy": "evaluated checkpoint",
+        "data_distribution": "development and untouched-test prompt distributions",
+        "comparator": "matched-budget control checkpoint"
+      },
+      "transfer_status": "empirical_hypothesis_only",
+      "observable_proxy": "independent-checker agreement, format perturbation, overlap audit, and fixed-budget pass@1/pass@8",
+      "falsifier": "The apparent gain disappears under the independent checker, format perturbation, or fixed inference budget.",
+      "permitted_language": "evaluation confound control"
+    },
+    {
+      "claim_id": "C7_offpolicy_reward_regression",
+      "claim_type": "guest_hypothesis",
+      "statement": "Squared reward-regression objectives may tolerate off-policy sampling under exact-target, support, and optimization conditions that must be tested rather than assumed.",
+      "source_refs": [
+        {
+          "manifest_id": "harvard_cs2824_5dcc34e",
+          "path": "slides/regressing_rewards.pdf",
+          "locator": "REBEL to A*PO; OAPL; global-minimizer and Jensen caveat discussion"
+        },
+        {
+          "manifest_id": "harvard_cs2824_5dcc34e",
+          "path": "slides/RLHF.pdf",
+          "locator": "KL-regularized RL, DPO, and REBEL"
+        }
+      ],
+      "primary_reference": "REBEL: Reinforcement Learning via Regressing Relative Rewards, NeurIPS 2024, https://proceedings.neurips.cc/paper_files/paper/2024/file/5df1d92b478716877f774b82943477b3-Paper-Conference.pdf",
+      "formal_domain": "KL-regularized generative-policy optimization with the objective-specific sampling and target assumptions",
+      "assumptions": [
+        {
+          "name": "regression_target_is_exact_or_bias_is_bounded",
+          "status": "unverified",
+          "evidence_or_proxy": "held-out target residual and value-estimation bias analysis"
+        },
+        {
+          "name": "data_distribution_has_required_support",
+          "status": "unverified",
+          "evidence_or_proxy": "sampler-policy support, ratio tails, and ESS"
+        }
+      ],
+      "llm_mapping": {
+        "state": "prompt",
+        "action": "complete response",
+        "trajectory": "single-turn response",
+        "reward": "registered verifier reward",
+        "policy": "learner and actual inference-engine sampler",
+        "data_distribution": "on-policy or explicitly bounded-lag replay",
+        "comparator": "group-relative and centered-reward controls"
+      },
+      "transfer_status": "hypothesis_source_only",
+      "observable_proxy": "on-policy replication, policy lag, target residual, policy-ratio tails, and ESS",
+      "falsifier": "The regression arm works only on fixed replay, lacks support, or loses the effect under on-policy replication.",
+      "permitted_language": "optional preregistered comparator hypothesis"
+    }
+  ]
+}

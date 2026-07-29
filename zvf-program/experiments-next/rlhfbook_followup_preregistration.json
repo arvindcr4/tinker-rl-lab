@@ -1,5 +1,5 @@
 {
-  "schema_version": "posttraining-foundations-followup-v2",
+  "schema_version": "posttraining-foundations-followup-v3",
   "status": "proposed_not_authorized",
   "created_on": "2026-07-29",
   "book_binding": {
@@ -34,6 +34,10 @@
       "CS2824projects.html"
     ],
     "use_boundary": "Course theorems are assumption-sensitive results for stated MDP and policy classes. They motivate diagnostics and proof obligations here; they do not transfer to language-model training without an explicit mapping and verified assumptions. Guest slides are hypothesis sources, not primary evidence."
+  },
+  "theory_transfer_ledger": {
+    "path": "zvf-program/experiments-next/theory_transfer_ledger.json",
+    "sha256": "02343f5db02a3c20450c2e7e8e3a0bedf668bb3334853efce6bb3906632deb4d"
   },
   "scope": {
     "objective": "Determine whether spectral or entropic auxiliary signals add calibrated information beyond terminal reward, increase independently verified rewarding-trajectory coverage, and improve held-out reasoning under matched cost, without proxy exploitation, unsupported theorem transfer, length artifacts, or policy-distribution confounds.",

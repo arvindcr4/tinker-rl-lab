@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import subprocess
 import sys
 import tempfile
@@ -33,15 +34,15 @@ EXPECTED_FORMAT_PERTURBATIONS = {
 EXPECTED_THEORY_LEDGER_PATH = "zvf-program/experiments-next/theory_transfer_ledger.json"
 EXPECTED_THEORY_LEDGER_SHA256 = "e53e8d5973670f6b13a0509415617a1d61367ca679786a450cddc66555a9034f"
 EXPECTED_OFFLINE_PACKET_PATH = "zvf-program/experiments-next/offline_falsification_packet.json"
-EXPECTED_OFFLINE_PACKET_SHA256 = "6a1933205f1218e3aca3081eef97e3fee02b828baafd8537239a4f907409c7fa"
+EXPECTED_OFFLINE_PACKET_SHA256 = "500f206dc196715faaf03ff89597ac46e2453b9aea1bcfca317ac332fa7746c0"
 EXPECTED_THEORY_LEDGER_CANONICAL_SHA256 = (
     "e69a285fb8adb86e9b455ccdc4bc79ad5b63cef81d209283e32ee6f73038e7e3"
 )
 EXPECTED_OFFLINE_PACKET_CANONICAL_SHA256 = (
-    "dc2e67e4354db74f8942c3df89e50265354700dbf1ff9c0ec8fccc56776b3311"
+    "91623c95ef2960be3d616a6771a86c9988912e322a700d15004942ca2e345b31"
 )
 EXPECTED_PROTOCOL_PAYLOAD_SHA256 = (
-    "250521c15cc6c5ff6c4f0703537ae8a3fb68acbefc6d574037330c28454d81ae"
+    "c939764c4073e671b4ace51186a9338fd9956b1727930015dd99e9b6229197dc"
 )
 EXPECTED_AUDIT_BINDINGS = {
     "zvf-program/experiments-next/RLHFBOOK_IMPROVEMENT_AUDIT.md": (
@@ -102,9 +103,17 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _object_without_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        require(key not in result, f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
 def load_json(path: Path) -> Mapping[str, Any]:
     with path.open("r", encoding="utf-8") as stream:
-        payload = json.load(stream)
+        payload = json.load(stream, object_pairs_hook=_object_without_duplicate_keys)
     require(isinstance(payload, dict), f"{path} must contain one JSON object")
     return payload
 
@@ -286,6 +295,10 @@ def verify_offline_packet(packet: Mapping[str, Any]) -> dict[str, Any]:
 
     data = packet["data_contract"]
     require(data["cluster_unit"] == "prompt_id", "cluster unit drift")
+    require(data["split_hash_algorithm"] == "SHA-256", "split hash algorithm drift")
+    require(data["split_hash_salt"] == "zvf-offline-s0-s2-v1", "split salt drift")
+    require("first 16 hex digits" in data["split_assignment"], "split assignment drift")
+    require("v mod 5" in data["development_fold_assignment"], "fold assignment drift")
     require(
         data["development_fraction"] + data["untouched_test_fraction"] == 1.0,
         "offline split fractions drift",
@@ -321,6 +334,7 @@ def verify_offline_packet(packet: Mapping[str, Any]) -> dict[str, Any]:
         "independent_checker_sha256",
         "independent_label_manifest_sha256",
         "split_manifest_sha256",
+        "categorical_level_manifest_sha256",
         "auxiliary_score_implementation_sha256",
     }
     require(
@@ -352,6 +366,11 @@ def verify_offline_packet(packet: Mapping[str, Any]) -> dict[str, Any]:
         "multiplicity rule drift",
     )
     require(
+        bootstrap["interval_method"] == "one-sided lower percentile prompt-cluster bootstrap bound"
+        and bootstrap["lower_quantile"] == 0.0125,
+        "bootstrap interval construction drift",
+    )
+    require(
         "NOT_IDENTIFIABLE" not in analysis["arm_pass_rule"]
         and "Both-class support" in analysis["arm_pass_rule"],
         "arm pass rule permits non-identifiable strata",
@@ -375,6 +394,13 @@ def verify_offline_packet(packet: Mapping[str, Any]) -> dict[str, Any]:
     require(
         power["maximum_total_groups_per_terminal_reward_stratum"] == 10000,
         "power budget drift",
+    )
+    require(power["per_contrast_alpha"] == 0.0125, "power per-contrast alpha drift")
+    require(power["simulation_replicates"] == 10000, "power simulation count drift")
+    require("one-sided" in power["test"], "power test direction drift")
+    require(
+        "one-way random-effects ANOVA" in power["effective_sample_size"],
+        "ICC rule drift",
     )
     require("NOT_FEASIBLE" in power["decision_rule"], "power infeasibility rule drift")
 
@@ -416,6 +442,132 @@ def verify_offline_packet(packet: Mapping[str, Any]) -> dict[str, Any]:
         "on-policy matched-input rule drift",
     )
     return {"status": packet["status"], "stage_count": len(receipts)}
+
+
+def adjudicate_s2_receipt(packet: Mapping[str, Any], receipt: Mapping[str, Any]) -> str:
+    require(isinstance(receipt, Mapping), "S2 receipt must be an object")
+    require(
+        receipt.get("schema_version") == "s2-offline-alignment-receipt-v1",
+        "S2 receipt schema drift",
+    )
+    require(receipt.get("stage_id") == "S2_offline_alignment", "S2 receipt stage drift")
+
+    required_hashes = set(packet["data_contract"]["required_hashes_before_analysis"])
+    input_hashes = receipt["input_hashes"]
+    require(set(input_hashes) == required_hashes, "S2 input hash set drift")
+    require(
+        all(
+            isinstance(value, str)
+            and len(value) == 64
+            and all(character in "0123456789abcdef" for character in value)
+            for value in input_hashes.values()
+        ),
+        "S2 input hash malformed",
+    )
+
+    required_strata = set(packet["data_contract"]["required_terminal_reward_strata"])
+    counts = receipt["class_counts_by_stratum"]
+    require(set(counts) == required_strata, "S2 class-count strata drift")
+    count_fields = set(packet["s2_adjudication_schema"]["class_count_fields_per_stratum"])
+    require(all(set(row) == count_fields for row in counts.values()), "S2 class-count fields drift")
+    require(
+        all(type(value) is int and value >= 0 for row in counts.values() for value in row.values()),
+        "S2 class count malformed",
+    )
+
+    expected_contrasts = set(packet["s2_adjudication_schema"]["required_contrast_ids"])
+    contrasts = receipt["contrast_results"]
+    require(len(contrasts) == 4, "S2 contrast count drift")
+    require({row["contrast_id"] for row in contrasts} == expected_contrasts, "S2 contrasts drift")
+    require(
+        all(
+            math.isfinite(row["point_estimate_nats_per_completion"])
+            and math.isfinite(row["lower_98_75_bound"])
+            for row in contrasts
+        ),
+        "S2 contrast value is not finite",
+    )
+
+    independence = receipt["checker_independence_receipt"]
+    require(
+        set(independence) == set(packet["s2_adjudication_schema"]["checker_independence_fields"]),
+        "checker independence receipt fields drift",
+    )
+    independence_ok = (
+        isinstance(independence["checker_id"], str)
+        and bool(independence["checker_id"].strip())
+        and isinstance(independence["implementation_sha256"], str)
+        and len(independence["implementation_sha256"]) == 64
+        and independence["used_for_policy_optimization"] is False
+        and independence["used_for_auxiliary_score_construction"] is False
+    )
+    blinding = receipt["checker_blinding_receipt"]
+    require(
+        set(blinding) == set(packet["s2_adjudication_schema"]["checker_blinding_fields"]),
+        "checker blinding receipt fields drift",
+    )
+    blinding_ok = all(value is False for value in blinding.values())
+    adjudication = receipt["adjudication_receipt"]
+    require(
+        set(adjudication) == set(packet["s2_adjudication_schema"]["adjudication_fields"]),
+        "adjudication receipt fields drift",
+    )
+    adjudication_ok = (
+        adjudication["primary_label"] == "raw_Y_ind"
+        and adjudication["sensitivity_label"] == "adjudicated_Y_ind"
+        and adjudication["sample_n_per_task_reward_disagreement_stratum"] == 100
+        and adjudication["seed"] == 20260731
+        and adjudication["third_procedure_blinded"] is True
+    )
+
+    one_class = any(
+        row["Y_ind_0_count"] == 0 or row["Y_ind_1_count"] == 0 for row in counts.values()
+    )
+    minimum_test_groups = packet["data_contract"][
+        "minimum_untouched_test_groups_per_terminal_reward_stratum"
+    ]
+    power = receipt["power_receipt"]
+    not_feasible = (
+        any(row["group_count"] < minimum_test_groups for row in counts.values())
+        or power["achieved_power"] < packet["power_gate"]["target_power"]
+        or power["required_total_groups_per_stratum"]
+        > packet["power_gate"]["maximum_total_groups_per_terminal_reward_stratum"]
+    )
+    contrast_fail = any(
+        row["point_estimate_nats_per_completion"] < 0.01 or row["lower_98_75_bound"] <= 0.0
+        for row in contrasts
+    )
+    if one_class:
+        decision = "NOT_IDENTIFIABLE"
+    elif not_feasible:
+        decision = "NOT_FEASIBLE"
+    elif contrast_fail or not (independence_ok and blinding_ok and adjudication_ok):
+        decision = "FAIL"
+    else:
+        decision = "PASS"
+    require(receipt["overall_decision"] == decision, "fabricated S2 overall decision")
+    return decision
+
+
+def verify_offline_stage_receipts(packet: Mapping[str, Any], repo_root: Path) -> dict[str, Any]:
+    summaries: dict[str, str] = {}
+    for specification in packet["stage_receipts"]:
+        receipt_path = repo_root / specification["path"]
+        require(
+            receipt_path.is_file(), f"offline stage receipt missing: {specification['stage_id']}"
+        )
+        receipt = load_json(receipt_path)
+        require(receipt["stage_id"] == specification["stage_id"], "offline receipt stage drift")
+        require(
+            set(specification["required_fields"]) <= set(receipt),
+            "offline receipt required field missing",
+        )
+        if specification["stage_id"] == "S2_offline_alignment":
+            summaries[specification["stage_id"]] = adjudicate_s2_receipt(packet, receipt)
+        else:
+            require(receipt["status"] == "passed", "offline prerequisite stage did not pass")
+            summaries[specification["stage_id"]] = "PASS"
+    return {"stages": summaries, "promotion_authorized": False}
 
 
 def _verify_contract(
@@ -766,6 +918,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         action="store_true",
         help="extract the frozen bundle to a temporary directory and rerun its verifier",
     )
+    parser.add_argument(
+        "--verify-offline-receipts",
+        action="store_true",
+        help="require and adjudicate the registered S0-S2 receipt files",
+    )
     args = parser.parse_args(argv)
 
     payload = load_json(args.protocol.resolve())
@@ -773,6 +930,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.deep_review_bundle:
         deep_verify_review_bundle(args.repo_root.resolve())
         result["deep_review_bundle"] = "pass"
+    if args.verify_offline_receipts:
+        packet = load_json(args.repo_root.resolve() / EXPECTED_OFFLINE_PACKET_PATH)
+        result["offline_receipts"] = verify_offline_stage_receipts(packet, args.repo_root.resolve())
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 

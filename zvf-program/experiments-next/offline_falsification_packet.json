@@ -18,12 +18,16 @@
     "independent_target_name": "Y_ind",
     "independence_requirement": "Y_ind is produced by a checker that is not used to optimize the policy or construct the auxiliary score.",
     "blinding": "The checker receives completion text and task metadata but not arm, auxiliary score, terminal reward, seed, or checkpoint selection status.",
-    "adjudication": "Disagreements between the registered parser and independent checker are adjudicated on a preregistered stratified sample by a blinded third procedure; raw and adjudicated labels are both retained.",
+    "adjudication": "Disagreements between the registered parser and independent checker are adjudicated on 100 completions per task by terminal-reward by disagreement stratum, sampled with seed 20260731 by a blinded third procedure. Raw and adjudicated labels are both retained; raw Y_ind is primary and adjudication is sensitivity-only.",
     "one_class_rule": "If Y_ind has fewer than two classes in any required terminal-reward stratum on the untouched test split, that stratum is NOT_IDENTIFIABLE and cannot pass. It is never imputed or silently pooled away."
   },
   "data_contract": {
     "cluster_unit": "prompt_id",
     "split_method": "hash-partition prompt_id into development and untouched test before fitting any calibration model",
+    "split_hash_algorithm": "SHA-256",
+    "split_hash_salt": "zvf-offline-s0-s2-v1",
+    "split_assignment": "Compute SHA256(salt + ':' + UTF8(prompt_id)); interpret the first 16 hex digits as an unsigned 64-bit integer u. Development iff u / 2^64 < 0.7, otherwise untouched test.",
+    "development_fold_assignment": "For development prompts, interpret hex digits 17-32 of the same digest as unsigned integer v and assign fold v mod 5.",
     "development_fraction": 0.7,
     "untouched_test_fraction": 0.3,
     "cross_fit_folds_within_development": 5,
@@ -41,6 +45,7 @@
       "independent_checker_sha256",
       "independent_label_manifest_sha256",
       "split_manifest_sha256",
+      "categorical_level_manifest_sha256",
       "auxiliary_score_implementation_sha256"
     ]
   },
@@ -75,7 +80,7 @@
       "loss": "binary log loss in natural-log units per completion"
     },
     "candidate_model_addition": "one fold-standardized preregistered auxiliary score and its interaction with terminal_reward_stratum",
-    "placebo": "Within each development training fold and each task by model_scale by terminal_reward_stratum cell, permute the auxiliary score with seed 20260729, preserving its observed marginal distribution. Apply the same fitted candidate pipeline to this placebo feature.",
+    "placebo": "Within each development training fold and each task by model_scale by terminal_reward_stratum cell, permute the auxiliary score with seed 20260729, preserving its observed marginal distribution. For untouched test, independently permute the test auxiliary score within the same frozen cells with seed 20260730; every fold-specific placebo model uses that one frozen test-placebo vector.",
     "confirmatory_contrasts": [
       "spectral candidate versus registered control",
       "entropic candidate versus registered control",
@@ -89,7 +94,10 @@
       "seed": 20260729,
       "familywise_confidence_level": 0.95,
       "contrastwise_confidence_level": 0.9875,
-      "multiplicity_rule": "Bonferroni across all four confirmatory contrasts"
+      "multiplicity_rule": "Bonferroni across all four confirmatory contrasts",
+      "interval_method": "one-sided lower percentile prompt-cluster bootstrap bound",
+      "lower_quantile": 0.0125,
+      "resampling_rule": "Resample prompt_id clusters with replacement within each terminal-reward stratum; retain every completion belonging to a sampled prompt; recompute all four mean log-loss contrasts without refitting models."
     },
     "arm_pass_rule": "Both-class support must hold in every required stratum. For both the arm-versus-control and arm-versus-placebo contrasts, the point estimate must be at least 0.01 nats per completion and the 98.75% prompt-cluster bootstrap lower confidence bound must exceed 0.0.",
     "secondary_metrics": [
@@ -107,6 +115,11 @@
     "alternative_effect_nats_per_completion": 0.01,
     "maximum_total_groups_per_terminal_reward_stratum": 10000,
     "variance_source": "blinded development-only pilot with prompt-cluster resampling",
+    "test": "one-sided four-contrast Bonferroni test of H0: log-loss reduction <= 0 against H1: reduction = 0.01 nats per completion",
+    "per_contrast_alpha": 0.0125,
+    "power_method": "At each candidate prompt count, draw 10000 stratified prompt-cluster bootstrap samples from the blinded pilot, add a fixed 0.01-nat shift to the paired completion-level loss differences, and estimate power as the fraction whose one-sided lower percentile bound exceeds 0.",
+    "effective_sample_size": "Report n_eff = n_prompt / (1 + (mean_completions_per_prompt - 1) * ICC), with ICC estimated by one-way random-effects ANOVA on paired completion-level loss differences within prompt.",
+    "simulation_replicates": 10000,
     "required_output": "power_receipt.json containing the estimated intracluster correlation, effective prompt count, required prompt count, and achieved power",
     "decision_rule": "If achieved power is below 0.8 at the frozen feasible sample budget, S2 is NOT_FEASIBLE and training remains blocked."
   },
@@ -150,11 +163,51 @@
         "power_receipt",
         "bootstrap_receipt",
         "placebo_receipt",
-        "arm_decisions",
+        "contrast_results",
         "overall_decision"
       ]
     }
   ],
+  "s2_adjudication_schema": {
+    "primary_label": "raw_Y_ind",
+    "required_contrast_ids": [
+      "spectral_vs_control",
+      "entropic_vs_control",
+      "spectral_vs_placebo",
+      "entropic_vs_placebo"
+    ],
+    "class_count_fields_per_stratum": [
+      "group_count",
+      "Y_ind_0_count",
+      "Y_ind_1_count"
+    ],
+    "checker_independence_fields": [
+      "checker_id",
+      "implementation_sha256",
+      "used_for_policy_optimization",
+      "used_for_auxiliary_score_construction"
+    ],
+    "checker_blinding_fields": [
+      "arm_visible",
+      "auxiliary_score_visible",
+      "terminal_reward_visible",
+      "seed_visible",
+      "checkpoint_selection_visible"
+    ],
+    "adjudication_fields": [
+      "primary_label",
+      "sensitivity_label",
+      "sample_n_per_task_reward_disagreement_stratum",
+      "seed",
+      "third_procedure_blinded"
+    ],
+    "decision_precedence": [
+      "NOT_IDENTIFIABLE",
+      "NOT_FEASIBLE",
+      "FAIL",
+      "PASS"
+    ]
+  },
   "training_amendment_boundary": {
     "status": "required_before_s3_s5",
     "must_specify": [

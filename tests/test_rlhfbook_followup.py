@@ -220,3 +220,107 @@ def test_semantic_rewrites_of_pinned_subcontracts_are_rejected() -> None:
     )
     with pytest.raises(verifier.FollowupContractError):
         verifier.verify_offline_packet(packet)
+
+
+def test_strict_json_loader_rejects_duplicate_keys(tmp_path: Path) -> None:
+    verifier = load_verifier()
+    path = tmp_path / "duplicate.json"
+    path.write_text('{"status":"passed","status":"not_run"}', encoding="utf-8")
+
+    with pytest.raises(verifier.FollowupContractError):
+        verifier.load_json(path)
+
+
+def passing_s2_receipt() -> dict:
+    digest = "a" * 64
+    return {
+        "schema_version": "s2-offline-alignment-receipt-v1",
+        "stage_id": "S2_offline_alignment",
+        "input_hashes": {
+            "prompt_manifest_sha256": digest,
+            "completion_manifest_sha256": digest,
+            "registered_reward_sha256": digest,
+            "independent_checker_sha256": digest,
+            "independent_label_manifest_sha256": digest,
+            "split_manifest_sha256": digest,
+            "categorical_level_manifest_sha256": digest,
+            "auxiliary_score_implementation_sha256": digest,
+        },
+        "class_counts_by_stratum": {
+            "all_correct_R": {
+                "group_count": 2000,
+                "Y_ind_0_count": 100,
+                "Y_ind_1_count": 1900,
+            },
+            "all_wrong_R": {
+                "group_count": 2000,
+                "Y_ind_0_count": 1900,
+                "Y_ind_1_count": 100,
+            },
+        },
+        "contrast_results": [
+            {
+                "contrast_id": contrast_id,
+                "point_estimate_nats_per_completion": 0.02,
+                "lower_98_75_bound": 0.005,
+            }
+            for contrast_id in (
+                "spectral_vs_control",
+                "entropic_vs_control",
+                "spectral_vs_placebo",
+                "entropic_vs_placebo",
+            )
+        ],
+        "checker_independence_receipt": {
+            "checker_id": "independent-checker-v1",
+            "implementation_sha256": digest,
+            "used_for_policy_optimization": False,
+            "used_for_auxiliary_score_construction": False,
+        },
+        "checker_blinding_receipt": {
+            "arm_visible": False,
+            "auxiliary_score_visible": False,
+            "terminal_reward_visible": False,
+            "seed_visible": False,
+            "checkpoint_selection_visible": False,
+        },
+        "adjudication_receipt": {
+            "primary_label": "raw_Y_ind",
+            "sensitivity_label": "adjudicated_Y_ind",
+            "sample_n_per_task_reward_disagreement_stratum": 100,
+            "seed": 20260731,
+            "third_procedure_blinded": True,
+        },
+        "power_receipt": {
+            "achieved_power": 0.85,
+            "required_total_groups_per_stratum": 7000,
+        },
+        "overall_decision": "PASS",
+    }
+
+
+def test_s2_receipt_adjudicator_computes_fail_closed_decisions() -> None:
+    verifier = load_verifier()
+    packet = json.loads(OFFLINE_PACKET_PATH.read_text(encoding="utf-8"))
+    receipt = passing_s2_receipt()
+    assert verifier.adjudicate_s2_receipt(packet, receipt) == "PASS"
+
+    not_identifiable = copy.deepcopy(receipt)
+    not_identifiable["class_counts_by_stratum"]["all_wrong_R"]["Y_ind_1_count"] = 0
+    not_identifiable["overall_decision"] = "NOT_IDENTIFIABLE"
+    assert verifier.adjudicate_s2_receipt(packet, not_identifiable) == "NOT_IDENTIFIABLE"
+
+    not_feasible = copy.deepcopy(receipt)
+    not_feasible["power_receipt"]["achieved_power"] = 0.7
+    not_feasible["overall_decision"] = "NOT_FEASIBLE"
+    assert verifier.adjudicate_s2_receipt(packet, not_feasible) == "NOT_FEASIBLE"
+
+    failed = copy.deepcopy(receipt)
+    failed["contrast_results"][0]["point_estimate_nats_per_completion"] = 0.005
+    failed["overall_decision"] = "FAIL"
+    assert verifier.adjudicate_s2_receipt(packet, failed) == "FAIL"
+
+    fabricated = copy.deepcopy(receipt)
+    fabricated["contrast_results"][0]["lower_98_75_bound"] = -0.001
+    with pytest.raises(verifier.FollowupContractError):
+        verifier.adjudicate_s2_receipt(packet, fabricated)

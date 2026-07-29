@@ -41,7 +41,7 @@
   },
   "offline_falsification_packet": {
     "path": "zvf-program/experiments-next/offline_falsification_packet.json",
-    "sha256": "6a1933205f1218e3aca3081eef97e3fee02b828baafd8537239a4f907409c7fa"
+    "sha256": "500f206dc196715faaf03ff89597ac46e2453b9aea1bcfca317ac332fa7746c0"
   },
   "audit_bindings": {
     "zvf-program/experiments-next/RLHFBOOK_IMPROVEMENT_AUDIT.md": "b501ba7be0dcc47c07b78a3b610a86150216adbb6918f7ba31a68bfba491e907",
@@ -68,7 +68,7 @@
     {
       "id": "H1_alignment",
       "claim": "The auxiliary score produces cross-fitted untouched-test log-loss reduction for the independent completion-level target Y_ind beyond length, token entropy, task, model scale, terminal-reward stratum, and a variance-matched placebo.",
-      "falsified_if": "Any required stratum has one-class Y_ind and is therefore NOT_IDENTIFIABLE, the prompt-clustered armwise lower confidence bound does not exceed 0.01 nats per completion, or the variance-matched placebo performs equivalently."
+      "falsified_if": "Any required stratum has one-class Y_ind and is therefore NOT_IDENTIFIABLE; either confirmatory point estimate is below 0.01 nats per completion; either one-sided 98.75% prompt-cluster lower confidence bound does not exceed 0; or the variance-matched placebo performs equivalently."
     },
     {
       "id": "H2_learning",

@@ -11,6 +11,7 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[1]
 VERIFIER_PATH = REPO_ROOT / "zvf-program/experiments-next/verify_rlhfbook_followup.py"
 PROTOCOL_PATH = REPO_ROOT / "zvf-program/experiments-next/rlhfbook_followup_preregistration.json"
+THEORY_LEDGER_PATH = REPO_ROOT / "zvf-program/experiments-next/theory_transfer_ledger.json"
 
 
 def load_verifier():
@@ -30,6 +31,8 @@ def test_followup_contract_is_inert_and_evidence_bounded() -> None:
     assert result["gpu_authorized"] is False
     assert result["promotion_authorized"] is False
     assert result["verified_payload_sha256"] == verifier.canonical_json_sha256(payload)
+    assert result["theory_claim_count"] == 7
+    assert result["theory_source_file_count"] == 12
     assert isinstance(result["live_checkout_matches_accepted_source"], bool)
     assert result["live_checkout_matches_accepted_source"] is (
         result["live_objective_sha256"] == result["accepted_objective_sha256"]
@@ -120,3 +123,27 @@ def test_malformed_or_semantically_weakened_contract_fails_closed(mutation) -> N
 
     with pytest.raises(verifier.FollowupContractError):
         verifier.verify_contract(candidate, REPO_ROOT)
+
+
+def test_theory_ledger_blocks_unsupported_promotion() -> None:
+    verifier = load_verifier()
+    ledger = json.loads(THEORY_LEDGER_PATH.read_text(encoding="utf-8"))
+    assert verifier.verify_theory_ledger(ledger) == {
+        "claim_count": 7,
+        "source_file_count": 12,
+    }
+
+    candidate = copy.deepcopy(ledger)
+    candidate["claims"][0]["transfer_status"] = "verified_theorem"
+    with pytest.raises(verifier.FollowupContractError):
+        verifier.verify_theory_ledger(candidate)
+
+
+def test_theory_ledger_source_manifest_is_exact() -> None:
+    verifier = load_verifier()
+    ledger = json.loads(THEORY_LEDGER_PATH.read_text(encoding="utf-8"))
+    candidate = copy.deepcopy(ledger)
+    candidate["source_manifests"][0]["files"][0]["sha256"] = "0" * 64
+
+    with pytest.raises(verifier.FollowupContractError):
+        verifier.verify_theory_ledger(candidate)

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import copy
 import importlib.util
 import json
 from pathlib import Path
+
+import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -63,3 +66,20 @@ def test_course_foundations_are_bound_to_assumptions_and_diagnostics() -> None:
         "verifier_error_rate",
     } <= telemetry
     assert payload["decision_rules"]["stage_order"][1] == "S1_foundations_mapping"
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda payload: payload.pop("course_binding"),
+        lambda payload: payload["decision_rules"].pop("theory_boundary"),
+    ],
+)
+def test_missing_foundations_sections_fail_closed(mutation) -> None:
+    verifier = load_verifier()
+    payload = json.loads(PROTOCOL_PATH.read_text(encoding="utf-8"))
+    candidate = copy.deepcopy(payload)
+    mutation(candidate)
+
+    with pytest.raises(verifier.FollowupContractError):
+        verifier.verify_contract(candidate, REPO_ROOT)

@@ -81,7 +81,8 @@ def verify_contract(
     }
     require(required_chapters <= set(book["chapters"]), "required book chapters are missing")
 
-    course = payload["course_binding"]
+    course = payload.get("course_binding")
+    require(isinstance(course, Mapping), "course binding is missing or malformed")
     require(course["url"] == "https://harvard-cs2824-s26.github.io/", "course URL drift")
     require(course["source_commit"] == EXPECTED_COURSE_COMMIT, "course commit drift")
     required_materials = {
@@ -199,13 +200,16 @@ def verify_contract(
     require(len(evaluation["answer_checks"]) >= 2, "independent answer check missing")
     require(len(evaluation["format_perturbations"]) >= 2, "format robustness check missing")
 
-    rules = payload["decision_rules"]
+    rules = payload.get("decision_rules")
+    require(isinstance(rules, Mapping), "decision rules are missing or malformed")
+    theory_boundary = rules.get("theory_boundary")
+    require(isinstance(theory_boundary, str), "theory boundary is missing or malformed")
     require(
-        "formal domain and assumptions" in rules["theory_boundary"],
+        "formal domain and assumptions" in theory_boundary,
         "theory assumption boundary is missing",
     )
     require(
-        "does not establish global optimality" in rules["theory_boundary"],
+        "does not establish global optimality" in theory_boundary,
         "small-gradient guardrail is missing",
     )
 

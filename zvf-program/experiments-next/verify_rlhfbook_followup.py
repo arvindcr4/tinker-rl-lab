@@ -113,6 +113,10 @@ def verify_contract(
         "zvf-program/flagship/pilot/launch-v2-corpus-resume-r4-2" in immutable,
         "r4-2 is not protected",
     )
+    require(
+        "zvf-program/flagship/paper/review_bundle.zip" in immutable,
+        "frozen review bundle is not protected",
+    )
     require("off-policy replay" in scope["frozen_classification"], "r4-2 classification drift")
 
     observation = scope["live_checkout_observation"]

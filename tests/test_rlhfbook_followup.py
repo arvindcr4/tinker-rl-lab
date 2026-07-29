@@ -73,6 +73,9 @@ def test_course_foundations_are_bound_to_assumptions_and_diagnostics() -> None:
     [
         lambda payload: payload.pop("course_binding"),
         lambda payload: payload["decision_rules"].pop("theory_boundary"),
+        lambda payload: payload["scope"]["must_not_modify_or_relabel"].remove(
+            "zvf-program/flagship/paper/review_bundle.zip"
+        ),
     ],
 )
 def test_missing_foundations_sections_fail_closed(mutation) -> None:

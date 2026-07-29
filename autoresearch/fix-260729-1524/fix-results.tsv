@@ -1,0 +1,10 @@
+# metric_direction: lower_is_better
+iteration	timestamp	error_type	error_fixed	commit	metric	delta	guard	status	description
+0	2026-07-29T09:47:30Z	holdout	-	622faedda98280d0c6dad526b5fa19f8db6689a7	5	0	102 passed	baseline	Five holdout finding groups remained
+1	2026-07-29T09:55:04Z	lint	contract semantics	7bec8abf-reverted-by-fe3b854e	5	0	ruff-format-failed	crash	Candidate passed focused tests but failed formatting and was reverted
+2	2026-07-29T09:56:10Z	contract	lint-versus-promotion semantics	a840877e7958cac52e8a7d27455bd86737b1f287	4	-1	110 passed	keep (reworked)	Controlled malformed-input failures exact independent checks payload digest and promotion false
+3	2026-07-29T09:59:57Z	lint	theory-ledger traceability	63f8dc1a-reverted-by-4d73bfd9	4	0	ruff-format-failed	crash	Ledger passed focused tests but failed formatting and was reverted
+4	2026-07-29T10:00:39Z	source-traceability	machine-readable theory ledger	7009a322295e34eb51623c43cb33b8460de323d5	3	-1	112 passed	keep (reworked)	Pinned source file hashes exact locators assumptions LLM mappings falsifiers and diagnostic-only transfer status
+5	2026-07-29T10:04:38Z	research-design	executable offline falsification packet	29c1063e9e94d8c221dab1f967dac8d7df408c97	0	-3	118 passed	keep	Added independent target clustered estimand one-class rule power and multiplicity gates receipts and on-policy matched-input rule
+6	2026-07-29T10:13:59Z	holdout-specification	exact estimator power multiplicity source and semantic bindings	79727bcbebfc3c237ac74e3f6253d25c08106108	0	-3	123 passed	keep	Resolved second holdout method gaps and froze protocol ledger packet and audit semantics by canonical or file digest
+7	2026-07-29T10:28:56Z	receipt-adjudication	strict JSON and executable S2 decisions	e6d511a74277d897ff840256cb1e0038129dd26f	0	-2	125 passed	keep	Added duplicate-key rejection exact split and interval rules and computed S2 decisions with deep bundle verification

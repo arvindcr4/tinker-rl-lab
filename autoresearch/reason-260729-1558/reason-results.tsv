@@ -1,0 +1,2 @@
+round	timestamp	candidate_label	judge_verdict	convergence_count	description
+1	2026-07-29T10:28:56Z	Candidate-C	fail_2_of_3	0	Source gate passed; contract and method gates found runtime receipt validation holes

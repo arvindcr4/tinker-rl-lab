@@ -1,0 +1,20 @@
+{
+  "version": "2.1.0",
+  "source": "reason",
+  "timestamp": "2026-07-29T09:47:30Z",
+  "status": "BOUNDED",
+  "results_tsv": "autoresearch/reason-260729-1515/reason-results.tsv",
+  "findings": [
+    {
+      "id": "holdout-not-converged",
+      "type": "recommendation",
+      "summary": "Add strict lint semantics, a machine-readable theorem ledger, and an executable offline S0-S2 falsification packet before convergence."
+    }
+  ],
+  "config": {
+    "task": "Independently verify the post-training foundations follow-up after the working metric reached 16/16.",
+    "domain": "research hypothesis",
+    "mode": "convergent",
+    "judges": 3
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "score": 12,
+  "maximum": 16,
+  "open_cases": [
+    {
+      "name": "missing_course_binding",
+      "outcome": "unexpected KeyError"
+    },
+    {
+      "name": "unprotected_review_bundle",
+      "outcome": "accepted"
+    },
+    {
+      "name": "blank_foundations_evidence",
+      "outcome": "accepted"
+    },
+    {
+      "name": "missing_theory_boundary",
+      "outcome": "unexpected KeyError"
+    }
+  ],
+  "guard": "98 passed",
+  "evaluator_sha256": "98bd20f5d80981a672c25b5dca3c9bd470a4cccb60553736e143b243b0ceeb72"
+}

@@ -1,0 +1,23 @@
+{
+  "version": "2.2.1-manual-fallback",
+  "goal": "Improve the evidence-bounded ZVF/GRPO follow-up using the RLHF Book and Harvard CS2824 resources.",
+  "archetype": "optimize-metric",
+  "mode": "orchestration_loop",
+  "scope": [
+    "zvf-program/experiments-next/*followup*",
+    "zvf-program/experiments-next/*AUDIT.md",
+    "tests/test_rlhfbook_followup.py"
+  ],
+  "metric": "controlled adversarial contract mutations rejected",
+  "direction": "higher_is_better",
+  "verify": "python3 autoresearch/orchestrator-260729-1505/readiness_metric.py",
+  "success_predicate": {
+    "command": "python3 autoresearch/orchestrator-260729-1505/readiness_metric.py",
+    "expected_stdout": "16"
+  },
+  "guard": "PYTHONPATH=zvf-program python3 -m pytest -q",
+  "max_cycles": 12,
+  "terminal_choice": "stop_at_verified",
+  "ship_or_push_authorized": false,
+  "router": "manual fallback because scripts/orchestrate.sh is absent from the installed skill"
+}

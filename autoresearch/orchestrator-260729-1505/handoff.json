@@ -1,0 +1,35 @@
+{
+  "version": "2.1.0",
+  "source": "orchestrator",
+  "timestamp": "2026-07-29T10:28:56Z",
+  "status": "CEILING",
+  "results_tsv": "autoresearch/orchestrator-260729-1505/loop-results.tsv",
+  "findings": [
+    {
+      "id": "runtime-receipt-type-safety",
+      "type": "remaining_unit",
+      "summary": "Harden numeric, finite, range, hash-equality, and actual-sample checks in S2 receipts."
+    },
+    {
+      "id": "runtime-receipt-evidence",
+      "type": "remaining_unit",
+      "summary": "Reject null S0/S1 and cross-fit/bootstrap/placebo evidence; validate their schemas."
+    },
+    {
+      "id": "runtime-randomness-power",
+      "type": "remaining_unit",
+      "summary": "Freeze PRNG/order semantics and marginal-versus-joint power interpretation."
+    }
+  ],
+  "config": {
+    "goal": "Improve the evidence-bounded ZVF/GRPO follow-up using the RLHF Book and Harvard CS2824 resources.",
+    "metric": "controlled adversarial contract mutations rejected",
+    "direction": "higher_is_better",
+    "verify": "python3 autoresearch/orchestrator-260729-1505/readiness_metric.py",
+    "maximum": 16,
+    "final": 16,
+    "guard": "PYTHONPATH=zvf-program python3 -m pytest -q",
+    "max_cycles": 12,
+    "terminal_choice": "stop_at_verified"
+  }
+}

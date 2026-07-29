@@ -1,0 +1,7 @@
+# metric_direction: higher_is_better
+iteration	timestamp	commit	metric	delta	guard	guard-metric	status	description
+0	2026-07-29T09:41:34Z	e8983a16e5a7f7d14779ebc91694b7563f5dfe28-dirty	12	0	pass	98 passed	baseline	Four of sixteen contract mutations were not rejected cleanly
+1	2026-07-29T09:43:23Z	db1037dcda198ba8b862d20a817b5bc4b63cc6cb	14	2	pass	100 passed	keep	Missing course and theory-boundary sections now fail closed
+2	2026-07-29T09:44:11Z	45976e74cc87799d2517f1da854534a3b4a4741a	15	1	pass	101 passed	keep	Frozen review bundle must remain in the immutable evidence list
+3	2026-07-29T09:44:58Z	f08e390e-reverted-by-20f3a77c	16	1	not-run	ruff-format-failed	crash	Evidence-field validation improved the metric but failed the formatting gate and was reverted
+4	2026-07-29T09:46:02Z	622faedda98280d0c6dad526b5fa19f8db6689a7	16	1	pass	102 passed	keep	Every protocol stage now requires a nonempty id gate and evidence requirement

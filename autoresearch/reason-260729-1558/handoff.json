@@ -1,0 +1,20 @@
+{
+  "version": "2.1.0",
+  "source": "reason",
+  "timestamp": "2026-07-29T10:28:56Z",
+  "status": "BOUNDED",
+  "results_tsv": "autoresearch/reason-260729-1558/reason-results.tsv",
+  "findings": [
+    {
+      "id": "cycle-12-not-converged",
+      "type": "recommendation",
+      "summary": "Harden runtime S0-S2 receipts before treating the offline packet as executable evidence."
+    }
+  ],
+  "config": {
+    "task": "Final cold-start convergence verification",
+    "domain": "research hypothesis and software contract",
+    "mode": "convergent",
+    "judges": 3
+  }
+}

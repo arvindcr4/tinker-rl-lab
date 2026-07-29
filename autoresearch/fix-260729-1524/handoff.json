@@ -1,0 +1,24 @@
+{
+  "version": "2.1.0",
+  "source": "fix",
+  "timestamp": "2026-07-29T10:28:56Z",
+  "status": "BOUNDED",
+  "results_tsv": "autoresearch/fix-260729-1524/fix-results.tsv",
+  "findings": [
+    {
+      "id": "runtime-receipt-type-safety",
+      "type": "unfixed_error",
+      "summary": "S2 runtime receipts still need exact numeric types, finite/range checks, checker-hash equality, and non-null computational subreceipts."
+    },
+    {
+      "id": "s0-s1-receipt-evidence",
+      "type": "unfixed_error",
+      "summary": "S0 and S1 receipt validators still accept passed status with null evidence values."
+    }
+  ],
+  "config": {
+    "target": "cold-start holdout error count",
+    "scope": "post-training foundations protocol, ledger, offline packet, verifier, tests, and audits",
+    "guard": "PYTHONPATH=zvf-program python3 -m pytest -q"
+  }
+}

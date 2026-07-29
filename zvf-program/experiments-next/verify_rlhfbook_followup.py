@@ -151,6 +151,17 @@ def verify_contract(
     require(all(item["falsified_if"].strip() for item in hypotheses), "hypothesis lacks falsifier")
 
     stages = payload["stages"]
+    require(
+        all(
+            isinstance(item, Mapping)
+            and all(
+                isinstance(item.get(field), str) and item[field].strip()
+                for field in ("id", "gate", "evidence")
+            )
+            for item in stages
+        ),
+        "stage is missing an id, gate, or evidence requirement",
+    )
     stage_ids = [item["id"] for item in stages]
     require(stage_ids == payload["decision_rules"]["stage_order"], "stage order drift")
     require(

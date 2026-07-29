@@ -23,7 +23,7 @@ def test_followup_contract_is_inert_and_evidence_bounded() -> None:
     payload = json.loads(PROTOCOL_PATH.read_text(encoding="utf-8"))
     result = verifier.verify_contract(payload, REPO_ROOT)
 
-    assert result["status"] == "RLHFBOOK_FOLLOWUP_CONTRACT_PASS"
+    assert result["status"] == "POSTTRAINING_FOUNDATIONS_FOLLOWUP_CONTRACT_PASS"
     assert result["gpu_authorized"] is False
     assert isinstance(result["live_checkout_matches_accepted_source"], bool)
     assert result["live_checkout_matches_accepted_source"] is (
@@ -38,3 +38,28 @@ def test_proxy_signal_cannot_complete_the_learning_claim() -> None:
     assert "cannot support a learning" in boundary
     assert payload["evaluation_contract"]["proxy_metrics_are_not_quality_metrics"] is True
     assert payload["authorization"]["amendment_required_before_execution"] is True
+
+
+def test_course_foundations_are_bound_to_assumptions_and_diagnostics() -> None:
+    payload = json.loads(PROTOCOL_PATH.read_text(encoding="utf-8"))
+
+    course = payload["course_binding"]
+    hypothesis_ids = {item["id"] for item in payload["hypotheses"]}
+    telemetry = set(payload["required_telemetry"])
+
+    assert course["url"] == "https://harvard-cs2824-s26.github.io/"
+    assert course["source_commit"] == "5dcc34e3b861da632371645fb05aebb12a40d23c"
+    assert "do not transfer" in course["use_boundary"]
+    assert {
+        "H5_coverage",
+        "H6_distribution_shift",
+        "H7_error_attribution",
+    } <= hypothesis_ids
+    assert {
+        "correct_completion_coverage",
+        "importance_weight_effective_sample_size",
+        "fisher_quadratic_step",
+        "approximation_error_proxy",
+        "verifier_error_rate",
+    } <= telemetry
+    assert payload["decision_rules"]["stage_order"][1] == "S1_foundations_mapping"

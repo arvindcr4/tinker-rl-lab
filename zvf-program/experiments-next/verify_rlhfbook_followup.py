@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the prospective RLHF Book-derived follow-up without mutating r4-2."""
+"""Validate the prospective RLHF Book and CS2824 follow-up without mutating r4-2."""
 
 from __future__ import annotations
 
@@ -17,6 +17,8 @@ from typing import Any, Mapping, Sequence
 HERE = Path(__file__).resolve().parent
 DEFAULT_PROTOCOL = HERE / "rlhfbook_followup_preregistration.json"
 REPO_ROOT = HERE.parents[1]
+EXPECTED_BOOK_COMMIT = "3624df9ef62177c2c3d6d824f5c2bb740f31041f"
+EXPECTED_COURSE_COMMIT = "5dcc34e3b861da632371645fb05aebb12a40d23c"
 
 
 class FollowupContractError(RuntimeError):
@@ -61,12 +63,15 @@ def verify_contract(
     repo_root: Path,
     protocol_path: Path = DEFAULT_PROTOCOL,
 ) -> dict[str, Any]:
-    require(payload.get("schema_version") == "rlhfbook-followup-v1", "schema drift")
+    require(
+        payload.get("schema_version") == "posttraining-foundations-followup-v2",
+        "schema drift",
+    )
     require(payload.get("status") == "proposed_not_authorized", "follow-up is not inert")
 
     book = payload["book_binding"]
     require(book["url"] == "https://rlhfbook.com/", "book URL drift")
-    require(len(book["source_commit"]) == 40, "book commit must be pinned")
+    require(book["source_commit"] == EXPECTED_BOOK_COMMIT, "book commit drift")
     required_chapters = {
         "06-policy-gradients",
         "14-over-optimization",
@@ -75,6 +80,28 @@ def verify_contract(
         "appendix-c-practical",
     }
     require(required_chapters <= set(book["chapters"]), "required book chapters are missing")
+
+    course = payload["course_binding"]
+    require(course["url"] == "https://harvard-cs2824-s26.github.io/", "course URL drift")
+    require(course["source_commit"] == EXPECTED_COURSE_COMMIT, "course commit drift")
+    required_materials = {
+        "slides/lecture_15.pdf",
+        "slides/npg.pdf",
+        "slides/PG_global_conv1.pdf",
+        "slides/PG_global_conv2.pdf",
+        "slides/NPG_ppo.pdf",
+        "slides/RLHF.pdf",
+        "slides/regressing_rewards.pdf",
+        "CS2824projects.html",
+    }
+    require(
+        required_materials <= set(course["materials"]),
+        "required course materials are missing",
+    )
+    require(
+        "do not transfer" in course["use_boundary"],
+        "course theorem transfer boundary is missing",
+    )
 
     scope = payload["scope"]
     immutable = set(scope["must_not_modify_or_relabel"])
@@ -110,6 +137,9 @@ def verify_contract(
             "H2_learning",
             "H3_robustness",
             "H4_no_proxy_exploitation",
+            "H5_coverage",
+            "H6_distribution_shift",
+            "H7_error_attribution",
         },
         "hypothesis set drift",
     )
@@ -122,10 +152,11 @@ def verify_contract(
         stage_ids
         == [
             "S0_isolation",
-            "S1_offline_alignment",
-            "S2_positive_control_feasibility",
-            "S3_matched_training",
-            "S4_robust_evaluation",
+            "S1_foundations_mapping",
+            "S2_offline_alignment",
+            "S3_positive_control_feasibility",
+            "S4_matched_training",
+            "S5_robust_evaluation",
         ],
         "required staged gates are missing",
     )
@@ -135,16 +166,28 @@ def verify_contract(
         "all_wrong_fraction",
         "all_correct_fraction",
         "mixed_fraction",
+        "gradient_norm",
+        "correct_completion_coverage",
+        "mixed_group_yield_per_charged_token",
+        "importance_weight_max",
+        "importance_weight_effective_sample_size",
+        "sampler_policy_version",
+        "data_policy_lag_steps",
         "positive_advantage_clip_fraction",
         "negative_advantage_clip_fraction",
         "approx_kl_to_old_policy",
         "kl_to_initial_reference",
+        "fisher_quadratic_step",
         "completion_cap_hit_rate",
         "parser_disagreement_rate",
         "charged_generated_tokens",
         "measured_flops",
         "heldout_pass_at_1",
         "heldout_pass_at_8",
+        "optimization_error_proxy",
+        "estimation_uncertainty",
+        "approximation_error_proxy",
+        "verifier_error_rate",
     }
     require(required_telemetry <= telemetry, "optimization or evaluation telemetry is incomplete")
 
@@ -155,6 +198,16 @@ def verify_contract(
     )
     require(len(evaluation["answer_checks"]) >= 2, "independent answer check missing")
     require(len(evaluation["format_perturbations"]) >= 2, "format robustness check missing")
+
+    rules = payload["decision_rules"]
+    require(
+        "formal domain and assumptions" in rules["theory_boundary"],
+        "theory assumption boundary is missing",
+    )
+    require(
+        "does not establish global optimality" in rules["theory_boundary"],
+        "small-gradient guardrail is missing",
+    )
 
     authorization = payload["authorization"]
     require(
@@ -174,7 +227,7 @@ def verify_contract(
     require(sha256(review_zip) == expected_outer, "frozen review bundle outer digest mismatch")
 
     return {
-        "status": "RLHFBOOK_FOLLOWUP_CONTRACT_PASS",
+        "status": "POSTTRAINING_FOUNDATIONS_FOLLOWUP_CONTRACT_PASS",
         "protocol_sha256": sha256(protocol_path),
         "live_objective_sha256": live_hash,
         "accepted_objective_sha256": accepted_hash,

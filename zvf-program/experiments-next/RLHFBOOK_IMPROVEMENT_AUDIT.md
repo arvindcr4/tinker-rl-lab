@@ -1,4 +1,4 @@
-# RLHF Book improvement audit
+# RLHF Book and CS2824 improvement audit
 
 Date: 2026-07-29  
 Book snapshot: Nathan Lambert, *Reinforcement Learning from Human Feedback*, source commit `3624df9ef62177c2c3d6d824f5c2bb740f31041f` (2026-07-28)  
@@ -16,7 +16,9 @@ The main improvement is therefore not another controller. It is a stricter ident
 4. log clipping, policy drift, length, parser, and contrast telemetry;
 5. require matched-cost multi-seed held-out gains before describing any signal as learning or reward recovery.
 
-The executable contract is [`rlhfbook_followup_preregistration.json`](rlhfbook_followup_preregistration.json), validated by [`verify_rlhfbook_followup.py`](verify_rlhfbook_followup.py).
+The Harvard CS2824 extension adds a foundations gate before the empirical ladder: every theorem-shaped statement must expose its formal domain, coverage and distribution assumptions, approximation class, LLM mapping, and falsifier. Its detailed mapping is in [`HARVARD_CS2824_IMPROVEMENT_AUDIT.md`](HARVARD_CS2824_IMPROVEMENT_AUDIT.md).
+
+The combined executable contract is [`rlhfbook_followup_preregistration.json`](rlhfbook_followup_preregistration.json), validated by [`verify_rlhfbook_followup.py`](verify_rlhfbook_followup.py).
 
 ## Evidence boundary discovered during the audit
 
@@ -45,6 +47,10 @@ This is a provenance separation, not a claim that the accepted artifacts are inv
 | [Appendix C: evaluation and training variance are distinct](https://rlhfbook.com/c/appendix-c-practical) | The pilot uses seed-level pairing and avoids checkpoint pseudo-replication. | Retain at least five paired training seeds for confirmatory claims and repeated sampled evaluation where decoding is stochastic; do not select a positive training outlier. |
 
 ## Highest-priority gates
+
+### 0. Foundations and assumption gate
+
+Before an optimization claim enters the experiment, bind it to an exact result and record the formal state/action/trajectory mapping, policy and comparator, data-generating distribution, support or coverage condition, function class, and approximation/estimation assumptions. Results for tabular MDPs or specific parameterizations remain analogies until those conditions are established for the language-model setting. In particular, a zero or small gradient can indicate missing rewarding-trajectory coverage rather than optimality, and PPO-style clipping does not itself prove a policy-space trust region.
 
 ### 1. Offline alignment gate
 

@@ -98,7 +98,10 @@
         "trajectory": "one completion",
         "reward": "registered terminal verifier reward R",
         "policy": "token-generating language model",
-        "data_distribution": "registered prompt schedule and sampler policy",
+        "reference_policy": "registered old/data policy and initial reference, kept distinct",
+        "prompt_distribution": "hash-frozen prompt schedule",
+        "rollout_distribution": "registered sampler policy completion distribution",
+        "evaluation_distribution": "untouched-test prompt distribution",
         "comparator": "matched-cost group-relative control"
       },
       "transfer_status": "empirical_hypothesis_only",
@@ -117,7 +120,7 @@
           "locator": "Vanishing Gradients and Saddle Points; sparse-reward zero-gradient example"
         }
       ],
-      "primary_reference": "RL Theory Book, Chapter 9, Section 9.1, Proposition 9.1; https://rltheorybook.github.io/rltheorybook_ABJKS.pdf",
+      "primary_reference": "RL Theory Book, Chapter 10, Section 10.1, Proposition 10.1; https://rltheorybook.github.io/rltheorybook_ABJKS.pdf",
       "formal_domain": "discounted finite MDP with direct tabular policy parameterization",
       "assumptions": [
         {
@@ -137,12 +140,15 @@
         "trajectory": "completion",
         "reward": "terminal independent correctness label Y_ind",
         "policy": "language model",
-        "data_distribution": "prompt and completion occupancy induced by the sampler",
+        "reference_policy": "registered control sampler",
+        "prompt_distribution": "registered prompt distribution",
+        "rollout_distribution": "prompt-prefix occupancy induced by the sampler",
+        "evaluation_distribution": "untouched-test prompt distribution",
         "comparator": "registered group-relative control"
       },
       "transfer_status": "diagnostic_analogy_only",
       "observable_proxy": "gradient norm jointly reported with verified correct-completion coverage",
-      "falsifier": "A nonzero auxiliary gradient is treated as learning evidence without increased verified coverage or held-out quality.",
+      "falsifier": "Under token-matched sampling, the preregistered coverage proxy does not covary with gradient starvation or independently verified correctness, so the proposed LLM mapping is rejected.",
       "permitted_language": "coverage-motivated analogy"
     },
     {
@@ -156,7 +162,7 @@
           "locator": "Stationarity and Optimality; log-barrier theorem and distribution-mismatch coefficient"
         }
       ],
-      "primary_reference": "RL Theory Book, Chapter 9, log-barrier stationarity result; https://rltheorybook.github.io/rltheorybook_ABJKS.pdf",
+      "primary_reference": "RL Theory Book, Chapter 10, Section 10.3, Theorem 10.4; https://rltheorybook.github.io/rltheorybook_ABJKS.pdf",
       "formal_domain": "discounted finite MDP with tabular softmax or direct policy and stated coverage measure",
       "assumptions": [
         {
@@ -176,12 +182,15 @@
         "trajectory": "completion",
         "reward": "terminal verifier outcome",
         "policy": "transformer policy",
-        "data_distribution": "sampler-policy completion distribution",
+        "reference_policy": "registered old/data policy",
+        "prompt_distribution": "registered optimization prompt measure",
+        "rollout_distribution": "actual sampler-policy completion distribution",
+        "evaluation_distribution": "registered target prompt measure",
         "comparator": "untouched-test target policy"
       },
       "transfer_status": "diagnostic_analogy_only",
       "observable_proxy": "coverage strata, policy-ratio quantiles, maximum weight, and effective sample size",
-      "falsifier": "Any global-optimality or convergence statement is made without verifying the theorem's policy class and coverage assumptions.",
+      "falsifier": "Registered mismatch proxies fail to predict any held-out degradation across the policy-lag sweep, so their proposed diagnostic mapping is rejected; no theorem transfer follows either outcome.",
       "permitted_language": "distribution-mismatch diagnostic motivation"
     },
     {
@@ -225,12 +234,15 @@
         "trajectory": "completion",
         "reward": "registered terminal reward plus any registered regularizer",
         "policy": "learner language model",
-        "data_distribution": "actual rollout policy",
+        "reference_policy": "old/data policy plus the initial reference model",
+        "prompt_distribution": "registered training prompt schedule",
+        "rollout_distribution": "actual rollout policy rather than the nominal learner",
+        "evaluation_distribution": "untouched-test prompt distribution",
         "comparator": "old/data policy and initial reference"
       },
       "transfer_status": "diagnostic_analogy_only",
       "observable_proxy": "empirical KL, policy-ratio tails, clipping by advantage sign, and Fisher-quadratic step",
-      "falsifier": "A clipped objective is described as proving a trust region without an empirical KL stop rule.",
+      "falsifier": "The Fisher-quadratic diagnostic does not track empirical KL or update instability across registered step sizes, rejecting its use as an empirical local-geometry proxy.",
       "permitted_language": "policy-geometry diagnostic motivation"
     },
     {
@@ -244,7 +256,7 @@
           "locator": "Q-NPG convergence with estimation error and with approximation plus estimation errors"
         }
       ],
-      "primary_reference": "RL Theory Book, Chapters 10-11; https://rltheorybook.github.io/rltheorybook_ABJKS.pdf",
+      "primary_reference": "RL Theory Book, Chapter 11, Section 11.4, Assumptions 11.4-11.5 and Theorem 11.6; https://rltheorybook.github.io/rltheorybook_ABJKS.pdf",
       "formal_domain": "NPG/Q-NPG with the stated feature class, conditioning, sampling, and comparator assumptions",
       "assumptions": [
         {
@@ -264,12 +276,15 @@
         "trajectory": "completion",
         "reward": "registered outcome",
         "policy": "transformer policy",
-        "data_distribution": "registered train/development/test distributions",
+        "reference_policy": "registered control or comparator policy",
+        "prompt_distribution": "hash-frozen training and development prompts",
+        "rollout_distribution": "registered sampler-policy distribution",
+        "evaluation_distribution": "untouched-test prompt distribution",
         "comparator": "matched-cost control"
       },
       "transfer_status": "diagnostic_analogy_only",
       "observable_proxy": "separate optimization diagnostics, prompt-clustered uncertainty, held-out residual checks, and verifier disagreement",
-      "falsifier": "Incompatible error proxies are summed or directly compared as if they were a theorem-derived common-unit bound.",
+      "falsifier": "Cross-fitted residual, sampling-uncertainty, and verifier-disagreement diagnostics do not explain their registered failure modes, rejecting the proposed empirical decomposition; they are never summed without a common-unit derivation.",
       "permitted_language": "error-decomposition checklist"
     },
     {
@@ -308,7 +323,10 @@
         "trajectory": "evaluated completion",
         "reward": "proxy score versus independent quality target",
         "policy": "evaluated checkpoint",
-        "data_distribution": "development and untouched-test prompt distributions",
+        "reference_policy": "initial reference and matched-budget control checkpoints",
+        "prompt_distribution": "hash-frozen development prompts",
+        "rollout_distribution": "registered checkpoint sampling distribution",
+        "evaluation_distribution": "untouched-test prompts under fixed templates and token budgets",
         "comparator": "matched-budget control checkpoint"
       },
       "transfer_status": "empirical_hypothesis_only",
@@ -332,7 +350,7 @@
           "locator": "KL-regularized RL, DPO, and REBEL"
         }
       ],
-      "primary_reference": "REBEL: Reinforcement Learning via Regressing Relative Rewards, NeurIPS 2024, https://proceedings.neurips.cc/paper_files/paper/2024/file/5df1d92b478716877f774b82943477b3-Paper-Conference.pdf",
+      "primary_reference": "Hypothesis source: Harvard CS2824 guest slides at the pinned course commit; background only: REBEL, NeurIPS 2024, https://proceedings.neurips.cc/paper_files/paper/2024/file/5df1d92b478716877f774b82943477b3-Paper-Conference.pdf",
       "formal_domain": "KL-regularized generative-policy optimization with the objective-specific sampling and target assumptions",
       "assumptions": [
         {
@@ -344,6 +362,16 @@
           "name": "data_distribution_has_required_support",
           "status": "unverified",
           "evidence_or_proxy": "sampler-policy support, ratio tails, and ESS"
+        },
+        {
+          "name": "population_global_minimizer_is_identified_by_the_sampled_distribution",
+          "status": "unverified",
+          "evidence_or_proxy": "objective-specific identification proof or counterexample"
+        },
+        {
+          "name": "optimization_and_finite_sample_error_are_bounded",
+          "status": "unverified",
+          "evidence_or_proxy": "held-out regression residual, seed uncertainty, and optimization diagnostics"
         }
       ],
       "llm_mapping": {
@@ -352,7 +380,10 @@
         "trajectory": "single-turn response",
         "reward": "registered verifier reward",
         "policy": "learner and actual inference-engine sampler",
-        "data_distribution": "on-policy or explicitly bounded-lag replay",
+        "reference_policy": "objective-specific fixed reference and actual inference-engine sampler",
+        "prompt_distribution": "registered prompt schedule",
+        "rollout_distribution": "on-policy or explicitly bounded-lag sampler distribution",
+        "evaluation_distribution": "untouched-test prompt distribution",
         "comparator": "group-relative and centered-reward controls"
       },
       "transfer_status": "hypothesis_source_only",

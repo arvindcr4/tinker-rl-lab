@@ -188,3 +188,35 @@ def test_offline_packet_rejects_undefined_or_fabricated_decisions(mutation) -> N
 
     with pytest.raises(verifier.FollowupContractError):
         verifier.verify_offline_packet(candidate)
+
+
+def test_payload_is_bound_to_the_protocol_file(tmp_path: Path) -> None:
+    verifier = load_verifier()
+    payload = json.loads(PROTOCOL_PATH.read_text(encoding="utf-8"))
+    unrelated = tmp_path / "unrelated.json"
+    unrelated.write_text('{"fabricated": true}', encoding="utf-8")
+
+    with pytest.raises(verifier.FollowupContractError):
+        verifier.verify_contract(payload, REPO_ROOT, unrelated)
+
+
+@pytest.mark.parametrize("payload", [[], None, "not-an-object"])
+def test_public_contract_verifier_rejects_non_objects(payload) -> None:
+    verifier = load_verifier()
+    with pytest.raises(verifier.FollowupContractError):
+        verifier.verify_contract(payload, REPO_ROOT)
+
+
+def test_semantic_rewrites_of_pinned_subcontracts_are_rejected() -> None:
+    verifier = load_verifier()
+    ledger = json.loads(THEORY_LEDGER_PATH.read_text(encoding="utf-8"))
+    ledger["claims"][-1]["transfer_status"] = "diagnostic_analogy_only"
+    with pytest.raises(verifier.FollowupContractError):
+        verifier.verify_theory_ledger(ledger)
+
+    packet = json.loads(OFFLINE_PACKET_PATH.read_text(encoding="utf-8"))
+    packet["label_contract"]["one_class_rule"] = (
+        "NOT_IDENTIFIABLE is never required; every one-class stratum passes."
+    )
+    with pytest.raises(verifier.FollowupContractError):
+        verifier.verify_offline_packet(packet)

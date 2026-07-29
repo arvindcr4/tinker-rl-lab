@@ -85,7 +85,7 @@ Each component receives its own registered diagnostic or uncertainty statement. 
 
 ### Comparator discipline
 
-The minimum comparison remains group-relative control, centered reward without standard-deviation normalization, spectral arm, entropic arm, and variance-matched placebo. A REBEL- or other regression-based arm is optional until its exact primary source and target are preregistered. If added, it must use the same realized prompt/corpus fingerprints, charged-token budget, measured-FLOP tolerance, and held-out evaluation.
+The minimum comparison remains group-relative control, centered reward without standard-deviation normalization, spectral arm, entropic arm, and variance-matched placebo. A REBEL- or other regression-based arm is optional until its exact primary source and target are preregistered. If added, it must use the same prompt-schedule and initial-checkpoint fingerprints, charged-token budget, measured-FLOP tolerance, and held-out evaluation while retaining its own on-policy completion fingerprint.
 
 ## What remains unchanged
 

@@ -38,7 +38,7 @@ This is a provenance separation, not a claim that the accepted artifacts are inv
 | Book lesson | Current evidence | Improvement now required |
 |---|---|---|
 | [Ch. 6: GRPO requires useful group contrast](https://rlhfbook.com/c/06-policy-gradients) | ZVF, exact zero-gradient relations, and group-size theory are first-class in the repo. | Report all-wrong, all-correct, and mixed fractions separately; stratify by prompt/task; compare observed degeneracy with `p(x)^G + (1-p(x))^G`; token-match temperature and group-size sweeps. |
-| [Ch. 6: loss aggregation changes weighting](https://rlhfbook.com/c/06-policy-gradients) | S1 freezes per-completion versus global-token reductions; the failed filtered regime was intended as a variable-length positive control. | Freshly preregister a feasible control with selected-row length CV at least `0.35`, cap-hit rate at most `0.05`, and identical realized corpora across arms. Never weaken the old failed gate. |
+| [Ch. 6: loss aggregation changes weighting](https://rlhfbook.com/c/06-policy-gradients) | S1 freezes per-completion versus global-token reductions; the failed filtered regime was intended as a variable-length positive control. | Freshly preregister a feasible control with selected-row length CV at least `0.35`, cap-hit rate at most `0.05`, identical prompt schedules and starting checkpoints, and arm-specific completion hashes for on-policy arms. Never weaken the old failed gate. |
 | [Ch. 6: off-policy reuse needs explicit correction](https://rlhfbook.com/c/06-policy-gradients) | r4-2 intentionally consumes immutable stored groups and stored old log-probabilities. | Keep its claims at replay/conformance scope. A learning follow-up must regenerate on-policy completions or bound learner-sampler lag and preregister the correction. |
 | [Ch. 6 and Ch. 15: clipping and KL reveal optimization health](https://rlhfbook.com/c/15-regularization) | Current accepted receipts emphasize losses, gradient relations, norms, and cost ledgers; pilot `beta` is `0`. | Log policy-ratio quantiles, clip fractions split by advantage sign, approximate KL to the old policy, KL to the initial reference, and checkpoint quality versus drift. |
 | [Ch. 14: a proxy can improve while true quality degrades](https://rlhfbook.com/c/14-over-optimization) | The synthetic spectral harness creates nonzero auxiliary advantages and gradients on equal terminal rewards. | Describe this only as auxiliary-signal injection. Before training, require independent correctness labels, length/entropy controls, and a variance-matched placebo. Synthetic gradient retention is not reward recovery. |
@@ -65,7 +65,7 @@ The r4-2 filtered pool was cap-saturated at 512 generated tokens and produced se
 - selected-row completion-length CV `>= 0.35`;
 - cap-hit rate `<= 0.05`;
 - EOS, parse-success, and answer-format rates;
-- identical corpus fingerprints for all compared arms;
+- identical prompt-schedule and initial-checkpoint fingerprints across arms, with arm-specific realized-completion fingerprints for on-policy arms;
 - equal charged tokens and measured FLOPs within `1%`.
 
 ### 3. Optimization-health telemetry

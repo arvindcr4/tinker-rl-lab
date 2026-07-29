@@ -37,11 +37,15 @@
   },
   "theory_transfer_ledger": {
     "path": "zvf-program/experiments-next/theory_transfer_ledger.json",
-    "sha256": "02343f5db02a3c20450c2e7e8e3a0bedf668bb3334853efce6bb3906632deb4d"
+    "sha256": "e53e8d5973670f6b13a0509415617a1d61367ca679786a450cddc66555a9034f"
   },
   "offline_falsification_packet": {
     "path": "zvf-program/experiments-next/offline_falsification_packet.json",
-    "sha256": "fda64baca5c4971ee0978499df322963afa687c6fdf5908324245ef27857bd31"
+    "sha256": "6a1933205f1218e3aca3081eef97e3fee02b828baafd8537239a4f907409c7fa"
+  },
+  "audit_bindings": {
+    "zvf-program/experiments-next/RLHFBOOK_IMPROVEMENT_AUDIT.md": "b501ba7be0dcc47c07b78a3b610a86150216adbb6918f7ba31a68bfba491e907",
+    "zvf-program/experiments-next/HARVARD_CS2824_IMPROVEMENT_AUDIT.md": "78a58a159fc5b5a154928def4785341fec63385fb54dac7acefcac586025034a"
   },
   "scope": {
     "objective": "Determine whether spectral or entropic auxiliary signals add calibrated information beyond terminal reward, increase independently verified rewarding-trajectory coverage, and improve held-out reasoning under matched cost, without proxy exploitation, unsupported theorem transfer, length artifacts, or policy-distribution confounds.",

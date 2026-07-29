@@ -27,7 +27,9 @@
     "development_fraction": 0.7,
     "untouched_test_fraction": 0.3,
     "cross_fit_folds_within_development": 5,
-    "minimum_groups_per_terminal_reward_stratum": 2000,
+    "minimum_total_groups_per_terminal_reward_stratum": 6667,
+    "minimum_development_groups_per_terminal_reward_stratum": 4667,
+    "minimum_untouched_test_groups_per_terminal_reward_stratum": 2000,
     "required_terminal_reward_strata": [
       "all_correct_R",
       "all_wrong_R"
@@ -45,25 +47,51 @@
   "primary_analysis": {
     "estimand": "For each auxiliary arm, prompt-clustered untouched-test mean log-loss reduction in nats per completion from adding the cross-fitted auxiliary score to the registered control model.",
     "control_model_features": [
-      "completion_length",
-      "token_entropy",
-      "task",
-      "model_scale",
-      "terminal_reward_stratum",
-      "registered_interactions"
+      "fold-standardized completion_length",
+      "fold-standardized token_entropy",
+      "one-hot task with levels frozen before labels are opened",
+      "one-hot model_scale with levels frozen before labels are opened",
+      "binary terminal_reward_stratum",
+      "task by model_scale interaction",
+      "terminal_reward_stratum by completion_length interaction",
+      "terminal_reward_stratum by token_entropy interaction"
     ],
-    "candidate_model_addition": "one preregistered standardized auxiliary score and its terminal-reward-stratum interaction",
-    "placebo": "variance-matched random auxiliary score generated independently inside each development fold with seed 20260729",
+    "estimator_specification": {
+      "outcome_family": "Bernoulli",
+      "model": "L2-penalized logistic regression",
+      "link": "logit",
+      "penalty_C": 1.0,
+      "solver": "lbfgs",
+      "maximum_iterations": 10000,
+      "class_weight": "none",
+      "hyperparameter_selection": "none; every estimator setting is fixed by this packet",
+      "continuous_preprocessing": "Within each development training fold, fit mean and population-standard-deviation on that fold only; apply those values to its validation fold and untouched test. A zero-variance feature is set to zero and recorded.",
+      "categorical_preprocessing": "Use the frozen level lists, treatment coding, and an explicit UNKNOWN level; levels are fit without Y_ind.",
+      "cross_fit_predictions": "Fit five models, each excluding one prompt fold. Development out-of-fold predictions come from the excluded-fold model. Untouched-test probability is the arithmetic mean of the five fold-model probabilities.",
+      "probability_clip": [
+        0.000001,
+        0.999999
+      ],
+      "loss": "binary log loss in natural-log units per completion"
+    },
+    "candidate_model_addition": "one fold-standardized preregistered auxiliary score and its interaction with terminal_reward_stratum",
+    "placebo": "Within each development training fold and each task by model_scale by terminal_reward_stratum cell, permute the auxiliary score with seed 20260729, preserving its observed marginal distribution. Apply the same fitted candidate pipeline to this placebo feature.",
+    "confirmatory_contrasts": [
+      "spectral candidate versus registered control",
+      "entropic candidate versus registered control",
+      "spectral candidate versus its within-cell permutation placebo",
+      "entropic candidate versus its within-cell permutation placebo"
+    ],
     "minimum_meaningful_log_loss_reduction_nats_per_completion": 0.01,
     "bootstrap": {
       "unit": "prompt_id",
       "replicates": 10000,
       "seed": 20260729,
       "familywise_confidence_level": 0.95,
-      "armwise_confidence_level": 0.975,
-      "multiplicity_rule": "Bonferroni across the two confirmatory auxiliary arms"
+      "contrastwise_confidence_level": 0.9875,
+      "multiplicity_rule": "Bonferroni across all four confirmatory contrasts"
     },
-    "arm_pass_rule": "Both-class support must hold in every required stratum; the armwise lower confidence bound for log-loss reduction must exceed 0.01 nats per completion; and the arm must beat its variance-matched placebo under the same bound.",
+    "arm_pass_rule": "Both-class support must hold in every required stratum. For both the arm-versus-control and arm-versus-placebo contrasts, the point estimate must be at least 0.01 nats per completion and the 98.75% prompt-cluster bootstrap lower confidence bound must exceed 0.0.",
     "secondary_metrics": [
       "stratum-specific AUC only when Y_ind has both classes",
       "calibration slope and intercept",
@@ -74,7 +102,10 @@
   "power_gate": {
     "target_power": 0.8,
     "familywise_alpha": 0.05,
-    "target_effect_nats_per_completion": 0.01,
+    "confirmatory_contrast_count": 4,
+    "null_effect_nats_per_completion": 0.0,
+    "alternative_effect_nats_per_completion": 0.01,
+    "maximum_total_groups_per_terminal_reward_stratum": 10000,
     "variance_source": "blinded development-only pilot with prompt-cluster resampling",
     "required_output": "power_receipt.json containing the estimated intracluster correlation, effective prompt count, required prompt count, and achieved power",
     "decision_rule": "If achieved power is below 0.8 at the frozen feasible sample budget, S2 is NOT_FEASIBLE and training remains blocked."
@@ -113,6 +144,9 @@
         "input_hashes",
         "class_counts_by_stratum",
         "cross_fit_receipt",
+        "checker_independence_receipt",
+        "checker_blinding_receipt",
+        "adjudication_receipt",
         "power_receipt",
         "bootstrap_receipt",
         "placebo_receipt",

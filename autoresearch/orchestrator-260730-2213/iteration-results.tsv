@@ -1,0 +1,6 @@
+# metric_direction: lower_is_better
+iteration	timestamp	hop	error_count	delta	status	evidence
+0	2026-07-30T21:58:00+05:30	baseline	1	0	baseline	A100 child completed but the Colab wrapper dropped the NEXT_PREFLIGHT_RESULT marker
+1	2026-07-30T22:06:00+05:30	harden	0	-1	keep	child stdout streams to the parent; zero exit no longer raises SystemExit; marker-loss recovery requires complete private HF artifacts
+2	2026-07-30T22:10:00+05:30	independent-verify	0	0	keep	exact HF commit 3cfeca29d02cbda308376f83de4b5911ac865607 is private and complete; W&B run 5573d4a7 is finished
+3	2026-07-30T22:13:00+05:30	regression	0	0	keep	195 tests, design verifier, lint, format, secret scan, and server-side Colab absence check pass

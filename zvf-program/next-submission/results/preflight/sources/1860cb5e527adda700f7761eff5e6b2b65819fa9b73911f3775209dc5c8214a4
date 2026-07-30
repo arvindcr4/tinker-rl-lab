@@ -536,22 +536,6 @@ def recover_result_from_remote(
     }
 
 
-def result_from_log_or_remote(
-    lines: list[str],
-    credentials: dict[str, str],
-    request: dict[str, Any],
-) -> tuple[dict[str, Any], dict[str, str] | None]:
-    """Parse streamed output, falling back to fully verifiable final artifacts."""
-
-    try:
-        return result_from_log(lines), None
-    except ValueError as exc:
-        return recover_result_from_remote(credentials, request), {
-            "reason": str(exc),
-            "source": "exact-private-hf-commit-and-finished-wandb-run",
-        }
-
-
 def build_execution_plan(
     args: argparse.Namespace,
     *,
@@ -901,8 +885,16 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         failed = {**base, "status": "failed", "error": failure_summary(lines)}
         helpers.atomic_json(result_path, failed)
         return {"status": "failed", "result_path": str(result_path)}
+    recovery = None
     try:
-        result, recovery = result_from_log_or_remote(lines, credentials, request)
+        try:
+            result = result_from_log(lines)
+        except ValueError as exc:
+            result = recover_result_from_remote(credentials, request)
+            recovery = {
+                "reason": str(exc),
+                "source": "exact-private-hf-commit-and-finished-wandb-run",
+            }
         manifest, verification = verify_remote(credentials, result, request)
     except Exception as exc:
         failed = {**base, "status": "failed", "error": str(exc)}

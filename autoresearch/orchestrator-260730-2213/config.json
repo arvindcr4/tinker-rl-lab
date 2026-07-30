@@ -1,0 +1,18 @@
+{
+  "version": "2.2.1",
+  "mode": "orchestrator",
+  "goal": "Harden the authorized Colab CLI preflight with exact Hugging Face and Weights & Biases provenance.",
+  "archetype": "harden",
+  "terminal_choice": "stop_at_verified",
+  "success_predicate": {
+    "command": "python3 zvf-program/next-submission/verify_design.py && python3 -m pytest -q && colab --auth=oauth2 sessions",
+    "expected": "design contract passes, all repository tests pass, the live preflight receipt validates an exact private HF commit and finished W&B run, and Colab reports no active sessions"
+  },
+  "safety_boundary": {
+    "evidence_class": "preflight-not-evidence",
+    "push": false,
+    "publish": false,
+    "submit": false,
+    "result_promotion": false
+  }
+}

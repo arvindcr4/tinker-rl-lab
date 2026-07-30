@@ -218,6 +218,34 @@ def test_result_log_parser_uses_last_marker():
     assert PREFLIGHT.result_from_log(lines) == payload
 
 
+def test_missing_result_marker_falls_back_to_remote_recovery(monkeypatch):
+    _, expected, request = valid_payload()
+    calls = []
+
+    def recover(credentials, recovered_request):
+        calls.append((credentials, recovered_request))
+        return expected
+
+    monkeypatch.setattr(PREFLIGHT, "recover_result_from_remote", recover)
+    result, recovery = PREFLIGHT.result_from_log_or_remote(
+        ["scientific child completed without a streamed marker"],
+        {"HF_TOKEN": "hf", "WANDB_API_KEY": "wandb"},
+        request,
+    )
+
+    assert result == expected
+    assert calls == [
+        (
+            {"HF_TOKEN": "hf", "WANDB_API_KEY": "wandb"},
+            request,
+        )
+    ]
+    assert recovery == {
+        "reason": "remote output did not contain a NEXT_PREFLIGHT_RESULT record",
+        "source": "exact-private-hf-commit-and-finished-wandb-run",
+    }
+
+
 def test_failure_summary_is_bounded_and_strips_ansi():
     lines = [f"line {index}" for index in range(20)] + ["\x1b[31mquota rejected\x1b[0m"]
     summary = PREFLIGHT.failure_summary(lines, limit=3)
@@ -293,7 +321,7 @@ def test_cleanup_retries_until_server_enumeration_proves_absence(monkeypatch, tm
 
 
 def test_secure_exec_deletes_files_and_keeps_secrets_out_of_persistent_environment(
-    monkeypatch, tmp_path
+    capsys, monkeypatch, tmp_path
 ):
     secret_path = tmp_path / "secrets.json"
     request_path = tmp_path / "request.json"
@@ -310,7 +338,8 @@ def test_secure_exec_deletes_files_and_keeps_secrets_out_of_persistent_environme
         "import os, sys\n"
         "assert os.environ['HF_TOKEN'] == 'child-hf-token'\n"
         "assert os.environ['WANDB_API_KEY'] == 'child-wandb-key'\n"
-        "assert sys.argv[1:] == ['expected-argument']\n",
+        "assert sys.argv[1:] == ['expected-argument']\n"
+        "print('NEXT_PREFLIGHT_RESULT streamed-marker', flush=True)\n",
         encoding="utf-8",
     )
     monkeypatch.setenv("HF_TOKEN", "parent-hf-token")
@@ -328,6 +357,61 @@ def test_secure_exec_deletes_files_and_keeps_secrets_out_of_persistent_environme
     assert not request_path.exists()
     assert os.environ["HF_TOKEN"] == "parent-hf-token"
     assert os.environ["WANDB_API_KEY"] == "parent-wandb-key"
+    assert "NEXT_PREFLIGHT_RESULT streamed-marker" in capsys.readouterr().out
+
+
+def test_recovery_reconstructs_result_only_from_complete_private_artifacts(monkeypatch, tmp_path):
+    manifest, _, request = valid_payload()
+    commit = "e" * 40
+    repo = PREFLIGHT.expected_hf_repo(request)
+    manifest["wandb"] = {
+        "run_id": "run12345",
+        "run_url": "https://wandb.ai/test-entity/tinker-rl-lab/runs/run12345",
+    }
+    manifest_path = tmp_path / "run_manifest.json"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    class FakeApi:
+        private = True
+
+        def model_info(self, repo_id, *, files_metadata):
+            assert repo_id == repo
+            assert files_metadata is True
+            return SimpleNamespace(
+                private=self.private,
+                sha=commit,
+                siblings=[
+                    SimpleNamespace(rfilename="run_manifest.json"),
+                    SimpleNamespace(rfilename="final/adapter_model.safetensors"),
+                ],
+            )
+
+    fake_api = FakeApi()
+    monkeypatch.setattr(PREFLIGHT, "HfApi", lambda token: fake_api)
+    monkeypatch.setattr(PREFLIGHT, "hf_hub_download", lambda **kwargs: str(manifest_path))
+
+    recovered = PREFLIGHT.recover_result_from_remote(
+        {"HF_TOKEN": "hf", "WANDB_API_KEY": "wandb"},
+        request,
+    )
+
+    assert recovered["status"] == "completed"
+    assert recovered["evidence_class"] == "preflight-not-evidence"
+    assert recovered["remote"] == {
+        "hf_repo": repo,
+        "hf_commit": commit,
+        "hf_manifest_path": "run_manifest.json",
+        "hf_final_adapter_path": "final/adapter_model.safetensors",
+        "wandb_run_id": "run12345",
+        "wandb_run_url": manifest["wandb"]["run_url"],
+    }
+
+    fake_api.private = False
+    with pytest.raises(RuntimeError, match="non-private"):
+        PREFLIGHT.recover_result_from_remote(
+            {"HF_TOKEN": "hf", "WANDB_API_KEY": "wandb"},
+            request,
+        )
 
 
 def test_remote_verification_requires_exact_private_hf_commit_and_finished_wandb(

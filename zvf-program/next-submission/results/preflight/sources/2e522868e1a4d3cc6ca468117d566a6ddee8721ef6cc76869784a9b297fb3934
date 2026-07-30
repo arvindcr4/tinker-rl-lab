@@ -247,7 +247,7 @@
     "remote_preflight_path": "zvf-program/next-submission/remote_preflight.py",
     "remote_preflight_sha256": "cd273ab9844ef6dc71c26339d5fe424e6109c86dc2f0aa60d3824a62a383fd87",
     "preflight_launcher_path": "zvf-program/next-submission/run_preflight.py",
-    "preflight_launcher_sha256": "7108d36eeac1e81ad8ee82ee87d77a7cf86f66a01fed05c1adc74750f74f965f",
+    "preflight_launcher_sha256": "1860cb5e527adda700f7761eff5e6b2b65819fa9b73911f3775209dc5c8214a4",
     "hf_jobs_preflight_launcher_path": "zvf-program/next-submission/run_hf_jobs_preflight.py",
     "hf_jobs_preflight_launcher_sha256": "c0b465cca5ae45979fa088b3d0a0a06be3987a8e81310d451305adb92ed41dee",
     "kaggle_preflight_launcher_path": "zvf-program/next-submission/run_kaggle_preflight.py",

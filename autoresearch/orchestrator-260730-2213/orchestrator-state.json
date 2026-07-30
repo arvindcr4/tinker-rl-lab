@@ -1,0 +1,41 @@
+{
+  "schema_version": "autoresearch-orchestrator-state-v1",
+  "goal": "Harden the authorized Colab CLI preflight with exact Hugging Face and Weights & Biases provenance.",
+  "archetype": "harden",
+  "mode": "orchestration_loop",
+  "terminal_choice": "stop_at_verified",
+  "success_predicate": {
+    "command": "python3 zvf-program/next-submission/verify_design.py && python3 -m pytest -q && colab --auth=oauth2 sessions",
+    "expected": "design contract passes, all repository tests pass, the live preflight receipt validates an exact private HF commit and finished W&B run, and Colab reports no active sessions"
+  },
+  "cycle_count": 3,
+  "pending_verify": false,
+  "units_remaining": [
+    1,
+    0,
+    0,
+    0
+  ],
+  "pipeline": [
+    {
+      "cycle": 1,
+      "hop": "harden",
+      "outcome": "progressed",
+      "evidence": "streamed child output and exact-artifact recovery eliminate the Colab output-marker transport failure"
+    },
+    {
+      "cycle": 2,
+      "hop": "independent-verify",
+      "outcome": "progressed",
+      "evidence": "the recovered receipt passed the existing semantic manifest validator, exact private HF revision checks, and finished W&B run checks"
+    },
+    {
+      "cycle": 3,
+      "hop": "regression",
+      "outcome": "progressed",
+      "evidence": "195 tests and all static gates pass; Colab server enumeration reports no active sessions"
+    }
+  ],
+  "current_incumbent": "streamed Colab wrapper with fail-closed HF and W&B artifact recovery",
+  "status": "CONVERGED"
+}

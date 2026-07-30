@@ -1,0 +1,25 @@
+{
+  "version": "2.2.1",
+  "source": "orchestrator",
+  "timestamp": "2026-07-30T22:13:00+05:30",
+  "status": "COMPLETE",
+  "verdict": "CONVERGED",
+  "results_tsv": "autoresearch/orchestrator-260730-2213/iteration-results.tsv",
+  "receipt": "zvf-program/next-submission/results/preflight/results/gsm8k__contrast_early_stop_g2_to_g8__s211.json",
+  "remote_verification": {
+    "hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-contrast_ear-s211-5573d4a7",
+    "hf_commit": "3cfeca29d02cbda308376f83de4b5911ac865607",
+    "hf_private": true,
+    "wandb_run_id": "5573d4a7",
+    "wandb_state": "finished",
+    "colab_session_absent": true
+  },
+  "verification": {
+    "repository_tests": 195,
+    "design_contract": "NEXT_SUBMISSION_DESIGN_CONTRACT_PASS",
+    "lint": "pass",
+    "format": "pass",
+    "secret_scan": "pass"
+  },
+  "claim_boundary": "This receipt is infrastructure and transport evidence only. It is not a scientific result, multi-seed evidence, or a reviewer-facing performance claim."
+}

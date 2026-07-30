@@ -1,0 +1,114 @@
+{
+  "version": "2.2.1-manual-fallback",
+  "goal": "Improve the live NeurIPS work using the RLHF Book, Harvard CS2824, and Reviewer 9kjk's follow-up without overstating reviewed evidence.",
+  "archetype": "optimize-metric",
+  "predicate": {
+    "command": "python3 autoresearch/orchestrator-260730-1818/reviewer_response_metric.py",
+    "expected_stdout": "12",
+    "evaluator_sha256": "7ff2b1bf814797af817eb1be1a0f6f55b259bdac27d3f71d5fab71657251bef7"
+  },
+  "terminal_choice": "stop_at_verified",
+  "units_remaining_history": [
+    12,
+    1,
+    0,
+    0
+  ],
+  "cycle_count": 3,
+  "pipeline": [
+    {
+      "hop": "plan",
+      "outcome": "progressed",
+      "note": "Pinned twelve reviewer-visible checks and an independent source-bound holdout."
+    },
+    {
+      "hop": "round_0",
+      "outcome": "progressed",
+      "score": 0,
+      "maximum": 12
+    },
+    {
+      "hop": "classic_loop",
+      "cycle": 1,
+      "outcome": "progressed",
+      "score": 11,
+      "note": "Added an exact-results response, a complete 20-cell adjudication, and supersession notices."
+    },
+    {
+      "hop": "classic_loop",
+      "cycle": 2,
+      "outcome": "progressed",
+      "score": 12,
+      "note": "Fixed a verifier false positive that treated PPO/GRPO and numeric fractions as paths."
+    },
+    {
+      "hop": "verify_reason",
+      "cycle": 3,
+      "outcome": "progressed",
+      "verdict": "CONVERGED",
+      "judge_agreement": "9/9 substantive-family votes; exact-label agreement 8/9",
+      "handoff": "autoresearch/reason-260730-1257/handoff.json",
+      "note": "Refined test identity, two-case triage language, inline definitions, and prospective power/precision rule."
+    },
+    {
+      "hop": "holdout_verify",
+      "cycle": 3,
+      "outcome": "verified",
+      "verdict": "HOLDOUT_REVIEWER_9KJK_PASS"
+    }
+  ],
+  "current_incumbent": {
+    "commit": null,
+    "commit_note": "The run record is included in the same requested commit and cannot self-reference its final hash.",
+    "response_sha256": "8e97ba6f5210744f135cde04becb0ffdc300873cb3c93d47a00d4c1d837dba94",
+    "ledger_sha256": "13a9f683b7330366f30f3f84bf053372a978873a44235ce209f4b85efee7bc88",
+    "score": 12,
+    "holdout": "pass"
+  },
+  "source_state": {
+    "rlhf_book_pinned_contract_commit": "3624df9ef62177c2c3d6d824f5c2bb740f31041f",
+    "rlhf_book_live_head": "1bd092d80d9a247fa51003c32cedd8fc4679ce47",
+    "rlhf_book_relevant_files_changed": false,
+    "harvard_cs2824_pinned_and_live_head": "5dcc34e3b861da632371645fb05aebb12a40d23c"
+  },
+  "verification": {
+    "working_metric": "12/12",
+    "independent_holdout": "pass",
+    "early_triage_source_match": "pass",
+    "rlhfbook_cs2824_contract": "POSTTRAINING_FOUNDATIONS_CONTRACT_LINT_PASS",
+    "deep_review_bundle": "pass",
+    "pytest": "125 passed",
+    "manuscript_build": "pass",
+    "promotion_authorized": false,
+    "offline_packet_status": "not_run",
+    "live_checkout_matches_accepted_source": false
+  },
+  "pending_verify": false,
+  "terminal_status": "CONVERGED",
+  "remaining_units": [],
+  "remaining_evidence_limits": [
+    "The reviewed paper remains structurally unreviewable without a revised review surface.",
+    "HumanEval and MATH primary numerical cells remain absent.",
+    "Single-seed comparative cells are withdrawn rather than repaired.",
+    "No external-user decision or outcome establishes a use-inspired contribution.",
+    "Post-submission E1 remains outside the reviewed record and statistically inconclusive."
+  ],
+  "screened_commands": [
+    {
+      "command": "python3 autoresearch/orchestrator-260730-1818/reviewer_response_metric.py",
+      "verdict": "allow",
+      "reason": "Read-only local response and JSON validation."
+    },
+    {
+      "command": "python3 autoresearch/orchestrator-260730-1818/holdout_verify.py",
+      "verdict": "allow",
+      "reason": "Read-only local source-bound holdout validation."
+    },
+    {
+      "command": "PYTHONPATH=zvf-program python3 -m pytest -q",
+      "verdict": "allow",
+      "reason": "Local test execution with no network or external writes."
+    }
+  ],
+  "router_fallback": "The installed Autoresearch skill references scripts/orchestrate.sh, but that file is absent. Routing and screening were recorded manually."
+}

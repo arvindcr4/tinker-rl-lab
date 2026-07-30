@@ -7,6 +7,12 @@
 **Reviewer rebuttal deadline:** 2026-07-28 17:29 IST; 10,000 characters per response  
 **Confidential AC-comment deadline:** 2026-08-04 16:29 IST; 5,000 characters  
 
+> **Reviewer 9kjk follow-up (2026-07-30):** the response at lines 94-110 is
+> superseded by `NEURIPS_2026_REVIEWER_9KJK_FOLLOWUP.md`. The reviewer rejected
+> the structural promise, filename relocation, and use-inspired framing and
+> reiterated the incomplete-matrix and single-seed concerns. Do not reuse the
+> score-reconsideration request below.
+
 ## Recommendation
 
 Replace all three current reviewer responses and the confidential AC comment. Do not patch them incrementally. All four current texts repeat an unsupported Qwen3-8B “matched control,” and OpenReview retains revision history. The correction therefore needs to be explicit, consistent, and easy to find.

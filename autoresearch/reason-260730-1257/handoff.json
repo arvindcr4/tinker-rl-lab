@@ -1,0 +1,22 @@
+{
+  "version": "2.1.0",
+  "source": "reason",
+  "timestamp": "2026-07-30T13:00:35Z",
+  "status": "CONVERGED",
+  "results_tsv": "autoresearch/reason-260730-1257/reason-results.tsv",
+  "findings": [
+    {
+      "id": "reviewer-9kjk-postable-reply",
+      "type": "recommendation",
+      "summary": "Use the converged evidence-bounded reply in summary.md: clarify the fixed-base seed-level test, treat early triage as two-case descriptive concordance, replace a universal five-seed rule with prospective power or precision, and scope external-user validation to renewed use-inspired claims."
+    }
+  ],
+  "config": {
+    "task": "Evaluate and refine the postable reply to Reviewer 9kjk while preserving the reviewed-evidence boundary",
+    "domain": "research-content",
+    "mode": "convergent",
+    "judges": 3,
+    "convergence": 3,
+    "max_iterations": 4
+  }
+}

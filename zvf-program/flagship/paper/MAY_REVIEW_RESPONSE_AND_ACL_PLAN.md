@@ -26,6 +26,23 @@ The 40-unit audit supplies a concrete algorithm-claim audit design, but a later 
 
 The best defensible response is therefore: **concede scope, correct the record, preserve the methodological contribution, and separate the current narrow paper from the future ACL empirical paper.**
 
+## Reviewer 9kjk follow-up decision (2026-07-30)
+
+The reviewer explicitly rejected the previous response's structural promise, appendix-filename remedy, and use-inspired framing, and again asked why the analyses did not cover every corpus-task cell and why some cells were single-seed. This closes the score-reconsideration path based on clarification alone.
+
+The direct answer is that the May audit corpus was assembled retrospectively from available completed runs rather than designed as a full factorial study. HumanEval and MATH have no comparable numerical main-result analyses, the tool-use evidence is two single-seed all-wrong boundary cases, and the central stack/PPO comparisons are single-seed or quarantined. API failures and exploratory paper construction explain how these rows entered the paper, but they are not a scientific justification for inferential claims.
+
+The live response policy is therefore:
+
+1. acknowledge that a promised rewrite cannot be assessed and that moving filenames does not replace numerical results;
+2. provide the surviving numbers directly and withdraw all-corpora, cross-corpus, algorithm-ranking, and single-seed comparative interpretations;
+3. withdraw the use-inspired contribution type because no external-user workflow or real-world outcome was evaluated;
+4. describe the surviving contribution as methodology/reproducibility only;
+5. do not ask for score reconsideration from this reviewer;
+6. keep the later E1 audit outside the reviewed record and use it only as the empirical spine of a future submission after its statistical pipeline is repaired.
+
+The postable acknowledgement and the complete 5-analysis by 4-corpus adjudication are maintained in the dedicated Reviewer 9kjk follow-up response and scope ledger. The future-paper gate is now explicit: every in-scope cell must be reported or marked missing with a rationale, replication and evaluation sample sizes must be prospectively justified by power or precision targets, every primary cell needs a fixed held-out evaluation, and “use-inspired” requires a prospectively tested external-user decision and outcome.
+
 ## Artifact boundary
 
 | Artifact | Located status | Consequence |

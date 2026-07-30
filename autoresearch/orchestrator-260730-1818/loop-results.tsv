@@ -1,0 +1,5 @@
+cycle	timestamp	score	maximum	units_remaining	outcome	description
+0	2026-07-30T12:48:00Z	0	12	12	baseline	No current-review response or complete scope ledger existed
+1	2026-07-30T12:54:00Z	11	12	1	progressed	Added postable acknowledgement, 5-by-4 coverage ledger, and response-policy update
+2	2026-07-30T12:56:00Z	12	12	0	progressed	Corrected verifier false positive for scientific slash notation and passed working predicate
+3	2026-07-30T13:00:35Z	12	12	0	verified	Applied converged blind-panel refinement; working and independent holdout checks pass

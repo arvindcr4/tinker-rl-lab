@@ -1,0 +1,19 @@
+{
+  "score": 0,
+  "maximum": 12,
+  "postable_characters": 0,
+  "failed_checks": [
+    "structural_concession",
+    "full_factorial_why",
+    "single_seed_why",
+    "use_inspired_withdrawn",
+    "actual_results_visible",
+    "no_filenames_in_postable_reply",
+    "complete_scope_ledger",
+    "ledger_cells_are_adjudicated",
+    "source_rules_applied",
+    "post_submission_boundary",
+    "future_replication_and_matrix_gate",
+    "decision_record_updated"
+  ]
+}

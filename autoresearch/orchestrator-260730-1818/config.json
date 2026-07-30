@@ -1,0 +1,31 @@
+{
+  "version": "2.2.1-manual-fallback",
+  "goal": "Improve the live NeurIPS work using the RLHF Book, Harvard CS2824, and Reviewer 9kjk's follow-up without overstating reviewed evidence.",
+  "archetype": "optimize-metric",
+  "mode": "orchestration_loop",
+  "scope": [
+    "zvf-program/flagship/paper/NEURIPS_2026_REVIEWER_9KJK_FOLLOWUP.md",
+    "zvf-program/flagship/paper/REVIEWER_9KJK_SCOPE_LEDGER.json",
+    "zvf-program/flagship/paper/NEURIPS_2026_OPENREVIEW_REBUTTAL_FINAL.md",
+    "zvf-program/flagship/paper/MAY_REVIEW_RESPONSE_AND_ACL_PLAN.md"
+  ],
+  "metric": "Reviewer-visible objections answered with exact reviewed evidence and explicit withdrawals",
+  "direction": "higher_is_better",
+  "verify": "python3 autoresearch/orchestrator-260730-1818/reviewer_response_metric.py",
+  "success_predicate": {
+    "command": "python3 autoresearch/orchestrator-260730-1818/reviewer_response_metric.py",
+    "expected_stdout": "12"
+  },
+  "holdout_verify": "python3 autoresearch/orchestrator-260730-1818/holdout_verify.py",
+  "guard": "PYTHONPATH=zvf-program python3 -m pytest -q",
+  "max_cycles": 4,
+  "terminal_choice": "stop_at_verified",
+  "source_bindings": {
+    "rlhf_book_url": "https://rlhfbook.com/",
+    "rlhf_book_live_head_checked": "1bd092d80d9a247fa51003c32cedd8fc4679ce47",
+    "harvard_cs2824_url": "https://harvard-cs2824-s26.github.io/",
+    "harvard_cs2824_live_head_checked": "5dcc34e3b861da632371645fb05aebb12a40d23c"
+  },
+  "ship_push_publish_authorized": false,
+  "router": "manual fallback because scripts/orchestrate.sh is absent from the installed skill"
+}

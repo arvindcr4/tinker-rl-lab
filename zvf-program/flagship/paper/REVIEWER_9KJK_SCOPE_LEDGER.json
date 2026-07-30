@@ -1,0 +1,237 @@
+{
+  "schema_version": "reviewer-9kjk-scope-ledger-v1",
+  "reviewed_artifact": {
+    "submission": 36320,
+    "forum": "CXbcYe69BQ",
+    "title": "Reward Contrast, Not Algorithm Labels: A Diagnostic Audit of Critic-Free Group-Relative RL for LLMs",
+    "pdf_sha256": "b15ac7e5f673473cf8edc07634f6acbd9fcd54b9f0d5d1f75b106565a174a62d"
+  },
+  "adjudication": {
+    "use_inspired_contribution": "withdrawn_not_established_in_reviewed_artifact",
+    "structural_rewrite": "not_reviewable_in_current_record",
+    "filename_policy": "paths_are_provenance_only_and_never_substitute_for_numerical_results",
+    "cross_corpus_claims": "withdrawn",
+    "single_seed_comparative_claims": "withdrawn"
+  },
+  "corpora": [
+    "gsm8k",
+    "humaneval",
+    "math",
+    "synthetic_tool_use"
+  ],
+  "analyses": [
+    "stack_sensitivity",
+    "heldout_capability",
+    "ppo_grpo",
+    "zvf_gu",
+    "early_triage"
+  ],
+  "coverage_cells": [
+    {
+      "analysis_id": "stack_sensitivity",
+      "corpus": "gsm8k",
+      "status": "quarantined",
+      "seed_basis": "One nominally matched seed; runner and backend differed.",
+      "reviewed_result": "The abstract and result tables do not supply a reconciled single numerical comparison.",
+      "permitted_inference": "Visible algorithm hyperparameters did not identify a controlled treatment; no framework or algorithm ranking."
+    },
+    {
+      "analysis_id": "stack_sensitivity",
+      "corpus": "humaneval",
+      "status": "not_evaluated",
+      "seed_basis": "0 independent training seeds reported for this cell.",
+      "reviewed_result": "No numerical main-result stack-sensitivity evaluation in the reviewed paper; this is missing evidence.",
+      "permitted_inference": "None."
+    },
+    {
+      "analysis_id": "stack_sensitivity",
+      "corpus": "math",
+      "status": "not_evaluated",
+      "seed_basis": "0 independent training seeds reported for this cell.",
+      "reviewed_result": "No numerical main-result stack-sensitivity evaluation in the reviewed paper; this is missing evidence.",
+      "permitted_inference": "None."
+    },
+    {
+      "analysis_id": "stack_sensitivity",
+      "corpus": "synthetic_tool_use",
+      "status": "not_evaluated",
+      "seed_basis": "0 independent training seeds reported for this cell.",
+      "reviewed_result": "No stack-sensitivity intervention was evaluated; this is missing evidence.",
+      "permitted_inference": "None."
+    },
+    {
+      "analysis_id": "heldout_capability",
+      "corpus": "gsm8k",
+      "status": "evaluated",
+      "seed_basis": "One fixed base checkpoint and five independently trained checkpoints on the same 200-item slice.",
+      "reviewed_result": "Base 164/200; trained 166, 165, 161, 168, and 173/200; trained mean 83.3% versus base 82.0%; seed-level p=.256 and all per-seed McNemar comparisons non-significant.",
+      "permitted_inference": "Inconclusive negative capability check; online reward does not license a held-out improvement claim."
+    },
+    {
+      "analysis_id": "heldout_capability",
+      "corpus": "humaneval",
+      "status": "not_evaluated",
+      "seed_basis": "0 independent training-seed held-out comparisons reported.",
+      "reviewed_result": "HumanEval is described as a verifier probe, but no comparable numerical held-out main result is reported; this is missing evidence.",
+      "permitted_inference": "None."
+    },
+    {
+      "analysis_id": "heldout_capability",
+      "corpus": "math",
+      "status": "not_evaluated",
+      "seed_basis": "0 independent training-seed held-out comparisons reported.",
+      "reviewed_result": "MATH is described as a verifier probe using a test-split prompt pool, not a generalization test; this is missing held-out evidence.",
+      "permitted_inference": "None."
+    },
+    {
+      "analysis_id": "heldout_capability",
+      "corpus": "synthetic_tool_use",
+      "status": "not_evaluated",
+      "seed_basis": "0 independent training-seed held-out comparisons reported.",
+      "reviewed_result": "The reviewed evidence reports schema-reward behavior, not a fixed held-out capability outcome; this is missing evidence.",
+      "permitted_inference": "None."
+    },
+    {
+      "analysis_id": "ppo_grpo",
+      "corpus": "gsm8k",
+      "status": "quarantined",
+      "seed_basis": "One seed per model-stack cell; optimization steps are not independent training replications.",
+      "reviewed_result": "The Qwen PPO source values conflict and the Llama online-reward comparison is single-seed and backend-confounded.",
+      "permitted_inference": "No directional PPO-versus-GRPO or estimator-only claim."
+    },
+    {
+      "analysis_id": "ppo_grpo",
+      "corpus": "humaneval",
+      "status": "not_evaluated",
+      "seed_basis": "0 independent training seeds reported for this cell.",
+      "reviewed_result": "No numerical PPO-versus-GRPO comparison was reported; this is missing evidence.",
+      "permitted_inference": "None."
+    },
+    {
+      "analysis_id": "ppo_grpo",
+      "corpus": "math",
+      "status": "not_evaluated",
+      "seed_basis": "0 independent training seeds reported for this cell.",
+      "reviewed_result": "No numerical PPO-versus-GRPO comparison was reported; this is missing evidence.",
+      "permitted_inference": "None."
+    },
+    {
+      "analysis_id": "ppo_grpo",
+      "corpus": "synthetic_tool_use",
+      "status": "not_evaluated",
+      "seed_basis": "0 independent training seeds reported for this cell.",
+      "reviewed_result": "No numerical PPO-versus-GRPO comparison was reported; this is missing evidence.",
+      "permitted_inference": "None."
+    },
+    {
+      "analysis_id": "zvf_gu",
+      "corpus": "gsm8k",
+      "status": "evaluated",
+      "seed_basis": "Heterogeneous completed runs, dominated by single-seed cells; not a crossed replication design.",
+      "reviewed_result": "The reviewed task-stratified aggregate reports mean ZVF 8.5% for GSM8K.",
+      "permitted_inference": "Descriptive within-corpus telemetry only; no cross-corpus predictive or causal claim."
+    },
+    {
+      "analysis_id": "zvf_gu",
+      "corpus": "humaneval",
+      "status": "not_evaluated",
+      "seed_basis": "0 identifiable independent training seeds in the reported ZVF/GU analysis.",
+      "reviewed_result": "No numerical HumanEval ZVF/GU main result was reported; this is missing evidence.",
+      "permitted_inference": "None."
+    },
+    {
+      "analysis_id": "zvf_gu",
+      "corpus": "math",
+      "status": "not_evaluated",
+      "seed_basis": "0 identifiable independent training seeds in the reported ZVF/GU analysis.",
+      "reviewed_result": "No numerical MATH ZVF/GU main result was reported; this is missing evidence.",
+      "permitted_inference": "None."
+    },
+    {
+      "analysis_id": "zvf_gu",
+      "corpus": "synthetic_tool_use",
+      "status": "evaluated",
+      "seed_basis": "Two model cells, each observed at one seed.",
+      "reviewed_result": "Both cells have online reward 0, ZVF=1, and GU=0.",
+      "permitted_inference": "Observed all-wrong reward homogeneity in two cases; not saturation, temporal collapse, prediction, or stopping utility."
+    },
+    {
+      "analysis_id": "early_triage",
+      "corpus": "gsm8k",
+      "status": "evaluated",
+      "seed_basis": "8 retrospective runs, mostly single-seed model cells; no collapsed positives.",
+      "reviewed_result": "0/8 collapsed, 6/8 labeled useful, mean late reward 0.609.",
+      "permitted_inference": "No task-specific recall estimate and no validated predictive claim."
+    },
+    {
+      "analysis_id": "early_triage",
+      "corpus": "humaneval",
+      "status": "not_evaluated",
+      "seed_basis": "0 labeled task-specific runs in the reported task breakdown.",
+      "reviewed_result": "The 22-run analysis contains 12 task-unknown records rather than an identifiable HumanEval cell; this is missing evidence.",
+      "permitted_inference": "None."
+    },
+    {
+      "analysis_id": "early_triage",
+      "corpus": "math",
+      "status": "not_evaluated",
+      "seed_basis": "0 labeled task-specific runs in the reported task breakdown.",
+      "reviewed_result": "The 22-run analysis contains 12 task-unknown records rather than an identifiable MATH cell; this is missing evidence.",
+      "permitted_inference": "None."
+    },
+    {
+      "analysis_id": "early_triage",
+      "corpus": "synthetic_tool_use",
+      "status": "evaluated",
+      "seed_basis": "2 retrospective single-seed model cells.",
+      "reviewed_result": "2/2 collapsed; both had early and late reward 0, ZVF=1, and GU=0; early reward alone identified the same failures.",
+      "permitted_inference": "Exploratory boundary observation only; no incremental prediction, recall generalization, or stopping-policy claim."
+    }
+  ],
+  "unassigned_records": {
+    "early_triage_count": 12,
+    "status": "task_unknown_not_reassignable_to_humaneval_or_math",
+    "consequence": "They cannot fill missing task cells or support an all-corpora claim."
+  },
+  "source_derived_design_rules": [
+    {
+      "source": "https://rlhfbook.com/c/06-policy-gradients",
+      "lesson": "Group contrast, sampler behavior, advantage construction, clipping, and loss aggregation define the realized treatment.",
+      "applied_rule": "Do not pool task, reward, sampler, or runner cells as replications; report each in-scope cell."
+    },
+    {
+      "source": "https://rlhfbook.com/c/14-over-optimization and https://rlhfbook.com/c/16-evaluation",
+      "lesson": "Proxy reward and evaluation choices can diverge from actual held-out quality.",
+      "applied_rule": "Every primary cell requires a fixed independent held-out outcome; online reward and ZVF/GU remain separate columns."
+    },
+    {
+      "source": "RLHF Book Appendix C practical variance guidance",
+      "lesson": "Training variance and evaluation variance are different uncertainty sources.",
+      "applied_rule": "Justify independent training-seed and evaluation-sample counts prospectively from power or precision targets; never count optimization steps or selected checkpoints as replications."
+    },
+    {
+      "source": "Harvard CS2824 policy-gradient global-convergence and coverage units, pinned course commit 5dcc34e3b861da632371645fb05aebb12a40d23c",
+      "lesson": "Stationarity-to-performance statements depend on coverage and distribution-mismatch assumptions.",
+      "applied_rule": "A missing corpus-task cell blocks transfer; it is not an implicit zero effect or an N/A without a prespecified rationale."
+    },
+    {
+      "source": "Harvard CS2824 approximation and estimation-error units, pinned course commit 5dcc34e3b861da632371645fb05aebb12a40d23c",
+      "lesson": "Optimization, statistical estimation, approximation, and reward/verifier error are distinct.",
+      "applied_rule": "Report seed uncertainty, held-out evaluation, and verifier error separately; do not infer capability from an optimization diagnostic."
+    }
+  ],
+  "post_submission_evidence": {
+    "review_status": "not_reviewed_not_used_to_answer_score",
+    "e1_summary": "A later five-arm by eight-seed same-stack GSM8K audit is future-paper feasibility evidence only; its conservative re-audit leaves all four held-out comparisons inconclusive.",
+    "boundary": "It cannot make the submitted structure reviewable or fill the reviewed HumanEval, MATH, and tool-use matrix cells."
+  },
+  "future_submission_gates": {
+    "all_in_scope_cells_accounted_for": true,
+    "replication_and_evaluation_sample_sizes": "prospectively_justified_by_power_or_precision_targets",
+    "fixed_heldout_evaluation_per_primary_cell": true,
+    "optimization_steps_are_not_replications": true,
+    "artifact_paths_never_replace_numerical_results": true,
+    "external_user_and_real_world_outcome_required_for_use_inspired": true,
+    "missing_or_quarantined_primary_cell_blocks_generalization": true
+  }
+}

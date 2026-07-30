@@ -1,0 +1,4 @@
+round	timestamp	candidate_label	judge_verdict	convergence_count	description
+1	2026-07-30T12:58:00Z	Candidate-AB	unanimous_3_of_3	1	Refine the current reply with exact test identity, two-case descriptive language, and power-or-precision-based future design
+2	2026-07-30T12:59:00Z	Candidate-AB	unanimous_3_of_3	2	Define ZVF and GU, preserve only the bounded analytical and reporting observation, and separate explanation from scientific justification
+3	2026-07-30T13:00:35Z	Candidate-AB	majority_2_of_3_exact_label_3_of_3_family	3	CONVERGED - retain the round-2 incumbent and scope external-user validation specifically to renewed use-inspired claims

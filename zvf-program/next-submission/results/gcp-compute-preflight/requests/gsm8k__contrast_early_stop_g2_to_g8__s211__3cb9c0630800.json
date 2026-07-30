@@ -1,5 +1,4 @@
 {
-  "allocation_started": true,
   "arm": "contrast_early_stop_g2_to_g8",
   "cleanup": {
     "delete_return_code": 0,
@@ -7,43 +6,30 @@
   },
   "completed_at": "2026-07-30T14:41:00+00:00",
   "console_url": "https://console.cloud.google.com/compute/instancesDetail/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-3cb9c063?project=electric-armor-388216",
+  "cost_estimate_source": "https://cloud.google.com/spot-vms/pricing",
   "credential_source": "gcp-secret-manager-existing-references",
+  "entry_script_sha256": "52aa97276389f7ff632255c7c3698a580d8ee213bfb5a7bc3784322b5dd366f8",
   "error": "raise ImportError( | ImportError: apply_chat_template requires jinja2>=3.1.0 to be installed. Your version is 3.0.3. | 2026/07/30 14:40:09 INFO handleInformTeardown: server teardown initiated id=1(@) | 2026/07/30 14:40:09 INFO handleInformTeardown: server shutdown complete id=1(@) | 2026/07/30 14:40:09 INFO connection: closing id=1(@) | 2026/07/30 14:40:09 INFO server is shutting down | 2026/07/30 14:40:09 INFO connection: closed successfully id=1(@) | 2026/07/30 14:40:09 INFO processOutgoingData: finished id=1(@) | 2026/07/30 14:40:09 INFO connection: ManageConnectionData: connection closed id=1(@) | 2026/07/30 14:40:09 INFO server: listener closed addr=/tmp/wandb-1244-1378-914156859/socket | 2026/07/30 14:40:09 INFO server is closed | NEXT_PREFLIGHT_EXIT_CODE=1",
+  "estimated_cost_cap_usd": 3.0,
   "failure_phase": "remote-runtime",
   "fingerprint": "3cb9c063080074ad2604595058911a27197153644dcf3fcaa63a4f658ad7cfa8",
-  "gcs_receipt": {
-    "log_download_error": null,
-    "log_download_return_code": 0,
-    "log_object": {
-      "bucket": "arvindcr-tinker-rl-preflight-358208640342",
-      "crc32c_hash": "Dwg0TA==",
-      "generation": "1785422412292284",
-      "md5_hash": "SzrMvDSQPa5O1X0EhUMQdA==",
-      "name": "preflight/3cb9c063080074ad2604595058911a27197153644dcf3fcaa63a4f658ad7cfa8/next-preflight.log",
-      "size": 33643
-    },
-    "log_uri": "gs://arvindcr-tinker-rl-preflight-358208640342/preflight/3cb9c063080074ad2604595058911a27197153644dcf3fcaa63a4f658ad7cfa8/next-preflight.log",
-    "result_download_return_code": 1,
-    "result_object": null,
-    "result_uri": "gs://arvindcr-tinker-rl-preflight-358208640342/preflight/3cb9c063080074ad2604595058911a27197153644dcf3fcaa63a4f658ad7cfa8/result.json"
-  },
   "gpu": "A100",
   "hardware_flavor": "a2-highgpu-1g-spot",
+  "hf_repo": "arvindcr4/tinker-rl-next-preflight-gcp-gsm8k-contrast_ear-s211-3cb9c063",
   "image": "pytorch-2-9-cu129-ubuntu-2204-nvidia-580-v20260730",
   "instance": "next-preflight-gsm8k-contrast-s211-3cb9c063",
   "machine_type": "a2-highgpu-1g",
+  "max_run_duration": "90m",
   "project": "electric-armor-388216",
   "protocol_sha256": "8849fecf6ebbbc974907f3a43078a6ff25fcec3457b1c6b3c2dff662575b7d75",
   "provider": "gcp_compute",
   "provider_job_stage": "TERMINATED",
   "receipt_bucket": "arvindcr-tinker-rl-preflight-358208640342",
   "receipt_prefix": "preflight/3cb9c063080074ad2604595058911a27197153644dcf3fcaa63a4f658ad7cfa8",
-  "remote_exit_code": 1,
   "removed_unused_optional_packages": [
     "torchaudio",
     "torchvision"
   ],
-  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/gcp-compute-preflight/requests/gsm8k__contrast_early_stop_g2_to_g8__s211__3cb9c0630800.json",
   "runtime_packages": [
     "trl==1.8.0",
     "transformers==5.13.1",
@@ -58,8 +44,6 @@
     "WANDB_API_KEY": "wandb-api-key"
   },
   "seed": 211,
-  "serial_log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/gcp-compute-preflight/logs/gsm8k__contrast_early_stop_g2_to_g8__s211__3cb9c0630800.log",
-  "serial_return_code": 0,
   "service_account": "webarena-runner@electric-armor-388216.iam.gserviceaccount.com",
   "source_commit": "b522e32834ebebda4cc74608bca039ab93d7ad57",
   "source_snapshots": {
@@ -92,8 +76,14 @@
       "snapshot": "sources/869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
     }
   },
+  "spot_hourly_usd_at_design": 1.92802,
   "stack_fingerprint": "0f6b41e5e20646ba79f54971956055761928301a87c01b5400dfb9e0ec6b742c",
+  "startup_script_sha256": "2608005c093af0ab6e353be60cb85d9bdbd1d60f3abafc6680f94b303eab71e3",
   "status": "failed",
+  "submission_output": "Created [https://www.googleapis.com/compute/v1/projects/electric-armor-388216/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-3cb9c063]. | NAME                                         ZONE           MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP   STATUS | next-preflight-gsm8k-contrast-s211-3cb9c063  us-central1-a  a2-highgpu-1g  true         10.128.0.10  136.116.75.9  RUNNING",
+  "submitted_at": "2026-07-30T14:36:54+00:00",
   "task": "gsm8k",
+  "updated_at": "2026-07-30T14:41:08+00:00",
+  "wandb_run_name": "next-preflight-gcp-gsm8k-contrast_early_stop_g2_to_g8-s211-3cb9c063",
   "zone": "us-central1-a"
 }

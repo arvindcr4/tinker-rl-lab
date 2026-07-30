@@ -29,3 +29,21 @@ def test_last_boxed_accepts_only_unbraced_numeric_atoms():
 def test_frozen_math_training_exceptions_are_parseable():
     assert REMOTE.last_boxed(r"the largest value is $\boxed 2$.") == "2"
     assert REMOTE.last_boxed(r"therefore the sum is $\boxed 9$.") == "9"
+
+
+def test_qwen_decoder_contract_disables_thinking_and_pins_sampling():
+    assert REMOTE.ENABLE_THINKING is False
+    assert REMOTE.TRAINING_DECODER == {
+        "temperature": 0.7,
+        "top_p": 0.8,
+        "top_k": 20,
+    }
+
+
+def test_latest_metric_requires_observed_training_telemetry():
+    history = [
+        {"loss": 1.0},
+        {"completions/clipped_ratio": 0.25},
+        {"loss": 0.5},
+    ]
+    assert REMOTE.latest_metric(history, "completions/clipped_ratio") == 0.25

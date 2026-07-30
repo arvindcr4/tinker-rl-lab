@@ -23,6 +23,8 @@ The intervention first generates two completions:
 
 This changes the sampling policy but not the model, prompt schedule, optimizer, reward parser, update count, checkpoint rule, evaluation harness, or canonical GRPO objective applied to expanded groups. Charged tokens include the two-completion probe and every expansion.
 
+Qwen3-8B runs in its explicit non-thinking mode for both arms. Training samples with `temperature=0.7`, `top_p=0.8`, and `top_k=20`; fixed held-out evaluation uses deterministic non-thinking decoding. This decoder contract was frozen prospectively after a non-evidence MATH preflight showed 100% clipping under thinking mode. Completion clipping is a required receipt field, and an all-clipped preflight cannot clear the execution gate.
+
 ## Closed matrix
 
 | Task | Baseline | Intervention | Paired seeds | Held-out examples |

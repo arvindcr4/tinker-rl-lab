@@ -93,10 +93,10 @@ def verify_contract(
     )
     amendments = protocol.get("amendments")
     require(
-        isinstance(amendments, list) and len(amendments) == 1,
+        isinstance(amendments, list) and len(amendments) == 2,
         "prospective protocol amendment ledger missing",
     )
-    amendment_record = amendments[0]
+    amendment_record, decoder_amendment_record = amendments
     require(
         isinstance(amendment_record, dict)
         and amendment_record.get("amendment_id") == "A001_math_unbraced_boxed_targets"
@@ -122,6 +122,24 @@ def verify_contract(
         and change.get("rows_retained_after_amendment") == 7500
         and change.get("rows_dropped") == 0,
         "MATH parser amendment corpus accounting drift",
+    )
+    require(
+        isinstance(decoder_amendment_record, dict)
+        and decoder_amendment_record.get("amendment_id") == "A002_qwen3_non_thinking_decoder"
+        and decoder_amendment_record.get("status") == "prospective_before_confirmatory_execution",
+        "Qwen decoder amendment identity or timing drift",
+    )
+    decoder_amendment_path = repo_root / str(decoder_amendment_record.get("path"))
+    require(decoder_amendment_path.is_file(), "Qwen decoder amendment receipt missing")
+    require(
+        decoder_amendment_record.get("sha256") == sha256(decoder_amendment_path),
+        "Qwen decoder amendment hash drift",
+    )
+    decoder_amendment = load_json(decoder_amendment_path)
+    require(
+        decoder_amendment.get("timing", {}).get("confirmatory_rows_completed_before_amendment") == 0
+        and decoder_amendment.get("timing", {}).get("confirmatory_outcomes_inspected") is False,
+        "Qwen decoder amendment is not prospective",
     )
 
     auth = protocol.get("authorization")
@@ -220,6 +238,15 @@ def verify_contract(
 
     treatment = protocol.get("treatment")
     require(isinstance(treatment, dict), "treatment missing")
+    require(
+        treatment.get("decoder")
+        == {
+            "enable_thinking": False,
+            "training": {"temperature": 0.7, "top_p": 0.8, "top_k": 20},
+            "evaluation": {"do_sample": False},
+        },
+        "Qwen decoder contract drift",
+    )
     arms = treatment.get("arms")
     require(isinstance(arms, list) and len(arms) == 2, "design must have exactly two arms")
     arm_ids = [arm.get("arm_id") for arm in arms]
@@ -488,6 +515,7 @@ def verify_contract(
             "trl_sampler_adapter",
             "remote_preflight",
             "protocol_amendment_001",
+            "protocol_amendment_002",
             "preflight_launcher",
             "hf_jobs_preflight_launcher",
             "kaggle_preflight_launcher",

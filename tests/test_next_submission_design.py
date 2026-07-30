@@ -46,13 +46,9 @@ def test_frozen_design_passes_with_hash_bindings(contract):
 
 def test_prospective_math_parser_amendment_is_hash_bound(contract):
     amendment = contract[0]["amendments"]
-    assert amendment == [
-        {
-            "amendment_id": "A001_math_unbraced_boxed_targets",
-            "status": "prospective_before_confirmatory_execution",
-            "path": "zvf-program/next-submission/protocol_amendment_001_math_boxed.json",
-            "sha256": "89f8ff4653e4f41c2988b2e6103080c75c7e3bac342c0ff36680bee1c4ea371a",
-        }
+    assert [row["amendment_id"] for row in amendment] == [
+        "A001_math_unbraced_boxed_targets",
+        "A002_qwen3_non_thinking_decoder",
     ]
 
 
@@ -60,6 +56,13 @@ def test_missing_math_parser_amendment_is_rejected(contract):
     candidate = copy.deepcopy(contract)
     candidate[0]["amendments"] = []
     with pytest.raises(VERIFIER.DesignContractError, match="amendment"):
+        verify(candidate)
+
+
+def test_thinking_decoder_drift_is_rejected(contract):
+    candidate = copy.deepcopy(contract)
+    candidate[0]["treatment"]["decoder"]["enable_thinking"] = True
+    with pytest.raises(VERIFIER.DesignContractError, match="decoder"):
         verify(candidate)
 
 

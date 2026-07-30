@@ -34,6 +34,12 @@ MATH_EVAL_ID = "HuggingFaceH4/MATH-500"
 MATH_EVAL_REVISION = "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be"
 ARMS = (ARM_BASELINE, ARM_EARLY_STOP)
 TASKS = ("gsm8k", "math500")
+ENABLE_THINKING = False
+TRAINING_DECODER = {
+    "temperature": 0.7,
+    "top_p": 0.8,
+    "top_k": 20,
+}
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -199,6 +205,14 @@ def dataset_manifest_hash(rows: Any) -> str:
     return digest.hexdigest()
 
 
+def latest_metric(history: list[dict[str, Any]], key: str) -> float:
+    for row in reversed(history):
+        value = row.get(key)
+        if isinstance(value, (int, float)):
+            return float(value)
+    raise RuntimeError(f"trainer history lacks required metric: {key}")
+
+
 def load_task_data(
     load_dataset: Any, task: str, heldout_n: int
 ) -> tuple[Any, Any, Callable[[str, str], float], dict[str, str]]:
@@ -284,7 +298,7 @@ def heldout_accuracy(
                 prompt,
                 tokenize=False,
                 add_generation_prompt=True,
-                enable_thinking=True,
+                enable_thinking=ENABLE_THINKING,
             )
             for prompt in batch["prompt"]
         ]
@@ -414,10 +428,10 @@ def main(argv: list[str] | None = None) -> int:
         gradient_checkpointing=True,
         gradient_checkpointing_kwargs={"use_reentrant": False},
         use_cache=False,
-        temperature=1.0,
-        top_p=1.0,
-        top_k=0,
-        chat_template_kwargs={"enable_thinking": True},
+        temperature=TRAINING_DECODER["temperature"],
+        top_p=TRAINING_DECODER["top_p"],
+        top_k=TRAINING_DECODER["top_k"],
+        chat_template_kwargs={"enable_thinking": ENABLE_THINKING},
         num_iterations=1,
         mask_truncated_completions=False,
         logging_strategy="steps",
@@ -492,6 +506,9 @@ def main(argv: list[str] | None = None) -> int:
             "all_wrong_fraction": cumulative["all_wrong_groups"] / rollout_groups,
             "all_correct_fraction": cumulative["all_correct_groups"] / rollout_groups,
             "mixed_fraction": cumulative["mixed_groups"] / rollout_groups,
+            "completion_clipped_fraction": latest_metric(
+                trainer.state.log_history, "completions/clipped_ratio"
+            ),
         }
         run_config = {
             "task": args.task,
@@ -515,6 +532,11 @@ def main(argv: list[str] | None = None) -> int:
                 "wandb_group": args.wandb_group,
             },
             "objective_fingerprint": canonical_hash(objective),
+            "decoder": {
+                "enable_thinking": ENABLE_THINKING,
+                "training": TRAINING_DECODER,
+                "evaluation": {"do_sample": False},
+            },
             "treatment": treatment,
             "dataset_bindings": dataset_bindings,
             "train_manifest_sha256": train_manifest_sha256,

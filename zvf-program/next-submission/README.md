@@ -33,6 +33,8 @@ The Colab CLI path validates OAuth, Hugging Face, and W&B credentials before all
 
 The first MATH-500 baseline preflight found two frozen MATH-lighteval training solutions that use unbraced `\boxed 2` and `\boxed 9` targets. Prospective amendment `A001_math_unbraced_boxed_targets` adds a numeric-only compatibility rule, retains all 7,500 training rows, and is hash-bound before any confirmatory row exists. The failed preflight receipt is retained and remains non-evidence.
 
+The amended MATH baseline then showed that thinking-mode decoding clipped every training completion at 1,024 tokens and produced no reward contrast. Qwen3's model card warns against greedy evaluation in thinking mode and documents non-thinking mode as the efficiency-oriented hard switch. Prospective amendment `A002_qwen3_non_thinking_decoder` therefore freezes non-thinking chat templates, the model-card training sampler (`temperature=0.7`, `top_p=0.8`, `top_k=20`), deterministic non-thinking evaluation, and a fail-closed completion-clipping field before confirmatory execution.
+
 ## Verify
 
 ```bash

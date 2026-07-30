@@ -48,6 +48,15 @@ PACKAGE_PINS = (
 ARMS = ("grpo_g8", "contrast_early_stop_g2_to_g8")
 TASKS = ("gsm8k", "math500")
 ANSI_RE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+DECODER_CONTRACT = {
+    "enable_thinking": False,
+    "training": {
+        "temperature": 0.7,
+        "top_p": 0.8,
+        "top_k": 20,
+    },
+    "evaluation": {"do_sample": False},
+}
 
 
 def load_e1_helpers() -> Any:
@@ -311,6 +320,8 @@ def validate_manifest(
     }
     if wrong:
         raise RuntimeError(f"remote run config mismatch: {wrong}")
+    if request.get("decoder") != DECODER_CONTRACT or run_config.get("decoder") != DECODER_CONTRACT:
+        raise RuntimeError("remote decoder contract differs from the frozen request")
     tracking_backends = run_config.get("tracking_backends")
     if not isinstance(tracking_backends, list) or "wandb" not in tracking_backends:
         raise RuntimeError("remote run config lacks required W&B tracking")
@@ -377,6 +388,9 @@ def validate_manifest(
             raise RuntimeError("intervention generation count violates the G2-to-G8 rule")
     if charged < generated:
         raise RuntimeError("charged generated tokens are below the generated-rollout count")
+    clipped = audit.get("completion_clipped_fraction")
+    if not isinstance(clipped, (int, float)) or not math.isfinite(clipped) or not 0 <= clipped < 1:
+        raise RuntimeError("completion clipping telemetry is invalid or all completions clipped")
     trace = manifest.get("heldout_trace")
     if not isinstance(trace, list) or len(trace) != 8:
         raise RuntimeError("held-out trace is incomplete")
@@ -717,6 +731,7 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
             "trainer": "trl-1.8.0-custom-rollout-g8-v1",
             "sampler_sha256": sha256_file(SAMPLER),
             "adapter_sha256": sha256_file(TRL_ADAPTER),
+            "decoder": DECODER_CONTRACT,
         }
     )
     tracking = {
@@ -739,6 +754,7 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         "protocol_sha256": protocol_sha256,
         "stack_fingerprint": stack_fingerprint,
         "runtime_packages": list(PACKAGE_PINS),
+        "decoder": DECODER_CONTRACT,
         "tracking": tracking,
         "source_snapshots": snapshots,
     }

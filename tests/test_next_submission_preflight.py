@@ -40,6 +40,7 @@ def valid_payload():
         "provider": "huggingface_jobs",
         "hardware_flavor": "l4x1",
         "runtime_packages": list(PREFLIGHT.PACKAGE_PINS),
+        "decoder": copy.deepcopy(PREFLIGHT.DECODER_CONTRACT),
         "tracking": {
             "hf_repo_prefix": "arvindcr4/tinker-rl-next-preflight",
             "wandb_project": "tinker-rl-lab",
@@ -64,6 +65,7 @@ def valid_payload():
         "all_wrong_fraction": 0.5,
         "all_correct_fraction": 0.0,
         "mixed_fraction": 0.5,
+        "completion_clipped_fraction": 0.0,
     }
     run_config = {
         "task": request["task"],
@@ -83,6 +85,7 @@ def valid_payload():
             "wandb_entity": request["tracking"]["wandb_entity"],
             "wandb_group": request["tracking"]["wandb_group"],
         },
+        "decoder": copy.deepcopy(request["decoder"]),
     }
     trace = [
         {"index": index, "correct": index < 4, "completion_sha256": f"{index:064x}"}
@@ -170,6 +173,12 @@ def test_source_hash_drift_is_rejected():
                 charged_generated_tokens=1
             ),
             "charged generated tokens",
+        ),
+        (
+            lambda manifest, result, request: manifest["audit_record"].update(
+                completion_clipped_fraction=1.0
+            ),
+            "clipping",
         ),
     ],
 )

@@ -8,6 +8,12 @@
       "status": "prospective_before_confirmatory_execution",
       "path": "zvf-program/next-submission/protocol_amendment_001_math_boxed.json",
       "sha256": "89f8ff4653e4f41c2988b2e6103080c75c7e3bac342c0ff36680bee1c4ea371a"
+    },
+    {
+      "amendment_id": "A002_qwen3_non_thinking_decoder",
+      "status": "prospective_before_confirmatory_execution",
+      "path": "zvf-program/next-submission/protocol_amendment_002_qwen_decoder.json",
+      "sha256": "c61b2e573923fabe1ca2fde65a1383153d36a6e95ac1fb5f8e93fddbb81259b9"
     }
   ],
   "conference_target": "next_general_ai_ml_conference_tbd",
@@ -86,6 +92,17 @@
     "per_device_train_batch_size": 2,
     "gradient_accumulation_steps": 8,
     "max_completion_length": 1024,
+    "decoder": {
+      "enable_thinking": false,
+      "training": {
+        "temperature": 0.7,
+        "top_p": 0.8,
+        "top_k": 20
+      },
+      "evaluation": {
+        "do_sample": false
+      }
+    },
     "fixed_components": [
       "initial checkpoint",
       "tokenizer",
@@ -237,6 +254,7 @@
     "kl_to_data_policy",
     "kl_to_initial_reference",
     "parser_disagreement",
+    "completion_clipped_fraction",
     "wall_clock_seconds"
   ],
   "bindings": {
@@ -253,11 +271,13 @@
     "trl_sampler_adapter_path": "zvf-program/next-submission/trl_sampler_adapter.py",
     "trl_sampler_adapter_sha256": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365",
     "remote_preflight_path": "zvf-program/next-submission/remote_preflight.py",
-    "remote_preflight_sha256": "7647ae578d6ddf9dbfeb46ee8de14c5faa831ea6ca369d2a2ac6ab2c4cda6a1c",
+    "remote_preflight_sha256": "dafa185f35b76f7db5ef3adcfdb71eddc81532039b2d333988ede14c5a5e375c",
     "protocol_amendment_001_path": "zvf-program/next-submission/protocol_amendment_001_math_boxed.json",
     "protocol_amendment_001_sha256": "89f8ff4653e4f41c2988b2e6103080c75c7e3bac342c0ff36680bee1c4ea371a",
+    "protocol_amendment_002_path": "zvf-program/next-submission/protocol_amendment_002_qwen_decoder.json",
+    "protocol_amendment_002_sha256": "c61b2e573923fabe1ca2fde65a1383153d36a6e95ac1fb5f8e93fddbb81259b9",
     "preflight_launcher_path": "zvf-program/next-submission/run_preflight.py",
-    "preflight_launcher_sha256": "7108d36eeac1e81ad8ee82ee87d77a7cf86f66a01fed05c1adc74750f74f965f",
+    "preflight_launcher_sha256": "9eec555a70bf44c74746d3032d9dfcc9c8a19c87bd9d6403ad6d18948bfbcc51",
     "hf_jobs_preflight_launcher_path": "zvf-program/next-submission/run_hf_jobs_preflight.py",
     "hf_jobs_preflight_launcher_sha256": "c0b465cca5ae45979fa088b3d0a0a06be3987a8e81310d451305adb92ed41dee",
     "kaggle_preflight_launcher_path": "zvf-program/next-submission/run_kaggle_preflight.py",

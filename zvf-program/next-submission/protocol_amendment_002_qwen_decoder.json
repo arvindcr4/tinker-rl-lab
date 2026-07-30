@@ -1,0 +1,58 @@
+{
+  "schema_version": "aiml-next-protocol-amendment-v1",
+  "amendment_id": "A002_qwen3_non_thinking_decoder",
+  "status": "prospective_before_confirmatory_execution",
+  "trigger": {
+    "phase": "four-cell non-evidence preflight",
+    "task": "math500",
+    "arm": "grpo_g8",
+    "seed": 211,
+    "request_fingerprint": "37df1c8658837fdaade274acdd54d165e5c9e48402b61056a58c219f84fc1f27",
+    "observed_completion_clipped_fraction": 1.0,
+    "observed_updated_groups": 0,
+    "observed_heldout_correct": 0,
+    "observed_heldout_n": 8
+  },
+  "timing": {
+    "confirmatory_rows_completed_before_amendment": 0,
+    "confirmatory_outcomes_inspected": false,
+    "preflight_is_scientific_evidence": false
+  },
+  "source_basis": {
+    "model": "Qwen/Qwen3-8B",
+    "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "model_card_path": "README.md",
+    "model_card_sha256": "0f36caaff9c2516411a7738db384606263ba653c1e63e61d72f511606164d5a6",
+    "finding": "The model card warns against greedy decoding in thinking mode and documents enable_thinking=false as the efficiency-oriented hard switch."
+  },
+  "change": {
+    "chat_template_enable_thinking": false,
+    "training_decoder": {
+      "temperature": 0.7,
+      "top_p": 0.8,
+      "top_k": 20
+    },
+    "evaluation_decoder": {
+      "do_sample": false
+    },
+    "new_required_telemetry": "completion_clipped_fraction",
+    "preflight_acceptance_rule": "A completed preflight is invalid when every sampled training completion is clipped."
+  },
+  "invariants": {
+    "tasks_unchanged": true,
+    "arms_unchanged": true,
+    "seed_plan_unchanged": true,
+    "reward_semantics_unchanged": true,
+    "completion_cap_unchanged": true,
+    "heldout_rows_unchanged": true,
+    "primary_estimands_unchanged": true,
+    "sample_size_rule_unchanged": true
+  },
+  "bindings": {
+    "prior_protocol_sha256": "2a3316d5cdf93f95a2711619ca1feebba1353ed61f759bb0fdd360b4040824f0",
+    "prior_remote_preflight_sha256": "7647ae578d6ddf9dbfeb46ee8de14c5faa831ea6ca369d2a2ac6ab2c4cda6a1c",
+    "amended_remote_preflight_sha256": "dafa185f35b76f7db5ef3adcfdb71eddc81532039b2d333988ede14c5a5e375c",
+    "amended_preflight_launcher_sha256": "9eec555a70bf44c74746d3032d9dfcc9c8a19c87bd9d6403ad6d18948bfbcc51"
+  },
+  "evidence_boundary": "This amendment repairs the decoder contract before any confirmatory row exists. Preflight outcomes remain non-evidence and cannot support C1-C4."
+}

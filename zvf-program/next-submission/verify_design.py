@@ -462,6 +462,7 @@ def verify_contract(
             "gcp_receipt_bucket",
             "preflight_secure_exec",
             "preflight_environment_check",
+            "preflight_colab_setup",
         ):
             path = repo_root / str(bindings.get(f"{name}_path"))
             require(path.is_file(), f"bound {name} missing")

@@ -29,6 +29,8 @@ The executable preflight stack now includes a pure sampler contract, a pinned TR
 
 Transport is provenance rather than treatment: Colab, Hugging Face Jobs, Kaggle, and GCP Compute launchers bind the requested provider and hardware flavor into distinct fingerprints, while the model, sampler, objective, data, and receipt checks remain fixed. Hugging Face Jobs runs additionally pin Trackio; every provider still requires the same private Hub and W&B receipts. The GCP path uses pre-existing Secret Manager references, a 90-minute Spot A100 limit, a dedicated private receipt bucket with public access prevention, and verified deletion of its exact temporary VM.
 
+The Colab CLI path validates OAuth, Hugging Face, and W&B credentials before allocation; installs its pinned stack through a bounded long-running `exec`; verifies the requested GPU before uploading credentials; deletes credential files immediately; runs training in a child process so secrets never enter the persistent kernel environment; checks the private Hub commit and finished W&B run independently; and fails closed unless server-side session enumeration proves cleanup.
+
 ## Verify
 
 ```bash
@@ -43,6 +45,7 @@ python3 zvf-program/next-submission/run_preflight.py \
   --arm contrast_early_stop_g2_to_g8 \
   --seed 211 \
   --dry-run
+# Remove --dry-run only from a clean committed tree after checking `colab sessions`.
 python3 zvf-program/next-submission/run_hf_jobs_preflight.py \
   --task gsm8k \
   --arm contrast_early_stop_g2_to_g8 \

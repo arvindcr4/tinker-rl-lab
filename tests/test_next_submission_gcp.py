@@ -67,6 +67,7 @@ def test_startup_script_has_frozen_packages_serial_receipt_and_shutdown():
 
     for requirement in GCP.PACKAGE_PINS:
         assert requirement in script
+    assert "jinja2==3.1.6" in GCP.PACKAGE_PINS
     assert "/dev/ttyS0" in script
     assert "NEXT_PREFLIGHT_EXIT_CODE" in script
     assert "NEXT_PREFLIGHT_UPLOAD_EXIT_CODE" in script

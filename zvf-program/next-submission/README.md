@@ -27,7 +27,7 @@ Local implementation and remote GPU execution are authorized by a bound receipt.
 
 The executable preflight stack now includes a pure sampler contract, a pinned TRL adapter, an environment gate, a credential-isolated remote runner, and an independent local receipt validator. A preflight is always labeled `preflight-not-evidence`; it cannot populate the confirmatory main table.
 
-Transport is provenance rather than treatment: Colab and Hugging Face Jobs launchers bind the requested provider and hardware flavor into distinct fingerprints, while the model, sampler, objective, data, and receipt checks remain fixed. Hugging Face Jobs runs additionally pin Trackio and still require the same private Hub and W&B receipts.
+Transport is provenance rather than treatment: Colab, Hugging Face Jobs, and Kaggle launchers bind the requested provider and hardware flavor into distinct fingerprints, while the model, sampler, objective, data, and receipt checks remain fixed. Hugging Face Jobs runs additionally pin Trackio; every provider still requires the same private Hub and W&B receipts.
 
 ## Verify
 
@@ -48,6 +48,12 @@ python3 zvf-program/next-submission/run_hf_jobs_preflight.py \
   --arm contrast_early_stop_g2_to_g8 \
   --seed 211 \
   --flavor a100-large \
+  --dry-run
+python3 zvf-program/next-submission/run_kaggle_preflight.py \
+  --task gsm8k \
+  --arm contrast_early_stop_g2_to_g8 \
+  --seed 211 \
+  --accelerator NvidiaTeslaA100 \
   --dry-run
 ```
 

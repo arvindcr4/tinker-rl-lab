@@ -1,0 +1,16 @@
+{
+  "code_file": "main.py",
+  "competition_sources": [],
+  "dataset_sources": [],
+  "enable_gpu": "true",
+  "enable_internet": "true",
+  "enable_tpu": "false",
+  "id": "arvindcr/next-preflight-gsm8k-contrast-s211-57dd21a4",
+  "is_private": "true",
+  "kernel_sources": [],
+  "kernel_type": "script",
+  "language": "python",
+  "machine_shape": "",
+  "model_sources": [],
+  "title": "Next Preflight Gsm8K Contrast S211 57Dd21A4"
+}

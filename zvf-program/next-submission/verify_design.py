@@ -457,6 +457,7 @@ def verify_contract(
             "remote_preflight",
             "preflight_launcher",
             "hf_jobs_preflight_launcher",
+            "kaggle_preflight_launcher",
             "preflight_secure_exec",
             "preflight_environment_check",
         ):

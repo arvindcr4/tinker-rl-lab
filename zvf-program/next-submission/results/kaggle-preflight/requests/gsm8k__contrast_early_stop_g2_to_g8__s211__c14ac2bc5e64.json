@@ -1,0 +1,62 @@
+{
+  "arm": "contrast_early_stop_g2_to_g8",
+  "estimated_cost_cap_usd": 0.0,
+  "fingerprint": "c14ac2bc5e6402429ecd216e1329fd5700182cb7b99219e120add28d748f3aee",
+  "gpu": "A100",
+  "hardware_flavor": "NvidiaTeslaA100",
+  "hf_repo": "arvindcr4/tinker-rl-next-preflight-kaggle-gsm8k-contrast_ear-s211-c14ac2bc",
+  "kernel_id": "arvindcr/next-preflight-gsm8k-contrast-s211-c14ac2bc",
+  "kernel_metadata_sha256": "9b07177453e43c6718cc2a68729346905eb79c164a26c6680405e0d762e0b8fe",
+  "kernel_script_sha256": "8b38fb6ddf58d6edacc205a201fb5e4f8fb4db0b90187a757aea098fe2b8cd2d",
+  "kernel_url": "https://www.kaggle.com/code/arvindcr/next-preflight-gsm8k-contrast-s211-c14ac2bc",
+  "protocol_sha256": "47a3e4f36b0d028e65f7fbe781de1033819f58823fa9039eb1615c742abe3455",
+  "provider": "kaggle",
+  "runtime_limit_seconds": 7200,
+  "runtime_packages": [
+    "trl==1.8.0",
+    "transformers==5.13.1",
+    "datasets==4.8.5",
+    "peft==0.19.1",
+    "torchao==0.17.0",
+    "wandb==0.28.0"
+  ],
+  "schema_version": "aiml-next-preflight-request-v1",
+  "seed": 211,
+  "source_commit": "ef1786102f746c4c389446a159283fd6ab66a1dd",
+  "source_snapshots": {
+    "zvf-program/next-submission/contrast_sampler.py": {
+      "sha256": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
+      "snapshot": "sources/083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86"
+    },
+    "zvf-program/next-submission/execution_authorization.json": {
+      "sha256": "c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561",
+      "snapshot": "sources/c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561"
+    },
+    "zvf-program/next-submission/preregistration.json": {
+      "sha256": "47a3e4f36b0d028e65f7fbe781de1033819f58823fa9039eb1615c742abe3455",
+      "snapshot": "sources/47a3e4f36b0d028e65f7fbe781de1033819f58823fa9039eb1615c742abe3455"
+    },
+    "zvf-program/next-submission/remote_preflight.py": {
+      "sha256": "e294565c260baa4db4b42ad2ef871d4c4cebde41727cd390c05066c2071c51ca",
+      "snapshot": "sources/e294565c260baa4db4b42ad2ef871d4c4cebde41727cd390c05066c2071c51ca"
+    },
+    "zvf-program/next-submission/run_kaggle_preflight.py": {
+      "sha256": "9ab9b8eadb464939c91458159515917059c0979efc9fea49f1dbfd0585ce4dcf",
+      "snapshot": "sources/9ab9b8eadb464939c91458159515917059c0979efc9fea49f1dbfd0585ce4dcf"
+    },
+    "zvf-program/next-submission/run_preflight.py": {
+      "sha256": "d69128fb6df3505ac702adc5a96147b31bafe01f07df8615689b23945d4ea455",
+      "snapshot": "sources/d69128fb6df3505ac702adc5a96147b31bafe01f07df8615689b23945d4ea455"
+    },
+    "zvf-program/next-submission/trl_sampler_adapter.py": {
+      "sha256": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365",
+      "snapshot": "sources/869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
+    }
+  },
+  "stack_fingerprint": "24541e75a5a40186261dd1006a8e45376e6d3665e2745cecaf0e99177aff1899",
+  "status": "dry-run",
+  "submitted_at": null,
+  "task": "gsm8k",
+  "updated_at": "2026-07-30T13:57:59+00:00",
+  "wandb_run_name": "next-preflight-kaggle-gsm8k-contrast_early_stop_g2_to_g8-s211-c14ac2bc"
+}

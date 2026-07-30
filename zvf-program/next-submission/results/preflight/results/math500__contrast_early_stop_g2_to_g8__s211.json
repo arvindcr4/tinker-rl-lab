@@ -1,0 +1,363 @@
+{
+  "allocation_started": true,
+  "arm": "contrast_early_stop_g2_to_g8",
+  "auth_strategy": "oauth2",
+  "cleanup": {
+    "attempts": 1,
+    "session_absent_verified": true,
+    "sessions_return_codes": [
+      0
+    ],
+    "stop_return_codes": [
+      0
+    ]
+  },
+  "colab_cli_version": "0.6.0",
+  "completed_at": "2026-07-30T18:05:26+00:00",
+  "decoder": {
+    "enable_thinking": false,
+    "evaluation": {
+      "do_sample": false
+    },
+    "training": {
+      "temperature": 0.7,
+      "top_k": 20,
+      "top_p": 0.8
+    }
+  },
+  "failed_step": null,
+  "fingerprint": "6ab821fda9bb63a1b8ec3ddf22960170f7da874be914d0bd578be385406cfd08",
+  "gpu": "A100",
+  "hardware_flavor": "A100",
+  "hf_repo": "arvindcr4/tinker-rl-next-preflight-math500-contrast_ear-s211-6ab821fd",
+  "log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/preflight/logs/math500__contrast_early_stop_g2_to_g8__s211__6ab821fda9bb.log",
+  "manifest": {
+    "audit_record": {
+      "all_correct_fraction": 0.5,
+      "all_wrong_fraction": 0.5,
+      "arm_id": "contrast_early_stop_g2_to_g8",
+      "charged_generated_tokens": 1260,
+      "completion_clipped_fraction": 0.0,
+      "evaluation_seconds": 265.94814152099997,
+      "evidence_tier": "preflight_not_scientific_evidence",
+      "generated_rollouts": 4,
+      "heldout_accuracy": 1.0,
+      "heldout_correct": 8,
+      "heldout_n": 8,
+      "mixed_fraction": 0.0,
+      "rollout_groups": 2,
+      "seed": 211,
+      "status": "complete",
+      "task_id": "math500",
+      "updated_groups": 0,
+      "wall_clock_seconds": 428.485904172
+    },
+    "completed_at": "2026-07-30T18:04:48+00:00",
+    "evidence_class": "preflight-not-evidence",
+    "heldout_trace": [
+      {
+        "completion_sha256": "3061427a589c75336c0d6036b60ca9902767555d3be8dfdd9c571eff6b74e53a",
+        "correct": true,
+        "index": 0
+      },
+      {
+        "completion_sha256": "46d1c4908e366c61da78a59b6d92836ba6d8a175b8027fb49e23ee5ba19be194",
+        "correct": true,
+        "index": 1
+      },
+      {
+        "completion_sha256": "d3854f960418322ef96f1fae874d88c601613336d8f5620b60cd2a0e5cd7ab7f",
+        "correct": true,
+        "index": 2
+      },
+      {
+        "completion_sha256": "7f76ea1df0284a3dfba5663876d2e408fadd4e700172c8629f68bd9ebfe3325a",
+        "correct": true,
+        "index": 3
+      },
+      {
+        "completion_sha256": "0b39199bf4c2690ce0b0ff61075692b9c4932bb519e5b205dd329a77795db8ec",
+        "correct": true,
+        "index": 4
+      },
+      {
+        "completion_sha256": "6ae934786056e58baca93b89d8039ae7d4723f66da7113621207b7aed9909af9",
+        "correct": true,
+        "index": 5
+      },
+      {
+        "completion_sha256": "f4d8e2fdb535b4c7843a6f93f245ead29ff04aef10a6dcff02bc45843cc25042",
+        "correct": true,
+        "index": 6
+      },
+      {
+        "completion_sha256": "5b3b6f841a4c50430e45338bc1f96cefd05643bac1c9ed20bc4a7d2604e0ab9b",
+        "correct": true,
+        "index": 7
+      }
+    ],
+    "run_config": {
+      "arm": "contrast_early_stop_g2_to_g8",
+      "dataset_bindings": {
+        "evaluation_dataset": "HuggingFaceH4/MATH-500",
+        "evaluation_revision": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+        "training_dataset": "DigitalLearningGmbH/MATH-lighteval",
+        "training_revision": "0530c78699ea5e8eb5530600900e1f328b48acad"
+      },
+      "decoder": {
+        "enable_thinking": false,
+        "evaluation": {
+          "do_sample": false
+        },
+        "training": {
+          "temperature": 0.7,
+          "top_k": 20,
+          "top_p": 0.8
+        }
+      },
+      "evaluation_manifest_sha256": "88f92c88fcb7ac635efa643385f67ae024018860619aab0a20a7673d3d41b1fd",
+      "hardware_flavor": "A100",
+      "heldout_n": 8,
+      "max_completion_length": 1024,
+      "max_steps": 1,
+      "model": "Qwen/Qwen3-8B",
+      "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "objective_fingerprint": "370c81cd7313b616aab7bb448cddda77555bf732d2e37f516e3e467d50e1ce9f",
+      "protocol_sha256": "bdaba0beff4cb75e9630834d600543195a7b065369cba587468b31478311142b",
+      "provider": "colab",
+      "seed": 211,
+      "source_commit": "454b3ead269f0cd2c87d694884672587cbf24122",
+      "stack_fingerprint": "f739ee5a5b474a6429f3a485d90d703c01ccfed45ff406349623e42b19bb48f8",
+      "task": "math500",
+      "tracking": {
+        "wandb_entity": null,
+        "wandb_group": "next-submission-preflight",
+        "wandb_project": "tinker-rl-lab"
+      },
+      "tracking_backends": [
+        "wandb"
+      ],
+      "train_manifest_sha256": "f024a5dad24f1a0ac0f81ac68627c580253c81509fb5683250b6bbfd4854052a",
+      "treatment": {
+        "arm": "contrast_early_stop_g2_to_g8",
+        "expand_rule": "expand iff the first two binary verifier rewards differ",
+        "expansion_group_size": 6,
+        "group_size": 8,
+        "homogeneous_rule": "no update and no replacement prompt",
+        "initial_group_size": 2
+      },
+      "unit_fingerprint": "6ab821fda9bb63a1b8ec3ddf22960170f7da874be914d0bd578be385406cfd08"
+    },
+    "runtime_versions": {
+      "cuda": "12.8",
+      "datasets": "4.8.5",
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "huggingface_hub": "1.26.0",
+      "jinja2": "3.1.6",
+      "peft": "0.19.1",
+      "torch": "2.11.0+cu128",
+      "torchao": "0.17.0",
+      "trackio": "missing",
+      "transformers": "5.13.1",
+      "trl": "1.8.0",
+      "wandb": "0.28.0"
+    },
+    "schema_version": "aiml-next-preflight-run-v1",
+    "source_files": {
+      "contrast_sampler.py": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
+      "remote_preflight.py": "dafa185f35b76f7db5ef3adcfdb71eddc81532039b2d333988ede14c5a5e375c",
+      "trl_sampler_adapter.py": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
+    },
+    "started_at": "2026-07-30T17:57:39+00:00",
+    "status": "complete",
+    "wandb": {
+      "run_id": "6ab821fd",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/6ab821fd"
+    }
+  },
+  "payload": {
+    "audit_record": {
+      "all_correct_fraction": 0.5,
+      "all_wrong_fraction": 0.5,
+      "arm_id": "contrast_early_stop_g2_to_g8",
+      "charged_generated_tokens": 1260,
+      "completion_clipped_fraction": 0.0,
+      "evaluation_seconds": 265.94814152099997,
+      "evidence_tier": "preflight_not_scientific_evidence",
+      "generated_rollouts": 4,
+      "heldout_accuracy": 1.0,
+      "heldout_correct": 8,
+      "heldout_n": 8,
+      "mixed_fraction": 0.0,
+      "rollout_groups": 2,
+      "seed": 211,
+      "status": "complete",
+      "task_id": "math500",
+      "updated_groups": 0,
+      "wall_clock_seconds": 428.485904172
+    },
+    "evidence_class": "preflight-not-evidence",
+    "remote": {
+      "hf_commit": "809c7e2329e27238683a8d34624d3a1db7b3a54a",
+      "hf_final_adapter_path": "final/adapter_model.safetensors",
+      "hf_manifest_path": "run_manifest.json",
+      "hf_repo": "arvindcr4/tinker-rl-next-preflight-math500-contrast_ear-s211-6ab821fd",
+      "wandb_run_id": "6ab821fd",
+      "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/6ab821fd"
+    },
+    "run_config": {
+      "arm": "contrast_early_stop_g2_to_g8",
+      "dataset_bindings": {
+        "evaluation_dataset": "HuggingFaceH4/MATH-500",
+        "evaluation_revision": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+        "training_dataset": "DigitalLearningGmbH/MATH-lighteval",
+        "training_revision": "0530c78699ea5e8eb5530600900e1f328b48acad"
+      },
+      "decoder": {
+        "enable_thinking": false,
+        "evaluation": {
+          "do_sample": false
+        },
+        "training": {
+          "temperature": 0.7,
+          "top_k": 20,
+          "top_p": 0.8
+        }
+      },
+      "evaluation_manifest_sha256": "88f92c88fcb7ac635efa643385f67ae024018860619aab0a20a7673d3d41b1fd",
+      "hardware_flavor": "A100",
+      "heldout_n": 8,
+      "max_completion_length": 1024,
+      "max_steps": 1,
+      "model": "Qwen/Qwen3-8B",
+      "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "objective_fingerprint": "370c81cd7313b616aab7bb448cddda77555bf732d2e37f516e3e467d50e1ce9f",
+      "protocol_sha256": "bdaba0beff4cb75e9630834d600543195a7b065369cba587468b31478311142b",
+      "provider": "colab",
+      "seed": 211,
+      "source_commit": "454b3ead269f0cd2c87d694884672587cbf24122",
+      "stack_fingerprint": "f739ee5a5b474a6429f3a485d90d703c01ccfed45ff406349623e42b19bb48f8",
+      "task": "math500",
+      "tracking": {
+        "wandb_entity": null,
+        "wandb_group": "next-submission-preflight",
+        "wandb_project": "tinker-rl-lab"
+      },
+      "tracking_backends": [
+        "wandb"
+      ],
+      "train_manifest_sha256": "f024a5dad24f1a0ac0f81ac68627c580253c81509fb5683250b6bbfd4854052a",
+      "treatment": {
+        "arm": "contrast_early_stop_g2_to_g8",
+        "expand_rule": "expand iff the first two binary verifier rewards differ",
+        "expansion_group_size": 6,
+        "group_size": 8,
+        "homogeneous_rule": "no update and no replacement prompt",
+        "initial_group_size": 2
+      },
+      "unit_fingerprint": "6ab821fda9bb63a1b8ec3ddf22960170f7da874be914d0bd578be385406cfd08"
+    },
+    "runtime_versions": {
+      "cuda": "12.8",
+      "datasets": "4.8.5",
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "huggingface_hub": "1.26.0",
+      "jinja2": "3.1.6",
+      "peft": "0.19.1",
+      "torch": "2.11.0+cu128",
+      "torchao": "0.17.0",
+      "trackio": "missing",
+      "transformers": "5.13.1",
+      "trl": "1.8.0",
+      "wandb": "0.28.0"
+    },
+    "schema_version": "aiml-next-preflight-result-v1",
+    "status": "completed"
+  },
+  "protocol_sha256": "bdaba0beff4cb75e9630834d600543195a7b065369cba587468b31478311142b",
+  "provider": "colab",
+  "remote_verification": {
+    "hf_commit": "809c7e2329e27238683a8d34624d3a1db7b3a54a",
+    "hf_files": [
+      "run_manifest.json",
+      "final/adapter_model.safetensors"
+    ],
+    "hf_private": true,
+    "hf_repo": "arvindcr4/tinker-rl-next-preflight-math500-contrast_ear-s211-6ab821fd",
+    "verified_at": "2026-07-30T18:05:28+00:00",
+    "wandb": {
+      "entity": "arvindcr4-pes-university",
+      "project": "tinker-rl-lab",
+      "run_id": "6ab821fd",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/6ab821fd",
+      "state": "finished"
+    }
+  },
+  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/preflight/requests/math500__contrast_early_stop_g2_to_g8__s211__6ab821fda9bb.json",
+  "return_code": 0,
+  "runtime_packages": [
+    "trl==1.8.0",
+    "transformers==5.13.1",
+    "jinja2==3.1.6",
+    "datasets==4.8.5",
+    "peft==0.19.1",
+    "torchao==0.17.0",
+    "wandb==0.28.0",
+    "huggingface_hub==1.26.0"
+  ],
+  "schema_version": "aiml-next-preflight-request-v1",
+  "seed": 211,
+  "session": "next-pre-math-contrast-6ab821",
+  "source_commit": "454b3ead269f0cd2c87d694884672587cbf24122",
+  "source_snapshots": {
+    "zvf-program/next-submission/contrast_sampler.py": {
+      "sha256": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
+      "snapshot": "sources/083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86"
+    },
+    "zvf-program/next-submission/execution_authorization.json": {
+      "sha256": "c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561",
+      "snapshot": "sources/c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561"
+    },
+    "zvf-program/next-submission/preregistration.json": {
+      "sha256": "bdaba0beff4cb75e9630834d600543195a7b065369cba587468b31478311142b",
+      "snapshot": "sources/bdaba0beff4cb75e9630834d600543195a7b065369cba587468b31478311142b"
+    },
+    "zvf-program/next-submission/remote_preflight.py": {
+      "sha256": "dafa185f35b76f7db5ef3adcfdb71eddc81532039b2d333988ede14c5a5e375c",
+      "snapshot": "sources/dafa185f35b76f7db5ef3adcfdb71eddc81532039b2d333988ede14c5a5e375c"
+    },
+    "zvf-program/next-submission/run_preflight.py": {
+      "sha256": "9eec555a70bf44c74746d3032d9dfcc9c8a19c87bd9d6403ad6d18948bfbcc51",
+      "snapshot": "sources/9eec555a70bf44c74746d3032d9dfcc9c8a19c87bd9d6403ad6d18948bfbcc51"
+    },
+    "zvf-program/next-submission/secure_exec_preflight.py": {
+      "sha256": "28bd89d7ad3314f405fa983034649e511da014285c4883326daccbaac217d2d0",
+      "snapshot": "sources/28bd89d7ad3314f405fa983034649e511da014285c4883326daccbaac217d2d0"
+    },
+    "zvf-program/next-submission/setup_colab_preflight.py": {
+      "sha256": "44245d3a7d03bf0972d4af89038e46e78e0aa20a8de845cd06150da0d745a611",
+      "snapshot": "sources/44245d3a7d03bf0972d4af89038e46e78e0aa20a8de845cd06150da0d745a611"
+    },
+    "zvf-program/next-submission/trl_sampler_adapter.py": {
+      "sha256": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365",
+      "snapshot": "sources/869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
+    },
+    "zvf-program/next-submission/verify_preflight_environment.py": {
+      "sha256": "ae1718e5c7eca2b1fb17e4d244cb387c3c0b83588fc333bb7789d9bb88c21b2a",
+      "snapshot": "sources/ae1718e5c7eca2b1fb17e4d244cb387c3c0b83588fc333bb7789d9bb88c21b2a"
+    }
+  },
+  "stack_fingerprint": "f739ee5a5b474a6429f3a485d90d703c01ccfed45ff406349623e42b19bb48f8",
+  "status": "completed",
+  "task": "math500",
+  "tracking": {
+    "hf_repo_prefix": "arvindcr4/tinker-rl-next-preflight",
+    "wandb_entity": null,
+    "wandb_group": "next-submission-preflight",
+    "wandb_project": "tinker-rl-lab"
+  },
+  "tracking_preflight": {
+    "hf_identity": "arvindcr4",
+    "wandb_identity": "arvindcr4"
+  }
+}

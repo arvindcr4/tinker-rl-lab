@@ -1,0 +1,118 @@
+[launcher] credentials staged out of band; values are not logged
+
+[launcher command] colab --auth=oauth2 new --gpu A100 --session next-pre-math-contrast-6ab821
+[colab] Creating session 'next-pre-math-contrast-6ab821'...
+[colab] Session READY.
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-math-contrast-6ab821 /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/remote_preflight.py /content/remote_preflight.py
+[colab] Uploaded '/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/remote_preflight.py' to '/content/remote_preflight.py'
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-math-contrast-6ab821 /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/contrast_sampler.py /content/contrast_sampler.py
+[colab] Uploaded '/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/contrast_sampler.py' to '/content/contrast_sampler.py'
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-math-contrast-6ab821 /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/trl_sampler_adapter.py /content/trl_sampler_adapter.py
+[colab] Uploaded '/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/trl_sampler_adapter.py' to '/content/trl_sampler_adapter.py'
+
+[launcher command] colab --auth=oauth2 exec --session next-pre-math-contrast-6ab821 --file /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/setup_colab_preflight.py --timeout 1800
+NEXT_PREFLIGHT_SETUP_OK {"removed_unused_optional_packages": ["torchaudio", "torchvision"], "versions": {"datasets": "4.8.5", "huggingface_hub": "1.26.0", "jinja2": "3.1.6", "peft": "0.19.1", "torchao": "0.17.0", "transformers": "5.13.1", "trl": "1.8.0", "wandb": "0.28.0"}}
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-math-contrast-6ab821 /var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-p4e1h5vm/request.json /content/next-preflight-request.json
+[colab] Uploaded '/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-p4e1h5vm/request.json' to '/content/next-preflight-request.json'
+
+[launcher command] colab --auth=oauth2 exec --session next-pre-math-contrast-6ab821 --file /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/verify_preflight_environment.py --timeout 120
+WARNING:torchao:Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so
+WARNING:torchao:Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so
+NEXT_PREFLIGHT_ENV_OK {"bf16": true, "cuda": "12.8", "gpu": "NVIDIA A100-SXM4-40GB", "torch": "2.11.0+cu128", "versions": {"datasets": "4.8.5", "huggingface_hub": "1.26.0", "jinja2": "3.1.6", "peft": "0.19.1", "torchao": "0.17.0", "transformers": "5.13.1", "trl": "1.8.0", "wandb": "0.28.0"}}
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-math-contrast-6ab821 /var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-p4e1h5vm/secrets.json /content/.next-preflight-secrets.json
+[colab] Uploaded '/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-p4e1h5vm/secrets.json' to '/content/.next-preflight-secrets.json'
+
+[launcher command] colab --auth=oauth2 exec --session next-pre-math-contrast-6ab821 --file /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/secure_exec_preflight.py --timeout 21600
+Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so
+Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so
+
+Generating train split:   0%|          | 0/7500 [00:00<?, ? examples/s]
+Generating train split: 100%|██████████| 7500/7500 [00:00<00:00, 313713.23 examples/s]
+
+Generating test split:   0%|          | 0/5000 [00:00<?, ? examples/s]
+Generating test split: 100%|██████████| 5000/5000 [00:00<00:00, 430609.01 examples/s]
+
+Map:   0%|          | 0/7500 [00:00<?, ? examples/s]
+Map:  27%|██▋       | 2000/7500 [00:00<00:00, 18272.17 examples/s]
+Map:  53%|█████▎    | 4000/7500 [00:00<00:00, 18489.27 examples/s]
+Map:  78%|███████▊  | 5866/7500 [00:00<00:00, 18561.37 examples/s]
+Map: 100%|██████████| 7500/7500 [00:00<00:00, 18116.75 examples/s]
+
+Generating test split: 0 examples [00:00, ? examples/s]
+Generating test split: 500 examples [00:00, 111633.77 examples/s]
+
+Map:   0%|          | 0/8 [00:00<?, ? examples/s]
+Map: 100%|██████████| 8/8 [00:00<00:00, 1609.02 examples/s]
+
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]
+Fetching 5 files:  20%|██        | 1/5 [00:14<00:59, 14.83s/it]
+Fetching 5 files:  40%|████      | 2/5 [00:35<00:54, 18.27s/it]
+Fetching 5 files:  60%|██████    | 3/5 [00:40<00:24, 12.11s/it]
+Fetching 5 files: 100%|██████████| 5/5 [00:40<00:00,  5.38s/it]
+Fetching 5 files: 100%|██████████| 5/5 [00:40<00:00,  8.14s/it]
+
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]
+Loading weights:   0%|          | 1/399 [00:00<01:48,  3.66it/s]
+Loading weights:   1%|          | 2/399 [00:00<02:03,  3.21it/s]
+Loading weights:   4%|▍         | 16/399 [00:00<00:12, 30.66it/s]
+Loading weights:   7%|▋         | 28/399 [00:00<00:07, 47.88it/s]
+Loading weights:  10%|▉         | 39/399 [00:00<00:05, 62.23it/s]
+Loading weights:  13%|█▎        | 53/399 [00:01<00:04, 81.24it/s]
+Loading weights:  16%|█▋        | 65/399 [00:01<00:03, 89.35it/s]
+Loading weights:  19%|█▉        | 76/399 [00:01<00:03, 94.72it/s]
+Loading weights:  22%|██▏       | 87/399 [00:01<00:03, 98.66it/s]
+Loading weights:  25%|██▍       | 98/399 [00:01<00:02, 101.84it/s]
+Loading weights:  27%|██▋       | 109/399 [00:01<00:02, 101.90it/s]
+Loading weights:  31%|███       | 123/399 [00:01<00:02, 112.57it/s]
+Loading weights:  34%|███▍      | 136/399 [00:01<00:02, 109.90it/s]
+Loading weights:  37%|███▋      | 148/399 [00:01<00:02, 105.56it/s]
+Loading weights:  40%|███▉      | 159/399 [00:02<00:02, 106.50it/s]
+Loading weights:  43%|████▎     | 171/399 [00:02<00:02, 103.21it/s]
+Loading weights:  46%|████▌     | 182/399 [00:02<00:02, 104.94it/s]
+Loading weights:  49%|████▉     | 196/399 [00:02<00:01, 114.25it/s]
+Loading weights:  52%|█████▏    | 208/399 [00:02<00:01, 113.16it/s]
+Loading weights:  55%|█████▌    | 220/399 [00:02<00:01, 112.81it/s]
+Loading weights:  58%|█████▊    | 233/399 [00:02<00:01, 117.52it/s]
+Loading weights:  62%|██████▏   | 246/399 [00:02<00:01, 113.04it/s]
+Loading weights:  65%|██████▍   | 258/399 [00:02<00:01, 107.35it/s]
+Loading weights:  68%|██████▊   | 270/399 [00:03<00:01, 103.47it/s]
+Loading weights:  71%|███████   | 282/399 [00:03<00:01, 107.78it/s]
+Loading weights:  74%|███████▍  | 295/399 [00:03<00:00, 113.66it/s]
+Loading weights:  77%|███████▋  | 307/399 [00:03<00:00, 113.16it/s]
+Loading weights:  80%|███████▉  | 319/399 [00:03<00:00, 112.72it/s]
+Loading weights:  83%|████████▎ | 331/399 [00:03<00:00, 113.42it/s]
+Loading weights:  86%|████████▌ | 343/399 [00:03<00:00, 113.79it/s]
+Loading weights:  89%|████████▉ | 355/399 [00:03<00:00, 114.83it/s]
+Loading weights:  92%|█████████▏| 367/399 [00:03<00:00, 107.97it/s]
+Loading weights:  95%|█████████▍| 379/399 [00:04<00:00, 103.93it/s]
+Loading weights:  98%|█████████▊| 391/399 [00:04<00:00, 101.13it/s]
+Loading weights: 100%|██████████| 399/399 [00:04<00:00, 95.48it/s]
+[transformers] The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'bos_token_id': None, 'pad_token_id': 151643}.
+
+  0%|          | 0/1 [00:00<?, ?it/s][RANK 0] All reward functions returned None for the following kwargs:
+{'problem': 'What is $\\frac{1}{4}\\%$ of 120? Express your answer as a decimal.', 'level': 'Level 2', 'solution': 'We have $$\\frac14\\%\\times120=\\frac{\\frac14}{100}\\times120=\\frac{1}{400}\\times120=\\frac{12}{40}=\\frac{3}{10}=\\boxed{.3}.$$', 'type': 'Algebra', 'answer': '.3', 'sampler_reward': None, 'sampler_active': False, 'prompt': [{'role': 'user', 'content': 'Solve this competition mathematics problem carefully. Show your reasoning, then put the final answer inside exactly one \\boxed{...}.\n\nWhat is $\\frac{1}{4}\\%$ of 120? Express your answer as a decimal.'}], 'completion': [{'role': 'assistant', 'content': ''}]}
+Please ensure that at least one reward function returns a valid reward.
+
+100%|██████████| 1/1 [01:46<00:00, 106.39s/it]
+
+
+100%|██████████| 1/1 [01:46<00:00, 106.39s/it]
+
+
+100%|██████████| 1/1 [01:46<00:00, 106.39s/it]
+100%|██████████| 1/1 [01:46<00:00, 106.40s/it]
+{'loss': '0', 'grad_norm': '0', 'learning_rate': '1e-06', 'num_tokens': '3392', 'completions/mean_length': '0', 'completions/min_length': '0', 'completions/max_length': '0', 'completions/clipped_ratio': '0', 'completions/mean_terminated_length': '0', 'completions/min_terminated_length': '0', 'completions/max_terminated_length': '0', 'rewards/sampler_reward/mean': None, 'rewards/sampler_reward/std': None, 'reward': None, 'reward_std': None, 'frac_reward_zero_std': '0', 'sampler/rollout_groups': '2', 'sampler/generated_rollouts': '4', 'sampler/charged_generated_tokens': '1260', 'sampler/updated_groups': '0', 'sampler/all_wrong_fraction': '0.5', 'sampler/all_correct_fraction': '0.5', 'sampler/mixed_fraction': '0', 'sampler/charged_generated_tokens_cumulative': '1260', 'sampler/generated_rollouts_cumulative': '4', 'sampler/rollout_groups_cumulative': '2', 'sampler/updated_groups_cumulative': '0', 'sampler/all_wrong_groups_cumulative': '1', 'sampler/all_correct_groups_cumulative': '1', 'sampler/mixed_groups_cumulative': '0', 'entropy': '0.006108', 'clip_ratio/low_mean': '0', 'clip_ratio/low_min': '0', 'clip_ratio/high_mean': '0', 'clip_ratio/high_max': '0', 'clip_ratio/region_mean': '0', 'step_time': '106.2', 'epoch': '0.0002667'}
+{'train_runtime': '108.8', 'train_samples_per_second': '0.147', 'train_steps_per_second': '0.009', 'train_loss': '0', 'epoch': '0.0002667'}
+NEXT_PREFLIGHT_RESULT {"audit_record": {"all_correct_fraction": 0.5, "all_wrong_fraction": 0.5, "arm_id": "contrast_early_stop_g2_to_g8", "charged_generated_tokens": 1260, "completion_clipped_fraction": 0.0, "evaluation_seconds": 265.94814152099997, "evidence_tier": "preflight_not_scientific_evidence", "generated_rollouts": 4, "heldout_accuracy": 1.0, "heldout_correct": 8, "heldout_n": 8, "mixed_fraction": 0.0, "rollout_groups": 2, "seed": 211, "status": "complete", "task_id": "math500", "updated_groups": 0, "wall_clock_seconds": 428.485904172}, "evidence_class": "preflight-not-evidence", "remote": {"hf_commit": "809c7e2329e27238683a8d34624d3a1db7b3a54a", "hf_final_adapter_path": "final/adapter_model.safetensors", "hf_manifest_path": "run_manifest.json", "hf_repo": "arvindcr4/tinker-rl-next-preflight-math500-contrast_ear-s211-6ab821fd", "wandb_run_id": "6ab821fd", "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/6ab821fd"}, "run_config": {"arm": "contrast_early_stop_g2_to_g8", "dataset_bindings": {"evaluation_dataset": "HuggingFaceH4/MATH-500", "evaluation_revision": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be", "training_dataset": "DigitalLearningGmbH/MATH-lighteval", "training_revision": "0530c78699ea5e8eb5530600900e1f328b48acad"}, "decoder": {"enable_thinking": false, "evaluation": {"do_sample": false}, "training": {"temperature": 0.7, "top_k": 20, "top_p": 0.8}}, "evaluation_manifest_sha256": "88f92c88fcb7ac635efa643385f67ae024018860619aab0a20a7673d3d41b1fd", "hardware_flavor": "A100", "heldout_n": 8, "max_completion_length": 1024, "max_steps": 1, "model": "Qwen/Qwen3-8B", "model_revision": "b968826d9c46dd6066d109eabc6255188de91218", "objective_fingerprint": "370c81cd7313b616aab7bb448cddda77555bf732d2e37f516e3e467d50e1ce9f", "protocol_sha256": "bdaba0beff4cb75e9630834d600543195a7b065369cba587468b31478311142b", "provider": "colab", "seed": 211, "source_commit": "454b3ead269f0cd2c87d694884672587cbf24122", "stack_fingerprint": "f739ee5a5b474a6429f3a485d90d703c01ccfed45ff406349623e42b19bb48f8", "task": "math500", "tracking": {"wandb_entity": null, "wandb_group": "next-submission-preflight", "wandb_project": "tinker-rl-lab"}, "tracking_backends": ["wandb"], "train_manifest_sha256": "f024a5dad24f1a0ac0f81ac68627c580253c81509fb5683250b6bbfd4854052a", "treatment": {"arm": "contrast_early_stop_g2_to_g8", "expand_rule": "expand iff the first two binary verifier rewards differ", "expansion_group_size": 6, "group_size": 8, "homogeneous_rule": "no update and no replacement prompt", "initial_group_size": 2}, "unit_fingerprint": "6ab821fda9bb63a1b8ec3ddf22960170f7da874be914d0bd578be385406cfd08"}, "runtime_versions": {"cuda": "12.8", "datasets": "4.8.5", "gpu": "NVIDIA A100-SXM4-40GB", "huggingface_hub": "1.26.0", "jinja2": "3.1.6", "peft": "0.19.1", "torch": "2.11.0+cu128", "torchao": "0.17.0", "trackio": "missing", "transformers": "5.13.1", "trl": "1.8.0", "wandb": "0.28.0"}, "schema_version": "aiml-next-preflight-result-v1", "status": "completed"}
+
+[launcher cleanup] colab --auth=oauth2 stop --session next-pre-math-contrast-6ab821
+[colab] Stopping session 'next-pre-math-contrast-6ab821'...
+[colab] Session terminated.
+
+[launcher cleanup verify] colab --auth=oauth2 sessions
+[colab] No active sessions found on server.

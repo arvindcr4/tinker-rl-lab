@@ -110,3 +110,22 @@ def test_result_log_parser_uses_last_marker():
     payload = {"schema_version": "aiml-next-preflight-result-v1"}
     lines = ["noise", "NEXT_PREFLIGHT_RESULT " + __import__("json").dumps(payload)]
     assert PREFLIGHT.result_from_log(lines) == payload
+
+
+def test_hardware_retry_archives_incompatible_receipt(tmp_path):
+    existing = {"fingerprint": "a" * 64, "status": "failed", "gpu": "A100"}
+
+    def write(path, payload):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(__import__("json").dumps(payload), encoding="utf-8")
+
+    path = PREFLIGHT.archive_incompatible_result(
+        output_dir=tmp_path,
+        unit="gsm8k__adaptive__s211",
+        existing=existing,
+        new_fingerprint="b" * 64,
+        atomic_json=write,
+    )
+
+    assert path == tmp_path / "results/history/gsm8k__adaptive__s211__aaaaaaaaaaaa.json"
+    assert __import__("json").loads(path.read_text(encoding="utf-8")) == existing

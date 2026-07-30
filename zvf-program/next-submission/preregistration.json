@@ -247,7 +247,7 @@
     "remote_preflight_path": "zvf-program/next-submission/remote_preflight.py",
     "remote_preflight_sha256": "4f3fdffd47769ca13be0098e30d6cda3dad9dc9b4135b93873105a52cadbdabc",
     "preflight_launcher_path": "zvf-program/next-submission/run_preflight.py",
-    "preflight_launcher_sha256": "d813ea03ca4b58121a34470c718ad1cbe5f9a3d4cf0026dde12dfa73c3988d6d",
+    "preflight_launcher_sha256": "35736bfbab8b0227976b6b798b166b95894690f981ccd7c729d40ea673b865bc",
     "preflight_secure_exec_path": "zvf-program/next-submission/secure_exec_preflight.py",
     "preflight_secure_exec_sha256": "38b22601cfe5cd33fc8ccb915c03eafa0b076b3ec1dce496af863bcb1cbbbe43",
     "preflight_environment_check_path": "zvf-program/next-submission/verify_preflight_environment.py",

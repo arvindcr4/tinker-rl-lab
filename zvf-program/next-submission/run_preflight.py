@@ -125,6 +125,29 @@ def result_from_log(lines: list[str]) -> dict[str, Any]:
     raise ValueError("Colab output did not contain a NEXT_PREFLIGHT_RESULT record")
 
 
+def archive_incompatible_result(
+    *,
+    output_dir: Path,
+    unit: str,
+    existing: dict[str, Any] | None,
+    new_fingerprint: str,
+    atomic_json: Any,
+) -> Path | None:
+    """Preserve an older unit receipt before a hardware/fingerprint retry."""
+
+    if not existing or existing.get("fingerprint") == new_fingerprint:
+        return None
+    old_fingerprint = existing.get("fingerprint")
+    if (
+        not isinstance(old_fingerprint, str)
+        or re.fullmatch(r"[0-9a-f]{64}", old_fingerprint) is None
+    ):
+        old_fingerprint = fingerprint(existing)
+    history_path = output_dir / "results" / "history" / f"{unit}__{old_fingerprint[:12]}.json"
+    atomic_json(history_path, existing)
+    return history_path
+
+
 def verify_wandb_run(api_key: str, run_url: str) -> dict[str, Any]:
     match = re.fullmatch(r"https://wandb\.ai/([^/]+)/([^/]+)/runs/([^/?#]+)", run_url)
     if match is None:
@@ -327,6 +350,13 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         and existing.get("fingerprint") == request["fingerprint"]
     ):
         return {"status": "skipped-compatible", "result_path": str(result_path)}
+    archive_incompatible_result(
+        output_dir=output_dir,
+        unit=unit,
+        existing=existing,
+        new_fingerprint=request["fingerprint"],
+        atomic_json=helpers.atomic_json,
+    )
 
     script_args = [
         "--task",

@@ -1,0 +1,71 @@
+{
+  "schema_version": "aiml-next-claim-ledger-v1",
+  "status": "planned_no_achieved_claims",
+  "claims": [
+    {
+      "claim_id": "C1_cost_reduction",
+      "status": "planned",
+      "statement": "Contrast-aware early stopping reduces charged generated tokens by at least 20% on each in-scope task.",
+      "primary_table_reference": "Table 1",
+      "required_columns": [
+        "paired_cost_effect",
+        "paired_cost_ci_lower",
+        "paired_cost_ci_upper"
+      ],
+      "success_rule": "For both tasks, the multiplicity-adjusted upper confidence bound is at most -0.20.",
+      "permitted_language_before_results": "We test whether the intervention reduces rollout cost."
+    },
+    {
+      "claim_id": "C2_capability_noninferiority",
+      "status": "planned",
+      "statement": "Contrast-aware early stopping preserves held-out exact-match accuracy within a one-percentage-point margin on each in-scope task.",
+      "primary_table_reference": "Table 1",
+      "required_columns": [
+        "paired_accuracy_effect",
+        "paired_accuracy_ci_lower",
+        "paired_accuracy_ci_upper"
+      ],
+      "success_rule": "For both tasks, the multiplicity-adjusted lower confidence bound is greater than -0.01 and the achieved power or precision gate passes.",
+      "permitted_language_before_results": "We test held-out non-inferiority."
+    },
+    {
+      "claim_id": "C3_joint_operator_rule",
+      "status": "planned",
+      "statement": "The intervention is useful only if both the cost and held-out conditions pass on both tasks.",
+      "primary_table_reference": "Table 1",
+      "required_columns": [
+        "paired_cost_ci_upper",
+        "paired_accuracy_ci_lower",
+        "verdict"
+      ],
+      "success_rule": "Intersection of C1 and C2 across the complete matrix; any missing or invalid cell is INCONCLUSIVE.",
+      "permitted_language_before_results": "We preregister a joint cost-quality decision."
+    },
+    {
+      "claim_id": "C4_mechanism",
+      "status": "exploratory_planned",
+      "statement": "Observed savings may be associated with homogeneous-group prevalence and false homogeneity at two samples.",
+      "primary_table_reference": "Figure 2",
+      "required_columns": [
+        "all_wrong_fraction",
+        "all_correct_fraction",
+        "mixed_fraction"
+      ],
+      "success_rule": "Descriptive and model-based mechanism analysis only; never upgrades C1-C3.",
+      "permitted_language_before_results": "We examine mechanism telemetry."
+    },
+    {
+      "claim_id": "C5_use_inspired",
+      "status": "blocked_external_receipt",
+      "statement": "The intervention improves a pre-existing education-domain review workflow.",
+      "primary_table_reference": "External Table 1",
+      "required_columns": [
+        "external_acceptance_without_correction",
+        "external_review_seconds_per_accepted_solution"
+      ],
+      "success_rule": "Unavailable unless the external-user receipt, ethics disposition, prospective analysis, and numeric outcome table are complete.",
+      "permitted_language_before_results": "No use-inspired claim is authorized."
+    }
+  ]
+}
+

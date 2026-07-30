@@ -1,0 +1,18 @@
+{
+  "schema_version": "aiml-external-use-receipt-v1",
+  "status": "template_not_evidence",
+  "organization_or_pseudonym": null,
+  "attestation_date": null,
+  "external_user_population": "Mathematics educators or education-product operators who already review AI-generated worked solutions.",
+  "pre_existing_workflow": null,
+  "operational_decision": null,
+  "primary_outcome": null,
+  "power_or_precision_plan": null,
+  "sampling_and_blinding_plan_sha256": null,
+  "ethics_or_consent_disposition": null,
+  "completion_receipt_sha256": null,
+  "numeric_result_table_sha256": null,
+  "signed_by_external_partner": false,
+  "warning": "This template does not authorize recruitment, satisfy the use-inspired gate, or constitute evidence."
+}
+

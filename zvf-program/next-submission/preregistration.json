@@ -253,7 +253,7 @@
     "kaggle_preflight_launcher_path": "zvf-program/next-submission/run_kaggle_preflight.py",
     "kaggle_preflight_launcher_sha256": "317b9b82c522c6f836c97afae897ad23e528e0a8ea5c09a5a911509c81199341",
     "gcp_preflight_launcher_path": "zvf-program/next-submission/run_gcp_preflight.py",
-    "gcp_preflight_launcher_sha256": "516fb1eb27ecdabb36b8900846bfc928b6a0a448b3fda2298c852667944c32cb",
+    "gcp_preflight_launcher_sha256": "bc51acd6a8bd4dbcd7d7ef319ec81e52e78850ec421f6e33c600942104d7b165",
     "preflight_secure_exec_path": "zvf-program/next-submission/secure_exec_preflight.py",
     "preflight_secure_exec_sha256": "38b22601cfe5cd33fc8ccb915c03eafa0b076b3ec1dce496af863bcb1cbbbe43",
     "preflight_environment_check_path": "zvf-program/next-submission/verify_preflight_environment.py",

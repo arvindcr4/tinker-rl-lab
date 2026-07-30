@@ -53,6 +53,7 @@ def test_startup_script_has_frozen_packages_serial_receipt_and_shutdown():
         assert requirement in script
     assert "/dev/ttyS0" in script
     assert "NEXT_PREFLIGHT_EXIT_CODE" in script
+    assert "sleep 10" in script
     assert "shutdown -h now" in script
     assert "set -x" not in script
 
@@ -98,3 +99,26 @@ def test_live_parser_requires_wait_for_cleanup():
     assert args.wait is False
     with pytest.raises(SystemExit, match="live GCP runs require --wait"):
         GCP.validate_args(args)
+
+
+def test_serial_receipt_retries_until_final_marker(monkeypatch):
+    responses = iter(
+        [
+            (1, "resource is not ready"),
+            (0, "boot output without final marker"),
+            (0, "NEXT_PREFLIGHT_EXIT_CODE=1"),
+        ]
+    )
+    monkeypatch.setattr(GCP, "serial_output", lambda *args, **kwargs: next(responses))
+    monkeypatch.setattr(GCP.time, "sleep", lambda seconds: None)
+
+    result = GCP.serial_output_with_retry(
+        "gcloud",
+        instance="exact-temp-instance",
+        project=GCP.PROJECT,
+        zone=GCP.ZONE,
+        attempts=3,
+        delay_seconds=0,
+    )
+
+    assert result == (0, "NEXT_PREFLIGHT_EXIT_CODE=1")

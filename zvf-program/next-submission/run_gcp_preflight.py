@@ -190,6 +190,7 @@ else
 fi
 echo NEXT_PREFLIGHT_EXIT_CODE=$RUN_EXIT
 sync
+sleep 10
 shutdown -h now
 exit "$RUN_EXIT"
 """
@@ -294,6 +295,30 @@ def serial_output(gcloud: str, *, instance: str, project: str, zone: str) -> tup
         check=False,
     )
     return output.returncode, output.stdout
+
+
+def serial_output_with_retry(
+    gcloud: str,
+    *,
+    instance: str,
+    project: str,
+    zone: str,
+    attempts: int = 12,
+    delay_seconds: int = 5,
+) -> tuple[int, str]:
+    """Wait for GCP to publish the final stopped-VM serial buffer."""
+
+    last = (1, "serial output was never requested")
+    for attempt in range(attempts):
+        last = serial_output(gcloud, instance=instance, project=project, zone=zone)
+        code, output = last
+        if code == 0 and (
+            "NEXT_PREFLIGHT_EXIT_CODE=" in output or "NEXT_PREFLIGHT_RESULT " in output
+        ):
+            return last
+        if attempt + 1 < attempts:
+            time.sleep(delay_seconds)
+    return last
 
 
 def delete_instance(gcloud: str, *, instance: str, project: str, zone: str) -> dict[str, Any]:
@@ -560,7 +585,7 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
             timeout_seconds=args.wait_timeout_seconds,
             poll_seconds=args.poll_seconds,
         )
-        serial_return_code, serial = serial_output(
+        serial_return_code, serial = serial_output_with_retry(
             gcloud, instance=instance, project=args.project, zone=args.zone
         )
         serial_path.parent.mkdir(parents=True, exist_ok=True)

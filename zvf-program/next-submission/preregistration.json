@@ -2,6 +2,14 @@
   "schema_version": "aiml-next-preregistration-v1",
   "status": "DESIGN_FROZEN_EXECUTION_AUTHORIZED",
   "title": "When Can We Skip a Group? A Complete Multi-Seed Test of Contrast-Aware Rollout Allocation for RLVR",
+  "amendments": [
+    {
+      "amendment_id": "A001_math_unbraced_boxed_targets",
+      "status": "prospective_before_confirmatory_execution",
+      "path": "zvf-program/next-submission/protocol_amendment_001_math_boxed.json",
+      "sha256": "89f8ff4653e4f41c2988b2e6103080c75c7e3bac342c0ff36680bee1c4ea371a"
+    }
+  ],
   "conference_target": "next_general_ai_ml_conference_tbd",
   "research_question": "Can a contrast-aware early-stop sampler reduce charged RLVR rollout tokens by at least 20% while keeping held-out mathematical accuracy within a one-percentage-point regret margin on every in-scope task?",
   "contribution_policy": {
@@ -245,7 +253,9 @@
     "trl_sampler_adapter_path": "zvf-program/next-submission/trl_sampler_adapter.py",
     "trl_sampler_adapter_sha256": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365",
     "remote_preflight_path": "zvf-program/next-submission/remote_preflight.py",
-    "remote_preflight_sha256": "cd273ab9844ef6dc71c26339d5fe424e6109c86dc2f0aa60d3824a62a383fd87",
+    "remote_preflight_sha256": "7647ae578d6ddf9dbfeb46ee8de14c5faa831ea6ca369d2a2ac6ab2c4cda6a1c",
+    "protocol_amendment_001_path": "zvf-program/next-submission/protocol_amendment_001_math_boxed.json",
+    "protocol_amendment_001_sha256": "89f8ff4653e4f41c2988b2e6103080c75c7e3bac342c0ff36680bee1c4ea371a",
     "preflight_launcher_path": "zvf-program/next-submission/run_preflight.py",
     "preflight_launcher_sha256": "7108d36eeac1e81ad8ee82ee87d77a7cf86f66a01fed05c1adc74750f74f965f",
     "hf_jobs_preflight_launcher_path": "zvf-program/next-submission/run_hf_jobs_preflight.py",

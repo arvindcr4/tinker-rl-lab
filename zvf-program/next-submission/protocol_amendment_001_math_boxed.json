@@ -1,0 +1,48 @@
+{
+  "schema_version": "aiml-next-protocol-amendment-v1",
+  "amendment_id": "A001_math_unbraced_boxed_targets",
+  "status": "prospective_before_confirmatory_execution",
+  "trigger": {
+    "phase": "four-cell non-evidence preflight",
+    "task": "math500",
+    "arm": "grpo_g8",
+    "seed": 211,
+    "failure": "MATH training solution lacks a final boxed answer",
+    "failed_request_fingerprint": "db3cd0a8aef540a9fbe0088ed5cc011eecae942a4d58e67f90a04906e515995d"
+  },
+  "timing": {
+    "confirmatory_rows_completed_before_amendment": 0,
+    "confirmatory_outcomes_inspected": false,
+    "preflight_is_scientific_evidence": false
+  },
+  "change": {
+    "component": "MATH-lighteval training-target extraction",
+    "prior_rule": "Accept only balanced braced LaTeX of the form \\boxed{...}.",
+    "amended_rule": "Also accept a final unbraced numeric atom after \\boxed whitespace; arbitrary unbraced prose remains invalid.",
+    "training_rows_before_filtering": 7500,
+    "braced_rows": 7498,
+    "unbraced_numeric_rows": 2,
+    "unbraced_row_indices": [
+      888,
+      1011
+    ],
+    "rows_retained_after_amendment": 7500,
+    "rows_dropped": 0,
+    "unbraced_row_index_manifest_sha256": "25a1970b0b6eea3315960f66dad028f1ed22d83c1e005be12cb2dcd956faa837"
+  },
+  "invariants": {
+    "tasks_unchanged": true,
+    "arms_unchanged": true,
+    "seed_plan_unchanged": true,
+    "reward_semantics_unchanged": true,
+    "heldout_evaluator_unchanged": true,
+    "primary_estimands_unchanged": true,
+    "sample_size_rule_unchanged": true
+  },
+  "bindings": {
+    "prior_protocol_sha256": "a896b3918899228fc5a890ff8745f3b3a95e64c8288ba4e29ab15b947f37dd36",
+    "prior_remote_preflight_sha256": "cd273ab9844ef6dc71c26339d5fe424e6109c86dc2f0aa60d3824a62a383fd87",
+    "amended_remote_preflight_sha256": "7647ae578d6ddf9dbfeb46ee8de14c5faa831ea6ca369d2a2ac6ab2c4cda6a1c"
+  },
+  "evidence_boundary": "This amendment repairs corpus ingestion before any confirmatory row exists. It does not authorize reuse or promotion of preflight outcomes."
+}

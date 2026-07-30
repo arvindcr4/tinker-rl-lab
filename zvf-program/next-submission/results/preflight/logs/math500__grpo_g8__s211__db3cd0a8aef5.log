@@ -1,0 +1,81 @@
+[launcher] credentials staged out of band; values are not logged
+
+[launcher command] colab --auth=oauth2 new --gpu A100 --session next-pre-math-grpo_g8-db3cd0
+[colab] Creating session 'next-pre-math-grpo_g8-db3cd0'...
+[colab] Session READY.
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-math-grpo_g8-db3cd0 /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/remote_preflight.py /content/remote_preflight.py
+[colab] Uploaded '/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/remote_preflight.py' to '/content/remote_preflight.py'
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-math-grpo_g8-db3cd0 /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/contrast_sampler.py /content/contrast_sampler.py
+[colab] Uploaded '/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/contrast_sampler.py' to '/content/contrast_sampler.py'
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-math-grpo_g8-db3cd0 /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/trl_sampler_adapter.py /content/trl_sampler_adapter.py
+[colab] Uploaded '/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/trl_sampler_adapter.py' to '/content/trl_sampler_adapter.py'
+
+[launcher command] colab --auth=oauth2 exec --session next-pre-math-grpo_g8-db3cd0 --file /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/setup_colab_preflight.py --timeout 1800
+NEXT_PREFLIGHT_SETUP_OK {"removed_unused_optional_packages": ["torchaudio", "torchvision"], "versions": {"datasets": "4.8.5", "huggingface_hub": "1.26.0", "jinja2": "3.1.6", "peft": "0.19.1", "torchao": "0.17.0", "transformers": "5.13.1", "trl": "1.8.0", "wandb": "0.28.0"}}
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-math-grpo_g8-db3cd0 /var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-gcs8p2u5/request.json /content/next-preflight-request.json
+[colab] Uploaded '/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-gcs8p2u5/request.json' to '/content/next-preflight-request.json'
+
+[launcher command] colab --auth=oauth2 exec --session next-pre-math-grpo_g8-db3cd0 --file /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/verify_preflight_environment.py --timeout 120
+WARNING:torchao:Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so
+WARNING:torchao:Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so
+NEXT_PREFLIGHT_ENV_OK {"bf16": true, "cuda": "12.8", "gpu": "NVIDIA A100-SXM4-40GB", "torch": "2.11.0+cu128", "versions": {"datasets": "4.8.5", "huggingface_hub": "1.26.0", "jinja2": "3.1.6", "peft": "0.19.1", "torchao": "0.17.0", "transformers": "5.13.1", "trl": "1.8.0", "wandb": "0.28.0"}}
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-math-grpo_g8-db3cd0 /var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-gcs8p2u5/secrets.json /content/.next-preflight-secrets.json
+[colab] Uploaded '/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-gcs8p2u5/secrets.json' to '/content/.next-preflight-secrets.json'
+
+[launcher command] colab --auth=oauth2 exec --session next-pre-math-grpo_g8-db3cd0 --file /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/secure_exec_preflight.py --timeout 21600
+Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so
+Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so
+
+Generating train split:   0%|          | 0/7500 [00:00<?, ? examples/s]
+Generating train split: 100%|██████████| 7500/7500 [00:00<00:00, 275481.92 examples/s]
+
+Generating test split:   0%|          | 0/5000 [00:00<?, ? examples/s]
+Generating test split: 100%|██████████| 5000/5000 [00:00<00:00, 391720.12 examples/s]
+
+Map:   0%|          | 0/7500 [00:00<?, ? examples/s]
+Map:  12%|█▏        | 888/7500 [00:00<00:00, 17198.50 examples/s]
+Traceback (most recent call last):
+  File "/content/remote_preflight.py", line 607, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/content/remote_preflight.py", line 352, in main
+    train_dataset, heldout, reward_parser, dataset_bindings = load_task_data(
+                                                              ^^^^^^^^^^^^^^^
+  File "/content/remote_preflight.py", line 231, in load_task_data
+    train = train_source.map(standardize_math_train)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/datasets/arrow_dataset.py", line 575, in wrapper
+    out: Union["Dataset", "DatasetDict"] = func(self, *args, **kwargs)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/datasets/arrow_dataset.py", line 3633, in map
+    for rank, done, content in Dataset._map_single(**unprocessed_kwargs):
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/datasets/arrow_dataset.py", line 3973, in _map_single
+    for i, example in iter_outputs(shard_iterable):
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/datasets/arrow_dataset.py", line 3951, in iter_outputs
+    yield i, apply_function(example, i, offset=offset)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/datasets/arrow_dataset.py", line 3872, in apply_function
+    processed_inputs = function(*fn_args, *additional_args, **fn_kwargs)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/content/remote_preflight.py", line 228, in standardize_math_train
+    raise RuntimeError("MATH training solution lacks a final boxed answer")
+RuntimeError: MATH training solution lacks a final boxed answer
+[0;31m---------------------------------------------------------------------------[0m[0;31mRuntimeError[0m                              Traceback (most recent call last)[0;32m/tmp/ipykernel_1480/615520819.py[0m in [0;36m<cell line: 0>[0;34m()[0m
+[1;32m     72[0m     [0mreturn_code[0m [0;34m=[0m [0mmain[0m[0;34m([0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[1;32m     73[0m     [0;32mif[0m [0mreturn_code[0m[0;34m:[0m[0;34m[0m[0;34m[0m[0m
+[0;32m---> 74[0;31m         [0;32mraise[0m [0mRuntimeError[0m[0;34m([0m[0;34mf"remote preflight child exited with code {return_code}"[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0m[0;31mRuntimeError[0m: remote preflight child exited with code 1
+
+[launcher cleanup] colab --auth=oauth2 stop --session next-pre-math-grpo_g8-db3cd0
+[colab] Stopping session 'next-pre-math-grpo_g8-db3cd0'...
+[colab] Session terminated.
+
+[launcher cleanup verify] colab --auth=oauth2 sessions
+[colab] No active sessions found on server.

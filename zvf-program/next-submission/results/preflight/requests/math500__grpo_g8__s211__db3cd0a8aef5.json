@@ -1,0 +1,170 @@
+{
+  "arm": "grpo_g8",
+  "auth_strategy": "oauth2",
+  "colab_cli_version": "0.6.0",
+  "execution_plan": [
+    [
+      "colab",
+      "--auth=oauth2",
+      "new",
+      "--gpu",
+      "A100",
+      "--session",
+      "next-pre-math-grpo_g8-db3cd0"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "next-pre-math-grpo_g8-db3cd0",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/remote_preflight.py",
+      "/content/remote_preflight.py"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "next-pre-math-grpo_g8-db3cd0",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/contrast_sampler.py",
+      "/content/contrast_sampler.py"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "next-pre-math-grpo_g8-db3cd0",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/trl_sampler_adapter.py",
+      "/content/trl_sampler_adapter.py"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "exec",
+      "--session",
+      "next-pre-math-grpo_g8-db3cd0",
+      "--file",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/setup_colab_preflight.py",
+      "--timeout",
+      "1800"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "next-pre-math-grpo_g8-db3cd0",
+      "<ephemeral-request-file>",
+      "/content/next-preflight-request.json"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "exec",
+      "--session",
+      "next-pre-math-grpo_g8-db3cd0",
+      "--file",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/verify_preflight_environment.py",
+      "--timeout",
+      "120"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "next-pre-math-grpo_g8-db3cd0",
+      "<ephemeral-secret-file>",
+      "/content/.next-preflight-secrets.json"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "exec",
+      "--session",
+      "next-pre-math-grpo_g8-db3cd0",
+      "--file",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/secure_exec_preflight.py",
+      "--timeout",
+      "21600"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "stop",
+      "--session",
+      "next-pre-math-grpo_g8-db3cd0"
+    ]
+  ],
+  "fingerprint": "db3cd0a8aef540a9fbe0088ed5cc011eecae942a4d58e67f90a04906e515995d",
+  "gpu": "A100",
+  "hardware_flavor": "A100",
+  "hf_repo": "arvindcr4/tinker-rl-next-preflight-math500-grpo_g8-s211-db3cd0a8",
+  "protocol_sha256": "a896b3918899228fc5a890ff8745f3b3a95e64c8288ba4e29ab15b947f37dd36",
+  "provider": "colab",
+  "runtime_packages": [
+    "trl==1.8.0",
+    "transformers==5.13.1",
+    "jinja2==3.1.6",
+    "datasets==4.8.5",
+    "peft==0.19.1",
+    "torchao==0.17.0",
+    "wandb==0.28.0",
+    "huggingface_hub==1.26.0"
+  ],
+  "schema_version": "aiml-next-preflight-request-v1",
+  "seed": 211,
+  "session": "next-pre-math-grpo_g8-db3cd0",
+  "source_commit": "22f860d8dc3ffa2492e6906d6f5f37a47c70cc5d",
+  "source_snapshots": {
+    "zvf-program/next-submission/contrast_sampler.py": {
+      "sha256": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
+      "snapshot": "sources/083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86"
+    },
+    "zvf-program/next-submission/execution_authorization.json": {
+      "sha256": "c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561",
+      "snapshot": "sources/c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561"
+    },
+    "zvf-program/next-submission/preregistration.json": {
+      "sha256": "a896b3918899228fc5a890ff8745f3b3a95e64c8288ba4e29ab15b947f37dd36",
+      "snapshot": "sources/a896b3918899228fc5a890ff8745f3b3a95e64c8288ba4e29ab15b947f37dd36"
+    },
+    "zvf-program/next-submission/remote_preflight.py": {
+      "sha256": "cd273ab9844ef6dc71c26339d5fe424e6109c86dc2f0aa60d3824a62a383fd87",
+      "snapshot": "sources/cd273ab9844ef6dc71c26339d5fe424e6109c86dc2f0aa60d3824a62a383fd87"
+    },
+    "zvf-program/next-submission/run_preflight.py": {
+      "sha256": "7108d36eeac1e81ad8ee82ee87d77a7cf86f66a01fed05c1adc74750f74f965f",
+      "snapshot": "sources/7108d36eeac1e81ad8ee82ee87d77a7cf86f66a01fed05c1adc74750f74f965f"
+    },
+    "zvf-program/next-submission/secure_exec_preflight.py": {
+      "sha256": "28bd89d7ad3314f405fa983034649e511da014285c4883326daccbaac217d2d0",
+      "snapshot": "sources/28bd89d7ad3314f405fa983034649e511da014285c4883326daccbaac217d2d0"
+    },
+    "zvf-program/next-submission/setup_colab_preflight.py": {
+      "sha256": "44245d3a7d03bf0972d4af89038e46e78e0aa20a8de845cd06150da0d745a611",
+      "snapshot": "sources/44245d3a7d03bf0972d4af89038e46e78e0aa20a8de845cd06150da0d745a611"
+    },
+    "zvf-program/next-submission/trl_sampler_adapter.py": {
+      "sha256": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365",
+      "snapshot": "sources/869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
+    },
+    "zvf-program/next-submission/verify_preflight_environment.py": {
+      "sha256": "ae1718e5c7eca2b1fb17e4d244cb387c3c0b83588fc333bb7789d9bb88c21b2a",
+      "snapshot": "sources/ae1718e5c7eca2b1fb17e4d244cb387c3c0b83588fc333bb7789d9bb88c21b2a"
+    }
+  },
+  "stack_fingerprint": "0f37437a3ddadc5cea2b7c17daa19ddf1a30a8daa47f127835b44a1c978640c2",
+  "status": "launching",
+  "task": "math500",
+  "tracking": {
+    "hf_repo_prefix": "arvindcr4/tinker-rl-next-preflight",
+    "wandb_entity": null,
+    "wandb_group": "next-submission-preflight",
+    "wandb_project": "tinker-rl-lab"
+  },
+  "updated_at": "2026-07-30T17:08:06+00:00",
+  "wandb_run_name": "next-preflight-math500-grpo_g8-s211-db3cd0a8"
+}

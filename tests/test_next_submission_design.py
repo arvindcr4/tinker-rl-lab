@@ -44,6 +44,25 @@ def test_frozen_design_passes_with_hash_bindings(contract):
     assert report["result_claims_authorized"] is False
 
 
+def test_prospective_math_parser_amendment_is_hash_bound(contract):
+    amendment = contract[0]["amendments"]
+    assert amendment == [
+        {
+            "amendment_id": "A001_math_unbraced_boxed_targets",
+            "status": "prospective_before_confirmatory_execution",
+            "path": "zvf-program/next-submission/protocol_amendment_001_math_boxed.json",
+            "sha256": "89f8ff4653e4f41c2988b2e6103080c75c7e3bac342c0ff36680bee1c4ea371a",
+        }
+    ]
+
+
+def test_missing_math_parser_amendment_is_rejected(contract):
+    candidate = copy.deepcopy(contract)
+    candidate[0]["amendments"] = []
+    with pytest.raises(VERIFIER.DesignContractError, match="amendment"):
+        verify(candidate)
+
+
 def test_gpu_execution_requires_the_bound_authorization_receipt(contract):
     candidate = copy.deepcopy(contract)
     candidate[0]["authorization"]["receipt_sha256"] = "0" * 64

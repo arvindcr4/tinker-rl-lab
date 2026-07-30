@@ -91,6 +91,38 @@ def verify_contract(
         protocol.get("status") == "DESIGN_FROZEN_EXECUTION_AUTHORIZED",
         "design status drift",
     )
+    amendments = protocol.get("amendments")
+    require(
+        isinstance(amendments, list) and len(amendments) == 1,
+        "prospective protocol amendment ledger missing",
+    )
+    amendment_record = amendments[0]
+    require(
+        isinstance(amendment_record, dict)
+        and amendment_record.get("amendment_id") == "A001_math_unbraced_boxed_targets"
+        and amendment_record.get("status") == "prospective_before_confirmatory_execution",
+        "MATH parser amendment identity or timing drift",
+    )
+    amendment_path = repo_root / str(amendment_record.get("path"))
+    require(amendment_path.is_file(), "MATH parser amendment receipt missing")
+    require(
+        amendment_record.get("sha256") == sha256(amendment_path),
+        "MATH parser amendment hash drift",
+    )
+    amendment = load_json(amendment_path)
+    require(
+        amendment.get("timing", {}).get("confirmatory_rows_completed_before_amendment") == 0
+        and amendment.get("timing", {}).get("confirmatory_outcomes_inspected") is False,
+        "MATH parser amendment is not prospective",
+    )
+    change = amendment.get("change")
+    require(
+        isinstance(change, dict)
+        and change.get("training_rows_before_filtering") == 7500
+        and change.get("rows_retained_after_amendment") == 7500
+        and change.get("rows_dropped") == 0,
+        "MATH parser amendment corpus accounting drift",
+    )
 
     auth = protocol.get("authorization")
     require(isinstance(auth, dict), "authorization block missing")
@@ -455,6 +487,7 @@ def verify_contract(
             "contrast_sampler",
             "trl_sampler_adapter",
             "remote_preflight",
+            "protocol_amendment_001",
             "preflight_launcher",
             "hf_jobs_preflight_launcher",
             "kaggle_preflight_launcher",

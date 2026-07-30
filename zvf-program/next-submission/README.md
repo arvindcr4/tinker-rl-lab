@@ -31,6 +31,8 @@ Transport is provenance rather than treatment: Colab, Hugging Face Jobs, Kaggle,
 
 The Colab CLI path validates OAuth, Hugging Face, and W&B credentials before allocation; installs its pinned stack through a bounded long-running `exec`; verifies the requested GPU before uploading credentials; deletes credential files immediately; runs training in a child process so secrets never enter the persistent kernel environment; streams the child result marker through the parent kernel; checks the private Hub commit and finished W&B run independently; and fails closed unless server-side session enumeration proves cleanup. If Colab still drops the streamed marker, the launcher can recover only from the request-derived private Hub repository after finding the manifest and final adapter at one resolved commit, revalidating the complete manifest, and proving that its referenced W&B run finished.
 
+The first MATH-500 baseline preflight found two frozen MATH-lighteval training solutions that use unbraced `\boxed 2` and `\boxed 9` targets. Prospective amendment `A001_math_unbraced_boxed_targets` adds a numeric-only compatibility rule, retains all 7,500 training rows, and is hash-bound before any confirmatory row exists. The failed preflight receipt is retained and remains non-evidence.
+
 ## Verify
 
 ```bash

@@ -106,20 +106,25 @@ def gsm8k_reward(response: str, answer: str) -> float:
 
 def last_boxed(text: str) -> str | None:
     index = text.rfind("\\boxed{")
-    if index == -1:
-        return None
-    cursor, depth, output = index + 7, 1, []
-    while cursor < len(text) and depth:
-        character = text[cursor]
-        if character == "{":
-            depth += 1
-        elif character == "}":
-            depth -= 1
-            if not depth:
-                break
-        output.append(character)
-        cursor += 1
-    return "".join(output) if depth == 0 else None
+    if index != -1:
+        cursor, depth, output = index + 7, 1, []
+        while cursor < len(text) and depth:
+            character = text[cursor]
+            if character == "{":
+                depth += 1
+            elif character == "}":
+                depth -= 1
+                if not depth:
+                    break
+            output.append(character)
+            cursor += 1
+        return "".join(output) if depth == 0 else None
+
+    # Two frozen MATH-lighteval rows use ``\boxed 2``/``\boxed 9`` rather
+    # than braced LaTeX. Accept only one unbraced numeric atom so this
+    # compatibility rule cannot silently reinterpret arbitrary prose.
+    unbraced = re.findall(r"\\boxed\s+([+-]?\d+(?:\.\d+)?(?:/\d+(?:\.\d+)?)?)", text)
+    return unbraced[-1] if unbraced else None
 
 
 def normalize_math(answer: str) -> str:

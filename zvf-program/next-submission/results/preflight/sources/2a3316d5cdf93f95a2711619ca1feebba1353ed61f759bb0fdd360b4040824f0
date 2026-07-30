@@ -1,0 +1,303 @@
+{
+  "schema_version": "aiml-next-preregistration-v1",
+  "status": "DESIGN_FROZEN_EXECUTION_AUTHORIZED",
+  "title": "When Can We Skip a Group? A Complete Multi-Seed Test of Contrast-Aware Rollout Allocation for RLVR",
+  "amendments": [
+    {
+      "amendment_id": "A001_math_unbraced_boxed_targets",
+      "status": "prospective_before_confirmatory_execution",
+      "path": "zvf-program/next-submission/protocol_amendment_001_math_boxed.json",
+      "sha256": "89f8ff4653e4f41c2988b2e6103080c75c7e3bac342c0ff36680bee1c4ea371a"
+    }
+  ],
+  "conference_target": "next_general_ai_ml_conference_tbd",
+  "research_question": "Can a contrast-aware early-stop sampler reduce charged RLVR rollout tokens by at least 20% while keeping held-out mathematical accuracy within a one-percentage-point regret margin on every in-scope task?",
+  "contribution_policy": {
+    "default_types": [
+      "methodology",
+      "reproducibility",
+      "negative_results"
+    ],
+    "use_inspired_authorized": false,
+    "use_inspired_receipt_path": "zvf-program/next-submission/external_use_receipt.json",
+    "external_user_population": "Mathematics educators or education-product operators with a pre-existing worked-solution review workflow.",
+    "external_outcomes": [
+      "acceptance_without_correction",
+      "review_seconds_per_accepted_solution"
+    ]
+  },
+  "claim_scope": {
+    "included_tasks": [
+      "gsm8k",
+      "math500"
+    ],
+    "included_model": "Qwen/Qwen3-8B",
+    "included_stack": "one pinned open canonical GRPO stack",
+    "excluded": {
+      "humaneval": "No coding claim is needed for the math-operator question.",
+      "mbpp": "No coding claim is needed for the math-operator question.",
+      "synthetic_tool_use": "Schema compliance is not the external workflow outcome.",
+      "ppo": "The paper tests a sampling intervention, not an algorithm leaderboard.",
+      "other_models": "Model transfer is outside the confirmatory claim universe.",
+      "subjective_rewards": "Only verifiable math rewards are in scope."
+    }
+  },
+  "sources": {
+    "rlhf_book": {
+      "repository": "https://github.com/natolambert/rlhf-book",
+      "commit": "1bd092d80d9a247fa51003c32cedd8fc4679ce47",
+      "files": {
+        "book/chapters/06-policy-gradients.md": "6671f67b6d635ab8cc1f1859345edeead9a3f7489e5410a5c4653cb1b6c4e444",
+        "book/chapters/14-over-optimization.md": "81736529e9237c079fa39d27a96635b45805af827cb287f5e2ee20959d4dfd81",
+        "book/chapters/15-regularization.md": "389dc58d110d1d5bcf30f9c2a6b5539f7db29aeffc3aec310bac5a27cef17fed",
+        "book/chapters/16-evaluation.md": "d9c1764b4cf85e869eac82a6a30f73a5578ddab4faf69c410c8e7d66ce5a4525",
+        "book/chapters/appendix-c-practical.md": "c08f557a7f3e2ae80339f6bac9a8028ee22b39158f743008f86a4e7273879e1a"
+      }
+    },
+    "harvard_cs2824": {
+      "repository": "https://github.com/harvard-cs2824-s26/harvard-cs2824-s26.github.io",
+      "commit": "5dcc34e3b861da632371645fb05aebb12a40d23c",
+      "files": {
+        "slides/PG_global_conv1.pdf": "26309b138a546eff684ed586809919de9a0360f2d0aeb8fd3ad64ccc546cd86f",
+        "slides/PG_global_conv2.pdf": "ee21ee7f5cc52e878007a643e23cbca1dac5ca8ea402a4fb1d8c94b858f64f5d",
+        "slides/NPG_ppo.pdf": "309137fbfec2dc7c01cc1489aaa867f768b5e4a253bdea3359f633eb4529a8db",
+        "slides/RLHF.pdf": "f12bd048818e817069cb0ef0f46ea90f22219ca3e3a9b016e748db1c3727194a",
+        "CS2824projects.html": "30ef1ea58da08abe7873564858feb95e8caae3d7f8061247b1092cf59edfcf41"
+      }
+    }
+  },
+  "prior_evidence_boundary": {
+    "planning_source": "zvf-program/audit/results/audit.json",
+    "allowed_use": "Worst observed paired held-out standard deviation only, as a conservative planning prior.",
+    "planning_sd": 0.012828539611796383,
+    "forbidden_uses": [
+      "No E1 arm verdict is a result for this paper.",
+      "The stale DAPO DISAPPEARS verdict is quarantined.",
+      "No post-submission run fills a new task-arm cell.",
+      "No May heterogeneous row is a confirmatory replicate."
+    ]
+  },
+  "treatment": {
+    "model": "Qwen/Qwen3-8B",
+    "stack": "pinned_open_canonical_grpo_stack",
+    "training_steps": 30,
+    "generation_batch_size": 16,
+    "num_generations": 8,
+    "per_device_train_batch_size": 2,
+    "gradient_accumulation_steps": 8,
+    "max_completion_length": 1024,
+    "fixed_components": [
+      "initial checkpoint",
+      "tokenizer",
+      "prompt order",
+      "reward parser",
+      "optimizer",
+      "learning rate",
+      "batch size",
+      "training steps",
+      "completion cap",
+      "checkpoint rule",
+      "held-out prompts",
+      "decoder",
+      "evaluator"
+    ],
+    "arms": [
+      {
+        "arm_id": "grpo_g8",
+        "description": "Generate G=8 completions for every prompt and apply the pinned canonical GRPO update."
+      },
+      {
+        "arm_id": "contrast_early_stop_g2_to_g8",
+        "description": "Generate two completions; expand to G=8 only when the first two verifier rewards differ; homogeneous two-sample groups receive no update and no replacement prompt."
+      }
+    ]
+  },
+  "paired_seed_plan": {
+    "planning_seed_count": 16,
+    "seeds": [
+      211,
+      223,
+      227,
+      229,
+      233,
+      239,
+      241,
+      251,
+      257,
+      263,
+      269,
+      271,
+      277,
+      281,
+      283,
+      293
+    ],
+    "independent_unit": "training seed within a frozen task-model-stack cell",
+    "disjoint_from_e1": true
+  },
+  "power_plan": {
+    "test_family": "one-sided paired non-inferiority planning approximation",
+    "planning_sd": 0.012828539611796383,
+    "accuracy_margin": 0.01,
+    "per_task_alpha": 0.025,
+    "target_power": 0.8,
+    "variance_transfer_inflation": 1.2,
+    "normal_approximation_seed_count_before_inflation": 13,
+    "planning_seed_count_after_inflation": 16,
+    "cost_effect_scale": "paired_log_token_ratio",
+    "cost_success_boundary_log_ratio": -0.2231435513142097,
+    "cost_variance_source": "blinded first-eight paired task-arm cells; no valid prior is assumed",
+    "blinded_reassessment_after_completed_pairs_per_cell": 8,
+    "maximum_seed_count_per_cell": 24,
+    "final_seed_count_rule": "maximum of capability and cost requirements across both tasks, capped at 24",
+    "cap_exceeded_verdict": "STOP_UNDERPOWERED",
+    "reassessment_may_reduce_n": false,
+    "reassessment_may_inspect_arm_effect": false,
+    "power_receipt_required_before_final_analysis": true
+  },
+  "tasks": [
+    {
+      "task_id": "gsm8k",
+      "training_dataset": "openai/gsm8k",
+      "training_dataset_revision": "740312add88f781978c0658806c59bc2815b9866",
+      "training_split": "train",
+      "reward": "strict exact extracted answer",
+      "heldout_n": 1000,
+      "heldout_split": "hash-frozen subset of the official test split",
+      "primary_metric": "exact_match_accuracy"
+    },
+    {
+      "task_id": "math500",
+      "training_dataset": "DigitalLearningGmbH/MATH-lighteval",
+      "training_dataset_revision": "0530c78699ea5e8eb5530600900e1f328b48acad",
+      "training_split": "train",
+      "evaluation_dataset": "HuggingFaceH4/MATH-500",
+      "evaluation_dataset_revision": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "reward": "strict boxed-answer exact match",
+      "heldout_n": 500,
+      "heldout_split": "all hash-frozen MATH-500 rows, disjoint from training prompts",
+      "primary_metric": "exact_match_accuracy"
+    }
+  ],
+  "matrix": [
+    {
+      "task_id": "gsm8k",
+      "arm_id": "grpo_g8",
+      "seed_set": "paired_seed_plan",
+      "status": "planned",
+      "heldout_n": 1000
+    },
+    {
+      "task_id": "gsm8k",
+      "arm_id": "contrast_early_stop_g2_to_g8",
+      "seed_set": "paired_seed_plan",
+      "status": "planned",
+      "heldout_n": 1000
+    },
+    {
+      "task_id": "math500",
+      "arm_id": "grpo_g8",
+      "seed_set": "paired_seed_plan",
+      "status": "planned",
+      "heldout_n": 500
+    },
+    {
+      "task_id": "math500",
+      "arm_id": "contrast_early_stop_g2_to_g8",
+      "seed_set": "paired_seed_plan",
+      "status": "planned",
+      "heldout_n": 500
+    }
+  ],
+  "primary_estimands": {
+    "cost": "paired mean log ratio of charged generated tokens, log(intervention/baseline), with the displayed table back-transformed to relative change",
+    "capability": "paired held-out exact-match accuracy difference, intervention minus baseline",
+    "cost_success_boundary": -0.2,
+    "cost_success_boundary_log_ratio": -0.2231435513142097,
+    "capability_noninferiority_boundary": -0.01,
+    "joint_success": "Both boundaries pass on both tasks; any missing or invalid cell yields INCONCLUSIVE."
+  },
+  "analysis": {
+    "confidence_intervals": "seed-paired bootstrap with deterministic streams and paired-t sensitivity",
+    "multiplicity": "intersection-union across cost and capability within task; Holm across two tasks",
+    "blinded_variance_reassessment": "pooled, arm-label-hidden variance only; may increase n to 24 and cannot change outcomes, margins, tasks, or estimands",
+    "missingness": "intention-to-treat; exact resume for infrastructure interruption; no failed run is silently dropped or relabeled as scientific failure",
+    "negative_result_rule": "A boundary-crossing interval, failed power receipt, or incomplete cell is INCONCLUSIVE, not equivalence or failure.",
+    "checkpoint_rule": "final registered checkpoint; never select by online reward"
+  },
+  "telemetry": [
+    "charged_generated_tokens",
+    "rollout_groups",
+    "all_wrong_fraction",
+    "all_correct_fraction",
+    "mixed_fraction",
+    "two_sample_false_homogeneity",
+    "policy_ratio_q05_q50_q95",
+    "clip_fraction_by_advantage_sign",
+    "kl_to_data_policy",
+    "kl_to_initial_reference",
+    "parser_disagreement",
+    "wall_clock_seconds"
+  ],
+  "bindings": {
+    "claim_ledger_path": "zvf-program/next-submission/claim_ledger.json",
+    "claim_ledger_sha256": "0ab19d64ec448642dbf760dc4005f2bb8b1cb6d5ae8baa728279dd6157de2234",
+    "results_contract_path": "zvf-program/next-submission/results_contract.json",
+    "results_contract_sha256": "6e543d9757c12fbbe94f5e14938ee5d9535bd9a9c0a6d278280437a6abfaff6d",
+    "manuscript_blueprint_path": "zvf-program/next-submission/MANUSCRIPT_BLUEPRINT.md",
+    "manuscript_blueprint_sha256": "6a9c6645683d41383a38d5c399a0fb35c864a93f537625a171cfd6961fb62588",
+    "execution_authorization_path": "zvf-program/next-submission/execution_authorization.json",
+    "execution_authorization_sha256": "c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561",
+    "contrast_sampler_path": "zvf-program/next-submission/contrast_sampler.py",
+    "contrast_sampler_sha256": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
+    "trl_sampler_adapter_path": "zvf-program/next-submission/trl_sampler_adapter.py",
+    "trl_sampler_adapter_sha256": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365",
+    "remote_preflight_path": "zvf-program/next-submission/remote_preflight.py",
+    "remote_preflight_sha256": "7647ae578d6ddf9dbfeb46ee8de14c5faa831ea6ca369d2a2ac6ab2c4cda6a1c",
+    "protocol_amendment_001_path": "zvf-program/next-submission/protocol_amendment_001_math_boxed.json",
+    "protocol_amendment_001_sha256": "89f8ff4653e4f41c2988b2e6103080c75c7e3bac342c0ff36680bee1c4ea371a",
+    "preflight_launcher_path": "zvf-program/next-submission/run_preflight.py",
+    "preflight_launcher_sha256": "7108d36eeac1e81ad8ee82ee87d77a7cf86f66a01fed05c1adc74750f74f965f",
+    "hf_jobs_preflight_launcher_path": "zvf-program/next-submission/run_hf_jobs_preflight.py",
+    "hf_jobs_preflight_launcher_sha256": "c0b465cca5ae45979fa088b3d0a0a06be3987a8e81310d451305adb92ed41dee",
+    "kaggle_preflight_launcher_path": "zvf-program/next-submission/run_kaggle_preflight.py",
+    "kaggle_preflight_launcher_sha256": "317b9b82c522c6f836c97afae897ad23e528e0a8ea5c09a5a911509c81199341",
+    "gcp_preflight_launcher_path": "zvf-program/next-submission/run_gcp_preflight.py",
+    "gcp_preflight_launcher_sha256": "2e3dd9671cd86a55b3475b71e2f69e6606c1365d0d411f656a0ea693be8bae87",
+    "gcp_receipt_bucket_path": "zvf-program/next-submission/gcp_receipt_bucket.json",
+    "gcp_receipt_bucket_sha256": "0112621b8819de638732566845eebb18c59c4d1e867996bbc42ad5f5b577b6f1",
+    "preflight_secure_exec_path": "zvf-program/next-submission/secure_exec_preflight.py",
+    "preflight_secure_exec_sha256": "28bd89d7ad3314f405fa983034649e511da014285c4883326daccbaac217d2d0",
+    "preflight_environment_check_path": "zvf-program/next-submission/verify_preflight_environment.py",
+    "preflight_environment_check_sha256": "ae1718e5c7eca2b1fb17e4d244cb387c3c0b83588fc333bb7789d9bb88c21b2a",
+    "preflight_colab_setup_path": "zvf-program/next-submission/setup_colab_preflight.py",
+    "preflight_colab_setup_sha256": "44245d3a7d03bf0972d4af89038e46e78e0aa20a8de845cd06150da0d745a611"
+  },
+  "manuscript_contract": {
+    "section_order": [
+      "Abstract",
+      "Introduction",
+      "Related work",
+      "Method",
+      "Experimental design",
+      "Results",
+      "External-user evaluation if authorized",
+      "Limitations",
+      "Conclusion",
+      "Artifact appendix"
+    ],
+    "method_before_results": true,
+    "one_primary_numeric_table": true,
+    "filenames_in_main_text": false,
+    "all_primary_cells_visible": true
+  },
+  "authorization": {
+    "gpu": true,
+    "external_user_recruitment": false,
+    "publish": false,
+    "submit": false,
+    "promotion": false,
+    "receipt_path": "zvf-program/next-submission/execution_authorization.json",
+    "receipt_sha256": "c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561"
+  }
+}

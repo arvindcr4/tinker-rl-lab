@@ -13,17 +13,252 @@
     ]
   },
   "colab_cli_version": "0.6.0",
-  "completed_at": "2026-07-30T17:09:30+00:00",
-  "error": "cannot recover because final Hugging Face artifacts are incomplete",
+  "completed_at": "2026-07-30T17:37:42+00:00",
   "failed_step": null,
-  "fingerprint": "db3cd0a8aef540a9fbe0088ed5cc011eecae942a4d58e67f90a04906e515995d",
+  "fingerprint": "37df1c8658837fdaade274acdd54d165e5c9e48402b61056a58c219f84fc1f27",
   "gpu": "A100",
   "hardware_flavor": "A100",
-  "hf_repo": "arvindcr4/tinker-rl-next-preflight-math500-grpo_g8-s211-db3cd0a8",
-  "log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/preflight/logs/math500__grpo_g8__s211__db3cd0a8aef5.log",
-  "protocol_sha256": "a896b3918899228fc5a890ff8745f3b3a95e64c8288ba4e29ab15b947f37dd36",
+  "hf_repo": "arvindcr4/tinker-rl-next-preflight-math500-grpo_g8-s211-37df1c86",
+  "log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/preflight/logs/math500__grpo_g8__s211__37df1c865883.log",
+  "manifest": {
+    "audit_record": {
+      "all_correct_fraction": 0.0,
+      "all_wrong_fraction": 1.0,
+      "arm_id": "grpo_g8",
+      "charged_generated_tokens": 16384,
+      "evaluation_seconds": 396.07036291200006,
+      "evidence_tier": "preflight_not_scientific_evidence",
+      "generated_rollouts": 16,
+      "heldout_accuracy": 0.0,
+      "heldout_correct": 0,
+      "heldout_n": 8,
+      "mixed_fraction": 0.0,
+      "rollout_groups": 2,
+      "seed": 211,
+      "status": "complete",
+      "task_id": "math500",
+      "updated_groups": 0,
+      "wall_clock_seconds": 1336.3902248529998
+    },
+    "completed_at": "2026-07-30T17:37:14+00:00",
+    "evidence_class": "preflight-not-evidence",
+    "heldout_trace": [
+      {
+        "completion_sha256": "e32ba9d472c053bf120311e3a47691d11e3c1bd33c5443dfc856c287acb28f88",
+        "correct": false,
+        "index": 0
+      },
+      {
+        "completion_sha256": "85a7644ffa43af558def3a2648ca8f9187776f9820af3a90b065609952f74abf",
+        "correct": false,
+        "index": 1
+      },
+      {
+        "completion_sha256": "aa94f6bdb6169fe51d0bccac5247120620cffe60809b22be6d752a1bcf8805ef",
+        "correct": false,
+        "index": 2
+      },
+      {
+        "completion_sha256": "a84bc1b484e8dfb479acb908eefa9c98d380fc066c7173f280444780f594d811",
+        "correct": false,
+        "index": 3
+      },
+      {
+        "completion_sha256": "12487541ab54be084a91fbaf48c4ebc1622b13b3ef0063ae66a4ffd46964b1d0",
+        "correct": false,
+        "index": 4
+      },
+      {
+        "completion_sha256": "300fefd58c6bc3dbb0c09369d8f0d09c6c457bd12aa58192619b6dc8a60196c2",
+        "correct": false,
+        "index": 5
+      },
+      {
+        "completion_sha256": "25d68b64c0bc9304aee6ae02e4403a52aef6caedd2a251ce14b8b9201b403f20",
+        "correct": false,
+        "index": 6
+      },
+      {
+        "completion_sha256": "bd87662a4d94ea5f5be64fb8bd7457972452664e35076d1d7ff6b190343b5f84",
+        "correct": false,
+        "index": 7
+      }
+    ],
+    "run_config": {
+      "arm": "grpo_g8",
+      "dataset_bindings": {
+        "evaluation_dataset": "HuggingFaceH4/MATH-500",
+        "evaluation_revision": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+        "training_dataset": "DigitalLearningGmbH/MATH-lighteval",
+        "training_revision": "0530c78699ea5e8eb5530600900e1f328b48acad"
+      },
+      "evaluation_manifest_sha256": "88f92c88fcb7ac635efa643385f67ae024018860619aab0a20a7673d3d41b1fd",
+      "hardware_flavor": "A100",
+      "heldout_n": 8,
+      "max_completion_length": 1024,
+      "max_steps": 1,
+      "model": "Qwen/Qwen3-8B",
+      "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "objective_fingerprint": "370c81cd7313b616aab7bb448cddda77555bf732d2e37f516e3e467d50e1ce9f",
+      "protocol_sha256": "2a3316d5cdf93f95a2711619ca1feebba1353ed61f759bb0fdd360b4040824f0",
+      "provider": "colab",
+      "seed": 211,
+      "source_commit": "7794b6157f72896a71a36e42fe6ba5572e3686e6",
+      "stack_fingerprint": "0f37437a3ddadc5cea2b7c17daa19ddf1a30a8daa47f127835b44a1c978640c2",
+      "task": "math500",
+      "tracking": {
+        "wandb_entity": null,
+        "wandb_group": "next-submission-preflight",
+        "wandb_project": "tinker-rl-lab"
+      },
+      "tracking_backends": [
+        "wandb"
+      ],
+      "train_manifest_sha256": "f024a5dad24f1a0ac0f81ac68627c580253c81509fb5683250b6bbfd4854052a",
+      "treatment": {
+        "arm": "grpo_g8",
+        "expand_rule": "expand iff the first two binary verifier rewards differ",
+        "expansion_group_size": 6,
+        "group_size": 8,
+        "homogeneous_rule": "no update and no replacement prompt",
+        "initial_group_size": 2
+      },
+      "unit_fingerprint": "37df1c8658837fdaade274acdd54d165e5c9e48402b61056a58c219f84fc1f27"
+    },
+    "runtime_versions": {
+      "cuda": "12.8",
+      "datasets": "4.8.5",
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "huggingface_hub": "1.26.0",
+      "jinja2": "3.1.6",
+      "peft": "0.19.1",
+      "torch": "2.11.0+cu128",
+      "torchao": "0.17.0",
+      "trackio": "missing",
+      "transformers": "5.13.1",
+      "trl": "1.8.0",
+      "wandb": "0.28.0"
+    },
+    "schema_version": "aiml-next-preflight-run-v1",
+    "source_files": {
+      "contrast_sampler.py": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
+      "remote_preflight.py": "7647ae578d6ddf9dbfeb46ee8de14c5faa831ea6ca369d2a2ac6ab2c4cda6a1c",
+      "trl_sampler_adapter.py": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
+    },
+    "started_at": "2026-07-30T17:14:57+00:00",
+    "status": "complete",
+    "wandb": {
+      "run_id": "37df1c86",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/37df1c86"
+    }
+  },
+  "payload": {
+    "audit_record": {
+      "all_correct_fraction": 0.0,
+      "all_wrong_fraction": 1.0,
+      "arm_id": "grpo_g8",
+      "charged_generated_tokens": 16384,
+      "evaluation_seconds": 396.07036291200006,
+      "evidence_tier": "preflight_not_scientific_evidence",
+      "generated_rollouts": 16,
+      "heldout_accuracy": 0.0,
+      "heldout_correct": 0,
+      "heldout_n": 8,
+      "mixed_fraction": 0.0,
+      "rollout_groups": 2,
+      "seed": 211,
+      "status": "complete",
+      "task_id": "math500",
+      "updated_groups": 0,
+      "wall_clock_seconds": 1336.3902248529998
+    },
+    "evidence_class": "preflight-not-evidence",
+    "remote": {
+      "hf_commit": "db6146dc0c67a79def322617e214d0cfa91d7f24",
+      "hf_final_adapter_path": "final/adapter_model.safetensors",
+      "hf_manifest_path": "run_manifest.json",
+      "hf_repo": "arvindcr4/tinker-rl-next-preflight-math500-grpo_g8-s211-37df1c86",
+      "wandb_run_id": "37df1c86",
+      "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/37df1c86"
+    },
+    "run_config": {
+      "arm": "grpo_g8",
+      "dataset_bindings": {
+        "evaluation_dataset": "HuggingFaceH4/MATH-500",
+        "evaluation_revision": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+        "training_dataset": "DigitalLearningGmbH/MATH-lighteval",
+        "training_revision": "0530c78699ea5e8eb5530600900e1f328b48acad"
+      },
+      "evaluation_manifest_sha256": "88f92c88fcb7ac635efa643385f67ae024018860619aab0a20a7673d3d41b1fd",
+      "hardware_flavor": "A100",
+      "heldout_n": 8,
+      "max_completion_length": 1024,
+      "max_steps": 1,
+      "model": "Qwen/Qwen3-8B",
+      "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "objective_fingerprint": "370c81cd7313b616aab7bb448cddda77555bf732d2e37f516e3e467d50e1ce9f",
+      "protocol_sha256": "2a3316d5cdf93f95a2711619ca1feebba1353ed61f759bb0fdd360b4040824f0",
+      "provider": "colab",
+      "seed": 211,
+      "source_commit": "7794b6157f72896a71a36e42fe6ba5572e3686e6",
+      "stack_fingerprint": "0f37437a3ddadc5cea2b7c17daa19ddf1a30a8daa47f127835b44a1c978640c2",
+      "task": "math500",
+      "tracking": {
+        "wandb_entity": null,
+        "wandb_group": "next-submission-preflight",
+        "wandb_project": "tinker-rl-lab"
+      },
+      "tracking_backends": [
+        "wandb"
+      ],
+      "train_manifest_sha256": "f024a5dad24f1a0ac0f81ac68627c580253c81509fb5683250b6bbfd4854052a",
+      "treatment": {
+        "arm": "grpo_g8",
+        "expand_rule": "expand iff the first two binary verifier rewards differ",
+        "expansion_group_size": 6,
+        "group_size": 8,
+        "homogeneous_rule": "no update and no replacement prompt",
+        "initial_group_size": 2
+      },
+      "unit_fingerprint": "37df1c8658837fdaade274acdd54d165e5c9e48402b61056a58c219f84fc1f27"
+    },
+    "runtime_versions": {
+      "cuda": "12.8",
+      "datasets": "4.8.5",
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "huggingface_hub": "1.26.0",
+      "jinja2": "3.1.6",
+      "peft": "0.19.1",
+      "torch": "2.11.0+cu128",
+      "torchao": "0.17.0",
+      "trackio": "missing",
+      "transformers": "5.13.1",
+      "trl": "1.8.0",
+      "wandb": "0.28.0"
+    },
+    "schema_version": "aiml-next-preflight-result-v1",
+    "status": "completed"
+  },
+  "protocol_sha256": "2a3316d5cdf93f95a2711619ca1feebba1353ed61f759bb0fdd360b4040824f0",
   "provider": "colab",
-  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/preflight/requests/math500__grpo_g8__s211__db3cd0a8aef5.json",
+  "remote_verification": {
+    "hf_commit": "db6146dc0c67a79def322617e214d0cfa91d7f24",
+    "hf_files": [
+      "run_manifest.json",
+      "final/adapter_model.safetensors"
+    ],
+    "hf_private": true,
+    "hf_repo": "arvindcr4/tinker-rl-next-preflight-math500-grpo_g8-s211-37df1c86",
+    "verified_at": "2026-07-30T17:37:44+00:00",
+    "wandb": {
+      "entity": "arvindcr4-pes-university",
+      "project": "tinker-rl-lab",
+      "run_id": "37df1c86",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/37df1c86",
+      "state": "finished"
+    }
+  },
+  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/preflight/requests/math500__grpo_g8__s211__37df1c865883.json",
   "return_code": 0,
   "runtime_packages": [
     "trl==1.8.0",
@@ -37,8 +272,8 @@
   ],
   "schema_version": "aiml-next-preflight-request-v1",
   "seed": 211,
-  "session": "next-pre-math-grpo_g8-db3cd0",
-  "source_commit": "22f860d8dc3ffa2492e6906d6f5f37a47c70cc5d",
+  "session": "next-pre-math-grpo_g8-37df1c",
+  "source_commit": "7794b6157f72896a71a36e42fe6ba5572e3686e6",
   "source_snapshots": {
     "zvf-program/next-submission/contrast_sampler.py": {
       "sha256": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
@@ -49,12 +284,12 @@
       "snapshot": "sources/c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561"
     },
     "zvf-program/next-submission/preregistration.json": {
-      "sha256": "a896b3918899228fc5a890ff8745f3b3a95e64c8288ba4e29ab15b947f37dd36",
-      "snapshot": "sources/a896b3918899228fc5a890ff8745f3b3a95e64c8288ba4e29ab15b947f37dd36"
+      "sha256": "2a3316d5cdf93f95a2711619ca1feebba1353ed61f759bb0fdd360b4040824f0",
+      "snapshot": "sources/2a3316d5cdf93f95a2711619ca1feebba1353ed61f759bb0fdd360b4040824f0"
     },
     "zvf-program/next-submission/remote_preflight.py": {
-      "sha256": "cd273ab9844ef6dc71c26339d5fe424e6109c86dc2f0aa60d3824a62a383fd87",
-      "snapshot": "sources/cd273ab9844ef6dc71c26339d5fe424e6109c86dc2f0aa60d3824a62a383fd87"
+      "sha256": "7647ae578d6ddf9dbfeb46ee8de14c5faa831ea6ca369d2a2ac6ab2c4cda6a1c",
+      "snapshot": "sources/7647ae578d6ddf9dbfeb46ee8de14c5faa831ea6ca369d2a2ac6ab2c4cda6a1c"
     },
     "zvf-program/next-submission/run_preflight.py": {
       "sha256": "7108d36eeac1e81ad8ee82ee87d77a7cf86f66a01fed05c1adc74750f74f965f",
@@ -78,7 +313,7 @@
     }
   },
   "stack_fingerprint": "0f37437a3ddadc5cea2b7c17daa19ddf1a30a8daa47f127835b44a1c978640c2",
-  "status": "failed",
+  "status": "completed",
   "task": "math500",
   "tracking": {
     "hf_repo_prefix": "arvindcr4/tinker-rl-next-preflight",

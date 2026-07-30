@@ -329,6 +329,29 @@ def test_cleanup_retries_until_server_enumeration_proves_absence(monkeypatch, tm
     }
 
 
+def test_transport_interrupt_is_converted_to_a_failed_step():
+    calls = []
+    lines = []
+
+    def run_logged(command, log_handle, output_lines):
+        calls.append(command)
+        if len(calls) == 1:
+            return 0
+        raise KeyboardInterrupt
+
+    return_code, failed_step, allocation_started = PREFLIGHT.execute_commands(
+        [["colab", "new"], ["colab", "exec"]],
+        run_logged=run_logged,
+        log_handle=object(),
+        lines=lines,
+    )
+
+    assert return_code == 1
+    assert failed_step == 1
+    assert allocation_started is True
+    assert lines == ["transport exception: KeyboardInterrupt:"]
+
+
 def test_secure_exec_deletes_files_and_keeps_secrets_out_of_persistent_environment(
     capsys, monkeypatch, tmp_path
 ):

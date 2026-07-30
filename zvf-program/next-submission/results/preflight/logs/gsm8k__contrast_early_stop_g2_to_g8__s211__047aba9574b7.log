@@ -1,0 +1,101 @@
+[launcher] credentials staged out of band; values are not logged
+
+[launcher command] colab --auth=oauth2 new --gpu A100 --session next-pre-gsm8-contrast-047aba
+[colab] Creating session 'next-pre-gsm8-contrast-047aba'...
+[colab] Session READY.
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-gsm8-contrast-047aba /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/remote_preflight.py /content/remote_preflight.py
+[colab] Uploaded '/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/remote_preflight.py' to '/content/remote_preflight.py'
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-gsm8-contrast-047aba /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/contrast_sampler.py /content/contrast_sampler.py
+[colab] Uploaded '/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/contrast_sampler.py' to '/content/contrast_sampler.py'
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-gsm8-contrast-047aba /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/trl_sampler_adapter.py /content/trl_sampler_adapter.py
+[colab] Uploaded '/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/trl_sampler_adapter.py' to '/content/trl_sampler_adapter.py'
+
+[launcher command] colab --auth=oauth2 exec --session next-pre-gsm8-contrast-047aba --file /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/setup_colab_preflight.py --timeout 1800
+NEXT_PREFLIGHT_SETUP_OK {"removed_unused_optional_packages": ["torchaudio", "torchvision"], "versions": {"datasets": "4.8.5", "huggingface_hub": "1.26.0", "jinja2": "3.1.6", "peft": "0.19.1", "torchao": "0.17.0", "transformers": "5.13.1", "trl": "1.8.0", "wandb": "0.28.0"}}
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-gsm8-contrast-047aba /var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-7xoqp5yr/request.json /content/next-preflight-request.json
+[colab] Uploaded '/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-7xoqp5yr/request.json' to '/content/next-preflight-request.json'
+
+[launcher command] colab --auth=oauth2 exec --session next-pre-gsm8-contrast-047aba --file /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/verify_preflight_environment.py --timeout 120
+WARNING:torchao:Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so
+WARNING:torchao:Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so
+NEXT_PREFLIGHT_ENV_OK {"bf16": true, "cuda": "12.8", "gpu": "NVIDIA A100-SXM4-40GB", "torch": "2.11.0+cu128", "versions": {"datasets": "4.8.5", "huggingface_hub": "1.26.0", "jinja2": "3.1.6", "peft": "0.19.1", "torchao": "0.17.0", "transformers": "5.13.1", "trl": "1.8.0", "wandb": "0.28.0"}}
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-gsm8-contrast-047aba /var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-7xoqp5yr/secrets.json /content/.next-preflight-secrets.json
+[colab] Uploaded '/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-7xoqp5yr/secrets.json' to '/content/.next-preflight-secrets.json'
+
+[launcher command] colab --auth=oauth2 exec --session next-pre-gsm8-contrast-047aba --file /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/secure_exec_preflight.py --timeout 21600
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /Users/arvind/.local/share/uv/tools/google-colab-cli/lib/python3.12/site-pac │
+│ kages/colab_cli/commands/execution.py:185 in exec_command                    │
+│                                                                              │
+│   182 │   │   │   )                                                          │
+│   183 │   │   │   state.prune_session(name)                                  │
+│   184 │   │   │   raise typer.Exit(1)                                        │
+│ ❱ 185 │   │   raise e                                                        │
+│   186 │                                                                      │
+│   187 │   try:                                                               │
+│   188 │   │   is_nb = file and file.endswith(".ipynb")                       │
+│                                                                              │
+│ /Users/arvind/.local/share/uv/tools/google-colab-cli/lib/python3.12/site-pac │
+│ kages/colab_cli/commands/execution.py:175 in exec_command                    │
+│                                                                              │
+│   172 │   )                                                                  │
+│   173 │   try:                                                               │
+│   174 │   │   # Ensure we are in /content which is the standard Colab        │
+│       working directory                                                      │
+│ ❱ 175 │   │   runtime.execute_code(                                          │
+│   176 │   │   │   "import os; os.makedirs('/content', exist_ok=True);        │
+│       os.chdir('/content')"                                                  │
+│   177 │   │   )                                                              │
+│   178 │   except Exception as e:                                             │
+│                                                                              │
+│ /Users/arvind/.local/share/uv/tools/google-colab-cli/lib/python3.12/site-pac │
+│ kages/colab_cli/runtime.py:227 in execute_code                               │
+│                                                                              │
+│   224 │   │   │   # execute_interactive returns the raw reply message        │
+│   225 │   │   │   reply_content = reply["content"] if reply else {"status":  │
+│       "error"}                                                               │
+│   226 │   │   else:                                                          │
+│ ❱ 227 │   │   │   reply = self.kernel_client.execute(code, **kwargs)         │
+│   228 │   │   │   if not reply:                                              │
+│   229 │   │   │   │   return []                                              │
+│   230 │   │   │   outputs = reply.get("outputs", [])                         │
+│                                                                              │
+│ /Users/arvind/.local/share/uv/tools/google-colab-cli/lib/python3.12/site-pac │
+│ kages/jupyter_kernel_client/client.py:287 in execute                         │
+│                                                                              │
+│   284 │   │   """                                                            │
+│   285 │   │   outputs = []                                                   │
+│   286 │   │   self._set_variables(variables)                                 │
+│ ❱ 287 │   │   reply = self._manager.client.execute_interactive(              │
+│   288 │   │   │   code,                                                      │
+│   289 │   │   │   silent=silent,                                             │
+│   290 │   │   │   store_history=store_history,                               │
+│                                                                              │
+│ /Users/arvind/.local/share/uv/tools/google-colab-cli/lib/python3.12/site-pac │
+│ kages/jupyter_kernel_client/wsclient.py:1073 in execute_interactive          │
+│                                                                              │
+│   1070 │   │   │   # wait for output and redisplay it                        │
+│   1071 │   │   │   while True:                                               │
+│   1072 │   │   │   │   if not self.connection_ready.is_set():                │
+│ ❱ 1073 │   │   │   │   │   raise RuntimeError("Connection was lost.")        │
+│   1074 │   │   │   │                                                         │
+│   1075 │   │   │   │   if timeout is not None:                               │
+│   1076 │   │   │   │   │   timeout = max(0, deadline - time.monotonic())     │
+╰──────────────────────────────────────────────────────────────────────────────╯
+RuntimeError: Connection was lost.
+Exception ignored in: <module 'threading' from '/Users/arvind/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/threading.py'>
+Traceback (most recent call last):
+  File "/Users/arvind/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/threading.py", line 1624, in _shutdown
+    lock.acquire()
+KeyboardInterrupt:
+
+[launcher cleanup] colab --auth=oauth2 stop --session next-pre-gsm8-contrast-047aba
+[colab] Session 'next-pre-gsm8-contrast-047aba' not found.
+
+[launcher cleanup verify] colab --auth=oauth2 sessions
+[colab] No active sessions found on server.

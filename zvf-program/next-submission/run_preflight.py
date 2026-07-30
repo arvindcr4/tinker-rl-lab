@@ -17,7 +17,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from typing import Any
+from typing import Any, Callable
 from urllib.request import Request, urlopen
 
 from huggingface_hub import HfApi, hf_hub_download
@@ -703,6 +703,34 @@ def stop_session_verified(
     }
 
 
+def execute_commands(
+    commands: list[list[str]],
+    *,
+    run_logged: Callable[[list[str], Any, list[str]], int],
+    log_handle: Any,
+    lines: list[str],
+) -> tuple[int, int | str | None, bool]:
+    """Convert Colab transport exceptions into a receiptable failed step."""
+
+    return_code = 0
+    failed_step: int | str | None = None
+    allocation_started = False
+    index = 0
+    try:
+        for index, command in enumerate(commands):
+            return_code = run_logged(command, log_handle, lines)
+            if index == 0 and return_code == 0:
+                allocation_started = True
+            if return_code:
+                failed_step = index
+                break
+    except BaseException as exc:
+        return_code = return_code or 1
+        failed_step = index
+        lines.append(f"transport exception: {type(exc).__name__}: {exc}".rstrip())
+    return return_code, failed_step, allocation_started
+
+
 def run_unit(args: argparse.Namespace) -> dict[str, Any]:
     helpers = load_e1_helpers()
     output_dir = args.output_dir.expanduser().resolve()
@@ -856,9 +884,6 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         helpers.atomic_json(result_path, failed)
         return {"status": "failed", "result_path": str(result_path)}
     lines: list[str] = []
-    return_code = 0
-    failed_step = None
-    allocation_started = False
     cleanup = {
         "attempts": 0,
         "stop_return_codes": [],
@@ -885,13 +910,12 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
                 invocation_source=str(invocation_path),
             )[:-1]
             try:
-                for index, command in enumerate(commands):
-                    return_code = helpers.run_logged(command, log_handle, lines)
-                    if index == 0 and return_code == 0:
-                        allocation_started = True
-                    if return_code:
-                        failed_step = index
-                        break
+                return_code, failed_step, allocation_started = execute_commands(
+                    commands,
+                    run_logged=helpers.run_logged,
+                    log_handle=log_handle,
+                    lines=lines,
+                )
             finally:
                 cleanup = stop_session_verified(args.auth, session, log_handle)
 

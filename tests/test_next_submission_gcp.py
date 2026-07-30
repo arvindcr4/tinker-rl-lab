@@ -70,6 +70,7 @@ def test_startup_script_has_frozen_packages_serial_receipt_and_shutdown():
     assert "/dev/ttyS0" in script
     assert "NEXT_PREFLIGHT_EXIT_CODE" in script
     assert "NEXT_PREFLIGHT_UPLOAD_EXIT_CODE" in script
+    assert "pip uninstall --yes torchaudio torchvision" in script
     assert "sleep 10" in script
     assert "shutdown -h now" in script
     assert "set -x" not in script
@@ -139,3 +140,9 @@ def test_serial_receipt_retries_until_final_marker(monkeypatch):
     )
 
     assert result == (0, "NEXT_PREFLIGHT_EXIT_CODE=1")
+
+
+def test_remote_exit_code_is_parsed_from_the_final_marker():
+    assert GCP.remote_exit_code("before\nNEXT_PREFLIGHT_EXIT_CODE=0\n") == 0
+    assert GCP.remote_exit_code("before\nNEXT_PREFLIGHT_EXIT_CODE=17\n") == 17
+    assert GCP.remote_exit_code("before") is None

@@ -1,5 +1,4 @@
 {
-  "allocation_started": true,
   "arm": "contrast_early_stop_g2_to_g8",
   "cleanup": {
     "delete_return_code": 0,
@@ -7,39 +6,27 @@
   },
   "completed_at": "2026-07-30T14:32:26+00:00",
   "console_url": "https://console.cloud.google.com/compute/instancesDetail/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-55bb7b31?project=electric-armor-388216",
+  "cost_estimate_source": "https://cloud.google.com/spot-vms/pricing",
   "credential_source": "gcp-secret-manager-existing-references",
+  "entry_script_sha256": "500ab871c737490e2e7bf7195fc9498ff971f1887ea14ece714a4a06bc923bbf",
   "error": "Remote exit 1 before model load: the unused torchaudio wheel was ABI-incompatible with the bound torch 2.9.1 DLVM image.",
+  "estimated_cost_cap_usd": 3.0,
   "failure_phase": "remote-runtime",
+  "remote_exit_code": 1,
   "fingerprint": "55bb7b31d616bd5b395c0f709cf6eadea52becc2879ebc3f45e8896ea78f78f6",
-  "gcs_receipt": {
-    "log_download_error": null,
-    "log_download_return_code": 0,
-    "log_object": {
-      "bucket": "arvindcr-tinker-rl-preflight-358208640342",
-      "crc32c_hash": "bDcr4Q==",
-      "generation": "1785421842090140",
-      "md5_hash": "dJrnuxa+zuwK5H+VCSVGjg==",
-      "name": "preflight/55bb7b31d616bd5b395c0f709cf6eadea52becc2879ebc3f45e8896ea78f78f6/next-preflight.log",
-      "size": 23822
-    },
-    "log_uri": "gs://arvindcr-tinker-rl-preflight-358208640342/preflight/55bb7b31d616bd5b395c0f709cf6eadea52becc2879ebc3f45e8896ea78f78f6/next-preflight.log",
-    "result_download_return_code": 1,
-    "result_object": null,
-    "result_uri": "gs://arvindcr-tinker-rl-preflight-358208640342/preflight/55bb7b31d616bd5b395c0f709cf6eadea52becc2879ebc3f45e8896ea78f78f6/result.json"
-  },
   "gpu": "A100",
   "hardware_flavor": "a2-highgpu-1g-spot",
+  "hf_repo": "arvindcr4/tinker-rl-next-preflight-gcp-gsm8k-contrast_ear-s211-55bb7b31",
   "image": "pytorch-2-9-cu129-ubuntu-2204-nvidia-580-v20260730",
   "instance": "next-preflight-gsm8k-contrast-s211-55bb7b31",
   "machine_type": "a2-highgpu-1g",
+  "max_run_duration": "90m",
   "project": "electric-armor-388216",
   "protocol_sha256": "3c763a12cb1b6f177165a6497f3c7ad85ef4f62de9f96a989408141264f9476d",
   "provider": "gcp_compute",
   "provider_job_stage": "TERMINATED",
-  "remote_exit_code": 1,
   "receipt_bucket": "arvindcr-tinker-rl-preflight-358208640342",
   "receipt_prefix": "preflight/55bb7b31d616bd5b395c0f709cf6eadea52becc2879ebc3f45e8896ea78f78f6",
-  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/gcp-compute-preflight/requests/gsm8k__contrast_early_stop_g2_to_g8__s211__55bb7b31d616.json",
   "runtime_packages": [
     "trl==1.8.0",
     "transformers==5.13.1",
@@ -54,8 +41,6 @@
     "WANDB_API_KEY": "wandb-api-key"
   },
   "seed": 211,
-  "serial_log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/gcp-compute-preflight/logs/gsm8k__contrast_early_stop_g2_to_g8__s211__55bb7b31d616.log",
-  "serial_return_code": 0,
   "service_account": "webarena-runner@electric-armor-388216.iam.gserviceaccount.com",
   "source_commit": "2f97c1b6bbe1cc4cff2253ad1e5b78c99df6aa9b",
   "source_snapshots": {
@@ -88,8 +73,14 @@
       "snapshot": "sources/869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
     }
   },
+  "spot_hourly_usd_at_design": 1.92802,
   "stack_fingerprint": "396ebcfc61bcc3d2fccc871dc9e107ebf41fe534d470fcd4c522fd27b6ab08ce",
+  "startup_script_sha256": "e0e886291b5708df9aa8eff1846b66e5787f0a8d8274a94d59e391deab4522cd",
   "status": "failed",
+  "submission_output": "Created [https://www.googleapis.com/compute/v1/projects/electric-armor-388216/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-55bb7b31]. | NAME                                         ZONE           MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS | next-preflight-gsm8k-contrast-s211-55bb7b31  us-central1-a  a2-highgpu-1g  true         10.128.0.9   34.45.112.139  RUNNING",
+  "submitted_at": "2026-07-30T14:29:24+00:00",
   "task": "gsm8k",
+  "updated_at": "2026-07-30T14:32:35+00:00",
+  "wandb_run_name": "next-preflight-gcp-gsm8k-contrast_early_stop_g2_to_g8-s211-55bb7b31",
   "zone": "us-central1-a"
 }

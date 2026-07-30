@@ -36,9 +36,9 @@
   "protocol_sha256": "3c763a12cb1b6f177165a6497f3c7ad85ef4f62de9f96a989408141264f9476d",
   "provider": "gcp_compute",
   "provider_job_stage": "TERMINATED",
-  "remote_exit_code": 1,
   "receipt_bucket": "arvindcr-tinker-rl-preflight-358208640342",
   "receipt_prefix": "preflight/55bb7b31d616bd5b395c0f709cf6eadea52becc2879ebc3f45e8896ea78f78f6",
+  "remote_exit_code": 1,
   "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/gcp-compute-preflight/requests/gsm8k__contrast_early_stop_g2_to_g8__s211__55bb7b31d616.json",
   "runtime_packages": [
     "trl==1.8.0",

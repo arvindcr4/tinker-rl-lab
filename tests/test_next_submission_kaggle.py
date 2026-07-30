@@ -58,3 +58,17 @@ def test_accelerator_labels_and_status_parser_are_unambiguous():
         KAGGLE.parse_kernel_stage('kernel has status "KernelWorkerStatus.COMPLETE"') == "COMPLETE"
     )
     assert KAGGLE.parse_kernel_stage("unexpected") == "UNKNOWN"
+
+
+def test_structured_kaggle_logs_are_normalized_for_failure_receipts():
+    payload = json.dumps(
+        [
+            {"stream_name": "stderr", "time": 1.0, "data": "first\n"},
+            {"stream_name": "stdout", "time": 2.0, "data": "second\n"},
+        ]
+    )
+
+    assert KAGGLE.normalize_kaggle_logs(payload) == [
+        "stderr: first",
+        "stdout: second",
+    ]

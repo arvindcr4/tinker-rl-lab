@@ -1,0 +1,64 @@
+{
+  "arm": "contrast_early_stop_g2_to_g8",
+  "allocation_started": true,
+  "completed_at": "2026-07-30T13:58:53+00:00",
+  "failure_phase": "kaggle-secret-lookup",
+  "error": ",{\"stream_name\":\"stderr\",\"time\":0.914260152,\"data\":\"    response_json = self.web_client.make_post_request(request_body, self.GET_USER_SECRET_BY_LABEL_ENDPOINT)\\n\"} | ,{\"stream_name\":\"stderr\",\"time\":0.914554612,\"data\":\"                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n\"} | ,{\"stream_name\":\"stderr\",\"time\":0.914595302,\"data\":\"  File \\\"/usr/local/lib/python3.12/dist-packages/kaggle_web_client.py\\\", line 58, in make_post_request\\n\"} | ,{\"stream_name\":\"stderr\",\"time\":0.914739636,\"data\":\"    raise ConnectionError(\\n\"} | ,{\"stream_name\":\"stderr\",\"time\":0.914747268,\"data\":\"ConnectionError: Connection error trying to communicate with service.\\n\"} | ,{\"stream_name\":\"stderr\",\"time\":3.224858024,\"data\":\"/usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\\\|'\\n\"} | ,{\"stream_name\":\"stderr\",\"time\":3.224888951,\"data\":\"  cells[i][c] = re.sub('\\\\\\\\\\\\\\\\\\\\|', '|', cell)\\n\"} | ,{\"stream_name\":\"stderr\",\"time\":3.530282729,\"data\":\"/usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\\\_'\\n\"} | ,{\"stream_name\":\"stderr\",\"time\":3.530307951,\"data\":\"  text = re.sub(r'_', '\\\\_', text) # Escape underscores in display text\\n\"} | ,{\"stream_name\":\"stderr\",\"time\":4.762394261,\"data\":\"[NbConvertApp] Converting notebook __script__.ipynb to html\\n\"} | ,{\"stream_name\":\"stderr\",\"time\":5.935549699,\"data\":\"[NbConvertApp] Writing 335256 bytes to __results__.html\\n\"} | ]",
+  "fingerprint": "fee1214d2061c239d615d7d3a752aa39e7cbaccee4dc5ddd60f02107d667d0f5",
+  "gpu": "A100",
+  "hardware_flavor": "NvidiaTeslaA100",
+  "kernel_id": "arvindcr/next-preflight-gsm8k-contrast-s211-fee1214d",
+  "kernel_url": "https://www.kaggle.com/code/arvindcr/next-preflight-gsm8k-contrast-s211-fee1214d",
+  "protocol_sha256": "47a3e4f36b0d028e65f7fbe781de1033819f58823fa9039eb1615c742abe3455",
+  "provider": "kaggle",
+  "provider_job_stage": "ERROR",
+  "provider_ui_runtime_gpu": "P100",
+  "requested_accelerator": "NvidiaTeslaA100",
+  "hardware_match_verified": false,
+  "provider_log_reference": "https://www.kaggle.com/code/arvindcr/next-preflight-gsm8k-contrast-s211-fee1214d/log",
+  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/kaggle-preflight/requests/gsm8k__contrast_early_stop_g2_to_g8__s211__fee1214d2061.json",
+  "runtime_packages": [
+    "trl==1.8.0",
+    "transformers==5.13.1",
+    "datasets==4.8.5",
+    "peft==0.19.1",
+    "torchao==0.17.0",
+    "wandb==0.28.0"
+  ],
+  "schema_version": "aiml-next-preflight-request-v1",
+  "seed": 211,
+  "source_commit": "2810490e4f163a2c0e032766a58596f5ea2b7498",
+  "source_snapshots": {
+    "zvf-program/next-submission/contrast_sampler.py": {
+      "sha256": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
+      "snapshot": "sources/083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86"
+    },
+    "zvf-program/next-submission/execution_authorization.json": {
+      "sha256": "c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561",
+      "snapshot": "sources/c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561"
+    },
+    "zvf-program/next-submission/preregistration.json": {
+      "sha256": "47a3e4f36b0d028e65f7fbe781de1033819f58823fa9039eb1615c742abe3455",
+      "snapshot": "sources/47a3e4f36b0d028e65f7fbe781de1033819f58823fa9039eb1615c742abe3455"
+    },
+    "zvf-program/next-submission/remote_preflight.py": {
+      "sha256": "e294565c260baa4db4b42ad2ef871d4c4cebde41727cd390c05066c2071c51ca",
+      "snapshot": "sources/e294565c260baa4db4b42ad2ef871d4c4cebde41727cd390c05066c2071c51ca"
+    },
+    "zvf-program/next-submission/run_kaggle_preflight.py": {
+      "sha256": "9ab9b8eadb464939c91458159515917059c0979efc9fea49f1dbfd0585ce4dcf",
+      "snapshot": "sources/9ab9b8eadb464939c91458159515917059c0979efc9fea49f1dbfd0585ce4dcf"
+    },
+    "zvf-program/next-submission/run_preflight.py": {
+      "sha256": "d69128fb6df3505ac702adc5a96147b31bafe01f07df8615689b23945d4ea455",
+      "snapshot": "sources/d69128fb6df3505ac702adc5a96147b31bafe01f07df8615689b23945d4ea455"
+    },
+    "zvf-program/next-submission/trl_sampler_adapter.py": {
+      "sha256": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365",
+      "snapshot": "sources/869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
+    }
+  },
+  "stack_fingerprint": "24541e75a5a40186261dd1006a8e45376e6d3665e2745cecaf0e99177aff1899",
+  "status": "failed",
+  "task": "gsm8k"
+}

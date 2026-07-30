@@ -251,7 +251,7 @@
     "hf_jobs_preflight_launcher_path": "zvf-program/next-submission/run_hf_jobs_preflight.py",
     "hf_jobs_preflight_launcher_sha256": "c0b465cca5ae45979fa088b3d0a0a06be3987a8e81310d451305adb92ed41dee",
     "kaggle_preflight_launcher_path": "zvf-program/next-submission/run_kaggle_preflight.py",
-    "kaggle_preflight_launcher_sha256": "9ab9b8eadb464939c91458159515917059c0979efc9fea49f1dbfd0585ce4dcf",
+    "kaggle_preflight_launcher_sha256": "317b9b82c522c6f836c97afae897ad23e528e0a8ea5c09a5a911509c81199341",
     "preflight_secure_exec_path": "zvf-program/next-submission/secure_exec_preflight.py",
     "preflight_secure_exec_sha256": "38b22601cfe5cd33fc8ccb915c03eafa0b076b3ec1dce496af863bcb1cbbbe43",
     "preflight_environment_check_path": "zvf-program/next-submission/verify_preflight_environment.py",

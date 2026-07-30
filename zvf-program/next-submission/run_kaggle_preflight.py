@@ -185,6 +185,26 @@ def get_kernel_status(kaggle: str, kernel_id: str) -> tuple[str, str]:
     return parse_kernel_stage(status.stdout), status.stdout
 
 
+def normalize_kaggle_logs(output: str) -> list[str]:
+    """Decode the CLI's structured log array into readable receipt lines."""
+
+    try:
+        payload = json.loads(output)
+    except json.JSONDecodeError:
+        return output.splitlines()
+    if not isinstance(payload, list):
+        return output.splitlines()
+    lines = []
+    for row in payload:
+        if not isinstance(row, dict):
+            continue
+        stream = str(row.get("stream_name", "log"))
+        data = str(row.get("data", "")).strip()
+        if data:
+            lines.append(f"{stream}: {data}")
+    return lines
+
+
 def wait_for_kernel(
     *, kaggle: str, kernel_id: str, timeout_seconds: int, poll_seconds: int
 ) -> tuple[str, str]:
@@ -208,7 +228,7 @@ def fetch_kernel_logs(kaggle: str, kernel_id: str) -> list[str]:
         stderr=subprocess.STDOUT,
         check=False,
     )
-    return logs.stdout.splitlines()
+    return normalize_kaggle_logs(logs.stdout)
 
 
 def run_unit(args: argparse.Namespace) -> dict[str, Any]:
@@ -419,19 +439,36 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         poll_seconds=args.poll_seconds,
     )
     lines = fetch_kernel_logs(kaggle, kernel_id)
+    completed_at = utc_now()
     base = {
         **request,
         "kernel_id": kernel_id,
         "kernel_url": kernel_url,
         "provider_job_stage": stage,
         "request_path": str(request_path),
-        "completed_at": utc_now(),
+        "completed_at": completed_at,
+        "allocation_started": stage in {"COMPLETE", "ERROR"},
     }
     if stage != "COMPLETE":
+        error = common.failure_summary(lines or status_output.splitlines())
+        helpers.atomic_json(
+            request_path,
+            {
+                **submitted,
+                "status": "failed",
+                "failure_phase": "kernel-runtime",
+                "provider_job_stage": stage,
+                "allocation_started": base["allocation_started"],
+                "completed_at": completed_at,
+                "error": error,
+                "updated_at": completed_at,
+            },
+        )
         failed = {
             **base,
             "status": "failed",
-            "error": common.failure_summary(lines or status_output.splitlines()),
+            "failure_phase": "kernel-runtime",
+            "error": error,
         }
         helpers.atomic_json(result_path, failed)
         return {"status": "failed", "result_path": str(result_path), "kernel_url": kernel_url}
@@ -476,6 +513,17 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         "remote_verification": verification,
         "fingerprint": request["fingerprint"],
     }
+    helpers.atomic_json(
+        request_path,
+        {
+            **submitted,
+            "status": "completed",
+            "provider_job_stage": stage,
+            "allocation_started": True,
+            "completed_at": completed_at,
+            "updated_at": completed_at,
+        },
+    )
     helpers.atomic_json(result_path, complete)
     return {"status": "completed", "result_path": str(result_path), "kernel_url": kernel_url}
 

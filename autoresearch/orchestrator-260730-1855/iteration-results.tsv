@@ -3,4 +3,7 @@ iteration	timestamp	hop	error_count	delta	status	evidence
 0	2026-07-30T18:55:05+05:30	baseline	2	0	baseline	sampler and adapter acceptance suites introduced
 1	2026-07-30T18:57:00+05:30	fix	1	-1	keep	corrected synthetic charged-token expectation from 40 to 42
 2	2026-07-30T19:02:00+05:30	fix	0	-1	keep	allowed active homogeneous G8 baseline slots with canonical zero advantage
-3	2026-07-30T19:10:00+05:30	regression	0	0	keep	39 focused tests plus lint format design verifier and dry-run pass
+3	2026-07-30T19:03:00+05:30	regression	0	0	keep	39 focused tests plus lint format design verifier and dry-run pass
+4	2026-07-30T19:04:18+05:30	remote-preflight-a100	1	1	blocked	A100 rejected before VM assignment due quota or entitlement
+5	2026-07-30T19:05:32+05:30	remote-preflight-l4	1	0	blocked	L4 rejected before VM assignment due quota or entitlement
+6	2026-07-30T19:12:00+05:30	independent-verify	1	0	keep	adversarial audit P1 and P2 validator findings fixed; independent re-audit PASS

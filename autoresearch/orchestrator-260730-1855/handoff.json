@@ -1,0 +1,28 @@
+{
+  "version": "2.2.1",
+  "source": "orchestrator",
+  "timestamp": "2026-07-30T19:12:00+05:30",
+  "status": "BLOCKED",
+  "verdict": "LOCAL_VERIFIED_REMOTE_ALLOCATION_BLOCKED",
+  "results_tsv": "autoresearch/orchestrator-260730-1855/iteration-results.tsv",
+  "findings": [
+    {
+      "severity": "blocking",
+      "file_line": "zvf-program/next-submission/results/preflight/results/gsm8k__contrast_early_stop_g2_to_g8__s211.json",
+      "description": "Colab rejected both A100 and L4 before VM assignment because the authenticated account has no entitlement or quota for either bf16-capable accelerator."
+    }
+  ],
+  "config": {
+    "scope": "zvf-program/next-submission and focused tests",
+    "success_predicate": "local contracts green plus one independently validated remote preflight receipt",
+    "local_verification": "172 repository tests and 47 focused tests passed after retry-history and adversarial receipt hardening; independent re-audit PASS",
+    "remote_evidence": "none; both attempts failed at step zero",
+    "unauthorized_actions_preserved": [
+      "push",
+      "publish",
+      "submit",
+      "external_user_recruitment",
+      "result_promotion"
+    ]
+  }
+}

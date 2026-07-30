@@ -1,0 +1,31 @@
+{
+  "schema_version": "aiml-next-allocation-failure-receipt-v1",
+  "status": "BLOCKED_REMOTE_ACCELERATOR_ENTITLEMENT",
+  "evidence_class": "infrastructure_only_not_scientific_evidence",
+  "task_id": "gsm8k",
+  "arm_id": "contrast_early_stop_g2_to_g8",
+  "seed": 211,
+  "attempts": [
+    {
+      "accelerator": "A100",
+      "source_commit": "81eb211cda37ba6b198de0cfd48430fab57650a3",
+      "unit_fingerprint": "2ffa3c114ef9988ec0127958aae8090dafde5cb232dbf0572bd61a50f2a1cd49",
+      "failed_step": 0,
+      "vm_assigned": false,
+      "provider_error": "Backend rejected accelerator 'A100'. You may not have quota or entitlement for this accelerator on your account.",
+      "result_sha256": "c5bb60575101fa820f1b79f83fc746d9567dee84b9f0e048f3f0e7b9763e78cc",
+      "log_sha256": "b555025f9702ffd83d1606316854746475e1da1eeff8ec47bd01f06f3e2e97a8"
+    },
+    {
+      "accelerator": "L4",
+      "source_commit": "e92a128921ff3869a01bdf5b44e2e412e2c69477",
+      "unit_fingerprint": "54beaa3f5b1fd649e3b156eab3fbd3b3f85d2aa5039d58244c27886449306d9e",
+      "failed_step": 0,
+      "vm_assigned": false,
+      "provider_error": "Backend rejected accelerator 'L4'. You may not have quota or entitlement for this accelerator on your account.",
+      "result_sha256": "9985f5b24071181210eb0dab0d366c5dec1c26c2ad24975da84f6b091a6bc607",
+      "log_sha256": "ca40c1f5c6199dce2257049418c930a53ad153557493e1c03bd9cd1dd1819d8b"
+    }
+  ],
+  "adjudication": "No remote runtime started, no model was loaded, no optimizer step ran, and no result claim is authorized. T4 was not attempted because it would violate the frozen bfloat16-capable 8B stack."
+}

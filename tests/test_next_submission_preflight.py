@@ -26,6 +26,7 @@ def valid_payload():
         "stack_fingerprint": "b" * 64,
         "source_commit": "c" * 40,
         "protocol_sha256": "d" * 64,
+        "gpu": "L4",
     }
     audit = {
         "task_id": "gsm8k",
@@ -68,14 +69,26 @@ def valid_payload():
         "status": "complete",
         "evidence_class": "preflight-not-evidence",
         "audit_record": audit,
-        "run_config": run_config,
+        "run_config": copy.deepcopy(run_config),
         "heldout_trace": trace,
         "source_files": source_files,
+        "runtime_versions": {
+            "trl": "1.8.0",
+            "transformers": "5.13.1",
+            "datasets": "4.8.5",
+            "peft": "0.19.1",
+            "torchao": "0.17.0",
+            "wandb": "0.28.0",
+            "gpu": "NVIDIA L4",
+        },
     }
     result = {
         "schema_version": "aiml-next-preflight-result-v1",
+        "status": "completed",
         "evidence_class": "preflight-not-evidence",
         "audit_record": audit,
+        "run_config": run_config,
+        "runtime_versions": manifest["runtime_versions"],
     }
     return manifest, result, request
 
@@ -106,10 +119,68 @@ def test_source_hash_drift_is_rejected():
         PREFLIGHT.validate_manifest(manifest, result, request)
 
 
+@pytest.mark.parametrize(
+    ("mutation", "match"),
+    [
+        (
+            lambda manifest, result, request: manifest["audit_record"].update(status="running"),
+            "status",
+        ),
+        (
+            lambda manifest, result, request: manifest["audit_record"].update(task_id="math500"),
+            "identity",
+        ),
+        (
+            lambda manifest, result, request: manifest["audit_record"].update(updated_groups=99),
+            "updated-group",
+        ),
+        (
+            lambda manifest, result, request: manifest["audit_record"].update(
+                charged_generated_tokens=1
+            ),
+            "charged generated tokens",
+        ),
+    ],
+)
+def test_semantically_invalid_audit_receipts_are_rejected(mutation, match):
+    manifest, result, request = copy.deepcopy(valid_payload())
+    mutation(manifest, result, request)
+    result["audit_record"] = copy.deepcopy(manifest["audit_record"])
+    with pytest.raises(RuntimeError, match=match):
+        PREFLIGHT.validate_manifest(manifest, result, request)
+
+
+def test_result_run_config_must_match_manifest():
+    manifest, result, request = copy.deepcopy(valid_payload())
+    result["run_config"]["task"] = "math500"
+    with pytest.raises(RuntimeError, match="run configs differ"):
+        PREFLIGHT.validate_manifest(manifest, result, request)
+
+
+def test_observed_gpu_and_versions_must_match_request():
+    manifest, result, request = copy.deepcopy(valid_payload())
+    manifest["runtime_versions"]["gpu"] = "NVIDIA T4"
+    result["runtime_versions"] = copy.deepcopy(manifest["runtime_versions"])
+    with pytest.raises(RuntimeError, match="does not match requested"):
+        PREFLIGHT.validate_manifest(manifest, result, request)
+
+    manifest, result, request = copy.deepcopy(valid_payload())
+    manifest["runtime_versions"]["trl"] = "1.9.0"
+    result["runtime_versions"] = copy.deepcopy(manifest["runtime_versions"])
+    with pytest.raises(RuntimeError, match="package mismatch"):
+        PREFLIGHT.validate_manifest(manifest, result, request)
+
+
 def test_result_log_parser_uses_last_marker():
     payload = {"schema_version": "aiml-next-preflight-result-v1"}
     lines = ["noise", "NEXT_PREFLIGHT_RESULT " + __import__("json").dumps(payload)]
     assert PREFLIGHT.result_from_log(lines) == payload
+
+
+def test_failure_summary_is_bounded_and_strips_ansi():
+    lines = [f"line {index}" for index in range(20)] + ["\x1b[31mquota rejected\x1b[0m"]
+    summary = PREFLIGHT.failure_summary(lines, limit=3)
+    assert summary == "line 18 | line 19 | quota rejected"
 
 
 def test_hardware_retry_archives_incompatible_receipt(tmp_path):

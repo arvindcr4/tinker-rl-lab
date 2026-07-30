@@ -249,7 +249,7 @@
     "preflight_launcher_path": "zvf-program/next-submission/run_preflight.py",
     "preflight_launcher_sha256": "d69128fb6df3505ac702adc5a96147b31bafe01f07df8615689b23945d4ea455",
     "hf_jobs_preflight_launcher_path": "zvf-program/next-submission/run_hf_jobs_preflight.py",
-    "hf_jobs_preflight_launcher_sha256": "355ac5ca8b8f278517871a9fdef07ffe4da224400aabd424edc6f7c6cc17ad76",
+    "hf_jobs_preflight_launcher_sha256": "c0b465cca5ae45979fa088b3d0a0a06be3987a8e81310d451305adb92ed41dee",
     "preflight_secure_exec_path": "zvf-program/next-submission/secure_exec_preflight.py",
     "preflight_secure_exec_sha256": "38b22601cfe5cd33fc8ccb915c03eafa0b076b3ec1dce496af863bcb1cbbbe43",
     "preflight_environment_check_path": "zvf-program/next-submission/verify_preflight_environment.py",

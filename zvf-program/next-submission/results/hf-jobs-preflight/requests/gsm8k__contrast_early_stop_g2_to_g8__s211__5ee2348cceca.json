@@ -1,0 +1,67 @@
+{
+  "arm": "contrast_early_stop_g2_to_g8",
+  "estimated_cost_cap_usd": 5.0,
+  "fingerprint": "5ee2348cceca923564444f126c2bee0a7b39ad5c990ead3312fbecc1ba0ee598",
+  "gpu": "A100",
+  "hardware_flavor": "a100-large",
+  "hf_repo": "arvindcr4/tinker-rl-next-preflight-hf-gsm8k-contrast_ear-s211-5ee2348c",
+  "job_script_sha256": "ee6b4ceb6448ab0b444e32986be2f3e9d4057798293cb4f6999de5bbeae14193",
+  "protocol_sha256": "a9797e08ffedc4be7806d968ec6548f878354fc6bd40a0b562732e6e66b71e10",
+  "provider": "huggingface_jobs",
+  "runtime_packages": [
+    "trl==1.8.0",
+    "transformers==5.13.1",
+    "datasets==4.8.5",
+    "peft==0.19.1",
+    "torchao==0.17.0",
+    "wandb==0.28.0"
+  ],
+  "schema_version": "aiml-next-preflight-request-v1",
+  "seed": 211,
+  "source_commit": "97ff3d314b57a7f49d7cf1a9220270e2dd974267",
+  "source_snapshots": {
+    "zvf-program/next-submission/contrast_sampler.py": {
+      "sha256": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
+      "snapshot": "sources/083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86"
+    },
+    "zvf-program/next-submission/execution_authorization.json": {
+      "sha256": "c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561",
+      "snapshot": "sources/c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561"
+    },
+    "zvf-program/next-submission/preregistration.json": {
+      "sha256": "a9797e08ffedc4be7806d968ec6548f878354fc6bd40a0b562732e6e66b71e10",
+      "snapshot": "sources/a9797e08ffedc4be7806d968ec6548f878354fc6bd40a0b562732e6e66b71e10"
+    },
+    "zvf-program/next-submission/remote_preflight.py": {
+      "sha256": "9f3192205aa9bd094dbcae2a6fead8867b97e23b853705b307f511f730300f68",
+      "snapshot": "sources/9f3192205aa9bd094dbcae2a6fead8867b97e23b853705b307f511f730300f68"
+    },
+    "zvf-program/next-submission/run_hf_jobs_preflight.py": {
+      "sha256": "355ac5ca8b8f278517871a9fdef07ffe4da224400aabd424edc6f7c6cc17ad76",
+      "snapshot": "sources/355ac5ca8b8f278517871a9fdef07ffe4da224400aabd424edc6f7c6cc17ad76"
+    },
+    "zvf-program/next-submission/run_preflight.py": {
+      "sha256": "d69128fb6df3505ac702adc5a96147b31bafe01f07df8615689b23945d4ea455",
+      "snapshot": "sources/d69128fb6df3505ac702adc5a96147b31bafe01f07df8615689b23945d4ea455"
+    },
+    "zvf-program/next-submission/trl_sampler_adapter.py": {
+      "sha256": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365",
+      "snapshot": "sources/869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
+    }
+  },
+  "stack_fingerprint": "a12a2d663bc1cf96aebedae6d4869de027220de11eb9cf83d526683c17fc7c02",
+  "status": "allocation-rejected",
+  "submitted_at": null,
+  "task": "gsm8k",
+  "timeout": "2h",
+  "tracking_packages": {
+    "trackio": "0.34.0"
+  },
+  "updated_at": "2026-07-30T13:51:48+00:00",
+  "failure_phase": "provider-submission",
+  "provider_job_id": null,
+  "provider_job_url": null,
+  "allocation_started": false,
+  "error": "HTTP 402 Payment Required: Pre-paid credit balance is insufficient - add more credits to your account to use Jobs.",
+  "wandb_run_name": "next-preflight-hf-gsm8k-contrast_early_stop_g2_to_g8-s211-5ee2348c"
+}

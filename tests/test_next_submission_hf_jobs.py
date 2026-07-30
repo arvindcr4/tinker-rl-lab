@@ -49,3 +49,12 @@ def test_supported_flavors_have_unambiguous_observed_gpu_labels():
         "a100-large": "A100",
         "h200": "H200",
     }
+
+
+def test_provider_error_sanitizer_removes_every_submitted_secret():
+    credentials = {"HF_TOKEN": "hf_example-secret", "WANDB_API_KEY": "wandb-secret"}
+    exc = RuntimeError("failed hf_example-secret and wandb-secret")
+
+    sanitized = HF_JOBS.sanitize_provider_error(exc, credentials)
+
+    assert sanitized == "failed <redacted> and <redacted>"

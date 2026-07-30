@@ -1,0 +1,21 @@
+{
+  "allocation_started": false,
+  "arm": "contrast_early_stop_g2_to_g8",
+  "completed_at": "2026-07-30T13:51:48+00:00",
+  "error": "HTTP 402 Payment Required: Pre-paid credit balance is insufficient - add more credits to your account to use Jobs.",
+  "failure_phase": "provider-submission",
+  "fingerprint": "5ee2348cceca923564444f126c2bee0a7b39ad5c990ead3312fbecc1ba0ee598",
+  "gpu": "A100",
+  "hardware_flavor": "a100-large",
+  "protocol_sha256": "a9797e08ffedc4be7806d968ec6548f878354fc6bd40a0b562732e6e66b71e10",
+  "provider": "huggingface_jobs",
+  "provider_job_id": null,
+  "provider_job_url": null,
+  "request_path": "zvf-program/next-submission/results/hf-jobs-preflight/requests/gsm8k__contrast_early_stop_g2_to_g8__s211__5ee2348cceca.json",
+  "schema_version": "aiml-next-preflight-result-v1",
+  "seed": 211,
+  "source_commit": "97ff3d314b57a7f49d7cf1a9220270e2dd974267",
+  "stack_fingerprint": "a12a2d663bc1cf96aebedae6d4869de027220de11eb9cf83d526683c17fc7c02",
+  "status": "failed",
+  "task": "gsm8k"
+}

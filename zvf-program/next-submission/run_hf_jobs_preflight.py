@@ -128,6 +128,16 @@ def job_stage(job: Any) -> str:
     return str(getattr(stage, "value", stage or "unknown")).upper()
 
 
+def sanitize_provider_error(exc: Exception, credentials: dict[str, str]) -> str:
+    """Return a bounded provider error that cannot contain submitted secrets."""
+
+    message = str(exc)
+    for value in credentials.values():
+        if value:
+            message = message.replace(value, "<redacted>")
+    return message
+
+
 def run_unit(args: argparse.Namespace) -> dict[str, Any]:
     common = load_common()
     helpers = common.load_e1_helpers()
@@ -258,14 +268,45 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
 
     credentials = helpers.load_credentials()
     api = HfApi(token=credentials["HF_TOKEN"])
-    job = api.run_uv_job(
-        str(script_path),
-        script_args=script_args,
-        flavor=args.flavor,
-        timeout=args.timeout,
-        secrets=credentials,
-        python="3.12",
-    )
+    try:
+        job = api.run_uv_job(
+            str(script_path),
+            script_args=script_args,
+            flavor=args.flavor,
+            timeout=args.timeout,
+            secrets=credentials,
+            python="3.12",
+        )
+    except Exception as exc:
+        error = common.failure_summary(sanitize_provider_error(exc, credentials).splitlines())
+        rejected = {
+            **launched,
+            "status": "allocation-rejected",
+            "failure_phase": "provider-submission",
+            "provider_job_id": None,
+            "provider_job_url": None,
+            "allocation_started": False,
+            "error": error,
+            "updated_at": utc_now(),
+        }
+        helpers.atomic_json(request_path, rejected)
+        failed = {
+            **request,
+            "status": "failed",
+            "failure_phase": "provider-submission",
+            "provider_job_id": None,
+            "provider_job_url": None,
+            "allocation_started": False,
+            "request_path": str(request_path),
+            "completed_at": utc_now(),
+            "error": error,
+        }
+        helpers.atomic_json(result_path, failed)
+        return {
+            "status": "failed",
+            "result_path": str(result_path),
+            "job_url": None,
+        }
     submitted = {
         **launched,
         "status": "submitted",

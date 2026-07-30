@@ -1,0 +1,88 @@
+{
+  "arm": "contrast_early_stop_g2_to_g8",
+  "cleanup": {
+    "delete_return_code": 0,
+    "instance_absent_verified": true
+  },
+  "completed_at": "2026-07-30T14:57:01+00:00",
+  "console_url": "https://console.cloud.google.com/compute/instancesDetail/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-b4601a45?project=electric-armor-388216",
+  "cost_estimate_source": "https://cloud.google.com/spot-vms/pricing",
+  "credential_source": "gcp-secret-manager-existing-references",
+  "entry_script_sha256": "9ddf41cf71f50a8d71bf48ec7a77ac534c944f30e7063bd6f981240e9493f3be",
+  "estimated_cost_cap_usd": 3.0,
+  "fingerprint": "b4601a450809822d37667b3facac3001d4b618dba5298f54ab17dc985ec18f1a",
+  "gpu": "A100",
+  "hardware_flavor": "a2-highgpu-1g-spot",
+  "hf_repo": "arvindcr4/tinker-rl-next-preflight-gcp-gsm8k-contrast_ear-s211-b4601a45",
+  "image": "pytorch-2-9-cu129-ubuntu-2204-nvidia-580-v20260730",
+  "instance": "next-preflight-gsm8k-contrast-s211-b4601a45",
+  "machine_type": "a2-highgpu-1g",
+  "max_run_duration": "90m",
+  "project": "electric-armor-388216",
+  "protocol_sha256": "1fdeb8f0c08c366c2a1eb521bc90cbeb2daa1044940637425a83e7c07ba1fc47",
+  "provider": "gcp_compute",
+  "provider_job_stage": "TERMINATED",
+  "receipt_bucket": "arvindcr-tinker-rl-preflight-358208640342",
+  "receipt_prefix": "preflight/b4601a450809822d37667b3facac3001d4b618dba5298f54ab17dc985ec18f1a",
+  "removed_unused_optional_packages": [
+    "torchaudio",
+    "torchvision"
+  ],
+  "runtime_packages": [
+    "trl==1.8.0",
+    "transformers==5.13.1",
+    "jinja2==3.1.6",
+    "datasets==4.8.5",
+    "peft==0.19.1",
+    "torchao==0.17.0",
+    "wandb==0.28.0"
+  ],
+  "schema_version": "aiml-next-preflight-request-v1",
+  "secret_names": {
+    "HF_TOKEN": "hf-token",
+    "WANDB_API_KEY": "wandb-api-key"
+  },
+  "seed": 211,
+  "service_account": "webarena-runner@electric-armor-388216.iam.gserviceaccount.com",
+  "source_commit": "31c2272228c93143d56acc1658822cee736a80c9",
+  "source_snapshots": {
+    "zvf-program/next-submission/contrast_sampler.py": {
+      "sha256": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
+      "snapshot": "sources/083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86"
+    },
+    "zvf-program/next-submission/execution_authorization.json": {
+      "sha256": "c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561",
+      "snapshot": "sources/c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561"
+    },
+    "zvf-program/next-submission/preregistration.json": {
+      "sha256": "1fdeb8f0c08c366c2a1eb521bc90cbeb2daa1044940637425a83e7c07ba1fc47",
+      "snapshot": "sources/1fdeb8f0c08c366c2a1eb521bc90cbeb2daa1044940637425a83e7c07ba1fc47"
+    },
+    "zvf-program/next-submission/remote_preflight.py": {
+      "sha256": "649909d248cc115c7755c1154dc65a619015f5964975fd75f04ce9956e9c4770",
+      "snapshot": "sources/649909d248cc115c7755c1154dc65a619015f5964975fd75f04ce9956e9c4770"
+    },
+    "zvf-program/next-submission/run_gcp_preflight.py": {
+      "sha256": "2e3dd9671cd86a55b3475b71e2f69e6606c1365d0d411f656a0ea693be8bae87",
+      "snapshot": "sources/2e3dd9671cd86a55b3475b71e2f69e6606c1365d0d411f656a0ea693be8bae87"
+    },
+    "zvf-program/next-submission/run_preflight.py": {
+      "sha256": "e4b3814ab597a291334a6bb1ccf77e1f6b762877d1b10635ca6184aeb628b716",
+      "snapshot": "sources/e4b3814ab597a291334a6bb1ccf77e1f6b762877d1b10635ca6184aeb628b716"
+    },
+    "zvf-program/next-submission/trl_sampler_adapter.py": {
+      "sha256": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365",
+      "snapshot": "sources/869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
+    }
+  },
+  "spot_hourly_usd_at_design": 1.92802,
+  "stack_fingerprint": "82986011bb65a1830e455ca1f3ba6f488d3de5615a481cb30d167d8288d6a61f",
+  "startup_script_sha256": "e47d04c0041bbd4d27b82a25303321f3d38997b4b13818d157ec0c42d55e04ac",
+  "status": "completed",
+  "submission_output": "Created [https://www.googleapis.com/compute/v1/projects/electric-armor-388216/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-b4601a45]. | NAME                                         ZONE           MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS | next-preflight-gsm8k-contrast-s211-b4601a45  us-central1-a  a2-highgpu-1g  true         10.128.0.12  34.45.112.139  RUNNING",
+  "submitted_at": "2026-07-30T14:44:08+00:00",
+  "task": "gsm8k",
+  "updated_at": "2026-07-30T14:57:11+00:00",
+  "wandb_run_name": "next-preflight-gcp-gsm8k-contrast_early_stop_g2_to_g8-s211-b4601a45",
+  "zone": "us-central1-a"
+}

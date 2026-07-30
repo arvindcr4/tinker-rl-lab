@@ -1,0 +1,81 @@
+{
+  "audit_record": {
+    "all_correct_fraction": 1.0,
+    "all_wrong_fraction": 0.0,
+    "arm_id": "contrast_early_stop_g2_to_g8",
+    "charged_generated_tokens": 1908,
+    "evaluation_seconds": 365.931076465,
+    "evidence_tier": "preflight_not_scientific_evidence",
+    "generated_rollouts": 4,
+    "heldout_accuracy": 0.625,
+    "heldout_correct": 5,
+    "heldout_n": 8,
+    "mixed_fraction": 0.0,
+    "rollout_groups": 2,
+    "seed": 211,
+    "status": "complete",
+    "task_id": "gsm8k",
+    "updated_groups": 0,
+    "wall_clock_seconds": 624.038828306
+  },
+  "evidence_class": "preflight-not-evidence",
+  "remote": {
+    "hf_commit": "4613097fca6182f7bf8f528d2fab1202c5755be3",
+    "hf_final_adapter_path": "final/adapter_model.safetensors",
+    "hf_manifest_path": "run_manifest.json",
+    "hf_repo": "arvindcr4/tinker-rl-next-preflight-gcp-gsm8k-contrast_ear-s211-b4601a45",
+    "wandb_run_id": "b4601a45",
+    "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/b4601a45"
+  },
+  "run_config": {
+    "arm": "contrast_early_stop_g2_to_g8",
+    "dataset_bindings": {
+      "evaluation_dataset": "openai/gsm8k",
+      "evaluation_revision": "740312add88f781978c0658806c59bc2815b9866",
+      "training_dataset": "openai/gsm8k",
+      "training_revision": "740312add88f781978c0658806c59bc2815b9866"
+    },
+    "evaluation_manifest_sha256": "b3a854659c4b709f70af895bf0157e00a47003905ad8f52e8c6346458f13cf8d",
+    "hardware_flavor": "a2-highgpu-1g-spot",
+    "heldout_n": 8,
+    "max_completion_length": 1024,
+    "max_steps": 1,
+    "model": "Qwen/Qwen3-8B",
+    "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+    "objective_fingerprint": "370c81cd7313b616aab7bb448cddda77555bf732d2e37f516e3e467d50e1ce9f",
+    "protocol_sha256": "1fdeb8f0c08c366c2a1eb521bc90cbeb2daa1044940637425a83e7c07ba1fc47",
+    "provider": "gcp_compute",
+    "seed": 211,
+    "source_commit": "31c2272228c93143d56acc1658822cee736a80c9",
+    "stack_fingerprint": "82986011bb65a1830e455ca1f3ba6f488d3de5615a481cb30d167d8288d6a61f",
+    "task": "gsm8k",
+    "tracking_backends": [
+      "wandb"
+    ],
+    "train_manifest_sha256": "72c53df862bc5d8a5cf4c13ba7fb95f6bffbd8721568ec85f3b73813616e4b10",
+    "treatment": {
+      "arm": "contrast_early_stop_g2_to_g8",
+      "expand_rule": "expand iff the first two binary verifier rewards differ",
+      "expansion_group_size": 6,
+      "group_size": 8,
+      "homogeneous_rule": "no update and no replacement prompt",
+      "initial_group_size": 2
+    },
+    "unit_fingerprint": "b4601a450809822d37667b3facac3001d4b618dba5298f54ab17dc985ec18f1a"
+  },
+  "runtime_versions": {
+    "cuda": "12.9",
+    "datasets": "4.8.5",
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "huggingface_hub": "1.26.0",
+    "peft": "0.19.1",
+    "torch": "2.9.1+cu129",
+    "torchao": "0.17.0",
+    "trackio": "missing",
+    "transformers": "5.13.1",
+    "trl": "1.8.0",
+    "wandb": "0.28.0"
+  },
+  "schema_version": "aiml-next-preflight-result-v1",
+  "status": "completed"
+}

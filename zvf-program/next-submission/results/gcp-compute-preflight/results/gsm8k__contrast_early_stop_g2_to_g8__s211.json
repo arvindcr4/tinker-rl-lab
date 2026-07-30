@@ -5,48 +5,271 @@
     "delete_return_code": 0,
     "instance_absent_verified": true
   },
-  "completed_at": "2026-07-30T14:41:00+00:00",
-  "console_url": "https://console.cloud.google.com/compute/instancesDetail/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-3cb9c063?project=electric-armor-388216",
+  "completed_at": "2026-07-30T14:57:01+00:00",
+  "console_url": "https://console.cloud.google.com/compute/instancesDetail/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-b4601a45?project=electric-armor-388216",
   "credential_source": "gcp-secret-manager-existing-references",
-  "error": "raise ImportError( | ImportError: apply_chat_template requires jinja2>=3.1.0 to be installed. Your version is 3.0.3. | 2026/07/30 14:40:09 INFO handleInformTeardown: server teardown initiated id=1(@) | 2026/07/30 14:40:09 INFO handleInformTeardown: server shutdown complete id=1(@) | 2026/07/30 14:40:09 INFO connection: closing id=1(@) | 2026/07/30 14:40:09 INFO server is shutting down | 2026/07/30 14:40:09 INFO connection: closed successfully id=1(@) | 2026/07/30 14:40:09 INFO processOutgoingData: finished id=1(@) | 2026/07/30 14:40:09 INFO connection: ManageConnectionData: connection closed id=1(@) | 2026/07/30 14:40:09 INFO server: listener closed addr=/tmp/wandb-1244-1378-914156859/socket | 2026/07/30 14:40:09 INFO server is closed | NEXT_PREFLIGHT_EXIT_CODE=1",
-  "failure_phase": "remote-runtime",
-  "fingerprint": "3cb9c063080074ad2604595058911a27197153644dcf3fcaa63a4f658ad7cfa8",
+  "fingerprint": "b4601a450809822d37667b3facac3001d4b618dba5298f54ab17dc985ec18f1a",
   "gcs_receipt": {
     "log_download_error": null,
     "log_download_return_code": 0,
     "log_object": {
       "bucket": "arvindcr-tinker-rl-preflight-358208640342",
-      "crc32c_hash": "Dwg0TA==",
-      "generation": "1785422412292284",
-      "md5_hash": "SzrMvDSQPa5O1X0EhUMQdA==",
-      "name": "preflight/3cb9c063080074ad2604595058911a27197153644dcf3fcaa63a4f658ad7cfa8/next-preflight.log",
-      "size": 33643
+      "crc32c_hash": "Y4aKLQ==",
+      "generation": "1785423355357393",
+      "md5_hash": "M3PE++vM4uQr1sk2fNdF0g==",
+      "name": "preflight/b4601a450809822d37667b3facac3001d4b618dba5298f54ab17dc985ec18f1a/next-preflight.log",
+      "size": 32355
     },
-    "log_uri": "gs://arvindcr-tinker-rl-preflight-358208640342/preflight/3cb9c063080074ad2604595058911a27197153644dcf3fcaa63a4f658ad7cfa8/next-preflight.log",
-    "result_download_return_code": 1,
-    "result_object": null,
-    "result_uri": "gs://arvindcr-tinker-rl-preflight-358208640342/preflight/3cb9c063080074ad2604595058911a27197153644dcf3fcaa63a4f658ad7cfa8/result.json"
+    "log_uri": "gs://arvindcr-tinker-rl-preflight-358208640342/preflight/b4601a450809822d37667b3facac3001d4b618dba5298f54ab17dc985ec18f1a/next-preflight.log",
+    "result_download_return_code": 0,
+    "result_object": {
+      "bucket": "arvindcr-tinker-rl-preflight-358208640342",
+      "crc32c_hash": "Ysg+Sg==",
+      "generation": "1785423355440761",
+      "md5_hash": "wD6NVFTcE1pBTMPnTGvTYg==",
+      "name": "preflight/b4601a450809822d37667b3facac3001d4b618dba5298f54ab17dc985ec18f1a/result.json",
+      "size": 3008
+    },
+    "result_uri": "gs://arvindcr-tinker-rl-preflight-358208640342/preflight/b4601a450809822d37667b3facac3001d4b618dba5298f54ab17dc985ec18f1a/result.json"
   },
   "gpu": "A100",
   "hardware_flavor": "a2-highgpu-1g-spot",
   "image": "pytorch-2-9-cu129-ubuntu-2204-nvidia-580-v20260730",
-  "instance": "next-preflight-gsm8k-contrast-s211-3cb9c063",
+  "instance": "next-preflight-gsm8k-contrast-s211-b4601a45",
   "machine_type": "a2-highgpu-1g",
+  "manifest": {
+    "audit_record": {
+      "all_correct_fraction": 1.0,
+      "all_wrong_fraction": 0.0,
+      "arm_id": "contrast_early_stop_g2_to_g8",
+      "charged_generated_tokens": 1908,
+      "evaluation_seconds": 365.931076465,
+      "evidence_tier": "preflight_not_scientific_evidence",
+      "generated_rollouts": 4,
+      "heldout_accuracy": 0.625,
+      "heldout_correct": 5,
+      "heldout_n": 8,
+      "mixed_fraction": 0.0,
+      "rollout_groups": 2,
+      "seed": 211,
+      "status": "complete",
+      "task_id": "gsm8k",
+      "updated_groups": 0,
+      "wall_clock_seconds": 624.038828306
+    },
+    "completed_at": "2026-07-30T14:55:47+00:00",
+    "evidence_class": "preflight-not-evidence",
+    "heldout_trace": [
+      {
+        "completion_sha256": "3d5d7fd98d813b10cfa7d0fdfad1e2735865b9762c91f47a4c97cb963dfe78e3",
+        "correct": true,
+        "index": 0
+      },
+      {
+        "completion_sha256": "a0c65ab40adebb1c0733edf2dee1c2c1b751715b017d8f1572d7950b69f28657",
+        "correct": true,
+        "index": 1
+      },
+      {
+        "completion_sha256": "e0e48e249f145cc30c80d35dcd05101e4de69a06133c583c3a9a2e7964e0cb21",
+        "correct": false,
+        "index": 2
+      },
+      {
+        "completion_sha256": "531a829d9764134eb94852d8161719b9914c322d2ade7bb82f55321eff1af260",
+        "correct": true,
+        "index": 3
+      },
+      {
+        "completion_sha256": "c509d95f49b6e91bfda358b61d1f8046cb8b7ae33fd45c49a2f9c74d54031e49",
+        "correct": true,
+        "index": 4
+      },
+      {
+        "completion_sha256": "f1104fa3a196109ef6dc571bd02b15a8479961813befca201f1579799328e82b",
+        "correct": false,
+        "index": 5
+      },
+      {
+        "completion_sha256": "b20b96e8a581ae0c0c15e5f82f673435e9d23bd02ecb25b3a49470a0209e9601",
+        "correct": true,
+        "index": 6
+      },
+      {
+        "completion_sha256": "d5635b6f51f744245696eb638a581ae6d50437f63dc1848545b3bebf3deee0c8",
+        "correct": false,
+        "index": 7
+      }
+    ],
+    "run_config": {
+      "arm": "contrast_early_stop_g2_to_g8",
+      "dataset_bindings": {
+        "evaluation_dataset": "openai/gsm8k",
+        "evaluation_revision": "740312add88f781978c0658806c59bc2815b9866",
+        "training_dataset": "openai/gsm8k",
+        "training_revision": "740312add88f781978c0658806c59bc2815b9866"
+      },
+      "evaluation_manifest_sha256": "b3a854659c4b709f70af895bf0157e00a47003905ad8f52e8c6346458f13cf8d",
+      "hardware_flavor": "a2-highgpu-1g-spot",
+      "heldout_n": 8,
+      "max_completion_length": 1024,
+      "max_steps": 1,
+      "model": "Qwen/Qwen3-8B",
+      "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "objective_fingerprint": "370c81cd7313b616aab7bb448cddda77555bf732d2e37f516e3e467d50e1ce9f",
+      "protocol_sha256": "1fdeb8f0c08c366c2a1eb521bc90cbeb2daa1044940637425a83e7c07ba1fc47",
+      "provider": "gcp_compute",
+      "seed": 211,
+      "source_commit": "31c2272228c93143d56acc1658822cee736a80c9",
+      "stack_fingerprint": "82986011bb65a1830e455ca1f3ba6f488d3de5615a481cb30d167d8288d6a61f",
+      "task": "gsm8k",
+      "tracking_backends": [
+        "wandb"
+      ],
+      "train_manifest_sha256": "72c53df862bc5d8a5cf4c13ba7fb95f6bffbd8721568ec85f3b73813616e4b10",
+      "treatment": {
+        "arm": "contrast_early_stop_g2_to_g8",
+        "expand_rule": "expand iff the first two binary verifier rewards differ",
+        "expansion_group_size": 6,
+        "group_size": 8,
+        "homogeneous_rule": "no update and no replacement prompt",
+        "initial_group_size": 2
+      },
+      "unit_fingerprint": "b4601a450809822d37667b3facac3001d4b618dba5298f54ab17dc985ec18f1a"
+    },
+    "runtime_versions": {
+      "cuda": "12.9",
+      "datasets": "4.8.5",
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "huggingface_hub": "1.26.0",
+      "peft": "0.19.1",
+      "torch": "2.9.1+cu129",
+      "torchao": "0.17.0",
+      "trackio": "missing",
+      "transformers": "5.13.1",
+      "trl": "1.8.0",
+      "wandb": "0.28.0"
+    },
+    "schema_version": "aiml-next-preflight-run-v1",
+    "source_files": {
+      "contrast_sampler.py": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
+      "remote_preflight.py": "649909d248cc115c7755c1154dc65a619015f5964975fd75f04ce9956e9c4770",
+      "trl_sampler_adapter.py": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
+    },
+    "started_at": "2026-07-30T14:45:23+00:00",
+    "status": "complete",
+    "wandb": {
+      "run_id": "b4601a45",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/b4601a45"
+    }
+  },
+  "payload": {
+    "audit_record": {
+      "all_correct_fraction": 1.0,
+      "all_wrong_fraction": 0.0,
+      "arm_id": "contrast_early_stop_g2_to_g8",
+      "charged_generated_tokens": 1908,
+      "evaluation_seconds": 365.931076465,
+      "evidence_tier": "preflight_not_scientific_evidence",
+      "generated_rollouts": 4,
+      "heldout_accuracy": 0.625,
+      "heldout_correct": 5,
+      "heldout_n": 8,
+      "mixed_fraction": 0.0,
+      "rollout_groups": 2,
+      "seed": 211,
+      "status": "complete",
+      "task_id": "gsm8k",
+      "updated_groups": 0,
+      "wall_clock_seconds": 624.038828306
+    },
+    "evidence_class": "preflight-not-evidence",
+    "remote": {
+      "hf_commit": "4613097fca6182f7bf8f528d2fab1202c5755be3",
+      "hf_final_adapter_path": "final/adapter_model.safetensors",
+      "hf_manifest_path": "run_manifest.json",
+      "hf_repo": "arvindcr4/tinker-rl-next-preflight-gcp-gsm8k-contrast_ear-s211-b4601a45",
+      "wandb_run_id": "b4601a45",
+      "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/b4601a45"
+    },
+    "run_config": {
+      "arm": "contrast_early_stop_g2_to_g8",
+      "dataset_bindings": {
+        "evaluation_dataset": "openai/gsm8k",
+        "evaluation_revision": "740312add88f781978c0658806c59bc2815b9866",
+        "training_dataset": "openai/gsm8k",
+        "training_revision": "740312add88f781978c0658806c59bc2815b9866"
+      },
+      "evaluation_manifest_sha256": "b3a854659c4b709f70af895bf0157e00a47003905ad8f52e8c6346458f13cf8d",
+      "hardware_flavor": "a2-highgpu-1g-spot",
+      "heldout_n": 8,
+      "max_completion_length": 1024,
+      "max_steps": 1,
+      "model": "Qwen/Qwen3-8B",
+      "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "objective_fingerprint": "370c81cd7313b616aab7bb448cddda77555bf732d2e37f516e3e467d50e1ce9f",
+      "protocol_sha256": "1fdeb8f0c08c366c2a1eb521bc90cbeb2daa1044940637425a83e7c07ba1fc47",
+      "provider": "gcp_compute",
+      "seed": 211,
+      "source_commit": "31c2272228c93143d56acc1658822cee736a80c9",
+      "stack_fingerprint": "82986011bb65a1830e455ca1f3ba6f488d3de5615a481cb30d167d8288d6a61f",
+      "task": "gsm8k",
+      "tracking_backends": [
+        "wandb"
+      ],
+      "train_manifest_sha256": "72c53df862bc5d8a5cf4c13ba7fb95f6bffbd8721568ec85f3b73813616e4b10",
+      "treatment": {
+        "arm": "contrast_early_stop_g2_to_g8",
+        "expand_rule": "expand iff the first two binary verifier rewards differ",
+        "expansion_group_size": 6,
+        "group_size": 8,
+        "homogeneous_rule": "no update and no replacement prompt",
+        "initial_group_size": 2
+      },
+      "unit_fingerprint": "b4601a450809822d37667b3facac3001d4b618dba5298f54ab17dc985ec18f1a"
+    },
+    "runtime_versions": {
+      "cuda": "12.9",
+      "datasets": "4.8.5",
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "huggingface_hub": "1.26.0",
+      "peft": "0.19.1",
+      "torch": "2.9.1+cu129",
+      "torchao": "0.17.0",
+      "trackio": "missing",
+      "transformers": "5.13.1",
+      "trl": "1.8.0",
+      "wandb": "0.28.0"
+    },
+    "schema_version": "aiml-next-preflight-result-v1",
+    "status": "completed"
+  },
   "project": "electric-armor-388216",
-  "protocol_sha256": "8849fecf6ebbbc974907f3a43078a6ff25fcec3457b1c6b3c2dff662575b7d75",
+  "protocol_sha256": "1fdeb8f0c08c366c2a1eb521bc90cbeb2daa1044940637425a83e7c07ba1fc47",
   "provider": "gcp_compute",
   "provider_job_stage": "TERMINATED",
   "receipt_bucket": "arvindcr-tinker-rl-preflight-358208640342",
-  "receipt_prefix": "preflight/3cb9c063080074ad2604595058911a27197153644dcf3fcaa63a4f658ad7cfa8",
-  "remote_exit_code": 1,
+  "receipt_prefix": "preflight/b4601a450809822d37667b3facac3001d4b618dba5298f54ab17dc985ec18f1a",
+  "remote_exit_code": 0,
+  "remote_verification": {
+    "hf_commit": "4613097fca6182f7bf8f528d2fab1202c5755be3",
+    "hf_repo": "arvindcr4/tinker-rl-next-preflight-gcp-gsm8k-contrast_ear-s211-b4601a45",
+    "verified_at": "2026-07-30T14:57:03+00:00",
+    "wandb": {
+      "run_id": "b4601a45",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/b4601a45",
+      "state": "finished"
+    }
+  },
   "removed_unused_optional_packages": [
     "torchaudio",
     "torchvision"
   ],
-  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/gcp-compute-preflight/requests/gsm8k__contrast_early_stop_g2_to_g8__s211__3cb9c0630800.json",
+  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/gcp-compute-preflight/requests/gsm8k__contrast_early_stop_g2_to_g8__s211__b4601a450809.json",
   "runtime_packages": [
     "trl==1.8.0",
     "transformers==5.13.1",
+    "jinja2==3.1.6",
     "datasets==4.8.5",
     "peft==0.19.1",
     "torchao==0.17.0",
@@ -58,10 +281,10 @@
     "WANDB_API_KEY": "wandb-api-key"
   },
   "seed": 211,
-  "serial_log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/gcp-compute-preflight/logs/gsm8k__contrast_early_stop_g2_to_g8__s211__3cb9c0630800.log",
+  "serial_log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/gcp-compute-preflight/logs/gsm8k__contrast_early_stop_g2_to_g8__s211__b4601a450809.log",
   "serial_return_code": 0,
   "service_account": "webarena-runner@electric-armor-388216.iam.gserviceaccount.com",
-  "source_commit": "b522e32834ebebda4cc74608bca039ab93d7ad57",
+  "source_commit": "31c2272228c93143d56acc1658822cee736a80c9",
   "source_snapshots": {
     "zvf-program/next-submission/contrast_sampler.py": {
       "sha256": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
@@ -72,16 +295,16 @@
       "snapshot": "sources/c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561"
     },
     "zvf-program/next-submission/preregistration.json": {
-      "sha256": "8849fecf6ebbbc974907f3a43078a6ff25fcec3457b1c6b3c2dff662575b7d75",
-      "snapshot": "sources/8849fecf6ebbbc974907f3a43078a6ff25fcec3457b1c6b3c2dff662575b7d75"
+      "sha256": "1fdeb8f0c08c366c2a1eb521bc90cbeb2daa1044940637425a83e7c07ba1fc47",
+      "snapshot": "sources/1fdeb8f0c08c366c2a1eb521bc90cbeb2daa1044940637425a83e7c07ba1fc47"
     },
     "zvf-program/next-submission/remote_preflight.py": {
       "sha256": "649909d248cc115c7755c1154dc65a619015f5964975fd75f04ce9956e9c4770",
       "snapshot": "sources/649909d248cc115c7755c1154dc65a619015f5964975fd75f04ce9956e9c4770"
     },
     "zvf-program/next-submission/run_gcp_preflight.py": {
-      "sha256": "81c6d3f4e6805d8c33a68dfcc4b5ba9cf58741fbc9f62283141933e152c70dad",
-      "snapshot": "sources/81c6d3f4e6805d8c33a68dfcc4b5ba9cf58741fbc9f62283141933e152c70dad"
+      "sha256": "2e3dd9671cd86a55b3475b71e2f69e6606c1365d0d411f656a0ea693be8bae87",
+      "snapshot": "sources/2e3dd9671cd86a55b3475b71e2f69e6606c1365d0d411f656a0ea693be8bae87"
     },
     "zvf-program/next-submission/run_preflight.py": {
       "sha256": "e4b3814ab597a291334a6bb1ccf77e1f6b762877d1b10635ca6184aeb628b716",
@@ -92,8 +315,8 @@
       "snapshot": "sources/869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
     }
   },
-  "stack_fingerprint": "0f6b41e5e20646ba79f54971956055761928301a87c01b5400dfb9e0ec6b742c",
-  "status": "failed",
+  "stack_fingerprint": "82986011bb65a1830e455ca1f3ba6f488d3de5615a481cb30d167d8288d6a61f",
+  "status": "completed",
   "task": "gsm8k",
   "zone": "us-central1-a"
 }

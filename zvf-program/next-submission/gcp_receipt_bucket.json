@@ -1,0 +1,14 @@
+{
+  "schema_version": "aiml-next-gcp-receipt-bucket-v1",
+  "created_at": "2026-07-30T14:25:08+00:00",
+  "project": "electric-armor-388216",
+  "bucket": "arvindcr-tinker-rl-preflight-358208640342",
+  "location": "US-CENTRAL1",
+  "uniform_bucket_level_access": true,
+  "public_access_prevention": "enforced",
+  "soft_delete_retention_seconds": 604800,
+  "writer": "serviceAccount:webarena-runner@electric-armor-388216.iam.gserviceaccount.com",
+  "writer_role": "roles/storage.objectCreator",
+  "contains_secret_values": false,
+  "purpose": "Private transport receipts for preflight-not-evidence GCP GPU runs. Model artifacts remain in the bound private Hugging Face repository."
+}

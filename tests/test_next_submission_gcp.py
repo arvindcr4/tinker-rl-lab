@@ -46,13 +46,30 @@ def test_entry_embeds_exact_sources_and_only_existing_secret_references():
     assert not re.search(r"hf_[A-Za-z0-9]{30,}", script)
 
 
+def test_receipt_uploader_uses_vm_identity_without_literal_credentials():
+    uploader = GCP.build_receipt_uploader(
+        bucket=GCP.RECEIPT_BUCKET, object_prefix="preflight/fingerprint"
+    )
+
+    assert "metadata.google.internal" in uploader
+    assert "storage.googleapis.com/upload" in uploader
+    assert GCP.RECEIPT_BUCKET in uploader
+    assert "preflight/fingerprint" in uploader
+    assert not re.search(r"hf_[A-Za-z0-9]{30,}", uploader)
+
+
 def test_startup_script_has_frozen_packages_serial_receipt_and_shutdown():
-    script = GCP.build_startup_script("print('entry')\n")
+    script = GCP.build_startup_script(
+        "print('entry')\n",
+        receipt_bucket=GCP.RECEIPT_BUCKET,
+        receipt_prefix="preflight/fingerprint",
+    )
 
     for requirement in GCP.PACKAGE_PINS:
         assert requirement in script
     assert "/dev/ttyS0" in script
     assert "NEXT_PREFLIGHT_EXIT_CODE" in script
+    assert "NEXT_PREFLIGHT_UPLOAD_EXIT_CODE" in script
     assert "sleep 10" in script
     assert "shutdown -h now" in script
     assert "set -x" not in script

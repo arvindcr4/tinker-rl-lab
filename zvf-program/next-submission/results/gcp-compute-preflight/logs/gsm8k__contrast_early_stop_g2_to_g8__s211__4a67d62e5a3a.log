@@ -1,0 +1,1 @@
+ERROR: (gcloud.compute.instances.get-serial-port-output) Could not fetch serial port output: The resource 'projects/electric-armor-388216/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-4a67d62e' is not ready

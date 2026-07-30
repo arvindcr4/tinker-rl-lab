@@ -1,5 +1,4 @@
 {
-  "allocation_started": true,
   "arm": "contrast_early_stop_g2_to_g8",
   "cleanup": {
     "delete_return_code": 0,
@@ -7,20 +6,24 @@
   },
   "completed_at": "2026-07-30T14:23:57+00:00",
   "console_url": "https://console.cloud.google.com/compute/instancesDetail/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-4a67d62e?project=electric-armor-388216",
+  "cost_estimate_source": "https://cloud.google.com/spot-vms/pricing",
   "credential_source": "gcp-secret-manager-existing-references",
+  "entry_script_sha256": "4b4f32f37b090d6bfbd2ef66b965561c9a8cb5cc0085d2c25ad29485a867798e",
   "error": "ERROR: (gcloud.compute.instances.get-serial-port-output) Could not fetch serial port output: The resource 'projects/electric-armor-388216/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-4a67d62e' is not ready",
+  "estimated_cost_cap_usd": 3.0,
   "failure_phase": "vm-runtime",
   "fingerprint": "4a67d62e5a3a73f7a3600fd119411a8c728638bb115fcd3e097d803e20f7a8d3",
   "gpu": "A100",
   "hardware_flavor": "a2-highgpu-1g-spot",
+  "hf_repo": "arvindcr4/tinker-rl-next-preflight-gcp-gsm8k-contrast_ear-s211-4a67d62e",
   "image": "pytorch-2-9-cu129-ubuntu-2204-nvidia-580-v20260730",
   "instance": "next-preflight-gsm8k-contrast-s211-4a67d62e",
   "machine_type": "a2-highgpu-1g",
+  "max_run_duration": "90m",
   "project": "electric-armor-388216",
   "protocol_sha256": "ff14046209c62627f7fede10229f7ba4a0d325e7175513a0aa72756815b23cf4",
   "provider": "gcp_compute",
   "provider_job_stage": "TERMINATED",
-  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/gcp-compute-preflight/requests/gsm8k__contrast_early_stop_g2_to_g8__s211__4a67d62e5a3a.json",
   "runtime_packages": [
     "trl==1.8.0",
     "transformers==5.13.1",
@@ -35,8 +38,6 @@
     "WANDB_API_KEY": "wandb-api-key"
   },
   "seed": 211,
-  "serial_log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/gcp-compute-preflight/logs/gsm8k__contrast_early_stop_g2_to_g8__s211__4a67d62e5a3a.log",
-  "serial_return_code": 1,
   "service_account": "webarena-runner@electric-armor-388216.iam.gserviceaccount.com",
   "source_commit": "02552ea74ec673c0fdc578645e9073c5c801d8bf",
   "source_snapshots": {
@@ -69,8 +70,14 @@
       "snapshot": "sources/869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
     }
   },
+  "spot_hourly_usd_at_design": 1.92802,
   "stack_fingerprint": "97b8d086e54777d5c06e0bc16a060251f7674dfc36f00275035494c884bdb50f",
+  "startup_script_sha256": "f7eab4cf4572483d81a50c6f68e2fb099f3ae32d847f8cad4959c7749be02f11",
   "status": "failed",
+  "submission_output": "Created [https://www.googleapis.com/compute/v1/projects/electric-armor-388216/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-4a67d62e]. | NAME                                         ZONE           MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP   STATUS | next-preflight-gsm8k-contrast-s211-4a67d62e  us-central1-a  a2-highgpu-1g  true         10.128.0.8   136.116.75.9  RUNNING",
+  "submitted_at": "2026-07-30T14:20:05+00:00",
   "task": "gsm8k",
+  "updated_at": "2026-07-30T14:24:05+00:00",
+  "wandb_run_name": "next-preflight-gcp-gsm8k-contrast_early_stop_g2_to_g8-s211-4a67d62e",
   "zone": "us-central1-a"
 }

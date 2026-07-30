@@ -5,22 +5,22 @@
     "delete_return_code": 0,
     "instance_absent_verified": true
   },
-  "completed_at": "2026-07-30T14:23:57+00:00",
-  "console_url": "https://console.cloud.google.com/compute/instancesDetail/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-4a67d62e?project=electric-armor-388216",
+  "completed_at": "2026-07-30T14:16:40+00:00",
+  "console_url": "https://console.cloud.google.com/compute/instancesDetail/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-677a834a?project=electric-armor-388216",
   "credential_source": "gcp-secret-manager-existing-references",
-  "error": "ERROR: (gcloud.compute.instances.get-serial-port-output) Could not fetch serial port output: The resource 'projects/electric-armor-388216/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-4a67d62e' is not ready",
+  "error": "ERROR: (gcloud.compute.instances.get-serial-port-output) Could not fetch serial port output: The resource 'projects/electric-armor-388216/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-677a834a' is not ready",
   "failure_phase": "vm-runtime",
-  "fingerprint": "4a67d62e5a3a73f7a3600fd119411a8c728638bb115fcd3e097d803e20f7a8d3",
+  "fingerprint": "677a834a69fbf519471629308c51d93d0c9240e7feb5b4afab537f1bb3b4ea98",
   "gpu": "A100",
   "hardware_flavor": "a2-highgpu-1g-spot",
   "image": "pytorch-2-9-cu129-ubuntu-2204-nvidia-580-v20260730",
-  "instance": "next-preflight-gsm8k-contrast-s211-4a67d62e",
+  "instance": "next-preflight-gsm8k-contrast-s211-677a834a",
   "machine_type": "a2-highgpu-1g",
   "project": "electric-armor-388216",
-  "protocol_sha256": "ff14046209c62627f7fede10229f7ba4a0d325e7175513a0aa72756815b23cf4",
+  "protocol_sha256": "b5fce070d74528ea66f2f4de6e092812ec31b94ed5ad1e0eaa0bba583444ca9e",
   "provider": "gcp_compute",
   "provider_job_stage": "TERMINATED",
-  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/gcp-compute-preflight/requests/gsm8k__contrast_early_stop_g2_to_g8__s211__4a67d62e5a3a.json",
+  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/gcp-compute-preflight/requests/gsm8k__contrast_early_stop_g2_to_g8__s211__677a834a69fb.json",
   "runtime_packages": [
     "trl==1.8.0",
     "transformers==5.13.1",
@@ -35,10 +35,10 @@
     "WANDB_API_KEY": "wandb-api-key"
   },
   "seed": 211,
-  "serial_log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/gcp-compute-preflight/logs/gsm8k__contrast_early_stop_g2_to_g8__s211__4a67d62e5a3a.log",
+  "serial_log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/gcp-compute-preflight/logs/gsm8k__contrast_early_stop_g2_to_g8__s211__677a834a69fb.log",
   "serial_return_code": 1,
   "service_account": "webarena-runner@electric-armor-388216.iam.gserviceaccount.com",
-  "source_commit": "02552ea74ec673c0fdc578645e9073c5c801d8bf",
+  "source_commit": "d01cdb0a2f5a08c23a2df62b96b1baf98040ce16",
   "source_snapshots": {
     "zvf-program/next-submission/contrast_sampler.py": {
       "sha256": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
@@ -49,16 +49,16 @@
       "snapshot": "sources/c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561"
     },
     "zvf-program/next-submission/preregistration.json": {
-      "sha256": "ff14046209c62627f7fede10229f7ba4a0d325e7175513a0aa72756815b23cf4",
-      "snapshot": "sources/ff14046209c62627f7fede10229f7ba4a0d325e7175513a0aa72756815b23cf4"
+      "sha256": "b5fce070d74528ea66f2f4de6e092812ec31b94ed5ad1e0eaa0bba583444ca9e",
+      "snapshot": "sources/b5fce070d74528ea66f2f4de6e092812ec31b94ed5ad1e0eaa0bba583444ca9e"
     },
     "zvf-program/next-submission/remote_preflight.py": {
       "sha256": "649909d248cc115c7755c1154dc65a619015f5964975fd75f04ce9956e9c4770",
       "snapshot": "sources/649909d248cc115c7755c1154dc65a619015f5964975fd75f04ce9956e9c4770"
     },
     "zvf-program/next-submission/run_gcp_preflight.py": {
-      "sha256": "bc51acd6a8bd4dbcd7d7ef319ec81e52e78850ec421f6e33c600942104d7b165",
-      "snapshot": "sources/bc51acd6a8bd4dbcd7d7ef319ec81e52e78850ec421f6e33c600942104d7b165"
+      "sha256": "516fb1eb27ecdabb36b8900846bfc928b6a0a448b3fda2298c852667944c32cb",
+      "snapshot": "sources/516fb1eb27ecdabb36b8900846bfc928b6a0a448b3fda2298c852667944c32cb"
     },
     "zvf-program/next-submission/run_preflight.py": {
       "sha256": "d69128fb6df3505ac702adc5a96147b31bafe01f07df8615689b23945d4ea455",

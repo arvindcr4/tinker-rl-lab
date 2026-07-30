@@ -1,26 +1,23 @@
 {
-  "allocation_started": true,
   "arm": "contrast_early_stop_g2_to_g8",
-  "cleanup": {
-    "delete_return_code": 0,
-    "instance_absent_verified": true
-  },
-  "completed_at": "2026-07-30T14:23:57+00:00",
-  "console_url": "https://console.cloud.google.com/compute/instancesDetail/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-4a67d62e?project=electric-armor-388216",
+  "console_url": "https://console.cloud.google.com/compute/instancesDetail/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-80117cac?project=electric-armor-388216",
+  "cost_estimate_source": "https://cloud.google.com/spot-vms/pricing",
   "credential_source": "gcp-secret-manager-existing-references",
-  "error": "ERROR: (gcloud.compute.instances.get-serial-port-output) Could not fetch serial port output: The resource 'projects/electric-armor-388216/zones/us-central1-a/instances/next-preflight-gsm8k-contrast-s211-4a67d62e' is not ready",
-  "failure_phase": "vm-runtime",
-  "fingerprint": "4a67d62e5a3a73f7a3600fd119411a8c728638bb115fcd3e097d803e20f7a8d3",
+  "entry_script_sha256": "5213b1b9600ca27fc5fd2d5fe2cd6de75328f4a703068347156b4a312bb05466",
+  "estimated_cost_cap_usd": 3.0,
+  "fingerprint": "80117cac14082f4ac5cf816cb4165c42367a1da86ee6d6683ab42165af52db7e",
   "gpu": "A100",
   "hardware_flavor": "a2-highgpu-1g-spot",
+  "hf_repo": "arvindcr4/tinker-rl-next-preflight-gcp-gsm8k-contrast_ear-s211-80117cac",
   "image": "pytorch-2-9-cu129-ubuntu-2204-nvidia-580-v20260730",
-  "instance": "next-preflight-gsm8k-contrast-s211-4a67d62e",
+  "instance": "next-preflight-gsm8k-contrast-s211-80117cac",
   "machine_type": "a2-highgpu-1g",
+  "max_run_duration": "90m",
   "project": "electric-armor-388216",
-  "protocol_sha256": "ff14046209c62627f7fede10229f7ba4a0d325e7175513a0aa72756815b23cf4",
+  "protocol_sha256": "3c763a12cb1b6f177165a6497f3c7ad85ef4f62de9f96a989408141264f9476d",
   "provider": "gcp_compute",
-  "provider_job_stage": "TERMINATED",
-  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/gcp-compute-preflight/requests/gsm8k__contrast_early_stop_g2_to_g8__s211__4a67d62e5a3a.json",
+  "receipt_bucket": "arvindcr-tinker-rl-preflight-358208640342",
+  "receipt_prefix": "preflight/80117cac14082f4ac5cf816cb4165c42367a1da86ee6d6683ab42165af52db7e",
   "runtime_packages": [
     "trl==1.8.0",
     "transformers==5.13.1",
@@ -35,8 +32,6 @@
     "WANDB_API_KEY": "wandb-api-key"
   },
   "seed": 211,
-  "serial_log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/gcp-compute-preflight/logs/gsm8k__contrast_early_stop_g2_to_g8__s211__4a67d62e5a3a.log",
-  "serial_return_code": 1,
   "service_account": "webarena-runner@electric-armor-388216.iam.gserviceaccount.com",
   "source_commit": "02552ea74ec673c0fdc578645e9073c5c801d8bf",
   "source_snapshots": {
@@ -49,16 +44,16 @@
       "snapshot": "sources/c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561"
     },
     "zvf-program/next-submission/preregistration.json": {
-      "sha256": "ff14046209c62627f7fede10229f7ba4a0d325e7175513a0aa72756815b23cf4",
-      "snapshot": "sources/ff14046209c62627f7fede10229f7ba4a0d325e7175513a0aa72756815b23cf4"
+      "sha256": "3c763a12cb1b6f177165a6497f3c7ad85ef4f62de9f96a989408141264f9476d",
+      "snapshot": "sources/3c763a12cb1b6f177165a6497f3c7ad85ef4f62de9f96a989408141264f9476d"
     },
     "zvf-program/next-submission/remote_preflight.py": {
       "sha256": "649909d248cc115c7755c1154dc65a619015f5964975fd75f04ce9956e9c4770",
       "snapshot": "sources/649909d248cc115c7755c1154dc65a619015f5964975fd75f04ce9956e9c4770"
     },
     "zvf-program/next-submission/run_gcp_preflight.py": {
-      "sha256": "bc51acd6a8bd4dbcd7d7ef319ec81e52e78850ec421f6e33c600942104d7b165",
-      "snapshot": "sources/bc51acd6a8bd4dbcd7d7ef319ec81e52e78850ec421f6e33c600942104d7b165"
+      "sha256": "e034c39390116d85cec7ebbf31c152097c8a494f9f10a4f1042c2ff8c0cca776",
+      "snapshot": "sources/e034c39390116d85cec7ebbf31c152097c8a494f9f10a4f1042c2ff8c0cca776"
     },
     "zvf-program/next-submission/run_preflight.py": {
       "sha256": "d69128fb6df3505ac702adc5a96147b31bafe01f07df8615689b23945d4ea455",
@@ -69,8 +64,13 @@
       "snapshot": "sources/869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
     }
   },
-  "stack_fingerprint": "97b8d086e54777d5c06e0bc16a060251f7674dfc36f00275035494c884bdb50f",
-  "status": "failed",
+  "spot_hourly_usd_at_design": 1.92802,
+  "stack_fingerprint": "396ebcfc61bcc3d2fccc871dc9e107ebf41fe534d470fcd4c522fd27b6ab08ce",
+  "startup_script_sha256": "c4ae526b19c63a6f3ce00918c32cf3c7fcc0d521359da15eaab787eb72ed71a9",
+  "status": "dry-run",
+  "submitted_at": null,
   "task": "gsm8k",
+  "updated_at": "2026-07-30T14:27:39+00:00",
+  "wandb_run_name": "next-preflight-gcp-gsm8k-contrast_early_stop_g2_to_g8-s211-80117cac",
   "zone": "us-central1-a"
 }

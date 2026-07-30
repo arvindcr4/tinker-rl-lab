@@ -27,7 +27,7 @@ Local implementation and remote GPU execution are authorized by a bound receipt.
 
 The executable preflight stack now includes a pure sampler contract, a pinned TRL adapter, an environment gate, a credential-isolated remote runner, and an independent local receipt validator. A preflight is always labeled `preflight-not-evidence`; it cannot populate the confirmatory main table.
 
-Transport is provenance rather than treatment: Colab, Hugging Face Jobs, Kaggle, and GCP Compute launchers bind the requested provider and hardware flavor into distinct fingerprints, while the model, sampler, objective, data, and receipt checks remain fixed. Hugging Face Jobs runs additionally pin Trackio; every provider still requires the same private Hub and W&B receipts. The GCP path uses pre-existing Secret Manager references, a 90-minute Spot A100 limit, serial receipts, and verified deletion of its exact temporary VM.
+Transport is provenance rather than treatment: Colab, Hugging Face Jobs, Kaggle, and GCP Compute launchers bind the requested provider and hardware flavor into distinct fingerprints, while the model, sampler, objective, data, and receipt checks remain fixed. Hugging Face Jobs runs additionally pin Trackio; every provider still requires the same private Hub and W&B receipts. The GCP path uses pre-existing Secret Manager references, a 90-minute Spot A100 limit, a dedicated private receipt bucket with public access prevention, and verified deletion of its exact temporary VM.
 
 ## Verify
 

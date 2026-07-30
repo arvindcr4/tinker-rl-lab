@@ -459,6 +459,7 @@ def verify_contract(
             "hf_jobs_preflight_launcher",
             "kaggle_preflight_launcher",
             "gcp_preflight_launcher",
+            "gcp_receipt_bucket",
             "preflight_secure_exec",
             "preflight_environment_check",
         ):

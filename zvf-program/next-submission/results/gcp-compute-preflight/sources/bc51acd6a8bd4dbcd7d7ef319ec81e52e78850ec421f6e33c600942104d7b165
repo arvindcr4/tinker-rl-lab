@@ -43,7 +43,6 @@ IMAGE_PROJECT = "deeplearning-platform-release"
 IMAGE = "pytorch-2-9-cu129-ubuntu-2204-nvidia-580-v20260730"
 SERVICE_ACCOUNT = "webarena-runner@electric-armor-388216.iam.gserviceaccount.com"
 SECRET_NAMES = {"HF_TOKEN": "hf-token", "WANDB_API_KEY": "wandb-api-key"}
-RECEIPT_BUCKET = "arvindcr-tinker-rl-preflight-358208640342"
 SPOT_HOURLY_USD = 1.92802
 DEFAULT_MAX_RUN_DURATION = "90m"
 DEFAULT_MAX_RUN_HOURS = 1.5
@@ -166,59 +165,8 @@ runpy.run_path(str(script), run_name="__main__")
 """
 
 
-def build_receipt_uploader(*, bucket: str, object_prefix: str) -> str:
-    """Build a metadata-authenticated uploader containing no credential value."""
-
-    return f"""import json
-from pathlib import Path
-import sys
-import urllib.parse
-import urllib.request
-
-METADATA_URL = (
-    "http://metadata.google.internal/computeMetadata/v1/instance/"
-    "service-accounts/default/token"
-)
-token_request = urllib.request.Request(
-    METADATA_URL, headers={{"Metadata-Flavor": "Google"}}
-)
-with urllib.request.urlopen(token_request, timeout=30) as response:
-    access_token = json.loads(response.read().decode("utf-8"))["access_token"]
-
-for local_name, object_name in (
-    (sys.argv[1], "next-preflight.log"),
-    (sys.argv[2], "result.json"),
-):
-    local_path = Path(local_name)
-    if not local_path.is_file():
-        continue
-    encoded_object = urllib.parse.quote({object_prefix!r} + "/" + object_name, safe="")
-    upload_url = (
-        "https://storage.googleapis.com/upload/storage/v1/b/"
-        + {bucket!r}
-        + "/o?uploadType=media&name="
-        + encoded_object
-    )
-    upload_request = urllib.request.Request(
-        upload_url,
-        data=local_path.read_bytes(),
-        headers={{
-            "Authorization": "Bearer " + access_token,
-            "Content-Type": "application/octet-stream",
-        }},
-        method="POST",
-    )
-    with urllib.request.urlopen(upload_request, timeout=120) as response:
-        if response.status not in (200, 201):
-            raise RuntimeError(f"receipt upload failed: {{response.status}}")
-"""
-
-
-def build_startup_script(entry_script: str, *, receipt_bucket: str, receipt_prefix: str) -> str:
+def build_startup_script(entry_script: str) -> str:
     encoded = base64.b64encode(entry_script.encode("utf-8")).decode("ascii")
-    uploader = base64.b64encode(
-        build_receipt_uploader(bucket=receipt_bucket, object_prefix=receipt_prefix).encode("utf-8")
-    ).decode("ascii")
     requirements = " ".join(PACKAGE_PINS)
     return f"""#!/bin/bash
 set -uo pipefail
@@ -227,7 +175,6 @@ mkdir -p /opt/next-submission-preflight /var/lib/next-preflight
 exec > >(tee -a /var/log/next-preflight.log /dev/ttyS0) 2>&1
 echo NEXT_PREFLIGHT_BOOT_STARTED
 printf '%s' '{encoded}' | base64 -d > /opt/next-submission-preflight/main.py
-printf '%s' '{uploader}' | base64 -d > /opt/next-submission-preflight/upload.py
 if [ -x /opt/conda/bin/python ]; then
   PYTHON_BIN=/opt/conda/bin/python
 else
@@ -242,10 +189,6 @@ else
   RUN_EXIT=$INSTALL_EXIT
 fi
 echo NEXT_PREFLIGHT_EXIT_CODE=$RUN_EXIT
-"$PYTHON_BIN" /opt/next-submission-preflight/upload.py \
-  /var/log/next-preflight.log /var/lib/next-preflight/result.json
-UPLOAD_EXIT=$?
-echo NEXT_PREFLIGHT_UPLOAD_EXIT_CODE=$UPLOAD_EXIT
 sync
 sleep 10
 shutdown -h now
@@ -378,75 +321,6 @@ def serial_output_with_retry(
     return last
 
 
-def download_gcs_receipts(
-    gcloud: str,
-    *,
-    bucket: str,
-    object_prefix: str,
-    log_path: Path,
-    result_path: Path,
-    attempts: int = 12,
-    delay_seconds: int = 5,
-) -> dict[str, Any]:
-    """Download the private VM receipts and return provider object metadata."""
-
-    log_uri = f"gs://{bucket}/{object_prefix}/next-preflight.log"
-    result_uri = f"gs://{bucket}/{object_prefix}/result.json"
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    log_download = None
-    for attempt in range(attempts):
-        log_download = subprocess.run(
-            [gcloud, "storage", "cp", log_uri, str(log_path), "--quiet"],
-            cwd=REPO_ROOT,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            check=False,
-        )
-        if log_download.returncode == 0 and log_path.is_file():
-            break
-        if attempt + 1 < attempts:
-            time.sleep(delay_seconds)
-    result_path.parent.mkdir(parents=True, exist_ok=True)
-    result_download = subprocess.run(
-        [gcloud, "storage", "cp", result_uri, str(result_path), "--quiet"],
-        cwd=REPO_ROOT,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        check=False,
-    )
-
-    def describe(uri: str) -> dict[str, Any] | None:
-        described = subprocess.run(
-            [gcloud, "storage", "objects", "describe", uri, "--format=json"],
-            cwd=REPO_ROOT,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            check=False,
-        )
-        if described.returncode:
-            return None
-        payload = json.loads(described.stdout)
-        return {
-            key: payload.get(key)
-            for key in ("bucket", "name", "size", "generation", "md5_hash", "crc32c_hash")
-        }
-
-    return {
-        "log_uri": log_uri,
-        "result_uri": result_uri,
-        "log_download_return_code": None if log_download is None else log_download.returncode,
-        "log_download_error": None
-        if log_download is None or log_download.returncode == 0
-        else log_download.stdout.strip(),
-        "result_download_return_code": result_download.returncode,
-        "log_object": describe(log_uri),
-        "result_object": describe(result_uri) if result_download.returncode == 0 else None,
-    }
-
-
 def delete_instance(gcloud: str, *, instance: str, project: str, zone: str) -> dict[str, Any]:
     deleted = subprocess.run(
         [
@@ -497,7 +371,6 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
             "accelerator": GPU,
             "machine_type": MACHINE_TYPE,
             "image": IMAGE,
-            "receipt_bucket": RECEIPT_BUCKET,
             "trainer": "trl-1.8.0-custom-rollout-g8-v1",
             "sampler_sha256": common.sha256_file(SAMPLER),
             "adapter_sha256": common.sha256_file(TRL_ADAPTER),
@@ -525,9 +398,6 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         "source_snapshots": snapshots,
     }
     request["fingerprint"] = common.fingerprint(request)
-    receipt_prefix = f"preflight/{request['fingerprint']}"
-    request["receipt_bucket"] = RECEIPT_BUCKET
-    request["receipt_prefix"] = receipt_prefix
     unit = f"{args.task}__{args.arm}__s{args.seed}"
     instance = (
         f"next-preflight-{args.task}-{args.arm[:8]}-s{args.seed}-{request['fingerprint'][:8]}"
@@ -600,11 +470,7 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
     entry_script = build_entry_script(
         script_args=script_args, project=args.project, secret_names=SECRET_NAMES
     )
-    startup_script = build_startup_script(
-        entry_script,
-        receipt_bucket=RECEIPT_BUCKET,
-        receipt_prefix=receipt_prefix,
-    )
+    startup_script = build_startup_script(entry_script)
     bundle_dir.mkdir(parents=True, exist_ok=True)
     entry_path.write_text(entry_script, encoding="utf-8")
     startup_path.write_text(startup_script, encoding="utf-8")
@@ -617,8 +483,6 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         "wandb_run_name": wandb_run_name,
         "entry_script_sha256": common.sha256_file(entry_path),
         "startup_script_sha256": common.sha256_file(startup_path),
-        "receipt_bucket": RECEIPT_BUCKET,
-        "receipt_prefix": receipt_prefix,
         "max_run_duration": args.max_run_duration,
         "spot_hourly_usd_at_design": SPOT_HOURLY_USD,
         "estimated_cost_cap_usd": ESTIMATED_COST_CAP_USD,
@@ -721,23 +585,11 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
             timeout_seconds=args.wait_timeout_seconds,
             poll_seconds=args.poll_seconds,
         )
-        downloaded_result_path = output_dir / "downloads" / request["fingerprint"] / "result.json"
-        gcs_receipt = download_gcs_receipts(
-            gcloud,
-            bucket=RECEIPT_BUCKET,
-            object_prefix=receipt_prefix,
-            log_path=serial_path,
-            result_path=downloaded_result_path,
+        serial_return_code, serial = serial_output_with_retry(
+            gcloud, instance=instance, project=args.project, zone=args.zone
         )
-        if serial_path.is_file():
-            serial_return_code = int(gcs_receipt["log_download_return_code"] or 0)
-            serial = serial_path.read_text(encoding="utf-8")
-        else:
-            serial_return_code, serial = serial_output_with_retry(
-                gcloud, instance=instance, project=args.project, zone=args.zone
-            )
-            serial_path.parent.mkdir(parents=True, exist_ok=True)
-            serial_path.write_text(serial, encoding="utf-8")
+        serial_path.parent.mkdir(parents=True, exist_ok=True)
+        serial_path.write_text(serial, encoding="utf-8")
         base = {
             **request,
             "instance": instance,
@@ -746,7 +598,6 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
             "request_path": str(request_path),
             "serial_log_path": str(serial_path),
             "serial_return_code": serial_return_code,
-            "gcs_receipt": gcs_receipt,
             "completed_at": utc_now(),
             "allocation_started": True,
         }
@@ -759,11 +610,7 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
             }
         else:
             try:
-                result = (
-                    json.loads(downloaded_result_path.read_text(encoding="utf-8"))
-                    if downloaded_result_path.is_file()
-                    else common.result_from_log(serial.splitlines())
-                )
+                result = common.result_from_log(serial.splitlines())
                 credentials = helpers.load_credentials()
                 manifest, verification = common.verify_remote(credentials, result, request)
                 outcome = {

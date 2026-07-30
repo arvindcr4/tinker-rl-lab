@@ -13,36 +13,24 @@
     ]
   },
   "colab_cli_version": "0.6.0",
-  "completed_at": "2026-07-30T18:13:25+00:00",
-  "decoder": {
-    "enable_thinking": false,
-    "evaluation": {
-      "do_sample": false
-    },
-    "training": {
-      "temperature": 0.7,
-      "top_k": 20,
-      "top_p": 0.8
-    }
-  },
+  "completed_at": "2026-07-30T17:07:35+00:00",
   "failed_step": null,
-  "fingerprint": "efbafec440cbfb1752da30889aea16935cee978a27b324d8073add225260fd50",
+  "fingerprint": "7fadea73c445976c77528d58b8ca3e23d06f8a62391e9f65ef70145d796c0d99",
   "gpu": "A100",
   "hardware_flavor": "A100",
-  "hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-grpo_g8-s211-efbafec4",
-  "log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/preflight/logs/gsm8k__grpo_g8__s211__efbafec440cb.log",
+  "hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-grpo_g8-s211-7fadea73",
+  "log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/preflight/logs/gsm8k__grpo_g8__s211__7fadea73c445.log",
   "manifest": {
     "audit_record": {
       "all_correct_fraction": 1.0,
       "all_wrong_fraction": 0.0,
       "arm_id": "grpo_g8",
-      "charged_generated_tokens": 2539,
-      "completion_clipped_fraction": 0.0,
-      "evaluation_seconds": 111.58271001900016,
+      "charged_generated_tokens": 8912,
+      "evaluation_seconds": 342.5486154329999,
       "evidence_tier": "preflight_not_scientific_evidence",
       "generated_rollouts": 16,
-      "heldout_accuracy": 0.625,
-      "heldout_correct": 5,
+      "heldout_accuracy": 0.375,
+      "heldout_correct": 3,
       "heldout_n": 8,
       "mixed_fraction": 0.0,
       "rollout_groups": 2,
@@ -50,48 +38,48 @@
       "status": "complete",
       "task_id": "gsm8k",
       "updated_groups": 0,
-      "wall_clock_seconds": 348.97034384699987
+      "wall_clock_seconds": 1040.254275727
     },
-    "completed_at": "2026-07-30T18:12:45+00:00",
+    "completed_at": "2026-07-30T17:07:09+00:00",
     "evidence_class": "preflight-not-evidence",
     "heldout_trace": [
       {
-        "completion_sha256": "8523a756d5e19deb7fe01e8b3d2b6c5977d983b415aae3778f4fd301dd08dd42",
+        "completion_sha256": "d19ea5ddb2fdaa5073514154e2e857a80955ef9145e8fb7be5b9aa31dbc8cb1c",
         "correct": true,
         "index": 0
       },
       {
-        "completion_sha256": "bba01645ca12bdd6084de015a4b34b86f2e1844f513f817f65d2eb803a7a6a4d",
+        "completion_sha256": "41224bf01d6664f68b64679219f8127657ae452d0a50d71374d7895fba411366",
         "correct": true,
         "index": 1
       },
       {
-        "completion_sha256": "82c817d57336be13f0086668748b9fd050cfb5588a26d428ed549eb4bd36a02b",
-        "correct": true,
+        "completion_sha256": "7f7e2e06a162c15c9b7afdc746241472f91ed386812a77a4e24da43fc71300f6",
+        "correct": false,
         "index": 2
       },
       {
-        "completion_sha256": "89a1649ea2b2a661564b859f2b8c3b19651291efd27eb8fd55ba4359ceea4dec",
+        "completion_sha256": "e12c955bcd4a563991a9cab02b416e6cf4848861b635c9bb1c29164bdef0aa00",
         "correct": true,
         "index": 3
       },
       {
-        "completion_sha256": "70dcfdec43c5e2071092d4be538103640554789a1b8c86f79126546ba05c08e1",
+        "completion_sha256": "497e62a2bdda02abb34e8b542529943952d6977a25c99dddaed028aa04877e8e",
         "correct": false,
         "index": 4
       },
       {
-        "completion_sha256": "e7c124834a3255908ad41f7ebd064217d730099e05e5b5c629e5f2b369f6ccb6",
-        "correct": true,
+        "completion_sha256": "0d707f14db08c9c5722b0dbaf36cf9bbe350b43e41a01978a5c98228c41edcfb",
+        "correct": false,
         "index": 5
       },
       {
-        "completion_sha256": "c5813235a7162c8e5d7b560b3c6d5aa977f658bcc16588d907c1386ddab76407",
+        "completion_sha256": "8c078bd3c6b2e1c80f084ffcc9adf546d51371f9574fa00c076b0f9387748872",
         "correct": false,
         "index": 6
       },
       {
-        "completion_sha256": "c5038c1c4fb8f1c0b89887779c6f8519103f16ddd101eb23d672b6ebcacb72e5",
+        "completion_sha256": "39751dd2c5b00eed9bec409909d555613367357b6bd872ddd12952b9bef91f5f",
         "correct": false,
         "index": 7
       }
@@ -104,17 +92,6 @@
         "training_dataset": "openai/gsm8k",
         "training_revision": "740312add88f781978c0658806c59bc2815b9866"
       },
-      "decoder": {
-        "enable_thinking": false,
-        "evaluation": {
-          "do_sample": false
-        },
-        "training": {
-          "temperature": 0.7,
-          "top_k": 20,
-          "top_p": 0.8
-        }
-      },
       "evaluation_manifest_sha256": "b3a854659c4b709f70af895bf0157e00a47003905ad8f52e8c6346458f13cf8d",
       "hardware_flavor": "A100",
       "heldout_n": 8,
@@ -123,11 +100,11 @@
       "model": "Qwen/Qwen3-8B",
       "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
       "objective_fingerprint": "370c81cd7313b616aab7bb448cddda77555bf732d2e37f516e3e467d50e1ce9f",
-      "protocol_sha256": "bdaba0beff4cb75e9630834d600543195a7b065369cba587468b31478311142b",
+      "protocol_sha256": "a896b3918899228fc5a890ff8745f3b3a95e64c8288ba4e29ab15b947f37dd36",
       "provider": "colab",
       "seed": 211,
-      "source_commit": "acb9068fb4c4d796bf2cc680a2390cd00d021d53",
-      "stack_fingerprint": "f739ee5a5b474a6429f3a485d90d703c01ccfed45ff406349623e42b19bb48f8",
+      "source_commit": "9d5321b33f5af88fbb9148fe6c1cf4102dabb78a",
+      "stack_fingerprint": "0f37437a3ddadc5cea2b7c17daa19ddf1a30a8daa47f127835b44a1c978640c2",
       "task": "gsm8k",
       "tracking": {
         "wandb_entity": null,
@@ -146,7 +123,7 @@
         "homogeneous_rule": "no update and no replacement prompt",
         "initial_group_size": 2
       },
-      "unit_fingerprint": "efbafec440cbfb1752da30889aea16935cee978a27b324d8073add225260fd50"
+      "unit_fingerprint": "7fadea73c445976c77528d58b8ca3e23d06f8a62391e9f65ef70145d796c0d99"
     },
     "runtime_versions": {
       "cuda": "12.8",
@@ -165,14 +142,14 @@
     "schema_version": "aiml-next-preflight-run-v1",
     "source_files": {
       "contrast_sampler.py": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
-      "remote_preflight.py": "dafa185f35b76f7db5ef3adcfdb71eddc81532039b2d333988ede14c5a5e375c",
+      "remote_preflight.py": "cd273ab9844ef6dc71c26339d5fe424e6109c86dc2f0aa60d3824a62a383fd87",
       "trl_sampler_adapter.py": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
     },
-    "started_at": "2026-07-30T18:06:56+00:00",
+    "started_at": "2026-07-30T16:49:49+00:00",
     "status": "complete",
     "wandb": {
-      "run_id": "efbafec4",
-      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/efbafec4"
+      "run_id": "7fadea73",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/7fadea73"
     }
   },
   "payload": {
@@ -180,13 +157,12 @@
       "all_correct_fraction": 1.0,
       "all_wrong_fraction": 0.0,
       "arm_id": "grpo_g8",
-      "charged_generated_tokens": 2539,
-      "completion_clipped_fraction": 0.0,
-      "evaluation_seconds": 111.58271001900016,
+      "charged_generated_tokens": 8912,
+      "evaluation_seconds": 342.5486154329999,
       "evidence_tier": "preflight_not_scientific_evidence",
       "generated_rollouts": 16,
-      "heldout_accuracy": 0.625,
-      "heldout_correct": 5,
+      "heldout_accuracy": 0.375,
+      "heldout_correct": 3,
       "heldout_n": 8,
       "mixed_fraction": 0.0,
       "rollout_groups": 2,
@@ -194,16 +170,16 @@
       "status": "complete",
       "task_id": "gsm8k",
       "updated_groups": 0,
-      "wall_clock_seconds": 348.97034384699987
+      "wall_clock_seconds": 1040.254275727
     },
     "evidence_class": "preflight-not-evidence",
     "remote": {
-      "hf_commit": "fb603b1344f511d8d0ad9d1859248521d5869bee",
+      "hf_commit": "557ea246bd32011f8e4474234d76eccc498accfe",
       "hf_final_adapter_path": "final/adapter_model.safetensors",
       "hf_manifest_path": "run_manifest.json",
-      "hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-grpo_g8-s211-efbafec4",
-      "wandb_run_id": "efbafec4",
-      "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/efbafec4"
+      "hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-grpo_g8-s211-7fadea73",
+      "wandb_run_id": "7fadea73",
+      "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/7fadea73"
     },
     "run_config": {
       "arm": "grpo_g8",
@@ -213,17 +189,6 @@
         "training_dataset": "openai/gsm8k",
         "training_revision": "740312add88f781978c0658806c59bc2815b9866"
       },
-      "decoder": {
-        "enable_thinking": false,
-        "evaluation": {
-          "do_sample": false
-        },
-        "training": {
-          "temperature": 0.7,
-          "top_k": 20,
-          "top_p": 0.8
-        }
-      },
       "evaluation_manifest_sha256": "b3a854659c4b709f70af895bf0157e00a47003905ad8f52e8c6346458f13cf8d",
       "hardware_flavor": "A100",
       "heldout_n": 8,
@@ -232,11 +197,11 @@
       "model": "Qwen/Qwen3-8B",
       "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
       "objective_fingerprint": "370c81cd7313b616aab7bb448cddda77555bf732d2e37f516e3e467d50e1ce9f",
-      "protocol_sha256": "bdaba0beff4cb75e9630834d600543195a7b065369cba587468b31478311142b",
+      "protocol_sha256": "a896b3918899228fc5a890ff8745f3b3a95e64c8288ba4e29ab15b947f37dd36",
       "provider": "colab",
       "seed": 211,
-      "source_commit": "acb9068fb4c4d796bf2cc680a2390cd00d021d53",
-      "stack_fingerprint": "f739ee5a5b474a6429f3a485d90d703c01ccfed45ff406349623e42b19bb48f8",
+      "source_commit": "9d5321b33f5af88fbb9148fe6c1cf4102dabb78a",
+      "stack_fingerprint": "0f37437a3ddadc5cea2b7c17daa19ddf1a30a8daa47f127835b44a1c978640c2",
       "task": "gsm8k",
       "tracking": {
         "wandb_entity": null,
@@ -255,7 +220,7 @@
         "homogeneous_rule": "no update and no replacement prompt",
         "initial_group_size": 2
       },
-      "unit_fingerprint": "efbafec440cbfb1752da30889aea16935cee978a27b324d8073add225260fd50"
+      "unit_fingerprint": "7fadea73c445976c77528d58b8ca3e23d06f8a62391e9f65ef70145d796c0d99"
     },
     "runtime_versions": {
       "cuda": "12.8",
@@ -274,26 +239,26 @@
     "schema_version": "aiml-next-preflight-result-v1",
     "status": "completed"
   },
-  "protocol_sha256": "bdaba0beff4cb75e9630834d600543195a7b065369cba587468b31478311142b",
+  "protocol_sha256": "a896b3918899228fc5a890ff8745f3b3a95e64c8288ba4e29ab15b947f37dd36",
   "provider": "colab",
   "remote_verification": {
-    "hf_commit": "fb603b1344f511d8d0ad9d1859248521d5869bee",
+    "hf_commit": "557ea246bd32011f8e4474234d76eccc498accfe",
     "hf_files": [
       "run_manifest.json",
       "final/adapter_model.safetensors"
     ],
     "hf_private": true,
-    "hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-grpo_g8-s211-efbafec4",
-    "verified_at": "2026-07-30T18:13:27+00:00",
+    "hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-grpo_g8-s211-7fadea73",
+    "verified_at": "2026-07-30T17:07:37+00:00",
     "wandb": {
       "entity": "arvindcr4-pes-university",
       "project": "tinker-rl-lab",
-      "run_id": "efbafec4",
-      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/efbafec4",
+      "run_id": "7fadea73",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/7fadea73",
       "state": "finished"
     }
   },
-  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/preflight/requests/gsm8k__grpo_g8__s211__efbafec440cb.json",
+  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/preflight/requests/gsm8k__grpo_g8__s211__7fadea73c445.json",
   "return_code": 0,
   "runtime_packages": [
     "trl==1.8.0",
@@ -307,8 +272,8 @@
   ],
   "schema_version": "aiml-next-preflight-request-v1",
   "seed": 211,
-  "session": "next-pre-gsm8-grpo_g8-efbafe",
-  "source_commit": "acb9068fb4c4d796bf2cc680a2390cd00d021d53",
+  "session": "next-pre-gsm8-grpo_g8-7fadea",
+  "source_commit": "9d5321b33f5af88fbb9148fe6c1cf4102dabb78a",
   "source_snapshots": {
     "zvf-program/next-submission/contrast_sampler.py": {
       "sha256": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
@@ -319,16 +284,16 @@
       "snapshot": "sources/c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561"
     },
     "zvf-program/next-submission/preregistration.json": {
-      "sha256": "bdaba0beff4cb75e9630834d600543195a7b065369cba587468b31478311142b",
-      "snapshot": "sources/bdaba0beff4cb75e9630834d600543195a7b065369cba587468b31478311142b"
+      "sha256": "a896b3918899228fc5a890ff8745f3b3a95e64c8288ba4e29ab15b947f37dd36",
+      "snapshot": "sources/a896b3918899228fc5a890ff8745f3b3a95e64c8288ba4e29ab15b947f37dd36"
     },
     "zvf-program/next-submission/remote_preflight.py": {
-      "sha256": "dafa185f35b76f7db5ef3adcfdb71eddc81532039b2d333988ede14c5a5e375c",
-      "snapshot": "sources/dafa185f35b76f7db5ef3adcfdb71eddc81532039b2d333988ede14c5a5e375c"
+      "sha256": "cd273ab9844ef6dc71c26339d5fe424e6109c86dc2f0aa60d3824a62a383fd87",
+      "snapshot": "sources/cd273ab9844ef6dc71c26339d5fe424e6109c86dc2f0aa60d3824a62a383fd87"
     },
     "zvf-program/next-submission/run_preflight.py": {
-      "sha256": "9eec555a70bf44c74746d3032d9dfcc9c8a19c87bd9d6403ad6d18948bfbcc51",
-      "snapshot": "sources/9eec555a70bf44c74746d3032d9dfcc9c8a19c87bd9d6403ad6d18948bfbcc51"
+      "sha256": "7108d36eeac1e81ad8ee82ee87d77a7cf86f66a01fed05c1adc74750f74f965f",
+      "snapshot": "sources/7108d36eeac1e81ad8ee82ee87d77a7cf86f66a01fed05c1adc74750f74f965f"
     },
     "zvf-program/next-submission/secure_exec_preflight.py": {
       "sha256": "28bd89d7ad3314f405fa983034649e511da014285c4883326daccbaac217d2d0",
@@ -347,7 +312,7 @@
       "snapshot": "sources/ae1718e5c7eca2b1fb17e4d244cb387c3c0b83588fc333bb7789d9bb88c21b2a"
     }
   },
-  "stack_fingerprint": "f739ee5a5b474a6429f3a485d90d703c01ccfed45ff406349623e42b19bb48f8",
+  "stack_fingerprint": "0f37437a3ddadc5cea2b7c17daa19ddf1a30a8daa47f127835b44a1c978640c2",
   "status": "completed",
   "task": "gsm8k",
   "tracking": {

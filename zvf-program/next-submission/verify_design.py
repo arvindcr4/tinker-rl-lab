@@ -456,6 +456,7 @@ def verify_contract(
             "trl_sampler_adapter",
             "remote_preflight",
             "preflight_launcher",
+            "hf_jobs_preflight_launcher",
             "preflight_secure_exec",
             "preflight_environment_check",
         ):

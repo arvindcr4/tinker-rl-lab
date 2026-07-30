@@ -245,7 +245,7 @@
     "trl_sampler_adapter_path": "zvf-program/next-submission/trl_sampler_adapter.py",
     "trl_sampler_adapter_sha256": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365",
     "remote_preflight_path": "zvf-program/next-submission/remote_preflight.py",
-    "remote_preflight_sha256": "9f3192205aa9bd094dbcae2a6fead8867b97e23b853705b307f511f730300f68",
+    "remote_preflight_sha256": "6f0e70275130528c18a63687469aa9229947d1057e0fed6fdcab2bd5676ef76f",
     "preflight_launcher_path": "zvf-program/next-submission/run_preflight.py",
     "preflight_launcher_sha256": "d69128fb6df3505ac702adc5a96147b31bafe01f07df8615689b23945d4ea455",
     "hf_jobs_preflight_launcher_path": "zvf-program/next-submission/run_hf_jobs_preflight.py",

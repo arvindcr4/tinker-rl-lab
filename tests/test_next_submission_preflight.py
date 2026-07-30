@@ -27,6 +27,9 @@ def valid_payload():
         "source_commit": "c" * 40,
         "protocol_sha256": "d" * 64,
         "gpu": "L4",
+        "provider": "huggingface_jobs",
+        "hardware_flavor": "l4x1",
+        "tracking_packages": {"trackio": "0.34.0"},
     }
     audit = {
         "task_id": "gsm8k",
@@ -55,6 +58,9 @@ def valid_payload():
         "protocol_sha256": request["protocol_sha256"],
         "max_steps": 1,
         "heldout_n": 8,
+        "provider": request["provider"],
+        "hardware_flavor": request["hardware_flavor"],
+        "tracking_backends": ["wandb", "trackio"],
     }
     trace = [
         {"index": index, "correct": index < 4, "completion_sha256": f"{index:064x}"}
@@ -79,6 +85,7 @@ def valid_payload():
             "peft": "0.19.1",
             "torchao": "0.17.0",
             "wandb": "0.28.0",
+            "trackio": "0.34.0",
             "gpu": "NVIDIA L4",
         },
     }

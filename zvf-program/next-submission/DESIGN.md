@@ -86,7 +86,7 @@ Without those receipts, the external study is absent and the contribution remain
 2. Implement the sampler behind unit and conformance tests.
 3. Run a local dry-run with synthetic receipts only. **Complete.**
 4. Obtain explicit GPU authorization before any remote execution. **Complete, with publication and external recruitment still excluded.**
-5. Run and independently verify the four task-arm preflight units; these remain non-evidence.
+5. Run and independently verify the four task-arm preflight units; these remain non-evidence. The gate requires a private Hugging Face artifact, a finished W&B run, verified provider cleanup, one shared scientific-stack fingerprint, a non-clipped completion path, and a live mixed-reward optimizer update in every task-arm cell. Each intervention task must also exercise its homogeneous early-stop branch. Missing coverage blocks confirmatory execution rather than being inferred from synthetic tests.
 6. Execute the first eight paired seeds in every cell.
 7. Perform the blinded variance-only reassessment; freeze the final seed count.
 8. Complete every remaining cell and fixed held-out evaluation.

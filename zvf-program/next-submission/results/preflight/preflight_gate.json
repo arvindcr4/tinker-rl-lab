@@ -1,0 +1,90 @@
+{
+  "cells": [
+    {
+      "arm_id": "contrast_early_stop_g2_to_g8",
+      "homogeneous_early_stop_observed": true,
+      "infrastructure_verified": true,
+      "mixed_reward_optimizer_update_observed": false,
+      "receipt_count": 1,
+      "receipts": [
+        {
+          "fingerprint": "ce9d8abff04bf06cc0ff9fe5b4f9e91cde8052d678aa89e87061c5356b275fd3",
+          "path": "gsm8k__contrast_early_stop_g2_to_g8__s211.json",
+          "sha256": "d160f4ac71bb59cccb630d4d4e6a3db43593983e5121e7aa361c85e5276c3477"
+        }
+      ],
+      "seeds": [
+        211
+      ],
+      "task_id": "gsm8k"
+    },
+    {
+      "arm_id": "grpo_g8",
+      "homogeneous_early_stop_observed": false,
+      "infrastructure_verified": true,
+      "mixed_reward_optimizer_update_observed": false,
+      "receipt_count": 1,
+      "receipts": [
+        {
+          "fingerprint": "efbafec440cbfb1752da30889aea16935cee978a27b324d8073add225260fd50",
+          "path": "gsm8k__grpo_g8__s211.json",
+          "sha256": "1f51bfaf70c8d5156db7a4d28f002a4efb46d829fd36b09dfad8a2b7e075df14"
+        }
+      ],
+      "seeds": [
+        211
+      ],
+      "task_id": "gsm8k"
+    },
+    {
+      "arm_id": "contrast_early_stop_g2_to_g8",
+      "homogeneous_early_stop_observed": true,
+      "infrastructure_verified": true,
+      "mixed_reward_optimizer_update_observed": false,
+      "receipt_count": 1,
+      "receipts": [
+        {
+          "fingerprint": "6ab821fda9bb63a1b8ec3ddf22960170f7da874be914d0bd578be385406cfd08",
+          "path": "math500__contrast_early_stop_g2_to_g8__s211.json",
+          "sha256": "65808245cdf95a7b419c47217af8dd297eeaf2760788ee8350ef6ee16801de51"
+        }
+      ],
+      "seeds": [
+        211
+      ],
+      "task_id": "math500"
+    },
+    {
+      "arm_id": "grpo_g8",
+      "homogeneous_early_stop_observed": false,
+      "infrastructure_verified": true,
+      "mixed_reward_optimizer_update_observed": false,
+      "receipt_count": 1,
+      "receipts": [
+        {
+          "fingerprint": "a9c328d8e0ebef4a36ee0eea2d779a8aefa36f38f959be96eefb4cdfa62bbfcc",
+          "path": "math500__grpo_g8__s211.json",
+          "sha256": "22ca3d677a459753609966d6ad68418c5f26f9a7fa9473d7098d398983da60e6"
+        }
+      ],
+      "seeds": [
+        211
+      ],
+      "task_id": "math500"
+    }
+  ],
+  "confirmatory_execution_gate": "blocked",
+  "evidence_class": "preflight-gate-not-scientific-evidence",
+  "expected_cell_count": 4,
+  "infrastructure_matrix_verified": true,
+  "missing_scientific_seams": [
+    "gsm8k/contrast_early_stop_g2_to_g8:mixed_reward_optimizer_update",
+    "gsm8k/grpo_g8:mixed_reward_optimizer_update",
+    "math500/contrast_early_stop_g2_to_g8:mixed_reward_optimizer_update",
+    "math500/grpo_g8:mixed_reward_optimizer_update"
+  ],
+  "receipt_count": 4,
+  "schema_version": "aiml-next-preflight-gate-v1",
+  "scientific_seams_verified": false,
+  "stack_fingerprint": "f739ee5a5b474a6429f3a485d90d703c01ccfed45ff406349623e42b19bb48f8"
+}

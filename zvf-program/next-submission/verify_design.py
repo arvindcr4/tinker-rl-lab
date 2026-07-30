@@ -372,6 +372,30 @@ def verify_contract(
         require(row.get("seed_set") == "paired_seed_plan", "matrix cell uses an unpaired seed set")
         require(row.get("heldout_n") == heldout_by_task[row["task_id"]], "cell held-out size drift")
 
+    preflight_gate = protocol.get("preflight_execution_gate")
+    require(isinstance(preflight_gate, dict), "preflight execution gate missing")
+    require(
+        preflight_gate.get("evidence_class") == "preflight-gate-not-scientific-evidence",
+        "preflight gate was promoted to scientific evidence",
+    )
+    require(
+        preflight_gate.get("required_task_arm_cells") == len(expected_cells)
+        and all(
+            preflight_gate.get(key) is True
+            for key in (
+                "require_private_huggingface_artifact",
+                "require_finished_wandb_run",
+                "require_provider_session_absence",
+                "require_shared_scientific_stack_fingerprint",
+                "require_non_clipped_completion_path",
+                "require_live_mixed_reward_optimizer_update_per_cell",
+                "require_live_homogeneous_early_stop_per_intervention_task",
+            )
+        )
+        and preflight_gate.get("failure_action") == "block_confirmatory_execution",
+        "preflight execution gate is permissive or incomplete",
+    )
+
     prior = protocol.get("prior_evidence_boundary")
     require(isinstance(prior, dict), "prior evidence boundary missing")
     require(
@@ -517,6 +541,7 @@ def verify_contract(
             "protocol_amendment_001",
             "protocol_amendment_002",
             "preflight_launcher",
+            "preflight_matrix_verifier",
             "hf_jobs_preflight_launcher",
             "kaggle_preflight_launcher",
             "gcp_preflight_launcher",

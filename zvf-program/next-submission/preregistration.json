@@ -289,7 +289,7 @@
     "protocol_amendment_002_path": "zvf-program/next-submission/protocol_amendment_002_qwen_decoder.json",
     "protocol_amendment_002_sha256": "5695e5358f12b318c142b357fa7b42df3fb4b824bb55b5ea2f3d6d8a4454739d",
     "preflight_launcher_path": "zvf-program/next-submission/run_preflight.py",
-    "preflight_launcher_sha256": "464722642854bf68dca20cf473d9a796837f1ddca8fc8e91ecdd78fa0b2d1f11",
+    "preflight_launcher_sha256": "550e2bef382f3c302e4b46977eb89b11941d02e1db97bd32c80be53955efe11b",
     "preflight_matrix_verifier_path": "zvf-program/next-submission/verify_preflight_matrix.py",
     "preflight_matrix_verifier_sha256": "34134539a66b8d016e5d5d2272eaacdd8e004d8f949a48cc0791e3df6dc07f61",
     "hf_jobs_preflight_launcher_path": "zvf-program/next-submission/run_hf_jobs_preflight.py",

@@ -299,6 +299,145 @@ def test_colab_plan_uses_bounded_setup_and_stages_secrets_after_environment_chec
     assert plan[9][-3:] == ["stop", "--session", "exact-session"]
 
 
+def test_validate_args_accepts_recovery_without_task_and_arm():
+    args = PREFLIGHT.parse_args(["--recover-request", "request.json"])
+    PREFLIGHT.validate_args(args)
+
+
+def test_validate_args_rejects_mixed_launch_and_recovery_modes():
+    args = PREFLIGHT.parse_args(
+        ["--task", "gsm8k", "--arm", "grpo_g8", "--recover-request", "request.json"]
+    )
+    with pytest.raises(SystemExit, match="recovery mode uses the request artifact identity"):
+        PREFLIGHT.validate_args(args)
+
+
+def test_recovery_mode_reconstructs_completed_receipt_from_request(monkeypatch, tmp_path):
+    manifest, result, request = valid_payload()
+    request.update(
+        {
+            "schema_version": "aiml-next-preflight-request-v1",
+            "status": "launching",
+            "provider": "colab",
+            "hardware_flavor": "A100",
+            "gpu": "A100",
+            "auth_strategy": "oauth2",
+            "colab_cli_version": "0.6.0",
+            "session": "exact-session",
+            "hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-grpo_g8-s211-aaaaaaaa",
+        }
+    )
+    output_dir = tmp_path / "preflight"
+    request_dir = output_dir / "requests"
+    request_dir.mkdir(parents=True)
+    _, _, request_path, log_path = PREFLIGHT.result_paths(output_dir, request)
+    request_path.parent.mkdir(parents=True, exist_ok=True)
+    request_path.write_text(json.dumps(request), encoding="utf-8")
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_path.write_text("transport ended before marker\n", encoding="utf-8")
+
+    def read_json(path):
+        if not path.exists():
+            return None
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    def atomic_json(path, payload):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+    monkeypatch.setattr(
+        PREFLIGHT,
+        "load_e1_helpers",
+        lambda: SimpleNamespace(
+            read_json=read_json,
+            atomic_json=atomic_json,
+            load_credentials=lambda: {"HF_TOKEN": "hf", "WANDB_API_KEY": "wandb"},
+        ),
+    )
+    monkeypatch.setattr(PREFLIGHT, "verify_tracking_credentials", lambda credentials, hf_repo_prefix: {"hf_identity": "arvindcr4", "wandb_identity": "tester"})
+    monkeypatch.setattr(PREFLIGHT, "result_from_log_or_remote", lambda lines, credentials, recovered_request: (result, {"source": "exact-private-hf-commit-and-finished-wandb-run", "reason": "missing marker"}))
+    monkeypatch.setattr(PREFLIGHT, "verify_remote", lambda credentials, recovered_result, recovered_request: (manifest, {"hf_private": True, "hf_repo": recovered_request["hf_repo"], "hf_commit": "e" * 40, "hf_files": ["run_manifest.json", "final/adapter_model.safetensors"], "wandb": {"state": "finished"}}))
+    monkeypatch.setattr(PREFLIGHT.subprocess, "run", lambda *args, **kwargs: SimpleNamespace(returncode=0, stdout="[colab] No active sessions found on server.\n"))
+
+    args = PREFLIGHT.parse_args(
+        ["--recover-request", str(request_path), "--output-dir", str(output_dir)]
+    )
+    PREFLIGHT.validate_args(args)
+    status = PREFLIGHT.recover_request_artifact(args)
+
+    receipt = json.loads((output_dir / "results" / "gsm8k__contrast_early_stop_g2_to_g8__s211.json").read_text(encoding="utf-8"))
+    assert status["status"] == "completed"
+    assert receipt["status"] == "completed"
+    assert receipt["recovery"]["source"] == "exact-private-hf-commit-and-finished-wandb-run"
+    assert receipt["cleanup"]["session_absent_verified"] is True
+    assert receipt["request_path"] == str(request_path)
+
+
+def test_recovery_mode_stops_live_session_and_records_failed_recovery(monkeypatch, tmp_path):
+    _, _, request = valid_payload()
+    request.update(
+        {
+            "schema_version": "aiml-next-preflight-request-v1",
+            "status": "launching",
+            "provider": "colab",
+            "hardware_flavor": "A100",
+            "gpu": "A100",
+            "auth_strategy": "oauth2",
+            "colab_cli_version": "0.6.0",
+            "session": "exact-session",
+            "hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-grpo_g8-s211-aaaaaaaa",
+        }
+    )
+    output_dir = tmp_path / "preflight"
+    _, _, request_path, log_path = PREFLIGHT.result_paths(output_dir, request)
+    request_path.parent.mkdir(parents=True, exist_ok=True)
+    request_path.write_text(json.dumps(request), encoding="utf-8")
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_path.write_text("transport ended before marker\n", encoding="utf-8")
+
+    def read_json(path):
+        if not path.exists():
+            return None
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    def atomic_json(path, payload):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+    monkeypatch.setattr(
+        PREFLIGHT,
+        "load_e1_helpers",
+        lambda: SimpleNamespace(
+            read_json=read_json,
+            atomic_json=atomic_json,
+            load_credentials=lambda: {"HF_TOKEN": "hf", "WANDB_API_KEY": "wandb"},
+        ),
+    )
+    monkeypatch.setattr(PREFLIGHT, "verify_tracking_credentials", lambda credentials, hf_repo_prefix: {"hf_identity": "arvindcr4", "wandb_identity": "tester"})
+    monkeypatch.setattr(PREFLIGHT, "result_from_log_or_remote", lambda lines, credentials, recovered_request: (_ for _ in ()).throw(RuntimeError("no remote artifacts found")))
+    responses = iter(
+        [
+            SimpleNamespace(returncode=0, stdout="exact-session A100 BUSY\n"),
+            SimpleNamespace(returncode=0, stdout="stopped\n"),
+            SimpleNamespace(returncode=0, stdout="[colab] No active sessions found on server.\n"),
+        ]
+    )
+    monkeypatch.setattr(PREFLIGHT.subprocess, "run", lambda *args, **kwargs: next(responses))
+
+    args = PREFLIGHT.parse_args(
+        ["--recover-request", str(request_path), "--output-dir", str(output_dir)]
+    )
+    status = PREFLIGHT.recover_request_artifact(args)
+
+    receipt = json.loads((output_dir / "results" / "gsm8k__contrast_early_stop_g2_to_g8__s211.json").read_text(encoding="utf-8"))
+    assert status["status"] == "failed"
+    assert receipt["status"] == "failed"
+    assert receipt["failed_step"] == "recovery"
+    assert receipt["cleanup"]["attempts"] == 1
+    assert receipt["cleanup"]["session_absent_verified"] is True
+    assert "no remote artifacts found" in receipt["error"]
+
+
 def test_cleanup_retries_until_server_enumeration_proves_absence(monkeypatch, tmp_path):
     responses = iter(
         [

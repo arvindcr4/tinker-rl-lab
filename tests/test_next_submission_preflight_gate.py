@@ -45,10 +45,9 @@ def test_current_matrix_verifies_infrastructure_but_blocks_confirmatory_executio
     assert report["infrastructure_matrix_verified"] is True
     assert report["scientific_seams_verified"] is False
     assert report["confirmatory_execution_gate"] == "blocked"
-    assert report["receipt_count"] == 4
+    assert report["receipt_count"] == 5
     assert report["missing_scientific_seams"] == [
         "gsm8k/contrast_early_stop_g2_to_g8:mixed_reward_optimizer_update",
-        "gsm8k/grpo_g8:mixed_reward_optimizer_update",
         "math500/contrast_early_stop_g2_to_g8:mixed_reward_optimizer_update",
         "math500/grpo_g8:mixed_reward_optimizer_update",
     ]

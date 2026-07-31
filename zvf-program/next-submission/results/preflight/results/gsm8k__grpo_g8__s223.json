@@ -1,0 +1,463 @@
+{
+  "allocation_started": true,
+  "arm": "grpo_g8",
+  "auth_strategy": "oauth2",
+  "cleanup": {
+    "attempts": 0,
+    "session_absent_verified": true,
+    "sessions_return_codes": [
+      0
+    ],
+    "stop_return_codes": []
+  },
+  "colab_cli_version": "0.6.0",
+  "completed_at": "2026-07-31T04:20:35+00:00",
+  "decoder": {
+    "enable_thinking": false,
+    "evaluation": {
+      "do_sample": false
+    },
+    "training": {
+      "temperature": 0.7,
+      "top_k": 20,
+      "top_p": 0.8
+    }
+  },
+  "execution_plan": [
+    [
+      "colab",
+      "--auth=oauth2",
+      "new",
+      "--gpu",
+      "A100",
+      "--session",
+      "next-pre-gsm8-grpo_g8-d5e876"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "next-pre-gsm8-grpo_g8-d5e876",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/remote_preflight.py",
+      "/content/remote_preflight.py"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "next-pre-gsm8-grpo_g8-d5e876",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/contrast_sampler.py",
+      "/content/contrast_sampler.py"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "next-pre-gsm8-grpo_g8-d5e876",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/trl_sampler_adapter.py",
+      "/content/trl_sampler_adapter.py"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "exec",
+      "--session",
+      "next-pre-gsm8-grpo_g8-d5e876",
+      "--file",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/setup_colab_preflight.py",
+      "--timeout",
+      "1800"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "next-pre-gsm8-grpo_g8-d5e876",
+      "<ephemeral-request-file>",
+      "/content/next-preflight-request.json"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "exec",
+      "--session",
+      "next-pre-gsm8-grpo_g8-d5e876",
+      "--file",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/verify_preflight_environment.py",
+      "--timeout",
+      "120"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "upload",
+      "--session",
+      "next-pre-gsm8-grpo_g8-d5e876",
+      "<ephemeral-secret-file>",
+      "/content/.next-preflight-secrets.json"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "exec",
+      "--session",
+      "next-pre-gsm8-grpo_g8-d5e876",
+      "--file",
+      "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/secure_exec_preflight.py",
+      "--timeout",
+      "21600"
+    ],
+    [
+      "colab",
+      "--auth=oauth2",
+      "stop",
+      "--session",
+      "next-pre-gsm8-grpo_g8-d5e876"
+    ]
+  ],
+  "failed_step": null,
+  "fingerprint": "d5e8767575a493180dea6fce391357b0c8834f402a2bffc9205b2a17cdabf8b7",
+  "gpu": "A100",
+  "hardware_flavor": "A100",
+  "hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-grpo_g8-s223-d5e87675",
+  "log_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/preflight/logs/gsm8k__grpo_g8__s223__d5e8767575a4.log",
+  "manifest": {
+    "audit_record": {
+      "all_correct_fraction": 0.5,
+      "all_wrong_fraction": 0.0,
+      "arm_id": "grpo_g8",
+      "charged_generated_tokens": 3509,
+      "completion_clipped_fraction": 0.0,
+      "evaluation_seconds": 106.94365360799998,
+      "evidence_tier": "preflight_not_scientific_evidence",
+      "generated_rollouts": 16,
+      "heldout_accuracy": 0.625,
+      "heldout_correct": 5,
+      "heldout_n": 8,
+      "mixed_fraction": 0.5,
+      "rollout_groups": 2,
+      "seed": 223,
+      "status": "complete",
+      "task_id": "gsm8k",
+      "updated_groups": 1,
+      "wall_clock_seconds": 420.392185563
+    },
+    "completed_at": "2026-07-31T01:42:30+00:00",
+    "evidence_class": "preflight-not-evidence",
+    "heldout_trace": [
+      {
+        "completion_sha256": "696452123c2f74bb5d847657b39211dbc45020c041a0dc1131925697da6f4654",
+        "correct": true,
+        "index": 0
+      },
+      {
+        "completion_sha256": "5ee8d863d8467023a787a3aadb74c18d483f80da7d065ea8a7c255797ee83e6f",
+        "correct": true,
+        "index": 1
+      },
+      {
+        "completion_sha256": "82c817d57336be13f0086668748b9fd050cfb5588a26d428ed549eb4bd36a02b",
+        "correct": true,
+        "index": 2
+      },
+      {
+        "completion_sha256": "89a1649ea2b2a661564b859f2b8c3b19651291efd27eb8fd55ba4359ceea4dec",
+        "correct": true,
+        "index": 3
+      },
+      {
+        "completion_sha256": "70dcfdec43c5e2071092d4be538103640554789a1b8c86f79126546ba05c08e1",
+        "correct": false,
+        "index": 4
+      },
+      {
+        "completion_sha256": "ebd2bb783e2b61b990d0293f564292f3c14017e5db1a5079a9ef77598e581252",
+        "correct": true,
+        "index": 5
+      },
+      {
+        "completion_sha256": "c5813235a7162c8e5d7b560b3c6d5aa977f658bcc16588d907c1386ddab76407",
+        "correct": false,
+        "index": 6
+      },
+      {
+        "completion_sha256": "142a5d48a08e5901112cdde60e837a09a4f8d0c9ef3ff74867adc2437faa9b8c",
+        "correct": false,
+        "index": 7
+      }
+    ],
+    "run_config": {
+      "arm": "grpo_g8",
+      "dataset_bindings": {
+        "evaluation_dataset": "openai/gsm8k",
+        "evaluation_revision": "740312add88f781978c0658806c59bc2815b9866",
+        "training_dataset": "openai/gsm8k",
+        "training_revision": "740312add88f781978c0658806c59bc2815b9866"
+      },
+      "decoder": {
+        "enable_thinking": false,
+        "evaluation": {
+          "do_sample": false
+        },
+        "training": {
+          "temperature": 0.7,
+          "top_k": 20,
+          "top_p": 0.8
+        }
+      },
+      "evaluation_manifest_sha256": "b3a854659c4b709f70af895bf0157e00a47003905ad8f52e8c6346458f13cf8d",
+      "hardware_flavor": "A100",
+      "heldout_n": 8,
+      "max_completion_length": 1024,
+      "max_steps": 1,
+      "model": "Qwen/Qwen3-8B",
+      "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "objective_fingerprint": "370c81cd7313b616aab7bb448cddda77555bf732d2e37f516e3e467d50e1ce9f",
+      "protocol_sha256": "93797d76c42912561dedbcaf6a9ebbe532a5812184ab718608763aa021260136",
+      "provider": "colab",
+      "seed": 223,
+      "source_commit": "d74cada89aecd3dd28cbf4affbd79ef946d950a8",
+      "stack_fingerprint": "f739ee5a5b474a6429f3a485d90d703c01ccfed45ff406349623e42b19bb48f8",
+      "task": "gsm8k",
+      "tracking": {
+        "wandb_entity": null,
+        "wandb_group": "next-submission-preflight",
+        "wandb_project": "tinker-rl-lab"
+      },
+      "tracking_backends": [
+        "wandb"
+      ],
+      "train_manifest_sha256": "72c53df862bc5d8a5cf4c13ba7fb95f6bffbd8721568ec85f3b73813616e4b10",
+      "treatment": {
+        "arm": "grpo_g8",
+        "expand_rule": "expand iff the first two binary verifier rewards differ",
+        "expansion_group_size": 6,
+        "group_size": 8,
+        "homogeneous_rule": "no update and no replacement prompt",
+        "initial_group_size": 2
+      },
+      "unit_fingerprint": "d5e8767575a493180dea6fce391357b0c8834f402a2bffc9205b2a17cdabf8b7"
+    },
+    "runtime_versions": {
+      "cuda": "12.8",
+      "datasets": "4.8.5",
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "huggingface_hub": "1.26.0",
+      "jinja2": "3.1.6",
+      "peft": "0.19.1",
+      "torch": "2.11.0+cu128",
+      "torchao": "0.17.0",
+      "trackio": "missing",
+      "transformers": "5.13.1",
+      "trl": "1.8.0",
+      "wandb": "0.28.0"
+    },
+    "schema_version": "aiml-next-preflight-run-v1",
+    "source_files": {
+      "contrast_sampler.py": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
+      "remote_preflight.py": "dafa185f35b76f7db5ef3adcfdb71eddc81532039b2d333988ede14c5a5e375c",
+      "trl_sampler_adapter.py": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
+    },
+    "started_at": "2026-07-31T01:35:30+00:00",
+    "status": "complete",
+    "wandb": {
+      "run_id": "d5e87675",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/d5e87675"
+    }
+  },
+  "payload": {
+    "audit_record": {
+      "all_correct_fraction": 0.5,
+      "all_wrong_fraction": 0.0,
+      "arm_id": "grpo_g8",
+      "charged_generated_tokens": 3509,
+      "completion_clipped_fraction": 0.0,
+      "evaluation_seconds": 106.94365360799998,
+      "evidence_tier": "preflight_not_scientific_evidence",
+      "generated_rollouts": 16,
+      "heldout_accuracy": 0.625,
+      "heldout_correct": 5,
+      "heldout_n": 8,
+      "mixed_fraction": 0.5,
+      "rollout_groups": 2,
+      "seed": 223,
+      "status": "complete",
+      "task_id": "gsm8k",
+      "updated_groups": 1,
+      "wall_clock_seconds": 420.392185563
+    },
+    "evidence_class": "preflight-not-evidence",
+    "remote": {
+      "hf_commit": "95c91ff60edb5d995be256ad29fff4649ad7634a",
+      "hf_final_adapter_path": "final/adapter_model.safetensors",
+      "hf_manifest_path": "run_manifest.json",
+      "hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-grpo_g8-s223-d5e87675",
+      "wandb_run_id": "d5e87675",
+      "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/d5e87675"
+    },
+    "run_config": {
+      "arm": "grpo_g8",
+      "dataset_bindings": {
+        "evaluation_dataset": "openai/gsm8k",
+        "evaluation_revision": "740312add88f781978c0658806c59bc2815b9866",
+        "training_dataset": "openai/gsm8k",
+        "training_revision": "740312add88f781978c0658806c59bc2815b9866"
+      },
+      "decoder": {
+        "enable_thinking": false,
+        "evaluation": {
+          "do_sample": false
+        },
+        "training": {
+          "temperature": 0.7,
+          "top_k": 20,
+          "top_p": 0.8
+        }
+      },
+      "evaluation_manifest_sha256": "b3a854659c4b709f70af895bf0157e00a47003905ad8f52e8c6346458f13cf8d",
+      "hardware_flavor": "A100",
+      "heldout_n": 8,
+      "max_completion_length": 1024,
+      "max_steps": 1,
+      "model": "Qwen/Qwen3-8B",
+      "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "objective_fingerprint": "370c81cd7313b616aab7bb448cddda77555bf732d2e37f516e3e467d50e1ce9f",
+      "protocol_sha256": "93797d76c42912561dedbcaf6a9ebbe532a5812184ab718608763aa021260136",
+      "provider": "colab",
+      "seed": 223,
+      "source_commit": "d74cada89aecd3dd28cbf4affbd79ef946d950a8",
+      "stack_fingerprint": "f739ee5a5b474a6429f3a485d90d703c01ccfed45ff406349623e42b19bb48f8",
+      "task": "gsm8k",
+      "tracking": {
+        "wandb_entity": null,
+        "wandb_group": "next-submission-preflight",
+        "wandb_project": "tinker-rl-lab"
+      },
+      "tracking_backends": [
+        "wandb"
+      ],
+      "train_manifest_sha256": "72c53df862bc5d8a5cf4c13ba7fb95f6bffbd8721568ec85f3b73813616e4b10",
+      "treatment": {
+        "arm": "grpo_g8",
+        "expand_rule": "expand iff the first two binary verifier rewards differ",
+        "expansion_group_size": 6,
+        "group_size": 8,
+        "homogeneous_rule": "no update and no replacement prompt",
+        "initial_group_size": 2
+      },
+      "unit_fingerprint": "d5e8767575a493180dea6fce391357b0c8834f402a2bffc9205b2a17cdabf8b7"
+    },
+    "runtime_versions": {
+      "cuda": "12.8",
+      "datasets": "4.8.5",
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "huggingface_hub": "1.26.0",
+      "jinja2": "3.1.6",
+      "peft": "0.19.1",
+      "torch": "2.11.0+cu128",
+      "torchao": "0.17.0",
+      "trackio": "missing",
+      "transformers": "5.13.1",
+      "trl": "1.8.0",
+      "wandb": "0.28.0"
+    },
+    "schema_version": "aiml-next-preflight-result-v1",
+    "status": "completed"
+  },
+  "protocol_sha256": "93797d76c42912561dedbcaf6a9ebbe532a5812184ab718608763aa021260136",
+  "provider": "colab",
+  "recovery": {
+    "reason": "remote output did not contain a NEXT_PREFLIGHT_RESULT record",
+    "source": "exact-private-hf-commit-and-finished-wandb-run"
+  },
+  "remote_verification": {
+    "hf_commit": "95c91ff60edb5d995be256ad29fff4649ad7634a",
+    "hf_files": [
+      "run_manifest.json",
+      "final/adapter_model.safetensors"
+    ],
+    "hf_private": true,
+    "hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-grpo_g8-s223-d5e87675",
+    "verified_at": "2026-07-31T04:20:37+00:00",
+    "wandb": {
+      "entity": "arvindcr4-pes-university",
+      "project": "tinker-rl-lab",
+      "run_id": "d5e87675",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/d5e87675",
+      "state": "finished"
+    }
+  },
+  "request_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/results/preflight/requests/gsm8k__grpo_g8__s223__d5e8767575a4.json",
+  "return_code": 0,
+  "runtime_packages": [
+    "trl==1.8.0",
+    "transformers==5.13.1",
+    "jinja2==3.1.6",
+    "datasets==4.8.5",
+    "peft==0.19.1",
+    "torchao==0.17.0",
+    "wandb==0.28.0",
+    "huggingface_hub==1.26.0"
+  ],
+  "schema_version": "aiml-next-preflight-request-v1",
+  "seed": 223,
+  "session": "next-pre-gsm8-grpo_g8-d5e876",
+  "source_commit": "d74cada89aecd3dd28cbf4affbd79ef946d950a8",
+  "source_snapshots": {
+    "zvf-program/next-submission/contrast_sampler.py": {
+      "sha256": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
+      "snapshot": "sources/083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86"
+    },
+    "zvf-program/next-submission/execution_authorization.json": {
+      "sha256": "c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561",
+      "snapshot": "sources/c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561"
+    },
+    "zvf-program/next-submission/preregistration.json": {
+      "sha256": "93797d76c42912561dedbcaf6a9ebbe532a5812184ab718608763aa021260136",
+      "snapshot": "sources/93797d76c42912561dedbcaf6a9ebbe532a5812184ab718608763aa021260136"
+    },
+    "zvf-program/next-submission/remote_preflight.py": {
+      "sha256": "dafa185f35b76f7db5ef3adcfdb71eddc81532039b2d333988ede14c5a5e375c",
+      "snapshot": "sources/dafa185f35b76f7db5ef3adcfdb71eddc81532039b2d333988ede14c5a5e375c"
+    },
+    "zvf-program/next-submission/run_preflight.py": {
+      "sha256": "464722642854bf68dca20cf473d9a796837f1ddca8fc8e91ecdd78fa0b2d1f11",
+      "snapshot": "sources/464722642854bf68dca20cf473d9a796837f1ddca8fc8e91ecdd78fa0b2d1f11"
+    },
+    "zvf-program/next-submission/secure_exec_preflight.py": {
+      "sha256": "28bd89d7ad3314f405fa983034649e511da014285c4883326daccbaac217d2d0",
+      "snapshot": "sources/28bd89d7ad3314f405fa983034649e511da014285c4883326daccbaac217d2d0"
+    },
+    "zvf-program/next-submission/setup_colab_preflight.py": {
+      "sha256": "44245d3a7d03bf0972d4af89038e46e78e0aa20a8de845cd06150da0d745a611",
+      "snapshot": "sources/44245d3a7d03bf0972d4af89038e46e78e0aa20a8de845cd06150da0d745a611"
+    },
+    "zvf-program/next-submission/trl_sampler_adapter.py": {
+      "sha256": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365",
+      "snapshot": "sources/869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
+    },
+    "zvf-program/next-submission/verify_preflight_environment.py": {
+      "sha256": "ae1718e5c7eca2b1fb17e4d244cb387c3c0b83588fc333bb7789d9bb88c21b2a",
+      "snapshot": "sources/ae1718e5c7eca2b1fb17e4d244cb387c3c0b83588fc333bb7789d9bb88c21b2a"
+    }
+  },
+  "stack_fingerprint": "f739ee5a5b474a6429f3a485d90d703c01ccfed45ff406349623e42b19bb48f8",
+  "status": "completed",
+  "task": "gsm8k",
+  "tracking": {
+    "hf_repo_prefix": "arvindcr4/tinker-rl-next-preflight",
+    "wandb_entity": null,
+    "wandb_group": "next-submission-preflight",
+    "wandb_project": "tinker-rl-lab"
+  },
+  "tracking_preflight": {
+    "hf_identity": "arvindcr4",
+    "wandb_identity": "arvindcr4"
+  },
+  "updated_at": "2026-07-31T01:34:17+00:00",
+  "wandb_run_name": "next-preflight-gsm8k-grpo_g8-s223-d5e87675"
+}

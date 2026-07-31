@@ -110,8 +110,8 @@ def source_commit(*, require_clean: bool) -> str:
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--task", choices=TASKS, required=True)
-    parser.add_argument("--arm", choices=ARMS, required=True)
+    parser.add_argument("--task", choices=TASKS)
+    parser.add_argument("--arm", choices=ARMS)
     parser.add_argument("--seed", type=int, default=211)
     parser.add_argument("--gpu", default="A100")
     parser.add_argument("--auth", choices=("oauth2", "adc"), default="oauth2")
@@ -124,6 +124,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--rerun", action="store_true")
+    parser.add_argument("--recover-request", type=Path)
     return parser.parse_args(argv)
 
 
@@ -132,6 +133,10 @@ def validate_args(args: argparse.Namespace) -> None:
         raise SystemExit("seed and timeouts must be positive")
     if "/" not in args.hf_repo_prefix or args.hf_repo_prefix.endswith("/"):
         raise SystemExit("hf-repo-prefix must include a namespace and repository prefix")
+    if args.recover_request is None and (args.task is None or args.arm is None):
+        raise SystemExit("task and arm are required unless --recover-request is provided")
+    if args.recover_request is not None and (args.task is not None or args.arm is not None):
+        raise SystemExit("recovery mode uses the request artifact identity; omit --task/--arm")
 
 
 def colab_cli_version() -> str:
@@ -650,6 +655,41 @@ def build_execution_plan(
     ]
 
 
+def blank_cleanup_receipt() -> dict[str, Any]:
+    return {
+        "attempts": 0,
+        "stop_return_codes": [],
+        "sessions_return_codes": [],
+        "session_absent_verified": False,
+    }
+
+
+def session_absence_verified(
+    auth: str,
+    session: str,
+    log_handle: Any,
+) -> dict[str, Any]:
+    sessions_command = ["colab", f"--auth={auth}", "sessions"]
+    sessions = subprocess.run(
+        sessions_command,
+        cwd=REPO_ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    log_handle.write("\n[launcher cleanup verify] " + shlex.join(sessions_command) + "\n")
+    log_handle.write(sessions.stdout or "")
+    log_handle.flush()
+    active = sessions.returncode == 0 and session in (sessions.stdout or "")
+    return {
+        "attempts": 0,
+        "stop_return_codes": [],
+        "sessions_return_codes": [sessions.returncode],
+        "session_absent_verified": not active and sessions.returncode == 0,
+    }
+
+
 def stop_session_verified(
     auth: str,
     session: str,
@@ -731,6 +771,124 @@ def execute_commands(
     return return_code, failed_step, allocation_started
 
 
+def result_paths(output_dir: Path, request: dict[str, Any]) -> tuple[str, Path, Path, Path]:
+    unit = f"{request['task']}__{request['arm']}__s{request['seed']}"
+    request_id = str(request["fingerprint"])[:12]
+    result_path = output_dir / "results" / f"{unit}.json"
+    request_path = output_dir / "requests" / f"{unit}__{request_id}.json"
+    log_path = output_dir / "logs" / f"{unit}__{request_id}.log"
+    return unit, result_path, request_path, log_path
+
+
+def build_result_base(
+    request: dict[str, Any],
+    *,
+    log_path: Path,
+    request_path: Path,
+    cleanup: dict[str, Any],
+    tracking_preflight: dict[str, Any],
+    return_code: int,
+    failed_step: int | str | None,
+    allocation_started: bool,
+) -> dict[str, Any]:
+    return {
+        **request,
+        "session": request.get("session"),
+        "hf_repo": request.get("hf_repo"),
+        "completed_at": utc_now(),
+        "return_code": return_code,
+        "failed_step": failed_step,
+        "allocation_started": allocation_started,
+        "cleanup": cleanup,
+        "tracking_preflight": tracking_preflight,
+        "log_path": str(log_path),
+        "request_path": str(request_path),
+    }
+
+
+def recover_request_artifact(args: argparse.Namespace) -> dict[str, Any]:
+    helpers = load_e1_helpers()
+    output_dir = args.output_dir.expanduser().resolve()
+    request_path = args.recover_request.expanduser().resolve()
+    request = helpers.read_json(request_path)
+    if not request:
+        raise RuntimeError(f"could not read recovery request: {request_path}")
+    if request.get("status") not in {"launching", "dry-run", "failed", "completed"}:
+        raise RuntimeError("recovery request does not contain a recognized launch status")
+    if not all(key in request for key in ("task", "arm", "seed", "fingerprint", "session", "tracking")):
+        raise RuntimeError("recovery request is missing required preflight identity fields")
+    _, result_path, expected_request_path, log_path = result_paths(output_dir, request)
+    existing = helpers.read_json(result_path)
+    if (
+        not args.rerun
+        and existing
+        and existing.get("status") == "completed"
+        and existing.get("fingerprint") == request["fingerprint"]
+    ):
+        return {"status": "skipped-compatible", "result_path": str(result_path)}
+
+    credentials = helpers.load_credentials()
+    tracking = request.get("tracking")
+    if not isinstance(tracking, dict):
+        raise RuntimeError("recovery request lacks tracking contract")
+    tracking_preflight = verify_tracking_credentials(
+        credentials,
+        hf_repo_prefix=tracking["hf_repo_prefix"],
+    )
+
+    lines: list[str] = []
+    cleanup = blank_cleanup_receipt()
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with log_path.open("a+", encoding="utf-8", buffering=1) as log_handle:
+        log_handle.seek(0)
+        lines = log_handle.readlines()
+        log_handle.seek(0, 2)
+        cleanup = session_absence_verified(request["auth_strategy"], request["session"], log_handle)
+        if not cleanup["session_absent_verified"]:
+            cleanup = stop_session_verified(request["auth_strategy"], request["session"], log_handle)
+
+    return_code = 0
+    failed_step: int | str | None = None
+    allocation_started = True
+    if not cleanup["session_absent_verified"]:
+        return_code = 1
+        failed_step = "cleanup"
+        lines.append("Colab session absence could not be verified during recovery")
+    base = build_result_base(
+        request,
+        log_path=log_path,
+        request_path=expected_request_path,
+        cleanup=cleanup,
+        tracking_preflight=tracking_preflight,
+        return_code=return_code,
+        failed_step=failed_step,
+        allocation_started=allocation_started,
+    )
+    if return_code:
+        failed = {**base, "status": "failed", "error": failure_summary(lines)}
+        helpers.atomic_json(result_path, failed)
+        return {"status": "failed", "result_path": str(result_path)}
+    try:
+        result, recovery = result_from_log_or_remote(lines, credentials, request)
+        manifest, verification = verify_remote(credentials, result, request)
+    except Exception as exc:
+        failed = {**base, "status": "failed", "return_code": 1, "failed_step": "recovery", "error": str(exc)}
+        helpers.atomic_json(result_path, failed)
+        return {"status": "failed", "result_path": str(result_path)}
+    complete = {
+        **base,
+        "status": "completed",
+        "payload": result,
+        "manifest": manifest,
+        "remote_verification": verification,
+        "fingerprint": request["fingerprint"],
+    }
+    if recovery is not None:
+        complete["recovery"] = recovery
+    helpers.atomic_json(result_path, complete)
+    return {"status": "completed", "result_path": str(result_path)}
+
+
 def run_unit(args: argparse.Namespace) -> dict[str, Any]:
     helpers = load_e1_helpers()
     output_dir = args.output_dir.expanduser().resolve()
@@ -787,15 +945,12 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         "source_snapshots": snapshots,
     }
     request["fingerprint"] = fingerprint(request)
-    unit = f"{args.task}__{args.arm}__s{args.seed}"
     session = f"next-pre-{args.task[:4]}-{args.arm[:8]}-{request['fingerprint'][:6]}"[:40]
     hf_repo = expected_hf_repo(request)
     wandb_run_name = (
         f"next-preflight-{args.task}-{args.arm}-s{args.seed}-{request['fingerprint'][:8]}"
     )
-    result_path = output_dir / "results" / f"{unit}.json"
-    request_path = output_dir / "requests" / f"{unit}__{request['fingerprint'][:12]}.json"
-    log_path = output_dir / "logs" / f"{unit}__{request['fingerprint'][:12]}.log"
+    unit, result_path, request_path, log_path = result_paths(output_dir, request)
 
     existing = helpers.read_json(result_path)
     if (
@@ -884,12 +1039,7 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         helpers.atomic_json(result_path, failed)
         return {"status": "failed", "result_path": str(result_path)}
     lines: list[str] = []
-    cleanup = {
-        "attempts": 0,
-        "stop_return_codes": [],
-        "sessions_return_codes": [],
-        "session_absent_verified": False,
-    }
+    cleanup = blank_cleanup_receipt()
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("w", encoding="utf-8", buffering=1) as log_handle:
         log_handle.write("[launcher] credentials staged out of band; values are not logged\n")
@@ -924,19 +1074,16 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         failed_step = "cleanup"
         lines.append("Colab session absence could not be verified after stop")
 
-    base = {
-        **request,
-        "session": session,
-        "hf_repo": hf_repo,
-        "completed_at": utc_now(),
-        "return_code": return_code,
-        "failed_step": failed_step,
-        "allocation_started": allocation_started,
-        "cleanup": cleanup,
-        "tracking_preflight": tracking_preflight,
-        "log_path": str(log_path),
-        "request_path": str(request_path),
-    }
+    base = build_result_base(
+        {**request, "session": session, "hf_repo": hf_repo},
+        log_path=log_path,
+        request_path=request_path,
+        cleanup=cleanup,
+        tracking_preflight=tracking_preflight,
+        return_code=return_code,
+        failed_step=failed_step,
+        allocation_started=allocation_started,
+    )
     if return_code:
         failed = {**base, "status": "failed", "error": failure_summary(lines)}
         helpers.atomic_json(result_path, failed)
@@ -965,7 +1112,7 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     validate_args(args)
-    status = run_unit(args)
+    status = recover_request_artifact(args) if args.recover_request else run_unit(args)
     print("[next-preflight] " + json.dumps(status, sort_keys=True), flush=True)
     return 1 if status["status"] == "failed" else 0
 

@@ -22,17 +22,23 @@
       "arm_id": "grpo_g8",
       "homogeneous_early_stop_observed": false,
       "infrastructure_verified": true,
-      "mixed_reward_optimizer_update_observed": false,
-      "receipt_count": 1,
+      "mixed_reward_optimizer_update_observed": true,
+      "receipt_count": 2,
       "receipts": [
         {
           "fingerprint": "efbafec440cbfb1752da30889aea16935cee978a27b324d8073add225260fd50",
           "path": "gsm8k__grpo_g8__s211.json",
           "sha256": "1f51bfaf70c8d5156db7a4d28f002a4efb46d829fd36b09dfad8a2b7e075df14"
+        },
+        {
+          "fingerprint": "d5e8767575a493180dea6fce391357b0c8834f402a2bffc9205b2a17cdabf8b7",
+          "path": "gsm8k__grpo_g8__s223.json",
+          "sha256": "e5af9ba27faf3acc246171901d969d97a8419c7ea2d575b7c2c95ce8f4b2e9c0"
         }
       ],
       "seeds": [
-        211
+        211,
+        223
       ],
       "task_id": "gsm8k"
     },
@@ -79,11 +85,10 @@
   "infrastructure_matrix_verified": true,
   "missing_scientific_seams": [
     "gsm8k/contrast_early_stop_g2_to_g8:mixed_reward_optimizer_update",
-    "gsm8k/grpo_g8:mixed_reward_optimizer_update",
     "math500/contrast_early_stop_g2_to_g8:mixed_reward_optimizer_update",
     "math500/grpo_g8:mixed_reward_optimizer_update"
   ],
-  "receipt_count": 4,
+  "receipt_count": 5,
   "schema_version": "aiml-next-preflight-gate-v1",
   "scientific_seams_verified": false,
   "stack_fingerprint": "f739ee5a5b474a6429f3a485d90d703c01ccfed45ff406349623e42b19bb48f8"

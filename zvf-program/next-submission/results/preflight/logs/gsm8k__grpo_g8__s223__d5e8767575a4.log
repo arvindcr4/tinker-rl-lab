@@ -89,3 +89,6 @@ Loading weights:  97%|█████████▋| 387/399 [00:04<00:00, 118.
 Loading weights: 100%|██████████| 399/399 [00:04<00:00, 96.70it/s] 
 [transformers] The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'bos_token_id': None, 'pad_token_id': 151643}.
 
+
+[launcher cleanup verify] colab --auth=oauth2 sessions
+[colab] No active sessions found on server.

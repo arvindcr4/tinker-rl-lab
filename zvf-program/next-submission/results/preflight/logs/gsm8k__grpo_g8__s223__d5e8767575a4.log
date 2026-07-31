@@ -1,0 +1,91 @@
+[launcher] credentials staged out of band; values are not logged
+
+[launcher command] colab --auth=oauth2 new --gpu A100 --session next-pre-gsm8-grpo_g8-d5e876
+[colab] Creating session 'next-pre-gsm8-grpo_g8-d5e876'...
+[colab] Session READY.
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-gsm8-grpo_g8-d5e876 /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/remote_preflight.py /content/remote_preflight.py
+[colab] Uploaded '/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/remote_preflight.py' to '/content/remote_preflight.py'
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-gsm8-grpo_g8-d5e876 /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/contrast_sampler.py /content/contrast_sampler.py
+[colab] Uploaded '/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/contrast_sampler.py' to '/content/contrast_sampler.py'
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-gsm8-grpo_g8-d5e876 /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/trl_sampler_adapter.py /content/trl_sampler_adapter.py
+[colab] Uploaded '/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/trl_sampler_adapter.py' to '/content/trl_sampler_adapter.py'
+
+[launcher command] colab --auth=oauth2 exec --session next-pre-gsm8-grpo_g8-d5e876 --file /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/setup_colab_preflight.py --timeout 1800
+NEXT_PREFLIGHT_SETUP_OK {"removed_unused_optional_packages": ["torchaudio", "torchvision"], "versions": {"datasets": "4.8.5", "huggingface_hub": "1.26.0", "jinja2": "3.1.6", "peft": "0.19.1", "torchao": "0.17.0", "transformers": "5.13.1", "trl": "1.8.0", "wandb": "0.28.0"}}
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-gsm8-grpo_g8-d5e876 /var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-9ko7zc0o/request.json /content/next-preflight-request.json
+[colab] Uploaded '/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-9ko7zc0o/request.json' to '/content/next-preflight-request.json'
+
+[launcher command] colab --auth=oauth2 exec --session next-pre-gsm8-grpo_g8-d5e876 --file /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/verify_preflight_environment.py --timeout 120
+WARNING:torchao:Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so
+WARNING:torchao:Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so
+NEXT_PREFLIGHT_ENV_OK {"bf16": true, "cuda": "12.8", "gpu": "NVIDIA A100-SXM4-40GB", "torch": "2.11.0+cu128", "versions": {"datasets": "4.8.5", "huggingface_hub": "1.26.0", "jinja2": "3.1.6", "peft": "0.19.1", "torchao": "0.17.0", "transformers": "5.13.1", "trl": "1.8.0", "wandb": "0.28.0"}}
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-gsm8-grpo_g8-d5e876 /var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-9ko7zc0o/secrets.json /content/.next-preflight-secrets.json
+[colab] Uploaded '/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-9ko7zc0o/secrets.json' to '/content/.next-preflight-secrets.json'
+
+[launcher command] colab --auth=oauth2 exec --session next-pre-gsm8-grpo_g8-d5e876 --file /Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/next-submission/secure_exec_preflight.py --timeout 21600
+Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so
+Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so
+
+Generating train split:   0%|          | 0/7473 [00:00<?, ? examples/s]
+Generating train split: 100%|██████████| 7473/7473 [00:00<00:00, 409902.75 examples/s]
+
+Generating test split:   0%|          | 0/1319 [00:00<?, ? examples/s]
+Generating test split: 100%|██████████| 1319/1319 [00:00<00:00, 318753.57 examples/s]
+
+Map:   0%|          | 0/7473 [00:00<?, ? examples/s]
+Map:  36%|███▌      | 2662/7473 [00:00<00:00, 26464.24 examples/s]
+Map:  72%|███████▏  | 5356/7473 [00:00<00:00, 26281.36 examples/s]
+Map: 100%|██████████| 7473/7473 [00:00<00:00, 26256.36 examples/s]
+
+Map:   0%|          | 0/8 [00:00<?, ? examples/s]
+Map: 100%|██████████| 8/8 [00:00<00:00, 1974.95 examples/s]
+
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]
+Fetching 5 files:  20%|██        | 1/5 [00:17<01:11, 17.81s/it]
+Fetching 5 files:  40%|████      | 2/5 [00:38<00:57, 19.24s/it]
+Fetching 5 files:  60%|██████    | 3/5 [00:39<00:21, 10.97s/it]
+Fetching 5 files:  80%|████████  | 4/5 [00:42<00:07,  7.91s/it]
+Fetching 5 files: 100%|██████████| 5/5 [00:55<00:00,  9.88s/it]
+Fetching 5 files: 100%|██████████| 5/5 [00:55<00:00, 11.15s/it]
+
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]
+Loading weights:   0%|          | 1/399 [00:00<01:48,  3.69it/s]
+Loading weights:   1%|          | 2/399 [00:00<01:57,  3.38it/s]
+Loading weights:   4%|▍         | 15/399 [00:00<00:12, 29.83it/s]
+Loading weights:   7%|▋         | 27/399 [00:00<00:07, 48.15it/s]
+Loading weights:  10%|▉         | 39/399 [00:00<00:05, 61.76it/s]
+Loading weights:  14%|█▎        | 54/399 [00:01<00:04, 81.75it/s]
+Loading weights:  17%|█▋        | 67/399 [00:01<00:03, 92.49it/s]
+Loading weights:  20%|█▉        | 79/399 [00:01<00:03, 99.61it/s]
+Loading weights:  23%|██▎       | 92/399 [00:01<00:03, 101.54it/s]
+Loading weights:  26%|██▌       | 104/399 [00:01<00:02, 99.81it/s]
+Loading weights:  29%|██▉       | 116/399 [00:01<00:02, 98.55it/s]
+Loading weights:  33%|███▎      | 131/399 [00:01<00:02, 109.55it/s]
+Loading weights:  36%|███▌      | 144/399 [00:01<00:02, 112.99it/s]
+Loading weights:  39%|███▉      | 156/399 [00:01<00:02, 114.60it/s]
+Loading weights:  42%|████▏     | 168/399 [00:02<00:01, 116.07it/s]
+Loading weights:  45%|████▌     | 180/399 [00:02<00:01, 109.72it/s]
+Loading weights:  48%|████▊     | 192/399 [00:02<00:01, 105.56it/s]
+Loading weights:  51%|█████     | 204/399 [00:02<00:01, 102.80it/s]
+Loading weights:  55%|█████▍    | 219/399 [00:02<00:01, 110.40it/s]
+Loading weights:  58%|█████▊    | 233/399 [00:02<00:01, 118.15it/s]
+Loading weights:  62%|██████▏   | 246/399 [00:02<00:01, 113.94it/s]
+Loading weights:  65%|██████▍   | 258/399 [00:02<00:01, 108.39it/s]
+Loading weights:  68%|██████▊   | 270/399 [00:03<00:01, 104.52it/s]
+Loading weights:  71%|███████   | 284/399 [00:03<00:01, 113.74it/s]
+Loading weights:  74%|███████▍  | 296/399 [00:03<00:00, 113.14it/s]
+Loading weights:  77%|███████▋  | 308/399 [00:03<00:00, 112.90it/s]
+Loading weights:  80%|████████  | 321/399 [00:03<00:00, 117.58it/s]
+Loading weights:  84%|████████▎ | 334/399 [00:03<00:00, 106.07it/s]
+Loading weights:  87%|████████▋ | 347/399 [00:03<00:00, 105.56it/s]
+Loading weights:  90%|█████████ | 361/399 [00:03<00:00, 114.42it/s]
+Loading weights:  93%|█████████▎| 373/399 [00:03<00:00, 110.84it/s]
+Loading weights:  97%|█████████▋| 387/399 [00:04<00:00, 118.54it/s]
+Loading weights: 100%|██████████| 399/399 [00:04<00:00, 96.70it/s] 
+[transformers] The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'bos_token_id': None, 'pad_token_id': 151643}.
+

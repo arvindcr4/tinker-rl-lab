@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Unit tests for publication_worthiness_check — drives the real shipped module."""
+"""Unit tests for publication_worthiness_check — P1–P12 roster."""
 from __future__ import annotations
 
 import tempfile
@@ -11,6 +11,7 @@ from publication_worthiness_check import (
     ACTIVE_ROSTER,
     FORBIDDEN_LIVE_PATHS,
     INDEPENDENT_SET,
+    VENUE_TIER,
     check_archives_present,
     check_claim_boundaries,
     check_live_paths_removed,
@@ -24,51 +25,50 @@ from publication_worthiness_check import (
 
 
 class TestPublicationWorthinessCheck(unittest.TestCase):
-    def test_active_roster_is_twelve(self):
+    def test_active_roster_is_p1_through_p12(self):
         self.assertEqual(len(ACTIVE_ROSTER), 12)
-        self.assertEqual(len(INDEPENDENT_SET), 12)
+        self.assertEqual(set(ACTIVE_ROSTER), {f"P{i}" for i in range(1, 13)})
         self.assertEqual(check_roster_partition(), [])
 
     def test_all_active_primary_sources_exist(self):
         self.assertEqual(check_primary_sources_exist(), [])
 
+    def test_every_paper_has_venue_tier(self):
+        for pid in ACTIVE_ROSTER:
+            self.assertIn(pid, VENUE_TIER)
+            self.assertIn(
+                VENUE_TIER[pid],
+                {"workshop-short", "workshop-artifact", "position-artifact", "main-track"},
+            )
+
     def test_absorbed_independent_roots_removed_from_live_paths(self):
         self.assertEqual(check_live_paths_removed(), [])
+        root = Path(__file__).resolve().parents[3]
         for rel in FORBIDDEN_LIVE_PATHS:
-            self.assertFalse(
-                (Path(__file__).resolve().parents[3] / rel).exists(),
-                msg=f"still live: {rel}",
-            )
+            self.assertFalse((root / rel).exists(), msg=f"still live: {rel}")
 
     def test_archives_present_for_all_absorbed(self):
         self.assertEqual(len(ABSORBED_ARCHIVED), 6)
         self.assertEqual(check_archives_present(), [])
 
-    def test_claim_boundaries_present_for_lifted_ids(self):
+    def test_claim_boundaries_present(self):
         errors = check_claim_boundaries()
         self.assertEqual(errors, [], msg=errors)
 
-    def test_absorbed_not_in_active_roster(self):
-        for id_ in ABSORBED_ARCHIVED:
-            self.assertNotIn(id_, ACTIVE_ROSTER)
-
-    def test_absorption_parents(self):
-        self.assertEqual(ABSORBED_ARCHIVED["R02"][0], "P02")
-        self.assertEqual(ABSORBED_ARCHIVED["R06"][0], "P05")
-        self.assertEqual(ABSORBED_ARCHIVED["R07"][0], "P06")
-        self.assertEqual(ABSORBED_ARCHIVED["R01"][0], "R04")
-        self.assertIn("thesis", ABSORBED_ARCHIVED["U01"][0])
-        self.assertEqual(ABSORBED_ARCHIVED["P08"][0], "thesis")
+    def test_p8_is_workshop_not_fraud(self):
+        self.assertIn("workshop", ACTIVE_ROSTER["P8"])
+        self.assertNotIn("fraud", ACTIVE_ROSTER["P8"])
+        self.assertIn("P08_fraud", ABSORBED_ARCHIVED)
 
     def test_parse_scores_and_rank_roundtrip(self):
         scores = """# scores
 | ID | Set | E | H | D | M | Total | Tier | Venue | cites |
 |---|---|---|---|---|---|---|---|---|---|
 """
-        for id_ in sorted(ACTIVE_ROSTER):
+        for id_ in [f"P{i}" for i in range(1, 13)]:
             scores += (
                 f"| {id_} | in | 1 | 1 | 1 | 1 | 4 | "
-                f"**publication-worthy now** | workshop-short | path |\n"
+                f"**publication-worthy now** | {VENUE_TIER[id_]} | path |\n"
             )
         for id_ in sorted(ABSORBED_ARCHIVED):
             scores += (
@@ -90,7 +90,7 @@ Archived satellites must not be double-counted.
             tiers = parse_scores_after(sp)
             for id_ in ACTIVE_ROSTER:
                 self.assertEqual(tiers[id_], "publication-worthy now")
-            self.assertEqual(parse_rank_after_count(rp), len(INDEPENDENT_SET))
+            self.assertEqual(parse_rank_after_count(rp), 12)
             errors = run_all_checks(scores_path=sp, rank_path=rp)
             self.assertEqual(errors, [], msg=errors)
 

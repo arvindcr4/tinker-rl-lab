@@ -1,0 +1,114 @@
+[launcher] credentials staged out of band; values are not logged
+
+[launcher command] colab --auth=oauth2 new --gpu A100 --session next-pre-gsm8-contrast-26c431
+[colab] Creating session 'next-pre-gsm8-contrast-26c431'...
+[colab] Session READY.
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-gsm8-contrast-26c431 /private/tmp/claude-501/-Users-arvind-Developer-agentic-repos-tinker-rl-lab/452f615c-170e-487c-b739-a5785e139d22/scratchpad/wt-preflight/zvf-program/next-submission/remote_preflight.py /content/remote_preflight.py
+[colab] Uploaded '/private/tmp/claude-501/-Users-arvind-Developer-agentic-repos-tinker-rl-lab/452f615c-170e-487c-b739-a5785e139d22/scratchpad/wt-preflight/zvf-program/next-submission/remote_preflight.py' to '/content/remote_preflight.py'
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-gsm8-contrast-26c431 /private/tmp/claude-501/-Users-arvind-Developer-agentic-repos-tinker-rl-lab/452f615c-170e-487c-b739-a5785e139d22/scratchpad/wt-preflight/zvf-program/next-submission/contrast_sampler.py /content/contrast_sampler.py
+[colab] Uploaded '/private/tmp/claude-501/-Users-arvind-Developer-agentic-repos-tinker-rl-lab/452f615c-170e-487c-b739-a5785e139d22/scratchpad/wt-preflight/zvf-program/next-submission/contrast_sampler.py' to '/content/contrast_sampler.py'
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-gsm8-contrast-26c431 /private/tmp/claude-501/-Users-arvind-Developer-agentic-repos-tinker-rl-lab/452f615c-170e-487c-b739-a5785e139d22/scratchpad/wt-preflight/zvf-program/next-submission/trl_sampler_adapter.py /content/trl_sampler_adapter.py
+[colab] Uploaded '/private/tmp/claude-501/-Users-arvind-Developer-agentic-repos-tinker-rl-lab/452f615c-170e-487c-b739-a5785e139d22/scratchpad/wt-preflight/zvf-program/next-submission/trl_sampler_adapter.py' to '/content/trl_sampler_adapter.py'
+
+[launcher command] colab --auth=oauth2 exec --session next-pre-gsm8-contrast-26c431 --file /private/tmp/claude-501/-Users-arvind-Developer-agentic-repos-tinker-rl-lab/452f615c-170e-487c-b739-a5785e139d22/scratchpad/wt-preflight/zvf-program/next-submission/setup_colab_preflight.py --timeout 1800
+NEXT_PREFLIGHT_SETUP_OK {"removed_unused_optional_packages": ["torchaudio", "torchvision"], "versions": {"datasets": "4.8.5", "huggingface_hub": "1.26.0", "jinja2": "3.1.6", "peft": "0.19.1", "torchao": "0.17.0", "transformers": "5.13.1", "trl": "1.8.0", "wandb": "0.28.0"}}
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-gsm8-contrast-26c431 /var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-6hlfcuoj/request.json /content/next-preflight-request.json
+[colab] Uploaded '/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-6hlfcuoj/request.json' to '/content/next-preflight-request.json'
+
+[launcher command] colab --auth=oauth2 exec --session next-pre-gsm8-contrast-26c431 --file /private/tmp/claude-501/-Users-arvind-Developer-agentic-repos-tinker-rl-lab/452f615c-170e-487c-b739-a5785e139d22/scratchpad/wt-preflight/zvf-program/next-submission/verify_preflight_environment.py --timeout 120
+WARNING:torchao:Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so
+WARNING:torchao:Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so
+NEXT_PREFLIGHT_ENV_OK {"bf16": true, "cuda": "12.8", "gpu": "NVIDIA A100-SXM4-40GB", "torch": "2.11.0+cu128", "versions": {"datasets": "4.8.5", "huggingface_hub": "1.26.0", "jinja2": "3.1.6", "peft": "0.19.1", "torchao": "0.17.0", "transformers": "5.13.1", "trl": "1.8.0", "wandb": "0.28.0"}}
+
+[launcher command] colab --auth=oauth2 upload --session next-pre-gsm8-contrast-26c431 /var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-6hlfcuoj/secrets.json /content/.next-preflight-secrets.json
+[colab] Uploaded '/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/next-colab-preflight-6hlfcuoj/secrets.json' to '/content/.next-preflight-secrets.json'
+
+[launcher command] colab --auth=oauth2 exec --session next-pre-gsm8-contrast-26c431 --file /private/tmp/claude-501/-Users-arvind-Developer-agentic-repos-tinker-rl-lab/452f615c-170e-487c-b739-a5785e139d22/scratchpad/wt-preflight/zvf-program/next-submission/secure_exec_preflight.py --timeout 21600
+Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so
+Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so
+
+Generating train split:   0%|          | 0/7473 [00:00<?, ? examples/s]
+Generating train split: 100%|██████████| 7473/7473 [00:00<00:00, 350663.24 examples/s]
+
+Generating test split:   0%|          | 0/1319 [00:00<?, ? examples/s]
+Generating test split: 100%|██████████| 1319/1319 [00:00<00:00, 308635.26 examples/s]
+
+Map:   0%|          | 0/7473 [00:00<?, ? examples/s]
+Map:  37%|███▋      | 2761/7473 [00:00<00:00, 27443.51 examples/s]
+Map:  75%|███████▍  | 5604/7473 [00:00<00:00, 28019.78 examples/s]
+Map: 100%|██████████| 7473/7473 [00:00<00:00, 27421.19 examples/s]
+
+Map:   0%|          | 0/8 [00:00<?, ? examples/s]
+Map: 100%|██████████| 8/8 [00:00<00:00, 1979.38 examples/s]
+
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]
+Fetching 5 files:  20%|██        | 1/5 [00:14<00:57, 14.44s/it]
+Fetching 5 files:  40%|████      | 2/5 [00:35<00:54, 18.22s/it]
+Fetching 5 files:  60%|██████    | 3/5 [00:40<00:24, 12.19s/it]
+Fetching 5 files:  80%|████████  | 4/5 [00:41<00:07,  7.72s/it]
+Fetching 5 files: 100%|██████████| 5/5 [00:42<00:00,  5.24s/it]
+Fetching 5 files: 100%|██████████| 5/5 [00:42<00:00,  8.41s/it]
+
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]
+Loading weights:   0%|          | 1/399 [00:00<03:58,  1.67it/s]
+Loading weights:   3%|▎         | 13/399 [00:00<00:15, 24.44it/s]
+Loading weights:   7%|▋         | 26/399 [00:00<00:08, 42.29it/s]
+Loading weights:  10%|▉         | 38/399 [00:00<00:06, 58.96it/s]
+Loading weights:  12%|█▏        | 49/399 [00:01<00:04, 70.79it/s]
+Loading weights:  15%|█▌        | 61/399 [00:01<00:04, 78.17it/s]
+Loading weights:  18%|█▊        | 72/399 [00:01<00:03, 86.03it/s]
+Loading weights:  21%|██        | 84/399 [00:01<00:03, 94.94it/s]
+Loading weights:  24%|██▍       | 97/399 [00:01<00:02, 104.35it/s]
+Loading weights:  27%|██▋       | 109/399 [00:01<00:02, 106.23it/s]
+Loading weights:  31%|███       | 122/399 [00:01<00:02, 110.47it/s]
+Loading weights:  34%|███▎      | 134/399 [00:01<00:02, 112.44it/s]
+Loading weights:  37%|███▋      | 146/399 [00:01<00:02, 113.58it/s]
+Loading weights:  40%|███▉      | 158/399 [00:02<00:02, 100.33it/s]
+Loading weights:  43%|████▎     | 170/399 [00:02<00:02, 104.85it/s]
+Loading weights:  45%|████▌     | 181/399 [00:02<00:02, 105.82it/s]
+Loading weights:  48%|████▊     | 192/399 [00:02<00:01, 106.67it/s]
+Loading weights:  51%|█████     | 203/399 [00:02<00:01, 107.41it/s]
+Loading weights:  54%|█████▍    | 215/399 [00:02<00:01, 103.53it/s]
+Loading weights:  57%|█████▋    | 226/399 [00:02<00:01, 105.29it/s]
+Loading weights:  59%|█████▉    | 237/399 [00:02<00:01, 106.61it/s]
+Loading weights:  63%|██████▎   | 251/399 [00:02<00:01, 115.88it/s]
+Loading weights:  66%|██████▌   | 263/399 [00:02<00:01, 114.53it/s]
+Loading weights:  69%|██████▉   | 276/399 [00:03<00:01, 116.60it/s]
+Loading weights:  72%|███████▏  | 288/399 [00:03<00:00, 116.92it/s]
+Loading weights:  75%|███████▌  | 301/399 [00:03<00:00, 112.58it/s]
+Loading weights:  78%|███████▊  | 313/399 [00:03<00:00, 107.02it/s]
+Loading weights:  81%|████████▏ | 325/399 [00:03<00:00, 104.11it/s]
+Loading weights:  85%|████████▍ | 339/399 [00:03<00:00, 113.59it/s]
+Loading weights:  88%|████████▊ | 351/399 [00:03<00:00, 110.58it/s]
+Loading weights:  91%|█████████▏| 365/399 [00:03<00:00, 118.52it/s]
+Loading weights:  95%|█████████▍| 378/399 [00:04<00:00, 114.29it/s]
+Loading weights:  98%|█████████▊| 390/399 [00:04<00:00, 108.88it/s]
+Loading weights: 100%|██████████| 399/399 [00:04<00:00, 95.26it/s] 
+[transformers] The tokenizer has new PAD/BOS/EOS tokens that differ from the model config and generation config. The model config and generation config were aligned accordingly, being updated with the tokenizer's values. Updated tokens: {'bos_token_id': None, 'pad_token_id': 151643}.
+
+  0%|          | 0/1 [00:00<?, ?it/s][RANK 0] All reward functions returned None for the following kwargs:
+{'question': 'Tanesha needs to buy rope so cut into 10 pieces that are each six inches long. She sees a 6-foot length of rope that cost $5 and also sees 1-foot lengths of rope that cost $1.25 each. What is the least she has to spend to get the rope she needs?', 'answer': 'She needs 60 inches of rope because 10 x 6 equals <<10*6=60>>60\nThe six-foot length of rope is 72 inches long because 6 x 12 = <<6*12=72>>72\nThe six-foot length of rope would give her 12 pieces because 72 / 6 = <<72/6=12>>12\nThe six-foot length is long enough because 12 > 10\nEach 1-foot rope equals 12 inches\nShe would need 5 of the 1-foot ropes because 60 / 12 = <<60/12=5>>5\nIf she bought one-foot ropes it would cost $6.25 because 5 x 1.25 = 6.25\nThe cheapest rope to buy is the 6-foot rope because 5 < 6.25\n#### 5', 'sampler_reward': None, 'sampler_active': False, 'prompt': [{'role': 'user', 'content': 'Solve this math problem. Show your reasoning, then end your response with exactly `#### <integer>`.\n\nTanesha needs to buy rope so cut into 10 pieces that are each six inches long. She sees a 6-foot length of rope that cost $5 and also sees 1-foot lengths of rope that cost $1.25 each. What is the least she has to spend to get the rope she needs?'}], 'completion': [{'role': 'assistant', 'content': ''}]}
+Please ensure that at least one reward function returns a valid reward.
+
+100%|██████████| 1/1 [01:13<00:00, 73.87s/it]
+                                             
+
+100%|██████████| 1/1 [01:13<00:00, 73.87s/it]
+                                             
+
+100%|██████████| 1/1 [01:13<00:00, 73.87s/it]
+100%|██████████| 1/1 [01:13<00:00, 73.87s/it]
+{'loss': '0', 'grad_norm': '0', 'learning_rate': '1e-06', 'num_tokens': '1512', 'completions/mean_length': '0', 'completions/min_length': '0', 'completions/max_length': '0', 'completions/clipped_ratio': '0', 'completions/mean_terminated_length': '0', 'completions/min_terminated_length': '0', 'completions/max_terminated_length': '0', 'rewards/sampler_reward/mean': None, 'rewards/sampler_reward/std': None, 'reward': None, 'reward_std': None, 'frac_reward_zero_std': '0', 'sampler/rollout_groups': '2', 'sampler/generated_rollouts': '4', 'sampler/charged_generated_tokens': '1071', 'sampler/updated_groups': '0', 'sampler/all_wrong_fraction': '0', 'sampler/all_correct_fraction': '1', 'sampler/mixed_fraction': '0', 'sampler/charged_generated_tokens_cumulative': '1071', 'sampler/generated_rollouts_cumulative': '4', 'sampler/rollout_groups_cumulative': '2', 'sampler/updated_groups_cumulative': '0', 'sampler/all_wrong_groups_cumulative': '0', 'sampler/all_correct_groups_cumulative': '2', 'sampler/mixed_groups_cumulative': '0', 'entropy': '0.1145', 'clip_ratio/low_mean': '0', 'clip_ratio/low_min': '0', 'clip_ratio/high_mean': '0', 'clip_ratio/high_max': '0', 'clip_ratio/region_mean': '0', 'step_time': '73.67', 'epoch': '0.0002677'}
+{'train_runtime': '75.79', 'train_samples_per_second': '0.211', 'train_steps_per_second': '0.013', 'train_loss': '0', 'epoch': '0.0002677'}
+NEXT_PREFLIGHT_RESULT {"audit_record": {"all_correct_fraction": 1.0, "all_wrong_fraction": 0.0, "arm_id": "contrast_early_stop_g2_to_g8", "charged_generated_tokens": 1071, "completion_clipped_fraction": 0.0, "evaluation_seconds": 109.20832501500001, "evidence_tier": "preflight_not_scientific_evidence", "generated_rollouts": 4, "heldout_accuracy": 0.625, "heldout_correct": 5, "heldout_n": 8, "mixed_fraction": 0.0, "rollout_groups": 2, "seed": 227, "status": "complete", "task_id": "gsm8k", "updated_groups": 0, "wall_clock_seconds": 238.90441381200003}, "evidence_class": "preflight-not-evidence", "remote": {"hf_commit": "e23eadac49a64df7fec6157043d857ae0d857187", "hf_final_adapter_path": "final/adapter_model.safetensors", "hf_manifest_path": "run_manifest.json", "hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-contrast_ear-s227-26c431e4", "wandb_run_id": "26c431e4", "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/26c431e4"}, "run_config": {"arm": "contrast_early_stop_g2_to_g8", "dataset_bindings": {"evaluation_dataset": "openai/gsm8k", "evaluation_revision": "740312add88f781978c0658806c59bc2815b9866", "training_dataset": "openai/gsm8k", "training_revision": "740312add88f781978c0658806c59bc2815b9866"}, "decoder": {"enable_thinking": false, "evaluation": {"do_sample": false}, "training": {"temperature": 0.7, "top_k": 20, "top_p": 0.8}}, "evaluation_manifest_sha256": "b3a854659c4b709f70af895bf0157e00a47003905ad8f52e8c6346458f13cf8d", "hardware_flavor": "A100", "heldout_n": 8, "max_completion_length": 1024, "max_steps": 1, "model": "Qwen/Qwen3-8B", "model_revision": "b968826d9c46dd6066d109eabc6255188de91218", "objective_fingerprint": "370c81cd7313b616aab7bb448cddda77555bf732d2e37f516e3e467d50e1ce9f", "protocol_sha256": "9a25e44b0a70a24c0591f48755a4cbe2117e60995daf8bf61b72ed1c6f507c60", "provider": "colab", "seed": 227, "source_commit": "cbdf260e5e424b29cb801da74c0575497a4f140f", "stack_fingerprint": "f739ee5a5b474a6429f3a485d90d703c01ccfed45ff406349623e42b19bb48f8", "task": "gsm8k", "tracking": {"wandb_entity": null, "wandb_group": "next-submission-preflight", "wandb_project": "tinker-rl-lab"}, "tracking_backends": ["wandb"], "train_manifest_sha256": "72c53df862bc5d8a5cf4c13ba7fb95f6bffbd8721568ec85f3b73813616e4b10", "treatment": {"arm": "contrast_early_stop_g2_to_g8", "expand_rule": "expand iff the first two binary verifier rewards differ", "expansion_group_size": 6, "group_size": 8, "homogeneous_rule": "no update and no replacement prompt", "initial_group_size": 2}, "unit_fingerprint": "26c431e4027562242e6773cf19bf77f5d78c9ef431b0eb85489c6c12f1360b4b"}, "runtime_versions": {"cuda": "12.8", "datasets": "4.8.5", "gpu": "NVIDIA A100-SXM4-40GB", "huggingface_hub": "1.26.0", "jinja2": "3.1.6", "peft": "0.19.1", "torch": "2.11.0+cu128", "torchao": "0.17.0", "trackio": "missing", "transformers": "5.13.1", "trl": "1.8.0", "wandb": "0.28.0"}, "schema_version": "aiml-next-preflight-result-v1", "status": "completed"}
+
+[launcher cleanup] colab --auth=oauth2 stop --session next-pre-gsm8-contrast-26c431
+[colab] Stopping session 'next-pre-gsm8-contrast-26c431'...
+[colab] Session terminated.
+
+[launcher cleanup verify] colab --auth=oauth2 sessions
+[colab] No active sessions found on server.

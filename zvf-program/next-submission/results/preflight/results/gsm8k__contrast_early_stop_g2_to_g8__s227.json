@@ -1,0 +1,363 @@
+{
+  "allocation_started": true,
+  "arm": "contrast_early_stop_g2_to_g8",
+  "auth_strategy": "oauth2",
+  "cleanup": {
+    "attempts": 1,
+    "session_absent_verified": true,
+    "sessions_return_codes": [
+      0
+    ],
+    "stop_return_codes": [
+      0
+    ]
+  },
+  "colab_cli_version": "0.6.0",
+  "completed_at": "2026-08-02T08:26:26+00:00",
+  "decoder": {
+    "enable_thinking": false,
+    "evaluation": {
+      "do_sample": false
+    },
+    "training": {
+      "temperature": 0.7,
+      "top_k": 20,
+      "top_p": 0.8
+    }
+  },
+  "failed_step": null,
+  "fingerprint": "26c431e4027562242e6773cf19bf77f5d78c9ef431b0eb85489c6c12f1360b4b",
+  "gpu": "A100",
+  "hardware_flavor": "A100",
+  "hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-contrast_ear-s227-26c431e4",
+  "log_path": "/private/tmp/claude-501/-Users-arvind-Developer-agentic-repos-tinker-rl-lab/452f615c-170e-487c-b739-a5785e139d22/scratchpad/wt-preflight/zvf-program/next-submission/results/preflight/logs/gsm8k__contrast_early_stop_g2_to_g8__s227__26c431e40275.log",
+  "manifest": {
+    "audit_record": {
+      "all_correct_fraction": 1.0,
+      "all_wrong_fraction": 0.0,
+      "arm_id": "contrast_early_stop_g2_to_g8",
+      "charged_generated_tokens": 1071,
+      "completion_clipped_fraction": 0.0,
+      "evaluation_seconds": 109.20832501500001,
+      "evidence_tier": "preflight_not_scientific_evidence",
+      "generated_rollouts": 4,
+      "heldout_accuracy": 0.625,
+      "heldout_correct": 5,
+      "heldout_n": 8,
+      "mixed_fraction": 0.0,
+      "rollout_groups": 2,
+      "seed": 227,
+      "status": "complete",
+      "task_id": "gsm8k",
+      "updated_groups": 0,
+      "wall_clock_seconds": 238.90441381200003
+    },
+    "completed_at": "2026-08-02T08:26:14+00:00",
+    "evidence_class": "preflight-not-evidence",
+    "heldout_trace": [
+      {
+        "completion_sha256": "8523a756d5e19deb7fe01e8b3d2b6c5977d983b415aae3778f4fd301dd08dd42",
+        "correct": true,
+        "index": 0
+      },
+      {
+        "completion_sha256": "bba01645ca12bdd6084de015a4b34b86f2e1844f513f817f65d2eb803a7a6a4d",
+        "correct": true,
+        "index": 1
+      },
+      {
+        "completion_sha256": "82c817d57336be13f0086668748b9fd050cfb5588a26d428ed549eb4bd36a02b",
+        "correct": true,
+        "index": 2
+      },
+      {
+        "completion_sha256": "89a1649ea2b2a661564b859f2b8c3b19651291efd27eb8fd55ba4359ceea4dec",
+        "correct": true,
+        "index": 3
+      },
+      {
+        "completion_sha256": "70dcfdec43c5e2071092d4be538103640554789a1b8c86f79126546ba05c08e1",
+        "correct": false,
+        "index": 4
+      },
+      {
+        "completion_sha256": "e7c124834a3255908ad41f7ebd064217d730099e05e5b5c629e5f2b369f6ccb6",
+        "correct": true,
+        "index": 5
+      },
+      {
+        "completion_sha256": "c5813235a7162c8e5d7b560b3c6d5aa977f658bcc16588d907c1386ddab76407",
+        "correct": false,
+        "index": 6
+      },
+      {
+        "completion_sha256": "c5038c1c4fb8f1c0b89887779c6f8519103f16ddd101eb23d672b6ebcacb72e5",
+        "correct": false,
+        "index": 7
+      }
+    ],
+    "run_config": {
+      "arm": "contrast_early_stop_g2_to_g8",
+      "dataset_bindings": {
+        "evaluation_dataset": "openai/gsm8k",
+        "evaluation_revision": "740312add88f781978c0658806c59bc2815b9866",
+        "training_dataset": "openai/gsm8k",
+        "training_revision": "740312add88f781978c0658806c59bc2815b9866"
+      },
+      "decoder": {
+        "enable_thinking": false,
+        "evaluation": {
+          "do_sample": false
+        },
+        "training": {
+          "temperature": 0.7,
+          "top_k": 20,
+          "top_p": 0.8
+        }
+      },
+      "evaluation_manifest_sha256": "b3a854659c4b709f70af895bf0157e00a47003905ad8f52e8c6346458f13cf8d",
+      "hardware_flavor": "A100",
+      "heldout_n": 8,
+      "max_completion_length": 1024,
+      "max_steps": 1,
+      "model": "Qwen/Qwen3-8B",
+      "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "objective_fingerprint": "370c81cd7313b616aab7bb448cddda77555bf732d2e37f516e3e467d50e1ce9f",
+      "protocol_sha256": "9a25e44b0a70a24c0591f48755a4cbe2117e60995daf8bf61b72ed1c6f507c60",
+      "provider": "colab",
+      "seed": 227,
+      "source_commit": "cbdf260e5e424b29cb801da74c0575497a4f140f",
+      "stack_fingerprint": "f739ee5a5b474a6429f3a485d90d703c01ccfed45ff406349623e42b19bb48f8",
+      "task": "gsm8k",
+      "tracking": {
+        "wandb_entity": null,
+        "wandb_group": "next-submission-preflight",
+        "wandb_project": "tinker-rl-lab"
+      },
+      "tracking_backends": [
+        "wandb"
+      ],
+      "train_manifest_sha256": "72c53df862bc5d8a5cf4c13ba7fb95f6bffbd8721568ec85f3b73813616e4b10",
+      "treatment": {
+        "arm": "contrast_early_stop_g2_to_g8",
+        "expand_rule": "expand iff the first two binary verifier rewards differ",
+        "expansion_group_size": 6,
+        "group_size": 8,
+        "homogeneous_rule": "no update and no replacement prompt",
+        "initial_group_size": 2
+      },
+      "unit_fingerprint": "26c431e4027562242e6773cf19bf77f5d78c9ef431b0eb85489c6c12f1360b4b"
+    },
+    "runtime_versions": {
+      "cuda": "12.8",
+      "datasets": "4.8.5",
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "huggingface_hub": "1.26.0",
+      "jinja2": "3.1.6",
+      "peft": "0.19.1",
+      "torch": "2.11.0+cu128",
+      "torchao": "0.17.0",
+      "trackio": "missing",
+      "transformers": "5.13.1",
+      "trl": "1.8.0",
+      "wandb": "0.28.0"
+    },
+    "schema_version": "aiml-next-preflight-run-v1",
+    "source_files": {
+      "contrast_sampler.py": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
+      "remote_preflight.py": "dafa185f35b76f7db5ef3adcfdb71eddc81532039b2d333988ede14c5a5e375c",
+      "trl_sampler_adapter.py": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
+    },
+    "started_at": "2026-08-02T08:22:16+00:00",
+    "status": "complete",
+    "wandb": {
+      "run_id": "26c431e4",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/26c431e4"
+    }
+  },
+  "payload": {
+    "audit_record": {
+      "all_correct_fraction": 1.0,
+      "all_wrong_fraction": 0.0,
+      "arm_id": "contrast_early_stop_g2_to_g8",
+      "charged_generated_tokens": 1071,
+      "completion_clipped_fraction": 0.0,
+      "evaluation_seconds": 109.20832501500001,
+      "evidence_tier": "preflight_not_scientific_evidence",
+      "generated_rollouts": 4,
+      "heldout_accuracy": 0.625,
+      "heldout_correct": 5,
+      "heldout_n": 8,
+      "mixed_fraction": 0.0,
+      "rollout_groups": 2,
+      "seed": 227,
+      "status": "complete",
+      "task_id": "gsm8k",
+      "updated_groups": 0,
+      "wall_clock_seconds": 238.90441381200003
+    },
+    "evidence_class": "preflight-not-evidence",
+    "remote": {
+      "hf_commit": "e23eadac49a64df7fec6157043d857ae0d857187",
+      "hf_final_adapter_path": "final/adapter_model.safetensors",
+      "hf_manifest_path": "run_manifest.json",
+      "hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-contrast_ear-s227-26c431e4",
+      "wandb_run_id": "26c431e4",
+      "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/26c431e4"
+    },
+    "run_config": {
+      "arm": "contrast_early_stop_g2_to_g8",
+      "dataset_bindings": {
+        "evaluation_dataset": "openai/gsm8k",
+        "evaluation_revision": "740312add88f781978c0658806c59bc2815b9866",
+        "training_dataset": "openai/gsm8k",
+        "training_revision": "740312add88f781978c0658806c59bc2815b9866"
+      },
+      "decoder": {
+        "enable_thinking": false,
+        "evaluation": {
+          "do_sample": false
+        },
+        "training": {
+          "temperature": 0.7,
+          "top_k": 20,
+          "top_p": 0.8
+        }
+      },
+      "evaluation_manifest_sha256": "b3a854659c4b709f70af895bf0157e00a47003905ad8f52e8c6346458f13cf8d",
+      "hardware_flavor": "A100",
+      "heldout_n": 8,
+      "max_completion_length": 1024,
+      "max_steps": 1,
+      "model": "Qwen/Qwen3-8B",
+      "model_revision": "b968826d9c46dd6066d109eabc6255188de91218",
+      "objective_fingerprint": "370c81cd7313b616aab7bb448cddda77555bf732d2e37f516e3e467d50e1ce9f",
+      "protocol_sha256": "9a25e44b0a70a24c0591f48755a4cbe2117e60995daf8bf61b72ed1c6f507c60",
+      "provider": "colab",
+      "seed": 227,
+      "source_commit": "cbdf260e5e424b29cb801da74c0575497a4f140f",
+      "stack_fingerprint": "f739ee5a5b474a6429f3a485d90d703c01ccfed45ff406349623e42b19bb48f8",
+      "task": "gsm8k",
+      "tracking": {
+        "wandb_entity": null,
+        "wandb_group": "next-submission-preflight",
+        "wandb_project": "tinker-rl-lab"
+      },
+      "tracking_backends": [
+        "wandb"
+      ],
+      "train_manifest_sha256": "72c53df862bc5d8a5cf4c13ba7fb95f6bffbd8721568ec85f3b73813616e4b10",
+      "treatment": {
+        "arm": "contrast_early_stop_g2_to_g8",
+        "expand_rule": "expand iff the first two binary verifier rewards differ",
+        "expansion_group_size": 6,
+        "group_size": 8,
+        "homogeneous_rule": "no update and no replacement prompt",
+        "initial_group_size": 2
+      },
+      "unit_fingerprint": "26c431e4027562242e6773cf19bf77f5d78c9ef431b0eb85489c6c12f1360b4b"
+    },
+    "runtime_versions": {
+      "cuda": "12.8",
+      "datasets": "4.8.5",
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "huggingface_hub": "1.26.0",
+      "jinja2": "3.1.6",
+      "peft": "0.19.1",
+      "torch": "2.11.0+cu128",
+      "torchao": "0.17.0",
+      "trackio": "missing",
+      "transformers": "5.13.1",
+      "trl": "1.8.0",
+      "wandb": "0.28.0"
+    },
+    "schema_version": "aiml-next-preflight-result-v1",
+    "status": "completed"
+  },
+  "protocol_sha256": "9a25e44b0a70a24c0591f48755a4cbe2117e60995daf8bf61b72ed1c6f507c60",
+  "provider": "colab",
+  "remote_verification": {
+    "hf_commit": "e23eadac49a64df7fec6157043d857ae0d857187",
+    "hf_files": [
+      "run_manifest.json",
+      "final/adapter_model.safetensors"
+    ],
+    "hf_private": true,
+    "hf_repo": "arvindcr4/tinker-rl-next-preflight-gsm8k-contrast_ear-s227-26c431e4",
+    "verified_at": "2026-08-02T08:26:28+00:00",
+    "wandb": {
+      "entity": "arvindcr4-pes-university",
+      "project": "tinker-rl-lab",
+      "run_id": "26c431e4",
+      "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab/runs/26c431e4",
+      "state": "finished"
+    }
+  },
+  "request_path": "/private/tmp/claude-501/-Users-arvind-Developer-agentic-repos-tinker-rl-lab/452f615c-170e-487c-b739-a5785e139d22/scratchpad/wt-preflight/zvf-program/next-submission/results/preflight/requests/gsm8k__contrast_early_stop_g2_to_g8__s227__26c431e40275.json",
+  "return_code": 0,
+  "runtime_packages": [
+    "trl==1.8.0",
+    "transformers==5.13.1",
+    "jinja2==3.1.6",
+    "datasets==4.8.5",
+    "peft==0.19.1",
+    "torchao==0.17.0",
+    "wandb==0.28.0",
+    "huggingface_hub==1.26.0"
+  ],
+  "schema_version": "aiml-next-preflight-request-v1",
+  "seed": 227,
+  "session": "next-pre-gsm8-contrast-26c431",
+  "source_commit": "cbdf260e5e424b29cb801da74c0575497a4f140f",
+  "source_snapshots": {
+    "zvf-program/next-submission/contrast_sampler.py": {
+      "sha256": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
+      "snapshot": "sources/083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86"
+    },
+    "zvf-program/next-submission/execution_authorization.json": {
+      "sha256": "c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561",
+      "snapshot": "sources/c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561"
+    },
+    "zvf-program/next-submission/preregistration.json": {
+      "sha256": "9a25e44b0a70a24c0591f48755a4cbe2117e60995daf8bf61b72ed1c6f507c60",
+      "snapshot": "sources/9a25e44b0a70a24c0591f48755a4cbe2117e60995daf8bf61b72ed1c6f507c60"
+    },
+    "zvf-program/next-submission/remote_preflight.py": {
+      "sha256": "dafa185f35b76f7db5ef3adcfdb71eddc81532039b2d333988ede14c5a5e375c",
+      "snapshot": "sources/dafa185f35b76f7db5ef3adcfdb71eddc81532039b2d333988ede14c5a5e375c"
+    },
+    "zvf-program/next-submission/run_preflight.py": {
+      "sha256": "550e2bef382f3c302e4b46977eb89b11941d02e1db97bd32c80be53955efe11b",
+      "snapshot": "sources/550e2bef382f3c302e4b46977eb89b11941d02e1db97bd32c80be53955efe11b"
+    },
+    "zvf-program/next-submission/secure_exec_preflight.py": {
+      "sha256": "28bd89d7ad3314f405fa983034649e511da014285c4883326daccbaac217d2d0",
+      "snapshot": "sources/28bd89d7ad3314f405fa983034649e511da014285c4883326daccbaac217d2d0"
+    },
+    "zvf-program/next-submission/setup_colab_preflight.py": {
+      "sha256": "44245d3a7d03bf0972d4af89038e46e78e0aa20a8de845cd06150da0d745a611",
+      "snapshot": "sources/44245d3a7d03bf0972d4af89038e46e78e0aa20a8de845cd06150da0d745a611"
+    },
+    "zvf-program/next-submission/trl_sampler_adapter.py": {
+      "sha256": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365",
+      "snapshot": "sources/869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365"
+    },
+    "zvf-program/next-submission/verify_preflight_environment.py": {
+      "sha256": "ae1718e5c7eca2b1fb17e4d244cb387c3c0b83588fc333bb7789d9bb88c21b2a",
+      "snapshot": "sources/ae1718e5c7eca2b1fb17e4d244cb387c3c0b83588fc333bb7789d9bb88c21b2a"
+    }
+  },
+  "stack_fingerprint": "f739ee5a5b474a6429f3a485d90d703c01ccfed45ff406349623e42b19bb48f8",
+  "status": "completed",
+  "task": "gsm8k",
+  "tracking": {
+    "hf_repo_prefix": "arvindcr4/tinker-rl-next-preflight",
+    "wandb_entity": null,
+    "wandb_group": "next-submission-preflight",
+    "wandb_project": "tinker-rl-lab"
+  },
+  "tracking_preflight": {
+    "hf_identity": "arvindcr4",
+    "wandb_identity": "arvindcr4"
+  }
+}

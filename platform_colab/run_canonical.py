@@ -5,6 +5,9 @@ On a Colab A100 runtime this drives the canonical GSM8K GRPO run. The interactiv
 alternative remains ``advanced_rl_colab.ipynb``.
 """
 import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 BACKEND = "colab"
 

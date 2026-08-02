@@ -1,0 +1,411 @@
+{
+  "schema": "tinkerrl-framework-backend-matrix-v1",
+  "canonical_experiment": {
+    "model": "Qwen/Qwen3-8B",
+    "task": "gsm8k",
+    "algorithm": "grpo",
+    "training_steps": 30,
+    "num_generations": 8,
+    "per_device_train_batch_size": 2,
+    "gradient_accumulation_steps": 8,
+    "learning_rate": 1e-06,
+    "lora_rank": 16,
+    "lora_alpha": 32,
+    "lora_target_modules": "all-linear",
+    "beta": 0.0,
+    "epsilon": 0.2,
+    "max_completion_length": 1024,
+    "seed": 211
+  },
+  "frameworks": [
+    "trl",
+    "tinker",
+    "verl",
+    "openrlhf",
+    "skyrl"
+  ],
+  "backends": [
+    "local",
+    "modal",
+    "colab",
+    "vast",
+    "gcp",
+    "hfspaces"
+  ],
+  "cells": [
+    {
+      "framework": "trl",
+      "backend": "local",
+      "command": "python -m platform_local.unified --backend local --framework trl --model Qwen/Qwen3-8B",
+      "driver_file": "platform_local/trl_integrations/trainer.py",
+      "output": "./checkpoints/",
+      "env": [],
+      "notes": "in-process framework dispatch"
+    },
+    {
+      "framework": "trl",
+      "backend": "modal",
+      "command": "modal run platform_hybrid/experiments/modal/modal_grpo_trl.py",
+      "driver_file": "platform_hybrid/experiments/modal/modal_grpo_trl.py",
+      "output": "Modal volume 'tinker-results' + /home/user/workspace/elevation_outputs/",
+      "env": [
+        "MODAL_TOKEN_ID",
+        "MODAL_TOKEN_SECRET",
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "Modal H100 serverless; per-framework driver"
+    },
+    {
+      "framework": "trl",
+      "backend": "colab",
+      "command": "python platform_colab/run_canonical.py --framework trl --model Qwen/Qwen3-8B",
+      "driver_file": "platform_colab/run_canonical.py",
+      "output": "platform_tinker/atropos/checkpoints/ (session-ephemeral)",
+      "env": [
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "A100 runtime; interactive alt: platform_colab/advanced_rl_colab.ipynb"
+    },
+    {
+      "framework": "trl",
+      "backend": "vast",
+      "command": "python -m platform_hybrid.skyrl.backends.vastai_runner --model Qwen/Qwen3-8B --algorithm grpo --instance-type a100-80gb --num-instances 1",
+      "driver_file": "platform_hybrid/skyrl/backends/vastai_runner.py",
+      "output": "/root/tinker-rl-lab/platform_tinker/atropos/checkpoints/ + /root/results_summary.json",
+      "env": [
+        "VAST_API_KEY",
+        "TINKER_API_KEY",
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "provisions a vast.ai A100; on-instance script runs the canonical GSM8K config"
+    },
+    {
+      "framework": "trl",
+      "backend": "gcp",
+      "command": "python zvf-program/next-submission/run_gcp_preflight.py --task gsm8k --arm grpo_g8 --seed 211 --wait",
+      "driver_file": "zvf-program/next-submission/remote_preflight.py",
+      "output": "HF repo arvindcr4/tinker-rl-next-preflight-gcp-* + W&B tinker-rl-lab + GCS receipts",
+      "env": [
+        "GCP_PROJECT",
+        "WANDB_API_KEY",
+        "HF_TOKEN"
+      ],
+      "notes": "single A100 Spot (a2-highgpu-1g); reuse preflight provisioning (launcher: zvf-program/next-submission/run_gcp_preflight.py)"
+    },
+    {
+      "framework": "trl",
+      "backend": "hfspaces",
+      "command": "python platform_hf_spaces/defense_live_demo/fetch_results.py --framework trl --task gsm8k",
+      "driver_file": "platform_hf_spaces/defense_live_demo/fetch_results.py",
+      "output": "Gradio dashboard tab (Live Results) in the Space",
+      "env": [
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "no training (HF Spaces has no GPU); fetches results produced on other backends. Dashboard: platform_hf_spaces/defense_live_demo/app.py"
+    },
+    {
+      "framework": "tinker",
+      "backend": "local",
+      "command": "python -m platform_local.unified --backend local --framework tinker --model Qwen/Qwen3-8B",
+      "driver_file": "platform_tinker/tinkerrl/grpo_cli.py",
+      "output": "./checkpoints/",
+      "env": [
+        "TINKER_API_KEY"
+      ],
+      "notes": "in-process framework dispatch"
+    },
+    {
+      "framework": "tinker",
+      "backend": "modal",
+      "command": "modal run platform_hybrid/experiments/modal_runner.py --exp trl_grpo --seeds 1",
+      "driver_file": "platform_hybrid/experiments/modal_runner.py",
+      "output": "Modal volume 'tinker-results' + /home/user/workspace/elevation_outputs/",
+      "env": [
+        "MODAL_TOKEN_ID",
+        "MODAL_TOKEN_SECRET",
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "Modal A10G sweep runner (tinker/skyrl delegate here)"
+    },
+    {
+      "framework": "tinker",
+      "backend": "colab",
+      "command": "python platform_colab/run_canonical.py --framework tinker --model Qwen/Qwen3-8B",
+      "driver_file": "platform_colab/run_canonical.py",
+      "output": "platform_tinker/atropos/checkpoints/ (session-ephemeral)",
+      "env": [
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "A100 runtime; interactive alt: platform_colab/advanced_rl_colab.ipynb"
+    },
+    {
+      "framework": "tinker",
+      "backend": "vast",
+      "command": "python -m platform_hybrid.skyrl.backends.vastai_runner --model Qwen/Qwen3-8B --algorithm grpo --instance-type a100-80gb --num-instances 1",
+      "driver_file": "platform_hybrid/skyrl/backends/vastai_runner.py",
+      "output": "/root/tinker-rl-lab/platform_tinker/atropos/checkpoints/ + /root/results_summary.json",
+      "env": [
+        "VAST_API_KEY",
+        "TINKER_API_KEY",
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "provisions a vast.ai A100; on-instance script runs the canonical GSM8K config"
+    },
+    {
+      "framework": "tinker",
+      "backend": "gcp",
+      "command": "python zvf-program/next-submission/run_gcp_preflight.py --task gsm8k --arm grpo_g8 --seed 211 --wait",
+      "driver_file": "zvf-program/next-submission/remote_preflight.py",
+      "output": "HF repo arvindcr4/tinker-rl-next-preflight-gcp-* + W&B tinker-rl-lab + GCS receipts",
+      "env": [
+        "GCP_PROJECT",
+        "WANDB_API_KEY",
+        "HF_TOKEN"
+      ],
+      "notes": "single A100 Spot (a2-highgpu-1g); reuse preflight provisioning (launcher: zvf-program/next-submission/run_gcp_preflight.py)"
+    },
+    {
+      "framework": "tinker",
+      "backend": "hfspaces",
+      "command": "python platform_hf_spaces/defense_live_demo/fetch_results.py --framework tinker --task gsm8k",
+      "driver_file": "platform_hf_spaces/defense_live_demo/fetch_results.py",
+      "output": "Gradio dashboard tab (Live Results) in the Space",
+      "env": [
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "no training (HF Spaces has no GPU); fetches results produced on other backends. Dashboard: platform_hf_spaces/defense_live_demo/app.py"
+    },
+    {
+      "framework": "verl",
+      "backend": "local",
+      "command": "python -m platform_local.unified --backend local --framework verl --model Qwen/Qwen3-8B",
+      "driver_file": "verl/trainer.py",
+      "output": "./checkpoints/",
+      "env": [],
+      "notes": "in-process framework dispatch"
+    },
+    {
+      "framework": "verl",
+      "backend": "modal",
+      "command": "modal run platform_hybrid/experiments/modal/modal_grpo_verl.py",
+      "driver_file": "platform_hybrid/experiments/modal/modal_grpo_verl.py",
+      "output": "Modal volume 'tinker-results' + /home/user/workspace/elevation_outputs/",
+      "env": [
+        "MODAL_TOKEN_ID",
+        "MODAL_TOKEN_SECRET",
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "Modal H100 serverless; per-framework driver"
+    },
+    {
+      "framework": "verl",
+      "backend": "colab",
+      "command": "python platform_colab/run_canonical.py --framework verl --model Qwen/Qwen3-8B",
+      "driver_file": "platform_colab/run_canonical.py",
+      "output": "platform_tinker/atropos/checkpoints/ (session-ephemeral)",
+      "env": [
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "A100 runtime; interactive alt: platform_colab/advanced_rl_colab.ipynb"
+    },
+    {
+      "framework": "verl",
+      "backend": "vast",
+      "command": "python -m platform_hybrid.skyrl.backends.vastai_runner --model Qwen/Qwen3-8B --algorithm grpo --instance-type a100-80gb --num-instances 1",
+      "driver_file": "platform_hybrid/skyrl/backends/vastai_runner.py",
+      "output": "/root/tinker-rl-lab/platform_tinker/atropos/checkpoints/ + /root/results_summary.json",
+      "env": [
+        "VAST_API_KEY",
+        "TINKER_API_KEY",
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "provisions a vast.ai A100; on-instance script runs the canonical GSM8K config"
+    },
+    {
+      "framework": "verl",
+      "backend": "gcp",
+      "command": "python zvf-program/next-submission/run_gcp_preflight.py --task gsm8k --arm grpo_g8 --seed 211 --wait",
+      "driver_file": "zvf-program/next-submission/remote_preflight.py",
+      "output": "HF repo arvindcr4/tinker-rl-next-preflight-gcp-* + W&B tinker-rl-lab + GCS receipts",
+      "env": [
+        "GCP_PROJECT",
+        "WANDB_API_KEY",
+        "HF_TOKEN"
+      ],
+      "notes": "single A100 Spot (a2-highgpu-1g); reuse preflight provisioning (launcher: zvf-program/next-submission/run_gcp_preflight.py)"
+    },
+    {
+      "framework": "verl",
+      "backend": "hfspaces",
+      "command": "python platform_hf_spaces/defense_live_demo/fetch_results.py --framework verl --task gsm8k",
+      "driver_file": "platform_hf_spaces/defense_live_demo/fetch_results.py",
+      "output": "Gradio dashboard tab (Live Results) in the Space",
+      "env": [
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "no training (HF Spaces has no GPU); fetches results produced on other backends. Dashboard: platform_hf_spaces/defense_live_demo/app.py"
+    },
+    {
+      "framework": "openrlhf",
+      "backend": "local",
+      "command": "python -m platform_local.unified --backend local --framework openrlhf --model Qwen/Qwen3-8B",
+      "driver_file": "platform_modal/openrlhf/trainer.py",
+      "output": "./checkpoints/",
+      "env": [],
+      "notes": "in-process framework dispatch"
+    },
+    {
+      "framework": "openrlhf",
+      "backend": "modal",
+      "command": "modal run platform_hybrid/experiments/modal/modal_grpo_openrlhf.py",
+      "driver_file": "platform_hybrid/experiments/modal/modal_grpo_openrlhf.py",
+      "output": "Modal volume 'tinker-results' + /home/user/workspace/elevation_outputs/",
+      "env": [
+        "MODAL_TOKEN_ID",
+        "MODAL_TOKEN_SECRET",
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "Modal H100 serverless; per-framework driver"
+    },
+    {
+      "framework": "openrlhf",
+      "backend": "colab",
+      "command": "python platform_colab/run_canonical.py --framework openrlhf --model Qwen/Qwen3-8B",
+      "driver_file": "platform_colab/run_canonical.py",
+      "output": "platform_tinker/atropos/checkpoints/ (session-ephemeral)",
+      "env": [
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "A100 runtime; interactive alt: platform_colab/advanced_rl_colab.ipynb"
+    },
+    {
+      "framework": "openrlhf",
+      "backend": "vast",
+      "command": "python -m platform_hybrid.skyrl.backends.vastai_runner --model Qwen/Qwen3-8B --algorithm grpo --instance-type a100-80gb --num-instances 1",
+      "driver_file": "platform_hybrid/skyrl/backends/vastai_runner.py",
+      "output": "/root/tinker-rl-lab/platform_tinker/atropos/checkpoints/ + /root/results_summary.json",
+      "env": [
+        "VAST_API_KEY",
+        "TINKER_API_KEY",
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "provisions a vast.ai A100; on-instance script runs the canonical GSM8K config"
+    },
+    {
+      "framework": "openrlhf",
+      "backend": "gcp",
+      "command": "python zvf-program/next-submission/run_gcp_preflight.py --task gsm8k --arm grpo_g8 --seed 211 --wait",
+      "driver_file": "zvf-program/next-submission/remote_preflight.py",
+      "output": "HF repo arvindcr4/tinker-rl-next-preflight-gcp-* + W&B tinker-rl-lab + GCS receipts",
+      "env": [
+        "GCP_PROJECT",
+        "WANDB_API_KEY",
+        "HF_TOKEN"
+      ],
+      "notes": "single A100 Spot (a2-highgpu-1g); reuse preflight provisioning (launcher: zvf-program/next-submission/run_gcp_preflight.py)"
+    },
+    {
+      "framework": "openrlhf",
+      "backend": "hfspaces",
+      "command": "python platform_hf_spaces/defense_live_demo/fetch_results.py --framework openrlhf --task gsm8k",
+      "driver_file": "platform_hf_spaces/defense_live_demo/fetch_results.py",
+      "output": "Gradio dashboard tab (Live Results) in the Space",
+      "env": [
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "no training (HF Spaces has no GPU); fetches results produced on other backends. Dashboard: platform_hf_spaces/defense_live_demo/app.py"
+    },
+    {
+      "framework": "skyrl",
+      "backend": "local",
+      "command": "python -m platform_local.unified --backend local --framework skyrl --model Qwen/Qwen3-8B",
+      "driver_file": "platform_hybrid/skyrl/configs/grpo_gsm8k.yaml",
+      "output": "./checkpoints/",
+      "env": [
+        "TINKER_API_KEY"
+      ],
+      "notes": "in-process framework dispatch"
+    },
+    {
+      "framework": "skyrl",
+      "backend": "modal",
+      "command": "modal run platform_hybrid/experiments/modal_runner.py --exp trl_grpo --seeds 1",
+      "driver_file": "platform_hybrid/experiments/modal_runner.py",
+      "output": "Modal volume 'tinker-results' + /home/user/workspace/elevation_outputs/",
+      "env": [
+        "MODAL_TOKEN_ID",
+        "MODAL_TOKEN_SECRET",
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "Modal A10G sweep runner (tinker/skyrl delegate here)"
+    },
+    {
+      "framework": "skyrl",
+      "backend": "colab",
+      "command": "python platform_colab/run_canonical.py --framework skyrl --model Qwen/Qwen3-8B",
+      "driver_file": "platform_colab/run_canonical.py",
+      "output": "platform_tinker/atropos/checkpoints/ (session-ephemeral)",
+      "env": [
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "A100 runtime; interactive alt: platform_colab/advanced_rl_colab.ipynb"
+    },
+    {
+      "framework": "skyrl",
+      "backend": "vast",
+      "command": "python -m platform_hybrid.skyrl.backends.vastai_runner --model Qwen/Qwen3-8B --algorithm grpo --instance-type a100-80gb --num-instances 1",
+      "driver_file": "platform_hybrid/skyrl/backends/vastai_runner.py",
+      "output": "/root/tinker-rl-lab/platform_tinker/atropos/checkpoints/ + /root/results_summary.json",
+      "env": [
+        "VAST_API_KEY",
+        "TINKER_API_KEY",
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "provisions a vast.ai A100; on-instance script runs the canonical GSM8K config"
+    },
+    {
+      "framework": "skyrl",
+      "backend": "gcp",
+      "command": "python zvf-program/next-submission/run_gcp_preflight.py --task gsm8k --arm grpo_g8 --seed 211 --wait",
+      "driver_file": "zvf-program/next-submission/remote_preflight.py",
+      "output": "HF repo arvindcr4/tinker-rl-next-preflight-gcp-* + W&B tinker-rl-lab + GCS receipts",
+      "env": [
+        "GCP_PROJECT",
+        "WANDB_API_KEY",
+        "HF_TOKEN"
+      ],
+      "notes": "single A100 Spot (a2-highgpu-1g); reuse preflight provisioning (launcher: zvf-program/next-submission/run_gcp_preflight.py)"
+    },
+    {
+      "framework": "skyrl",
+      "backend": "hfspaces",
+      "command": "python platform_hf_spaces/defense_live_demo/fetch_results.py --framework skyrl --task gsm8k",
+      "driver_file": "platform_hf_spaces/defense_live_demo/fetch_results.py",
+      "output": "Gradio dashboard tab (Live Results) in the Space",
+      "env": [
+        "HF_TOKEN",
+        "WANDB_API_KEY"
+      ],
+      "notes": "no training (HF Spaces has no GPU); fetches results produced on other backends. Dashboard: platform_hf_spaces/defense_live_demo/app.py"
+    }
+  ]
+}

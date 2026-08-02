@@ -6,6 +6,9 @@ the unified launcher with this backend pinned, so the framework × backend matri
 shares one source of training logic (no duplication).
 """
 import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 BACKEND = "local"
 

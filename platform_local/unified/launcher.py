@@ -261,8 +261,6 @@ class UnifiedLauncher:
         CLI command. The hosted-equivalent path is the MODAL backend
         (``modal_grpo_openrlhf.py``).
         """
-        import subprocess
-
         spec = self._resolve_spec()
         print("\n[OPENRLHF] OpenRLHF (Ray + vLLM, group-norm GRPO)")
         try:

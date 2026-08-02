@@ -230,6 +230,28 @@ footer {display:none !important;}
 """
 
 
+def fetch_live_results(framework: str, task: str):
+    """Pull the latest canonical-experiment outputs (HF Hub / W&B / GCS) into the Space.
+
+    HF Spaces hosts no GPU training; this surfaces results produced on the
+    GPU-capable backends. Each source degrades gracefully if unreachable.
+    """
+    import json as _json
+
+    try:
+        from fetch_results import fetch_all
+    except Exception:  # pragma: no cover - missing module in a stripped build
+        return "⚠️ `fetch_results` unavailable in this Space build.", "{}"
+    try:
+        data = fetch_all(framework or "trl", task or "gsm8k")
+        return (
+            "✅ Fetched — any source showing an `error` field was unreachable.",
+            _json.dumps(data, indent=2, default=str),
+        )
+    except Exception as e:  # pragma: no cover
+        return f"⚠️ fetch failed: {e}", "{}"
+
+
 with gr.Blocks(title="Tinker RL Defense Demo", css=CSS) as demo:
     gr.HTML(
         """
@@ -320,6 +342,21 @@ with gr.Blocks(title="Tinker RL Defense Demo", css=CSS) as demo:
             "[Lightning evidence](https://github.com/arvindcr4/tinker-rl-lab/blob/main/zvf-program/experiments-next/results/passk_lightning_qwen3-8b_base_mbpp_p200_n32_s42.json) · "
             "[Colab notebook](https://github.com/arvindcr4/tinker-rl-lab/blob/main/platform_colab/ppo_reinforce_baselines_colab.ipynb)"
         )
+
+    with gr.Tab("5 · Live results"):
+        gr.Markdown(
+            "### Live results from the canonical experiment\n"
+            "Fetches the latest GSM8K GRPO outputs the GPU-capable backends produce — from "
+            "HF Hub, W&B, and the GCS receipt bucket. HF Spaces hosts no training; this tab "
+            "displays results computed elsewhere (see `fetch_results.py`)."
+        )
+        with gr.Row():
+            lr_framework = gr.Textbox(value="trl", label="framework")
+            lr_task = gr.Textbox(value="gsm8k", label="task")
+        lr_button = gr.Button("Fetch live results", variant="primary")
+        lr_status = gr.Markdown()
+        lr_json = gr.Code(language="json", label="Fetched results (HF / W&B / GCS)")
+        lr_button.click(fetch_live_results, [lr_framework, lr_task], [lr_status, lr_json])
 
 
 if __name__ == "__main__":

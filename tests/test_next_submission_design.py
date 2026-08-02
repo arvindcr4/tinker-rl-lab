@@ -110,7 +110,49 @@ def test_underpowered_seed_count_is_rejected(contract):
     candidate[0]["paired_seed_plan"]["planning_seed_count"] = 8
     candidate[0]["paired_seed_plan"]["seeds"] = candidate[0]["paired_seed_plan"]["seeds"][:8]
     candidate[0]["power_plan"]["planning_seed_count_after_inflation"] = 8
-    with pytest.raises(VERIFIER.DesignContractError, match="power"):
+    with pytest.raises(VERIFIER.DesignContractError, match="power|seed"):
+        verify(candidate)
+
+
+def test_relaxed_noninferiority_boundary_is_rejected(contract):
+    candidate = copy.deepcopy(contract)
+    candidate[0]["primary_estimands"]["capability_noninferiority_boundary"] = -0.10
+    with pytest.raises(VERIFIER.DesignContractError, match="non-inferiority boundary"):
+        verify(candidate)
+
+
+def test_gutted_telemetry_is_rejected(contract):
+    candidate = copy.deepcopy(contract)
+    candidate[0]["telemetry"] = ["charged_generated_tokens"]
+    with pytest.raises(VERIFIER.DesignContractError, match="telemetry"):
+        verify(candidate)
+
+
+def test_rewritten_joint_success_rule_is_rejected(contract):
+    candidate = copy.deepcopy(contract)
+    candidate[0]["primary_estimands"]["joint_success"] = "either task passing is sufficient"
+    with pytest.raises(VERIFIER.DesignContractError, match="joint success"):
+        verify(candidate)
+
+
+def test_deleted_analysis_rule_is_rejected(contract):
+    candidate = copy.deepcopy(contract)
+    candidate[0]["analysis"]["missingness"] = "drop failed runs"
+    with pytest.raises(VERIFIER.DesignContractError, match="analysis rule drift: missingness"):
+        verify(candidate)
+
+
+def test_unpinned_optimizer_is_rejected(contract):
+    candidate = copy.deepcopy(contract)
+    candidate[0]["treatment"]["optimizer"]["learning_rate"] = 2e-06
+    with pytest.raises(VERIFIER.DesignContractError, match="optimizer hyperparameters"):
+        verify(candidate)
+
+
+def test_swapped_seed_values_are_rejected(contract):
+    candidate = copy.deepcopy(contract)
+    candidate[0]["paired_seed_plan"]["seeds"] = [541] * 23
+    with pytest.raises(VERIFIER.DesignContractError, match="seed"):
         verify(candidate)
 
 

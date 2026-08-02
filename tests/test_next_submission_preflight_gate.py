@@ -54,8 +54,9 @@ def test_current_matrix_verifies_infrastructure_but_blocks_confirmatory_executio
 
 
 def test_gate_rejects_incomplete_matrix():
+    receipts = [p for p in current_receipts() if "math500__grpo_g8" not in p.name]
     with pytest.raises(GATE.PreflightGateError, match="matrix is incomplete"):
-        GATE.evaluate_matrix(PROTOCOL, current_receipts()[:-1])
+        GATE.evaluate_matrix(PROTOCOL, receipts)
 
 
 def test_gate_rejects_unreconciled_remote_receipt(tmp_path):

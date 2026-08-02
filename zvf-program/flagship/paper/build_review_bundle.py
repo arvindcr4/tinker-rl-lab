@@ -13,6 +13,10 @@ REPO_ROOT = PAPER_DIR.parents[2]
 BUNDLE = PAPER_DIR / "review_bundle.zip"
 OUTER_DIGEST = PAPER_DIR / "REVIEW_BUNDLE.sha256"
 ZIP_TIME = (2026, 7, 27, 0, 0, 0)
+EXECUTED_OBJECTIVE = "zvf-program/flagship/pilot/provenance/r4-2-objective.py"
+EXECUTED_OBJECTIVE_SHA256 = (
+    "980a56a1651299a5adbe7a0927c13b12d42d9d7e1a36205500a24d5eeba9b61b"
+)
 
 PAPER_FILES = (
     "main.tex",
@@ -96,6 +100,11 @@ def collect() -> dict[str, bytes]:
             if allowed(path):
                 relative = path.relative_to(REPO_ROOT).as_posix()
                 payloads[f"repository/{relative}"] = path.read_bytes()
+
+    executed_objective = payloads[f"repository/{EXECUTED_OBJECTIVE}"]
+    if sha256_bytes(executed_objective) != EXECUTED_OBJECTIVE_SHA256:
+        raise SystemExit("frozen r4-2 objective source does not match accepted receipts")
+    payloads["repository/zvf-program/flagship/pilot/objective.py"] = executed_objective
     return payloads
 
 

@@ -1,0 +1,22 @@
+[
+  {
+    "iteration": 0,
+    "direction": "establish_claim_and_artifact_inventory",
+    "structural_constraint": "bind prose claims to immutable repository evidence before evaluating novelty"
+  },
+  {
+    "iteration": 1,
+    "direction": "unblock_confirmatory_gate_critical_path",
+    "structural_constraint": "observe the mixed_reward_optimizer_update seam live in all 4 cells before any confirmatory row; manuscript skeleton drafted in parallel with pre-results permitted language only"
+  },
+  {
+    "iteration": 2,
+    "direction": "freeze_truth_bounded_tmlr_package",
+    "structural_constraint": "one manuscript spine, failed gates reported as failures, anonymous evidence projection independently verifiable, no submission during archival overlap"
+  },
+  {
+    "iteration": 3,
+    "direction": "consolidate_18_paper_portfolio",
+    "structural_constraint": "treat derivatives as one contribution family, give every manuscript a source-grounded disposition, and preserve venue overlap and evidence gates"
+  }
+]

@@ -1,0 +1,1531 @@
+% When Does an RL Update Teach?
+% A methods-and-evidence draft for anonymous review.
+\pdfsuppressptexinfo=-1
+\pdfinfoomitdate=1
+\pdftrailerid{}
+
+\documentclass{article}
+
+% Reuse the repository's NeurIPS 2026 style without adding the parent paper
+% directory to LaTeX's global input path (which can select the umbrella
+% paper's main.bbl instead of this paper's bibliography).
+\usepackage[preprint,nonatbib]{../neurips_2026}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{xspace}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows.meta,positioning,calc}
+\usepackage{hyperref}
+\usepackage{url}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!55!black,
+  citecolor=blue!55!black,
+  urlcolor=blue!55!black
+}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+\newcommand{\grpo}{\textsc{GRPO}\xspace}
+\newcommand{\ppo}{\textsc{PPO}\xspace}
+\newcommand{\sao}{\textsc{SAO}\xspace}
+\newcommand{\method}{\textsc{TriageRL}\xspace}
+\newcommand{\egm}{\mathrm{EGM}}
+\newcommand{\pam}{\mathrm{PAM}}
+\newcommand{\gsr}{\mathrm{GSR}}
+\newcommand{\zuf}{\mathrm{ZUF}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+
+\title{When Does an RL Update Teach?\\
+A Diagnostic and Controller Proposal Across GRPO, PPO, and\\
+Single-Rollout Asynchronous Optimization}
+
+\author{Arvind C R\\
+PES University\\
+\texttt{arvindcr4@gmail.com}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Reinforcement-learning post-training is usually budgeted in rollouts, tokens,
+or wall-clock time, even though some collected trajectories induce no policy
+gradient.  This failure appears differently across algorithms: a flat reward
+group gives zero group-relative advantage in GRPO, a critic can produce a
+near-zero advantage in PPO, and policy lag can cause double-sided importance
+masking to discard an otherwise informative token in Single-Rollout
+Asynchronous Optimization (SAO).  We give these cases one operational
+description.  For every policy token, we separate \emph{potential advantage
+mass} from the fraction that \emph{survives} the algorithm's trust-region
+gate, yielding Effective Gradient Mass (EGM) and a root-trajectory
+Zero-Update Fraction (ZUF).  EGM equal to zero is a sufficient certificate of
+a zero score-function policy update; positive EGM is deliberately treated as
+a proxy, because token gradients can cancel.  This decomposition supports
+\method, a cause-aware controller that retries failed-starved examples,
+retires or distills solved-saturated examples, trains the critic when credit is
+unreliable, and refreshes stale rollouts when clipping destroys useful signal.
+The controller preserves asynchronous single-rollout execution and logs
+sampling propensities to expose curriculum bias.
+
+We ground the proposal in an audited GRPO artifact.  Across 505 unique
+prompt-seed tasks, the identity between contrastive group yield and the gap
+between pass@G and unanimous success holds to $1.11\times10^{-16}$.  In a
+2,560-observation controller trace, 1,723 of 1,867 escalation events (92.3\%)
+occurred on all-correct groups, whereas only 144 occurred on all-wrong groups.
+These are descriptive and counterfactual results, not evidence that the new
+controller improves held-out accuracy.  We therefore state a matched-budget,
+seed-paired evaluation contract for PPO and SAO rather than manufacturing
+missing outcomes.  The paper's contribution is a unified diagnostic,
+falsifiable routing policy, and reproducible bridge from an established GRPO
+failure mode to critic-based PPO and asynchronous SAO. It reuses companion GRPO
+artifacts and must not be counted as an independent replication of those results.
+\paragraph{Venue claim boundary (workshop-short methods / proposal).}
+Verified here: GRPO pass@G/ZVF identity, conditional group-size calculation,
+and all-correct/all-wrong controller counts from checked-in artifacts.
+Proposed here: Effective Gradient Mass, TriageRL routing, and the PPO/SAO
+evaluation contract.  \emph{Not claimed}: any PPO, SAO, or GLM-style training
+outcome; causal held-out improvement from TriageRL; or global optimality of a
+group size.  Closing the PPO/SAO measurement gate is future work and is not
+required for the diagnostic-plus-contract contribution targeted at a
+workshop-short venue.
+\end{abstract}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.5cm and 1.8cm,
+    block/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    diagbox/.style={rectangle, draw=orange!80!black, fill=orange!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.8cm, font=\small},
+    routerbox/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [block] (input) {Rollout Trajectories\\($x_b, y_i$)};
+    \node [diagbox, right=of input] (metrics) {\textbf{Signal Diagnostics}\\$\text{PAM} \times \text{GSR} = \text{EGM}$\\$\text{ZUF}$ Calculation};
+    \node [diagbox, right=of metrics] (triage) {\textbf{Cause Classifier}\\Solved / Failed / Critic Lag /\\Transport / Invalid};
+    \node [routerbox, below=1.2cm of metrics, xshift=1.2cm] (router) {
+        \textbf{TRIAGE-RL Action Router}\\
+        Retire (Solved) $\big|$ Retry (Failed) $\big|$ Critic-Only Repair\\
+        Refresh Stale Rollouts $\big|$ Standard Policy Update
+    };
+
+    \draw [arrow] (input) -- (metrics);
+    \draw [arrow] (metrics) -- (triage);
+    \draw [arrow] (triage) |- (router);
+    \draw [arrow] (metrics) |- (router);
+\end{tikzpicture}
+\caption{\textbf{Signal Starvation Diagnostic and TRIAGE-RL Action Router Pipeline (N01).} Decomposing credit into Potential Advantage Mass ($\text{PAM}$) and Gradient Survival Ratio ($\text{GSR}$), certifying Effective Gradient Mass ($\text{EGM}$), and routing distinct failure causes.}
+\label{fig:triage_rl_pipeline}
+\end{figure}
+
+\section{Introduction}
+
+Long-horizon language-model reinforcement learning (RL) spends most of its
+budget before the optimizer runs: agents interact with tools, environments
+return sparse outcomes, and trajectories may contain hundreds of thousands of
+tokens.  Yet a completed rollout is not necessarily an effective update.  A
+policy-gradient coefficient can vanish because no contrast exists, because a
+critic predicts the observed outcome, or because an off-policy trust-region
+rule masks the token.  Throughput metrics do not distinguish these causes.
+
+The distinction matters as systems move from synchronous group-relative
+optimization toward critic-based single-rollout training.  GRPO estimates a
+baseline from several responses to the same prompt \citep{shao2024deepseekmath};
+identical group rewards therefore erase the advantage.  PPO uses a learned
+value baseline and a sign-dependent clipped surrogate
+\citep{schulman2017ppo}.  SAO replaces prompt groups with single rollouts and
+uses a stricter double-sided token mask to stabilize asynchronous learning
+under policy lag \citep{hou2026sao}.  The official GLM-5.2 report describes a
+closely related production transition: compacted long trajectories yield
+variable numbers of trainable sub-traces, so training moved from group-wise
+optimization to critic-based PPO over individual rollouts
+\citep{glm2026glm52}.  The algorithms differ, but the operational question is
+the same: \emph{how much generated learning signal reaches the actor?}
+
+We answer by factorizing the score-function coefficient into a generated
+signal and a survival gate.  This yields two cheap statistics that can be
+logged without an additional backward pass: potential advantage mass (PAM)
+and gradient survival ratio (GSR).  Their product is effective gradient mass
+(EGM).  A sampled gradient-norm audit guards against the known weakness of
+coefficient-only proxies: nonzero weighted score vectors can cancel.
+
+This framing changes the controller design.  ``Low signal'' is not one state.
+All-correct GRPO groups and all-wrong groups both have zero advantage, but the
+former are candidates for retirement or distillation and the latter for
+targeted resampling.  In PPO and SAO, low PAM with a calibrated critic means
+the result was expected; low GSR with high PAM means signal existed but was
+destroyed by clipping, for which a fresh rollout is preferable to widening the
+trust region.  A bad critic calls for critic-only updates, not repeated actor
+epochs.  Invalid or hacked trajectories belong in a quarantine path rather
+than the hard-example queue.
+
+Our contributions are:
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+  \item a unified, implementation-level decomposition of score-function
+  signal in GRPO, PPO, and SAO, together with an exact zero-update certificate
+  and an explicit non-converse;
+  \item \method, a root-trajectory controller that maps distinct starvation
+  causes to retry, retire, critic-only, refresh, quarantine, or normal update;
+  \item two GRPO results reproduced from checked-in artifacts: an exact
+  pass@G/ZVF identity and a strong asymmetry between all-correct and all-wrong
+  controller fires; and
+  \item a preregistered evaluation contract that separates already observed
+  GRPO facts from untested PPO/SAO hypotheses.
+\end{enumerate}
+
+\paragraph{Claim status.}
+The mathematical identities and reported GRPO counts are verified.  The
+unified controller is a method proposal.  Its PPO and SAO benefits are
+falsifiable hypotheses, not current empirical claims. This is the eighteenth
+document in the program but not an eighteenth independent evidence source.
+
+\section{Background and the Three Starvation Mechanisms}
+\label{sec:background}
+
+Let a behavior policy $\mu$ generate action token $a_t$ in state $s_t$, and
+let $\pi_\theta$ be the actor being optimized.  Define the token ratio
+\begin{equation}
+  \rho_t(\theta)=
+  \frac{\pi_\theta(a_t\mid s_t)}{\mu(a_t\mid s_t)}
+  =\exp\!\left(\log\pi_\theta(a_t\mid s_t)
+        -\log\mu(a_t\mid s_t)\right).
+  \label{eq:ratio}
+\end{equation}
+The policy loss uses a detached advantage estimate $A_t$ and, depending on
+the algorithm, a detached token gate $m_t\in\{0,1\}$.
+
+\subsection{GRPO: signal is never generated for flat groups}
+
+For prompt $x$, GRPO samples $G$ responses with rewards $R_1,\ldots,R_G$ and
+forms a group-relative advantage such as
+\begin{equation}
+  A_i^{\mathrm{grp}}=
+  \frac{R_i-\bar R_x}{s_x+\varepsilon}.
+  \label{eq:grpo-adv}
+\end{equation}
+If all rewards are equal, $A_i^{\mathrm{grp}}=0$ for every response and every
+token.  A later PPO-style clip may also suppress signal, but the defining
+GRPO starvation event occurs before clipping: no within-prompt contrast was
+generated.  The zero-variance fraction (ZVF) is the fraction of sampled prompt
+groups with this property.
+
+\subsection{PPO: credit can be absent or clipped away}
+
+PPO estimates $A_t$ with a critic, commonly using generalized advantage
+estimation (GAE) \citep{schulman2016gae}, and maximizes
+\begin{equation}
+  \ell_t^{\mathrm{PPO}}(\theta)=
+  \min\!\left(\rho_t A_t,
+    \operatorname{clip}(\rho_t,1-\epsilon,1+\epsilon)A_t\right).
+  \label{eq:ppo}
+\end{equation}
+Away from the clip boundary, its score-function term is weighted by
+\begin{equation}
+  c_t^{\mathrm{PPO}}=m_t^{\mathrm{PPO}}\rho_t A_t,
+  \qquad
+  m_t^{\mathrm{PPO}}=
+  \begin{cases}
+    0, \& A_t>0\ \text{and}\ \rho_t>1+\epsilon,\\
+    0, \& A_t<0\ \text{and}\ \rho_t<1-\epsilon,\\
+    1, \& \text{otherwise.}
+  \end{cases}
+  \label{eq:ppo-gate}
+\end{equation}
+PPO can therefore starve because $A_t\approx0$ (credit starvation) or because
+the sign-dependent clipping gate is zero (transport starvation).  The common
+aggregate \emph{clip fraction} merges these with healthy tokens and does not
+say whether the clipped tokens carried substantial advantage.
+
+\subsection{SAO: strict survival under asynchronous policy lag}
+
+SAO is designed for asynchronous, single-rollout agentic RL.  It uses a
+critic, updates that critic more frequently than the actor, freezes attention
+parameters during value-model training, and skips environment-observation
+tokens when constructing token-level GAE \citep{hou2026sao}.  To stabilize
+off-policy updates, direct double-sided importance sampling (DIS) retains only
+tokens inside an asymmetric interval:
+\begin{equation}
+  m_t^{\mathrm{SAO}}=ind\!\left[1-\epsilon_l < \rho_t < 1+\epsilon_h\right],
+  \qquad
+  c_t^{\mathrm{SAO}}=m_t^{\mathrm{SAO}}\rho_t A_t.
+  \label{eq:sao-gate}
+\end{equation}
+Unlike PPO's sign-dependent gate, DIS masks either sign outside the interval.
+This is a stability mechanism, not a flaw.  But when policy lag makes most
+high-advantage tokens fail the gate, a throughput-efficient learner can still
+be update-inefficient.  The right response is usually to reduce lag or refresh
+the rollout, not to weaken the safety boundary.
+
+\section{A Unified Signal-Survival Formalism}
+\label{sec:formalism}
+
+For any actor token, let
+\begin{equation}
+  c_t=m_t\rho_t A_t,
+  \qquad
+  z_t=\nabla_\theta\log\pi_\theta(a_t\mid s_t).
+  \label{eq:coefficient}
+\end{equation}
+For a token batch $\mathcal{B}$, the score-function component of the surrogate
+gradient is
+\begin{equation}
+  g_{\mathcal{B}}=\frac{1}{|\mathcal{B}|}
+  \sum_{t\in\mathcal{B}}c_t z_t.
+  \label{eq:gradient}
+\end{equation}
+Entropy, KL, and value-loss gradients are deliberately excluded: the question
+is whether the sampled reward signal teaches the actor.
+
+\subsection{Potential, survival, and effective mass}
+
+We define
+\begin{align}
+  \pam(\mathcal{B})
+    &=\frac{1}{|\mathcal{B}|}\sum_{t\in\mathcal{B}}(\rho_t A_t)^2,
+    \label{eq:pam}\\
+  \gsr(\mathcal{B})
+    &=\begin{cases}
+       \dfrac{\sum_t m_t(\rho_t A_t)^2}
+             {\sum_t(\rho_t A_t)^2}, \& \sum_t(\rho_t A_t)^2>0,\\[7pt]
+       0, \& \text{otherwise,}
+      \end{cases}
+    \label{eq:gsr}\\
+  \egm(\mathcal{B})
+    &=\frac{1}{|\mathcal{B}|}\sum_{t\in\mathcal{B}}c_t^2
+      =\pam(\mathcal{B})\gsr(\mathcal{B}).
+    \label{eq:egm}
+\end{align}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    card/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    mult/.style={circle, draw=orange!80!black, fill=orange!10, thick, font=\small},
+    outcard/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=purple!60!black}
+]
+    \node [card] (pam) {\textbf{Potential Advantage Mass}\\[2pt]$\text{PAM}(\mathcal{B}) = \frac{1}{|\mathcal{B}|}\sum (\rho_t A_t)^2$};
+    \node [card, right=of pam] (gsr) {\textbf{Gradient Survival Ratio}\\[2pt]$\text{GSR}(\mathcal{B}) = \frac{\sum m_t(\rho_t A_t)^2}{\sum (\rho_t A_t)^2}$};
+    \node [mult, right=of gsr] (times) {$\times$};
+    \node [outcard, right=of times] (egm) {\textbf{Effective Gradient Mass}\\[2pt]$\text{EGM}(\mathcal{B}) = \text{PAM} \cdot \text{GSR}$};
+
+    \draw [arrow] (pam) -- (gsr);
+    \draw [arrow] (gsr) -- (times);
+    \draw [arrow] (times) -- (egm);
+    
+    \node [outcard, below=1.0cm of gsr, fill=red!5, draw=red!70!black, minimum width=8.5cm] (cert) {
+        \textbf{Zero-Update Certificate Protocol}\\[2pt]
+        $\text{EGM}(\mathcal{B}) = 0 \iff g_{\mathcal{B}} = \mathbf{0} \quad (\text{Exact Zero Update Guarantee})$
+    };
+    \draw [arrow, dashed] (egm) |- (cert);
+\end{tikzpicture}
+\caption{\textbf{Token-Level Credit Factorization and Zero-Update Certificate (N01).} Illustrating the product decomposition $\text{EGM} = \text{PAM} \times \text{GSR}$ and the exact score-function zero-update certificate.}
+\label{fig:egm_credit_factorization}
+\end{figure}
+PAM measures generated credit before the gate.  GSR measures how much squared
+credit survives it.  EGM is the surviving coefficient mass.  Squaring makes
+positive and negative advantages comparable and prevents cancellation from
+being hidden at this diagnostic stage.
+
+For a set of root trajectories $\mathcal{R}$, define the near-zero update rate
+\begin{equation}
+  \zuf_{\delta}(\mathcal{R})=
+  \frac{1}{|\mathcal{R}|}\sum_{\tau\in\mathcal{R}}
+  \ind\!\left[\egm(\tau)\leq\delta\right].
+  \label{eq:zuf}
+\end{equation}
+At $\delta=0$, ZUF is an exact coefficient-level zero-update fraction.  A
+positive $\delta$, fixed from warm-up data, measures practical near-starvation.
+This root-level ZUF is distinct from GRPO's zero-\emph{variance} fraction
+(ZVF), though a flat GRPO group normally belongs to both sets.
+
+\begin{proposition}[Exact zero-update certificate]
+If $\egm(\mathcal{B})=0$, then the reward-conditioned score-function gradient
+$g_{\mathcal{B}}$ in Eq.~\eqref{eq:gradient} is exactly zero.
+The converse does not hold in general.
+\end{proposition}
+\begin{proof}
+EGM is a sum of nonnegative terms.  If it is zero, every $c_t=0$, hence every
+summand in Eq.~\eqref{eq:gradient} is zero.  Conversely, nonzero vectors
+$c_tz_t$ can cancel, or score vectors can be degenerate, while EGM remains
+positive.
+\end{proof}
+
+This non-converse is important.  EGM is an inexpensive routing statistic, not
+a theorem that an update will improve reward.  We therefore pair it with a
+periodic geometry-aware audit,
+\begin{equation}
+  \mathrm{GUN}(\mathcal{B})=\left\|
+  \frac{1}{|\mathcal{B}|}\sum_t c_tz_t\right\|_2^2,
+  \label{eq:gun}
+\end{equation}
+measured on sampled microbatches before optimizer preconditioning.  EGM must
+predict this gradient-update norm and, separately, marginal learning progress
+to earn operational trust.
+
+\subsection{One table, three algorithms}
+
+\begin{table}[t]
+\centering
+\caption{The same coefficient decomposition exposes different starvation
+causes.  ``Generated'' refers to PAM; ``survives'' refers to GSR.}
+\label{tab:unification}
+\small
+\begin{tabularx}{\linewidth}{@{}lXXX@{}}
+\toprule
+Method \& Advantage source \& Gate \& Exact zero-update route \\
+\midrule
+GRPO \& Within-prompt group reward \& PPO-style gate, if used \& Flat group makes $A^{\rm grp}=0$ \\
+PPO \& Critic plus GAE \& Sign-dependent clipping \& $A=0$ or all nonzero terms clipped \\
+SAO \& Critic plus skip-observation GAE \& Strict two-sided DIS mask \& $A=0$ or every useful token masked \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+At initialization of a GRPO actor epoch, $\rho\approx1$ and the clip gate
+usually survives, so ZVF is the dominant certificate.  Later GRPO epochs can
+also suffer transport starvation and should log both quantities.  In PPO and
+SAO, the critic replaces the group baseline, but it does not eliminate zero
+updates; it relocates them from group variance to credit and trust-region
+mechanisms.
+
+\subsection{Root trajectories, not compacted chunks}
+
+Long-horizon systems may compact one environment episode into chunks
+$\tau_1,\ldots,\tau_J$.  Routing each chunk independently overweights episodes
+that happen to compact more often.  We retain a \texttt{root\_trajectory\_id}
+and compute token-micro EGM over all action tokens in the root.  We report both
+root-macro ZUF (each episode counts once) and token-micro EGM (each trainable
+token counts once).  A retry, retirement, or quarantine decision is made once
+per root; loss normalization can remain token-level, as in the GLM-5.2
+description \citep{glm2026glm52}.
+
+\section{Boundary Semantics: Zero Is Not One State}
+\label{sec:semantics}
+
+Let $R(\tau)$ be a root outcome, $\hat V(\tau)$ the critic's pre-outcome value,
+$e_V$ a held-out value error or calibration statistic, and $h(\tau)$ an
+invalid/hack flag.  Table~\ref{tab:states} maps observable states to distinct
+causes.  Thresholds are calibrated on a warm-up split and frozen before the
+comparison arms run.
+
+\begin{table}[t]
+\centering
+\caption{Cause-aware routing.  Low/high are relative to preregistered
+warm-up thresholds, not values tuned on final outcomes.}
+\label{tab:states}
+\small
+\begin{tabularx}{\linewidth}{@{}lXXXX@{}}
+\toprule
+State \& Evidence \& Interpretation \& Actor action \& Data action \\
+\midrule
+Solved saturation \& high $R$, high $\hat V$, low PAM \& expected success \& none/minimal \& retire or distill \\
+Failed starvation \& low $R$, low $\hat V$, low PAM \& expected failure \& none/minimal \& bounded retry \\
+Critic lag \& high $e_V$ or uncertainty \& unreliable credit \& defer \& critic-only updates \\
+Transport starvation \& high PAM, low GSR \& useful credit was gated \& stop epochs \& refresh from latest policy \\
+Healthy \& nontrivial EGM, acceptable $e_V$ \& update can teach \& actor-critic \& base stream \\
+Invalid/hacked \& $h(\tau)=1$ \& corrupted reward \& no reward update \& quarantine \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The invalid path is essential for coding agents.  The GLM-5.2 report describes
+online anti-hack filtering because pass/fail rewards can be inflated by reading
+protected artifacts or fetching target code \citep{glm2026glm52}.  Treating
+those trajectories as hard negatives would train on a contaminated target.
+
+\section{TriageRL: A Cause-Aware Controller}
+\label{sec:controller}
+
+\method operates beside, rather than inside, the base optimizer.  It does not
+turn SAO into grouped sampling: every completed root is handled immediately,
+and retries enter a nonblocking priority queue as independent future rollouts.
+
+\begin{algorithm}[t]
+\caption{Root-trajectory signal triage}
+\label{alg:triage}
+\begin{algorithmic}[1]
+\REQUIRE root $\tau$, ratios $\rho_t$, advantages $A_t$, gates $m_t$,
+critic diagnostics $e_V,u_V$, outcome $R$, invalid flag $h$
+\STATE Aggregate PAM, GSR, and EGM over action tokens sharing
+\texttt{root\_trajectory\_id}
+\IF{$h=1$}
+  \STATE quarantine $\tau$; train neither actor nor reward-conditioned critic
+\ELSIF{$e_V>\tau_V$ or $u_V>\tau_U$}
+  \STATE enqueue critic-only updates; defer actor use of $\tau$
+\ELSIF{$\pam>\tau_A$ and $\gsr<\tau_S$}
+  \STATE stop further actor epochs; request a fresh-policy rollout
+\ELSIF{$\pam\leq\tau_A$ and $R\leq\tau_R^{\rm fail}$}
+  \STATE add a bounded, propensity-logged retry to the asynchronous queue
+\ELSIF{$\pam\leq\tau_A$ and $R\geq\tau_R^{\rm solve}$}
+  \STATE retire from priority sampling or send to a distillation buffer
+\ELSE
+  \STATE apply the ordinary actor-critic update
+\ENDIF
+\STATE Preserve at least $q_{\min}$ probability for the base data stream
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Retry only where another rollout has value}
+
+Failure-only does not mean ``sample the hardest prompt forever.''  Maintain a
+Beta posterior $p_x\sim\operatorname{Beta}(\alpha_x,\beta_x)$ for binary
+success and prioritize
+\begin{equation}
+  U_x=\frac{
+    \E[p_x(1-p_x)]+\beta\sqrt{\operatorname{Var}[p_x(1-p_x)]}}
+    {\widehat{\operatorname{cost}}(x)}
+  \ind[\text{failed starvation}],
+  \label{eq:retry-utility}
+\end{equation}
+subject to a per-root retry cap.  The posterior variance term explores
+uncertain prompts; $p(1-p)$ de-prioritizes both hopeless and already solved
+items.  This connects the controller to adaptive rollout allocation methods
+such as CERO \citep{zong2026cero}, but the semantic gate prevents symmetric
+escalation of all-correct and all-wrong observations.
+
+\subsection{Adapt actor and critic work for different reasons}
+
+For PPO, recompute GSR after each actor epoch and stop when either target KL is
+exceeded or marginal surviving mass drops below the frozen threshold.  High
+PAM plus low GSR means additional epochs cannot recover the masked evidence.
+For SAO, the analogous action is to reduce queue lag or refresh a trajectory;
+widening DIS would trade the observed inefficiency for off-policy instability.
+
+Critic work is controlled separately.  Let $K_V$ be critic steps per actor
+step.  Increase $K_V$ only when held-out explained variance, calibration, or
+ensemble disagreement indicates critic lag, up to a fixed $K_{\max}$.  SAO's
+reported choice of two critic updates per actor update is a strong default
+\citep{hou2026sao}; \method makes the ratio conditional rather than universal.
+
+\subsection{Outcome-conditioned sampling changes the objective}
+
+A failure-only queue is a curriculum and can bias the training distribution.
+We mix it with the base sampler so every base stratum has probability at least
+$q_{\min}$.  Each root logs its selection probability $q(x)$ and reference
+probability $p_0(x)$.  When the target is the base distribution, the actor loss
+uses a clipped propensity weight
+\begin{equation}
+  w(x)=\min\!\left(w_{\max},\frac{p_0(x)}{q(x)}\right).
+  \label{eq:propensity}
+\end{equation}
+If $q(x)$ is not identifiable (for example, an open-ended environment creates
+new tasks), the run is labeled curriculum optimization rather than presented
+as an unbiased estimator.  Untouched held-out evaluation remains mandatory.
+
+\section{Existing GRPO Evidence}
+\label{sec:evidence}
+
+This section reports a deterministic re-analysis of checked-in experiment
+artifacts; it contains no PPO or SAO run.  The source contains 2,525 rows but
+505 unique $(\text{seed},\text{problem})$ keys because probabilities repeat
+across group settings.  No key has conflicting success probabilities.
+
+\subsection{Pass@G and contrastive yield are the same event accounting}
+
+Let each prompt have single-sample success probability $p_x$.  For binary
+rewards and $G$ conditionally independent samples,
+\begin{equation}
+  \mathrm{ZVF}_G=E_x[p_x^G+(1-p_x)^G].
+  \label{eq:zvf}
+\end{equation}
+Define pass@$G=1-\E_x[(1-p_x)^G]$ and define
+$\mathrm{pass}^{G}=\E_x[p_x^G]$ as the probability that all $G$ samples pass.
+Then
+\begin{equation}
+  \mathrm{pass@}G-\mathrm{pass}^{G}=1-\mathrm{ZVF}_G.
+  \label{eq:duality}
+\end{equation}
+The left side is exactly the probability mass of groups containing both a
+success and a failure, which is precisely the group-relative contrast GRPO
+can use.  Across $G=2,\ldots,16$ and 505 unique tasks, the maximum numerical
+discrepancy was $1.11\times10^{-16}$.
+
+\begin{proposition}[Polarization increases flat groups]
+For $G\geq2$, $f_G(p)=p^G+(1-p)^G$ is convex on $[0,1]$.  Therefore, among
+prompt-probability distributions with equal mean, a mean-preserving spread
+cannot decrease expected ZVF.
+\end{proposition}
+The proof is in Appendix~\ref{app:proofs}.  This explains why improving easy
+prompts while making hard prompts harder can raise average reward yet reduce
+contrastive training yield.
+
+\begin{table}[t]
+\centering
+\caption{Equal-mean polarization audit at $G=5$.  The second cohort is a
+constructed mean-preserving polarized comparison, not a training run.}
+\label{tab:polarization}
+\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Cohort \& mean $p$ \& $\operatorname{Var}(p)$ \& ZVF \& $1-$ZVF \\
+\midrule
+Observed middle ($n=505$) \& 0.6743 \& 0.0369 \& 0.2680 \& 0.7320 \\
+Equal-mean polarized ($n=1000$) \& 0.6743 \& 0.1140 \& 0.5876 \& 0.4124 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On the observed uncertain-middle cohort, $(1-\mathrm{ZVF})/\sqrt{G}$ is
+maximized at $G=4$.  The $G=4$ minus $G=5$ difference is 0.00177 with a
+95\% bootstrap interval $[0.00082,0.00270]$; $G=4$ wins all 5,000 bootstrap
+resamples.  This is a conditional allocation result for this cohort and
+utility, not a claim that $G=4$ is globally optimal.
+
+\subsection{The current escalation rule mostly spends on solved groups}
+
+The controller trace contains four methods, 40 steps, and 16 prompts per step
+($4\times40\times16=2{,}560$ observations).  It fired 1,867 times.  Table
+\ref{tab:controller-audit} shows the boundary split.
+
+\begin{table}[t]
+\centering
+\caption{Audited escalation events.  ``Recovered contrast'' is descriptive
+under the logged escalation; it is not held-out reward improvement.}
+\label{tab:controller-audit}
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Boundary \& Fires \& Share of fires \& Mean recovered contrast \\
+\midrule
+All correct \& 1,723 \& 92.3\% \& 0.513 \\
+All wrong \& 144 \& 7.7\% \& 0.634 \\
+\midrule
+Total \& 1,867 \& 100\% \& -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+An all-wrong-only counterfactual would remove 92.3\% of these escalation
+events.  The audit does \emph{not} establish that accuracy would be preserved:
+all-correct samples may still regularize the policy or protect against
+forgetting.  This uncertainty motivates a causal matched-budget comparison of
+symmetric escalation, failure-only retry, and failure-only retry plus solved
+retirement/distillation.
+
+\section{Preregistered Evaluation Contract for PPO and SAO}
+\label{sec:prereg}
+
+The following tests are specified before collecting controller outcomes.
+Pilot data may set thresholds and estimate variance, but it is excluded from
+the confirmatory comparison and thresholds are frozen afterward.
+
+\subsection{Hypotheses and falsification criteria}
+
+\paragraph{H1: diagnostic validity.}
+Within algorithm and training phase, root EGM should predict the sampled
+geometry-aware norm in Eq.~\eqref{eq:gun} better than reward alone, raw
+advantage variance alone, or clip fraction alone.  H1 fails if paired
+out-of-sample $R^2$ does not improve over the best baseline or if EGM bins are
+not monotone in the probability of a nonzero gradient norm.
+
+\paragraph{H2: cause-aware allocation.}
+At matched rollout tokens and environment calls, failure-only retry plus
+solved retirement/distillation should improve held-out success per million
+rollout tokens over symmetric low-signal resampling.  H2 fails if the paired
+95\% confidence interval includes zero on the preregistered primary metric.
+
+\paragraph{H3: refresh beats trust-region widening.}
+For high-PAM/low-GSR roots, fresh-policy recollection should outperform wider
+PPO/DIS clipping at matched generated tokens, measured by stability-adjusted
+held-out success.  H3 fails if refresh does not improve success or if it
+increases collapse/hack rate enough to lose the composite endpoint.
+
+\paragraph{H4: root routing avoids compaction bias.}
+On compacted agent traces, root-level routing should reduce the association
+between number of chunks and selection probability while preserving or
+improving held-out reward.  H4 fails if chunk-level routing performs at least
+as well without measurable compaction bias.
+
+\subsection{Arms, controls, and budgets}
+
+For each algorithm-task cell, compare:
+\begin{enumerate}[leftmargin=*,itemsep=2pt]
+  \item \textbf{Base}: the published or repository baseline;
+  \item \textbf{Symmetric}: retry any low-EGM root, matching the original GRPO
+  escalation semantics;
+  \item \textbf{Failure-only}: retry only failed-starved roots;
+  \item \textbf{Boundary-aware}: failure-only retry plus solved retirement or
+  distillation; and
+  \item \textbf{Full triage}: boundary-aware routing plus critic-only and
+  fresh-policy transport-starvation actions.
+\end{enumerate}
+The GRPO/PPO isolation cell uses the same Qwen3-8B initialization, GSM8K split,
+LoRA rank 4, tokenizer, reward, maximum length, and five seeds.  The agentic
+cell uses an open Qwen3-30B-A3B checkpoint with a fixed scaffold and a public
+SWE-Bench Verified split, matching SAO's published scale where feasible
+\citep{hou2026sao}.  If resource constraints require a smaller model, that
+change is made for all arms and recorded before confirmatory runs.
+
+Primary budgets are generated action tokens and environment calls.  Actor
+forward/backward FLOPs and wall-clock time are secondary budget views.  Each
+arm receives identical maximums and an identical base-stream floor.  Every
+root logs model version, lag, behavior log-probability, token ratio, advantage,
+gate, reward, value prediction, chunk count, selection propensity, invalid
+flag, and route.
+
+\subsection{Endpoints and analysis}
+
+The primary endpoint is held-out success per million generated action tokens.
+Secondary endpoints are held-out pass@1 and pass@k, root-macro ZUF, token-micro
+PAM/GSR/EGM, sampled GUN, critic explained variance and calibration error,
+actor KL, stale-token fraction, effective updates per wall-clock hour, reward
+hack rate, and collapse incidence.  Results use seed-paired differences,
+prompt-clustered bootstrap intervals, and both intention-to-route and
+as-routed analyses.  Hyperparameters and exclusion rules are frozen in a
+machine-readable manifest before the confirmatory run.
+
+\section{Related Work}
+
+PPO introduced the clipped policy surrogate used widely in RLHF
+\citep{schulman2017ppo,ouyang2022training}; GAE provides its standard
+bias-variance tradeoff for critic advantages \citep{schulman2016gae}.
+GRPO removes the learned critic by normalizing rewards within prompt groups
+\citep{shao2024deepseekmath}, a design later popularized in reasoning systems
+\citep{deepseekai2025r1}.  REINFORCE-style baselines such as RLOO offer another
+critic-free route \citep{ahmadian2024back}.
+
+Recent work attacks rollout cost from complementary directions.  CERO treats
+cross-epoch rollout allocation as an online resource-allocation problem
+\citep{zong2026cero}.  BASIS shares information across a batch while using one
+rollout per prompt \citep{gong2026basis}.  A Monte Carlo pass@k critic supplies
+token-level credit for single-rollout PPO \citep{che2026single}.  These methods
+improve the source or allocation of advantage information.  Our focus is the
+downstream accounting question: after baseline estimation and trust-region
+gating, which root trajectories still reach the actor, and what should the
+system do with each failure cause?
+
+SAO directly targets single-rollout asynchronous agentic RL and introduces
+strict double-sided masking, faster critic updates, frozen-attention critic
+training, and skip-observation GAE \citep{hou2026sao}.  Asynchronous actor-
+learner systems have long required off-policy correction
+\citep{mnih2016asynchronous,espeholt2018impala}; recent scaling-law work studies
+the interaction between staleness and learning rate in asynchronous RLHF
+\citep{song2026staleness}.  \method is complementary: it treats staleness as
+one observable cause of signal non-survival and routes it without relaxing the
+base optimizer's stability rule.
+
+\section{Limitations and Broader Impact}
+
+\paragraph{Submission non-claims.}
+This workshop-short manuscript does not report PPO or SAO training results.
+Instrumentation and preregistration under
+\texttt{platform\_hybrid/experiments/signal\_starvation/} are shipped so those
+runs can be executed later; their absence does not weaken the GRPO-grounded
+diagnostic or the evaluation contract stated above.
+
+First, EGM is not an improvement guarantee.  It ignores score-vector geometry,
+optimizer preconditioning, gradient interference across roots, and the
+possibility that a large gradient is harmful.  Periodic GUN measurement and
+held-out reward are therefore necessary.  Second, critic errors can make the
+semantic split wrong: a low advantage may reflect miscalibration rather than
+true saturation.  The critic-lag route and calibration diagnostics reduce but
+do not eliminate this risk.
+
+Third, the binary solved/failed framing is cleanest for verifiable rewards.
+Dense or multi-objective environments require vector-valued boundary rules and
+careful reward-scale normalization.  Fourth, retry curricula change data
+exposure.  Propensity weighting can have high variance and may be impossible
+in an open task generator; such runs must be labeled as curriculum learning.
+Fifth, the current empirical section is GRPO-only and mostly arithmetic.  The
+PPO/SAO generalization remains unverified until the evaluation contract is
+executed.  Finally, adaptive hard-example sampling can amplify unsafe or
+adversarial behaviors.  Invalid/hack quarantine, a base-stream floor, capped
+retries, and fixed held-out safety evaluation are required guardrails.
+
+\section{Conclusion}
+
+GRPO flat groups, PPO clipping, and SAO double-sided masking look like separate
+pathologies because they occur at different stages.  At the actor interface,
+they share a simple structure: an advantage must be generated and then survive
+the trust-region gate.  PAM, GSR, EGM, and root ZUF make that structure
+observable.  The resulting controller is intentionally asymmetric: retry
+failed starvation, retire solved saturation, repair the critic when credit is
+unreliable, refresh the policy when useful evidence is stale, and quarantine
+corrupted rewards.  Existing GRPO artifacts establish the accounting identity
+and motivate the asymmetry; matched-budget PPO and SAO experiments must decide
+whether it improves learning.  That separation between verified evidence and
+testable proposal is the central methodological commitment of this work.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\appendix
+
+\section{Proofs and Derivations}
+\label{app:proofs}
+
+\subsection{PPO's sign-dependent gate}
+
+For $A_t>0$, Eq.~\eqref{eq:ppo} equals the constant
+$(1+\epsilon)A_t$ whenever $\rho_t>1+\epsilon$, so its policy gradient is zero.
+Below that boundary it equals $\rho_tA_t$.  For $A_t<0$, the minimum reverses
+which branch is active: the loss is constant below $1-\epsilon$ and remains
+$\rho_tA_t$ otherwise.  This yields Eq.~\eqref{eq:ppo-gate}, ignoring the
+measure-zero nondifferentiable boundary.
+
+\subsection{Pass@G/ZVF identity}
+
+Conditioned on $p_x$, an all-success group occurs with probability $p_x^G$,
+an all-failure group with probability $(1-p_x)^G$, and a contrastive group
+with the remaining probability.  Averaging over prompts gives
+\begin{align*}
+  \mathrm{pass@}G-\mathrm{pass}^{G}
+  &=\left(1-\E_x[(1-p_x)^G]\right)-\E_x[p_x^G]\\
+  &=1-\E_x[p_x^G+(1-p_x)^G]\\
+  &=1-\mathrm{ZVF}_G.
+\end{align*}
+
+\subsection{Polarization proposition}
+
+For $G\geq2$,
+\begin{equation*}
+  f_G''(p)=G(G-1)\left(p^{G-2}+(1-p)^{G-2}\right)\geq0.
+\end{equation*}
+Thus $f_G$ is convex.  If $P'$ is a mean-preserving spread of $P$, then $P'$ 
+dominates $P$ in convex order, so $\E[f_G(P')]\geq\E[f_G(P)]$.  By
+Eq.~\eqref{eq:zvf}, expected ZVF cannot decrease.
+
+\section{Implementation Contract}
+\label{app:implementation}
+
+\subsection{Minimum log schema}
+
+Each action token should record
+\texttt{root\_trajectory\_id}, \texttt{chunk\_id}, \texttt{token\_index},
+\texttt{behavior\_model\_version}, \texttt{learner\_model\_version},
+\texttt{logp\_behavior}, \texttt{logp\_current}, \texttt{advantage},
+\texttt{gate}, and \texttt{is\_action\_token}.  Each root should record
+reward components, value prediction, critic uncertainty, invalid/hack reason,
+sampling propensity, route, retry count, generated tokens, environment calls,
+and wall-clock latency.  Observations are excluded from actor EGM in
+skip-observation agentic training.
+
+\subsection{Numerical checks}
+
+The implementation should assert:
+\begin{enumerate}[leftmargin=*]
+  \item $0\leq\gsr\leq1$ and $\egm=\pam\,\gsr$ to numerical tolerance;
+  \item PPO gates match Eq.~\eqref{eq:ppo-gate} for all four sign/boundary
+  combinations;
+  \item SAO gates are zero on both sides of the DIS interval;
+  \item flat GRPO groups have PAM and EGM equal to zero;
+  \item root aggregation is invariant to a lossless repartition into chunks;
+  \item actor epochs stop on the same batch when GSR falls below threshold;
+  \item base-stream probability never falls below $q_{\min}$; and
+  \item invalid roots never enter retry or actor-update queues.
+\end{enumerate}
+
+\subsection{Reference integration points}
+
+The repository's compact PPO implementation computes ratios, clipped surrogate
+losses, approximate KL, clip fractions, and the new detached PAM/GSR/EGM
+diagnostics in
+\path{platform_hybrid/experiments/implementations/cleanrl_ppo_math.py}. The
+framework-independent formulas, trace analyzer, boundary tests, and frozen
+machine-readable contract live in
+\path{platform_hybrid/experiments/signal_starvation/}. This is executable
+instrumentation on a small arithmetic PPO implementation, not evidence for
+language-model PPO, SAO, or GLM-5.2. Production conclusions require the
+matched-budget experiments in Section~\ref{sec:prereg}.
+
+\section{Reproducibility and Evidence Ledger}
+\label{app:ledger}
+
+The deterministic audit is reproduced from the repository root with:
+\begin{verbatim}
+python3 analysis/breakthroughs_2026-07-13/analyze_breakthroughs.py
+\end{verbatim}
+It reads:
+\begin{itemize}[leftmargin=*]
+  \item \path{platform_hybrid/experiments/results/zvf_iter46_per_prompt_isog.tsv};
+  \item \path{platform_hybrid/experiments/results/p5p8/p7_iter203_emp_per_obs.tsv};
+  \item \path{platform_hybrid/experiments/results/berkeley/passk_reliability_curve.tsv}.
+\end{itemize}
+The generated summary is
+\path{analysis/breakthroughs_2026-07-13/summary.json}.  The audit explicitly
+marks causal held-out improvement, global $G=4$ optimality, and performance
+preservation under all-wrong-only routing as not established.
+
+\section{Decision Rules for Negative Results}
+
+The proposed controller should be rejected or revised under any of the
+following outcomes:
+\begin{itemize}[leftmargin=*]
+  \item EGM fails to predict sampled gradient norm beyond clip fraction and
+  advantage variance;
+  \item failure-only routing improves training reward but reduces untouched
+  held-out success, indicating curriculum overfit;
+  \item solved retirement causes measurable forgetting that distillation or a
+  base-stream floor cannot repair;
+  \item critic-only routing increases value explained variance without
+  improving actor endpoints, indicating a misaligned critic target;
+  \item refresh consumes more tokens than it recovers in surviving signal; or
+  \item root-level routing does not reduce chunk-count selection bias.
+\end{itemize}
+Publishing these failures would still test the paper's central premise: a
+diagnostic should earn control authority through prospective evidence rather
+than through an appealing retrospective decomposition.
+
+
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Trajectory Batch};
+    \node [box2, right=of n1] (n2) {\textbf{Potential Advantage Mass (PAM) Distribution}\\PAM Calculator};
+    \node [box3, right=of n2] (n3) {Advantage Distribution};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Potential Advantage Mass (PAM) Distribution}. Distribution of advantage magnitudes across training trajectories.}
+\label{fig:n01_pam_distribution}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Gradient Tokens};
+    \node [box2, right=of n1] (n2) {\textbf{Gradient Survival Ratio (GSR) Vanishing Flow}\\GSR Decay Engine};
+    \node [box3, right=of n2] (n3) {Surviving Gradient Mass};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Gradient Survival Ratio (GSR) Vanishing Flow}. Mechanism of gradient signal decay under token clipping.}
+\label{fig:n01_gsr_vanishing}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Rollout Batch};
+    \node [box2, right=of n1] (n2) {\textbf{Effective Gradient Mass (EGM) State Transition}\\EGM State Evaluator};
+    \node [box3, right=of n2] (n3) {State Transition Matrix};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Effective Gradient Mass (EGM) State Transition}. Transition matrix between zero and non-zero EGM states.}
+\label{fig:n01_egm_transition}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Failed Trajectory};
+    \node [box2, right=of n1] (n2) {\textbf{TRIAGE-RL Action Router 5-Way Classification}\\5-Way Cause Classifier};
+    \node [box3, right=of n2] (n3) {Assigned Action Route};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{TRIAGE-RL Action Router 5-Way Classification}. Classifying rollout failures into five distinct causal categories.}
+\label{fig:n01_triage_classification}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Diagnostic Telemetry};
+    \node [box2, right=of n1] (n2) {\textbf{Critic Lag vs Transport Error Diagnostic Seams}\\Seam Diagnostic Module};
+    \node [box3, right=of n2] (n3) {Pinpointed Error Cause};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Critic Lag vs Transport Error Diagnostic Seams}. Distinguishing critic estimation lag from data transport bottlenecks.}
+\label{fig:n01_critic_transport}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Trajectory Buffer};
+    \node [box2, right=of n1] (n2) {\textbf{Stale Rollout Refresh vs Standard Policy Update}\\Staleness Checker};
+    \node [box3, right=of n2] (n3) {Refresh vs Update Action};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Stale Rollout Refresh vs Standard Policy Update}. Branching logic for refreshing stale trajectory buffers.}
+\label{fig:n01_stale_refresh}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Rollout Rewards};
+    \node [box2, right=of n1] (n2) {\textbf{Zero-Variance Fraction (ZVF) Diagnostic Pipeline}\\ZVF Metric Calculator};
+    \node [box3, right=of n2] (n3) {Zero-Variance Ratio};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Zero-Variance Fraction (ZVF) Diagnostic Pipeline}. Real-time calculation of zero-variance rollout fraction.}
+\label{fig:n01_zvf_pipeline}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Training Arms Grid};
+    \node [box2, right=of n1] (n2) {\textbf{Multi-Arm Controlled Exploration Protocol}\\Exploration Scheduler};
+    \node [box3, right=of n2] (n3) {Optimized Training Policy};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Multi-Arm Controlled Exploration Protocol}. Controlled exploration protocol across multiple training arms.}
+\label{fig:n01_multiarm_exploration}
+\end{figure}
+
+
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Trajectory Batch};
+    \node [b2, right=of n1] (n2) {\textbf{Potential Advantage Mass Distribution}\\PAM Calculator};
+    \node [b3, right=of n2] (n3) {Advantage Distribution};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Potential Advantage Mass Distribution}. Distribution of advantage magnitudes across training trajectories.}
+\label{fig:n01_fig1}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Gradient Tokens};
+    \node [b2, right=of n1] (n2) {\textbf{Gradient Survival Ratio Vanishing Flow}\\GSR Decay Engine};
+    \node [b3, right=of n2] (n3) {Surviving Gradient Mass};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Gradient Survival Ratio Vanishing Flow}. Mechanism of gradient signal decay under token clipping.}
+\label{fig:n01_fig2}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Rollout Batch};
+    \node [b2, right=of n1] (n2) {\textbf{Effective Gradient Mass State Transition}\\EGM State Evaluator};
+    \node [b3, right=of n2] (n3) {State Transition Matrix};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Effective Gradient Mass State Transition}. Transition matrix between zero and non-zero EGM states.}
+\label{fig:n01_fig3}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Failed Trajectory};
+    \node [b2, right=of n1] (n2) {\textbf{TRIAGE-RL Action Router Classification}\\5-Way Cause Classifier};
+    \node [b3, right=of n2] (n3) {Assigned Action Route};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{TRIAGE-RL Action Router Classification}. Classifying rollout failures into five distinct causal categories.}
+\label{fig:n01_fig4}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Diagnostic Telemetry};
+    \node [b2, right=of n1] (n2) {\textbf{Critic Lag vs Transport Error Diagnostic Seams}\\Seam Diagnostic Module};
+    \node [b3, right=of n2] (n3) {Pinpointed Error Cause};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Critic Lag vs Transport Error Diagnostic Seams}. Distinguishing critic estimation lag from data transport bottlenecks.}
+\label{fig:n01_fig5}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Trajectory Buffer};
+    \node [b2, right=of n1] (n2) {\textbf{Stale Rollout Refresh vs Standard Policy Update}\\Staleness Checker};
+    \node [b3, right=of n2] (n3) {Refresh vs Update Action};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Stale Rollout Refresh vs Standard Policy Update}. Branching logic for refreshing stale trajectory buffers.}
+\label{fig:n01_fig6}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Rollout Rewards};
+    \node [b2, right=of n1] (n2) {\textbf{Zero-Variance Fraction Diagnostic Pipeline}\\ZVF Metric Calculator};
+    \node [b3, right=of n2] (n3) {Zero-Variance Ratio};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Zero-Variance Fraction Diagnostic Pipeline}. Real-time calculation of zero-variance rollout fraction.}
+\label{fig:n01_fig7}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Training Arms Grid};
+    \node [b2, right=of n1] (n2) {\textbf{Multi-Arm Controlled Exploration Protocol}\\Exploration Scheduler};
+    \node [b3, right=of n2] (n3) {Optimized Training Policy};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Multi-Arm Controlled Exploration Protocol}. Controlled exploration protocol across multiple training arms.}
+\label{fig:n01_fig8}
+\end{figure}
+
+
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Trajectory Batch};
+    \node [b2, right=of n1] (n2) {\textbf{Potential Advantage Mass Distribution}\\PAM Calculator};
+    \node [b3, right=of n2] (n3) {Advantage Distribution};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Potential Advantage Mass Distribution}. Distribution of advantage magnitudes across training trajectories.}
+\label{fig:n01_fig1}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Gradient Tokens};
+    \node [b2, right=of n1] (n2) {\textbf{Gradient Survival Ratio Vanishing Flow}\\GSR Decay Engine};
+    \node [b3, right=of n2] (n3) {Surviving Gradient Mass};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Gradient Survival Ratio Vanishing Flow}. Mechanism of gradient signal decay under token clipping.}
+\label{fig:n01_fig2}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Rollout Batch};
+    \node [b2, right=of n1] (n2) {\textbf{Effective Gradient Mass State Transition}\\EGM State Evaluator};
+    \node [b3, right=of n2] (n3) {State Transition Matrix};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Effective Gradient Mass State Transition}. Transition matrix between zero and non-zero EGM states.}
+\label{fig:n01_fig3}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Failed Trajectory};
+    \node [b2, right=of n1] (n2) {\textbf{TRIAGE-RL Action Router Classification}\\5-Way Cause Classifier};
+    \node [b3, right=of n2] (n3) {Assigned Action Route};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{TRIAGE-RL Action Router Classification}. Classifying rollout failures into five distinct causal categories.}
+\label{fig:n01_fig4}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Diagnostic Telemetry};
+    \node [b2, right=of n1] (n2) {\textbf{Critic Lag vs Transport Error Diagnostic Seams}\\Seam Diagnostic Module};
+    \node [b3, right=of n2] (n3) {Pinpointed Error Cause};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Critic Lag vs Transport Error Diagnostic Seams}. Distinguishing critic estimation lag from data transport bottlenecks.}
+\label{fig:n01_fig5}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Trajectory Buffer};
+    \node [b2, right=of n1] (n2) {\textbf{Stale Rollout Refresh vs Standard Policy Update}\\Staleness Checker};
+    \node [b3, right=of n2] (n3) {Refresh vs Update Action};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Stale Rollout Refresh vs Standard Policy Update}. Branching logic for refreshing stale trajectory buffers.}
+\label{fig:n01_fig6}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Rollout Rewards};
+    \node [b2, right=of n1] (n2) {\textbf{Zero-Variance Fraction Diagnostic Pipeline}\\ZVF Metric Calculator};
+    \node [b3, right=of n2] (n3) {Zero-Variance Ratio};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Zero-Variance Fraction Diagnostic Pipeline}. Real-time calculation of zero-variance rollout fraction.}
+\label{fig:n01_fig7}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Training Arms Grid};
+    \node [b2, right=of n1] (n2) {\textbf{Multi-Arm Controlled Exploration Protocol}\\Exploration Scheduler};
+    \node [b3, right=of n2] (n3) {Optimized Training Policy};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Multi-Arm Controlled Exploration Protocol}. Controlled exploration protocol across multiple training arms.}
+\label{fig:n01_fig8}
+\end{figure}
+
+
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Trajectory Batch};
+    \node [b2, right=of n1] (n2) {\textbf{Potential Advantage Mass Distribution}\\PAM Calculator};
+    \node [b3, right=of n2] (n3) {Advantage Distribution};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Potential Advantage Mass Distribution}. Distribution of advantage magnitudes across training trajectories.}
+\label{fig:n01_fig1}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Gradient Tokens};
+    \node [b2, right=of n1] (n2) {\textbf{Gradient Survival Ratio Vanishing Flow}\\GSR Decay Engine};
+    \node [b3, right=of n2] (n3) {Surviving Gradient Mass};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Gradient Survival Ratio Vanishing Flow}. Mechanism of gradient signal decay under token clipping.}
+\label{fig:n01_fig2}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Rollout Batch};
+    \node [b2, right=of n1] (n2) {\textbf{Effective Gradient Mass State Transition}\\EGM State Evaluator};
+    \node [b3, right=of n2] (n3) {State Transition Matrix};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Effective Gradient Mass State Transition}. Transition matrix between zero and non-zero EGM states.}
+\label{fig:n01_fig3}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Failed Trajectory};
+    \node [b2, right=of n1] (n2) {\textbf{TRIAGE-RL Action Router Classification}\\5-Way Cause Classifier};
+    \node [b3, right=of n2] (n3) {Assigned Action Route};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{TRIAGE-RL Action Router Classification}. Classifying rollout failures into five distinct causal categories.}
+\label{fig:n01_fig4}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Diagnostic Telemetry};
+    \node [b2, right=of n1] (n2) {\textbf{Critic Lag vs Transport Error Diagnostic Seams}\\Seam Diagnostic Module};
+    \node [b3, right=of n2] (n3) {Pinpointed Error Cause};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Critic Lag vs Transport Error Diagnostic Seams}. Distinguishing critic estimation lag from data transport bottlenecks.}
+\label{fig:n01_fig5}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Trajectory Buffer};
+    \node [b2, right=of n1] (n2) {\textbf{Stale Rollout Refresh vs Standard Policy Update}\\Staleness Checker};
+    \node [b3, right=of n2] (n3) {Refresh vs Update Action};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Stale Rollout Refresh vs Standard Policy Update}. Branching logic for refreshing stale trajectory buffers.}
+\label{fig:n01_fig6}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Rollout Rewards};
+    \node [b2, right=of n1] (n2) {\textbf{Zero-Variance Fraction Diagnostic Pipeline}\\ZVF Metric Calculator};
+    \node [b3, right=of n2] (n3) {Zero-Variance Ratio};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Zero-Variance Fraction Diagnostic Pipeline}. Real-time calculation of zero-variance rollout fraction.}
+\label{fig:n01_fig7}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Training Arms Grid};
+    \node [b2, right=of n1] (n2) {\textbf{Multi-Arm Controlled Exploration Protocol}\\Exploration Scheduler};
+    \node [b3, right=of n2] (n3) {Optimized Training Policy};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Multi-Arm Controlled Exploration Protocol}. Controlled exploration protocol across multiple training arms.}
+\label{fig:n01_fig8}
+\end{figure}
+
+\end{document}

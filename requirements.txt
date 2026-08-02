@@ -2,23 +2,25 @@
 # TinkerRL Lab - Pinned Dependencies for Reproducibility
 # =============================================================================
 # Install: pip install -r requirements.txt
-# Generated: 2026-04-13
-# Python: 3.10+
+# Pinned to the frozen E1 runtime lock (see execution-notes.md frozen-runtime
+# record; validated 106/106 on this stack). These exact pins are what the
+# Dockerfile reproduces — do not widen without re-freezing the record.
+# Python: 3.11/3.12 frozen runtime (Dockerfile base installs 3.10; see note below)
 # =============================================================================
 
-# --- Core ML Frameworks ---
-torch>=2.5.0
-numpy>=2.1.0
+# --- Core ML Frameworks (E1-locked) ---
+torch==2.7.1
+numpy==2.2.6
 scipy>=1.12.0,<1.14.0
 
-# --- HuggingFace Ecosystem ---
-transformers>=4.56.2,<4.60.0
-trl>=1.0.0,<1.2.0
-datasets>=3.0.0,<3.2.0
-accelerate>=1.0.0,<1.2.0
-peft>=0.13.0,<0.15.0
+# --- HuggingFace Ecosystem (E1-locked) ---
+transformers==5.5.4
+trl==1.2.0
+datasets==4.8.4
+accelerate==1.13.0
+peft==0.19.1
 safetensors>=0.4.0,<0.5.0
-huggingface-hub>=0.26.0,<0.28.0
+huggingface-hub==1.11.0
 tokenizers>=0.22.0,<0.24.0
 
 # --- RL Libraries ---
@@ -43,8 +45,8 @@ seaborn>=0.13.0,<0.14.0
 pandas>=2.1.0,<2.3.0
 scikit-learn>=1.5.0,<1.7.0
 
-# --- Experiment Tracking ---
-wandb>=0.18.0,<0.20.0
+# --- Experiment Tracking (E1-locked) ---
+wandb==0.21.0
 codecarbon>=2.0.0
 
 # --- Web Server (Atropos) ---

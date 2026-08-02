@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Structural publication-worthiness checks for the canonical 18-paper roster.
+"""Structural publication-worthiness checks for the active manuscript roster.
 
-Drives real on-disk manuscript paths (not re-implemented scores). Used by
-unit tests and by the goal verification harness.
+Independent venue candidates only (12). Former companions R01/R02/R06/R07/U01/P08
+are archived under platform_hybrid/paper/archive/absorbed/ — not live roots.
 """
 from __future__ import annotations
 
@@ -14,7 +14,8 @@ from pathlib import Path
 # Repo root: platform_hybrid/paper/scripts/ -> ../../../
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
-ROSTER: dict[str, str] = {
+# Live independent venue-candidate roots only
+ACTIVE_ROSTER: dict[str, str] = {
     "P01": "platform_hybrid/paper/paper_P1_scaling.tex",
     "P02": "platform_hybrid/paper/paper_P2_zvf.tex",
     "P03": "platform_hybrid/paper/paper_P3_group_size.tex",
@@ -22,110 +23,70 @@ ROSTER: dict[str, str] = {
     "P05": "platform_hybrid/paper/paper_P5_minreport.tex",
     "P06": "platform_hybrid/paper/paper_P6_registry.tex",
     "P07": "platform_hybrid/paper/paper_P7_zvf_controller.tex",
-    "P08": "platform_hybrid/paper/paper_P8_fraud.tex",
-    "R01": "platform_hybrid/paper/acm_main.tex",
-    "R02": "platform_hybrid/paper/neurips_2026_variants/main_zvf.tex",
     "R03": "platform_hybrid/paper/neurips_2026_variants/main_workshop.tex",
     "R04": "platform_hybrid/paper/neurips_2026_variants/main_dnb.tex",
     "R05": "zvf-program/theory/zvf_theory.tex",
-    "R06": "zvf-program/position/min_report_rl.tex",
-    "R07": "zvf-program/registry/grpo_registry.tex",
     "R08": "zvf-program/audit/reproducibility_audit.tex",
-    "U01": "platform_hybrid/paper/main.tex",
     "N01": "platform_hybrid/paper/unified_signal_starvation/main.tex",
 }
 
-# Pure companions / parked / non-venue — absorbed into parents; not independent tops
+# Former independent IDs → parent + archive directory (relative to repo)
+ABSORBED_ARCHIVED: dict[str, tuple[str, str]] = {
+    "R01": ("R04", "platform_hybrid/paper/archive/absorbed/R01_acm"),
+    "R02": ("P02", "platform_hybrid/paper/archive/absorbed/R02_main_zvf"),
+    "R06": ("P05", "platform_hybrid/paper/archive/absorbed/R06_min_report"),
+    "R07": ("P06", "platform_hybrid/paper/archive/absorbed/R07_grpo_registry"),
+    "U01": ("thesis+R04", "platform_hybrid/paper/archive/absorbed/U01_main_compendium"),
+    "P08": ("thesis", "platform_hybrid/paper/archive/absorbed/P08_fraud"),
+}
+
+# Former live paths that must NOT exist (independent versions removed)
+FORBIDDEN_LIVE_PATHS: tuple[str, ...] = (
+    "platform_hybrid/paper/acm_main.tex",
+    "platform_hybrid/paper/neurips_2026_variants/main_zvf.tex",
+    "zvf-program/position/min_report_rl.tex",
+    "zvf-program/registry/grpo_registry.tex",
+    "platform_hybrid/paper/main.tex",
+    "platform_hybrid/paper/paper_P8_fraud.tex",
+)
+
+# Back-compat aliases
+ROSTER = ACTIVE_ROSTER
+INDEPENDENT_SET: frozenset[str] = frozenset(ACTIVE_ROSTER)
 OUT_OF_SET: dict[str, str] = {
-    "R01": "ABSORBED → R04 (ACM regenerate of tiered artifact)",
-    "R02": "ABSORBED → P02 (short ZVF vehicle; same evidence)",
-    "R06": "ABSORBED → P05 (condensed position; retires at submit)",
-    "R07": "ABSORBED → P06 (condensed registry; retires at submit)",
-    "U01": "ABSORBED → thesis + R04 (evidence bank; not a venue paper)",
-    "P08": "ABSORBED → thesis (parked fraud side study; appendix only)",
+    k: f"ABSORBED → {parent} (archived at {path})"
+    for k, (parent, path) in ABSORBED_ARCHIVED.items()
 }
+ABSORPTION: dict[str, str] = {k: v[0] for k, v in ABSORBED_ARCHIVED.items()}
 
-# Absorbed ID → parent vehicle ID(s)
-ABSORPTION: dict[str, str] = {
-    "R01": "R04",
-    "R02": "P02",
-    "R06": "P05",
-    "R07": "P06",
-    "U01": "thesis+R04",
-    "P08": "thesis",
-}
-
-# On-disk absorption markers required in absorbed satellite sources
-ABSORPTION_MARKERS: dict[str, list[tuple[str, str]]] = {
-    "R01": [
-        (
-            "platform_hybrid/paper/acm_main.tex",
-            r"Absorption \(roster R01\)",
-        ),
-    ],
-    "R02": [
-        (
-            "platform_hybrid/paper/neurips_2026_variants/main_zvf.tex",
-            r"Absorption \(roster R02\)",
-        ),
-    ],
-    "R06": [
-        (
-            "zvf-program/position/min_report_rl.tex",
-            r"Absorption \(roster R06\)",
-        ),
-    ],
-    "R07": [
-        (
-            "zvf-program/registry/grpo_registry.tex",
-            r"Absorption \(roster R07\)",
-        ),
-    ],
-    "U01": [
-        (
-            "platform_hybrid/paper/main.tex",
-            r"Absorption \(roster U01\)",
-        ),
-    ],
-    "P08": [
-        (
-            "platform_hybrid/paper/sections/p8_abstract.tex",
-            r"Absorption \(roster P08\)",
-        ),
-    ],
-}
-
-# Parent papers must declare absorbed satellites
+# Parent papers must declare retired absorbed satellites
 PARENT_ABSORPTION_MARKERS: dict[str, list[tuple[str, str]]] = {
     "P02": [
         (
             "platform_hybrid/paper/sections/p2_abstract.tex",
-            r"Absorbed satellite",
+            r"Absorbed satellite \(retired\)|archive/absorbed/R02",
         ),
     ],
     "P05": [
         (
             "platform_hybrid/paper/sections/p5_abstract.tex",
-            r"Absorbed satellite",
+            r"Absorbed satellite \(retired\)|archive/absorbed/R06",
         ),
     ],
     "P06": [
         (
             "platform_hybrid/paper/sections/p6_abstract.tex",
-            r"Absorbed satellite",
+            r"Absorbed satellite \(retired\)|archive/absorbed/R07",
         ),
     ],
     "R04": [
         (
             "platform_hybrid/paper/neurips_2026_variants/sections/abstract_dnb.tex",
-            r"Absorbed satellites",
+            r"Absorbed satellites \(retired\)|archive/absorbed/R01",
         ),
     ],
 }
 
-INDEPENDENT_SET: frozenset[str] = frozenset(ROSTER) - frozenset(OUT_OF_SET)
-
-# Claim-boundary anchors required after goal improvements (paths relative to repo)
 CLAIM_BOUNDARY_MARKERS: dict[str, list[tuple[str, str]]] = {
     "P01": [
         (
@@ -179,7 +140,6 @@ CLAIM_BOUNDARY_MARKERS: dict[str, list[tuple[str, str]]] = {
     ],
 }
 
-# Patterns that would indicate fabricated run IDs in score prose
 FABRICATED_RUN_PATTERNS = [
     r"\brun[_-]?id\s*[:=]\s*fake",
     r"\bfabricated\s+run\b",
@@ -197,24 +157,46 @@ def out_of_set() -> dict[str, str]:
 
 def check_roster_partition() -> list[str]:
     errors: list[str] = []
-    if len(ROSTER) != 18:
-        errors.append(f"roster size {len(ROSTER)} != 18")
-    if len(INDEPENDENT_SET) + len(OUT_OF_SET) != 18:
-        errors.append("in+out != 18")
-    if INDEPENDENT_SET & set(OUT_OF_SET):
-        errors.append(f"overlap: {INDEPENDENT_SET & set(OUT_OF_SET)}")
-    missing = set(ROSTER) - INDEPENDENT_SET - set(OUT_OF_SET)
-    if missing:
-        errors.append(f"unassigned IDs: {missing}")
+    if len(ACTIVE_ROSTER) != 12:
+        errors.append(f"active roster size {len(ACTIVE_ROSTER)} != 12")
+    if len(ABSORBED_ARCHIVED) != 6:
+        errors.append(f"absorbed count {len(ABSORBED_ARCHIVED)} != 6")
+    if INDEPENDENT_SET & set(ABSORBED_ARCHIVED):
+        errors.append(f"overlap: {INDEPENDENT_SET & set(ABSORBED_ARCHIVED)}")
     return errors
 
 
 def check_primary_sources_exist(root: Path = REPO_ROOT) -> list[str]:
     errors: list[str] = []
-    for id_, rel in ROSTER.items():
+    for id_, rel in ACTIVE_ROSTER.items():
         path = root / rel
         if not path.is_file():
-            errors.append(f"{id_}: missing primary source {rel}")
+            errors.append(f"{id_}: missing active primary source {rel}")
+    return errors
+
+
+def check_live_paths_removed(root: Path = REPO_ROOT) -> list[str]:
+    """Independent versions of absorbed papers must not remain at live paths."""
+    errors: list[str] = []
+    for rel in FORBIDDEN_LIVE_PATHS:
+        if (root / rel).exists():
+            errors.append(f"absorbed independent root still live: {rel}")
+    return errors
+
+
+def check_archives_present(root: Path = REPO_ROOT) -> list[str]:
+    errors: list[str] = []
+    readme = root / "platform_hybrid/paper/archive/absorbed/README.md"
+    if not readme.is_file():
+        errors.append("missing archive/absorbed/README.md")
+    for id_, (parent, rel) in ABSORBED_ARCHIVED.items():
+        d = root / rel
+        if not d.is_dir():
+            errors.append(f"{id_}: missing archive dir {rel}")
+            continue
+        tex_files = list(d.rglob("*.tex"))
+        if not tex_files:
+            errors.append(f"{id_}: archive dir has no .tex: {rel}")
     return errors
 
 
@@ -237,7 +219,6 @@ def _check_marker_table(
 
 
 def check_claim_boundaries(root: Path = REPO_ROOT) -> list[str]:
-    """Require venue claim-boundary text for IDs lifted by claim narrowing."""
     errors: list[str] = []
     for id_ in CLAIM_BOUNDARY_MARKERS:
         if id_ not in INDEPENDENT_SET:
@@ -247,19 +228,10 @@ def check_claim_boundaries(root: Path = REPO_ROOT) -> list[str]:
 
 
 def check_absorption_markers(root: Path = REPO_ROOT) -> list[str]:
-    """Require absorption notes on satellites and parent vehicles."""
     errors: list[str] = []
-    if set(ABSORPTION) != set(OUT_OF_SET):
-        errors.append(
-            f"ABSORPTION keys {set(ABSORPTION)} != OUT_OF_SET {set(OUT_OF_SET)}"
-        )
-    if set(ABSORPTION_MARKERS) != set(OUT_OF_SET):
-        errors.append("ABSORPTION_MARKERS must cover every out-of-set ID")
-    errors.extend(_check_marker_table(ABSORPTION_MARKERS, root, "absorption"))
     errors.extend(
         _check_marker_table(PARENT_ABSORPTION_MARKERS, root, "parent-absorption")
     )
-    # PAPERS_README must document the map
     readme = root / "platform_hybrid/paper/PAPERS_README.md"
     if not readme.is_file():
         errors.append("missing PAPERS_README.md")
@@ -267,10 +239,9 @@ def check_absorption_markers(root: Path = REPO_ROOT) -> list[str]:
         text = readme.read_text(encoding="utf-8", errors="replace")
         if "Absorption map" not in text:
             errors.append("PAPERS_README.md missing Absorption map section")
-        for child, parent in ABSORPTION.items():
-            if f"**ABSORBED →" not in text and "ABSORBED" not in text:
-                errors.append(f"PAPERS_README missing ABSORBED labels")
-                break
+        if "archive/absorbed" not in text:
+            errors.append("PAPERS_README.md must point at archive/absorbed")
+        for child in ABSORBED_ARCHIVED:
             if child not in text:
                 errors.append(f"PAPERS_README missing absorbed ID {child}")
     abs_md = root / "platform_hybrid/paper/ABSORPTION.md"
@@ -283,7 +254,6 @@ def parse_scores_after(path: Path) -> dict[str, str]:
     """Map ID -> tier string from paper_scores_after.md table rows."""
     text = path.read_text(encoding="utf-8", errors="replace")
     tiers: dict[str, str] = {}
-    # Rows like: | P05 | in | 5 | ... | **publication-worthy now** | ...
     for line in text.splitlines():
         if not line.strip().startswith("|"):
             continue
@@ -291,9 +261,8 @@ def parse_scores_after(path: Path) -> dict[str, str]:
         if len(cells) < 8:
             continue
         id_cell = cells[0].replace("*", "").strip()
-        if id_cell not in ROSTER:
+        if id_cell not in ACTIVE_ROSTER and id_cell not in ABSORBED_ARCHIVED:
             continue
-        # Find tier cell containing "publication-worthy" / "conditionally" / "not worthy"
         tier = ""
         for c in cells:
             cl = c.replace("*", "").lower()
@@ -303,7 +272,7 @@ def parse_scores_after(path: Path) -> dict[str, str]:
             if "conditionally worthy" in cl:
                 tier = "conditionally worthy"
                 break
-            if "not worthy" in cl:
+            if "not worthy" in cl or "archived" in cl or "absorbed" in cl:
                 tier = "not worthy as standalone"
                 break
         if tier:
@@ -313,10 +282,7 @@ def parse_scores_after(path: Path) -> dict[str, str]:
 
 def parse_rank_after_count(path: Path) -> int | None:
     text = path.read_text(encoding="utf-8", errors="replace")
-    m = re.search(
-        r"In-set rated publication-worthy now:\D*?(\d+)",
-        text,
-    )
+    m = re.search(r"In-set rated publication-worthy now:\D*?(\d+)", text)
     if m:
         return int(m.group(1))
     m = re.search(
@@ -348,27 +314,18 @@ def check_score_artifacts(
         return [f"missing rank file: {rank_path}"]
 
     tiers = parse_scores_after(scores_path)
-    for id_ in ROSTER:
+    for id_ in ACTIVE_ROSTER:
         if id_ not in tiers:
-            errors.append(f"scores_after missing ID {id_}")
-    for id_ in INDEPENDENT_SET:
-        tier = tiers.get(id_)
-        if tier != "publication-worthy now":
+            errors.append(f"scores_after missing active ID {id_}")
+        elif tiers[id_] != "publication-worthy now":
             errors.append(
-                f"in-set {id_} tier is {tier!r}, expected publication-worthy now"
+                f"active {id_} tier is {tiers.get(id_)!r}, expected publication-worthy now"
             )
-    for id_ in OUT_OF_SET:
-        tier = tiers.get(id_)
-        if tier == "publication-worthy now":
-            # Out-of-set may still be high quality but must not be required as independent tops;
-            # allow "now" only if labeled companion elsewhere — we require not standalone independent.
-            # Strict: out-of-set should be "not worthy as standalone"
-            if tier != "not worthy as standalone":
-                errors.append(
-                    f"out-of-set {id_} should be not-standalone, got {tier!r}"
-                )
+    # Absorbed IDs, if present, must not be scored as independent "now"
+    for id_ in ABSORBED_ARCHIVED:
+        if tiers.get(id_) == "publication-worthy now":
+            errors.append(f"archived {id_} must not be publication-worthy now")
 
-    # fabricated run IDs
     blob = scores_path.read_text(encoding="utf-8", errors="replace") + rank_path.read_text(
         encoding="utf-8", errors="replace"
     )
@@ -384,10 +341,10 @@ def check_score_artifacts(
             f"rank_after count {count} != independent-set size {len(INDEPENDENT_SET)}"
         )
 
-    # double-count language
     rank_text = rank_path.read_text(encoding="utf-8", errors="replace")
     if "Double-count" not in rank_text and "double-count" not in rank_text:
-        errors.append("rank_after missing double-count section")
+        if "absorb" not in rank_text.lower() and "archive" not in rank_text.lower():
+            errors.append("rank_after missing double-count/absorption section")
     return errors
 
 
@@ -399,6 +356,8 @@ def run_all_checks(
     errors: list[str] = []
     errors.extend(check_roster_partition())
     errors.extend(check_primary_sources_exist(root))
+    errors.extend(check_live_paths_removed(root))
+    errors.extend(check_archives_present(root))
     errors.extend(check_claim_boundaries(root))
     errors.extend(check_absorption_markers(root))
     errors.extend(check_score_artifacts(scores_path, rank_path))
@@ -407,24 +366,9 @@ def run_all_checks(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--scores",
-        type=Path,
-        default=None,
-        help="path to paper_scores_after.md",
-    )
-    parser.add_argument(
-        "--rank",
-        type=Path,
-        default=None,
-        help="path to publication_worthiness_rank_after.md",
-    )
-    parser.add_argument(
-        "--root",
-        type=Path,
-        default=REPO_ROOT,
-        help="repository root",
-    )
+    parser.add_argument("--scores", type=Path, default=None)
+    parser.add_argument("--rank", type=Path, default=None)
+    parser.add_argument("--root", type=Path, default=REPO_ROOT)
     args = parser.parse_args(argv)
     errors = run_all_checks(args.root, args.scores, args.rank)
     if errors:
@@ -433,12 +377,12 @@ def main(argv: list[str] | None = None) -> int:
             print(" -", e)
         return 1
     print("PASS")
-    print(f"INDEPENDENT_SET_SIZE={len(INDEPENDENT_SET)}")
-    print(f"OUT_OF_SET_SIZE={len(OUT_OF_SET)}")
-    print("INDEPENDENT_SET=" + ",".join(sorted(INDEPENDENT_SET)))
+    print(f"ACTIVE_ROSTER_SIZE={len(ACTIVE_ROSTER)}")
+    print(f"ABSORBED_ARCHIVED_SIZE={len(ABSORBED_ARCHIVED)}")
+    print("ACTIVE_ROSTER=" + ",".join(sorted(ACTIVE_ROSTER)))
     print(
         "ABSORPTION="
-        + ",".join(f"{k}->{v}" for k, v in sorted(ABSORPTION.items()))
+        + ",".join(f"{k}->{v[0]}@{v[1]}" for k, v in sorted(ABSORBED_ARCHIVED.items()))
     )
     return 0
 

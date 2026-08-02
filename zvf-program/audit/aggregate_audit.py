@@ -219,6 +219,52 @@ def _paired_t_power_from_ncp(
 
 
 @functools.lru_cache(maxsize=None)
+def _student_t_critical_one_sided(degrees_freedom: int, alpha: float) -> float:
+    target = 1.0 - alpha
+    lower, upper = 0.0, 2.0
+    while _student_t_cdf(upper, degrees_freedom) < target:
+        upper *= 2.0
+    for _ in range(55):
+        middle = (lower + upper) / 2.0
+        if _student_t_cdf(middle, degrees_freedom) < target:
+            lower = middle
+        else:
+            upper = middle
+    return (lower + upper) / 2.0
+
+
+def paired_t_power_one_sided(
+    standardized_effect: float, sample_size: int, alpha: float
+) -> float:
+    """Exact one-sided paired-t power against a standardized mean effect."""
+    degrees_freedom = sample_size - 1
+    critical = _student_t_critical_one_sided(degrees_freedom, alpha)
+    noncentrality = standardized_effect * math.sqrt(sample_size)
+    scale = math.sqrt(degrees_freedom)
+    return _chi_radius_expectation(
+        degrees_freedom,
+        lambda radius: 1.0
+        - _normal_cdf(critical * radius / scale - noncentrality),
+    )
+
+
+def minimum_paired_t_sample_size(
+    standardized_effect: float,
+    alpha: float,
+    target_power: float,
+    maximum: int = 10000,
+) -> int:
+    """Smallest n whose exact one-sided paired-t power reaches target_power."""
+    for sample_size in range(2, maximum + 1):
+        if (
+            paired_t_power_one_sided(standardized_effect, sample_size, alpha)
+            >= target_power
+        ):
+            return sample_size
+    raise ValueError("no sample size up to the maximum reaches the target power")
+
+
+@functools.lru_cache(maxsize=None)
 def _standardized_paired_t_mde(
     sample_size: int, alpha: float, target_power: float
 ) -> float:

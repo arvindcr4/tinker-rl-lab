@@ -41,16 +41,23 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LC_ALL=C.UTF-8
 
 # --- System deps --------------------------------------------------------------
+# Python 3.12 matches the frozen runtime validated 106/106 (execution-notes.md
+# frozen-runtime record) and the project's requires-python>=3.11. Ubuntu 22.04
+# ships 3.10, so install 3.12 via the deadsnakes PPA.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        python3.10 python3.10-venv python3.10-dev python3-pip \
+        software-properties-common gnupg \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get update && apt-get install -y --no-install-recommends \
+        python3.12 python3.12-venv python3.12-dev \
         git git-lfs curl wget ca-certificates \
         build-essential pkg-config \
         jq tini \
     && rm -rf /var/lib/apt/lists/* \
     && git lfs install --system
 
-RUN update-alternatives --install /usr/bin/python  python  /usr/bin/python3.10 1 && \
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
+RUN update-alternatives --install /usr/bin/python  python  /usr/bin/python3.12 1 && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1 && \
+    python -m ensurepip --upgrade
 
 # --- Workdir ------------------------------------------------------------------
 WORKDIR /workspace/tinker-rl-lab

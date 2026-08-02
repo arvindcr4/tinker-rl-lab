@@ -4,6 +4,8 @@
 % Build: pdflatex paper_P1_scaling ; bibtex paper_P1_scaling ; pdflatex x2
 % =============================================================================
 \documentclass{article}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows.meta,positioning,calc}
 \input{sections/_shared_preamble}
 \title{Limits of Scaling Laws for GRPO Post-Training:\\
        A Cross-Library, Cross-Scale Audit}
@@ -33,4 +35,206 @@
 \input{sections/p1_conclusion}
 \bibliographystyle{plainnat}
 \bibliography{references}
+
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Rollout Generator};
+    \node [b2, right=of n1] (n2) {\textbf{GRPO Rollout Scaling Grid}\\Scaling Evaluator};
+    \node [b3, right=of n2] (n3) {Policy Update};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{GRPO Rollout Scaling Grid}. Multi-seed rollout batching architecture.}
+\label{fig:p01_f1}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Pass@k Metric};
+    \node [b2, right=of n1] (n2) {\textbf{Pass@k Advantage Factorization}\\Advantage Calculator};
+    \node [b3, right=of n2] (n3) {Gradient Scaling};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Pass@k Advantage Factorization}. Factorizing advantage estimation under Pass@k.}
+\label{fig:p01_f2}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Group Size G};
+    \node [b2, right=of n1] (n2) {\textbf{Group-Size Noise Boundary}\\Noise Evaluator};
+    \node [b3, right=of n2] (n3) {Stable Horizon};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Group-Size Noise Boundary}. Noise threshold as group size G increases.}
+\label{fig:p01_f3}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Token Budget};
+    \node [b2, right=of n1] (n2) {\textbf{Token-Matched Sweep Matrix}\\Sweep Engine};
+    \node [b3, right=of n2] (n3) {Optimal Frontier};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Token-Matched Sweep Matrix}. Comparing fixed token budgets across group sizes.}
+\label{fig:p01_f4}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Seed Array};
+    \node [b2, right=of n1] (n2) {\textbf{Multi-Seed Variance Reduction}\\Variance Calculator};
+    \node [b3, right=of n2] (n3) {Confidence Interval};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Multi-Seed Variance Reduction}. Variance reduction curve across random seeds.}
+\label{fig:p01_f5}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Model Parameters};
+    \node [b2, right=of n1] (n2) {\textbf{Empirical Pass@1 Scaling Frontier}\\Scaling Estimator};
+    \node [b3, right=of n2] (n3) {Pass@1 Frontier};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Empirical Pass@1 Scaling Frontier}. Empirical scaling law for Pass@1 accuracy.}
+\label{fig:p01_f6}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Token Pool};
+    \node [b2, right=of n1] (n2) {\textbf{Token-Matched Rollout Allocation}\\Resource Scheduler};
+    \node [b3, right=of n2] (n3) {Allocated Rollouts};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Token-Matched Rollout Allocation}. Resource allocation pipeline for rollout tokens.}
+\label{fig:p01_f7}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Exploration Rate};
+    \node [b2, right=of n1] (n2) {\textbf{Exploration-Exploitation Tradeoff Curve}\\Tradeoff Evaluator};
+    \node [b3, right=of n2] (n3) {Optimized Policy};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Exploration-Exploitation Tradeoff Curve}. Tradeoff curve between rollout exploration and policy update.}
+\label{fig:p01_f8}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Task Scores};
+    \node [b2, right=of n1] (n2) {\textbf{Task Difficulty Stratification Matrix}\\Tier Stratifier};
+    \node [b3, right=of n2] (n3) {Stratified Clusters};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Task Difficulty Stratification Matrix}. Categorizing benchmarks into difficulty tiers.}
+\label{fig:p01_f9}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Benchmark Tasks};
+    \node [b2, right=of n1] (n2) {\textbf{End-to-End GRPO Scaling Benchmark Flow}\\GRPO Scaling Suite};
+    \node [b3, right=of n2] (n3) {Certified Scaling Law};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{End-to-End GRPO Scaling Benchmark Flow}. Complete pipeline for GRPO empirical scaling evaluation.}
+\label{fig:p01_f10}
+\end{figure}
+
 \end{document}

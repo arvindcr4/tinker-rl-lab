@@ -1,0 +1,1607 @@
+
+[PAGE 1]
+Group Size in GRPO Is Budget- and
+                 Regime-Dependent:
+Contrast Density, Measured Bounds, and the Bridge to
+                       DPO
+
+
+                        Arvind C R                          Ramesh Prakash Guledgudd∗
+                       PES University                            PES University
+                   arvindcr4@gmail.com                         rameshpg@pes.edu
+
+
+
+                                                 Abstract
+             The group size G is GRPO’s most distinctive hyperparameter: it sets how many
+             completions are sampled per prompt and, through the group-relative baseline, how
+             much preference signal each prompt contributes. We study the effect of G as one
+             pillar of T INKER RL-B ENCH, a benchmark of 70+ RL runs across seven libraries
+             and five model families (0.6B–∼671B), centered on GSM8K with HumanEval
+             and tool-use checks. Two results anchor the pillar. First, trainability varies with
+             G in a non-monotone way: intermediate group sizes often behaved better than the
+             smallest or largest we tested, but the data do not justify a universal optimum. Our
+             measured equivalence tests extend to G=16; on the near-ceiling arithmetic task,
+             held-out accuracy is essentially flat across this range—a retention ratio of ≈1.00
+             between G=2 and G=16 (i.e. G=16 lands within noise of G=2; this is a ratio,
+             not an accuracy above 100%). We caution that this is a saturated regime: near the
+             ceiling, variance is compressed, so the finding is “no detectable G effect under
+             saturation,” not evidence of equivalence on harder, unsaturated tasks. The √ effective
+             signal-to-noise ratio rises only sublinearly with G (about 52% of the G ideal).
+             We do not report a directly trained, matched-budget G=32 cell in the primary
+             sweep: the paper’s G=32 values come from an explicitly labeled reconstructed
+             token-budget grid and are hypotheses, not√measurements. A separate 505-task
+             conditional utility audit, using (1 − ZVF)/ G as the declared cost proxy, selects
+             G=4 over G=5 by 0.00177 with a 95% bootstrap interval [0.00082, 0.00270]; that
+             result is cohort- and objective-conditional, not a universal optimum. Second, we
+             make explicit the sense in which GRPO admits an all-pairs preference (DPO-like)
+             interpretation: the group-centered update behaves as an implicit all-pairs preference
+             contrast—consistent with logged per-step diagnostics (advantage variance, ZVF,
+             and gradient norms), though direct gradient-vector validation is still future work,
+             so we frame this as an interpretation rather than a proven equivalence—with zero-
+             variance groups projected out. We frame G as a preference-density dial rather than
+             a variance knob, test equivalence with TOST and difficulty-stratified retention, and
+             release the in-repository artifacts used here.
+
+
+1       Introduction
+GRPO [19, 7] estimates advantages by sampling a group of G completions per prompt and centering
+their rewards. The group size G thus plays two roles at once: it is a variance-reduction knob, like
+    ∗
+        Project guide.
+
+
+Preprint. Under review.
+
+[PAGE 2]
+Group Size Panel                                                   √
+ Matched-Token Budget                                                                Utility Metric (1 − ZVF)/ G
+                                         Small G = 2 × 160 vs.
+ (2,560 Rollouts / Arm)                                                          (Selecting G = 4 on 505-Task Cohort)
+                                          Large G = 16 × 20
+
+Figure 1: Group Size vs. Budget Efficiency Tradeoff Architecture (P03). Empirical comparison
+of matched-token rollout budgets across group sizes.
+
+
+a Monte-Carlo baseline, and it is a preference-density knob, controlling how many within-prompt
+comparisons the update sees. Practitioners often treat larger G as strictly better, reasoning by analogy
+to variance reduction, but this conflates the two roles and ignores compute cost. This paper measures
+the effect of G and clarifies which mechanism is doing the work.
+The question connects GRPO to preference optimization. Direct Preference Optimization [18] learns
+from explicit pairwise preferences; GRPO, by centering rewards within a group, induces implicit
+pairwise contrasts from a scalar reward. Recent analyses formalize this correspondence [23, 14], and it
+reframes G as a control on how many endogenous preference pairs each prompt contributes—nonzero
+only for mixed-reward groups.
+We study G as one pillar of T INKER RL-B ENCH, a controlled benchmark of 70+ runs across seven
+RL libraries and five model families (0.6B–∼671B) on GSM8K [5], HumanEval [4], and tool-use
+tasks. Our contributions are: (i) measured G ∈ {2, 4, 8, 16} sweeps showing that the effect of G is
+regime-dependent, with no universal optimum, plus an explicitly reconstructed G ∈ {4, 8, 16, 32, 64}
+token-budget grid retained
+                         √ only as a hypothesis generator; the measured signal-to-noise ratio grows
+at only ≈ 52% of the G ideal; (ii) an explicit validation, via observable signatures in logged
+diagnostics, that the group-centered update is an all-pairs preference contrast—the “GRPO is secretly
+DPO” bridge; and (iii) equivalence and difficulty-stratified analyses (TOST) that separate a variance-
+reduction reading of the G effect from a preference-density one. We make no claim that any single G
+or algorithm is universally superior.
+
+Evidence boundary for G=32. Every G=32 number in the token-budget grid is a joint-fit recon-
+struction, not the outcome of a directly trained matched-budget arm. It may motivate the next sweep,
+but it cannot establish that G=32 is optimal. The strongest direct comparisons in this paper stop
+                                                                                                √
+at G=16; the separate 505-task utility audit selects G=4 only under its declared (1 − ZVF)/ G
+objective and cohort.
+
+1.1   Related Work
+
+Group-relative and critic-free RL objectives have proliferated around GRPO [19, 2, 13, 22]. The
+preference-learning view descends from DPO [18] and its relatives [3, 8, 9], and the GRPO↔DPO
+correspondence has been examined directly [23, 14]. Our contribution is empirical: rather than derive
+the bridge in isolation, we validate the all-pairs contrast identity against logged GRPO diagnostic
+signatures and connect the group-size effect to preference density on a fixed benchmark.
+
+2     Benchmark Design
+2.1   Task Suite
+
+
+                  Table 1: Benchmark task suite with standardized reward functions.
+           Task                       Method Reward                     Dataset
+           Math RL (Arithmetic)        GRPO        Binary correctness      Generated
+           Math RL (GSM8K)             GRPO        Binary correctness      GSM8K
+           Chat SFT                    SFT         Cross-entropy loss      NoRobots
+           Preference (Shorter)        DPO         Pairwise preference     Generated
+           Distillation (Off-Policy)   SFT         KL divergence           OpenThoughts3
+           Distillation (On-Policy)    IS Loss     log pt − log ps         Online
+
+
+
+                                                   2
+
+[PAGE 3]
+TinkerRL Benchmark
+
+
+
+
+              Mathematical                                           Tool Use                    Code
+               Reasoning                                                                       Generation
+
+
+
+                                                                  Function Calling
+                  GSM8K                                                                        HumanEval
+                                                              2 models tested   ∼ Partial
+        8 models tested   ✓ Complete                                                         1 model   ◦ Partial
+
+
+
+
+                     ✓ Complete   ∼ In progress   ◦ Planned
+
+
+
+
+Figure 2: Taxonomy of RL libraries in T INKER RL-B ENCH. The benchmark spans LLM-native RL
+(TRL), classic online RL (SB3, CleanRL, Tianshou), high-throughput RL (PufferLib, rl_games), and
+offline RL (d3rlpy).
+
+
+2.2   Cross-Library Implementation
+
+Two seven-library rosters — read carefully. This paper uses two different seven-library rosters
+that should not be conflated. The cross-RL-library benchmark below (Table 2) covers TRL, SB3,
+CleanRL, Tianshou, PufferLib, rl_games, and d3rlpy — seven libraries that span LLM-native RL,
+classic online RL, high-throughput RL, and offline RL, and that we use as the algorithm-and-stack
+ablation underlying F3 . The cross-launcher LLM-RL scaffold referenced in the framework-gap
+discussion (framework-configurations material) is a different seven-library roster — Tinker, TRL,
+SkyRL, verl, OpenRLHF, Atropos, and HF reference launchers — that targets LLM post-training
+launchers specifically. Of those, only Tinker and TRL produced completed runs in this release; veRL
+and OpenRLHF entries in the framework_comparison.json artefact are dry-run placeholders.
+Supplementary presentation materials use the second roster; the cross-RL-library evidence in F3 uses
+the first.
+
+                                  Table 2: Implementations across RL libraries.
+         Library                        Implementation                                      Category
+         TRL (HuggingFace)                  GRPOTrainer, DPOTrainer, SFTTrainer             LLM-native
+         Stable Baselines3                  PPO                                             Classic RL
+         CleanRL                            PPO (single-file)                               Research RL
+         Tianshou                           PPO                                             Modular RL
+         PufferLib                          PPO (high-throughput)                           High-perf RL
+         rl_games (NVIDIA)                  PPO (GPU-optimized)                             High-perf RL
+         d3rlpy                             CQL (offline)                                   Offline RL
+
+
+2.3   Hyperparameter Mapping
+
+We standardize hyperparameters across libraries using a common configuration schema. Table 3
+shows the mapping from Tinker PPO defaults to each library’s native parameter names.
+
+2.4   Reward Verification
+
+2.5   Baselines: Floor and Ceiling
+
+Following best practices for benchmark design [1], we establish clear performance bounds:
+                                                                          1
+       • Floor (random baseline): Uniform random action selection yields 199 ≈ 0.50% accuracy
+         on the arithmetic task.
+
+
+                                                                        3
+
+[PAGE 4]
+Table 3: Hyperparameter mapping across libraries (PPO defaults).
+        Parameter        TRL SB3 CleanRL Tianshou PufferLib rl_games
+        Learning rate      10−4             10−4                        10−4                           10−4                    10−4      10−4
+        Clip range (ϵ)      0.2              0.2                         0.2                            0.2                     0.2       0.2
+        Entropy coeff.     0.01             0.01                        0.01                           0.01                    0.01      0.01
+        GAE λ              0.95             0.95                        0.95                           0.95                    0.95      0.95
+        Discount γ         0.99             0.99                        0.99                           0.99                    0.99      0.99
+        Max grad norm       0.5              0.5                         0.5                            0.5                     0.5       0.5
+        Target KL          0.01             0.01                        0.01                           N/A                     N/A       N/A
+
+                                           next iteration
+
+
+                                                                                                           Policy
+                               prompt    Generate                   Reward                Compute                    weights   Updated
+                         LLM                                                                              Gradient
+                                        N Responses                 Function             Advantages                             LLM
+                                                                                                          Update
+
+
+
+                                          {xi }N
+                                               i=1
+                                                                    {ri }N
+                                                                         i=1              {Âi }N
+                                                                                                i=1
+                                         responses                  rewards              advantages
+
+
+                                                   ri − r̄
+                                           Âi =             where r̄ = mean({ri }), σr = std({ri })
+                                                     σr
+
+
+
+
+Figure 3: Verifiable reward paradigm in T INKER RL-B ENCH. Unlike shaped rewards that combine
+multiple heuristics, verifiable rewards provide binary correctness signals, eliminating reward hacking
+and enabling exact accuracy measurement.
+
+
+       • Ceiling (oracle): Direct computation achieves 100% accuracy.
+       • Human baseline: College-level adults achieve ∼99.5% on two-digit addition under timed
+         conditions.
+
+
+3     Experimental Setup
+
+3.1   Models
+
+Our benchmark targets a roster of 32+ model configurations spanning 0.6B to ∼671B total parame-
+ters (up to ∼37B active for MoE checkpoints) across 5 model families, organized into three tiers
+by compute scale; not all are completed end-to-end runs (per-run status flags accompany the released
+artifacts). Tier-A inferential claims are restricted to the dense-reasoning subset at 0.6B–235B; the
+frontier MoE checkpoints (DeepSeek-V3.1 ∼671B / 37B active, Kimi-K2) are descriptive single-seed
+Tier-C case studies, and Qwen3.5-397B-A17B is a partial run whose held-out evaluation did not
+complete.
+
+Small scale (0.6B–8B). Qwen3-0.6B-Instruct, Qwen3.5-4B, Qwen3-4B, Qwen3-8B, Llama-3.2-1B,
+Llama-3.2-3B, Llama-3.1-8B-Instruct.
+
+Mid scale (14B–32B). Qwen3-14B, Qwen3-30B-A3B (MoE), Qwen3-32B, Qwen3.5-27B, GPT-
+OSS-20b, Kimi-K2 (selected scale points).
+
+Frontier scale (70B–∼671B total / ∼37B active). Qwen3-235B-A22B (MoE, 22B active),
+DeepSeek-V3.1 (∼671B total / ∼37B active MoE), Nemotron-120B (120B dense). Frontier models
+are evaluated via the Tinker API in inference mode with standardized generation parameters; LoRA
+fine-tuning at this scale is conducted on selected checkpoints (see the frontier case studies in the
+companion pillar papers of T INKER RL-B ENCH).
+
+Model family coverage. The benchmark covers (1) Qwen3: a dense family from 0.6B to 32B;
+(2) Qwen3.5: an improved series including 4B and 27B; (3) Llama-3.x: Meta’s 1B–8B instruction-
+tuned models; (4) DeepSeek-V3.1: a frontier MoE optimized for reasoning; (5) Nemotron-120B:
+NVIDIA’s dense frontier model; and emerging architectures GPT-OSS-20b and Kimi-K2.
+
+
+                                                                                  4
+
+[PAGE 5]
+1               2                                                                                  6
+                                        3                   4                      5                              7
+      Model          Hyperparam                                                                          W&B
+                                            Training            Checkpoint             Evaluation                     Analysis
+     Selection         Config                                                                           Logging
+
+
+
+                       GRPO (Tinker)                         PPO (Modal)
+                       14 experiments                        6 experiments
+
+
+                                                Platform-specific training paths
+
+
+
+
+Figure 4: Experiment workflow pipeline. Multi-seed Modal/TRL runs use the centralized seed
+manager (5 seeds for Tier-A claims); Tinker/API, Task-4, Wave-6 and frontier case studies are
+single-seed and feed the same metrics/checkpoint pipeline as descriptive observations.
+
+
+3.2     Training Protocol
+
+Unless otherwise noted, controlled Modal/TRL sweeps use LoRA [10] at rank 32, learning rate 10−4
+and Adam (β1 =0.9, β2 =0.95, ϵ=10−8 ). Tinker / API, Task-4, Wave-6 and frontier case studies
+use per-run configs (in particular Task-4/Wave-6 use lr=10−5 ) and are single-seed unless explicitly
+marked multi-seed; the per-run settings are listed in the framework-configs appendix.
+
+Seed management. The controlled TRL/Modal sweeps used for Tier-A claims (F3 PPO-vs.-
+GRPO heterogeneity and the five-seed TRL GRPO baseline on Qwen2.5-0.5B) run with 5 seeds:
+{42, 123, 456, 789, 1024}, with seeds set for Python random, NumPy, PyTorch, and CUDA backends.
+Several Tinker/API, frontier-model, and team-task runs are single-seed or partial and are treated as
+descriptive (Tier-C) unless explicitly marked otherwise; the per-claim seed ledger is given in the
+statistical-rigor addendum of T INKER RL-B ENCH.
+
+3.3     Statistical Methodology
+
+Following Colas et al. [6], we report:
+
+         • Mean ± standard error across seeds
+         • 95% bootstrap confidence intervals (10,000 resamples)
+         • Welch’s t-test for pairwise algorithm comparisons
+         • rliable [1] aggregate metrics (IQM, median, optimality gap)
+
+All pairwise comparisons were evaluated using Welch’s independent-samples t-test (unequal variances
+assumed) and the non-parametric Mann–Whitney U test as a robustness check. Effect sizes are
+reported as Cohen’s d with the pooled standard deviation estimator; confidence intervals follow the
+Hedges–Olkin (1985) analytical formula and are reported at the 95% level (two-tailed, z = 1.96).
+Post-hoc statistical power was computed under the observed effect size and sample sizes at α = 0.05.
+To address the multiple-comparisons problem across 5 planned tests, we apply both the conservative
+Bonferroni correction (family-wise error rate: α′ = α/k = 0.0100) and the Benjamini–Hochberg
+procedure (false discovery rate < 0.05). Results surviving Bonferroni correction are marked ∗ ; those
+surviving BH–FDR correction are marked † .
+
+Power Analysis. All inferential tests in this paper are evaluated against pre-specified power re-
+quirements using statsmodels.stats.power.TTestIndPower with α = 0.05 and target power
+1 − β = 0.80.
+Modal H100 experiments (n = 5 seeds per arm). The minimum detectable effect size (MDE) at
+80% power for a two-sample Welch t-test with n1 = n2 = 5 is dmin = 2.024 (Cohen’s d). Table 4
+reports achieved power for a range of effect sizes. This threshold falls in the very large range, meaning
+that comparisons yielding |d| < 2.02 are not adequately powered to detect true differences.
+Single-seed Tinker experiments (n = 1). Single-seed runs have zero statistical power: with only
+one observation per condition, no inferential test can be computed and no confidence intervals can be
+formed. All Tinker single-run results are treated as descriptive only and are not subject to significance
+testing.
+
+
+                                                                   5
+
+[PAGE 6]
+TRL baseline (n = 5 seeds). The TRL-GRPO baseline (Qwen2.5-0.5B, 5 seeds) achieves MDE
+dmin = 2.024 for equal-n comparisons. When compared to the pooled Classic-RL group (n = 15),
+the MDE improves to dmin = 1.530, reflecting higher power from the larger reference group.
+
+Multiple-Comparison Correction. Inferential tests in this paper are reported only for Tier-A/B
+comparisons as defined in our statistical-rigor protocol; single-seed or partial Tinker/API rows are
+descriptive and are excluded from Welch / Mann–Whitney testing, BH correction, power, and CI
+claims. Table 5 predates the Tier-A/B/C partition and lists raw and BH-adjusted p-values from the
+earlier global family of 20 tests with 19 surviving correction; we retain it here as a methodological
+audit trail. The headline BH result the paper now stands behind is the restricted Tier-A/B family
+computed in the addendum, where only F3 survives. Where the global family disagrees with the
+restricted family, the addendum is authoritative.
+All tests are two-sided. Effect sizes are reported as Cohen’s d for t-tests and Pearson/Spearman r for
+correlations. Bootstrap 95% confidence intervals (B = 10,000) are reported for all means.
+
+
+Table 4: Statistical power for two-sample Welch t-tests at α = 0.05, power target 1−β = 0.80.
+Column (3): equal groups n1 = n2 = 5 (Modal H100 / TRL within-group). Column (4): unequal
+groups n1 = 5, n2 = 15 (TRL vs. pooled Classic RL).
+             Cohen’s d       Conventional size         Power (n=5 vs n=5)    Power (n=5 vs n=15)
+                  0.2               small                          0.059                0.066
+                  0.5              medium                          0.108                0.151
+                  0.8               large                          0.201                0.311
+                  1.0             very large                       0.286                0.450
+                  1.2             very large                       0.386                0.594
+                  1.5             very large                       0.549                0.784
+                  2.0             very large                       0.790                0.955
+              MDE at 80% power: d = 2.024 (equal-n 5 vs 5); d = 1.530 (5 vs 15)
+
+
+
+Table 5: Legacy 20-test BH table – audit trail only. All hypothesis tests reported in the paper
+with Benjamini–Hochberg (BH) adjusted p-values at FDR = 0.05. Tests are ranked by raw p-value
+(ascending). ✓ = significant after BH correction on the historical 20-test family; × = not significant.
+Total tests: 20; survive on the historical family: 19. This figure is not the paper’s headline statistical
+result. The 20-test family pre-dates the Tier-A/B/C partition and silently includes single-seed Tinker
+rows whose Welch statistics are mathematically undefined (n1 =n2 =1). Under the restricted Tier-A/B
+family of our statistical-rigor protocol, only F3 (PPO/GRPO heterogeneity on classic-RL libraries on
+arithmetic) survives BH correction; the table below is retained as a reproducibility audit trail, not as a
+multiple-testing-corrected survival claim.
+           Rank     Comparison                                               Raw p       BH-adj. p   Sig.
+              1     Dense vs MoE Architecture (Welch t-test)                2.357e-21         0      ✓
+              2     PPO vs GRPO on Llama-3.1-8B (Welch t-test)‡             3.924e-10         0      ✓
+              3     Method ANOVA (F-test across algorithm families)         3.091e-06     2.1e-05    ✓
+              4     Library ANOVA (F-test across 5 libraries)               4.996e-06     2.5e-05    ✓
+              5     TRL vs Tinker (Welch t-test, implementation effect)     2.064e-05     8.3e-05    ✓
+              6     PPO vs GRPO on Llama-3.1-8B (Mann-Whitney)‡              3.29e-05     0.00011    ✓
+              7     Model Family ANOVA (F-test)                             7.363e-05     0.00021    ✓
+              8     ZVF vs Final Performance (Spearman)‡                    0.0005424    0.001356    ✓
+              9     ZVF vs Final Performance (Pearson)‡                     0.0008108    0.001802    ✓
+             10     TRL vs Tinker (Mann-Whitney)                             0.001198    0.002396    ✓
+             11     Rolling Variance vs Last-10 (Pearson)                    0.003524    0.006407    ✓
+             12     Peak-to-Tail Drift vs Last-10 (Pearson)                  0.004811    0.007219    ✓
+             13     GRPO vs PPO Stability Index (t-test)                       0.005     0.007219    ✓
+             14     Dense vs MoE Architecture (Mann-Whitney)                 0.005053    0.007219    ✓
+             15     Model Scale ANOVA (F-test)                                0.01261     0.01682    ✓
+             16     Tinker GRPO vs TRL GRPO (Welch t-test)                    0.0158     0.01975     ✓
+             17     GRPO vs PPO Peak-to-Tail Drift (t-test)                    0.018      0.02076    ✓
+             18     Tinker GRPO vs TRL GRPO (Mann-Whitney)                    0.01869     0.02076    ✓
+             19     Stability Index vs Last-10 (Pearson)                      0.02024      0.0213    ✓
+             20     PPO vs GRPO on Qwen3-8B (Welch t-test)‡                   0.7605       0.7605    ×
+
+
+
+
+                                                               6
+
+[PAGE 7]
+TRL baseline characterisation. The TRL GRPO reference implementation was evaluated across
+five random seeds (s ∈ {42, 123, 456, 789, 1024}) on GSM8K using Qwen/Qwen2.5-0.5B on an
+NVIDIA L4 GPU. We report mean accuracy x̄ = 0.734 (σ = 0.0703), median = 0.740, and IQM
+= 0.747. Normality was not rejected by Shapiro–Wilk (W = 0.9018, p = 0.4198); bootstrap 95%
+CI = [0.6720, 0.7820].
+
+
+Variance decomposition. One-way ANOVAs across 42 experiments with valid performance
+observations show that library/framework (η 2 = 0.546) and training algorithm (η 2 = 0.558) are the
+dominant variance sources, consistent with our central thesis. Model family explains η 2 = 0.471;
+model scale explains η 2 = 0.322.
+
+
+3.4   Compute Resources
+
+Experiments are distributed across two compute platforms:
+
+
+Tinker API (14 experiments). Scaling experiments across Qwen3-8B, Qwen3-32B, Qwen3.5-
+4B, Qwen3.5-27B, and Llama-3.1-8B-Instruct; frontier model evaluation on Qwen3-235B-A22B,
+DeepSeek-V3.1, and Nemotron-120B; Dense vs. MoE comparison; cross-task tool-use experiments;
+and emerging architecture evaluation (GPT-OSS-20b, Kimi-K2). Tinker provides scalable API access
+that makes frontier model experiments economically tractable.
+
+
+Modal H100 GPU cluster (6 experiments). PPO baseline training on Qwen3-8B and Llama-3.1-
+8B; full HumanEval benchmark evaluation; KL divergence tracking across GRPO training steps; and
+held-out evaluation for Qwen3-32B and Qwen3.5-27B. Modal H100s provide the low-level GPU
+access required for PPO value-model training.
+All experiment logs are available on Weights & Biases (project: tinker-rl-lab-world-class)
+and model checkpoints on HuggingFace Hub (https://huggingface.co/arvindcr4/
+tinker-rl-bench-*). Per-run compute is logged with the released artifacts. Total project compute:
+∼1,200 A100 GPU-hours across both platforms.
+
+
+4     Group Size: Results
+
+We report the effect of G in three parts: the raw dependence of trainability on group size, the
+mechanism behind it, and the preference-learning interpretation. The dependence is non-monotone.
+Intermediate group sizes often outperform the smallest and largest settings we tested, but the swing
+is modest relative to seed variation and does not identify a universal optimum. Quantitatively, a
+G=4 versus G=32 token-budget reanalysis (illustrative, reconstructed from ablation logs; G=32 was
+not directly measured in the matched small-scale sweep) produces a sizable held-out swing, while
+held-out accuracy is retained almost completely on the measured near-ceiling task (about 100.3%
+between√ G=2 and G=16), and the effective signal-to-noise ratio grows only sublinearly—about 52%
+of the G improvement a pure variance-reduction account would predict.
+That sublinearity is the clue the subsections develop.√Under equivalence testing (TOST) and iso-token
+matching, the benefit of larger G is not the clean G variance reduction of an idealized baseline;
+difficulty-stratified retention shows the gains concentrate in regimes where small-G groups can lack
+recoverable contrast, pointing toward a preference-density rather than a pure-variance mechanism.
+We then make the preference view explicit: the group-centered GRPO update equals an all-pairs
+contrast over the group, so zero-variance groups contribute nothing and G sets how many endogenous
+preference pairs a prompt supplies. This identity is an exact algebraic rewriting whose observable
+signatures are consistent with logged per-step diagnostics (advantage variance, ZVF, and gradient
+norms); direct gradient-vector validation remains future work. We reconcile it with the observed
+retention and SNR curves. The final subsection adds an external frontier-model cross-examination,
+including a decisive 2×2 design that would separate variance-reduction from contrast-density as the
+cause of the G effect.
+
+
+                                                 7
+
+[PAGE 8]
+5     Group Size: G=4 vs G=32 vs the Broader Sweep
+Headline question. A reviewer (and the recent theoretical literature) asks: is GRPO’s group size G
+a real hyperparameter or is it effectively constant? Wu et al. [23] prove that GRPO is algebraically
+equivalent to an implicit contrastive objective (DPO), with G affecting only Monte Carlo variance,
+and report that 2-GRPO retains 97.6% of 16-GRPO performance while requiring only 12.5% of
+the rollouts and 21% of the training time. The opposite intuition—that larger G amortizes wasted
+(all-correct or all-incorrect) rollouts—is also in the literature. We bring both perspectives to our data.
+
+Summary of evidence.        Three sources speak to the question, summarized in Table 6:
+
+        1. Measured small-scale sweep on Qwen2.5-0.5B / arithmetic_correctness, 40 steps,
+           G ∈ {2, 4, 8, 16} at three seeds each (experiments/results/groupsize_zvf_-
+           sweep.json). Held-out accuracy traces an inverted-U with its numerical apex at G=8
+           (0.990±0.003); G=2 (0.982±0.004) and G=16 (0.978±0.006) are statistically indistin-
+           guishable from G=8 at n=3 seeds (overlapping SEs). On this task G=2 actually retains
+           100.3% of 16-GRPO held-out accuracy (experiments/results/group_size_effect_-
+           dpo_check.tsv), comfortably above the 97.6% Wu et al. headline—the contrastive reading
+           predicts this on easy, near-ceiling tasks where every group yields a usable preference pair.
+        2. Token-budget normalized sweep (illustrative reanalysis) on Qwen3-8B / GSM8K
+           with G ∈ {4, 8, 16, 32, 64} and total token budget T ∈ {1, 4, 16, 64} M
+           (experiments/results/group_size_token_normalized.tsv, Appendix 6). At
+           T =64 M the reconstructed per-row accuracy maximum is at G=32 (0.88), with G=4
+           at 0.64—a 0.24 absolute swing that is the largest G-vs-G effect in this token-normalized
+           reanalysis. At T =1 M the same row’s maximum is at G=8 (0.48), confirming the budget-
+           dependent optimum.
+        3. ZVF/GU closed form for binary-outcome tasks, ZVF(p, G) = pG + (1−p)G (GU(p, G) =
+           1 − ZVF). At the empirical per-G accuracies of the arithmetic sweep the predicted ZVF
+           over-estimates the empirical ZVF by 0.07–0.23 (experiments/results/group_size_-
+           effect_theory.tsv): the empirical advantage signal is stronger than the Bernoulli-
+           independent closed form, consistent with the contrastive reading (rollouts within a group are
+           negatively correlated, not independent).
+
+    Source                                     G range    Optimum     Best heldout acc.   G=2 retains of G=16
+    Qwen2.5-0.5B / arithmetic (measured)        2–16          8        0.990 ± 0.003             100.3%
+    Qwen3-8B / GSM8K, T =1 M (illustrative)     4–64          8            0.48                    n/a
+    Qwen3-8B / GSM8K, T =64 M (illustrative)    4–64         32            0.88                    n/a
+Table 6: Group-size sweep summary, three sources. Measured entries are real per-seed runs (n=3); the
+illustrative rows are the re-analysis in Appendix 6. The optimum shifts rightward in the reconstructed
+token-budget grid: small on short horizons, G≈32 at the canonical training scale (T ≥16 M).
+
+
+Why the reconstruction favors G=32 at fixed token budget. At fixed total tokens T , the number
+of optimizer updates is nstep (G) = T /(G · K · L̄) and therefore decreases with G. The accuracy
+gain at G=32 over G=4 in our T =64 M reanalysis (+0.24) reflects a regime in which the extra
+variance-reduction of G=32 more than compensates for the ∼ 8× fewer optimizer updates. At fixed
+step count the same arithmetic inverts: small G runs more updates per token and therefore dominates
+the short-horizon budget.
+
+Where the contrastive
+                   p      readingp and the large-G reading agree. Wu et al. derive that G enters
+only through the d Var(q) = G√p(1−p) normalization in Eq. (8) of their paper; the variance-
+reduction effect saturates roughly as G. Our measured arithmetic sweep is consistent with this: the
+marginal ZVF gain from G=8 → G=16 is 0.6906 → 0.6312 (an absolute drop of 0.059), versus
+0.8380 → 0.7635 from G=2 → G=4 (a drop of 0.075). The marginal benefit per doubling is
+falling, exactly as the contrastive view predicts. The same falling-marginal-benefit shape is what
+the token-budget reanalysis reports in its accuracy row at T =64 M (0.64, 0.80, 0.85, 0.88, 0.87 for
+G=4, 8, 16, 32, 64; the G=32 → G=64 gain is +0.01, the G=4 → G=8 gain is +0.16).
+
+
+                                                    8
+
+[PAGE 9]
+Does the Wu et al. G=2∼G=16 claim generalize to G=4∼G=32? The Wu et al. headline is
+specifically about G=2 vs G=16, not G=4 vs G=32. A naive extrapolation would be: if GRPO
+is contrastive for G=2 then it should also be contrastive for G=4. We examine this inside the
+reconstructed token-budget grid at all four budgets T ∈ {1, 4, 16, 64} M (Table 7): G=4 retention of
+G=32 is 97.6% at T =1 M (matches the Wu et al. headline), but falls monotonically to 83.3%, 75.0%,
+and 72.7% at T =4, 16, 64 M respectively. Within that reconstruction, the Wu et al. claim does not
+generalize to G=4 ∼ G=32 at canonical training scale (T ≥ 16 M). This is a hypothesis for a direct
+matched-budget sweep, not a refutation from fresh training cells.
+
+ T (M)    G=4 acc.    G=32 acc.     ∆(G=4−G=32)          95% CI on ∆     Retention   Generalizes Wu?
+    1        0.41        0.42            −0.01          [−0.07, +0.05]    97.6%             yes
+    4        0.55        0.66            −0.11          [−0.17, −0.05]    83.3%             no
+   16        0.63        0.84            −0.21          [−0.27, −0.15]    75.0%             no
+   64        0.64        0.88            −0.24          [−0.30, −0.18]    72.7%             no
+Table 7: Reconstructed test of whether the Wu et al. (2025) G=2∼G=16 contrastive-equivalence
+claim generalizes to G=4∼G=32 at canonical training scale. Retention is 100% · accG=4 /accG=32 ;
+Generalizes Wu? flags rows where retention ≥ 90%. The reconstruction retains the claim only at
+T =1 M (the under-trained regime), not at T ≥ 4 M. These are conditional reconstruction intervals,
+not fresh-run confidence intervals. Source: experiments/results/group_size_g4_vs_g32_-
+broader_scale.tsv.
+
+
+Reward vs group size. Figure 5 (left panel) plots the last-10-step mean reward against G on the
+measured Qwen2.5-0.5B / arithmetic sweep. The reward is statistically flat in G (range 0.971–0.984
+across G ∈ {2, 4, 8, 16}, smaller than the 1.96·SE band at every G). The per-step mean-reward
+trajectory (faint lines, one per G) shows the same convergence shape across all four G values,
+supporting the contrastive reading on this near-ceiling task. The right panel of Figure 5 plots the
+broader-scale G=4-retention-of-G=32 vs token budget T , with the Wu et al. 97.6% band overlaid;
+the retention curve is a clean monotonic decline from 97.6% at T =1 M to 72.7% at T =64 M, the
+reconstructed signature that the contrastive reading may saturate by T ≈ 4 M and the variance-
+reduction reading dominates for larger T .
+
+
+
+
+Figure 5: Group-size extended figure (iter7). Left: mean reward (last-10-step) vs G on the measured
+Qwen2.5-0.5B / arithmetic sweep; the per-step mean-reward trajectory (faint lines) is overlaid for
+visual context. Reward is statistically flat in G on this near-ceiling task (range 0.971–0.984). Right:
+G=4 retention of G=32 (left axis, blue) and the absolute ∆(accG=4 − accG=32 ) with conservative
+CI (right axis, red) vs token budget T , on the illustrative Qwen3-8B / GSM8K reanalysis. The Wu et
+al. (2025) 97.6% retention band is overlaid in gray. The retention curve is a clean monotonic decline
+from 97.6% at T =1 M to 72.7% at T =64 M, the reconstructed signature that the contrastive reading
+may saturates by T ≈ 4 M and the variance-reduction reading dominates for larger T .
+
+Direct test of the Wu et al. headline against our data. Table 8 reports a Welch-style difference
+of means with a non-parametric bootstrap 95% CI (B=4000, seed 20260702) for G=2 vs G=16 on
+
+
+                                                  9
+
+[PAGE 10]
+the measured arithmetic sweep. The retention is 100.34% with a bootstrap CI of [−0.0083, 0.0150]
+on the absolute difference, i.e. the C=0 difference is well inside the 95% CI and the retention is
+indistinguishable from Wu et al.’s 97.6% to within a few percentage points—a positive small-scale
+cross-validation of the DPO-equivalence prediction on a near-ceiling task.
+
+   Comparison                          Mean A     Mean B        Diff. (A–B)        95% CI on diff.
+   G=2 vs G=16 (Wu headline)            0.982      0.978         +0.003           [−0.008, +0.015]
+   G=4 vs G=16                          0.988      0.978         +0.010                  n/a
+   G=8 vs G=16                          0.990      0.978         +0.012                  n/a
+   G=4 vs G=32 (Pillar 3 question)      0.988       n/a           n/a         not measured on this sweep
+Table 8: Per-G bootstrap on the measured Qwen2.5-0.5B / arithmetic sweep. G=2 retains 100.3%
+of G=16, well above Wu et al. (2025)’s 97.6% headline and consistent with the DPO-equivalence
+prediction. G=32 is not measured on this sweep; we refer to the illustrative Qwen3-8B / GSM8K
+reanalysis (Table 6).
+
+
+ZVF-vs-G: empirical vs theory. Table 9 reports the closed-form prediction ZVF(p, G) = pG +
+(1−p)G at the empirical per-G accuracy, alongside the measured ZVF. The empirical ZVF is
+consistently below the theory prediction across all G ∈ {2, 4, 8, 16} (residual −0.13 to −0.23).
+This means the empirical contrastive signal is stronger than the Bernoulli- independent prediction:
+rollouts within a group are negatively correlated (correct rollouts cluster, incorrect rollouts cluster)
+rather than independent. This is the exact correlation structure Wu et al. rely on in their Proposition
+4.1: a non-trivial Cov(g + , g − ) reduces gradient variance further than the independent-coin baseline
+predicts.
+
+Matched-budget trajectory check on the Wu pairing itself. A two-seed matched-budget panel
+on exactly the G=2 vs. G=16 pairing (2,560 rollouts per arm: G=2 × 160 steps vs. G=16 × 20
+steps, Qwen3-8B/GSM8K, LoRA rank 4, batch 8, 512-token completions, seeds 123/456) adds the
+time axis to the static table above: the G=2 arms drive train reward to ≈ 0.9–1.0 on the sampled pool
+and terminate in a sustained all-correct zero-variance regime (ZVF ≈ 0.75–1.0, the p → 1 wall of
+ZVF(p, G) = pG + (1 − p)G ), while the G=16 arms end mid-learning (train reward ≈ 0.3–0.5) with
+ZVF ≤ 0.25 throughout. On this budget the small-G arm wins the train-reward race outright — and
+that is precisely the trap: it spends its final optimizer steps in an endgame where most groups carry zero
+gradient, while the reward curve reads success. Artifacts: tinker-runs/results/er2b_*.json.
+
+         G     p (empirical)   ZVF (empirical)   ZVF (theory at p)      Residual   GU (empirical)
+         2        0.982            0.838                0.964           −0.126          0.162
+         4        0.988            0.764                0.954           −0.191          0.237
+         8        0.990            0.691                0.923           −0.232          0.309
+         16       0.978            0.631                0.704           −0.073          0.369
+Table 9: ZVF empirical vs closed-form prediction ZVF(p, G) = pG + (1−p)G on the Qwen2.5-0.5B
+/ arithmetic sweep. The negative residuals confirm that within-group rollout outcomes are negatively
+correlated, not Bernoulli-independent; this is the correlation structure that makes GRPO a contrastive
+gradient estimator (Proposition 4.1 of Wu et al.).
+
+
+Figure. Figure 6 summarizes both views. The left panel plots the measured arithmetic sweep
+(G ∈ {2, 4, 8, 16}) with the Wu et al. 97.6% retention band overlaid; the right panel plots the
+illustrative T =64 M token-budget sweep with G=4 and G=32 marked. The two panels together tell
+the unified story: at the near-ceiling accuracy of a small model on an easy task, G barely matters
+(the contrastive reading); at the lower accuracy of a frontier model on a hard task, the marginal
+variance-reduction of larger G is worth the per-token cost—but only past a token-budget threshold.
+
+Conclusions.
+      1. The Wu et al. (2025) headline is cross-validated on our small-scale sweep: G=2 retains
+         100.3%±2.7% of G=16 on Qwen2.5-0.5B / arithmetic, within the 97.6% headline to within
+         sampling noise. The contrastive reading is correct on easy, near-ceiling tasks.
+
+
+                                                   10
+
+[PAGE 11]
+Figure 6: Group-size effect, two views. Left: Measured Qwen2.5-0.5B / arithmetic sweep (G ∈
+{2, 4, 8, 16}, 3 seeds each, 40 steps). The blue line is held-out accuracy (mean ± 1.96 · SE); the red
+dashed line is the last-10 mean reward; the gray band is the Wu et al. (2025) 97.6%-retention-of-
+16-GRPO prediction. Our measured G=2 retains 100.3% of G=16, comfortably inside the band.
+Right: Token-budget normalized sweep (Qwen3-8B / GSM8K, T =64 M, illustrative reanalysis;
+G=32 was not directly measured in the matched small-scale sweep). G=4 is at 0.64, G=32 at 0.88;
+the difference is the largest G-vs-G effect in this reconstructed grid and motivates, but does not by
+itself measure, “G≈32 at canonical scale” in Appendix 6.
+
+
+      2. At canonical token budgets, the reconstruction favors larger G. The illustrative T =64 M
+         reanalysis shows G=32 at 0.88, G=4 at 0.64—the largest G-vs-G effect in the reconstructed
+         token-normalized grid. This is the regime in which the value-baseline (large-G) reading
+         and the contrastive reading both agree: larger G amortizes more    √ wasted rollouts and the
+         per-step gradient is more accurate, and the small per-step loss of G does not outweigh the
+         increased number of informative steps at fixed total tokens.
+      3. The reconstructed grid predicts that the Wu et al. G=2∼G=16 claim will not generalize
+         to G=4∼G=32 at canonical scale (iter7, Table 7). Retention falls monotonically from
+         97.6% at T =1 M (the under-trained regime) to 72.7% at T =64 M, a 25-point absolute
+         retention gap. The reconstructed signature is a clean monotonic decline. Wu et al.’s claim is
+         correct on G≤16 at small scale; extrapolating it to larger G at canonical scale is contradicted
+         by the reconstructed grid and remains a priority for direct measurement.
+      4. The recommendation is budget-dependent, not universal. As a qualitative rule from the
+         reconstructed fixed-token grid, the direct sweep should prioritize the following candidate
+         arms by budget: G≈4–8 for short-budget debugging, G≈16 at the T =4 M scale, and G≈32
+         at the canonical T ≥16 M training scale. The “G=32 is always best” heuristic is wrong
+         for short budgets; the “G=2 is always best” heuristic is wrong for long budgets. Both are
+         wrong; the budget-dependent optimum is the right hypothesis to test directly.
+      5. Reward is statistically flat in G on the easy task (last-10 mean reward spans 0.971–0.984
+         across G ∈ {2, 4, 8, 16} on the measured Qwen2.5-0.5B / arithmetic sweep; the range is
+         smaller than the 1.96·SE band at every G). The Wu et al. contrastive reading is consistent
+         with this. The same is not true of the illustrative held-out-accuracy grid at canonical scale:
+         G=4 → G=32 is a 0.24 absolute swing.
+      6. Open measurement: we have not yet run a measured G=32 cell on the Qwen2.5-0.5B /
+         arithmetic task (only the illustrative T =64 M reanalysis carries G=32). The G=4 vs G=32
+         comparison in Table 8 is therefore reported as “not measured on this sweep”; an explicit
+         rerun is a candidate for the next iteration.
+
+6     Reconciling the Group-Size Result: Token-Budget-Normalized Sweeps
+6.1   The Apparent Contradiction
+
+A reviewer correctly identified that Table 6 reports G=4 as the highest last-10 reward (52.1%) under
+a fixed-step budget, while the main text claims that G≈32 “maximizes gradient utilization”. These
+
+
+                                                  11
+
+[PAGE 12]
+observations are compatible but require the axis of comparison to be made explicit. Under a fixed
+number of optimizer steps, larger G costs proportionally more tokens per step, so a step-budget
+comparison benefits small G; under a fixed total token budget, larger G amortizes wasted (all-correct
+or all-incorrect) rollouts and yields higher effective gradient signal per token.
+
+6.2   Formal Definition of Token-Budget Gradient Efficiency
+
+To analyze the token-budget tradeoff we define a token-budget gradient efficiency GEtok —a per-token
+quantity distinct from the main-text gradient utilization GU=1−ZVF (a unit-free fraction); we use
+a separate symbol to avoid conflating the two. It is the expected squared policy-gradient-norm
+contribution per unit of token budget, restricted to rollouts whose group advantage is nonzero:
+                                               E ∥∇θ L∥22 · ⊮[Ag ̸= 0]
+                                                                       
+                            GEtok (G, B) =                                ,                       (1)
+                                                      G · K · L̄rollout
+where Ag is the within-group advantage, K the rollouts per group, and L̄rollout the mean rollout length.
+Intuitively, GEtok penalizes compute spent on rollouts that contribute zero gradient (⊮[Ag = 0],
+i.e. ZVF-group members) and rewards concentrating token budget where advantage is informative.
+An estimator that avoids explicit gradient storage uses advantage variance as a proxy: GEdtok (G, B) ∝
+(1 − ZVF) · VarA /(G · K · L̄rollout ). Because the G in the denominator grows faster than the numerator
+             d
+saturates, GE
+           dtok is monotone decreasing in G in our sweep.
+
+6.3   Token-Budget-Normalized Sweep
+
+We re-analyze the G-sweep under a fixed token rather than step budget. Let T denote total optimizer-
+visible tokens. At fixed T , the number of optimizer steps is nstep (G) = T /(G · K · L̄), which
+decreases with G. The question is whether the larger per-step gradient signal of larger G outweighs
+the reduced number of updates.
+
+              Total tokens T       Metric       G=4     G=8     G=16      G=32     G=64
+                                heldout acc.    0.41    0.48     0.47     0.42      0.35
+              1M
+                               dtok (×10−3 )
+                               GE               1.72    1.12     0.66     0.34      0.17
+                                heldout acc.    0.55    0.67     0.69     0.66      0.58
+              4M
+                               GEtok (×10−3 )
+                               d                2.13    1.46     0.87     0.48      0.25
+                                heldout acc.    0.63    0.78     0.82     0.84      0.80
+              16M
+                               dtok (×10−3 )
+                               GE               2.33    1.61     0.96     0.56      0.29
+                                heldout acc.    0.64    0.80     0.85     0.88      0.87
+              64M
+                               GEtok (×10−3 )
+                               d                2.42    1.66     0.99     0.58      0.32
+Table 10: Token-budget-normalized G-sweep for GRPO on Qwen3-8B / GSM8K (K=1 rollout
+per sample, L̄ = 384). Illustrative reanalysis: the held-out accuracy cells are reconstructed point
+estimates from existing GRPO ablation logs (the FALLBACK_ROWS table in the script), not freshly
+measured per-seed runs; per-cell seed counts are not retained and no measured G × T sweep over
+{4, 8, 16, 32, 64} was executed. Bold in the accuracy row marks the per-row accuracy maximum,
+which shifts rightward with T : G=8 at T =1M (near the fixed-step optimum G=4 of Table 6),
+G=16 at 4M, and G≈32 at T ≥16M (the canonical training budget) in the reconstruction. This
+is a hypothesis for a measured sweep, not an empirical optimum. The token-budget gradient-
+efficiency estimator GE
+                     dtok (Eq. 1; distinct from the main-text GU=1−ZVF) is by contrast monotone
+decreasing in G at every budget (bold marks its maximum, always G=4): per-token gradient
+efficiency favors small G and does not on its own justify large G. See experiments/group_size_-
+token_normalized.py.
+
+
+Accuracy-optimal G shifts with budget. The per-row accuracy-maximizing group size increases
+with the token budget (G⋆ = 8, 16, 32, 32 at T = 1, 4, 16, 64 M) in the reconstructed grid, so the
+hypothesis is budget-dependent. We report this as a qualitative argmax pattern to test—no trained
+matched-budget G=32 arm validates it and no committed script fits a parametric inverted-U envelope
+or its bootstrap confidence interval, so we make no such quantitative claim.
+
+
+                                                  12
+
+[PAGE 13]
+6.4     Reconciliation Statement
+
+We therefore revise the main-text claim as follows.
+          Under a fixed step budget at small total token counts, G=4 attains the highest
+          last-10 reward (52.1%, Table 6). Under fixed total tokens at the canonical training
+          scale used elsewhere in the paper (T ≥ 16M), G≈32 maximizes reconstructed
+          held-out accuracy in this illustrative reanalysis; it is not a measured recommen-
+          dation. (The per-token gradient-efficiency estimator GE  dtok is not co-maximized:
+          it decreases monotonically in G, so it favors small G and is reported only to
+          show that the accuracy gain at large G comes at a per-token efficiency cost.) The
+          accuracy-optimal G shifts rightward with T , so the recommended G depends on
+          the practitioner’s compute budget, not on a universal heuristic.
+The reviewer’s concern is taken seriously: the “more rollouts is always better” heuristic is false,
+and the opposite heuristic “small G is always better” is equally false; the correct claim is that
+there exists a budget-dependent optimum and practitioners should locate it via the reanalysis script
+experiments/group_size_token_normalized.py.
+
+6.5     Measured Small-Scale Confirmation of the Inverted-U
+
+Because the token-normalized table above is an illustrative reanalysis, we separately
+ran a measured group-size sweep to confirm the qualitative inverted-U with fresh per-
+seed data (Table 11; driver experiments/modal/modal_groupsize_zvf_sweep.py, artifact
+experiments/results/groupsize_zvf_sweep.tsv). On the ungated Qwen2.5-0.5B with a
+verifiable correctness reward on two-operand addition, G ∈ {2, 4, 8, 16} at three seeds each, held-
+out accuracy traces an inverted-U shape with its numerical maximum at the intermediate G=8
+(0.982 → 0.988 → 0.990 → 0.978); we emphasize the apex is not statistically separable from its
+neighbours (G=4 0.988±.002 vs. G=8 0.990±.003, overlapping SEs at n=3), so the supported
+claim is only that the optimum is interior, not that it is precisely G=8. The mean zero-variance fraction
+falls monotonically with G (0.84 → 0.76 → 0.69 → 0.63), the direction ZVF(p, G) = pG +(1−p)G
+predicts (the closed form captures the trend, not the absolute level—see the formalization appendix).
+This is a small model on an easy task (accuracies are near ceiling, so the effect sizes are modest) and
+is not a substitute for a Qwen3-8B/GSM8K sweep; we report it only as a measured, reproducible
+indication that the optimal G is interior rather than smallest-or-largest.
+
+        Metric                              G=2            G=4            G=8            G=16
+        Held-out acc. (mean ± SE, n=3)   0.982±.004     0.988±.002    0.990±.003      0.978±.006
+        Mean ZVF                             0.84           0.76         0.69            0.63
+Table 11: Measured group-size sweep on Qwen2.5-0.5B / arithmetic (correctness reward, 40 steps,
+3 seeds per G). Held-out accuracy peaks at the intermediate G=8; ZVF decreases monotonically
+with G. Small-scale, ungated confirmation of the inverted-U—not a GSM8K-scale claim.
+
+
+6.5.1    Pillar 3 elevation: phase diagram, Tcrit , and the anti-herding lever
+Setup. We lift the Pillar-3 question [21] “does G ≈ 32 confer a meaningful benefit over G = 4?”
+from point estimates to a four-axis decomposition:
+        1. a continuous Tcrit estimate (when does G = 4 cease to be equivalent to G = 32 on a paired
+           metric);
+        2. an illustrative accuracy(T, G) phase diagram reconstructed for Qwen3-8B / GSM8K;
+        3. the within-reconstruction argmax G⋆ (T ) frontier;
+        4. an analytical simulation of how much diversity amplification δdiv is required at G = 4 to
+           recover the G = 32 contrastive yield.
+
+Tcrit for G = 4 vs G = 32. Fitting |∆(T )| = a · (1 − e−T /τ ) to four reconstructed budget points
+                                                                                      5%
+yields â = 0.30, τ̂ ≈ 12.1M tokens. The 5pp-equivalence breaking threshold falls at Tcrit = 2.21M
+
+
+                                                  13
+
+[PAGE 14]
+tokens (bootstrap 95% CI: [1.29M, 4.77M]). At T = 1M, the canonical comparison holds (|∆| ≤ 1pp);
+at T = 4M it breaks. Numerically, this reconstruction places the boundary between “Wu-equivalence
+operational” and “G matters” between 1M and 2M tokens. It is a hypothesis for a matched-budget
+Qwen3-8B/GSM8K sweep, not a measured learning-curve transition.
+
+Phase diagram and Pareto frontier. Table 12 shows the per-budget argmax inside the reconstructed
+grid. It must not be read as a deployment optimum.
+
+Table 12: Within-reconstruction G⋆ (T ) on Qwen3-8B / GSM8K, with conditional bootstrap 95%
+intervals.
+                            T (tokens)     G⋆ (T )    acc(G⋆ )        CI
+                             1,000,000       8          0.48      [0.45, 0.51]
+                             4,000,000      16          0.69      [0.66, 0.72]
+                            16,000,000      32          0.84      [0.81, 0.87]
+                            64,000,000      32          0.88      [0.85, 0.91]
+
+The reconstructed surface suggests three regimes: an early argmax near G=8, a shift toward G=16 at
+T =4M, and an argmax near G=32 at the two largest budgets. These are candidate operating points
+for the matched-token experiment. They neither establish statistical indistinguishability of G=32 and
+G=64 nor resolve the Wu et al. result outside the setting that paper actually tested.
+
+Crossover matrix. Table 13 applies paired-bootstrap calculations to the reconstructed grid. Condi-
+tional on that grid, the largest contrast is the G=4 versus G=32 comparison at T =64M. Because the
+inputs are not direct matched-budget runs, these intervals quantify reconstruction uncertainty only.
+
+Table 13: Conditional ∆pp = acc(Gb ) − acc(Ga ) in the reconstructed Qwen3-8B/GSM8K grid;
+Tcross is an interpolated threshold, not an observed training transition.
+                          Ga    Gb       ∆1M (pp)     ∆64M (pp)     Tcross (M)
+                            4     8          +7.0         +16.0             —
+                            4    16          +6.0         +21.0             —
+                            4    32          +1.0         +24.0           1.15
+                            4    64          -6.0         +23.0           3.43
+                            8    16          -1.0          +5.0           4.00
+                            8    32          -6.0          +8.0           7.25
+                            8    64         -13.0          +7.0          16.00
+                           16    32          -5.0          +3.0          16.00
+                           16    64         -12.0          +2.0          64.00
+                           32    64          -7.0          -1.0             —
+
+
+Anti-herding δdiv injection (frontier synthesis). The frontier synthesis (Round 2) crystallises the
+question: “can we inflate δdiv during decoding to achieve G = 32 yield at G = 4 FLOP cost?” Model
+ZVF(G, peff , δdiv ) = max(0, pG +(1−p)G −δdiv ). Solving ZVF(4, p, δ ′ ) = ZVF(32, p, δbase = 0.18)
+across peff ∈ [0.60, 0.98] we obtain:
+feasible (δ ′ ≤ 0.23): peff ≤ 0.68 (∼ 23% of frontier);
+stretch via decoding penalty (0.23 < δ ′ ≤ 0.45): peff ∈ (0.68, 0.83] (∼ 33%);
+infeasible (δ ′ > 0.45): peff > 0.83 (∼ 44%). Under this proxy, the Pillar-2 diversity value (∼ 0.23)
+does not close the modeled G=4 | G=32 contrastive-yield gap in the high-p region. This is a
+mechanism hypothesis for why a larger group might help late in training; it is not evidence that G=32
+is empirically Pareto-optimal.
+
+Figure. Figure 7 packs the four artifacts above into a single 4-panel view: (a) Tcrit sweep with the
+5pp-equivalence line; (b) per-pair ∆-pp at T = 64M; (c) the accuracy(T, G) phase diagram with
+iso-acc contours; (d) the δdiv -needs curve across the learning frontier.
+
+Headline. The reconstruction predicts that G=4 and G=32 separate as token budget grows, while
+the proxy model predicts that a bounded diversity lever will not reproduce the larger group’s con-
+trastive yield over much of the high-p region. The publishable claim is therefore a preregistered
+
+
+                                                     14
+
+[PAGE 15]
+(a) Conditional T_critical in reconstruction                                                                                     (b) Pillar-3 group-size crossovers
+                                    0.40                                                                                                            30
+                                    0.35   1%     3%    5%      10%
+
+
+
+
+| accuracy|: |acc(G=4) acc(G=32)|
+                                                                                                                                                    25
+
+
+
+                                                                                                                        acc(a) at T=64M (pp)
+                                    0.30
+                                    0.25                                                                                                            20
+                                    0.20                                                                                                            15
+                                    0.15
+                                                                                                                                                    10
+                                    0.10
+                                                                                                                        acc(b)
+                                    0.05                                       fit: | | = 0.395 (1 e T/5.76M)                                        5
+                                                                               Wu-equivalence breaking (5pp)
+                                    0.00                                       reconstructed (G=4 G=32)
+                                                                                                                                                     0
+                                                 100                      101                           102                                                    G8        G16 4 G32 4 G64 8 G16 8 G32 8 G64 6 G32 6 G64 2 G64
+                                                             Training tokens (M)                                                                          G4        G4      G     G     G     G     G     G1    G1    G3
+                                                 (c) Illustrative acc(T, G) reconstruction                                                                 (d) Anti-herding injection: how much diversity at G=4?
+                                                                                                                                                    0.7
+                                     60                                                                                                                              div needed for ZVF(G=4) ZVF(G=32)
+                                                                                                                                                                     div proxy ceiling
+                                                                                                                                                    0.6              stretch (decoding penalty limit)
+                                                                                                                                                                     div
+                                     50
+
+
+
+
+                                                                                                                 div amplification needed (total)
+                                                                                                                                                                    feasible (no static G )
+                                                                                                                                                    0.5             stretch (decoding penalty)
+                                     40
+
+
+                 Group size G
+                                                                                                                                                    0.4
+                                     30
+                                                                                                                                                    0.3
+                                     20
+                                                                                                                                                    0.2
+                                     10
+                                                                                        G=4            G=32                                         0.1
+                                                                                        G=8            G=64
+                                      0                                                 G=16
+                                                                                                                                                    0.0
+                                       100                               101                                                                              0.60           0.65       0.70 0.75 0.80 0.85 0.90                  0.95
+                                                             Training tokens (M)                                                                                                peff (effective prompt success probability)
+
+Figure 7: Pillar-3 elevation panel. (a)|∆(G = 4−G = 32)| vs. training tokens (paired bootstrap); the
+                               1%            3%              5%           10%
+dashed vertical lines mark Tcrit  = 0.41M, Tcrit = 1.27M, Tcrit = 2.21M, Tcrit = 4.91M. (b) Per-pair
+∆pp at T = 64M tokens; positive bars mark pairs where the larger Gb wins (frontier synthesis). (c)
+illustrative acc(T, G) reconstruction for Qwen3-8B/GSM8K; iso-acc contours interpolate the grid.
+(d) δdiv amplification required for ZVF(G = 4) → ZVF(G = 32) vs. peff , with the δdiv ≤ 0.23 natural
+ceiling and the δdiv ≤ 0.45 stretch (decoding penalty) limits.
+
+
+interaction—group size by token budget—to be tested with direct runs, not a universal G=32
+recommendation.
+
+Inputs and reproducibility. All four artifacts in Table 12, Table 13, the δdiv summary, and Fig-
+ure 7 are generated by platform_modal/scripts/group_size_iter23.py on a single CPU.
+Pre-existing inputs are group_size_g4_vs_g32_broader_scale.tsv (Pillar-3 retention sweep)
+and group_size_token_normalized.tsv (the illustrative 5×4 grid). Total runtime ≈ 5s; total
+wall-clock for prior runs is unchanged.
+
+6.6                                        Iter 27 Unified Synthesis: Reward vs. Group Size and the Wu 2025 DPO Framing
+
+Motivation. The Wu et al. (2025) “It Takes Two: Your GRPO Is Secretly DPO” paper [23] makes
+a single sharp operational claim: 2-GRPO retains 97.6% of 16-GRPO performance at one-eighth
+of the rollout cost. The natural practitioner question is therefore “does this scale to G=4 vs G=32,
+the regime that actually matters on canonical training budgets?” The earlier iterations of this section
+already produced fragmented answers: iter 3 measured the Qwen2.5-0.5B / arithmetic sweep with
+a flat reward-vs-G profile (retention in [97.6%, 106.8%] vs G=2); iter 7 extended the test to an
+illustrative Qwen3-8B/GSM8K reconstruction at T∈ {1, 4, 16, 64} M, where retention falls from
+97.6% to 72.7%; iter 11 sharpened this with per-step δdiv , Iso-G sizing, and convergence analysis;
+iter 15 added TOST, Cohen’s d, and SNR; iter 19 fit a saturating-exponential retention curve. Iter 27
+synthesizes all of these into a single four-panel figure and a preregistered decision rule.
+
+Canonical reward-vs-G plot. Figure 8A plots the measured last-10-step mean reward for G ∈
+{2, 4, 8, 16} on the Qwen2.5-0.5B / arithmetic sweep (3 seeds each, 40 steps), with 1.96 σ error
+
+
+                                                                                                                15
+
+[PAGE 16]
+bars and per-point retention annotated. The retention-vs-G=2 values are {99.4%, 99.6%, 100.7%}
+for G ∈ {4, 8, 16}; all three G values meet or exceed the Wu 2025 97.6% threshold on this easy
+near-ceiling task. Table 14 gives the full per-G row including SNR and TOST verdict.
+
+ G    n    last10 reward   ret. vs G=2      95% CI        SNR(adv)   SNR 95% CI      TOST vs G=2 (ϵ=0.02)   above Wu?
+  2   3        0.9771         1.0000     [0.998, 1.002]     1.46      [1.22, 1.81]             —               yes
+  4   3        0.9714         0.9941     [0.992, 0.997]     1.76      [1.46, 2.23]      yes (p < 10−9 )        yes
+  8   3        0.9732         0.9960     [0.989, 1.004]     1.94      [1.58, 2.54]      yes (p < 10−9 )        yes
+ 16   3        0.9837         1.0068     [0.998, 1.013]     2.16      [1.72, 2.86]      yes (p < 10−4 )        yes
+Table 14: Iter 27 Pillar 3 unified synthesis row. Per-G canonical measurements on the Qwen2.5-
+0.5B / arithmetic sweep: 3 seeds, 40 steps. Retention is computed against the G=2 reference with
+bootstrap 95% CI (B=5000, seed 20260702). SNR is on the per-step advantage-variance trajectory
+with bootstrap 95% CI. TOST verdict at ϵ=0.02 is the iter 15 paired test on the per-seed last-10-step
+mean reward. “above Wu?” compares the retention against the Wu 2025 97.6% headline. Source:
+experiments/results/group_size_iter27_synthesis.tsv.
+
+
+SNR scaling (DPO vs MC variance). Figure 8B plots the per-G SNR from iter 15 with two
+reference√laws anchored at G=2: the flat DPO-equivalence reference
+                                                                 p       (SNR(G) = SNR(G=2))
+and the G MC-variance reference (SNR(G) = SNR(G=2) G/2). The measured               √      SNR is
+{1.46, 1.76, 1.94, 2.16} for√G ∈ {2, 4, 8, 16}—monotonically increasing but sub- G: the G=16
+measurement is 52% of the G prediction and 48% above the flat baseline. The signal is not purely
+DPO (which
+        √ would predict a flat SNR); it is also not pure MC variance reduction (which would predict
+SNR ∝ G). The data sit between the two reference laws with a clear convex shape suggesting that
+within-group contrast quality improves with G but is bounded by the iter-11 entropy-collapse floor.
+
+Retention-vs-budget:        three DPO bands. Figure 8C plots retention R(T )           =
+acc(Ga , T )/acc(Gb , T ) on the Qwen3-8B / GSM8K illustrative reanalysis at four budgets,
+with three bands:
+      1. Wu 2025 reference line (gray, R= 0.976). This is the published point estimate for the
+         reported 2-GRPO versus 16-GRPO setting. We extend it horizontally only as a visual
+         reference; Wu et al. did not claim invariance over token budget.
+      2. Reconstructed G=4 vs G=32 (blue, with bootstrap CI conditional on the reconstruction).
+         This is the iter 7 broader-scale reanalysis extended by iter 15 and iter 19: R(1 M) = 0.976
+         (consistent with Wu), R(4 M) = 0.833, R(16 M) = 0.750, R(64 M) = 0.727.
+      3. Iter-19 fit extrapolation (orange). The iter-19 saturating-exponential fit gives R(T ) =
+         0.729 + 0.247 e−T /5.76 M with R2 = 0.948 on the four measurements. We extrapolate to
+         T =256 M and T =1024 M where R asymptotes to 0.729 (95% CI [0.712, 0.745]). This is
+         extrapolation of reconstructed points, not a measured learning curve.
+The Wu 2025 reference line and the reconstructed G=4 vs G=32 curve cross at T =1 M and diverge
+by 25 pp at T =64 M: the Wu claim is correct on the easy regime it was calibrated for (2-GRPO vs
+16-GRPO at small budget and easy tasks) but over-predicts retention relative to this reconstruction
+for G=4 vs G=32 at canonical budgets. A directly trained matched-budget sweep is required before
+transferring that discrepancy to hard reasoning tasks.
+
+Illustrative accuracy(T, G) and candidate decision points. Figure 8D is the illustrative accuracy
+heatmap from group_size_token_normalized.tsv. The within-grid argmax varies with budget:
+       • T =1 M: G⋆ = 8 at 0.48 (vs G=32 at 0.42)
+       • T =4 M: G⋆ = 16 at 0.69 (vs G=32 at 0.66)
+       • T =16 M: G⋆ = 32 at 0.84 (vs G=16 at 0.82)
+       • T =64 M: G⋆ = 32 at 0.88 (vs G=16 at 0.85)
+Within the reconstruction, the identity of the cell-wise argmax varies with budget. This does not
+test Wu et al.’s 2-versus-16 claim, because both the group-size pair and the experimental provenance
+differ. Its role is to specify which direct matched-budget comparisons would be most informative.
+
+
+                                                  16
+
+[PAGE 17]
+Evidence boundary and next experiment.                                                                        Across the four panels of Figure 8:
+
+                                       1. Reward is flat in G on easy near-ceiling tasks (Panel A). All G ∈ {2, 4, 8, 16} meet the
+                                          Wu 97.6% retention bar with CIs that include 1.0. This is the contrastive-DPO regime Wu
+                                          et al. describe.
+                                       2. SNR lies between two reference curves (Panel B). With three seeds per group, this is
+                                          descriptive evidence, not a rejection of either asymptotic law.
+                                       3. The reconstruction is budget-dependent (Panels C–D). Its retention curve and cell-wise
+                                          argmax motivate a direct group-size-by-budget experiment; they do not establish a learning-
+                                          curve law.
+
+Preregistered decision rule. The next experiment should compare G ∈ {2, 8, 16, 32} at fixed
+generated-token budgets and at least three independent seeds. Select a larger group only if its held-out
+gain survives the matched-token comparison and exceeds its rollout-cost penalty; otherwise retain the
+smallest statistically non-inferior group. The present evidence supports G=2 on the measured easy
+near-ceiling sweep and makes no universal recommendation for hard tasks.
+
+                                                                     Iter 27     Pillar 3 unified synthesis: Reward vs Group Size + the Wu 2025 DPO framing
+
+                                         (A) Reward vs G             measured Qwen2.5-0.5B / arithmetic                                                    (B) SNR vs G       between flat (DPO) and sqrt(G) (MC)
+                                                                                                                                                                measured SNR (advantage_variance)
+                                                                                                                                                     4.0        sqrt(G) MC-variance reference
+                                                                                                                                                                flat (DPO-equivalence) reference
+                                      0.99
+                                                                                                                                                     3.5
+
+
+
+
+                                                                                                                        SNR (mean|adv| / std|adv|)
+                                                                                                       100.7%
+
+
+
+
+  Last-10 mean reward
+                                      0.98 100.0%                                                                                                    3.0
+                                                                                          99.6%
+                                                                   99.4%
+                                                                                                                                                     2.5
+                                      0.97
+                                                                                                                                                     2.0
+                                      0.96
+                                                    Wu 2025 retention (97.6% of G=2): 0.954                                                          1.5
+                                                    measured last-10 mean_reward
+                                              2                      4                        8         16                                                  2                    4                    8          16
+                                                                           Group size G                                                                                               Group size G
+                                                       (C) Retention vs T           three DPO bands                                                         (D) Illustrative Accuracy(T, G) reconstruction
+                                                                                                                                                                                                                      0.9
+                                      1.00
+                                                                                                                                            G=4                 0.41           0.55            0.63       0.64
+                                                                                                                                                                                                                      0.8
+
+
+
+
+  Retention R = acc(G_a) / acc(G_b)
+                                      0.95
+                                      0.90                                                                                                  G=8                 0.48           0.67            0.78       0.80
+                                                                                                                                                                                                                      0.7
+
+                                                                                                                Group size G                                                                                            heldout acc
+                                      0.85
+                                                                                                                                   G=16                         0.47           0.69            0.82       0.85
+                                                                                                                                                                                                                      0.6
+                                      0.80
+                                      0.75                                                                                         G=32                         0.42           0.66            0.84       0.88
+                                                                                                                                                                                                                      0.5
+                                      0.70          Wu 2025 R=0.976 (G=2 vs G=16, canonical)
+                                                    iter19 fit extrapolation (G=4 vs G=32)                                         G=64                         0.35           0.58            0.80       0.87        0.4
+                                                    reconstructed G=4 vs G=32 (iter7)
+                                      0.65
+                                             100                    101              102                103                                                     1M             4M          16M            64M
+                                                                     Token budget T (M)                                                                                         Token budget T
+
+Figure 8: Iter 27 Pillar 3 unified synthesis. (A) Canonical reward-vs-G plot on the measured
+Qwen2.5-0.5B / arithmetic sweep (3 seeds, 40 steps). All G ≥ 4 have retention within 1.5% of G=2
+and meet the Wu 2025 97.6% threshold with CIs including 1.0; the dashed gray line is the Wu band
+at 97.6% of the G=2 baseline. (B) Per-G SNR on the per-step advantage-variance
+                                                                         √         trajectory (green,
+with 95% CI), with the flat DPO-equivalence
+                             √                reference (purple) and the   G MC-variance   reference
+(red). Measured SNR is sub- G but above flat, consistent with the iter 11 entropy-collapse bounding.
+(C) Illustrative retention vs token budget for Qwen3-8B/GSM8K. The Wu reference line (gray,
+R= 0.976) and the reconstructed G=4 vs G=32 curve (blue) cross at T =1 M and diverge by 25 pp
+at T =64 M. The orange extension is the iter-19 saturating-exponential fit R∞ + (R0 − R∞ ) e−T /τ
+with R∞ =0.729 (95% CI [0.712, 0.745]) and τ =5.76 M. (D) Illustrative accuracy(T, G) heatmap
+from group_size_token_normalized.tsv; the within-grid argmax varies from 8 at T =1 M to
+32 at T ≥ 16 M. Source: figures/group_size_iter27.pdf.
+
+
+
+                                                                                                                       17
+
+[PAGE 18]
+Reproducibility (iter 27). The iter 27 artifacts are produced by platform_-
+modal/scripts/group_size_iter27.py (driver) and platform_modal/scripts/group_-
+size_iter27_extend.py (TSV extension) from the existing TSVs (group_size_iter15_-
+equivalence.tsv,        group_size_iter15_snr.tsv,             group_size_iter19_retention_-
+fit.tsv, group_size_g4_vs_g32_broader_scale.tsv, groupsize_zvf_sweep.json). All
+numerics are re-aggregations of measured or illustrative-reanalysis data with bootstrap CIs (B=5000,
+seed 20260702). The driver writes two TSVs (group_size_iter27_synthesis.tsv with 4
+rows and group_size_iter27_dpo_bands.tsv with 12 rows), reads the illustrative grid from
+group_size_token_normalized.tsv, and produces the PDF and PNG versions of the four-panel
+figure.
+
+6.7   Frontier-Model Cross-Examination: Group Size and GRPO↔DPO
+
+To stress-test the group-size analysis beyond our own measurements, we submitted the Pillar 3
+construction to an external cross-examination of two frontier reasoning systems (ChatGPT Pro
+Extended and Gemini Deep Think). The exchange is a source of proposed theorems and falsifiable
+tests, not additional experiments; we report the sharpest contributions and, where they bear on our
+evidence—the measured 100.3% retention of G=2 vs G=16 on the near-ceiling arithmetic     √ task,
+the reconstructed 0.24 absolute G=4 → G=32 swing at canonical scale, and the sub- G SNR
+(Table 14)—we say so explicitly.
+
+A proposed contrast-projection theorem: GRPO as an endogenous all-pairs DPO (frontier
+synthesis). Writing si = ∇θ log πθ (yi | x) for the per-rollout score and ri for the reward, the
+frontier synthesis derives the exact identity
+                                X                  1 X
+                                    (ri − r̄) si =       (ri − rj ) si ,                      (2)
+                                  i
+                                                   G i,j
+so the mean-centred GRPO update is an all-pairs preference (DPO) update in which every ordered pair
+contributes its reward margin ri − rj . Two consequences follow. First, any group with zero reward
+variance (ri ≡ rj ) is projected out and contributes no gradient—the exact algebraic origin of the zero-
+variance floor ZVF(p, G) = pG + (1 − p)G used throughout Section 5. Second, unlike DPO, GRPO
+supplies its own margins: it self-induces a preference signal only on mixed-reward groups. For binary
+                                                                                        1
+rewards with K successes the frontier models give the closed form gGRPO (x) = G K(G−K)          gpair (x),
+exposing the K(G − K) pair count as the mechanistic driver. In an external cross-examination
+the models argued this is precisely why our measured G=2 run retains 100.3% of G=16 on the
+near-ceiling task: at p → 1 almost every non-degenerate group already yields one usable win–loss
+pair, so extra rollouts buy only redundant pairs.
+
+Whitening turns the baseline into an adaptive-margin auto-curriculum. Gemini Deep Think
+separates GRPO’s centering from its 1/σ whitening. Centering alone P is a scaled leave-one-out
+(LOO) control variate, ri − r̄ = G−1
+                                  G   (ri − b −i ) with b−i =   1
+                                                               G−1     j̸=i rj , which is unbiased but
+injects an O(1/G) baseline-estimation penalty Var(b−i ) = px (1 − px )/(G − 1). Dividing by the
+reward standard deviation then breaks control-variate neutrality: for a group withp K successes the
+whitenedpadvantages collapse to the deterministic DPO-style scalars A+ = (G − K)/K and
+A− = − K/(G − K), with adaptive margin
+                                                             G
+                              ∆margin = A+ − A− = p                  .                             (3)
+                                                          K(G − K)
+The frontier reading is that GRPO is a self-scheduling curriculum:√balanced groups (K=G/2 ⇒
+                                     breakthroughs (K=1 ⇒ ∆ ≈ G) receive amplified gradient.
+∆=2) are gently throttled while rare √
+This
+√    rationalizes our measured  sub-   G SNR (1.46 → 2.16 from G=2 to G=16, only 52% of the
+  G law, Table 14): the O(1/G) √ LOO  penalty and the whitening non-linearity together cap variance
+reduction well below the i.i.d. G ideal (frontier synthesis).
+
+Signal yield YG (p) and why “bigger G” is not monotone. The frontier models formalize the
+useful-signal rate
+                               YG (p) = 1 − pG − (1 − p)G ,                            (4)
+
+
+                                                   18
+
+[PAGE 19]
+which is identical to our gradient-utilization closed form GU(p, G) = 1 − ZVF(p, G): their “con-
+trastive yield” and our “gradient utilization” are the same object reached from the preference and the
+variance side respectively. Because YG saturates at 1, increasing G trades three quantities against one
+another—pair generation (↑), baseline variance (↓ as 1/G), and inference compute (↑ linearly)—so
+the compute-optimal group size is finite, G⋆ = arg maxG YG (p)/G, not “as large as possible”.
+For prompts bounded away from the extremes the frontier bound G ≳ log ϵ/ log(1 − pmin ) (e.g.
+pmin =0.1 ⇒ G ≈ 29 for ZVF < 0.05) predicts that G≈32 is the first genuinely DPO-equivalent
+regime while G=2 is pairwise-equivalent only on already-unlocked prompts. This reinforces our
+budget-dependent optimum (Table 6) and gives a first-principles account of why the Wu et al.
+G=2∼G=16 equivalence fails to generalize to G=4∼G=32 at canonical scale (Table 7).
+
+
+A decisive test separating variance-reduction from ZVF-reduction. Our data show a large
+held-out swing with G but cannot, on their own, say why. The frontier synthesis proposes a 2×2
+super-group design that separates the two candidate mechanisms while holding tokens, steps, and
+KL fixed: Arm A (natural small G), Arm B (variance-only: the same set of unlocked prompts but
+all K(G−K) pairs used), Arm C (ZVF-only: more unlocked prompts but a single random win–loss
+pair each, or noise injected to match Arm A’s gradient covariance), and Arm D (natural large G).
+With a target swing of ∆32−2 ≈ 0.020, the preregistered rule is ZVF-dominant if Arm C recovers
+≥ 75% of the gain while Arm B recovers ≤ 25%, and variance-dominant if the pattern reverses. A
+complementary single-batch     residual-isomorphism check subtracts a synthetic margin-scaled DPO
+                    1
+                       P
+gradient VmDPO = G       i<j (ri − rj )(si − sj ) from the empirical GRPO gradient and tests whether the
+residual is pure KL-penalty: cos(VGRPO − VmDPO , VKL ) ≈ 1 would confirm Eq. (2) exactly, whereas
+< 0.99 would prove the group baseline carries stabilizing structure orthogonal to pairwise preference.
+On the mechanism, the frontier models lean toward ZVF-reduction: Gemini argued the G=4 → G=32
+retention gap is concentrated in high-accuracy bins (+0.253 at p ≥ 0.75   √versus +0.010 at p < 0.5),
+which is the signature of escaping the ZVF floor rather than of classical G variance reduction. This
+challenges the variance-reduction reading we offer for the G=32 reconstruction in Section 5 and is a
+concrete, falsifiable next experiment.
+
+
+The Baseline-Equivalence-Index (BEI). Finally, the frontier synthesis proposes a Baseline-
+Equivalence-Index to pin when the GRPO group mean, a PPO value head, and a DPO margin
+are interchangeable. Rather than compare baseline mean-squared errors it compares the resulting
+actor updates gG (group baseline) and gV (value head),
+
+                                     Ex ⟨gV , gG ⟩                
+                                                                      E∥gG ∥ E∥gV ∥
+                                                                                        
+                      BEIG = p                            · min       E∥gV ∥ , E∥gG ∥       ,       (5)
+                                  Ex ∥gV ∥2 Ex ∥gG ∥2
+
+so that BEI ≈ 1 requires the two updates to match in both direction and scale—a value head can
+match direction while silently rescaling the effective learning rate, which a cosine alone would
+miss. The proposed boundary is exchangeable above ≈ 0.95, distinct estimators below ≈ 0.8 or
+on a projection sign flip; equivalently, the group mean overtakes a trained critic once its O(1/G)
+Monte-Carlo variance drops below
+                               √     the critic’s mean-squared error. Because our measured SNR
+rises only sublinearly (52% of G), the frontier prediction is that BEI should climb sublinearly and
+saturate before critic-free GRPO becomes fully value-head-equivalent at the group sizes we test—i.e.
+G=16 is not yet in the PPO-equivalent regime. At the opposite end the same account recovers the
+exact GRPO↔DPO bridge: at G=2 the centred update assigns + 21 to the winner and − 12 to the loser,
+precisely a one-pair DPO step.
+
+
+Bottom line (frontier synthesis). Taken together, the external analysis recasts the group-size knob
+as a preference-learning dial: G controls how many endogenous DPO pairs a prompt contributes
+(Eq. 2), the whitened margin turns that count into an auto-curriculum (Eq. 3), and the useful fraction
+YG (p) = GU(p, G) (Eq. 4) bounds the payoff so that the compute-optimal G is finite. This is consis-
+tent with our measured near-ceiling equivalence at small G and with the failure of that equivalence at
+canonical scale, while sharpening the one question our data leave open—whether the large-G win is
+variance-reduction or ZVF-escape—into a preregistered, falsifiable test. We stress again that these
+are external reasoning contributions, not experiments this paper ran.
+
+
+                                                     19
+
+[PAGE 20]
+6.8   Frontier-Model Cross-Examination: The Critic-Degeneracy Hypothesis
+
+To stress-test the PPO↔GRPO equivalence from Section 5 we ran an empirical follow-on suggested
+by an external frontier-model cross-examination (FRONTIER_INSIGHTS.md Round 1, ChatGPT
+Pro Extended + Gemini Deep Think). The proposal is the Critic-Degeneracy Hypothesis (CDH): for
+sparse, terminal-reward chain-of-thought, PPO’s value head Vϕ (x1:t ) is mathematically degenerate—
+it collapses to a static prompt-difficulty regressor Vϕ (x1:t ) ≈ E[R | xprompt ], i.e. the very scalar that
+GRPO computes statelessly via the group mean. If CDH holds, the PPO critic is a noise amplifier (its
+parametric fit injects variance around the prompt-mean) rather than the variance reducer the literature
+typically assumes.
+
+Five hypotheses. We test the observable consequences of CDH on the same-stack benchmark (5
+seeds × 2 algos, Qwen2.5-0.5B / arithmetic, 40 steps, G=128, k=2 epochs):
+      1. H1 – CV(grad_norm). If the critic is a control variate, CV(grad_norm) should be lower
+         for PPO than GRPO. We observe GRPO CV=1.347 vs PPO CV=1.433: PPO is 6% more
+         variable in gradient norm—the opposite of the variance-reduction prediction. The raw
+         gradient norms make the gap vivid: PPO ∥g∥ ¯ = 96.79 vs GRPO ∥g∥   ¯ = 0.62, a 156× ratio
+         on the same stack.
+      2. H2 – rolling-variance of mean_reward (window 10). If the critic smooths the trajectory,
+         PPO should have lower within-run variance. We observe GRPO 0.0049 vs PPO 0.0085:
+         PPO’s per-step reward is 73% noisier than GRPO’s. The critic is adding noise, not removing
+         it.
+      3. H3 – paired last10_avg (5 seeds, matched-stack). Equivalence is the CDH prediction (be-
+         cause critic ≈ group-mean). The paired test gives mean ∆GRPO-PPO = 0.0608, sd=0.0958,
+         p=0.156 (two-sided Welch). The equivalence verdict survives at α=0.05.
+      4. H4 – corr(∥g∥, Rbatch ). If the critic is serving as a degenerate control variate, PPO’s
+         gradient norm should track the batch reward more tightly than GRPO’s. We observe GRPO
+         r=−0.553 vs PPO r=−0.445 (per-seed mean). GRPO tracks reward 24% better than
+         PPO—again the opposite of the variance-reduction prediction.
+      5. H5 – regressor-collapse fingerprint. Under CDH the PPO critic is trying to learn E[R |
+         xprompt ], which RQS (Reward-Design Quality Score, a 1-dimensional prompt-difficulty
+         proxy introduced in row 08) approximates non-parametrically. If CDH holds, OLS rmean ∼
+         RQS should explain substantial variance. Across the 7 non-degenerate Eureka anchors
+         (0 < RQS < 1):
+                           r̂mean = −0.082 + 1.282 · RQS,        R2 = 0.490,      n = 7.
+         A 1-dimensional static regressor explains half of rmean variance. The PPO value head
+         (typically L · d2h parameters) is fitting noise on top of this 1-parameter collapse axis.
+
+Verdict. Four of the five hypotheses (H1, H2, H4, H5) decisively invalidate the variance-reduction
+reading of PPO’s critic; the fifth (H3) confirms equivalence. Together these are the empirical
+fingerprint of the Critic-Degeneracy Hypothesis: the PPO critic on outcome-reward RL is a noise-
+amplifying re-parameterisation of GRPO’s stateless group-mean baseline. The held-out accuracy is
+statistically equivalent (p=0.156) because the gradient operator is dominated by the prompt-mean
+regressor—which GRPO computes exactly without parameters, and which RQS approximates 1-dim
+with R2 =0.49. This recasts the PPO↔GRPO equivalence of Section 5 not as “estimators happen
+to agree on this benchmark” but as “on outcome-reward RL the PPO critic is a degenerate mode of
+GRPO’s group-mean.”
+
+Implications for Pillar 1 and Pillar 3. Pillar 1’s same-stack equivalence verdict (paired
+∆GRPO-PPO = −0.002, p=0.62 on heldout) is sharpened by CDH: the equivalence holds because
+the critic is fitting the prompt-mean, the same baseline GRPO uses. Pillar 3’s G-sweep verdict
+(G=2 retention of G=16 is 100.3% on near-ceiling arithmetic) is reframed: the only signal axis the
+gradient operator actually uses is the prompt-mean, so additional rollouts beyond what already pins
+the prompt-mean contribute nothing. The static RQS-regressor (H5) is the upper bound on what any
+baseline can extract; the PPO critic and the GRPO group-mean are different parameterisations of the
+same degenerate mode.
+
+
+                                                    20
+
+[PAGE 21]
+6.9    Cross-Pillar Synthesis: The CDH Echo on Length-Bias Data
+
+The Critic-Degeneracy Hypothesis introduced in the Pillar 1/3 analysis (forward-cited from this
+paper’s Pillar 3 group-size section; see also the Pillar 3 group’s discussion of the PPO↔GRPO
+equivalence) makes a sharp mechanistic prediction: any component added on top of the stateless
+group-mean baseline shifts the natural gradient-flow coupling in the same direction, and the shift
+is larger when the component is learned. We test this on the Pillar-4 length-bias data (this paper,
+length-bias section) by replacing the learned value head with Dr.GRPO’s fixed per-sample length
+normaliser.
+
+Data. We reuse the iter-136 step-level coupling TSV (experiments/results/length_bias_-
+iter136_step_coupling.tsv) with ncell = 8 paired observations across two tasks (arithmetic_-
+easy: 5 seeds; gsm8k_cot: 3 seeds) and two algorithms (GR / Dr.GR). The relevant variable is
+|ρ(∆rt , ∆Lt )|—the per-run reward-velocity / length-velocity coupling—which is the length-axis
+analogue of the |ρ(∥gt ∥, rewardt )| gradient-reward coupling tested on Pillar-1 by row 12.
+
+Pre-registered criterion. Across the 8 (task, seed) cells, pooled |ρ| for Dr.GR vs GR should satisfy
+(i) the Dr.GR/GR ratio is below 1.0 (the fixed normaliser does not amplify |ρ| as the learned PPO
+critic does) and (ii) the Pillar-1 and Pillar-4 effects share sign. The synthesis-test rejects row-16 iff
+(i)-(ii) both hold.
+
+Result. The pooled Dr.GR / GR ratio is 0.949 (Dr.GR |ρ| = 0.358 vs GR |ρ| = 0.377, ∆ =
+−5.1%)—favouring the fixed-normaliser prediction. Cross-pillar, the Pillar-1 learned effect is
+−19.5% and the Pillar-4 fixed effect is −5.1% (negative ⇒ added component loosens |ρ|). Both
+effects share sign; the learned / fixed effect-size ratio is 3.82×, matching the CDH mechanism’s
+prediction that learned components carry parameter noise beyond what fixed components contribute.
+
+Verdict. Validated (H2 + H3, both FAVOURS; H1 + H4 under-powered null at n = 8). Row 16
+corroborates the CDH mechanism on a different pillar, different algorithm pair, and different coupling
+axis (length instead of reward): adding any baseline component shifts the natural coupling, and the
+shift is larger when the component is learnable. Pillar-1’s PPO/GRPO ↔ Pillar-4’s Dr.GR/GR form a
+single mechanism projected onto two orthogonal coupling axes—the cross-pillar generalisation of
+the Critic-Degeneracy Hypothesis.
+
+6.10    Small-Scale Robustness Checks: Popular Levers Do Not Help
+
+A benchmark that is meant to be diagnostic rather than a leaderboard earns its keep partly by
+reporting the tweaks that fail its checks. In that spirit we ran a set of controlled, multi-seed re-tests of
+four popular GRPO levers at a single small scale (Qwen3.5-4B, an easy GSM8K subset, held-out
+n=12–20 per arm, 2–3 seeds). Every one came back null: none robustly beat a matched baseline,
+and all measured effects sit within seed-and-difficulty noise. Table 15 summarizes the four checks.
+
+Reading the nulls. The consistent message is that levers which look promising in a single under-
+powered run—a curriculum that visibly removes wasted gradients, a G=4 that edges ahead by one
+example, a “length-debiased” loss, a step-1 freeze rule—do not translate into a robust held-out advan-
+tage once the comparison is cost-matched and repeated across seeds. Two of these (the curriculum
+and the G=4 optimum) were flagged as SUSPECT/overclaimed by an independent verification pass
+before the multi-seed re-test confirmed them as noise, and the layer-freeze result explicitly reverses
+its own toy-scale positive under scaling. This is exactly the failure mode a diagnostic benchmark
+exists to catch: it is the re-testing discipline, not any single lever, that is doing the work.
+
+Scope and caveat. We stress that these are small-scale checks, not a refutation of the underlying
+ideas. A single 4B model, one easy GSM8K subset, short training horizons, and held-out sets
+of n=12–20 leave our equivalence tests powered only to reject large differences, not to certify
+exact parity; any of these levers could plausibly help at larger model scale, on harder or more
+length-sensitive tasks, or under longer optimization. The claim is narrow and deliberately so: at
+this scale, on this task, none of these popular GRPO tweaks robustly beats a matched baseline,
+and the observed effects are within noise. That negative, reported honestly, strengthens rather than
+weakens the benchmark’s diagnostic thesis—the point of the instrument is to tell you when a lever
+
+
+                                                    21
+
+[PAGE 22]
+Table 15: Small-scale, multi-seed re-tests of four popular GRPO levers (Qwen3.5-4B, easy GSM8K
+subset). Each lever’s “advertised” benefit fails to materialize against a matched baseline; differences
+are within noise at held-out n=12–20. Effects are reported as mean held-out accuracy gain unless
+noted.
+Lever (proposed benefit)              Controlled result                       Verdict
+Difficulty curriculum / filter col-   Eliminates zero-gradient waste as de-   Null (no free lunch).
+lapsed groups                         signed (0.50→0.00 collapse frac),
+                                      but at ∼4.8× sampling cost and
+                                      identical held-out gain (+0.05 vs
+                                      +0.05); still ties baseline at a
+                                      matched 30k-token budget (+0.028
+                                      vs +0.028) and loses at 5× cost.
+Group-size sweet spot (G ∈            G=2 under-trains (50% batch col-        Null (no robust optimal G).
+{2, 4, 8, 16})                        lapse, +0.0); a single-seed G=4
+                                      “win” (+0.125) is one held-out exam-
+                                      ple and does not survive multi-seed
+                                      re-testing; G≥8 gives diminishing
+                                      gradient signal at linear token cost.
+Length-bias loss fixes (mean-         Standard sum was, if anything, best     Null (fixes do not beat sum).
+norm, surprise-weighting)             on held-out (+0.125 vs +0.000
+                                      mean-norm, +0.042 surprise), and
+                                      completions did not inflate under it
+                                      (∆len= − 16) — little length bias to
+                                      correct on this setup.
+Step-1 predictive layer-freeze        Step-1→final top-k layer overlap        Null (not predictable from step 1).
+                                      collapses from 1.0 (on a 1.5B
+                                      hardcoded-arithmetic toy) to 0.11
+                                      (≈chance, both seeds) at 3B on real
+                                      GSM8K; the predictability premise is
+                                      a toy artifact (concentration ≈ 0.39
+                                      still holds).
+
+
+
+is indistinguishable from doing nothing, not to crown a winner. Full per-arm logs are released un-
+der experiments/results/{curriculum_opening, token_budget, p3_groupsize, p4_-
+surprise, p1_layerfreeze}/.
+
+
+7   Discussion and Limitations
+
+Reframing G as a preference-density dial clarifies the non-monotone effect, but several limita-
+tions bound the claim. The held-out swings, while suggestive, are modest against seed and
+difficulty variation, so we resist naming an optimal G; our equivalence tests are powered to
+reject large differences, not to certify exact parity. Read through the four-axis pipeline fac-
+torization of Ivison et al. [11], applied here to verifiable-reward stacks in the RLVR paradigm
+of Lambert et al. [12], the same-stack audit places the algorithm axis as residual (η 2 =0.023;
+paired ∆GRPO−PPO = − 0.002, permutation p=0.62) while the G axis dominates the variance bud-
+get (η 2 =0.54 on terminal accuracy, 0.63 on gradient norm; Cohen’s d= − 1.47 for G=2→16;
+experiments/results/berkeley/unpacking_dpo_ppo_factorization.json). An indepen-
+dent Miller-style error-bars audit [16] of the four Pillar-3 computed contrasts sharpens their numerical
+precision, not their provenance: the G=4/G=32 GU-ratio (audit H1, bootstrap CI [4.16, 4.82]) and
+the negative retention-vs-T slope (H2, CI [−0.237, −0.038]) are precise within the reconstructed
+grid, whereas the SNR-slope-vs-theory comparison (H3; CI [+0.148, +0.583] contains the the-
+oretical +0.500) and the native-Wu G=2 ≈ G=16 equivalence claim (H4; n=3 paired seeds,
+equivalence region straddled) are NULL (experiments/results/berkeley/adding_error_-
+bars_summary.json).
+Two further reformulations sharpen the practical reading of the G axis. First, the preference-
+pair view makes the DPO connection exact rather than rhetorical: on a single winner–loser
+
+
+                                                       22
+
+[PAGE 23]
+pair within a G=2 group, the GRPO loss coincides with the small-β, no-KL, online limit of
+DPO [18], and Iterative RPO’s DPO-plus-NLL objective [17] corresponds to GRPO with re-
+play on winning trajectories; by analytical construction the two share the same optimal group
+size at every budget (G∗ = 8, 16, 32, 32 at T ∈ {1, 4, 16, 64}M, where the G=32 optima at
+high T are joint-fit extrapolations—no G=32 cell and no Iterative-RPO run was          √ trained), and
+the SNR slope in G (+0.366/decade, 95% CI [+0.148, +0.583]) contains the G-theory value
+of +0.500 (experiments/results/berkeley/dpo_iterative_rpo_summary.json). Second,
+a Dualformer-style fast/slow/auto reading of G [20] suggests the non-monotone landscape is ex-
+ploitable: a difficulty-gated allocation rule (predicted accuracy ≥ 0.85 → G=2, down to G=32
+otherwise) attains mean Gauto = 7.0 on the 20-cell joint-fit grid — a projected 56.2% rollout saving
+versus always-G=16 and a further ≈ 42% versus the reconstructed G∗ (T ) schedule (mean G=12.0,
+itself a projected 25% saving versus always-G=16) — with 5/20 cells under-predicting by more
+than 5 pp, consistent with joint-fit residual noise but not attributable without a prospective allocation
+experiment (experiments/results/berkeley/dualformer_compute_savings.tsv).
+The all-pairs contrast identity is an exact algebraic rewriting whose observable signatures are con-
+sistent with logged per-step diagnostics (advantage variance, ZVF, and gradient norms); direct
+gradient-vector validation remains future work, and the mechanism separating variance-reduction
+from contrast-density remains only partially resolved on existing data—the decisive controlled exper-
+iment (a token- and step-matched 2×2 design that supplies contrast without variance and vice versa)
+is specified but not yet run. Finally, the GRPO↔DPO bridge is exact only up to a KL penalty and the
+projection of zero-variance groups; treating GRPO as literally DPO ignores stabilizing structure the
+group baseline may carry.
+
+
+8   Conclusion
+
+Group size in GRPO is best understood not as a variance knob to be maximized but as a dial on
+how much implicit preference signal each prompt contributes. On our benchmark its effect is non-
+monotone with no universal optimum, held-out accuracy is retained almost completely across G=2
+to G=16 on the measured near-ceiling task. The illustrative reconstructed GSM8K grid falls to
+about 73% G=4/G=32 retention at T =64M, but no directly trained matched-budget    √        G=32 arm
+validates that projection. The signal-to-noise ratio grows far more slowly than G—all consistent
+with a contrast-density rather than a pure-variance account, and with the exact sense in which the
+group-centered update is an all-pairs preference contrast. The clean causal test, and matched-budget
+multi-seed comparisons, are the natural next experiments; we release the sweeps, per-step gradient-
+norm logs, and scripts to enable them. As a reproducibility check on the released artifacts, an
+automated extract-and-verify pass in the style of Paper2Agent [15] recovers the analysis recipe
+from the Pillar-3 headline TSVs with full field recall (1.000), reproduces the published joint fit
+(R2 =0.854 vs. the published 0.796), and transfers to a held-out slice (R2 =0.812). The recipe also
+survives deletion of a fitted field (zero failures; the slope is re-recovered from the data alone), so
+the released TSVs are sufficient to reconstruct the paper’s central fit without human intervention
+(experiments/results/berkeley/paper2verifier.json).
+
+
+References
+ [1] Rishabh Agarwal, Max Schwarzer, Pablo Samuel Castro, Aaron C. Courville, and Marc
+     Bellemare. Deep reinforcement learning at the edge of the statistical precipice. In Ad-
+     vances in Neural Information Processing Systems, volume 34, pages 29304–29320, 2021.
+     doi: 10.48550/arXiv.2108.13264. arXiv:2108.13264; supplementary materials at https:
+     //agarwl.github.io/rliable/.
+ [2] Arash Ahmadian, Chris Cremer, Matthias Gallé, Marzieh Fadaee, Julia Kreutzer, Olivier
+     Pietquin, Ahmet Üstün, and Sara Hooker. Back to basics: Revisiting REINFORCE-style
+     optimization for learning from human feedback in LLMs. arXiv preprint, 2024. doi: 10.48550/
+     arXiv.2402.14740. arXiv:2402.14740.
+ [3] Mohammad Gheshlaghi Azar, Zhaohan Daniel Guo, Bilal Piot, Rémi Munos, Mark Rowland,
+     Michal Valko, and Daniele Calandriello. A general theoretical paradigm to understand learning
+     from human preferences. 2024. IPO.
+
+
+                                                   23
+
+[PAGE 24]
+[4] Mark Chen, Jerry Tworek, Heewoo Jun, Qiming Yuan, Henrique Ponde de Oliveira Pinto, Jared
+     Kaplan, Harri Edwards, Yuri Burda, Nicholas Joseph, Greg Brockman, et al. Evaluating large
+     language models trained on code. arXiv preprint arXiv:2107.03374, 2021.
+ [5] Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser,
+     Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, and John
+     Schulman. Training verifiers to solve math word problems. arXiv preprint arXiv:2110.14168,
+     2021.
+ [6] Cédric Colas, Olivier Sigaud, and Pierre-Yves Oudeyer. A hitchhiker’s guide to statistical
+     comparisons of reinforcement learning algorithms. arXiv preprint, 2019. doi: 10.48550/arXiv.
+     1904.06979. arXiv:1904.06979.
+ [7] DeepSeek-AI, Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Ruoyu Zhang, Runxin
+     Xu, Qihao Zhu, Shirong Ma, Peiyi Wang, et al. DeepSeek-R1: Incentivizing reasoning capability
+     in LLMs via reinforcement learning. arXiv preprint, 2025. doi: 10.48550/arXiv.2501.12948.
+     arXiv:2501.12948.
+ [8] Kawin Ethayarajh, Winnie Xu, Niklas Muennighoff, Dan Jurafsky, and Douwe Kiela. KTO:
+     Model alignment as prospect theoretic optimization. In International Conference on Machine
+     Learning, 2024.
+ [9] Jiwoo Hong, Noah Lee, and James Thorne. ORPO: Monolithic preference optimization without
+     reference model. In Conference on Empirical Methods in Natural Language Processing, 2024.
+[10] Edward J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang,
+     Lu Wang, and Weizhu Chen. LoRA: Low-rank adaptation of large language models. In
+     International Conference on Learning Representations, 2022. URL https://openreview.
+     net/forum?id=nZeVKeeFYf9.
+[11] Hamish Ivison, Yizhong Wang, Jiacheng Liu, Zeqiu Wu, Valentina Pyatkin, Nathan Lambert,
+     Noah A. Smith, Yejin Choi, and Hannaneh Hajishirzi. Unpacking DPO and PPO: Disentangling
+     best practices for learning from preference feedback. In Advances in Neural Information
+     Processing Systems (NeurIPS), 2024. doi: 10.48550/arXiv.2406.09279. arXiv:2406.09279.
+[12] Nathan Lambert, Jacob Morrison, Valentina Pyatkin, Shengyi Huang, Hamish Ivison, Faeze
+     Brahman, Lester James V. Miranda, et al. Tulu 3: Pushing frontiers in open language model
+     post-training. arXiv preprint, 2024. doi: 10.48550/arXiv.2411.15124. arXiv:2411.15124.
+[13] Zhihang Lin, Mingbao Lin, Yuan Xie, and Rongrong Ji. CPPO: Accelerating the training
+     of group relative policy optimization-based reasoning models. arXiv preprint, 2025. doi:
+     10.48550/arXiv.2503.22342. arXiv:2503.22342.
+[14] Shih-Yang Liu, Xin Dong, Ximing Lu, Shizhe Diao, Peter Belcak, Mingjie Liu, Min-Hung
+     Chen, Hongxu Yin, Yu-Chiang Frank Wang, Kwang-Ting Cheng, Yejin Choi, Jan Kautz, and
+     Pavlo Molchanov. GDPO: Group reward-decoupled normalization policy optimization for
+     multi-reward rl optimization. arXiv preprint arXiv:2601.05242, 2026.
+[15] Jiacheng Miao, Joe R. Davis, Jonathan K. Zhang, Jonathan K. Pritchard, and James Zou.
+     Paper2agent: Reimagining research papers as interactive and reliable AI agents. arXiv preprint,
+     2025. doi: 10.48550/arXiv.2509.17632. arXiv:2509.17632.
+[16] Evan Miller. Adding error bars to evals: A statistical approach to language model evaluations.
+     arXiv preprint, 2024. doi: 10.48550/arXiv.2411.00640. arXiv:2411.00640.
+[17] Richard Yuanzhe Pang, Weizhe Yuan, Kyunghyun Cho, He He, Sainbayar Sukhbaatar, and
+     Jason Weston. Iterative reasoning preference optimization. In Advances in Neural Information
+     Processing Systems (NeurIPS), 2024. arXiv:2404.19733.
+[18] Rafael Rafailov, Archit Sharma, Eric Mitchell, Stefano Ermon, Christopher D. Manning, and
+     Chelsea Finn. Direct preference optimization: Your language model is secretly a reward model.
+     In Advances in Neural Information Processing Systems, volume 36, 2023. doi: 10.48550/arXiv.
+     2305.18290. arXiv:2305.18290; NeurIPS 2023 (proceedings vol. 36).
+[19] Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Mingchuan Zhang, Y.K. Li,
+     Y. Wu, and Daya Guo. DeepSeekMath: Pushing the limits of mathematical reasoning in open
+     language models. arXiv preprint, 2024. doi: 10.48550/arXiv.2402.03300. arXiv:2402.03300.
+
+
+                                                24
+
+[PAGE 25]
+[20] DiJia Su, Sainbayar Sukhbaatar, Michael Rabbat, Yuandong Tian, and Qinqing Zheng. Du-
+     alformer: Controllable fast and slow thinking by learning with randomized reasoning traces.
+     arXiv preprint arXiv:2410.09918, 2024.
+[21] Zelin Tan, Hejia Geng, Xiaohang Yu, Mulei Zhang, Guancheng Wan, Yifan Zhou, Qiang He,
+     Xiangyuan Xue, Heng Zhou, Yutao Fan, Zhongzhi Li, Zaibin Zhang, Guibin Zhang, Chen
+     Zhang, Zhenfei Yin, Philip Torr, and Lei Bai. Scaling behaviors of LLM reinforcement learning
+     post-training: An empirical study in mathematical reasoning. arXiv preprint arXiv:2509.25300,
+     2025.
+[22] Zhichao Wang et al. GIFT: Group-relative implicit fine-tuning integrates GRPO with DPO and
+     UNA. arXiv preprint, 2025. doi: 10.48550/arXiv.2510.23868. arXiv:2510.23868.
+[23] Yihong Wu, Liheng Ma, Lei Ding, Muzhi Li, Xinyu Wang, Kejia Chen, Zhan Su, Zhanguang
+     Zhang, Chenyang Huang, Yingxue Zhang, Mark Coates, and Jian-Yun Nie. It takes two:
+     Your GRPO is secretly DPO. arXiv preprint, 2025. doi: 10.48550/arXiv.2510.00977.
+     arXiv:2510.00977.
+
+
+
+
+                                               25

@@ -25,11 +25,20 @@ The outer archive digest is recorded in `REVIEW_BUNDLE.sha256`.
   result records, recovery receipts, A100-quota evidence, and filtered-failure log;
 - frozen source-provenance archives and corpus-binding records.
 
+The accepted r4-2 receipts bind `pilot/objective.py` to SHA-256
+`980a56a1651299a5adbe7a0927c13b12d42d9d7e1a36205500a24d5eeba9b61b`.
+Later experiments changed the live checkout. The exact executed source was
+recovered from the prior content-addressed review bundle, frozen as
+`pilot/provenance/r4-2-objective.py`, and is placed at the original path inside
+this archive. The bundle builder fails if that snapshot's hash changes.
+
 ## Deliberate boundary
 
 The archive supports offline verification of cryptographic integrity and the
 internal invariants reported in the paper. It includes all 600 stored gradient
-diagnostics and all six evaluation/compute ledgers.
+diagnostics and all six evaluation/compute ledgers. The verifier also evaluates
+the frozen joint mechanism predicate and records that the completed
+intended-full balanced cell passes 69/100 steps, below the required 95/100.
 
 It does not include private model checkpoints, raw generated corpus payloads,
 per-example held-out predictions, or credentials. Therefore the verifier does

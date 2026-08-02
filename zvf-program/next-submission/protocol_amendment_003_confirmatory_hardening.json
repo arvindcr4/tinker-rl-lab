@@ -1,0 +1,117 @@
+{
+  "schema_version": "aiml-next-protocol-amendment-v1",
+  "amendment_id": "A003_confirmatory_hardening",
+  "status": "prospective_before_confirmatory_execution",
+  "trigger": {
+    "phase": "pre-confirmatory adversarial design audit",
+    "audit_date": "2026-08-02",
+    "confirmatory_rows_completed_before_amendment": 0,
+    "findings": [
+      "The frozen protocol pinned no learning rate, optimizer, clipping epsilon, KL coefficient, importance-sampling level, reward scaling, or adapter configuration; those values existed only inside a preflight script pinned for one optimizer step.",
+      "The blinded variance reassessment may raise the seed count to 24, but no deterministic derivation rule for seeds 17-24 existed.",
+      "The power derivation used the large-sample normal approximation that the same-day E1 statistical reanalysis repudiated as anti-conservative at small n, and it powered each task at alpha 0.025 although the locked analysis applies Holm across two tasks, whose worst-case per-test alpha is 0.0125.",
+      "The G=2 probe size had no preregistered justification despite being the intervention's central design degree of freedom.",
+      "Non-evidence preflights ran on preregistered confirmatory seeds without a documented reuse policy.",
+      "Amendment-mandated and preregistered telemetry fields (completion_clipped_fraction, two_sample_false_homogeneity, policy-ratio tails, KL fields, parser_disagreement, wall_clock_seconds) were absent from the results contract's required seed-row fields.",
+      "The execution authorization named the protocol path but no protocol hash, so what was authorized was not machine-defined."
+    ]
+  },
+  "timing": {
+    "confirmatory_rows_completed_before_amendment": 0,
+    "confirmatory_outcomes_inspected": false,
+    "preflight_is_scientific_evidence": false
+  },
+  "change": {
+    "objective": {
+      "epsilon": 0.2,
+      "epsilon_high": 0.2,
+      "importance_sampling_level": "token",
+      "scale_rewards": "group",
+      "loss_type": "grpo",
+      "beta": 0.0
+    },
+    "optimizer": {
+      "learning_rate": 1e-06,
+      "lr_scheduler_type": "linear",
+      "warmup_steps": 0,
+      "optim": "adamw_torch_fused",
+      "weight_decay": 0.0,
+      "max_grad_norm": 1.0,
+      "num_iterations": 1,
+      "mask_truncated_completions": false
+    },
+    "precision_and_memory": {
+      "bf16": true,
+      "tf32": true,
+      "gradient_checkpointing": true,
+      "gradient_checkpointing_use_reentrant": false
+    },
+    "adapter": {
+      "method": "lora",
+      "r": 16,
+      "lora_alpha": 32,
+      "lora_dropout": 0.0,
+      "target_modules": "all-linear",
+      "bias": "none",
+      "task_type": "CAUSAL_LM"
+    },
+    "seed_plan": {
+      "planning_seed_count": 23,
+      "added_seeds": [307, 311, 313, 317, 331, 337, 347],
+      "seed_derivation_rule": "Seeds beyond the original 16 are the ascending primes strictly greater than 293 that are disjoint from the E1 seed set {11, 23, 37, 53, 71, 89, 107, 131} and from every already-frozen seed, taken in ascending order as needed. The 24th seed, required only if the blinded reassessment raises the count to the cap, is 349.",
+      "seed_24_reserve": 349
+    },
+    "power_plan": {
+      "power_method": "exact one-sided noncentral paired-t; stdlib implementation pinned in this amendment",
+      "per_task_alpha_nominal": 0.025,
+      "planning_alpha_worst_case": 0.0125,
+      "planning_alpha_basis": "Holm across two tasks tests the smaller p at alpha/2; each task is powered at the worst-case per-test alpha",
+      "exact_t_seed_count_before_inflation": 19,
+      "variance_transfer_inflation": 1.2,
+      "planning_seed_count_after_inflation": 23,
+      "blinded_reassessment_method": "Capability endpoint: exact one-sided noncentral paired-t at planning_alpha_worst_case with the reassessed paired-difference variance. Cost endpoint: one-sided paired-t on the paired log token ratio against the log(0.8) boundary at the same alpha and target power. The frozen final count is the larger requirement across both endpoints and both tasks, increase-only, capped at 24; exceeding the cap yields STOP_UNDERPOWERED.",
+      "joint_power_disclosure": "The 0.80 target is per endpoint per task. The joint success rule requires every endpoint to pass on both tasks, so the probability of the preregistered joint success criterion is not powered above the product of the per-endpoint powers; this is disclosed as a limitation rather than silently multiplied away.",
+      "superseded_fields": "normal_approximation_seed_count_before_inflation (13) and planning_seed_count_after_inflation (16) are replaced by the exact-t values in this amendment."
+    },
+    "probe_size_justification": {
+      "choice": "single G=2 probe, no probe-size arm in the confirmatory matrix",
+      "rationale": "G=2 is the maximal-savings and worst-case-false-homogeneity design point: expected token savings are 0.75 times the G=2 homogeneous fraction, and the false-homogeneity probability conditional on a two-sample agreement is quantified a priori (about 0.98 at per-prompt success p=0.5, 0.84 at p=0.25 or 0.75). The design deliberately tests the worst case for the censoring mechanism: harm, if any, is maximized and therefore detectable by the joint non-inferiority guard, and false homogeneity is measured directly on the baseline arm's first two samples. Adding probe-size arms would break the closed complete-matrix discipline that the prior review required.",
+      "follow_up": "A G=4 probe is the preregistered first follow-up ablation: at p=0.5 it cuts the false-homogeneity probability from about 0.50 to about 0.125 while still saving up to 37.5% of tokens on homogeneous groups. It is out of the confirmatory claim universe for this paper.",
+      "limitation": "A probe-size result cannot be claimed from this study; the paper reports the G=2 operating point only."
+    },
+    "preflight_seed_reuse_policy": "Non-evidence preflights may run on preregistered confirmatory seeds. A preflight is at most one optimizer step with heldout_n=8, is labeled preflight-not-evidence, and can never populate the confirmatory ledger. Confirmatory units are fresh, independent full runs; no preflight outcome, reward trace, or checkpoint enters any analysis. This reuse is permitted because no efficacy information flows from a preflight into the confirmatory estimands.",
+    "telemetry_contract_completion": [
+      "completion_clipped_fraction",
+      "two_sample_false_homogeneity",
+      "policy_ratio_q05_q50_q95",
+      "clip_fraction_by_advantage_sign",
+      "kl_to_data_policy",
+      "kl_to_initial_reference",
+      "parser_disagreement",
+      "wall_clock_seconds"
+    ],
+    "protocol_self_binding": {
+      "mechanism": "execution_authorization.json records protocol_canonical_sha256",
+      "canonicalization": "UTF-8 bytes of preregistration.json with the JSON values of bindings.execution_authorization_sha256 and authorization.receipt_sha256 replaced by the empty string before hashing",
+      "purpose": "The authorized protocol revision is machine-defined and verifier-checked without a circular hash dependency."
+    }
+  },
+  "invariants": {
+    "tasks_unchanged": true,
+    "arms_unchanged": true,
+    "reward_semantics_unchanged": true,
+    "decoder_unchanged": true,
+    "completion_cap_unchanged": true,
+    "heldout_rows_unchanged": true,
+    "primary_estimands_unchanged": true,
+    "margins_unchanged": true,
+    "reassessment_increase_only_unchanged": true,
+    "seed_cap_unchanged": true
+  },
+  "bindings": {
+    "prior_protocol_sha256": "9a25e44b0a70a24c0591f48755a4cbe2117e60995daf8bf61b72ed1c6f507c60",
+    "power_implementation_path": "zvf-program/audit/aggregate_audit.py",
+    "power_implementation_sha256": "c323c4edcd021e10b0ffe5fe27461aa7c0f6354e718519b50f5bcfa1e240358e"
+  },
+  "evidence_boundary": "This amendment hardens specification before any confirmatory row exists. It introduces no outcome information, changes no estimand or margin, and cannot support claims C1-C5. Preflight outcomes remain non-evidence."
+}

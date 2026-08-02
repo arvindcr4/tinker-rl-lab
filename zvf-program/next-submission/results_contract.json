@@ -37,7 +37,15 @@
     "mixed_fraction",
     "heldout_correct",
     "heldout_n",
-    "heldout_accuracy"
+    "heldout_accuracy",
+    "completion_clipped_fraction",
+    "two_sample_false_homogeneity",
+    "policy_ratio_q05_q50_q95",
+    "clip_fraction_by_advantage_sign",
+    "kl_to_data_policy",
+    "kl_to_initial_reference",
+    "parser_disagreement",
+    "wall_clock_seconds"
   ],
   "main_table_columns": [
     "task",
@@ -87,5 +95,5 @@
     "invalid",
     "quarantined"
   ],
-  "publication_gate": "Every one of the 64 initially planned task-arm-seed rows, or every row added by the blinded variance amendment, must be complete and hash-valid before the main table can be generated."
+  "publication_gate": "Every one of the 92 task-arm-seed rows planned under the A003-amended 23-seed plan, or every row added by the blinded variance reassessment up to the 24-seed cap, must be complete and hash-valid before the main table can be generated."
 }

@@ -14,6 +14,12 @@
       "status": "prospective_before_confirmatory_execution",
       "path": "zvf-program/next-submission/protocol_amendment_002_qwen_decoder.json",
       "sha256": "5695e5358f12b318c142b357fa7b42df3fb4b824bb55b5ea2f3d6d8a4454739d"
+    },
+    {
+      "amendment_id": "A003_confirmatory_hardening",
+      "status": "prospective_before_confirmatory_execution",
+      "path": "zvf-program/next-submission/protocol_amendment_003_confirmatory_hardening.json",
+      "sha256": "25047e5a806651700b9112fb9f77f6b549955e54a4e1b98bad986b99d36e72f8"
     }
   ],
   "conference_target": "next_general_ai_ml_conference_tbd",
@@ -103,6 +109,39 @@
         "do_sample": false
       }
     },
+    "objective": {
+      "epsilon": 0.2,
+      "epsilon_high": 0.2,
+      "importance_sampling_level": "token",
+      "scale_rewards": "group",
+      "loss_type": "grpo",
+      "beta": 0.0
+    },
+    "optimizer": {
+      "learning_rate": 1e-06,
+      "lr_scheduler_type": "linear",
+      "warmup_steps": 0,
+      "optim": "adamw_torch_fused",
+      "weight_decay": 0.0,
+      "max_grad_norm": 1.0,
+      "num_iterations": 1,
+      "mask_truncated_completions": false
+    },
+    "precision_and_memory": {
+      "bf16": true,
+      "tf32": true,
+      "gradient_checkpointing": true,
+      "gradient_checkpointing_use_reentrant": false
+    },
+    "adapter": {
+      "method": "lora",
+      "r": 16,
+      "lora_alpha": 32,
+      "lora_dropout": 0.0,
+      "target_modules": "all-linear",
+      "bias": "none",
+      "task_type": "CAUSAL_LM"
+    },
     "fixed_components": [
       "initial checkpoint",
       "tokenizer",
@@ -116,7 +155,9 @@
       "checkpoint rule",
       "held-out prompts",
       "decoder",
-      "evaluator"
+      "evaluator",
+      "objective hyperparameters",
+      "adapter configuration"
     ],
     "arms": [
       {
@@ -130,7 +171,7 @@
     ]
   },
   "paired_seed_plan": {
-    "planning_seed_count": 16,
+    "planning_seed_count": 23,
     "seeds": [
       211,
       223,
@@ -147,24 +188,38 @@
       277,
       281,
       283,
-      293
+      293,
+      307,
+      311,
+      313,
+      317,
+      331,
+      337,
+      347
     ],
+    "seed_derivation_rule": "Seeds beyond the original 16 are the ascending primes strictly greater than 293 that are disjoint from the E1 seed set {11, 23, 37, 53, 71, 89, 107, 131} and from every already-frozen seed, taken in ascending order as needed.",
+    "seed_24_reserve": 349,
     "independent_unit": "training seed within a frozen task-model-stack cell",
     "disjoint_from_e1": true
   },
   "power_plan": {
-    "test_family": "one-sided paired non-inferiority planning approximation",
+    "test_family": "one-sided paired non-inferiority, exact noncentral-t planning",
+    "power_method": "exact one-sided noncentral paired-t; stdlib implementation hash-bound in this protocol",
     "planning_sd": 0.012828539611796383,
     "accuracy_margin": 0.01,
     "per_task_alpha": 0.025,
+    "planning_alpha_worst_case": 0.0125,
+    "planning_alpha_basis": "Holm across two tasks tests the smaller p at alpha/2; each task is powered at the worst-case per-test alpha",
     "target_power": 0.8,
     "variance_transfer_inflation": 1.2,
-    "normal_approximation_seed_count_before_inflation": 13,
-    "planning_seed_count_after_inflation": 16,
+    "exact_t_seed_count_before_inflation": 19,
+    "planning_seed_count_after_inflation": 23,
+    "joint_power_disclosure": "The 0.80 target is per endpoint per task; the joint two-task intersection-union success probability is not powered above the product of the per-endpoint powers and is disclosed as a limitation.",
     "cost_effect_scale": "paired_log_token_ratio",
     "cost_success_boundary_log_ratio": -0.2231435513142097,
     "cost_variance_source": "blinded first-eight paired task-arm cells; no valid prior is assumed",
     "blinded_reassessment_after_completed_pairs_per_cell": 8,
+    "blinded_reassessment_method": "Capability: exact one-sided noncentral paired-t at planning_alpha_worst_case with the reassessed paired-difference variance. Cost: one-sided paired-t on the paired log token ratio against the log(0.8) boundary at the same alpha and target power.",
     "maximum_seed_count_per_cell": 24,
     "final_seed_count_rule": "maximum of capability and cost requirements across both tasks, capped at 24",
     "cap_exceeded_verdict": "STOP_UNDERPOWERED",
@@ -273,11 +328,11 @@
     "claim_ledger_path": "zvf-program/next-submission/claim_ledger.json",
     "claim_ledger_sha256": "0ab19d64ec448642dbf760dc4005f2bb8b1cb6d5ae8baa728279dd6157de2234",
     "results_contract_path": "zvf-program/next-submission/results_contract.json",
-    "results_contract_sha256": "6e543d9757c12fbbe94f5e14938ee5d9535bd9a9c0a6d278280437a6abfaff6d",
+    "results_contract_sha256": "bef7dd99152ebea1ed6ab8d38174af7bd53a921e833081d60a51f6f3057dc78e",
     "manuscript_blueprint_path": "zvf-program/next-submission/MANUSCRIPT_BLUEPRINT.md",
     "manuscript_blueprint_sha256": "6a9c6645683d41383a38d5c399a0fb35c864a93f537625a171cfd6961fb62588",
     "execution_authorization_path": "zvf-program/next-submission/execution_authorization.json",
-    "execution_authorization_sha256": "c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561",
+    "execution_authorization_sha256": "8f13c39384e08ada8f30b34abe90afd10e5aef22da4b7c2282471377d37531ed",
     "contrast_sampler_path": "zvf-program/next-submission/contrast_sampler.py",
     "contrast_sampler_sha256": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
     "trl_sampler_adapter_path": "zvf-program/next-submission/trl_sampler_adapter.py",
@@ -288,6 +343,10 @@
     "protocol_amendment_001_sha256": "89f8ff4653e4f41c2988b2e6103080c75c7e3bac342c0ff36680bee1c4ea371a",
     "protocol_amendment_002_path": "zvf-program/next-submission/protocol_amendment_002_qwen_decoder.json",
     "protocol_amendment_002_sha256": "5695e5358f12b318c142b357fa7b42df3fb4b824bb55b5ea2f3d6d8a4454739d",
+    "protocol_amendment_003_path": "zvf-program/next-submission/protocol_amendment_003_confirmatory_hardening.json",
+    "protocol_amendment_003_sha256": "25047e5a806651700b9112fb9f77f6b549955e54a4e1b98bad986b99d36e72f8",
+    "power_implementation_path": "zvf-program/audit/aggregate_audit.py",
+    "power_implementation_sha256": "c323c4edcd021e10b0ffe5fe27461aa7c0f6354e718519b50f5bcfa1e240358e",
     "preflight_launcher_path": "zvf-program/next-submission/run_preflight.py",
     "preflight_launcher_sha256": "550e2bef382f3c302e4b46977eb89b11941d02e1db97bd32c80be53955efe11b",
     "preflight_matrix_verifier_path": "zvf-program/next-submission/verify_preflight_matrix.py",
@@ -332,6 +391,6 @@
     "submit": false,
     "promotion": false,
     "receipt_path": "zvf-program/next-submission/execution_authorization.json",
-    "receipt_sha256": "c201253789abed5dacb404bf5c6d367f32d71d7a38cd7db607212768faabd561"
+    "receipt_sha256": "8f13c39384e08ada8f30b34abe90afd10e5aef22da4b7c2282471377d37531ed"
   }
 }

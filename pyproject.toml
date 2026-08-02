@@ -30,12 +30,15 @@ classifiers = [
 ]
 
 dependencies = [
-    "numpy>=1.24.0",
-    "torch>=2.0.0",
+    # E1 frozen-runtime lock (see execution-notes.md); pinned for reproducibility.
+    "numpy==2.2.6",
+    "torch==2.7.1",
+    "transformers==5.5.4",
+    "datasets==4.8.4",
+    "huggingface-hub==1.11.0",
+    "wandb==0.21.0",
     "gymnasium>=0.29.0",
     "tinker>=0.5.0",
-    "transformers>=4.36.0",
-    "datasets>=2.14.0",
     "codecarbon>=2.0.0",
 ]
 
@@ -44,11 +47,11 @@ tinkerrl = "platform_local.unified.__main__:main"
 
 [project.optional-dependencies]
 trl = [
-    "transformers>=4.36.0",
-    "trl>=0.7.0",
-    "datasets>=2.14.0",
-    "peft>=0.5.0",
-    "accelerate>=0.24.0",
+    "transformers==5.5.4",
+    "trl==1.2.0",
+    "datasets==4.8.4",
+    "peft==0.19.1",
+    "accelerate==1.13.0",
 ]
 sb3 = [
     "stable-baselines3>=2.1.0",
@@ -67,15 +70,15 @@ eval = [
     "openai>=1.0.0",
 ]
 all = [
-    "accelerate>=0.24.0",
+    "accelerate==1.13.0",
     "d3rlpy>=2.0.0",
     "fschat>=0.2.33",
     "openai>=1.0.0",
-    "peft>=0.5.0",
+    "peft==0.19.1",
     "stable-baselines3>=2.1.0",
     "tensorboard>=2.14.0",
     "tianshou>=0.5.0",
-    "trl>=0.7.0",
+    "trl==1.2.0",
 ]
 dev = [
     "build>=1.2",

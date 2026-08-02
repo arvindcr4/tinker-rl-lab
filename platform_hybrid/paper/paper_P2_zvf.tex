@@ -4,6 +4,8 @@
 % Build: pdflatex paper_P2_zvf ; bibtex paper_P2_zvf ; pdflatex x2
 % =============================================================================
 \documentclass{article}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows.meta,positioning,calc}
 \input{sections/_shared_preamble}
 \title{The Zero-Variance Fraction:\\
        A Descriptive Diagnostic for Signal Starvation in GRPO}
@@ -39,4 +41,206 @@
 \input{sections/zvf_pipeline_spec}
 \bibliographystyle{plainnat}
 \bibliography{references}
+
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Step Rewards};
+    \node [b2, right=of n1] (n2) {\textbf{ZVF Telemetry Monitor}\\ZVF Calculator};
+    \node [b3, right=of n2] (n3) {Diagnostic Alert};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{ZVF Telemetry Monitor}. Real-time zero-variance monitoring loop.}
+\label{fig:p02_f1}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Batch Advantages};
+    \node [b2, right=of n1] (n2) {\textbf{Contrastive Advantage Mass}\\Mass Estimator};
+    \node [b3, right=of n2] (n3) {Yield Metric};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Contrastive Advantage Mass}. Measuring contrastive advantage yield.}
+\label{fig:p02_f2}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Rollout Outcomes};
+    \node [b2, right=of n1] (n2) {\textbf{All-Correct vs All-Wrong Separation}\\Zero-Var Filter};
+    \node [b3, right=of n2] (n3) {Filtered Batch};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{All-Correct vs All-Wrong Separation}. Classifying rollout zero-variance states.}
+\label{fig:p02_f3}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Step Stream};
+    \node [b2, right=of n1] (n2) {\textbf{Step-Level ZVF Accounting}\\Telemetry Engine};
+    \node [b3, right=of n2] (n3) {ZVF Plot};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Step-Level ZVF Accounting}. Step-by-step telemetry of ZVF ratio.}
+\label{fig:p02_f4}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Binary Rewards};
+    \node [b2, right=of n1] (n2) {\textbf{Binary Reward ZVF Identity Verification}\\Identity Engine};
+    \node [b3, right=of n2] (n3) {Exact Match 1.1e-16};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Binary Reward ZVF Identity Verification}. Verification of pass@G - p^G = 1 - ZVF.}
+\label{fig:p02_f5}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Task Matrix};
+    \node [b2, right=of n1] (n2) {\textbf{Reward Variance Heatmap Pipeline}\\Heatmap Generator};
+    \node [b3, right=of n2] (n3) {Variance Map};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Reward Variance Heatmap Pipeline}. Generating reward variance heatmaps.}
+\label{fig:p02_f6}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {ZVF Stream};
+    \node [b2, right=of n1] (n2) {\textbf{ZVF Sentinel Early Stopping Gate}\\Threshold Gate};
+    \node [b3, right=of n2] (n3) {Stop vs Continue};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{ZVF Sentinel Early Stopping Gate}. Early stopping gate when ZVF exceeds threshold.}
+\label{fig:p02_f7}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Group Rollouts};
+    \node [b2, right=of n1] (n2) {\textbf{Contrastive Group Yield Calculator}\\Yield Calculator};
+    \node [b3, right=of n2] (n3) {Contrastive Score};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Contrastive Group Yield Calculator}. Calculating net contrastive yield per prompt cohort.}
+\label{fig:p02_f8}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Prompt Array};
+    \node [b2, right=of n1] (n2) {\textbf{Prompt-Level ZVF Distribution Profiler}\\Distribution Profiler};
+    \node [b3, right=of n2] (n3) {Prompt Tier Report};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Prompt-Level ZVF Distribution Profiler}. Profiling ZVF distribution across prompt difficulty tiers.}
+\label{fig:p02_f9}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Rollout Engine};
+    \node [b2, right=of n1] (n2) {\textbf{Integrated ZVF Sentinel Control Pipeline}\\ZVF Diagnostic Core};
+    \node [b3, right=of n2] (n3) {Optimization Telemetry};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Integrated ZVF Sentinel Control Pipeline}. End-to-end ZVF diagnostic and monitoring stack.}
+\label{fig:p02_f10}
+\end{figure}
+
 \end{document}

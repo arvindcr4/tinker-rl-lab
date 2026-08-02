@@ -61,3 +61,23 @@ reproducibility mismatches. All were corrected before release:
 The follow-up audit found no remaining P0/P1 issue and judged the revised
 package publishable in its stated scope: a methods/reproducibility preprint and
 registered-feasibility postmortem.
+
+## 2026-08-02 truth-audit correction
+
+A later audit supersedes the final sentence above on two points:
+
+- The sole completed intended-full balanced cell satisfies the frozen joint
+  cosine/relative-L2 predicate on 69/100 steps, below the preregistered 95/100
+  threshold. High cosine alone was descriptive and cannot be called registered
+  equivalence. The paper and claim ledger now report a failed mechanism cell.
+- The live `pilot/objective.py` had changed after execution, while accepted
+  receipts bound the executed file to SHA-256 `980a56a...`. The exact file was
+  recovered from the previous content-addressed bundle, frozen under
+  `pilot/provenance/r4-2-objective.py`, and made a hard input to the bundle
+  builder. Clean extraction now verifies the manifest, exact source hash, and
+  the 69/100 failed gate.
+
+These corrections preserve the methods/postmortem scope but further narrow the
+empirical claim: the campaign establishes receipt integrity, a failed balanced
+mechanism cell, and an infeasible positive-control construction. It does not
+establish implementation equivalence or a causal training effect.

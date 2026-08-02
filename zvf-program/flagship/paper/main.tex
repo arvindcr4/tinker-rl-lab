@@ -33,7 +33,6 @@
 \newtheorem{remark}{Remark}
 \newcommand{\grpo}{\textsc{GRPO}\xspace}
 \newcommand{\zvf}{\textsc{ZVF}\xspace}
-\newcommand{\rlm}{\textsc{RLM}\xspace}
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\Prob}{\mathbb{P}}
 \newcommand{\ind}{\mathbf{1}}
@@ -77,16 +76,15 @@ We then report the outcome of a frozen A100 screening campaign without filling
 in missing evidence.  Six scientific units completed in the balanced
 equal-length negative control.  Each contained 100 replay steps, 62--65 of
 which store exact joint-zero gradient diagnostics; all remaining intended-versus-native
-cosines were at least 0.999844.  The filtered variable-length positive control
-was contract-infeasible, four seed-37 units remain pending for accelerator
-quota, and no confirmatory matrix ran.  Consequently, this registered
+cosines were at least 0.999844.  High cosine was not the registered gate: the
+sole completed intended-full cell satisfies the joint cosine/relative-$\ell_2$
+criterion on 69/100 steps, below the required 95/100.  The filtered
+variable-length positive control was contract-infeasible, four seed-37 units
+remain pending for accelerator quota, and no confirmatory matrix ran.  Consequently, this registered
 feasibility outcome does not establish a causal training effect or a scientific
-negative result about objective semantics.  Finally, we specify a prospective
-trace-aware extension for recursive language-model harnesses.  Its process
-traces may resolve some terminal-reward ambiguity, but we state this as a
-falsifiable study design, not a result.  The paper's contribution is an
-auditable boundary between conformance evidence, mathematical necessity,
-registered feasibility outcomes, and hypotheses.
+negative result about objective semantics.  The paper's contribution is an
+auditable boundary between conformance evidence, mathematical necessity, and a
+registered feasibility outcome.
 \end{abstract}
 
 \section{Introduction}
@@ -142,9 +140,8 @@ We make four contributions.
   not a competing starvation theory.
   \item We prove a two-action batch-retry witness and state the standard
   conditional value-of-information inequality under explicit assumptions.
-  \item We release an audited registered-feasibility postmortem and a
-  prospective \rlm trace-aware validation protocol.  We explicitly do not claim
-  a training effect, controller improvement, or \rlm result.
+  \item We release an audited registered-feasibility postmortem.  We explicitly
+  do not claim a training effect or controller improvement.
 \end{enumerate}
 
 \paragraph{Claim discipline.}
@@ -213,18 +210,6 @@ and every verdict is bound to source and fixture hashes.  This complements
 experiment-lineage systems such as MLflow \citep{zaharia2018mlflow}; lineage
 records what ran, whereas conformance also asks whether the recorded operation
 matches a declared equation.
-
-\subsection{Recursive language-model harnesses}
-
-Recursive Language Models (RLMs) treat a long prompt as an external environment
-that a model can inspect programmatically and can process through recursive
-subcalls \citep{zhang2025rlm}.  Subsequent harness experiments report
-generalization from shorter training tasks to longer or structurally related
-tasks \citep{zhang2026harness}.  The harness exposes intermediate events such as
-iterations, REPL calls, and sub-model calls.  Those observations motivate our
-prospective extension in Section~\ref{sec:rlm}; they do not constitute process
-rewards and do not imply that an \rlm implementation avoids gradient
-starvation.
 
 \section{A Fail-Closed Conformance Protocol}
 \label{sec:method}
@@ -617,12 +602,17 @@ for seed 23; every such receipt stores both norms as exact zero and leaves
 cosine and relative $\ell_2$ null.  The verifier checks those stored invariants
 but does not regenerate gradients from private model checkpoints.
 
-The balanced negative control behaves in the direction anticipated by the
-preregistration: nonzero gradients are nearly collinear and zero gradients are
-joint.  It cannot test the central causal hypothesis, which required the
-missing filtered positive control and direction-consistent effects across all
-three seeds.  Differences in the six final accuracies are neither a causal
-effect nor evidence of superiority.  No confirmatory seeds ran.
+For the sole completed intended-full balanced cell (seed 23), 69/100 receipts
+satisfy the frozen joint criterion, below the preregistered 95/100 requirement.
+Sixty-five are joint-zero; only four of the 35 nonzero receipts satisfy both
+cosine $\geq 0.999$ and relative $\ell_2\leq 0.01$.  The very high cosine
+extrema are therefore descriptive near-collinearity, not registered
+equivalence.  The incomplete screening matrix prevents a full campaign
+verdict, but no missing cell can reverse this accepted cell's failure.  The
+central causal hypothesis also required the missing filtered positive control
+and direction-consistent effects across all three seeds.  Differences in the
+six final accuracies are neither causal effects nor evidence of superiority.
+No confirmatory seeds ran.
 
 \subsection{What the feasibility outcome establishes}
 
@@ -630,73 +620,16 @@ The evidence supports the following limited claims:
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
   \item fail-closed receipts can represent recorded exact-zero gradient pairs
   without dropping data or fabricating cosine similarity;
-  \item the balanced negative control produced high intended/native gradient
-  agreement in every completed unit;
+  \item the balanced records show descriptive near-collinearity, while the sole
+  completed intended-full cell fails the registered 95/100 mechanism gate;
   \item the frozen positive-control construction was infeasible for the chosen
   model/decoding contract; and
   \item the preregistered causal and confirmatory questions remain unanswered.
 \end{enumerate}
 
 The campaign does \emph{not} establish a general equivalence of TRL and the
-reference, a harmful training effect from native semantics, an advantage from a
-controller, or a result about recursive language models.
-
-\section{Prospective Trace-Aware RLM--ZVF Study}
-\label{sec:rlm}
-
-RLM harnesses create a useful test bed for the action-insufficiency result
-because a root task can expose both terminal reward and a structured process
-trace.  Let
-\begin{equation}
-  O=(R_{1:G},G,\text{root history}),\qquad
-  Z=(\text{iterations},\text{REPL calls},\text{subcalls},
-       \text{progress/error events}).
-\end{equation}
-The trace $Z$ is observational information.  Unless a separately validated
-reward model assigns it credit, it is not a process reward.
-
-\subsection{Competing hypotheses}
-
-\begin{description}[leftmargin=2.8cm,style=nextline,itemsep=3pt]
-  \item[$H_{\mathrm{terminal}}$] Terminal outcomes and charged cost are
-  sufficient; trace features add no calibrated out-of-sample information about
-  whether retry, stop, reverify, or repair is optimal.
-  \item[$H_{\mathrm{trace}}$] For observationally matched terminal histories,
-  trace features predict a preregistered latent cause or intervention response
-  and change the utility-maximizing action under matched total cost.
-  \item[$H_{\mathrm{artifact}}$] Apparent trace value is caused by leakage,
-  changing task mix, reward-parser error, or implementation differences rather
-  than action-relevant process state.
-\end{description}
-
-\subsection{Validation design}
-
-The study should freeze the official \rlm environment and rubric commit, then
-construct root tasks in at least three regimes: recoverable search failure,
-irrecoverable/invalid task, and verifier false negative.  For each root, sample
-multiple trajectories and record terminal reward, all charged tokens/calls,
-and a content-addressed trace.  Split by root task, never by trajectory, to
-avoid near-duplicate leakage.
-
-Three stages are required:
-\begin{enumerate}[leftmargin=*,itemsep=2pt]
-  \item \textbf{Measurement:} compare a terminal-only predictor with a
-  trace-aware predictor on held-out roots using calibration and prespecified
-  cause/intervention labels.
-  \item \textbf{Action reversal:} identify matched terminal histories for which
-  trace strata prospectively predict opposite best actions.  Estimate the
-  action-by-regime interaction, not merely trace/reward correlation.
-  \item \textbf{Intervention:} compare fixed-$G$, terminal-only, and trace-aware
-  policies under identical total charged cost.  Primary outcomes are utility
-  and held-out task success; all probes, rejected samples, and subcalls count.
-\end{enumerate}
-
-The trace hypothesis is falsified if root-held-out calibration does not improve,
-if the maximizing action does not change across trace strata, if gains disappear
-under matched total cost, or if independent reward/runtime audits explain the
-effect.  Binary Eq.~\eqref{eq:degeneracy} applies only when the frozen rubric is
-binary; graded \rlm rewards require direct empirical degeneracy estimates or an
-appropriate multinomial/continuous model.
+reference, a harmful training effect from native semantics, or an advantage from
+a controller.
 
 \section{Discussion}
 
@@ -736,12 +669,6 @@ updates between retries, correlated rollouts, continuous rewards, and changing
 verification policies.  Its purpose is to prove insufficiency under transparent
 assumptions, not to prescribe a universal controller.
 
-The \rlm section is a protocol only.  Harness traces can be high-dimensional,
-post-treatment, and correlated with cost.  They may reveal task identity or
-answer content and thereby create leakage.  A valid experiment needs root-level
-splits, independently labeled causes, matched compute, and ablations that
-separate trace content from simple call counts.  We have not run that study.
-
 Finally, the current repository contains mutable working-tree development
 around immutable acceptance artifacts.  Reproduction should use the source
 hashes and artifact commits in receipts, not assume that a directory name alone
@@ -760,11 +687,9 @@ regret.
 These facts make semantic and evidential discipline part of the algorithm.  A
 fail-closed conformance chain can show what objective, gradient, and update
 actually ran; immutable receipts can distinguish accepted evidence from failed,
-descoped, pending, and unrun work.  In our campaign, that discipline supports a
-balanced-control conformance observation and an honest infeasibility result,
-not the preregistered causal headline.  Trace-aware RLM control is a promising
-way to test whether additional process information resolves the ambiguity, but
-it remains a falsifiable next experiment.
+descoped, pending, and unrun work.  In our campaign, that discipline exposes a
+failed balanced mechanism gate and an infeasible positive-control construction,
+not the preregistered causal headline.
 
 \section*{Reproducibility Statement}
 
@@ -899,7 +824,6 @@ reported decomposition.
     Filtered positive control & Frozen CV gate cannot be met & Infeasible \\
     Causal training effect & Needs both regimes and all seeds & Not established \\
     Controller benefit & No matched intervention study & Not run \\
-    Trace-aware RLM value & Preregisterable protocol only & Proposed \\
     \bottomrule
   \end{tabularx}
 \end{table}

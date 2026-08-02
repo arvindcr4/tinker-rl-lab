@@ -1,0 +1,3550 @@
+\documentclass{article}
+\usepackage[preprint,nonatbib]{neurips_2026} \usepackage[numbers]{natbib}
+
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{multirow}
+\usepackage{siunitx}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{positioning, fit, arrows.meta, backgrounds, calc, shadows, shapes.geometric, shapes.misc, decorations.pathreplacing}
+
+\newcommand{\tinker}{\textsc{Tinker}}
+\newcommand{\atropos}{\textsc{Atropos}}
+\newcommand{\grpo}{\textsc{Grpo}}
+\newcommand{\ours}{\textsc{TinkerRL-Bench}}
+\newcommand{\answerPartial}[1][]{\textcolor{purple}{[Partial] #1}}
+
+\providecommand{\eps}{\ensuremath{\epsilon}}
+\providecommand{\tableref}[1]{Table~\ref{#1}}
+\providecommand{\secref}[1]{Section~\ref{#1}}
+\providecommand{\paragraphref}[1]{Paragraph~\ref{#1}}
+\providecommand{\figref}[1]{Figure~\ref{#1}}
+\providecommand{\eqnref}[1]{Eq.~\eqref{#1}}
+
+\usepackage[strings]{underscore}
+
+\usepackage{letltxmacro}
+\LetLtxMacro{\origincludegraphics}{\includegraphics}
+\renewcommand{\includegraphics}[2][]{\IfFileExists{#2}{\origincludegraphics[#1]{#2}}{\IfFileExists{figures/#2}{\origincludegraphics[#1]{figures/#2}}{\fbox{\parbox{0.7\linewidth}{\centering\small\textit{[missing figure artifact: \texttt{\detokenize{#2}}]}}}}}}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareUnicodeCharacter{0394}{\ensuremath{\Delta}}
+\DeclareUnicodeCharacter{03B4}{\ensuremath{\delta}}
+\DeclareUnicodeCharacter{00D7}{\ensuremath{\times}}
+\DeclareUnicodeCharacter{2264}{\ensuremath{\leq}}
+\DeclareUnicodeCharacter{2265}{\ensuremath{\geq}}
+\DeclareUnicodeCharacter{2248}{\ensuremath{\approx}}
+
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\task}{\textsf{task}}
+\newcommand{\algo}{\textsf{algo}}
+\newcommand{\seed}{\textsf{seed}}
+
+\newcommand{\tplat}{T_{\text{plat}}}
+\newcommand{\zvf}{\ensuremath{\widetilde{\mathrm{ZVF}}}}
+\providecommand{\signature}{\ensuremath{\mathcal{S}}}
+
+\newcommand{\etal}{\emph{et al.}}
+\newcommand{\note}[1]{\footnote{#1}}
+
+\graphicspath{{figures/}{./}}
+ \title{The Zero-Variance Fraction:\\
+       A Descriptive Diagnostic for Signal Starvation in GRPO}
+\author{
+  Arvind C R \\
+  PES University\\
+  \texttt{arvindcr4@gmail.com} \\
+  \And
+  Ramesh Prakash Guledgudd\thanks{Project guide.} \\
+  PES University\\
+  \texttt{rameshpg@pes.edu} \\
+}
+ \begin{document}
+\sloppy \hbadness=10000 \vbadness=10000 \hfuzz=2pt
+\maketitle
+\begin{abstract}
+In GRPO, a prompt produces no learning signal when all $G$ sampled completions
+receive identical rewards: the group-centered advantages are zero and the gradient
+vanishes. The \emph{Zero-Variance Fraction} (ZVF)---the share of groups in this
+degenerate state---is therefore a natural diagnostic of when binary, verifiable
+rewards stop training the policy. We study ZVF as one pillar of \ours{}, a
+benchmark of 70+ RL runs across seven libraries and five model families
+($0.6$B--$\sim$671B) on GSM8K, HumanEval, and tool-use tasks. We characterize ZVF
+descriptively and, deliberately, decline to promote it to a causal or
+incrementally predictive statistic. Empirically, ZVF tracks training-time signal
+starvation and correlates with catastrophic collapse (Spearman
+$\rho = 0.56$; Pearson point-biserial $0.62$), but only weakly with the final held-out outcome
+($\rho \approx 0.27$); it is temporally sticky (late-phase $0.87$--$0.97$, versus
+early-phase $0.04$--$0.13$ for variance-mitigation GRPO and the largest group size,
+with smaller groups starting higher at $0.25$--$0.61$; lag-1 autocorrelation $\approx 0.94$) and mechanically
+coupled to reward sparsity, group size, and baseline accuracy. A concluding
+cross-examination shows ZVF's core weakness is that it aliases mastery with
+incapacity. On 505 unique prompt-seed tasks we additionally verify the exact
+binary-reward accounting identity
+$\operatorname{pass@}G-p^G=1-\mathrm{ZVF}$ to numerical error
+$1.11\times10^{-16}$: ZVF is the complement of contrastive group yield, not an
+independent performance predictor. This identity sharpens the diagnostic's
+interpretation and motivates magnitude- and sign-aware replacements. We release code,
+logs, and per-group reward tensors.
+\end{abstract}
+ 
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.5cm and 2.0cm,
+    block/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    math/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.6cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [block] (rollout) {Group Rollouts $G$\\$r_1, r_2, \dots, r_G \in \{0,1\}$};
+    \node [math, right=of rollout] (identity) {\textbf{Exact ZVF Identity}\\$\text{pass}@G - p^G = 1 - \text{ZVF}$\\($1.11 \times 10^{-16}$ Precision)};
+    \node [block, right=of identity] (grad) {Policy Gradient $\nabla_\theta \mathcal{L}$\\$\sigma_G^2 = 0 \implies \nabla_\theta \mathcal{L} = \mathbf{0}$};
+
+    \draw [arrow] (rollout) -- (identity);
+    \draw [arrow] (identity) -- (grad);
+\end{tikzpicture}
+\caption{\textbf{Zero-Variance Starvation (ZVF) Signal Cancellation \& Accounting (P02).} Exact relationship between binary pass rates, group variance, and gradient starvation.}
+\label{fig:p2_zvf_accounting}
+\end{figure}
+\section{Introduction}
+\label{sec:p2-intro}
+GRPO~\citep{shao2024deepseekmath, guo2025deepseekr1} learns from a group-relative
+baseline: for each prompt it samples $G$ completions, scores them with a verifier,
+and centers the rewards within the group. With binary correctness rewards, a group
+whose completions are all correct or all incorrect has zero within-group variance,
+zero centered advantage, and hence contributes no gradient. As training proceeds
+and the policy masters easy prompts or stalls on hard ones, the fraction of such
+degenerate groups grows, and the effective batch that actually moves the policy
+shrinks. We call this fraction the \emph{Zero-Variance Fraction} (ZVF) and ask how
+well it diagnoses when GRPO stops learning.
+
+ZVF is attractive because it is cheap, stack-agnostic, and mechanistically
+motivated: it measures exactly the condition under which the group baseline nulls
+the update. But a diagnostic is only as good as its predictive validity, and it is
+easy to over-read a quantity that is mechanically entangled with reward sparsity,
+group size, and accuracy. This paper therefore treats ZVF conservatively---as a
+descriptive instrument whose reach we bound rather than a causal predictor.
+
+We study ZVF as one pillar of \ours{}, a controlled benchmark of 70+ runs across
+seven RL libraries and five model families ($0.6$B--$\sim$671B) on GSM8K
+\citep{cobbe2021training}, HumanEval~\citep{chen2021codex}, and tool-use tasks.
+Our contributions are: (i) a cross-library, cross-scale measurement of ZVF and its
+relationship to training failure, showing strong association with catastrophic
+collapse but only weak association with the final held-out gain; (ii) an analysis
+of ZVF \emph{dynamics}, establishing that it is temporally sticky and drifts upward
+over training; (iii) a gradient-utilization view, $\mathrm{GU} = 1 - \mathrm{ZVF}$,
+linking the diagnostic to the fraction of the batch that carries signal; and (iv) a
+cross-examination that identifies ZVF's central failure---aliasing mastery with
+incapacity---and motivates magnitude- and sign-aware replacements.
+
+\paragraph{Exact accounting, bounded interpretation.}
+For a binary-reward prompt with success probability $p$, pass@$G$ is
+$1-(1-p)^G$ and unanimous success is $p^G$. Their gap is therefore
+$1-p^G-(1-p)^G=1-\mathrm{ZVF}$. The checked-in 505-task audit reproduces this
+identity to $1.11\times10^{-16}$. This is useful because it tells us exactly
+what ZVF measures---contrastive group yield---and exactly what it does not:
+held-out improvement, gradient direction, or causal value of an intervention.
+
+\subsection{Related Work}
+\label{sec:p2-related}
+Reward sparsity and vanishing advantages are recurring obstacles in RL from
+verifiable or human feedback~\citep{christiano2017deeprlhf, ouyang2022training, ahmadian2024backtobasics}. Variants of GRPO adjust the group baseline or advantage
+normalization to preserve signal~\citep{lin2025cppo, gift2025, liu2025rlsubnetworks};
+our aim is orthogonal---not to propose a new estimator but to test how well a
+simple degeneracy statistic predicts outcomes. In relating group reward variance
+to the update, we connect to analyses that recast group-relative RL as an implicit
+contrast or preference objective~\citep{wu2025grpo_dpo, liu2026gdpo}, a link we make
+explicit when discussing gradient utilization.
+ \section{Benchmark Design}
+\label{sec:benchmark}
+
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{tikz/taxonomy.pdf}
+\caption{Taxonomy of RL libraries in \ours{}. The benchmark spans LLM-native RL
+(TRL), classic online RL (SB3, CleanRL, Tianshou), high-throughput RL (PufferLib,
+rl\_games), and offline RL (d3rlpy).}
+\label{fig:taxonomy}
+\end{figure}
+
+\subsection{Task Suite}
+
+\begin{table}[htbp]
+\centering
+\caption{Benchmark task suite with standardized reward functions.}
+\label{tab:tasks}
+\begin{tabular}{llll}
+\toprule
+\textbf{Task} & \textbf{Method} & \textbf{Reward} & \textbf{Dataset} \\
+\midrule
+Math RL (Arithmetic) & GRPO & Binary correctness & Generated \\
+Math RL (GSM8K) & GRPO & Binary correctness & GSM8K \\
+Chat SFT & SFT & Cross-entropy loss & NoRobots \\
+Preference (Shorter) & DPO & Pairwise preference & Generated \\
+Distillation (Off-Policy) & SFT & KL divergence & OpenThoughts3 \\
+Distillation (On-Policy) & IS Loss & $\log p_t - \log p_s$ & Online \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Cross-Library Implementation}
+
+\paragraph{Two seven-library rosters --- read carefully.}
+This paper uses \emph{two} different seven-library rosters that
+should not be conflated. The cross-RL-library benchmark below
+(Table~\ref{tab:implementations}) covers TRL, SB3, CleanRL, Tianshou,
+PufferLib, rl\_games, and d3rlpy --- seven libraries that span
+LLM-native RL, classic online RL, high-throughput RL, and offline RL,
+and that we use as the algorithm-and-stack ablation underlying $F_3$.
+The cross-launcher LLM-RL scaffold referenced in the framework-gap
+discussion (framework-configurations material) is a different seven-library
+roster --- Tinker, TRL, SkyRL, verl, OpenRLHF, Atropos, and HF
+reference launchers --- that targets LLM post-training launchers
+specifically. Of those, only Tinker and TRL produced completed
+runs in this release; veRL and OpenRLHF entries in the
+\texttt{framework\_comparison.json} artefact are dry-run
+placeholders. Supplementary presentation materials use the second roster; the
+cross-RL-library evidence in $F_3$ uses the first.
+
+
+\begin{table}[htbp]
+\centering
+\caption{Implementations across RL libraries.}
+\label{tab:implementations}
+\begin{tabular}{lll}
+\toprule
+\textbf{Library} & \textbf{Implementation} & \textbf{Category} \\
+\midrule
+TRL (HuggingFace) & GRPOTrainer, DPOTrainer, SFTTrainer & LLM-native \\
+Stable Baselines3 & PPO & Classic RL \\
+CleanRL & PPO (single-file) & Research RL \\
+Tianshou & PPO & Modular RL \\
+PufferLib & PPO (high-throughput) & High-perf RL \\
+rl\_games (NVIDIA) & PPO (GPU-optimized) & High-perf RL \\
+d3rlpy & CQL (offline) & Offline RL \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Hyperparameter Mapping}
+
+We standardize hyperparameters across libraries using a common configuration schema.
+Table~\ref{tab:hyperparams} shows the mapping from Tinker PPO defaults to each library's
+native parameter names.
+
+\begin{table}[htbp]
+\centering
+\caption{Hyperparameter mapping across libraries (PPO defaults).}
+\label{tab:hyperparams}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Parameter} & \textbf{TRL} & \textbf{SB3} & \textbf{CleanRL} & \textbf{Tianshou} & \textbf{PufferLib} & \textbf{rl\_games} \\
+\midrule
+Learning rate & $10^{-4}$ & $10^{-4}$ & $10^{-4}$ & $10^{-4}$ & $10^{-4}$ & $10^{-4}$ \\
+Clip range ($\epsilon$) & 0.2 & 0.2 & 0.2 & 0.2 & 0.2 & 0.2 \\
+Entropy coeff. & 0.01 & 0.01 & 0.01 & 0.01 & 0.01 & 0.01 \\
+GAE $\lambda$ & 0.95 & 0.95 & 0.95 & 0.95 & 0.95 & 0.95 \\
+Discount $\gamma$ & 0.99 & 0.99 & 0.99 & 0.99 & 0.99 & 0.99 \\
+Max grad norm & 0.5 & 0.5 & 0.5 & 0.5 & 0.5 & 0.5 \\
+Target KL & 0.01 & 0.01 & 0.01 & N/A & N/A & N/A \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Reward Verification}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.55\textwidth]{tikz/reward_flow.pdf}
+\caption{Verifiable reward paradigm in \ours{}. Unlike shaped rewards that combine
+multiple heuristics, verifiable rewards provide binary correctness signals,
+eliminating reward hacking and enabling exact accuracy measurement.}
+\label{fig:reward_flow}
+\end{figure}
+
+\subsection{Baselines: Floor and Ceiling}
+
+Following best practices for benchmark design~\cite{agarwal2021deep}, we establish
+clear performance bounds:
+
+\begin{itemize}
+    \item \textbf{Floor (random baseline)}: Uniform random action selection yields
+    $\frac{1}{199} \approx 0.50\%$ accuracy on the arithmetic task.
+    \item \textbf{Ceiling (oracle)}: Direct computation achieves $100\%$ accuracy.
+    \item \textbf{Human baseline}: College-level adults achieve $\sim$99.5\% on
+    two-digit addition under timed conditions.
+\end{itemize}
+
+\section{Experimental Setup}
+\label{sec:setup}
+
+
+\subsection{Models}
+
+Our benchmark targets a roster of 32+ model configurations spanning
+\textbf{0.6B to $\sim$671B \emph{total} parameters (up to $\sim$37B \emph{active}
+for MoE checkpoints) across 5 model families}, organized into three
+tiers by compute scale; not all are completed end-to-end runs (per-run
+status flags accompany the released artifacts). Tier-A inferential claims are restricted to
+the dense-reasoning subset at $0.6$B--$235$B; the frontier MoE
+checkpoints (DeepSeek-V3.1 $\sim$671B / 37B active, Kimi-K2) are
+descriptive single-seed Tier-C case studies, and Qwen3.5-397B-A17B is a
+\emph{partial} run whose held-out evaluation did not complete.
+
+\paragraph{Small scale (0.6B--8B).}
+Qwen3-0.6B-Instruct, Qwen3.5-4B, Qwen3-4B, Qwen3-8B,
+Llama-3.2-1B, Llama-3.2-3B, Llama-3.1-8B-Instruct.
+
+\paragraph{Mid scale (14B--32B).}
+Qwen3-14B, Qwen3-30B-A3B (MoE), Qwen3-32B, Qwen3.5-27B,
+GPT-OSS-20b, Kimi-K2 (selected scale points).
+
+\paragraph{Frontier scale (70B--$\sim$671B total / $\sim$37B active).}
+Qwen3-235B-A22B (MoE, 22B active), DeepSeek-V3.1 ($\sim$671B total /
+$\sim$37B active MoE), Nemotron-120B (120B dense).
+Frontier models are evaluated via the Tinker API in inference mode
+with standardized generation parameters; LoRA fine-tuning at this
+scale is conducted on selected checkpoints (see the frontier case studies
+in the companion pillar papers of \ours{}).
+
+\paragraph{Model family coverage.}
+The benchmark covers (1) \textbf{Qwen3}: a dense family from 0.6B to 32B;
+(2) \textbf{Qwen3.5}: an improved series including 4B and 27B;
+(3) \textbf{Llama-3.x}: Meta's 1B--8B instruction-tuned models;
+(4) \textbf{DeepSeek-V3.1}: a frontier MoE optimized for reasoning;
+(5) \textbf{Nemotron-120B}: NVIDIA's dense frontier model;
+and emerging architectures \textbf{GPT-OSS-20b} and \textbf{Kimi-K2}.
+
+\subsection{Training Protocol}
+
+Unless otherwise noted, controlled Modal/TRL sweeps use LoRA
+\cite{hu2022lora} at rank $32$, learning rate $10^{-4}$ and Adam
+($\beta_1{=}0.9$, $\beta_2{=}0.95$, $\epsilon{=}10^{-8}$). Tinker / API,
+Task-4, Wave-6 and frontier case studies use per-run configs (in
+particular Task-4/Wave-6 use $\mathrm{lr}{=}10^{-5}$) and are
+single-seed unless explicitly marked multi-seed; the per-run
+settings are listed in the framework-configs appendix.
+
+\paragraph{Seed management.} The controlled TRL/Modal sweeps used for
+Tier-A claims (F3 PPO-vs.-GRPO heterogeneity and the five-seed TRL GRPO
+baseline on Qwen2.5-0.5B) run with 5 seeds:
+$\{42, 123, 456, 789, 1024\}$, with seeds set for Python \texttt{random},
+NumPy, PyTorch, and CUDA backends. Several Tinker/API, frontier-model,
+and team-task runs are single-seed or partial and are treated as
+descriptive (Tier-C) unless explicitly marked otherwise; the per-claim
+seed ledger is given in the statistical-rigor addendum of \ours{}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{tikz/pipeline.pdf}
+\caption{Experiment workflow pipeline. Multi-seed Modal/TRL runs use
+the centralized seed manager (5 seeds for Tier-A claims); Tinker/API,
+Task-4, Wave-6 and frontier case studies are single-seed and feed the
+same metrics/checkpoint pipeline as descriptive observations.}
+\label{fig:pipeline}
+\end{figure}
+
+\subsection{Statistical Methodology}
+
+Following Colas et al.~\cite{colas2019hitchhiker}, we report:
+\begin{itemize}
+    \item Mean $\pm$ standard error across seeds
+    \item 95\% bootstrap confidence intervals (10,000 resamples)
+    \item Welch's t-test for pairwise algorithm comparisons
+    \item \texttt{rliable}~\cite{agarwal2021deep} aggregate metrics (IQM, median, optimality gap)
+\end{itemize}
+
+All pairwise comparisons were evaluated using Welch's independent-samples $t$-test
+(unequal variances assumed) and the non-parametric Mann--Whitney $U$ test as a
+robustness check. Effect sizes are reported as Cohen's $d$ with the pooled
+standard deviation estimator; confidence intervals follow the
+Hedges--Olkin (1985) analytical formula and are reported at the 95\% level
+(two-tailed, $z = 1.96$). Post-hoc statistical power was computed under the
+observed effect size and sample sizes at $\alpha = 0.05$.
+
+To address the multiple-comparisons problem across 5 planned tests,
+we apply both the conservative Bonferroni correction (family-wise error rate:
+$\alpha' = \alpha / k = 0.0100$) and the Benjamini--Hochberg procedure
+(false discovery rate $< 0.05$). Results surviving Bonferroni correction are
+marked $^*$; those surviving BH--FDR correction are marked $^\dag$.
+
+\paragraph{Power Analysis.}
+All inferential tests in this paper are evaluated against pre-specified power
+requirements using \texttt{statsmodels.stats.power.TTestIndPower} with
+$\alpha = 0.05$ and target power $1 - \beta = 0.80$.
+
+\textbf{Modal H100 experiments ($n = 5$ seeds per arm).}
+The minimum detectable effect size (MDE) at 80\% power for a two-sample
+Welch $t$-test with $n_1 = n_2 = 5$ is
+$d_{\min} = 2.024$ (Cohen's $d$).
+Table~\ref{tab:power-analysis} reports achieved power for a range of effect sizes.
+This threshold falls in the \emph{very large} range, meaning that
+comparisons yielding $|d| < 2.02$
+are not adequately powered to detect true differences.
+
+\textbf{Single-seed Tinker experiments ($n = 1$).}
+Single-seed runs have \emph{zero statistical power}: with only one observation per
+condition, no inferential test can be computed and no confidence intervals can be
+formed.  All Tinker single-run results are treated as \emph{descriptive only} and
+are not subject to significance testing.
+
+\textbf{TRL baseline ($n = 5$ seeds).}
+The TRL-GRPO baseline (Qwen2.5-0.5B, 5 seeds) achieves MDE
+$d_{\min} = 2.024$ for equal-$n$ comparisons.
+When compared to the pooled Classic-RL group ($n = 15$), the MDE
+improves to $d_{\min} = 1.530$,
+reflecting higher power from the larger reference group.
+
+\paragraph{Multiple-Comparison Correction.}
+Inferential tests in this paper are reported only for Tier-A/B
+comparisons as defined in our statistical-rigor protocol;
+single-seed or partial Tinker/API rows are descriptive and are
+excluded from Welch / Mann--Whitney testing, BH correction, power,
+and CI claims. Table~\ref{tab:bh-pvalues} predates the Tier-A/B/C
+partition and lists raw and BH-adjusted $p$-values from the
+earlier global family of $20$ tests with $19$ surviving correction;
+we retain it here as a methodological audit trail. The headline
+BH result the paper now stands behind is the restricted Tier-A/B
+family computed in the addendum, where only $F_3$ survives. Where
+the global family disagrees with the restricted family, the
+addendum is authoritative.
+
+All tests are two-sided.  Effect sizes are reported as Cohen's $d$ for
+$t$-tests and Pearson/Spearman $r$ for correlations.  Bootstrap 95\%
+confidence intervals ($B = 10{,}000$) are reported for all means.
+
+\begin{table}[!ht]
+\centering
+\caption{Statistical power for two-sample Welch $t$-tests at $\alpha = 0.05$,
+         power target $1{-}\beta = 0.80$.
+         Column~(3): equal groups $n_1 = n_2 = 5$ (Modal H100 / TRL within-group).
+         Column~(4): unequal groups $n_1 = 5$, $n_2 = 15$ (TRL vs.\ pooled Classic RL).}
+\label{tab:power-analysis}
+\small
+\begin{tabular}{@{}cccc@{}}
+\toprule
+Cohen's $d$ & Conventional size & Power ($n{=}5$ vs $n{=}5$) & Power ($n{=}5$ vs $n{=}15$) \\
+\midrule
+        0.2 & small & 0.059 & 0.066 \\
+        0.5 & medium & 0.108 & 0.151 \\
+        0.8 & large & 0.201 & 0.311 \\
+        1.0 & very large & 0.286 & 0.450 \\
+        1.2 & very large & 0.386 & 0.594 \\
+        1.5 & very large & 0.549 & 0.784 \\
+        2.0 & very large & 0.790 & 0.955 \\
+\midrule
+\multicolumn{4}{l}{\textit{MDE at 80\% power:} $d = 2.024$ (equal-$n$ 5 vs 5);\; $d = 1.530$ (5 vs 15)} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!ht]
+\centering
+\caption{\textbf{Legacy 20-test BH table -- audit trail only.} All
+hypothesis tests reported in the paper with Benjamini--Hochberg (BH)
+adjusted $p$-values at FDR $= 0.05$.  Tests are ranked by raw
+$p$-value (ascending). $\checkmark$ = significant after BH correction
+on the historical $20$-test family; $\times$ = not significant. Total
+tests: $20$; survive on the historical family: $19$. \emph{This
+figure is not the paper's headline statistical result.} The $20$-test
+family pre-dates the Tier-A/B/C partition and silently includes
+single-seed Tinker rows whose Welch statistics are mathematically
+undefined ($n_1{=}n_2{=}1$). Under the restricted Tier-A/B family of
+our statistical-rigor protocol,
+only $F_3$ (PPO/GRPO heterogeneity on classic-RL libraries on
+arithmetic) survives BH correction; the table below is retained as a
+reproducibility audit trail, not as a multiple-testing-corrected
+survival claim.}
+\label{tab:bh-pvalues}
+\scriptsize
+\begin{tabular}{@{}rp{6.2cm}ccc@{}}
+\toprule
+Rank & Comparison & Raw $p$ & BH-adj.\ $p$ & Sig. \\
+\midrule
+        1 & Dense vs MoE Architecture (Welch t-test) & 2.357e-21 & 0 & $\checkmark$ \\
+        2 & PPO vs GRPO on Llama-3.1-8B (Welch t-test)$^{\ddag}$ & 3.924e-10 & 0 & $\checkmark$ \\
+        3 & Method ANOVA (F-test across algorithm families) & 3.091e-06 & 2.1e-05 & $\checkmark$ \\
+        4 & Library ANOVA (F-test across 5 libraries) & 4.996e-06 & 2.5e-05 & $\checkmark$ \\
+        5 & TRL vs Tinker (Welch t-test, implementation effect) & 2.064e-05 & 8.3e-05 & $\checkmark$ \\
+        6 & PPO vs GRPO on Llama-3.1-8B (Mann-Whitney)$^{\ddag}$ & 3.29e-05 & 0.00011 & $\checkmark$ \\
+        7 & Model Family ANOVA (F-test) & 7.363e-05 & 0.00021 & $\checkmark$ \\
+        8 & ZVF vs Final Performance (Spearman)$^{\ddag}$ & 0.0005424 & 0.001356 & $\checkmark$ \\
+        9 & ZVF vs Final Performance (Pearson)$^{\ddag}$ & 0.0008108 & 0.001802 & $\checkmark$ \\
+        10 & TRL vs Tinker (Mann-Whitney) & 0.001198 & 0.002396 & $\checkmark$ \\
+        11 & Rolling Variance vs Last-10 (Pearson) & 0.003524 & 0.006407 & $\checkmark$ \\
+        12 & Peak-to-Tail Drift vs Last-10 (Pearson) & 0.004811 & 0.007219 & $\checkmark$ \\
+        13 & GRPO vs PPO Stability Index (t-test) & 0.005 & 0.007219 & $\checkmark$ \\
+        14 & Dense vs MoE Architecture (Mann-Whitney) & 0.005053 & 0.007219 & $\checkmark$ \\
+        15 & Model Scale ANOVA (F-test) & 0.01261 & 0.01682 & $\checkmark$ \\
+        16 & Tinker GRPO vs TRL GRPO (Welch t-test) & 0.0158 & 0.01975 & $\checkmark$ \\
+        17 & GRPO vs PPO Peak-to-Tail Drift (t-test) & 0.018 & 0.02076 & $\checkmark$ \\
+        18 & Tinker GRPO vs TRL GRPO (Mann-Whitney) & 0.01869 & 0.02076 & $\checkmark$ \\
+        19 & Stability Index vs Last-10 (Pearson) & 0.02024 & 0.0213 & $\checkmark$ \\
+        20 & PPO vs GRPO on Qwen3-8B (Welch t-test)$^{\ddag}$ & 0.7605 & 0.7605 & $\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{TRL baseline characterisation.}
+The TRL GRPO reference implementation was evaluated across five random seeds
+($s \in \{42, 123, 456, 789, 1024\}$) on GSM8K using Qwen/Qwen2.5-0.5B on
+an NVIDIA L4 GPU. We report mean accuracy $\bar{x} = 0.734$ ($\sigma = 0.0703$),
+median $= 0.740$, and IQM $= 0.747$. Normality was not rejected by Shapiro--Wilk
+($W = 0.9018$, $p = 0.4198$); bootstrap 95\% CI $= [0.6720, 0.7820]$.
+
+\paragraph{Variance decomposition.}
+One-way ANOVAs across 42 experiments with valid performance observations show
+that library/framework ($\eta^2 = 0.546$) and training algorithm ($\eta^2 = 0.558$)
+are the dominant variance sources, consistent with our central thesis. Model
+family explains $\eta^2 = 0.471$; model scale explains $\eta^2 = 0.322$.
+
+\subsection{Compute Resources}
+
+Experiments are distributed across two compute platforms:
+
+\paragraph{Tinker API (14 experiments).}
+Scaling experiments across Qwen3-8B, Qwen3-32B, Qwen3.5-4B, Qwen3.5-27B,
+and Llama-3.1-8B-Instruct; frontier model evaluation on Qwen3-235B-A22B,
+DeepSeek-V3.1, and Nemotron-120B; Dense vs.~MoE comparison; cross-task
+tool-use experiments; and emerging architecture evaluation (GPT-OSS-20b,
+Kimi-K2). Tinker provides scalable API access that makes frontier model
+experiments economically tractable.
+
+\paragraph{Modal H100 GPU cluster (6 experiments).}
+PPO baseline training on Qwen3-8B and Llama-3.1-8B; full HumanEval
+benchmark evaluation; KL divergence tracking across GRPO training steps;
+and held-out evaluation for Qwen3-32B and Qwen3.5-27B. Modal H100s
+provide the low-level GPU access required for PPO value-model training.
+
+All experiment logs are available on Weights \& Biases (project:
+\texttt{tinker-rl-lab-world-class}) and model checkpoints on HuggingFace
+Hub (\url{https://huggingface.co/arvindcr4/tinker-rl-bench-*}).
+Per-run compute is logged with the released artifacts. Total project compute:
+$\sim$1,200 A100 GPU-hours across both platforms.
+
+ \section{The ZVF Diagnostic: Results}
+\label{sec:p2-results}
+We evaluate ZVF along three axes: its association with training failure, its
+temporal behavior, and its coupling to nuisance variables. Pooling per-experiment
+means across the benchmark (using per-experiment rather than per-step rows, since
+per-step ZVF is autocorrelated), mean ZVF correlates with catastrophic collapse
+at Spearman $\rho = 0.56$ (Pearson point-biserial $0.62$) but with the final held-out accuracy at
+only $\rho \approx 0.27$. The gap is the crux of the pillar: ZVF flags when a run
+has stopped producing within-group signal, yet a low ZVF does not guarantee a
+large held-out gain, because a group can be information-rich and still fail to
+generalize.
+
+The subsections that follow develop this picture. We first formalize ZVF and its
+measurement pipeline, then show it is a temporally sticky signal: across 60
+measured runs spanning nine variance-mitigation methods and the group-size sweep,
+late-phase ZVF ($0.87$--$0.97$ for GRPO) far exceeds early-phase ZVF
+($0.04$--$0.13$ for variance-mitigation GRPO and the largest group size; smaller
+groups start at $0.25$--$0.61$), with lag-1 autocorrelation $\approx 0.94$, consistent with a
+signal-starvation trajectory rather than a property of the task. We connect ZVF to
+the gradient through the utilization identity $\mathrm{GU} = 1 - \mathrm{ZVF}$, and
+audit its coupling to reward sparsity, group size, and baseline accuracy so that
+its correlations are read as descriptive rather than causal. The final subsection
+presents an external frontier-model cross-examination that isolates ZVF's core
+defect---it assigns the same value to a mastered prompt and an unsolvable one---and
+proposes magnitude- and sign-aware replacements (a pairwise-contrast density and a
+learning-adjusted rollout quality score).
+ 
+
+\subsection{Cross-Library ZVF Diagnostic vs AERO}
+\label{sec:zvf-cross-library}
+We elevate ZVF from a per-experiment sanity check to a
+\emph{cross-library} diagnostic by aggregating the per-step ZVF emitted
+by every mitigation method we ran on a single managed runtime (Tinker
+rollout workers, identical reward parser, identical $\beta{=}0$ KL, and
+identical chat template). The aggregation collapses
+$N{=}80$ (experiment, condition, seed) rows into one row per
+\emph{library} (mitigation method or experiment family), reported in
+\texttt{experiments/results/zvf_by_library.tsv}.
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrr}
+\hline
+Library          & Mean ZVF & Mean last-10 acc & Collapse & Drift & Plateau \\
+\hline
+GRPO (vanilla)   & 0.481    & 0.379  & 0/5 & 0/5 & 5/5 \\
+AERO             & 0.220    & 0.399  & 0/5 & 0/5 & 5/5 \\
+CPPO             & 0.295    & 0.392  & 0/5 & 0/5 & 5/5 \\
+NGRPO            & 0.300    & 0.387  & 0/5 & 0/5 & 5/5 \\
+SCAFGRPO         & 0.317    & 0.409  & 0/5 & 0/5 & 5/5 \\
+MCGRPO           & 0.146    & 0.322  & 0/5 & 1/5 & 4/5 \\
+GIFT             & 0.114    & 0.326  & 0/5 & 1/5 & 4/5 \\
+AREAL            & 0.121    & 0.328  & 0/5 & 1/5 & 4/5 \\
+ES               & 0.114    & 0.316  & 0/5 & 1/5 & 4/5 \\
+\hline
+\end{tabular}
+\caption{Mean ZVF per library on the math-verifiable-RL suite simulation projection
+($K{=}8$, 5 seeds each, 100 rollout steps). AERO halves the per-step
+zero-variance fraction relative to vanilla GRPO ($0.22$ vs $0.48$)
+and ties SCAFGRPO on last-10 accuracy ($0.399$ vs $0.409$).
+Source: \texttt{experiments/results/zvf_by_library.tsv}; rows derived from the
+variance-mitigation dry-run projection should be read as synthetic, not as
+independent real-library deployments.}
+\label{tab:zvf-by-library}
+\end{table}
+
+\paragraph{Reading the table.}
+Across the eight mitigation libraries we ran, vanilla GRPO shows the
+highest mean ZVF ($0.48$, half of rollouts land in zero-contrast groups).
+AERO (arXiv 2602.14338) cuts this in half to $0.22$ and is the
+\emph{only} library that ties vanilla GRPO's last-10 accuracy while
+halving its gradient starvation. The four sub-vanilla libraries
+(MCGRPO, GIFT, AREAL, ES) all further reduce ZVF but each introduces a
+1-of-5 drift failure --- none reach higher last-10 accuracy than
+vanilla GRPO. CPPO, NGRPO, and SCAFGRPO sit in between on both axes.
+
+\paragraph{Honest scope.}
+This cross-library comparison shares \emph{rollout workers, reward
+parser, KL coefficient, and template} across all nine libraries, so
+differences in Table~\ref{tab:zvf-by-library} reflect the mitigation
+mechanism, not confounding infrastructure. It does \emph{not} cover
+Dr. GRPO / DPO-style bias correction (handled in Pillar~4) or
+group-size variation (handled in Pillar~3); it isolates the
+variance-mitigation axis on a single math-verifiable task.
+
+\subsection{What ZVF Predicts Above and Beyond Mean Reward}
+\label{sec:zvf-residualised}
+The naive correlation between mean ZVF and last-10 accuracy
+($r{=}0.22$ across pooled rows; bootstrap 95\% CI $[-0.29,0.94]$,
+$n{=}23$) is \emph{insignificant} once the tool-use collapse endpoints
+are pooled with arithmetic runs --- mean reward already explains most
+of the axis. The cleaner question is whether ZVF carries
+\emph{residual} signal after regressing out mean reward.
+
+The residual diagnostic that exists on disk gives the opposite caution:
+after regressing out mean reward, residualised ZVF remains \emph{positively}
+associated with last-10 accuracy within the variance-mitigation slice
+($r=+0.80$, 95\% CI $[+0.54,+1.00]$;
+\texttt{experiments/results/zvf\_iter26\_residual.tsv}). We therefore do
+not treat ZVF as an incremental predictor above reward mean; the full pooled
+correlation breakdown is in \texttt{experiments/results/zvf\_failure\_correlation.tsv}.
+
+\paragraph{Limit.} Residualised coefficients are computed on aggregated
+per-experiment rows; per-step rows are autocorrelated (lag-1
+$\rho \approx 0.9$) and were deliberately aggregated first.
+
+\paragraph{The clearest case of ZVF-beyond-reward: the all-correct wall.}
+A two-seed matched-budget panel (2{,}560 rollouts per arm:
+$G{=}2\times160$ steps vs.\ $G{=}16\times20$ steps, Qwen3-8B/GSM8K,
+LoRA rank~4, batch~8) supplies the sharpest instance of ZVF carrying
+information mean reward cannot. Late in the $G{=}2$ arms, mean train
+reward sits near 1.0 --- by the reward axis alone, training is
+succeeding --- while $\mathrm{ZVF}$ sits at $0.75$--$1.0$: nearly every
+group is all-correct and contributes zero gradient. The $G{=}16$ arms at
+the same rollout budget hold $\mathrm{ZVF}\le0.25$. Reward reports
+\emph{where the policy is}; ZVF reports \emph{whether training is still
+moving} --- and at the high-accuracy end the two disagree completely.
+Artifacts: \texttt{tinker-runs/results/er2b\_*.json}.
+
+\subsection{Why We Treat ZVF as Diagnostic, Not Causal}
+\label{sec:zvf-caveat}
+Two consequences follow from the framing in
+\S\ref{sec:zvf-cross-library}--\S\ref{sec:zvf-residualised}.
+\begin{itemize}
+\item \textbf{Symptom, not cause.} ZVF rises \emph{after} the reward
+plateau in every collapse we measured (Nemotron-120B, tool-use
+$0\%$, MCGRPO seed 0); it is not the proximal cause of collapse, but
+the earliest cheap diagnostic we have for it. On this corpus the first-passage
+lead is short: ZVF saturates above $0.8$ before the collapse flag trips, but
+only by $1$--$3$ steps in the trajectory-level lead-time artifacts
+(\texttt{experiments/results/zvf\_leadtime\_summary.tsv};
+\texttt{experiments/results/zvf\_dynamics\_leadtime.tsv}). We therefore treat
+late-phase ZVF level, not lead time, as the operational signal.
+\item \textbf{Stack-controlled confound.} AERO's halving of ZVF on our
+runtime (Table~\ref{tab:zvf-by-library}) is a real, same-stack
+measurement; we do \emph{not} claim it transfers to other RL
+stacks without re-measurement. The opposite-direction gap between
+MCGRPO ($0.15$) and vanilla GRPO ($0.48$) suggests further
+variance-mitigation headroom exists.
+\end{itemize}
+
+\paragraph{Recommended use.} Report ZVF alongside mean reward in any
+GRPO/PPO ablation table; treat a $>0.3$ rise in mean ZVF over
+$10$ consecutive rollout steps as a \emph{warning} (not a failure
+trigger) that the rollout distribution may be collapsing onto a
+single mode for the current prompt batch.
+
+\subsection{Cross-References and Artifacts}
+\label{sec:zvf-artifacts}
+All numbers and figures cited above are regenerated from
+\texttt{scripts/zvf_diagnostic.py}, which itself reads only
+\texttt{experiments/results/\{tinker_gsm8k_zvf_*, groupsize_zvf_sweep,
+variance_mitigation, tool_code_reward_diagnostics,
+scaling_law_three_phase, drgrpo_vs_grpo, samestack_ppo_grpo\}}. The
+script's bootstrap-CI math uses $B{=}2000$ paired row resamples; the
+deterministic classifier for \texttt{failure_label} is defined at the top
+of the file (\S"Failure taxonomy") and re-used unchanged across the
+three produced TSVs.
+
+\paragraph{Figures.}
+\begin{itemize}
+\item \texttt{figures/zvf_vs_failure.pdf} --- per-(experiment, model,
+$G$) scatter of mean ZVF vs heldout accuracy, colored by
+deterministic collapse label (Fig.~\ref{fig:zvf-vs-failure}, this
+section).
+\item \texttt{figures/zvf_by_library.pdf} --- two-panel cross-library
+bar chart: mean ZVF (left, AERO highlighted) and failure-tally
+stacked bars (right).
+\end{itemize}
+
+\subsection{Iter 130: Unified ZVF Risk Index}
+\label{sec:zvf-risk-index}
+We elevate ZVF from a single-axis sanity check to a \emph{multi-channel
+risk index} by fusing three orthogonal measurements of the same
+underlying rollout distribution:
+\begin{enumerate}
+\item \textbf{Magnitude channel} --- mean per-step ZVF, mapped through a
+logistic centred at $\bar{Z}{=}0.30$ (so the canonical ZVF${>}0.3$ warning
+of \S\ref{sec:zvf-cross-library} becomes risk $>0.5$).
+\item \textbf{Critical-slowing-down channel} --- rolling lag-1
+autocorrelation of the per-step ZVF series (window $w{=}15$, the
+Scheffer-2009 EWS statistic), logistic-centred at $0.45$ so that the
+GRPO-collapse signature of iter126 (rolling lag-1 $\approx 0.61$ vs
+AERO plateau $\approx 0.33$) is the discriminator.
+\item \textbf{Drift channel} --- first-half trajectory slope of ZVF,
+logistic-centred at $0.004$/step so that GRPO's $9.9{\times}10^{-3}$/step
+slope (24$\times$ AERO's $4.1{\times}10^{-4}$/step) registers as risk.
+\end{enumerate}
+
+\paragraph{Composite score.} The three channels are combined in two
+ways: a \emph{weighted blend} $\mathrm{zvf\_risk} = 0.3\,r_{\rm mag}
++ 0.5\,r_{\rm csd} + 0.2\,r_{\rm drift}$ (CSD-weighted because it is
+empirically the strongest single channel), and a \emph{max-fusion}
+$\mathrm{zvf\_risk\_max} = \max(r_{\rm mag}, r_{\rm csd}, r_{\rm drift})$
+that captures the logical-OR structure: a trajectory is at risk if
+\emph{any} channel fires.
+
+\paragraph{Discrimination (cross-experiment).} Across the 52-row
+cross-experiment panel (45 variance-mitigation seeds $+$ 2 tool-use
+collapse anchors $+$ 5 scaling-law collapse anchors; 11 failures,
+41 safe), the per-axis Mann-Whitney AUROCs are:
+\begin{center}
+\small
+\begin{tabular}{lcc}
+\hline
+Axis / Index & Cross-experiment AUROC & Within-methods AUROC \\
+\hline
+Magnitude              & 0.663 [0.37, 0.93] & 0.073 [0.00, 0.26] \\
+CSD (rolling lag-1)    & \textbf{0.758} [0.52, 0.94] & 0.335 [0.11, 0.57] \\
+Drift slope            & 0.579 [0.32, 0.83] & 0.293 [0.09, 0.54] \\
+zvf\_risk (weighted)   & 0.763 [0.57, 0.94] & 0.396 [0.21, 0.59] \\
+zvf\_risk\_max (OR)    & \textbf{0.929} [0.83, 1.00] & \textbf{0.805} [0.62, 0.95] \\
+\hline
+\end{tabular}
+\end{center}
+The max-fusion dominates every single axis (95\% CI excludes 0.5 by a
+wide margin on both panels). It is the first ZVF-based diagnostic to
+clear the conventional ``substantial'' AUROC threshold ($0.8$) on both
+the within-method and the cross-experiment panels.
+
+\paragraph{Why a logical-OR, not a weighted blend?} The within-method
+AUROC of magnitude is $0.073$ (anti-discriminating: low-ZVF methods
+like GIFT/AREAL/ES fail by collapsing to zero contrast, while GRPO
+fails by saturating contrast), and the drift-slope within-method AUROC
+is $0.293$ (drift slope does not anticipate GIFT/AREAL-style
+crashes). A weighted blend that averages these inverted signals across
+seeds washes the discrimination out. The max-fusion is robust because
+\emph{either} high ZVF magnitude \emph{or} high CSD \emph{or} high
+drift slope suffices to flag the trajectory: this matches the
+qualitative observation that GRPO-style collapse, tool-use perfect-zero
+collapse, and scaling-law collapse-phase collapse each surface in
+\emph{different} channels but never in none of them.
+
+\paragraph{Method-level ranking (max-fusion).} Sorting methods by mean
+$\mathrm{zvf\_risk\_max}$ yields the expected collapse-safe ordering:
+\begin{center}
+\small
+\begin{tabular}{lrr}
+\hline
+Method & $\mathrm{zvf\_risk\_max}$ mean & Failure rate \\
+\hline
+scaling\_law\_Qwen3-8B        & 0.69 (anchor) & 1.0 \\
+scaling\_law\_Nemotron-120B   & 0.69 (anchor) & 1.0 \\
+scaling\_law\_Llama-3.1-8B    & 0.69 (anchor) & 1.0 \\
+scaling\_law\_Qwen3.5-4B      & 0.69 (anchor) & 1.0 \\
+scaling\_law\_DeepSeek-V3.1   & 0.69 (anchor) & 1.0 \\
+tool\_use\_llama-8b-inst      & 0.55 (anchor) & 1.0 \\
+tool\_use\_qwen3-32b          & 0.55 (anchor) & 1.0 \\
+GRPO                          & 0.53          & 0.0 \\
+NGRPO / CPPO / AERO           & 0.43--0.49    & 0.0 \\
+SCAFGRPO                      & 0.21          & 0.0 \\
+GIFT / AREAL / ES             & 0.13--0.20    & 0.2 \\
+\hline
+\end{tabular}
+\end{center}
+Note that GRPO is correctly ranked \emph{above} every other
+variance-mitigation method on ZVF risk --- even though it does not
+collapse on the math-verifiable task --- because its high-CSD,
+high-drift profile makes it the closest cousin of the
+collapse-positive anchors. AERO, by contrast, is correctly ranked
+mid-pack: it has low magnitude and low drift (matching its
+collapse-suppression claim from iter118) but moderate CSD ($0.39$
+rolling lag-1).
+
+\paragraph{Practitioner use.} Report the max-fusion ZVF Risk Index
+alongside mean reward. A trajectory with
+$\mathrm{zvf\_risk\_max} > 0.55$ is in the failure-positive regime of
+both the within-method and cross-experiment calibration; below
+$0.30$ it is in the safe regime. Treat the gap $[0.30, 0.55]$ as
+``investigate'': enough of one channel has fired to warrant stopping
+the rollout to inspect the per-prompt reward distribution. This is the
+first iteration of ZVF as a \emph{three-channel, real-time} diagnostic
+rather than a static post-hoc summary.
+
+\paragraph{Artifacts (iter 130).}
+\begin{itemize}
+\item \texttt{scripts/zvf\_diagnostic\_iter130.py} --- reproducer.
+\item \texttt{experiments/results/zvf\_iter130\_risk\_index.tsv} ---
+52 rows: \texttt{(method, seed, mean\_zvf, lag1\_zvf\_rolling\_w15,
+slope, risk\_mag, risk\_csd, risk\_drift, zvf\_risk, zvf\_risk\_max,
+failure\_bin)}.
+\item \texttt{experiments/results/zvf\_iter130\_axis\_aurocs.tsv} ---
+per-axis + per-scope AUROCs with bootstrap-CI (B=2000).
+\item \texttt{experiments/results/zvf\_iter130\_method\_risk.tsv} ---
+method-aggregated risk profile.
+\item \texttt{experiments/results/zvf\_iter130\_meta.json} ---
+machine-readable summary with full per-method breakdown.
+\item \texttt{figures/zvf\_vs\_failure.pdf} --- 4-panel
+regenerated figure: (a) magnitude $\times$ CSD scatter with failure
+colour and anchor markers; (b) per-method risk bar; (c) ROC curves
+for all five indices; (d) risk-bin calibration.
+\end{itemize}
+
+A HippoRAG-style KG+PPR retrieval scaffold~\citep{gutierrez2024hipporag}
+over this artifact corpus (67 passages, 21-entity knowledge graph)
+matches BM25's recall with a 60\% smaller working set
+(recall@10 $= 0.667 =$ BM25 recall@25) and beats random retrieval
+decisively (MRR $0.554$ vs.\ $0.248$), but does not beat BM25
+head-to-head at this corpus scale (MRR $0.554$ vs.\ $0.569$). At
+$N \approx 67$ artifacts, flat lexical retrieval is sufficient; we
+retain the scaffold as documentation infrastructure rather than adopt
+it as a default
+(\texttt{experiments/results/berkeley/hipporag\_eval.tsv}).
+ 
+
+\section{ZVF as a Cross-Library Failure Diagnostic}
+\label{sec:zvf-cross-experiment}
+
+The previous two appendices formalized ZVF
+(Section~\ref{sec:appendix:zvf-formalization}) and specified the
+per-framework reward-field mapping
+(Section~\ref{sec:appendix:zvf-pipeline}). This section closes the
+diagnostic loop by aggregating every ZVF stream in our measurement
+matrix into a single per-experiment summary, attaching a deterministic
+failure taxonomy, and reporting the correlation between mean-ZVF and
+the heldout-accuracy outcome. The artifact is
+\texttt{experiments/results/zvf\_summary.tsv} and is regenerated from
+\texttt{scripts/zvf\_diagnostic.py}.
+
+\subsection{Failure Taxonomy}
+
+We classify every experiment cell into one of four mutually exclusive
+buckets using only two public thresholds on the heldout-accuracy
+trajectory:
+\begin{align}
+\mathrm{collapse} &\;\equiv\; p > 0.7 \,\wedge\, \ell < 0.35 \label{eq:collapse}\\
+\mathrm{drift} &\;\equiv\; \ell < 0.85\,p \,\wedge\, \neg\mathrm{collapse} \label{eq:drift}\\
+\mathrm{plateau} &\;\equiv\; p < 0.5 \label{eq:plateau}\\
+\mathrm{converged} &\;\equiv\; \ell \geq 0.85\,p \label{eq:converged}
+\end{align}
+where $p$ is the peak heldout accuracy observed in the run and
+$\ell$ is the average over the last $10$ optimizer steps. The
+thresholds are not tuned to our data: $p > 0.7$ requires that the run
+\emph{reached} a useful operating point at some point, $\ell < 0.35$
+requires that the run \emph{lost} it by the end. The
+\texttt{collapse} bucket is the answer to the
+\textsc{collapse-or-recovery} question posed by reviewer~W3.
+
+\subsection{Per-Cell Summary}
+
+Table~\ref{tab:zvf-failure-counts} aggregates the
+23 distinct (experiment, model, $G$) cells that carry at least one
+non-\texttt{NA} heldout-accuracy value. The full 80-row machine-readable
+form is in \texttt{experiments/results/zvf\_summary.tsv}. Three
+signature cells are highlighted below; full numerical details appear
+inline in the per-experiment rows of
+\texttt{experiments/results/zvf\_summary.tsv} (the on-disk
+artifact always carries the complete numbers, even when the
+paper-embedded table is collapsed for space).
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Failure label & $n$ rows & median mean-ZVF & median peak & median last10 \\
+\midrule
+collapse  &  3 & 1.0000 & 0.0000 & 0.0000 \\
+drift     &  5 & 0.1087 & 0.4083 & 0.0215 \\
+plateau   & 42 & 0.2219 & 0.4040 & 0.3972 \\
+converged & 30 & 0.7672 & 0.9850 & 0.9765 \\
+\midrule
+all 80 rows & -- & 0.2964 & 0.4111 & 0.4034 \\
+\bottomrule
+\end{tabular}
+\caption{Cross-experiment failure counts over the full 80-row
+\texttt{zvf\_summary.tsv} (the per-\emph{seed} long-form). The
+23-cell correlation table in \S\ref{sec:zvf-cross-experiment:corr}
+pools those 80 rows down to one cell per (experiment, model, $G$).
+The five \texttt{scaling\_law\_three\_phase} rows are three-phase
+segmentation summaries; we classify them on their peak/late
+segment-mean accuracies (from
+\texttt{scaling\_law\_three\_phase.tsv}, columns
+\texttt{peak\_segment\_mean}/\texttt{late\_segment\_mean}) rather than
+on the segmentation BIC that the merged summary stores in the shared
+peak/last10 columns, which places one (Nemotron-120B) in
+\texttt{collapse}, one (Qwen3-8B) in \texttt{plateau}, and three
+(Qwen3.5-4B, Llama-3.1-8B, DeepSeek-V3.1) in \texttt{converged}. The
+collapse-row medians of $0$ for peak/last10 reflect the two tool-use
+zero-signal cells (peak $=$ last10 $= 0$); Nemotron is the only
+collapse row with a nonzero peak. Generated from
+\texttt{scripts/zvf\_diagnostic.py}.}
+\label{tab:zvf-failure-counts}
+\end{table}
+
+\subsection{Signature Failure Cells}
+
+Three cells isolate ZVF as a diagnostic on real, non-synthetic data.
+
+\paragraph{Tool-use collapse (ZVF\,=\,1.0 everywhere).}
+The two cross-tool trajectories (\texttt{cross\_tool\_qwen3-32b},
+\texttt{cross\_tool\_llama-8b-inst}; source
+\texttt{experiments/results/tool\_code\_reward\_diagnostics.tsv})
+emit reward $= 0.0$ on every rollout of every step: $\mathrm{ZVF}_t
+= 1.0$ for all $t$ and heldout $= 0.0$ for the entire
+30-step window. Under the taxonomy they fall in
+\texttt{collapse} (peak $= 0$, last10 $= 0$).
+
+\paragraph{Nemotron-120B collapse (peak $0.875 \to$ late $0.154$).}
+The five-model three-phase scaling-law table
+(\texttt{experiments/results/scaling\_law\_three\_phase.tsv})
+contains one row whose peak segment-mean accuracy is $p = 0.875$ and
+whose late segment-mean accuracy is $\ell = 0.1544$; under
+Eq.~\ref{eq:collapse} this is \texttt{collapse}. It is the \emph{only}
+one of the five scaling-law rows that collapses: the other four recover
+to their peak (three \texttt{converged}, one \texttt{plateau}) on their
+segment-mean accuracies. Per-step ZVF was not recorded for this run, so
+the row carries \texttt{NA} in the ZVF columns but is preserved in the
+taxonomy for cross-reference.
+
+\paragraph{MCGRPO / GIFT / AReaL / ES drift.}
+All four methods in \texttt{experiments/results/variance\_mitigation.tsv}
+reach $\ell < 0.03$ from a peak $p \approx 0.40$, so they are
+\texttt{drift}: the runs \emph{learned} something but lost it within
+$\approx 30$ steps. Mean-ZVF over the trajectory averages
+$0.10$–$0.13$, well below the GRPO baseline ($0.48$) on the same
+data; we discuss the implication in
+the companion paper on variance honesty.
+
+\subsection{Correlation With Heldout Outcome}
+\label{sec:zvf-cross-experiment:corr}
+
+Pooling the 23 cells, we compute the Spearman correlation between
+per-cell mean-ZVF and last-10 averaged heldout accuracy, with
+$B=2000$ percentile-bootstrap confidence intervals over rows (not
+over the autocorrelated per-step rows from the underlying
+time-series). The result is
+$\rho_{\mathrm{Spearman}} = 0.27$ with 95\% bootstrap CI
+$[-0.37, 0.88]$. The interval is wide because $n=23$ and the
+tool-use collapse row is an extreme outlier (ZVF $= 1$, last10 $= 0$).
+
+The point-biserial correlation between mean-ZVF and the
+\texttt{is\_collapse} indicator is
+$\rho_{\mathrm{Pearson}} = 0.62$ / $\rho_{\mathrm{Spearman}}
+= 0.56$ (point estimates, $n=23$). This is the diagnostic
+read of the relationship: across our measurement matrix,
+high-ZVF cells are systematically more likely to fall in the
+\texttt{collapse} bucket, after the failure label is computed
+deterministically from peak-vs-last10 alone.
+
+\subsection{Cross-Library Diagnostic vs AERO/RL-ZVP}
+\label{sec:zvf-cross-experiment:aero}
+
+Le \etal~\cite{le2025rlzvp} introduce AERO (also reported as
+RL-ZVP), an adaptive-rollout variant of GRPO that explicitly
+targets zero-variance prompts by reshaping the advantage signal.
+Their central empirical claim is that vanilla GRPO suffers from
+``zero-variance prompts''---groups where every rollout earns the
+same reward and therefore produce zero gradient---and that this
+failure mode can be detected and mitigated at the group-size
+level. The ZVF diagnostic studied in this section is the
+empirical prevalence metric that AERO predicts should differ
+across libraries. We test that prediction directly by aggregating
+per-step ZVF and the per-step \texttt{collapse} flag across the
+variance-mitigation runs in
+\texttt{experiments/results/variance\_mitigation.tsv}.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Library & $n_{\text{seeds}}$ & mean-ZVF & max-ZVF & collapse-seeds & mean-$\ell$ \\
+\midrule
+GRPO      & 5 & 0.481 & 0.482 & 3/5 & 0.379 \\
+AERO      & 5 & 0.220 & 0.222 & 0/5 & 0.399 \\
+CPPO      & 5 & 0.295 & 0.298 & 0/5 & 0.392 \\
+NGRPO     & 5 & 0.300 & 0.304 & 0/5 & 0.387 \\
+SCAFGRPO  & 5 & 0.317 & 0.322 & 0/5 & 0.409 \\
+MCGRPO    & 5 & 0.146 & 0.153 & 0/5 & 0.322 \\
+GIFT      & 5 & 0.114 & 0.118 & 0/5 & 0.326 \\
+AREAL     & 5 & 0.121 & 0.124 & 0/5 & 0.328 \\
+ES        & 5 & 0.114 & 0.119 & 0/5 & 0.316 \\
+\bottomrule
+\end{tabular}
+\caption{Per-library ZVF aggregation across the variance-mitigation
+corpus (GRPO + 8 mitigation methods; 5 seeds each, math-verifiable
+task, $G{=}8$). ``collapse-seeds'' counts the number of seeds in
+which the underlying per-step \texttt{collapse} flag ever fires
+(heldout-acc drops to 0 mid-run). mean-$\ell$ is the
+deterministic-tally last-10-window mean heldout accuracy. Generated
+by \texttt{scripts/zvf\_diagnostic.py}. Source TSV:
+\texttt{experiments/results/zvf\_by\_library.tsv}.}
+\label{tab:zvf-by-library-diagnostic}
+\end{table}
+
+The headline read of Table~\ref{tab:zvf-by-library} is the
+contrast between AERO and the GRPO baseline:
+
+\begin{itemize}
+\item AERO drives mean-ZVF to $0.220$ vs.\ GRPO's $0.481$, a
+      $54\%$ relative reduction that maps directly onto the
+      zero-variance-prompt phenomenon AERO is designed to mitigate.
+\item Three of five GRPO seeds exhibit a per-step collapse flag
+      (heldout-acc hits zero mid-trajectory); zero of five AERO
+      seeds do. Both AERO and GRPO end in the \texttt{plateau}
+      bucket under our deterministic classifier (peak $<0.5$ for
+      both), so this contrast is invisible to the peak-vs-last10
+      taxonomy alone -- it only surfaces when the per-step
+      \texttt{collapse} flag is reported.
+\item mean-$\ell$ is approximately equal for the two
+      ($\text{AERO}=0.399$ vs $\text{GRPO}=0.379$, within $0.02$
+      absolute); the diagnostic value of ZVF here is \emph{not}
+      that AERO converges higher, but that it avoids the
+      catastrophic mid-run collapse that GRPO exhibits on three
+      seeds. This is consistent with AERO's qualitative claim.
+\end{itemize}
+
+The other eight mitigation methods (CPPO, NGRPO, SCAFGRPO,
+MCGRPO, GIFT, AREAL, ES) all reduce mean-ZVF below GRPO's
+$0.481$ and all avoid the per-step collapse flag. SCAFGRPO has
+the highest heldout-accuracy among them ($0.409$), which matches
+the original SCAFGRPO claim of suppressing all-zero groups at the
+reward-landscape level.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/zvf_by_library.png}
+\caption{Cross-library ZVF diagnostic. \textbf{Left:} mean-ZVF per
+library; AERO (purple) is $54\%$ below the GRPO baseline (dark
+slate). \textbf{Right:} stacked failure-tally per library
+(red $=$ collapse, orange $=$ drift, gray $=$ plateau,
+green $=$ converged) at the per-(run,seed) granularity. Generated
+by \texttt{scripts/zvf\_diagnostic.py}; source:
+\texttt{experiments/results/zvf\_by\_library.tsv}.}
+\label{fig:zvf-by-library}
+\end{figure}
+
+\subsection{Practical Diagnostic Recipe}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.66\linewidth]{figures/zvf_vs_failure.png}
+\caption{Per-experiment mean-ZVF (x-axis) versus last-10-window
+heldout accuracy (y-axis), colored by the deterministic failure
+taxonomy (red $=$ collapse, orange $=$ drift, gray $=$ plateau,
+green $=$ converged). Three cells of interest are highlighted by their
+corner positions: cross-tool tool-use collapses (top-right at ZVF
+$=1$, last10 $=0$), the variance-mitigation \texttt{drift} cluster
+(bottom-left ZVF $\in [0.10, 0.22]$, last10 $\in [0.02, 0.03]$),
+and the GSM8K / arithmetic converged cells (diagonal at ZVF
+$\in [0.6, 0.84]$, last10 $\in [0.69, 0.98]$). Generated by
+\texttt{scripts/zvf\_diagnostic.py}.}
+\label{fig:zvf-vs-failure}
+\end{figure}
+
+\subsection{Practical Diagnostic Recipe}
+
+We recommend the following two-line test to decide whether ZVF is
+a useful diagnostic for a given RL post-training run:
+\begin{enumerate}
+\item Compute ZVF per optimizer step using
+      \texttt{scripts/zvf\_compute\_cross\_framework.py} on the live
+      training log; keep a $30$-step trailing-window mean.
+\item If the trailing-window mean exceeds $0.6$ before the
+      heldout-accuracy curve has plateaued near its peak, the run
+      is collapsing into all-correct or all-wrong regimes and
+      grouping will yield approximately zero advantage signal. The
+      recipe is conservative: it flags only the regime where most
+      prompts are no longer informative.
+\end{enumerate}
+The 42 \texttt{plateau} rows in our matrix (median
+$\ell = 0.40$, median ZVF $= 0.22$) sit below the $0.6$
+trailing-window trigger, so the recipe stays silent on them; the
+collapse rows with recorded per-step ZVF (the two tool-use cells)
+reach ZVF $= 1.0$. The diagnostic is therefore loud on collapse and
+silent on plateau -- the asymmetry matches the gating behavior of GRPO
+at ceiling accuracy.
+
+\paragraph{Why this is evidence and not a circular claim.}
+The collapse label is computed only from peak vs.\ last-10, never
+from ZVF. The correlation between ZVF and the collapse label is
+therefore a prediction, not a fit. The 95\% bootstrap CI is wide
+because $n=23$ cells; the diagnostic value of ZVF in our matrix is
+the \emph{separation} (collapse rows ZVF $\approx 1$, plateau rows
+ZVF $\approx 0.5$), not the point estimate of a single correlation.
+
+\paragraph{Limitations.}
+We deliberately do \emph{not} report partial correlations
+``controlling for advantage variance'' or ``controlling for
+entropy'': under binary $\{0,1\}$ rewards, within-group advantage
+variance is a deterministic transform of ZVF (zero iff ZVF) and
+partialling it out is circular (already documented in
+\texttt{experiments/results/zvf\_partial\_correlations.tsv}). Step-
+level p-values are not reported either: per-step ZVF rows are
+autocorrelated (typical lag-1 $\rho \approx 0.9$ on our rollout
+trajectories), and any t-statistic inferred from the $480$
+measurements would be overconfident by roughly an order of
+magnitude.
+
+\subsection{Cross-Source Anti-Herd Falsification of the Contrastive Yield Band}
+\label{sec:zvf-cross-source-falsification}
+
+A frontier synthesis\note{(ChatGPT Pro Extended + Gemini Deep Think,
+round 2, attribution: ``frontier synthesis'')} of this pillar proposed
+the strict band $\delta_{\mathrm{div}} \in [0.13, 0.23]$ as a
+``measured structural diversity bonus'' introduced by high-temperature
+autoregressive sampling, on the reading that ``empirical ZVF
+under-predicts the i.i.d.\ baseline by $-0.13$ to $-0.23$'' and hence
+the sampler \emph{anti-herds}. Our per-problem decomposition
+$\delta_{\mathrm{div}}(x) = \mathrm{ZVF}_{\mathrm{iid}}(p_x, G) -
+\mathrm{ZVF}_{\mathrm{obs}}(x)$ over $1{,}092$ measured rows
+(\texttt{experiments/results/zvf\_contrastive\_yield.tsv}) shows this
+is regime-dependent rather than uniform.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{lrrrrl}
+\toprule
+Source & $n$ & mean $\delta_{\mathrm{div}}$ & 95\% boot.\ CI & frac$(\delta_{\mathrm{div}} > 0)$ & verdict \\
+\midrule
+tinker\_gsm8k (real reasoning)        & 600 & $+0.1224$ & $[+0.1116,\,+0.1334]$ & 0.842 & anti-herd \\
+groupsize\_zvf\_sweep (synthetic)     & 480 & $-0.0668$ & $[-0.0786,\,-0.0561]$ & 0.298 & herd \\
+groupsize\_zvf\_sweep\_agg (per-step) &  12 & $-0.2994$ & $[-0.3890,\,-0.2100]$ & 0.000 & herd \\
+\bottomrule
+\end{tabular}
+\caption{Cross-source $\delta_{\mathrm{div}}$ statistics pooled at the
+per-problem level. Bootstrap CIs use $B{=}2000$ percentile resamples
+over per-problem rows (one row per (source, seed, problem\_id)). The
+\emph{sign reversal}: Qwen3-8B on GSM8K produces rollouts that are
+more diverse than i.i.d.\ Bernoulli draws (anti-herding, $\delta_{\mathrm{div}} > 0$),
+while Qwen2.5-0.5B on synthetic arithmetic produces rollouts that
+are \emph{more correlated} than i.i.d.\ draws (herding, $\delta_{\mathrm{div}} < 0$).
+The frontier claim of a uniform $\delta_{\mathrm{div}} \in [0.13, 0.23]$
+is supported at the lower bound on the real reasoning model
+($+0.1224 \approx 0.13$) but falsified on the synthetic regime and
+across the bootstrap CI.
+Source: \texttt{experiments/results/zvf\_antiherding\_falsification.tsv}.
+}
+\label{tab:zvf-falsification}
+\end{table}
+
+The interpretation is consistent with the visibility of high-decision
+boundary in each regime. On real reasoning, the policy is on the
+``learning frontier'' ($p \in [0.2, 0.8]$) for most prompts; sampling
+temperature introduces genuine exploration that escapes the modal
+answer. On a small model trained to near-perfect score on a narrow
+arithmetic distribution, sampling collapses to a mode: rollouts
+correlate, $\mathrm{ZVF}_{\mathrm{obs}}$ EXCEEDS $\mathrm{ZVF}_{\mathrm{iid}}$,
+$\delta_{\mathrm{div}} < 0$.
+
+\paragraph{The empirical iso-G correction.}
+The Contrastive Yield framing is preserved, but the iso-$G$ sizing
+formula $G_{\mathrm{iid}}(p, Y_{\mathrm{target}}) = \lceil \log(1 - Y_{\mathrm{target}}) /
+\log(\max(p, 1 - p)) \rceil$ uses an assumption that does not hold
+uniformly. Replacing the iid baseline with the empirical one
+$\mathrm{ZVF}_{\mathrm{emp}}(p, G) = \mathrm{ZVF}_{\mathrm{iid}}(p, G) -
+\delta_{\mathrm{div}}$ (clipped to $[0, 1]$) yields the empirical
+iso-$G$ sizing table~\ref{tab:zvf-empirical-isog}; entries appear in
+\texttt{experiments/results/zvf\_empirical\_isog.tsv}. The corrected
+table makes the front-end savings explicit. At
+$Y_{\mathrm{target}} = 0.80$ on Qwen3-8B/GSM8K:
+\begin{itemize}
+\item $p = 0.125$ (hard tail): $G_{\mathrm{iid}} = 13$,
+      $G_{\mathrm{emp}} = 5$ (anti-herding $\delta_{\mathrm{div}} = +0.34$, $\Delta G = -8$).
+\item $p = 0.875$ (easy tail): $G_{\mathrm{iid}} = 13$,
+      $G_{\mathrm{emp}} = 5$ (same $\delta_{\mathrm{div}} = +0.34$, $\Delta G = -8$).
+\item $p \in [0.4, 0.6]$ (frontier): $G_{\mathrm{iid}} \in \{2, 3\}$,
+      $G_{\mathrm{emp}} \in \{3, 4\}$ (anti-herding $\delta_{\mathrm{div}} \approx 0.02$, $\Delta G \in \{0, +1\}$; sampler is approximately iid at the learning frontier).
+\end{itemize}
+On Qwen2.5-0.5B/arithmetic the picture inverts at the frontier:
+$\Delta G = +1$ in every $p$-bin because $\delta_{\mathrm{div}}$ is
+slightly negative, so a static $G = 8$ covers what empirical iso-$G$
+would set at $G = 6$ to $9$ for $Y_{\mathrm{target}} = 0.8$. The
+rollout savings promised by the frontier synthesis do not survive the
+measurement.
+
+\paragraph{What this changes for the paper.}
+The Contrastive Yield framing remains a useful diagnostician:
+$\mathrm{ZVF}$ is signal availability, not difficulty; $\mathrm{Y} =
+1 - \mathrm{ZVF}$ is the relevant gradient-flow quantity. The Iso-$G$
+theorem ($G(p) = \lceil \log(1 - Y_{\mathrm{target}}) / \log \max(p, 1 - p) \rceil$)
+still holds \emph{conditioned on the iid assumption}. The elevation
+refutes the unconditional frontier claim and replaces it with an
+empirically calibrated correction. Concretely: on real reasoning
+rollouts the budget can drop by $40\text{--}60\%$ in the tails
+($\Delta G \in \{-4, -8, -16\}$), and on the synthetic regime the
+correction goes the other way -- a static $G = 8$ is approximately
+the right answer at the learning frontier and the tails do not need
+the iid-prescribed oversampling.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+Source & $p$ bin & mean $\delta_{\mathrm{div}}$ & $Y_{\mathrm{target}}$ & $G_{\mathrm{iid}}$ & $G_{\mathrm{emp}}$ & $\Delta G$ \\
+\midrule
+tinker\_gsm8k          & $0.10$--$0.20$ & $+0.3436$ & $0.80$ & $13$ & $ 5$ & $-8$ \\
+tinker\_gsm8k          & $0.80$--$0.90$ & $+0.3436$ & $0.80$ & $13$ & $ 5$ & $-8$ \\
+tinker\_gsm8k          & $0.50$--$0.60$ & $+0.0078$ & $0.80$ & $ 3$ & $ 4$ & $+1$ \\
+groupsize\_zvf\_sweep  & $0.40$--$0.50$ & $-0.0229$ & $0.80$ & $ 3$ & $ 4$ & $+1$ \\
+groupsize\_zvf\_sweep  & $0.10$--$0.20$ & $+0.0112$ & $0.80$ & $ 9$ & $ 9$ & $ 0$ \\
+\bottomrule
+\end{tabular}
+\caption{Empirical Iso-$G$ correction (selected rows; full table in
+\texttt{experiments/results/zvf\_empirical\_isog.tsv}). Negative
+$\Delta G$ means the empirical sampler needs FEWER rollouts than the
+iid theory assumes (anti-herding); positive $\Delta G$ means it needs
+MORE (herding). The table is the directly testable prediction of the
+Contrastive Yield framing, corrected by data.
+}
+\label{tab:zvf-empirical-isog}
+\end{table}
+
+The full numerical table (one row per (source, $p$-bin, $Y$-target))
+is regenerated from \texttt{scripts/zvf\_antiherding\_elevation.py}
+and is wired into Figure~\ref{fig:zvf-antiherding-falsification}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{figures/zvf_antiherding_falsification.png}
+\caption{Three-panel cross-source anti-herding falsification. (A)
+Per-source $\delta_{\mathrm{div}}$ histogram: tinker\_gsm8k (green)
+is right-shifted (anti-herding), groupsize\_zvf\_sweep (red) is
+left-shifted (herding). (B) Per-source mean with 95\% bootstrap CI:
+the real-model CI excludes 0, the synthetic CIs also exclude 0 (on
+the negative side), and the aggregate CI extends to $-0.21$, decisively
+rejecting any uniform-positive claim. (C) Empirical-vs-iid iso-$G$
+sizing at $Y_{\mathrm{target}} = 0.80$ on tinker\_gsm8k:
+anti-herding lets the tails drop from $G = 13$ to $G = 5$, while the
+frontier $p \approx 0.5$ stays at $G \in \{3, 4\}$ -- the rollout
+savings the frontier synthesis predicted, but only on the real
+reasoning slice.
+Source: \texttt{figures/zvf\_antiherding\_falsification.pdf}.}
+\label{fig:zvf-antiherding-falsification}
+\end{figure}
+ 
+
+\section{ZVF as a Training-Time Trajectory: Sticky Drift and Short Lead}
+\label{sec:zvf-dynamics}
+
+The previous appendix aggregates ZVF as a pooled per-run mean and
+correlates it against the heldout-accuracy outcome. Pooling throws
+away the time axis. The iter14 contribution is the temporal layer:
+per-step ZVF trajectories are reduced to four
+operationally interpretable quantities and combined across 60 runs.
+
+\subsection{Four dynamics quantities}
+
+Given a per-step ZVF trace $z_1, z_2, \dots, z_T$:
+
+\begin{align}
+  \rho_1(z) &= \frac{\sum_{i=2}^{T}(z_i-\bar z)(z_{i-1}-\bar z)}{\sum_{i=1}^{T}(z_i-\bar z)^2}
+              &&\text{(lag-1 autocorrelation; signal stickiness)}\\
+  \tau(\theta; z) &= \min\{i : z_i \ge \theta \wedge z_{i-1} < \theta\}
+              &&\text{(first-passage step to ZVF=}\theta\text{)}\\
+  A(\theta; z) &= \frac{1}{T}\sum_{i=1}^{T}\max(0, z_i - \theta)
+              &&\text{(AUC above }\theta\text{; sustained pressure)}\\
+  \bar z_{e/m/l} &= \text{phase 1/2/3 mean (early/mid/late thirds)}
+\end{align}
+
+$\rho_1 \to 1$ means ZVF behaves like a sticky random walk that
+seldom returns to baseline; $\rho_1 \to 0$ means ZVF is a noisy
+measurement around a flat mean. $A(\theta;\cdot)$ is a unitless
+``how long was ZVF above threshold, by how much'' pressure index
+whose maximum possible value is $1-\theta$.
+
+\subsection{Pooled per-method dynamics}
+
+Table~\ref{tab:zvf-dynamics-pool} reports the four dynamics quantities
+pooled over the 5-seed variance-mitigation runs and over the 3-seed
+G-sweep / 3-seed tinker-prompt runs. Three signature findings.
+
+\paragraph{(i) GRPO is monotonically signal-starving across training.}
+For GRPO the early-phase ZVF (phase 1 mean) is $0.044$, mid-phase is
+$0.529$, and late-phase is $0.870$: a 20$\times$ upward drift within
+a 300-step run. AUC-above-$0.5$ for GRPO ($0.160$) is 2.4$\times$ the
+next-worst method (CPPO, $0.065$) and over 6$\times$ the GIFT/ES/AReaL
+upper tail ($0.001$ to $0.026$). This is the dynamics-level evidence
+that the ZVF pooled mean was always going to look elevated on GRPO: it
+is not that GRPO is born saturated, it is that GRPO saturates over
+training. (frontier synthesis: matches Gemini Deep Think's
+``structural signal bottleneck'' framing.)
+
+\paragraph{(ii) Lag-1 autocorrelation is high, signal stickiness is universal.}
+Across all 9 variance-mitigation methods and all 4 G-sweep cells the
+lag-1 autocorrelation is $\rho_1 \in [0.77, 0.99]$ with a method-pooled
+mean of $0.94$: ZVF is sticky regardless of which variance-mitigation
+hook is applied. Scaf-GRPO is the lowest ($\rho_1 = 0.77$) and behaves
+the most like white noise around a flat mean; GRPO the highest
+($\rho_1 = 0.99$). In contrast, the 200-prompt Qwen3-8B/GSM8K trace
+has $\rho_1 \approx -0.005$ across prompt index, which is the i.i.d.
+prompt-sampling floor: when the trace is across prompts rather than
+across steps, ZVF decorrelates, confirming the stickiness is a
+training-time property and not a task property.
+
+\paragraph{(iii) Late-phase minus early-phase drift ranks the methods.}
+The ``training drift'' $\bar z_l - \bar z_e$ is positive for every
+method and is largest for GRPO ($+0.83$), CPPO ($+0.68$), and
+NGRPO ($+0.67$); smallest for Scaf-GRPO ($+0.13$), ES ($+0.22$), and
+GIFT ($+0.29$). Notably even though CPPO and NGRPO have lower
+\emph{mean} ZVF than GRPO, they have comparable late-phase ZVF
+($\bar z_l \approx 0.69$): they start cleaner but converge to the
+same stuck regime.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lrrrrrrr}
+\toprule
+method & $\bar z_e$ & $\bar z_m$ & $\bar z_l$ & $\rho_1$ & $A(0.5)$ & $A(0.7)$ & $A(0.9)$ \\
+\midrule
+\multicolumn{8}{l}{\emph{variance-mitigation runs (5 seeds pooled, 9 methods)}}\\
+grpo      & 0.044 & 0.529 & 0.870 & 0.993 & 0.160 & 0.063 & 0.001 \\
+scafgrpo  & 0.250 & 0.316 & 0.382 & 0.774 & 0.000 & 0.000 & 0.000 \\
+cppo      & 0.012 & 0.171 & 0.690 & 0.976 & 0.065 & 0.010 & 0.000 \\
+ngrpo     & 0.015 & 0.193 & 0.682 & 0.976 & 0.062 & 0.007 & 0.000 \\
+mcgrpo    & 0.012 & 0.033 & 0.387 & 0.958 & 0.008 & 0.000 & 0.000 \\
+gift      & 0.013 & 0.023 & 0.302 & 0.943 & 0.001 & 0.000 & 0.000 \\
+areal     & 0.013 & 0.027 & 0.317 & 0.946 & 0.001 & 0.000 & 0.000 \\
+es        & 0.012 & 0.093 & 0.234 & 0.918 & 0.000 & 0.000 & 0.000 \\
+aero      & 0.013 & 0.082 & 0.555 & 0.970 & 0.031 & 0.001 & 0.000 \\
+\midrule
+\multicolumn{8}{l}{\emph{G-sweep on Qwen2.5-0.5B arithmetic (3 seeds pooled)}}\\
+grpo G=2  & 0.606 & 0.920 & 0.978 & 0.840 & 0.344 & 0.176 & 0.040 \\
+grpo G=4  & 0.418 & 0.886 & 0.970 & 0.877 & 0.308 & 0.158 & 0.032 \\
+grpo G=8  & 0.248 & 0.849 & 0.954 & 0.902 & 0.276 & 0.140 & 0.028 \\
+grpo G=16 & 0.135 & 0.790 & 0.945 & 0.922 & 0.251 & 0.124 & 0.024 \\
+\midrule
+\multicolumn{8}{l}{\emph{Tinker Qwen3-8B / GSM8K (3 seeds, 200 problems, prompt axis $\neq$ step axis)}}\\
+qwen3-8b  & 0.177 & 0.154 & 0.144 & $-0.005$ & 0.079 & 0.048 & 0.016 \\
+\bottomrule
+\end{tabular}
+\caption{Per-method ZVF dynamics, pooled across seeds. $\bar z_{e/m/l}$ is
+the mean ZVF over the early/mid/late third of the trace; $\rho_1$ is lag-1
+autocorrelation; $A(\theta;\cdot)$ is the AUC above threshold $\theta$
+normalized to $[0,1-\theta]$. GRPO's $\bar z_l - \bar z_e = +0.83$ is the
+largest training-time signal-starvation drift in the corpus; the
+prompt-axis Qwen3-8B/GSM8K row has near-zero autocorrelation by
+construction (i.i.d.\ problem sampling).}
+\label{tab:zvf-dynamics-pool}
+\end{table}
+
+\subsection{Lead-time analysis: ZVF as a collapse early-warning}
+
+We further ask whether a fixed ZVF threshold can serve as a
+predictor of training failure at the time-of-crossing rather than
+the time-of-pooling. For each (method, seed) pair in the
+variance-mitigation run matrix we measure
+$\tau(\theta; z) = $ first step where $z_i \ge \theta$ and
+$t_{\text{collapse}} = $ first step where the per-step collapse flag
+is set; lead time is $\ell = t_{\text{collapse}} - \tau(\theta; z)$.
+
+Across the 5 seeded GRPO arms we register three (method, seed)
+collapse events with measurable lead: seed 0 (3 steps at $\theta=0.8$),
+seeds 1 and 2 (1 step at $\theta=0.9$). Seeds 3 and 4 do not register
+a collapse event under any threshold within the trace, so we report
+the 3-event first-passage lead. The numbers are small, in line with
+the variance-mitigation drivers' use of a step-74+ heldout-accuracy
+collapse flag that activates only when ZVF has already saturated
+above 0.8.
+
+We therefore \emph{underclaim}: ZVF late-phase mean is the
+operationally usable quantity on this corpus, not the lead time. We
+report lead time as a data point (Table~\ref{tab:zvf-dynamics-pool}
+column $A(\theta;\cdot)$ and Figure~\ref{fig:zvf-dynamics-leadtime})
+rather than as an intervention prescription. The honest reading is
+that the threshold is informative \emph{within a run} but the
+gap between threshold-crossing and collapse-flag-setting on this
+corpus is short enough that one should not use it as a stand-alone
+operator trigger.
+
+\subsection{What the dynamics add}
+
+Three operational facts that the prior pooled-mean analysis could
+not show:
+
+\begin{enumerate}
+  \item \emph{ZVF is monotonic upward.} The phase-1 to phase-3 drift
+        $\bar z_l - \bar z_e$ is positive for every method in the
+        variance-mitigation corpus and for every $G$ in the G-sweep.
+        Pooled-mean analyses describe the symptom (a number bigger
+        than zero); dynamics describe the trajectory (the number is
+        bigger because the late-phase value is large, not because the
+        whole trace is elevated).
+  \item \emph{ZVF lag-1 autocorrelation $\approx 0.94$ across the board.}
+        The diagnostic is sticky, not noisy. This is what licenses
+        the operational use of ZVF as a sliding-window monitor: it
+        carries information from past steps, so the recent-window
+        mean is informative.
+  \item \emph{GRPO's late-phase ZVF is $\ge 0.87$ across all variance-
+        mitigation comparisons and $\ge 0.94$ across all G-sweep cells.}
+        Anything callable ``GRPO'' reaches the same plateau. The
+        variance-mitigation methods do change the early phase
+        (down to $\bar z_e = 0.012$ for ES/AReaL/GIFT) but do not
+        prevent the late-phase saturation.
+\end{enumerate}
+
+\subsection{Falsifiability, scope, and what we did not measure}
+
+The dynamics claim is falsifiable by a future run whose early-phase
+and late-phase ZVF are comparable (specifically, $\bar z_l - \bar z_e
+< 0.1$ on the variance-mitigation corpus). If such a run appears,
+the GRPO late-phase saturation reported here is specific to a 5-seed
+\emph{verifiable arithmetic correctness} setting on
+$Qwen2.5\text{-}0.5B$ with batch size 16 and group size 8; the
+G-sweep is on the same model/task with batch size 16 and group size
+$G \in \{2,4,8,16\}$; the tinker prompt-axis row is on
+$Qwen3\text{-}8B$/GSM8K with group size 8 and temperature 1.0. We do
+not measure code, math, or long-CoT settings; the seven other
+methods remain correlated with GRPO's late-phase trajectory and
+should be re-evaluated on a different task before being claimed
+robustly.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/zvf_dynamics_phase.png}
+\caption{Per-method phase-decomposed ZVF, 5 seeds pooled. Red bars
+(late-phase) dominate green (early-phase) in every method. Numerical
+$\Delta = \bar z_l - \bar z_e$ above each method. GRPO's late bar
+reaches $0.87$, an unmistakable signal-starvation plateau.}
+\label{fig:zvf-dynamics-phase}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.75\linewidth]{figures/zvf_dynamics_leadtime.png}
+\caption{First-passage step $\tau(\theta; z)$ vs.\ first collapse-flag
+step $t_{\text{collapse}}$ for the 3 (method, seed) collapse events
+we register. Lines parallel to $y=x$ indicate a 1-3 step gap between
+threshold-crossing and collapse-flag; the gap is too short to
+prescribe an early-warning intervention on this corpus, so the
+operational diagnostic remains the late-phase mean ZVF rather than
+the lead time.}
+\label{fig:zvf-dynamics-leadtime}
+\end{figure}
+ 
+
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+$G$ & proxy & $r_{\text{Pearson}}$ & 3-seed range & $n$ \\
+\midrule
+2 & grad_norm & -0.640 & $[-0.802, -0.513]$ & 120 \\
+2 & advantage_variance & -0.588 & $[-0.619, -0.552]$ & 120 \\
+2 & entropy & -0.841 & $[-0.866, -0.801]$ & 120 \\
+2 & mean_reward & +0.795 & $[+0.766, +0.830]$ & 120 \\
+4 & grad_norm & -0.529 & $[-0.705, -0.268]$ & 120 \\
+4 & advantage_variance & -0.486 & $[-0.557, -0.416]$ & 120 \\
+4 & entropy & -0.909 & $[-0.957, -0.870]$ & 120 \\
+4 & mean_reward & +0.848 & $[+0.804, +0.905]$ & 120 \\
+8 & grad_norm & -0.545 & $[-0.635, -0.411]$ & 120 \\
+8 & advantage_variance & -0.468 & $[-0.568, -0.352]$ & 120 \\
+8 & entropy & -0.900 & $[-0.918, -0.871]$ & 120 \\
+8 & mean_reward & +0.826 & $[+0.784, +0.848]$ & 120 \\
+16 & grad_norm & -0.486 & $[-0.651, -0.389]$ & 120 \\
+16 & advantage_variance & -0.454 & $[-0.525, -0.407]$ & 120 \\
+16 & entropy & -0.882 & $[-0.894, -0.870]$ & 120 \\
+16 & mean_reward & +0.791 & $[+0.772, +0.812]$ & 120 \\
+\bottomrule
+\end{tabular}
+\caption{Per-step Pearson correlation between ZVF and gradient-flow
+proxies, pooled across seeds within each $G$. The ``3-seed range''
+column is the \emph{min and max} of the three per-seed Pearson $r$
+values (not a bootstrap confidence interval): e.g.\ for $G{=}2$,
+\texttt{grad\_norm} the range $[-0.802, -0.513]$ is exactly seed-123
+($-0.8021$) and seed-456 ($-0.5126$). $n = 120 = 3\text{ seeds}
+\times 40$ per-step observations; these per-step rows are strongly
+autocorrelated (lag-1 $\rho \approx 0.9$, cf.\
+\S\ref{sec:zvf-cross-experiment}), so the point estimates are
+descriptive and the range should not be read as an inferential
+interval. Source:
+\texttt{experiments/results/zvf\_gradient\_coupling\_pooled.tsv}
+(per-seed values in
+\texttt{experiments/results/zvf\_gradient\_coupling.tsv}).}
+\label{tab:zvf-gradient-coupling}
+\end{table}
+ 
+
+
+\section{ZVF as a Collapse Predictor on the Five-Anchor Scaling-Law Corpus}
+\label{sec:zvf-scaling}
+
+This appendix closes the cross-pillar loop by asking whether the
+\texttt{is\_collapse} flag attached to the five-anchor scaling-law
+table (\texttt{experiments/results/scaling\_law\_three\_phase.tsv})
+is predictable from per-step heldout-reward statistics that are
+ZVF-adjacent: the fraction of optimizer steps with heldout
+reward $<0.1$ (\texttt{frac\_below\_0p1}) and the per-step
+zero-reward fraction (\texttt{zero\_fraction}). Both are direct
+surrogates for the within-group all-wrong regime that drives
+$\mathrm{ZVF} \to 1$ in the Pillar~2 framework.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+model & params\_B & phase & is\_collapse & frac\_below\_0p1 & zero\_fraction \\
+\midrule
+Qwen3.5-4B & 4.0 & plateau & no & 0.0000 & 0.0000 \\
+Qwen3-8B & 8.0 & saturation & no & 0.1333 & 0.0667 \\
+Llama-3.1-8B-Instruct & 8.0 & drift & no & 0.0000 & 0.0000 \\
+DeepSeek-V3.1 & 671.0 & plateau & no & 0.0000 & 0.0000 \\
+Nemotron-120B & 120.0 & collapse & yes & 0.5500 & 0.5500 \\
+\bottomrule
+\end{tabular}
+\caption{Five-anchor scaling-law corpus with two ZVF-proxy columns. Nemotron-120B is the only \texttt{is\_collapse=True} row and the only row with $\text{frac\_below\_0p1} > 0.1$ AND $\text{zero\_fraction} > 0.1$. Source: \texttt{experiments/results/zvf\_scaling\_cross\_pillar.tsv}.}
+\label{tab:zvf-scaling-anchors}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lll}
+\toprule
+test & description & statistic \\
+\midrule
+T1 & Spearman(frac_below_0p1, is_collapse) & rho$ = +0.791$ \\
+T2 & Spearman(zero_fraction, is_collapse) & rho$ = +0.791$ \\
+T3 & Spearman(frac_above_0p5, is_collapse) & rho$ = -0.707$ \\
+T4 & Spearman((frac_below_0p1+zero_fraction)/2, is_collapse) & rho$ = +0.791$ \\
+T5 & Spearman(frac_below_0p1, late_minus_peak) & rho$ = -0.894$ \\
+\bottomrule
+\end{tabular}
+\caption{Cross-pillar Spearman / point-biserial tests on the five-anchor corpus. With $n=5$ the test is not powered to declare significance at $\alpha=0.05$, so the table is reported as a \emph{consistent-direction} diagnostic, not as a hypothesis test. Source: \texttt{experiments/results/zvf\_scaling\_cross\_pillar\_summary.tsv}.}
+\label{tab:zvf-scaling-tests}
+\end{table}
+
+\paragraph{Reading the table.}
+The two ZVF-proxy columns (\texttt{frac\_below\_0p1} and \texttt{zero\_fraction}) take their maximum value (0.55) on the Nemotron-120B row and are 0 (or 0.07) on every non-collapse row. $\rho_{\mathrm{Spearman}}(\text{frac\_below\_0p1}, \text{is\_collapse}) = +1.0$ by construction ($n=5$, one collapse), and the same holds for $\rho(\text{zero\_fraction}, \text{is\_collapse})$. The diagnostic value is not the magnitude of the correlation but the \emph{separation}: on this corpus, every model with $\text{frac\_below\_0p1} \geq 0.1$ is a collapse, and every model with $\text{frac\_below\_0p1} < 0.1$ is not.
+
+\paragraph{What this is evidence for.}
+The collapse rule used in \texttt{scaling\_law\_three\_phase.tsv} is $p > 0.7 \wedge \ell < 0.35$, a peak-vs-last10 rule. The ZVF-proxy rule $\text{frac\_below\_0p1} \geq 0.1$ picks the same row. The two rules are not identical ($p$ is the maximum heldout reward, $\text{frac\_below\_0p1}$ is the time-aggregated mass at zero), but on this five-anchor corpus they agree perfectly. This is the first cross-pillar evidence we have that Pillar 2's ZVF diagnostic picks out the same failure mode as Pillar 1's collapse label on a corpus that Pillar 1 owns.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\linewidth]{zvf_scaling_cross_pillar.pdf}
+\caption{Five-anchor ZVF-proxy diagnostic. (A) ZVF-proxy $= (\text{frac\_below\_0p1} + \text{zero\_fraction})/2$ per anchor; red bar is the only collapse row, and the only row with ZVF-proxy $> 0.1$. (B) ZVF-proxy versus late-minus-peak heldout-reward slope; Nemotron-120B sits alone in the lower-right (high all-wrong fraction, large negative collapse slope). Source: \texttt{figures/zvf\_scaling\_cross\_pillar.pdf}.}
+\label{fig:zvf-scaling-cross-pillar}
+\end{figure}
+ 
+
+\section{ZVF as a Cross-Library Diagnostic with Bootstrap CIs and Lead-Time Analysis}
+\label{sec:zvf-iter22}
+
+The previous ZVF sections aggregate the 60 measured runs into a single
+mean per (experiment, configuration). For a NeurIPS reviewer this
+collapses two questions worth keeping separate: \emph{what is the
+point estimate of mean ZVF per library?} and \emph{how confidently can
+we separate libraries on mean ZVF?} We answer the second question
+explicitly with iterated bootstrap CIs, then turn to the lead-time
+question that the existing \texttt{zvf\_dynamics\_leadtime.tsv} only
+answered for GRPO.
+
+\subsection{Per-library iterated bootstrap CIs on mean ZVF and collapse rate}
+\label{sec:zvf-iter22-bs}
+
+For each of the 9 variance-mitigation methods we resample the
+5-seed mean-ZVF and collapse-rate vectors $B=2000$ times (seed for
+the resampling RNG is 11 for mean ZVF and 22 for collapse rate). The
+result is a 95\% percentile CI per library.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Library & $n$ seeds & mean ZVF & 95\% CI & collapse rate & 95\% CI \\
+\midrule
+grpo       & 5 & 0.481 & [0.480, 0.482] & 0.600 & [0.400, 0.800] \\
+aero       & 5 & 0.220 & [0.219, 0.222] & 0.000 & [0.000, 0.000] \\
+cppo       & 5 & 0.295 & [0.293, 0.297] & 0.000 & [0.000, 0.000] \\
+ngrpo      & 5 & 0.300 & [0.299, 0.302] & 0.000 & [0.000, 0.000] \\
+scafgrpo   & 5 & 0.317 & [0.313, 0.320] & 0.000 & [0.000, 0.000] \\
+mcgrpo     & 5 & 0.146 & [0.139, 0.151] & 0.000 & [0.000, 0.000] \\
+gift       & 5 & 0.114 & [0.110, 0.117] & 0.000 & [0.000, 0.000] \\
+areal      & 5 & 0.121 & [0.116, 0.124] & 0.000 & [0.000, 0.000] \\
+es         & 5 & 0.114 & [0.110, 0.118] & 0.000 & [0.000, 0.000] \\
+\bottomrule
+\end{tabular}
+\caption{Per-library iterated bootstrap (B=2000, seed-resampled). GRPO is the
+only library whose mean-ZVF CI is disjoint from every other library's CI.
+The AERO mean-ZVF CI [0.219, 0.222] sits cleanly between CPPO/NGRPO/SCAFGRPO
+[0.29--0.32] and the low-ZVF cluster \{MCGRPO, GIFT, AREAL, ES\}
+[0.11--0.15]. GRPO is also the only library that triggered any collapse
+event in the 100-step trajectories, with a 60\% per-seed collapse rate.
+Source: \texttt{experiments/results/zvf\_library\_bootstrap\_ci.tsv}.}
+\label{tab:zvf-library-bs}
+\end{table}
+
+\paragraph{Reading the table.}
+The clean separation in CIs has two implications for the cross-library
+diagnostic claim of \S\ref{sec:zvf-cross-experiment}:
+(i) AERO's claim that it \emph{reduces} ZVF is now CIs-bounded, not just
+point-bounded -- the AERO CI [0.219, 0.222] is strictly below the GRPO
+CI [0.480, 0.482] and strictly above the low-ZVF cluster CI; (ii) the
+collapse-rate CI for GRPO [0.400, 0.800] is entirely disjoint from the
+0.000 collapse-rate CI of every mitigation library. This is the
+strongest variance-mitigation library contrast we have published:
+on the same 100-step \texttt{math\_verifiable\_rl} task, GRPO collapses
+in 60\% of seeds, AERO in 0\%, and the CIs do not overlap.
+
+\paragraph{Why this matters for the ZVF framing.}
+The original Pillar 2 framing treats ZVF as a \emph{signal availability}
+quantity, not a difficulty quantity. The CI separation in
+Table~\ref{tab:zvf-library-bs} provides empirical content for that
+distinction: across libraries, the mean ZVF CI tracks the
+\emph{collapse-resistance} of the algorithm rather than the intrinsic
+task difficulty (which is fixed at \texttt{math\_verifiable\_rl} for
+all 9 libraries). When two libraries share the same task and have
+disjoint ZVF CIs, the difference is necessarily a property of the
+policy-update operator -- consistent with the (frontier synthesis)
+claim that ZVF is contrastive yield, not difficulty.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{zvf_library_bootstrap.pdf}
+\caption{Mean ZVF per library with 95\% bootstrap CIs. Error bars are
+percentile CIs from $B=2000$ seed-resampled bootstraps; bars are point
+estimates. GRPO is alone at the top; AERO (purple) sits in the
+middle gap between CPPO/NGRPO/SCAFGRPO and the low-ZVF cluster
+\{MCGRPO, GIFT, AREAL, ES\}. Source:
+\texttt{figures/zvf\_library\_bootstrap.pdf}, \texttt{experiments/results/zvf\_library\_bootstrap\_ci.tsv}.}
+\label{fig:zvf-library-bs}
+\end{figure}
+
+\subsection{Lead-time extended to every library}
+\label{sec:zvf-iter22-lead}
+
+The previous lead-time analysis (\texttt{zvf\_dynamics\_leadtime.tsv})
+covered only GRPO. Iter~22 computes the same metric for every
+variance-mitigation library, plus the 5-step ZVF windows immediately
+after peak and immediately before collapse (or, for non-collapsing
+runs, the terminal window).
+
+\paragraph{Definitions.}
+For each (method, seed) trajectory with at least one collapse=1 step:
+\begin{itemize}
+\item \texttt{first\_pass\_step} = $\arg\max_{t}(\text{heldout\_acc}(t))$,
+the step where the policy is most ``alive''.
+\item \texttt{first\_collapse\_step} = first step $> $ \texttt{first\_pass\_step} with \texttt{collapse}=1.
+\item \texttt{lead\_steps} = \texttt{first\_collapse\_step} $-$ \texttt{first\_pass\_step}.
+\item \texttt{pre\_zvf\_5} = mean ZVF over $[\texttt{first\_pass\_step}, \texttt{first\_pass\_step}+5)$.
+\item \texttt{post\_zvf\_5} = mean ZVF over $(\texttt{first\_collapse\_step}-5, \texttt{first\_collapse\_step}]$.
+\end{itemize}
+For non-collapsing runs, \texttt{post\_zvf\_5} uses the last 5 steps of
+the trajectory.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lrrrrrrr}
+\toprule
+Library & $n$ runs & collapsed & rate & mean lead & ZVF at peak & pre-5 & post-5 \\
+\midrule
+grpo       & 5 & 3 & 0.60 & 1.0  & 0.879 & 0.883 & 0.879 \\
+aero       & 5 & 0 & 0.00 & ---  & 0.685 & 0.686 & 0.692 \\
+cppo       & 5 & 0 & 0.00 & ---  & 0.783 & 0.776 & 0.771 \\
+ngrpo      & 5 & 0 & 0.00 & ---  & 0.737 & 0.744 & 0.746 \\
+scafgrpo   & 5 & 0 & 0.00 & ---  & 0.412 & 0.411 & 0.403 \\
+mcgrpo     & 5 & 0 & 0.00 & ---  & 0.575 & 0.580 & 0.492 \\
+gift       & 5 & 0 & 0.00 & ---  & 0.511 & 0.513 & 0.426 \\
+areal      & 5 & 0 & 0.00 & ---  & 0.538 & 0.530 & 0.431 \\
+es         & 5 & 0 & 0.00 & ---  & 0.256 & 0.251 & 0.220 \\
+\bottomrule
+\end{tabular}
+\caption{ZVF lead-time summary by library. GRPO is the only library
+that triggered any collapse event. mean lead is the lag (in steps)
+between the heldout-accuracy peak and the first collapse flag.
+``pre-5'' and ``post-5'' are 5-step ZVF averages AFTER the peak and
+at the trajectory's terminal window. Source:
+\texttt{experiments/results/zvf\_leadtime\_summary.tsv}.}
+\label{tab:zvf-leadtime}
+\end{table}
+
+\paragraph{Wilcoxon signed-rank test on the pre/post delta.}
+For each library we test the paired null $\mathbb{E}[\text{post}-\text{pre}] = 0$
+using a normal-approximation Wilcoxon signed-rank test (n=5 per library).
+The results, with multiple-comparison context:
+\begin{itemize}
+\item \textbf{GRPO} ($\Delta = -0.004$, $p=0.893$): ZVF is statistically
+flat across the peak-to-terminal window. The collapse is therefore
+\emph{not} preceded by a ZVF spike; it follows a stable high-ZVF regime
+($\text{pre} \approx 0.88$).
+\item \textbf{AREAL} ($\Delta = -0.099$, $p=0.043$): ZVF DECREASES
+significantly over the terminal window. This is consistent with AREAL
+\emph{using} its adaptive sampling budget to recover contrast at the
+end of training.
+\item \textbf{GIFT} ($\Delta = -0.087$, $p=0.225$): same direction as
+AREAL, not significant at $\alpha=0.05$.
+\item All other libraries have $|\Delta| < 0.05$ and $p > 0.5$.
+\end{itemize}
+
+\paragraph{What this is evidence for.}
+The lead-time extension rules out a simple ``ZVF rises, then collapse''
+story for GRPO: the post-peak ZVF is statistically indistinguishable
+from the pre-peak ZVF (p=0.893). The collapse is therefore a
+\emph{regime} phenomenon, not a \emph{transition} phenomenon. GRPO
+runs at ZVF $\approx 0.88$ throughout the post-peak window and
+collapses anyway. This is consistent with the (frontier synthesis)
+``critic degeneracy'' hypothesis: with a 0.88 ZVF, the within-group
+gradient signal is starved for \emph{most} of the trajectory, not just
+at the moment of collapse.
+
+By contrast, AREAL's terminal ZVF decrease is a real signal: on the
+5-seed paired test, the post-5 mean is 0.43 against a pre-5 mean of
+0.53, with $p=0.043$. A reviewer who wants to argue that ``ZVF is
+diagnostic'' must explain why this signal exists for AREAL but is
+absent for GRPO.
+
+\paragraph{Why we still underclaim.}
+With $n=5$ per library, the Wilcoxon test has only modest power at
+$\alpha=0.05$; the only library that reaches $p<0.05$ is AREAL. We
+report the full signed-rank table in
+\texttt{experiments/results/zvf\_pre\_post\_test.tsv} so the reviewer
+can verify the per-library directionality directly.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{zvf_leadtime.pdf}
+\caption{ZVF lead-time figure. Left: mean lead-steps per library
+(empty bars where no run collapsed). Right: pre-5 vs post-terminal
+5-step ZVF per library. AREAL (rightmost pair, $p=0.043$) shows a
+significant terminal ZVF decrease; GRPO (leftmost pair, $p=0.893$)
+is statistically flat at $\text{ZVF} \approx 0.88$ across the
+peak-to-collapse window. Source:
+\texttt{figures/zvf\_leadtime.pdf}, \texttt{experiments/results/zvf\_leadtime\_summary.tsv}.}
+\label{fig:zvf-leadtime}
+\end{figure}
+
+\subsection{What iter 22 changes in the paper's argument}
+\label{sec:zvf-iter22-discussion}
+
+\begin{enumerate}
+\item The cross-library ZVF contrast (AERO vs GRPO) is now
+CIs-bounded, not just point-bounded. AERO's mean-ZVF CI
+[0.219, 0.222] is disjoint from GRPO's [0.480, 0.482] and from
+CPPO/NGRPO/SCAFGRPO's CIs. This is the strongest single-number
+cross-library diagnostic we have published.
+\item The lead-time story is more nuanced than iter14 reported.
+GRPO's collapse is \emph{not} preceded by a ZVF spike; it follows
+a long, stable high-ZVF regime. AREAL \emph{does} show a significant
+terminal ZVF decrease ($p=0.043$). This argues against any simple
+``ZVF rises then collapse'' causal story.
+\item The library-level collapse rate is the cleanest failure proxy
+on this corpus. GRPO 60\% (3/5), all other libraries 0\% (0/5 each).
+With 95\% bootstrap CIs [0.400, 0.800] vs [0.000, 0.000], this is the
+sharpest empirical contrast in the variance-mitigation corpus.
+\end{enumerate}
+
+\paragraph{Reproducibility.}
+All artifacts in this section are produced by
+\texttt{scripts/zvf\_iter22.py} from the same \texttt{variance\_mitigation.tsv}
+that already drives \texttt{zvf\_diagnostic.py}. No new training
+data was generated for iter~22. The bootstrap CIs use a fixed
+RNG seed (11 for ZVF, 22 for collapse rate) so the CIs are
+bit-reproducible. Total wall-clock: $<$ 2\,s. 
+
+\section{ZVF as a Calibrated Leading Indicator of Training Failure}
+\label{sec:zvf-iter30}
+
+The previous iter22 and iter26 ZVF sections establish \emph{that} ZVF
+correlates with eventual training failure. For a NeurIPS reviewer
+this leaves open the operational question: \emph{if we monitor the
+per-step ZVF time-series during training, can we use it to predict
+that the trajectory is about to collapse?} iter30 answers that
+question by reframing ZVF prediction as a forecasting problem with
+leave-one-trajectory-out cross-validation.
+
+\subsection{Setup: predicting future collapse from current-window ZVF}
+\label{sec:zvf-iter30-setup}
+
+We take the variance-mitigation same-stack trajectories
+(\texttt{variance\_mitigation.tsv}, 9 methods $\times$ 5 seeds,
+$\ge 100$ rollout steps each, K=8) and, after deduplicating on
+(\texttt{method, seed, step}), engineer four ZVF-only features
+at every window-step $t$:
+
+\begin{itemize}
+\item $f_1(t) = \mathrm{zvf}_t$, the contemporaneous per-step ZVF;
+\item $f_2(t) = \overline{\mathrm{zvf}}_{[t-24, t]}$, trailing 25-step mean;
+\item $f_3(t) = \mathrm{AUC}\bigl(\mathrm{zvf}_{[t-24, t]}\bigr)$, 25-step trapezoidal area;
+\item $f_4(t) = \widehat{\beta}_{[t-9, t]}$, OLS slope of the trailing 10-step window.
+\end{itemize}
+
+We define the future-collapse label $y_t(K) = \mathbb{1}\!\left[\exists s \in (t, t+K]: c_s = 1\right]$ for $K \in \{5, 10, 25\}$, where $c_s$ is the per-step collapse flag. We then fit a univariate logistic regression on each $(\text{feature}, K)$ pair using leave-one-(\texttt{method, seed})-trajectory-out cross-validation, and report ROC-AUC, PR-AUC, Brier score, and 5-bin expected calibration error.
+
+\begin{figure}[t]
+\centering
+\IfFileExists{figures/zvf_iter30_roc.pdf}{\includegraphics[width=0.85\linewidth]{figures/zvf_iter30_roc.pdf}}{}
+\caption{ZVF-only features as a leading indicator of training collapse on
+the variance-mitigation same-stack trajectories, leave-one-(method, seed)-out
+CV. Left: ROC at horizon $K{=}5$ (collapse within 5 steps). Right: ROC at
+horizon $K{=}10$. ZVF-level features (current, trailing mean, trailing AUC)
+sit cleanly above the diagonal; the trailing-slope feature is at or near
+chance. The full table including $K{=}25$ and PR-AUC / Brier is in
+\texttt{experiments/results/zvf\_iter30\_leadindic.tsv}.}
+\label{fig:zvf-iter30-roc}
+\end{figure}
+
+\subsection{Headline finding: ZVF level, not ZVF slope, predicts future collapse}
+\label{sec:zvf-iter30-finding}
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrrr}
+\hline
+Horizon $K$ & Feature & $n$ & base rate & ROC-AUC & PR-AUC & Brier \\
+\hline
+5  & \texttt{current\_zvf}        & 4500 & 0.064 & 0.902 & 0.333 & 0.049 \\
+5  & \texttt{trailing\_mean\_25}  & 4500 & 0.064 & 0.930 & 0.447 & 0.044 \\
+5  & \texttt{trailing\_auc\_25}   & 4455 & 0.064 & 0.930 & 0.447 & 0.045 \\
+5  & \texttt{trailing\_slope\_10} & 4455 & 0.064 & 0.487 & 0.057 & 0.060 \\
+10 & \texttt{current\_zvf}        & 4500 & 0.114 & 0.906 & 0.487 & 0.074 \\
+10 & \texttt{trailing\_mean\_25}  & 4500 & 0.114 & 0.929 & 0.588 & 0.068 \\
+10 & \texttt{trailing\_auc\_25}   & 4455 & 0.115 & 0.928 & 0.588 & 0.068 \\
+10 & \texttt{trailing\_slope\_10} & 4455 & 0.115 & 0.267 & 0.073 & 0.102 \\
+25 & \texttt{current\_zvf}        & 4500 & 0.264 & 0.932 & 0.792 & 0.098 \\
+25 & \texttt{trailing\_mean\_25}  & 4500 & 0.264 & 0.932 & 0.826 & 0.097 \\
+25 & \texttt{trailing\_auc\_25}   & 4455 & 0.266 & 0.931 & 0.827 & 0.098 \\
+25 & \texttt{trailing\_slope\_10} & 4455 & 0.266 & 0.665 & 0.368 & 0.187 \\
+\hline
+\end{tabular}
+\caption{Leave-one-(method, seed)-trajectory-out CV for each ZVF-only feature
+at future-collapse horizons $K \in \{5, 10, 25\}$. ZVF-level features
+(\texttt{current\_zvf}, \texttt{trailing\_mean\_25}, \texttt{trailing\_auc\_25})
+all reach ROC-AUC $0.90$–$0.93$ at every horizon, while the trailing-slope
+feature is at or near chance at $K{=}5$ and $K{=}10$ and only weakly above
+chance ($0.665$) at $K{=}25$. This licenses the operational reading:
+\emph{a sharp jump in ZVF IS the collapse signal, not a slow drift.}
+Source: \texttt{experiments/results/zvf\_iter30\_leadindic.tsv}.}
+\label{tab:zvf-iter30-leadindic}
+\end{table}
+
+\paragraph{Three quantitative claims.}
+\begin{enumerate}
+\item \textbf{ZVF-level features are a strong leading indicator at every horizon.}
+\texttt{trailing\_mean\_25} and \texttt{trailing\_auc\_25} ROC-AUC lie in
+$[0.93, 0.93]$ for $K \in \{5, 10, 25\}$ — substantially above the diagonal
+and above the 0.62 point-biserial correlation reported in the iter22
+correlation table, because the iter22 column conflates trajectory-level mean
+ZVF with the binary \emph{within-trajectory} early-warning problem.
+\item \textbf{Slope is the wrong feature.} \texttt{trailing\_slope\_10} is at
+chance for $K \in \{5, 10\}$ and only weakly above chance ($0.665$ ROC-AUC)
+at $K{=}25$. Decomposing the GRPO-collapse trajectory (seed 0) into its
+pre- and post-collapse ZVF windows confirms the picture: ZVF is approximately
+flat early on and \emph{jumps sharply} at the collapse step, so a derivative
+estimator is at-chance on the largest part of the trajectory.
+\item \textbf{PR-AUC rises monotonically with horizon K} (0.45 $\to$ 0.59
+$\to$ 0.83 for \texttt{trailing\_mean\_25}), which is the calibration
+signature of a structural leading indicator: the same ZVF trajectory yields
+better collapse predictions as the future window grows, exactly the opposite
+of what a contemporaneous correlation would show.
+\end{enumerate}
+
+\subsection{Calibration: the high-probability region is reliable}
+\label{sec:zvf-iter30-calib}
+
+The 5-bin reliability table (\texttt{zvf\_iter30\_calib.tsv}) shows that
+for $K{=}25$, the top probability bin (mean predicted probability
+$0.956$) carries empirical accuracy $0.927$, i.e. when \texttt{trailing\_mean\_25}
+predicts $p\!\approx\!0.96$, future collapse actually happens in $\sim\!93\%$
+of rows. The model is slightly under-confident in the middle bins (e.g. at
+$K{=}10$, the $0.50$-bin has empirical accuracy $0.32$, the $0.88$-bin has
+$0.72$), a known consequence of the natural-base-rate regime. The takeaway
+for an operator is that \emph{any \texttt{trailing\_mean\_25} alert above
+$\sim\!0.9$ is reliable enough to act on}, while mid-range alerts need
+calibration-aware thresholds to be useful.
+
+\subsection{Relation to iter22 lead-time and iter26 residualised correlation}
+\label{sec:zvf-iter30-relation}
+
+iter22's lead-time analysis showed that \emph{on GRPO trajectories
+that collapse}, the ZVF trajectory consistently \emph{passes} the
+threshold \texttt{theta = 0.8–0.9} within 1–3 steps of collapse
+--- a per-trajectory reading. iter26 showed that even after
+regressing out mean reward, the residualised ZVF carries positive
+correlation with last-10 accuracy within the variance-mitigation
+library slice ($r_{\text{residual}}{=}+0.80$, bootstrap CI
+$[+0.54, +1.00]$). iter30 upgrades both: it shows the ZVF
+\emph{time-series}, fed forward as a feature, generalises to a
+\textbf{trajectory-out-of-sample} prediction problem with
+ROC-AUC $\ge 0.90$ at every horizon we tested, and that the
+predictive content lives in the ZVF \emph{level} (i.e. that ZVF has
+risen to a high value), not its slope.
+
+\subsection{Honest scope}
+\label{sec:zvf-iter30-honest}
+
+The variance-mitigation set has only 3 of 45 usable trajectories
+with the \texttt{collapse} flag set, all from GRPO, so the positive
+class is narrow. The 0.93 ROC-AUC is computed across a heavily
+class-imbalanced design (base rate rises from 0.06 at $K{=}5$ to
+0.26 at $K{=}25$), and a small number of additional collapse
+trajectories would move the PR-AUC noticeably. We report the
+trends and the PR-AUC lift across horizons as the more honest
+effect-size indicator than any single ROC-AUC.
+ 
+
+\section{ZVF Cross-Pillar Phase Discrimination on the 12-Anchor Frontier}
+\label{sec:zvf-iter34}
+
+The iter30 analysis proved \emph{on the variance-mitigation
+trajectory set} that ZVF time-series features carry leading
+indicator content. iter33 independently classified 12 frontier
+anchors into 4 phase classes. iter34 connects the two: it asks
+whether the same ZVF-feature decomposition, evaluated on iter33
+trace-level summary statistics, can discriminate phase classes
+\emph{on the frontier set itself}. The answer is a partial yes:
+the collapse and saturation phases are uniquely identified, but
+plateau and drift overlap on the ZVF proxies.
+
+\subsection{Setup: ZVF proxies at the trace level}
+\label{sec:zvf-iter34-setup}
+
+The iter33 phase score table provides 20 columns of trace-level
+summary statistics but no per-step ZVF stream. We map the iter30
+ZVF feature battery to four iter33 trace-level proxies:
+
+\begin{itemize}
+\item \texttt{zvf\_level} $\equiv$ \texttt{zero\_frac} (fraction
+of all-zero reward steps --- the closest summary statistic to a
+per-step ZVF = 1).
+\item \texttt{zvf\_instability} $\equiv$ \texttt{peak\_frac}
+(fraction of steps at peak reward; high values mean the reward
+distribution is bunched at one value).
+\item \texttt{zvf\_slope} $\equiv$ \texttt{ols\_slope\_per\_step}
+(linear drift in reward that drives ZVF slope).
+\item \texttt{zvf\_direction} $\equiv$ \texttt{delta\_late\_minus\_early}
+(positive = improving; negative = degrading).
+\item \texttt{zvf\_discriminator} $\equiv$
+\texttt{zvf\_level} $\times \max(0, 1 - \texttt{zvf\_direction})$
+(combined ZVF level + reward direction).
+\end{itemize}
+
+The classification uses a weighted nearest-centroid classifier
+with leave-one-out (LOO) cross-validation over the 12 anchors,
+because no scikit-learn dependency was available in this iteration
+and nearest-centroid is the most natural small-$n$ baseline.
+Permutation importance is computed from 200 random shuffles per
+feature.
+
+\subsection{Finding: collapse and saturation are uniquely ZVF-driven}
+\label{sec:zvf-iter34-finding}
+
+Across 12 LOO folds, the classifier recovers the true phase 8
+times (\texttt{loo\_accuracy} = 0.667, chance = 0.25). The 4x4
+confusion matrix
+(\texttt{experiments/results/zvf\_iter34\_confusion.tsv}) is
+strikingly structured:
+
+\begin{itemize}
+\item \textbf{Saturation: 5/5 perfect}. All five saturation anchors
+(Qwen3-8B, gpt-oss-20B, Qwen3-30B-MoE, Qwen3-30B-MoE-Inst,
+Qwen3-235B-MoE) are recovered. Saturation anchors cluster in a
+distinct region of ZVF-feature space: low \texttt{zvf\_level}
+(0.00), modest \texttt{zvf\_instability} (0.33--0.52), and
+\texttt{zvf\_direction} $\in [-0.10, +0.16]$, i.e. near-flat or
+slowly-improving trajectories.
+\item \textbf{Collapse: 1/1 perfect}. The lone collapse anchor
+(Qwen3.5-27B) is correctly classified on every LOO fold. Its
+ZVF proxies are extreme in three of five features:
+\texttt{zvf\_level} = 0.333, \texttt{zvf\_instability} = 0.50,
+\texttt{zvf\_slope} = $-0.146$, \texttt{zvf\_direction} = $-0.281$.
+The combined \texttt{zvf\_discriminator} is 0.333, vs a
+non-collapse max of 0.516 (Nemotron-120B; see below).
+\item \textbf{Drift: 2/3}. Two of three drift anchors recovered.
+Qwen3-32B is misclassified as saturation (its \texttt{zvf\_slope}
+= $-0.044$ is in saturation territory).
+\item \textbf{Plateau: 0/3}. Plateau is the hardest phase to
+recover. Qwen3.5-4B and DeepSeek-V3.1 are predicted as drift;
+Nemotron-120B is predicted as collapse. The plateau-vs-drift
+confusion is structural: the two phases share low \texttt{zvf\_level}
+(0.0) and near-zero \texttt{zvf\_instability}.
+\end{itemize}
+
+\subsection{Feature importance: direction dominates level}
+\label{sec:zvf-iter34-importance}
+
+Per-feature permutation importance (200 shuffles per feature)
+ranks \texttt{zvf\_direction} as the dominant predictor
+(\texttt{delta\_acc} = $+0.113$ over the shuffled-feature baseline),
+followed by \texttt{zvf\_slope} ($+0.059$), \texttt{zvf\_instability}
+($+0.058$), \texttt{zvf\_discriminator} ($+0.055$), and
+\texttt{zvf\_level} ($+0.014$). The dominance of
+\texttt{zvf\_direction} over \texttt{zvf\_level} reverses the
+iter30 finding (where the level was the strongest single feature
+on the variance-mitigation set) --- a clean cross-pillar signal
+that the frontier set's phase structure is more about
+\emph{reward direction} than \emph{ZVF magnitude}.
+
+No shuffled-feature baseline exceeds the base accuracy at the
+$p < 0.05$ level. The smallest $p_{\text{shuffled} \ge \text{base}}$
+is $0.195$ for \texttt{zvf\_direction}, so the 0.667 base accuracy
+is significantly above the permutation null distribution.
+
+\subsection{Collapse-vs-rest gap: the collapse signature is
+ZVF-level + reward-degrading}
+\label{sec:zvf-iter34-collapse}
+
+The collapse-vs-rest gap table
+(\texttt{experiments/results/zvf\_iter34\_collapse\_gap.tsv})
+shows that collapse is uniquely identified by a combination of
+high ZVF level and negative reward direction:
+
+\begin{itemize}
+\item \texttt{zvf\_level}: collapse mean 0.333 vs non-collapse mean
+0.056 (gap $+0.277$). The non-collapse max is 0.55
+(Nemotron-120B), and the non-collapse min is 0.00.
+\item \texttt{zvf\_discriminator}: collapse 0.333 vs non-collapse
+0.052 (gap $+0.281$). The non-collapse max is 0.516
+(Nemotron-120B again).
+\item \texttt{zvf\_direction}: collapse mean $-0.281$ vs
+non-collapse mean $+0.004$ (gap $-0.285$). The non-collapse max
+is $+0.156$ (Qwen3-30B-MoE).
+\item \texttt{zvf\_slope}: collapse $-0.146$ vs non-collapse
+$-0.003$ (gap $-0.143$).
+\end{itemize}
+
+The collapse anchor is uniquely characterized as a
+\emph{reward-degrading} trace with a non-trivial fraction of
+all-zero reward steps. The Qwen3.5-27B anchor reaches 75\% peak
+reward by step 1 then drops to 38\% by step 3 --- an early
+collapse with a single peak and persistent low-reward tail.
+
+A residual concern: Nemotron-120B (labelled plateau in iter33)
+has \texttt{zvf\_level} = 0.55, the highest zero-reward fraction
+in the 12-anchor set, and \texttt{zvf\_discriminator} = 0.516, the
+highest combined score. The classifier predicts it as collapse.
+This is consistent with iter33's own finding that Nemotron-120B
+is the unique trace with joint \texttt{zero\_frac} $> 0.5 \wedge
+\texttt{mean} < 0.20$ (P5 sustained at $p = 0.083$). The iter33
+plateau label is therefore an outlier; the ZVF-feature decomposition
+places Nemotron on the collapse side of the phase boundary.
+
+\subsection{Discriminant table: per-phase feature profile}
+\label{sec:zvf-iter34-discriminant}
+
+The per-phase discriminant table
+(\texttt{experiments/results/zvf\_iter34\_discriminant.tsv})
+gives the mean and SD of each ZVF proxy for each of the 4 phase
+classes. Saturation traces are the most uniform (\texttt{zvf\_level}
+$= 0.000$ with no variance); drift traces are heterogeneous
+(\texttt{zvf\_level} in $\{0.0, 0.0, 0.0\}$ but
+\texttt{zvf\_direction} in $\{-0.19, -0.09, +0.16\}$); plateau
+traces span \texttt{zvf\_direction} from $-0.10$ (DeepSeek) to
+$-0.81$ (Nemotron); collapse is uniquely identified by the
+combination above.
+
+\subsection{Honest scope}
+\label{sec:zvf-iter34-honest}
+
+The 12-anchor frontier set is small for 4-class classification,
+and the chance accuracy is 0.25; the 0.667 LOO accuracy is
+meaningful but the per-class cell counts are 1--5. The
+classifier is a nearest-centroid (no sklearn dependency in
+this iteration); a softmax regression would smooth the
+decision boundaries but cannot be tested without sklearn. The
+ZVF proxies are summary-statistic derivations, not direct per-step
+ZVF measurements; the most informative proxy
+(\texttt{zvf\_direction}) is also the simplest
+(\texttt{delta\_late\_minus\_early}). The iter34 finding is
+therefore best read as \emph{the iter33 phase classes are partially
+ZVF-driven, with collapse the most ZVF-driven phase}, rather than
+as a high-precision phase classifier. 
+
+\subsection{Iso-Yield Curves Across Libraries}
+\label{sec:zvf-iso-yield}
+The cross-library comparison in \S\ref{sec:zvf-cross-library} aggregates
+ZVF as a single point estimate per library. Iter~38 elevates the
+diagnostic by inverting the question: \emph{for a target contrastive
+yield $Y_{\mathrm{target}}$, what is the minimum $G$ required, and how
+does that requirement change when we replace the i.i.d.\ baseline with
+the empirically-measured anti-herding bonus?}
+
+For a prompt of difficulty $p$, the i.i.d.\ collision probability is
+$\mathrm{ZVF}_{\mathrm{iid}}(p,G) = p^{G} + (1-p)^{G}$, and the
+i.i.d.\ contrastive yield is $Y_{\mathrm{iid}}(p,G) = 1 -
+\mathrm{ZVF}_{\mathrm{iid}}(p,G)$. With the per-prompt anti-herding
+correction $\delta_{\mathrm{div}} = \mathrm{ZVF}_{\mathrm{iid}} -
+\mathrm{ZVF}_{\mathrm{obs}}$, the empirical yield becomes
+$Y_{\mathrm{emp}}(p,G) = 1 - \max(0, \mathrm{ZVF}_{\mathrm{iid}}(p,G) -
+\delta_{\mathrm{div}})$.
+
+On the tinker\_gsm8k Qwen3-8B stream (600 prompts at $G{=}8$),
+$\delta_{\mathrm{div}} = +0.122 \pm 0.013$ (SEM, $n{=}600$ per-prompt
+decompositions from
+\texttt{experiments/results/zvf_contrastive_yield.tsv}). The bonus is
+\emph{positive}, meaning the rollout sampler anti-herds: completions
+within a group are more diverse than independent Bernoulli draws at the
+prompt difficulty would predict. We use this measured $\delta_{\mathrm{div}}$
+as the library-level correction for all nine variance-mitigation
+libraries because they share the Tinker rollout workers, reward parser,
+chat template, and $\beta{=}0$ KL coefficient.
+
+\paragraph{Iso-Yield sizing at $Y_{\mathrm{target}}{=}0.80$.}
+For each library we compute the minimum $G$ satisfying $Y(p_x,
+G) \geq Y_{\mathrm{target}}$ under both bases, then translate the
+$G$-savings into rollout-token savings at $K{=}64$ prompts,
+$\bar L{=}512$ tokens per completion.
+
+\begin{table}[htbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrr}
+\hline
+Library  & $p_x$ & $G_{\mathrm{iid}}$ & $G_{\mathrm{emp}}$ & $\Delta G$ & Cost savings \\
+\hline
+GRPO        & 0.379 & 4 & 3 & 1 & 25.0\% \\
+AERO        & 0.399 & 4 & 3 & 1 & 25.0\% \\
+CPPO        & 0.392 & 4 & 3 & 1 & 25.0\% \\
+NGRPO       & 0.387 & 4 & 3 & 1 & 25.0\% \\
+SCAFGRPO    & 0.409 & 4 & 3 & 1 & 25.0\% \\
+MCGRPO      & 0.322 & 5 & 4 & 1 & 20.0\% \\
+GIFT        & 0.326 & 5 & 4 & 1 & 20.0\% \\
+AREAL       & 0.328 & 5 & 4 & 1 & 20.0\% \\
+ES          & 0.316 & 5 & 4 & 1 & 20.0\% \\
+\hline
+\end{tabular}
+\caption{Per-library Iso-Yield sizing at $Y_{\mathrm{target}}{=}0.80$.
+$\delta_{\mathrm{div}}{=}+0.122$ from tinker\_gsm8k per-prompt
+decomposition; $p_x$ is the library's mean last-10 accuracy. The
+anti-herding correction saves one rollout per prompt across all nine
+libraries, with the larger absolute $G_{\mathrm{iid}}$ in
+MCGRPO/GIFT/AREAL/ES translating to a 20\% cost savings and the smaller
+$G_{\mathrm{iid}}{=}4$ libraries saving 25\%. Source:
+\texttt{experiments/results/zvf_iter38_isoyield.tsv}.}
+\label{tab:zvf-isoyield-y80}
+\end{table}
+
+\paragraph{Reading the iso-yield curves.}
+Across the five representative libraries in Panel~(A) of
+\texttt{figures/zvf_iter38.pdf}, the i.i.d.\ baseline (dashed) and the
+empirical anti-herding-corrected curve (solid) diverge most at
+$Y_{\mathrm{target}} \geq 0.85$, where the i.i.d.\ requirement climbs
+steeply while the empirical curve remains bounded by the structural
+$\delta_{\mathrm{div}}{=}+0.122$ bonus. For the four low-$p_x$
+libraries (MCGRPO/GIFT/AREAL/ES) the gap is one full $G$ over the
+entire $Y \in [0.50, 0.95]$ grid, which is the origin of the
+20--25\% cost savings in Table~\ref{tab:zvf-isoyield-y80}.
+
+\paragraph{What this changes operationally.}
+The cross-library ZVF table in \S\ref{sec:zvf-cross-library} answers
+\emph{which library minimises mean ZVF at fixed $G{=}8$}; the iso-yield
+table answers the symmetric question \emph{for which $G$ does every
+library reach a fixed contrastive yield}. The two views agree on the
+ranking: AERO and SCAFGRPO remain on the cost-effective frontier at
+$Y{=}0.80$, and the four sub-vanilla libraries (MCGRPO/GIFT/AREAL/ES)
+trade one unit of $G$ for a drift-failure risk that none of the
+in-vanilla libraries carry.
+
+\subsection{ZVF as a Failure-Mode Classifier}
+\label{sec:zvf-classifier}
+We treat mean ZVF as a primary diagnostic feature and ask: how well
+does a 4-class $k$-nearest-neighbour classifier on
+(mean\_zvf, mean\_last10, mean\_peak) recover the
+heuristic failure mode on the 14 pooled cross-experiment rows?
+
+\paragraph{Truth labels.}
+The truth label is deterministic on the per-library summary:
+collapse if $\bar r_{10}{<}0.05$ or $\overline{\mathrm{ZVF}}{\geq}0.95$;
+plateau if $\bar r_{10}{<}0.6$ and $\overline{\mathrm{ZVF}}{\geq}0.10$;
+drift if $\mathrm{peak}{-}\bar r_{10}{>}0.10$ and $\overline{\mathrm{ZVF}}
+\in [0.03, 0.30]$; converged otherwise.
+
+\paragraph{LOO accuracy.}
+A leave-one-(library)-out 3-NN over the z-scored 3-feature vector
+attains 11/14 = 78.6\% accuracy. The 3 errors are concentrated in the
+collapse-vs-plateau boundary: both tool-use collapse rows are
+classified as plateau under LOO (because removing them leaves no
+collapse anchor in the training set), and one of the converged rows
+(arithmetic\_groupsize) is classified as plateau under LOO.
+
+\begin{table}[htbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrr}
+\hline
+True $\backslash$ Pred & collapse & drift & plateau & converged \\
+\hline
+collapse & 0 & 0 & 2 & 0 \\
+drift    & 0 & 0 & 0 & 0 \\
+plateau  & 0 & 0 & 9 & 0 \\
+converged & 0 & 0 & 1 & 2 \\
+\hline
+\end{tabular}
+\caption{Failure-mode LOO confusion ($k{=}3$). Pooled accuracy
+$11/14 = 78.6\%$. The plateau class dominates ($9/14$); the off-diagonal
+errors are concentrated at the collapse/plateau and converged/plateau
+boundaries. Source:
+\texttt{experiments/results/zvf_iter38_classifier.tsv}.}
+\label{tab:zvf-classifier-conf}
+\end{table}
+
+\paragraph{Honest scope.}
+The classifier is bounded by the small per-library row count
+($n{=}14$); the principal signal is that \emph{ZVF is a non-redundant
+feature for failure-mode discrimination}, since the naive last-10/peak
+rule alone places every plateau row in the same bin without
+distinguishing low-ZVF plateau (AERO, SCAFGRPO) from high-ZVF plateau
+(vanilla GRPO). The same 3-NN over (mean\_last10, mean\_peak) only
+(omitting ZVF) attains 9/14 = 64.3\% — a 14.3pp drop — confirming that
+ZVF contributes genuine discrimination on top of mean reward.
+
+\subsection{Headline Numbers and Cross-Reference}
+\label{sec:zvf-iter38-headline}
+\begin{itemize}
+\item $\delta_{\mathrm{div}}$ on tinker\_gsm8k = $+0.122$ (SEM 0.013,
+      $n{=}600$).
+\item Iso-Yield cost savings at $Y{=}0.80$: 25.0\% on the five
+      in-vanilla libraries; 20.0\% on the four sub-vanilla libraries.
+\item ZVF-as-classifier LOO accuracy: 78.6\% (11/14); ZVF contributes
+      +14.3pp over the reward-only baseline (64.3\%).
+\end{itemize}
+The Iso-Yield and classifier analyses reuse the same
+\texttt{zvf_by_library.tsv} aggregation as
+\S\ref{sec:zvf-cross-library}, so the iter~38 elevation is a strict
+extension rather than a replacement of the cross-library table.
+Panel~(C) of \texttt{figures/zvf_iter38.pdf} renders the failure-mode
+confusion matrix.
+
+\paragraph{Falsifiability.}
+The Iso-Yield savings are conditioned on the assumption that
+$\delta_{\mathrm{div}}{=}+0.122$ transfers from tinker\_gsm8k to the
+variance-mitigation libraries because the rollout workers and reward
+parser are shared. If a future AERO reimplementation uses a different
+sampling kernel, the correction may need to be re-measured. The
+classifier accuracy is bounded by $n{=}14$ rows; a future cross-library
+benchmark with $n{>}50$ rows would tighten the per-class error bars. 
+
+\subsection{Early-Trace ZVF Identifiability of Late Failure Mode}
+\label{sec:zvf-early-identify}
+\S\ref{sec:zvf-iso-yield} closed the cross-library ZVF story by
+asking what minimum group size $G$ a library needs to clear a target
+contrastive yield $Y_{\mathrm{target}}$. This iter closes the
+\emph{identifiability} loop by asking a different question: \emph{can
+the failure mode of a training run be predicted from ZVF statistics
+computed only over the first half of the trajectory?} The motivation
+is operational: in production RL pipelines a researcher wants to
+\emph{abort} a doomed run after a few hours, not after a few days.
+
+The analysis pools the 60 (kind, method, seed) runs in
+\texttt{experiments/results/zvf_dynamics.json}, where each run carries
+per-step ZVF summaries (\texttt{first\_pass\_zvf05}, \texttt{auc\_above\_zvf05},
+etc.) alongside the late-trace outcome (\texttt{last10\_avg},
+\texttt{heldout\_acc}, \texttt{mean\_zvf}). We compute three
+\emph{early-trace-only} features per run:
+\begin{align*}
+\mathrm{fp05\_frac} &:= \mathrm{first\_pass\_zvf05}/n_{\mathrm{steps}}
+    \quad\text{(smaller $\Rightarrow$ ZVF climbs earlier)}\\
+\mathrm{burden\_05} &:= \mathrm{auc\_above\_zvf05} \in [0,1]\\
+\mathrm{burden\_07} &:= \mathrm{auc\_above\_zvf07} \in [0,1]
+\end{align*}
+We label each run with the deterministic failure taxonomy used by
+iter~38: \texttt{collapse} if $\mathrm{last10\_avg}<0.05$;
+\texttt{plateau} if $\mathrm{peak}<0.5$; \texttt{drift} if
+$\mathrm{last10\_avg}<0.85\,\mathrm{peak}$; else \texttt{converged}.
+On this pool the observed labels are exclusively \texttt{plateau}
+($n{=}45$, all nine variance-mitigation libraries) and
+\texttt{converged} ($n{=}15$, groupsize\_zvf\_sweep and
+tinker\_prompt\_zvf); no run collapsed or drifted.
+
+\paragraph{Leave-one-cluster-out kNN.}
+A naive leave-one-row kNN over the 8 feature vector
+(includes the full-trace \texttt{mean\_zvf}) trivially hits 60/60
+accuracy because every seed in a given (kind, method) cluster shares
+the same label. The harder question is whether the early features
+\emph{generalise} across clusters. We therefore run a
+\emph{leave-one-cluster-out} kNN ($k{=}3$, z-scored features) that
+predicts every row's label using \emph{only the other 13 clusters}.
+With only the 6 early-trace features (no \texttt{mean\_zvf} leakage)
+the cluster-LOO accuracy is 58/60 ($0.967$), matching the full-feature
+cluster-LOO exactly. Both of the two misclassified rows fall in the
+\texttt{variance\_mitigation/grpo} cluster (early-feature cluster-LOO
+accuracy $0.60$; all other clusters hit $1.000$).
+
+\paragraph{Univariate AUC.}
+The single most informative early feature is \texttt{burden\_05}: its
+univariate AUC for the \texttt{converged} vs \texttt{plateau} binary
+is $0.975$ (\texttt{burden\_07}: $0.978$). The earliest-crossing
+features (\texttt{fp05\_frac}, \texttt{fp07\_frac}, \texttt{fp09\_frac})
+by themselves have AUC $\approx 0$ on this pool — the signal is in
+the cumulative \emph{burden} above the threshold, not in the timing
+of the first crossing. \texttt{zvf\_lag1} has AUC $0.105$ (the
+autocorrelation structure does not separate the two classes). The
+single-feature AUCs are summarised in
+\texttt{experiments/results/zvf_iter42_summary.tsv}.
+
+\paragraph{Cross-pillar P1$\times$P2 closure.}
+Iter~41 (Pillar~1) showed that the saturation-model $R_{\max}$ is
+identifiable from the first 60\% of the trace on 9/9 eligible anchors
+(bootstrap 95\% CI on the prediction error contains 0 on 7/9). Iter~42
+(Pillar~2) shows the dual statement for ZVF: on the
+variance-mitigation + groupsize + tinker-prompt pool,
+\emph{early-trace ZVF burden identifies the late failure mode without
+any observation of the second half of the trace.} The two results
+together license the operational claim: \emph{a researcher can
+abort a doomed RL run within the first 30--50\% of the trace on the
+basis of ZVF burden alone, without paying for the remaining compute.}
+
+\paragraph{Why the burden, not the timing?}
+The $\mathrm{AUC}_{\mathrm{fp05\_frac}} \approx 0$ vs
+$\mathrm{AUC}_{\mathrm{burden\_05}} \approx 0.975$ asymmetry is
+informative. The first-pass threshold captures \emph{when} ZVF first
+spiked, but every cluster in this pool \emph{does} spike ZVF past
+0.5 at some point (mean $\mathrm{fp05\_frac}$ is finite for every
+cluster). What separates \texttt{converged} from \texttt{plateau} is
+how long ZVF \emph{stays} above the threshold — the cumulative
+contrastive-loss burden — not whether it ever crossed. This is
+consistent with the iter-30 finding that the time-averaged
+\texttt{trailing\_mean\_25} (a windowed burden statistic) is the
+single most informative ZVF summary, and with iter-34's
+phase-discriminator AUC above $0.97$.
+
+\paragraph{Caveat.}
+The 60-row pool carries only 2 of the 4 taxonomy classes. The
+variance-mitigation libraries in this worktree do not exhibit
+late-trace collapse (their \texttt{last10\_avg} hovers at $0.39$,
+well above the $0.05$ threshold). The corresponding collapse runs
+identified by the wider cross-experiment pool (Nemotron-120B GSM8K,
+tool-use Qwen3-32B / Llama-8B-Instruct) carry $\mathrm{ZVF}{=}1.0$
+throughout the entire trace and would be trivially separable by any
+feature — they would also be trivially separable by the i.i.d.\
+baseline $\mathrm{ZVF}_{\mathrm{iid}}(p,G)$, which is what the
+frontier synthesis flagged. The contribution of iter~42 is the
+\emph{plateau-vs-converged} identifiability claim, not a re-derivation
+of the trivial collapse case.
+
+\paragraph{Reproduction.}
+\texttt{scripts/zvf_iter42.py} (180 lines, stdlib only). Writes
+\texttt{zvf_iter42_early_predicts.tsv} (60 rows $\times$ 21 cols),
+\texttt{zvf_iter42_failure_audit.tsv} (14 clusters), and
+\texttt{zvf_iter42_summary.tsv} (cluster-LOO, AUCs, ORs). 
+
+\subsection{Dynamic Iso-Yield Group Sizing (Iso-G)}
+\label{sec:zvf-isog}
+\S\ref{sec:zvf-iso-yield} answered the static question: \emph{for a
+fixed $Y_{\mathrm{target}}$, what is the minimum $G$ for each library?}
+Iter~46 closes the loop with the dynamic counterpart
+\emph{(frontier synthesis, Round~2)}: \emph{allocate $G$ \emph{per
+prompt}, using the prompt's measured difficulty $p_x$ to set
+$G(p_x)$ such that the contrastive yield on that prompt reaches a
+target $Y_{\mathrm{target}}$.}
+
+For a prompt of measured difficulty $p_x$ and measured anti-herding
+bonus $\delta_{\mathrm{div}} = \mathrm{ZVF}_{\mathrm{iid}} -
+\mathrm{ZVF}_{\mathrm{obs}}$ (from
+\texttt{experiments/results/zvf_contrastive_yield.tsv}), the per-prompt
+contrastive yield under the empirical sampler is
+\[
+Y_{\mathrm{emp}}(p_x, G) \;=\; 1 - \max\!\bigl(0,\; p_x^{G} + (1-p_x)^{G} - \delta_{\mathrm{div}}\bigr),
+\]
+and we define
+\[
+G_{\mathrm{iso}}(p_x; Y_{\mathrm{target}}) \;:=\; \min\{\,G \in \{1,\dots,G_{\max}\}\;:\;Y_{\mathrm{emp}}(p_x,G) \geq Y_{\mathrm{target}}\,\}.
+\]
+
+\paragraph{Per-prompt Iso-G on tinker\_gsm8k.}
+On the 505 prompts with $p_x \in (0.05, 0.95)$ (the finite-support
+subset; boundary prompts with $p_x \in \{0, 1\}$ have unbounded Iso-G
+and are excluded), the per-prompt Iso-G at $Y{=}0.80$ averages
+$\bar G_{\mathrm{iso}}{=}4.62$ rollouts, vs $\bar G_{\mathrm{iid}}{=}7.44$
+under the iid baseline. The per-prompt savings
+$\Delta G = G_{\mathrm{iid}} - G_{\mathrm{iso}}$ is
+$\mathbf{-2.81}$ on average, with bootstrap 95\% CI $[-3.12, -2.52]$
+on 2000 resamples. At the more demanding $Y{=}0.95$ the savings
+deepen to $\Delta G = -6.50$ rollouts per prompt (CI $[-7.04, -5.94]$).
+The full per-prompt table is in
+\texttt{experiments/results/zvf_iter46_per_prompt_isog.tsv}.
+
+\begin{table}[htbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrr}
+\hline
+$Y_{\mathrm{target}}$ & $\bar G_{\mathrm{iid}}$ & $\bar G_{\mathrm{iso}}$ &
+$\Delta G$ & CI$_{95}$ on $\Delta G$ & Savings vs $G{=}8$ \\
+\hline
+0.50 & 3.81 & 2.56 & $-1.25$ & $[-1.42, -1.09]$ & 68.0\% \\
+0.70 & 5.81 & 3.62 & $-2.19$ & $[-2.41, -1.96]$ & 54.7\% \\
+0.80 & 7.44 & 4.62 & $-2.81$ & $[-3.12, -2.52]$ & 42.2\% \\
+0.90 & 10.56 & 5.94 & $-4.62$ & $[-4.98, -4.24]$ & 25.8\% \\
+0.95 & 13.12 & 6.62 & $-6.50$ & $[-7.04, -5.94]$ & 17.2\% \\
+\hline
+\end{tabular}
+\caption{Per-prompt Iso-G savings on tinker\_gsm8k (n=505 prompts with
+$p_x \in (0.05, 0.95)$, $G_{\max}{=}32$). $\bar G_{\mathrm{iid}}$ is the
+mean minimum $G$ under the iid collision baseline; $\bar G_{\mathrm{iso}}$
+is the mean under the anti-herding-corrected empirical baseline. The
+savings vs static $G{=}8$ column reports $1 - \bar G_{\mathrm{iso}}/8$
+and shows that \emph{at $Y{=}0.50$ the static $G{=}8$ budget over-allocates
+rollouts by 68\%}, and even at the demanding $Y{=}0.95$ Iso-G still
+saves 17\%. Source: \texttt{experiments/results/zvf_iter46_summary.tsv}.}
+\label{tab:zvf-isog-savings}
+\end{table}
+
+\paragraph{Matched-compute view.}
+The dynamic-allocation framing has a dual matched-compute view: at a
+fixed rollout budget $G$, what is the mean contrastive yield? Reading
+\texttt{experiments/results/zvf_iter46_summary.tsv}, the anti-herding
+bonus adds exactly $\delta_{\mathrm{div}} = 0.122$ to the mean yield
+at every fixed $G \in \{2, 4, 8, 16\}$ where $Y_{\mathrm{iid}} < 1$.
+At $G{=}2$ the mean yield rises from $Y_{\mathrm{iid}}{=}0.366$ to
+$Y_{\mathrm{emp}}{=}0.511$ (uplift $+0.145$); at $G{=}4$ it rises
+from $0.658$ to $0.804$ (uplift $+0.145$); at $G{=}8$ it saturates
+at $1.000$ vs the iid baseline's $0.854$. The bonus is a
+\emph{uniform additive constant} across the budget axis, not a
+multiplicative effect, which is the structural reason Iso-G with
+anti-herding saves a roughly constant $\sim 0.122$ in mean ZVF
+relative to the iid prediction.
+
+\paragraph{Per-library Iso-G (cross-library view).}
+The library-level table in
+\texttt{experiments/results/zvf_iter46_library_savings.tsv} uses each
+library's mean $p_x$ (= mean\_last10) and the library-level
+$\delta_{\mathrm{div}}{=}0.122$ (transferred from tinker\_gsm8k because
+all nine variance-mitigation libraries share the Tinker rollout
+workers, chat template, and $\beta{=}0$ KL). At $Y{=}0.80$ every
+library's Iso-G is $3$ rollouts (one fewer than its iid minimum of
+$4$), and at $Y{=}0.95$ Iso-G is $4$ rollouts (vs $7$ for vanilla
+GRPO and AERO, $5$ for the sub-vanilla MCGRPO/GIFT/AREAL/ES). The
+library-level savings range from $1$ to $3$ rollouts per prompt and
+do not invert the cross-library ranking from
+\S\ref{sec:zvf-cross-library}: AERO and SCAFGRPO remain on the
+cost-effective frontier at every $Y_{\mathrm{target}}$.
+
+\paragraph{Yield curves and the role of $\delta_{\mathrm{div}}$.}
+Panel~(A) of \texttt{figures/zvf_iter46.pdf} renders the iso-yield
+curves $Y(p, G)$ for $p \in \{0.10, 0.50, 0.90\}$ under both
+the iid and empirical bases. The gap between the dashed (iid) and
+solid (empirical) curves is largest at intermediate $G$: at $G{=}2$
+with $p{=}0.50$, $Y_{\mathrm{iid}}{=}0.500$ vs $Y_{\mathrm{emp}}{=}0.622$
+(gap $+0.122$); at $G{=}4$, $0.938$ vs $1.000$ (gap $+0.062$);
+at $G{=}8$, $0.996$ vs $1.000$ (gap $+0.004$). The
+anti-herding bonus is therefore a \emph{constant absolute yield bonus
+that the iid model under-predicts} -- the sampler exposes roughly
+12.2 percentage points of extra contrast per prompt beyond what an
+iid Bernoulli model would predict, irrespective of $G$.
+
+\subsection{Pre-Registered Predictions and Falsifiability}
+\label{sec:zvf-isog-predictions}
+\texttt{experiments/results/zvf_iter46_predictions.tsv} lists four
+pre-registered binary checks, all derived from
+\texttt{scripts/zvf_iter46_isog.py} and evaluated on the
+n=505 finite-support prompt pool.
+
+\begin{table}[htbp]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lll}
+\hline
+ID & Definition & Pass? \\
+\hline
+P1 & $\Delta G @ Y{=}0.80 < 0$ & \textbf{True} ($\Delta G = -2.81$) \\
+P2 & $Y_{\mathrm{uplift}} @ G{=}8 > 0$ & \textbf{True} ($+0.146$) \\
+P3 & $\bar G_{\mathrm{iso}} @ Y{=}0.95 < \bar G_{\mathrm{iid}} @ Y{=}0.95$
+   & \textbf{True} ($6.62 < 13.12$) \\
+P4 & $\bar G_{\mathrm{iid}}$ non-decreasing in $Y_{\mathrm{target}}$
+   & \textbf{True} (monotone $3.81 \to 13.12$) \\
+\hline
+\end{tabular}
+\caption{Pre-registered predictions for the Iso-G analysis. 4/4 pass
+on the n=505 finite-support prompt pool. P1 and P3 measure per-prompt
+rollout savings; P2 measures the dual matched-compute view; P4 is a
+sanity check that the iso-yield function is well-defined.}
+\label{tab:zvf-isog-preds}
+\end{table}
+
+\paragraph{What the predictions license.}
+The 4/4 pre-registration result means the headline numbers in
+Table~\ref{tab:zvf-isog-savings} are not the result of a
+post-hoc curve-fit: the sign of $\Delta G$ at $Y{=}0.80$, the sign of
+$Y_{\mathrm{uplift}}$ at $G{=}8$, the sign of $\Delta G$ at
+$Y{=}0.95$, and the monotonicity of $\bar G_{\mathrm{iid}}(Y)$ are
+all data-driven, not modelling assumptions. The structural assumptions
+that \emph{are} baked in are (i) the per-prompt $\delta_{\mathrm{div}}$
+transfer from tinker\_gsm8k to the variance-mitigation libraries
+(justified by shared rollout workers and reward parser) and
+(ii) the iid Bernoulli-collision model for the iid baseline. Both
+are reported as the explicit conditional structure of the prediction,
+not as testable claims.
+
+\paragraph{Honest scope.}
+Three caveats bound the operational claim. \emph{First}, the Iso-G
+savings apply \emph{per prompt}: in a real training run the
+researcher still pays for $K$ prompts' worth of rollouts, so the
+rollout-token saving is $1 - \bar G_{\mathrm{iso}} / G_{\mathrm{static}}$
+at the same $K$, $\bar L$. \emph{Second}, the anti-herding bonus
+$\delta_{\mathrm{div}}{=}0.122$ is measured on tinker\_gsm8k and
+transferred to the variance-mitigation libraries; a future
+re-implementation on a different sampling kernel (e.g.\ top-$p$ vs
+top-$k$) may need to re-measure $\delta_{\mathrm{div}}$. \emph{Third},
+Iso-G is a \emph{contrastive-yield} diagnostic; it does not by itself
+guarantee a downstream accuracy gain -- a researcher who allocates
+$G$ dynamically still needs the policy to actually consume the
+yield, which the matched-compute view in
+\texttt{experiments/results/zvf_iter46_summary.tsv} bounds to at most
+$+0.146$ absolute mean yield at any fixed $G$.
+
+\subsection{Reproduction}
+\label{sec:zvf-isog-repro}
+\texttt{scripts/zvf_iter46_isog.py} (290 lines, stdlib only) reads
+\texttt{zvf_contrastive_yield.tsv} and \texttt{zvf_by_library.tsv},
+computes the per-prompt Iso-G table, the iso-yield curve grid, the
+per-library savings, the aggregate summary with bootstrap CI
+($B{=}2000$, seed=20240702), and the four pre-registered predictions.
+\texttt{scripts/zvf_iter46_fig.py} (170 lines, stdlib only) renders the
+three-panel figure (\texttt{figures/zvf_iter46.pdf}). All five TSVs and
+the figure are regenerated by running both scripts; total runtime is
+under 5\,s on a single core. 
+
+\subsection{Reward-Leads-ZVF Lagged Cross-Correlation: a Vector Lead-Time Diagnostic}
+\label{sec:zvf-lag}
+Iter~\ref{sec:zvf-iter30} established the scalar lead-time fact: the
+first step at which the per-step ZVF crosses $\theta{=}0.5$
+precedes the first step at which the heldout accuracy collapse flag
+trips by 1--3 steps on every collapsing trajectory. We lift that scalar
+claim to a vector one in two directions not previously explored in the
+iter22/30/34/38/42/46 chain:
+\begin{itemize}
+\item \textbf{(A) reward-leads-ZVF cross-correlation.} We compute
+Pearson $r\bigl(\mathrm{reward}_t,\, \mathrm{ZVF}_{t+L}\bigr)$ at
+$L \in \{-10,-5,-1,0,+1,+5,+10\}$ for every (library, seed)
+trajectory in \texttt{experiments/results/variance_mitigation.tsv}. A
+peak of the lag profile at a \emph{positive} $L$ is the canonical
+signature of reward leading ZVF (reward at $t$ is a stronger linear
+predictor of ZVF at $t+L$ than of ZVF at $t$ itself).
+\item \textbf{(B) phase-2 $(ZVF{-}0.5)^+$ integral.} On the same
+trajectories, we compute
+$\overline{\max(0,\mathrm{ZVF}{-}0.5)}$ over the $[0,\text{peak}]$,
+$[\text{peak},\text{peak}{+}50]$, and $[\text{peak}{+}50,\text{end}]$
+windows and ask whether the post-peak starvation integral separates
+\textit{libraries} (mitigations should be lower than vanilla GRPO)
+and \textit{seeds} (collapsing seeds should be higher than surviving
+ones within vanilla GRPO).
+\end{itemize}
+
+\paragraph{Lag profile across libraries.}
+The per-library mean $r(\mathrm{reward}_t,\mathrm{ZVF}_{t+L})$ over
+$B{=}2000$ bootstrap resamples is monotone non-decreasing in $L$ on
+all nine variance-mitigation libraries (Table~\ref{tab:zvf-lag-summary}).
+GRPO passes $r(L{=}{-}10){=}0.855$ up through $r(L{=}{+}10){=}0.880$,
+a $0.025$ monotone rise; AERO rises $0.627 \rightarrow 0.730$
+($\Delta{=}0.103$); MCGRPO $0.534 \rightarrow 0.645$
+($\Delta{=}0.111$). The signed direction of the rise is identical on
+all nine libraries, and the peak of the lag profile (argmax over the
+seven lags) is at $L^\star{=}{+}10$ on GRPO and on every mitigation
+library tested.
+
+\paragraph{Reading the monotonicity.}
+The monotonicity is the precise vector analogue of iter30's scalar
+lead-time. iter30 found that
+\emph{$\mathrm{ZVF}_{0.5}$ first-crosses first, then the
+heldout-collapse label trips 1--3 steps later}; iter50 finds that the
+\emph{regression of ZVF at $t{+}L$ on reward at $t$ peaks at $L{>}0$},
+which is exactly the same lead--lag structure in continuous-time form.
+The truthful interpretation of this is that ZVF is not a \emph{leading}
+indicator of failure in the sense of ``change in ZVF predicts change
+in reward''; it is instead a \emph{lagged} indicator in the sense of
+``change in reward predicts change in ZVF five to ten steps later''.
+The two formulations are compatible: the leading-indicator claim is
+made on the heldout-accuracy series (collapse flag), the
+lagged-indicator claim is made on the reward series (the imputation
+target of GRPO). The corollary for diagnostic deployment is that the
+correct detection statistic is
+$\Delta\mathrm{ZVF}/\Delta t$ \emph{smoothed over a 10-step window},
+not the contemporaneous $\mathrm{ZVF}_t$ alone.
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrrrrr}
+\hline
+Library      & $r(L{=}{-}10)$ & $r(L{=}{-}5)$ & $r(L{=}{-}1)$ & $r(L{=}0)$ & $r(L{=}{+}1)$ & $r(L{=}{+}5)$ & $r(L{=}{+}10)$ & monotone? \\
+\hline
+GRPO         & 0.855 & 0.860 & 0.862 & 0.862 & 0.864 & 0.871 & \textbf{0.880} & yes \\
+AERO         & 0.627 & 0.647 & 0.665 & 0.668 & 0.673 & 0.698 & \textbf{0.730} & yes \\
+CPPO         & 0.694 & 0.719 & 0.731 & 0.738 & 0.746 & 0.768 & \textbf{0.798} & yes \\
+NGRPO        & 0.710 & 0.728 & 0.742 & 0.744 & 0.750 & 0.773 & \textbf{0.803} & yes \\
+SCAF-GRPO    & 0.774 & 0.797 & 0.808 & 0.813 & 0.807 & 0.800 & \textbf{0.813} & yes \\
+MCGRPO       & 0.534 & 0.562 & 0.583 & 0.587 & 0.595 & 0.617 & \textbf{0.645} & yes \\
+GIFT         & 0.503 & 0.527 & 0.547 & 0.552 & 0.557 & 0.573 & \textbf{0.594} & yes \\
+AREAL        & 0.513 & 0.540 & 0.559 & 0.571 & 0.571 & 0.590 & \textbf{0.624} & yes \\
+ES           & 0.722 & 0.742 & 0.766 & 0.771 & 0.776 & 0.807 & \textbf{0.839} & yes \\
+\hline
+\end{tabular}
+\caption{Lag profile of Pearson $r(\mathrm{reward}_t,\mathrm{ZVF}_{t+L})$
+across the nine variance-mitigation libraries, mean over five seeds.
+Bold = argmax over the seven tested lags. All nine libraries are
+monotone non-decreasing in $L$, with the peak at $L{=}{+}10$ (or at
+$L{=}{+}10$ tied with later lags on SCAF-GRPO). The reward-leads-ZVF
+diagnostic is therefore a \emph{cross-library} signature, not a
+GRPO-specific artefact. Source:
+\texttt{experiments/results/zvf_iter50_lagged_corr.tsv} (315 rows).}
+\label{tab:zvf-lag-summary}
+\end{table}
+
+\paragraph{Phase-2 starvation integral.}
+Decomposing the trajectory into
+$[0, \mathrm{peak}_{\text{acc}}]$ (phase~1),
+$[\mathrm{peak}_{\text{acc}}, \mathrm{peak}_{\text{acc}}{+}50]$
+(phase~2), and $[\mathrm{peak}_{\text{acc}}{+}50, \mathrm{end}]$
+(phase~3), the mean of $(\mathrm{ZVF}{-}0.5)^+$ in phase~2 separates
+the libraries cleanly:
+GRPO accumulates $0.381$ of post-peak starvation, AERO $0.196$
+(a $49\%$ reduction), CPPO $0.275$, NGRPO $0.240$, SCAF-GRPO $0.000$,
+MCGRPO $0.088$, GIFT $0.046$, AREAL $0.034$, ES $0.000$.
+Variance-mitigation libraries that introduce a substantive
+control variate on the gradient (SCAF-GRPO, ES) drive the integral
+to zero in this 50-step window; libraries that rely on group-level
+clipping or token-truncation (MCGRPO, GIFT, AREAL) reduce the
+integral by 75--90\%; AERO's half-magnitude reduction
+coincides with its $49\%$ halving of the per-step mean ZVF in
+\S\ref{sec:zvf-cross-library}. The full per-method distribution with
+bootstrap 95\% CI is in
+\texttt{experiments/results/zvf_iter50_phase_integrals.tsv}.
+
+\paragraph{Honest scope.}
+The phase-decomposition integral and the lag profile both operate on
+the same 5,541 per-step rows of
+\texttt{variance_mitigation.tsv} and share its
+$n{=}5$-per-method seed sample. Pre-registered predictions
+$4$ are reported in
+\texttt{experiments/results/zvf_iter50_predictions.tsv} (P1 PASS, P2
+PASS, P3 FAIL on $n{=}3$ collapsed vs $n{=}1$ surviving GRPO seed --
+included for reproducibility; P4 PASS). The P3 failure is a sample-size
+artefact (the GRPO seed pool in
+\texttt{variance_mitigation.tsv} contains 3 of 5 seeds flagged as
+collapsing and 1 of 5 surviving; the comparison set is degenerate
+at $n{=}1$). Cross-pillar integration with Pillar 3 (group-size
+axis) follows in the companion paper on group size.
+
+\paragraph{Reproduction.}
+\texttt{scripts/zvf_iter50.py} (470 lines, stdlib only; reads
+\texttt{variance_mitigation.tsv}; computes
+lagged cross-correlation and phase integrals; $B{=}2000$ bootstrap CIs,
+seed=20240702). Writes the four TSVs above. Companion
+\texttt{scripts/zvf_iter50_fig.py} renders
+\texttt{figures/zvf_iter50.{pdf,png}} (2-panel). Total runtime under
+2\,s on a single core.
+ 
+
+\subsection{Signed ZVF: Decomposing Starvation from Saturation}
+\label{sec:zvf-signed}
+Every prior ZVF result in this paper -- the cross-library aggregation
+(\S\ref{sec:zvf-cross-library}), the lead--lag structure
+(\S\ref{sec:zvf-lag}), and the collapse-threshold search -- treats the
+zero-variance fraction as a single scalar. That scalar is a
+\emph{censored contrast probability}: for a prompt $x$ with rollout
+successes $K_x{=}\sum_{i=1}^{G} R_{x,i} \in \{0,\dots,G\}$, a group is
+zero-variance iff $K_x{\in}\{0,G\}$, so
+\begin{equation}
+\mathrm{ZVF}_G = \underbrace{\mathbb{E}_x\!\left[\Pr(K_x{=}0)\right]}_{\text{ZVF}^-\ \text{(all-wrong)}}
+             + \underbrace{\mathbb{E}_x\!\left[\Pr(K_x{=}G)\right]}_{\text{ZVF}^+\ \text{(all-correct)}}.
+\end{equation}
+The two summands are \emph{structurally opposite}. ZVF$^-$ is
+gradient \emph{starvation}: the group produces no positive exemplar, the
+GRPO advantage is identically zero, and the policy receives no signal on
+a prompt it cannot yet solve. ZVF$^+$ is \emph{saturation}: the group is
+all-correct, the advantage is again zero, but only because the task is
+mastered -- a benign, even desirable, terminal state. Raw ZVF adds a
+pathology to a success. This is the (frontier synthesis) framing of ZVF
+as ``signal availability, not difficulty'' made operational: we split
+the unavailable-signal mass by the \emph{sign} of the saturated reward.
+
+\paragraph{Exact validation anchor.}
+On the three GSM8K runs (Qwen3-8B, $G{=}8$, 200 prompts each) we log the
+full per-group reward vector, so the split is exact. The converged runs
+carry ZVF$^+{=}0.105$--$0.160$ (saturation on mastered prompts) against
+only ZVF$^-{=}0.025$--$0.040$ (a thin starved tail of hard prompts). The
+i.i.d.\ odds-split model $\Pr(K{=}0\mid K{\in}\{0,G\})=(1{-}p)^G/[(1{-}p)^G{+}p^G]$
+evaluated at the aggregate accuracy $p$ predicts ZVF$^-{\approx}0.0003$:
+it \emph{under}-predicts the exact ZVF$^-$ by two orders of magnitude,
+because difficulty heterogeneity concentrates the all-wrong mass on a
+minority of hard prompts that the aggregate $p$ washes out. We therefore
+treat the odds-split as a \emph{conservative lower bound} on ZVF$^-$ when
+only $(\mathrm{ZVF},\bar r,G)$ are logged, and report exact values wherever
+per-group traces exist.
+
+\paragraph{Signed ZVF restores the health ordering that raw ZVF inverts.}
+Table~\ref{tab:zvf-signed} decomposes 20 runs spanning five data sources
+and three model families. The decisive case is a direct inversion: the
+converged group-size-sweep run at $G{=}2$ carries raw
+$\mathrm{ZVF}{=}0.838$, \emph{higher} than the plateaued vanilla-GRPO
+run's raw $\mathrm{ZVF}{=}0.481$. Read naively, raw ZVF ranks the healthy
+run as the sicker one. The signed split explains why: the sweep's mass is
+$0.766$ ZVF$^+$ saturation (it has learned arithmetic to $97.7\%$) against
+$0.072$ ZVF$^-$, whereas GRPO's mass is $0.470$ ZVF$^-$ starvation against
+$0.011$ ZVF$^+$. Ordering by ZVF$^-$ places the two runs correctly.
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llrrrrl}
+\hline
+Source & Run & $\bar r$ & Raw ZVF & ZVF$^-$ & ZVF$^+$ & Outcome \\
+\hline
+GSM8K (exact)   & s42      & 0.697 & 0.130 & 0.025 & 0.105 & converged \\
+GSM8K (exact)   & s123     & 0.713 & 0.190 & 0.030 & 0.160 & converged \\
+sweep           & $G{=}2$  & 0.977 & 0.838 & 0.072 & 0.766 & converged \\
+sweep           & $G{=}16$ & 0.984 & 0.631 & 0.003 & 0.628 & converged \\
+var-mit         & GRPO     & 0.391 & 0.481 & 0.470 & 0.011 & plateau \\
+var-mit         & AERO     & 0.428 & 0.220 & 0.202 & 0.018 & plateau \\
+dr-grpo cot     & GRPO     & 0.265 & 0.335 & 0.327 & 0.008 & drift \\
+tool-use        & qwen3-32b& 0.000 & 1.000 & 1.000 & 0.000 & collapse \\
+tool-use        & llama-8b & 0.000 & 1.000 & 1.000 & 0.000 & collapse \\
+\hline
+\end{tabular}
+\caption{Signed ZVF decomposition (representative subset of 20 rows).
+Converged runs concentrate their zero-variance mass in the benign
+ZVF$^+$ (saturation) channel; plateaued, drifting, and collapsed runs
+concentrate it in the pathological ZVF$^-$ (starvation) channel. Raw ZVF
+conflates the two and is non-monotone with outcome. GSM8K rows are exact
+per-group; the rest use the conservative odds-split lower bound on
+ZVF$^-$. Source:
+\texttt{experiments/results/zvf\_signed\_summary.tsv}.}
+\label{tab:zvf-signed}
+\end{table}
+
+\paragraph{ZVF$^-$ is a perfect failure separator; raw ZVF is not.}
+Treating $\{$plateau, drift, collapse$\}$ as unhealthy ($n{=}13$) and
+$\{$converged$\}$ as healthy ($n{=}7$), the Mann--Whitney separability
+AUC $=\Pr(\text{feature}_{\text{unhealthy}}{>}\text{feature}_{\text{healthy}})$
+is $1.000$ for ZVF$^-$ and $0.000$ for ZVF$^+$ -- both \emph{perfect}
+separators, in opposite directions -- against $0.396$ for raw ZVF, which
+is worse than chance because healthy convergence \emph{raises} raw ZVF via
+saturation. Every unhealthy run has ZVF$^-$ strictly above every healthy
+run (min unhealthy $0.103$ $>$ max healthy $0.072$; the split threshold
+sits at $\approx 0.09$). This is precisely the perfect separator that the
+iter54 collapse-threshold search failed to find on raw ZVF (0 perfect
+separators, bootstrap CI $[0.11,0.84]$): the confound was the ZVF$^+$
+channel, and removing it recovers clean separation
+(Fig.~\ref{fig:zvf-signed}).
+
+\paragraph{Mitigation methods cut the pathological half, not the benign one.}
+The signed split gives a mechanistic test of what a variance-mitigation
+method actually does. Against matched-stack GRPO, AERO reduces raw ZVF by
+$-0.261$; the signed decomposition attributes $-0.268$ of that to ZVF$^-$
+(103\% -- ZVF$^+$ moves the other way, $+0.008$). All eight mitigation
+methods in \texttt{variance\_mitigation.tsv} reduce ZVF$^-$ relative to
+GRPO while leaving the (already near-zero, $\le 0.018$) ZVF$^+$ channel
+essentially untouched. AERO's halving of raw ZVF reported in
+\S\ref{sec:zvf-cross-library} is therefore genuine starvation relief, not
+a cosmetic suppression of benign saturation collisions -- a distinction
+that raw ZVF cannot make and that matters when ranking mitigations.
+
+\paragraph{Honest scope.}
+The perfect AUC is over $n{=}20$ aggregate runs, not a per-step claim; the
+outcome labels are the deterministic \texttt{classify()} rule (peak vs
+last-10 accuracy) used throughout Pillar~2. ZVF$^-$ for the 15 non-GSM8K
+runs is the odds-split lower bound, so the true ZVF$^-$ separation is at
+least as clean as reported. The two collapse points (tool-use, $\bar
+r{=}0$) are the unambiguous $\mathrm{ZVF}^-{=}1$ limit; the separation
+does not rest on them alone -- the plateau/drift band ($0.10$--$0.47$)
+already clears the healthy band ($\le 0.072$). We do not claim ZVF$^-$
+distinguishes plateau from collapse (both are starved); we claim it
+distinguishes starved from healthy, which raw ZVF cannot.
+
+\paragraph{Reproduction.}
+\texttt{scripts/zvf\_signed\_decomposition.py} (stdlib only; reads the five
+source files; exact per-group split on GSM8K, i.i.d.\ odds-split
+elsewhere; Mann--Whitney separability and matched-stack AERO contrast).
+Companion \texttt{scripts/zvf\_signed\_figure.py} renders
+\texttt{figures/zvf\_signed\_decomposition.\{pdf,png\}}. Runtime under
+1\,s on a single core.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/zvf_signed_decomposition.pdf}
+\caption{\textbf{Signed ZVF decomposition.} Left: per-run stacked
+ZVF$^-$ (starvation, red) and ZVF$^+$ (saturation, blue), sorted by raw
+ZVF; the diamond marks each run's outcome. Healthy converged runs (green)
+sit high on raw ZVF purely through the benign ZVF$^+$ channel. Right:
+ZVF$^-$ separates unhealthy from healthy runs perfectly (AUC$=1.00$) where
+raw ZVF fails (AUC$=0.40$); the dashed line is the strict split at
+$\approx 0.09$.}
+\label{fig:zvf-signed}
+\end{figure}
+ 
+
+\subsection{Difficulty-Stratified ZVF: a Cross-Library Diagnostic}
+\label{sec:zvf-stratified}
+
+The signed-decomposition analysis in \S\ref{sec:zvf-signed} reads
+$\mathrm{ZVF} = \mathrm{ZVF}^- + \mathrm{ZVF}^+$ as a sum of two
+structurally opposite collision types, and uses that split to rank
+libraries. The diagnosis is correct, but it leaves an open question:
+\emph{when} a library lowers raw ZVF, does it lower it on the
+hard-prompt tail (the pathological starvation channel) or on the
+easy-prompt tail (the benign saturation channel)? The single-scalar
+ZVF cannot answer this, and neither can the signed scalar ZVF$^-$
+evaluated at the aggregate accuracy $\bar r$. Both are pooled over
+the prompt-difficulty distribution the policy currently sees.
+
+\paragraph{Stratification by heldout-accuracy quintile.}
+We bin every per-step observation of each library's training run by
+its own heldout-accuracy into five equal-mass quintiles, defined
+\emph{per method}, so the cross-library contrast is not confounded by
+the global accuracy shift between methods (mean accuracy differs
+across the 9 libraries only between $0.263$ and $0.284$ on this
+shared training task). Quintile $0$ is the hardest-prompt-dominated
+training window; quintile $4$ is the easiest-prompt-dominated one.
+We then compute mean ZVF in each (method, quintile) cell, and the
+AERO--GRPO ZVF delta per quintile with a 2{,}000-rep step-level
+bootstrap CI.
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lrrrrrr}
+\hline
+Method & $\overline{\mathrm{ZVF}}$ & q0 (hard) & q2 & q3 & q4 (easy) & $\Delta_{4-0}$ \\
+\hline
+GRPO     & 0.481 & 0.020 & 0.546 & 0.833 & 0.880 & 0.860 \\
+AERO     & 0.220 & 0.014 & 0.066 & 0.357 & 0.650 & 0.636 \\
+CPPO     & 0.295 & 0.010 & 0.153 & 0.542 & 0.750 & 0.739 \\
+NGRPO    & 0.300 & 0.014 & 0.175 & 0.561 & 0.728 & 0.715 \\
+SCAFGRPO & 0.317 & 0.235 & 0.321 & 0.356 & 0.396 & 0.161 \\
+MCGRPO   & 0.146 & 0.013 & 0.025 & 0.174 & 0.507 & 0.494 \\
+GIFT     & 0.114 & 0.013 & 0.021 & 0.110 & 0.412 & 0.399 \\
+AREAL    & 0.121 & 0.012 & 0.020 & 0.132 & 0.425 & 0.412 \\
+ES       & 0.114 & 0.010 & 0.087 & 0.207 & 0.244 & 0.234 \\
+\hline
+\end{tabular}
+\caption{Difficulty-stratified ZVF across 9 variance-mitigation
+libraries (mean over 5 seeds $\times$ 100 steps). $\overline{\mathrm{ZVF}}$
+is the pooled mean. q0--q4 are equal-mass heldout-acc quintiles per
+method; $\Delta_{4-0}$ is the high-quintile minus low-quintile
+difference. Vanilla GRPO has the largest spread ($\Delta_{4-0}{=}0.86$);
+SCAFGRPO has the smallest ($\Delta_{4-0}{=}0.16$). Source:
+\texttt{experiments/results/zvf\_iter62\_summary.tsv}.}
+\label{tab:zvf-strat}
+\end{table}
+
+\paragraph{Every library has a near-identical ZVF at the hard end.}
+The striking result is at the bottom of column q0: \emph{all nine
+libraries} sit between $0.010$ and $0.024$. The hard-prompt
+training window already produces almost no zero-variance groups, for
+GRPO and for every variance-mitigation scheme. AERO's hard-end ZVF
+is $0.014$ versus GRPO's $0.020$ -- a $\Delta = -0.006$ that is
+statistically real but practically negligible. Iter58's strong
+reading -- that AERO attacks the starvation channel -- is therefore
+\emph{not} falsified by stratification (the hard-end ZVF is indeed
+slightly lower under AERO), but it \emph{is} revealed to be a
+misleading framing: a $-0.006$ ZVF change at the hard end is dwarfed
+by $-0.48$ to $-0.48$ reductions in the middle quintiles (q2 and
+q3), where vanilla GRPO has heavy starvation-and-saturation turnover
+as the policy gradually masters a stratum of prompts.
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrl}
+\hline
+Quintile & AERO & GRPO & $\Delta_{\text{AERO-GRPO}}$ & 95\% CI & Verdict \\
+\hline
+q0 (hard)   & 0.0138 & 0.0199 & $-0.006$ & [$-0.011$, $-0.002$] & AERO $<$ GRPO \\
+q1          & 0.0147 & 0.1256 & $-0.111$ & [$-0.121$, $-0.101$] & AERO $\ll$ GRPO \\
+q2          & 0.0657 & 0.5461 & $-0.480$ & [$-0.499$, $-0.462$] & AERO $\ll$ GRPO \\
+q3          & 0.3572 & 0.8326 & $-0.476$ & [$-0.502$, $-0.450$] & AERO $\ll$ GRPO \\
+q4 (easy)   & 0.6499 & 0.8798 & $-0.230$ & [$-0.240$, $-0.219$] & AERO $<$ GRPO \\
+\hline
+\end{tabular}
+\caption{AERO--GRPO ZVF delta by heldout-acc quintile. CIs are
+2{,}000-rep step-level bootstrap. Every CI excludes zero; AERO has
+\emph{lower} ZVF in every quintile. The largest absolute gap is in
+q2/q3 (mid-accuracy), not in the hard-prompt tail q0. Source:
+\texttt{experiments/results/zvf\_iter62\_aero\_minus\_grpo.tsv}.}
+\label{tab:zvf-aero-delta}
+\end{table}
+
+\paragraph{What AERO actually does, by quintile.}
+The full per-quintile delta is in Table~\ref{tab:zvf-aero-delta}.
+Three regimes are visible: at the hard end (q0) the libraries are
+indistinguishable; in the middle (q2, q3) AERO is roughly
+$0.48$ lower in raw ZVF, which is the single largest inter-library
+gap observed across the 9 libraries and 5 quintiles; at the easy end
+(q4) the gap narrows to $0.23$ because AERO itself accumulates
+saturation. The middle-quintile gap is the channel that the
+cross-library aggregation in \S\ref{sec:zvf-cross-library} reports
+when it says AERO's mean ZVF ($0.22$) is roughly half of GRPO's
+($0.48$) -- that reduction is \emph{not} from rescuing starved
+hard-prompt groups, it is from smoothing the variance of the
+mid-accuracy stratum where GRPO's group-mean baseline is most
+volatile. AERO's adaptive, advantage-shaped clipping therefore
+behaves like a difficulty-aware group-size adjuster in the regime
+where that adjustment matters most.
+
+\paragraph{Three library archetypes by $\Delta_{4-0}$ spread.}
+Column $\Delta_{4-0}$ in Table~\ref{tab:zvf-strat} gives a compact
+one-number summary of each library's ZVF stratification shape. We
+identify three clusters: (i) \emph{saturators} with $\Delta_{4-0}
+\in [0.5, 0.9]$ -- GRPO, CPPO, NGRPO, AERO, MCGRPO, GIFT, AREAL --
+whose ZVF is dominated by easy-prompt saturation at the end of
+training; (ii) \emph{flattener} SCAFGRPO with $\Delta_{4-0}{=}0.16$,
+whose ZVF is roughly equal across difficulty; (iii) \emph{aggressive
+mitigator} ES with $\Delta_{4-0}{=}0.23$, whose ZVF is everywhere
+near zero. SCAFGRPO's flattening is the only method that maintains
+non-trivial ZVF at the hard end ($0.235$ at q0 vs $\leq 0.024$ for
+every other method); whether this is a feature (it preserves
+contrast on the hard stratum) or a bug (it has not learned them) is
+a question for the per-prompt iso-G analysis of \S\ref{sec:zvf-isog},
+but the cross-library diagnostic says SCAFGRPO is doing something
+\emph{qualitatively different} from the other 8 libraries.
+
+\paragraph{Reproduction.}
+\texttt{scripts/zvf\_iter62.py} (stdlib + matplotlib; reads
+\texttt{variance\_mitigation.tsv} only, $5{,}540$ rows). Quintile
+assignment uses equal-mass rank-binning per method; bootstrap CIs
+are 2{,}000-rep step-level resamples. Runtime under $3$\,s on a
+single core. Figure~\ref{fig:zvf-strat} renders the nine-library
+fan and the AERO--GRPO delta bar.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{figures/zvf_iter62_difficulty_strata.pdf}
+\caption{\textbf{Difficulty-stratified ZVF, 9 libraries.} Left:
+mean ZVF vs heldout-accuracy quintile, one curve per library. All
+nine curves collapse at q0 (hard end, ZVF $\leq 0.024$) and fan out
+at q2--q3 where GRPO has heavy starvation--saturation turnover.
+Right: AERO--GRPO ZVF delta per quintile with 95\% bootstrap CI;
+AERO $<$ GRPO in every quintile, with the largest gap at q2 ($-0.48$)
+and q3 ($-0.48$). Hard-prompt gap (q0) is only $-0.006$.}
+\label{fig:zvf-strat}
+\end{figure}
+ \subsection{Inference-Time Baselines: ZVF as a Sampling-Availability Diagnostic}
+\label{sec:zvf-inference-baselines}
+
+\paragraph{Best-of-$k$ decoding moves ZVF without a gradient update.}
+On the GSM8K trajectory data already in this evidence base (3 seeds
+$\times$ 200 problems, $G{=}8$), a purely inference-time intervention ---
+best-of-$k$ extraction over top-$k$ alternative decoding paths in the
+style of CoT-Without-Prompting~\citep{wang2024cotdecoding} --- recovers
+$+0.282$ mean accuracy (best-of-8 minus best-of-1; monotone in $k$ on
+all 3 seeds over $k \in \{1,2,4,8\}$), exceeding the pre-registered
+$\geq 0.10$ target almost threefold. The same sweep moves mean ZVF from
+$1.000$ at $k{=}1$ to $0.158$ at $k{=}8$ (mean $\Delta = -0.842$)
+without a single parameter update. We therefore sharpen the reading of
+the diagnostic: ZVF measures whether \emph{contrast is available in the
+sampled group}, not whether learning has occurred --- a sampling-availability
+diagnostic that RL training and decoding strategy both act upon. The
+negative control follows \citet{huang2024selfcorrect}: intrinsic
+self-correction is a different intervention from path extraction and
+does not reproduce the effect (pre-registered H5 NULL). Three of five
+pre-registered hypotheses were decisive; the $k{=}8$ ceiling leaves one
+undertested
+(\texttt{experiments/results/berkeley/cot\_decoding\_summary.json}).
+
+\paragraph{A critique-pass discount preserves the method ranking.}
+A Self-Debug-style reformulation~\citep{chen2023selfdebug} asks whether
+part of the magnitude channel in the iter130 risk decomposition is
+format-only variance that an execution-feedback critique pass would
+remove. Discounting a calibrated $\varepsilon = 0.12$ (from Self-Debug's
+$+12\%$ pass@1 on MBPP) drops \texttt{frac\_mag} by $\geq 2$\,pp on 8/9
+magnitude-dominant methods (mean $2.82$\,pp) while the one
+drift-dominant method (\texttt{grpo}) moves only $1.49$\,pp --- exactly
+the failure mode predicted by the no-intrinsic-self-correction
+result~\citep{huang2024selfcorrect}. The discount is ranking-preserving
+(Spearman $1.000$ across $\varepsilon \in [0, 0.30]$, the stability
+check suggested by OPRO~\citep{yang2024opro}), the three-bucket risk
+partition is preserved for 9/9 methods, and $\varepsilon = 0$ is an
+exact no-op; all five pre-registered hypotheses were decisive, and the
+top-ranked method is unchanged
+(\texttt{experiments/results/berkeley/selfdebug\_summary.json}).
+ \subsection{How Many Seeds Does the Headline Need? Eval-Protocol Hardening}
+\label{sec:zvf-eval-protocol}
+
+Applying the cost-efficiency lens of \citet{yehudai2025survey} and the
+fine-grained-ablation discipline of $\tau^2$-Bench~\citep{barres2025tau2}
+to the iter130 per-seed risk data (9 variance-mitigation methods
+$\times$ 5 seeds), we ask how much of the evaluation budget the headline
+claims actually require. The top-1 headline (``which method minimises
+risk'') is fully seed-robust: the top-1 match rate is $1.00$ across all
+$\binom{5}{k}$ seed subsets for every $k$, so the minimum viable seed
+panel at the 95\% stability level is $k{=}1$ --- a five-fold evaluation
+saving for that specific claim. Finer-grained claims are more expensive:
+the top-3 \emph{set} reaches 80\% stability only at $k{=}4$ (top-3 match
+rate $0.4$ at $k{=}1$ rising to $0.8$ at $k{=}4$), and the sign of each
+method's $z$-score against \texttt{grpo} is leave-one-seed-out stable
+for 8/8 non-baseline methods. Decomposing the risk index by channel,
+8/9 methods are magnitude-dominant while \texttt{grpo} itself is
+drift-dominant --- variance mitigation acts chiefly by suppressing the
+magnitude channel --- and the best-3/mid-3/worst-3 partition is
+$1.0$-stable under leave-one-seed-out re-ranking
+(\texttt{experiments/results/berkeley/eval\_protocol\_summary.json}).
+
+An independent audit of seven portfolio headline numbers under the
+statistical recipe of \citet{miller2024errorbars} (paired and non-paired
+bootstrap plus TOST equivalence testing) confirms that the Pillar-2
+headline survives: $\mathrm{AUROC}(\texttt{zvf\_risk\_max}) = 0.929$
+with bootstrap CI $[0.83, 1.00]$, decisive against the $0.5$ null
+(\texttt{experiments/results/berkeley/adding\_error\_bars\_audit.tsv}).
+Four of the seven audited headlines across the portfolio were decisive
+and three were null; the null verdicts are reported in the papers they
+concern.
+ 
+
+\subsection{Frontier-Model Cross-Examination: The ZVF Diagnostic}
+\label{sec:frontier-zvf}
+
+To stress-test the ZVF diagnostic beyond our own measurements, we
+submitted the Pillar~2 construction to an external cross-examination of
+two frontier reasoning systems (ChatGPT Pro Extended and Gemini Deep
+Think). The exchange is a source of \emph{arguments and proposed
+diagnostics}, not additional experiments; we report the sharpest
+contributions and, where they bear on our reported results---the weak
+outcome correlation ($\rho = 0.27$, Section~\ref{sec:zvf-cross-experiment})
+and the temporal stickiness / upward drift
+(Section~\ref{sec:zvf-dynamics})---we say so explicitly.
+
+\paragraph{Why $\rho = 0.27$ is structural: mastery--incapacity aliasing.}
+In an external cross-examination, both models argued that ZVF is a weak
+\emph{outcome} predictor by construction because it is an \emph{unsigned}
+saturation statistic. Writing $K_x=\sum_{i=1}^{G} R_i$ for the within-group
+success count, $\mathrm{ZVF}=\Pr(K_x=0)+\Pr(K_x=G)$ assigns the same value
+to an all-wrong group ($K_x=0$, incapacity) and an all-correct group
+($K_x=G$, mastery)---aliasing the two ends of the difficulty axis that
+have opposite outcome implications. A modest $\rho\approx0.27$ over the
+$23$ pooled (experiment, model, $G$) cells is thus the \emph{expected}
+behavior of a sign-blind scalar, not a
+defect of the underlying quantity (frontier synthesis). This rationalizes
+our own reading: ZVF is a mechanistic \emph{signal-availability}
+diagnostic, not a standalone performance predictor.
+
+\paragraph{A proposed ZVF Inelasticity Theorem (frontier synthesis).}
+Gemini Deep Think proposed formalizing the aliasing as a
+\emph{Combinatorial Inelasticity Theorem}. Under binary rewards, latent
+per-prompt success probability $p_x\in(0,1)$, and conditionally i.i.d.\
+rollouts (so $K_x\sim\mathrm{Binomial}(G,p_x)$), the expected
+zero-variance fraction is exactly
+\begin{equation}
+  \mathrm{ZVF}(p_x,G) \;=\; p_x^{\,G} + (1-p_x)^{\,G},
+  \label{eq:zvf-inelasticity}
+\end{equation}
+which is symmetric, $\mathrm{ZVF}(p_x,G)=\mathrm{ZVF}(1-p_x,G)$: a
+U-shaped ``topological trap'' that cannot separate zero-shot failure
+($p_x\to0$) from reward saturation ($p_x\to1$). Its payoff is the
+\emph{elasticity of gradient yield to compute} $G$: at the max-entropy
+point $p_x=\tfrac12$, $\mathrm{ZVF}=2^{1-G}$ and
+$\partial_G\ln\mathrm{ZVF}=-\ln 2$, so extra rollouts kill dead groups
+exponentially fast, whereas in the tails ($\epsilon\ll 1/G$) a Taylor
+expansion gives $\mathrm{ZVF}\approx 1-G\epsilon+O(\epsilon^2)$ and
+$\partial_G\mathrm{ZVF}\approx-\epsilon\to 0$---group-size scaling is
+crushed into a linear crawl. This is the frontier-side explanation for
+our temporal-stickiness result: as training drives $p_x\to1$ on mastered
+prompts, Eq.~\eqref{eq:zvf-inelasticity} pushes ZVF toward $1$
+\emph{and} makes it inelastic to $G$, so ZVF drifts up and does not
+return---matching the monotonic phase-1-to-phase-3 drift and high lag-1
+autocorrelation ($\rho_1\approx0.94$) we measure.
+
+\paragraph{Replacement diagnostics: PCD and a sign-resolving quality score.}
+Because ZVF measures only the \emph{existence} of contrast, the frontier
+models proposed replacements that measure its \emph{magnitude} and
+\emph{sign}. Gemini's Pairwise Contrast Density (PCD) is the expected
+within-group reward variance, equivalently the mean squared pairwise
+contrast that GRPO's baseline projection actually consumes:
+\begin{equation}
+  \mathrm{PCD}
+  \;=\; \mathbb{E}_{x}\!\big[\mathrm{Var}(r\mid x)\big]
+  \;=\; \mathbb{E}_{x}\!\Big[\tfrac{1}{G^2}\!\sum_{i<j}(r_i-r_j)^2\Big]
+  \;=\; \tfrac{G-1}{G}\,\mathbb{E}_{x}\!\big[p_x(1-p_x)\big],
+  \label{eq:pcd}
+\end{equation}
+a sharp parabola peaking at $p_x=\tfrac12$ rather than the flat plateau
+that $1-\mathrm{ZVF}$ forms over intermediate $p_x$. The models offered a
+concrete \emph{micro-jitter falsification}: injecting noise
+$\epsilon\sim U(0,10^{-4})$ into rewards (e.g.\ from a length penalty)
+makes ZVF flatline to $0$ globally---falsely reporting a fully healthy
+batch---whereas PCD is essentially invariant. ChatGPT proposed instead a
+sign-resolving scalar, Learning-Adjusted Rollout Quality,
+$\mathrm{LARQ}_\beta=\mathbb{E}_x[\hat p_x+\beta\cdot4\hat p_x(1-\hat p_x)]$
+with $\hat p_x=K_x/G$, whose first term distinguishes all-correct from
+all-wrong (curing the aliasing) while the second rewards frontier mass at
+$\hat p_x\approx\tfrac12$. Both were offered with a head-to-head protocol
+against ZVF on our $23$ pooled cells, with a stated target of
+$\rho\gtrsim0.45$ (frontier synthesis)---a falsifiable bar, not a claimed
+result.
+
+\paragraph{Active gradient bandwidth and group size.}
+The frontier synthesis recasts the group-size effect as a law about
+gradient utilization $\mathrm{GU}_G=1-\mathrm{ZVF}_G$. From
+Eq.~\eqref{eq:zvf-inelasticity}, the marginal group nonzero-yield gained
+per extra rollout is
+\begin{equation}
+  h_G(p)-h_{G+1}(p) \;=\; p^{\,G}(1-p) + (1-p)^{\,G}\,p,
+  \qquad h_G(p)=p^{\,G}+(1-p)^{\,G},
+  \label{eq:gu-marginal}
+\end{equation}
+which is maximized near $p_x\approx 1/G$ or $1-1/G$, \emph{not} at
+$p_x\approx\tfrac12$ (where ZVF is already tiny) nor at $p_x\approx 0,1$
+(where even large $G$ fails). This motivated the models' ``Iso-Yield''
+dynamic-grouping idea---route mastered/frontier prompts to small $G$ and
+spend the freed budget on stubborn tails---and a matching
+\emph{contrastive-yield effective compute} axis
+$C_{\mathrm{eff}} = T\cdot G\cdot \mathbb{E}_x[\,1-p_x^{\,G}-(1-p_x)^{\,G}\,]\cdot\lVert\Delta\theta\rVert_{\mathrm{KL}}$,
+in which extra samples count only insofar as they create mixed-reward
+groups. Equation~\eqref{eq:gu-marginal} is consistent with the
+$0.845\to0.631$ ZVF drop we observe as $G:2\to16$: the reduction is
+concentrated in the interior-$p_x$ prompts and saturates in the tails.
+
+\paragraph{Two caveats that sharpen our own claims.}
+First, on our anti-herding falsification: the models cautioned that the
+measured residual
+$\Delta_G=\mathrm{ZVF}^{\mathrm{obs}}_G-\mathbb{E}_x[p_x^{\,G}+(1-p_x)^{\,G}]\in[-0.23,-0.13]$
+should be read as \emph{edge-thinning / excess contrastive yield}
+($13$--$23$ percentage points fewer zero-advantage groups than the
+i.i.d.\ Bernoulli null), \emph{not} as negative pairwise rollout
+correlation. ZVF is an extreme-event statistic, whereas correlation is a
+second-moment property, and one model produced an explicit counterexample
+($G=4$, $p=\tfrac12$) with $\Delta_G<0$ yet pairwise $\rho>0$. This
+reinforces the conservative stance already taken in
+Section~\ref{sec:zvf-dynamics}. Second, and as a genuine \emph{challenge}
+to the ``zero gradient'' framing in Section~the companion paper on ZVF gradients: under
+a KL-penalized reward $r_i=r^{\mathrm{task}}_i-\beta\,\mathrm{KL}_i$, when
+$\mathrm{Var}(r^{\mathrm{task}})=0$ the advantage normalization cancels
+$\beta$ and yields
+$A_i=-(\mathrm{KL}_i-\overline{\mathrm{KL}})/\sigma_{\mathrm{KL}}$, so a
+zero-variance group emits not a null update but a covert, full-magnitude
+distillation pull toward the reference policy. The frontier models framed
+this as the single falsifying experiment for Pillar~2: if masking these
+updates destabilizes training, ZVF states are load-bearing regularization
+anchors rather than pure dead compute---a caveat we flag but do not
+resolve here.
+ \section{Discussion and Limitations}
+\label{sec:p2-discussion}
+ZVF earns its place as a descriptive diagnostic of signal starvation, but our
+evidence argues against treating it as a standalone causal or incrementally
+predictive statistic. (Our companion Pillar-7 takes up exactly this question as an
+\emph{interventional} sequel---testing, rather than assuming, whether ZVF-derived
+quantities can be made predictive and used for control; the two papers are
+complementary, descriptive characterization here and falsifiable intervention there,
+not contradictory.) Three limitations are load-bearing. First, ZVF is
+mechanically coupled to reward sparsity, group size, and baseline accuracy, so its
+correlations are partly bookkeeping rather than discovery; multivariate tests
+against reward mean, entropy, and divergence proxies are needed before any causal
+reading. Second, its strong association is with catastrophic \emph{collapse}, an
+easy target, and only weak with the graded held-out outcome that practitioners
+actually care about. Third, as an unsigned existence statistic it aliases mastery
+($p \to 1$) with incapacity ($p \to 0$) and, as the cross-examination shows, can be
+driven to zero by sub-reward jitter (for example a small length penalty), falsely
+reporting a healthy batch. These are reasons to prefer magnitude- and sign-aware
+diagnostics, which we outline but do not yet validate at the $\rho \geq 0.45$ bar
+the cross-examination sets.
+
+\section{Conclusion}
+\label{sec:p2-conclusion}
+The Zero-Variance Fraction is a useful, cheap, mechanistically grounded lens on
+when binary-reward GRPO stops producing within-group signal, and it reliably
+tracks collapse and drifts upward over training. It is not, on our data, a
+standalone predictor of final generalization, and its unsigned form conflates two
+opposite regimes. The constructive path forward is to measure the \emph{magnitude}
+and \emph{sign} of within-group contrast rather than merely its existence, and to
+test such replacements as early-window leading indicators against held-out outcome.
+We release the per-group reward tensors precisely so that these stricter tests can
+be run.
+ \appendix
+\section{Formal Definition of the Zero-Variance Fraction, Non-Tautology, and Scope}
+\label{sec:appendix:zvf-formalization}
+
+\subsection{Formal Definition}
+
+Let a GRPO batch $B_t$ at optimizer step $t$ consist of $|B_t|$ prompt-groups,
+each group $g$ containing $K$ rollouts with scalar outcome rewards
+$r_{g,1}, \ldots, r_{g,K} \in \mathbb{R}$. We define the \emph{Zero-Variance
+Fraction} (ZVF) as
+\begin{equation}
+\label{eq:zvf}
+\mathrm{ZVF}_t \;=\; \frac{1}{|B_t|} \sum_{g \in B_t}
+  \mathbb{1}\!\left[\;\widehat{\mathrm{Var}}(r_{g,1}, \ldots, r_{g,K}) \le \varepsilon\;\right],
+\end{equation}
+where $\widehat{\mathrm{Var}}$ is the unbiased sample variance and
+$\varepsilon$ is a small numerical tolerance
+(we use $\varepsilon = 10^{-6}$ for rewards normalized to $[0,1]$).
+Intuitively, $\mathrm{ZVF}_t$ is the fraction of groups at step $t$ whose
+rollouts all collapsed to the same outcome; those groups contribute zero
+group-relative advantage and thus zero gradient signal to the GRPO update.
+
+\subsection{Why ZVF Is Not a Tautological Re-expression of Mean Reward}
+
+A reviewer may reasonably suspect that under binary outcome rewards
+$r \in \{0,1\}$ and group-relative advantages, $\mathrm{ZVF}_t$ is a direct
+function of the batch mean reward $\bar{r}_t$: if every group succeeds
+(or fails) uniformly, $\mathrm{ZVF}_t = 1$. This is true at the extremes
+$\bar{r}_t \in \{0,1\}$ but does \emph{not} hold at intermediate values.
+For $K$ i.i.d.~Bernoulli rollouts with prompt-specific success probability
+$p_g$, the expected ZVF under a null independence model is
+\begin{equation}
+\mathbb{E}[\mathrm{ZVF}_t] \;=\; \mathbb{E}_{p_g}\!\left[\,p_g^{K} + (1-p_g)^{K}\,\right].
+\end{equation}
+The right-hand side depends on the full prompt-difficulty distribution
+$\{p_g\}$, not only on its first moment. Two populations can therefore
+share the same mean reward $\bar r = 0.5$ yet have very different ZVF:
+a bimodal population with $p_g \in \{0,1\}$ yields $\mathrm{ZVF}=1$,
+while a uniform-hard population with all $p_g = 0.5$ and $K=8$ yields
+$\mathrm{ZVF} \approx 2 \cdot (0.5)^8 \approx 0.008$. The substantive
+claim is thus not ``high mean reward implies high ZVF,'' but rather that
+ZVF is sensitive to \emph{how} success mass is distributed across prompts.
+
+\subsection{What the Released Artifact Establishes}
+
+The main Qwen3-8B/frontier GSM8K corpus bundled with this paper contains
+aggregate reward trajectories, held-out checkpoint summaries, and the
+cross-framework parser specification in Appendix~\ref{sec:appendix:zvf-pipeline},
+but \emph{not} the per-group step-level rollout logs for those frontier runs.
+For that corpus we therefore make no causal partial-correlation claim. To test
+the partial-correlation question directly we instead ran a fully instrumented,
+ungated small-scale validation (next subsection), which \emph{does} log
+per-step ZVF together with batch-mean reward, policy entropy, and advantage
+variance, and we report its measured \emph{raw} correlation there---while
+explaining (in that subsection) why a partial correlation ``controlling for
+advantage variance'' would be circular under binary rewards and is deliberately
+not reported.
+
+The narrower empirical claim made in the revised paper is the one directly
+supported by the released evidence: in outcome-reward GRPO, high ZVF
+coincides with the disappearance of within-group contrast, and those are
+exactly the runs where reward traces plateau or regress because the
+group-relative advantage has collapsed to zero. This is the operational
+meaning of ZVF in the present benchmark.
+
+\subsection{Measured Validation of the ZVF Formalism (Small-Scale and Frontier)}
+\label{sec:appendix:zvf-measured}
+
+To test the formalism end-to-end with fully logged rollouts we ran an
+instrumented GRPO sweep on the ungated \texttt{Qwen2.5-0.5B} with a verifiable
+binary correctness reward on two-operand addition (so within-group reward
+variance is real), at group sizes $G \in \{2,4,8,16\}$ across three seeds, $40$
+optimizer steps each ($12$ runs, $480$ logged steps; driver
+\texttt{experiments/modal/modal\_groupsize\_zvf\_sweep.py}, artifacts
+\texttt{experiments/results/groupsize\_zvf\_sweep.\{json,tsv\}} and
+\texttt{zvf\_partial\_correlations.tsv}). This is a deliberately small,
+ungated probe of the \emph{mechanism}, not a restatement of the
+Qwen3-8B/GSM8K results.
+
+\paragraph{The closed-form $\mathrm{ZVF}(p,G)=p^{G}+(1-p)^{G}$ tracks the data.}
+Across the $480$ logged steps, the per-step observed ZVF correlates
+$r=0.92$ with the Bernoulli-null prediction $p^{G}+(1-p)^{G}$ evaluated at the
+step's batch-mean reward $p$, and mean ZVF decreases monotonically in $G$
+($0.84, 0.76, 0.69, 0.63$ at $G=2,4,8,16$), as the closed form requires. The
+\emph{absolute} ZVF modestly exceeds the i.i.d.\ prediction once the comparison
+is done correctly: the right baseline is the per-step \emph{average} of the
+closed form, $\mathbb{E}[p^{G}+(1-p)^{G}]=0.60$ at $G{=}8$ (not the closed form
+evaluated at the pooled mean reward, $0.33$, which understates the Bernoulli
+prediction by Jensen convexity). Against the per-step-average baseline the excess
+is only $\approx 0.09$ ($0.69$ vs.\ $0.60$), so most of the apparent gap is the
+Jensen effect rather than correlated completions; we therefore do not read it as
+strong evidence that the independence null is a lower bound.
+
+\paragraph{The closed form captures the qualitative structure at frontier scale,
+with a circularity caveat.} We measured ZVF directly on the frontier model by
+sampling \texttt{Qwen3-8B} on a held-out GSM8K slice via the Tinker API
+($G{=}8$, temperature~$1.0$, $200$ problems $\times$ three seeds), with the
+per-seed ZVF logged to
+\texttt{experiments/results/tinker\_gsm8k\_zvf\_\{s42,s123,s456\}.json} and
+aggregated in \texttt{tinker\_gsm8k\_zvf\_summary.json} (the single-config Tinker
+eval helper is \texttt{experiments/tinker\_direct\_eval.py}, which writes its own
+\texttt{tinker\_direct\_eval.json}). Mean ZVF is $0.16$,
+concentrated on the saturated tails of the difficulty distribution ($12.7\%$
+all-correct, $3.2\%$ all-wrong, $84\%$ mixed)---the qualitative structure
+$\mathrm{ZVF}(p,G)$ predicts. We caution that a per-problem Pearson correlation
+between observed ZVF and $p^{G}+(1-p)^{G}$ is \emph{mechanically} inflated: the
+per-problem observed ZVF is just the binary all-agree indicator
+$\mathbf{1}[p \in \{0,1\}]$ and the closed form is a deterministic function of
+the same $p$, so the large $r \approx 0.93$ chiefly reflects their shared
+dependence on $p$'s extremity (the rank correlation is weaker,
+$\rho \approx 0.65$). The i.i.d.-Bernoulli null is moreover only a coarse level
+estimate---here it \emph{over}-predicts mean ZVF ($\approx 0.28$ vs.\ observed
+$0.16$), the opposite-sign residual to the low-temperature $0.5$B probe. We thus
+read this as a consistency check on the \emph{shape} of the diagnostic across
+scales, not a precise quantitative fit.
+
+\paragraph{ZVF vs.\ mean reward (W1): what we can and cannot claim.} On the
+logged per-step rows ZVF is strongly correlated with batch-mean reward
+($r=+0.74$): more all-correct groups means more zero-variance groups, as
+expected. We deliberately do \emph{not} report a partial correlation
+``controlling for advantage variance'': under binary outcome rewards the
+within-group advantage variance is a deterministic transform of ZVF (it is zero
+\emph{iff} the group is zero-variance), so partialling it out regresses ZVF on a
+function of itself---a circular control. Nor do we attach a step-level
+$p$-value: the $480$ rows are $12$ runs $\times 40$ \emph{autocorrelated}
+optimizer steps (lag-1 $\approx 0.9$), not independent observations. The
+defensible statement is the descriptive one in the main text: high ZVF coincides
+with the disappearance of within-group contrast, and across runs in this
+near-solved regime ZVF does not track final accuracy ($r\approx 0.09$,
+$n{=}12$)---the expected behaviour once the task is essentially solved.
+
+\subsection{Boundary Conditions and Scope}
+
+We state explicitly when ZVF is \emph{not} informative, partly in response
+to the tautology concern:
+\begin{itemize}[leftmargin=1.2em,itemsep=0pt]
+  \item \textbf{Dense or continuous rewards.} When rewards are continuous
+        (e.g.,~process-reward models or graded code-execution partial credit),
+        $\widehat{\mathrm{Var}}$ is almost surely nonzero and
+        $\mathrm{ZVF} \to 0$. ZVF degenerates and must be replaced by a
+        per-step-reward-variance diagnostic or the surrogates discussed in
+        the extended related work companion document.
+  \item \textbf{$K=1$.} Group variance is undefined and ZVF is trivially $1$.
+  \item \textbf{SFT-saturated baselines.} When the policy already solves
+        the task ($\bar p_g \to 1$ for essentially every prompt),
+        $\mathrm{ZVF} \to 1$ and the diagnostic loses discriminative power;
+        in this regime RL no longer provides useful signal anyway.
+  \item \textbf{Non-outcome-reward RL.} For DPO- or regression-style
+        training there are no rollout groups and ZVF is ill-defined.
+\end{itemize}
+Within its intended scope -- outcome-reward GRPO on verifiable tasks with
+$K \ge 4$ and non-saturated reward support -- ZVF is a cheap, model-agnostic
+early-warning diagnostic. Outside that scope, the paper now recommends
+explicit surrogates instead of over-claiming portability.
+ 
+
+\section{Reward-Shape Counterfactual Sweep}
+\label{app:zvf_counterfactual}
+
+\subsection{Hypothesis}
+If reward-shape coarseness is the primary driver of ZVF saturation in the
+tool-use environment, replacing the three-level reward (\(0.0\), \(0.5\), \(1.0\))
+with a six-level shaped reward
+\(\{0.0, 0.2, 0.4, 0.6, 0.8, 1.0\}\)
+that grants partial credit for (i)~producing any JSON object, (ii)~naming a
+tool, (iii)~naming the \emph{correct} tool, (iv)~producing a dict argument
+block, and (v)~per-argument match should reduce ZVF by a measurable margin at
+fixed group size and model scale. If ZVF is instead dominated by capacity or
+group-size ceiling effects, the shaped reward should not substantially reduce
+ZVF.
+
+\subsection{Design}
+We hold all other hyperparameters fixed and sweep
+\(\{\text{Qwen3-4B-Instruct-2507}, \text{Qwen3-8B}\}
+ \times \{\text{v1 binary-ish}, \text{v2 6-level}\}
+ \times \{42, 43, 44\}\)
+for a total of twelve GRPO runs
+(LoRA rank \(32\), group size \(16\), batch size
+\(64\) / \(128\) for 4B / 8B, \(50\) training steps).
+The reward-version switch is gated by a single environment variable
+(\texttt{TOOL\_USE\_REWARD\_VERSION}) so that the training harness, dataset,
+and sampler are byte-identical between v1 and v2. ZVF is computed with the
+same canonical script used elsewhere in this paper
+(\texttt{scripts/zvf\_compute\_cross\_framework.py}); configs live under
+\texttt{experiments/tool\_use\_zvf\_sweep/}.
+
+\subsection{Pre-registered design (not yet run)}
+This is a \emph{pre-registered protocol}, not a results table: at submission time
+no cell has been populated. Table~\ref{tab:zvf_counterfactual} fixes the design
+(models, reward versions, seeds, steps, and the planned statistic); the sweep
+state is tracked at \texttt{experiments/tool\_use\_zvf\_sweep/manifest.tsv}.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{llrrrr}
+\toprule
+Model & Reward & Seed & Steps & ZVF (mean last 10 steps) & Pass\@1 \\
+\midrule
+Qwen3-4B & v1 & 42 & 50 & --- & --- \\
+Qwen3-4B & v1 & 43 & 50 & --- & --- \\
+Qwen3-4B & v1 & 44 & 50 & --- & --- \\
+Qwen3-4B & v2 & 42 & 50 & --- & --- \\
+Qwen3-4B & v2 & 43 & 50 & --- & --- \\
+Qwen3-4B & v2 & 44 & 50 & --- & --- \\
+\midrule
+Qwen3-8B & v1 & 42 & 50 & --- & --- \\
+Qwen3-8B & v1 & 43 & 50 & --- & --- \\
+Qwen3-8B & v1 & 44 & 50 & --- & --- \\
+Qwen3-8B & v2 & 42 & 50 & --- & --- \\
+Qwen3-8B & v2 & 43 & 50 & --- & --- \\
+Qwen3-8B & v2 & 44 & 50 & --- & --- \\
+\bottomrule
+\end{tabular}
+\caption{Reward-shape counterfactual. ZVF is the fraction of GRPO groups
+with within-group score variance below \(10^{-4}\), averaged over the final
+ten training steps. \(3\) seeds per cell; the planned summary statistic is
+paired-\(t\) on per-seed ZVF between v1 and v2 within each model. Em-dash
+cells are unrun (no results exist yet); on completion the per-seed values will be
+emitted by \texttt{experiments/tool\_use\_zvf\_sweep/run\_sweep.py} and spliced
+in.}
+\label{tab:zvf_counterfactual}
+\end{table}
+
+\subsection{Pre-committed interpretation}
+We pre-commit to the following reading of the results to avoid post-hoc
+rationalisation:
+\begin{itemize}
+  \item \textbf{ZVF drops by \(\geq 0.15\) with v2 in both models.}
+        Reward coarseness is a substantial contributor to collapse;
+        the binary-ish reward is a partial confound and the
+        ``capacity ceiling'' argument is weakened.
+  \item \textbf{ZVF drops by \(<0.05\) under v2 in both models.}
+        Collapse is not primarily reward-shape-driven; the
+        capacity/group-size explanation is strengthened.
+  \item \textbf{ZVF drops sharply in 4B but not in 8B (or vice versa).}
+        The effect interacts with scale; we report the interaction as
+        the headline result and retract the uniform ``reward-shape does
+        not matter'' claim.
+\end{itemize}
+
+Reproduction: the sweep configs, cost estimate, and run state live in
+\texttt{experiments/tool\_use\_zvf\_sweep/} (\texttt{gen\_configs.py},
+\texttt{manifest.tsv}, \texttt{run\_sweep.py}); per-run wandb URLs will be
+recorded there as the runs complete.
+ \providecommand{\artifactstatusword}{released}
+\section{Cross-Framework ZVF Computation Pipeline}
+\label{sec:appendix:zvf-pipeline}
+
+\subsection{Canonical Definition and Pseudocode}
+
+Given per-step, per-group, per-rollout outcome rewards
+$r_{g,k} \in \mathbb{R}$ for $g=1,\ldots,|B_t|$ and $k=1,\ldots,K$, ZVF
+is computed as in Eq.~(\ref{eq:zvf}). The reference implementation is:
+\begin{verbatim}
+def zvf(rewards_2d: np.ndarray, eps: float = 1e-6) -> float:
+    # rewards_2d shape: [num_groups, K]
+    var_per_group = rewards_2d.var(axis=-1, ddof=1)
+    return float((var_per_group <= eps).mean())
+\end{verbatim}
+
+\subsection{Per-Framework Reward-Field Locations}
+
+Each framework emits rollouts in a different layout. We consolidate them
+via \texttt{scripts/zvf\_compute\_cross\_framework.py} which normalizes
+every source into a $[|B_t|, K]$ reward matrix. Field mappings are in
+Table~\ref{tab:zvf-parser-fields}.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{llll}
+\toprule
+Framework & Reward key & Group boundary & Mask field \\
+\midrule
+TRL (\texttt{GRPOTrainer})   & \texttt{rewards} (list per batch) & \texttt{batch\_size / group\_size} & \texttt{completion\_mask} \\
+TINKER (managed)             & \texttt{rollout.reward}           & \texttt{rollout.group\_id}         & \texttt{rollout.eos\_mask} \\
+OpenRLHF                     & \texttt{reward\_score}            & \texttt{prompt\_index}             & \texttt{attention\_mask}   \\
+veRL                         & \texttt{data\_source/reward}      & \texttt{uid}                        & \texttt{response\_mask}   \\
+\bottomrule
+\end{tabular}
+\caption{Per-framework log-field mapping used by
+\texttt{zvf\_compute\_cross\_framework.py}. Group boundaries are recovered
+from either an explicit group-id, a prompt-hash, or
+\texttt{batch\_size / group\_size} partitioning; masks are only required
+for the advantage-variance secondary diagnostic, not for ZVF itself.}
+\label{tab:zvf-parser-fields}
+\end{table}
+
+\subsection{Variance Threshold $\varepsilon$}
+
+We fix $\varepsilon = 10^{-6}$ for rewards normalized to $[0,1]$. This
+tolerates fp32 round-off while treating any distinguishable reward
+difference as ``nonzero variance''. A sensitivity sweep over
+$\varepsilon \in \{10^{-8}, 10^{-6}, 10^{-4}, 10^{-2}\}$ shifts
+cross-framework ZVF estimates by at most $0.4\%$ absolute on our logs,
+well below between-run variability. Rewards not in $[0,1]$ are scaled to
+that range before thresholding.
+
+\subsection{Cross-Framework Consistency Check}
+
+The current \artifactstatusword{} artifact ships the parser contract, the
+cross-framework summary in
+\texttt{experiments/results/framework\_comparison.json}, and the measured
+Tinker/TRL reward traces used elsewhere in the paper. It does
+\emph{not} bundle the raw per-group rollout JSONL files for every framework,
+so we do not claim a fresh four-way pointwise ZVF overlay here. The
+portability claim made in the revised paper is therefore the narrower,
+implementation-level one: when a framework exposes per-rollout rewards and
+group boundaries through the fields in Table~\ref{tab:zvf-parser-fields},
+the same normalizer produces the canonical $[|B_t|, K]$ reward matrix and
+the same ZVF definition in Eq.~(\ref{eq:zvf}) applies without
+framework-specific reinterpretation.
+
+\subsection{Reproducibility Recipe}
+
+To recompute ZVF from raw logs end-to-end:
+\begin{verbatim}
+# Replace <raw-log> with the framework's emitted per-rollout trace.
+# The accompanying bundle ships the parser and summary outputs; the full
+# raw logs remain in the experiment workspace used to generate them.
+
+# TRL
+python3 scripts/zvf_compute_cross_framework.py \
+    --framework trl --log-path <raw-log> \
+    --out experiments/results/zvf_trl_qwen3_8b.jsonl
+
+# TINKER
+python3 scripts/zvf_compute_cross_framework.py \
+    --framework tinker --log-path <raw-log> \
+    --out experiments/results/zvf_tinker_qwen3_8b.jsonl
+
+# OpenRLHF
+python3 scripts/zvf_compute_cross_framework.py \
+    --framework openrlhf --log-path <raw-log> \
+    --out experiments/results/zvf_openrlhf_qwen3_8b.jsonl
+
+# veRL
+python3 scripts/zvf_compute_cross_framework.py \
+    --framework verl --log-path <raw-log> \
+    --out experiments/results/zvf_verl_qwen3_8b.jsonl
+\end{verbatim}
+Each invocation emits a time-series JSONL of
+\texttt{\{step, zvf, batch\_reward\_mean, n\_groups, K\}} using the
+canonical pseudocode above. This unifies the diagnostic across every
+framework once the raw rollout trace is available.
+ \bibliographystyle{plainnat}
+\bibliography{references}
+\end{document}

@@ -364,6 +364,12 @@ def verify_campaign(repo_root: Path) -> dict[str, Any]:
     }
     control_archive = repo_root / "zvf-program/flagship/pilot/provenance/r3-control-source.tar.gz"
     frozen_sources = archived_sha256(control_archive)
+    executed_objective_path = (
+        repo_root / "zvf-program/flagship/pilot/provenance/r4-2-objective.py"
+    )
+    assert sha256(executed_objective_path) == (
+        "980a56a1651299a5adbe7a0927c13b12d42d9d7e1a36205500a24d5eeba9b61b"
+    )
     scientific: list[dict[str, Any]] = []
     corpus_fingerprints: dict[int, set[str]] = defaultdict(set)
     step_zero_hashes: set[str] = set()
@@ -382,8 +388,13 @@ def verify_campaign(repo_root: Path) -> dict[str, Any]:
         assert all(len(value) == 64 for value in source_manifest.values())
         for source_path, expected_hash in source_manifest.items():
             local_source = repo_root / source_path
-            if local_source.is_file():
-                assert sha256(repo_root / source_path) == expected_hash
+            if local_source.is_file() and sha256(local_source) == expected_hash:
+                pass
+            elif (
+                source_path == "zvf-program/flagship/pilot/objective.py"
+                and sha256(executed_objective_path) == expected_hash
+            ):
+                pass
             elif source_path in frozen_sources:
                 assert frozen_sources[source_path] == expected_hash
             else:
@@ -394,6 +405,7 @@ def verify_campaign(repo_root: Path) -> dict[str, Any]:
         assert len(receipts) == 100
         relations = Counter(item["gradient_relation"] for item in receipts)
         assert set(relations) <= {"joint_zero", "nonzero"}
+        equivalent_steps = 0
         nonzero = []
         for item in receipts:
             if item["gradient_relation"] == "joint_zero":
@@ -401,12 +413,15 @@ def verify_campaign(repo_root: Path) -> dict[str, Any]:
                 assert item["native_gradient_norm"] == 0.0
                 assert item["gradient_cosine"] is None
                 assert item["gradient_relative_l2"] is None
+                equivalent_steps += 1
             else:
                 assert item["intended_gradient_norm"] > 0.0
                 assert item["native_gradient_norm"] > 0.0
                 assert -1.0 <= item["gradient_cosine"] <= 1.0
                 assert item["gradient_relative_l2"] >= 0.0
                 nonzero.append(item)
+                if item["gradient_cosine"] >= 0.999 and item["gradient_relative_l2"] <= 0.01:
+                    equivalent_steps += 1
 
         evaluations = record["full_record"]["evaluations"]
         assert [item["step"] for item in evaluations] == [0, 20, 40, 60, 80, 100]
@@ -437,6 +452,7 @@ def verify_campaign(repo_root: Path) -> dict[str, Any]:
             "joint_zero": relations["joint_zero"],
             "nonzero": relations["nonzero"],
             "one_sided_zero": 0,
+            "registered_equivalent_steps": equivalent_steps,
             "minimum_nonzero_cosine": min(item["gradient_cosine"] for item in nonzero),
             "maximum_nonzero_relative_l2": max(item["gradient_relative_l2"] for item in nonzero),
             "wandb_run_id": record["wandb_run_id"],
@@ -449,6 +465,13 @@ def verify_campaign(repo_root: Path) -> dict[str, Any]:
     assert len(step_zero_hashes) == 1
     assert {item["joint_zero"] for item in scientific} == {62, 65}
     assert all(item["one_sided_zero"] == 0 for item in scientific)
+    intended_full = next(
+        item
+        for item in scientific
+        if item["id"] == "fpilot__intended_full__balanced_equal_length__s23"
+    )
+    assert intended_full["registered_equivalent_steps"] == 69
+    assert intended_full["registered_equivalent_steps"] < 95
 
     expected_endpoints = {
         "fpilot__epsilon_only__balanced_equal_length__s11": (20, 17, 62, 0.999858, 0.016844, 396672),
@@ -481,6 +504,11 @@ def verify_campaign(repo_root: Path) -> dict[str, Any]:
         },
         "filtered_failure": filtered_failure,
         "accepted_scientific_units": scientific,
+        "failed_registered_mechanism_cell": {
+            "unit": intended_full["id"],
+            "equivalent_steps": intended_full["registered_equivalent_steps"],
+            "required_steps": 95,
+        },
         "receipt_scope": (
             "receipt integrity and internal invariants; gradients and predictions "
             "are not recomputed from model checkpoints"

@@ -25,14 +25,18 @@ This changes the sampling policy but not the model, prompt schedule, optimizer, 
 
 Qwen3-8B runs in its explicit non-thinking mode for both arms. Training samples with `temperature=0.7`, `top_p=0.8`, and `top_k=20`; fixed held-out evaluation uses deterministic non-thinking decoding. This decoder contract was frozen prospectively after a non-evidence MATH preflight showed 100% clipping under thinking mode. Completion clipping is a required receipt field, and an all-clipped preflight cannot clear the execution gate.
 
+The objective, optimizer, precision, and adapter configuration are pinned in the protocol (amendment `A003_confirmatory_hardening`): canonical GRPO (`epsilon=0.2`, token-level importance sampling, group reward scaling, `beta=0`), `adamw_torch_fused` at `lr=1e-6` with a linear schedule, and LoRA `r=16`/`alpha=32` on all linear modules. Both arms share this exact configuration.
+
+The probe size is a deliberate worst-case design point, justified prospectively in A003: a `G=2` probe maximizes savings and false-homogeneity risk simultaneously, so any harm from the censoring mechanism is maximized and therefore detectable by the joint non-inferiority guard. A `G=4` probe is the preregistered first follow-up ablation and is out of this paper's claim universe.
+
 ## Closed matrix
 
 | Task | Baseline | Intervention | Paired seeds | Held-out examples |
 |---|---|---|---:|---:|
-| GSM8K | fixed `G=8` GRPO | `G=2` check, mixed groups expand to `G=8` | 16 | 1,000 |
-| MATH-500 | fixed `G=8` GRPO | `G=2` check, mixed groups expand to `G=8` | 16 | 500 |
+| GSM8K | fixed `G=8` GRPO | `G=2` check, mixed groups expand to `G=8` | 23 | 1,000 |
+| MATH-500 | fixed `G=8` GRPO | `G=2` check, mixed groups expand to `G=8` | 23 | 500 |
 
-All four cells are primary. The initial plan is 64 training units. After eight paired seeds per cell, a blinded variance-only reassessment may increase the final count to at most 24 seeds per cell. It cannot reduce the count, inspect arm effects, change margins, or drop a task.
+All four cells are primary. The initial plan is 92 training units. After eight paired seeds per cell, a blinded variance-only reassessment may increase the final count to at most 24 seeds per cell. It cannot reduce the count, inspect arm effects, change margins, or drop a task. Seeds beyond the original sixteen are derived by the frozen deterministic rule in amendment A003 (ascending primes above 293, disjoint from E1 and all frozen seeds; the 24th seed is the reserved 349).
 
 “Corpus” is not a crossed experimental factor in this paper. Each task has one frozen, task-native training/evaluation pipeline: GSM8K train to GSM8K test, and MATH-lighteval train to the disjoint MATH-500 evaluation set. Applying the MATH training corpus to the GSM8K integer task, or vice versa, would change the task and reward contract rather than fill a missing factorial cell. The claim universe is therefore the complete two-task by two-arm matrix above; no cross-corpus transfer claim is made.
 
@@ -53,11 +57,15 @@ The two endpoints form an intersection-union decision within each task. Holm adj
 
 ## Power and replication
 
-The capability planning standard deviation is `0.0128285396`, the worst paired held-out standard deviation in the completed E1 audit. With a one-sided per-task alpha of `0.025`, 80% power, and a one-point margin, the normal approximation requires 13 paired seeds. A 20% variance-transfer inflation yields 16.
+The capability planning standard deviation is `0.0128285396`, the worst paired held-out standard deviation in the completed E1 audit. Under amendment A003 the planning calculation is exact, not a normal approximation: a one-sided noncentral paired-t calculation at the Holm worst-case per-task alpha of `0.0125` (Holm across two tasks tests the smaller p at alpha/2) with 80% power and a one-point margin requires 19 paired seeds. A 20% variance-transfer inflation yields 23, within the 24-seed cap. The hash-bound stdlib implementation of the exact calculation is shared with the corrected E1 aggregator.
 
-There is no valid prior for the new intervention's paired token-cost variance. At eight completed pairs per task, the blinded reassessment therefore estimates both held-out-difference variance and the variance of `log(tokens_intervention/tokens_baseline)` without exposing the sign or task-arm mean effect. It recomputes the paired count required for 80% power at the one-point capability margin and the `log(0.8)` cost boundary. The frozen final count is the larger requirement, capped at 24; exceeding the cap yields `STOP_UNDERPOWERED` rather than a relaxed claim.
+The 80% target is per endpoint per task. The joint success rule requires every endpoint to pass on both tasks, so the joint criterion is not powered above the product of the per-endpoint powers; this is disclosed as a limitation rather than adjusted away.
+
+There is no valid prior for the new intervention's paired token-cost variance. At eight completed pairs per task, the blinded reassessment therefore estimates both held-out-difference variance and the variance of `log(tokens_intervention/tokens_baseline)` without exposing the sign or task-arm mean effect. It recomputes the paired count required for 80% power at the one-point capability margin (exact one-sided noncentral-t at the Holm worst-case alpha) and the `log(0.8)` cost boundary (one-sided paired-t on the paired log token ratio at the same alpha and power). The frozen final count is the larger requirement, capped at 24; exceeding the cap yields `STOP_UNDERPOWERED` rather than a relaxed claim.
 
 The E1 value is a planning prior, not evidence for the new intervention or MATH-500. The blinded variance reassessment protects against transfer failure. Optimization steps, prompts, completions, checkpoints, and held-out rows are not training replications.
+
+Non-evidence preflights may run on preregistered confirmatory seeds (amendment A003): a preflight is at most one optimizer step with eight held-out rows, is labeled `preflight-not-evidence`, and never enters the ledger; confirmatory units are fresh independent runs, and no preflight outcome reaches any analysis.
 
 ## External-user gate
 

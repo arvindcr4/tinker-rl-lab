@@ -19,10 +19,10 @@ Policy: a claim is publishable here only when it is proved under explicit assump
 | C9 | r4-2 contains exactly 31 manifest jobs with status counts 10 accepted, 14 contract-infeasible, 2 infrastructure-failed, 1 validation-failed, and 4 quota-pending. | Artifact-verified | `launch_manifest.json` and `supervisor_state.json` are parsed; manifest/state ID equality, manifest counts/fingerprint, every exact disposition set, and both file digests are asserted. Appendix D gives the exhaustive crosswalk. |
 | C10 | Exactly six final scientific acceptance records exist, all balanced equal-length units with the six stated condition/seed IDs. | Artifact-verified | Exact accepted-ID set, acceptance filenames, regime, package pins, source-manifest shape, and corpus/step-0 matching invariants are asserted. |
 | C11 | The six records contain 62 or 65 stored joint-zero relations, no one-sided-zero relation, minimum nonzero cosine at least 0.999844, and maximum nonzero relative L2 at most 0.017681. | Receipt-verified | All 600 stored records are inspected. Joint-zero requires both stored norms to equal zero and both angle/distance fields to be null. Nonzero bounds are range-checked. Gradients are not recomputed from private checkpoints. |
+| C11a | The completed intended-full balanced cell satisfies the frozen joint equivalence predicate on 69/100 steps, below the required 95/100. | Preregistered mechanism gate failed for this cell | Seed 23 contains 65 joint-zero receipts and 35 nonzero receipts. Only 4 nonzero receipts satisfy both cosine `>=0.999` and relative L2 `<=0.01`; high cosine alone is not the registered predicate. Matrix incompleteness prevents a full campaign verdict but cannot reverse this accepted cell failure. |
 | C12 | Evaluation uses six checkpoints over the same 128-example held-out set; all starts are 20/128; the table's final counts and charged-token totals match the ledgers. | Receipt-verified | Evaluation step grid, denominator, unique-row count, accuracy arithmetic, shared step-0 evidence hash, and positive token/FLOP fields are asserted. Per-example predictions and FLOPs are not regenerated. |
 | C13 | The filtered positive-control construction failed its frozen CV gate: observed CV 0 was below 0.35 under the registered Qwen3-1.7B/512-token contract. | Artifact-verified feasibility outcome | Original seed-11 `ReplayContractError`, preregistered threshold/model/cap, and exact filtered job disposition are checked. Descendant summaries were corrected to remove an erroneous Qwen2.5-0.5B label; no gate, status, or scientific artifact changed. |
-| C14 | The preregistered causal training hypothesis and confirmatory study are not established. | Required non-claim | The positive-control regime was never constructed, the balanced screening matrix is incomplete, and no confirmatory seeds ran. |
-| C15 | RLM traces may resolve some terminal-outcome ambiguity. | Proposed | Prospective protocol only. It is falsified by failed root-held-out calibration/action reversal, loss under matched cost, or leakage/conformance explanations. No RLM result is reported. |
+| C14 | The preregistered causal training hypothesis and confirmatory study are not established. | Required non-claim | The intended-full balanced cell fails its 95/100 mechanism gate, the positive-control regime was never constructed, the screening matrix is incomplete, and no confirmatory seeds ran. |
 
 ## Verification scope
 
@@ -44,6 +44,7 @@ It does **not** symbolically prove the propositions, recompute gradients from mo
 - Defined exact-zero semantics and replaced “maximal semantic divergence” with “categorical material divergence.”
 - Removed the unsupported 59/3/38 corpus decomposition and partial step-60 claim from the manuscript.
 - Reframed the empirical campaign as a registered feasibility outcome/protocol postmortem, not a scientific negative result.
+- Removed the prospective RLM section so the paper has one evidence-backed spine.
 - Corrected the value-of-information conditioning and exact group-size endpoint domain.
 
 ## Review bundle
@@ -109,8 +110,7 @@ the bundled S1 README.
 - TinyV: <https://arxiv.org/abs/2505.14625>
 - VerifyBench: <https://arxiv.org/abs/2505.15801>
 - Recursive Language Models: <https://arxiv.org/abs/2512.24601>
-- RLM harness study: <https://alexzhang13.github.io/blog/2026/harness/>
 
 ## Audit conclusion
 
-After the listed corrections and bundle verification, the manuscript is suitable as an evidence-bounded methods/reproducibility preprint and registered-feasibility postmortem. It is not supportable as a causal-training, new-controller, or RLM-results paper. Promotion to those claims requires a redesigned feasible positive control, fresh preregistration, complete multi-seed matched-cost execution, and confirmation.
+After the listed corrections and bundle verification, the manuscript is suitable as an evidence-bounded methods/reproducibility preprint and registered-feasibility postmortem. Its empirical postmortem now includes a failed registered balanced-mechanism cell, not an equivalence claim. It is not supportable as a causal-training or new-controller paper. Promotion to those claims requires a redesigned feasible positive control, fresh preregistration, complete multi-seed matched-cost execution, and confirmation.

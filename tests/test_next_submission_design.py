@@ -39,7 +39,7 @@ def verify(candidate, *, bindings: bool = False):
 def test_frozen_design_passes_with_hash_bindings(contract):
     report = verify(contract, bindings=True)
     assert report["status"] == "NEXT_SUBMISSION_DESIGN_CONTRACT_PASS"
-    assert report["initial_training_units"] == 64
+    assert report["initial_training_units"] == 92
     assert report["gpu_authorized"] is True
     assert report["result_claims_authorized"] is False
 
@@ -49,6 +49,7 @@ def test_prospective_math_parser_amendment_is_hash_bound(contract):
     assert [row["amendment_id"] for row in amendment] == [
         "A001_math_unbraced_boxed_targets",
         "A002_qwen3_non_thinking_decoder",
+        "A003_confirmatory_hardening",
     ]
 
 

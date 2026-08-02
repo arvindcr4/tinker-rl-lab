@@ -32,46 +32,41 @@ The canonical evidence hierarchy remains thesis-first:
 8. P8 fraud is parked outside the ZVF thesis; it demonstrates measurement
    discipline but contributes no RL evidence.
 
-Canonical document roster:
+Canonical document roster (**active independent set only — 12**):
 
 | ID | Source | Role after revision |
 |---|---|---|
 | P01 | `paper_P1_scaling.tex` | limits/identifiability audit, not a positive scaling law; workshop-short claim boundary fences multi-seed as non-claim |
-| P02 | `paper_P2_zvf.tex` | descriptive ZVF diagnostic and exact accounting |
+| P02 | `paper_P2_zvf.tex` | descriptive ZVF diagnostic and exact accounting (former R02 retired into archive) |
 | P03 | `paper_P3_group_size.tex` | measured bounds plus explicitly reconstructed hypotheses |
 | P04 | `paper_P4_length_bias.tex` | bounded null under a 200-token cap |
-| P05 | `paper_P5_minreport.tex` | canonical evidence for the eight-item reporting standard |
-| P06 | `paper_P6_registry.tex` | canonical seven-field registry; position-artifact resource (shared 17× exhibit is not re-claimed) |
+| P05 | `paper_P5_minreport.tex` | canonical eight-item reporting standard (former R06 retired into archive) |
+| P06 | `paper_P6_registry.tex` | canonical seven-field registry; position-artifact (former R07 retired into archive) |
 | P07 | `paper_P7_zvf_controller.tex` | retrospective audit + prospective test plan only; adaptive G not promoted |
-| P08 | `paper_P8_fraud.tex` | **ABSORBED → thesis** measurement-discipline appendix (parked; not a standalone venue paper) |
-| R01 | `acm_main.tex` | **ABSORBED → R04** compact ACM regenerate of the tiered artifact vehicle |
-| R02 | `neurips_2026_variants/main_zvf.tex` | **ABSORBED → P02** optional short venue vehicle of the ZVF diagnostic (not a second paper) |
 | R03 | `neurips_2026_variants/main_workshop.tex` | exploratory artifact note |
-| R04 | `neurips_2026_variants/main_dnb.tex` | tiered artifact paper; ZVF is bench instrumentation not flagship claim; absorbs R01 + U01 bench packaging |
+| R04 | `neurips_2026_variants/main_dnb.tex` | tiered artifact paper; ZVF is bench instrumentation; former R01/U01 packaging absorbed |
 | R05 | `zvf-program/theory/zvf_theory.tex` | calibration and reliability proof sketches; no adaptive set-point |
-| R06 | `zvf-program/position/min_report_rl.tex` | **ABSORBED → P05** condensed position; retires at P05 submission |
-| R07 | `zvf-program/registry/grpo_registry.tex` | **ABSORBED → P06** condensed catalog; retires at P06 submission |
 | R08 | `zvf-program/audit/reproducibility_audit.tex` | completed 40-unit single-stack survival audit; open-stack generalization remains gated |
-| U01 | `main.tex` | **ABSORBED → thesis / R04** long evidence bank; not a venue submission |
 | N01 | `unified_signal_starvation/main.tex` | GRPO-grounded diagnostic + PPO/SAO evaluation contract; PPO/SAO outcomes non-claims |
 
-### Absorption map (2026-08-02) — the former “other 6”
+### Absorption map — independent versions **removed from live paths**
 
-These six files remain on disk as satellites; they are **not** independent venue
-counts. Evidence and claims live under the parent vehicle:
+Former independent roots R01, R02, R06, R07, U01, and P08 are **no longer live
+manuscript paths**. They live only under `archive/absorbed/` for history:
 
-| Absorbed ID | Parent vehicle | Absorption rule |
+| Former ID | Parent | Archive folder |
 |---|---|---|
-| R02 | **P02** | Short stratified ZVF framing of the same diagnostic; submit P02 *or* R02, never both as independent papers |
-| R06 | **P05** | Condensed community position of MIN-REPORT-RL; retire when P05 submits |
-| R07 | **P06** | Condensed living-catalog of GRPO-Registry; retire when P06 submits (or ship as P05/P06 appendix) |
-| R01 | **R04** | ACM-format regenerate of the tiered bench artifact; rebuild from R04 on demand |
-| U01 | **thesis + R04** | Long evidence compendium for degree/thesis chapters and artifact packaging; not a conference paper |
-| P08 | **thesis** | Parked cross-domain measurement side study; thesis methods/reproducibility appendix only |
+| R02 | **P02** | `archive/absorbed/R02_main_zvf/` |
+| R06 | **P05** | `archive/absorbed/R06_min_report/` |
+| R07 | **P06** | `archive/absorbed/R07_grpo_registry/` |
+| R01 | **R04** | `archive/absorbed/R01_acm/` |
+| U01 | **thesis + R04** | `archive/absorbed/U01_main_compendium/` |
+| P08 | **thesis** | `archive/absorbed/P08_fraud/` |
 
-**Independent venue-candidate set after absorption (12):** P01–P07, R03, R04, R05, R08, N01.  
+**Independent venue-candidate set: 12** (P01–P07, R03, R04, R05, R08, N01).  
+Do not count archived IDs as separate papers.  
 Machine-checked in `platform_hybrid/paper/scripts/publication_worthiness_check.py`
-(`ABSORPTION` / `OUT_OF_SET`).
+(`ACTIVE_ROSTER` / `ABSORBED_ARCHIVED`).
 
 The older plans below are retained as history. Where they disagree with this
 section, this section is canonical.
@@ -179,13 +174,13 @@ status per duplicate pair (reciprocal scope notes are embedded in each tex):
 
 | Concept | Canonical | Companion (kept, scoped) |
 |---|---|---|
-| MIN-REPORT-RL standard | `paper_P5_minreport` (evidence corpus; **eight-item** standard as of 2026-07-11 — item 8 = pass@k curves, merged from the position draft) | `zvf-program/position/min_report_rl.tex` (community-position statement) |
-| GRPO-Registry | `paper_P6_registry` (schema, population, measured-evidence tiers) | `zvf-program/registry/grpo_registry.tex` (living-catalog statement) |
+| MIN-REPORT-RL standard | `paper_P5_minreport` (evidence corpus; **eight-item** standard as of 2026-07-11 — item 8 = pass@k curves, merged from the position draft) | former `min_report_rl.tex` → `archive/absorbed/R06_min_report/` |
+| GRPO-Registry | `paper_P6_registry` (schema, population, measured-evidence tiers) | former `grpo_registry.tex` → `archive/absorbed/R07_grpo_registry/` |
 | ZVF theory ↔ controller | split by scope: `zvf-program/theory/zvf_theory.tex` canonical for theorems (T1–T3), `paper_P7_zvf_controller` canonical for controller engineering | cross-referenced companions |
-| ZVF diagnostic | `paper_P2_zvf` (pillar paper) | `neurips_2026_variants/main_zvf.tex` (NeurIPS variant framing) |
-| Benchmark | `main.tex` (+ `acm_main.tex`) | `neurips_2026_variants/main_workshop.tex`, `main_dnb.tex` (venue variants); P1–P4 are per-pillar splits |
+| ZVF diagnostic | `paper_P2_zvf` (pillar paper) | former `main_zvf.tex` → `archive/absorbed/R02_main_zvf/` |
+| Benchmark | `neurips_2026_variants/main_dnb.tex` (R04) + workshop note R03 | former `main.tex` / `acm_main.tex` → `archive/absorbed/U01_*` / `R01_acm/` |
 | Survival audit | `zvf-program/audit/reproducibility_audit.tex` (no P counterpart) | — |
-| Fraud detection | `paper_P8_fraud` (no R counterpart) | — |
+| Fraud detection | thesis appendix only | former `paper_P8_fraud` → `archive/absorbed/P08_fraud/` |
 
 # Four Per-Pillar Standalone Papers
 

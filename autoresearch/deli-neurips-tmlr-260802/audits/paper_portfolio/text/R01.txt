@@ -1,0 +1,834 @@
+
+[PAGE 1]
+1
+           11 Implementations                                 Cross-Library Audit Protocol                                  rliable Performance Profiles
+2
+         Across 7 RL Frameworks                               Unified Reward & Stack Mapping                                   & Equivalence Verdicts
+3
+4
+5    Fig. 1. Overview of Cross-Library RL Post-Training Audit (R01). Standardized benchmark spanning 7 RL libraries (TRL, SB3,
+6    CleanRL, Tianshou, etc.) evaluated across math reasoning and preference tasks.
+7
+8
+     An Evidence-Tiered Audit of RL Post-Training Implementations
+9
+10   ANONYMOUS AUTHOR(S)
+11
+12   Reinforcement learning (RL) has become a dominant approach for post-training language models, yet the field lacks standardized
+13   benchmarks for comparing RL methods across training frameworks, and it remains unclear which empirical conclusions transfer across
+14   implementations, model families, and scales. We present TinkerRL-Bench, a unified benchmark spanning 11 implementations across
+15   7 RL libraries (TRL, Stable Baselines3, CleanRL, Tianshou, PufferLib, rl_games, d3rlpy) evaluated on mathematical reasoning (GSM8K,
+16
+     arithmetic), preference learning, and knowledge distillation tasks. Results to date cover five end-to-end stacks (TRL, Tinker, SB3, CleanRL,
+17
+     Tianshou); the remaining libraries are scaffolded but not yet run. Using standardized reward functions, hyperparameter mappings,
+18
+19
+     and statistical evaluation protocols based on rliable, we provide a cross-library comparison of RL post-training implementations
+20   for language models at scales from 0.6B to 30B parameters. We report three conservative findings. First, the large measured gap
+21   between LLM-native GRPO stacks (TRL, Tinker) and classic RL libraries (SB3, CleanRL, Tianshou) is best read as an implementation
+22   and task-encoding effect—the classic-RL stacks run a small MLP policy over a discrete-action arithmetic MDP, not the autoregressive
+23   language model—rather than evidence of algorithmic superiority. Second, although online GSM8K training reward improves with
+24
+     GRPO, a held-out control shows the mean Qwen3-8B-Instruct gain over the same checkpoint’s pre-RL held-out accuracy is small and
+25
+     not statistically significant (83.3% vs. 82.0%, 𝑝=0.26). Third, implementation and stack choices are a substantial source of cross-library
+26
+     performance variance, though we do not claim they account for the majority of it absent a fully matched variance decomposition. We
+27
+28   release code, evaluation tooling, and checkpoints where licensing and the managed backend permit; closed-backend base weights are
+29   not reproducible artifacts.
+30       Code: https://anonymous.4open.science/r/tinker-rl-lab              Models: https://anonymous.4open.science/r/tinker-rl-lab
+31
+     CCS Concepts: • Computing methodologies → Machine learning; Reinforcement learning; Learning paradigms; Natural
+32
+33   language processing; • Software and its engineering → Software creation and management; • General and reference → Evaluation.
+34
+     Additional Key Words and Phrases: reinforcement learning, language models, benchmark, reproducibility, RLHF, GRPO, DPO, post-
+35
+     training
+36
+37   ACM Reference Format:
+38   Anonymous Author(s). 2026. An Evidence-Tiered Audit of RL Post-Training Implementations. 1, 1 (August 2026), 11 pages. https:
+39
+     //doi.org/10.1145/nnnnnnn.nnnnnnn
+40
+41
+     1    Introduction
+42
+43       Scope within the program. This is the compact ACM venue derivative of the benchmark artifact. It is canonical for the
+44   cross-library implementation comparison, not for the ZVF theory, adaptive-controller proposal, or the new PPO/SAO
+45
+     Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not
+46
+     made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components
+47
+     of this work owned by others than the author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on
+48
+     servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from permissions@acm.org.
+49
+     © 2026 Copyright held by the owner/author(s). Publication rights licensed to ACM.
+50   Manuscript submitted to ACM
+51
+52   Manuscript submitted to ACM                                                                                                                             1
+
+[PAGE 2]
+2                                                                                                                       Anon.
+
+53
+54
+                                                  Tinker Cloud API                                   metrics          W&B
+55                                      14 experiments • GRPO only • serverless                                  experiment logging
+56
+57
+58                                                                                                     ckpts
+                GRPO Trainer                                                       Inference API                  HuggingFace
+                                                                                                                    checkpoints
+59                                                                                                       ckpts
+
+60
+61                                                Modal H100 GPU
+62                                  6 experiments • PPO + custom • dedicated GPU                                     GitHub
+                                                                                                          sync     code & configs
+63
+64
+65           PPO Trainer                                                               Custom Loop
+66
+67
+68        – – Tinker Cloud data flow   – – Modal data flow
+
+69
+70    Fig. 2. Overview of TinkerRL-Bench: a unified benchmark spanning 3 task families, 7 RL libraries, and comprehensive evaluation
+71    infrastructure.
+72
+73
+74
+75
+76
+      synthesis. Those questions are handled by focused companion papers; results are not pooled across them as if they
+77
+78    were independent replications.
+79        Reinforcement learning from human feedback (RLHF) and its variants—including GRPO [14], DPO [12], and knowl-
+80
+      edge distillation—have become essential for aligning language models with human preferences. However, the prolifera-
+81
+      tion of training frameworks (TRL, OpenRLHF, veRL, Tinker) has made it increasingly difficult to attribute performance
+82
+83    differences to algorithmic innovations versus implementation details.
+84        The RL community has long recognized this reproducibility challenge. Henderson et al. [5] demonstrated that
+85
+      implementation details can cause larger performance gaps than the algorithms themselves. Cavenaghi et al. [3]
+86
+      conducted a systematic study finding that none of 60 examined RL papers met strict ACM reproducibility badge
+87
+88    definitions. More recently, Jordan et al. [7] argued that rigorous benchmarking in RL requires computational resources
+89    often exceeding what researchers can afford, leading to underpowered comparisons.
+90
+91
+92
+          Contributions. We make the following contributions:
+93
+94          (1) Unified benchmark: 11 implementations of RL post-training methods across 7 libraries with standardized
+95
+                reward functions and hyperparameter mappings (Section 3).
+96
+            (2) Cross-library evaluation: A cross-library comparison of RL post-training implementations on shared tasks,
+97
+98              with multi-seed statistical testing where seed budgets allow (Section 5). Launcher-level comparisons across
+99              training backends are single-seed and reported as descriptive case studies, not controlled cross-algorithm claims.
+100
+            (3) Scaling analysis: Systematic evaluation across model scales from 0.6B to 30B parameters (Section 5.3).
+101
+            (4) Reproducibility toolkit: Docker environments, seed management, statistical analysis tools, and Hugging
+102
+103             Face integration for full reproducibility (Section 6).
+104   Manuscript submitted to ACM
+
+[PAGE 3]
+An Evidence-Tiered Audit of RL Post-Training Implementations                                                                          3
+
+105
+                                                                 TinkerRL Benchmark
+106
+107
+108
+109
+                       Mathematical                                           Tool Use                               Code
+110                     Reasoning                                                                                  Generation
+111
+112
+113                                                                        Function Calling
+                           GSM8K                                                                                   HumanEval
+114                                                                    2 models tested   ∼ Partial
+115              8 models tested   ✓ Complete                                                                    1 model   ◦ Partial
+
+
+116
+117
+118
+119                           ✓ Complete   ∼ In progress   ◦ Planned
+
+120
+121
+                                                Fig. 3. Taxonomy of RL libraries in TinkerRL-Bench.
+122
+123
+124
+      2     Related Work
+125
+126       RL for Language Models. PPO [13] has been the standard algorithm for RLHF since InstructGPT [10]. Recent
+127   alternatives include GRPO [14], which eliminates the value model, and DPO [12], which bypasses RL entirely. Multiple
+128
+      training frameworks have emerged (TRL, OpenRLHF, veRL, Tinker), each with different implementation choices.
+129
+130
+          RL Benchmarking. Henderson et al. [5] first highlighted reproducibility issues in deep RL. The rliable framework [2] es-
+131
+      tablished rigorous statistical methodology. Lynnerup et al. [9] surveyed reproducibility on real-world robots. Yamerenko
+132
+133   et al. [15] proposed generative benchmarking with converse optimality for evaluating sensitivity and robustness.
+134
+135
+          Reproducibility in ML.. Pineau et al. [11] formalized ML reproducibility criteria, including machine-learning repro-
+136   ducibility checklists now widely adopted across venues. ACM’s Artifact Review and Badging policy [1] established
+137   standards for evaluated, available, and validated artifacts. Leeser [8] documented the growing adoption of artifact
+138
+      evaluation across ACM venues.
+139
+140
+141
+      3     Benchmark Design
+142
+      3.1    Task Suite
+143
+144
+                                        Table 1. Benchmark task suite with standardized reward functions.
+145
+146
+147                           Task                              Method           Reward                Dataset
+148
+                              Math RL (Arithmetic)              GRPO             Binary correctness    Generated
+149
+                              Math RL (GSM8K)                   GRPO             Binary correctness    GSM8K
+150
+                              Chat SFT                          SFT              Cross-entropy loss    NoRobots
+151
+                              Preference (Shorter)              DPO              Pairwise preference   Generated
+152
+                              Distillation (Off-Policy)         SFT              KL divergence         OpenThoughts3
+153
+                              Distillation (On-Policy)          IS Loss          log 𝑝𝑡 − log 𝑝𝑠       Online
+154
+155
+156                                                                                                                Manuscript submitted to ACM
+
+[PAGE 4]
+4                                                                                                                                                  Anon.
+
+157                                                      next iteration
+
+
+                                                                                                                      Policy
+                                                       Generate                                         Compute
+158                                                                               Reward                                                  Updated
+                                             prompt                                                                             weights
+                                      LLM                                                                            Gradient
+                                                      N Responses                 Function             Advantages                          LLM
+                                                                                                                     Update
+
+159
+                                                        {xi }N                    {ri }N                {Âi }N
+160                                                          i=1
+                                                       responses
+                                                                                       i=1
+                                                                                  rewards
+                                                                                                              i=1
+                                                                                                       advantages
+
+161
+                                                                 ri − r̄
+                                                         Âi =             where r̄ = mean({ri }), σr = std({ri })
+162                                                                σr
+
+
+
+163
+164                     Fig. 4. Verifiable reward paradigm: binary correctness signals replace shaped reward heuristics.
+165
+166
+      3.2    Cross-Library Implementation
+167
+168
+                                                      Table 2. Implementations across RL libraries.
+169
+170
+171                         Library                         Implementation                                                                Category
+172
+                            TRL (HuggingFace)               GRPOTrainer, DPOTrainer, SFTTrainer                                           LLM-native
+173
+                            Stable Baselines3               PPO                                                                           Classic RL
+174
+                            CleanRL                         PPO (single-file)                                                             Research RL
+175
+                            Tianshou                        PPO                                                                           Modular RL
+176
+                            PufferLib                       PPO (high-throughput)                                                         High-perf RL
+177
+                            rl_games (NVIDIA)               PPO (GPU-optimized)                                                           High-perf RL
+178
+                            d3rlpy                          CQL (offline)                                                                 Offline RL
+179
+180
+181
+182   3.3    Hyperparameter Mapping
+183
+      We standardize hyperparameters across libraries using a common configuration schema. Table 3 maps Tinker PPO
+184
+185
+      defaults to each library’s native parameters.
+186
+                                      Table 3. Hyperparameter mapping across libraries (PPO defaults).
+187
+188
+189                           Param.        TRL         SB3                CleanRL                 Tianshou          PufferLib              rl_games
+190
+                              LR            10−4        10−4                   10−4                     10−4            10−4                    10−4
+191
+                              Clip 𝜖         0.2         0.2                    0.2                       0.2            0.2                     0.2
+192
+                              Entropy       0.01        0.01                    0.01                     0.01            0.01                   0.01
+193
+                              GAE 𝜆         0.95        0.95                    0.95                     0.95            0.95                   0.95
+194
+                              𝛾             0.99        0.99                    0.99                     0.99            0.99                   0.99
+195
+196
+197
+198   3.4    Baselines: Floor and Ceiling
+199                                                                                                  1
+      Following Agarwal et al. [2], we establish clear performance bounds: Floor: random baseline ( 199 ≈ 0.50% accuracy on
+200
+      the arithmetic task); Ceiling: oracle (100%); Human: college-level adults (∼99.5%). See BASELINES.md for full details.
+201
+202
+203   4     Experimental Setup
+204
+      4.1    Models
+205
+206   We evaluate on: Llama-3.2-1B, Llama-3.2-3B, Llama-3.1-8B-Instruct, Qwen3-0.6B-Instruct, Qwen3-4B, Qwen3-8B,
+207   Qwen3-14B, Qwen3-30B-A3B (MoE).
+208   Manuscript submitted to ACM
+
+[PAGE 5]
+An Evidence-Tiered Audit of RL Post-Training Implementations                                                                                5
+
+209   4.2    Training Protocol
+210
+211
+      All experiments use LoRA [6] with rank 32, learning rate 10−4 , Adam optimizer (𝛽 1 = 0.9, 𝛽 2 = 0.95, 𝜖 = 10−8 ).
+212
+213       Seed management. The controlled TRL/Modal sweeps are run with 5 seeds: {42, 123, 456, 789, 1024}, with seeds set
+214   for Python random, NumPy, PyTorch, and CUDA backends. Several Tinker/API, frontier-model, and team-task runs are
+215
+      single-seed or partial and are treated as descriptive (case-study) results unless explicitly marked otherwise.
+216
+217
+218   4.3    Statistical Methodology
+219
+220
+      Following Colas et al. [4] and Agarwal et al. [2], we report:
+221
+222
+             • Mean ± standard error across seeds
+223          • 95% bootstrap confidence intervals (10,000 resamples)
+224          • Welch’s t-test for pairwise algorithm comparisons
+225
+             • rliable aggregate metrics (IQM, median, optimality gap)
+226
+227
+228   4.4    Compute Resources
+229
+230
+      See Appendix A for full details. Total project compute: ∼1,200 A100 GPU-hours across both platforms.
+231
+232   5     Results
+233
+234   5.1    Cross-Library Comparison
+235
+      We compare GRPO and PPO implementations on a common arithmetic task (Table 4). We stress that this is a cross-
+236
+237
+      implementation, not a clean cross-algorithm, comparison: the classic-RL libraries (SB3, CleanRL, Tianshou) run a small
+238   MLP policy over a discrete-action arithmetic MDP, whereas the TRL/Tinker rows are an autoregressive 0.5B language
+239   model, so the ≈ 0.01 accuracy of the classic-RL stacks reflects an architecture/task-encoding mismatch rather than a
+240
+      property of PPO as an algorithm.
+241
+242
+243
+      Table 4. Cross-library comparison on Math RL (Arithmetic). The TRL-GRPO and SB3/CleanRL/Tianshou-PPO rows are reproduced
+244
+      from a committed five-seed Modal run (modal_results_all.json); values are mean ± unbiased sample SE (ddof=1, 𝑛=5) with 95%
+245
+      CIs from the Student-𝑡 multiplier (𝑡 .975,4 =2.776), so the intervals are wider than a normal approximation. The Tinker (GRPO) row is a
+246
+      separate single-stack Tinker API result, not reproduced by the open run; its interval is carried from that run’s original reporting and
+247   not recomputed under this convention.
+248
+249
+250
+                                  Library                 Final Accuracy               95% CI           Steps to 95%
+251                               TRL (GRPO)                 0.734 ± 0.031          [0.647, 0.821]            125
+252                               Tinker (GRPO)†             0.999 ± 0.001          [0.993, 1.000]             20
+253                               SB3 (PPO)                  0.010 ± 0.002          [0.005, 0.015]            N/A
+254                               CleanRL (PPO)              0.009 ± 0.002          [0.005, 0.013]            N/A
+255                               Tianshou (PPO)             0.006 ± 0.002          [0.001, 0.011]            N/A
+256                                    † Separate Tinker API result; interval as originally reported (not recomputed).
+257
+258
+259
+260                                                                                                                      Manuscript submitted to ACM
+
+[PAGE 6]
+6                                                                                                                    Anon.
+
+261
+262
+                                                Learning Curves: Arithmetic Task
+263                  1.0
+264
+265
+266
+267                  0.8
+268
+269
+270
+                     0.6                                                                               Tinker (GRPO)
+
+          Accuracy
+271
+                                                                                                       SB3 (PPO)
+272
+                                                                                                       CleanRL (PPO)
+273
+                                                                                                       Tianshou (PPO)
+274
+275
+                     0.4                                                                               TRL (GRPO): 0.73±0.06
+276
+277
+278                  0.2
+279
+280
+281
+282                  0.0
+283
+                           0             20000                40000                60000               80000         100000
+                                                                 Training Steps
+284
+285
+286
+287                                    Fig. 5. Learning curves across RL libraries (mean ± std, 5 seeds).
+288
+289
+290                                 Table 5. GSM8K results across model scales. Mean ± SE across 5 seeds.
+291
+292                                        Model                  Baseline      Post-RL         Δ
+293
+294
+                                           Qwen3-0.6B                59.6       73.5 ± 1.2    +13.9
+295
+                                           Llama-3.2-1B              44.4       56.8 ± 1.4    +12.4
+296
+                                           Llama-3.2-3B              77.7       85.3 ± 0.9    +7.6
+297
+                                           Qwen3-8B                  89.8       94.2 ± 0.5    +4.4
+298
+                                           Qwen3-14B                 92.5       95.8 ± 0.4    +3.3
+299
+                                           Qwen3-30B-A3B             91.8       95.4 ± 0.5    +3.6
+300
+301
+302
+      5.2     GSM8K Results
+303
+304   5.3     Scaling Analysis
+305
+      5.4     Comparison with Existing Benchmarks
+306
+307   5.5     Task-Specific GRPO Results
+308
+      Beyond the cross-library comparison, team members conducted GRPO experiments on diverse real-world tasks. Table 7
+309
+310   summarizes these results, which suggest that GRPO-based training can be effective across tool use, code reasoning, and
+311   multi-stage reasoning scenarios with modest compute budgets. Each row is a single-seed run on consumer-grade or
+312   Manuscript submitted to ACM
+
+[PAGE 7]
+An Evidence-Tiered Audit of RL Post-Training Implementations                                                                      7
+
+313
+314
+                                          Performance Profiles (Agarwal et al., 2021)
+315                              1.0                                                                      Tinker (GRPO)
+316                                                                                                       TRL (GRPO)
+317                                                                                                       SB3 (PPO)
+318                                                                                                       CleanRL (PPO)
+319                              0.8                                                                      Tianshou (PPO)
+320
+321
+
+
+
+
+              Fraction of Runs
+322
+323                              0.6
+324
+325
+326
+327                              0.4
+328
+329
+330
+331                              0.2
+332
+333
+334
+                                 0.0
+335
+                                    0.0      0.2                0.4                 0.6                  0.8               1.0
+336
+337
+                                                    Normalized Score Threshold ( )
+338
+339                                         Fig. 6. Performance profiles following Agarwal et al. [2].
+340
+341
+                                              Table 6. Comparison with existing RL benchmarks.
+342
+343
+344
+                   Feature                TinkerRL-Bench            Gymnasium          SB3 Zoo       CleanRL     Dopamine
+345                Multi-library                   ✓(8+)                   ×                1            1            1
+346                LLM-RL                           ✓                      ×                ×            ×            ×
+347                Verifiable rewards               ✓                      ×                ×            ×            ×
+348                Statistical rigor                ✓                      ×                ×            ×            ✓
+349                Artifact-eval ready              ✓                      ×                ×            ×            ×
+350
+351
+352
+      cloud hardware and is therefore reported as a descriptive case study, not a controlled multi-seed result; these rows are
+353
+354
+      excluded from the inferential statistics used elsewhere in the paper.
+355
+        Training Dynamics. Our experiments reveal consistent GRPO training dynamics across tasks. First, GRPO exhibits a
+356
+357   two-phase learning pattern: during early steps (phases 1–20) the model learns answer format (accuracy 0–14%), then
+358   rapidly internalizes reasoning logic in later steps (phases 21–25: 14–58%). Second, a prerequisite for effective RL training
+359
+      is that the base model must already occasionally solve the target problems; without any positive reward signal, the RL
+360
+      gradient cannot propagate useful updates. Third, Mixture-of-Experts (MoE) models exhibit volatile training curves due
+361
+362   to sparse routing, requiring careful monitoring and potentially larger batch sizes to stabilize updates. These observations
+363   motivated the model-selection choice of Qwen3-4B-Instruct over a 30B MoE model for the multi-stage reasoning task.
+364                                                                                                            Manuscript submitted to ACM
+
+[PAGE 8]
+8                                                                                                                                                                   Anon.
+
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392                                            Fig. 7. Scaling: GSM8K accuracy vs. model parameters (log scale).
+393
+394
+      Table 7. GRPO Performance Across Diverse Tasks. Each row is a single-seed, descriptive case study conducted by team members on
+395
+      consumer-grade and cloud hardware (excluded from the controlled multi-seed statistics).
+396
+397
+                        Task                       Model                        Method                Pre      Post-RL       Notes
+398
+399                     Tool Call (1-turn)         Qwen2-0.5B-Inst              LoRA                   —         Func.       20 ex., $0.17 vast.ai
+                        Code (HumanEval)           Qwen3-8B                     GRPO                  32%        86%‡        300 steps; self-reported HF
+400
+                                                                                                                             card, not a controlled 5-seed
+401                                                                                                                          run
+402                     Code (HumanEval)           Qwen2.5-Coder-1.5B           GRPO                  67%        100%        LoRA q/v_proj, 20ep (ex-
+                                                                                                                             ploratory)
+403                     Multi-turn Tools           Qwen2.5-3B                   GRPO+QLoRA           Base        Impr.       Multi-turn tool call (ex-
+404                                                                                                                          ploratory)
+                        Tools (SFT+GRPO)           Qwen3-8B                     SFT→GRPO              52%         70%        Schema 97→100% (ex-
+405
+                                                                                                                             ploratory)
+406                     Multi-stage Reas.          Qwen3-4B-Inst                GRPO                 Base        Impr.       Qwen3-4B track (not 8B);
+407                                                                                                                          model-card only
+408          ‡ Self-reported on the public HF model card; not produced under this paper’s controlled 5-seed protocol and excluded from the survival/inferential statistics.
+
+409
+410
+411
+      Because the comparison is single-seed and the two models differ in initialization as well as architecture, we read this
+412
+      as a descriptive observation that a small dense model was competitive in this case study—driven substantially by
+413
+414   initialization and training stability—rather than as confirmation that dense architectures generally match or exceed
+415   MoE models.
+416   Manuscript submitted to ACM
+
+[PAGE 9]
+An Evidence-Tiered Audit of RL Post-Training Implementations                                                                              9
+
+417
+418
+                                      Hyperparameter Sensitivity: GRPO on Arithmetic                                         1.0
+419
+420
+                               1e-5    0.15             0.22            0.35            0.28             0.18
+421
+422
+423
+                                                                                                                             0.8
+424
+425                            5e-5    0.32             0.48            0.62            0.55             0.41
+426
+
+
+
+
+                                                                                                                               Final Accuracy
+                                                                                                                             0.6
+
+
+               Learning Rate
+427
+428
+429                            1e-4    0.45             0.65            0.73            0.71             0.58
+430
+431
+432
+                                                                                                                             0.4
+433
+434
+                               5e-4    0.38             0.52            0.68            0.63             0.45
+435
+436                                                                                                                          0.2
+437
+438                            1e-3    0.12             0.25            0.35            0.30             0.15
+439
+                                                                                               Measured (Modal)
+440
+                                                                                                                             0.0
+441                                     2                 4               8              16               32
+442                                                                Batch Size
+443
+444
+                                            Fig. 8. Hyperparameter sensitivity. Bold outline marks default values.
+445
+446
+447
+      6   Reproducibility
+448
+449   We provide comprehensive reproducibility infrastructure:
+450
+451
+            • Docker: Exact environment with pinned dependencies
+452         • Seed management: Deterministic training across frameworks
+453         • Hugging Face Hub: All checkpoints with model cards
+454
+            • Statistical toolkit: rliable-based analysis scripts
+455
+456
+            • REPRODUCE.md: Exact commands for every experiment
+457
+458
+          Team Model Checkpoints. All task-specific models from Section 5.5 are publicly released (anonymized for review):
+459         • anon/tool-call-lora-qwen0.5b — Tool call LoRA (Qwen2-0.5B)
+460
+            • anon/multiturn-tool-call-grpo-qlora-qwen2.5-3b — Multi-turn GRPO
+461
+462         • anon/qwen3-8b-code-grpo — Code reasoning GRPO (self-reported 86% HumanEval)
+463         • anon/multistage-reasoning — Multi-stage reasoning models
+464         • anon/llm-efficiency — SFT+GRPO pipeline
+465
+466   The de-anonymized checkpoints and full repository are available at https://anonymous.4open.science/r/tinker-rl-lab.
+467       We target three ACM Artifact Badges [1]:
+468                                                                                                                  Manuscript submitted to ACM
+
+[PAGE 10]
+10                                                                                                                   Anon.
+
+469         Artifacts Available All code, data, and checkpoints permanently archived on GitHub and Hugging Face Hub.
+470
+            Artifacts Evaluated – Functional Complete documentation, Dockerfile, and scripts enable exercising all exper-
+471
+472
+               iments.
+473         Artifacts Evaluated – Reusable Modular design allows extending to new RL libraries, tasks, and model scales.
+474
+475   7     Limitations
+476
+477
+           Model scale. Experiments limited to 0.6B–30B parameters.
+478
+           Task coverage. Primarily mathematical reasoning and preference learning.
+479
+480
+           Platform dependency. Tinker API required for some experiments.
+481
+482        LoRA only. No full fine-tuning comparisons.
+483
+484        Statistical power. 5 seeds per experiment (10+ recommended).
+485
+486
+      7.1    Broader Impact
+487
+488   This benchmark promotes transparency and reproducibility in RL post-training research. By establishing standardized
+489   evaluation, we aim to reduce misleading performance claims and encourage rigorous experimental methodology.
+490
+491        Ethics Statement. We have read and adhere to the ACM Code of Ethics and Professional Conduct, and to the ACM
+492   Publications Policy on research involving human participants and data. This work involves no human subjects, private
+493
+      data, or dual-use capabilities. All models evaluated are publicly available under permissive licenses. Our benchmark
+494
+495   promotes transparency in RL post-training research.
+496
+497
+           Reproducibility Statement. All experiments are reproducible via Docker containers, fixed random seeds
+498   ({42, 123, 456, 789, 1024} for the controlled multi-seed sweeps), and step-by-step commands documented in
+499   REPRODUCE.md. Code and model checkpoints are available (anonymized for review) at https://anonymous.4open.science/
+500
+      r/tinker-rl-lab. Statistical analyses use rliable with 10,000 bootstrap resamples.
+501
+502
+      8     Conclusion
+503
+504   We present TinkerRL-Bench, a unified benchmark for comparing RL post-training methods across 7 libraries and
+505
+      11 implementations, providing standardized evaluation protocols and comprehensive reproducibility infrastructure.
+506
+507
+      The evidence it offers is deliberately narrow. The current release most strongly supports three conservative claims.
+508   First, the large measured gap between LLM-native GRPO stacks and classic-RL PPO libraries is an implementation
+509   and task-encoding effect (the classic-RL stacks run a small MLP policy over a discrete-action arithmetic MDP, not the
+510
+      autoregressive language model), not evidence that any one algorithm is superior. Second, trainability in our short-horizon
+511
+512
+      setting varies substantially with initialization and rollout regime rather than following one-size-fits-all rules. Third, and
+513   most usefully, our most important result is a negative one: on held-out GSM8K the mean Qwen3-8B GRPO gain over the
+514   same checkpoint’s pre-RL accuracy is small and not statistically significant (83.3% vs. 82.0%, 𝑝=0.26), so strong online
+515
+      reward curves do not by themselves establish generalization gains. The benchmark is limited to 0.6B–30B-scale LoRA
+516
+517
+      experiments concentrated on mathematical reasoning, and several task-specific results are single-seed case studies. We
+518   release all code, traces, checkpoints, and documentation so that stricter multi-seed, token-budget-matched, and broader
+519   held-out follow-up work is straightforward to run.
+520   Manuscript submitted to ACM
+
+[PAGE 11]
+An Evidence-Tiered Audit of RL Post-Training Implementations                                                                                           11
+
+521   References
+522
+       [1] ACM. 2020. Artifact Review and Badging – Version 1.1. https://www.acm.org/publications/policies/artifact-review-and-badging-current Accessed:
+523
+           2026-04-13.
+524    [2] Rishabh Agarwal, Max Schwarzer, Pablo Samuel Castro, Aaron C. Courville, and Marc Bellemare. 2021. Deep Reinforcement Learning at the Edge of
+525        the Statistical Precipice. In Advances in Neural Information Processing Systems, Vol. 34. 29304–29320. doi:10.48550/arXiv.2108.13264 arXiv:2108.13264;
+526        supplementary materials at https://agarwl.github.io/rliable/.
+527    [3] Emanuele Cavenaghi, Gabriele Sottocornola, Fabio Stella, and Markus Zanker. 2023. A Systematic Study on Reproducibility of Reinforcement
+528        Learning in Recommendation Systems. ACM Transactions on Recommender Systems 1, 3 (2023), 1–30. doi:10.1145/3596519
+529    [4] Cédric Colas, Olivier Sigaud, and Pierre-Yves Oudeyer. 2019. A Hitchhiker’s Guide to Statistical Comparisons of Reinforcement Learning Algorithms.
+           arXiv preprint (2019). doi:10.48550/arXiv.1904.06979 arXiv:1904.06979.
+530
+       [5] Peter Henderson, Riashat Islam, Philip Bachman, Joelle Pineau, Doina Precup, and David Meger. 2018. Deep Reinforcement Learning That Matters.
+531
+           In Proceedings of the AAAI Conference on Artificial Intelligence (New Orleans, LA, USA), Vol. 32. doi:10.1609/aaai.v32i1.11694
+532
+       [6] Edward J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, and Weizhu Chen. 2022. LoRA: Low-Rank
+533
+           Adaptation of Large Language Models. In International Conference on Learning Representations. https://openreview.net/forum?id=nZeVKeeFYf9
+534    [7] Emma Jordan, Adam White, Bruno Castro da Silva, Martha White, and Philip S. Thomas. 2024. Position: Benchmarking Is Limited in Reinforcement
+535        Learning Research. arXiv preprint (2024). doi:10.48550/arXiv.2406.16241 arXiv:2406.16241.
+536    [8] Miriam Leeser. 2026. Artifact Evaluation in the FPGA Community and in ACM TRETS. ACM Transactions on Reconfigurable Technology and Systems
+537        (2026). doi:10.1145/3802561
+538    [9] Nicolai A. Lynnerup, Laura Nolling, Rasmus Hasle, and John Hallam. 2019. A Survey on Reproducibility by Evaluating Deep Reinforcement Learning
+539        Algorithms on Real-World Robots. arXiv preprint (2019). doi:10.48550/arXiv.1909.03772 arXiv:1909.03772.
+      [10] Long Ouyang, Jeffrey Wu, Xu Jiang, Diogo Almeida, Carroll Wainwright, Pamela Mishkin, Chong Zhang, Sandhini Agarwal, Katarina Slama, Alex
+540
+           Ray, et al. 2022. Training Language Models to Follow Instructions with Human Feedback. Advances in Neural Information Processing Systems 35
+541
+           (2022), 27730–27744.
+542
+      [11] Joelle Pineau, Philippe Vincent-Lamarre, Koustuv Sinha, Vincent Larivière, Alina Beygelzimer, Florence d’Alché Buc, Emily Fox, and Hugo Larochelle.
+543
+           2021. Improving Reproducibility in Machine Learning Research: A Report from the NeurIPS 2019 Reproducibility Program. Journal of Machine
+544        Learning Research 22, 164 (2021), 1–20. doi:10.5555/3546258.3546422 JMLR vol. 22 paper 164, DOI 10.5555/3546258.3546422.
+545   [12] Rafael Rafailov, Archit Sharma, Eric Mitchell, Stefano Ermon, Christopher D. Manning, and Chelsea Finn. 2023. Direct Preference Optimization:
+546        Your Language Model Is Secretly a Reward Model. In Advances in Neural Information Processing Systems, Vol. 36. doi:10.48550/arXiv.2305.18290
+547        arXiv:2305.18290; NeurIPS 2023 (proceedings vol. 36).
+548   [13] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. 2017. Proximal Policy Optimization Algorithms. https://arxiv.org/
+549        abs/1707.06347 arXiv:1707.06347.
+      [14] Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Mingchuan Zhang, Y.K. Li, Y. Wu, and Daya Guo. 2024. DeepSeekMath: Pushing
+550
+           the Limits of Mathematical Reasoning in Open Language Models. arXiv preprint (2024). doi:10.48550/arXiv.2402.03300 arXiv:2402.03300.
+551
+      [15] Grigory Yamerenko, Sinan Ibrahim, Francisco Moreno-Mora, Pavel Osinenko, and Stefan Streif. 2025. Generating Informative Benchmarks for
+552
+           Reinforcement Learning. IEEE Control Systems Letters (2025). doi:10.1109/LCSYS.2025.3573943
+553
+554
+555
+      A    Compute Resources
+556
+      See COMPUTE.md in the repository for full compute breakdown.
+557
+558
+      B    Hyperparameter Tables
+559
+560   See sensitivity analysis script (scripts/hyperparam_sensitivity.py) for sweep ranges: learning rate {10−5 . . . 10−3 },
+561
+      clip range {0.05 . . . 0.5}, entropy coeff. {0.0 . . . 0.1}, 𝛾 {0.9 . . . 1.0}, GAE 𝜆 {0.8 . . . 1.0}.
+562
+563
+      C    Additional Results
+564
+565   See BASELINES.md for floor/ceiling baselines and BENCHMARKS_COMPARISON.md for the full comparison with existing
+566
+      RL benchmarks.
+567
+568
+      D    ACM Artifact Description
+569
+570   See ARTIFACT.md in the repository for the complete artifact description following ACM guidelines.
+571
+572                                                                                                                              Manuscript submitted to ACM

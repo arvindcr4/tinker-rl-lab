@@ -11,7 +11,7 @@ The PDF copies in `papers/` are review artifacts. The LaTeX sources and evidence
 | P5 | Minimum reporting standard for stack-conditioned results | [`../paper/paper_P5_minreport.tex`](../paper/paper_P5_minreport.tex) | P5 analysis notes under [`../docs/p5p8_improvements/`](../docs/p5p8_improvements/) and P5 outputs under [`../experiments/results/p5p8/`](../experiments/results/p5p8/) |
 | P6 | Machine-readable GRPO stack registry | [`../paper/paper_P6_registry.tex`](../paper/paper_P6_registry.tex) | Registry schemas, validators, and P6 outputs under [`../experiments/results/p5p8/`](../experiments/results/p5p8/) |
 | P7 | Adaptive group-size controller based on signal starvation | [`../paper/paper_P7_zvf_controller.tex`](../paper/paper_P7_zvf_controller.tex) | Controller simulations and audits under [`../experiments/results/p5p8/`](../experiments/results/p5p8/) |
-| P8 | LLM evidence extraction versus XGBoost for fraud decisions | [`../paper/paper_P8_fraud.tex`](../paper/paper_P8_fraud.tex) | Fraud data/scripts at repository root and P8 outputs under [`../experiments/results/p5p8/`](../experiments/results/p5p8/) |
+| P8 (archived) | Fraud side study — absorbed into thesis; not an independent venue paper | [`../paper/archive/absorbed/P08_fraud/`](../paper/archive/absorbed/P08_fraud/) | P8 outputs under [`../experiments/results/p5p8/`](../experiments/results/p5p8/) |
 
 ## Inherited versus new
 

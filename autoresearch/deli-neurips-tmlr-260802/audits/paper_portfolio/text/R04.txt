@@ -1,0 +1,2126 @@
+
+[PAGE 1]
+RL-Finetuning Bench: A Reproducible Artifact for
+     Auditing RL Post-Training of Language Models Across
+            Stacks (with Stratified ZVF Diagnostics)
+
+
+                                             Anonymous Author(s)
+                                                 Affiliation
+                                                  Address
+                                                   email
+
+
+
+                                                   Abstract
+
+ 1            We release RL-F INETUNING B ENCH, a reproducible artifact for auditing
+ 2            reinforcement-learning post-training of language models across heterogeneous
+ 3            stacks. The artifact bundles 79 runs from 7 RL libraries, 5 model families, and
+ 4            total-parameter scales from 0.6B to 671B (active-parameter counts 0.6B–37B for
+ 5            the largest mixture-of-experts checkpoints) on GSM8K, MATH-500, HumanEval,
+ 6            and synthetic tool-use tasks; for every reported run we ship pinned containers, step-
+ 7            level reward traces, raw rollout JSONL where licensing allows, and Zero-Variance
+8             Fraction (ZVF) diagnostics.
+ 9            We organize all claims into three explicit evidence tiers. (A-grade, analytic or
+10            multi-seed inferential): a mechanical ZVF = pG + (1−p)G identity for binary-
+11            reward GRPO (analytic, not an empirical multi-seed claim), and a 5-seed held-out
+12            Qwen3-8B GSM8K control showing only a +1.3pp delta over the base model
+13            (p=0.26, not significant). (B-grade, single-seed descriptive): case-study runs
+14            across model scale on the closed-backend Tinker API, including group-size sweeps
+15            and frontier-scale checkpoints, reported as illustrative not inferential. (C-grade,
+16            listed for honesty): failed or partially completed cells, enumerated in the run
+17            manifest. The artifact’s value is auditability: every (backend, model, task) cell is
+18            tier-classified, every log type is named (precomputed traces, step-level aggregates,
+19            raw rollouts), and every closed-backend dependency is flagged.
+20            We also release a stratified ZVF diagnostic suite that documents how pooled
+21            ZVF-vs-performance correlations are dominated by task identity rather than a
+22            within-task predictive law—a finding we treat as descriptive instrumentation, not a
+23            causal claim.
+
+24            Venue claim boundary (position-artifact / datasets-and-benchmarks). This
+25            manuscript is an artifact-first release: pinned containers, tier-classified run cells,
+26            and reproduce targets. Stratified ZVF traces are instrumentation shipped with
+27            the bench, not a flagship ZVF theory or controller paper (those claims live in the
+28            companion diagnostic and theory vehicles). We do not headline a universal ZVF
+29            predictor, a winning group size, or an adaptive controller. Submission target is
+30            a datasets-and-benchmarks or workshop-artifact venue under the stated A/B/C
+31            evidence tiers.
+32            Code,       traces,      checkpoints,       and     a     one-command           make
+33            reproduce-main target are at https://anonymous.4open.science/r/
+34            agentic-grpo-bench-anon-2C6B.
+
+
+     Submitted to 40th Conference on Neural Information Processing Systems (NeurIPS 2026). Do not distribute.
+
+[PAGE 2]
+Evidence Tier A                           Evidence Tier B                        Tiered Reproduction Harness
+      (Executed Core Protocol)                 (Bounded Empirical Cases)                      Artifact-First Verification
+
+     Figure 1: Tiered Benchmark Dataset & Reproduction Harness Architecture (R04). Categorizing
+     artifact evidence into rigorous evidence tiers (A/B/C) with reproducible verification.
+
+
+35   1   Introduction
+
+36   Reinforcement learning post-training now underpins much of modern language-model reasoning and
+37   alignment [84, 20], but empirical claims in this area are hard to compare across stacks. PPO [101],
+38   GRPO [102], and DPO [95] are typically evaluated on different model families, with different
+39   framework defaults, different reward functions, and different notions of success. The field needs
+40   auditable, tier-classified artifacts more than it needs another leaderboard.
+
+41   Artifact-first contribution. RL-F INETUNING B ENCH is released as a reproducible artifact: 79
+42   runs spanning 7 RL libraries, 5 model families, 32+ checkpoints, and total-parameter scales from
+43   0.6B to 671B (active-parameter counts 0.6B–37B for the largest mixture-of-experts checkpoints),
+44   each accompanied by pinned containers, step-level reward traces, ZVF/GU diagnostics, and (where
+45   the backend permits) raw per-group rollout JSONL. Every (backend, model, task) cell in the manifest
+46   is classified into one of three evidence tiers, used consistently in the abstract, the main evidence table,
+47   and the conclusion:
+
+48          • (A-grade) multi-seed completed cells used for inference; these support the only inferential
+49            claims in the paper.
+50          • (B-grade) single-seed completed case-study runs on the closed-backend Tinker API, reported
+51            descriptively only.
+52          • (C-grade) failed, partial, or never-started cells, enumerated in the run manifest for honesty.
+
+53   What the artifact lets reviewers do. A reviewer can: (i) re-run any A-grade open-stack cell end-to-
+54   end via make reproduce-main; (ii) inspect step-level ZVF/GU and reward traces for every reported
+55   run, including B-grade Tinker case studies; (iii) read off a per-run auditability matrix (Table 2)
+56   that lists, for each cell, whether raw rollouts, ZVF traces, checkpoints, and held-out evaluation are
+57   released; and (iv) consult the claims-evidence table (Table 1) to see exactly which artifact each claim
+58   depends on and what its tier is.
+
+59   Two narrow scientific take-aways. The artifact supports two A-grade results stated conservatively.
+60   First, the mechanical identity ZVF(p, G) = pG + (1−p)G characterises when binary-reward GRPO
+61   produces zero within-group gradient; we use it as a descriptive diagnostic, not as a standalone causal
+62   predictor of downstream performance, because ZVF is mechanically coupled to reward sparsity,
+63   group size, and baseline accuracy. Second, a 5-seed held-out Qwen3-8B GSM8K control yields only
+64   a +1.3pp delta over the base model (p=0.26), so strong online reward curves on a closed backend
+65   do not by themselves establish generalization gains. All B-grade single-seed case-study runs across
+66   model scale are reported as illustrative.
+
+67   Stratified ZVF diagnostics. A separate stratified diagnostic suite documents that the pooled
+68   ZVF-vs-performance correlation is dominated by task identity: within GSM8K alone the apparent
+69   monotone relationship does not survive (Pearson r = +0.40, p = 0.09 across the 19 Tinker GSM8K
+70   runs; r = +0.13, p = 0.79 across the 7 model-varying GSM8K cells). We release these stratified
+71   analyses precisely so that follow-up work can audit them against richer multi-seed corpora.
+
+
+72   2   Related Work
+
+73   RL-F INETUNING B ENCH sits at the intersection of five rapidly evolving lines of work: policy-
+74   gradient algorithms for language models, RL for reasoning (including process reward models), RL
+75   for tool use and agentic behaviour, empirical scaling laws for RL post-training, and the frameworks
+76   and benchmarks that instantiate these algorithms. We situate our contribution against more than fifty
+77   recent works; entries marked with † appeared at NeurIPS, ICML, or ICLR in the 2025–2026 cycle.
+                                                       2
+
+[PAGE 3]
+78   2.1   RL Algorithms for Large Language Models
+
+ 79   Proximal Policy Optimization (PPO) [101] is the workhorse algorithm behind InstructGPT-style
+ 80   RLHF [84, 14, 110, 7, 8] and has dominated production deployments for five years. Direct Preference
+ 81   Optimization [95] reframed preference learning as contrastive classification and spawned a large
+ 82   family of RL-free alternatives, including IPO [6], KTO [21], SimPO [72], ORPO [34], and SLiC [142],
+ 83   all of which we consider as no-rollout baselines in our cross-library protocol.
+ 84   The current wave is defined by group-relative policy gradient methods. GRPO was introduced with
+ 85   DeepSeekMath [102] and popularised by DeepSeek-R1 [19, 20], the first reasoning RL method pub-
+ 86   lished in Nature, which showed that pure outcome-reward RL can elicit chain-of-thought behaviour
+ 87   from a base model without supervised cold-start data. A second wave of refinements dissects the
+ 88   biases of vanilla GRPO. Dr. GRPO [61] removes a response-length bias and a question-difficulty
+ 89   amplification bias by using a constant loss normaliser and dropping the standard-deviation denomi-
+ 90   nator in the advantage. GDPO [58] decouples group-relative normalisation per reward component,
+ 91   preventing advantage collapse when rewards are multi-valued. MC-GRPO (median-centered ad-
+ 92   vantage) [44] replaces the group-mean baseline in the advantage with the group median to stabilise
+ 93   group-relative normalisation under small rollout counts. G2 RPO [38] forces per-prompt advantages
+ 94   to match N (0, 1) to fix reward-topology variance in multimodal settings. Wu et al. [125] prove that
+ 95   GRPO is “secretly DPO” — the group-level advantage is an implicit contrastive objective — and
+ 96   show that 2-GRPO retains 98.1% of the performance of 16-GRPO at 12.5% of the rollout budget.
+ 97   A parallel thread focuses on production-scale refinements. GSPO, from the Qwen team [143],
+ 98   redefines the importance ratio at the sequence level (rather than token level) and was credited with sta-
+ 99   bilising the Qwen3 series, especially its Mixture-of-Experts variants. DAPO, from ByteDance [134],
+100   contributes asymmetric Clip-Higher, dynamic sampling, token-level loss normalisation, and overlong
+101   filtering, reaching 50 points on AIME 2024 with a 32B model. Kimi-K1.5 [46, 45] and DeepSeek-
+102   V3 [18] both report their own GRPO variants and online mirror-descent-style updates. Orthogonal
+103   production variants include VAPO [10] and Dr. SAC [3]; the last argues that classical REINFORCE
+104   with a value baseline, when carefully implemented, matches GRPO on several RLHF tasks.
+105   A third thread attacks the zero-variance failure mode (ZVF) directly. GRESO [144] pre-screens
+106   prompts before sampling; CPPO [55] prunes completions post-rollout, giving up to 7.98× speedup
+107   on GSM8K. NGRPO [75] adds Advantage Calibration and asymmetric clipping so that all-incorrect
+108   groups still carry gradient. Scaf-GRPO [139] injects tiered scaffolding hints when learning stagnates,
+109   boosting AIME 2024 by 44.3% relative. MO-GRPO [40] addresses vanilla GRPO’s collapse to a
+110   single reward component under multiple objectives via variance-based reward re-weighting. Finally,
+111   SSPO [129] operates at sentence granularity to balance the stability of GSPO against the expressive-
+112   ness of token-level GRPO, improving by 3.56 points on math benchmarks. Taken together, these
+113   results explain at a theoretical level why implementation details at the granularity of the importance
+114   ratio have such large empirical effects — an explanation our benchmark complements with a 73 pp
+115   cross-library measurement.
+
+
+116   2.2   Reasoning RL and Process Reward Models
+
+117   The shift from outcome rewards to process supervision has reshaped reasoning RL. Let’s-Verify-
+118   Step-by-Step [54] showed that step-level PRMs dramatically outperform outcome reward models on
+119   GSM8K and MATH. Math-Shepherd [120] derives process rewards from auto-generated process anno-
+120   tations, avoiding costly human labels. PRM800K [115] and PRMBench [109] provide evaluation data
+121   for step-level scoring. OmegaPRM [66] uses Monte-Carlo tree search to supervise process rewards
+122   without human-in-the-loop, while ReasonEval [126] introduces reasoning-specific reward models.
+123   Implicit PRM [135] learns PRMs implicitly from outcome labels, and VersaPRM [136] extends pro-
+124   cess rewards to multi-domain tasks. These supervision signals are the backbone of recent reasoning
+125   models, including OpenAI’s o1/o3 family [80, 82], DeepSeek-R1 [19, 20], Qwen2.5-Math [128],
+126   Qwen3 [94], Gemini 2.5 Pro’s deliberative mode [24], and Kimi-K2 [45]. Complementary results
+127   demonstrate that self-consistency [122], tree-of-thought search [132], and critic-style post-hoc ver-
+128   ifiers [71] all benefit from or substitute for process reward supervision. VerifyBench [141] and
+129   A Sober Look [31] warn, however, that reward hacking and evaluation artefacts can inflate perceived
+130   gains, motivating our insistence on binary verifiable rewards for mathematical reasoning.
+
+
+                                                         3
+
+[PAGE 4]
+131   Reasoning-specific algorithmic contributions also continue to accumulate. ReFT [67] studies su-
+132   pervised fine-tuning versus RL for reasoning. Let’s Reward Step [140] and STaR [137] bootstrap
+133   reasoning chains from weak supervisors. rStar-Math [25] combines MCTS-based PRMs with
+134   self-evolved reasoning. ReST-EM [107] alternates expectation and maximisation steps over self-
+135   generated rationales. Self-Taught Evaluator [121] adapts an LLM to score its own reasoning chains.
+136   GRPO-Lead [64], LCPO [65], and LIMR [52] each tune reasoning depth with length-aware rewards.
+137   Search-R1 [41] trains reasoning agents to interleave search queries with chain-of-thought. TTRL [91]
+138   performs test-time RL against self-generated verifiers. We use the Dr. GRPO [61] and GSPO [143]
+139   formulations as reference implementations when measuring reasoning accuracy across the 0.6B–235B
+140   frontier.
+
+141   2.3   Tool-Use and Agentic RL
+
+142   Tool-use RL trains LLMs to interleave natural-language reasoning with external API calls. Tool-
+143   former [100] introduced self-supervised tool-call insertion for a small set of APIs; Gorilla [87]
+144   retrieved from a large API catalogue; and ToolLLM [93] scaled training to thousands of real-world
+145   REST APIs. ReAct [131] established the interleaved reason–act–observe pattern that most subse-
+146   quent agents inherit. RL specifically for tool use was pioneered by ToolACE [59], which couples a
+147   tool-calling reward with a self-evolving synthesis pipeline; ToolRL [92] applies GRPO with verifiable
+148   tool-call rewards; ToRL [53] optimises the joint reasoning–action trajectory. Further advances include
+149   APIGen [56] (high-quality synthetic API data), Nexus-Raven [76], and Octopus [13]. Agentic RL
+150   extends tool use to long-horizon tasks: WebGPT [74] and WebShop [130] were the first large-scale
+151   web agents, Reflexion [105] and Voyager [119] add episodic self-reflection, and AutoGPT-style
+152   agents have been formalised by AgentBench [60]. 2025–2026 produced a wave of RL-trained agents:
+153   SWE-RL [124] trains coding agents with execution rewards; SWE-Gym [85] provides an RL training
+154   environment for real GitHub issues; ARTIST [106] trains tool-integrated reasoning agents with
+155   GRPO; RAGEN [123] studies multi-turn RL with tool access; OpenAI’s Deep Research [81] and
+156   Perplexity Deep Research [89] both report GRPO-style training over web-browsing traces. Our
+157   benchmark currently focuses on single-turn verifiable mathematical reasoning; we adopt Tinker’s
+158   message_with_tool interface as the neutral substrate for future tool-use extensions and explicitly
+159   cite these works as concurrent settings in which RL-F INETUNING B ENCH’s ZVF measurements will
+160   need to be re-evaluated.
+
+161   2.4   Scaling Laws for RL Post-Training
+
+162   Compute-optimal training of base language models is governed by well-known scaling laws [43, 33,
+163   73], but RL post-training is much less well characterised. Hilton et al. [30] first derived compute-
+164   efficiency frontiers for RL in games and robotics. For RLHF, Gao et al. [22] characterise the
+165   over-optimisation curve of reward models, and Rafailov et al. [96] provide scaling laws for DPO
+166   and PPO that show a strong dependence on reward-model quality. Nimmaturi et al. [77] derive
+167   an empirical scaling law specifically for GRPO, identifying three training phases (slow start, rapid
+168   improvement, plateau) and showing that most benefit is exhausted by roughly 80% of one epoch. Liu
+169   et al. [62] find that RL fine-tuning updates only 5–30% of model parameters across seven algorithms
+170   and ten model families, suggesting RL activates a sparse “RL subnetwork.” MiniCPM [37] and the
+171   SLM survey of Subramanian et al. [112] characterise scaling in the sub-8B regime that forms the bulk
+172   of our frontier. Schaeffer et al. [99] caution that apparent emergent abilities may be metric artefacts,
+173   a concern that persists into RL. Our measurements extend these works by providing cross-family
+174   scaling data for RL from 0.6B to 235B across five families and four frameworks, supplying empirical
+175   ground truth against which future RL scaling laws can be calibrated.
+
+176   2.5   Frameworks, Benchmarks, and Reproducibility
+
+177   The proliferation of algorithms has been matched by a proliferation of training frameworks:
+178   TRL [118], OpenRLHF [36], veRL [104], NeMo-RL [78], DeepSpeed-Chat [133], trlX [26], Ax-
+179   olotl [79], and T INKER [114]. Each framework makes different default choices about advantage
+180   normalisation, KL estimators, tokenisation loss masking, rollout batching, and importance-sampling
+181   granularity; those differences are the principal source of the cross-library gap we quantify. On the
+182   inference side, vLLM [48] and SGLang [145] provide the rollout backends on which all modern
+183   frameworks depend; FlashAttention [17] and LoRA [35] are load-bearing kernels.
+
+
+                                                         4
+
+[PAGE 5]
+184   In the RL benchmarking tradition, Henderson et al. [27] first exposed the fragility of deep-RL results
+185   to implementation choices and seeds; rliable [2] introduced interquartile-mean reporting and
+186   performance profiles; BenchMARL [9] unified multi-agent RL benchmarks; Patterson et al. [88]
+187   surveyed empirical design practices; Jordan et al. [42] argued that most published RL comparisons
+188   lack statistical power; and Madaan et al. [69] quantified LLM evaluation variance along seed,
+189   monotonicity, and scaling axes. Pineau et al. [90] formalised NeurIPS reproducibility criteria and
+190   ACM’s Artifact Review and Badging [1] established community standards for available, evaluated,
+191   and reproduced artifacts. Reproducibility studies in adjacent fields include [11, 68, 127, 86, 39, 63, 50,
+192   98, 16], alongside Hoffman et al.’s Acme [32]. Classical evaluations rest on GSM8K [15], MATH [29],
+193   AIME [70], MMLU [28], HumanEval [12], MBPP [5], and BBH [113]. RL-F INETUNING B ENCH
+194   ports these statistical traditions to the LLM RL post-training regime, contributing the first cross-library
+195   measurement protocol for GRPO-family algorithms, a ZVF diagnostic that scales from 0.6B to 235B
+196   parameters, and an empirical grounding for the scaling laws, frameworks, and algorithmic refinements
+197   surveyed above.
+
+
+198   3     Artifact Design
+
+199   Tasks and reward functions. The artifact covers (i) GSM8K math reasoning with binary verifiable
+200   reward (complete coverage), (ii) function-calling tool use with shaped schema-validity reward (partial
+201   coverage), and (iii) HumanEval code generation with binary unit-test reward (partial coverage).
+202   Verifiable rewards reduce reward-model subjectivity but do not eliminate reward hacking, format
+203   gaming, or train-set reward inflation; we discuss residual failure modes in Section 6. The full task
+204   table and per-task data splits are listed in Appendix B.
+
+205   Cross-stack coverage. Implementations span 7 RL libraries: TRL (HuggingFace), Stable Base-
+206   lines3, CleanRL, Tianshou, PufferLib, NVIDIA rl_games, and d3rlpy, plus the closed-source Tinker
+207   API. Per-stack hyperparameter mappings, baseline floor/ceiling specifications, and the full imple-
+208   mentation matrix are deferred to Appendix D; the per-(stack, model, task) tier classification lives in
+209   Appendix B and is the single source of truth referenced throughout this paper.
+
+210   Models and training protocol. We evaluate 32+ checkpoints spanning 0.6B–671B total param-
+211   eters (0.6B–37B active for the largest MoE checkpoints) across the Qwen3, Qwen3.5, Llama-3.x,
+212   DeepSeek-V3.1, and Nemotron-120B families. Tier-A open-stack rows use LoRA (rank 32), Adam
+213   (β1 =0.9, β2 =0.95), learning rate 10−4 , and seeds drawn from {42, 123, 456, 789, 1024}. The Modal
+214   classic-RL arms (CleanRL, SB3, Tianshou, Qwen2.5-0.5B) use the full 5-seed protocol; the Tinker
+215   Qwen3-8B Wave-6 group-size ablation is 1 seed per cell across 12 cells; and the Tinker Llama-3.3-
+216   70B-Inst arm is 4 seeds. Tier-B rows (single-seed Modal H100 Llama-3.2-{1,3}B; single-seed Tinker
+217   Qwen3-8B GSM8K headline; the single-seed frontier-model case-study runs across model scale
+218   on Tinker) are reported descriptively. Frontier-scale Tinker runs are case studies, not inferential
+219   evidence.
+
+
+220   4     Results
+
+221   4.1   Claims hierarchy and evidence
+
+222   Table 1 maps every claim in the paper to its evidence tier and to the artifact files that support it;
+223   a per-stack auditability matrix is in Table 2. Inferential conclusions (A-grade) are limited to the
+224   mechanical ZVF identity (Section 4.2) and the held-out 5-seed Qwen3-8B GSM8K control. All other
+225   rows are B-grade single-seed case studies or C-grade listings; the full per-row training-reward table
+226   that earlier drafts placed in main is now Appendix A.
+
+227   4.2   Zero-Variance Fraction: cross-stack diagnostic
+
+228   We introduce three descriptive quantities that summarise when GRPO groups provide little within-
+229   group learning signal. Zero-Variance Fraction (ZVF) at step t is the fraction of prompts for which
+
+
+                                                          5
+
+[PAGE 6]
+Table 1: Claims hierarchy with evidence tier and artifact availability. Tier A: multi-seed completed
+      cells used for inference. Tier B: single-seed completed case-study runs, descriptive only. Tier C:
+      failed or partial cells listed for honesty (Appendix B). “Repro.” = reproducibility status: open
+      (re-runnable end-to-end via released code on commodity GPUs), closed-backend (depends on the
+      proprietary Tinker API), or listed (no claim, only enumerated).
+          Claim                                   Tier Evidence type                Artifact? Repro.
+         Mechanical                    identity    A   Closed-form deriva-             ✓     open
+         ZVF=pG +(1−p)G for binary-                    tion; verified against all
+         reward GRPO (Section 4.2, Ap-                 logged groups
+         pendix C)
+         Held-out 5-seed Qwen3-8B GSM8K            A   5 seeds, paired greedy          ✓     open
+         control (83.3% vs. base 82.0%,                eval on held-out test
+         ∆=+1.3pp, p=0.26; not significant;            split
+         Section 6)
+         Tier-A classic-RL multi-seed Modal        A   Multi-seed step-level           ✓     open
+         arms (CleanRL, SB3, Tianshou,                 traces; mean ± SE /
+         Qwen2.5-0.5B, 5 seeds each; Llama-            IQM
+         3.3-70B-Inst, 4 seeds; Qwen3-8B
+         Wave-6 ablation, 12 cells)
+         Single-seed case-study runs across        B   Single-seed       train-        ✓     closed-backend
+         model scale on Tinker (8B-base                reward + ZVF traces;
+         through 671B / 397B MoE; Section 4)           descriptive only
+         Single-seed Tinker group-size sweep       B   Single-seed traces; con-        ✓     closed-backend
+         (G ∈ {2, 4, 8, 16, 32}, Qwen3-8B,             sistent with mechanical
+         GSM8K) and tool-use case studies              identity
+         (Llama-3.1-8B-Inst, Qwen3-32B; re-
+         ward 0 at 30 steps)
+         Stratified      ZVF-vs-performance        B   Descriptive instrumen-          ✓     closed-backend
+         analysis     (within-task    Pearson          tation, task-confounded
+         r=+0.40,         N =19;        model-
+         varying r=+0.13, N =7;            see
+         stratified_diagnostics when
+         present)
+         Failed/partial cells (JWT-interrupted     C   None (listed only)              —     listed
+         Tinker MoE runs; KL-tracking Modal
+         H100; unstarted external collaborator
+         cells; Appendix B)
+
+
+230   all G completions receive identical rewards:
+                                             1 X                      
+                                  ZVFt =           1 Varc∼C(p) r(c) = 0 .
+                                            |Pt |
+                                                    p∈Pt
+
+231   Gradient Utilization GUt = 1 − ZVFt is the complementary fraction. For binary-outcome tasks
+232   with per-prompt accuracy p, the closed-form identity ZVF(p, G) = pG + (1 − p)G holds exactly;
+233   this is the (A-grade) mechanical theorem. The full derivation and a check against every logged group
+234   is in Appendix C.
+
+235   Pooled cross-task descriptive correlation. Across N = 15 experiments spanning 5 model families
+236   and 0.6 B–671 B total parameters (0.6 B–37 B active for the largest MoE checkpoints), mean ZVF is
+237   negatively associated with final training performance: rPearson = −0.769 (p = 0.0008), ρSpearman =
+238   −0.784 (p = 0.0005). We treat this association as descriptive (B-grade), not causal: ZVF is
+239   mechanically coupled to reward sparsity, group size, and baseline accuracy, and the pooled N =15
+240   sample mixes tasks.
+
+241   Stratified within-task analysis (consistency note). Stratifying within GSM8K, the apparent
+242   monotone relationship does not survive: Pearson r = +0.40 (p = 0.09, N =19 Tinker GSM8K
+243   runs); restricted to the 7 model-varying GSM8K cells, r = +0.13 (p = 0.79, N =7). The pooled
+244   negative correlation is therefore a task-identity artifact rather than a within-task predictive law. The
+245   full stratified diagnostic suite (per-task, per-family, per-group-size breakdowns) is released alongside
+
+
+                                                           6
+
+[PAGE 7]
+Table 2: Artifact card / auditability matrix at submission time, summarised from the per-cell run
+      manifest (Appendix B). One row per (stack, model-class) bucket. “Raw” is per-group rollout JSONL;
+      “ZVF” is step-level ZVF/GU + reward traces; “Ckpt” is a released LoRA adapter; “Held-out” indicates
+      a held-out test-split evaluation exists for at least one seed in the bucket. Tier classification follows
+      Appendix B: A = multi-seed inferential, B = single-seed descriptive, C = failed/partial.
+             Stack                                       Model bucket                                                     Task                  Seeds    Raw    ZVF       Ckpt Held-out Tier
+             Modal H100 / CleanRL                        PPO (synthetic math)                                             math gen                   5   ✓        ✓        —      —      A
+             Modal H100 / SB3                            PPO (synthetic math)                                             math gen                   5   ✓        ✓        —      —      A
+             Modal H100 / Tianshou                       PPO (synthetic math)                                             math gen                   5   ✓        ✓        —      —      A
+             Modal L4 / TRL                              Qwen2.5-0.5B                                                     GSM8K                      5   ✓        ✓        ✓      —      A
+             Tinker (closed)                             Qwen3-8B Wave-6 ablation                                         GSM8K                     12   —        ✓        —      ✓      A
+             Tinker (closed)                             Llama-3.3-70B-Inst                                               GSM8K                      4   —        ✓        —      —      A
+             Tinker (closed)                             Qwen3-8B (G=8, base)                                             GSM8K                     1 partial     ✓        —      ✓      B
+             Tinker (closed)                             Qwen3.5-4B / Qwen3.5-27B†                                        GSM8K                     1   —         ✓        —      —      B
+             Tinker (closed)                             Llama-8B-Inst                                                    GSM8K                     1   —         ✓        —      —      B
+             Tinker (closed)                             DeepSeek-V3.1 / V3.1-Base                                        GSM8K                     1   —         ✓        —      —      B
+             Tinker (closed)                             Nemotron-120B / GPT-OSS-120B / Qwen3.5-397B                      GSM8K                     1   —         ✓        —      —      B
+             Tinker (closed)                             Kimi-K2 / Kimi-K2-Thinking / Kimi-K2.5                           GSM8K                     1   —         ✓        —      —      B
+             Tinker (closed)                             Qwen3-8B group-size {2, 4, 8, 16, 32}                            GSM8K                     1   —         ✓        —      —      B
+             Modal H100                                  Llama-3.2-{1,3}B-Inst                                            GSM8K                     1   ✓         ✓        —      —      B
+             Modal H100 / TRL                            Qwen3-8B reference run                                           GSM8K                     1   ✓         ✓        —      —      B
+             Tinker (closed)                             Llama-8B-Inst, Qwen3-32B (tool-use)                              tool-use                  1   —         ✓        —      —      B
+             Tinker (closed)                             Qwen3-235B-MoE / Qwen3-30B-MoE / Qwen3-32B / Qwen3.5-27B GSM8K (partial)                   1    —      partial    —      —      C
+             Modal H100                                  Qwen3-8B HumanEval / KL-tracking                         code/diag.                        1    —        —        —      —      C
+             External collaborators                      0.5b-DPO / 3b-tool / Qwen3-4B / Qwen3-8B                 misc.                             1    —        —        —      —      C
+
+
+
+                                               Frontier Qwen3-8B/GSM8K (n=600)                                          ZVF decreases with G
+                                                      obs-vs-theory r=0.93                                          (Qwen2.5-0.5B/arith., measured)
+                                   1.0         identity                                                                                          measured mean ZVF
+                                               binned mean
+
+
+
+
+      observed ZVF (per problem)
+                                   0.8                                                                   0.80
+
+                                   0.6
+                                                                                              mean ZVF
+                                                                                                         0.75
+                                   0.4
+                                                                                                         0.70
+                                   0.2
+                                   0.0                                                                   0.65
+
+                                         0.0       0.2       0.4       0.6       0.8    1.0                     2           4                   8                16
+                                                    theoretical ZVF = pG + (1 − p)G                                              group size G
+
+      Figure 2: Left: pooled ZVF vs. final performance scatter (r = −0.769, p = 0.0008, N =15);
+      the apparent strong negative correlation is task-confounded (tool-use cluster at ZVF=1, reward 0;
+      GSM8K cluster at ZVF≤0.5, reward ≥ 0.3). Right: mean ZVF by model family. Within-GSM8K
+      stratified Pearson is r = +0.40 (p = 0.09, N =19); restricted to model-varying GSM8K, r = +0.13
+      (p = 0.79, N =7). The pooled negative correlation does not survive stratification.
+
+
+246    this artifact under analysis/stratified/; within the paper we report only the headline numbers
+247    above and refer readers to the artifact and to the appendix.
+
+248   Group-size sweep (B-grade case study). The single-seed group-size sweep on Qwen3-8B/GSM8K
+249   (G ∈ {2, 4, 8, 16, 32}) is non-monotone in both peak and last-10 reward; neither the smallest nor
+250   the largest G is uniformly best. We report this as a case study against the heuristic that “larger G
+251   is always better” rather than as a prescription. The token-budget-normalised reanalysis showing
+252   that the TBGU-optimal
+               \                G shifts rightward with total tokens T is in Appendix E; per-row training-
+253   reward numbers are in Appendix A. A two-seed matched-budget follow-up (2,560 rollouts per arm;
+254   G=2 × 160 vs. G=16 × 20 steps, 512-token completions) upgrades one facet of the case study:
+255   the G=2 arms drive train reward to ≈ 0.9–1.0 on the sampled pool and terminate in a sustained
+256   all-correct zero-variance regime (ZVF ≈ 0.75–1.0), while G=16 ends mid-learning (≈ 0.3–0.5)
+257   with ZVF ≤ 0.25 throughout. Artifacts: tinker-runs/results/er2b_*.json.
+
+
+                                                                                              7
+
+[PAGE 8]
+258   5     Reproducibility
+
+259   We release pinned containers, deterministic seed management, and rliable-based analysis scripts.
+260   Logged artifacts are released at three explicitly named levels of granularity: (i) precomputed
+261   ZVF/GU traces for every reported run, including all Tinker rows; (ii) step-level aggregate logs
+262   (per-step mean reward, loss, gradient norm, and—where the backend exposes it—KL) for every
+263   reported run; and (iii) raw per-group rollout JSONL for the Tier-A open-stack rows in Appendix B
+264   and a subset of Tinker GSM8K rows. Raw JSONL is not bundled for every Tinker case-study or
+265   tool-use run; those cases are flagged in the manifest.
+
+266   5.1   One-command reproducibility
+
+267   The artifact ships a top-level Makefile with three documented targets that govern the open-stack
+268   reproducibility surface:
+
+269          • make smoke-test — ∼5 min on a single commodity GPU (T4 or L4 class, 16 GB). Verifies
+270            that the artifact installs, the pinned containers launch, and the GSM8K reward harness emits
+271            a non-trivial reward on a 16-prompt sanity batch. No model weights are updated.
+272          • make reproduce-main — end-to-end re-run of every Tier-A open-stack cell in the mani-
+273            fest (Modal H100 CleanRL/SB3/Tianshou/Qwen2.5-0.5B classic-RL arms; the 5-seed held-
+274            out Qwen3-8B GSM8K control). Estimated wall-clock: ∼96 GPU-hours on H100 SXM5
+275            (80 GB), or ∼3 hours per seed for the 0.5B reference. Produces the same step-level ZVF/GU
+276            traces and the held-out evaluation numbers cited in Table 1.
+277          • make reproduce-appendix — regenerates the full results table (Appendix A) figures
+278            from the precomputed traces shipped with the artifact, without re-running any backend.
+279            Useful for reviewers who want to verify that our plotting code agrees with the bundled trace
+280            files.
+
+281   What is and is not in the make target. make reproduce-main only re-runs A-grade open-stack
+282   cells; B-grade Tinker case-study runs are not re-run because the Tinker backend is closed-source
+283   and rate-limited (Section 6). For B-grade cells we ship the JSON step logs and the API-call scripts;
+284   replication requires Tinker credentials and incurs the JWT-expiry failure modes documented in the
+285   manifest (Appendix B).
+
+286   Hash manifest. On a successful make reproduce-main run, the artifact writes a
+287   REPRODUCIBILITY_HASHES.json file containing SHA-256 digests of every emitted ZVF trace,
+288   reward CSV, and held-out evaluation summary. Reviewers can diff this against the reference man-
+289   ifest released with the artifact to confirm bit-level (where deterministic) or distributional (where
+290   sampling-based) agreement.
+
+291   Submission-time status. At submission, the Makefile targets are wired to the already-released
+292   Modal scripts and the held-out evaluation harness; if a target is missing or stub-only at the time
+293   the camera-ready artifact tag is cut, the corresponding entry in the artifact card (Table 2) will be
+294   downgraded from ✓ to “pending” and the README will list the substitute manual command.
+
+
+295   6     Limitations
+
+296   The current release has documented gaps; full discussion (dual-use, compute accounting, carbon
+297   estimate, data provenance, closed-backend acknowledgement, and known methodological limits) is in
+298   Appendix F. In summary: (i) all B-grade rows are single-seed and depend on a closed-source Tinker
+299   backend; we report them descriptively. (ii) Most A-grade evidence is concentrated on short-horizon
+300   GSM8K with binary verifiable rewards; tool-use, code-generation, and non-math coverage are sparser.
+301   (iii) Inferential claims are limited to the mechanical ZVF = pG + (1−p)G identity and the held-out 5-
+302   seed Qwen3-8B GSM8K control (+1.3pp, t=1.32, p=0.26, not significant). (iv) Many cross-library
+303   comparisons are confounded by checkpoint, hardware, or default-config differences and should be
+304   read as stack-level rather than algorithm-level statements.
+
+
+                                                       8
+
+[PAGE 9]
+305   Scope relative to companion ZVF vehicles. Any ZVF identity or stratification result reported
+306   here is bench instrumentation cross-cited for auditability. Readers seeking the descriptive diagnostic
+307   contribution or calibration theory should consult the companion pillar papers; this vehicle does not
+308   re-open those claims as independent main-track science.
+
+309   7    Conclusion
+310   RL-F INETUNING B ENCH is a shared empirical substrate for RL post-training across libraries,
+311   algorithms, and model families. The current release supports three conservative claims: (i) ZVF/GU
+312   are useful descriptive diagnostics of when binary-reward GRPO stops producing within-group
+313   signal, but should not be read as causal predictors independent of reward mean and group size; (ii)
+314   initialization and rollout regime are plausible stack-level moderators in the released case studies,
+315   not isolated causal effects; and (iii) cross-stack PPO/GRPO rankings are descriptive because policy
+316   architecture and task encoding are not fully matched. The held-out Qwen3-8B GSM8K control gives
+317   a small, non-significant GRPO gain over the base (p=0.26). The released traces and checkpoints are
+318   intended to make stricter follow-up easy.
+
+319   References
+320       [1] ACM. Artifact review and badging – version 1.1, 2020. URL https://www.acm.org/
+321           publications/policies/artifact-review-and-badging-current. Accessed: 2026-
+322           04-13.
+323       [2] Rishabh Agarwal, Max Schwarzer, Pablo Samuel Castro, Aaron C. Courville, and Marc
+324           Bellemare. Deep reinforcement learning at the edge of the statistical precipice. In Advances
+325           in Neural Information Processing Systems, volume 34, pages 29304–29320, 2021. doi: 10.
+326           48550/arXiv.2108.13264. arXiv:2108.13264; supplementary materials at https://agarwl.
+327           github.io/rliable/.
+328       [3] Arash Ahmadian, Chris Cremer, Matthias Gallé, Marzieh Fadaee, Julia Kreutzer, Olivier
+329           Pietquin, Ahmet Üstün, and Sara Hooker. Back to basics: Revisiting REINFORCE-style
+330           optimization for learning from human feedback in LLMs. arXiv preprint, 2024. doi: 10.48550/
+331           arXiv.2402.14740. arXiv:2402.14740.
+332       [4] Amazon Web Services. AWS sustainability: Data center efficiency and PUE. https://
+333           sustainability.aboutamazon.com/, 2023.
+334       [5] Jacob Austin, Augustus Odena, Maxwell Nye, Maarten Bosma, Henryk Michalewski, David
+335           Dohan, Ellen Jiang, Carrie Cai, Michael Terry, Quoc Le, and Charles Sutton. Program
+336           synthesis with large language models. arXiv preprint, 2021. doi: 10.48550/arXiv.2108.07732.
+337           arXiv:2108.07732; MBPP.
+338       [6] Mohammad Gheshlaghi Azar, Zhaohan Daniel Guo, Bilal Piot, Rémi Munos, Mark Rowland,
+339           Michal Valko, and Daniele Calandriello. A general theoretical paradigm to understand learning
+340           from human preferences. 2024. IPO.
+341       [7] Yuntao Bai, Andy Jones, Kamal Ndousse, Amanda Askell, Anna Chen, Nova DasSarma,
+342           Dawn Drain, Stanislav Fort, Deep Ganguli, Tom Henighan, et al. Training a helpful and
+343           harmless assistant with reinforcement learning from human feedback. arXiv preprint, 2022.
+344           doi: 10.48550/arXiv.2204.05862. arXiv:2204.05862.
+345       [8] Yuntao Bai, Saurav Kadavath, Sandipan Kundu, Amanda Askell, Jackson Kernion, Andy
+346           Jones, Anna Chen, Anna Goldie, Azalia Mirhoseini, Cameron McKinnon, et al. Constitutional
+347           AI: Harmlessness from AI feedback. arXiv preprint, 2022. doi: 10.48550/arXiv.2212.08073.
+348           arXiv:2212.08073.
+349       [9] Matteo Bettini, Amanda Prorok, and Vincent Moens. BenchMARL: Benchmarking multi-
+350           agent reinforcement learning. arXiv preprint, 2023. doi: 10.48550/arXiv.2312.01472.
+351           arXiv:2312.01472.
+352    [10] ByteDance Seed, Yu Yue, Yufeng Yuan, Qiying Yu, Xiaochen Zuo, Ruofei Zhu, Wenyuan Xu,
+353         Jiaze Chen, Chengyi Wang, Tiantian Fan, et al. VAPO: Efficient and reliable reinforcement
+354         learning for advanced reasoning tasks. arXiv preprint, 2025. doi: 10.48550/arXiv.2504.05118.
+355         arXiv:2504.05118.
+
+
+                                                        9
+
+[PAGE 10]
+356   [11] Emanuele Cavenaghi, Gabriele Sottocornola, Fabio Stella, and Markus Zanker. A system-
+357        atic study on reproducibility of reinforcement learning in recommendation systems. ACM
+358        Transactions on Recommender Systems, 1(3):1–30, 2023. doi: 10.1145/3596519.
+359   [12] Mark Chen, Jerry Tworek, Heewoo Jun, Qiming Yuan, Henrique Ponde de Oliveira Pinto,
+360        Jared Kaplan, Harri Edwards, Yuri Burda, Nicholas Joseph, Greg Brockman, et al. Evaluating
+361        large language models trained on code. arXiv preprint arXiv:2107.03374, 2021.
+362   [13] Wei Chen and Zhiyuan Li. Octopus v4: Graph of language models. arXiv preprint, 2024. doi:
+363        10.48550/arXiv.2404.19296. arXiv:2404.19296.
+364   [14] Paul F. Christiano, Jan Leike, Tom B. Brown, Miljan Martic, Shane Legg, and Dario Amodei.
+365        Deep reinforcement learning from human preferences. Advances in Neural Information
+366        Processing Systems, 30, 2017.
+367   [15] Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser,
+368        Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, and John
+369        Schulman. Training verifiers to solve math word problems. arXiv preprint arXiv:2110.14168,
+370        2021.
+371   [16] Cédric Colas, Olivier Sigaud, and Pierre-Yves Oudeyer. A hitchhiker’s guide to statistical
+372        comparisons of reinforcement learning algorithms. arXiv preprint, 2019. doi: 10.48550/arXiv.
+373        1904.06979. arXiv:1904.06979.
+374   [17] Tri Dao, Daniel Y. Fu, Stefano Ermon, Atri Rudra, and Christopher Ré. FlashAttention: Fast
+375        and memory-efficient exact attention with IO-awareness. In Advances in Neural Information
+376        Processing Systems, 2022. doi: 10.48550/arXiv.2205.14135. arXiv:2205.14135.
+377   [18] DeepSeek-AI, Aixin Liu, Bei Feng, Bing Xue, Bingxuan Wang, Bochao Wu, Chengda Lu,
+378        Chenggang Zhao, Chengqi Deng, Chenyu Zhang, et al. DeepSeek-V3 technical report. arXiv
+379        preprint, 2024. doi: 10.48550/arXiv.2412.19437. arXiv:2412.19437.
+380   [19] DeepSeek-AI, Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Ruoyu Zhang, Runxin
+381        Xu, Qihao Zhu, Shirong Ma, Peiyi Wang, et al. DeepSeek-R1: Incentivizing reasoning
+382        capability in LLMs via reinforcement learning. arXiv preprint, 2025. doi: 10.48550/arXiv.
+383        2501.12948. arXiv:2501.12948.
+384   [20] DeepSeek-AI, Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Ruoyu Zhang, et al.
+385        DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learning. Nature, 645
+386        (8081):633–638, 2025. doi: 10.1038/s41586-025-09422-z.
+387   [21] Kawin Ethayarajh, Winnie Xu, Niklas Muennighoff, Dan Jurafsky, and Douwe Kiela. KTO:
+388        Model alignment as prospect theoretic optimization. In International Conference on Machine
+389        Learning, 2024.
+390   [22] Leo Gao, John Schulman, and Jacob Hilton. Scaling laws for reward model overoptimization.
+391        In Proceedings of the 40th International Conference on Machine Learning (ICML), 2023. doi:
+392        10.48550/arXiv.2210.10760. arXiv:2210.10760; PMLR vol. 202.
+393   [23] Google. 2023 environmental report: Data center PUE. https://sustainability.google/
+394        reports/, 2023.
+395   [24] Google DeepMind. Gemini 2.5 Pro: Advanced reasoning with Deep Think, 2025. URL
+396        https://deepmind.google/technologies/gemini/.
+397   [25] Xinyu Guan, Li Lyna Zhang, Yifei Liu, Ning Shang, Youran Sun, Yi Zhu, Fan Yang, and Mao
+398        Yang. rStar-Math: Small LLMs can master math reasoning with self-evolved deep thinking.
+399        arXiv preprint, 2025. doi: 10.48550/arXiv.2501.04519. arXiv:2501.04519.
+400   [26] Alex Havrilla, Maksym Zhuravinskyi, Duy Phung, Aman Tiwari, Jonathan Tow, Stella Bider-
+401        man, Quentin Anthony, and Louis Castricato. trlX: A framework for large scale reinforcement
+402        learning from human feedback. 2023.
+403   [27] Peter Henderson, Riashat Islam, Philip Bachman, Joelle Pineau, Doina Precup, and David
+404        Meger. Deep reinforcement learning that matters. In Proceedings of the AAAI Conference on
+405        Artificial Intelligence, volume 32, 2018. doi: 10.1609/aaai.v32i1.11694.
+406   [28] Dan Hendrycks, Collin Burns, Steven Basart, Andy Zou, Mantas Mazeika, Dawn Song, and
+407        Jacob Steinhardt. Measuring massive multitask language understanding. In International
+408        Conference on Learning Representations, 2021.
+
+
+                                                    10
+
+[PAGE 11]
+409   [29] Dan Hendrycks, Collin Burns, Saurav Kadavath, Akul Arora, Steven Basart, Eric Tang, Dawn
+410        Song, and Jacob Steinhardt. Measuring mathematical problem solving with the MATH dataset.
+411        In NeurIPS Datasets and Benchmarks Track, 2021.
+412   [30] Jacob Hilton, Jie Tang, and John Schulman. Scaling laws for single-agent reinforcement
+413        learning. arXiv preprint, 2023. doi: 10.48550/arXiv.2301.13442. arXiv:2301.13442.
+414   [31] Andreas Hochlehnert et al. A sober look at progress in language model reasoning. arXiv
+415        preprint, 2025. doi: 10.48550/arXiv.2504.07086. arXiv:2504.07086.
+416   [32] Matthew W. Hoffman, Bobak Shahriari, John Aslanides, Gabriel Barth-Maron, et al. Acme:
+417        A research framework for distributed reinforcement learning. In arXiv preprint, 2022. doi:
+418        10.48550/arXiv.2006.00979. arXiv:2006.00979.
+419   [33] Jordan Hoffmann, Sebastian Borgeaud, Arthur Mensch, Elena Buchatskaya, Trevor Cai, Eliza
+420        Rutherford, Diego de Las Casas, Lisa Anne Hendricks, Johannes Welbl, Aidan Clark, et al.
+421        Training compute-optimal large language models. arXiv preprint, 2022. doi: 10.48550/arXiv.
+422        2203.15556. arXiv:2203.15556.
+423   [34] Jiwoo Hong, Noah Lee, and James Thorne. ORPO: Monolithic preference optimization without
+424        reference model. In Conference on Empirical Methods in Natural Language Processing, 2024.
+425   [35] Edward J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang,
+426        Lu Wang, and Weizhu Chen. LoRA: Low-rank adaptation of large language models. In
+427        International Conference on Learning Representations, 2022. URL https://openreview.
+428        net/forum?id=nZeVKeeFYf9.
+429   [36] Jian Hu, Xibin Wu, Zilin Zhu, Xianyu, Weixun Wang, Dehao Zhang, and Yu Cao. OpenRLHF:
+430        An easy-to-use, scalable and high-performance RLHF framework. arXiv preprint, 2024. doi:
+431        10.48550/arXiv.2405.11143. arXiv:2405.11143.
+432   [37] Shengding Hu, Yuge Tu, Xu Han, Chaoqun He, Ganqu Cui, Xiang Long, Zhi Zheng, Yewei
+433        Fang, Yuxiang Huang, Weilin Zhao, et al. MiniCPM: Unveiling the potential of small language
+434        models with scalable training strategies. arXiv preprint, 2024. doi: 10.48550/arXiv.2404.06395.
+435        arXiv:2404.06395.
+436   [38] Shuhao Hu, Chenyu Wang, et al. OpenVLthinker: Multimodal reasoning with G2 RPO. arXiv
+437        preprint, 2026. doi: 10.48550/arXiv.2603.04567. arXiv:2603.04567.
+438   [39] Jin Huang, Harrie Oosterhuis, Bunyamin Cetinkaya, Thijs Rood, and Maarten de Rijke.
+439        State encoders in reinforcement learning for recommendation: A reproducibility study. In
+440        Proceedings of the 45th International ACM SIGIR Conference, pages 2738–2743. ACM, 2022.
+441        doi: 10.1145/3477495.3531716.
+442   [40] Shiki Ichihara et al. MO-GRPO: Automatic variance-based reward reweighting for
+443        multi-objective alignment. arXiv preprint, 2025. doi: 10.48550/arXiv.2510.17711.
+444        arXiv:2510.17711.
+445   [41] Bowen Jin, Hansi Zeng, Zhenrui Yue, Jinsung Yoon, Sercan Arik, Dong Wang, Hamed Zamani,
+446        and Jiawei Han. Search-R1: Training LLMs to reason and leverage search engines with rein-
+447        forcement learning. arXiv preprint, 2025. doi: 10.48550/arXiv.2503.09516. arXiv:2503.09516.
+448   [42] Emma Jordan, Adam White, Bruno Castro da Silva, Martha White, and Philip S. Thomas.
+449        Position: Benchmarking is limited in reinforcement learning research. arXiv preprint, 2024.
+450        doi: 10.48550/arXiv.2406.16241. arXiv:2406.16241.
+451   [43] Jared Kaplan, Sam McCandlish, Tom Henighan, Tom B. Brown, Benjamin Chess, Rewon
+452        Child, Scott Gray, Alec Radford, Jeffrey Wu, and Dario Amodei. Scaling laws for neural
+453        language models. arXiv preprint, 2020. doi: 10.48550/arXiv.2001.08361. arXiv:2001.08361.
+454   [44] Youngeun Kim. MC-GRPO: Median-centered group relative policy optimization for small-
+455        rollout reinforcement learning. arXiv preprint, 2026. doi: 10.48550/arXiv.2601.22582.
+456        arXiv:2601.22582.
+457   [45] Kimi Team. Kimi K2: Open agentic intelligence. arXiv preprint, 2025. doi: 10.48550/arXiv.
+458        2507.20534. arXiv:2507.20534.
+459   [46] Kimi Team, Angang Du, Bofei Gao, Bowei Xing, Changjiu Jiang, Cheng Chen, Cheng Li,
+460        Chenjun Xiao, Chenzhuang Du, Chonghua Liao, et al. Kimi k1.5: Scaling reinforcement learn-
+461        ing with LLMs. arXiv preprint, 2025. doi: 10.48550/arXiv.2501.12599. arXiv:2501.12599.
+
+
+                                                     11
+
+[PAGE 12]
+462   [47] Victoria Krakovna, Jonathan Uesato, Vladimir Mikulik, Matthew Rahtz, Tom
+463        Everitt, Ramana Kumar, Zac Kenton, Jan Leike, and Shane Legg.                       Spec-
+464        ification gaming:     The flip side of AI ingenuity.                DeepMind Safety Re-
+465        search     blog,   2020.            https://deepmindsafetyresearch.medium.com/
+466        specification-gaming-the-flip-side-of-ai-ingenuity-c85bdb0deeb4;                      not
+467        a peer-reviewed venue — retained for traceability of the specification-gaming term.
+468   [48] Woosuk Kwon, Zhuohan Li, Siyuan Zhuang, Ying Sheng, Lianmin Zheng, Cody Hao Yu,
+469        Joseph E. Gonzalez, Hao Zhang, and Ion Stoica. Efficient memory management for large
+470        language model serving with PagedAttention. In Proceedings of the 29th Symposium on
+471        Operating Systems Principles (SOSP), 2023. doi: 10.1145/3600006.3613165.
+472   [49] Ariel N. Lee, Cole J. Hunter, and Nataniel Ruiz. Platypus: Quick, cheap, and powerful
+473        refinement of LLMs. arXiv preprint, 2023. arXiv:2308.07317; Open-Platypus CC BY-NC 4.0.
+474   [50] Miriam Leeser. Artifact evaluation in the FPGA community and in ACM TRETS. ACM
+475        Transactions on Reconfigurable Technology and Systems, 2026. doi: 10.1145/3802561.
+476   [51] Jia Li, Edward Beeching, Lewis Tunstall, Ben Lipkin, Roman Soletskyi, Shengyi Huang,
+477        Kashif Rasul, Longhui Yu, Albert Q. Jiang, Ziju Shen, Zihan Qin, Bin Dong, Li Zhou, Yann
+478        Fleureau, Guillaume Lample, and Stanislas Polu. NuminaMath: The largest public dataset in
+479        AI4Maths with 860k pairs of competition math problems and solutions, 2024. Apache 2.0;
+480        https://huggingface.co/datasets/AI-MO/NuminaMath-CoT.
+481   [52] Xuefeng Li et al. LIMR: Less is more for RL scaling. arXiv preprint, 2025. doi: 10.48550/
+482        arXiv.2502.11886. arXiv:2502.11886.
+483   [53] Xuefeng Li et al. ToRL: Scaling tool-integrated RL for language models. arXiv preprint, 2025.
+484        doi: 10.48550/arXiv.2503.23383. arXiv:2503.23383.
+485   [54] Hunter Lightman, Vineet Kosaraju, Yura Burda, Harri Edwards, Bowen Baker, Teddy Lee,
+486        Jan Leike, John Schulman, Ilya Sutskever, and Karl Cobbe. Let’s verify step by step. In
+487        International Conference on Learning Representations (ICLR), 2024. doi: 10.48550/arXiv.
+488        2305.20050. First released as arXiv:2305.20050, May 2023.
+489   [55] Zhihang Lin, Mingbao Lin, Yuan Xie, and Rongrong Ji. CPPO: Accelerating the training
+490        of group relative policy optimization-based reasoning models. arXiv preprint, 2025. doi:
+491        10.48550/arXiv.2503.22342. arXiv:2503.22342.
+492   [56] Zuxin Lin, Chen Xu, Akshara Prabhakar, Anand Koshy, Devansh Arpit, Rafal Kocielnik,
+493        Pranav Gundecha, Silvio Savarese, and Caiming Xiong. APIGen: Automated pipeline for
+494        generating verifiable and diverse function-calling datasets. arXiv preprint, 2024. doi: 10.
+495        48550/arXiv.2406.18518. arXiv:2406.18518.
+496   [57] Jianguo Liu, Zuxin Zhang, Thai Hoang, Silvio Huang, et al. xLAM: A family of large action
+497        models to empower ai agent systems. Salesforce Research, 2024. https://huggingface.
+498        co/datasets/Salesforce/xlam-function-calling-60k; CC BY 4.0.
+499   [58] Shih-Yang Liu, Xin Dong, Ximing Lu, Shizhe Diao, Peter Belcak, Mingjie Liu, Min-Hung
+500        Chen, Hongxu Yin, Yu-Chiang Frank Wang, Kwang-Ting Cheng, Yejin Choi, Jan Kautz, and
+501        Pavlo Molchanov. GDPO: Group reward-decoupled normalization policy optimization for
+502        multi-reward rl optimization. arXiv preprint arXiv:2601.05242, 2026.
+503   [59] Weiwen Liu, Xu Huang, Xingshan Zeng, Xinlong Hao, Shuai Yu, Dexun Li, Shuai Wang,
+504        Weinan Gan, Zhengying Liu, Yuanqing Yu, et al. ToolACE: Winning the points of LLM
+505        function calling. arXiv preprint, 2024. doi: 10.48550/arXiv.2409.00920. arXiv:2409.00920.
+506   [60] Xiao Liu, Hao Yu, Hanchen Zhang, Yifan Xu, Xuanyu Lei, Hanyu Lai, Yu Gu, Hangliang Ding,
+507        Kaiwen Men, Kejuan Yang, et al. AgentBench: Evaluating LLMs as agents. In International
+508        Conference on Learning Representations, 2024.
+509   [61] Zichen Liu, Changyu Chen, Wenjun Li, Penghui Qi, Tianyu Pang, Chao Du, Wee Sun Lee,
+510        and Min Lin. Understanding R1-Zero-Like training: A critical perspective. arXiv preprint,
+511        2025. doi: 10.48550/arXiv.2503.20783. arXiv:2503.20783; introduces Dr. GRPO.
+512   [62] Zichen Liu et al. RL fine-tuning activates a sparse subnetwork in LLMs. arXiv preprint, 2025.
+513        doi: 10.48550/arXiv.2510.20015. arXiv:2510.20015.
+
+
+                                                    12
+
+[PAGE 13]
+514   [63] Manuel López-Ibáñez, Juergen Branke, and Luís Paquete. Reproducibility in evolutionary
+515        computation. ACM Transactions on Evolutionary Learning and Optimization, 1(1):1–21, 2021.
+516        doi: 10.1145/3466624.
+517   [64] Yingqian Lu et al. GRPO-LEAD: Length-aware reward shaping for GRPO. arXiv preprint,
+518        2025. doi: 10.48550/arXiv.2504.09696. arXiv:2504.09696.
+519   [65] Zhihao Lu et al. LCPO: Length-conditioned policy optimization for reasoning models. arXiv
+520        preprint, 2025. doi: 10.48550/arXiv.2503.04697. arXiv:2503.04697.
+521   [66] Liangchen Luo, Yinxiao Liu, Rosanne Liu, Samrat Phatale, Harsh Lara, Yunxuan Li, Lei
+522        Shu, Yun Zhu, Lei Meng, Jiao Sun, and Abhinav Rastogi. Improve mathematical reasoning
+523        in language models by automated process supervision. arXiv preprint, 2024. doi: 10.48550/
+524        arXiv.2406.06592. arXiv:2406.06592; OmegaPRM.
+525   [67] Trung Quoc Luong, Xinbo Zhang, Zhanming Jie, Peng Sun, Xiaoran Jin, and Hang Li. ReFT:
+526        Reasoning with reinforced fine-tuning. 2024.
+527   [68] Nicolai A. Lynnerup, Laura Nolling, Rasmus Hasle, and John Hallam. A survey on repro-
+528        ducibility by evaluating deep reinforcement learning algorithms on real-world robots. arXiv
+529        preprint, 2019. doi: 10.48550/arXiv.1909.03772. arXiv:1909.03772.
+530   [69] Lovish Madaan, Aaditya K. Singh, Rylan Schaeffer, Andrew Poulton, Sanmi Koyejo, Pon-
+531        tus Stenetorp, Sharan Narang, and Dieuwke Hupkes. Quantifying variance in evaluation
+532        benchmarks. arXiv preprint, 2024. doi: 10.48550/arXiv.2406.10229. arXiv:2406.10229.
+533   [70] Mathematical Association of America.   AIME: American invitational math-
+534        ematics examination, 2024.     URL https://maa.org/math-competitions/
+535        american-invitational-mathematics-examination-aime.
+536   [71] Nat McAleese, Rai Michael Pokorny, Juan Felipe Cerón Uribe, Evgenia Nitishinskaya, Maja
+537        Trebacz, and Jan Leike. LLM critics help catch LLM bugs. arXiv preprint, 2024. doi:
+538        10.48550/arXiv.2407.00215. arXiv:2407.00215; CriticGPT.
+539   [72] Yu Meng, Mengzhou Xia, and Danqi Chen. SimPO: Simple preference optimization with a
+540        reference-free reward. In Advances in Neural Information Processing Systems, 2024.
+541   [73] Niklas Muennighoff, Alexander M. Rush, Boaz Barak, Teven Le Scao, Aleksandra Piktus,
+542        Nouamane Tazi, Sampo Pyysalo, Thomas Wolf, and Colin Raffel. Scaling data-constrained
+543        language models. In Advances in Neural Information Processing Systems, 2023.
+544   [74] Reiichiro Nakano, Jacob Hilton, Suchir Balaji, Jeff Wu, Long Ouyang, Christina Kim,
+545        Christopher Hesse, Shantanu Jain, Vineet Kosaraju, William Saunders, et al. WebGPT:
+546        Browser-assisted question-answering with human feedback. arXiv preprint, 2021. doi:
+547        10.48550/arXiv.2112.09332. arXiv:2112.09332.
+548   [75] Gongrui Nan et al. NGRPO: Negative-enhanced group relative policy optimization. arXiv
+549        preprint, 2025. doi: 10.48550/arXiv.2509.18851. arXiv:2509.18851.
+550   [76] Nexusflow. NexusRaven-V2: Surpassing GPT-4 for zero-shot function calling, 2024. URL
+551        https://nexusflow.ai/blogs/ravenv2.
+552   [77] Datta Nimmaturi, Vaishnavi Bhargava, Rajat Ghosh, Johnu George, and Debojyoti Dutta.
+553        Predictive scaling laws for efficient GRPO training of large reasoning models. arXiv preprint,
+554        2025. doi: 10.48550/arXiv.2507.18014. arXiv:2507.18014; identifies three consistent training
+555        phases: slow start, rapid improvement, plateau.
+556   [78] NVIDIA. NeMo-RL: Reinforcement learning for NVIDIA NeMo framework. https://
+557        github.com/NVIDIA/NeMo-RL, 2024.
+558   [79] OpenAccess AI Collective. Axolotl: A unified framework for LLM fine-tuning. https:
+559        //github.com/OpenAccess-AI-Collective/axolotl, 2024.
+560   [80] OpenAI. Learning to reason with LLMs (o1 system card), 2024. URL https://openai.
+561        com/index/learning-to-reason-with-llms/.
+562   [81] OpenAI.   Introducing deep research, 2025.            URL https://openai.com/index/
+563        introducing-deep-research/.
+564   [82] OpenAI. OpenAI o3 and o3-mini: System card, 2025. URL https://openai.com/index/
+565        o3-system-card/.
+
+
+                                                     13
+
+[PAGE 14]
+566    [83] OpenRLHF Contributors. OpenRLHF: An easy-to-use, high-performance RLHF framework.
+567         https://github.com/OpenRLHF/OpenRLHF, 2024.
+568    [84] Long Ouyang, Jeffrey Wu, Xu Jiang, Diogo Almeida, Carroll Wainwright, Pamela Mishkin,
+569         Chong Zhang, Sandhini Agarwal, Katarina Slama, Alex Ray, et al. Training language models
+570         to follow instructions with human feedback. Advances in Neural Information Processing
+571         Systems, 35:27730–27744, 2022.
+572    [85] Jiayi Pan, Xingyao Wang, Graham Neubig, Navdeep Jaitly, Heng Ji, Alane Suhr, and Yizhe
+573         Zhang. Training software engineering agents and verifiers with SWE-Gym. arXiv preprint,
+574         2025. doi: 10.48550/arXiv.2412.21139. arXiv:2412.21139.
+575    [86] Vincenzo Paparella, Vito Walter Anelli, Ludovico Boratto, and Tommaso Di Noia. Repro-
+576         ducibility of multi-objective reinforcement learning recommendation. In Proceedings of
+577         the 17th ACM Conference on Recommender Systems, pages 683–689. ACM, 2023. doi:
+578         10.1145/3604915.3609493.
+579    [87] Shishir G. Patil, Tianjun Zhang, Xin Wang, and Joseph E. Gonzalez. Gorilla: Large language
+580         model connected with massive APIs. arXiv preprint, 2023. doi: 10.48550/arXiv.2305.15334.
+581         arXiv:2305.15334.
+582    [88] Andrew Patterson, Samuel Neumann, Martha White, and Adam White. Empirical de-
+583         sign in reinforcement learning. arXiv preprint, 2024. doi: 10.48550/arXiv.2304.01315.
+584         arXiv:2304.01315.
+585    [89] Perplexity. Introducing perplexity deep research, 2025. URL https://www.perplexity.
+586         ai/hub/blog/introducing-perplexity-deep-research.
+587    [90] Joelle Pineau, Philippe Vincent-Lamarre, Koustuv Sinha, Vincent Larivière, Alina Beygelzimer,
+588         Florence d’Alché Buc, Emily Fox, and Hugo Larochelle. Improving reproducibility in machine
+589         learning research: A report from the NeurIPS 2019 reproducibility program. Journal of
+590         Machine Learning Research, 22(164):1–20, 2021. doi: 10.5555/3546258.3546422. JMLR vol.
+591         22 paper 164, DOI 10.5555/3546258.3546422.
+592    [91] Yangyang Pu et al. TTRL: Test-time reinforcement learning. arXiv preprint, 2025. doi:
+593         10.48550/arXiv.2504.16084. arXiv:2504.16084.
+594    [92] Cheng Qian et al. ToolRL: Reward is all tool learning needs. arXiv preprint, 2025. doi:
+595         10.48550/arXiv.2504.13958. arXiv:2504.13958.
+596    [93] Yujia Qin, Shihao Liang, Yining Ye, Kunlun Zhu, Lan Yan, Yaxi Lu, Yankai Lin, Xin Cong,
+597         Xiangru Tang, Bill Qian, et al. ToolLLM: Facilitating large language models to master 16000+
+598         real-world APIs. In International Conference on Learning Representations, 2024.
+599    [94] Qwen Team, An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng,
+600         Bowen Yu, Chang Gao, Chengen Huang, et al. Qwen3 technical report. arXiv preprint, 2025.
+601         doi: 10.48550/arXiv.2505.09388. arXiv:2505.09388.
+602    [95] Rafael Rafailov, Archit Sharma, Eric Mitchell, Stefano Ermon, Christopher D. Manning, and
+603         Chelsea Finn. Direct preference optimization: Your language model is secretly a reward
+604         model. In Advances in Neural Information Processing Systems, volume 36, 2023. doi:
+605         10.48550/arXiv.2305.18290. arXiv:2305.18290; NeurIPS 2023 (proceedings vol. 36).
+606    [96] Rafael Rafailov, Joey Hejna, Ryan Park, and Chelsea Finn. Scaling laws for reward model
+607         overoptimization in direct alignment algorithms. arXiv preprint, 2024. doi: 10.48550/arXiv.
+608         2406.02900. arXiv:2406.02900.
+609    [97] Martin Riddell, Ansong Ni, and Arman Cohan. Quantifying contamination in evaluating code
+610         generation capabilities of language models. arXiv preprint, 2024. arXiv:2403.04811.
+611    [98] Mohammad Reza Saleh Sedghpour, Alessandro Vittorio Papadopoulos, Cristian Klein, and
+612         Johan Tordsson. Artifact evaluation for distributed systems: Current practices and beyond.
+613         2024. doi: 10.48550/arXiv.2406.13045. arXiv:2406.13045.
+614    [99] Rylan Schaeffer, Brando Miranda, and Sanmi Koyejo. Are emergent abilities of large language
+615         models a mirage? In Advances in Neural Information Processing Systems, 2023.
+616   [100] Timo Schick, Jane Dwivedi-Yu, Roberto Dessì, Roberta Raileanu, Maria Lomeli, Eric Hambro,
+617         Luke Zettlemoyer, Nicola Cancedda, and Thomas Scialom. Toolformer: Language models can
+618         teach themselves to use tools. In Advances in Neural Information Processing Systems, 2023.
+
+
+                                                     14
+
+[PAGE 15]
+619   [101] John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proxi-
+620         mal policy optimization algorithms. 2017. URL https://arxiv.org/abs/1707.06347.
+621         arXiv:1707.06347.
+622   [102] Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Mingchuan Zhang, Y.K. Li,
+623         Y. Wu, and Daya Guo. DeepSeekMath: Pushing the limits of mathematical reasoning in open
+624         language models. arXiv preprint, 2024. doi: 10.48550/arXiv.2402.03300. arXiv:2402.03300.
+625   [103] Guangming Sheng, Chi Zhang, Zilin Ye, Xibin Wu, Wang Zhang, Ru Zhang, Yanghua Peng,
+626         Haibin Lin, and Chuan Wu. HybridFlow: A flexible and efficient RLHF framework (verl).
+627         arXiv preprint, 2024. arXiv:2409.19256.
+628   [104] Guangming Sheng, Chi Zhang, Zilingfeng Ye, Xibin Wu, Wang Zhang, Ru Zhang, Yanghua
+629         Peng, Haibin Lin, and Chuan Wu. HybridFlow: A flexible and efficient RLHF framework.
+630         arXiv preprint, 2024. doi: 10.48550/arXiv.2409.19256. arXiv:2409.19256; veRL.
+631   [105] Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao.
+632         Reflexion: Language agents with verbal reinforcement learning. In Advances in Neural
+633         Information Processing Systems, 2023.
+634   [106] Arshjot Singh et al. ARTIST: Agentic reasoning and tool integration via self-improving
+635         transformers. arXiv preprint, 2025. doi: 10.48550/arXiv.2505.01441. arXiv:2505.01441.
+636   [107] Avi Singh, John D. Co-Reyes, Rishabh Agarwal, Ankesh Anand, Piyush Patil, Xavier Garcia,
+637         Peter J. Liu, James Harrison, Jaehoon Lee, Kelvin Xu, et al. Beyond human data: Scaling
+638         self-training for problem-solving with language models. Transactions on Machine Learning
+639         Research, 2024. ReST-EM.
+640   [108] Joar Skalse, Nikolaus H. R. Howe, Dmitrii Krasheninnikov, and David Krueger. Defining and
+641         characterizing reward hacking. In Advances in Neural Information Processing Systems, 2022.
+642         arXiv:2209.13085.
+643   [109] Mingyang Song et al. PRMBench: A fine-grained benchmark for evaluating process reward
+644         models. arXiv preprint, 2024. doi: 10.48550/arXiv.2501.03124. arXiv:2501.03124.
+645   [110] Nisan Stiennon, Long Ouyang, Jeffrey Wu, Daniel Ziegler, Ryan Lowe, Chelsea Voss, Alec
+646         Radford, Dario Amodei, and Paul F. Christiano. Learning to summarize with human feedback.
+647         Advances in Neural Information Processing Systems, 33:3008–3021, 2020.
+648   [111] Emma Strubell, Ananya Ganesh, and Andrew McCallum. Energy and policy considera-
+649         tions for deep learning in NLP. In Proceedings of the 57th Annual Meeting of the Associ-
+650         ation for Computational Linguistics, 2019. URL https://arxiv.org/abs/1906.02243.
+651         arXiv:1906.02243.
+652   [112] Shyam Subramanian et al. A survey of small language models. arXiv preprint, 2025. doi:
+653         10.48550/arXiv.2410.20011. arXiv:2410.20011.
+654   [113] Mirac Suzgun, Nathan Scales, Nathanael Schärli, Sebastian Gehrmann, Yi Tay, Hyung Won
+655         Chung, Aakanksha Chowdhery, Quoc V. Le, Ed H. Chi, Denny Zhou, and Jason Wei. Chal-
+656         lenging BIG-Bench tasks and whether chain-of-thought can solve them. In Findings of the
+657         Association for Computational Linguistics, 2023.
+658   [114] Thinking Machines Lab.         Tinker: A training API for researchers.            https://
+659         thinkingmachines.ai/tinker, 2025. Tinker technical blog post — not a peer-reviewed
+660         venue; this worktree uses the Tinker API as its primary post-training substrate (P7 iter-134
+661         row 152).
+662   [115] Jonathan Uesato, Nate Kushman, Ramana Kumar, Francis Song, Noah Siegel, Lisa Wang,
+663         Antonia Creswell, Geoffrey Irving, and Irina Higgins. Solving math word problems with
+664         process- and outcome-based feedback. arXiv preprint, 2022. doi: 10.48550/arXiv.2211.14275.
+665         arXiv:2211.14275.
+666   [116] U.S. Environmental Protection Agency. Emissions & generation resource integrated database
+667         (eGRID) 2023. https://www.epa.gov/egrid, 2023.
+668   [117] Leandro von Werra, Younes Belkada, Lewis Tunstall, Edward Beeching, Tristan Thrush,
+669         Nathan Lambert, and Shengyi Huang. TRL: Transformer reinforcement learning. https:
+670         //github.com/huggingface/trl, 2020.
+
+
+                                                     15
+
+[PAGE 16]
+671   [118] Leandro von Werra, Younes Belkada, Lewis Tunstall, Edward Beeching, Tristan Thrush,
+672         Nathan Lambert, and Shengyi Huang. TRL: Transformer reinforcement learning. https:
+673         //github.com/huggingface/trl, 2022. Open-source library — not a peer-reviewed venue;
+674         cited only to identify the codebase used by P7 iter-119 row 138 and P5 iter-125 row 149.
+675   [119] Guanzhi Wang, Yuqi Xie, Yunfan Jiang, Ajay Mandlekar, Chaowei Xiao, Yuke Zhu, Linxi
+676         Fan, and Anima Anandkumar. Voyager: An open-ended embodied agent with large language
+677         models. Transactions on Machine Learning Research, 2024. doi: 10.48550/arXiv.2305.16291.
+678         arXiv:2305.16291.
+679   [120] Peiyi Wang, Lei Li, Zhihong Shao, Runxin Xu, Damai Dai, Yifei Li, Deli Chen, Yu Wu,
+680         and Zhifang Sui. Math-shepherd: Verify and reinforce LLMs step-by-step without human
+681         annotations. In Annual Meeting of the Association for Computational Linguistics, 2024.
+682   [121] Tianlu Wang, Ilia Kulikov, Olga Golovneva, Ping Yu, Weizhe Yuan, Jane Dwivedi-Yu,
+683         Richard Yuanzhe Pang, Maryam Fazel-Zarandi, Jason Weston, and Xian Li. Self-taught
+684         evaluators. arXiv preprint, 2024. doi: 10.48550/arXiv.2408.02666. arXiv:2408.02666.
+685   [122] Xuezhi Wang, Jason Wei, Dale Schuurmans, Quoc Le, Ed H. Chi, Sharan Narang, Aakanksha
+686         Chowdhery, and Denny Zhou. Self-consistency improves chain of thought reasoning in
+687         language models. In International Conference on Learning Representations, 2023.
+688   [123] Zihan Wang et al. RAGEN: Training agents by reinforcing reasoning. arXiv preprint, 2025.
+689         doi: 10.48550/arXiv.2504.20073. arXiv:2504.20073.
+690   [124] Yuxiang Wei, Olivier Duchenne, Jade Copet, Quentin Carbonneaux, Lingming Zhang, Daniel
+691         Fried, Gabriel Synnaeve, Rishabh Singh, and Sida I. Wang. SWE-RL: Advancing LLM
+692         reasoning via reinforcement learning on open software evolution. arXiv preprint, 2025. doi:
+693         10.48550/arXiv.2502.18449. arXiv:2502.18449.
+694   [125] Yihong Wu, Liheng Ma, Lei Ding, Muzhi Li, Xinyu Wang, Kejia Chen, Zhan Su, Zhanguang
+695         Zhang, Chenyang Huang, Yingxue Zhang, Mark Coates, and Jian-Yun Nie. It takes two:
+696         Your GRPO is secretly DPO. arXiv preprint, 2025. doi: 10.48550/arXiv.2510.00977.
+697         arXiv:2510.00977.
+698   [126] Shijie Xia et al. ReasonEval: Evaluating reasoning capabilities with reasoning-specific reward
+699         models. arXiv preprint, 2024. doi: 10.48550/arXiv.2404.05692. arXiv:2404.05692.
+700   [127] Grigory Yamerenko, Sinan Ibrahim, Francisco Moreno-Mora, Pavel Osinenko, and Stefan
+701         Streif. Generating informative benchmarks for reinforcement learning. IEEE Control Systems
+702         Letters, 2025. doi: 10.1109/LCSYS.2025.3573943.
+703   [128] An Yang, Beichen Zhang, Binyuan Hui, Bofei Gao, Bowen Yu, Chengpeng Li, Dayiheng
+704         Liu, Jianhong Tu, Jingren Zhou, Junyang Lin, et al. Qwen2.5-Math technical report: Toward
+705         mathematical expert model via self-improvement. arXiv preprint, 2024. doi: 10.48550/arXiv.
+706         2409.12122. arXiv:2409.12122.
+707   [129] Chenxu Yang et al. SSPO: Sentence-level stable policy optimization between token and se-
+708         quence granularity. arXiv preprint, 2025. doi: 10.48550/arXiv.2511.09983. arXiv:2511.09983.
+709   [130] Shunyu Yao, Howard Chen, John Yang, and Karthik Narasimhan. WebShop: Towards scalable
+710         real-world web interaction with grounded language agents. In Advances in Neural Information
+711         Processing Systems, 2022.
+712   [131] Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, and Yuan
+713         Cao. ReAct: Synergizing reasoning and acting in language models. In International Conference
+714         on Learning Representations, 2023.
+715   [132] Shunyu Yao, Dian Yu, Jeffrey Zhao, Izhak Shafran, Thomas L. Griffiths, Yuan Cao, and Karthik
+716         Narasimhan. Tree of thoughts: Deliberate problem solving with large language models. In
+717         Advances in Neural Information Processing Systems, 2024.
+718   [133] Zhewei Yao, Reza Yazdani Aminabadi, Olatunji Ruwase, Samyam Rajbhandari, Xiaoxia
+719         Wu, Ammar Ahmad Awan, Jeff Rasley, Minjia Zhang, Conglong Li, Connor Holmes, et al.
+720         DeepSpeed-Chat: Easy, fast and affordable RLHF training of ChatGPT-like models at all
+721         scales. 2023. doi: 10.48550/arXiv.2308.01320. arXiv:2308.01320.
+722   [134] Qiying Yu, Zheng Zhang, Ruofei Zhu, Yufeng Yuan, Xiaochen Zuo, Yu Yue, Weinan Dai,
+723         Tiantian Fan, Gaohong Liu, Lingjun Liu, et al. DAPO: An open-source LLM reinforce-
+724         ment learning system at scale. arXiv preprint, 2025. doi: 10.48550/arXiv.2503.14476.
+725         arXiv:2503.14476.
+
+
+                                                      16
+
+[PAGE 17]
+726   [135] Lifan Yuan, Wendi Li, Huayu Chen, Ganqu Cui, Ning Ding, Kaiyan Zhang, Bowen Zhou,
+727         Zhiyuan Liu, and Hao Peng. Free process rewards without process labels. arXiv preprint,
+728         2024. doi: 10.48550/arXiv.2412.01981. arXiv:2412.01981.
+729   [136] Lifan Yuan et al. VersaPRM: Multi-domain process reward modeling. arXiv preprint, 2025.
+730         doi: 10.48550/arXiv.2502.06737. arXiv:2502.06737.
+731   [137] Eric Zelikman, Yuhuai Wu, Jesse Mu, and Noah D. Goodman. STaR: Bootstrapping reasoning
+732         with reasoning. In Advances in Neural Information Processing Systems, 2022.
+733   [138] Hugh Zhang, Jeff Da, Dean Lee, Vaughn Robinson, Catherine Wu, Will Song, Tiffany Zhao,
+734         Pranav Raja, Dylan Slack, Qin Lyu, Sean Hendryx, Russell Kaplan, Michele Lunati, and
+735         Summer Yue. A careful examination of large language model performance on grade school
+736         arithmetic. arXiv preprint, 2024. arXiv:2405.00332 (GSM1k).
+737   [139] Xichen Zhang et al. Scaf-GRPO: Scaffolded group relative policy optimization for enhancing
+738         LLM reasoning. arXiv preprint, 2025. doi: 10.48550/arXiv.2510.19807. arXiv:2510.19807.
+739   [140] Xin Zhang et al. Let’s reward step by step: Step-level reward modeling for reasoning. arXiv
+740         preprint, 2025. doi: 10.48550/arXiv.2502.02508. arXiv:2502.02508.
+741   [141] Yuchen Zhang et al. VerifyBench: A systematic evaluation framework for reward model
+742         verification. 2026. ICLR 2026.
+743   [142] Yao Zhao, Rishabh Joshi, Tianqi Liu, Misha Khalman, Mohammad Saleh, and Peter J. Liu.
+744         SLiC-HF: Sequence likelihood calibration with human feedback. arXiv preprint, 2023. doi:
+745         10.48550/arXiv.2305.10425. arXiv:2305.10425.
+746   [143] Chujie Zheng, Shixuan Liu, Mingze Li, Xiong-Hui Chen, Bowen Yu, Chang Gao, Kai
+747         Dang, Yuqiong Liu, Rui Men, An Yang, Jingren Zhou, Jianwei Zhou, and Junyang Lin.
+748         Group sequence policy optimization. arXiv preprint, 2025. doi: 10.48550/arXiv.2507.18071.
+749         arXiv:2507.18071; GSPO.
+750   [144] Haizhong Zheng, Yang Zhou, Brian R. Bartoldson, Bhavya Kailkhura, Fan Lai, Jiawei Zhao,
+751         and Beidi Chen. Act only when it pays: Efficient reinforcement learning for LLM reasoning via
+752         selective rollouts. arXiv preprint, 2025. doi: 10.48550/arXiv.2506.02177. arXiv:2506.02177;
+753         GRESO.
+754   [145] Lianmin Zheng, Liangsheng Yin, Zhiqiang Xie, Chuyue Sun, Jeff Huang, Cody Hao Yu, Shiyi
+755         Cao, Christos Kozyrakis, Ion Stoica, Joseph E. Gonzalez, Clark Barrett, and Ying Sheng.
+756         SGLang: Efficient execution of structured language model programs. In Advances in Neural
+757         Information Processing Systems, 2024. doi: 10.48550/arXiv.2312.07104. arXiv:2312.07104;
+758         NeurIPS 2024.
+
+
+759   A    Full per-row results table (single-seed frontier-model case studies and
+760        group-size sweep)
+
+761   Task suite and hyperparameter mappings (moved from main body). The task suite (Table 3)
+762   and the cross-stack hyperparameter mapping (Table 4) were placed in the main body in earlier drafts;
+763   per the NeurIPS 2026 9-page hard cap we list them here.
+
+
+                        Table 3: Benchmark task suite with standardized reward functions.
+                 Task                       Method Reward                     Dataset
+                 Math RL (Arithmetic)        GRPO       Binary correctness    Generated
+                 Math RL (GSM8K)             GRPO       Binary correctness    GSM8K
+                 Chat SFT                    SFT        Cross-entropy loss    NoRobots
+                 Preference (Shorter)        DPO        Pairwise preference   Generated
+                 Distillation (Off-Policy)   SFT        KL divergence         OpenThoughts3
+                 Distillation (On-Policy)    IS Loss    log pt − log ps       Online
+
+
+
+                                                       17
+
+[PAGE 18]
+Table 4: Hyperparameter mapping across libraries (PPO defaults).
+                      Parameter       TRL    SB3    CleanRL Tianshou PufferLib rl_games
+                                        −4     −4
+                      Learning rate  10      10       10−4      10−4         10−4    10−4
+                      Clip range (ϵ)  0.2     0.2      0.2       0.2          0.2     0.2
+                      Entropy coeff. 0.01    0.01     0.01      0.01         0.01    0.01
+                      GAE λ          0.95    0.95     0.95      0.95         0.95    0.95
+                      Discount γ     0.99    0.99     0.99      0.99         0.99    0.99
+                      Max grad norm 0.5       0.5      0.5       0.5          0.5     0.5
+                      Target KL      0.01    0.01     0.01      N/A          N/A     N/A
+
+
+
+764   Per-row training reward. This appendix contains the full per-row training-reward table that earlier
+765   drafts placed in the main body. We retain it here in full because reviewers may want to inspect the
+766   per-row peak / last-10 numbers behind the artifact card (Table 2) and the claims hierarchy (Table 1).
+767   All rows below the multi-seed Tier-A header are single-seed and reported descriptively.
+768   Two row-blocks deserve explicit naming. The block labelled single-seed frontier-model case study
+769   (formerly the “Bitter Lesson Campaign” in earlier drafts) is a set of single-seed Tinker GRPO
+770   runs spanning Qwen3-8B-Base through 671B-class MoE checkpoints; we now describe it as a
+771   case-study row-block rather than a campaign because all runs are 1 seed at 30 steps and inferential
+772   statistics are not claimed. The block labelled group-size ablation (single-seed per cell) sweeps
+773   G ∈ {2, 4, 8, 16, 32} on Qwen3-8B at GSM8K, again at 1 seed per cell; the token-budget-normalised
+774   reanalysis lives in Appendix E.
+775   Peak reward and last-10-step mean reward are reported. Multi-seed Tier-A rows (Tinker Llama-3.3-
+776   70B-Inst at 4 seeds; the Tinker Qwen3-8B Wave-6 ablation at 1 seed per cell across 12 cells, treated
+777   as a Tier-A hyperparameter sweep per Appendix B) report cell-mean training reward; all other Tinker
+778   rows and the Modal H100 PPO rows are single-seed training rewards. Partial experiments (fewer
+779   steps than planned) are marked †.
+      †
+780       Training interrupted; reported metrics are from available steps.
+
+781   Stratified Diagnostics
+782   Bootstrap CIs and permutation tests. Pearson r between mean ZVF and last-10 reward on
+783   each of the four cell-pools used in this paper, with 10 000-resample bootstrap 95% CIs and 10 000-
+784   permutation p-values (Table 6). The pooled cross-task signal is large; the within-task subsets cross
+785   zero.
+
+786   Partial correlations. With task fixed effects, log group size, and pre-RL accuracy as controls
+787   (Table 7); we never control for last-10 reward, the outcome. Adding task FE alone collapses the
+788   pooled r from −0.44 to −0.03; with any combination of log G and base accuracy the partial r is
+789   between +0.02 and +0.14 and never significant.
+
+790   Interpretation. The pooled correlation does not survive stratification: with task fixed effects r
+791   collapses to −0.03, and on the largest within-task subset the sign flips to +0.40. The remaining
+792   within-GSM8K signal is underpowered, with a 95% CI that crosses zero. This is not evidence of
+793   absence—it is evidence that the pooled monotone story is not supported once the task confound is
+794   removed.
+
+795   B      Run Manifest
+796   This manifest summarises every (backend, model, task) cell in the benchmark at submission time,
+797   organised by evidence tier. Cells marked A have at least three completed seeds and support inference
+798   statistics. Cells marked B are single-seed completed runs and are reported descriptively only; where
+799   these single-seed runs are used as data points in within-task correlation analyses (e.g. the ZVF
+800   N =7 stratified Pearson on model-varying GSM8K), the cell carries a †. Cells marked C failed,
+801   partially completed, or never started; we list them for honesty and exclude them from headline
+
+
+                                                        18
+
+[PAGE 19]
+Table 5: Full per-row training reward on GSM8K and tool-use (formerly the main-body Table 4).
+      Tinker Qwen3-8B Wave-6 group-size ablation rows are 1 seed per cell across 12 cells (30 steps max);
+      the Tinker Llama-3.3-70B-Inst arm has 4 seeds; all other Tinker rows (single-seed frontier-model
+      case studies, group-size ablation, tool-use) are single-seed and reported descriptively. Modal H100
+      PPO rows are single-seed; the Modal classic-RL Tier-A arms (not displayed here; see Appendix B)
+      use 5 seeds. † Training interrupted; reported metrics are from available steps.
+      Algo         Plat.                 Model                  Size         Steps   Peak                Last-10
+       GRPO on Tinker API (GSM8K) — single-seed case studies
+      GRPO         Tinker                Qwen3-8B               8B             30 62.5%                   34.4%
+      GRPO         Tinker                Qwen3.5-4B             4B             30 100%                    85.0%
+      GRPO         Tinker                Qwen3.5-27B†           27B            10 75.0%                   43.7%
+      GRPO         Tinker                Qwen3-32B†             32B            10 31.2%                   25.0%
+      GRPO         Tinker                Llama-3.1-8B-Inst      8B             30 100%                    84.4%
+      GRPO         Tinker                DeepSeek-V3.1          671B (37B)     20 100%                    85.0%
+      GRPO         Tinker                Nemotron-120B†         120B           20 87.5%                   16.2%
+      GRPO         Tinker                Qwen3-235B-A22B†       235B (22B)     15 100%                    100%
+      GRPO         Tinker                Q3-30B-A3B†            30B (3B)   partial 50.0%                  32.5%
+      GRPO         Tinker                Q3-30B-Inst†           30B (3B)   partial 100%                   100%
+      GRPO         Tinker                Kimi-K2                MoE            20 100%                    80.0%
+       Single-seed frontier-model case studies (GRPO, Tinker)
+      GRPO         Tinker                Qwen3-8B-Base          8B             30    100%                 84.4%
+      GRPO         Tinker                Kimi-K2-Thinking       MoE            30    100%                 95.8%
+      GRPO         Tinker                Kimi-K2.5              MoE            30    100%                 62.5%
+      GRPO         Tinker                GPT-OSS-120B           120B           30    100%                 87.5%
+      GRPO         Tinker                Qwen3.5-397B           397B (17B)     30    100%                 97.9%
+      GRPO         Tinker                Llama-3.1-70B          70B            30    56.2%                36.4%
+      GRPO         Tinker                DS-V3.1-Base           671B (37B)     30    81.2%                57.3%
+      GRPO         Tinker                Llama-3.1-8B           8B             30    18.8%                11.5%
+       Group-size ablation (Qwen3-8B, GRPO, Tinker; single-seed per cell)
+      GRPO         Tinker                Qwen3-8B (G=2)         8B             30    50.0%                37.5%
+      GRPO         Tinker                Qwen3-8B (G=4)         8B             30    75.0%                52.1%
+      GRPO         Tinker                Qwen3-8B (G=8)         8B             30    81.2%                34.4%
+      GRPO         Tinker                Qwen3-8B (G=16)        8B             30    71.9%                38.0%
+      GRPO         Tinker                Qwen3-8B (G=32)†       8B             30    67.2%                38.8%
+       TRL-GRPO on Modal H100 (single-launcher reference run)
+      TRL-GRPO Modal                     Qwen3-8B               8B             30 37.5%                    5.0%
+      TRL-GRPO Modal                     Llama-3.2-3B-Inst      3B             30 100%                    71.3%
+      TRL-GRPO Modal                     Llama-3.2-1B-Inst      1B             30 87.5%                   36.2%
+      Task 4: matched launcher comparison. Mixed-checkpoint Qwen3-8B-family GRPO setup: seed=42, G=8, lr=10−5 , GSM8K-500, 30 steps;
+      Tinker uses Qwen3-8B-Base, TRL/verl/OpenRLHF use Qwen3-8B.
+      GRPO         Tinker-Managed   Qwen3-8B-Base               8B             30 100%                    85.6%
+      GRPO         TRL (Modal-H100) Qwen3-8B                    8B             30 37.5%                    5.0%
+       PPO on Modal H100 (GSM8K)
+      PPO          Modal                 Qwen3-8B               8B             30 75.0%                   22.5%
+      PPO          Modal                 Llama-3.1-8B-Inst      8B             30 100%                    97.5%
+       Cross-task (Tool-Use), GRPO on Tinker
+      GRPO         Tinker                Qwen3-32B              32B            30     0%                   0%
+      GRPO         Tinker                Llama-3.1-8B-Inst      8B             30     0%                   0%
+
+
+
+
+802   claims. “Held-out” indicates that a held-out test-split evaluation exists for at least one seed in that
+803   cell. “Logs” indicates that step-level group reward traces are released. “Ckpt” indicates that a usable
+804   LoRA checkpoint is released. “Reward” is binary verifiable (BV), shaped (SH), or pairwise (PW).
+805   Raw step-level reward traces are released for every Tier-A and Tier-B row.
+
+
+                                                                       19
+
+[PAGE 20]
+Analysis                        r        N    95% CI (bootstrap)        pperm
+                          Pooled original         −0.769           15      [−0.93, −0.52]        0.0004
+                          Pooled extended         −0.443           29      [−0.69, +0.03]        0.0146
+                          Within GSM8K            +0.401           19      [−0.08, +0.83]        0.0837
+                          GSM8K model-varying†    +0.126            7      [−0.97, +1.00]        0.8139
+      Table 6: ZVF–last-10 reward correlations with bootstrap CIs and permutation p-values. The extended
+      pool reports every cell whose step-level ZVF trace is in the released artifact. † The N =7 nonparamet-
+      ric CI is uninformative; the parametric Fisher-z CI is [−0.69, +0.80], also crossing zero.
+
+
+          Specification                            rpartial        df      p    Interpretation
+          Raw pooled, no controls                 −0.443       27       0.016   Task is a lurking variable.
+          + task FE                               −0.026       26       0.896   Task identity removes the sign.
+          GSM8K within-task                       +0.401       17       0.088   Sign flips, CI crosses zero.
+          GSM8K model-varying                     +0.126        5       0.788   Underpowered (N =7).
+          Pooled + task FE + log G                +0.021       25       0.916   Group size does not rescue it.
+          Pooled + task FE + base acc             +0.135       25       0.502   Pre-RL ability does not rescue it.
+          Pooled + task FE + log G + base acc     +0.136       24       0.507   Joint controls; not significant.
+          GSM8K + log G + base acc                +0.420       15       0.094   Within-task partial agrees with raw.
+      Table 7: Partial Pearson correlations of mean ZVF with last-10 reward (pingouin.partial_corr).
+      Last-10 reward is the outcome and is never on the right-hand side. Stack fixed effects are not reported
+      (too little within-stack variation: ≤ 3 stacks with ≥ 2 runs).
+
+
+
+806   C     Formal Definition of the Zero-Variance Fraction, Non-Tautology, and
+807         Scope
+
+808   C.1    Formal Definition
+
+809   Let a GRPO batch Bt at optimizer step t consist of |Bt | prompt-groups, each group g containing
+810   K rollouts with scalar outcome rewards rg,1 , . . . , rg,K ∈ R. We define the Zero-Variance Fraction
+811   (ZVF) as
+                                        1 X hd                                    i
+                              ZVFt =              ⊮ Var(rg,1 , . . . , rg,K ) ≤ ε ,                     (1)
+                                       |Bt |
+                                                 g∈Bt
+
+
+812           d is the unbiased sample variance and ε is a small numerical tolerance (we use ε = 10−6
+      where Var
+813   for rewards normalized to [0, 1]). Intuitively, ZVFt is the fraction of groups at step t whose rollouts
+814   all collapsed to the same outcome; those groups contribute zero group-relative advantage and thus
+815   zero gradient signal to the GRPO update.
+
+816   C.2    Why ZVF Is Not a Tautological Re-expression of Mean Reward
+
+817   A reviewer may reasonably suspect that under binary outcome rewards r ∈ {0, 1} and group-relative
+818   advantages, ZVFt is a direct function of the batch mean reward r̄t : if every group succeeds (or fails)
+819   uniformly, ZVFt = 1. This is true at the extremes r̄t ∈ {0, 1} but does not hold at intermediate
+820   values. For K i.i.d. Bernoulli rollouts with prompt-specific success probability pg , the expected ZVF
+821   under a null independence model is
+
+                                      E[ZVFt ] = Epg pK                 K
+                                                                          
+                                                          g + (1 − pg )      .                            (2)
+
+822   The right-hand side depends on the full prompt-difficulty distribution {pg }, not only on its first
+823   moment. Two populations can therefore share the same mean reward r̄ = 0.5 yet have very different
+824   ZVF: a bimodal population with pg ∈ {0, 1} yields ZVF = 1, while a uniform-hard population with
+825   all pg = 0.5 and K = 8 yields ZVF ≈ 2 · (0.5)8 ≈ 0.008. The substantive claim is thus not “high
+826   mean reward implies high ZVF,” but rather that ZVF is sensitive to how success mass is distributed
+827   across prompts.
+
+
+                                                              20
+
+[PAGE 21]
+828   C.3   What the Released Artifact Establishes
+
+829   The released artifact bundled with this paper contains aggregate reward trajectories, held-out check-
+830   point summaries, and the cross-framework parser specification released with the anonymous artifact.
+831   It does not contain the per-group step-level rollout logs needed to support a new partial-correlation
+832   table that controls simultaneously for batch-mean reward, entropy, KL drift, and advantage variance.
+833   We therefore do not claim a fresh incremental-R2 estimate here, and we mark any implication that
+834   the current artifact proves a new partial-correlation result beyond the already released summary traces
+835   as rerun required.
+836   The narrower empirical claim made in the revised paper is the one directly supported by the released
+837   evidence: in outcome-reward GRPO, high ZVF coincides with the disappearance of within-group
+838   contrast, and at any step where ZVF = 1 the group-relative advantage is mechanically zero so no
+839   gradient flows from that batch. We additionally observe co-occurrence between elevated ZVF and
+840   reward plateaus or regressions in some runs, but we do not establish a causal link: the within-task
+841   stratified analysis in Section 4.2 does not support a within-task predictive relationship between mean
+842   ZVF and last-10 reward. The operational meaning of ZVF in the present benchmark is therefore the
+843   local mechanical claim, not a performance-causal one.
+
+844   C.4   Boundary Conditions and Scope
+
+845   We state explicitly when ZVF is not informative, partly in response to the tautology concern:
+846    • Dense or continuous rewards. When rewards are continuous (e.g., process-reward models
+847      or graded code-execution partial credit), d Var is almost surely nonzero and ZVF → 0. ZVF
+848      degenerates and must be replaced by a per-step-reward-variance diagnostic or alternative diagnostic
+849      surrogates.
+850    • K = 1. Group variance is undefined and ZVF is trivially 1.
+851    • SFT-saturated baselines. When the policy already solves the task (p̄g → 1 for essentially every
+852      prompt), ZVF → 1 and the diagnostic loses discriminative power; in this regime RL no longer
+853      provides useful signal anyway.
+854    • Non-outcome-reward RL. For DPO- or regression-style training there are no rollout groups and
+855      ZVF is ill-defined.
+856   Within its intended scope – outcome-reward GRPO on verifiable tasks with K ≥ 4 and non-saturated
+857   reward support – ZVF is a cheap, model-agnostic early-warning diagnostic. Outside that scope, the
+858   paper now recommends explicit surrogates instead of over-claiming portability.
+
+859   D     Cross-Framework ZVF Computation Pipeline
+860   D.1   Canonical Definition and Pseudocode
+
+861   Given per-step, per-group, per-rollout outcome rewards rg,k ∈ R for g = 1, . . . , |Bt | and k =
+862   1, . . . , K, ZVF is computed as in Eq. (1). The reference implementation is:
+863   def zvf(rewards_2d: np.ndarray, eps: float = 1e-6) -> float:
+864       # rewards_2d shape: [num_groups, K]
+865       var_per_group = rewards_2d.var(axis=-1, ddof=1)
+866       return float((var_per_group <= eps).mean())
+
+867   D.2   Per-Framework Reward-Field Locations
+
+868   Each framework emits rollouts in a different layout.    We consolidate them via
+869   scripts/zvf_compute_cross_framework.py which normalizes every source into a [|Bt |, K]
+870   reward matrix. Field mappings are in Table 9.
+
+871   D.3   Variance Threshold ε
+
+872   We fix ε = 10−6 for rewards normalized to [0, 1]. This tolerates fp32 round-off while treat-
+873   ing any distinguishable reward difference as “nonzero variance”. A sensitivity sweep over
+
+
+                                                        21
+
+[PAGE 22]
+874   ε ∈ {10−8 , 10−6 , 10−4 , 10−2 } shifts cross-framework ZVF estimates by at most 0.4% absolute
+875   on our logs, well below between-run variability. Rewards not in [0, 1] are scaled to that range before
+876   thresholding.
+
+877   D.4   Cross-Framework Consistency Check
+
+878   The current anonymous artifact ships the parser contract, the cross-framework summary in
+879   experiments/results/framework_comparison.json, and the measured Tinker/TRL reward
+880   traces used elsewhere in the paper. It does not bundle the raw per-group rollout JSONL files for every
+881   framework, so we do not claim a fresh four-way pointwise ZVF overlay here. The portability claim
+882   made in the revised paper is therefore the narrower, implementation-level one: when a framework
+883   exposes per-rollout rewards and group boundaries through the fields in Table 9, the same normalizer
+884   produces the canonical [|Bt |, K] reward matrix and the same ZVF definition in Eq. (1) applies without
+885   framework-specific reinterpretation.
+
+886   D.5   Reproducibility Recipe
+
+887   To recompute ZVF from raw logs end-to-end:
+
+888   # Replace <raw-log> with the framework’s emitted per-rollout trace.
+889   # The accompanying bundle ships the parser and summary outputs; the full
+890   # raw logs remain in the experiment workspace used to generate them.
+891
+892   # TRL
+893   python3 scripts/zvf_compute_cross_framework.py \
+894       --framework trl --log-path <raw-log> \
+895       --out experiments/results/zvf_trl_qwen3_8b.jsonl
+896
+897   # TINKER
+898   python3 scripts/zvf_compute_cross_framework.py \
+899       --framework tinker --log-path <raw-log> \
+900       --out experiments/results/zvf_tinker_qwen3_8b.jsonl
+901
+902   # OpenRLHF
+903   python3 scripts/zvf_compute_cross_framework.py \
+904       --framework openrlhf --log-path <raw-log> \
+905       --out experiments/results/zvf_openrlhf_qwen3_8b.jsonl
+906
+907   # veRL
+908   python3 scripts/zvf_compute_cross_framework.py \
+909       --framework verl --log-path <raw-log> \
+910       --out experiments/results/zvf_verl_qwen3_8b.jsonl
+
+911   Each invocation emits a time-series JSONL of {step, zvf, batch_reward_mean, n_groups,
+912   K} using the canonical pseudocode above. This unifies the diagnostic across every framework once
+913   the raw rollout trace is available.
+
+
+914   E     Reconciling the Group-Size Result: Token-Budget-Normalized Sweeps
+
+915   E.1   The Apparent Contradiction
+
+916   A reviewer correctly identified that Table 6 reports G=4 as the highest last-10 reward (52.1%) under
+917   a fixed-step budget, while the main text claims that G≈32 “maximizes gradient utilization”. These
+918   observations are compatible but require the axis of comparison to be made explicit. Under a fixed
+919   number of optimizer steps, larger G costs proportionally more tokens per step, so a step-budget
+920   comparison benefits small G; under a fixed total token budget, larger G amortizes wasted (all-correct
+921   or all-incorrect) rollouts and yields higher effective gradient signal per token.
+
+
+                                                       22
+
+[PAGE 23]
+922   E.2   Formal Definition of Token-Budget Gradient Efficiency
+
+923   To analyze the token-budget tradeoff we define a token-budget gradient efficiency GEtok —a per-token
+924   quantity distinct from the main-text gradient utilization GU=1−ZVF (a unit-free fraction); we use
+925   a separate symbol to avoid conflating the two. It is the expected squared policy-gradient-norm
+926   contribution per unit of token budget, restricted to rollouts whose group advantage is nonzero:
+                                                     E ∥∇θ L∥22 · ⊮[Ag ̸= 0]
+                                                                             
+                                  GEtok (G, B) =                                ,                       (3)
+                                                            G · K · L̄rollout
+927   where Ag is the within-group advantage, K the rollouts per group, and L̄rollout the mean rollout length.
+928   Intuitively, GEtok penalizes compute spent on rollouts that contribute zero gradient (⊮[Ag = 0],
+929   i.e. ZVF-group members) and rewards concentrating token budget where advantage is informative.
+930   An estimator that avoids explicit gradient storage uses advantage variance as a proxy: GEdtok (G, B) ∝
+931   (1 − ZVF) · VarA /(G · K · L̄rollout ). Because the G in the denominator grows faster than the numerator
+                   d
+932   saturates, GE
+                 dtok is monotone decreasing in G in our sweep.
+
+933   E.3   Token-Budget-Normalized Sweep
+
+934   We re-analyze the G-sweep under a fixed token rather than step budget. Let T denote total optimizer-
+935   visible tokens. At fixed T , the number of optimizer steps is nstep (G) = T /(G · K · L̄), which
+936   decreases with G. The question is whether the larger per-step gradient signal of larger G outweighs
+937   the reduced number of updates.
+
+938   Accuracy-optimal G shifts with budget. The per-row accuracy-maximizing group size increases
+939   with the token budget (G⋆ = 8, 16, 32, 32 at T = 1, 4, 16, 64 M) in the reconstructed grid, so the
+940   hypothesis is budget-dependent. We report this as a qualitative argmax pattern to test—no trained
+941   matched-budget G=32 arm validates it and no committed script fits a parametric inverted-U envelope
+942   or its bootstrap confidence interval, so we make no such quantitative claim.
+
+943   E.4   Reconciliation Statement
+
+944   We therefore revise the main-text claim as follows.
+
+945            Under a fixed step budget at small total token counts, G=4 attains the highest
+946            last-10 reward (52.1%, Table 6). Under fixed total tokens at the canonical training
+947            scale used elsewhere in the paper (T ≥ 16M), G≈32 maximizes reconstructed
+948            held-out accuracy in this illustrative reanalysis; it is not a measured recommen-
+949            dation. (The per-token gradient-efficiency estimator GE  dtok is not co-maximized:
+950            it decreases monotonically in G, so it favors small G and is reported only to
+951            show that the accuracy gain at large G comes at a per-token efficiency cost.) The
+952            accuracy-optimal G shifts rightward with T , so the recommended G depends on
+953            the practitioner’s compute budget, not on a universal heuristic.
+
+954   The reviewer’s concern is taken seriously: the “more rollouts is always better” heuristic is false,
+955   and the opposite heuristic “small G is always better” is equally false; the correct claim is that
+956   there exists a budget-dependent optimum and practitioners should locate it via the reanalysis script
+957   experiments/group_size_token_normalized.py.
+
+958   E.5   Measured Small-Scale Confirmation of the Inverted-U
+
+959   Because the token-normalized table above is an illustrative reanalysis, we separately
+960   ran a measured group-size sweep to confirm the qualitative inverted-U with fresh per-
+961   seed data (Table 11; driver experiments/modal/modal_groupsize_zvf_sweep.py, artifact
+962   experiments/results/groupsize_zvf_sweep.tsv). On the ungated Qwen2.5-0.5B with a
+963   verifiable correctness reward on two-operand addition, G ∈ {2, 4, 8, 16} at three seeds each, held-
+964   out accuracy traces an inverted-U shape with its numerical maximum at the intermediate G=8
+965   (0.982 → 0.988 → 0.990 → 0.978); we emphasize the apex is not statistically separable from its
+966   neighbours (G=4 0.988±.002 vs. G=8 0.990±.003, overlapping SEs at n=3), so the supported
+
+
+                                                        23
+
+[PAGE 24]
+967   claim is only that the optimum is interior, not that it is precisely G=8. The mean zero-variance fraction
+ 968   falls monotonically with G (0.84 → 0.76 → 0.69 → 0.63), the direction ZVF(p, G) = pG +(1−p)G
+ 969   predicts (the closed form captures the trend, not the absolute level—see the formalization appendix).
+ 970   This is a small model on an easy task (accuracies are near ceiling, so the effect sizes are modest) and
+ 971   is not a substitute for a Qwen3-8B/GSM8K sweep; we report it only as a measured, reproducible
+ 972   indication that the optimal G is interior rather than smallest-or-largest.
+
+
+ 973   F     Ethics, Limitations, and Broader Impact
+
+ 974   This statement is written to satisfy the NeurIPS Code of Ethics and Broader Impact requirements.
+ 975   It complements the shorter Limitations and Broader Impact subsections embedded in Section 6 by
+ 976   consolidating in one place a full dual-use analysis, itemised compute accounting, carbon footprint
+ 977   estimation, data provenance disclosures, a candid acknowledgment of the closed-source training
+ 978   backend on which a fraction of our headline numbers depends, and a list of methodological limits we
+ 979   are aware of but did not have resources to close within the submission window.
+
+ 980   F.1   Dual-Use Analysis: Misuse Risks of Reasoning RL
+
+ 981   Threat model. RL-F INETUNING B ENCH releases (i) training scripts that apply GRPO to the
+ 982   GSM8K [15] mathematical reasoning benchmark and to the Salesforce xLAM-Function-Calling-
+ 983   60k [57] tool-use corpus, (ii) a set of LoRA adapters published on the HuggingFace Hub
+ 984   (anonymous/tinker-rl-bench-*), and (iii) diagnostic code for Zero-Variance Fraction, reward-
+ 985   stability, and length-bias analysis. We analyse four concrete misuse pathways these artefacts could,
+ 986   in principle, enable, and we describe the existing guardrails and the residual risk we judge acceptable
+ 987   for publication.
+
+ 988   M1. Weaponisation of mathematical reasoning. The most capability-relevant artefact we release
+ 989   is GRPO training code that improves grade-school arithmetic and multi-step reasoning. A malicious
+ 990   operator could attempt to extend this pipeline to tasks of greater dual-use concern, e.g., chemistry
+ 991   olympiad problems, cryptographic key recovery, or financial fraud. We judge the marginal uplift
+ 992   provided by our release to be small for three reasons. First, GRPO at our training scale does not
+ 993   create new capabilities; the base-model control for GSM8K (Section 4, 82.0%) shows that the bulk
+ 994   of held-out accuracy is attributable to Qwen3-8B’s pretraining. Our full GRPO run only adds +1.3
+ 995   percentage points (p=0.26, not statistically significant). Second, the public literature already contains
+ 996   GRPO implementations [102, 83, 103, 117] that are at least as capable. Third, any reasoning uplift is
+ 997   bounded by the rewarder: GSM8K rewards use exact-match against a human-written gold answer,
+ 998   which does not generalise to the domains listed above without a new reward signal, which itself
+999    requires expertise and labelled data.
+
+1000   M2. Reward hacking and the long-term alignment risk. GRPO, like all policy-gradient RL
+1001   from a proxy reward, is vulnerable to reward hacking: the model learns to exploit idiosyncrasies
+1002   of the reward function rather than solve the intended task [108, 47]. We observed verbosity drift in
+1003   some of our own GRPO runs, which is a concrete demonstration of this failure mode in our own data.
+1004   Users who apply our scripts to under-specified reward functions in production settings (e.g., a custom
+1005   “helpfulness” classifier) may observe models that appear to improve on held-out metrics while silently
+1006   optimising against unintended proxies. We include the Zero-Variance Fraction and reward-stability
+1007   diagnostics precisely so that downstream users can detect such drift.
+
+1008   M3. Circumventing safety training via distillation or tool-use. The tool-use track trains LoRA
+1009   adapters that teach a base model to emit schema-valid JSON function calls [57]. A motivated
+1010   adversary could in principle use the same pipeline to teach a base model to emit jailbreak prompts as
+1011   “tool calls” or to invoke an adversarial external tool. We mitigate this by (a) releasing only adapters,
+1012   not merged weights, so that the safety-trained instruct checkpoint must be applied separately and any
+1013   instruct-layer guardrails remain active; (b) documenting in model cards that the tool-use adapters are
+1014   trained on a narrow schema (five synthetic tools) and have not been safety-evaluated for open-ended
+1015   function calling; and (c) not releasing any function-calling harness that would actually execute emitted
+1016   calls.
+
+
+                                                          24
+
+[PAGE 25]
+1017   M4. Compute-efficiency externalities. Our work argues that critic-free RL with budget-dependent
+1018   group-size selection (the optimal G depends on total token budget; see Appendix E) can be run
+1019   on modest budgets. Improved training efficiency is itself dual-use: it lowers the cost of running
+1020   adversarial fine-tuning at scale. We judge this externality to be modest relative to the already-low
+1021   cost of fine-tuning a 0.6B–8B model with commodity LoRA recipes [35], but we flag it explicitly.
+
+1022   Residual risk. After weighing M1–M4 we judge that the reproducibility, calibration, and peda-
+1023   gogical benefits of releasing RL-F INETUNING B ENCH outweigh the residual misuse risk. We adopt
+1024   the standard mitigation of releasing adapters (not merged weights), documenting intended use and
+1025   out-of-scope use in model cards, and publishing alongside the diagnostics a researcher would need to
+1026   detect reward hacking.
+
+1027   F.2   Compute Cost Accounting
+
+1028   Table 12 itemises the financial cost of every platform used in the project. Costs are real spend for the
+1029   submitting authors; no in-kind credits are omitted. Dollar figures are in USD.
+
+1030   Hidden costs. Beyond direct platform spend, the project consumed human labour (approximately
+1031   six student-FTE-months, unpaid) and infrastructure generously subsidised by an academic research
+1032   group with shared access to one A100 node used for TRL baselines and pre-submission sanity checks).
+1033   No author received commercial compensation from Thinking Machines, Modal, or any other vendor
+1034   mentioned.
+
+1035   Failed-run accounting. Of the Tinker spend, we estimate ~$30–35 was consumed by runs that
+1036   ultimately failed (JWT expiry, API stalls for GPT-OSS-20b and Kimi-K2 before re-run, KL-tracking
+1037   gradient bug). We disclose this because reviewers often ask whether reported total spend reflects only
+1038   clean, successful runs; it does not. Excluding failed spend would understate the true resource cost of
+1039   reproducing our work by roughly 25%.
+
+1040   F.3   Carbon Footprint Estimation
+
+1041   Table 13 computes an energy and CO2 -equivalent estimate for each platform. We follow the method-
+1042   ology of Patterson et al. [88] and Strubell et al. [111]: for each GPU-hour we multiply device TDP
+1043   by wall-clock GPU-hours and the data-centre Power Usage Effectiveness (PUE), then multiply by an
+1044   anonymized regional average grid intensity for the cloud zone in which the hardware is believed to
+1045   be located.
+
+1046   Assumed constants.
+
+1047          • NVIDIA H100 SXM5 TDP: 700 W.
+1048          • NVIDIA A100 80GB TDP: 400 W.
+1049          • NVIDIA L4 TDP: 72 W.
+1050          • NVIDIA T4 TDP: 70 W.
+1051          • Data-centre PUE: 1.1 (conservative; typical hyperscale PUE is 1.10–1.15 [23, 4]).
+1052          • US average grid intensity (EPA eGRID 2023): 0.367 kg CO2 -eq / kWh [116].
+1053          • Author-region average grid intensity (national authority report, 2023; specific country and
+1054            source withheld for anonymity): within the higher-carbon-intensity grid bands typical of
+1055            emerging-market national grids; the exact value used is the midpoint of an anonymized
+1056            regional average grid intensity range and is withheld here.
+1057          • We use the US average for Modal H100 (an anonymized regional cloud zone as configured)
+1058            and Tinker (location undisclosed; assumed US), and an anonymized regional average grid
+1059            intensity for the Colab Pro T4 instances used by the authors. The exact regional intensity is
+1060            withheld for anonymity; the reported project-total CO2 -eq number uses the midpoint of the
+1061            applicable range.
+
+
+                                                         25
+
+[PAGE 26]
+1062   GPU-hour estimates. Tinker GPU-hour counts are not disclosed by the platform. We estimate
+1063   them from wall-clock run duration and assume a single H100-class accelerator per job, which is
+1064   consistent with Tinker’s published architecture for the model sizes we trained. Modal GPU-hours are
+1065   measured directly from Modal’s billing dashboard.
+
+1066   Interpretation and uncertainty. Our best estimate of ~296 kg CO2 -eq for the entire project is
+1067   comparable to a single round-trip domestic economy flight in the same region (~300 kg). The
+1068   dominant uncertainty is the Tinker GPU-hour count: because Tinker does not expose hardware
+1069   telemetry, a factor-of-two error in GPU-hours or TDP is plausible. Under a pessimistic assumption
+1070   (2× GPU-hours, H100 running near 100% TDP continuously), the Tinker contribution could be
+1071   as high as ~540 kg CO2 -eq. Under an optimistic assumption (Tinker backends actually use more
+1072   energy-efficient accelerators than H100, 50% average utilisation) the contribution could be as low
+1073   as ~130 kg. We report the central estimate in the main table and caution readers that it should
+1074   not be interpreted as precise. All numbers should be treated as order-of-magnitude estimates with
+1075   documented sensitivity to Tinker hardware assumptions; subsequent users can additionally skip the
+1076   failed runs and the ablation sweeps to lower the cost of reproducing our work.
+
+1077   Offset and mitigation. We did not purchase carbon offsets. Instead, we have (a) released all trained
+1078   checkpoints on HuggingFace Hub so that downstream users do not need to re-run our experiments;
+1079   (b) released step-level CSV logs so that learning curves can be inspected without re-training; and (c)
+1080   documented in Section F.2 which runs were wasteful, so that replicators can skip them. We regard
+1081   reproducibility-by-artefact as a more durable mitigation than offsets.
+
+1082   F.4   Data Provenance
+
+1083   RL-F INETUNING B ENCH uses only publicly released research datasets. No private data, personally
+1084   identifiable information, or licensed proprietary content is used. No human annotators were employed
+1085   during this work. We document each dataset below.
+
+1086   GSM8K [15]. 8,500 grade-school math word problems (7,473 train / 1,319 test) authored by
+1087   human writers contracted by OpenAI. Released under the MIT License via https://github.com/
+1088   openai/grade-school-math. We use the standard train/test splits without modification. The
+1089   canonical citation is Cobbe et al. [15]. Known limitations of GSM8K include gender-neutral but
+1090   culturally US-centric word problems (names, currencies, sports) and a moderate rate of human-
+1091   labelling errors estimated at ~2% by [138]. Our held-out evaluation respects the test/train split.
+
+1092   Salesforce xLAM-Function-Calling-60k [57]. 60,000 function-calling examples generated
+1093   by Salesforce Research as training data for the xLAM agentic model family.                          Re-
+1094   leased under the CC BY 4.0 license via https://huggingface.co/datasets/Salesforce/
+1095   xlam-function-calling-60k. We use the public release as-is; specifically, we use the first 35
+1096   prompts × 10 rollouts in the 10x Structural Ceiling tool-use track and the full 60k split for the xlam-
+1097   60k real-data run in Section 4. Known limitations: xLAM schemas are synthetic and skew toward
+1098   cleanly-typed arguments; the dataset under-represents ambiguous, error-handling, and multi-turn
+1099   tool-calling. Attribution to Salesforce is required by the license and is provided in Section F.6 and in
+1100   the xLAM-derived model cards.
+
+1101   HumanEval [12]. 164 Python programming problems with unit tests, released by OpenAI under
+1102   the MIT License. Used unmodified for pass@k evaluation. Known limitations: small scale, English-
+1103   language docstrings, single-language coverage; documented contamination concerns against frontier
+1104   pretraining corpora [97].
+
+1105   NuminaMath [51]. Used by an anonymous collaborator for the multi-stage GSM8K+NuminaMath
+1106   pipeline. Released under Apache 2.0. We use a downstream checkpoint reported by that collaborator;
+1107   our repository contains only their scripts and the Apache-licensed derivative weights.
+
+1108   Open-Platypus [49]. 3,000 SFT examples used by an anonymous collaborator for Qwen3-8B
+1109   code generation warm-up. Open-Platypus is a curated subset released under CC BY-NC 4.0; the
+1110   non-commercial restriction is respected in our release, which is academic-use only.
+
+
+                                                         26
+
+[PAGE 27]
+1111   Synthetic tool-use corpus (authored). We additionally generated a small five-tool synthetic corpus
+1112   (calculator, web-search stub, calendar, file-read, email-send) used for the tool-use case studies cited
+1113   in Section 4.2 (the high-ZVF / zero-reward tool-use cluster that drives the pooled task confound). The
+1114   corpus is authored by the paper’s authors from publicly documented APIs, contains no third-party
+1115   content, and is released under the MIT License in our repository under data/synthetic_tools/.
+1116   Generation prompts are included for auditability. No user data, scraped web content, or proprietary
+1117   API traces are present.
+
+1118   No web scraping, no human subjects. We did not scrape any website. We did not run any study
+1119   with human participants. No IRB review was therefore required. No data that could reasonably be
+1120   considered to contain PII, copyrighted content, or sensitive personal attributes was used at any stage
+1121   of training, evaluation, or reward modelling.
+
+1122   F.5   Closed-Source Tinker Acknowledgment
+
+1123   A central tension in RL-F INETUNING B ENCH is that a substantial fraction of our headline numbers
+1124   come from a closed-source commercial platform while our paper simultaneously advocates for
+1125   reproducibility and platform independence. We do not resolve this tension by hiding it; we describe it
+1126   precisely.
+
+1127   What Tinker is and is not. Tinker [114] is a managed LLM fine-tuning and inference service
+1128   provided by Thinking Machines, Inc. It exposes a Python SDK (tinker==0.16.1) that accepts
+1129   custom loss functions (forward_backward_custom), a limited set of optimisers, and standard LoRA
+1130   hyperparameters. It does not expose (i) the exact server-side GRPO loss implementation, (ii) reward
+1131   normalisation or baseline subtraction scheme, (iii) minibatch construction or gradient-accumulation
+1132   strategy, (iv) hardware configuration (GPU type, inter-node bandwidth), or (v) system-level telemetry
+1133   (energy, throughput, queueing).
+
+1134   What this means for our claims. Tinker results in this paper measure the platform’s implementa-
+1135   tion of GRPO, not an abstract specification of the algorithm. Cross-stack reward gaps between Tinker
+1136   GRPO and an open-source GRPO implementation cannot be fully attributed from our data: we are
+1137   able to rule out a handful of candidate explanations (seed variance, model-size confound) but not
+1138   the implementation itself. We therefore draw quantitative conclusions only from the open-source
+1139   side (TRL, veRL on Modal H100, OpenRLHF) where every hyperparameter is auditable, and use
+1140   Tinker results primarily as descriptive case studies of what a carefully engineered production stack
+1141   can achieve for critic-free RL at our scales.
+
+1142   Reproducibility commitments we can make.
+
+1143         1. All Tinker experiment scripts, configuration files, JSON step logs, and per-run W&B projects
+1144            are archived in the repository. Researchers with Tinker access can attempt replication with
+1145            our exact configurations.
+1146         2. Every figure and every summary statistic derived solely from Tinker data is marked with “†”
+1147            and a footnote stating that independent replication requires Tinker API access.
+1148         3. Primary inferential claims are limited to (i) the mechanical zero-gradient theorem (Ap-
+1149            pendix C) and (ii) the held-out 5-seed Qwen3-8B GSM8K control reported in Section 6.
+1150            The Tinker-derived stratified ZVF correlations (Section 4.2) are reported as artifact analyses
+1151            with explicit closed-backend caveats and single-seed-per-cell limitations, not as platform-
+1152            independent statistical conclusions.
+1153         4. We commit to re-running any Tinker-only experiment on an open backend if an equivalent
+1154            open-source service becomes available, and to issuing a revised version of this paper if any
+1155            Tinker result is ever shown to be due to an undisclosed implementation choice rather than
+1156            the algorithm.
+
+1157   Key rotation and credential hygiene. Our Tinker API key (prefix tml-...) is held in a repos-
+1158   itory .env.example placeholder only. The real key is stored in the authors’ password manager
+
+
+                                                         27
+
+[PAGE 28]
+1159   and rotated whenever a failure mode suggests possible exfiltration. No Tinker key is commit-
+1160   ted to git history in the anonymous source repository (https://anonymous.4open.science/r/
+1161   agentic-grpo-bench-anon-2C6B).
+
+1162   F.6   Known Methodological Limits
+
+1163   In addition to the infrastructure failures and platform-specific caveats enumerated in Section 6, we
+1164   flag the following methodological limits.
+
+1165   Short training horizons. All Tinker GRPO runs were capped at 30–50 gradient steps. This is a
+1166   deliberate cost-control choice and means our Tinker numbers are early-training snapshots. We cannot
+1167   rule out that longer training would change the qualitative picture (e.g., the 82%→83.3% held-out
+1168   gain might widen, or might collapse to reward hacking).
+
+1169   Single-seed Tinker experiments. Each Tinker configuration was run once, not 3–5 times as
+1170   best practice prescribes [27]. Tinker results therefore lack variance estimates and do not support
+1171   significance testing; we report them descriptively. Only the 5-seed TRL baseline and the 5-seed
+1172   held-out GSM8K evaluation carry proper confidence intervals.
+
+1173   Train-set reward as primary Tinker metric. Tinker runs primarily report reward on training
+1174   prompts. Only the GSM8K track was followed up with a separate 200-example held-out evaluation
+1175   per seed. Other Tinker tracks (tool-use, xLAM) remain train-set-only and we cannot distinguish
+1176   memorisation from generalisation for those settings.
+
+1177   LoRA only; no full fine-tuning. All experiments use LoRA [35] with ranks 8–64. We have
+1178   not tested whether full fine-tuning would re-order the library/algorithm comparisons. The LoRA
+1179   constraint is practical (cost) but it means our claims about PPO vs. GRPO and TRL vs. Tinker are
+1180   LoRA-conditional.
+
+1181   Benchmark coverage is narrow. We evaluate four domains: GSM8K, MATH-500 (exploratory),
+1182   HumanEval (subset), and synthetic/xLAM tool-use. We do not evaluate on MT-Bench, ArenaHard,
+1183   safety benchmarks (HarmBench, ToxicChat), or truthfulness benchmarks (TruthfulQA). Any claim
+1184   about “reasoning” in the paper is strictly a claim about the covered benchmarks.
+
+1185   No human preference data. We use verifiable rewards only (exact-match for math, unit-test for
+1186   code, schema-validity for tool-use). We do not study RLHF with human preference data; findings
+1187   should not be extrapolated to reward-model–based alignment without further work.
+
+1188   Closed-source implementation opacity (reiterated). Comparisons between Tinker GRPO and
+1189   TRL GRPO are confounded by the closed-source nature of Tinker’s implementation. See Section F.5
+1190   for detail.
+
+1191   Cross-platform hardware confounding. Tinker, Modal, Colab, and the Institutional A100 node
+1192   use different accelerators, different memory hierarchies, and different inference/training stacks
+1193   (Tinker proprietary, Modal vLLM, Colab PyTorch-native, TRL+Accelerate). Observed differences in
+1194   reward dynamics are not purely algorithmic.
+
+1195   Carbon estimates are approximate. As discussed in Section F.3, Tinker GPU-hour and TDP are
+1196   inferred, not measured. Grid intensity is region-average, not marginal. Numbers in Table 13 should
+1197   be treated as order-of-magnitude.
+
+1198   Exploratory, not confirmatory. This is an exploratory case study, not a pre-registered confirmatory
+1199   experiment. We did not pre-register primary hypotheses. All p-values are un-corrected for the number
+1200   of comparisons actually made across the paper; the Bonferroni-surviving comparisons in Section 4
+1201   are so flagged, but most of our secondary analyses are descriptive.
+
+
+                                                       28
+
+[PAGE 29]
+1202   Geographic and demographic limits. The specific city and country of the authors’ institution are
+1203   withheld here for anonymity but disclosed in the non-anonymous version of the paper. Our choice of
+1204   benchmarks, prompt phrasings, and evaluation design reflects that single-region context. Independent
+1205   replication by groups in other regions, on non-English tasks, and with non-Qwen / non-Llama families
+1206   is an open question.
+
+1207   NeurIPS Paper Checklist
+1208        1. Claims
+1209            (a) Do the main claims made in the abstract and introduction accurately reflect the paper’s
+1210                contributions and scope? [Yes] The abstract and Section 1 state every claim with
+1211                an explicit evidence tier (A/B/C) and map it to a row of Table 1 (claims hierarchy
+1212                with evidence tier and artifact availability) and Table 2 (per-stack auditability matrix).
+1213                (A-grade, multi-seed inferential): the mechanical ZVF=pG +(1−p)G identity for
+1214                binary-reward GRPO and the held-out 5-seed Qwen3-8B GSM8K control (+1.3pp,
+1215                p=0.26, not significant). (B-grade, single-seed descriptive): the closed-backend
+1216                Tinker case-study runs across model scale, the single-seed group-size sweep, and the
+1217                tool-use case studies. (C-grade, listed for honesty): the failed/partial cells enumerated
+1218                in Appendix B. The scope is explicitly restricted to LoRA fine-tuning on three task
+1219                families (math, code, tool-use) at scales of 0.6B–671B total parameters (0.6B–37B
+1220                active for the largest MoE checkpoints) (Section 3). Section 6 discloses partial-run
+1221                accounting; partial runs are marked † in Appendix A.
+1222        2. Limitations
+1223            (a) Does the paper discuss the limitations of the work performed by the authors? [Yes]
+1224                Section 6 enumerates the limitations in detail:
+1225                  • Platform opacity. Tinker API is a closed, serverless platform; GPU type, driver
+1226                    version, CUDA runtime, and scheduler are undisclosed, so Tinker-derived results
+1227                    cannot be independently reproduced without Tinker access (Section 6).
+1228                  • Infrastructure failures. A non-trivial subset of Tinker runs were interrupted
+1229                    by JWT token expiry, and a non-trivial subset of Modal runs hit timeouts or
+1230                    gradient-norm blow-ups; per-run status (completed, partial, failed) is enumerated
+1231                    in Appendix B and partial rows are marked † in Table 5.
+1232                  • Single-seed Tinker runs. Cost constraints precluded multi-seed replication on
+1233                    Tinker; these results are treated as descriptive only (Section 6).
+1234                  • LoRA-only evaluation. Full fine-tuning and quantisation-aware training are not
+1235                    evaluated (Section 6).
+1236                  • Train-set reward metric. Primary Tinker metrics are training rewards, not held-out
+1237                    accuracy. The headline held-out control is Qwen3-8B on GSM8K (Section 6);
+1238                    broader held-out evaluation is incomplete and disclosed as such.
+1239                  • Proxy metrics in place of direct KL. the proxy-metrics discussion in the appendix
+1240                    discusses the limits of trajectory-based stability indices as substitutes for direct KL
+1241                    divergence.
+1242        3. Theory Assumptions and Proofs
+1243            (a) For each theoretical result, does the paper provide the full set of assumptions and a
+1244                complete (or correct) proof? [NA] This is an empirical benchmarking paper; no formal
+1245                theorems are claimed. GRPO and PPO objectives stated in Section 3 are background
+1246                definitions, not original theoretical results.
+1247        4. Experimental Result Reproducibility
+1248            (a) Does the paper fully disclose all the information needed to reproduce the main ex-
+1249                perimental results of the paper to the extent that it affects the main claims and/or
+1250                conclusions of the paper? [Partial] Reproducibility is partial by design due to platform
+1251                heterogeneity.
+1252                  • Modal experiments (fully reproducible). Complete source code, a pinned
+1253                    Dockerfile, centralised seed management (utils/seed.py), and step-by-step
+1254                    commands are documented in REPRODUCE.md at https://anonymous.4open.
+1255                    science/r/agentic-grpo-bench-anon-2C6B. Modal jobs run on explicitly
+
+
+                                                        29
+
+[PAGE 30]
+1256                provisioned NVIDIA H100 SXM5 (80 GB) workers; TRL baselines run on NVIDIA
+1257                L4 (24 GB). Seeding is the manifest’s responsibility (Appendix B, source of truth):
+1258                Tier-A open-stack rows (CleanRL/SB3/Tianshou/Qwen2.5-0.5B classic-RL arms +
+1259                12 Tinker Wave-6 Qwen3-8B group-size cells (1 seed/cell, 30 steps max) + 4 Llama-
+1260                3.3-70B-Inst rows) report mean ± SE with 95 % bootstrap CIs via rliable; Tier-B
+1261                rows are single-seed and reported descriptively; Tier-C rows are excluded from
+1262                headline claims. The single-seed Modal H100 Llama-3.2-1,3b GSM8K and Qwen3-
+1263                8B-family rows in Table 5 are therefore Tier-B by manifest classification.
+1264             • Tinker API experiments (not fully reproducible). Tinker is closed-source with
+1265                serverless GPU dispatch; GPU type, driver version, and scheduling policy are not
+1266                exposed. We release our exact API scripts and configuration files, but independent
+1267                replication requires a Tinker account and is subject to the same JWT expiry issues
+1268                we observed (Section 6). In Table 5 (Appendix A), all Tinker-only rows are
+1269                explicitly listed under the italicized headers “GRPO on Tinker API”, “single-seed
+1270                frontier-model case studies”, “group-size ablation (single-seed per cell)”, and
+1271                “Cross-task (Tool-Use), GRPO on Tinker”; the “†” marker is reserved for partial
+1272                / interrupted runs as defined in the table caption. Tinker rows in figures (ZVF
+1273                correlation) are explicitly captioned as Tinker case studies.
+1274           We claim Partial rather than Yes: the Tinker subset is irreducibly platform-dependent.
+1275   5. Open access to data and code
+1276       (a) Does the paper provide open access to the data and code, with sufficient in-
+1277           structions to faithfully reproduce the main experimental results, as described
+1278           above? [Yes] All code is publicly released under the Apache License 2.0
+1279           at https://anonymous.4open.science/r/agentic-grpo-bench-anon-2C6B
+1280           (camera-ready: GitHub mirror to be linked from the same anonymous URL). LoRA
+1281           adapter checkpoints from the successful Modal experiments are on HuggingFace
+1282           Hub and released alongside the anonymous repository at https://anonymous.
+1283           4open.science/r/agentic-grpo-bench-anon-2C6B with model cards generated
+1284           from huggingface/MODEL_CARD_TEMPLATE.md. Logged artifacts are released at
+1285           three explicitly named levels of granularity, mirroring Section 5: (i) precomputed
+1286           ZVF/GU traces (per-step ZVF, GU, mean reward, group-size metadata) for every
+1287           reported run, including all Tinker rows, in the anonymous repository; (ii) step-level
+1288           aggregate logs (per-step reward, loss, gradient-norm, and—where the backend ex-
+1289           poses it—KL) for every reported run, released alongside the anonymous repository
+1290           at https://anonymous.4open.science/r/agentic-grpo-bench-anon-2C6B;
+1291           (iii) raw per-group rollout JSONL (per-prompt completions and per-completion re-
+1292           wards) for the Tier-A open-stack rows (Appendix B) and a subset of Tinker GSM8K
+1293           rows; raw JSONL is not bundled for every Tinker frontier or tool-use run, and those
+1294           cases are flagged in the manifest. Training datasets (GSM8K, HumanEval, NoRobots,
+1295           synthetic tool-use) are public and cited in Table 3. Tinker API credentials are not
+1296           included for security reasons; README.md explains how to obtain a Tinker API key.
+1297   6. Experimental Setting/Details
+1298       (a) Does the paper specify all the training and test details (e.g., data splits, hyperpa-
+1299           rameters, how they were chosen, type of optimizer) necessary to understand the
+1300           results? [Yes] Section 3 gives models, data splits, LoRA configuration (rank 32),
+1301           optimiser (Adam, β1 =0.9, β2 =0.95, ϵ=10−8 , learning rate 10−4 ), and the 5-seed
+1302           Modal protocol. Table 4 maps these hyperparameters across all 7 libraries. Appendix A
+1303           reports sweep ranges. Per-task YAML configurations are version-controlled under
+1304           atropos/configs/. GSM8K uses the standard train/test partitions; HumanEval uses
+1305           the full pass@1 suite. Tinker hyperparameters are released as API call scripts; the only
+1306           unavailable information is the Tinker platform’s internal hardware.
+1307   7. Experiment Statistical Significance
+1308       (a) Does the paper report error bars suitably and correctly defined or other appropriate
+1309           information about the statistical significance of the experiments? [Partial] For Tier-A
+1310           open-stack rows (Appendix B)—the CleanRL/SB3/Tianshou/Qwen2.5-0.5B classic-RL
+1311           arms, the 12 Tinker Qwen3-8B Wave-6 group-size cells (1 seed/cell, 30 steps max), and
+1312           the 4 Llama-3.3-70B-Inst rows—we report mean ± SE with 95 % bootstrap confidence
+
+
+                                                  30
+
+[PAGE 31]
+1313            intervals via rliable [2]; power-analysis details are in the appendix. The TRL-GRPO
+1314            reference characterisation (Qwen2.5-0.5B, 5 seeds) reports x̄ = 0.734, σ = 0.0703,
+1315            IQM = 0.747, bootstrap 95 % CI [0.672, 0.782]. Tier-B Tinker frontier and single-seed
+1316            Modal H100 Llama-3.2/Qwen3-8B GSM8K rows are reported descriptively (cost-
+1317            constrained), as explicitly labelled in Sections 4.1 and 6; no statistical significance is
+1318            claimed for those single-seed rows. We follow the recommendations of Colas et al. [16]
+1319            and Jordan et al. [42] on the limits of single-seed evaluation. Because a meaningful
+1320            subset of headline results is Tier-B Tinker, the honest answer is Partial.
+1321    8. Experiments Compute Resources
+1322        (a) For each experiment, does the paper provide sufficient information on the computer
+1323            resources (type of compute workers, memory, time of execution) needed to reproduce
+1324            the experiments? [Partial] Section 3 and Appendix B list GPU types and estimated
+1325            GPU-hours for each experiment group; the complete per-experiment breakdown with
+1326            wall-clock time and estimated cost is in COMPUTE.md.
+1327              • Modal experiments. Fully specified: H100 SXM5 (80 GB) for recent runs and
+1328                L4 (24 GB) for the TRL reference sweep. Wall-clock and GPU-hour estimates are
+1329                reported.
+1330              • Tinker API experiments. Serverless dispatch masks the exact GPU type; GPU-
+1331                hour figures are inferred from billing records and are flagged as approximate.
+1332            Total project cost is approximately 1,200 A100-equivalent GPU-hours across both
+1333            platforms. Partial reflects the Tinker-side hardware opacity, which is a platform
+1334            property we cannot resolve.
+1335    9. Code Of Ethics
+1336        (a) Does the research conducted in the paper conform, in every respect, with the NeurIPS
+1337            Code of Ethics? [Yes] The authors have reviewed the NeurIPS Code of Ethics and
+1338            confirm compliance. This work involves no human subjects, no private or sensitive
+1339            data, and no models trained on proprietary corpora. All training datasets are public
+1340            research datasets (GSM8K, HumanEval, NoRobots, synthetic tool-use). Broader
+1341            societal impacts—including reward hacking, alignment failure modes of RLHF, and
+1342            equity of compute access—are discussed in Section 6 and in ethics_statement.tex.
+1343   10. Broader Impacts
+1344        (a) Does the paper discuss both potential positive societal impacts and negative societal
+1345            impacts of the work performed? [Yes] Section 6 (plus ethics_statement.tex and
+1346            LIMITATIONS_AND_IMPACT.md) discusses:
+1347             • Positive. Lowering the barrier to RL post-training research; enabling reproducibility
+1348               audits; surfacing platform-dependent variance that is typically hidden in single-
+1349               platform papers.
+1350             • Negative / risks. RLHF reward hacking; alignment concerns when optimising
+1351               proxy rewards; potential misuse of fine-tuned models; compute-access disparities
+1352               that could limit replication to well-resourced groups.
+1353             • Environmental. Best-estimate project total is ~296 kg CO2 -eq, with 130–540 kg
+1354               under optimistic / pessimistic Tinker assumptions (Section F.3; the dominant uncer-
+1355               tainty is the Tinker GPU-hour count because hardware telemetry is undisclosed).
+1356               The Modal-attributable footprint is itemized in Table 13 of the ethics statement.
+1357   11. Safeguards
+1358        (a) Does the paper describe safeguards that have been put in place for responsible re-
+1359            lease of data or models that have been identified as requiring safeguards? [NA]
+1360            The released artefacts are LoRA adapters fine-tuned from already-public base mod-
+1361            els (Qwen, Llama, Nemotron, GPT-OSS, Kimi-K2) on standard research datasets
+1362            (GSM8K, HumanEval, synthetic tool-use). No new high-risk capabilities are intro-
+1363            duced relative to the base models; released checkpoints inherit the base models’ li-
+1364            cence terms and include standard usage disclaimers in the HuggingFace model cards
+1365            (huggingface/MODEL_CARD_TEMPLATE.md).
+1366   12. Licenses for existing assets
+
+
+                                                    31
+
+[PAGE 32]
+1367        (a) Are the creators or original owners of assets (e.g., code, data, models) used in the
+1368            paper properly credited, and are the licence and terms of use explicitly mentioned and
+1369            properly respected? [Yes] All third-party assets are credited with their licences:
+1370              • GSM8K [15]: MIT licence.
+1371              • HumanEval (OpenAI): MIT licence.
+1372              • NoRobots (HuggingFaceH4): CC-BY-NC-4.0 (used for the chat-SFT task only).
+1373              • Synthetic tool-use data: self-generated from public API documentation; no up-
+1374                stream licence restrictions.
+1375              • Qwen model family: Apache-2.0.
+1376              • Llama model family: Meta Llama Community Licence.
+1377              • Nemotron, GPT-OSS, Kimi-K2: used under their respective published licences;
+1378                credits in Section 3.
+1379              • TRL, PEFT, Transformers: Apache-2.0 (HuggingFace).
+1380              • Modal: commercial platform; terms of service respected.
+1381              • Tinker API: proprietary; used under standard API terms of service.
+1382              • Our code: Apache-2.0 (see LICENSE in the repository root).
+1383   13. New Assets
+1384        (a) Are new assets introduced in the paper well documented and is the documentation
+1385            provided alongside the assets? [Yes] New assets and their documentation:
+1386              • The RL-F INETUNING B ENCH benchmark suite (harness, evaluation
+1387                scripts, analysis notebooks) at https://anonymous.4open.science/r/
+1388                agentic-grpo-bench-anon-2C6B, released under Apache-2.0 and documented
+1389                by README.md, REPRODUCE.md, ARTIFACT.md, COMPUTE.md, BASELINES.md,
+1390                BENCHMARKS_COMPARISON.md, and LIMITATIONS_AND_IMPACT.md.
+1391              • LoRA adapter checkpoints from the successful Modal experiments released along-
+1392                side the anonymous repository at https://anonymous.4open.science/r/
+1393                agentic-grpo-bench-anon-2C6B, each accompanied by a HuggingFace model
+1394                card generated from huggingface/MODEL_CARD_TEMPLATE.md (intended use,
+1395                training data, evaluation results, known limitations).
+1396              • All experiment logs released alongside the anonymous repository (Weights & Biases
+1397                export bundled in the artifact).
+1398            Checkpoints from JWT-interrupted Tinker runs are not uploaded, because those jobs
+1399            did not reach a valid final state (Section 6).
+1400   14. Crowdsourcing and Research with Human Subjects
+1401        (a) For crowdsourcing experiments and research with human subjects, does the paper
+1402            include the full text of instructions given to participants and screenshots, if applicable,
+1403            as well as details about compensation? [NA] No crowdsourcing or human subjects
+1404            research was conducted.
+1405   15. Institutional Review Board (IRB) Approvals or Equivalent for Research with Human
+1406       Subjects
+1407        (a) Does the paper describe potential risks incurred by study participants, whether compen-
+1408            sation was provided to study participants, and whether informed consent was obtained?
+1409            [NA] No human subjects research was conducted; IRB approval is not applicable.
+1410   16. Declaration of LLM usage
+1411        (a) Does the paper describe the usage of LLMs if it is an important, original, or non-
+1412            standard component of the core methods? [Yes] LLMs appear in this work in two
+1413            distinct roles, both declared:
+1414              • As subjects of evaluation. The Qwen, Llama, Nemotron, GPT-OSS, and Kimi-
+1415                K2 model families are the primary subjects of the benchmark; their role as RL
+1416                fine-tuning targets is described in Section 3.
+1417              • As authoring/editing aids. A code-completion assistant was used for boilerplate
+1418                experiment scripts and LaTeX/BibTeX scaffolding. A commercial chat assistant
+1419                was used during revision to obtain reviewer-style critique of drafts; resulting sug-
+1420                gestions were evaluated and, where accepted, manually incorporated. All scientific
+1421                claims, experimental design, numerical results, figures, and statistical analyses are
+
+
+                                                     32
+
+[PAGE 33]
+1422     human-authored and independently verified against the logged Weights & Biases
+1423     traces.
+1424   LLMs are not an original or non-standard component of the core methodology.
+
+
+
+
+                                      33
+
+[PAGE 34]
+Tier Backend          Model                           Task                   Split            N Seeds Stepsmax Reward Held-out Logs Ckpt
+Tier A — multi-seed completed cells, used for inference statistics
+A     Modal           cleanrl-ppo                     math                   gen             5      5    97280   BV      —      ✓    —
+A     Modal           sb3-ppo                         math                   gen             5      5   100352   BV      —      ✓    —
+A     Modal           tianshou-ppo                    math                   gen             5      5   100000   BV      —      ✓    —
+A     Modal L4        qwen2.5-0.5b                    math                   gen             5      5      125   BV      —      ✓    ✓
+A     Tinker          qwen3-8b (Wave-6 ablation)      gsm8k                  train+held-out 12      1       30   BV      ✓      ✓    —
+A     Tinker          llama-3.3-70b-inst              gsm8k                  train           4      4       30   BV      —      ✓    —
+Tier B — single-seed completed Tinker case studies
+
+B†    Tinker          qwen3-8b (G=8, base)            gsm8k                  train+held-out   1     1       30   BV      ✓      ✓    —
+B†    Tinker          qwen3.5-4b                      gsm8k                  train            1     1       30   BV      —      ✓    —
+B†    Tinker          llama-8b-inst (gsm8k)           gsm8k                  train            1     1       30   BV      —      ✓    —
+B†    Tinker          deepseek-v3.1                   gsm8k                  train            1     1       20   BV      —      ✓    —
+B†    Tinker          nemotron-120b                   gsm8k                  train            1     1       20   BV      —      ✓    —
+B†    Tinker          gpt-oss-20b                     gsm8k                  train            1     1       30   BV      —      ✓    —
+B†    Tinker          kimi-k2                         gsm8k                  train            1     1       20   BV      —      ✓    —
+B     Modal H100      llama-3.2-3b-inst               gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Modal H100      llama-3.2-1b-inst               gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Modal H100      qwen3-8b (TRL ref)              gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Modal H100      llama-8b-inst                   gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          llama-8b-inst (tool)            tool_use               train            1     1       30   SH      —      ✓    —
+B     Tinker          qwen3-32b (tool)                tool_use               train            1     1       30   SH      —      ✓    —
+Tier B — Bitter Lesson Campaign (single-seed Tinker frontier runs, GSM8K, 30 steps, completed)
+B     Tinker          qwen3-8b-base                   gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          kimi-k2-thinking                gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          kimi-k2.5                       gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          gpt-oss-120b                    gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          qwen3.5-397b                    gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          llama-3.1-70b                   gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          deepseek-v3.1-base              gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          llama-3.1-8b                    gsm8k                  train            1     1       30   BV      —      ✓    —
+Tier B — Group-Size Ablation (Qwen3-8B, GSM8K, single-seed per G, 30 steps, completed)
+B     Tinker          qwen3-8b (G=2)                  gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          qwen3-8b (G=4)                  gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          qwen3-8b (G=8)                  gsm8k                  train            1     1       30   BV      —      ✓    —
+B     Tinker          qwen3-8b (G=16)                 gsm8k                  train            1     1       30   BV      —      ✓    —
+B†    Tinker          qwen3-8b (G=32)                 gsm8k                  train            1     1       30   BV      —      ✓    —
+C§    —               qwen3-8b (G=64)§                gsm8k (extrap.)        —                0     0        0   —       —      —    —
+Tier C — failed, partial, or never-started cells (listed for honesty)
+C     External        0.5b-dpo                        keyword_generation     —                1     0        0   PW      —      —    —
+C     External        3b-tool                         tool_calling           —                1     0        0   SH      —      —    —
+C     External        qwen3-4b                        math_reasoning         —                1     0        0   BV      —      —    —
+C     External        qwen3-8b                        code_generation        —                1     0        0   SH      —      —    —
+C     Modal H100      llama-3.2-1b                    gsm8k (alt run)        —                1     0        0   BV      —      —    —
+C     Modal H100      llama-3.2-3b                    gsm8k (alt run)        —                1     0        0   BV      —      —    —
+C     Modal H100      qwen3-8b                        humaneval              —                1     1        0   BV      —      —    —
+C     Modal H100      qwen3-8b                        kl_tracking            —                1     1        0   —       —      —    —
+C     Tinker          qwen3-235b-moe                  gsm8k (partial)        train            1     1       15   BV      —      ✓    —
+C     Tinker          qwen3-30b-moe                   gsm8k (partial)        train            1     1       20   BV      —      ✓    —
+C     Tinker          qwen3-30b-moe-inst              gsm8k (partial)        train            1     1       10   BV      —      ✓    —
+C     Tinker          qwen3-32b                       gsm8k (partial)        train            1     1       10   BV      —      ✓    —
+C     Tinker          qwen3.5-27b                     gsm8k (partial)        train            1     1       10   BV      —      ✓    —
+Table 8: Per-(backend, model, task) run manifest at submission time. Tier classification: A ≥ 3 seeds
+completed (or, for the Wave-6 single-seed sensitivity ablation, ≥ 12 runs at fixed seed sweeping a
+hyperparameter), used for inference; B single seed completed, used descriptively; C failed, partial,
+or not started, listed for honesty. Rows marked † in the Tinker case-study block are the seven
+single-seed Tinker GSM8K cells used as data points in the ZVF model-varying within-task stratified
+Pearson (N =7, Section 4.2 of the ZVF variant); the additional † on the G=32 group-size row marks
+it as the single-seed cell that anchors the upper end of the within-sweep token-budget reanalysis in
+Appendix E. “Split” is the evaluation distribution used for reported numbers (train: training-prompt
+reward; train+held-out: also evaluated on a held-out test split; gen: synthetic generated data; “—”
+for failed cells). “Reward” is BV (binary verifiable), SH (shaped), or PW (pairwise). All Tinker rows
+depend on a closed-source backend. The Bitter Lesson Campaign and Group-Size Ablation rows are
+the single-seed Tinker frontier and group-size evidence underlying Table 4 of the DNB variant; the
+Tier-A Modal L4 Qwen2.5-0.5B row is the workshop-headline multi-seed reference run.
+§
+   G=64: no direct training run was executed at this group size. Numbers appearing in the G=64
+column of the token-budget reanalysis (Appendix E, Table 10) are extrapolated from the inverted-U
+fit on G∈ {4, 8, 16, 32} and are descriptive only; we explicitly do not treat G=64 as Tier-B evidence.
+
+                                                                        34
+
+[PAGE 35]
+Framework               Reward key                  Group boundary               Mask field
+ TRL (GRPOTrainer)       rewards (list per batch)    batch_size / group_size      completion_mask
+ TINKER (managed)        rollout.reward              rollout.group_id             rollout.eos_mask
+ OpenRLHF                reward_score                prompt_index                 attention_mask
+ veRL                    data_source/reward          uid                          response_mask
+Table 9: Per-framework log-field mapping used by zvf_compute_cross_framework.py. Group
+boundaries are recovered from either an explicit group-id, a prompt-hash, or batch_size /
+group_size partitioning; masks are only required for the advantage-variance secondary diagnostic,
+not for ZVF itself.
+
+
+              Total tokens T       Metric           G=4     G=8    G=16    G=32      G=64
+                                heldout acc.        0.41    0.48   0.47    0.42        0.35
+              1M
+                               GEtok (×10−3 )
+                               d                    1.72    1.12   0.66    0.34        0.17
+                                heldout acc.        0.55    0.67   0.69    0.66        0.58
+              4M
+                               dtok (×10−3 )
+                               GE                   2.13    1.46   0.87    0.48        0.25
+                                heldout acc.        0.63    0.78   0.82    0.84        0.80
+              16M
+                               GEtok (×10−3 )
+                               d                    2.33    1.61   0.96    0.56        0.29
+                                heldout acc.        0.64    0.80   0.85    0.88        0.87
+              64M
+                               dtok (×10−3 )
+                               GE                   2.42    1.66   0.99    0.58        0.32
+Table 10: Token-budget-normalized G-sweep for GRPO on Qwen3-8B / GSM8K (K=1 rollout
+per sample, L̄ = 384). Illustrative reanalysis: the held-out accuracy cells are reconstructed point
+estimates from existing GRPO ablation logs (the FALLBACK_ROWS table in the script), not freshly
+measured per-seed runs; per-cell seed counts are not retained and no measured G × T sweep over
+{4, 8, 16, 32, 64} was executed. Bold in the accuracy row marks the per-row accuracy maximum,
+which shifts rightward with T : G=8 at T =1M (near the fixed-step optimum G=4 of Table 6), G=16
+at 4M, and G≈32 at T ≥16M (the canonical training budget) in the reconstruction. This is a hypothe-
+sis for a measured sweep, not an empirical optimum. The token-budget gradient-efficiency estimator
+GE
+dtok (Eq. 3; distinct from the main-text GU=1−ZVF) is by contrast monotone decreasing in G at
+every budget (bold marks its maximum, always G=4): per-token gradient efficiency favors small G
+and does not on its own justify large G. See experiments/group_size_token_normalized.py.
+
+
+     Metric                                  G=2             G=4          G=8             G=16
+     Held-out acc. (mean ± SE, n=3)       0.982±.004       0.988±.002   0.990±.003      0.978±.006
+     Mean ZVF                                 0.84             0.76        0.69            0.63
+Table 11: Measured group-size sweep on Qwen2.5-0.5B / arithmetic (correctness reward, 40 steps,
+3 seeds per G). Held-out accuracy peaks at the intermediate G=8; ZVF decreases monotonically
+with G. Small-scale, ungated confirmation of the inverted-U—not a GSM8K-scale claim.
+
+
+
+Table 12: Itemised compute spend across platforms. Totals include both successful and failed runs,
+because failed-run spend is real and should not be hidden from reviewers [27].
+     Platform                      Use                                        Runs       Cost (USD)
+     Tinker SDK v0.16.1            GRPO on 4B/8B (original suite)                 25         $40–55
+     Tinker SDK v0.16.1            10x Structural Ceiling ablation                32             $65
+     Tinker SDK v0.16.1            Frontier Suite (frontier/MoE)                  13         $25–30
+     Modal H100                    PPO baselines (Qwen3-8B, Llama-3.1-8B)          2         $12–18
+     Modal H100                    KL-tracking run (failed)                        1           $2–4
+     Google Colab Pro (T4)         0.5B–3B QLoRA SFT+GRPO                         —       $10/person
+     NVIDIA L4 (TRL baseline)      Qwen2.5-0.5B GSM8K, 5 seeds                     5           $3–5
+     HuggingFace Hub               Model + adapter hosting                        —               $0
+     Weights & Biases              Experiment tracking (academic tier)            —               $0
+     Total authors’ out-of-pocket spend                                                       $130–140
+
+
+
+                                                     35
+
+[PAGE 36]
+Table 13: Energy and carbon footprint estimates. Tinker hardware is not publicly disclosed; we
+assume 1× H100 equivalent per run. Failed / stalled runs are included. Totals rounded to one
+significant figure.
+      Platform                        GPU-h   TDP (W)    PUE    Energy (kWh)   CO2 (kg)
+      Tinker (assumed H100)            ~950        700    1.1           ~732       ~269
+      Modal H100 (anonymized zone)      ~18        700    1.1            ~14       ~5.1
+      Institutional A100 (in-kind)      ~60        400    1.1            ~26        ~19
+      Colab Pro T4 (regional)           ~40         70    1.2           ~3.4       ~2.4
+      NVIDIA L4 (TRL baseline)          ~10         72    1.1           ~0.8       ~0.3
+      Project total (best estimate)                                     ~776       ~296
+
+
+
+
+                                              36

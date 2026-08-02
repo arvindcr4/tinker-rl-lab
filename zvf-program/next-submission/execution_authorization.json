@@ -15,5 +15,7 @@
     "promote_result_claims_before_complete_receipts": false
   },
   "protocol_path": "zvf-program/next-submission/preregistration.json",
+  "protocol_canonical_sha256": "bef29e552f0bf4f57b6f47ddf19fb788876e07f7990e362f91e8af9a17f7b859",
+  "protocol_canonicalization": "JSON document parsed, with the values of bindings.execution_authorization_sha256 and authorization.receipt_sha256 set to the empty string, re-serialized with two-space indentation and a trailing newline",
   "evidence_boundary": "Authorization permits execution. It does not turn preflight, partial, failed, or unverified rows into scientific results."
 }

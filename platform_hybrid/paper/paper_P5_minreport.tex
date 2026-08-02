@@ -4,7 +4,9 @@
 % Reuses shared preamble/author/methods; pulls the P5 section family.
 % Build: pdflatex paper_P5_minreport ; bibtex paper_P5_minreport ; pdflatex x2
 % =============================================================================
-\documentclass{article}  % iter-149 forced rebuild to pick up bib patches (9 entries: agarwal2021deep, dao2022flashattention, gao2023reward, krakovna2020specification, pineau2020improving, rafailov2024direct, thinkingmachines2024tinker, vonwerra2022trl, zheng2024sglang)
+\documentclass{article}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows.meta,positioning,calc}  % iter-149 forced rebuild to pick up bib patches (9 entries: agarwal2021deep, dao2022flashattention, gao2023reward, krakovna2020specification, pineau2020improving, rafailov2024direct, thinkingmachines2024tinker, vonwerra2022trl, zheng2024sglang)
 \input{sections/_shared_preamble}
 \title{Report the Stack, Not the Label:\\
        RL-for-LLM Results Are Stack-Conditioned}
@@ -55,4 +57,272 @@
 \input{sections/p5_worked_example}
 \bibliographystyle{plainnat}
 \bibliography{references}
+
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Hidden Stack};
+    \node [b2, right=of n1] (n2) {\textbf{MIN-REPORT Stack Spec Gate}\\8-Item Spec Gate};
+    \node [b3, right=of n2] (n3) {Reproducible RL};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{MIN-REPORT Stack Spec Gate}. Preventing unannounced stack shifts.}
+\label{fig:p05_fig1}
+\end{figure}
+
+
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Hidden Stack};
+    \node [b2, right=of n1] (n2) {\textbf{MIN-REPORT Stack Spec Gate}\\8-Item Spec Gate};
+    \node [b3, right=of n2] (n3) {Reproducible RL};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{MIN-REPORT Stack Spec Gate}. Preventing unannounced stack shifts.}
+\label{fig:p05_fig1}
+\end{figure}
+
+
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Hidden Stack};
+    \node [b2, right=of n1] (n2) {\textbf{MIN-REPORT Stack Spec Gate}\\8-Item Spec Gate};
+    \node [b3, right=of n2] (n3) {Reproducible RL};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{MIN-REPORT Stack Spec Gate}. Preventing unannounced stack shifts.}
+\label{fig:p05_fig1}
+\end{figure}
+
+
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Run Manifest};
+    \node [b2, right=of n1] (n2) {\textbf{8-Item Specification Standard Gate}\\8-Item Validator};
+    \node [b3, right=of n2] (n3) {Compliance Badge};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{8-Item Specification Standard Gate}. Validation gate for MIN-REPORT-RL compliance.}
+\label{fig:p05_f1}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Control Prompts};
+    \node [b2, right=of n1] (n2) {\textbf{Held-Out Control Task Harness}\\Evaluation Harness};
+    \node [b3, right=of n2] (n3) {Certified Pass@k};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Held-Out Control Task Harness}. Executing held-out control task evaluation.}
+\label{fig:p05_f2}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Sampler Config};
+    \node [b2, right=of n1] (n2) {\textbf{Sampler Precision Specification Gate}\\Precision Inspector};
+    \node [b3, right=of n2] (n3) {Valid Precision};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Sampler Precision Specification Gate}. Verifying floating-point sampler precision declarations.}
+\label{fig:p05_f3}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {KL Config};
+    \node [b2, right=of n1] (n2) {\textbf{KL Penalty Placement Auditor}\\Placement Inspector};
+    \node [b3, right=of n2] (n3) {Valid KL Spec};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{KL Penalty Placement Auditor}. Auditing reference policy KL penalty placement.}
+\label{fig:p05_f4}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Masking Code};
+    \node [b2, right=of n1] (n2) {\textbf{Completion Token Masking Inspector}\\Masking Inspector};
+    \node [b3, right=of n2] (n3) {Valid Masking Spec};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Completion Token Masking Inspector}. Validating token loss masking rules.}
+\label{fig:p05_f5}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Batch Schedule};
+    \node [b2, right=of n1] (n2) {\textbf{Group Size Schedule Validator}\\Schedule Inspector};
+    \node [b3, right=of n2] (n3) {Valid Batch Spec};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Group Size Schedule Validator}. Auditing declared group size and micro-batch schedules.}
+\label{fig:p05_f6}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Parser Code};
+    \node [b2, right=of n1] (n2) {\textbf{Reward Parser Consistency Gate}\\Consistency Gate};
+    \node [b3, right=of n2] (n3) {Valid Parser Spec};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Reward Parser Consistency Gate}. Ensuring uniform reward parsing regex across evaluations.}
+\label{fig:p05_f7}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Run Artifacts};
+    \node [b2, right=of n1] (n2) {\textbf{Cryptographic Provenance Hash Binder}\\Provenance Binder};
+    \node [b3, right=of n2] (n3) {SHA-256 Provenance};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Cryptographic Provenance Hash Binder}. Generating SHA-256 manifest hash for run provenance.}
+\label{fig:p05_f8}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Score Matrices};
+    \node [b2, right=of n1] (n2) {\textbf{rliable Performance Profile Certification}\\rliable Certifier};
+    \node [b3, right=of n2] (n3) {Certified Profile};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{rliable Performance Profile Certification}. Generating certified rliable statistical aggregate profiles.}
+\label{fig:p05_f9}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {RL Run Package};
+    \node [b2, right=of n1] (n2) {\textbf{End-to-End MIN-REPORT Compliance Framework}\\MIN-REPORT Suite};
+    \node [b3, right=of n2] (n3) {Certified Benchmark Card};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{End-to-End MIN-REPORT Compliance Framework}. Complete evaluation suite enforcing MIN-REPORT-RL standard.}
+\label{fig:p05_f10}
+\end{figure}
+
 \end{document}

@@ -439,9 +439,63 @@ def build() -> Presentation:
              7.10, 5.15, 4.95, 0.82, size=11, color=MUTED)
     add_footer(s, "Source: preflight_gate.json (confirmatory_execution_gate=blocked; evidence_class=preflight-gate-not-scientific-evidence)")
 
-    # 9 — next steps
+    # 9 — eighteen-paper review
     s = new_slide(prs)
-    add_header(s, "Next week", "My next three steps", 9)
+    add_header(s, "Paper review", "I checked all 18 drafts", 9)
+    add_text(s, "Several drafts tell the same story in different formats, so the 18 files collapse into fewer paper ideas.",
+             0.68, 1.43, 11.7, 0.32, size=14.5, color=MUTED)
+    add_metric(s, 0.72, 2.00, 2.35, 1.25, "18/18", "drafts rebuilt", TEAL, "every current PDF compiles")
+    add_metric(s, 3.30, 2.00, 2.35, 1.25, "868", "pages reviewed", BLUE, "including the 239-page internal book")
+    add_metric(s, 5.88, 2.00, 2.35, 1.25, "329", "source files", LAV, "all included files entered the review")
+    add_metric(s, 8.46, 2.00, 2.35, 1.25, "6 + 1", "real story groups", AMBER, "six research themes + one internal book")
+    add_metric(s, 11.04, 2.00, 1.60, 1.25, "0", "ready now", RED, "none unchanged")
+    buckets = [
+        ("KEEP", "3", "R08 audit\nR02 short note\nR04 artifact", GREEN),
+        ("MERGE", "8", "useful pieces,\nbut overlapping", BLUE),
+        ("TEST FIRST", "5", "evidence still\nmissing", AMBER),
+        ("ARCHIVE", "2", "R01 + U01", RED),
+    ]
+    for i, (heading, count, body, color) in enumerate(buckets):
+        x = 0.76 + i * 3.04
+        add_shape(s, MSO_SHAPE.RECTANGLE, x, 3.73, 2.70, 2.33, PANEL, GRID, radius=True)
+        add_text(s, heading, x + 0.22, 3.98, 1.55, 0.24, size=9, color=color, bold=True)
+        add_text(s, count, x + 1.82, 3.88, 0.54, 0.45, size=27, color=color, bold=True,
+                 font=FONT_DISPLAY, align=PP_ALIGN.RIGHT)
+        add_text(s, body, x + 0.22, 4.55, 2.20, 0.92, size=13, color=INK, bold=True)
+    add_text(s, "The page count got bigger. The publishable story got smaller and clearer.",
+             0.78, 6.43, 9.0, 0.30, size=12.5, color=AMBER, bold=True)
+    add_footer(s, "Source: autoresearch/deli-neurips-tmlr-260802/audits/18_PAPER_PORTFOLIO_REVIEW.md; paper_portfolio inventory and overlap scan")
+
+    # 10 — publication route
+    s = new_slide(prs)
+    add_header(s, "Publication plan", "The route I would take", 10)
+    add_text(s, "The best journal paper is the separate flagship audit. The current NeurIPS review has to finish first.",
+             0.68, 1.43, 11.7, 0.34, size=14.5, color=MUTED)
+    route = [
+        ("NOW", "Keep the evidence frozen", "Do not submit a second overlapping paper while the NeurIPS review is open.", RED),
+        ("NEXT", "Send the flagship to TMLR", "If NeurIPS rejects or the paper is withdrawn, rerun the overlap and anonymity checks.", TEAL),
+        ("LATER", "Build the companions", "R08 audit, a short R02 note, and the R04 artifact each need their own missing gate.", BLUE),
+    ]
+    for i, (when, title, body, color) in enumerate(route):
+        y = 2.03 + i * 1.34
+        add_shape(s, MSO_SHAPE.OVAL, 0.82, y, 0.72, 0.72, color, color)
+        add_text(s, str(i + 1), 0.82, y + 0.19, 0.72, 0.26, size=15, color=NAVY,
+                 bold=True, align=PP_ALIGN.CENTER)
+        add_text(s, when, 1.85, y - 0.01, 1.10, 0.23, size=8.5, color=color, bold=True)
+        add_text(s, title, 1.85, y + 0.27, 4.60, 0.31, size=15.5, color=INK, bold=True,
+                 font=FONT_DISPLAY)
+        add_text(s, body, 6.08, y + 0.09, 5.85, 0.56, size=11.2, color=MUTED)
+        if i < 2:
+            add_line(s, 1.18, y + 0.75, 1.18, y + 1.27, GRID, 1.1)
+    add_shape(s, MSO_SHAPE.RECTANGLE, 0.82, 6.08, 11.80, 0.58, PANEL_2, GRID, radius=True)
+    add_text(s, "The evidence supports a careful methods and failure-analysis paper; the controller result is still missing.",
+             1.06, 6.23, 11.30, 0.25, size=12.5, color=AMBER, bold=True,
+             align=PP_ALIGN.CENTER)
+    add_footer(s, "Sources: PUBLICATION_READINESS.md; 18_PAPER_PORTFOLIO_REVIEW.md; TMLR editorial policies; active NeurIPS overlap record")
+
+    # 11 — next steps
+    s = new_slide(prs)
+    add_header(s, "Next week", "My next three steps", 11)
     add_text(s, "I will do these in order. I will not skip ahead just because the setup works.", 0.68, 1.42, 10.0, 0.30, size=14, color=MUTED)
     steps = [
         ("01", "Get the three missing updates", "Run the three cells that still have setup receipts but no real update.", RED),
@@ -462,9 +516,9 @@ def build() -> Presentation:
     add_text(s, "Status today:\nwaiting on 3 cells", 0.84, 6.47, 5.0, 0.34, size=13, color=RED, bold=True)
     add_footer(s, "Sources: preflight_gate.json; rlhfbook_followup_preregistration.json; offline_falsification_packet.json")
 
-    # 10 — close / backup references
+    # 12 — close / backup references
     s = new_slide(prs)
-    add_header(s, "Bottom line", "I have a safer experiment. The result is still to be earned.", 10)
+    add_header(s, "Bottom line", "I have a safer experiment. The result is still to be earned.", 12)
     add_text(s, "The setup is cleaner, the old work is documented, and I know exactly what is still missing.",
              0.68, 1.48, 11.7, 0.52, size=21, color=INK, bold=True, font=FONT_DISPLAY)
     cols = [

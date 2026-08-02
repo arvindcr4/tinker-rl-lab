@@ -5,11 +5,11 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import math
 import re
 from pathlib import Path
-from statistics import NormalDist
 from typing import Any
 
 
@@ -32,6 +32,94 @@ EXPECTED_COURSE_FILES = {
     "slides/RLHF.pdf": "f12bd048818e817069cb0ef0f46ea90f22219ca3e3a9b016e748db1c3727194a",
     "CS2824projects.html": "30ef1ea58da08abe7873564858feb95e8caae3d7f8061247b1092cf59edfcf41",
 }
+
+
+EXPECTED_SEEDS = [
+    211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283,
+    293, 307, 311, 313, 317, 331, 337, 347,
+]
+EXPECTED_SEED_24_RESERVE = 349
+EXPECTED_FIXED_COMPONENTS = [
+    "initial checkpoint",
+    "tokenizer",
+    "prompt order",
+    "reward parser",
+    "optimizer",
+    "learning rate",
+    "batch size",
+    "training steps",
+    "completion cap",
+    "checkpoint rule",
+    "held-out prompts",
+    "decoder",
+    "evaluator",
+    "objective hyperparameters",
+    "adapter configuration",
+]
+EXPECTED_TELEMETRY = [
+    "charged_generated_tokens",
+    "rollout_groups",
+    "all_wrong_fraction",
+    "all_correct_fraction",
+    "mixed_fraction",
+    "two_sample_false_homogeneity",
+    "policy_ratio_q05_q50_q95",
+    "clip_fraction_by_advantage_sign",
+    "kl_to_data_policy",
+    "kl_to_initial_reference",
+    "parser_disagreement",
+    "completion_clipped_fraction",
+    "wall_clock_seconds",
+]
+EXPECTED_OBJECTIVE = {
+    "epsilon": 0.2,
+    "epsilon_high": 0.2,
+    "importance_sampling_level": "token",
+    "scale_rewards": "group",
+    "loss_type": "grpo",
+    "beta": 0.0,
+}
+EXPECTED_OPTIMIZER = {
+    "learning_rate": 1e-06,
+    "lr_scheduler_type": "linear",
+    "warmup_steps": 0,
+    "optim": "adamw_torch_fused",
+    "weight_decay": 0.0,
+    "max_grad_norm": 1.0,
+    "num_iterations": 1,
+    "mask_truncated_completions": False,
+}
+EXPECTED_PRECISION = {
+    "bf16": True,
+    "tf32": True,
+    "gradient_checkpointing": True,
+    "gradient_checkpointing_use_reentrant": False,
+}
+EXPECTED_ADAPTER = {
+    "method": "lora",
+    "r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.0,
+    "target_modules": "all-linear",
+    "bias": "none",
+    "task_type": "CAUSAL_LM",
+}
+EXPECTED_ANALYSIS = {
+    "confidence_intervals": "seed-paired bootstrap with deterministic streams and paired-t sensitivity",
+    "multiplicity": "intersection-union across cost and capability within task; Holm across two tasks",
+    "blinded_variance_reassessment": "pooled, arm-label-hidden variance only; may increase n to 24 and cannot change outcomes, margins, tasks, or estimands",
+    "missingness": "intention-to-treat; exact resume for infrastructure interruption; no failed run is silently dropped or relabeled as scientific failure",
+    "negative_result_rule": "A boundary-crossing interval, failed power receipt, or incomplete cell is INCONCLUSIVE, not equivalence or failure.",
+    "checkpoint_rule": "final registered checkpoint; never select by online reward",
+}
+EXPECTED_JOINT_SUCCESS = (
+    "Both boundaries pass on both tasks; any missing or invalid cell yields INCONCLUSIVE."
+)
+EXPECTED_CANONICALIZATION = (
+    "JSON document parsed, with the values of bindings.execution_authorization_sha256 "
+    "and authorization.receipt_sha256 set to the empty string, re-serialized with "
+    "two-space indentation and a trailing newline"
+)
 
 
 class DesignContractError(ValueError):
@@ -62,15 +150,45 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def expected_planning_seed_count(power: dict[str, Any]) -> tuple[int, int]:
-    alpha = float(power["per_task_alpha"])
+def _load_power_implementation(repo_root: Path, bindings: dict[str, Any]) -> Any:
+    path = repo_root / str(bindings.get("power_implementation_path"))
+    require(path.is_file(), "power implementation missing")
+    require(
+        bindings.get("power_implementation_sha256") == sha256(path),
+        "power implementation hash drift",
+    )
+    spec = importlib.util.spec_from_file_location("next_power_implementation", path)
+    require(spec is not None and spec.loader is not None, "power implementation unreadable")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    for name in ("minimum_paired_t_sample_size", "paired_t_power_one_sided"):
+        require(hasattr(module, name), f"power implementation lacks {name}")
+    return module
+
+
+def canonical_protocol_sha256(protocol: dict[str, Any]) -> str:
+    """Hash the protocol with the two authorization-hash fields blanked.
+
+    This matches the canonicalization string recorded in
+    execution_authorization.json and lets the authorization receipt anchor the
+    exact protocol revision it authorizes without a circular hash dependency.
+    """
+    clone = json.loads(json.dumps(protocol))
+    clone.get("bindings", {})["execution_authorization_sha256"] = ""
+    clone.get("authorization", {})["receipt_sha256"] = ""
+    text = json.dumps(clone, indent=2) + "\n"
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def expected_planning_seed_count(
+    power: dict[str, Any], power_impl: Any
+) -> tuple[int, int]:
+    alpha = float(power["planning_alpha_worst_case"])
     target_power = float(power["target_power"])
     sd = float(power["planning_sd"])
     margin = float(power["accuracy_margin"])
     inflation = float(power["variance_transfer_inflation"])
-    z_alpha = NormalDist().inv_cdf(1.0 - alpha)
-    z_power = NormalDist().inv_cdf(target_power)
-    raw = math.ceil(((z_alpha + z_power) * sd / margin) ** 2)
+    raw = power_impl.minimum_paired_t_sample_size(margin / sd, alpha, target_power)
     inflated = math.ceil(raw * inflation)
     return raw, inflated
 
@@ -93,10 +211,10 @@ def verify_contract(
     )
     amendments = protocol.get("amendments")
     require(
-        isinstance(amendments, list) and len(amendments) == 2,
+        isinstance(amendments, list) and len(amendments) == 3,
         "prospective protocol amendment ledger missing",
     )
-    amendment_record, decoder_amendment_record = amendments
+    amendment_record, decoder_amendment_record, hardening_amendment_record = amendments
     require(
         isinstance(amendment_record, dict)
         and amendment_record.get("amendment_id") == "A001_math_unbraced_boxed_targets"
@@ -140,6 +258,36 @@ def verify_contract(
         decoder_amendment.get("timing", {}).get("confirmatory_rows_completed_before_amendment") == 0
         and decoder_amendment.get("timing", {}).get("confirmatory_outcomes_inspected") is False,
         "Qwen decoder amendment is not prospective",
+    )
+    require(
+        isinstance(hardening_amendment_record, dict)
+        and hardening_amendment_record.get("amendment_id") == "A003_confirmatory_hardening"
+        and hardening_amendment_record.get("status") == "prospective_before_confirmatory_execution",
+        "confirmatory-hardening amendment identity or timing drift",
+    )
+    hardening_amendment_path = repo_root / str(hardening_amendment_record.get("path"))
+    require(hardening_amendment_path.is_file(), "confirmatory-hardening amendment receipt missing")
+    require(
+        hardening_amendment_record.get("sha256") == sha256(hardening_amendment_path),
+        "confirmatory-hardening amendment hash drift",
+    )
+    hardening_amendment = load_json(hardening_amendment_path)
+    require(
+        hardening_amendment.get("timing", {}).get("confirmatory_rows_completed_before_amendment") == 0
+        and hardening_amendment.get("timing", {}).get("confirmatory_outcomes_inspected") is False,
+        "confirmatory-hardening amendment is not prospective",
+    )
+    hardening_change = hardening_amendment.get("change", {})
+    require(
+        hardening_change.get("objective") == EXPECTED_OBJECTIVE
+        and hardening_change.get("optimizer") == EXPECTED_OPTIMIZER
+        and hardening_change.get("adapter") == EXPECTED_ADAPTER,
+        "confirmatory-hardening amendment treatment block drift",
+    )
+    require(
+        hardening_change.get("seed_plan", {}).get("planning_seed_count") == len(EXPECTED_SEEDS)
+        and hardening_change.get("power_plan", {}).get("planning_alpha_worst_case") == 0.0125,
+        "confirmatory-hardening amendment seed or power block drift",
     )
 
     auth = protocol.get("authorization")
@@ -189,6 +337,14 @@ def verify_contract(
             )
         ),
         "execution authorization silently permits an external or evidence-promotion action",
+    )
+    require(
+        authorization.get("protocol_path") == "zvf-program/next-submission/preregistration.json",
+        "execution authorization protocol path drift",
+    )
+    require(
+        authorization.get("protocol_canonicalization") == EXPECTED_CANONICALIZATION,
+        "execution authorization canonicalization rule drift",
     )
 
     contribution = protocol.get("contribution_policy")
@@ -251,7 +407,17 @@ def verify_contract(
     require(isinstance(arms, list) and len(arms) == 2, "design must have exactly two arms")
     arm_ids = [arm.get("arm_id") for arm in arms]
     require(arm_ids == ["grpo_g8", "contrast_early_stop_g2_to_g8"], "arm definition drift")
-    require(len(treatment.get("fixed_components", [])) >= 10, "matched treatment fields incomplete")
+    require(treatment.get("objective") == EXPECTED_OBJECTIVE, "objective hyperparameters drift")
+    require(treatment.get("optimizer") == EXPECTED_OPTIMIZER, "optimizer hyperparameters drift")
+    require(
+        treatment.get("precision_and_memory") == EXPECTED_PRECISION,
+        "precision and memory settings drift",
+    )
+    require(treatment.get("adapter") == EXPECTED_ADAPTER, "adapter configuration drift")
+    require(
+        treatment.get("fixed_components") == EXPECTED_FIXED_COMPONENTS,
+        "matched treatment fields drift",
+    )
 
     seed_plan = protocol.get("paired_seed_plan")
     require(isinstance(seed_plan, dict), "paired seed plan missing")
@@ -267,17 +433,49 @@ def verify_contract(
         "independent unit drift",
     )
     require(set(seeds).isdisjoint({11, 23, 37, 53, 71, 89, 107, 131}), "new seeds overlap E1")
+    require(seeds == EXPECTED_SEEDS, "preregistered seed values drift")
+    require(
+        seed_plan.get("seed_24_reserve") == EXPECTED_SEED_24_RESERVE,
+        "seed reserve for the reassessment cap drift",
+    )
+    require(
+        "ascending primes strictly greater than 293" in str(seed_plan.get("seed_derivation_rule")),
+        "seed derivation rule missing",
+    )
 
     power = protocol.get("power_plan")
     require(isinstance(power, dict), "power plan missing")
-    raw_n, inflated_n = expected_planning_seed_count(power)
     require(
-        power.get("normal_approximation_seed_count_before_inflation") == raw_n,
-        "raw power calculation drift",
+        "exact one-sided noncentral paired-t" in str(power.get("power_method")),
+        "power method is not the exact noncentral-t calculation",
+    )
+    require(
+        math.isclose(
+            float(power.get("planning_alpha_worst_case")),
+            float(power.get("per_task_alpha")) / 2.0,
+            rel_tol=0.0,
+            abs_tol=1e-15,
+        ),
+        "Holm worst-case planning alpha drift",
+    )
+    power_impl = _load_power_implementation(repo_root, protocol.get("bindings", {}))
+    raw_n, inflated_n = expected_planning_seed_count(power, power_impl)
+    require(
+        power.get("exact_t_seed_count_before_inflation") == raw_n,
+        "raw exact-t power calculation drift",
     )
     require(
         power.get("planning_seed_count_after_inflation") == inflated_n == planned_n,
         "inflated power calculation drift",
+    )
+    require(
+        "joint" in str(power.get("joint_power_disclosure")),
+        "joint power disclosure missing",
+    )
+    require(
+        "log(0.8)" in str(power.get("blinded_reassessment_method"))
+        and "noncentral paired-t" in str(power.get("blinded_reassessment_method")),
+        "blinded reassessment method unspecified",
     )
     require(power.get("cost_effect_scale") == "paired_log_token_ratio", "cost effect scale drift")
     require(
@@ -331,6 +529,41 @@ def verify_contract(
             abs_tol=1e-15,
         ),
         "estimand cost boundary drift",
+    )
+    require(
+        math.isclose(
+            float(estimands.get("cost_success_boundary")),
+            -0.2,
+            rel_tol=0.0,
+            abs_tol=1e-15,
+        ),
+        "cost success boundary drift",
+    )
+    require(
+        math.isclose(
+            float(estimands.get("capability_noninferiority_boundary")),
+            -0.01,
+            rel_tol=0.0,
+            abs_tol=1e-15,
+        ),
+        "capability non-inferiority boundary drift",
+    )
+    require(
+        estimands.get("joint_success") == EXPECTED_JOINT_SUCCESS,
+        "joint success rule drift",
+    )
+
+    analysis = protocol.get("analysis")
+    require(isinstance(analysis, dict), "analysis rules missing")
+    for analysis_key, analysis_value in EXPECTED_ANALYSIS.items():
+        require(
+            analysis.get(analysis_key) == analysis_value,
+            f"analysis rule drift: {analysis_key}",
+        )
+
+    require(
+        protocol.get("telemetry") == EXPECTED_TELEMETRY,
+        "preregistered telemetry list drift",
     )
 
     task_rows = protocol.get("tasks")
@@ -491,6 +724,10 @@ def verify_contract(
         "receipt_sha256",
     }
     require(required_provenance.issubset(seed_fields), "seed-row provenance contract incomplete")
+    require(
+        set(EXPECTED_TELEMETRY).issubset(seed_fields),
+        "seed-row telemetry contract incomplete",
+    )
 
     manuscript = protocol.get("manuscript_contract")
     require(isinstance(manuscript, dict), "manuscript contract missing")
@@ -540,6 +777,8 @@ def verify_contract(
             "remote_preflight",
             "protocol_amendment_001",
             "protocol_amendment_002",
+            "protocol_amendment_003",
+            "power_implementation",
             "preflight_launcher",
             "preflight_matrix_verifier",
             "hf_jobs_preflight_launcher",
@@ -553,6 +792,11 @@ def verify_contract(
             path = repo_root / str(bindings.get(f"{name}_path"))
             require(path.is_file(), f"bound {name} missing")
             require(bindings.get(f"{name}_sha256") == sha256(path), f"bound {name} hash drift")
+
+    require(
+        authorization.get("protocol_canonical_sha256") == canonical_protocol_sha256(protocol),
+        "execution authorization does not anchor the current protocol revision",
+    )
 
     return {
         "status": "NEXT_SUBMISSION_DESIGN_CONTRACT_PASS",

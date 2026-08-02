@@ -1,0 +1,305 @@
+% =============================================================================
+% PRE-RESULTS MANUSCRIPT SKELETON — DO NOT CIRCULATE AS A RESULTS PAPER.
+%
+% Status: 0 of 64 confirmatory task-arm-seed rows are complete. The publication
+% gate in results_contract.json is unmet, so Section 5 (Results) is a structural
+% stub and contains NO numbers. Every claim in this document uses only the
+% "permitted_language_before_results" phrasings from claim_ledger.json
+% (C1--C4). Claim C5 is blocked pending its external receipt and is therefore
+% absent from this document, as is its contribution label.
+%
+% Source of truth: zvf-program/next-submission/{MANUSCRIPT_BLUEPRINT.md,
+% claim_ledger.json, preregistration.json, DESIGN.md, results_contract.json,
+% protocol_amendment_001_math_boxed.json, protocol_amendment_002_qwen_decoder.json}
+%
+% Blueprint Section 6 (external-user evaluation) is intentionally omitted and
+% later sections are renumbered: the external-user receipt does not exist.
+% =============================================================================
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in,headheight=15pt]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage[round]{natbib}
+\usepackage{fancyhdr}
+\usepackage{microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% --- Draft-status machinery -------------------------------------------------
+\setlength{\emergencystretch}{3em}
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+\newcommand{\todocite}[1]{\textcolor{red}{\textbf{[TODO cite: #1]}}}
+\newcommand{\resultpending}[1]{\textcolor{red}{\textbf{[RESULT PENDING --- #1]}}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{\textcolor{red}{\footnotesize PRE-RESULTS SKELETON --- 0/64 CONFIRMATORY ROWS COMPLETE --- PUBLICATION GATE UNMET}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\title{When Can We Skip a Group? A Complete Multi-Seed Test of Contrast-Aware Rollout Allocation for RLVR\\[1ex]
+{\large\textcolor{red}{[DRAFT SKELETON --- no results exist; all outcome language is preregistered test language]}}}
+\author{Author list to be determined\thanks{Draft skeleton generated from the frozen design in \texttt{zvf-program/next-submission/}; no confirmatory execution has occurred.}}
+\date{Draft of August 2, 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Reinforcement learning from verifiable rewards (RLVR) charges its operator for every generated rollout token, yet a group of completions whose verifier rewards all agree provides no centered reward contrast and therefore no group-relative learning signal. We study a contrast-aware early-stop sampler for group-relative policy optimization: the sampler first draws two completions per prompt, expands the group to eight completions only when the two verifier rewards disagree, and stops sampling otherwise. We evaluate this intervention against a fixed eight-completion baseline in a complete, preregistered two-task matrix --- GSM8K and MATH-500, with sixteen paired seeds per task-arm cell and fixed held-out evaluation for every cell. We test whether the intervention reduces rollout cost. We test held-out non-inferiority. We preregister a joint cost-quality decision: the intervention counts as useful only if the multiplicity-adjusted charged-token saving reaches at least twenty percent and the held-out exact-match accuracy difference stays within a one-percentage-point non-inferiority margin, on both tasks simultaneously. \resultpending{one numerical headline result with its confidence interval will be inserted here only after all confirmatory rows are complete and the publication gate passes}. All claims are bounded to the frozen mathematical tasks, model, and stack under study; no transfer beyond that boundary is asserted.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:introduction}
+
+Group-relative policy optimization for verifiable-reward tasks prices its training signal in generated tokens. Every completion in a rollout group is charged to the operator, but the group-relative update only carries information when the centered rewards inside a group differ: a group whose completions are all wrong, or all correct, contributes zero advantage to every member. An operator running fixed group sizes therefore pays for rollouts that cannot move the policy. The practical question is whether an inexpensive contrast check can identify such groups early and skip the remaining samples without degrading the trained model.
+
+This paper asks one research question, fixed before any execution: can a contrast-aware early-stop sampler reduce charged generated tokens by at least twenty percent relative to fixed $G{=}8$ group-relative training, while the lower confidence bound for the held-out accuracy difference remains above minus one percentage point, separately on GSM8K and MATH-500? Both conditions must hold on both tasks; a positive result on one task cannot compensate for a missing or negative cell on the other.
+
+We make three contributions:
+\begin{enumerate}
+  \item \textbf{The intervention.} A contrast-aware early-stop sampling policy that probes each prompt with two completions and expands only mixed-reward groups to the full group size, leaving the model, objective, optimizer, data order, reward parser, and evaluator untouched (Section~\ref{sec:method}).
+  \item \textbf{The complete paired-seed study.} A preregistered two-task, two-arm confirmatory matrix with sixteen paired seeds per cell, a blinded variance reassessment that can only increase the seed count, and a joint cost/non-inferiority estimand with multiplicity control (Section~\ref{sec:design}). We test whether the intervention reduces rollout cost, and we test held-out non-inferiority.
+  \item \textbf{The fail-closed evidence pipeline.} A results contract under which every confirmatory value must originate from a hash-validated run ledger; incomplete or invalid cells yield an \textsc{inconclusive} verdict rather than a weakened claim, and the main table cannot be generated at all until every planned row is complete (Sections~\ref{sec:design} and~\ref{sec:results}).
+\end{enumerate}
+
+The contribution types of this work are methodology, reproducibility, and (if the preregistered decision so resolves) negative results. No external-user study has been conducted and no claim about deployed practice is made.
+
+\section{Related work}
+\label{sec:related}
+
+Table~\ref{tab:related} situates the study. Two distinctions matter throughout. First, we separate \emph{interventions}, which change how training samples are spent, from \emph{diagnostics}, which measure training behavior without changing it: this paper tests an intervention whose companion telemetry is diagnostic only. Second, we separate \emph{sequence-level verifiable rewards}, which are the object of study here, from intended solution quality: a verifier-approved completion is not thereby a pedagogically good solution, and no claim of the latter kind is made.
+
+\begin{table}[t]
+\centering
+\caption{Compact comparison of adjacent research areas. ``Intervention'' changes the training/sampling process; ``diagnostic'' observes it.}
+\label{tab:related}
+\small
+\begin{tabular}{@{}p{3.2cm}p{3.6cm}p{2.2cm}p{5.2cm}@{}}
+\toprule
+Area & Representative work & Type & Relation to this study \\
+\midrule
+Group-relative sampling for RLVR & \citet{shao2024deepseekmath}; \citet{yu2025dapo} & Intervention & GRPO fixes the group size; DAPO-style dynamic sampling reshapes batches around uninformative groups. We instead test a per-prompt early stop with an unchanged objective. \\
+\addlinespace
+Dynamic curricula & \citet{bengio2009curriculum}; \todocite{RLVR-specific curriculum/data-selection work} & Intervention & Curricula reorder or reweight prompts; our sampler never substitutes or reorders prompts --- it only truncates sampling within a group. \\
+\addlinespace
+Early stopping and adaptive allocation & \citet{lai1985asymptotically}; \citet{auer2002finite}; \citet{evendar2006action} & Intervention & Classical bandit allocation stops sampling arms whose value is resolved; the two-sample contrast check is an extreme, budgeted analogue at the prompt-group level. \\
+\addlinespace
+RL reproducibility and statistical practice & \citet{henderson2018deep}; \citet{agarwal2021deep} & Diagnostic & Motivates the paired multi-seed design, preregistered estimands, and interval-based verdicts used here. \\
+\addlinespace
+Verifier and parser reliability & \todocite{reward-parser / verifier error analyses for math RLVR} & Diagnostic & Verifier error bounds what any verifiable-reward claim can mean; we track parser disagreement as telemetry and bound claims accordingly. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Group-relative policy optimization (GRPO) was introduced for mathematical reasoning by \citet{shao2024deepseekmath} as a critic-free alternative to actor-critic methods such as PPO \citep{schulman2017proximal}, computing advantages relative to the mean reward of a sampled group. Follow-on systems have observed that zero-contrast groups waste computation; DAPO \citep{yu2025dapo} filters or resamples such groups dynamically at the batch level. Our intervention is deliberately narrower: a fixed two-sample probe with a single expansion rule, no replacement prompts, and no batch reshaping, so that the causal effect of skipping homogeneous groups can be isolated and priced. \todocite{other rollout-efficiency or sample-allocation methods for RLVR that should be compared here}
+
+The statistical framing draws on the reproducibility literature in deep RL, which documents high seed-to-seed variance and advocates paired designs and interval-based reporting \citep{henderson2018deep, agarwal2021deep}, on classical sequential allocation and stopping \citep{lai1985asymptotically, auer2002finite, evendar2006action}, and on standard multiplicity control \citep{holm1979simple} and bootstrap interval construction \citep{efron1993bootstrap}. \todocite{canonical non-inferiority testing methodology reference for the margin-based capability endpoint}
+
+\section{Method}
+\label{sec:method}
+
+\subsection{Baseline and intervention}
+
+Both arms train Qwen3-8B \citep{qwen3report2025} with a pinned open canonical GRPO stack built on TRL \citep{vonwerra2020trl}, on a frozen prompt schedule, for a fixed number of optimizer updates.
+
+\textbf{Baseline (\texttt{grpo\_g8}).} For every prompt the sampler generates $G{=}8$ completions, scores each with the task's deterministic verifier, and applies the pinned canonical group-relative update.
+
+\textbf{Intervention (\texttt{contrast\_early\_stop\_g2\_to\_g8}).} For every prompt the sampler first generates exactly two completions and scores them:
+\begin{enumerate}
+  \item If the two verifier rewards \emph{differ}, the sampler generates six additional completions and applies the same $G{=}8$ update as the baseline, on the same objective, with no modification.
+  \item If the two verifier rewards \emph{agree}, the sampler stops sampling that prompt and records a homogeneous group (all-wrong or all-correct). The group receives no gradient update and no replacement prompt. No auxiliary gradient, curriculum substitution, or hidden resampling is introduced.
+\end{enumerate}
+
+The intervention changes the sampling policy and nothing else: the model, prompt schedule, optimizer, reward parser, update count, checkpoint rule, evaluation harness, and the canonical GRPO objective applied to expanded groups are identical across arms.
+
+\subsection{Canonical objective}
+
+Expanded groups in both arms are optimized with the same pinned group-relative objective: rewards within a group are centered against the group mean, and the resulting advantages weight a clipped policy-gradient update, exactly as in the pinned stack's canonical GRPO implementation \citep{shao2024deepseekmath, vonwerra2020trl}. The intervention introduces no new objective term; homogeneous groups under the intervention simply contribute no update, mirroring the fact that a zero-variance group contributes zero advantage under the baseline objective as well.
+
+\subsection{Charged-token accounting}
+
+The primary cost quantity is \emph{charged generated tokens}: every token the operator pays to generate during training rollouts. Under the intervention this includes the two-completion probe for every prompt \emph{and} every expansion completion for mixed groups. Skipped groups still pay for their probe. No token generated by either arm is excluded from the account, and evaluation tokens are accounted separately from training rollouts.
+
+\subsection{Fixed components and decoder contract}
+
+The following components are frozen and identical across arms and seeds: initial checkpoint, tokenizer, prompt order, reward parser, optimizer, learning rate, batch size, number of training steps (30 optimizer updates; generation batch size 16; per-device train batch size 2 with gradient accumulation 8), completion cap (1{,}024 tokens), checkpoint rule (final registered checkpoint, never selected by online reward), held-out prompts, decoder, and evaluator.
+
+The decoder contract, frozen prospectively by protocol amendment A002 (Section~\ref{sec:amendments}), runs Qwen3-8B in its explicit non-thinking mode for both arms: training samples with temperature $0.7$, top-$p$ $0.8$, top-$k$ $20$ (the model card's documented sampler), and the fixed held-out evaluation decodes deterministically in non-thinking mode. Completion clipping is a required receipt field, and a run whose sampled training completions are all clipped fails closed.
+
+\subsection{Telemetry: ZVF/GU and mechanism instrumentation}
+
+Both arms log, per update and per run: the zero-variance group fraction (ZVF; the fraction of rollout groups whose rewards are homogeneous and thus carry no contrast), the gradient-updated group fraction (GU), all-wrong / all-correct / mixed group fractions, the two-sample false-homogeneity rate (measured on the \emph{baseline} arm by asking how often its first two samples agree while the full eight-sample group is mixed), policy-ratio quantiles ($q_{05}, q_{50}, q_{95}$), clip fraction by advantage sign, KL to the data policy and to the initial reference, parser disagreement, completion-clipped fraction, and wall-clock seconds. We examine mechanism telemetry; it is descriptive and model-based only, and can never upgrade the confirmatory claims (Section~\ref{sec:results}).
+
+\subsection{Held-out evaluator}
+
+Each task has a fixed, hash-frozen held-out set evaluated identically for every run: 1{,}000 prompts drawn as a hash-frozen subset of the official GSM8K test split \citep{cobbe2021gsm8k}, and all 500 MATH-500 rows \citep{hendrycks2021math}, disjoint from the MATH training prompts. The evaluator decodes deterministically (non-thinking mode), applies the task's strict exact-match reward parser, and reports exact-match accuracy. The evaluator, its decoding parameters, and the held-out manifests are frozen before execution and are identical across arms.
+
+\subsection{External-user contribution gate}
+
+The design includes a gate for any claim about external operational practice: such a claim would require a dated partner attestation of a pre-existing review workflow, an ethics/consent disposition before recruitment, a frozen sampling and blinding plan, a prospectively powered primary outcome, and a signed completion receipt with a numeric result table. None of these receipts exist. The gate is therefore closed, no external-user evaluation appears in this paper, and the contribution types remain methodology, reproducibility, and negative results.
+
+\section{Experimental design}
+\label{sec:design}
+
+\subsection{Complete task-arm matrix and paired seeds}
+
+Table~\ref{tab:matrix} shows the complete confirmatory matrix. All four cells are primary; the initial plan totals $2 \times 2 \times 16 = 64$ training units.
+
+\begin{table}[t]
+\centering
+\caption{The complete, preregistered task-arm matrix. Every cell is primary. This is a design table, not a results table; no cell has been executed.}
+\label{tab:matrix}
+\small
+\begin{tabular}{@{}llp{5.2cm}cr@{}}
+\toprule
+Task & Baseline arm & Intervention arm & Paired seeds & Held-out $n$ \\
+\midrule
+GSM8K   & fixed $G{=}8$ GRPO & $G{=}2$ check, mixed groups expand to $G{=}8$ & 16 & 1{,}000 \\
+MATH-500 & fixed $G{=}8$ GRPO & $G{=}2$ check, mixed groups expand to $G{=}8$ & 16 & 500 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The sixteen preregistered seeds per cell are 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, and 293, paired across arms within each task before execution and disjoint from all prior audit seeds. The independent unit is the training seed within a frozen task-model-stack cell; optimization steps, prompts, completions, checkpoints, and held-out rows are \emph{not} treated as replications.
+
+Corpus is not a crossed factor. Each task keeps one frozen task-native pipeline: GSM8K train (\texttt{openai/gsm8k}, pinned revision) to the GSM8K held-out subset, and MATH-lighteval train (pinned revision) to the disjoint MATH-500 evaluation set (pinned revision). No cross-corpus transfer claim is made.
+
+\subsection{Estimands and joint success rule}
+
+We preregister a joint cost-quality decision. For each task, with seed pairing fixed before execution:
+\begin{itemize}
+  \item \textbf{Cost estimand:} the paired mean log ratio of charged generated tokens, $\log(t_{\mathrm{int}}/t_{\mathrm{base}})$ where $t$ counts charged tokens per run, displayed back-transformed as a relative change. We test whether the intervention reduces rollout cost, with success boundary $-0.20$ relative change (log-ratio boundary $\log 0.8$): the multiplicity-adjusted \emph{upper} confidence bound must be at most $-0.20$.
+  \item \textbf{Capability estimand:} the paired held-out exact-match accuracy difference, intervention minus baseline. We test held-out non-inferiority with margin one percentage point: the multiplicity-adjusted \emph{lower} confidence bound must be greater than $-0.01$, and the achieved power or precision gate must pass.
+\end{itemize}
+
+The two endpoints form an intersection-union decision within each task, and Holm adjustment \citep{holm1979simple} is applied across the two tasks. Confidence intervals use a seed-paired bootstrap with deterministic streams \citep{efron1993bootstrap}, with a paired-$t$ sensitivity analysis. The intervention counts as useful only if both boundaries pass on both tasks. Any incomplete cell, failed provenance gate, power failure, or interval crossing a boundary yields \textsc{inconclusive} --- never ``equivalent'' and never a downgraded partial claim.
+
+\subsection{Power derivation and blinded variance reassessment}
+
+The capability planning standard deviation is $0.0128285396$, the worst paired held-out standard deviation observed in the completed E1 audit; that value is a conservative planning prior only, and no E1 verdict is evidence for this paper. With a one-sided per-task $\alpha = 0.025$, target power $0.80$, and a one-percentage-point margin, the normal approximation requires 13 paired seeds; a $20\%$ variance-transfer inflation yields the preregistered 16.
+
+There is no valid prior for the intervention's paired token-cost variance. After eight completed pairs per cell, a \emph{blinded} variance-only reassessment therefore estimates the held-out-difference variance and the variance of the paired log token ratio with arm labels hidden --- it can see neither the sign nor the task-arm mean effect. It recomputes the paired count required for $80\%$ power at the one-point capability margin and the $\log 0.8$ cost boundary; the frozen final count is the larger requirement, capped at 24 seeds per cell. The reassessment may increase but never decrease the count, may not inspect arm effects, may not change margins or estimands, and may not drop a task. If the requirement exceeds the cap, the study verdict is \textsc{stop\_underpowered} rather than a relaxed claim.
+
+\subsection{Protocol amendments (prospective, pre-execution)}
+\label{sec:amendments}
+
+Two hash-bound prospective amendments were registered before any confirmatory row existed; both leave tasks, arms, seeds, reward semantics, estimands, and the sample-size rule unchanged.
+
+\textbf{A001 (MATH unbraced boxed targets).} A non-evidence MATH-500 preflight found two frozen MATH-lighteval training solutions whose final answers use unbraced \verb|\boxed| targets. The amendment adds a numeric-only compatibility rule for a final unbraced numeric atom after \verb|\boxed|, retains all 7{,}500 training rows, and drops none; arbitrary unbraced prose remains invalid.
+
+\textbf{A002 (Qwen3 non-thinking decoder).} The amended MATH baseline preflight then showed that thinking-mode decoding clipped every sampled training completion at the 1{,}024-token cap and produced no reward contrast. Consistent with the Qwen3 model card's guidance \citep{qwen3report2025}, the amendment freezes non-thinking chat templates, the model-card training sampler (temperature $0.7$, top-$p$ $0.8$, top-$k$ $20$), deterministic non-thinking evaluation, and a fail-closed completion-clipping receipt field. Preflight outcomes remain non-evidence and cannot support any confirmatory claim.
+
+\subsection{Failure and missingness policy}
+
+Analysis is intention-to-treat over the preregistered seed plan. Infrastructure interruptions are handled by exact resume; no failed run is silently dropped or relabeled as a scientific failure. Every run carries one of the allowed statuses (\texttt{planned}, \texttt{running}, \texttt{complete}, \texttt{failed\_infrastructure}, \texttt{invalid}, \texttt{quarantined}), and any cell left incomplete or invalid renders the joint decision \textsc{inconclusive}. A boundary-crossing interval, a failed power receipt, or an incomplete cell is \textsc{inconclusive}, not equivalence and not failure.
+
+\subsection{Provenance fields and publication gate}
+
+Every confirmatory seed row must carry a complete provenance record before it can enter analysis, including: task, arm, and seed identifiers; claim identifiers; run identity; run status; source commit; protocol hash; model, tokenizer, stack, and objective fingerprints; task split; prompt, completion, reward-parser, and evaluation manifest hashes; training-step count; checkpoint rule and checkpoint hash; evaluation rule; evidence tier; and receipt hash --- alongside the measured charged-token, group-composition, and held-out quantities. The publication gate is absolute: every one of the 64 initially planned task-arm-seed rows (or every row added by the blinded variance amendment) must be complete and hash-valid before the main table can be generated. Preflight runs are labeled \texttt{preflight-not-evidence} and can never populate the confirmatory table.
+
+\section{Results}
+\label{sec:results}
+
+\begin{center}
+\fbox{\parbox{0.92\textwidth}{\centering\textbf{\textcolor{red}{STRUCTURAL STUB --- NO RESULTS EXIST.}}\\
+\textcolor{red}{0 of 64 confirmatory task-arm-seed rows are complete. The publication gate in \texttt{results\_contract.json} is unmet, so Table~\ref{tab:main} cannot be generated. Nothing in this section is an empirical finding.}}}
+\end{center}
+
+Table~\ref{tab:main} will be generated \emph{only} from the reconciled, hash-valid run ledger, with every task-arm row visible, and with values only --- the results contract prohibits artifact-reference columns (file, filename, path, URL, artifact) in the main table, and no value may be replaced by a pointer to an artifact.
+
+\begin{table}[h]
+\centering
+\caption{\textbf{[PLACEHOLDER --- TABLE NOT GENERATED]} Main confirmatory table. Column structure follows the frozen contract \texttt{main\_table\_columns} in \texttt{results\_contract.json}: task, arm, completed seeds, charged-token mean with confidence interval, held-out accuracy mean with confidence interval, paired cost effect with confidence interval, paired accuracy effect with confidence interval, and verdict.}
+\label{tab:main}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}llrrrrrrrrrrrrrl@{}}
+\toprule
+task & arm & \multicolumn{1}{c}{\shortstack{compl.\\seeds}} & \multicolumn{3}{c}{\shortstack{charged tokens\\mean [CI low, CI high]}} & \multicolumn{3}{c}{\shortstack{held-out accuracy\\mean [CI low, CI high]}} & \multicolumn{3}{c}{\shortstack{paired cost effect\\[0pt] [CI low, CI high]}} & \multicolumn{3}{c}{\shortstack{paired accuracy effect\\[0pt] [CI low, CI high]}} & verdict \\
+\midrule
+\multicolumn{16}{c}{\textcolor{red}{\textbf{TABLE NOT GENERATED --- publication gate unmet: 0/64 confirmatory rows complete}}} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+Planned reporting, keyed to the claim ledger:
+
+\begin{itemize}
+  \item \todo{C1\_cost\_reduction: after the publication gate passes, populate the paired cost effect and its multiplicity-adjusted interval for both tasks from the reconciled ledger. Pre-results status: we test whether the intervention reduces rollout cost. No cost number may appear before then.}
+  \item \todo{C2\_capability\_noninferiority: after the gate passes, populate the paired held-out accuracy effect, its multiplicity-adjusted interval, and the power/precision gate outcome for both tasks. Pre-results status: we test held-out non-inferiority.}
+  \item \todo{C3\_joint\_operator\_rule: after C1 and C2 columns exist, report the intersection-union verdict per task with Holm adjustment across tasks; any missing or invalid cell is INCONCLUSIVE. Pre-results status: we preregister a joint cost-quality decision.}
+  \item \todo{C4\_mechanism: after the gate passes, add the mechanism-telemetry figure (all-wrong / all-correct / mixed group fractions, two-sample false homogeneity, ZVF/GU, clipping, policy-ratio tails, KL, parser disagreement, wall time) as descriptive analysis only. Pre-results status: we examine mechanism telemetry; it never upgrades C1--C3.}
+  \item \todo{Prespecified sensitivity analyses: paired-t versus seed-paired bootstrap intervals; report both after the gate passes.}
+\end{itemize}
+
+\section{Limitations}
+\label{sec:limitations}
+
+All claims in this paper, once results exist, will be bounded to the frozen study universe: two mathematical tasks (GSM8K and MATH-500) with their task-native corpora, one model (Qwen3-8B in explicit non-thinking mode), one pinned open GRPO stack, the frozen strict exact-match reward parsers, a 30-update training horizon with a 1{,}024-token completion cap, and the exact two-sample early-stop sampling policy tested. No conclusion transfers to other models, stacks, tasks, coding or tool-use domains, subjective rewards, longer horizons, or any other stopping controller.
+
+Four design-level limitations deserve emphasis before any data arrive. First, \emph{false homogeneity at two samples}: two agreeing rewards do not prove the eight-sample group would have been homogeneous, so the intervention can skip groups that carried contrast; the design measures this directly on the baseline arm as the two-sample false-homogeneity rate, and we examine mechanism telemetry to characterize it. Second, \emph{verifier error}: strict exact-match parsers can misgrade completions, so the reward being optimized is the parser's judgment, not intended solution quality; parser disagreement is tracked as telemetry and bounds interpretation. Third, \emph{task coverage}: two math tasks cannot support any general claim about RLVR, and none will be made. Fourth, \emph{statistical precision}: with sixteen paired seeds per cell (at most 24 after the blinded reassessment), only effects at or beyond the preregistered margins are decidable; a boundary-crossing interval yields \textsc{inconclusive}, and the design accepts that outcome rather than relaxing margins.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper preregisters a complete confirmatory test of one narrow operational question: whether a contrast-aware early-stop sampler --- two probe completions, expansion to eight only on reward disagreement --- can cut charged RLVR rollout tokens by at least twenty percent while holding held-out accuracy within a one-percentage-point non-inferiority margin, on GSM8K and MATH-500 simultaneously. We test whether the intervention reduces rollout cost; we test held-out non-inferiority; we preregister a joint cost-quality decision whose verdict must come from a complete, hash-valid ledger. \resultpending{the joint cost-quality outcome and its intervals will be restated here after the publication gate passes}.
+
+The claim boundary is exact and will not move with the results: whatever the verdict, it applies to the frozen tasks, model, stack, parsers, horizon, and sampling policy above, and to nothing else. Missing or invalid cells produce \textsc{inconclusive}, not a salvaged partial claim; mechanism telemetry remains descriptive; and no statement about external operational practice is made without the receipts this design requires.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\appendix
+
+\section{Artifact appendix}
+\label{app:artifacts}
+
+This appendix carries reproducibility material: artifact paths, hashes, run identities, environment locks, and recovery receipts. It supports reproducibility but never substitutes for the numerical main table; per the results contract, no main-text value may be replaced by an artifact reference.
+
+\subsection{Frozen design artifacts}
+
+The design is frozen under \texttt{zvf-program/next-submission/} with SHA-256 bindings recorded in \texttt{preregistration.json}. Key artifacts:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lp{9.2cm}@{}}
+\toprule
+Artifact & Path (SHA-256 prefix) \\
+\midrule
+Preregistration & \texttt{preregistration.json} \\
+Claim ledger & \texttt{claim\_ledger.json} (\texttt{0ab19d64\ldots}) \\
+Results contract & \texttt{results\_contract.json} (\texttt{6e543d97\ldots}) \\
+Manuscript blueprint & \texttt{MANUSCRIPT\_BLUEPRINT.md} (\texttt{6a9c6645\ldots}) \\
+Execution authorization & \texttt{execution\_authorization.json} (\texttt{c2012537\ldots}) \\
+Contrast sampler & \texttt{contrast\_sampler.py} (\texttt{083da9d9\ldots}) \\
+TRL sampler adapter & \texttt{trl\_sampler\_adapter.py} (\texttt{86964746\ldots}) \\
+Remote preflight & \path{remote_preflight.py} (\texttt{dafa185f\ldots}) \\
+Amendment A001 & \path{protocol_amendment_001_math_boxed.json} (\texttt{89f8ff46\ldots}) \\
+Amendment A002 & \path{protocol_amendment_002_qwen_decoder.json} (\texttt{5695e535\ldots}) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Full 64-hex digests for these artifacts, and for every provider launcher (Colab, Hugging Face Jobs, Kaggle, GCP), are recorded in the \texttt{bindings} block of the preregistration file. The design verifier, \texttt{verify\_design.py}, checks the complete matrix, power calculation, claim ledger, contribution-type gate, generated-table contract, manuscript order, execution authorization, executable source hashes, and the frozen evidence boundary.
+
+\subsection{Dataset pins}
+
+Frozen dataset revisions:
+\begin{itemize}
+  \item GSM8K training: \path{openai/gsm8k}, revision \texttt{740312ad\ldots}
+  \item MATH training: \path{DigitalLearningGmbH/MATH-lighteval}, revision \texttt{0530c786\ldots}
+  \item MATH-500 evaluation: \path{HuggingFaceH4/MATH-500}, revision \texttt{6e4ed1a2\ldots}
+\end{itemize}
+Held-out manifests are hash-frozen before execution.
+
+\subsection{Run identities, environment locks, and recovery receipts}
+
+\todo{After confirmatory execution: insert per-run identities (run\_id, source\_commit, protocol\_sha256, model/tokenizer/stack/objective fingerprints, manifest hashes, checkpoint hashes, receipt hashes), the shared scientific-stack environment lock, provider fingerprints, and any exact-resume recovery receipts, all drawn from the reconciled ledger. No such records exist yet; preflight receipts are labeled preflight-not-evidence and are excluded from this appendix's confirmatory tables.}
+
+\end{document}

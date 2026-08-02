@@ -46,7 +46,7 @@ The resulting rankings are transparent judgments. They are not survey statistics
 The panel was constrained by the following repository facts:
 
 - The completed E1/R08 audit is `COMPLETE`: 40 arm–seed units, eight paired seeds for GRPO, DAPO, GSPO, Dr.GRPO, and AERO, all under one Qwen3-8B/GSM8K/Tinker stack.
-- Against GRPO, DAPO's held-out delta is `+0.0010` with 95% CI `[-0.0045, +0.00675]` and the preregistered verdict `DISAPPEARS`. GSPO (`+0.0050`), Dr.GRPO (`-0.0020`), and AERO (`-0.00075`) are `INCONCLUSIVE`; no arm collapsed.
+- Against GRPO, DAPO's held-out delta is `+0.0010` with 95% CI `[-0.0045, +0.00675]`. Exact paired-t power gives MDE80 `0.01012`, above the `0.01` equivalence margin, so DAPO is `INCONCLUSIVE`. GSPO (`+0.0050`), Dr.GRPO (`-0.0020`), and AERO (`-0.00075`) are also `INCONCLUSIVE`; no arm collapsed and no Benjamini-Hochberg-adjusted difference test rejects.
 - E1 is a survival audit, not a controller validation or general leaderboard. Its scope is one model, task, stack, 30-step horizon, and binary exact-match reward.
 - E1 also exposes the trust problem: a prior loss flag was present but unwired, and recovery/finalizer bookkeeping defects required explicit correction receipts. Plausible outcome traces were not sufficient proof that the intended algorithm executed.
 - The flagship protocol is frozen but screening has not started. S1 requires float64 losses, masks, importance ratios, action selections, and flattened gradients to agree across a canonical reference, TRL, and verl before any GPU screening.

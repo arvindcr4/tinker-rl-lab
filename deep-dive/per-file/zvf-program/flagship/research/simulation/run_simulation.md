@@ -1,6 +1,6 @@
 # Deep Dive: `zvf-program/flagship/research/simulation/run_simulation.py`
 
-> AntiVibe &middot; compact mode &middot; 2026-08-02 12:34 UTC &middot; source: `zvf-program/flagship/research/simulation/run_simulation.py` (481 lines)
+> AntiVibe &middot; compact mode &middot; 2026-08-02 &middot; source: `zvf-program/flagship/research/simulation/run_simulation.py` (481 lines)
 
 ## Overview
 `run_simulation.py` is an entry point that parses intent from the command line and dispatches to the underlying machinery. It translates `--framework/--backend` flags into a plan, then executes or dry-runs it, acting as the seam between human intent and framework-specific code.
@@ -33,11 +33,11 @@ It leans on **argparse, config, csv, dataclass, numpy, protocol** to do its work
 - **When**: For passive data carriers -- configs, results, plans -- especially when you want `==`/hash semantics.
 - **Trade-offs**: No validation by itself; frozen fields protect from mutation but not bad values (pair with pydantic for that).
 
-### CSV I/O
-- **What**: `csv` reads/writes comma-separated records, the lingua franca for tabular data and result dumps.
-- **Why used here**: Large benchmark/results files are exchanged as CSV, so importing/exporting that format is a direct requirement.
-- **When**: When tabular data must be human-openable or compatible with spreadsheets/other tools.
-- **Trade-offs**: CSV has no schema or types -- every field is a string, so parsing and quoting edge cases are on you.
+### Command-line argument parsing
+- **What**: `argparse` turns `sys.argv` into typed options (`--framework`, `--dry-run`) with help text and error handling for free.
+- **Why used here**: Every platform entry point must be runnable by humans and by shelling-out code, so a stable, documented CLI is the contract between them.
+- **When**: When a script is invoked by people, CI, or other processes and needs explicit knobs.
+- **Trade-offs**: Boilerplate-heavy and positional-only; richer CLIs use click/typer for nesting and auto-generated help.
 
 ### Configuration as declarative data (YAML/JSON/TOML)
 - **What**: Knobs live in YAML/JSON/TOML files or tables rather than code, so a run's intent is inspectable and diffable without reading the program.
@@ -45,11 +45,11 @@ It leans on **argparse, config, csv, dataclass, numpy, protocol** to do its work
 - **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
 - **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
 
-### Structural subtyping with typing.Protocol
-- **What**: `Protocol` describes an interface by the *attributes* something has, not by inheritance -- anything matching the shape satisfies it (duck typing with static checks).
-- **Why used here**: Lets the code accept `plan`-like and `run`-like objects without forcing a class hierarchy, useful in the shim layer.
-- **When**: When many small objects share behavior but have no common ancestor.
-- **Trade-offs**: Runtime `isinstance` checks need `@runtime_checkable` and are shallow; static checkers are the real beneficiary.
+### CSV I/O
+- **What**: `csv` reads/writes comma-separated records, the lingua franca for tabular data and result dumps.
+- **Why used here**: Large benchmark/results files are exchanged as CSV, so importing/exporting that format is a direct requirement.
+- **When**: When tabular data must be human-openable or compatible with spreadsheets/other tools.
+- **Trade-offs**: CSV has no schema or types -- every field is a string, so parsing and quoting edge cases are on you.
 
 ### Numeric arrays with NumPy
 - **What**: NumPy gives dense N-d arrays and vectorized math (reductions, broadcasting) that run at C speed.
@@ -57,15 +57,15 @@ It leans on **argparse, config, csv, dataclass, numpy, protocol** to do its work
 - **When**: Any batched numeric transform -- rewards, accuracy, aggregations across rollouts.
 - **Trade-offs**: NumPy and torch each own their memory; converting between them copies unless you share storage carefully.
 
-### Command-line argument parsing
-- **What**: `argparse` turns `sys.argv` into typed options (`--framework`, `--dry-run`) with help text and error handling for free.
-- **Why used here**: Every platform entry point must be runnable by humans and by shelling-out code, so a stable, documented CLI is the contract between them.
-- **When**: When a script is invoked by people, CI, or other processes and needs explicit knobs.
-- **Trade-offs**: Boilerplate-heavy and positional-only; richer CLIs use click/typer for nesting and auto-generated help.
+### Structural subtyping with typing.Protocol
+- **What**: `Protocol` describes an interface by the *attributes* something has, not by inheritance -- anything matching the shape satisfies it (duck typing with static checks).
+- **Why used here**: Lets the code accept `plan`-like and `run`-like objects without forcing a class hierarchy, useful in the shim layer.
+- **When**: When many small objects share behavior but have no common ancestor.
+- **Trade-offs**: Runtime `isinstance` checks need `@runtime_checkable` and are shallow; static checkers are the real beneficiary.
 
 
 ## Related Code
 - Stand-alone: imports nothing else local.
 
 ---
-*Generated by AntiVibe per-file pass &middot; 2026-08-02 12:34 UTC &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*
+*Generated by AntiVibe per-file pass &middot; 2026-08-02 &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*

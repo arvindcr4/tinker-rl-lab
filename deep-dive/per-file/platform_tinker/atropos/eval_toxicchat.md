@@ -1,6 +1,6 @@
 # Deep Dive: `platform_tinker/atropos/eval_toxicchat.py`
 
-> AntiVibe &middot; compact mode &middot; 2026-08-02 12:34 UTC &middot; source: `platform_tinker/atropos/eval_toxicchat.py` (246 lines)
+> AntiVibe &middot; compact mode &middot; 2026-08-02 &middot; source: `platform_tinker/atropos/eval_toxicchat.py` (246 lines)
 
 ## Overview
 `eval_toxicchat.py` is an evaluation/measurement script that quantifies outcomes and produces evidence. It turns raw run outputs into comparable metrics and receipts rather than anecdotes.
@@ -25,17 +25,11 @@ It leans on **argparse, asyncio, config, dataclass, http, protocol, transformers
 - **When**: For passive data carriers -- configs, results, plans -- especially when you want `==`/hash semantics.
 - **Trade-offs**: No validation by itself; frozen fields protect from mutation but not bad values (pair with pydantic for that).
 
-### Hugging Face Transformers (pretrained models & tokenizers)
-- **What**: The `transformers` library loads pretrained checkpoints (here Qwen3-8B) and their tokenizers behind a uniform `AutoModelForCausalLM`/`AutoTokenizer` interface.
-- **Why used here**: It gives one stable API over many architectures plus hosted checkpoints, which is why it is the shared backbone across every framework in this repo.
-- **When**: Any task that starts from an existing LLM and adds training, serving, or eval.
-- **Trade-offs**: The abstraction hides internals; subtle differences between architectures can surprise you when you rely on undocumented behavior.
-
-### HTTP client calls
-- **What**: `requests`/`httpx`/`aiohttp` issue HTTP requests to APIs -- model hosting, receipt uploads (HF/W&B/GCS), or remote preflight checks.
-- **Why used here**: Evidence must land on independent channels, and those channels are network APIs, so HTTP is how receipts and checkpoints actually get out.
-- **When**: Any interaction with a REST endpoint: upload, download, health-check, serverless invocation.
-- **Trade-offs**: Network calls fail; you need timeouts, retries, and idempotency or a transient blip becomes a lost run.
+### Command-line argument parsing
+- **What**: `argparse` turns `sys.argv` into typed options (`--framework`, `--dry-run`) with help text and error handling for free.
+- **Why used here**: Every platform entry point must be runnable by humans and by shelling-out code, so a stable, documented CLI is the contract between them.
+- **When**: When a script is invoked by people, CI, or other processes and needs explicit knobs.
+- **Trade-offs**: Boilerplate-heavy and positional-only; richer CLIs use click/typer for nesting and auto-generated help.
 
 ### Asynchronous I/O (asyncio / async def)
 - **What**: `async`/`await` lets one thread interleave many I/O-bound operations (network, subprocesses) instead of blocking on each.
@@ -49,17 +43,23 @@ It leans on **argparse, asyncio, config, dataclass, http, protocol, transformers
 - **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
 - **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
 
+### HTTP client calls
+- **What**: `requests`/`httpx`/`aiohttp` issue HTTP requests to APIs -- model hosting, receipt uploads (HF/W&B/GCS), or remote preflight checks.
+- **Why used here**: Evidence must land on independent channels, and those channels are network APIs, so HTTP is how receipts and checkpoints actually get out.
+- **When**: Any interaction with a REST endpoint: upload, download, health-check, serverless invocation.
+- **Trade-offs**: Network calls fail; you need timeouts, retries, and idempotency or a transient blip becomes a lost run.
+
 ### Structural subtyping with typing.Protocol
 - **What**: `Protocol` describes an interface by the *attributes* something has, not by inheritance -- anything matching the shape satisfies it (duck typing with static checks).
 - **Why used here**: Lets the code accept `plan`-like and `run`-like objects without forcing a class hierarchy, useful in the shim layer.
 - **When**: When many small objects share behavior but have no common ancestor.
 - **Trade-offs**: Runtime `isinstance` checks need `@runtime_checkable` and are shallow; static checkers are the real beneficiary.
 
-### Command-line argument parsing
-- **What**: `argparse` turns `sys.argv` into typed options (`--framework`, `--dry-run`) with help text and error handling for free.
-- **Why used here**: Every platform entry point must be runnable by humans and by shelling-out code, so a stable, documented CLI is the contract between them.
-- **When**: When a script is invoked by people, CI, or other processes and needs explicit knobs.
-- **Trade-offs**: Boilerplate-heavy and positional-only; richer CLIs use click/typer for nesting and auto-generated help.
+### Hugging Face Transformers (pretrained models & tokenizers)
+- **What**: The `transformers` library loads pretrained checkpoints (here Qwen3-8B) and their tokenizers behind a uniform `AutoModelForCausalLM`/`AutoTokenizer` interface.
+- **Why used here**: It gives one stable API over many architectures plus hosted checkpoints, which is why it is the shared backbone across every framework in this repo.
+- **When**: Any task that starts from an existing LLM and adds training, serving, or eval.
+- **Trade-offs**: The abstraction hides internals; subtle differences between architectures can surprise you when you rely on undocumented behavior.
 
 
 ## Related Code
@@ -71,4 +71,4 @@ It leans on **argparse, asyncio, config, dataclass, http, protocol, transformers
 - sibling `platform_tinker/atropos/pyproject.toml`
 
 ---
-*Generated by AntiVibe per-file pass &middot; 2026-08-02 12:34 UTC &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*
+*Generated by AntiVibe per-file pass &middot; 2026-08-02 &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*

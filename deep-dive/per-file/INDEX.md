@@ -1,6 +1,6 @@
 # AntiVibe Per-File Deep Dives -- Index
 
-> Generated 2026-08-02 12:34 UTC by `tools/apply_antivibe.py` (AntiVibe compact mode).
+> Generated 2026-08-02 by `tools/apply_antivibe.py` (AntiVibe compact mode).
 
 One educational deep dive per real source file, mirrored under this folder.
 Scope: Python (.py), shell (.sh), YAML/TOML, and key top-level JSON. Excluded:
@@ -1256,7 +1256,7 @@ with: `python tools/apply_antivibe.py`.
 
 | Source | Deep dive | Role | Lines |
 |--------|-----------|------|------:|
-| `tools/apply_antivibe.py` | [tools/apply_antivibe.md](tools/apply_antivibe.md) | lib | 939 |
+| `tools/apply_antivibe.py` | [tools/apply_antivibe.md](tools/apply_antivibe.md) | lib | 950 |
 | `tools/check_repo_policy.py` | [tools/check_repo_policy.md](tools/check_repo_policy.md) | eval | 71 |
 | `tools/check_stale_verdicts.py` | [tools/check_stale_verdicts.md](tools/check_stale_verdicts.md) | eval | 140 |
 | `tools/check_wheel.py` | [tools/check_wheel.md](tools/check_wheel.md) | eval | 56 |

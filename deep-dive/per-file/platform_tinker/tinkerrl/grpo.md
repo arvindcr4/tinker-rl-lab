@@ -1,6 +1,6 @@
 # Deep Dive: `platform_tinker/tinkerrl/grpo.py`
 
-> AntiVibe &middot; compact mode &middot; 2026-08-02 12:34 UTC &middot; source: `platform_tinker/tinkerrl/grpo.py` (832 lines)
+> AntiVibe &middot; compact mode &middot; 2026-08-02 &middot; source: `platform_tinker/tinkerrl/grpo.py` (832 lines)
 
 ## Overview
 `grpo.py` is a training path that runs gradient-based optimization (GRPO/PPO-style) over model weights. Rollouts are generated, scored by a reward model, and their feedback is backpropagated through a policy updated toward higher reward.
@@ -34,17 +34,29 @@ It leans on **config, dataclass, protocol, regex, torch, transformers, wandb** t
 ### Why the loop is GRPO and not full RLHF
 - **What**: GRPO is the reward-model-free-online variant this protocol froze: it relies on group-relative advantage, cutting the value critic and memory.
 
+### Data modeling with dataclasses
+- **What**: `@dataclass` auto-generates `__init__`, `__repr__`, and `__eq__` from field annotations, turning plain classes into compact value objects.
+- **Why used here**: The repo models specs, results, and plans as frozen dataclasses so structural equality and hashing come for free and mutation is blocked.
+- **When**: For passive data carriers -- configs, results, plans -- especially when you want `==`/hash semantics.
+- **Trade-offs**: No validation by itself; frozen fields protect from mutation but not bad values (pair with pydantic for that).
+
 ### Structural subtyping with typing.Protocol
 - **What**: `Protocol` describes an interface by the *attributes* something has, not by inheritance -- anything matching the shape satisfies it (duck typing with static checks).
 - **Why used here**: Lets the code accept `plan`-like and `run`-like objects without forcing a class hierarchy, useful in the shim layer.
 - **When**: When many small objects share behavior but have no common ancestor.
 - **Trade-offs**: Runtime `isinstance` checks need `@runtime_checkable` and are shallow; static checkers are the real beneficiary.
 
-### Data modeling with dataclasses
-- **What**: `@dataclass` auto-generates `__init__`, `__repr__`, and `__eq__` from field annotations, turning plain classes into compact value objects.
-- **Why used here**: The repo models specs, results, and plans as frozen dataclasses so structural equality and hashing come for free and mutation is blocked.
-- **When**: For passive data carriers -- configs, results, plans -- especially when you want `==`/hash semantics.
-- **Trade-offs**: No validation by itself; frozen fields protect from mutation but not bad values (pair with pydantic for that).
+### Configuration as declarative data (YAML/JSON/TOML)
+- **What**: Knobs live in YAML/JSON/TOML files or tables rather than code, so a run's intent is inspectable and diffable without reading the program.
+- **Why used here**: A single frozen `CanonicalSpec` + preregistration files is the repo's whole comparability contract -- config-as-data is what makes runs hashable and testable.
+- **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
+- **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
+
+### Text processing with regular expressions
+- **What**: `re` matches/extracts patterns in text -- parsing logs, sanitizing identifiers, or validating formats that don't warrant a full parser.
+- **Why used here**: Receipts, path probes, and name munging are string-shaped; regex is the compact tool for targeted extraction.
+- **When**: Small, well-defined text patterns where a parser is overkill.
+- **Trade-offs**: Regex is opaque and easy to get subtly wrong; complex grammars should graduate to a real parser.
 
 ### PyTorch tensor computation & autograd
 - **What**: PyTorch is the numeric engine: `torch.Tensor` holds batched GPU/CPU arrays and `torch.autograd` builds the computation graph so gradients flow from a loss back to every parameter.
@@ -64,22 +76,10 @@ It leans on **config, dataclass, protocol, regex, torch, transformers, wandb** t
 - **When**: When a run's value is in its history -- comparing sweeps, auditing, or sharing results without sending weights.
 - **Trade-offs**: Adds a network dependency and an external account; local-only runs must opt out or write a local fallback.
 
-### Text processing with regular expressions
-- **What**: `re` matches/extracts patterns in text -- parsing logs, sanitizing identifiers, or validating formats that don't warrant a full parser.
-- **Why used here**: Receipts, path probes, and name munging are string-shaped; regex is the compact tool for targeted extraction.
-- **When**: Small, well-defined text patterns where a parser is overkill.
-- **Trade-offs**: Regex is opaque and easy to get subtly wrong; complex grammars should graduate to a real parser.
-
-### Configuration as declarative data (YAML/JSON/TOML)
-- **What**: Knobs live in YAML/JSON/TOML files or tables rather than code, so a run's intent is inspectable and diffable without reading the program.
-- **Why used here**: A single frozen `CanonicalSpec` + preregistration files is the repo's whole comparability contract -- config-as-data is what makes runs hashable and testable.
-- **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
-- **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
-
 
 ## Related Code
 - sibling `platform_tinker/tinkerrl/__init__.py`
 - sibling `platform_tinker/tinkerrl/grpo_cli.py`
 
 ---
-*Generated by AntiVibe per-file pass &middot; 2026-08-02 12:34 UTC &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*
+*Generated by AntiVibe per-file pass &middot; 2026-08-02 &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*

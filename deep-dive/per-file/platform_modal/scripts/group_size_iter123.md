@@ -1,6 +1,6 @@
 # Deep Dive: `platform_modal/scripts/group_size_iter123.py`
 
-> AntiVibe &middot; compact mode &middot; 2026-08-02 12:34 UTC &middot; source: `platform_modal/scripts/group_size_iter123.py` (589 lines)
+> AntiVibe &middot; compact mode &middot; 2026-08-02 &middot; source: `platform_modal/scripts/group_size_iter123.py` (589 lines)
 
 ## Overview
 `group_size_iter123.py` is a library module exposing reusable building blocks to the rest of the codebase. It defines types, helpers, and algorithms consumed by drivers and experiments rather than performing a single top-level action.
@@ -26,6 +26,24 @@ It leans on **config, numpy, pandas, regex, viz** to do its work.
 ### DRY across drivers
 - **What**: Shared helper modules stop five framework drivers from each re-solving the same problem in five slightly different ways.
 
+### Configuration as declarative data (YAML/JSON/TOML)
+- **What**: Knobs live in YAML/JSON/TOML files or tables rather than code, so a run's intent is inspectable and diffable without reading the program.
+- **Why used here**: A single frozen `CanonicalSpec` + preregistration files is the repo's whole comparability contract -- config-as-data is what makes runs hashable and testable.
+- **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
+- **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
+
+### Numeric arrays with NumPy
+- **What**: NumPy gives dense N-d arrays and vectorized math (reductions, broadcasting) that run at C speed.
+- **Why used here**: Reward computation and metrics are array operations; vectorizing over a batch is both faster and more readable than Python loops.
+- **When**: Any batched numeric transform -- rewards, accuracy, aggregations across rollouts.
+- **Trade-offs**: NumPy and torch each own their memory; converting between them copies unless you share storage carefully.
+
+### Tabular data with pandas
+- **What**: pandas DataFrames hold labeled, columnar data and offer groupby/merge/agg one-liners over CSV/JSON exports.
+- **Why used here**: Experiment logs and result exports aggregate nicely into tables for reporting and audits.
+- **When**: When you'd otherwise hand-roll loops over rows of CSV/JSON results.
+- **Trade-offs**: DataFrames are heavier than raw arrays; overuse for tiny data adds import cost and ambiguity about index semantics.
+
 ### Text processing with regular expressions
 - **What**: `re` matches/extracts patterns in text -- parsing logs, sanitizing identifiers, or validating formats that don't warrant a full parser.
 - **Why used here**: Receipts, path probes, and name munging are string-shaped; regex is the compact tool for targeted extraction.
@@ -38,24 +56,6 @@ It leans on **config, numpy, pandas, regex, viz** to do its work.
 - **When**: When a comparison (scaling curve, loss trace, ablation) is clearer as a picture than a table.
 - **Trade-offs**: Figures need explicit styling to stay trustworthy; a miscalled axis or log scale can misrepresent the claim.
 
-### Configuration as declarative data (YAML/JSON/TOML)
-- **What**: Knobs live in YAML/JSON/TOML files or tables rather than code, so a run's intent is inspectable and diffable without reading the program.
-- **Why used here**: A single frozen `CanonicalSpec` + preregistration files is the repo's whole comparability contract -- config-as-data is what makes runs hashable and testable.
-- **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
-- **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
-
-### Tabular data with pandas
-- **What**: pandas DataFrames hold labeled, columnar data and offer groupby/merge/agg one-liners over CSV/JSON exports.
-- **Why used here**: Experiment logs and result exports aggregate nicely into tables for reporting and audits.
-- **When**: When you'd otherwise hand-roll loops over rows of CSV/JSON results.
-- **Trade-offs**: DataFrames are heavier than raw arrays; overuse for tiny data adds import cost and ambiguity about index semantics.
-
-### Numeric arrays with NumPy
-- **What**: NumPy gives dense N-d arrays and vectorized math (reductions, broadcasting) that run at C speed.
-- **Why used here**: Reward computation and metrics are array operations; vectorizing over a batch is both faster and more readable than Python loops.
-- **When**: Any batched numeric transform -- rewards, accuracy, aggregations across rollouts.
-- **Trade-offs**: NumPy and torch each own their memory; converting between them copies unless you share storage carefully.
-
 
 ## Related Code
 - sibling `platform_modal/scripts/_reviewer_points_extract.py`
@@ -66,4 +66,4 @@ It leans on **config, numpy, pandas, regex, viz** to do its work.
 - sibling `platform_modal/scripts/ed25519-sign.py`
 
 ---
-*Generated by AntiVibe per-file pass &middot; 2026-08-02 12:34 UTC &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*
+*Generated by AntiVibe per-file pass &middot; 2026-08-02 &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*

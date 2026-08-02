@@ -68,7 +68,7 @@ async def evaluate_with_tinker(
 ) -> Dict[str, Any]:
     """Evaluate model on GSM8K using Tinker API."""
     
-    # TODO: Address "Closed-Source Confound" by benchmarking against open-source alternatives 
+    # LIMITATION: "Closed-Source Confound" by benchmarking against open-source alternatives 
     # (e.g., TRL or vLLM) to ensure performance gaps aren't just due to Tinker's proprietary optimizations.
     try:
         import tinker
@@ -83,7 +83,7 @@ async def evaluate_with_tinker(
         tokenizer.pad_token = tokenizer.eos_token
 
     # Load GSM8K test split
-    # TODO: Address "The Early-Training Snapshot Problem" and "API cost constraints" by evaluating 
+    # LIMITATION: "The Early-Training Snapshot Problem" and "API cost constraints" by evaluating 
     # on the full test set instead of small subsets once budget allows.
     ds = load_dataset("openai/gsm8k", "main", split="test")
     ds = ds.shuffle(seed=seed)
@@ -153,7 +153,7 @@ async def evaluate_with_tinker(
     overall_acc = np.mean([r["mean_reward"] for r in results])
     overall_zvf = np.mean(zvf_per_problem)
 
-    # TODO: Address "Failure to Prove Generalization" by implementing statistical significance 
+    # LIMITATION: "Failure to Prove Generalization" by implementing statistical significance 
     # testing (e.g., p-values) against base model performance to rigorously prove reasoning uplift.
 
     summary = {
@@ -177,7 +177,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--group-size", type=int, default=8, help="Rollout group size")
     p.add_argument("--temperature", type=float, default=1.0)
     p.add_argument("--seed", type=int, default=42)
-    # TODO: Address "Single-Seed Extrapolations" by supporting multiple seeds and computing 
+    # LIMITATION: "Single-Seed Extrapolations" by supporting multiple seeds and computing 
     # confidence intervals, as RL dynamics are notoriously high-variance and initialization-dependent.
     p.add_argument("--out", default=str(OUT_JSON))
     args = p.parse_args(argv)

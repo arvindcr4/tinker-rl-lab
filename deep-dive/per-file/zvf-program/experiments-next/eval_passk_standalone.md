@@ -1,6 +1,6 @@
 # Deep Dive: `zvf-program/experiments-next/eval_passk_standalone.py`
 
-> AntiVibe &middot; compact mode &middot; 2026-08-02 12:34 UTC &middot; source: `zvf-program/experiments-next/eval_passk_standalone.py` (415 lines)
+> AntiVibe &middot; compact mode &middot; 2026-08-02 &middot; source: `zvf-program/experiments-next/eval_passk_standalone.py` (415 lines)
 
 ## Overview
 `eval_passk_standalone.py` is an evaluation/measurement script that quantifies outcomes and produces evidence. It turns raw run outputs into comparable metrics and receipts rather than anecdotes.
@@ -25,17 +25,11 @@ It leans on **argparse, config, parallel, regex, subprocess, vllm** to do its wo
 ### Comparability over raw numbers
 - **What**: Results only matter relative to a shared frozen protocol; evaluation exists to keep every framework measured against the same yardstick.
 
-### Text processing with regular expressions
-- **What**: `re` matches/extracts patterns in text -- parsing logs, sanitizing identifiers, or validating formats that don't warrant a full parser.
-- **Why used here**: Receipts, path probes, and name munging are string-shaped; regex is the compact tool for targeted extraction.
-- **When**: Small, well-defined text patterns where a parser is overkill.
-- **Trade-offs**: Regex is opaque and easy to get subtly wrong; complex grammars should graduate to a real parser.
-
-### Parallelism (threads / processes / futures)
-- **What**: `concurrent.futures`/threading/multiprocessing run independent work concurrently, cutting wall-clock for fan-out tasks.
-- **Why used here**: Rollout generation and multi-backend dispatch are embarrassingly parallel, so pools/futures are a cheap win.
-- **When**: Many independent units of work that share no mutable state.
-- **Trade-offs**: Threads don't speed up CPU-bound Python (GIL); processes add copy/serialization cost and need picklable arguments.
+### Command-line argument parsing
+- **What**: `argparse` turns `sys.argv` into typed options (`--framework`, `--dry-run`) with help text and error handling for free.
+- **Why used here**: Every platform entry point must be runnable by humans and by shelling-out code, so a stable, documented CLI is the contract between them.
+- **When**: When a script is invoked by people, CI, or other processes and needs explicit knobs.
+- **Trade-offs**: Boilerplate-heavy and positional-only; richer CLIs use click/typer for nesting and auto-generated help.
 
 ### Configuration as declarative data (YAML/JSON/TOML)
 - **What**: Knobs live in YAML/JSON/TOML files or tables rather than code, so a run's intent is inspectable and diffable without reading the program.
@@ -43,11 +37,17 @@ It leans on **argparse, config, parallel, regex, subprocess, vllm** to do its wo
 - **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
 - **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
 
-### vLLM high-throughput inference serving
-- **What**: vLLM serves LLMs with paged attention and continuous batching, turning costly rollout generation into a fast, batched operation.
-- **Why used here**: RL rollouts need thousands of completions per step; vLLM's batching is what makes that tractable on limited GPU time.
-- **When**: Whenever inference volume (not just latency) is the bottleneck -- exactly the RL rollout case.
-- **Trade-offs**: Serving adds a process boundary and a different memory footprint; small models can be slower through vLLM than a plain HF forward pass.
+### Parallelism (threads / processes / futures)
+- **What**: `concurrent.futures`/threading/multiprocessing run independent work concurrently, cutting wall-clock for fan-out tasks.
+- **Why used here**: Rollout generation and multi-backend dispatch are embarrassingly parallel, so pools/futures are a cheap win.
+- **When**: Many independent units of work that share no mutable state.
+- **Trade-offs**: Threads don't speed up CPU-bound Python (GIL); processes add copy/serialization cost and need picklable arguments.
+
+### Text processing with regular expressions
+- **What**: `re` matches/extracts patterns in text -- parsing logs, sanitizing identifiers, or validating formats that don't warrant a full parser.
+- **Why used here**: Receipts, path probes, and name munging are string-shaped; regex is the compact tool for targeted extraction.
+- **When**: Small, well-defined text patterns where a parser is overkill.
+- **Trade-offs**: Regex is opaque and easy to get subtly wrong; complex grammars should graduate to a real parser.
 
 ### Process orchestration (subprocess)
 - **What**: `subprocess.run`/`Popen` spawns and captures external commands, letting Python drive shell steps, remote CLIs, and other tools as child processes.
@@ -55,11 +55,11 @@ It leans on **argparse, config, parallel, regex, subprocess, vllm** to do its wo
 - **When**: When work is naturally a separate executable: `modal run`, `gcloud`, ssh commands, secondary scripts.
 - **Trade-offs**: Argument quoting/escaping and env leakage are footguns; you lose in-process debugging across the boundary.
 
-### Command-line argument parsing
-- **What**: `argparse` turns `sys.argv` into typed options (`--framework`, `--dry-run`) with help text and error handling for free.
-- **Why used here**: Every platform entry point must be runnable by humans and by shelling-out code, so a stable, documented CLI is the contract between them.
-- **When**: When a script is invoked by people, CI, or other processes and needs explicit knobs.
-- **Trade-offs**: Boilerplate-heavy and positional-only; richer CLIs use click/typer for nesting and auto-generated help.
+### vLLM high-throughput inference serving
+- **What**: vLLM serves LLMs with paged attention and continuous batching, turning costly rollout generation into a fast, batched operation.
+- **Why used here**: RL rollouts need thousands of completions per step; vLLM's batching is what makes that tractable on limited GPU time.
+- **When**: Whenever inference volume (not just latency) is the bottleneck -- exactly the RL rollout case.
+- **Trade-offs**: Serving adds a process boundary and a different memory footprint; small models can be slower through vLLM than a plain HF forward pass.
 
 
 ## Related Code
@@ -71,4 +71,4 @@ It leans on **argparse, config, parallel, regex, subprocess, vllm** to do its wo
 - sibling `zvf-program/experiments-next/analyze_t3_gstar.py`
 
 ---
-*Generated by AntiVibe per-file pass &middot; 2026-08-02 12:34 UTC &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*
+*Generated by AntiVibe per-file pass &middot; 2026-08-02 &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*

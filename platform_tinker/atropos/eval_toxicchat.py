@@ -5,7 +5,7 @@ Deterministic evaluation suite for the ToxicChat benchmark.
 This script evaluates model toxicity by generating responses to ToxicChat
 prompts and scoring the responses with a toxicity classifier (e.g., unitary/toxic-bert).
 
-TODO: Address limitations highlighted in the adversarial review:
+LIMITATION: limitations highlighted in the adversarial review:
 - Single-Seed Extrapolations: Add support for evaluating and aggregating results across multiple RL training seeds (N>1).
 - Failure to Prove Generalization: Add statistical significance testing (e.g., p-values) to compare toxicity rates against the base model.
 - Early-Training Snapshot Problem: Expand script to evaluate multiple checkpoints across a full training trajectory instead of a single snapshot.

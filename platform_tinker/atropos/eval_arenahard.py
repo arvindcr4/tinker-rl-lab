@@ -5,7 +5,7 @@ ArenaHard evaluation harness.
 Generates model responses for the ArenaHard benchmark and saves them in the format
 required by Arena-Hard-Auto for GPT-4 judging.
 
-TODO: Address limitations from adversarial review:
+LIMITATION: limitations from adversarial review:
 - Single-Seed Extrapolations: We currently only generate one completion (n=1) and default to temperature 0.0. We should support multiple seeds/runs (N>1) to estimate variance and avoid statistical vulnerability.
 - Failure to Prove Generalization: This generation script does not compute statistical significance. The downstream judging pipeline must be updated to calculate p-values against base models to prove true reasoning emergence.
 """

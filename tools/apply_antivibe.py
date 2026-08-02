@@ -23,15 +23,23 @@ import json
 import os
 import re
 import sys
-import textwrap
 import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT_ROOT = ROOT / "deep-dive" / "per-file"
-NOW = datetime.now(timezone.utc)
-TS = NOW.strftime("%Y-%m-%d %H:%M UTC")
+
+# Reproducible timestamp: honor SOURCE_DATE_EPOCH (reproducible-builds
+# convention) so CI can force byte-identical output; otherwise date-grain so
+# re-running on the same day produces NO diff. (Minute-grain would dirty all
+# ~1344 docs on every run, defeating the "deterministic, regenerable" contract.)
+_sde = os.environ.get("SOURCE_DATE_EPOCH", "")
+TS = (
+    datetime.fromtimestamp(int(_sde), tz=timezone.utc).strftime("%Y-%m-%d")
+    if _sde.lstrip("-").isdigit()
+    else datetime.now(timezone.utc).strftime("%Y-%m-%d")
+)
 
 # --- scope -----------------------------------------------------------------
 EXCLUDE_DIR_NAMES = {
@@ -801,7 +809,10 @@ def render_doc(rel: Path, facts: dict, role: str) -> str:
     lines.append("")
 
     shown = set()
-    for key in list(facts["patterns"]) + list(facts["libs"]):
+    # Sort both sets: iteration order of a Python set depends on PYTHONHASHSEED,
+    # so an unsorted walk would make the Concepts section (and thus the whole
+    # doc) drift between runs. Sorted -> deterministic regardless of hash seed.
+    for key in sorted(facts["patterns"]) + sorted(facts["libs"]):
         key = "memoization" if key == "memoization" else key
         if key in CONCEPTS and key not in shown:
             shown.add(key)

@@ -7,7 +7,7 @@ Usage:
     python serve.py --weights tinker://...path...      # from saved weights
     python serve.py --port 8001                        # custom port
 
-TODO: Address limitations from the adversarial review:
+LIMITATION: limitations from the adversarial review:
 - The Closed-Source Confound: Tinker is a closed-source "black box". We need to document or open-source Tinker's managed defaults, micro-partitioning, and reference offloading to ensure fair algorithmic comparisons.
 - The ZVF Metric, Early-Training Snapshots, Failure to Prove Generalization, and Single-Seed Extrapolations limitations apply to training and are not directly applicable to this inference server.
 """

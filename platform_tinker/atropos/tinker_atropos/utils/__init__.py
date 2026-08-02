@@ -1,5 +1,5 @@
 """
-TODO: Address the following limitations identified in the adversarial review:
+LIMITATION: the following limitations identified in the adversarial review:
 
 1. ZVF Metric:
    - ZVF is borderline tautological and mechanically coupled to reward sparsity, group size, and baseline accuracy.

@@ -25,7 +25,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-# TODO(adversarial_review): Address the methodological limitations raised in adversarial_review.md.
+# LIMITATION (review): Address the methodological limitations raised in adversarial_review.md.
 # These cannot be fixed via anonymization and require new experiments/paper rewrites:
 # 1. ZVF Metric: Fragile across domains (format-gated tasks), borderline tautological, symptom rather than root cause.
 # 2. "Early-Training Snapshot" Problem: 30-50 steps are insufficient to observe true RL convergence.

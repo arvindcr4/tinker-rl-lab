@@ -176,7 +176,7 @@ add_text(slide, 0.7, 5.7, 11.9, 0.3, "SCALING LAW", 14, CYAN, True)
 add_text(slide, 0.7, 6.1, 11.9, 0.7, "Clear trend: model size correlates with GRPO effectiveness. 1B: 63% | 8B: 100% | 30B: 100% (faster convergence). This mirrors findings in SimpleRL-Zoo and DeepSeek-R1 literature.", 14, GRAY)
 
 # ==================== SLIDE 5: Reward Trajectories ====================
-# TODO: Address the Early-Training Snapshot limitation (30-50 steps are insufficient for true RL convergence).
+# LIMITATION: the Early-Training Snapshot limitation (30-50 steps are insufficient for true RL convergence).
 slide = prs.slides.add_slide(prs.slide_layouts[6])
 set_bg(slide)
 add_text(slide, 0.5, 0.3, 3, 0.5, "04", 14, CYAN, True)
@@ -243,7 +243,7 @@ add_card(slide, 0.5, 6.2, 12.3, 0.8)
 add_text(slide, 0.7, 6.3, 11.9, 0.5, "Total experiment matrix: 5 models x 4 benchmarks = 20 experiments. Currently 6 complete, 2 running, 12 planned.", 14, GRAY)
 
 # ==================== SLIDE 7: Technical Architecture ====================
-# TODO: Address the Closed-Source Confound (Tinker API's black box nature confounds algorithmic comparisons with open-source TRL).
+# LIMITATION: the Closed-Source Confound (Tinker API's black box nature confounds algorithmic comparisons with open-source TRL).
 slide = prs.slides.add_slide(prs.slide_layouts[6])
 set_bg(slide)
 add_text(slide, 0.5, 0.3, 3, 0.5, "06", 14, CYAN, True)

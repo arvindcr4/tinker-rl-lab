@@ -1,6 +1,6 @@
 # Deep Dive: `platform_tinker/atropos/serve.py`
 
-> AntiVibe &middot; compact mode &middot; 2026-08-02 12:34 UTC &middot; source: `platform_tinker/atropos/serve.py` (270 lines)
+> AntiVibe &middot; compact mode &middot; 2026-08-02 &middot; source: `platform_tinker/atropos/serve.py` (270 lines)
 
 ## Overview
 `serve.py` is an entry point that parses intent from the command line and dispatches to the underlying machinery. It translates `--framework/--backend` flags into a plan, then executes or dry-runs it, acting as the seam between human intent and framework-specific code.
@@ -20,17 +20,11 @@ It leans on **argparse, asyncio, logging, transformers, web** to do its work.
 ### One entry, many substrates
 - **What**: Every backend eventually re-enters the local dispatch, so the CLI is both the human interface and the remote-on-box interface.
 
-### Hugging Face Transformers (pretrained models & tokenizers)
-- **What**: The `transformers` library loads pretrained checkpoints (here Qwen3-8B) and their tokenizers behind a uniform `AutoModelForCausalLM`/`AutoTokenizer` interface.
-- **Why used here**: It gives one stable API over many architectures plus hosted checkpoints, which is why it is the shared backbone across every framework in this repo.
-- **When**: Any task that starts from an existing LLM and adds training, serving, or eval.
-- **Trade-offs**: The abstraction hides internals; subtle differences between architectures can surprise you when you rely on undocumented behavior.
-
-### Web service / API layer
-- **What**: A web framework (FastAPI/Flask) exposes endpoints so external actors can query or drive the system over HTTP with structured request/response schemas.
-- **Why used here**: Demos and live checkpoints are served over the web so reviewers can interact without shipping weights or code.
-- **When**: When something must be reachable by a browser or another service at a URL.
-- **Trade-offs**: A server is a long-running, externally reachable surface -- more security and liveness concerns than a plain script.
+### Command-line argument parsing
+- **What**: `argparse` turns `sys.argv` into typed options (`--framework`, `--dry-run`) with help text and error handling for free.
+- **Why used here**: Every platform entry point must be runnable by humans and by shelling-out code, so a stable, documented CLI is the contract between them.
+- **When**: When a script is invoked by people, CI, or other processes and needs explicit knobs.
+- **Trade-offs**: Boilerplate-heavy and positional-only; richer CLIs use click/typer for nesting and auto-generated help.
 
 ### Asynchronous I/O (asyncio / async def)
 - **What**: `async`/`await` lets one thread interleave many I/O-bound operations (network, subprocesses) instead of blocking on each.
@@ -44,11 +38,17 @@ It leans on **argparse, asyncio, logging, transformers, web** to do its work.
 - **When**: Anywhere you'd `print` something that matters: progress, warnings, step boundaries, and fatal errors.
 - **Trade-offs**: More setup than `print`; misconfigured handler levels silently swallow the very lines you need in production.
 
-### Command-line argument parsing
-- **What**: `argparse` turns `sys.argv` into typed options (`--framework`, `--dry-run`) with help text and error handling for free.
-- **Why used here**: Every platform entry point must be runnable by humans and by shelling-out code, so a stable, documented CLI is the contract between them.
-- **When**: When a script is invoked by people, CI, or other processes and needs explicit knobs.
-- **Trade-offs**: Boilerplate-heavy and positional-only; richer CLIs use click/typer for nesting and auto-generated help.
+### Hugging Face Transformers (pretrained models & tokenizers)
+- **What**: The `transformers` library loads pretrained checkpoints (here Qwen3-8B) and their tokenizers behind a uniform `AutoModelForCausalLM`/`AutoTokenizer` interface.
+- **Why used here**: It gives one stable API over many architectures plus hosted checkpoints, which is why it is the shared backbone across every framework in this repo.
+- **When**: Any task that starts from an existing LLM and adds training, serving, or eval.
+- **Trade-offs**: The abstraction hides internals; subtle differences between architectures can surprise you when you rely on undocumented behavior.
+
+### Web service / API layer
+- **What**: A web framework (FastAPI/Flask) exposes endpoints so external actors can query or drive the system over HTTP with structured request/response schemas.
+- **Why used here**: Demos and live checkpoints are served over the web so reviewers can interact without shipping weights or code.
+- **When**: When something must be reachable by a browser or another service at a URL.
+- **Trade-offs**: A server is a long-running, externally reachable surface -- more security and liveness concerns than a plain script.
 
 
 ## Related Code
@@ -60,4 +60,4 @@ It leans on **argparse, asyncio, logging, transformers, web** to do its work.
 - sibling `platform_tinker/atropos/launch_training.py`
 
 ---
-*Generated by AntiVibe per-file pass &middot; 2026-08-02 12:34 UTC &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*
+*Generated by AntiVibe per-file pass &middot; 2026-08-02 &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*

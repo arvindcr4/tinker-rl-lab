@@ -111,8 +111,8 @@ def is_partial(exp):
 # ═══════════════════════════════════════════════════════════
 # Figure 1: Learning curves – all GSM8K GRPO experiments
 # ═══════════════════════════════════════════════════════════
-# TODO(adversarial_review): "Early-Training Snapshot" - Training runs are limited to 30-50 steps due to budget constraints, which is insufficient to show convergence. No fix applicable without longer training data.
-# TODO(adversarial_review): "Single-Seed Extrapolations" - These curves are based on N=1 runs. Cannot add error bars or confidence intervals without multi-seed data.
+# LIMITATION (review): "Early-Training Snapshot" - Training runs are limited to 30-50 steps due to budget constraints, which is insufficient to show convergence. No fix applicable without longer training data.
+# LIMITATION (review): "Single-Seed Extrapolations" - These curves are based on N=1 runs. Cannot add error bars or confidence intervals without multi-seed data.
 gsm8k_exps = [
     e
     for e in data
@@ -185,7 +185,7 @@ print("✓ learning_curves.png")
 # ═══════════════════════════════════════════════════════════
 # Figure 2: Grouped bar chart – peak vs last-10 accuracy
 # ═══════════════════════════════════════════════════════════
-# TODO(adversarial_review): "Failure to Prove Generalization" - Gains over base models (e.g. +1.3% for Qwen3-8B) are not statistically significant (p=0.26). Cannot plot significance markers without full evaluation distributions.
+# LIMITATION (review): "Failure to Prove Generalization" - Gains over base models (e.g. +1.3% for Qwen3-8B) are not statistically significant (p=0.26). Cannot plot significance markers without full evaluation distributions.
 # Gather one entry per model (prefer full run if duplicate)
 model_data = {}
 for exp in data:
@@ -274,7 +274,7 @@ print("✓ comparison_bars.png")
 # ═══════════════════════════════════════════════════════════
 # Figure 3: Scaling plot – model size vs peak accuracy
 # ═══════════════════════════════════════════════════════════
-# TODO(adversarial_review): "Single-Seed Extrapolations" - Extrapolating scaling laws from N=1 runs per model is highly vulnerable to initialization variance. Cannot fix without multi-seed runs for each model size.
+# LIMITATION (review): "Single-Seed Extrapolations" - Extrapolating scaling laws from N=1 runs per model is highly vulnerable to initialization variance. Cannot fix without multi-seed runs for each model size.
 MODEL_SIZES = {
     "qwen3-8b": 8,
     "qwen3.5-4b": 4,
@@ -500,7 +500,7 @@ print("✓ scaling_plot.png")
 # ═══════════════════════════════════════════════════════════
 # Figure 4: PPO vs GRPO side-by-side comparison
 # ═══════════════════════════════════════════════════════════
-# TODO(adversarial_review): "The Closed-Source Confound" - Large performance gaps between algorithms may be confounded by Tinker API's closed-source optimizations rather than the algorithms themselves. Cannot be fixed in plots without baseline open-source (e.g. TRL) run data.
+# LIMITATION (review): "The Closed-Source Confound" - Large performance gaps between algorithms may be confounded by Tinker API's closed-source optimizations rather than the algorithms themselves. Cannot be fixed in plots without baseline open-source (e.g. TRL) run data.
 # From the data + task spec hardcoded values:
 ppo_grpo = {
     "Qwen3-8B": {

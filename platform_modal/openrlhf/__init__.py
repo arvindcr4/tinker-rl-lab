@@ -10,7 +10,7 @@ Features:
 - Async RL training
 - Multi-GPU and multi-node support
 
-TODO: Address structural and methodological limitations identified in adversarial review:
+Known limitations (adversarial review; not open work tickets — need multi-seed GPU campaigns):
 - Fix ZVF metric fragility: ZVF breaks down in format-gated tasks and serves mostly as a symptom rather than root cause.
 - Address the "Early-Training Snapshot" Problem: Expand experiments beyond 30-50 gradient steps to observe true RL convergence.
 - Resolve the Closed-Source Confound: Deconfound Tinker API's managed defaults from nominal RL algorithms.

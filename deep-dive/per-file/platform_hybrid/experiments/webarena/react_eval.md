@@ -1,6 +1,6 @@
 # Deep Dive: `platform_hybrid/experiments/webarena/react_eval.py`
 
-> AntiVibe &middot; compact mode &middot; 2026-08-02 12:34 UTC &middot; source: `platform_hybrid/experiments/webarena/react_eval.py` (525 lines)
+> AntiVibe &middot; compact mode &middot; 2026-08-02 &middot; source: `platform_hybrid/experiments/webarena/react_eval.py` (525 lines)
 
 ## Overview
 `react_eval.py` is an evaluation/measurement script that quantifies outcomes and produces evidence. It turns raw run outputs into comparable metrics and receipts rather than anecdotes.
@@ -33,6 +33,30 @@ It leans on **argparse, config, dataclass, logging, protocol, transformers, wand
 - **When**: For passive data carriers -- configs, results, plans -- especially when you want `==`/hash semantics.
 - **Trade-offs**: No validation by itself; frozen fields protect from mutation but not bad values (pair with pydantic for that).
 
+### Command-line argument parsing
+- **What**: `argparse` turns `sys.argv` into typed options (`--framework`, `--dry-run`) with help text and error handling for free.
+- **Why used here**: Every platform entry point must be runnable by humans and by shelling-out code, so a stable, documented CLI is the contract between them.
+- **When**: When a script is invoked by people, CI, or other processes and needs explicit knobs.
+- **Trade-offs**: Boilerplate-heavy and positional-only; richer CLIs use click/typer for nesting and auto-generated help.
+
+### Configuration as declarative data (YAML/JSON/TOML)
+- **What**: Knobs live in YAML/JSON/TOML files or tables rather than code, so a run's intent is inspectable and diffable without reading the program.
+- **Why used here**: A single frozen `CanonicalSpec` + preregistration files is the repo's whole comparability contract -- config-as-data is what makes runs hashable and testable.
+- **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
+- **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
+
+### Structured diagnostics with logging
+- **What**: The `logging` module writes level-filtered messages to stderr/files, separating operational noise from real errors and leaving them toggleable at runtime.
+- **Why used here**: Runs are audited, so leaving a trail of INFO/DEBUG statements lets a reviewer reconstruct what happened without rerunning GPUs.
+- **When**: Anywhere you'd `print` something that matters: progress, warnings, step boundaries, and fatal errors.
+- **Trade-offs**: More setup than `print`; misconfigured handler levels silently swallow the very lines you need in production.
+
+### Structural subtyping with typing.Protocol
+- **What**: `Protocol` describes an interface by the *attributes* something has, not by inheritance -- anything matching the shape satisfies it (duck typing with static checks).
+- **Why used here**: Lets the code accept `plan`-like and `run`-like objects without forcing a class hierarchy, useful in the shim layer.
+- **When**: When many small objects share behavior but have no common ancestor.
+- **Trade-offs**: Runtime `isinstance` checks need `@runtime_checkable` and are shallow; static checkers are the real beneficiary.
+
 ### Hugging Face Transformers (pretrained models & tokenizers)
 - **What**: The `transformers` library loads pretrained checkpoints (here Qwen3-8B) and their tokenizers behind a uniform `AutoModelForCausalLM`/`AutoTokenizer` interface.
 - **Why used here**: It gives one stable API over many architectures plus hosted checkpoints, which is why it is the shared backbone across every framework in this repo.
@@ -45,34 +69,10 @@ It leans on **argparse, config, dataclass, logging, protocol, transformers, wand
 - **When**: When a run's value is in its history -- comparing sweeps, auditing, or sharing results without sending weights.
 - **Trade-offs**: Adds a network dependency and an external account; local-only runs must opt out or write a local fallback.
 
-### Configuration as declarative data (YAML/JSON/TOML)
-- **What**: Knobs live in YAML/JSON/TOML files or tables rather than code, so a run's intent is inspectable and diffable without reading the program.
-- **Why used here**: A single frozen `CanonicalSpec` + preregistration files is the repo's whole comparability contract -- config-as-data is what makes runs hashable and testable.
-- **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
-- **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
-
-### Structural subtyping with typing.Protocol
-- **What**: `Protocol` describes an interface by the *attributes* something has, not by inheritance -- anything matching the shape satisfies it (duck typing with static checks).
-- **Why used here**: Lets the code accept `plan`-like and `run`-like objects without forcing a class hierarchy, useful in the shim layer.
-- **When**: When many small objects share behavior but have no common ancestor.
-- **Trade-offs**: Runtime `isinstance` checks need `@runtime_checkable` and are shallow; static checkers are the real beneficiary.
-
-### Structured diagnostics with logging
-- **What**: The `logging` module writes level-filtered messages to stderr/files, separating operational noise from real errors and leaving them toggleable at runtime.
-- **Why used here**: Runs are audited, so leaving a trail of INFO/DEBUG statements lets a reviewer reconstruct what happened without rerunning GPUs.
-- **When**: Anywhere you'd `print` something that matters: progress, warnings, step boundaries, and fatal errors.
-- **Trade-offs**: More setup than `print`; misconfigured handler levels silently swallow the very lines you need in production.
-
-### Command-line argument parsing
-- **What**: `argparse` turns `sys.argv` into typed options (`--framework`, `--dry-run`) with help text and error handling for free.
-- **Why used here**: Every platform entry point must be runnable by humans and by shelling-out code, so a stable, documented CLI is the contract between them.
-- **When**: When a script is invoked by people, CI, or other processes and needs explicit knobs.
-- **Trade-offs**: Boilerplate-heavy and positional-only; richer CLIs use click/typer for nesting and auto-generated help.
-
 
 ## Related Code
 - sibling `platform_hybrid/experiments/webarena/aggregate.py`
 - sibling `platform_hybrid/experiments/webarena/push_model_card.py`
 
 ---
-*Generated by AntiVibe per-file pass &middot; 2026-08-02 12:34 UTC &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*
+*Generated by AntiVibe per-file pass &middot; 2026-08-02 &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*

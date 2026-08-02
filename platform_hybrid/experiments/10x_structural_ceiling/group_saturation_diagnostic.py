@@ -5,7 +5,7 @@ Key insight: When all G completions in a group receive the same reward,
 the advantage vector is all-zeros and the gradient vanishes. This diagnostic
 measures how often this happens and correlates it with learning stalls.
 
-TODO: Address the following limitations of the ZVF metric:
+Known limitations of the ZVF metric:
 - Fragility across domains: ZVF breaks down in format-gated tasks (e.g., tool-use) by saturating at 1.0 when base models fail schema parsing. Consider implementing ERF (Effective-Rollout Fraction) as an alternative or supplementary metric.
 - Symptom vs. Root Cause: ZVF is primarily a descriptive symptom of a stuck model. We should supplement it with causal metrics like policy entropy, advantage variance, and mean reward to provide more actionable insights.
 

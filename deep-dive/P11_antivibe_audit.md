@@ -1,42 +1,33 @@
-# AntiVibe Deep Dive & Senior Architectural Audit: P11 (Single-Stack Survival Audit)
+# AntiVibe Senior Audit: P11 — Single-Stack Reproducibility Audit (spine)
 
-> **Framework Version:** AntiVibe v1.0 (mohi-devhub/antivibe)  
-> **Target Document:** `zvf-program/audit/paper_P11_reproducibility_audit.tex`  
-> **Audit Date:** 2026-08-02  
-> **Level:** Senior / Architectural Review  
+> **Target:** `zvf-program/audit/paper_P11_reproducibility_audit.tex`  
+> **Ship unit:** Canonical spine (12 pp) + tmlr_package_p11/  
+> **Date:** 2026-08-02  
+> **Contract:** `.claude/skills/antivibe/agents/auditor.md` (senior flags, not tutorial)
 
----
+### Architecture Summary
+- Preregistered single-stack re-implementation of DAPO/GSPO/Dr.GRPO/AERO vs GRPO.
+- Fail-closed 40 arm–seed units; exact noncentral paired-t MDE + BH; all INCONCLUSIVE.
+- Secondary cost: DAPO ZVF 0.693→0.000 at 3.61× rollouts.
 
-## 1. Executive Overview & Purpose
+### Key Decisions
+- Drop survival/RETAINS framing when published_delta=null for all arms.
+- DISAPPEARS for DAPO is superseded (MDE80=0.01012 > 0.01 margin).
+- Absorb E-R2b matched-budget as bounded secondary panel only.
 
-### What This Paper Does
-Single-Stack Survival Audit establishes a rigorous empirical and mathematical foundation for Group Relative Policy Optimization (GRPO) and Zero-Variance Fraction (ZVF) diagnostics in large language model post-training.
+### Flags (vibe / integrity smells)
+- Historical DISAPPEARS text must never reappear as a result label.
+- Pilot is effective n=1; table is held-out score not Δ vs GRPO.
+- Companion cites to unpublished minreport/registry drafts — abstract now uses public prior art.
 
-### Why It Was Written This Way
-Existing post-training implementations suffer from "vibe-coding" assumptions—treating advantage normalization as a black box without auditing zero-variance collapse or length-bias reward hacking. This paper replaces heuristic tuning with exact theoretical bounds and reproducible empirical ledgers.
+### Edge Cases & Failure Modes
+- Replay can move held-out by 0.004 > DAPO point Δ 0.001.
+- Stack lock ≠ sample-budget lock (DAPO 3.61× rollouts).
 
----
+### Testability / Offline checks
+- python3 zvf-program/audit/aggregate_audit.py + unittest; verdicts all INCONCLUSIVE.
+- Overlap check vs NeurIPS 36320: drafts/P11_NEURIPS_OVERLAP_CHECK.md.
 
-## 2. Key CS & Mathematical Concepts
-
-- **Zero-Variance Fraction (ZVF):** The empirical probability $P(\text{Var}_G(r) = 0)$ across prompt groups of size $G$.
-- **Length-Bias Elasticity ($\eta_{\text{length}}$):** The sensitivity of advantage estimates to token output length $L$.
-- **Group-Size Trade-off Surface:** The computational Pareto frontier balancing rollout memory bandwidth against advantage variance reduction.
-
----
-
-## 3. Failure Modes & Edge Case Audits
-
-| Failure Mode | Trigger Condition | Architectural Mitigation |
-| :--- | :--- | :--- |
-| **ZVF Degeneracy** | Homogeneous prompt outputs ($r_1 = r_2 = \dots = r_G$) | Adaptive group size expansion or noise injection |
-| **Length Inflation** | Verbosity reward hacking ($L_i \gg L_{\text{target}}$) | Token-level length normalization penalty |
-| **Signal Starvation** | Vanishing advantage gradients | Dynamic advantage clipping sentinel |
-
----
-
-## 4. Verification & Testing Ledger
-
-1. `test_zvf_computation_accuracy()`: Verifies floating-point stability when variance approaches 0.
-2. `test_length_bias_resilience()`: Ensures advantage estimates remain orthogonal to output token count.
-3. `test_reproducibility_ledger()`: Validates seed-matched execution reproducibility within $\pm 1\%$.
+    ---
+    *Replaces the 2026-08-02 template clone that only swapped the paper title.
+    Grounded in `drafts/PORTFOLIO_DECISION.md` + 12-paper verification wave.*

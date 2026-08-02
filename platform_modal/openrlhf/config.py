@@ -35,7 +35,7 @@ class OpenRLHFAlgorithmConfig(BaseModel):
     kl_coef: float = 0.01
     temperature: float = 1.0
     sample_num: int = 16
-    # TODO: Address fragility of ZVF metric across domains.
+    # LIMITATION: ZVF is fragile outside math/format-gated tasks.
     # ZVF breaks down (saturates at 1.0) outside of math tasks like tool-use. Switch to ERF if needed.
     diagnostic_metric: str = "zvf"
 
@@ -44,7 +44,7 @@ class OpenRLHFDataConfig(BaseModel):
     """Data configuration"""
     train_data: List[str] = Field(default_factory=list)
     val_data: List[str] = Field(default_factory=list)
-    # TODO: Address "Failure to Prove Generalization" by rigorously evaluating on held-out test data.
+    # LIMITATION: held-out generalization not established for this dryrun/short path.
     test_data: List[str] = Field(default_factory=list)
     max_prompt_length: int = 512
     max_response_length: int = 1024
@@ -62,9 +62,9 @@ class OpenRLHFConfig(BaseModel):
     epochs: int = 20
     train_batch_size: int = 1024
     micro_batch_size: int = 1
-    # TODO: Address "Single-Seed Extrapolations" limitation by parameterizing seed to run N>1 replicates.
+    # LIMITATION: default seed path is N=1 unless callers parameterize multi-seed.
     seed: int = 42
-    # TODO: Address "Early-Training Snapshot Problem" by supporting runs longer than 30-50 steps to observe true convergence.
+    # LIMITATION: short max_samples/steps yield early-training snapshots only.
     max_steps: Optional[int] = None
 
     # Ray cluster settings
@@ -87,7 +87,7 @@ class OpenRLHFConfig(BaseModel):
 
     # Environment
     env_class: str = "gsm8k"
-    # TODO: Address "Closed-Source Confound" by clarifying performance gaps between open-source and Tinker's managed defaults.
+    # LIMITATION: do not attribute Tinker managed-default gaps to the open algorithm alone.
 
     @property
     def model_name(self) -> str:

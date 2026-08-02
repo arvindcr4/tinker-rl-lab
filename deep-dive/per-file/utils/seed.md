@@ -1,6 +1,6 @@
 # Deep Dive: `utils/seed.py`
 
-> AntiVibe &middot; compact mode &middot; 2026-08-02 12:34 UTC &middot; source: `utils/seed.py` (210 lines)
+> AntiVibe &middot; compact mode &middot; 2026-08-02 &middot; source: `utils/seed.py` (210 lines)
 
 ## Overview
 `seed.py` is a library module exposing reusable building blocks to the rest of the codebase. It defines types, helpers, and algorithms consumed by drivers and experiments rather than performing a single top-level action.
@@ -16,6 +16,24 @@ It leans on **argparse, config, numpy, torch, transformers, trl** to do its work
 ## Concepts & Decisions
 ### DRY across drivers
 - **What**: Shared helper modules stop five framework drivers from each re-solving the same problem in five slightly different ways.
+
+### Command-line argument parsing
+- **What**: `argparse` turns `sys.argv` into typed options (`--framework`, `--dry-run`) with help text and error handling for free.
+- **Why used here**: Every platform entry point must be runnable by humans and by shelling-out code, so a stable, documented CLI is the contract between them.
+- **When**: When a script is invoked by people, CI, or other processes and needs explicit knobs.
+- **Trade-offs**: Boilerplate-heavy and positional-only; richer CLIs use click/typer for nesting and auto-generated help.
+
+### Configuration as declarative data (YAML/JSON/TOML)
+- **What**: Knobs live in YAML/JSON/TOML files or tables rather than code, so a run's intent is inspectable and diffable without reading the program.
+- **Why used here**: A single frozen `CanonicalSpec` + preregistration files is the repo's whole comparability contract -- config-as-data is what makes runs hashable and testable.
+- **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
+- **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
+
+### Numeric arrays with NumPy
+- **What**: NumPy gives dense N-d arrays and vectorized math (reductions, broadcasting) that run at C speed.
+- **Why used here**: Reward computation and metrics are array operations; vectorizing over a batch is both faster and more readable than Python loops.
+- **When**: Any batched numeric transform -- rewards, accuracy, aggregations across rollouts.
+- **Trade-offs**: NumPy and torch each own their memory; converting between them copies unless you share storage carefully.
 
 ### PyTorch tensor computation & autograd
 - **What**: PyTorch is the numeric engine: `torch.Tensor` holds batched GPU/CPU arrays and `torch.autograd` builds the computation graph so gradients flow from a loss back to every parameter.
@@ -35,24 +53,6 @@ It leans on **argparse, config, numpy, torch, transformers, trl** to do its work
 - **When**: When you need a maintained, well-tested RLHF loop and accept its configuration model.
 - **Trade-offs**: The library's opinionated defaults can fight custom research setups; equivalence testing exists precisely because each framework behaves slightly differently.
 
-### Configuration as declarative data (YAML/JSON/TOML)
-- **What**: Knobs live in YAML/JSON/TOML files or tables rather than code, so a run's intent is inspectable and diffable without reading the program.
-- **Why used here**: A single frozen `CanonicalSpec` + preregistration files is the repo's whole comparability contract -- config-as-data is what makes runs hashable and testable.
-- **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
-- **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
-
-### Numeric arrays with NumPy
-- **What**: NumPy gives dense N-d arrays and vectorized math (reductions, broadcasting) that run at C speed.
-- **Why used here**: Reward computation and metrics are array operations; vectorizing over a batch is both faster and more readable than Python loops.
-- **When**: Any batched numeric transform -- rewards, accuracy, aggregations across rollouts.
-- **Trade-offs**: NumPy and torch each own their memory; converting between them copies unless you share storage carefully.
-
-### Command-line argument parsing
-- **What**: `argparse` turns `sys.argv` into typed options (`--framework`, `--dry-run`) with help text and error handling for free.
-- **Why used here**: Every platform entry point must be runnable by humans and by shelling-out code, so a stable, documented CLI is the contract between them.
-- **When**: When a script is invoked by people, CI, or other processes and needs explicit knobs.
-- **Trade-offs**: Boilerplate-heavy and positional-only; richer CLIs use click/typer for nesting and auto-generated help.
-
 
 ## Related Code
 - sibling `utils/__init__.py`
@@ -62,4 +62,4 @@ It leans on **argparse, config, numpy, torch, transformers, trl** to do its work
 - sibling `utils/verify_results.py`
 
 ---
-*Generated by AntiVibe per-file pass &middot; 2026-08-02 12:34 UTC &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*
+*Generated by AntiVibe per-file pass &middot; 2026-08-02 &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*

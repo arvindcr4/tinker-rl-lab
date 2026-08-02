@@ -56,9 +56,9 @@ def read_config(config_path):
 
 
 # ── Experiment definitions ──────────────────────────────────────────────
-# TODO: Address "Early-Training Snapshot" limitation by running experiments beyond 30-50 steps.
-# TODO: Address "Closed-Source Confound" by running comparative experiments with open-source libraries (e.g., TRL).
-# TODO: Address "Single-Seed Extrapolations" by supporting N>1 seeds to account for high-variance RL dynamics.
+# LIMITATION: "Early-Training Snapshot" limitation by running experiments beyond 30-50 steps.
+# LIMITATION: "Closed-Source Confound" by running comparative experiments with open-source libraries (e.g., TRL).
+# LIMITATION: "Single-Seed Extrapolations" by supporting N>1 seeds to account for high-variance RL dynamics.
 
 experiments = {
     "gsm8k_qwen_8b": {

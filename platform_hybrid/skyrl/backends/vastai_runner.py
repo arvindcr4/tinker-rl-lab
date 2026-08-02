@@ -340,7 +340,7 @@ bash -c '{training_script}'
                 server_host_key_algs=[],
             ) as conn:
 
-                # TODO: Fix "Early-Training Snapshot" limitation.
+                # LIMITATION: Early-Training Snapshot — increase horizon only with GPU budget.
                 # 1 hour timeout restricts training to ~30-50 steps, insufficient for convergence.
                 # Increasing timeout to allow longer training runs (requires higher API budget).
                 result = await conn.run(cmd, timeout=86400)  # 24 hours max

@@ -19,7 +19,7 @@ Supported benchmarks
 The script talks to any OpenAI-compatible chat endpoint, including the local
 `serve.py` server in this repo.
 
-TODO(adversarial_review):
+LIMITATION (adversarial review):
 - Add HumanEval/code generation benchmarks to rigorously test non-math generalization.
 - Add format-gated / tool-use benchmarks to track ERF (Effective-Rollout Fraction) and address ZVF fragility outside math domains.
 - Implement statistical significance testing (e.g., p-value calculation vs base models) to properly prove generalized reasoning uplift.

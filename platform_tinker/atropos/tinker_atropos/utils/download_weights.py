@@ -11,9 +11,9 @@ except ImportError:
 import tinker
 import urllib.request
 
-# TODO: Address "Closed-Source Confound" by also downloading Tinker's internal configs/managed defaults (if API allows) to ensure transparent baseline comparisons.
-# TODO: Address "Early-Training Snapshot Problem" by downloading intermediate training checkpoints, not just the final snapshot.
-# TODO: Address "Failure to Prove Generalization" by ensuring these downloaded weights are subsequently evaluated on a held-out test set.
+# LIMITATION: "Closed-Source Confound" by also downloading Tinker's internal configs/managed defaults (if API allows) to ensure transparent baseline comparisons.
+# LIMITATION: "Early-Training Snapshot Problem" by downloading intermediate training checkpoints, not just the final snapshot.
+# LIMITATION: "Failure to Prove Generalization" by ensuring these downloaded weights are subsequently evaluated on a held-out test set.
 
 # Add multiple Training Run IDs (seeds) here to address the "Single-Seed Extrapolations" limitation
 RUN_IDS = ["<unique_id_1>", "<unique_id_2>", "<unique_id_3>"]

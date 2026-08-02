@@ -58,8 +58,8 @@ COLORS = {
 }
 
 # ─── Reward traces ─────────────────────────────────────────────────────────────
-# TODO: Address "Early-Training Snapshot" limitation. Traces are only 20-30 steps long due to API costs. Need longer runs to observe true convergence.
-# TODO: Address "Single-Seed Extrapolations" limitation. These traces are from N=1 runs. Need multi-seed runs for reliable statistical variance.
+# LIMITATION: "Early-Training Snapshot" limitation. Traces are only 20-30 steps long due to API costs. Need longer runs to observe true convergence.
+# LIMITATION: "Single-Seed Extrapolations" limitation. These traces are from N=1 runs. Need multi-seed runs for reliable statistical variance.
 traces = {
     name: np.asarray(values, dtype=float) for name, values in figure_records["traces"].items()
 }
@@ -173,7 +173,7 @@ print("Saved performance_profiles.png + .pdf")
 # ══════════════════════════════════════════════════════════════════════════════
 # FIGURE 2: Sensitivity heatmap — model × metric
 # ══════════════════════════════════════════════════════════════════════════════
-# TODO: Address "Failure to Prove Generalization" limitation. We should add metrics for held-out test set performance and statistical significance, rather than just training set dynamics.
+# LIMITATION: "Failure to Prove Generalization" limitation. We should add metrics for held-out test set performance and statistical significance, rather than just training set dynamics.
 # Models (columns): Qwen2.5-0.5B (TRL GRPO), GRPO-Qwen3-8B, GRPO-DeepSeek-V3.1, PPO-Qwen3-8B, PPO-Llama-8B
 # Metrics (rows): Peak Reward, Last-10 Avg, Steps to >50%, Volatility
 

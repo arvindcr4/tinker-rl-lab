@@ -1,5 +1,5 @@
 """
-TODO(adversarial_review):
+LIMITATION (adversarial review):
 The following limitations from the adversarial review cannot be fixed purely within this launch script and require broader experimental changes:
 1. ZVF Metric Fragility: Training should log ERF (Effective-Rollout Fraction) instead of relying solely on ZVF.
 2. The "Early-Training Snapshot" Problem: The number of training steps (num_steps) needs to be significantly increased beyond the current 30-50 step budget to observe true convergence.

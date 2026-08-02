@@ -1,6 +1,6 @@
 # Deep Dive: `platform_hybrid/experiments/modal/modal_grpo_openrlhf.py`
 
-> AntiVibe &middot; compact mode &middot; 2026-08-02 12:34 UTC &middot; source: `platform_hybrid/experiments/modal/modal_grpo_openrlhf.py` (292 lines)
+> AntiVibe &middot; compact mode &middot; 2026-08-02 &middot; source: `platform_hybrid/experiments/modal/modal_grpo_openrlhf.py` (292 lines)
 
 ## Overview
 `modal_grpo_openrlhf.py` is a training path that runs gradient-based optimization (GRPO/PPO-style) over model weights. Rollouts are generated, scored by a reward model, and their feedback is backpropagated through a policy updated toward higher reward.
@@ -14,6 +14,36 @@ It leans on **config, numpy, parallel, regex, subprocess, torch, transformers, w
 ## Concepts & Decisions
 ### Why the loop is GRPO and not full RLHF
 - **What**: GRPO is the reward-model-free-online variant this protocol froze: it relies on group-relative advantage, cutting the value critic and memory.
+
+### Configuration as declarative data (YAML/JSON/TOML)
+- **What**: Knobs live in YAML/JSON/TOML files or tables rather than code, so a run's intent is inspectable and diffable without reading the program.
+- **Why used here**: A single frozen `CanonicalSpec` + preregistration files is the repo's whole comparability contract -- config-as-data is what makes runs hashable and testable.
+- **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
+- **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
+
+### Numeric arrays with NumPy
+- **What**: NumPy gives dense N-d arrays and vectorized math (reductions, broadcasting) that run at C speed.
+- **Why used here**: Reward computation and metrics are array operations; vectorizing over a batch is both faster and more readable than Python loops.
+- **When**: Any batched numeric transform -- rewards, accuracy, aggregations across rollouts.
+- **Trade-offs**: NumPy and torch each own their memory; converting between them copies unless you share storage carefully.
+
+### Parallelism (threads / processes / futures)
+- **What**: `concurrent.futures`/threading/multiprocessing run independent work concurrently, cutting wall-clock for fan-out tasks.
+- **Why used here**: Rollout generation and multi-backend dispatch are embarrassingly parallel, so pools/futures are a cheap win.
+- **When**: Many independent units of work that share no mutable state.
+- **Trade-offs**: Threads don't speed up CPU-bound Python (GIL); processes add copy/serialization cost and need picklable arguments.
+
+### Text processing with regular expressions
+- **What**: `re` matches/extracts patterns in text -- parsing logs, sanitizing identifiers, or validating formats that don't warrant a full parser.
+- **Why used here**: Receipts, path probes, and name munging are string-shaped; regex is the compact tool for targeted extraction.
+- **When**: Small, well-defined text patterns where a parser is overkill.
+- **Trade-offs**: Regex is opaque and easy to get subtly wrong; complex grammars should graduate to a real parser.
+
+### Process orchestration (subprocess)
+- **What**: `subprocess.run`/`Popen` spawns and captures external commands, letting Python drive shell steps, remote CLIs, and other tools as child processes.
+- **Why used here**: Remote backends provision a box then shell out to a driver command -- subprocess is the seam between 'plan' and 'actually run elsewhere'.
+- **When**: When work is naturally a separate executable: `modal run`, `gcloud`, ssh commands, secondary scripts.
+- **Trade-offs**: Argument quoting/escaping and env leakage are footguns; you lose in-process debugging across the boundary.
 
 ### PyTorch tensor computation & autograd
 - **What**: PyTorch is the numeric engine: `torch.Tensor` holds batched GPU/CPU arrays and `torch.autograd` builds the computation graph so gradients flow from a loss back to every parameter.
@@ -33,41 +63,11 @@ It leans on **config, numpy, parallel, regex, subprocess, torch, transformers, w
 - **When**: When a run's value is in its history -- comparing sweeps, auditing, or sharing results without sending weights.
 - **Trade-offs**: Adds a network dependency and an external account; local-only runs must opt out or write a local fallback.
 
-### Text processing with regular expressions
-- **What**: `re` matches/extracts patterns in text -- parsing logs, sanitizing identifiers, or validating formats that don't warrant a full parser.
-- **Why used here**: Receipts, path probes, and name munging are string-shaped; regex is the compact tool for targeted extraction.
-- **When**: Small, well-defined text patterns where a parser is overkill.
-- **Trade-offs**: Regex is opaque and easy to get subtly wrong; complex grammars should graduate to a real parser.
-
 ### Web service / API layer
 - **What**: A web framework (FastAPI/Flask) exposes endpoints so external actors can query or drive the system over HTTP with structured request/response schemas.
 - **Why used here**: Demos and live checkpoints are served over the web so reviewers can interact without shipping weights or code.
 - **When**: When something must be reachable by a browser or another service at a URL.
 - **Trade-offs**: A server is a long-running, externally reachable surface -- more security and liveness concerns than a plain script.
-
-### Parallelism (threads / processes / futures)
-- **What**: `concurrent.futures`/threading/multiprocessing run independent work concurrently, cutting wall-clock for fan-out tasks.
-- **Why used here**: Rollout generation and multi-backend dispatch are embarrassingly parallel, so pools/futures are a cheap win.
-- **When**: Many independent units of work that share no mutable state.
-- **Trade-offs**: Threads don't speed up CPU-bound Python (GIL); processes add copy/serialization cost and need picklable arguments.
-
-### Configuration as declarative data (YAML/JSON/TOML)
-- **What**: Knobs live in YAML/JSON/TOML files or tables rather than code, so a run's intent is inspectable and diffable without reading the program.
-- **Why used here**: A single frozen `CanonicalSpec` + preregistration files is the repo's whole comparability contract -- config-as-data is what makes runs hashable and testable.
-- **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
-- **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
-
-### Numeric arrays with NumPy
-- **What**: NumPy gives dense N-d arrays and vectorized math (reductions, broadcasting) that run at C speed.
-- **Why used here**: Reward computation and metrics are array operations; vectorizing over a batch is both faster and more readable than Python loops.
-- **When**: Any batched numeric transform -- rewards, accuracy, aggregations across rollouts.
-- **Trade-offs**: NumPy and torch each own their memory; converting between them copies unless you share storage carefully.
-
-### Process orchestration (subprocess)
-- **What**: `subprocess.run`/`Popen` spawns and captures external commands, letting Python drive shell steps, remote CLIs, and other tools as child processes.
-- **Why used here**: Remote backends provision a box then shell out to a driver command -- subprocess is the seam between 'plan' and 'actually run elsewhere'.
-- **When**: When work is naturally a separate executable: `modal run`, `gcloud`, ssh commands, secondary scripts.
-- **Trade-offs**: Argument quoting/escaping and env leakage are footguns; you lose in-process debugging across the boundary.
 
 
 ## Related Code
@@ -79,4 +79,4 @@ It leans on **config, numpy, parallel, regex, subprocess, torch, transformers, w
 - sibling `platform_hybrid/experiments/modal/modal_grpo_trl.py`
 
 ---
-*Generated by AntiVibe per-file pass &middot; 2026-08-02 12:34 UTC &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*
+*Generated by AntiVibe per-file pass &middot; 2026-08-02 &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*

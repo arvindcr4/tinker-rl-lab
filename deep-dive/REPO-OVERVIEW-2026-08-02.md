@@ -59,6 +59,11 @@ Also see [`framework-backend-dispatch-2026-08-02.md`](framework-backend-dispatch
 - **Receipts as evidence.** Every run writes to multiple independent channels (HF + W&B + GCS); agreement across them is the trust signal.
 - **Code-as-artifact.** Decks and audits derive numbers from the checkout at build time — nothing hand-typed that can drift from evidence.
 
+## Vibe-smell ledger
+
+See [`VIBE_SMELLS.md`](VIBE_SMELLS.md) for smells captured by these dives and their fix status.
+Paper-level senior audits: `P1_antivibe_audit.md` … `P12_antivibe_audit.md` (rewritten; no longer template clones).
+
 ## Per-file deep dives
 
 These subsystem dives are the 10,000-foot view. For the **file-by-file** drill-down, see **[`per-file/INDEX.md`](per-file/INDEX.md)** — one AntiVibe deep dive per real source file (Python, shell, YAML/TOML, key JSON), mirrored under `per-file/<module>/` and regenerable with `python tools/apply_antivibe.py`. The interactive `/antivibe` skill now ships in the repo at `.claude/skills/antivibe/`.

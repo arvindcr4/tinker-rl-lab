@@ -16,7 +16,7 @@ Env vars required in caller shell:
   TINKER_API_KEY, WANDB_API_KEY, HF_TOKEN
   TINKER_RATE_SAMPLE_PER_M, TINKER_RATE_TRAIN_PER_M
 
-# TODO: The "Closed-Source Confound" - reliance on Tinker API means algorithmic gains
+# LIMITATION: Closed-Source Confound — do not attribute managed-API gaps to the algorithm alone.
 # might be confounded by managed defaults. Need an open-source baseline.
 # TODO: Failure to Prove Generalization - ensure training evaluates on held-out
 # test sets to prove generalized reasoning rather than just training curve overfitting.
@@ -105,7 +105,7 @@ def run_one(cfg: Path, atropos_dir: Path) -> int:
 
     base_env = os.environ.copy()
     base_env["TOOL_USE_REWARD_VERSION"] = rv
-    # TODO: Address ZVF metric fragility limitation. ZVF saturates at 1.0 for format-gated
+    # LIMITATION: ZVF metric fragility limitation. ZVF saturates at 1.0 for format-gated
     # tasks like tool-use. Monitor ERF (Effective-Rollout Fraction) instead.
     base_env["PYTHONPATH"] = f"{atropos_dir}:{base_env.get('PYTHONPATH','')}"
 

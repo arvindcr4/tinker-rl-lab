@@ -35,7 +35,7 @@ OUT_TSV = REPO / "experiments" / "results" / "base_instruct_paired.tsv"
 
 # The set of model families to enumerate. Only ones with at least one
 # checkpoint in the repo are included; missing ones are logged, not errored.
-# TODO(adversarial_review): "The Closed-Source Confound". The 73% performance gap between Tinker
+# LIMITATION (review): "The Closed-Source Confound". The 73% performance gap between Tinker
 # and open-source libraries (like TRL) might be due to Tinker's undisclosed managed defaults.
 # We should replicate these runs on fully open-source frameworks to isolate algorithmic gains.
 MODELS: List[Tuple[str, str, str]] = [
@@ -109,7 +109,7 @@ def train_metrics(master: List[Dict[str, Any]], model_id: str) -> Dict[str, Any]
         if not _match_model(r, model_id):
             continue
         if r.get("task") not in ("gsm8k",):
-            # TODO(adversarial_review): ZVF breaks down outside of math tasks (e.g., format-gated).
+            # LIMITATION (review): ZVF breaks down outside of math tasks (e.g., format-gated).
             # We should implement and compute ERF (Effective-Rollout Fraction) for non-math tasks.
             continue
         lr = r.get("lr")
@@ -214,7 +214,7 @@ def zvf_at_100(zvf_tail_mean: Optional[float], train_post_rl: Optional[float]) -
     symmetry with the paper's main ZVF analysis and is flagged in the table
     as 'extrapolation'.
     """
-    # TODO(adversarial_review): The "Early-Training Snapshot" problem. 30 steps is insufficient
+    # LIMITATION (review): The "Early-Training Snapshot" problem. 30 steps is insufficient
     # to observe meaningful RL convergence. We should execute full training runs instead of extrapolating.
     if zvf_tail_mean is None or train_post_rl is None:
         return None
@@ -355,7 +355,7 @@ def build_rows() -> List[Dict[str, Any]]:
             "heldout_post_rl": ho_base["post_rl"],
             "zvf_at_100": zvf_at_100(tm_base["zvf_tail_mean"], tm_base["train_post_rl"]),
             "n_seeds": max(ho_base["n_seeds"], len(tm_base["seeds"])),
-            # TODO(adversarial_review): Beware of "Single-Seed Extrapolations". Ensure N > 1 
+            # LIMITATION (review): Beware of "Single-Seed Extrapolations". Ensure N > 1 
             # for all configurations to properly account for RL variance and initialization dependence.
             "raw_seeds": tm_base["seeds"],
             "heldout_per_seed": [],
@@ -389,7 +389,7 @@ def build_rows() -> List[Dict[str, Any]]:
         if r["heldout_per_seed"] and r["heldout_pre_rl"] is not None:
             d = [a - float(r["heldout_pre_rl"]) for a in r["heldout_per_seed"]]
             t, p = paired_t_test(d)
-            # TODO(adversarial_review): Failure to prove generalization. The held-out gains
+            # LIMITATION (review): Failure to prove generalization. The held-out gains
             # are not statistically significant (e.g., p=0.26). We need larger evaluation sets
             # or more seeds to rigorously prove generalized reasoning uplift.
             r["delta_heldout"] = _mean(d)

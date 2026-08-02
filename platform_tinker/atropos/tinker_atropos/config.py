@@ -31,7 +31,7 @@ class EnvConfig(BaseModel):
     steps_per_eval: int = 100
 
     # Experiment control
-    # TODO: Address "Single-Seed Extrapolations" limitation by supporting multiple seeds
+    # LIMITATION: "Single-Seed Extrapolations" limitation by supporting multiple seeds
     data_seed: int = 42
     use_prompt_prefix: bool = True
 
@@ -50,7 +50,7 @@ class OpenAIServerConfig(BaseModel):
 class TinkerConfig(BaseModel):
     """Tinker-specific configuration for LoRA training"""
 
-    # TODO: Address "The Closed-Source Confound" by supporting open-source training backends like TRL
+    # LIMITATION: "The Closed-Source Confound" by supporting open-source training backends like TRL
     use_lora: bool = True
     lora_rank: int = 32
     learning_rate: float = 4e-5

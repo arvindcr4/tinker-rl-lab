@@ -1,42 +1,32 @@
-# AntiVibe Deep Dive & Senior Architectural Audit: P2 (Zero-Variance Fraction Diagnostic)
+# AntiVibe Senior Audit: P2 — Zero-Variance Fraction
 
-> **Framework Version:** AntiVibe v1.0 (mohi-devhub/antivibe)  
-> **Target Document:** `platform_hybrid/paper/paper_P2_zvf.tex`  
-> **Audit Date:** 2026-08-02  
-> **Level:** Senior / Architectural Review  
+> **Target:** `platform_hybrid/paper/paper_P2_zvf.tex (demoted 46 pp)`  
+> **Ship unit:** platform_hybrid/paper/paper_P2_zvf_falsification_note.tex (3 pp)  
+> **Date:** 2026-08-02  
+> **Contract:** `.claude/skills/antivibe/agents/auditor.md` (senior flags, not tutorial)
 
----
+### Architecture Summary
+- Original long draft mixed real group tensors with variance_mitigation.tsv simulation rows.
+- Surviving science: Bernoulli ZVF model sign-fails across regimes (GSM8K vs synthetic arithmetic).
+- Short note freezes only recomputable δ = ZVF_iid − ZVF_obs panels.
 
-## 1. Executive Overview & Purpose
+### Key Decisions
+- Delete simulation-as-measured (negative rewards/accuracies in variance_mitigation.tsv).
+- Demote pass@G − p^G = 1−ZVF to a lemma, not a 1.11e-16 'discovery'.
+- Do not pool ZVF–outcome correlations across heterogeneous cells.
 
-### What This Paper Does
-Zero-Variance Fraction Diagnostic establishes a rigorous empirical and mathematical foundation for Group Relative Policy Optimization (GRPO) and Zero-Variance Fraction (ZVF) diagnostics in large language model post-training.
+### Flags (vibe / integrity smells)
+- Any residual abstract language about AUROC/collapse prediction is a claim leak.
+- Seed order in summary JSON was previously swapped; keep zvf_per_seed aligned to seeds[].
 
-### Why It Was Written This Way
-Existing post-training implementations suffer from "vibe-coding" assumptions—treating advantage normalization as a black box without auditing zero-variance collapse or length-bias reward hacking. This paper replaces heuristic tuning with exact theoretical bounds and reproducible empirical ledgers.
+### Edge Cases & Failure Modes
+- GSM8K δ mean +0.1224 CI excludes 0; arithmetic δ mean −0.0703 CI excludes 0 — opposite signs.
+- Importing P7 92.3% base-rate figure would re-inject a by-construction artifact.
 
----
+### Testability / Offline checks
+- Recompute from tinker_gsm8k_zvf_s{42,123,456}.json and groupsize_zvf_sweep.json only.
+- Bootstrap with fixed RNG seed for CI bit-stability.
 
-## 2. Key CS & Mathematical Concepts
-
-- **Zero-Variance Fraction (ZVF):** The empirical probability $P(\text{Var}_G(r) = 0)$ across prompt groups of size $G$.
-- **Length-Bias Elasticity ($\eta_{\text{length}}$):** The sensitivity of advantage estimates to token output length $L$.
-- **Group-Size Trade-off Surface:** The computational Pareto frontier balancing rollout memory bandwidth against advantage variance reduction.
-
----
-
-## 3. Failure Modes & Edge Case Audits
-
-| Failure Mode | Trigger Condition | Architectural Mitigation |
-| :--- | :--- | :--- |
-| **ZVF Degeneracy** | Homogeneous prompt outputs ($r_1 = r_2 = \dots = r_G$) | Adaptive group size expansion or noise injection |
-| **Length Inflation** | Verbosity reward hacking ($L_i \gg L_{\text{target}}$) | Token-level length normalization penalty |
-| **Signal Starvation** | Vanishing advantage gradients | Dynamic advantage clipping sentinel |
-
----
-
-## 4. Verification & Testing Ledger
-
-1. `test_zvf_computation_accuracy()`: Verifies floating-point stability when variance approaches 0.
-2. `test_length_bias_resilience()`: Ensures advantage estimates remain orthogonal to output token count.
-3. `test_reproducibility_ledger()`: Validates seed-matched execution reproducibility within $\pm 1\%$.
+    ---
+    *Replaces the 2026-08-02 template clone that only swapped the paper title.
+    Grounded in `drafts/PORTFOLIO_DECISION.md` + 12-paper verification wave.*

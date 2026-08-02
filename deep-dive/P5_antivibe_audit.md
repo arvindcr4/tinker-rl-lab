@@ -1,42 +1,28 @@
-# AntiVibe Deep Dive & Senior Architectural Audit: P5 (MIN-REPORT-RL Standard)
+# AntiVibe Senior Audit: P5 — MIN-REPORT-RL
 
-> **Framework Version:** AntiVibe v1.0 (mohi-devhub/antivibe)  
-> **Target Document:** `platform_hybrid/paper/paper_P5_minreport.tex`  
-> **Audit Date:** 2026-08-02  
-> **Level:** Senior / Architectural Review  
+> **Target:** `platform_hybrid/paper/paper_P5_minreport.tex`  
+> **Ship unit:** Merge with P6 into reporting resource after retractions  
+> **Date:** 2026-08-02  
+> **Contract:** `.claude/skills/antivibe/agents/auditor.md` (senior flags, not tutorial)
 
----
+### Architecture Summary
+- Position/resource paper on stack reporting fields + exhibits.
+- 17× backend swing is not a measurement (no completions terminated on low arm).
 
-## 1. Executive Overview & Purpose
+### Key Decisions
+- Retract Exhibit 1 as empirical; recast as provenance-failure vignette.
+- Delete forced η²(G)=1.0000 (per_group_n all 1s) and inherited 22×/133× ratios.
 
-### What This Paper Does
-MIN-REPORT-RL Standard establishes a rigorous empirical and mathematical foundation for Group Relative Policy Optimization (GRPO) and Zero-Variance Fraction (ZVF) diagnostics in large language model post-training.
+### Flags (vibe / integrity smells)
+- Exhibit 9 certifies numbers with bootstrap from different corpus/model/task.
+- Confounded base checkpoints sold as backend-only effects.
 
-### Why It Was Written This Way
-Existing post-training implementations suffer from "vibe-coding" assumptions—treating advantage normalization as a black box without auditing zero-variance collapse or length-bias reward hacking. This paper replaces heuristic tuning with exact theoretical bounds and reproducible empirical ledgers.
+### Edge Cases & Failure Modes
+- Field-coverage audit n=98 with 0/98 concrete kl-* values is the durable asset.
 
----
+### Testability / Offline checks
+- Recompute exhibits from registry only; fail if per_group_n implies SS_within=0.
 
-## 2. Key CS & Mathematical Concepts
-
-- **Zero-Variance Fraction (ZVF):** The empirical probability $P(\text{Var}_G(r) = 0)$ across prompt groups of size $G$.
-- **Length-Bias Elasticity ($\eta_{\text{length}}$):** The sensitivity of advantage estimates to token output length $L$.
-- **Group-Size Trade-off Surface:** The computational Pareto frontier balancing rollout memory bandwidth against advantage variance reduction.
-
----
-
-## 3. Failure Modes & Edge Case Audits
-
-| Failure Mode | Trigger Condition | Architectural Mitigation |
-| :--- | :--- | :--- |
-| **ZVF Degeneracy** | Homogeneous prompt outputs ($r_1 = r_2 = \dots = r_G$) | Adaptive group size expansion or noise injection |
-| **Length Inflation** | Verbosity reward hacking ($L_i \gg L_{\text{target}}$) | Token-level length normalization penalty |
-| **Signal Starvation** | Vanishing advantage gradients | Dynamic advantage clipping sentinel |
-
----
-
-## 4. Verification & Testing Ledger
-
-1. `test_zvf_computation_accuracy()`: Verifies floating-point stability when variance approaches 0.
-2. `test_length_bias_resilience()`: Ensures advantage estimates remain orthogonal to output token count.
-3. `test_reproducibility_ledger()`: Validates seed-matched execution reproducibility within $\pm 1\%$.
+    ---
+    *Replaces the 2026-08-02 template clone that only swapped the paper title.
+    Grounded in `drafts/PORTFOLIO_DECISION.md` + 12-paper verification wave.*

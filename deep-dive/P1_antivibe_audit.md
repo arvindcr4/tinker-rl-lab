@@ -1,42 +1,34 @@
-# AntiVibe Deep Dive & Senior Architectural Audit: P1 (GRPO Scaling Laws Audit)
+# AntiVibe Senior Audit: P1 — GRPO Scaling Laws
 
-> **Framework Version:** AntiVibe v1.0 (mohi-devhub/antivibe)  
-> **Target Document:** `platform_hybrid/paper/paper_P1_scaling.tex`  
-> **Audit Date:** 2026-08-02  
-> **Level:** Senior / Architectural Review  
+> **Target:** `platform_hybrid/paper/paper_P1_scaling.tex (+ sections/scaling_*.tex)`  
+> **Ship unit:** platform_hybrid/paper/paper_P1_identifiability_note.tex (2 pp short unit)  
+> **Date:** 2026-08-02  
+> **Contract:** `.claude/skills/antivibe/agents/auditor.md` (senior flags, not tutorial)
 
----
+### Architecture Summary
+- Long draft is a multi-iter elevation archive (~47 pp) over managed Tinker GSM8K anchors (0.6B–1T).
+- Scientific object is cross-scale identifiability of reward/saturation laws, not a powered multi-seed RCT.
+- Short note is the publication unit; long draft is thesis/archive.
 
-## 1. Executive Overview & Purpose
+### Key Decisions
+- Negative claim over positive law: flat slopes + λ at bound + constant AICc winners is the honest story.
+- Withdraw MoE-vs-dense (+0.338, p=0.023): Nemotron-3-Super is LatentMoE; mislabelled dense collapse anchor.
+- Strike external 'pre-registered' language for internal iteration-ledger predictions.
 
-### What This Paper Does
-GRPO Scaling Laws Audit establishes a rigorous empirical and mathematical foundation for Group Relative Policy Optimization (GRPO) and Zero-Variance Fraction (ZVF) diagnostics in large language model post-training.
+### Flags (vibe / integrity smells)
+- Long PDF still looks like a scaling-law paper by page count — submit the 2 pp note only.
+- Most anchors are single-seed descriptive; any significance language is a regression risk.
+- Leave-Nemotron sensitivity had no trusted TSV; do not resurrect it.
 
-### Why It Was Written This Way
-Existing post-training implementations suffer from "vibe-coding" assumptions—treating advantage normalization as a black box without auditing zero-variance collapse or length-bias reward hacking. This paper replaces heuristic tuning with exact theoretical bounds and reproducible empirical ledgers.
+### Edge Cases & Failure Modes
+- HF/W&B identity conflicts: only HF-arbitrated Nemotron path is authoritative (0.55 zero-reward exact).
+- 671B vs 685B-class DeepSeek naming must stay reconciled.
 
----
+### Testability / Offline checks
+- Offline: recompute Nemotron zero-frac from frontier_gsm8k_nemotron-120b.json reward_trace.
+- Offline: permutation tables in scaling_law_iter109b_permtest.tsv.
+- No GPU required for the short-note claims.
 
-## 2. Key CS & Mathematical Concepts
-
-- **Zero-Variance Fraction (ZVF):** The empirical probability $P(\text{Var}_G(r) = 0)$ across prompt groups of size $G$.
-- **Length-Bias Elasticity ($\eta_{\text{length}}$):** The sensitivity of advantage estimates to token output length $L$.
-- **Group-Size Trade-off Surface:** The computational Pareto frontier balancing rollout memory bandwidth against advantage variance reduction.
-
----
-
-## 3. Failure Modes & Edge Case Audits
-
-| Failure Mode | Trigger Condition | Architectural Mitigation |
-| :--- | :--- | :--- |
-| **ZVF Degeneracy** | Homogeneous prompt outputs ($r_1 = r_2 = \dots = r_G$) | Adaptive group size expansion or noise injection |
-| **Length Inflation** | Verbosity reward hacking ($L_i \gg L_{\text{target}}$) | Token-level length normalization penalty |
-| **Signal Starvation** | Vanishing advantage gradients | Dynamic advantage clipping sentinel |
-
----
-
-## 4. Verification & Testing Ledger
-
-1. `test_zvf_computation_accuracy()`: Verifies floating-point stability when variance approaches 0.
-2. `test_length_bias_resilience()`: Ensures advantage estimates remain orthogonal to output token count.
-3. `test_reproducibility_ledger()`: Validates seed-matched execution reproducibility within $\pm 1\%$.
+    ---
+    *Replaces the 2026-08-02 template clone that only swapped the paper title.
+    Grounded in `drafts/PORTFOLIO_DECISION.md` + 12-paper verification wave.*

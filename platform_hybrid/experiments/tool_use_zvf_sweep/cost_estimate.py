@@ -2,7 +2,7 @@
 """
 Pre-flight cost estimator for one Tinker sweep run.
 
-TODO: Address limitations raised in adversarial review:
+LIMITATION: limitations raised in adversarial review:
 - ZVF saturates at 1.0 for format-gated tasks (like tool-use). We should consider 
   sweeping ERF (Effective-Rollout Fraction) instead.
 - API cost constraints limit us to 30-50 steps (the "Early-Training Snapshot" problem), 

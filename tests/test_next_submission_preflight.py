@@ -650,3 +650,104 @@ def test_remote_verification_requires_exact_private_hf_commit_and_finished_wandb
             result,
             request,
         )
+
+
+def seam_payload(arm="contrast_early_stop_g2_to_g8", groups=6, mixed=1):
+    """A seam_verification payload: the widened window, everything else frozen."""
+    manifest, result, request = copy.deepcopy(valid_payload())
+    cap, max_steps = PREFLIGHT.seam_window("seam_verification", arm)
+    request["arm"] = arm
+    request["preflight_class"] = "seam_verification"
+    for config in (manifest["run_config"], result["run_config"]):
+        config["arm"] = arm
+        config["max_steps"] = max_steps
+        config["optimizer_steps"] = max_steps
+        config["preflight_class"] = "seam_verification"
+        config["rollout_groups_cap"] = cap
+    generated = groups * 2 + mixed * 6 if arm == "contrast_early_stop_g2_to_g8" else groups * 8
+    for audit in (manifest["audit_record"], result["audit_record"]):
+        audit["arm_id"] = arm
+        audit["rollout_groups"] = groups
+        audit["updated_groups"] = mixed
+        audit["generated_rollouts"] = generated
+        audit["charged_generated_tokens"] = max(generated, 100)
+        audit["mixed_fraction"] = mixed / groups
+        audit["all_wrong_fraction"] = 1 - mixed / groups
+        audit["all_correct_fraction"] = 0.0
+    return manifest, result, request
+
+
+def test_launcher_and_remote_seam_windows_agree():
+    """The launcher validates the window the remote run actually executes."""
+    remote_dir = ROOT / "zvf-program/next-submission"
+    remote_path = remote_dir / "remote_preflight.py"
+    spec = importlib.util.spec_from_file_location("next_submission_remote", remote_path)
+    assert spec is not None and spec.loader is not None
+    remote = importlib.util.module_from_spec(spec)
+    sys.path.insert(0, str(remote_dir))  # remote_preflight imports its siblings
+    try:
+        spec.loader.exec_module(remote)
+    finally:
+        sys.path.remove(str(remote_dir))
+    assert remote.SEAM_ROLLOUT_GROUP_CAP == PREFLIGHT.SEAM_ROLLOUT_GROUP_CAP
+    assert remote.SEAM_OPTIMIZER_STEP_CAP == PREFLIGHT.SEAM_OPTIMIZER_STEP_CAP
+    assert remote.PREFLIGHT_CLASSES == PREFLIGHT.PREFLIGHT_CLASSES
+    for preflight_class in PREFLIGHT.PREFLIGHT_CLASSES:
+        for arm in PREFLIGHT.ARMS:
+            assert remote.seam_window(preflight_class, arm) == PREFLIGHT.seam_window(
+                preflight_class, arm
+            )
+
+
+def test_seam_window_stays_within_the_amendment_caps():
+    assert PREFLIGHT.seam_window("matrix_infrastructure", "grpo_g8") == (2, 1)
+    assert PREFLIGHT.seam_window("seam_verification", "grpo_g8") == (24, 12)
+    assert PREFLIGHT.seam_window("seam_verification", "contrast_early_stop_g2_to_g8") == (48, 24)
+    for arm in PREFLIGHT.ARMS:
+        cap, steps = PREFLIGHT.seam_window("seam_verification", arm)
+        assert steps <= PREFLIGHT.SEAM_OPTIMIZER_STEP_CAP
+        assert cap < 60  # one confirmatory unit is 30 steps x 2 groups
+
+
+def test_valid_seam_verification_preflight_contract_passes():
+    PREFLIGHT.validate_manifest(*seam_payload())
+
+
+def test_seam_verification_rollout_groups_cannot_exceed_the_cap():
+    manifest, result, request = seam_payload(groups=6)
+    for audit in (manifest["audit_record"], result["audit_record"]):
+        audit["rollout_groups"] = 49
+        audit["updated_groups"] = 1
+        audit["mixed_fraction"] = 1 / 49
+        audit["all_wrong_fraction"] = 48 / 49
+        audit["generated_rollouts"] = 49 * 2 + 6
+        audit["charged_generated_tokens"] = 200
+    with pytest.raises(RuntimeError, match="cap"):
+        PREFLIGHT.validate_manifest(manifest, result, request)
+
+
+def test_seam_verification_cannot_run_the_matrix_window_max_steps():
+    manifest, result, request = seam_payload()
+    manifest["run_config"]["max_steps"] = 1
+    result["run_config"]["max_steps"] = 1
+    with pytest.raises(RuntimeError, match="run config mismatch"):
+        PREFLIGHT.validate_manifest(manifest, result, request)
+
+
+def test_seam_receipt_does_not_overwrite_the_matrix_receipt(tmp_path):
+    base = {"task": "gsm8k", "arm": "grpo_g8", "seed": 223, "fingerprint": "f" * 64}
+    matrix_unit, matrix_path, _, _ = PREFLIGHT.result_paths(tmp_path, base)
+    seam_unit, seam_path, _, _ = PREFLIGHT.result_paths(
+        tmp_path, {**base, "preflight_class": "seam_verification"}
+    )
+    assert matrix_unit == "gsm8k__grpo_g8__s223"
+    assert seam_unit == "gsm8k__grpo_g8__s223__seam_verification"
+    assert matrix_path != seam_path
+
+
+def test_preflight_class_defaults_to_matrix_infrastructure():
+    args = PREFLIGHT.parse_args(["--task", "gsm8k", "--arm", "grpo_g8", "--seed", "223"])
+    assert args.preflight_class == "matrix_infrastructure"
+    manifest, result, request = copy.deepcopy(valid_payload())
+    request.pop("preflight_class", None)
+    PREFLIGHT.validate_manifest(manifest, result, request)

@@ -104,6 +104,12 @@ EXPECTED_ADAPTER = {
     "bias": "none",
     "task_type": "CAUSAL_LM",
 }
+# A004: seam-verification rollout-group caps, both strictly below the 60 rollout
+# groups of one confirmatory unit.
+EXPECTED_SEAM_ROLLOUT_GROUP_CAP = {
+    "contrast_early_stop_g2_to_g8": 48,
+    "grpo_g8": 24,
+}
 EXPECTED_ANALYSIS = {
     "confidence_intervals": "seed-paired bootstrap with deterministic streams and paired-t sensitivity",
     "multiplicity": "intersection-union across cost and capability within task; Holm across two tasks",
@@ -211,10 +217,15 @@ def verify_contract(
     )
     amendments = protocol.get("amendments")
     require(
-        isinstance(amendments, list) and len(amendments) == 3,
+        isinstance(amendments, list) and len(amendments) == 4,
         "prospective protocol amendment ledger missing",
     )
-    amendment_record, decoder_amendment_record, hardening_amendment_record = amendments
+    (
+        amendment_record,
+        decoder_amendment_record,
+        hardening_amendment_record,
+        seam_amendment_record,
+    ) = amendments
     require(
         isinstance(amendment_record, dict)
         and amendment_record.get("amendment_id") == "A001_math_unbraced_boxed_targets"
@@ -288,6 +299,39 @@ def verify_contract(
         hardening_change.get("seed_plan", {}).get("planning_seed_count") == len(EXPECTED_SEEDS)
         and hardening_change.get("power_plan", {}).get("planning_alpha_worst_case") == 0.0125,
         "confirmatory-hardening amendment seed or power block drift",
+    )
+    require(
+        isinstance(seam_amendment_record, dict)
+        and seam_amendment_record.get("amendment_id") == "A004_seam_verification_window"
+        and seam_amendment_record.get("status") == "prospective_before_confirmatory_execution",
+        "seam-verification amendment identity or timing drift",
+    )
+    seam_amendment_path = repo_root / str(seam_amendment_record.get("path"))
+    require(seam_amendment_path.is_file(), "seam-verification amendment receipt missing")
+    require(
+        seam_amendment_record.get("sha256") == sha256(seam_amendment_path),
+        "seam-verification amendment hash drift",
+    )
+    seam_amendment = load_json(seam_amendment_path)
+    require(
+        seam_amendment.get("timing", {}).get("confirmatory_rows_completed_before_amendment") == 0
+        and seam_amendment.get("timing", {}).get("confirmatory_outcomes_inspected") is False,
+        "seam-verification amendment is not prospective",
+    )
+    seam_window = seam_amendment.get("change", {}).get("seam_verification_window", {})
+    require(
+        seam_window.get("rollout_groups_cap") == EXPECTED_SEAM_ROLLOUT_GROUP_CAP
+        and seam_window.get("optimizer_step_budget") == 24
+        and seam_window.get("unchanged", {}).get("heldout_n") == 8
+        and seam_window.get("unchanged", {}).get("num_generations") == 8,
+        "seam-verification amendment window block drift",
+    )
+    require(
+        seam_amendment.get("change", {}).get("gate_unchanged", {}).get(
+            "require_live_mixed_reward_optimizer_update_per_cell"
+        )
+        is True,
+        "seam-verification amendment relaxes the confirmatory execution gate",
     )
 
     auth = protocol.get("authorization")

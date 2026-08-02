@@ -50,6 +50,7 @@ def test_prospective_math_parser_amendment_is_hash_bound(contract):
         "A001_math_unbraced_boxed_targets",
         "A002_qwen3_non_thinking_decoder",
         "A003_confirmatory_hardening",
+        "A004_seam_verification_window",
     ]
 
 
@@ -234,3 +235,36 @@ def test_duplicate_json_keys_are_rejected(tmp_path):
     path.write_text('{"a": 1, "a": 2}', encoding="utf-8")
     with pytest.raises(VERIFIER.DesignContractError, match="duplicate JSON key"):
         VERIFIER.load_json(path)
+
+
+def seam_amendment(contract):
+    record = contract[0]["amendments"][3]
+    return VERIFIER.load_json(ROOT / record["path"])
+
+
+def test_seam_amendment_cannot_relax_the_execution_gate(contract):
+    gate = seam_amendment(contract)["change"]["gate_unchanged"]
+    assert gate["require_live_mixed_reward_optimizer_update_per_cell"] is True
+    assert gate["failure_action"] == "block_confirmatory_execution"
+
+
+def test_seam_amendment_window_is_smaller_than_one_confirmatory_unit(contract):
+    window = seam_amendment(contract)["change"]["seam_verification_window"]
+    # A confirmatory unit is 30 optimizer steps x 2 rollout groups = 60 groups.
+    assert max(window["rollout_groups_cap"].values()) < 60
+    assert window["optimizer_step_budget"] < 30
+    assert window["unchanged"]["heldout_n"] == 8
+    assert window["unchanged"]["num_generations"] == 8
+
+
+def test_seam_amendment_quarantines_stopping_rule_biased_telemetry(contract):
+    quarantine = seam_amendment(contract)["change"]["telemetry_quarantine"]
+    assert "mixed_fraction" in quarantine["quarantined_fields"]
+    assert "two_sample_false_homogeneity" in quarantine["quarantined_fields"]
+
+
+def test_relaxed_seam_gate_is_rejected(contract):
+    candidate = copy.deepcopy(contract)
+    candidate[0]["amendments"][3]["status"] = "retrospective"
+    with pytest.raises(VERIFIER.DesignContractError, match="seam-verification amendment"):
+        verify(candidate)

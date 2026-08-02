@@ -15,11 +15,22 @@ from typing import Any
 HERE = Path(__file__).resolve().parent
 DEFAULT_PROTOCOL = HERE / "preregistration.json"
 DEFAULT_RESULTS = HERE / "results/preflight/results"
+# Each source file maps to the ordered binding keys whose hashes are accepted.
+# A superseded key is honoured because the window it produced is a strict subset
+# of the current window (A004): a receipt from the narrower window is
+# conservative evidence for the same seam, so it must not be invalidated by a
+# widening that can only make the seam easier to observe.
 SOURCE_BINDINGS = {
-    "contrast_sampler.py": "contrast_sampler_sha256",
-    "remote_preflight.py": "remote_preflight_sha256",
-    "trl_sampler_adapter.py": "trl_sampler_adapter_sha256",
+    "contrast_sampler.py": ("contrast_sampler_sha256",),
+    "remote_preflight.py": ("remote_preflight_sha256", "superseded_remote_preflight_sha256"),
+    "trl_sampler_adapter.py": ("trl_sampler_adapter_sha256",),
 }
+
+# A004: a seam-verification preflight may draw more rollout groups than the
+# matrix-infrastructure window, but never more than one confirmatory unit.
+PREFLIGHT_CLASSES = ("matrix_infrastructure", "seam_verification")
+SEAM_ROLLOUT_GROUP_CAP = {"contrast_early_stop_g2_to_g8": 48, "grpo_g8": 24}
+SEAM_OPTIMIZER_STEP_CAP = 24
 
 
 class PreflightGateError(ValueError):
@@ -216,16 +227,52 @@ def validate_receipt(
     audit = _validate_audit(payload.get("audit_record"), task, arm, seed)
     require(audit == manifest.get("audit_record"), f"{path.name}: payload/manifest audit drift")
 
+    # A004 window discipline. Receipts predating the amendment carry no
+    # preflight_class and are matrix_infrastructure by construction.
+    preflight_class = run_config.get("preflight_class", "matrix_infrastructure")
+    require(
+        preflight_class in PREFLIGHT_CLASSES,
+        f"{path.name}: unknown preflight_class {preflight_class!r}",
+    )
+    require(run_config.get("heldout_n") == 8, f"{path.name}: heldout_n is not the frozen 8")
+    if preflight_class == "matrix_infrastructure":
+        require(
+            run_config.get("max_steps") == 1,
+            f"{path.name}: matrix_infrastructure preflight exceeds one optimizer step",
+        )
+    else:
+        cap = SEAM_ROLLOUT_GROUP_CAP.get(arm)
+        require(cap is not None, f"{path.name}: no A004 rollout-group cap for arm {arm}")
+        require(
+            audit["rollout_groups"] <= cap,
+            f"{path.name}: seam-verification rollout groups exceed the A004 cap of {cap}",
+        )
+        steps = run_config.get("optimizer_steps")
+        require(
+            isinstance(steps, int)
+            and not isinstance(steps, bool)
+            and 1 <= steps <= SEAM_OPTIMIZER_STEP_CAP,
+            f"{path.name}: seam-verification optimizer steps exceed the A004 cap of "
+            f"{SEAM_OPTIMIZER_STEP_CAP}",
+        )
+        require(
+            run_config.get("rollout_groups_cap") == cap,
+            f"{path.name}: seam-verification declares a rollout_groups_cap other than {cap}",
+        )
+
     source_files = manifest.get("source_files")
     bindings = protocol.get("bindings")
     require(
         isinstance(source_files, dict) and isinstance(bindings, dict),
         f"{path.name}: source provenance missing",
     )
-    for filename, binding_key in SOURCE_BINDINGS.items():
+    for filename, binding_keys in SOURCE_BINDINGS.items():
+        accepted = {
+            bindings[key] for key in binding_keys if isinstance(bindings.get(key), str)
+        }
         require(
-            source_files.get(filename) == bindings.get(binding_key),
-            f"{path.name}: {filename} differs from the frozen source binding",
+            source_files.get(filename) in accepted,
+            f"{path.name}: {filename} differs from every frozen source binding",
         )
 
     remote = payload.get("remote")
@@ -270,6 +317,7 @@ def validate_receipt(
         "task_id": task,
         "arm_id": arm,
         "seed": seed,
+        "preflight_class": preflight_class,
         "fingerprint": receipt["fingerprint"],
         "stack_fingerprint": receipt["stack_fingerprint"],
         "receipt_path": path.name,
@@ -292,12 +340,12 @@ def evaluate_matrix(
     require(receipt_paths, "no preflight receipts found")
 
     records: list[dict[str, Any]] = []
-    identities: set[tuple[str, str, int]] = set()
+    identities: set[tuple[str, str, int, str]] = set()
     for path in sorted(receipt_paths):
         record = validate_receipt(load_json(path), protocol, path)
         cell = (record["task_id"], record["arm_id"])
         require(cell in cells, f"unexpected preflight cell: {cell[0]}/{cell[1]}")
-        identity = (*cell, record["seed"])
+        identity = (*cell, record["seed"], record["preflight_class"])
         require(identity not in identities, f"duplicate preflight identity: {identity}")
         identities.add(identity)
         records.append(record)

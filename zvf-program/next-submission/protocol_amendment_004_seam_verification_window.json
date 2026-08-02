@@ -1,0 +1,157 @@
+{
+  "schema_version": "aiml-next-protocol-amendment-v1",
+  "amendment_id": "A004_seam_verification_window",
+  "status": "prospective_before_confirmatory_execution",
+  "trigger": {
+    "phase": "pre-confirmatory preflight gate deadlock",
+    "audit_date": "2026-08-02",
+    "confirmatory_rows_completed_before_amendment": 0,
+    "findings": [
+      "The preflight execution gate requires a live mixed_reward_optimizer_update in each of the 4 (task, arm) cells, but the preflight window that must produce it draws only 2 rollout groups per attempt.",
+      "Fitting the receipt-observed group classes gives a per-group mixed probability of 0.09393 (gsm8k) and 0.05783 (math500) at the G=2 probe and 0.14629 (math500) at G=8, so a 2-group attempt clears a blocked cell with probability 0.18, 0.11 and 0.27 respectively, and clears all three jointly with probability 0.0055.",
+      "The five attempts already spent on the three blocked cells all missed; under the fitted rates that outcome has probability 0.32, so the failures are the expected behaviour of a window too small to sample the event rather than a defect in the stack.",
+      "Clearing the gate by drawing more seeds at the current window needs an estimated 52 further A100 preflight allocations for 95% per-cell confidence, against 23 preregistered seeds per cell and a documented history of interrupted Colab sessions.",
+      "The gate therefore deadlocks: the seam the gate exists to verify is the one thing the gate's own window prevents it from observing."
+    ]
+  },
+  "timing": {
+    "confirmatory_rows_completed_before_amendment": 0,
+    "confirmatory_outcomes_inspected": false,
+    "preflight_is_scientific_evidence": false
+  },
+  "scope": "This amendment changes only how many rollout groups a seam-verification preflight may draw before it stops. It changes nothing that a confirmatory unit does.",
+  "change": {
+    "preflight_class": {
+      "values": [
+        "matrix_infrastructure",
+        "seam_verification"
+      ],
+      "recorded_in": [
+        "run_config",
+        "receipt"
+      ],
+      "default": "matrix_infrastructure",
+      "legacy_receipts": "Every receipt committed before this amendment carries no preflight_class and is matrix_infrastructure by construction; none is affected."
+    },
+    "seam_verification_window": {
+      "applies_to": "preflight_class == 'seam_verification' only",
+      "rollout_groups_cap": {
+        "contrast_early_stop_g2_to_g8": 48,
+        "grpo_g8": 24
+      },
+      "rollout_groups_cap_rationale": "A G=2 probe is mixed with probability 2p(1-p) and the arm's class is decided by the probe, so contrast needs more groups; grpo_g8 classifies on all 8 samples and clears far sooner.",
+      "stopping_rule": "The run stops drawing new groups as soon as one group has been classified mixed AND the optimizer update for the accumulating batch has been applied, or when rollout_groups_cap is reached \u2014 whichever comes first.",
+      "optimizer_step_budget": 24,
+      "unchanged": {
+        "heldout_n": 8,
+        "num_generations": 8,
+        "initial_group_size": 2,
+        "expansion_group_size": 6,
+        "expand_rule": "unchanged",
+        "homogeneous_rule": "unchanged",
+        "decoder": "unchanged",
+        "model_revision": "unchanged",
+        "reward_parser": "unchanged",
+        "max_completion_length": 1024,
+        "adapter": "unchanged",
+        "objective": "unchanged",
+        "learning_rate": "unchanged",
+        "peak_generation_batch_completions": 16
+      },
+      "peak_memory_note": "Peak generation batch stays at 16 completions per generate() call \u2014 the value already exercised on A100-40GB \u2014 so no new memory failure mode is introduced."
+    },
+    "implementation_path": {
+      "preferred": "Keep max_steps=1 and accumulate the extra groups inside the single optimizer step, which keeps A003's 'at most one optimizer step' literally satisfied.",
+      "permitted_fallback": "If the pinned TRL 1.8.0 will not accumulate across generation chunks within one step, up to 24 optimizer steps of the existing 2-groups-per-step geometry are permitted.",
+      "path_taken": "permitted_fallback",
+      "path_taken_rationale": "The fallback keeps the generation geometry byte-identical to the window already exercised on A100-40GB and is verifiable without a GPU; the preferred path would require re-tuning generation_batch_size and re-validating peak memory. At 2 groups per optimizer step the caps resolve to 24 optimizer steps (contrast) and 12 (grpo_g8), both within the 24-step budget and below the 60 rollout groups of one confirmatory unit.",
+      "auditability": "The receipt records optimizer_steps and rollout_groups, so which path ran is visible to the auditor.",
+      "narrowed_policy_sentence": "A003's preflight_seed_reuse_policy sentence is narrowed to: a seam-verification preflight is at most 24 optimizer steps over at most 48 rollout groups with heldout_n=8 \u2014 a strict subset of one confirmatory unit."
+    },
+    "seeds": {
+      "policy": "Seam-verification preflights reuse the seeds already burned for that cell (211, 223, 227) under A003's existing preflight_seed_reuse_policy.",
+      "additional_preregistered_seeds_consumed": 0
+    },
+    "telemetry_quarantine": {
+      "reason": "The stopping rule terminates on a mixed group, so the group-class fractions from a seam_verification receipt are stopping-rule-biased upward.",
+      "quarantined_fields": [
+        "mixed_fraction",
+        "all_correct_fraction",
+        "all_wrong_fraction",
+        "charged_generated_tokens",
+        "two_sample_false_homogeneity"
+      ],
+      "barred_uses": [
+        "descriptive statistics",
+        "planning",
+        "blinded variance reassessment",
+        "manuscript reporting",
+        "any prior for the G=2 false-homogeneity rate"
+      ],
+      "permitted_use": "The gate reads exactly one bit from them: mixed_fraction > 0.",
+      "unaffected": "The confirmatory two_sample_false_homogeneity telemetry that the paper reports comes from full 30-step runs with no stopping rule."
+    },
+    "gate_unchanged": {
+      "require_live_mixed_reward_optimizer_update_per_cell": true,
+      "scope": "per cell, live on GPU",
+      "failure_action": "block_confirmatory_execution",
+      "rejected_alternatives": [
+        "Accepting the observed gsm8k/grpo_g8 seam as covering the other three cells.",
+        "Substituting a unit test for a live observation."
+      ],
+      "rejection_rationale": "Both would weaken a preregistered gate. Widening the observation window does not."
+    }
+  },
+  "invariants": {
+    "tasks_unchanged": true,
+    "arms_unchanged": true,
+    "reward_semantics_unchanged": true,
+    "decoder_unchanged": true,
+    "completion_cap_unchanged": true,
+    "heldout_rows_unchanged": true,
+    "primary_estimands_unchanged": true,
+    "margins_unchanged": true,
+    "seed_cap_unchanged": true,
+    "confirmatory_training_steps_unchanged": true,
+    "confirmatory_batch_geometry_unchanged": true
+  },
+  "planning_projection": {
+    "status": "planning figures derived from preflight-fitted rates; NOT a result and not admissible as evidence",
+    "method": "Per-prompt success p ~ Beta(a, b) fitted to the censored group classes of the 7 committed receipts under a weakly informative hierarchical prior (mu ~ U(0,1), p(kappa) proportional to (1+kappa)^-3/2); q is the posterior-mean per-group mixed probability.",
+    "per_attempt_clearance_before": {
+      "gsm8k/contrast_early_stop_g2_to_g8": 0.179,
+      "math500/contrast_early_stop_g2_to_g8": 0.1123,
+      "math500/grpo_g8": 0.2712,
+      "joint": 0.0055
+    },
+    "per_attempt_clearance_after": {
+      "gsm8k/contrast_early_stop_g2_to_g8": 0.9912,
+      "math500/contrast_early_stop_g2_to_g8": 0.9427,
+      "math500/grpo_g8": 0.9775,
+      "joint": 0.9134
+    },
+    "expected_rollout_groups_before_stop": {
+      "gsm8k/contrast_early_stop_g2_to_g8": 11.1,
+      "math500/contrast_early_stop_g2_to_g8": 16.8,
+      "math500/grpo_g8": 7.2,
+      "note": "Computed at the 2-groups-per-optimizer-step stopping granularity actually implemented."
+    },
+    "cost_direction": "Roughly a 3-7x rollout increase per attempt against a reduction from an estimated 52 A100 allocations to about 3.",
+    "correction_note": "An earlier draft of this projection quoted 0.9995 for math500/grpo_g8 and 0.9339 joint. Those are the values at a 48-group cap; grpo_g8 is capped at 24 groups by this amendment, so the correct figures are 0.9775 and 0.9134."
+  },
+  "why_this_cannot_bias_the_results": [
+    "Constitutionally non-evidence: every receipt is stamped evidence_class preflight-not-evidence and evidence_tier preflight_not_scientific_evidence, and validate_receipt fails closed if that stamp is ever promoted. A003's evidence_boundary and preflight_seed_reuse_policy already state that no preflight outcome, reward trace or checkpoint enters any analysis and that confirmatory units are fresh independent runs from the frozen initial checkpoint. This amendment changes the size of a throwaway, never the ledger.",
+    "The gate reads one infrastructural bit. mixed_fraction > 0 asks whether the code path heterogeneous group -> non-degenerate advantages -> optimizer update executes on live hardware. That is a property of the stack, not of the data. Drawing more prompts changes what the gate can see; it cannot change what a confirmatory run does.",
+    "The widened window is strictly smaller than the thing it gates. A confirmatory unit is 30 optimizer steps x 2 groups = 60 rollout groups. This amendment caps the seam preflight at 48 groups and 24 steps. A preflight smaller than one unit of the study cannot be a backdoor version of the study. At the fitted q the confirmatory math500 contrast run will hit a mixed group with probability 1 - 0.94217^60 = 0.972 on its own.",
+    "No leakage channel exists at heldout_n = 8. The only outcome-shaped number a preflight produces is held-out accuracy on 8 rows; its resolution is 0.125, twelve and a half times the 0.01 non-inferiority margin, and its standard error at p=0.6 is 0.17. No adaptive design decision can be motivated by it, and this amendment does not touch heldout_n. The blinded variance reassessment remains restricted to confirmatory cells and increase-only.",
+    "Prospective by construction. Zero of the 4 cells x 23 seeds x 2 endpoints of confirmatory evidence exist. The amendment is written before any outcome is inspected, changes no estimand, margin, task, arm, seed set, analysis or multiplicity rule, and is hash-bound into the protocol in the same commit.",
+    "The direction of the change is disclosed rather than described as neutral. Widening the window makes the gate more likely to pass, so it is a reduction in the gate's incidental strictness. That strictness was accidental \u2014 it came from a window too small to sample the event, not from a considered threshold \u2014 and its effect was a deadlock. Increasing the number of live observations strengthens verification.",
+    "The one real hazard is named and quarantined. A stop-on-first-mixed rule biases the preflight's group-class fractions upward; change.telemetry_quarantine bars every one of those fields from all downstream use."
+  ],
+  "bindings": {
+    "prior_protocol_sha256": "7d2e244d1ccf91841a2fd87c3a40b1ec7bbc51b61db86144cd13ccc7ff9922d9",
+    "superseded_remote_preflight_sha256": "dafa185f35b76f7db5ef3adcfdb71eddc81532039b2d333988ede14c5a5e375c",
+    "superseded_remote_preflight_rationale": "The pre-A004 window is a strict subset of the post-A004 window, so a receipt produced under it is conservative evidence for the same seam. verify_preflight_matrix accepts either hash for remote_preflight.py so that widening the window does not invalidate the 7 committed receipts or the seam already observed in gsm8k/grpo_g8."
+  },
+  "evidence_boundary": "This amendment widens a non-evidence verification window before any confirmatory row exists. It introduces no outcome information, changes no estimand or margin, and cannot support claims C1-C5. Preflight outcomes remain non-evidence."
+}

@@ -47,6 +47,30 @@ PACKAGE_PINS = (
 )
 ARMS = ("grpo_g8", "contrast_early_stop_g2_to_g8")
 TASKS = ("gsm8k", "math500")
+
+# A004 seam-verification window. Mirrors remote_preflight.py; the two are held
+# in agreement by tests/test_next_submission_preflight.py so the launcher
+# validates exactly the window the remote run executes.
+PREFLIGHT_CLASSES = ("matrix_infrastructure", "seam_verification")
+SEAM_ROLLOUT_GROUP_CAP = {"contrast_early_stop_g2_to_g8": 48, "grpo_g8": 24}
+SEAM_OPTIMIZER_STEP_CAP = 24
+GROUPS_PER_OPTIMIZER_STEP = 2
+
+
+def seam_window(preflight_class: str, arm: str) -> tuple[int, int]:
+    """Return (rollout_groups_cap, max_steps) for a preflight class and arm."""
+
+    if preflight_class == "matrix_infrastructure":
+        return GROUPS_PER_OPTIMIZER_STEP, 1
+    cap = SEAM_ROLLOUT_GROUP_CAP[arm]
+    steps = -(-cap // GROUPS_PER_OPTIMIZER_STEP)
+    if steps > SEAM_OPTIMIZER_STEP_CAP:
+        raise ValueError(
+            f"seam window for {arm} needs {steps} optimizer steps, "
+            f"above the A004 cap of {SEAM_OPTIMIZER_STEP_CAP}"
+        )
+    return cap, steps
+
 ANSI_RE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 DECODER_CONTRACT = {
     "enable_thinking": False,
@@ -125,6 +149,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--rerun", action="store_true")
     parser.add_argument("--recover-request", type=Path)
+    parser.add_argument(
+        "--preflight-class",
+        choices=("matrix_infrastructure", "seam_verification"),
+        default="matrix_infrastructure",
+        help="A004: seam_verification widens only the rollout-group budget and "
+        "stops on the first applied mixed-reward update",
+    )
     return parser.parse_args(argv)
 
 
@@ -305,6 +336,10 @@ def validate_manifest(
     run_config = manifest.get("run_config") or {}
     if result.get("run_config") != run_config:
         raise RuntimeError("manifest and result run configs differ")
+    preflight_class = request.get("preflight_class", "matrix_infrastructure")
+    if preflight_class not in PREFLIGHT_CLASSES:
+        raise RuntimeError(f"unknown preflight class: {preflight_class}")
+    rollout_groups_cap, expected_max_steps = seam_window(preflight_class, request["arm"])
     expected = {
         "task": request["task"],
         "arm": request["arm"],
@@ -315,9 +350,12 @@ def validate_manifest(
         "protocol_sha256": request["protocol_sha256"],
         "provider": request["provider"],
         "hardware_flavor": request["hardware_flavor"],
-        "max_steps": 1,
+        "max_steps": expected_max_steps,
         "heldout_n": 8,
     }
+    if preflight_class != "matrix_infrastructure":
+        expected["preflight_class"] = preflight_class
+        expected["rollout_groups_cap"] = rollout_groups_cap
     wrong = {
         key: (run_config.get(key), value)
         for key, value in expected.items()
@@ -391,6 +429,10 @@ def validate_manifest(
     if request["arm"] == "contrast_early_stop_g2_to_g8":
         if generated != groups * 2 + mixed_groups * 6:
             raise RuntimeError("intervention generation count violates the G2-to-G8 rule")
+    if groups > rollout_groups_cap:
+        raise RuntimeError(
+            f"rollout groups {groups} exceed the {preflight_class} cap of {rollout_groups_cap}"
+        )
     if charged < generated:
         raise RuntimeError("charged generated tokens are below the generated-rollout count")
     clipped = audit.get("completion_clipped_fraction")
@@ -773,6 +815,11 @@ def execute_commands(
 
 def result_paths(output_dir: Path, request: dict[str, Any]) -> tuple[str, Path, Path, Path]:
     unit = f"{request['task']}__{request['arm']}__s{request['seed']}"
+    # A004 seam-verification receipts are a separate artifact from the
+    # matrix_infrastructure receipt for the same cell and seed, so that reusing a
+    # burned seed cannot archive or overwrite committed evidence.
+    if request.get("preflight_class", "matrix_infrastructure") != "matrix_infrastructure":
+        unit = f"{unit}__{request['preflight_class']}"
     request_id = str(request["fingerprint"])[:12]
     result_path = output_dir / "results" / f"{unit}.json"
     request_path = output_dir / "requests" / f"{unit}__{request_id}.json"
@@ -931,6 +978,7 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
         "task": args.task,
         "arm": args.arm,
         "seed": args.seed,
+        "preflight_class": args.preflight_class,
         "gpu": args.gpu,
         "provider": "colab",
         "hardware_flavor": args.gpu,
@@ -998,6 +1046,8 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
     ]
     if args.wandb_entity:
         script_args.extend(["--wandb-entity", args.wandb_entity])
+    if args.preflight_class != "matrix_infrastructure":
+        script_args.extend(["--preflight-class", args.preflight_class])
 
     execution_plan = build_execution_plan(
         args,

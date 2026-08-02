@@ -35,6 +35,17 @@ MATH_EVAL_REVISION = "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be"
 ARMS = (ARM_BASELINE, ARM_EARLY_STOP)
 TASKS = ("gsm8k", "math500")
 ENABLE_THINKING = False
+
+# A004 seam-verification window. A matrix_infrastructure preflight is the
+# original one-step window. A seam_verification preflight keeps every scientific
+# knob frozen and only widens how many rollout groups may be drawn before the
+# run stops, so that the mixed-reward optimizer-update seam can actually be
+# observed. The caps are strictly smaller than one confirmatory unit
+# (30 steps x 2 groups = 60 groups).
+PREFLIGHT_CLASSES = ("matrix_infrastructure", "seam_verification")
+SEAM_ROLLOUT_GROUP_CAP = {ARM_EARLY_STOP: 48, ARM_BASELINE: 24}
+SEAM_OPTIMIZER_STEP_CAP = 24
+GROUPS_PER_OPTIMIZER_STEP = 2
 TRAINING_DECODER = {
     "temperature": 0.7,
     "top_p": 0.8,
@@ -64,7 +75,32 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--wandb-entity")
     parser.add_argument("--max-completion-length", type=int, default=1024)
     parser.add_argument("--eval-batch-size", type=int, default=2)
+    parser.add_argument(
+        "--preflight-class",
+        choices=PREFLIGHT_CLASSES,
+        default="matrix_infrastructure",
+        help=(
+            "matrix_infrastructure is the frozen one-step window; seam_verification "
+            "widens only the rollout-group budget under A004 and stops on the first "
+            "applied mixed-reward update"
+        ),
+    )
     return parser.parse_args(argv)
+
+
+def seam_window(preflight_class: str, arm: str) -> tuple[int, int]:
+    """Return (rollout_groups_cap, max_steps) for a preflight class and arm."""
+
+    if preflight_class == "matrix_infrastructure":
+        return GROUPS_PER_OPTIMIZER_STEP, 1
+    cap = SEAM_ROLLOUT_GROUP_CAP[arm]
+    steps = -(-cap // GROUPS_PER_OPTIMIZER_STEP)  # ceil
+    if steps > SEAM_OPTIMIZER_STEP_CAP:
+        raise ValueError(
+            f"seam window for {arm} needs {steps} optimizer steps, "
+            f"above the A004 cap of {SEAM_OPTIMIZER_STEP_CAP}"
+        )
+    return cap, steps
 
 
 def utc_now() -> str:
@@ -339,7 +375,7 @@ def main(argv: list[str] | None = None) -> int:
     from datasets import load_dataset
     from huggingface_hub import HfApi
     from peft import LoraConfig
-    from transformers import AutoTokenizer
+    from transformers import AutoTokenizer, TrainerCallback
     from trl import GRPOConfig, GRPOTrainer
     import wandb
 
@@ -402,6 +438,7 @@ def main(argv: list[str] | None = None) -> int:
     ]
     if "wandb" not in report_to:
         raise RuntimeError("the receipt contract requires W&B tracking")
+    rollout_groups_cap, max_steps = seam_window(args.preflight_class, args.arm)
     training_args = GRPOConfig(
         output_dir=os.environ.get("NEXT_PREFLIGHT_OUTPUT_DIR", "/tmp/next-preflight-output"),
         run_name=args.wandb_run_name,
@@ -415,7 +452,7 @@ def main(argv: list[str] | None = None) -> int:
         gradient_accumulation_steps=8,
         generation_batch_size=16,
         num_generations=8,
-        max_steps=1,
+        max_steps=max_steps,
         max_completion_length=args.max_completion_length,
         learning_rate=1e-6,
         lr_scheduler_type="linear",
@@ -468,6 +505,22 @@ def main(argv: list[str] | None = None) -> int:
             reward_parser=reward_parser,
         ),
     )
+    if args.preflight_class == "seam_verification":
+
+        class StopOnFirstAppliedUpdate(TrainerCallback):
+            """End the run once a mixed group has had its update applied.
+
+            on_step_end fires after the optimizer step, so a stop here means the
+            seam the gate asks about — heterogeneous group, non-degenerate
+            advantages, optimizer update — has actually executed on GPU.
+            """
+
+            def on_step_end(self, args_, state, control, **kwargs):
+                if int(trainer._next_sampler_cumulative.get("updated_groups", 0)) > 0:
+                    control.should_training_stop = True
+                return control
+
+        trainer.add_callback(StopOnFirstAppliedUpdate())
 
     try:
         trainer.train()
@@ -516,7 +569,10 @@ def main(argv: list[str] | None = None) -> int:
             "seed": args.seed,
             "model": MODEL_ID,
             "model_revision": MODEL_REVISION,
-            "max_steps": 1,
+            "max_steps": max_steps,
+            "optimizer_steps": int(trainer.state.global_step),
+            "preflight_class": args.preflight_class,
+            "rollout_groups_cap": rollout_groups_cap,
             "heldout_n": 8,
             "max_completion_length": args.max_completion_length,
             "unit_fingerprint": args.unit_fingerprint,

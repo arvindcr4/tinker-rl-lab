@@ -20,6 +20,12 @@
       "status": "prospective_before_confirmatory_execution",
       "path": "zvf-program/next-submission/protocol_amendment_003_confirmatory_hardening.json",
       "sha256": "25047e5a806651700b9112fb9f77f6b549955e54a4e1b98bad986b99d36e72f8"
+    },
+    {
+      "amendment_id": "A004_seam_verification_window",
+      "status": "prospective_before_confirmatory_execution",
+      "path": "zvf-program/next-submission/protocol_amendment_004_seam_verification_window.json",
+      "sha256": "b99f0c59d5fbd9e2f9bc760cd8b7244262b31653f2bc4972170693bbf646300a"
     }
   ],
   "conference_target": "next_general_ai_ml_conference_tbd",
@@ -332,13 +338,13 @@
     "manuscript_blueprint_path": "zvf-program/next-submission/MANUSCRIPT_BLUEPRINT.md",
     "manuscript_blueprint_sha256": "6a9c6645683d41383a38d5c399a0fb35c864a93f537625a171cfd6961fb62588",
     "execution_authorization_path": "zvf-program/next-submission/execution_authorization.json",
-    "execution_authorization_sha256": "490251ac85ecbc6a0b03fea4d4f79c542ba4bfa634e11d72dcf5ad59e94d8391",
+    "execution_authorization_sha256": "43e7d3cb810e423dbab7231dd256e32cbe4a6919c0dfe970cd903b1f04e5b92d",
     "contrast_sampler_path": "zvf-program/next-submission/contrast_sampler.py",
     "contrast_sampler_sha256": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
     "trl_sampler_adapter_path": "zvf-program/next-submission/trl_sampler_adapter.py",
     "trl_sampler_adapter_sha256": "869647469633f62b7d44273ab35ecc8823db2ad8a9c0e06fecf5ff95f801c365",
     "remote_preflight_path": "zvf-program/next-submission/remote_preflight.py",
-    "remote_preflight_sha256": "dafa185f35b76f7db5ef3adcfdb71eddc81532039b2d333988ede14c5a5e375c",
+    "remote_preflight_sha256": "2cc7b68f92c318d6a71844853a8faa6ab6d1709a42a032311c4b2524e4dd8964",
     "protocol_amendment_001_path": "zvf-program/next-submission/protocol_amendment_001_math_boxed.json",
     "protocol_amendment_001_sha256": "89f8ff4653e4f41c2988b2e6103080c75c7e3bac342c0ff36680bee1c4ea371a",
     "protocol_amendment_002_path": "zvf-program/next-submission/protocol_amendment_002_qwen_decoder.json",
@@ -348,9 +354,9 @@
     "power_implementation_path": "zvf-program/audit/aggregate_audit.py",
     "power_implementation_sha256": "c323c4edcd021e10b0ffe5fe27461aa7c0f6354e718519b50f5bcfa1e240358e",
     "preflight_launcher_path": "zvf-program/next-submission/run_preflight.py",
-    "preflight_launcher_sha256": "550e2bef382f3c302e4b46977eb89b11941d02e1db97bd32c80be53955efe11b",
+    "preflight_launcher_sha256": "2b9656e88f66d7723d81a75cddbf2309a0e6ad2dd12395ac96bc9d95b02ddce9",
     "preflight_matrix_verifier_path": "zvf-program/next-submission/verify_preflight_matrix.py",
-    "preflight_matrix_verifier_sha256": "34134539a66b8d016e5d5d2272eaacdd8e004d8f949a48cc0791e3df6dc07f61",
+    "preflight_matrix_verifier_sha256": "f38204be7260093b68c34f89dfd769cfc9d9e2b205409a338243097642370af7",
     "hf_jobs_preflight_launcher_path": "zvf-program/next-submission/run_hf_jobs_preflight.py",
     "hf_jobs_preflight_launcher_sha256": "c0b465cca5ae45979fa088b3d0a0a06be3987a8e81310d451305adb92ed41dee",
     "kaggle_preflight_launcher_path": "zvf-program/next-submission/run_kaggle_preflight.py",
@@ -364,7 +370,10 @@
     "preflight_environment_check_path": "zvf-program/next-submission/verify_preflight_environment.py",
     "preflight_environment_check_sha256": "ae1718e5c7eca2b1fb17e4d244cb387c3c0b83588fc333bb7789d9bb88c21b2a",
     "preflight_colab_setup_path": "zvf-program/next-submission/setup_colab_preflight.py",
-    "preflight_colab_setup_sha256": "44245d3a7d03bf0972d4af89038e46e78e0aa20a8de845cd06150da0d745a611"
+    "preflight_colab_setup_sha256": "44245d3a7d03bf0972d4af89038e46e78e0aa20a8de845cd06150da0d745a611",
+    "superseded_remote_preflight_sha256": "dafa185f35b76f7db5ef3adcfdb71eddc81532039b2d333988ede14c5a5e375c",
+    "protocol_amendment_004_path": "zvf-program/next-submission/protocol_amendment_004_seam_verification_window.json",
+    "protocol_amendment_004_sha256": "b99f0c59d5fbd9e2f9bc760cd8b7244262b31653f2bc4972170693bbf646300a"
   },
   "manuscript_contract": {
     "section_order": [
@@ -391,6 +400,6 @@
     "submit": false,
     "promotion": false,
     "receipt_path": "zvf-program/next-submission/execution_authorization.json",
-    "receipt_sha256": "490251ac85ecbc6a0b03fea4d4f79c542ba4bfa634e11d72dcf5ad59e94d8391"
+    "receipt_sha256": "43e7d3cb810e423dbab7231dd256e32cbe4a6919c0dfe970cd903b1f04e5b92d"
   }
 }

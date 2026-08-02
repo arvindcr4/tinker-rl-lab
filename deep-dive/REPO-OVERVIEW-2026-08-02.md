@@ -59,6 +59,10 @@ Also see [`framework-backend-dispatch-2026-08-02.md`](framework-backend-dispatch
 - **Receipts as evidence.** Every run writes to multiple independent channels (HF + W&B + GCS); agreement across them is the trust signal.
 - **Code-as-artifact.** Decks and audits derive numbers from the checkout at build time — nothing hand-typed that can drift from evidence.
 
+## Per-file deep dives
+
+These subsystem dives are the 10,000-foot view. For the **file-by-file** drill-down, see **[`per-file/INDEX.md`](per-file/INDEX.md)** — one AntiVibe deep dive per real source file (Python, shell, YAML/TOML, key JSON), mirrored under `per-file/<module>/` and regenerable with `python tools/apply_antivibe.py`. The interactive `/antivibe` skill now ships in the repo at `.claude/skills/antivibe/`.
+
 ## What's *not* code (deliberately skipped)
 
 `autoresearch/`, `research/` (hyperresearch vault), `capstone-literature-survey/`, `thesis/`, `docs/`, and the `.tex`/`.md` paper + audit prose are documentation and research notes, not source — listed in the README structure map but outside AntiVibe's scope. The `platform_modal/scripts/{berkeley,p5p8}` trees (~322 files) and `platform_modal/openrlhf/` are **vendored** experiment scripts kept for reproducibility, not invoked by the unified launcher.

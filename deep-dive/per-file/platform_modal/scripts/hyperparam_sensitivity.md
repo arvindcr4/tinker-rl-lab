@@ -1,0 +1,64 @@
+# Deep Dive: `platform_modal/scripts/hyperparam_sensitivity.py`
+
+> AntiVibe &middot; compact mode &middot; 2026-08-02 12:34 UTC &middot; source: `platform_modal/scripts/hyperparam_sensitivity.py` (424 lines)
+
+## Overview
+`hyperparam_sensitivity.py` is a library module exposing reusable building blocks to the rest of the codebase. It defines types, helpers, and algorithms consumed by drivers and experiments rather than performing a single top-level action.
+It leans on **argparse, config, csv, numpy, torch** to do its work.
+*Self-description:* "Hyperparameter Sensitivity Analysis for TinkerRL ================================================= Sweeps key PPO hyperparameters to assess benchmark robustness"
+
+## Key Components
+- `ArithmeticEnv` -- Simple arithmetic environment: add two numbers 1–99.  Observation : [num1, num2]  (float32, normalized to [0, 1]) Action      : integer in { (3 methods: __init__, reset, step)
+- `PPOAgent` (bases: nn.Module) -- Separate actor and critic networks, each a 2-layer MLP with 64 hidden units. (3 methods: __init__, get_value, get_action_and_value)
+- `RolloutBuffer` -- Minimal on-policy rollout buffer for PPO. (3 methods: __init__, add, compute_returns_and_advantages)
+- `_make_mlp()` -- Build a 2-layer MLP with Tanh activations.
+- `train_and_evaluate()` -- Train a PPO agent on ArithmeticEnv with the given hyperparameters and return final accuracy (fraction of eval episodes solved correctly).  P
+- `main()` -- function
+- Has a `if __name__ == "__main__"` entry point
+
+## Concepts & Decisions
+### DRY across drivers
+- **What**: Shared helper modules stop five framework drivers from each re-solving the same problem in five slightly different ways.
+
+### PyTorch tensor computation & autograd
+- **What**: PyTorch is the numeric engine: `torch.Tensor` holds batched GPU/CPU arrays and `torch.autograd` builds the computation graph so gradients flow from a loss back to every parameter.
+- **Why used here**: TRL, transformers, vLLM and this repo's RL loops are all built on PyTorch, so using it directly avoids impedance mismatch between framework and training code.
+- **When**: Anywhere gradients must reach model weights -- training, RL rollouts, LoRA adaptation, or evaluation under a different dtype.
+- **Trade-offs**: Eager execution is easy to debug but slower than compiled graphs; `torch.compile`/export recover speed at the cost of traceability.
+
+### CSV I/O
+- **What**: `csv` reads/writes comma-separated records, the lingua franca for tabular data and result dumps.
+- **Why used here**: Large benchmark/results files are exchanged as CSV, so importing/exporting that format is a direct requirement.
+- **When**: When tabular data must be human-openable or compatible with spreadsheets/other tools.
+- **Trade-offs**: CSV has no schema or types -- every field is a string, so parsing and quoting edge cases are on you.
+
+### Configuration as declarative data (YAML/JSON/TOML)
+- **What**: Knobs live in YAML/JSON/TOML files or tables rather than code, so a run's intent is inspectable and diffable without reading the program.
+- **Why used here**: A single frozen `CanonicalSpec` + preregistration files is the repo's whole comparability contract -- config-as-data is what makes runs hashable and testable.
+- **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
+- **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
+
+### Numeric arrays with NumPy
+- **What**: NumPy gives dense N-d arrays and vectorized math (reductions, broadcasting) that run at C speed.
+- **Why used here**: Reward computation and metrics are array operations; vectorizing over a batch is both faster and more readable than Python loops.
+- **When**: Any batched numeric transform -- rewards, accuracy, aggregations across rollouts.
+- **Trade-offs**: NumPy and torch each own their memory; converting between them copies unless you share storage carefully.
+
+### Command-line argument parsing
+- **What**: `argparse` turns `sys.argv` into typed options (`--framework`, `--dry-run`) with help text and error handling for free.
+- **Why used here**: Every platform entry point must be runnable by humans and by shelling-out code, so a stable, documented CLI is the contract between them.
+- **When**: When a script is invoked by people, CI, or other processes and needs explicit knobs.
+- **Trade-offs**: Boilerplate-heavy and positional-only; richer CLIs use click/typer for nesting and auto-generated help.
+
+
+## Related Code
+- `utils.seed` &rarr; local `utils/seed.py`
+- sibling `platform_modal/scripts/_reviewer_points_extract.py`
+- sibling `platform_modal/scripts/anonymize.sh`
+- sibling `platform_modal/scripts/build_submission.py`
+- sibling `platform_modal/scripts/build_university_submission.py`
+- sibling `platform_modal/scripts/contamination_check.py`
+- sibling `platform_modal/scripts/ed25519-sign.py`
+
+---
+*Generated by AntiVibe per-file pass &middot; 2026-08-02 12:34 UTC &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*

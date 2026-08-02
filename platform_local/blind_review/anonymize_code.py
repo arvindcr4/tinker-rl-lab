@@ -133,6 +133,28 @@ BINARY_EXTS = {
     ".ico",
 }
 
+# --- Identity / binary-document exclusion (RECONSTRUCTED — verify before rely) ---
+# These three were referenced by _excluded() but never defined: no committed
+# version ever assigned them (lost during the ddcbb868 restructure). Values
+# below are reconstructed FAIL-CLOSED from this module's own docstring (the
+# identifier rewrite table) and from EXCLUDE_FILES / BINARY_EXTS — they
+# over-exclude rather than risk leaking identity into the anonymised bundle.
+# Any path that could carry an identifier is dropped; binary docs that can't be
+# text-rewritten are dropped unless explicitly allow-listed.
+_IDENT_PATH_RE = re.compile(
+    r"(?i)(madhu2133|balasandhya|mohammadrafiml|dhruvanmurthy|"
+    r"madhukumara1993|arvindcr4-pes-university|arvindcr4|"
+    r"pes[-_]llm[-_]research)"
+)
+# Binary document types that cannot be safely text-anonymised.
+_DOC_BINARY_EXTS = {".pdf", ".docx", ".pptx", ".xlsx"}
+# PDFs kept despite being binary docs (figures the bundle needs). Any other PDF
+# is dropped as non-anonymisable.
+_PDF_ALLOWED_PREFIXES = (
+    "paper/figures/",
+    "platform_hybrid/paper/figures/",
+)
+
 # Rewriteable text extensions (everything else we skip for safety).
 TEXT_EXTS = {
     ".py",

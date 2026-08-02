@@ -1,4 +1,4 @@
-"""Iter 149 P5 related-work hardening: comprehensive cite-key audit for every
+r"""Iter 149 P5 related-work hardening: comprehensive cite-key audit for every
 reference cited in paper_P5_minreport.tex + p5_*.tex sections. Extends the
 iter-109 4-standard CrossRef verification to the full P5 bibliography.
 

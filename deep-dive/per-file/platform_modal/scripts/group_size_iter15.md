@@ -1,0 +1,69 @@
+# Deep Dive: `platform_modal/scripts/group_size_iter15.py`
+
+> AntiVibe &middot; compact mode &middot; 2026-08-02 12:34 UTC &middot; source: `platform_modal/scripts/group_size_iter15.py` (467 lines)
+
+## Overview
+`group_size_iter15.py` is a library module exposing reusable building blocks to the rest of the codebase. It defines types, helpers, and algorithms consumed by drivers and experiments rather than performing a single top-level action.
+It leans on **config, csv, numpy, protocol, viz** to do its work.
+*Self-description:* "Iter 15 — Pillar 3 elevation: sharp statistical test of the Wu et al. (2025) "It Takes Two: Your GRPO Is Secretly DPO" DPO-equivalence claim (arXiv 2510.00977),"
+
+## Key Components
+- `bootstrap_paired_t_ci()` -- Paired bootstrap on the mean of (a - b). Returns (mean, lo, hi).
+- `bootstrap_cohens_d_paired()` -- Paired Cohen's d = mean(a - b) / std(a - b), with bootstrap CI.
+- `tost_pvalue()` -- Two One-Sided Test p-value for equivalence within [-eps, eps].  H0: |mu_a - mu_b| >= eps H1: |mu_a - mu_b| <  eps  We compute the bootstrap 
+- `snr()` -- SNR = |mean| / std.  Returns nan if std == 0 or input is empty.
+- `load_sweep()` -- function
+- `per_seed_last10_mean_reward()` -- Return {G: array of per-seed last-10-step mean_reward}, length 3.
+- `per_step_advantage_variance()` -- Return {G: array of per-step advantage_variance, pooled over seeds}.
+- `load_g4_vs_g32_tsv()` -- function
+- `write_equivalence_tsv()` -- function
+- `write_snr_tsv()` -- function
+- `write_retained_dpo_tsv()` -- Per-budget G=4 vs G=32 retention test against Wu 2025 97.6%.
+- `build_figure()` -- function
+- Has a `if __name__ == "__main__"` entry point
+
+## Concepts & Decisions
+### DRY across drivers
+- **What**: Shared helper modules stop five framework drivers from each re-solving the same problem in five slightly different ways.
+
+### CSV I/O
+- **What**: `csv` reads/writes comma-separated records, the lingua franca for tabular data and result dumps.
+- **Why used here**: Large benchmark/results files are exchanged as CSV, so importing/exporting that format is a direct requirement.
+- **When**: When tabular data must be human-openable or compatible with spreadsheets/other tools.
+- **Trade-offs**: CSV has no schema or types -- every field is a string, so parsing and quoting edge cases are on you.
+
+### Data visualization
+- **What**: Matplotlib/Plotly render metrics into figures, replacing dense number tables with readable curves.
+- **Why used here**: The repo produces decks and figures as code so charts derive from evidence and regenerate whenever the checkout changes.
+- **When**: When a comparison (scaling curve, loss trace, ablation) is clearer as a picture than a table.
+- **Trade-offs**: Figures need explicit styling to stay trustworthy; a miscalled axis or log scale can misrepresent the claim.
+
+### Configuration as declarative data (YAML/JSON/TOML)
+- **What**: Knobs live in YAML/JSON/TOML files or tables rather than code, so a run's intent is inspectable and diffable without reading the program.
+- **Why used here**: A single frozen `CanonicalSpec` + preregistration files is the repo's whole comparability contract -- config-as-data is what makes runs hashable and testable.
+- **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
+- **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
+
+### Structural subtyping with typing.Protocol
+- **What**: `Protocol` describes an interface by the *attributes* something has, not by inheritance -- anything matching the shape satisfies it (duck typing with static checks).
+- **Why used here**: Lets the code accept `plan`-like and `run`-like objects without forcing a class hierarchy, useful in the shim layer.
+- **When**: When many small objects share behavior but have no common ancestor.
+- **Trade-offs**: Runtime `isinstance` checks need `@runtime_checkable` and are shallow; static checkers are the real beneficiary.
+
+### Numeric arrays with NumPy
+- **What**: NumPy gives dense N-d arrays and vectorized math (reductions, broadcasting) that run at C speed.
+- **Why used here**: Reward computation and metrics are array operations; vectorizing over a batch is both faster and more readable than Python loops.
+- **When**: Any batched numeric transform -- rewards, accuracy, aggregations across rollouts.
+- **Trade-offs**: NumPy and torch each own their memory; converting between them copies unless you share storage carefully.
+
+
+## Related Code
+- sibling `platform_modal/scripts/_reviewer_points_extract.py`
+- sibling `platform_modal/scripts/anonymize.sh`
+- sibling `platform_modal/scripts/build_submission.py`
+- sibling `platform_modal/scripts/build_university_submission.py`
+- sibling `platform_modal/scripts/contamination_check.py`
+- sibling `platform_modal/scripts/ed25519-sign.py`
+
+---
+*Generated by AntiVibe per-file pass &middot; 2026-08-02 12:34 UTC &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*

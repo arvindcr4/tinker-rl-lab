@@ -161,7 +161,6 @@ def run_one(exp):
         try:
             import wandb
             try:
-                import torch, wandb
                 if not getattr(wandb, '_vram_patched', False):
                     _old_log = wandb.log
                     def _vram_log(data, *args, **kwargs):

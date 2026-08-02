@@ -2,6 +2,8 @@
 Modal H100: Fixed PPO training on Qwen3.5-4B with 4-bit quantization to avoid OOM.
 Also runs a retry of GRPO seed=123 with gradient checkpointing.
 """
+import json
+
 import modal
 import os
 
@@ -229,7 +231,6 @@ def main():
     print(f"\nResult: {json.dumps(result, indent=2)}")
 
     # Save locally too
-    import json
     import os
     out_path = os.path.join(os.path.dirname(__file__), "ppo_fix_result.json")
     with open(out_path, "w") as f:

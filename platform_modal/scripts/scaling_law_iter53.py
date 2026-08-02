@@ -460,7 +460,7 @@ def write_paper_section(tau, rho_pa, p_pa, rho_pr, p_pr,
     primary_fail = (not p1_pass) and (not p2_pass) and (not p3_pass)
     verdict = (
         "All three pre-registered primary predictions FAILED. iter53 is therefore "
-        "a \emph{negative result} for the joint two-parameter OLS fit as a ranking "
+        r"a \emph{negative result} for the joint two-parameter OLS fit as a ranking "
         "or temporal-coupling tool, and a falsification of the Critic-Degeneracy "
         "cross-axis test."
     )

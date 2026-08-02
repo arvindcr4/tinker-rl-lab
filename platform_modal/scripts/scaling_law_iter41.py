@@ -409,9 +409,9 @@ def main() -> None:
     lines.append(r"\end{table}")
     lines.append(r"\paragraph{Early $\to$ late prediction.}")
     lines.append(
-        f" Using only the first 60\% of the trace, the predicted "
-        f"$R_{{\max}}$ falls within $\pm 10\%$ of the full-fit $R_{{\max}}$ "
-        f"for {pct60_within10pct}/{len(pct60)} anchors; the bootstrap 95\% "
+        rf" Using only the first 60\% of the trace, the predicted "
+        rf"$R_{{\max}}$ falls within $\pm 10\%$ of the full-fit $R_{{\max}}$ "
+        rf"for {pct60_within10pct}/{len(pct60)} anchors; the bootstrap 95\% "
         f"CI on the prediction error contains 0 for {pct60_ci}/{len(pct60)}."
     )
     lines.append(r"\paragraph{Takeaway.}")

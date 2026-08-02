@@ -1,0 +1,109 @@
+% =============================================================================
+% SHORT WORKSHOP NOTE (portfolio §3.3) — demoted rebuild of P1
+% Zero GPU. Claim fixes already in paper_P1_scaling; this is the shippable short unit.
+% Build: latexmk -pdf paper_P1_identifiability_note.tex
+% =============================================================================
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{microtype}
+
+\title{Failed Identifiability of GRPO Post-Training Scaling\\
+\large A Short Negative Note on Cross-Scale Anchors}
+\author{Arvind C R\\
+PES University\\\texttt{arvindcr4@gmail.com}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We audit whether a smooth size-scaling law is identifiable for group-relative
+policy optimization (GRPO) post-training on a multi-family GSM8K anchor panel
+($0.6$B--$1$T, managed Tinker runs, mostly single-seed). The answer is negative
+and recomputable offline: the cross-scale slope of mean training reward is
+consistent with zero under permutation tests; saturation-rate $\lambda$ is
+pinned at the fit boundary on four of five frontier traces; a constant model
+wins AICc on every anchor family tested in the elevation suite; and the sole
+dramatic outlier (Nemotron-120B) is a collapse phase (zero-reward step fraction
+$0.55$, $5$ of $20$ steps above reward $0.25$), not a point on a smooth curve.
+An earlier MoE-vs-dense positive gap ($+0.338$, one-sided $p{=}0.023$) is
+\textbf{withdrawn}: Nemotron-3-Super-120B-A12B is LatentMoE, so the 6-vs-6 split
+mislabelled the collapse anchor. We report a stack-conditioned taxonomy of
+ceilings, not a Chinchilla-style law in $N$.
+\end{abstract}
+
+\section{What is (and is not) claimed}
+
+\paragraph{Claim.} In this anchor set, model size alone does not identify a
+positive GRPO reward trend or a universal saturation exponent.
+
+\paragraph{Non-claims.} No multi-seed powered cross-scale significance test; no
+causal architecture ranking; no claim that larger models cannot improve under
+other stacks, horizons, or tasks. Frontier anchors are single-seed and
+descriptive by design. Predictions recorded in an internal iteration ledger are
+\emph{not} an immutable external preregistration.
+
+\section{Panel}
+
+Managed/open GRPO post-training traces on GSM8K spanning dense and MoE families
+up to Kimi-K2 ($1$T) and DeepSeek-V3.1 ($685$B class), plus Nemotron-120B
+(LatentMoE: $120$B total / $12$B active). Source traces live under
+\texttt{platform\_hybrid/experiments/} (scaling-law TSV suite and
+\texttt{tinker-runs/results/frontier\_gsm8k\_*.json}).
+
+\section{Negative results (recomputed)}
+
+\begin{table}[t]
+\centering
+\caption{Headline negatives. All offline from checked-in artifacts.}
+\label{tab:neg}
+\small
+\begin{tabular}{@{}p{0.42\linewidth}p{0.5\linewidth}@{}}
+\toprule
+Check & Outcome \\
+\midrule
+Cross-scale slope of mean reward vs $\log_{10}N$
+  & Flat within uncertainty; permutation tests fail to reject zero slope
+    (e.g.\ $\lambda$--$N$ and $R_\infty$--$N$ two-sided $p{=}0.74$ / $0.51$ on
+    the 12-anchor panel, $10^4$ permutations) \\
+Saturation $\lambda$
+  & Unidentifiable / boundary-pinned on most frontier traces \\
+Model selection (AICc elevations)
+  & Constant (or non-scaling) forms win; no reliable Chinchilla-style ceiling
+    in $\log_{10}N$ \\
+Nemotron-120B
+  & Collapse: peak $0.875$ at step 3, last-10 $0.1625$, zero-reward fraction
+    $0.55$ exact ($11/20$), $5/20$ steps with reward $>0.25$
+    (\texttt{frontier\_gsm8k\_nemotron-120b.json}) \\
+MoE vs dense gap $+0.338$ ($p{=}0.023$)
+  & \textbf{Withdrawn} --- Nemotron is MoE; reclassification removes the
+    architecture headline (corrected one-sided $p\approx 0.178$) \\
+Leave-Nemotron ``sensitivity''
+  & \textbf{Withdrawn} --- no trusted checked-in TSV; recomputation reverses the
+    earlier non-significant story \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Reading}
+
+The defensible object is a \emph{local, stack-conditioned taxonomy}: plateau /
+drift / collapse endpoints co-move with recipe, horizon, and architecture, so
+cross-scale differences cannot be assigned to size. That is an identifiability
+failure in \emph{these} anchors, not a universal ban on post-training scaling
+laws. Related public scaling-law work occupies the broad positive claim space;
+this note's contribution is the negative audit with withdrawn false positives.
+
+\section{Relation to the long draft}
+
+The 47-page \texttt{paper\_P1\_scaling.pdf} retains elevation history for the
+thesis archive. \textbf{This short note is the publication unit.} Do not submit
+the long PDF as a scaling-law paper.
+
+\end{document}

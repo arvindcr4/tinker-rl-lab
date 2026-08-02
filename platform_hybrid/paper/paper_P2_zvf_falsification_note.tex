@@ -1,0 +1,175 @@
+% =============================================================================
+% SHORT WORKSHOP NOTE (portfolio §3.2) — demoted rebuild of P2
+% Evidence frozen 2026-08-02; zero GPU. Do NOT submit the 46pp paper_P2_zvf.tex.
+% Build: latexmk -pdf paper_P2_zvf_falsification_note.tex
+% =============================================================================
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage{microtype}
+\usepackage[numbers,sort&compress]{natbib}
+
+\title{The Bernoulli Zero-Variance Model Is Sign-Wrong:\\
+\large A Short Measurement Note on Group-Relative RL Sampling}
+\author{Arvind C R\\
+PES University\\\texttt{arvindcr4@gmail.com}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Group-relative policy optimization (GRPO) trains on groups of $G$ rollouts per
+prompt. The zero-variance fraction (ZVF) is the share of groups whose rewards
+are constant---the groups that contribute no within-group learning signal.
+Under an i.i.d.\ Bernoulli success model with success probability $p$,
+$\mathrm{ZVF}_{\mathrm{iid}}=p^G+(1-p)^G$. We show that this sampling model is
+systematically wrong on measured groups, and that the \emph{sign} of the error
+depends on the task regime. On Qwen3-8B/GSM8K ($G{=}8$, 600 groups) the mean
+divergence
+$\delta=\mathrm{ZVF}_{\mathrm{iid}}-\mathrm{ZVF}_{\mathrm{obs}}$ is
+$+0.1224$ with bootstrap 95\% CI $[+0.1115,+0.1337]$. On synthetic arithmetic
+with Qwen2.5-0.5B ($G\in\{2,4,8,16\}$, 459 logged steps) the same divergence is
+$-0.0703$ with CI $[-0.0818,-0.0590]$. Both intervals exclude zero; the signs
+are opposite. Consequence: Bernoulli-derived iso-$G$ sizing and prompt filters
+are miscalibrated in both directions. We do not claim that ZVF predicts
+training failure, rank algorithms, or support a controller.
+\end{abstract}
+
+\section{Setup}
+
+For a group of $G$ binary rewards $(r_1,\ldots,r_G)\in\{0,1\}^G$, write
+\[
+\mathrm{ZVF}_{\mathrm{obs}}
+  = \mathbf{1}\{r_1=\cdots=r_G\},
+\qquad
+\hat p = G^{-1}\sum_{i=1}^G r_i,
+\qquad
+\mathrm{ZVF}_{\mathrm{iid}}(\hat p,G)=\hat p^G+(1-\hat p)^G.
+\]
+The per-group divergence is
+$\delta=\mathrm{ZVF}_{\mathrm{iid}}(\hat p,G)-\mathrm{ZVF}_{\mathrm{obs}}$.
+Under the i.i.d.\ Bernoulli model, $\mathbb{E}[\mathrm{ZVF}_{\mathrm{obs}}]
+=\mathrm{ZVF}_{\mathrm{iid}}(p,G)$, so $\mathbb{E}[\delta]=0$. Empirically
+$\delta$ is not mean-zero.
+
+\paragraph{Lemma (algebraic identity under the model).}
+If rewards are i.i.d.\ Bernoulli$(p)$, then
+$\mathrm{pass@}G-p^G=1-\mathrm{ZVF}_{\mathrm{iid}}(p,G)$.
+This is an identity, not an empirical discovery. We therefore do not report
+``verification to machine precision on $N$ tasks'' as a result.
+
+\section{Data (checked-in only)}
+
+\begin{table}[t]
+\centering
+\caption{Sources. Everything else in the retired 46-page ZVF manuscript---in
+particular \texttt{variance\_mitigation.tsv}---is excluded (simulation rows with
+negative rewards/accuracies were previously consumed as measured evidence).}
+\label{tab:sources}
+\small
+\begin{tabular}{@{}llp{0.42\linewidth}@{}}
+\toprule
+Regime & Artifact & Content \\
+\midrule
+GSM8K & \texttt{tinker\_gsm8k\_zvf\_s\{42,123,456\}.json}
+  & Qwen3-8B, $G{=}8$, 200 problems/seed, full reward vectors \\
+Arithmetic & \texttt{groupsize\_zvf\_sweep.json}
+  & Qwen2.5-0.5B, $G\in\{2,4,8,16\}$, 3 seeds $\times$ 40 steps \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Per-seed GSM8K ZVF (recomputed from the JSON files; seed order aligned 2026-08-02):
+
+\begin{center}
+\small
+\begin{tabular}{@{}rrr@{}}
+\toprule
+Seed & overall ZVF & overall accuracy \\
+\midrule
+42 & 0.130 & 0.6969 \\
+123 & 0.190 & 0.7125 \\
+456 & 0.155 & 0.6731 \\
+mean & 0.1583 & 0.6942 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Result}
+
+Bootstrap the mean of group-level (GSM8K) or step-level (arithmetic) $\delta$
+with a fixed RNG seed (\texttt{Random(20260802)} for GSM8K; 5000 resamples for
+arithmetic).
+
+\begin{table}[t]
+\centering
+\caption{Sign-dependent failure of the Bernoulli ZVF model.}
+\label{tab:main}
+\small
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+Regime & Model / task & $n$ & mean $\delta$ & 95\% CI \\
+\midrule
+GSM8K reasoning & Qwen3-8B, $G{=}8$
+  & 600 groups & $+0.1224$ & $[+0.1115,+0.1337]$ \\
+Synthetic arithmetic & Qwen2.5-0.5B, multi-$G$
+  & 459 steps & $-0.0703$ & $[-0.0818,-0.0590]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On real GSM8K groups the i.i.d.\ model \emph{over}-predicts zero variance
+(positive $\delta$): groups are more mixed than Bernoulli$(\hat p)$ expects.
+On saturated synthetic arithmetic the model \emph{under}-predicts zero variance
+(negative $\delta$): observed groups are flatter than the Bernoulli formula.
+The opposite signs matter operationally: a planner that sizes $G$ from
+$\mathrm{ZVF}_{\mathrm{iid}}$ will request too little diversity on reasoning
+traces and too much on easy arithmetic.
+
+\paragraph{Do not pool ZVF across tasks.}
+A single cross-experiment correlation that mixes GSM8K reasoning with synthetic
+arithmetic (or pools failed verifiers with live runs) is not an estimand we
+report. Prior pooled Spearman figures from heterogeneous cells are retired
+with the 46-page draft.
+
+\section{Non-claims}
+
+\begin{itemize}
+  \item No claim that ZVF predicts held-out collapse or ranks trainers.
+  \item No AERO/GRESO/DAPO algorithm ranking and no controller advantage.
+  \item No use of \texttt{variance\_mitigation.tsv} or any simulated panel.
+  \item No multi-library benchmark claim; this note is two offline recomputable
+    panels only.
+\end{itemize}
+
+\section{Reproducibility}
+
+All numbers recompute from the two artifacts in Table~\ref{tab:sources} with
+stdlib Python (no GPU). The companion long-form theory manuscript records
+asymptotic CI statements under the Bernoulli model (T1--T3); those statements
+apply to the \emph{model}, which this note falsifies as a sampling description
+of real groups. Venue class: workshop short / measurement note.
+
+\bibliographystyle{plainnat}
+% Minimal local refs if the shared bib is unavailable at build time:
+\begin{thebibliography}{9}
+\bibitem{yu2025dapo}
+Q.~Yu et al.
+\newblock {DAPO}: An open-source {LLM} reinforcement learning system at scale.
+\newblock arXiv:2503.14476, 2025.
+\bibitem{zhang2026aero}
+AERO reference (arXiv:2602.14338); cite the canonical entry in
+\texttt{platform\_hybrid/paper/references.bib} as \texttt{zhang2026aero} when
+building against the shared bibliography.
+\bibitem{le2025rlzvp}
+RL-ZVP reference (arXiv:2509.21880); cite \texttt{le2025rlzvp} in the shared
+bibliography.
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,64 @@
+# Deep Dive: `zvf-program/flagship/pilot/benchmark_spectral_harness.py`
+
+> AntiVibe &middot; compact mode &middot; 2026-08-02 12:34 UTC &middot; source: `zvf-program/flagship/pilot/benchmark_spectral_harness.py` (374 lines)
+
+## Overview
+`benchmark_spectral_harness.py` is a benchmarking/sweep driver that runs many configurations and compares them. A sweep varies one or more knobs across fixed axes and aggregates the results for comparison.
+It leans on **argparse, config, dataclass, protocol, torch** to do its work.
+*Self-description:* "Automated Spectral Benchmark Harness for ZVF Program Pilot.  Runs scaling trials comparing standard GRPO, spectral_legendre_grpo, and entropic_givens_grpo acros"
+
+## Key Components
+- `AlgorithmMetrics` -- class (1 methods: to_dict)
+- `TrialResult` -- class (1 methods: to_dict)
+- `generate_benchmark_fixture()` -- Generate deterministic normal and zero-reward-variance (ZVF) benchmark fixtures.
+- `compute_theoretical_flops()` -- Compute exact theoretical FLOP count for objective evaluation.
+- `evaluate_algorithm_trial()` -- Run loss, advantage, gradient, FLOP, and timing analysis for a single algorithm trial.
+- `run_spectral_benchmark_harness()` -- Execute all scaling trials across group sizes G and sequence lengths L.
+- `main()` -- function
+- Has a `if __name__ == "__main__"` entry point
+
+## Concepts & Decisions
+### Abstraction isolating the variable
+- **What**: A sweep must change one axis at a time so observed differences can be attributed -- the opposite of a kitchen-sink config.
+
+### Data modeling with dataclasses
+- **What**: `@dataclass` auto-generates `__init__`, `__repr__`, and `__eq__` from field annotations, turning plain classes into compact value objects.
+- **Why used here**: The repo models specs, results, and plans as frozen dataclasses so structural equality and hashing come for free and mutation is blocked.
+- **When**: For passive data carriers -- configs, results, plans -- especially when you want `==`/hash semantics.
+- **Trade-offs**: No validation by itself; frozen fields protect from mutation but not bad values (pair with pydantic for that).
+
+### PyTorch tensor computation & autograd
+- **What**: PyTorch is the numeric engine: `torch.Tensor` holds batched GPU/CPU arrays and `torch.autograd` builds the computation graph so gradients flow from a loss back to every parameter.
+- **Why used here**: TRL, transformers, vLLM and this repo's RL loops are all built on PyTorch, so using it directly avoids impedance mismatch between framework and training code.
+- **When**: Anywhere gradients must reach model weights -- training, RL rollouts, LoRA adaptation, or evaluation under a different dtype.
+- **Trade-offs**: Eager execution is easy to debug but slower than compiled graphs; `torch.compile`/export recover speed at the cost of traceability.
+
+### Configuration as declarative data (YAML/JSON/TOML)
+- **What**: Knobs live in YAML/JSON/TOML files or tables rather than code, so a run's intent is inspectable and diffable without reading the program.
+- **Why used here**: A single frozen `CanonicalSpec` + preregistration files is the repo's whole comparability contract -- config-as-data is what makes runs hashable and testable.
+- **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
+- **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
+
+### Structural subtyping with typing.Protocol
+- **What**: `Protocol` describes an interface by the *attributes* something has, not by inheritance -- anything matching the shape satisfies it (duck typing with static checks).
+- **Why used here**: Lets the code accept `plan`-like and `run`-like objects without forcing a class hierarchy, useful in the shim layer.
+- **When**: When many small objects share behavior but have no common ancestor.
+- **Trade-offs**: Runtime `isinstance` checks need `@runtime_checkable` and are shallow; static checkers are the real beneficiary.
+
+### Command-line argument parsing
+- **What**: `argparse` turns `sys.argv` into typed options (`--framework`, `--dry-run`) with help text and error handling for free.
+- **Why used here**: Every platform entry point must be runnable by humans and by shelling-out code, so a stable, documented CLI is the contract between them.
+- **When**: When a script is invoked by people, CI, or other processes and needs explicit knobs.
+- **Trade-offs**: Boilerplate-heavy and positional-only; richer CLIs use click/typer for nesting and auto-generated help.
+
+
+## Related Code
+- sibling `zvf-program/flagship/pilot/__init__.py`
+- sibling `zvf-program/flagship/pilot/analysis.py`
+- sibling `zvf-program/flagship/pilot/artifacts.py`
+- sibling `zvf-program/flagship/pilot/bootstrap.py`
+- sibling `zvf-program/flagship/pilot/checkpointing.py`
+- sibling `zvf-program/flagship/pilot/dashboard_export.py`
+
+---
+*Generated by AntiVibe per-file pass &middot; 2026-08-02 12:34 UTC &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*

@@ -20,6 +20,18 @@ TMLR while NeurIPS 36320 is live.
 
 ---
 
+
+## Shippable zero-GPU units (2026-08-02)
+
+| Unit | PDF (local; `*.pdf` gitignored) | Role |
+|---|---|---|
+| P11 spine | `zvf-program/audit/paper_P11_reproducibility_audit.pdf` | Primary TMLR candidate |
+| P2 note | `platform_hybrid/paper/paper_P2_zvf_falsification_note.pdf` | Workshop short |
+| P1 note | `platform_hybrid/paper/paper_P1_identifiability_note.pdf` | Workshop / thesis short |
+
+Package binder: `zvf-program/audit/tmlr_package_p11/`.
+Freeze: `drafts/ZERO_GPU_FREEZE.md` (EXHAUSTED).
+
 ## Decision
 
 Do not send a new archival submission today.

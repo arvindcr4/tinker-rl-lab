@@ -769,7 +769,8 @@ problem.
     \\midrule
 """
     for r in cross:
-        tex += (f"    {r['source']} & {r['metric'].replace('_', '\\_')} & "
+        metric_esc = r['metric'].replace('_', '\\_')
+        tex += (f"    {r['source']} & {metric_esc} & "
                 f"{float(r['value']):.4f} \\\\\n")
     tex += f"""    \\bottomrule
   \\end{{tabular}}

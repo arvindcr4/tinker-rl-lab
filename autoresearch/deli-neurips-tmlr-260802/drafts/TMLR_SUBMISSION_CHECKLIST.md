@@ -1,70 +1,69 @@
 # TMLR submission checklist
 
-Status: blocked until NeurIPS submission 36320 is closed or withdrawn.
+Updated: 2026-08-02
 
-## Files
+Two independent tracks exist. **Do not confuse them.**
 
-- Paper: `zvf-program/flagship/paper/tmlr_submission/main.pdf`
-- Supplement: `zvf-program/flagship/paper/tmlr_submission/anonymous_supplement.zip`
-- Paper source: `zvf-program/flagship/paper/tmlr_submission/main.tex`
-- Internal decision record: `autoresearch/deli-neurips-tmlr-260802/drafts/PUBLICATION_READINESS.md`
-- Portfolio overlap record: `autoresearch/deli-neurips-tmlr-260802/audits/18_PAPER_PORTFOLIO_REVIEW.md`
+---
 
-## Submission description
+## Track A — Portfolio spine (P11 GRPO-Stack-Audit) — zero-GPU ready
 
-Contribution types: methodology, reproducibility, and a registered feasibility
-postmortem.
+**Status:** manuscript + short companions built; portal upload is a human step.
 
-Suggested keywords: group-relative reinforcement learning; semantic
-conformance; reproducibility; gradient auditing; verifiable rewards; negative
-results.
+| Item | Path |
+|---|---|
+| Package binder | `zvf-program/audit/tmlr_package_p11/README.md` |
+| Paper tex | `zvf-program/audit/paper_P11_reproducibility_audit.tex` |
+| Paper pdf (local) | `zvf-program/audit/paper_P11_reproducibility_audit.pdf` |
+| Claim ledger | `zvf-program/audit/tmlr_package_p11/ANONYMOUS_CLAIM_LEDGER.md` |
+| Byte manifest | `zvf-program/audit/tmlr_package_p11/MANIFEST.sha256` |
+| Overlap vs NeurIPS 36320 | `drafts/P11_NEURIPS_OVERLAP_CHECK.md` (clean) |
+| Workshop P2 | `platform_hybrid/paper/paper_P2_zvf_falsification_note.tex` |
+| Workshop P1 | `platform_hybrid/paper/paper_P1_identifiability_note.tex` |
+
+### Before Track A upload
+
+- [ ] Human freezes PDF hash against `MANIFEST.sha256`
+- [ ] Identity scan on PDF + source
+- [ ] Claims match `ANONYMOUS_CLAIM_LEDGER.md`
+- [ ] Confirm venue dual-submission comfort vs live 36320 (overlap is content-clean; policy is human)
+- [ ] Enter conflicts / subject areas in OpenReview manually
+
+Contribution types: methodology, reproducibility, negative/bounded results.
 
 One-sentence summary:
 
-> The paper proves that terminal reward homogeneity is insufficient to choose a
-> retry action, gives an executable objective-to-gradient conformance protocol,
-> and shows how that protocol preserves a failed registered mechanism gate
-> instead of turning high cosine into an equivalence claim.
+> A single-stack preregistered audit of DAPO/GSPO/Dr.GRPO/AERO against shared GRPO finds all four comparisons INCONCLUSIVE under exact paired-t power, and reports DAPO's zero-ZVF cost (3.61× rollouts) without a capability claim.
 
-## Before upload
+---
+
+## Track B — Flagship "Same Terminal Signal" — blocked while NeurIPS 36320 live
+
+**Status:** blocked until NeurIPS submission 36320 is closed or withdrawn.
+
+| Item | Path |
+|---|---|
+| Paper | `zvf-program/flagship/paper/tmlr_submission/main.pdf` |
+| Supplement | `zvf-program/flagship/paper/tmlr_submission/anonymous_supplement.zip` |
+| Decision record | `drafts/PUBLICATION_READINESS.md` |
+
+### Before Track B upload
 
 - Confirm in OpenReview that the NeurIPS paper is no longer under review.
-- Recheck the overlap table against the final NeurIPS record.
-- Recheck the flagship against all 18 portfolio files; do not upload a second
-  derivative as a separate archival paper.
-- Rebuild both files and confirm their recorded SHA-256 digests are unchanged.
-- Extract the supplement in a new directory and run
-  `python3 verify_anonymous_claims.py`.
-- Run the identity scan on the PDF, source, file names, and supplement contents.
-- Read the title, abstract, contribution list, result table, limitations, and
-  conclusion against `ANONYMOUS_CLAIM_LEDGER.md`.
-- Keep `69/100 < 95/100` visible in the abstract and results.
-- Keep all four E1 outcomes as `INCONCLUSIVE` if E1 is discussed anywhere.
-- Do not link the anonymous submission to a named repository or preprint.
-- Add author names only after the review system asks for the non-anonymous final
-  version.
-- Enter conflicts, author order, and subject areas manually in OpenReview.
+- Recheck overlap table against the final NeurIPS record.
+- Rebuild both files and confirm recorded SHA-256 digests.
+- Extract the supplement and run `python3 verify_anonymous_claims.py`.
+- Keep `69/100 < 95/100` and all E1 outcomes `INCONCLUSIVE` if discussed.
 
-## Venue rules checked
+---
+
+## Venue rules
 
 - [TMLR author guide](https://jmlr.org/tmlr/author-guide.html)
 - [TMLR editorial policies](https://jmlr.org/tmlr/editorial-policies.html)
 - [TMLR acceptance criteria](https://jmlr.org/tmlr/acceptance-criteria.html)
 - [Official TMLR style files](https://github.com/JmlrOrg/tmlr-style-file)
 
-## Stop conditions
+## Stop conditions (either track)
 
-Stop the upload if any of these is true:
-
-- the NeurIPS review is still active;
-- the paper or supplement reveals an author identity;
-- the 69/100 result is described as equivalence;
-- an inconclusive held-out comparison is described as improvement;
-- the supplement verifier or manifest fails; or
-- the uploaded PDF differs from the locally reviewed digest.
-
-## Spine selection (2026-08-02)
-
-- Target manuscript: P11 `zvf-program/audit/paper_P11_reproducibility_audit.tex` (GRPO-Stack-Audit), not the NeurIPS 36320 flagship.
-- Overlap check: `drafts/P11_NEURIPS_OVERLAP_CHECK.md` — clean.
-- Do not upload until human freezes PDF hash and anonymity package.
+Stop upload if: identity leak; DISAPPEARS sold as live verdict; inconclusive sold as improvement; manifest/hash mismatch; dual-submission policy violated.

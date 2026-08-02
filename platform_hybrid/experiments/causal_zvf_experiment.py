@@ -618,7 +618,6 @@ def run_training_arm(
     bin_rates = bin_data["bins"][phase]["rates"]
 
     # Reload all prompts and filter
-    from transformers import AutoTokenizer
     tok = AutoTokenizer.from_pretrained(config["model"], trust_remote_code=True)
     all_prompts = load_gsm8k_prompts(tok, max_examples=bin_data["total_prompts"])
     prompts = [all_prompts[i] for i in bin_prompts if i < len(all_prompts)]

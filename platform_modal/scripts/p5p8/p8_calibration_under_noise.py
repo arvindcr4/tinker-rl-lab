@@ -278,7 +278,7 @@ def main():
     ax.axhline(0, color="grey", lw=0.7, ls="--")
     ax.set_xlabel(r"$\sigma_{\text{mult}}$ (sensor noise scaling)")
     ax.set_ylabel(r"Calib gap = $\bar p_{\text{top-K}} - \pi_{\text{top-K}}$ at $K{=}2\%$")
-    ax.set_title("Operational calibration gap vs sensor noise ($K{=}2\%$)")
+    ax.set_title(r"Operational calibration gap vs sensor noise ($K{=}2\%$)")
     ax.legend(fontsize=8)
 
     # Panel B: calib_gap vs K at sigma=0.10

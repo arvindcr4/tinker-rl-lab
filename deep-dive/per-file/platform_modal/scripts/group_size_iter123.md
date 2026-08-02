@@ -1,0 +1,69 @@
+# Deep Dive: `platform_modal/scripts/group_size_iter123.py`
+
+> AntiVibe &middot; compact mode &middot; 2026-08-02 12:34 UTC &middot; source: `platform_modal/scripts/group_size_iter123.py` (589 lines)
+
+## Overview
+`group_size_iter123.py` is a library module exposing reusable building blocks to the rest of the codebase. It defines types, helpers, and algorithms consumed by drivers and experiments rather than performing a single top-level action.
+It leans on **config, numpy, pandas, regex, viz** to do its work.
+*Self-description:* "Pillar 3 -- Iter 123: Broader-scale generalization of the Wu et al.\ (2025) "It Takes Two" G=2~=G=16 claim.  Iter 99 -- Iter 119 closed the Wu et al.\ equivalen"
+
+## Key Components
+- `load_iso()` -- function
+- `load_snr()` -- function
+- `load_iter95()` -- function
+- `load_boot()` -- function
+- `load_rc()` -- function
+- `load_iso_acc()` -- function
+- `load_zvf_summary()` -- function
+- `iso_reward_retention()` -- For each T and each reward threshold r in {0.40,0.50,...,0.90}, find the largest G_small/G_large pair such that the heldout-acc ratio R = a(
+- `noise_mechanism()` -- Join iter 99 SNR-at-G with iter 119 D (sigma^2/G). Test the predicted scaling: snr(G) ~ G^0.5.
+- `wu_broader_pairs()` -- For each (G_small, G_large) and each T, compute R and the rollouts-frac that achieves R>=0.976. Wu et al.'s headline pair is (G=2, G=16) -- 
+- `effect_size()` -- Cohen's d on the per-seed heldout-accuracy distribution at each T. Use the bootstrap SE to reconstruct the per-seed SD.
+- `cross_pillar_noise()` -- From the zvf_summary, compute the predicted sigma^2/G axis for both groupsize cells and variance_mitigation cells. Spearman rank correlation
+- Has a `if __name__ == "__main__"` entry point
+
+## Concepts & Decisions
+### DRY across drivers
+- **What**: Shared helper modules stop five framework drivers from each re-solving the same problem in five slightly different ways.
+
+### Text processing with regular expressions
+- **What**: `re` matches/extracts patterns in text -- parsing logs, sanitizing identifiers, or validating formats that don't warrant a full parser.
+- **Why used here**: Receipts, path probes, and name munging are string-shaped; regex is the compact tool for targeted extraction.
+- **When**: Small, well-defined text patterns where a parser is overkill.
+- **Trade-offs**: Regex is opaque and easy to get subtly wrong; complex grammars should graduate to a real parser.
+
+### Data visualization
+- **What**: Matplotlib/Plotly render metrics into figures, replacing dense number tables with readable curves.
+- **Why used here**: The repo produces decks and figures as code so charts derive from evidence and regenerate whenever the checkout changes.
+- **When**: When a comparison (scaling curve, loss trace, ablation) is clearer as a picture than a table.
+- **Trade-offs**: Figures need explicit styling to stay trustworthy; a miscalled axis or log scale can misrepresent the claim.
+
+### Configuration as declarative data (YAML/JSON/TOML)
+- **What**: Knobs live in YAML/JSON/TOML files or tables rather than code, so a run's intent is inspectable and diffable without reading the program.
+- **Why used here**: A single frozen `CanonicalSpec` + preregistration files is the repo's whole comparability contract -- config-as-data is what makes runs hashable and testable.
+- **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
+- **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
+
+### Tabular data with pandas
+- **What**: pandas DataFrames hold labeled, columnar data and offer groupby/merge/agg one-liners over CSV/JSON exports.
+- **Why used here**: Experiment logs and result exports aggregate nicely into tables for reporting and audits.
+- **When**: When you'd otherwise hand-roll loops over rows of CSV/JSON results.
+- **Trade-offs**: DataFrames are heavier than raw arrays; overuse for tiny data adds import cost and ambiguity about index semantics.
+
+### Numeric arrays with NumPy
+- **What**: NumPy gives dense N-d arrays and vectorized math (reductions, broadcasting) that run at C speed.
+- **Why used here**: Reward computation and metrics are array operations; vectorizing over a batch is both faster and more readable than Python loops.
+- **When**: Any batched numeric transform -- rewards, accuracy, aggregations across rollouts.
+- **Trade-offs**: NumPy and torch each own their memory; converting between them copies unless you share storage carefully.
+
+
+## Related Code
+- sibling `platform_modal/scripts/_reviewer_points_extract.py`
+- sibling `platform_modal/scripts/anonymize.sh`
+- sibling `platform_modal/scripts/build_submission.py`
+- sibling `platform_modal/scripts/build_university_submission.py`
+- sibling `platform_modal/scripts/contamination_check.py`
+- sibling `platform_modal/scripts/ed25519-sign.py`
+
+---
+*Generated by AntiVibe per-file pass &middot; 2026-08-02 12:34 UTC &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*

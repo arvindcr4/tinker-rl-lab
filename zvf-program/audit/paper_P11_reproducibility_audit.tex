@@ -500,6 +500,43 @@ spending 186 rollouts. The comparison therefore validates telemetry and budget
 accounting only; it is not evidence that one method learns better.
 
 % =============================================================================
+
+% =============================================================================
+\section{Absorbed bounded panels (from the demoted workshop artifact)}
+\label{sec:absorbed-p8}
+% =============================================================================
+
+Two offline-recomputable panels from the retired workshop artifact are retained
+here as \emph{bounded secondary evidence}. They are not algorithm rankings and
+they do not upgrade the four \texttt{INCONCLUSIVE} arm--GRPO verdicts.
+
+\paragraph{Matched-budget $G{=}2\times 160$ vs $G{=}16\times 20$.}
+On Qwen3-8B/GSM8K with a locked $2560$-rollout budget (batch $8$), seeds
+$\{123,456\}$:
+\begin{center}
+\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Arm & Seed & Steps & Last-10 reward & Last-10 ZVF \\
+\midrule
+$G{=}2$  & 123 & 160 & $0.9000$ & $0.975$ \\
+$G{=}2$  & 456 & 160 & $0.9625$ & $0.975$ \\
+$G{=}16$ & 123 & 20  & $0.3219$ & $0.150$ \\
+$G{=}16$ & 456 & 20  & $0.3891$ & $0.100$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+Sources:
+\path{submission/demo/defense_fallback/data/raw/er2b_g{2,16}_s{123,456}.json}.
+At equal rollouts the small-$G$ arm reaches the all-correct high-ZVF wall while
+the large-$G$ arm remains mid-learning. This is a two-seed trajectory
+observation, not a universal group-size optimum.
+
+\paragraph{What is not absorbed.}
+Mislabelled synthetic-as-GSM8K rows, interrupted $100\%$ frontier rows, and
+sign-flipping pooled correlations from the demoted workshop PDF are
+\emph{not} carried forward.
+
 \section{Limitations and Extensions}
 % =============================================================================
 

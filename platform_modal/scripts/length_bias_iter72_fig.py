@@ -72,7 +72,7 @@ def main():
         ax.set_xticklabels([label], fontsize=9)
     ax.axhline(0, color="grey", linewidth=0.7, linestyle="--")
     ax.set_ylabel(r"AR(1) $\phi$ of $\Delta L$ on $\Delta R_t, \Delta L_{t-1}$")
-    ax.set_title(r"(a) Persistence coefficient $\phi$" + "\n($\phi<0$: anti-persistent)")
+    ax.set_title(r"(a) Persistence coefficient $\phi$" + "\n($\\phi<0$: anti-persistent)")
     ax.set_ylim(-0.85, 0.05)
 
     # Panel (b): Residual variance ratio with CI

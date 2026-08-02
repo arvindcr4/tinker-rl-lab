@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""P5 MIN-REPORT v2.4 -> v2.5 forward-compatibility stress test (iter 177).
+r"""P5 MIN-REPORT v2.4 -> v2.5 forward-compatibility stress test (iter 177).
 
 Fresh vein, not in 173 prior rows. Closes brief vein (a) at the
 **schema-evolution** layer: prior P5 audits (iter-105, iter-117,

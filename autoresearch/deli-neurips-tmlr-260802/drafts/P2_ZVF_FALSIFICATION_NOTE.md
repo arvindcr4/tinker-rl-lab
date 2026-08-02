@@ -2,7 +2,7 @@
 
 Date: 2026-08-02  
 Source: portfolio §3.2 (`PORTFOLIO_DECISION.md`)  
-Status: **zero-GPU evidence freeze** — numbers recomputed offline; full LaTeX short note not yet typeset (the 46pp `paper_P2_zvf.tex` remains demoted and must **not** be submitted as-is).
+Status: **complete (zero GPU)** — numbers recomputed offline; short note typeset as `platform_hybrid/paper/paper_P2_zvf_falsification_note.{tex,pdf}` (3 pp). The 46pp `paper_P2_zvf.tex` remains demoted and must **not** be submitted as-is.
 
 ## Claim (only this)
 

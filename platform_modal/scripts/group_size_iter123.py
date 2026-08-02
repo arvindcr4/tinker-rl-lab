@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pillar 3 -- Iter 123: Broader-scale generalization of the Wu
+r"""Pillar 3 -- Iter 123: Broader-scale generalization of the Wu
 et al.\ (2025) "It Takes Two" G=2~=G=16 claim.
 
 Iter 99 -- Iter 119 closed the Wu et al.\ equivalence at G=4 vs G=32

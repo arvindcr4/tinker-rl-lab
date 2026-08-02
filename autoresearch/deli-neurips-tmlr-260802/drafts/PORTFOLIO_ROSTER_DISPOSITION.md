@@ -49,3 +49,11 @@ GPU matrix / confirmatory runner: **out of scope** for this freeze (human §4.3 
 - No A004 bind without human authorization.
 - No TMLR upload of the flagship while 36320 is live.
 - No claim that any estimator/framework ranks above another from this portfolio.
+
+## Short units produced under zero GPU
+
+- P2 note: `platform_hybrid/paper/paper_P2_zvf_falsification_note.pdf` sha `737b2d8cf29fa6718eaf80b1eccdf10c37666d2150bc6052e67cc6e8e1142127`
+- Freeze ledger: `drafts/ZERO_GPU_FREEZE.md`
+
+- P1 note: `platform_hybrid/paper/paper_P1_identifiability_note.pdf`
+- P11 now includes absorbed matched-budget E-R2b panel (§Absorbed bounded panels)

@@ -1,4 +1,4 @@
-"""Pillar 1 iter33 -- Three-Phase Hypothesis (arXiv 2507.18014) pre-registered battery.
+r"""Pillar 1 iter33 -- Three-Phase Hypothesis (arXiv 2507.18014) pre-registered battery.
 
 Nimmaturi et al. (arXiv 2507.18014, "Predictive Scaling Laws for Efficient GRPO
 Training of Large Reasoning Models") propose that GRPO training proceeds in three

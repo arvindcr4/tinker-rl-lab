@@ -1,0 +1,12 @@
+# P11 TMLR package manifest — generated 2026-08-02
+
+6e7c5f9eeb887bfe9a87c8d65901255c0a868cebbe60d6c9a3030bd3ddc183fe  43705  pages=  zvf-program/audit/paper_P11_reproducibility_audit.tex
+948bb2deede95aa47d4f9b8370bee6f694368dea958c1d1e5839e23072ae766d  525166  pages=12  zvf-program/audit/paper_P11_reproducibility_audit.pdf
+91048df7922276051cd8a07ffa939e4e6d1bbf8b8ef3c95705c0518beca9236f  3353  pages=  zvf-program/audit/preregistration.json
+385b17f43ec5b8d92b95554243b5e3cf04b1fc32e1362adf8fee472d087c8c67  4592  pages=  zvf-program/audit/results/audit.json
+a0f6d66915688b7d453899de04d8fb61e693639136991469ff6694004e9016ab  927  pages=  zvf-program/audit/results/audit_results.tex
+4596bd3db934c59a47da64623d3d16195394f112b33843b450125be3098d666e  2120  pages=  zvf-program/audit/STATISTICAL_REANALYSIS.md
+8b877d356da194c7514ae8fa91f6b8fa68ab288427607ad5f30783459f37e774  6651  pages=  platform_hybrid/paper/paper_P2_zvf_falsification_note.tex
+737b2d8cf29fa6718eaf80b1eccdf10c37666d2150bc6052e67cc6e8e1142127  359272  pages=3  platform_hybrid/paper/paper_P2_zvf_falsification_note.pdf
+078cca45fde1704d85e65060878c9fc7c3b5277a884ab393590cebe5b97a0fbe  4758  pages=  platform_hybrid/paper/paper_P1_identifiability_note.tex
+55ff5370f58217104f54a5684e65b9eff34ea759a7df3bad2612b51cb15f926c  278523  pages=2  platform_hybrid/paper/paper_P1_identifiability_note.pdf

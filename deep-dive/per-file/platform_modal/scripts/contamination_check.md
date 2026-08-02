@@ -1,0 +1,62 @@
+# Deep Dive: `platform_modal/scripts/contamination_check.py`
+
+> AntiVibe &middot; compact mode &middot; 2026-08-02 12:34 UTC &middot; source: `platform_modal/scripts/contamination_check.py` (465 lines)
+
+## Overview
+`contamination_check.py` is an evaluation/measurement script that quantifies outcomes and produces evidence. It turns raw run outputs into comparable metrics and receipts rather than anecdotes.
+It leans on **argparse, config, numpy, protocol** to do its work.
+*Self-description:* "Data Contamination Detection for TinkerRL ========================================== Checks for train/test overlap and data leakage in benchmark tasks.  Referen"
+
+## Key Components
+- `_hash_string()` -- Return the SHA-256 hex digest of a UTF-8-encoded string.
+- `_hash_file()` -- Return the SHA-256 hex digest of a file's raw bytes.
+- `_ngrams()` -- Return the set of n-gram tuples for a token list.
+- `check_arithmetic_contamination()` -- Verify that generated arithmetic problems are uniformly sampled and not memorised across seeds.  For each seed, generate a batch of (num1, n
+- `check_ngram_overlap()` -- Compute the fraction of test n-grams that appear in the training set. Standard methodology from Brown et al. (2020) and Jacovi et al. (2023)
+- `check_exact_duplicates()` -- Hash every example in both datasets and report exact cross-set duplicates.  Parameters ---------- dataset1, dataset2 : lists of string examp
+- `check_seed_independence()` -- Verify that different seeds yield different problem orderings for the arithmetic task. All pairwise orderings should differ.  Parameters ---
+- `check_results_integrity()` -- Walk a results directory looking for JSON/CSV result files and verify their stored checksum (if any) matches the file content.  Convention: 
+- `generate_report()` -- Write a contamination report (JSON) to output_path.  Parameters ---------- check_results : list of result dicts from each check function out
+- `_generate_synthetic_gsm8k()` -- Generate n synthetic arithmetic word-problem strings (GSM8K-like).
+- `main()` -- function
+- Has a `if __name__ == "__main__"` entry point
+
+## Concepts & Decisions
+### Comparability over raw numbers
+- **What**: Results only matter relative to a shared frozen protocol; evaluation exists to keep every framework measured against the same yardstick.
+
+### Configuration as declarative data (YAML/JSON/TOML)
+- **What**: Knobs live in YAML/JSON/TOML files or tables rather than code, so a run's intent is inspectable and diffable without reading the program.
+- **Why used here**: A single frozen `CanonicalSpec` + preregistration files is the repo's whole comparability contract -- config-as-data is what makes runs hashable and testable.
+- **When**: Anywhere parameters should be changeable without editing code, or compared across runs.
+- **Trade-offs**: Config can drift from what the code actually reads; validation (pydantic) is what catches a key that no longer means what it says.
+
+### Numeric arrays with NumPy
+- **What**: NumPy gives dense N-d arrays and vectorized math (reductions, broadcasting) that run at C speed.
+- **Why used here**: Reward computation and metrics are array operations; vectorizing over a batch is both faster and more readable than Python loops.
+- **When**: Any batched numeric transform -- rewards, accuracy, aggregations across rollouts.
+- **Trade-offs**: NumPy and torch each own their memory; converting between them copies unless you share storage carefully.
+
+### Structural subtyping with typing.Protocol
+- **What**: `Protocol` describes an interface by the *attributes* something has, not by inheritance -- anything matching the shape satisfies it (duck typing with static checks).
+- **Why used here**: Lets the code accept `plan`-like and `run`-like objects without forcing a class hierarchy, useful in the shim layer.
+- **When**: When many small objects share behavior but have no common ancestor.
+- **Trade-offs**: Runtime `isinstance` checks need `@runtime_checkable` and are shallow; static checkers are the real beneficiary.
+
+### Command-line argument parsing
+- **What**: `argparse` turns `sys.argv` into typed options (`--framework`, `--dry-run`) with help text and error handling for free.
+- **Why used here**: Every platform entry point must be runnable by humans and by shelling-out code, so a stable, documented CLI is the contract between them.
+- **When**: When a script is invoked by people, CI, or other processes and needs explicit knobs.
+- **Trade-offs**: Boilerplate-heavy and positional-only; richer CLIs use click/typer for nesting and auto-generated help.
+
+
+## Related Code
+- sibling `platform_modal/scripts/_reviewer_points_extract.py`
+- sibling `platform_modal/scripts/anonymize.sh`
+- sibling `platform_modal/scripts/build_submission.py`
+- sibling `platform_modal/scripts/build_university_submission.py`
+- sibling `platform_modal/scripts/ed25519-sign.py`
+- sibling `platform_modal/scripts/eval_harmbench.py`
+
+---
+*Generated by AntiVibe per-file pass &middot; 2026-08-02 12:34 UTC &middot; run `/antivibe` (or the antivibe skill) on this file for a full-mode drill-down.*

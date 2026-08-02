@@ -14,7 +14,7 @@ except ImportError:
     pass
 
 
-import os, re, json, random, sys, time, warnings, traceback, torch
+import os, re, json, random, sys, warnings, traceback, torch
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -144,7 +144,6 @@ def run_experiment(exp):
         try:
             import wandb
             try:
-                import torch, wandb
                 if not getattr(wandb, '_vram_patched', False):
                     _old_log = wandb.log
                     def _vram_log(data, *args, **kwargs):

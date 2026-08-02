@@ -90,6 +90,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--wait", action="store_true")
     parser.add_argument("--rerun", action="store_true")
+    parser.add_argument(
+        "--framework",
+        choices=["trl", "tinker", "verl", "openrlhf", "skyrl"],
+        default="trl",
+        help="RL framework to run on the VM. trl uses the validated "
+        "remote_preflight.py GRPO path; the others clone the repo and run the "
+        "unified launcher's in-process dispatch for the framework.",
+    )
     return parser.parse_args(argv)
 
 
@@ -165,6 +173,94 @@ sys.path.insert(0, str(source_root))
 script = source_root / "remote_preflight.py"
 sys.argv = [str(script), *SCRIPT_ARGS]
 runpy.run_path(str(script), run_name="__main__")
+"""
+
+
+CANONICAL_MODEL = "Qwen/Qwen3-8B"
+
+
+def build_unified_entry_script(
+    *, framework: str, project: str, secret_names: dict[str, str]
+) -> str:
+    """Build a VM entrypoint that runs a non-TRL framework via the unified launcher.
+
+    Same Secret-Manager prefix as :func:`build_entry_script` (so WANDB_API_KEY /
+    HF_TOKEN / TINKER_API_KEY land in ``os.environ``), then clones the repo and
+    runs ``python -m platform_local.unified --framework <fw> --backend local`` —
+    the same per-framework dispatch the local backend uses. A minimal
+    ``result.json`` is written so the receipt uploader and ``--wait`` polling see
+    a structured outcome.
+    """
+
+    return f"""import base64
+import json
+import os
+import subprocess
+import urllib.parse
+import urllib.request
+from pathlib import Path
+
+METADATA_ROOT = "http://metadata.google.internal/computeMetadata/v1"
+METADATA_HEADERS = {{"Metadata-Flavor": "Google"}}
+
+
+def get_json(url, headers):
+    request = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(request, timeout=30) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+token_payload = get_json(
+    METADATA_ROOT + "/instance/service-accounts/default/token", METADATA_HEADERS
+)
+access_token = token_payload["access_token"]
+secret_headers = {{"Authorization": "Bearer " + access_token}}
+for environment_name, secret_name in {secret_names!r}.items():
+    encoded_name = urllib.parse.quote(secret_name, safe="")
+    payload = get_json(
+        "https://secretmanager.googleapis.com/v1/projects/"
+        + {project!r}
+        + "/secrets/"
+        + encoded_name
+        + "/versions/latest:access",
+        secret_headers,
+    )
+    os.environ[environment_name] = base64.b64decode(payload["payload"]["data"]).decode(
+        "utf-8"
+    )
+
+RESULT_PATH = Path("/var/lib/next-preflight/result.json")
+RESULT_PATH.parent.mkdir(parents=True, exist_ok=True)
+REPO = Path("/root/tinker-rl-lab")
+FRAMEWORK = {framework!r}
+MODEL = {CANONICAL_MODEL!r}
+
+# Clone the repo (carries platform_local.unified + the per-framework drivers).
+subprocess.run(
+    ["git", "clone", "https://github.com/pes-llm-research/tinker-rl-lab.git", str(REPO)],
+    check=False,
+)
+
+cmd = [
+    "python3", "-m", "platform_local.unified",
+    "--framework", FRAMEWORK,
+    "--backend", "local",
+    "--model", MODEL,
+    "--algorithm", "grpo",
+]
+print("NEXT_PREFLIGHT_UNIFIED_CMD", " ".join(cmd), flush=True)
+proc = subprocess.run(cmd, cwd=str(REPO))
+exit_code = proc.returncode
+
+result = {{
+    "framework": FRAMEWORK,
+    "model": MODEL,
+    "platform": "gcp-a100-spot",
+    "exit_code": exit_code,
+    "mode": "unified-dispatch",
+}}
+RESULT_PATH.write_text(json.dumps(result, indent=2))
+raise SystemExit(exit_code)
 """
 
 
@@ -620,9 +716,14 @@ def run_unit(args: argparse.Namespace) -> dict[str, Any]:
     if args.wandb_entity:
         script_args.extend(["--wandb-entity", args.wandb_entity])
 
-    entry_script = build_entry_script(
-        script_args=script_args, project=args.project, secret_names=SECRET_NAMES
-    )
+    if args.framework == "trl":
+        entry_script = build_entry_script(
+            script_args=script_args, project=args.project, secret_names=SECRET_NAMES
+        )
+    else:
+        entry_script = build_unified_entry_script(
+            framework=args.framework, project=args.project, secret_names=SECRET_NAMES
+        )
     startup_script = build_startup_script(
         entry_script,
         receipt_bucket=RECEIPT_BUCKET,

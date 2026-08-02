@@ -332,7 +332,7 @@
     "manuscript_blueprint_path": "zvf-program/next-submission/MANUSCRIPT_BLUEPRINT.md",
     "manuscript_blueprint_sha256": "6a9c6645683d41383a38d5c399a0fb35c864a93f537625a171cfd6961fb62588",
     "execution_authorization_path": "zvf-program/next-submission/execution_authorization.json",
-    "execution_authorization_sha256": "8f13c39384e08ada8f30b34abe90afd10e5aef22da4b7c2282471377d37531ed",
+    "execution_authorization_sha256": "490251ac85ecbc6a0b03fea4d4f79c542ba4bfa634e11d72dcf5ad59e94d8391",
     "contrast_sampler_path": "zvf-program/next-submission/contrast_sampler.py",
     "contrast_sampler_sha256": "083da9d93887f92b69ad6baf109c694de60b0e201833a641173750f5e77baf86",
     "trl_sampler_adapter_path": "zvf-program/next-submission/trl_sampler_adapter.py",
@@ -356,7 +356,7 @@
     "kaggle_preflight_launcher_path": "zvf-program/next-submission/run_kaggle_preflight.py",
     "kaggle_preflight_launcher_sha256": "317b9b82c522c6f836c97afae897ad23e528e0a8ea5c09a5a911509c81199341",
     "gcp_preflight_launcher_path": "zvf-program/next-submission/run_gcp_preflight.py",
-    "gcp_preflight_launcher_sha256": "2e3dd9671cd86a55b3475b71e2f69e6606c1365d0d411f656a0ea693be8bae87",
+    "gcp_preflight_launcher_sha256": "278ee98e1a1565c7b58c654b3e75faabb66e9ef343a682a1f04c61a09c39445e",
     "gcp_receipt_bucket_path": "zvf-program/next-submission/gcp_receipt_bucket.json",
     "gcp_receipt_bucket_sha256": "0112621b8819de638732566845eebb18c59c4d1e867996bbc42ad5f5b577b6f1",
     "preflight_secure_exec_path": "zvf-program/next-submission/secure_exec_preflight.py",
@@ -391,6 +391,6 @@
     "submit": false,
     "promotion": false,
     "receipt_path": "zvf-program/next-submission/execution_authorization.json",
-    "receipt_sha256": "8f13c39384e08ada8f30b34abe90afd10e5aef22da4b7c2282471377d37531ed"
+    "receipt_sha256": "490251ac85ecbc6a0b03fea4d4f79c542ba4bfa634e11d72dcf5ad59e94d8391"
   }
 }

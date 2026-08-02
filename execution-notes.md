@@ -1,5 +1,12 @@
 # Execution notes
 
+> **2026-08-02 correction:** Any entry below that quotes DAPO as
+> `DISAPPEARS` is superseded. Exact paired-t MDE80 is `0.01012`, above the
+> `0.01` equivalence margin, and the executable Benjamini-Hochberg step rejects
+> no difference. DAPO, GSPO, Dr.GRPO, and AERO are all `INCONCLUSIVE`. Current
+> sources of truth are `zvf-program/audit/results/audit.json` and
+> `zvf-program/audit/STATISTICAL_REANALYSIS.md`.
+
 ## Active objective
 
 Produce one submission-ready flagship paper and artifact that turns the frozen
@@ -25,7 +32,10 @@ recovery if the amendment permits corpus reuse.
 ## Evidence checked
 
 - `zvf-program/audit/results/audit.json` is `COMPLETE` with eight paired seeds.
-- Final verdicts are DAPO `DISAPPEARS`; GSPO, Dr.GRPO, and AERO `INCONCLUSIVE`.
+- Final verdicts are DAPO, GSPO, Dr.GRPO, and AERO all `INCONCLUSIVE`
+  (superseded 2026-08-02; the earlier DAPO `DISAPPEARS` used a
+  normal-approximation MDE and skipped the preregistered multiplicity step —
+  see `zvf-program/audit/STATISTICAL_REANALYSIS.md`).
 - The canonical R08 source and generated inventory copy contained stale
   pre-final deltas and a contribution item describing three missing units.
 - `inventory_papers.py` correctly regenerates the inventory copy from the

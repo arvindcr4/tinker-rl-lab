@@ -15,6 +15,7 @@ Each input file is one JSON record with the fields listed in
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import math
 import random
@@ -78,16 +79,188 @@ def paired_bootstrap_ci(
     return percentile(means, alpha / 2.0), percentile(means, 1.0 - alpha / 2.0)
 
 
+def _normal_cdf(value: float) -> float:
+    return 0.5 * math.erfc(-value / math.sqrt(2.0))
+
+
+def _simpson(
+    function: Any,
+    lower: float,
+    upper: float,
+    f_lower: float,
+    f_upper: float,
+    f_middle: float,
+) -> float:
+    return (upper - lower) * (f_lower + 4.0 * f_middle + f_upper) / 6.0
+
+
+def _adaptive_simpson(
+    function: Any,
+    lower: float,
+    upper: float,
+    f_lower: float,
+    f_upper: float,
+    f_middle: float,
+    whole: float,
+    tolerance: float,
+    depth: int,
+) -> float:
+    middle = (lower + upper) / 2.0
+    left_middle = (lower + middle) / 2.0
+    right_middle = (middle + upper) / 2.0
+    f_left_middle = function(left_middle)
+    f_right_middle = function(right_middle)
+    left = _simpson(function, lower, middle, f_lower, f_middle, f_left_middle)
+    right = _simpson(function, middle, upper, f_middle, f_upper, f_right_middle)
+    correction = left + right - whole
+    if depth <= 0 or abs(correction) <= 15.0 * tolerance:
+        return left + right + correction / 15.0
+    return _adaptive_simpson(
+        function,
+        lower,
+        middle,
+        f_lower,
+        f_middle,
+        f_left_middle,
+        left,
+        tolerance / 2.0,
+        depth - 1,
+    ) + _adaptive_simpson(
+        function,
+        middle,
+        upper,
+        f_middle,
+        f_upper,
+        f_right_middle,
+        right,
+        tolerance / 2.0,
+        depth - 1,
+    )
+
+
+def _integrate_unit_interval(function: Any, tolerance: float = 1e-11) -> float:
+    lower, upper, middle = 0.0, 1.0, 0.5
+    f_lower = function(lower)
+    f_upper = function(upper)
+    f_middle = function(middle)
+    whole = _simpson(function, lower, upper, f_lower, f_upper, f_middle)
+    return _adaptive_simpson(
+        function,
+        lower,
+        upper,
+        f_lower,
+        f_upper,
+        f_middle,
+        whole,
+        tolerance,
+        24,
+    )
+
+
+def _chi_radius_expectation(degrees_freedom: int, function: Any) -> float:
+    """Integrate an expectation over sqrt(ChiSquare(df)) without SciPy."""
+    log_normalizer = (1.0 - degrees_freedom / 2.0) * math.log(2.0) - math.lgamma(
+        degrees_freedom / 2.0
+    )
+
+    def integrand(unit_value: float) -> float:
+        if unit_value >= 1.0:
+            return 0.0
+        radius = unit_value / (1.0 - unit_value)
+        if radius == 0.0:
+            density = math.exp(log_normalizer) if degrees_freedom == 1 else 0.0
+        else:
+            log_density = (
+                log_normalizer
+                + (degrees_freedom - 1.0) * math.log(radius)
+                - radius * radius / 2.0
+                - 2.0 * math.log1p(-unit_value)
+            )
+            density = 0.0 if log_density < -745.0 else math.exp(log_density)
+        return density * function(radius)
+
+    return _integrate_unit_interval(integrand)
+
+
+def _student_t_cdf(value: float, degrees_freedom: int) -> float:
+    scale = math.sqrt(degrees_freedom)
+    return _chi_radius_expectation(
+        degrees_freedom, lambda radius: _normal_cdf(value * radius / scale)
+    )
+
+
+@functools.lru_cache(maxsize=None)
+def _student_t_critical(degrees_freedom: int, alpha: float) -> float:
+    target = 1.0 - alpha / 2.0
+    lower, upper = 0.0, 2.0
+    while _student_t_cdf(upper, degrees_freedom) < target:
+        upper *= 2.0
+    for _ in range(55):
+        middle = (lower + upper) / 2.0
+        if _student_t_cdf(middle, degrees_freedom) < target:
+            lower = middle
+        else:
+            upper = middle
+    return (lower + upper) / 2.0
+
+
+def _paired_t_power_from_ncp(
+    noncentrality: float, sample_size: int, alpha: float
+) -> float:
+    degrees_freedom = sample_size - 1
+    critical = _student_t_critical(degrees_freedom, alpha)
+    scale = math.sqrt(degrees_freedom)
+    return _chi_radius_expectation(
+        degrees_freedom,
+        lambda radius: _normal_cdf(-critical * radius / scale - noncentrality)
+        + 1.0
+        - _normal_cdf(critical * radius / scale - noncentrality),
+    )
+
+
+@functools.lru_cache(maxsize=None)
+def _standardized_paired_t_mde(
+    sample_size: int, alpha: float, target_power: float
+) -> float:
+    lower, upper = 0.0, 1.0
+    while _paired_t_power_from_ncp(upper, sample_size, alpha) < target_power:
+        upper *= 2.0
+    for _ in range(55):
+        middle = (lower + upper) / 2.0
+        if _paired_t_power_from_ncp(middle, sample_size, alpha) < target_power:
+            lower = middle
+        else:
+            upper = middle
+    noncentrality = (lower + upper) / 2.0
+    return noncentrality / math.sqrt(sample_size)
+
+
 def achieved_mde_80(differences: list[float]) -> float:
-    """Normal-approximation two-sided alpha=.05, power=.80 MDE."""
+    """Exact two-sided paired-t MDE at alpha=.05 and power=.80."""
     if len(differences) < 2:
         return math.inf
-    return (1.959963984540054 + 0.8416212335729143) * statistics.stdev(differences) / math.sqrt(len(differences))
+    standard_deviation = statistics.stdev(differences)
+    if standard_deviation == 0.0:
+        return math.inf
+    return standard_deviation * _standardized_paired_t_mde(len(differences), 0.05, 0.80)
+
+
+def paired_t_p_value(differences: list[float]) -> float:
+    """Two-sided paired-t p-value for a zero mean difference."""
+    if len(differences) < 2:
+        return 1.0
+    standard_deviation = statistics.stdev(differences)
+    if standard_deviation == 0.0:
+        return 1.0
+    statistic = abs(statistics.fmean(differences)) * math.sqrt(len(differences)) / standard_deviation
+    return min(1.0, 2.0 * (1.0 - _student_t_cdf(statistic, len(differences) - 1)))
 
 
 def benjamini_hochberg(p_values: dict[str, float], alpha: float = 0.05) -> dict[str, bool]:
     """Return BH rejections; included for the locked multiplicity contract."""
     ordered = sorted(p_values.items(), key=lambda item: item[1])
+    if not ordered:
+        return {}
     largest = -1
     m = len(ordered)
     for index, (_, p_value) in enumerate(ordered, start=1):
@@ -220,9 +393,11 @@ def verdict(
     mde: float,
     equivalence_margin: float,
     published_delta: float | None,
+    *,
+    difference_rejected: bool,
 ) -> str:
     lower95, upper95 = ci95
-    if upper95 < 0:
+    if upper95 < 0 and difference_rejected:
         return "REVERSES"
     if (
         ci90[0] >= -equivalence_margin
@@ -230,7 +405,7 @@ def verdict(
         and mde <= equivalence_margin
     ):
         return "DISAPPEARS"
-    if lower95 > 0:
+    if lower95 > 0 and difference_rejected:
         if published_delta is not None and lower95 >= 0.5 * abs(published_delta):
             return "RETAINS"
         return "SURVIVES"
@@ -243,6 +418,7 @@ def aggregate(prereg: dict[str, Any], indexed: dict[tuple[str, int], dict[str, A
     seeds = core["seeds"]
     margin = prereg["analysis"]["equivalence_margin"]
     results: dict[str, Any] = {}
+    p_values: dict[str, float] = {}
     for arm, arm_spec in core["arms"].items():
         if arm == baseline:
             continue
@@ -254,6 +430,8 @@ def aggregate(prereg: dict[str, Any], indexed: dict[tuple[str, int], dict[str, A
         ci95 = paired_bootstrap_ci(differences, 0.95)
         ci90 = paired_bootstrap_ci(differences, 0.90)
         mde = achieved_mde_80(differences)
+        p_value = paired_t_p_value(differences)
+        p_values[arm] = p_value
         results[arm] = {
             "paired_differences": differences,
             "controlled_delta": statistics.fmean(differences),
@@ -262,7 +440,7 @@ def aggregate(prereg: dict[str, Any], indexed: dict[tuple[str, int], dict[str, A
             "achieved_mde_80": mde,
             "equivalence_margin": margin,
             "published_delta": arm_spec["published_delta"],
-            "verdict": verdict(ci95, ci90, mde, margin, arm_spec["published_delta"]),
+            "difference_p_value": p_value,
             "secondary_means": {
                 field: statistics.fmean(indexed[(arm, seed)][field] for seed in seeds)
                 for field in prereg["secondary_metrics"]
@@ -272,11 +450,32 @@ def aggregate(prereg: dict[str, Any], indexed: dict[tuple[str, int], dict[str, A
                 float(indexed[(arm, seed)]["collapse"]) for seed in seeds
             ),
         }
+    multiplicity_alpha = float(prereg["analysis"]["mde_alpha"])
+    rejections = benjamini_hochberg(p_values, multiplicity_alpha)
+    for arm, result in results.items():
+        difference_rejected = rejections[arm]
+        result["bh_difference_rejected"] = difference_rejected
+        result["verdict"] = verdict(
+            tuple(result["ci95"]),
+            tuple(result["ci90"]),
+            result["achieved_mde_80"],
+            result["equivalence_margin"],
+            result["published_delta"],
+            difference_rejected=difference_rejected,
+        )
     return {
         "status": "COMPLETE",
         "schema_version": prereg["schema_version"],
         "n_seeds": len(seeds),
         "baseline_arm": baseline,
+        "mde_method": "exact noncentral paired-t, two-sided alpha=.05, power=.80",
+        "multiplicity": {
+            "family": "four core arm-versus-GRPO paired two-sided t tests",
+            "method": "Benjamini-Hochberg",
+            "alpha": multiplicity_alpha,
+            "raw_p_values": p_values,
+            "rejections": rejections,
+        },
         "results": results,
     }
 

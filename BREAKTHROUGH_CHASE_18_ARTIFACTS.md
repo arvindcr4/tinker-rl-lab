@@ -306,6 +306,8 @@ Corpus integrity at the starting point: 18 canonical roots, 328 unique included
 source files, all roots compiling, and explicit derivative/evidence-reuse
 boundaries. The current R08 aggregate is `COMPLETE` with eight paired seeds:
 DAPO `DISAPPEARS`; GSPO, Dr.GRPO, and AERO `INCONCLUSIVE`.
+**(Superseded 2026-08-02: all four arms are `INCONCLUSIVE` under the corrected
+exact-t analysis — see `zvf-program/audit/STATISTICAL_REANALYSIS.md`.)**
 
 ## Rerun inputs
 

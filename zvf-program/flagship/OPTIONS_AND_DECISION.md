@@ -127,6 +127,10 @@ condition and fallback venue.
 
 **What:** publish the 40/40 E1 audit and the `SURVIVES` / `DISAPPEARS` /
 `INCONCLUSIVE` protocol as a reproducibility artifact.  
+**Note (2026-08-02):** all four E1 arms are now `INCONCLUSIVE`; the DAPO
+`DISAPPEARS` verdict is superseded (`zvf-program/audit/STATISTICAL_REANALYSIS.md`).
+The protocol artifact route is unaffected, but no equivalence finding can be
+presented.  
 **Why:** this is the strongest completed evidence and the lowest-risk asset.  
 **Why not the first flagship:** one model, one principal task, short training,
 and heterogeneous method budgets limit the breadth of the scientific claim.  

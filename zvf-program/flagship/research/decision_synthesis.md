@@ -213,9 +213,10 @@ full provenance.
 **Strongest novelty claim.** The combination of declared-lever fingerprints,
 fail-closed aggregation, local/W&B/HF reconciliation, immutable held-out hashes,
 correction/resume receipts, and equivalence-aware verdicts is unusually strong.
-E1's current disciplined result---DAPO `DISAPPEARS`; GSPO, Dr.GRPO, and AERO
-remain `INCONCLUSIVE`---is valuable precisely because it does not turn low
-power into a leaderboard.
+E1's current disciplined result---all four arms `INCONCLUSIVE` under the
+corrected exact-t analysis (the earlier DAPO `DISAPPEARS` is superseded;
+`zvf-program/audit/STATISTICAL_REANALYSIS.md`)---is valuable precisely
+because it does not turn low power into a leaderboard.
 
 **Closest prior.** DAPO provides an open end-to-end recipe; official shared
 frameworks expose multiple objectives; objective papers compare selected

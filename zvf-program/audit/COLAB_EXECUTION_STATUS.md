@@ -1,8 +1,22 @@
 # Colab execution status
 
-Date: 2026-07-20
+Last scientific-status correction: 2026-08-02
 Backend: Google Colab CLI 0.6.0, OAuth2 account `arvindcr4@gmail.com`
 Confirmed accelerator: NVIDIA A100-SXM4-40GB
+
+> **Statistical correction.** Historical entries below that say DAPO
+> `DISAPPEARS` are superseded. The old aggregator used a large-sample MDE at
+> eight seeds and did not execute its declared Benjamini-Hochberg step. The
+> corrected exact paired-t MDE is 0.01012, above the 0.01 margin, and no
+> adjusted difference test rejects. All four arm-versus-GRPO comparisons are
+> `INCONCLUSIVE`; see `STATISTICAL_REANALYSIS.md` and `results/audit.json`.
+>
+> The dated operational snapshot at
+> `results/colab-e1-confirmatory/campaign/campaign.json` still records the
+> pre-repair 39/40 state. It is superseded by
+> `results/campaign-verification.json`, which records 40 locally validated and
+> 40 remotely verified units with zero errors. The stale snapshot is retained
+> as execution history, not current scientific status.
 
 ## Frozen E1 campaign: complete (40/40 independently validated)
 
@@ -35,8 +49,8 @@ completed all 500 held-out rows, and passed at exact private commit
 500 valid unique completion hashes, and byte-identical manifest SHA-256
 `0243e256a3cdae62d30cad889f8bdf19bfe6d7cc2862edc60edffc23586ac3ed`.
 The campaign verifier reports `COMPLETE`: 40 locally validated and 40 remotely
-verified units with zero errors. The frozen aggregate reports `COMPLETE` and
-emits DAPO `DISAPPEARS`; GSPO, Dr.GRPO, and AERO `INCONCLUSIVE`. All Colab
+verified units with zero errors. The corrected aggregate reports `COMPLETE` and
+emits `INCONCLUSIVE` for DAPO, GSPO, Dr.GRPO, and AERO. All Colab
 sessions are released and no campaign or recovery process remains active.
 
 | Arm | Seed | Held-out exact match | Last-10 reward | Mean ZVF | Mean GU | Collapse | Effective time |
@@ -1257,8 +1271,9 @@ They do not enter `results/full` and cannot satisfy any frozen E1 arm.
 - E1 is closed: all 40 frozen units pass strict local, W&B, private-HF
   checkpoint, stack-fingerprint, treatment, manifest, and 500-row unique-hash
   verification. `campaign-verification.json` and `audit.json` both report
-  `COMPLETE`; DAPO `DISAPPEARS`, while GSPO, Dr.GRPO, and AERO are
-  `INCONCLUSIVE`.
+  `COMPLETE`; all four arms (DAPO, GSPO, Dr.GRPO, AERO) are `INCONCLUSIVE`
+  under the corrected exact-t analysis of 2026-08-02 (the former DAPO
+  `DISAPPEARS` verdict is superseded — see `STATISTICAL_REANALYSIS.md`).
 - E8 flagship conformance screening is stopped at the infrastructure gate.
   The balanced-regime seed-11 corpus exhausted its three guarded attempts on
   2026-07-21 without any scientific unit running: attempt 1 (W&B `ujryg527`)

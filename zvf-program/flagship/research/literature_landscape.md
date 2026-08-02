@@ -70,10 +70,13 @@ than treating planned work as completed.
   units pass local, W&B, private-Hub, checkpoint, treatment-fingerprint, and
   held-out-hash verification.
 - Relative to GRPO, DAPO has delta `+0.00100`, 95% CI
-  `[-0.00450,+0.00675]`, and the preregistered `DISAPPEARS` equivalence verdict.
+  `[-0.00450,+0.00675]`; its former preregistered `DISAPPEARS` equivalence
+  verdict is **superseded** (2026-08-02 exact-t reanalysis: MDE80 0.0101 >
+  0.01 margin, and the multiplicity step had never run — see
+  `zvf-program/audit/STATISTICAL_REANALYSIS.md`), so DAPO is `INCONCLUSIVE`.
   GSPO is `+0.00500 [-0.00125,+0.01200]`, Dr.GRPO is
   `-0.00200 [-0.00950,+0.00725]`, and AERO is
-  `-0.00075 [-0.00825,+0.00675]`; all three are `INCONCLUSIVE`. No arm
+  `-0.00075 [-0.00825,+0.00675]`; all four arms are `INCONCLUSIVE`. No arm
   collapsed.
 - The result is a bounded single-stack survival audit, not a universal algorithm
   ranking. It is short-horizon, one-model, one-task, LoRA, and relies on a closed
@@ -551,9 +554,10 @@ small comparisons.
 **Claimed novelty that is still safe.** The survival-verdict framework,
 strict machine contract, full local/W&B/HF reconciliation, treatment
 fingerprints, held-out completion hashes, and equivalence-aware fail-closed
-aggregation form a distinctive benchmark methodology. The E1 finding—DAPO
-`DISAPPEARS`, while GSPO/Dr.GRPO/AERO are underpowered rather than declared
-failures—is also a disciplined negative result.
+aggregation form a distinctive benchmark methodology. The E1 finding—four
+arms `INCONCLUSIVE` after the 2026-08-02 exact-t reanalysis superseded the
+DAPO `DISAPPEARS` verdict, with no arm declared a failure—is also a
+disciplined negative result.
 
 **Remaining gap.** To be an archival benchmark rather than a bounded case
 study, it needs an open primary stack, objective-differential tests, longer

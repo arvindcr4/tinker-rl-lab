@@ -6,6 +6,8 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+import check_stale_verdicts
+
 
 ROOT = Path(__file__).resolve().parents[1]
 MAX_TRACKED_BYTES = 100 * 1024 * 1024
@@ -58,6 +60,8 @@ def main() -> int:
     if issues:
         for issue in issues:
             print(f"ERROR: {issue}")
+        return 1
+    if check_stale_verdicts.main() != 0:
         return 1
     print("repository policy: passed")
     return 0

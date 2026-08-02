@@ -19,7 +19,7 @@ Path 4 alone can become a main-track analysis paper only if it finds a general, 
 
 ### Evidence actually held
 
-- E1 is complete and independently verified for **40/40 units**: GRPO plus DAPO, GSPO, Dr.GRPO, and AERO, eight paired seeds each, pinned Qwen3-8B/GSM8K, 30 optimizer steps, and 500 held-out examples. The frozen aggregate says DAPO `DISAPPEARS`; GSPO, Dr.GRPO, and AERO remain `INCONCLUSIVE`.
+- E1 is complete and independently verified for **40/40 units**: GRPO plus DAPO, GSPO, Dr.GRPO, and AERO, eight paired seeds each, pinned Qwen3-8B/GSM8K, 30 optimizer steps, and 500 held-out examples. Under the corrected 2026-08-02 exact-t analysis, all four arms are `INCONCLUSIVE`; the frozen aggregate's earlier DAPO `DISAPPEARS` verdict is superseded (`zvf-program/audit/STATISTICAL_REANALYSIS.md`).
 - This is a strong provenance and bounded-survival result. It is not a general ranking of the algorithms. It covers one model, one binary-reward task, one short horizon, LoRA, and one execution surface.
 - The flagship protocol is frozen at `frozen-screening-not-started`. Its hypotheses, seed split, endpoints, margins, and ordered expansion gates are design commitments, not positive evidence.
 - The policy comparison is a synthetic allocation model. Its most damaging finding for a universal-controller story is that registered wins split among `static_g8`, `boundary_aware`, and `full_triage`, while the mean AUC of G8 and full triage is nearly tied. Sparse and compute-constrained cases favor G8.

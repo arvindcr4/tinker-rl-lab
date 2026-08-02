@@ -36,35 +36,38 @@ Canonical document roster:
 
 | ID | Source | Role after revision |
 |---|---|---|
-| P01 | `paper_P1_scaling.tex` | limits/identifiability audit, not a positive scaling law |
+| P01 | `paper_P1_scaling.tex` | limits/identifiability audit, not a positive scaling law; workshop-short claim boundary fences multi-seed as non-claim |
 | P02 | `paper_P2_zvf.tex` | descriptive ZVF diagnostic and exact accounting |
 | P03 | `paper_P3_group_size.tex` | measured bounds plus explicitly reconstructed hypotheses |
 | P04 | `paper_P4_length_bias.tex` | bounded null under a 200-token cap |
 | P05 | `paper_P5_minreport.tex` | canonical evidence for the eight-item reporting standard |
-| P06 | `paper_P6_registry.tex` | canonical seven-field run-manifest registry plus evaluation linkage |
-| P07 | `paper_P7_zvf_controller.tex` | retrospective audit and prospective controller test plan |
+| P06 | `paper_P6_registry.tex` | canonical seven-field registry; position-artifact resource (shared 17× exhibit is not re-claimed) |
+| P07 | `paper_P7_zvf_controller.tex` | retrospective audit + prospective test plan only; adaptive G not promoted |
 | P08 | `paper_P8_fraud.tex` | parked cross-domain side study |
 | R01 | `acm_main.tex` | compact cross-library venue derivative |
 | R02 | `neurips_2026_variants/main_zvf.tex` | focused ZVF sentinel/stratification paper |
 | R03 | `neurips_2026_variants/main_workshop.tex` | exploratory artifact note |
-| R04 | `neurips_2026_variants/main_dnb.tex` | tiered dataset/benchmark artifact paper |
+| R04 | `neurips_2026_variants/main_dnb.tex` | tiered artifact paper; ZVF is bench instrumentation not flagship claim |
 | R05 | `zvf-program/theory/zvf_theory.tex` | calibration and reliability proof sketches; no adaptive set-point |
 | R06 | `zvf-program/position/min_report_rl.tex` | condensed community position statement |
 | R07 | `zvf-program/registry/grpo_registry.tex` | condensed living-catalog statement |
 | R08 | `zvf-program/audit/reproducibility_audit.tex` | completed 40-unit single-stack survival audit; open-stack generalization remains gated |
 | U01 | `main.tex` | long evidence compendium, not a venue submission |
-| N01 | `unified_signal_starvation/main.tex` | GRPO/PPO/SAO diagnostic and controller proposal |
+| N01 | `unified_signal_starvation/main.tex` | GRPO-grounded diagnostic + PPO/SAO evaluation contract; PPO/SAO outcomes non-claims |
 
 The older plans below are retained as history. Where they disagree with this
 section, this section is canonical.
 
-**Post-E1 update (2026-07-20).** R08 is no longer a planned or placeholder
-audit: all 40 frozen Qwen3-8B/GSM8K/Tinker units independently validate, DAPO
-meets the preregistered `DISAPPEARS` rule, and GSPO, Dr.GRPO, and AERO are
-`INCONCLUSIVE`. This closes the bounded single-stack artifact but does not
-remove the main-track gate below: an archival survival claim still needs an
-open implementation, objective-differential tests, longer learning curves,
-and prospective external-validity evidence.
+**Post-E1 statistical correction (2026-08-02).** R08 is no longer a planned or
+placeholder audit: all 40 frozen Qwen3-8B/GSM8K/Tinker units independently
+validate. The original aggregator, however, used a large-sample MDE at eight
+seeds and never called its Benjamini-Hochberg routine. Exact paired-t power puts
+DAPO's MDE80 at 0.01012, above the 0.01 equivalence margin; no adjusted
+difference test rejects. DAPO, GSPO, Dr.GRPO, and AERO are all `INCONCLUSIVE`.
+This closes the bounded execution artifact but does not remove the main-track
+gate below: a general survival claim still needs an open implementation,
+objective-differential tests, longer learning curves, and prospective
+external-validity evidence.
 
 ## Consolidation plan v3 — THESIS-FIRST (2026-07-11, after adversarial council review)
 

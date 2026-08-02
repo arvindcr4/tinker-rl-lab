@@ -1,9 +1,28 @@
 {
   "baseline_arm": "grpo",
+  "mde_method": "exact noncentral paired-t, two-sided alpha=.05, power=.80",
+  "multiplicity": {
+    "alpha": 0.05,
+    "family": "four core arm-versus-GRPO paired two-sided t tests",
+    "method": "Benjamini-Hochberg",
+    "raw_p_values": {
+      "aero": 0.8577962778635067,
+      "dapo": 0.7559627503965327,
+      "drgrpo": 0.6725407270453154,
+      "gspo": 0.2102873416045905
+    },
+    "rejections": {
+      "aero": false,
+      "dapo": false,
+      "drgrpo": false,
+      "gspo": false
+    }
+  },
   "n_seeds": 8,
   "results": {
     "aero": {
-      "achieved_mde_80": 0.011302855105379352,
+      "achieved_mde_80": 0.013191682147050082,
+      "bh_difference_rejected": false,
       "ci90": [
         -0.007000000000000006,
         0.005500000000000005
@@ -14,6 +33,7 @@
       ],
       "collapse_rate": 0.0,
       "controlled_delta": -0.0007500000000000007,
+      "difference_p_value": 0.8577962778635067,
       "equivalence_margin": 0.01,
       "paired_differences": [
         -0.020000000000000018,
@@ -36,7 +56,8 @@
       "verdict": "INCONCLUSIVE"
     },
     "dapo": {
-      "achieved_mde_80": 0.008667467435361708,
+      "achieved_mde_80": 0.010115893228851714,
+      "bh_difference_rejected": false,
       "ci90": [
         -0.003500000000000003,
         0.005750000000000005
@@ -47,6 +68,7 @@
       ],
       "collapse_rate": 0.0,
       "controlled_delta": 0.0010000000000000009,
+      "difference_p_value": 0.7559627503965327,
       "equivalence_margin": 0.01,
       "paired_differences": [
         -0.0020000000000000018,
@@ -66,10 +88,11 @@
         "rollouts": 1734.0,
         "wall_clock_seconds": 16096.092877764873
       },
-      "verdict": "DISAPPEARS"
+      "verdict": "INCONCLUSIVE"
     },
     "drgrpo": {
-      "achieved_mde_80": 0.012706796166654119,
+      "achieved_mde_80": 0.014830236659238293,
+      "bh_difference_rejected": false,
       "ci90": [
         -0.008500000000000008,
         0.005500000000000005
@@ -80,6 +103,7 @@
       ],
       "collapse_rate": 0.0,
       "controlled_delta": -0.0020000000000000018,
+      "difference_p_value": 0.6725407270453154,
       "equivalence_margin": 0.01,
       "paired_differences": [
         -0.008000000000000007,
@@ -102,7 +126,8 @@
       "verdict": "INCONCLUSIVE"
     },
     "gspo": {
-      "achieved_mde_80": 0.010156608936058173,
+      "achieved_mde_80": 0.011853886078093819,
+      "bh_difference_rejected": false,
       "ci90": [
         -0.0002500000000000002,
         0.01075000000000001
@@ -113,6 +138,7 @@
       ],
       "collapse_rate": 0.0,
       "controlled_delta": 0.0050000000000000044,
+      "difference_p_value": 0.2102873416045905,
       "equivalence_margin": 0.01,
       "paired_differences": [
         -0.010000000000000009,

@@ -13,26 +13,87 @@ SPEC.loader.exec_module(aggregate_audit)
 
 
 class StatisticsTests(unittest.TestCase):
+    def test_small_sample_mde_matches_exact_paired_t_power(self):
+        differences = [-0.002, -0.012, -0.006, 0.002, 0.0, 0.016, 0.0, 0.010]
+        mde = aggregate_audit.achieved_mde_80(differences)
+        self.assertAlmostEqual(mde, 0.0101158932289, places=10)
+        self.assertGreater(mde, 0.01)
+
     def test_verdicts_are_fail_closed(self):
         self.assertEqual(
-            aggregate_audit.verdict((0.01, 0.03), (0.012, 0.028), 0.005, 0.01, 0.02),
+            aggregate_audit.verdict(
+                (0.01, 0.03),
+                (0.012, 0.028),
+                0.005,
+                0.01,
+                0.02,
+                difference_rejected=True,
+            ),
             "RETAINS",
         )
         self.assertEqual(
-            aggregate_audit.verdict((0.001, 0.02), (0.002, 0.018), 0.005, 0.01, None),
+            aggregate_audit.verdict(
+                (0.001, 0.02),
+                (0.002, 0.018),
+                0.005,
+                0.01,
+                None,
+                difference_rejected=True,
+            ),
             "SURVIVES",
         )
         self.assertEqual(
-            aggregate_audit.verdict((-0.009, 0.009), (-0.008, 0.008), 0.008, 0.01, None),
+            aggregate_audit.verdict(
+                (-0.009, 0.009),
+                (-0.008, 0.008),
+                0.008,
+                0.01,
+                None,
+                difference_rejected=False,
+            ),
             "DISAPPEARS",
         )
         self.assertEqual(
-            aggregate_audit.verdict((-0.04, -0.01), (-0.035, -0.015), 0.01, 0.01, None),
+            aggregate_audit.verdict(
+                (-0.04, -0.01),
+                (-0.035, -0.015),
+                0.01,
+                0.01,
+                None,
+                difference_rejected=True,
+            ),
             "REVERSES",
         )
         self.assertEqual(
-            aggregate_audit.verdict((-0.02, 0.02), (-0.015, 0.015), 0.02, 0.01, None),
+            aggregate_audit.verdict(
+                (-0.02, 0.02),
+                (-0.015, 0.015),
+                0.02,
+                0.01,
+                None,
+                difference_rejected=False,
+            ),
             "INCONCLUSIVE",
+        )
+        self.assertEqual(
+            aggregate_audit.verdict(
+                (0.001, 0.02),
+                (0.002, 0.018),
+                0.005,
+                0.01,
+                None,
+                difference_rejected=False,
+            ),
+            "INCONCLUSIVE",
+        )
+
+    def test_bh_rejections_are_executable_not_documentary(self):
+        rejections = aggregate_audit.benjamini_hochberg(
+            {"dapo": 0.001, "gspo": 0.02, "drgrpo": 0.04, "aero": 0.5}
+        )
+        self.assertEqual(
+            rejections,
+            {"dapo": True, "gspo": True, "drgrpo": False, "aero": False},
         )
 
     def test_bootstrap_is_deterministic(self):

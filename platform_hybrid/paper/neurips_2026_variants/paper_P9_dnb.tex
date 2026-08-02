@@ -18,6 +18,8 @@
 \usepackage[T1]{fontenc}
 \usepackage{hyperref}
 \usepackage{url}
+% Avoid green link boxes / annotation artifacts on wrapped URLs
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue,pdfborder={0 0 0}}
 \usepackage{booktabs}
 \usepackage{amsfonts}
 \usepackage{amsmath}
@@ -65,6 +67,10 @@
 % -----------------------------------------------------------------------------
 \input{sections/abstract_dnb}
 
+% Define claim/artifact tables early so intro Table~\ref resolves (no Table [?]).
+\input{sections/claims_tier_dnb}
+\input{sections/artifact_card_dnb}
+
 \begin{figure}[htbp]
 \centering
 \resizebox{\linewidth}{!}{
@@ -82,7 +88,7 @@
     \draw [arrow] (t2) -- (repo);
 \end{tikzpicture}
 }
-\caption{\textbf{Tiered Benchmark Dataset \& Reproduction Harness Architecture (R04).} Categorizing artifact evidence into rigorous evidence tiers (A/B/C) with reproducible verification.}
+\caption{\textbf{Tiered Benchmark Dataset \& Reproduction Harness Architecture (P9).} Categorizing artifact evidence into rigorous evidence tiers (A/B/C) with reproducible verification.}
 \label{fig:dnb_benchmark_architecture}
 \end{figure}
 \input{sections/intro_dnb}
@@ -143,15 +149,13 @@ not inferential evidence.
 
 Table~\ref{tab:claims-tier} maps every claim in the paper to its evidence
 tier and to the artifact files that support it; a per-stack auditability
-matrix is in Table~\ref{tab:artifact-card}. Inferential conclusions
-(A-grade) are limited to the mechanical $\mathrm{ZVF}$ identity
-(Section~\ref{sec:zvf-analysis}) and the held-out 5-seed Qwen3-8B GSM8K
-control. All other rows are B-grade single-seed case studies or C-grade
-listings; the full per-row training-reward table that earlier drafts
-placed in main is now Appendix~\ref{sec:appendix:full-results}.
-
-\input{sections/claims_tier_dnb}
-\input{sections/artifact_card_dnb}
+matrix is in Table~\ref{tab:artifact-card} (both tables appear immediately
+after the abstract so cross-references resolve in the introduction).
+Inferential conclusions (A-grade) are limited to the mechanical
+$\mathrm{ZVF}$ identity (Section~\ref{sec:zvf-analysis}) and the held-out
+5-seed Qwen3-8B GSM8K control. All other rows are B-grade single-seed case
+studies or C-grade listings; the full per-row training-reward table that
+earlier drafts placed in main is now Appendix~\ref{sec:appendix:full-results}.
 
 \subsection{Zero-Variance Fraction: cross-stack diagnostic}
 \label{sec:zvf-analysis}

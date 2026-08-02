@@ -77,93 +77,13 @@
 \label{fig:p03_fig2}
 \end{figure}
 
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Group Rollouts};
-    \node [b2, right=of n1] (n2) {\textbf{Group Size Scaling Surface}\\Variance Evaluator};
-    \node [b3, right=of n2] (n3) {Gradient Step};
 
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Group Size Scaling Surface}. Variance surface reduction scaling.}
-\label{fig:p03_fig1}
-\end{figure}
 
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Group G=2};
-    \node [b2, right=of n1] (n2) {\textbf{GRPO to DPO Bridge}\\Preference Margin};
-    \node [b3, right=of n2] (n3) {DPO Limit};
 
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{GRPO to DPO Bridge}. Preference loss limit transition.}
-\label{fig:p03_fig2}
-\end{figure}
 
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Group Rollouts};
-    \node [b2, right=of n1] (n2) {\textbf{Group Size Scaling Surface}\\Variance Evaluator};
-    \node [b3, right=of n2] (n3) {Gradient Step};
 
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Group Size Scaling Surface}. Variance surface reduction scaling.}
-\label{fig:p03_fig1}
-\end{figure}
 
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Group G=2};
-    \node [b2, right=of n1] (n2) {\textbf{GRPO to DPO Bridge}\\Preference Margin};
-    \node [b3, right=of n2] (n3) {DPO Limit};
 
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{GRPO to DPO Bridge}. Preference loss limit transition.}
-\label{fig:p03_fig2}
-\end{figure}
 
 \begin{figure}[htbp]
 \centering
@@ -253,14 +173,26 @@
 \label{fig:p03_f6}
 \end{figure}
 
+
+
+
+
+
+
+
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+
 \begin{figure}[htbp]
 \centering
 \resizebox{\linewidth}{!}{
 \begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
     arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
 ]
     \node [b1] (n1) {Token Budget};
@@ -272,17 +204,17 @@
 \end{tikzpicture}
 }
 \caption{\textbf{Matched Token Budget Comparison Matrix}. Comparing group sizes G under equal token budgets.}
-\label{fig:p03_new1}
+\label{fig:p03_unique_1}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
 \resizebox{\linewidth}{!}{
 \begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
     arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
 ]
     \node [b1] (n1) {Rollout Yield};
@@ -294,17 +226,17 @@
 \end{tikzpicture}
 }
 \caption{\textbf{Conditional Utility Selection Surface}. Utility calculation surface selecting optimal group size G.}
-\label{fig:p03_new2}
+\label{fig:p03_unique_2}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
 \resizebox{\linewidth}{!}{
 \begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
     arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
 ]
     \node [b1] (n1) {Historical Logs};
@@ -316,17 +248,17 @@
 \end{tikzpicture}
 }
 \caption{\textbf{Frozen Replay vs Counterfactual Simulation}. Differentiating offline replay from online counterfactuals.}
-\label{fig:p03_new3}
+\label{fig:p03_unique_3}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
 \resizebox{\linewidth}{!}{
 \begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
     arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
 ]
     \node [b1] (n1) {Task Complexity};
@@ -338,9 +270,7 @@
 \end{tikzpicture}
 }
 \caption{\textbf{Group Size Tradeoff Decision Boundary}. Mapping group size choices across prompt difficulty tiers.}
-\label{fig:p03_new4}
+\label{fig:p03_unique_4}
 \end{figure}
 
-\bibliographystyle{plainnat}
-\bibliography{references}
 \end{document}

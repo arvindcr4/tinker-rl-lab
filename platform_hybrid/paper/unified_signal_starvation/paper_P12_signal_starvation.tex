@@ -1029,49 +1029,9 @@ testable proposal is the central methodological commitment of this work.
 \label{fig:n01_fig4}
 \end{figure}
 
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Diagnostic Telemetry};
-    \node [b2, right=of n1] (n2) {\textbf{Critic Lag vs Transport Error Diagnostic Seams}\\Seam Diagnostic Module};
-    \node [b3, right=of n2] (n3) {Pinpointed Error Cause};
 
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Critic Lag vs Transport Error Diagnostic Seams}. Distinguishing critic estimation lag from data transport bottlenecks.}
-\label{fig:n01_fig5}
-\end{figure}
 
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Trajectory Buffer};
-    \node [b2, right=of n1] (n2) {\textbf{Stale Rollout Refresh vs Standard Policy Update}\\Staleness Checker};
-    \node [b3, right=of n2] (n3) {Refresh vs Update Action};
 
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Stale Rollout Refresh vs Standard Policy Update}. Branching logic for refreshing stale trajectory buffers.}
-\label{fig:n01_fig6}
-\end{figure}
 
 \begin{figure}[htbp]
 \centering
@@ -1095,27 +1055,7 @@ testable proposal is the central methodological commitment of this work.
 \label{fig:n01_fig7}
 \end{figure}
 
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Training Arms Grid};
-    \node [b2, right=of n1] (n2) {\textbf{Multi-Arm Controlled Exploration Protocol}\\Exploration Scheduler};
-    \node [b3, right=of n2] (n3) {Optimized Training Policy};
 
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Multi-Arm Controlled Exploration Protocol}. Controlled exploration protocol across multiple training arms.}
-\label{fig:n01_fig8}
-\end{figure}
 
 \bibliographystyle{plainnat}
 \bibliography{references}

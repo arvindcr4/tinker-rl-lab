@@ -40,6 +40,16 @@ Examples:
     )
 
     parser.add_argument(
+        "--backend",
+        "-b",
+        type=str,
+        choices=["local", "modal", "colab", "vast", "gcp", "hfspaces"],
+        default="local",
+        help="Compute backend (local runs the framework in-process; others delegate "
+        "to their provisioning driver)",
+    )
+
+    parser.add_argument(
         "--model", "-m", type=str, default="Qwen/Qwen2.5-1.5B-Instruct", help="Model name or path"
     )
 
@@ -146,11 +156,15 @@ Examples:
     # Create launcher
     launcher = UnifiedLauncher()
     launcher.framework = args.framework
+    launcher.backend = args.backend
     launcher.model = args.model
     launcher.algorithm = args.algorithm
     launcher.epochs = args.epochs
     launcher.use_peft = not args.no_peft
     launcher.peft_method = args.peft_method
+    launcher.dry_run = args.dry_run
+    launcher.train_data = list(args.train_data)
+    launcher.wandb_project = args.wandb_project
 
     max_steps = -1
     if args.total_token_budget:
@@ -164,9 +178,9 @@ Examples:
             f" -> Computed max_steps: {max_steps} (assuming batch size {args.batch_size}, 4 grad accum, ~{args.tokens_per_sample} tokens/sample)"
         )
 
-    if args.dry_run:
-        launcher.print_banner()
-        print("\n[Dry run - exiting]")
+    # Dry-run is handled inside launcher.run() (prints the resolved LaunchPlan).
+    if args.dry_run and not args.generate_script:
+        launcher.run()
         return
 
     if args.generate_script:

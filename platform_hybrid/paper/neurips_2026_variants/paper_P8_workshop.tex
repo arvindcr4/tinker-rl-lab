@@ -314,327 +314,39 @@ ecosystem.
 
 
 
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Multi-Library Code};
-    \node [b2, right=of n1] (n2) {\textbf{Workshop Multi-Library Scope}\\Scope Evaluator};
-    \node [b3, right=of n2] (n3) {Comprehensive Benchmark};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Workshop Multi-Library Scope}. Overview of benchmark coverage across 7 libraries.}
-\label{fig:r03_fig1}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {TRL / SB3 Stacks};
-    \node [b2, right=of n1] (n2) {\textbf{TRL vs SB3 Comparison}\\Pipeline Comparator};
-    \node [b3, right=of n2] (n3) {Architectural Comparison};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{TRL vs SB3 Comparison}. Comparing LLM-native TRL with classic RL SB3.}
-\label{fig:r03_fig2}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {CleanRL / Tianshou Stacks};
-    \node [b2, right=of n1] (n2) {\textbf{CleanRL vs Tianshou Architecture}\\Stack Auditor};
-    \node [b3, right=of n2] (n3) {Execution Comparison};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{CleanRL vs Tianshou Architecture}. Comparing lightweight CleanRL with modular Tianshou stack.}
-\label{fig:r03_fig3}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Task Encoding Spec};
-    \node [b2, right=of n1] (n2) {\textbf{Arithmetic MDP Task Encoding vs LLM Generation}\\MDP vs LLM Resolver};
-    \node [b3, right=of n2] (n3) {Representation Boundary};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Arithmetic MDP Task Encoding vs LLM Generation}. Distinguishing small MLP MDPs from autoregressive LLMs.}
-\label{fig:r03_fig4}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Raw Score Arrays};
-    \node [b2, right=of n1] (n2) {\textbf{rliable Performance Profile Generation Flow}\\rliable Engine};
-    \node [b3, right=of n2] (n3) {Performance Profile Plot};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{rliable Performance Profile Generation Flow}. Generating statistically rigorous performance profiles.}
-\label{fig:r03_fig5}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Environment Rewards};
-    \node [b2, right=of n1] (n2) {\textbf{Reward Function Standardization and Normalization}\\Reward Normalizer};
-    \node [b3, right=of n2] (n3) {Standardized Reward Signal};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Reward Function Standardization and Normalization}. Ensuring uniform reward scaling across evaluation environments.}
-\label{fig:r03_fig6}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Control Task Cohort};
-    \node [b2, right=of n1] (n2) {\textbf{Held-Out Control Task Evaluation Pipeline}\\Evaluation Harness};
-    \node [b3, right=of n2] (n3) {Held-Out Pass@k Score};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Held-Out Control Task Evaluation Pipeline}. Evaluating generalization on non-training control tasks.}
-\label{fig:r03_fig7}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Submission Artifacts};
-    \node [b2, right=of n1] (n2) {\textbf{Workshop Reproducibility Checklist and Flow}\\Checklist Auditor};
-    \node [b3, right=of n2] (n3) {Verified Benchmark Badge};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Workshop Reproducibility Checklist and Flow}. Verifying compliance with workshop reproducibility standards.}
-\label{fig:r03_fig8}
-\end{figure}
 
 
 
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Multi-Library Code};
-    \node [b2, right=of n1] (n2) {\textbf{Workshop Multi-Library Scope}\\Scope Evaluator};
-    \node [b3, right=of n2] (n3) {Comprehensive Benchmark};
 
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Workshop Multi-Library Scope}. Overview of benchmark coverage across 7 libraries.}
-\label{fig:r03_fig1}
-\end{figure}
 
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {TRL / SB3 Stacks};
-    \node [b2, right=of n1] (n2) {\textbf{TRL vs SB3 Comparison}\\Pipeline Comparator};
-    \node [b3, right=of n2] (n3) {Architectural Comparison};
 
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{TRL vs SB3 Comparison}. Comparing LLM-native TRL with classic RL SB3.}
-\label{fig:r03_fig2}
-\end{figure}
 
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {CleanRL / Tianshou Stacks};
-    \node [b2, right=of n1] (n2) {\textbf{CleanRL vs Tianshou Architecture}\\Stack Auditor};
-    \node [b3, right=of n2] (n3) {Execution Comparison};
 
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{CleanRL vs Tianshou Architecture}. Comparing lightweight CleanRL with modular Tianshou stack.}
-\label{fig:r03_fig3}
-\end{figure}
 
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Task Encoding Spec};
-    \node [b2, right=of n1] (n2) {\textbf{Arithmetic MDP Task Encoding vs LLM Generation}\\MDP vs LLM Resolver};
-    \node [b3, right=of n2] (n3) {Representation Boundary};
 
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Arithmetic MDP Task Encoding vs LLM Generation}. Distinguishing small MLP MDPs from autoregressive LLMs.}
-\label{fig:r03_fig4}
-\end{figure}
 
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Raw Score Arrays};
-    \node [b2, right=of n1] (n2) {\textbf{rliable Performance Profile Generation Flow}\\rliable Engine};
-    \node [b3, right=of n2] (n3) {Performance Profile Plot};
 
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{rliable Performance Profile Generation Flow}. Generating statistically rigorous performance profiles.}
-\label{fig:r03_fig5}
-\end{figure}
 
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Environment Rewards};
-    \node [b2, right=of n1] (n2) {\textbf{Reward Function Standardization and Normalization}\\Reward Normalizer};
-    \node [b3, right=of n2] (n3) {Standardized Reward Signal};
 
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Reward Function Standardization and Normalization}. Ensuring uniform reward scaling across evaluation environments.}
-\label{fig:r03_fig6}
-\end{figure}
 
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Control Task Cohort};
-    \node [b2, right=of n1] (n2) {\textbf{Held-Out Control Task Evaluation Pipeline}\\Evaluation Harness};
-    \node [b3, right=of n2] (n3) {Held-Out Pass@k Score};
 
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Held-Out Control Task Evaluation Pipeline}. Evaluating generalization on non-training control tasks.}
-\label{fig:r03_fig7}
-\end{figure}
 
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Submission Artifacts};
-    \node [b2, right=of n1] (n2) {\textbf{Workshop Reproducibility Checklist and Flow}\\Checklist Auditor};
-    \node [b3, right=of n2] (n3) {Verified Benchmark Badge};
 
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Workshop Reproducibility Checklist and Flow}. Verifying compliance with workshop reproducibility standards.}
-\label{fig:r03_fig8}
-\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

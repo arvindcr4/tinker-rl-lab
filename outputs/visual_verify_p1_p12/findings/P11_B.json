@@ -1,0 +1,21 @@
+{
+  "paper": "P11",
+  "angle": "B",
+  "pages_inspected": ["5", "11"],
+  "verdict": "FAIL",
+  "findings": [
+    {
+      "severity": "major",
+      "page": "11",
+      "issue": "Right-side flowchart nodes systematically clipped at page margin",
+      "evidence": "Figures 21–26 are three-box horizontal pipelines; the rightmost (green) boxes are cut off mid-text: Fig 21 ends at '95% Confidence I', Fig 22 at 'Disappears Ver', Fig 23 at 'Inconclusiv', Fig 24 at 'Inconclusive V', Fig 25 at 'Inconclusiv', Fig 26 at 'Final Surviv'. Truncation is at the right page edge, not soft wrap."
+    },
+    {
+      "severity": "minor",
+      "page": "11",
+      "issue": "Figure 20 right node may be tight or lightly clipped at margin",
+      "evidence": "Top pipeline ends with a green box 'Clean Telemetry Logs' that sits at the right margin; less clearly truncated than Figs 21–26 but aligned with the same overflow pattern."
+    }
+  ],
+  "summary": "Page 5 (mid-document body with verdict table and §4 Statistical Protocol) is clean: table, captions, body text, and page footer look fine. Page 11 (last page) fails visual QA: multiple flowchart figures have right-hand node labels truncated by the page edge, so diagram content is unreadable."
+}

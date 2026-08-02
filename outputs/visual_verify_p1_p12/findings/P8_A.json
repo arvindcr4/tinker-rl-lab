@@ -1,0 +1,11 @@
+{
+  "paper": "P8",
+  "angle": "A",
+  "pages_inspected": [
+    "page_001-01.png",
+    "page_002-02.png"
+  ],
+  "verdict": "PASS",
+  "findings": [],
+  "summary": "Title page is clean and readable: title hierarchy, anonymous author block, abstract with explicit claim hierarchy, and intro claim-boundary paragraphs all render without overflow, overlap, or encoding issues. Page 2 continues intro through Setup and Headline Result with a well-set ZVF equation and a compact Table 1; margins, line spacing, and citation markers look fine for workshop front matter."
+}

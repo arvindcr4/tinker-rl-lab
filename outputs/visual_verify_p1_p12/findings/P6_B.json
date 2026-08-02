@@ -1,0 +1,21 @@
+{
+  "paper": "P6",
+  "angle": "B",
+  "pages_inspected": ["32", "64"],
+  "verdict": "PASS_WITH_NOTES",
+  "findings": [
+    {
+      "severity": "minor",
+      "page": "64",
+      "issue": "Sparse last page",
+      "evidence": "Page 64 contains only a single bibliography entry ([25] GSPO/arXiv:2507.18071) near the top, with the rest of the page almost entirely blank white space and page number 64 at the bottom center."
+    },
+    {
+      "severity": "minor",
+      "page": "32",
+      "issue": "Side note cramped against table right margin",
+      "evidence": "A short note ('Note: adaptiveg's measured rows use a different panel…') sits flush to the right of Table 21's body and wraps under the table; placement is readable but tight relative to the table grid and looks like an overflow/margin squeeze rather than a clean caption or footnote."
+    }
+  ],
+  "summary": "Mid-document page 32 renders Table 21 and body text cleanly with no cutoffs, overflow, or contrast problems; a side note is slightly cramped beside the table. Last page 64 is sparsely filled with only one reference line and large empty space—no collisions or truncation."
+}

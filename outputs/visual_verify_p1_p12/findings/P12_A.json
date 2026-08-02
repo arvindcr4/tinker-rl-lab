@@ -1,0 +1,11 @@
+{
+  "paper": "P12",
+  "angle": "A",
+  "pages_inspected": [
+    "page_001-01.png",
+    "page_002-02.png"
+  ],
+  "verdict": "PASS",
+  "findings": [],
+  "summary": "Title page and abstract/claim-boundary block are clean: readable multi-line title, centered author block, dense but well-set abstract, explicit venue claim-boundary paragraph, and adequate margins with no overflow or overlap. Page 2 teaser Figure 1 is sharp and labeled; intro text and contributions list render without font, spacing, or layout defects."
+}

@@ -1,0 +1,134 @@
+{
+  "P1": {
+    "pdf": "platform_hybrid/paper/paper_P1_scaling.pdf",
+    "pages": 46,
+    "images": [
+      "outputs/visual_verify_p1_p12/P1/page_001-01.png",
+      "outputs/visual_verify_p1_p12/P1/page_002-02.png",
+      "outputs/visual_verify_p1_p12/P1/page_023-23.png",
+      "outputs/visual_verify_p1_p12/P1/page_046-46.png"
+    ],
+    "note": ""
+  },
+  "P2": {
+    "pdf": "platform_hybrid/paper/paper_P2_zvf.pdf",
+    "pages": 46,
+    "images": [
+      "outputs/visual_verify_p1_p12/P2/page_001-01.png",
+      "outputs/visual_verify_p1_p12/P2/page_002-02.png",
+      "outputs/visual_verify_p1_p12/P2/page_023-23.png",
+      "outputs/visual_verify_p1_p12/P2/page_046-46.png"
+    ],
+    "note": ""
+  },
+  "P3": {
+    "pdf": "platform_hybrid/paper/paper_P3_group_size.pdf",
+    "pages": 26,
+    "images": [
+      "outputs/visual_verify_p1_p12/P3/page_001-01.png",
+      "outputs/visual_verify_p1_p12/P3/page_002-02.png",
+      "outputs/visual_verify_p1_p12/P3/page_013-13.png",
+      "outputs/visual_verify_p1_p12/P3/page_026-26.png"
+    ],
+    "note": ""
+  },
+  "P4": {
+    "pdf": "platform_hybrid/paper/paper_P4_length_bias.pdf",
+    "pages": 46,
+    "images": [
+      "outputs/visual_verify_p1_p12/P4/page_001-01.png",
+      "outputs/visual_verify_p1_p12/P4/page_002-02.png",
+      "outputs/visual_verify_p1_p12/P4/page_023-23.png",
+      "outputs/visual_verify_p1_p12/P4/page_046-46.png"
+    ],
+    "note": ""
+  },
+  "P5": {
+    "pdf": "platform_hybrid/paper/paper_P5_minreport.pdf",
+    "pages": 81,
+    "images": [
+      "outputs/visual_verify_p1_p12/P5/page_001-01.png",
+      "outputs/visual_verify_p1_p12/P5/page_002-02.png",
+      "outputs/visual_verify_p1_p12/P5/page_040-40.png",
+      "outputs/visual_verify_p1_p12/P5/page_081-81.png"
+    ],
+    "note": ""
+  },
+  "P6": {
+    "pdf": "outputs/visual_verify_p1_p12/P6_source.pdf",
+    "pages": 64,
+    "images": [
+      "outputs/visual_verify_p1_p12/P6/page_001-01.png",
+      "outputs/visual_verify_p1_p12/P6/page_002-02.png",
+      "outputs/visual_verify_p1_p12/P6/page_032-32.png",
+      "outputs/visual_verify_p1_p12/P6/page_064-64.png"
+    ],
+    "note": "frozen sem4 PDF"
+  },
+  "P7": {
+    "pdf": "platform_hybrid/paper/paper_P7_zvf_controller.pdf",
+    "pages": 83,
+    "images": [
+      "outputs/visual_verify_p1_p12/P7/page_001-01.png",
+      "outputs/visual_verify_p1_p12/P7/page_002-02.png",
+      "outputs/visual_verify_p1_p12/P7/page_041-41.png",
+      "outputs/visual_verify_p1_p12/P7/page_083-83.png"
+    ],
+    "note": ""
+  },
+  "P8": {
+    "pdf": "platform_hybrid/paper/neurips_2026_variants/paper_P8_workshop.pdf",
+    "pages": 20,
+    "images": [
+      "outputs/visual_verify_p1_p12/P8/page_001-01.png",
+      "outputs/visual_verify_p1_p12/P8/page_002-02.png",
+      "outputs/visual_verify_p1_p12/P8/page_010-10.png",
+      "outputs/visual_verify_p1_p12/P8/page_020-20.png"
+    ],
+    "note": ""
+  },
+  "P9": {
+    "pdf": "platform_hybrid/paper/neurips_2026_variants/paper_P9_dnb.pdf",
+    "pages": 40,
+    "images": [
+      "outputs/visual_verify_p1_p12/P9/page_001-01.png",
+      "outputs/visual_verify_p1_p12/P9/page_002-02.png",
+      "outputs/visual_verify_p1_p12/P9/page_020-20.png",
+      "outputs/visual_verify_p1_p12/P9/page_040-40.png"
+    ],
+    "note": ""
+  },
+  "P10": {
+    "pdf": "zvf-program/theory/paper_P10_zvf_theory.pdf",
+    "pages": 15,
+    "images": [
+      "outputs/visual_verify_p1_p12/P10/page_001-01.png",
+      "outputs/visual_verify_p1_p12/P10/page_002-02.png",
+      "outputs/visual_verify_p1_p12/P10/page_007-07.png",
+      "outputs/visual_verify_p1_p12/P10/page_015-15.png"
+    ],
+    "note": ""
+  },
+  "P11": {
+    "pdf": "zvf-program/audit/paper_P11_reproducibility_audit.pdf",
+    "pages": 11,
+    "images": [
+      "outputs/visual_verify_p1_p12/P11/page_001-01.png",
+      "outputs/visual_verify_p1_p12/P11/page_002-02.png",
+      "outputs/visual_verify_p1_p12/P11/page_005-05.png",
+      "outputs/visual_verify_p1_p12/P11/page_011-11.png"
+    ],
+    "note": ""
+  },
+  "P12": {
+    "pdf": "platform_hybrid/paper/unified_signal_starvation/paper_P12_signal_starvation.pdf",
+    "pages": 16,
+    "images": [
+      "outputs/visual_verify_p1_p12/P12/page_001-01.png",
+      "outputs/visual_verify_p1_p12/P12/page_002-02.png",
+      "outputs/visual_verify_p1_p12/P12/page_008-08.png",
+      "outputs/visual_verify_p1_p12/P12/page_016-16.png"
+    ],
+    "note": ""
+  }
+}

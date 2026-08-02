@@ -770,493 +770,580 @@ illustrative algebraic constants or drawn from the checked-in
 \texttt{experiments-next/results/*.json} artifacts named inline.
 
 %==============================================================================
+
+% --- appendix figures (moved before bibliography for denser last page) ---
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Probability $p$ and Group $G$};
+    \node [b2, right=of n1] (n2) {\textbf{Binomial Variance Surface Function}\\Binomial Function};
+    \node [b3, right=of n2] (n3) {Variance Surface Curve};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Binomial Variance Surface Function}. Surface plot of variance as a function of success probability.}
+\label{fig:r05_fig1}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Group Size Schedule};
+    \node [b2, right=of n1] (n2) {\textbf{Asymmetric Group Size Escalation and Efficiency}\\Efficiency Evaluator};
+    \node [b3, right=of n2] (n3) {Optimal Sample Curve};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Asymmetric Group Size Escalation and Efficiency}. Evaluating sample budget efficiency under adaptive G scaling.}
+\label{fig:r05_fig2}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Rollout Outcomes};
+    \node [b2, right=of n1] (n2) {\textbf{Mastered vs Failed Task Separation}\\Task Classifier};
+    \node [b3, right=of n2] (n3) {Identified Task Classes};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Mastered vs Failed Task Separation}. Separating mastered tasks from failed tasks.}
+\label{fig:r05_fig3}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Predicted Probabilities};
+    \node [b2, right=of n1] (n2) {\textbf{Empirical Calibration Error Decomposition}\\ECE Decomposer};
+    \node [b3, right=of n2] (n3) {Calibration Curve};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Empirical Calibration Error Decomposition}. Decomposing probability calibration errors in RL post-training.}
+\label{fig:r05_fig4}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Task Cohort Data};
+    \node [b2, right=of n1] (n2) {\textbf{Multi-Task Pass@k Convergence Bounds}\\Convergence Bound Engine};
+    \node [b3, right=of n2] (n3) {Theoretical Bound Plot};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Multi-Task Pass@k Convergence Bounds}. Mathematical convergence bounds for pass@k across task cohorts.}
+\label{fig:r05_fig5}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Bernoulli Rewards};
+    \node [b2, right=of n1] (n2) {\textbf{Bernoulli Process Gradient Noise Variance}\\Noise Calculator};
+    \node [b3, right=of n2] (n3) {Gradient Noise Metric};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Bernoulli Process Gradient Noise Variance}. Analyzing gradient noise variance under Bernoulli reward models.}
+\label{fig:r05_fig6}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {ZVF Feedback Signal};
+    \node [b2, right=of n1] (n2) {\textbf{Closed-Loop ZVF Controller Feedback Loop}\\Optimizer Controller};
+    \node [b3, right=of n2] (n3) {Stabilized Trajectory};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Closed-Loop ZVF Controller Feedback Loop}. Theoretical closed-loop dynamics of ZVF-guided optimization.}
+\label{fig:r05_fig7}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Core Axioms};
+    \node [b2, right=of n1] (n2) {\textbf{Theoretical Proof and Derivation Dependency Map}\\Theorem Graph};
+    \node [b3, right=of n2] (n3) {Verified ZVF Theorem};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Theoretical Proof and Derivation Dependency Map}. Graph of mathematical proofs establishing ZVF properties.}
+\label{fig:r05_fig8}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Probability $p$ and Group $G$};
+    \node [b2, right=of n1] (n2) {\textbf{Binomial Variance Surface Function}\\Binomial Function};
+    \node [b3, right=of n2] (n3) {Variance Surface Curve};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Binomial Variance Surface Function}. Surface plot of variance as a function of success probability.}
+\label{fig:r05_fig1}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Group Size Schedule};
+    \node [b2, right=of n1] (n2) {\textbf{Asymmetric Group Size Escalation and Efficiency}\\Efficiency Evaluator};
+    \node [b3, right=of n2] (n3) {Optimal Sample Curve};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Asymmetric Group Size Escalation and Efficiency}. Evaluating sample budget efficiency under adaptive G scaling.}
+\label{fig:r05_fig2}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Rollout Outcomes};
+    \node [b2, right=of n1] (n2) {\textbf{Mastered vs Failed Task Separation}\\Task Classifier};
+    \node [b3, right=of n2] (n3) {Identified Task Classes};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Mastered vs Failed Task Separation}. Separating mastered tasks from failed tasks.}
+\label{fig:r05_fig3}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Predicted Probabilities};
+    \node [b2, right=of n1] (n2) {\textbf{Empirical Calibration Error Decomposition}\\ECE Decomposer};
+    \node [b3, right=of n2] (n3) {Calibration Curve};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Empirical Calibration Error Decomposition}. Decomposing probability calibration errors in RL post-training.}
+\label{fig:r05_fig4}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Task Cohort Data};
+    \node [b2, right=of n1] (n2) {\textbf{Multi-Task Pass@k Convergence Bounds}\\Convergence Bound Engine};
+    \node [b3, right=of n2] (n3) {Theoretical Bound Plot};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Multi-Task Pass@k Convergence Bounds}. Mathematical convergence bounds for pass@k across task cohorts.}
+\label{fig:r05_fig5}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Bernoulli Rewards};
+    \node [b2, right=of n1] (n2) {\textbf{Bernoulli Process Gradient Noise Variance}\\Noise Calculator};
+    \node [b3, right=of n2] (n3) {Gradient Noise Metric};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Bernoulli Process Gradient Noise Variance}. Analyzing gradient noise variance under Bernoulli reward models.}
+\label{fig:r05_fig6}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {ZVF Feedback Signal};
+    \node [b2, right=of n1] (n2) {\textbf{Closed-Loop ZVF Controller Feedback Loop}\\Optimizer Controller};
+    \node [b3, right=of n2] (n3) {Stabilized Trajectory};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Closed-Loop ZVF Controller Feedback Loop}. Theoretical closed-loop dynamics of ZVF-guided optimization.}
+\label{fig:r05_fig7}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Core Axioms};
+    \node [b2, right=of n1] (n2) {\textbf{Theoretical Proof and Derivation Dependency Map}\\Theorem Graph};
+    \node [b3, right=of n2] (n3) {Verified ZVF Theorem};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Theoretical Proof and Derivation Dependency Map}. Graph of mathematical proofs establishing ZVF properties.}
+\label{fig:r05_fig8}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Probability $p$ and Group $G$};
+    \node [b2, right=of n1] (n2) {\textbf{Binomial Variance Surface Function}\\Binomial Function};
+    \node [b3, right=of n2] (n3) {Variance Surface Curve};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Binomial Variance Surface Function}. Surface plot of variance as a function of success probability.}
+\label{fig:r05_fig1}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Group Size Schedule};
+    \node [b2, right=of n1] (n2) {\textbf{Asymmetric Group Size Escalation and Efficiency}\\Efficiency Evaluator};
+    \node [b3, right=of n2] (n3) {Optimal Sample Curve};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Asymmetric Group Size Escalation and Efficiency}. Evaluating sample budget efficiency under adaptive G scaling.}
+\label{fig:r05_fig2}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Rollout Outcomes};
+    \node [b2, right=of n1] (n2) {\textbf{Mastered vs Failed Task Separation}\\Task Classifier};
+    \node [b3, right=of n2] (n3) {Identified Task Classes};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Mastered vs Failed Task Separation}. Separating mastered tasks from failed tasks.}
+\label{fig:r05_fig3}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Predicted Probabilities};
+    \node [b2, right=of n1] (n2) {\textbf{Empirical Calibration Error Decomposition}\\ECE Decomposer};
+    \node [b3, right=of n2] (n3) {Calibration Curve};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Empirical Calibration Error Decomposition}. Decomposing probability calibration errors in RL post-training.}
+\label{fig:r05_fig4}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Task Cohort Data};
+    \node [b2, right=of n1] (n2) {\textbf{Multi-Task Pass@k Convergence Bounds}\\Convergence Bound Engine};
+    \node [b3, right=of n2] (n3) {Theoretical Bound Plot};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Multi-Task Pass@k Convergence Bounds}. Mathematical convergence bounds for pass@k across task cohorts.}
+\label{fig:r05_fig5}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Bernoulli Rewards};
+    \node [b2, right=of n1] (n2) {\textbf{Bernoulli Process Gradient Noise Variance}\\Noise Calculator};
+    \node [b3, right=of n2] (n3) {Gradient Noise Metric};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Bernoulli Process Gradient Noise Variance}. Analyzing gradient noise variance under Bernoulli reward models.}
+\label{fig:r05_fig6}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {ZVF Feedback Signal};
+    \node [b2, right=of n1] (n2) {\textbf{Closed-Loop ZVF Controller Feedback Loop}\\Optimizer Controller};
+    \node [b3, right=of n2] (n3) {Stabilized Trajectory};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Closed-Loop ZVF Controller Feedback Loop}. Theoretical closed-loop dynamics of ZVF-guided optimization.}
+\label{fig:r05_fig7}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Core Axioms};
+    \node [b2, right=of n1] (n2) {\textbf{Theoretical Proof and Derivation Dependency Map}\\Theorem Graph};
+    \node [b3, right=of n2] (n3) {Verified ZVF Theorem};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Theoretical Proof and Derivation Dependency Map}. Graph of mathematical proofs establishing ZVF properties.}
+\label{fig:r05_fig8}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {ZVF Feedback Signal};
+    \node [b2, right=of n1] (n2) {\textbf{Closed-Loop ZVF Controller Feedback Loop}\\Optimizer Controller};
+    \node [b3, right=of n2] (n3) {Stabilized Trajectory};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Closed-Loop ZVF Controller Feedback Loop}. Theoretical closed-loop dynamics of ZVF-guided optimization.}
+\label{fig:p10_new1}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Core Axioms};
+    \node [b2, right=of n1] (n2) {\textbf{Theoretical Proof and Derivation Dependency Map}\\Theorem Graph};
+    \node [b3, right=of n2] (n3) {Verified ZVF Theorem};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Theoretical Proof and Derivation Dependency Map}. Graph of mathematical proofs establishing ZVF properties.}
+\label{fig:p10_new2}
+\end{figure}
+
 \bibliographystyle{plainnat}
 \bibliography{../../platform_hybrid/paper/references}
-
-
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Probability $p$ and Group $G$};
-    \node [b2, right=of n1] (n2) {\textbf{Binomial Variance Surface Function}\\Binomial Function};
-    \node [b3, right=of n2] (n3) {Variance Surface Curve};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Binomial Variance Surface Function}. Surface plot of variance as a function of success probability.}
-\label{fig:r05_fig1}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Group Size Schedule};
-    \node [b2, right=of n1] (n2) {\textbf{Asymmetric Group Size Escalation and Efficiency}\\Efficiency Evaluator};
-    \node [b3, right=of n2] (n3) {Optimal Sample Curve};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Asymmetric Group Size Escalation and Efficiency}. Evaluating sample budget efficiency under adaptive G scaling.}
-\label{fig:r05_fig2}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Rollout Outcomes};
-    \node [b2, right=of n1] (n2) {\textbf{Mastered vs Failed Task Separation}\\Task Classifier};
-    \node [b3, right=of n2] (n3) {Identified Task Classes};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Mastered vs Failed Task Separation}. Separating mastered tasks from failed tasks.}
-\label{fig:r05_fig3}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Predicted Probabilities};
-    \node [b2, right=of n1] (n2) {\textbf{Empirical Calibration Error Decomposition}\\ECE Decomposer};
-    \node [b3, right=of n2] (n3) {Calibration Curve};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Empirical Calibration Error Decomposition}. Decomposing probability calibration errors in RL post-training.}
-\label{fig:r05_fig4}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Task Cohort Data};
-    \node [b2, right=of n1] (n2) {\textbf{Multi-Task Pass@k Convergence Bounds}\\Convergence Bound Engine};
-    \node [b3, right=of n2] (n3) {Theoretical Bound Plot};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Multi-Task Pass@k Convergence Bounds}. Mathematical convergence bounds for pass@k across task cohorts.}
-\label{fig:r05_fig5}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Bernoulli Rewards};
-    \node [b2, right=of n1] (n2) {\textbf{Bernoulli Process Gradient Noise Variance}\\Noise Calculator};
-    \node [b3, right=of n2] (n3) {Gradient Noise Metric};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Bernoulli Process Gradient Noise Variance}. Analyzing gradient noise variance under Bernoulli reward models.}
-\label{fig:r05_fig6}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {ZVF Feedback Signal};
-    \node [b2, right=of n1] (n2) {\textbf{Closed-Loop ZVF Controller Feedback Loop}\\Optimizer Controller};
-    \node [b3, right=of n2] (n3) {Stabilized Trajectory};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Closed-Loop ZVF Controller Feedback Loop}. Theoretical closed-loop dynamics of ZVF-guided optimization.}
-\label{fig:r05_fig7}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Core Axioms};
-    \node [b2, right=of n1] (n2) {\textbf{Theoretical Proof and Derivation Dependency Map}\\Theorem Graph};
-    \node [b3, right=of n2] (n3) {Verified ZVF Theorem};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Theoretical Proof and Derivation Dependency Map}. Graph of mathematical proofs establishing ZVF properties.}
-\label{fig:r05_fig8}
-\end{figure}
-
-
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Probability $p$ and Group $G$};
-    \node [b2, right=of n1] (n2) {\textbf{Binomial Variance Surface Function}\\Binomial Function};
-    \node [b3, right=of n2] (n3) {Variance Surface Curve};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Binomial Variance Surface Function}. Surface plot of variance as a function of success probability.}
-\label{fig:r05_fig1}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Group Size Schedule};
-    \node [b2, right=of n1] (n2) {\textbf{Asymmetric Group Size Escalation and Efficiency}\\Efficiency Evaluator};
-    \node [b3, right=of n2] (n3) {Optimal Sample Curve};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Asymmetric Group Size Escalation and Efficiency}. Evaluating sample budget efficiency under adaptive G scaling.}
-\label{fig:r05_fig2}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Rollout Outcomes};
-    \node [b2, right=of n1] (n2) {\textbf{Mastered vs Failed Task Separation}\\Task Classifier};
-    \node [b3, right=of n2] (n3) {Identified Task Classes};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Mastered vs Failed Task Separation}. Separating mastered tasks from failed tasks.}
-\label{fig:r05_fig3}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Predicted Probabilities};
-    \node [b2, right=of n1] (n2) {\textbf{Empirical Calibration Error Decomposition}\\ECE Decomposer};
-    \node [b3, right=of n2] (n3) {Calibration Curve};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Empirical Calibration Error Decomposition}. Decomposing probability calibration errors in RL post-training.}
-\label{fig:r05_fig4}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Task Cohort Data};
-    \node [b2, right=of n1] (n2) {\textbf{Multi-Task Pass@k Convergence Bounds}\\Convergence Bound Engine};
-    \node [b3, right=of n2] (n3) {Theoretical Bound Plot};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Multi-Task Pass@k Convergence Bounds}. Mathematical convergence bounds for pass@k across task cohorts.}
-\label{fig:r05_fig5}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Bernoulli Rewards};
-    \node [b2, right=of n1] (n2) {\textbf{Bernoulli Process Gradient Noise Variance}\\Noise Calculator};
-    \node [b3, right=of n2] (n3) {Gradient Noise Metric};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Bernoulli Process Gradient Noise Variance}. Analyzing gradient noise variance under Bernoulli reward models.}
-\label{fig:r05_fig6}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {ZVF Feedback Signal};
-    \node [b2, right=of n1] (n2) {\textbf{Closed-Loop ZVF Controller Feedback Loop}\\Optimizer Controller};
-    \node [b3, right=of n2] (n3) {Stabilized Trajectory};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Closed-Loop ZVF Controller Feedback Loop}. Theoretical closed-loop dynamics of ZVF-guided optimization.}
-\label{fig:r05_fig7}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Core Axioms};
-    \node [b2, right=of n1] (n2) {\textbf{Theoretical Proof and Derivation Dependency Map}\\Theorem Graph};
-    \node [b3, right=of n2] (n3) {Verified ZVF Theorem};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Theoretical Proof and Derivation Dependency Map}. Graph of mathematical proofs establishing ZVF properties.}
-\label{fig:r05_fig8}
-\end{figure}
-
-
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Probability $p$ and Group $G$};
-    \node [b2, right=of n1] (n2) {\textbf{Binomial Variance Surface Function}\\Binomial Function};
-    \node [b3, right=of n2] (n3) {Variance Surface Curve};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Binomial Variance Surface Function}. Surface plot of variance as a function of success probability.}
-\label{fig:r05_fig1}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Group Size Schedule};
-    \node [b2, right=of n1] (n2) {\textbf{Asymmetric Group Size Escalation and Efficiency}\\Efficiency Evaluator};
-    \node [b3, right=of n2] (n3) {Optimal Sample Curve};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Asymmetric Group Size Escalation and Efficiency}. Evaluating sample budget efficiency under adaptive G scaling.}
-\label{fig:r05_fig2}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Rollout Outcomes};
-    \node [b2, right=of n1] (n2) {\textbf{Mastered vs Failed Task Separation}\\Task Classifier};
-    \node [b3, right=of n2] (n3) {Identified Task Classes};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Mastered vs Failed Task Separation}. Separating mastered tasks from failed tasks.}
-\label{fig:r05_fig3}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Predicted Probabilities};
-    \node [b2, right=of n1] (n2) {\textbf{Empirical Calibration Error Decomposition}\\ECE Decomposer};
-    \node [b3, right=of n2] (n3) {Calibration Curve};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Empirical Calibration Error Decomposition}. Decomposing probability calibration errors in RL post-training.}
-\label{fig:r05_fig4}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Task Cohort Data};
-    \node [b2, right=of n1] (n2) {\textbf{Multi-Task Pass@k Convergence Bounds}\\Convergence Bound Engine};
-    \node [b3, right=of n2] (n3) {Theoretical Bound Plot};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Multi-Task Pass@k Convergence Bounds}. Mathematical convergence bounds for pass@k across task cohorts.}
-\label{fig:r05_fig5}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Bernoulli Rewards};
-    \node [b2, right=of n1] (n2) {\textbf{Bernoulli Process Gradient Noise Variance}\\Noise Calculator};
-    \node [b3, right=of n2] (n3) {Gradient Noise Metric};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Bernoulli Process Gradient Noise Variance}. Analyzing gradient noise variance under Bernoulli reward models.}
-\label{fig:r05_fig6}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {ZVF Feedback Signal};
-    \node [b2, right=of n1] (n2) {\textbf{Closed-Loop ZVF Controller Feedback Loop}\\Optimizer Controller};
-    \node [b3, right=of n2] (n3) {Stabilized Trajectory};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Closed-Loop ZVF Controller Feedback Loop}. Theoretical closed-loop dynamics of ZVF-guided optimization.}
-\label{fig:r05_fig7}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Core Axioms};
-    \node [b2, right=of n1] (n2) {\textbf{Theoretical Proof and Derivation Dependency Map}\\Theorem Graph};
-    \node [b3, right=of n2] (n3) {Verified ZVF Theorem};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Theoretical Proof and Derivation Dependency Map}. Graph of mathematical proofs establishing ZVF properties.}
-\label{fig:r05_fig8}
-\end{figure}
-
 \end{document}

@@ -1,0 +1,30 @@
+{
+  "paper": "P9",
+  "angle": "A",
+  "pages_inspected": [
+    "page_001-01.png",
+    "page_002-02.png"
+  ],
+  "verdict": "PASS_WITH_NOTES",
+  "findings": [
+    {
+      "severity": "major",
+      "page": "page_002-02.png",
+      "issue": "Unresolved cross-reference renders as Table [?]",
+      "evidence": "In the Introduction, the phrase about the per-run auditability matrix shows a broken citation: 'matrix (Table [?])' with a literal question mark instead of a table number."
+    },
+    {
+      "severity": "minor",
+      "page": "page_002-02.png",
+      "issue": "Green rectangular border around wrapped URL path",
+      "evidence": "The anonymous.4open.science URL wraps across two lines; the second line (agentic-grpo-bench-anon-2C6B) is enclosed in a bright green box that reads as a link-annotation or highlight artifact rather than clean body text."
+    },
+    {
+      "severity": "minor",
+      "page": "page_002-02.png",
+      "issue": "Stray mark near left margin on URL continuation line",
+      "evidence": "Left of the green-boxed URL path segment there is a small lone '0' (or similar mark) between the line-number gutter and the link text, not part of the sentence flow."
+    }
+  ],
+  "summary": "Title page and abstract layout are clean: readable multi-line title, standard anonymous author block, dense but well-structured A/B/C claim-boundary abstract, and a clear three-box Figure 1 teaser with no overflow or overlap. Page 2 intro is otherwise solid, but an unresolved Table [?] reference is a major typesetting defect, with minor URL-link border and gutter-mark issues."
+}

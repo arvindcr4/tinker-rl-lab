@@ -105,6 +105,7 @@ workshop-short venue.
 
 \begin{figure}[htbp]
 \centering
+\resizebox{\linewidth}{!}{
 \begin{tikzpicture}[
     node distance=1.5cm and 1.8cm,
     block/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
@@ -126,6 +127,7 @@ workshop-short venue.
     \draw [arrow] (triage) |- (router);
     \draw [arrow] (metrics) |- (router);
 \end{tikzpicture}
+}
 \caption{\textbf{Signal Starvation Diagnostic and TRIAGE-RL Action Router Pipeline (N01).} Decomposing credit into Potential Advantage Mass ($\text{PAM}$) and Gradient Survival Ratio ($\text{GSR}$), certifying Effective Gradient Mass ($\text{EGM}$), and routing distinct failure causes.}
 \label{fig:triage_rl_pipeline}
 \end{figure}
@@ -310,6 +312,7 @@ We define
 
 \begin{figure}[htbp]
 \centering
+\resizebox{\linewidth}{!}{
 \begin{tikzpicture}[
     node distance=1.4cm and 1.8cm,
     card/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
@@ -332,6 +335,7 @@ We define
     };
     \draw [arrow, dashed] (egm) |- (cert);
 \end{tikzpicture}
+}
 \caption{\textbf{Token-Level Credit Factorization and Zero-Update Certificate (N01).} Illustrating the product decomposition $\text{EGM} = \text{PAM} \times \text{GSR}$ and the exact score-function zero-update certificate.}
 \label{fig:egm_credit_factorization}
 \end{figure}
@@ -760,9 +764,361 @@ and motivate the asymmetry; matched-budget PPO and SAO experiments must decide
 whether it improves learning.  That separation between verified evidence and
 testable proposal is the central methodological commitment of this work.
 
+% --- appendix figures (moved before bibliography for denser last page) ---
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Trajectory Batch};
+    \node [box2, right=of n1] (n2) {\textbf{Potential Advantage Mass (PAM) Distribution}\\PAM Calculator};
+    \node [box3, right=of n2] (n3) {Advantage Distribution};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Potential Advantage Mass (PAM) Distribution}. Distribution of advantage magnitudes across training trajectories.}
+\label{fig:n01_pam_distribution}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Gradient Tokens};
+    \node [box2, right=of n1] (n2) {\textbf{Gradient Survival Ratio (GSR) Vanishing Flow}\\GSR Decay Engine};
+    \node [box3, right=of n2] (n3) {Surviving Gradient Mass};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Gradient Survival Ratio (GSR) Vanishing Flow}. Mechanism of gradient signal decay under token clipping.}
+\label{fig:n01_gsr_vanishing}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Rollout Batch};
+    \node [box2, right=of n1] (n2) {\textbf{Effective Gradient Mass (EGM) State Transition}\\EGM State Evaluator};
+    \node [box3, right=of n2] (n3) {State Transition Matrix};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Effective Gradient Mass (EGM) State Transition}. Transition matrix between zero and non-zero EGM states.}
+\label{fig:n01_egm_transition}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Failed Trajectory};
+    \node [box2, right=of n1] (n2) {\textbf{TRIAGE-RL Action Router 5-Way Classification}\\5-Way Cause Classifier};
+    \node [box3, right=of n2] (n3) {Assigned Action Route};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{TRIAGE-RL Action Router 5-Way Classification}. Classifying rollout failures into five distinct causal categories.}
+\label{fig:n01_triage_classification}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Diagnostic Telemetry};
+    \node [box2, right=of n1] (n2) {\textbf{Critic Lag vs Transport Error Diagnostic Seams}\\Seam Diagnostic Module};
+    \node [box3, right=of n2] (n3) {Pinpointed Error Cause};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Critic Lag vs Transport Error Diagnostic Seams}. Distinguishing critic estimation lag from data transport bottlenecks.}
+\label{fig:n01_critic_transport}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Trajectory Buffer};
+    \node [box2, right=of n1] (n2) {\textbf{Stale Rollout Refresh vs Standard Policy Update}\\Staleness Checker};
+    \node [box3, right=of n2] (n3) {Refresh vs Update Action};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Stale Rollout Refresh vs Standard Policy Update}. Branching logic for refreshing stale trajectory buffers.}
+\label{fig:n01_stale_refresh}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Rollout Rewards};
+    \node [box2, right=of n1] (n2) {\textbf{Zero-Variance Fraction (ZVF) Diagnostic Pipeline}\\ZVF Metric Calculator};
+    \node [box3, right=of n2] (n3) {Zero-Variance Ratio};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Zero-Variance Fraction (ZVF) Diagnostic Pipeline}. Real-time calculation of zero-variance rollout fraction.}
+\label{fig:n01_zvf_pipeline}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Training Arms Grid};
+    \node [box2, right=of n1] (n2) {\textbf{Multi-Arm Controlled Exploration Protocol}\\Exploration Scheduler};
+    \node [box3, right=of n2] (n3) {Optimized Training Policy};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Multi-Arm Controlled Exploration Protocol}. Controlled exploration protocol across multiple training arms.}
+\label{fig:n01_multiarm_exploration}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Trajectory Batch};
+    \node [b2, right=of n1] (n2) {\textbf{Potential Advantage Mass Distribution}\\PAM Calculator};
+    \node [b3, right=of n2] (n3) {Advantage Distribution};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Potential Advantage Mass Distribution}. Distribution of advantage magnitudes across training trajectories.}
+\label{fig:n01_fig1}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Gradient Tokens};
+    \node [b2, right=of n1] (n2) {\textbf{Gradient Survival Ratio Vanishing Flow}\\GSR Decay Engine};
+    \node [b3, right=of n2] (n3) {Surviving Gradient Mass};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Gradient Survival Ratio Vanishing Flow}. Mechanism of gradient signal decay under token clipping.}
+\label{fig:n01_fig2}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Rollout Batch};
+    \node [b2, right=of n1] (n2) {\textbf{Effective Gradient Mass State Transition}\\EGM State Evaluator};
+    \node [b3, right=of n2] (n3) {State Transition Matrix};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Effective Gradient Mass State Transition}. Transition matrix between zero and non-zero EGM states.}
+\label{fig:n01_fig3}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Failed Trajectory};
+    \node [b2, right=of n1] (n2) {\textbf{TRIAGE-RL Action Router Classification}\\5-Way Cause Classifier};
+    \node [b3, right=of n2] (n3) {Assigned Action Route};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{TRIAGE-RL Action Router Classification}. Classifying rollout failures into five distinct causal categories.}
+\label{fig:n01_fig4}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Diagnostic Telemetry};
+    \node [b2, right=of n1] (n2) {\textbf{Critic Lag vs Transport Error Diagnostic Seams}\\Seam Diagnostic Module};
+    \node [b3, right=of n2] (n3) {Pinpointed Error Cause};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Critic Lag vs Transport Error Diagnostic Seams}. Distinguishing critic estimation lag from data transport bottlenecks.}
+\label{fig:n01_fig5}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Trajectory Buffer};
+    \node [b2, right=of n1] (n2) {\textbf{Stale Rollout Refresh vs Standard Policy Update}\\Staleness Checker};
+    \node [b3, right=of n2] (n3) {Refresh vs Update Action};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Stale Rollout Refresh vs Standard Policy Update}. Branching logic for refreshing stale trajectory buffers.}
+\label{fig:n01_fig6}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Rollout Rewards};
+    \node [b2, right=of n1] (n2) {\textbf{Zero-Variance Fraction Diagnostic Pipeline}\\ZVF Metric Calculator};
+    \node [b3, right=of n2] (n3) {Zero-Variance Ratio};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Zero-Variance Fraction Diagnostic Pipeline}. Real-time calculation of zero-variance rollout fraction.}
+\label{fig:n01_fig7}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Training Arms Grid};
+    \node [b2, right=of n1] (n2) {\textbf{Multi-Arm Controlled Exploration Protocol}\\Exploration Scheduler};
+    \node [b3, right=of n2] (n3) {Optimized Training Policy};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Multi-Arm Controlled Exploration Protocol}. Controlled exploration protocol across multiple training arms.}
+\label{fig:n01_fig8}
+\end{figure}
+
 \bibliographystyle{plainnat}
 \bibliography{references}
-
 \appendix
 
 \section{Proofs and Derivations}
@@ -882,650 +1238,74 @@ than through an appealing retrospective decomposition.
 
 
 
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [box1] (n1) {Trajectory Batch};
-    \node [box2, right=of n1] (n2) {\textbf{Potential Advantage Mass (PAM) Distribution}\\PAM Calculator};
-    \node [box3, right=of n2] (n3) {Advantage Distribution};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Potential Advantage Mass (PAM) Distribution}. Distribution of advantage magnitudes across training trajectories.}
-\label{fig:n01_pam_distribution}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [box1] (n1) {Gradient Tokens};
-    \node [box2, right=of n1] (n2) {\textbf{Gradient Survival Ratio (GSR) Vanishing Flow}\\GSR Decay Engine};
-    \node [box3, right=of n2] (n3) {Surviving Gradient Mass};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Gradient Survival Ratio (GSR) Vanishing Flow}. Mechanism of gradient signal decay under token clipping.}
-\label{fig:n01_gsr_vanishing}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [box1] (n1) {Rollout Batch};
-    \node [box2, right=of n1] (n2) {\textbf{Effective Gradient Mass (EGM) State Transition}\\EGM State Evaluator};
-    \node [box3, right=of n2] (n3) {State Transition Matrix};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Effective Gradient Mass (EGM) State Transition}. Transition matrix between zero and non-zero EGM states.}
-\label{fig:n01_egm_transition}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [box1] (n1) {Failed Trajectory};
-    \node [box2, right=of n1] (n2) {\textbf{TRIAGE-RL Action Router 5-Way Classification}\\5-Way Cause Classifier};
-    \node [box3, right=of n2] (n3) {Assigned Action Route};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{TRIAGE-RL Action Router 5-Way Classification}. Classifying rollout failures into five distinct causal categories.}
-\label{fig:n01_triage_classification}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [box1] (n1) {Diagnostic Telemetry};
-    \node [box2, right=of n1] (n2) {\textbf{Critic Lag vs Transport Error Diagnostic Seams}\\Seam Diagnostic Module};
-    \node [box3, right=of n2] (n3) {Pinpointed Error Cause};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Critic Lag vs Transport Error Diagnostic Seams}. Distinguishing critic estimation lag from data transport bottlenecks.}
-\label{fig:n01_critic_transport}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [box1] (n1) {Trajectory Buffer};
-    \node [box2, right=of n1] (n2) {\textbf{Stale Rollout Refresh vs Standard Policy Update}\\Staleness Checker};
-    \node [box3, right=of n2] (n3) {Refresh vs Update Action};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Stale Rollout Refresh vs Standard Policy Update}. Branching logic for refreshing stale trajectory buffers.}
-\label{fig:n01_stale_refresh}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [box1] (n1) {Rollout Rewards};
-    \node [box2, right=of n1] (n2) {\textbf{Zero-Variance Fraction (ZVF) Diagnostic Pipeline}\\ZVF Metric Calculator};
-    \node [box3, right=of n2] (n3) {Zero-Variance Ratio};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Zero-Variance Fraction (ZVF) Diagnostic Pipeline}. Real-time calculation of zero-variance rollout fraction.}
-\label{fig:n01_zvf_pipeline}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [box1] (n1) {Training Arms Grid};
-    \node [box2, right=of n1] (n2) {\textbf{Multi-Arm Controlled Exploration Protocol}\\Exploration Scheduler};
-    \node [box3, right=of n2] (n3) {Optimized Training Policy};
-
-    \draw [arrow] (n1) -- (n2);
-    \draw [arrow] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Multi-Arm Controlled Exploration Protocol}. Controlled exploration protocol across multiple training arms.}
-\label{fig:n01_multiarm_exploration}
-\end{figure}
-
-
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Trajectory Batch};
-    \node [b2, right=of n1] (n2) {\textbf{Potential Advantage Mass Distribution}\\PAM Calculator};
-    \node [b3, right=of n2] (n3) {Advantage Distribution};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Potential Advantage Mass Distribution}. Distribution of advantage magnitudes across training trajectories.}
-\label{fig:n01_fig1}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Gradient Tokens};
-    \node [b2, right=of n1] (n2) {\textbf{Gradient Survival Ratio Vanishing Flow}\\GSR Decay Engine};
-    \node [b3, right=of n2] (n3) {Surviving Gradient Mass};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Gradient Survival Ratio Vanishing Flow}. Mechanism of gradient signal decay under token clipping.}
-\label{fig:n01_fig2}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Rollout Batch};
-    \node [b2, right=of n1] (n2) {\textbf{Effective Gradient Mass State Transition}\\EGM State Evaluator};
-    \node [b3, right=of n2] (n3) {State Transition Matrix};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Effective Gradient Mass State Transition}. Transition matrix between zero and non-zero EGM states.}
-\label{fig:n01_fig3}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Failed Trajectory};
-    \node [b2, right=of n1] (n2) {\textbf{TRIAGE-RL Action Router Classification}\\5-Way Cause Classifier};
-    \node [b3, right=of n2] (n3) {Assigned Action Route};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{TRIAGE-RL Action Router Classification}. Classifying rollout failures into five distinct causal categories.}
-\label{fig:n01_fig4}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Diagnostic Telemetry};
-    \node [b2, right=of n1] (n2) {\textbf{Critic Lag vs Transport Error Diagnostic Seams}\\Seam Diagnostic Module};
-    \node [b3, right=of n2] (n3) {Pinpointed Error Cause};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Critic Lag vs Transport Error Diagnostic Seams}. Distinguishing critic estimation lag from data transport bottlenecks.}
-\label{fig:n01_fig5}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Trajectory Buffer};
-    \node [b2, right=of n1] (n2) {\textbf{Stale Rollout Refresh vs Standard Policy Update}\\Staleness Checker};
-    \node [b3, right=of n2] (n3) {Refresh vs Update Action};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Stale Rollout Refresh vs Standard Policy Update}. Branching logic for refreshing stale trajectory buffers.}
-\label{fig:n01_fig6}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Rollout Rewards};
-    \node [b2, right=of n1] (n2) {\textbf{Zero-Variance Fraction Diagnostic Pipeline}\\ZVF Metric Calculator};
-    \node [b3, right=of n2] (n3) {Zero-Variance Ratio};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Zero-Variance Fraction Diagnostic Pipeline}. Real-time calculation of zero-variance rollout fraction.}
-\label{fig:n01_fig7}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Training Arms Grid};
-    \node [b2, right=of n1] (n2) {\textbf{Multi-Arm Controlled Exploration Protocol}\\Exploration Scheduler};
-    \node [b3, right=of n2] (n3) {Optimized Training Policy};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Multi-Arm Controlled Exploration Protocol}. Controlled exploration protocol across multiple training arms.}
-\label{fig:n01_fig8}
-\end{figure}
-
-
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Trajectory Batch};
-    \node [b2, right=of n1] (n2) {\textbf{Potential Advantage Mass Distribution}\\PAM Calculator};
-    \node [b3, right=of n2] (n3) {Advantage Distribution};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Potential Advantage Mass Distribution}. Distribution of advantage magnitudes across training trajectories.}
-\label{fig:n01_fig1}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Gradient Tokens};
-    \node [b2, right=of n1] (n2) {\textbf{Gradient Survival Ratio Vanishing Flow}\\GSR Decay Engine};
-    \node [b3, right=of n2] (n3) {Surviving Gradient Mass};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Gradient Survival Ratio Vanishing Flow}. Mechanism of gradient signal decay under token clipping.}
-\label{fig:n01_fig2}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Rollout Batch};
-    \node [b2, right=of n1] (n2) {\textbf{Effective Gradient Mass State Transition}\\EGM State Evaluator};
-    \node [b3, right=of n2] (n3) {State Transition Matrix};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Effective Gradient Mass State Transition}. Transition matrix between zero and non-zero EGM states.}
-\label{fig:n01_fig3}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Failed Trajectory};
-    \node [b2, right=of n1] (n2) {\textbf{TRIAGE-RL Action Router Classification}\\5-Way Cause Classifier};
-    \node [b3, right=of n2] (n3) {Assigned Action Route};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{TRIAGE-RL Action Router Classification}. Classifying rollout failures into five distinct causal categories.}
-\label{fig:n01_fig4}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Diagnostic Telemetry};
-    \node [b2, right=of n1] (n2) {\textbf{Critic Lag vs Transport Error Diagnostic Seams}\\Seam Diagnostic Module};
-    \node [b3, right=of n2] (n3) {Pinpointed Error Cause};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Critic Lag vs Transport Error Diagnostic Seams}. Distinguishing critic estimation lag from data transport bottlenecks.}
-\label{fig:n01_fig5}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Trajectory Buffer};
-    \node [b2, right=of n1] (n2) {\textbf{Stale Rollout Refresh vs Standard Policy Update}\\Staleness Checker};
-    \node [b3, right=of n2] (n3) {Refresh vs Update Action};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Stale Rollout Refresh vs Standard Policy Update}. Branching logic for refreshing stale trajectory buffers.}
-\label{fig:n01_fig6}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Rollout Rewards};
-    \node [b2, right=of n1] (n2) {\textbf{Zero-Variance Fraction Diagnostic Pipeline}\\ZVF Metric Calculator};
-    \node [b3, right=of n2] (n3) {Zero-Variance Ratio};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Zero-Variance Fraction Diagnostic Pipeline}. Real-time calculation of zero-variance rollout fraction.}
-\label{fig:n01_fig7}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Training Arms Grid};
-    \node [b2, right=of n1] (n2) {\textbf{Multi-Arm Controlled Exploration Protocol}\\Exploration Scheduler};
-    \node [b3, right=of n2] (n3) {Optimized Training Policy};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Multi-Arm Controlled Exploration Protocol}. Controlled exploration protocol across multiple training arms.}
-\label{fig:n01_fig8}
-\end{figure}
-
-
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Trajectory Batch};
-    \node [b2, right=of n1] (n2) {\textbf{Potential Advantage Mass Distribution}\\PAM Calculator};
-    \node [b3, right=of n2] (n3) {Advantage Distribution};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Potential Advantage Mass Distribution}. Distribution of advantage magnitudes across training trajectories.}
-\label{fig:n01_fig1}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Gradient Tokens};
-    \node [b2, right=of n1] (n2) {\textbf{Gradient Survival Ratio Vanishing Flow}\\GSR Decay Engine};
-    \node [b3, right=of n2] (n3) {Surviving Gradient Mass};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Gradient Survival Ratio Vanishing Flow}. Mechanism of gradient signal decay under token clipping.}
-\label{fig:n01_fig2}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Rollout Batch};
-    \node [b2, right=of n1] (n2) {\textbf{Effective Gradient Mass State Transition}\\EGM State Evaluator};
-    \node [b3, right=of n2] (n3) {State Transition Matrix};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Effective Gradient Mass State Transition}. Transition matrix between zero and non-zero EGM states.}
-\label{fig:n01_fig3}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Failed Trajectory};
-    \node [b2, right=of n1] (n2) {\textbf{TRIAGE-RL Action Router Classification}\\5-Way Cause Classifier};
-    \node [b3, right=of n2] (n3) {Assigned Action Route};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{TRIAGE-RL Action Router Classification}. Classifying rollout failures into five distinct causal categories.}
-\label{fig:n01_fig4}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Diagnostic Telemetry};
-    \node [b2, right=of n1] (n2) {\textbf{Critic Lag vs Transport Error Diagnostic Seams}\\Seam Diagnostic Module};
-    \node [b3, right=of n2] (n3) {Pinpointed Error Cause};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Critic Lag vs Transport Error Diagnostic Seams}. Distinguishing critic estimation lag from data transport bottlenecks.}
-\label{fig:n01_fig5}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Trajectory Buffer};
-    \node [b2, right=of n1] (n2) {\textbf{Stale Rollout Refresh vs Standard Policy Update}\\Staleness Checker};
-    \node [b3, right=of n2] (n3) {Refresh vs Update Action};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Stale Rollout Refresh vs Standard Policy Update}. Branching logic for refreshing stale trajectory buffers.}
-\label{fig:n01_fig6}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Rollout Rewards};
-    \node [b2, right=of n1] (n2) {\textbf{Zero-Variance Fraction Diagnostic Pipeline}\\ZVF Metric Calculator};
-    \node [b3, right=of n2] (n3) {Zero-Variance Ratio};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Zero-Variance Fraction Diagnostic Pipeline}. Real-time calculation of zero-variance rollout fraction.}
-\label{fig:n01_fig7}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Training Arms Grid};
-    \node [b2, right=of n1] (n2) {\textbf{Multi-Arm Controlled Exploration Protocol}\\Exploration Scheduler};
-    \node [b3, right=of n2] (n3) {Optimized Training Policy};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-\caption{\textbf{Multi-Arm Controlled Exploration Protocol}. Controlled exploration protocol across multiple training arms.}
-\label{fig:n01_fig8}
-\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \end{document}

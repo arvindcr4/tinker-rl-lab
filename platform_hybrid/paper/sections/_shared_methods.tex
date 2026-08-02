@@ -3,13 +3,14 @@
 \label{sec:benchmark}
 % =============================================================================
 
-% Figure 2: Library Taxonomy
+% Task-coverage taxonomy (graphic is a task tree, not a library tree)
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\textwidth]{tikz/taxonomy.pdf}
-\caption{Taxonomy of RL libraries in \ours{}. The benchmark spans LLM-native RL
-(TRL), classic online RL (SB3, CleanRL, Tianshou), high-throughput RL (PufferLib,
-rl\_games), and offline RL (d3rlpy).}
+\caption{Task-coverage taxonomy of \ours{}. The benchmark organises tasks into
+mathematical reasoning (GSM8K; complete), tool use / function calling
+(partial), and code generation (HumanEval; partial). Library coverage is
+listed separately in Table~\ref{tab:implementations}.}
 \label{fig:taxonomy}
 \end{figure}
 

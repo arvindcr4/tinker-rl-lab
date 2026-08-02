@@ -1,10 +1,11 @@
-# Per-Pillar Standalone Papers (P1–P8)
+# Active manuscript roster (P1-P12)
 
-## Program-wide consistency revision — 18 documents (2026-07-14)
+## Canonical publication queue — 12 active, 6 absorbed (2026-08-02)
 
-The repository now contains 17 existing manuscripts plus the new synthesis
-`unified_signal_starvation/main.tex`. They are **not 18 independent evidence
-sources**: venue variants and the long compendium reuse runs, tables, and prose.
+The repository's publication queue contains 12 active roots. The earlier
+18-file review snapshot remains useful as history, but six of those roots are
+now absorbed into a parent paper or the thesis. They are not extra evidence or
+extra submission vehicles.
 The canonical evidence hierarchy remains thesis-first:
 
 1. Per-step ZVF is a mechanical diagnostic of contrastive group yield. For
@@ -36,34 +37,34 @@ Canonical document roster (**active independent set only — 12**):
 
 | ID | Source | Role after revision |
 |---|---|---|
-| P01 | `paper_P1_scaling.tex` | limits/identifiability audit, not a positive scaling law; workshop-short claim boundary fences multi-seed as non-claim |
-| P02 | `paper_P2_zvf.tex` | descriptive ZVF diagnostic and exact accounting (former R02 retired into archive) |
-| P03 | `paper_P3_group_size.tex` | measured bounds plus explicitly reconstructed hypotheses |
-| P04 | `paper_P4_length_bias.tex` | bounded null under a 200-token cap |
-| P05 | `paper_P5_minreport.tex` | canonical eight-item reporting standard (former R06 retired into archive) |
-| P06 | `paper_P6_registry.tex` | canonical seven-field registry; position-artifact (former R07 retired into archive) |
-| P07 | `paper_P7_zvf_controller.tex` | retrospective audit + prospective test plan only; adaptive G not promoted |
-| R03 | `neurips_2026_variants/main_workshop.tex` | exploratory artifact note |
-| R04 | `neurips_2026_variants/main_dnb.tex` | tiered artifact paper; ZVF is bench instrumentation; former R01/U01 packaging absorbed |
-| R05 | `zvf-program/theory/zvf_theory.tex` | calibration and reliability proof sketches; no adaptive set-point |
-| R08 | `zvf-program/audit/reproducibility_audit.tex` | completed 40-unit single-stack survival audit; open-stack generalization remains gated |
-| N01 | `unified_signal_starvation/main.tex` | GRPO-grounded diagnostic + PPO/SAO evaluation contract; PPO/SAO outcomes non-claims |
+| P1 | `paper_P1_scaling.tex` | limits/identifiability audit, not a positive scaling law |
+| P2 | `paper_P2_zvf.tex` | descriptive ZVF diagnostic and exact accounting; absorbs former R02 |
+| P3 | `paper_P3_group_size.tex` | measured bounds plus explicitly reconstructed hypotheses |
+| P4 | `paper_P4_length_bias.tex` | bounded null under a 200-token cap |
+| P5 | `paper_P5_minreport.tex` | canonical eight-item reporting standard; absorbs former R06 |
+| P6 | `paper_P6_registry.tex` | canonical seven-field registry; absorbs former R07 |
+| P7 | `paper_P7_zvf_controller.tex` | retrospective audit and prospective test plan only |
+| P8 | `neurips_2026_variants/paper_P8_workshop.tex` | exploratory workshop/artifact note; former R03 |
+| P9 | `neurips_2026_variants/paper_P9_dnb.tex` | tiered artifact paper; absorbs former R01 and U01 packaging |
+| P10 | `../../zvf-program/theory/paper_P10_zvf_theory.tex` | calibration and reliability proof sketches; former R05 |
+| P11 | `../../zvf-program/audit/paper_P11_reproducibility_audit.tex` | bounded 40-unit single-stack audit; former R08 |
+| P12 | `unified_signal_starvation/paper_P12_signal_starvation.tex` | GRPO diagnostic plus PPO/SAO evaluation contract; former N01 |
 
 ### Absorption map — independent versions **removed from live paths**
 
-Former independent roots R01, R02, R06, R07, U01, and P08 are **no longer live
+Former independent roots R01, R02, R06, R07, U01, and P08_fraud are **no longer live
 manuscript paths**. They live only under `archive/absorbed/` for history:
 
 | Former ID | Parent | Archive folder |
 |---|---|---|
-| R02 | **P02** | `archive/absorbed/R02_main_zvf/` |
-| R06 | **P05** | `archive/absorbed/R06_min_report/` |
-| R07 | **P06** | `archive/absorbed/R07_grpo_registry/` |
-| R01 | **R04** | `archive/absorbed/R01_acm/` |
-| U01 | **thesis + R04** | `archive/absorbed/U01_main_compendium/` |
-| P08 | **thesis** | `archive/absorbed/P08_fraud/` |
+| R02 | **P2** | `archive/absorbed/R02_main_zvf/` |
+| R06 | **P5** | `archive/absorbed/R06_min_report/` |
+| R07 | **P6** | `archive/absorbed/R07_grpo_registry/` |
+| R01 | **P9** | `archive/absorbed/R01_acm/` |
+| U01 | **thesis + P9** | `archive/absorbed/U01_main_compendium/` |
+| P08_fraud | **thesis** | `archive/absorbed/P08_fraud/` |
 
-**Independent venue-candidate set: 12** (P01–P07, R03, R04, R05, R08, N01).  
+**Independent venue-candidate set: 12** (P1-P12).  
 Do not count archived IDs as separate papers.  
 Machine-checked in `platform_hybrid/paper/scripts/publication_worthiness_check.py`
 (`ACTIVE_ROSTER` / `ABSORBED_ARCHIVED`).

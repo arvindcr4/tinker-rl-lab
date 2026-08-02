@@ -1,0 +1,11 @@
+{
+  "paper": "P7",
+  "angle": "A",
+  "pages_inspected": [
+    "page_001-01.png",
+    "page_002-02.png"
+  ],
+  "verdict": "PASS",
+  "findings": [],
+  "summary": "Title page and abstract/intro render cleanly: readable two-line title, balanced two-column author block, intact math (ZVF, hats, subscripts), and a clear bold venue claim-boundary paragraph. Dense abstract and intro body stay within margins with no overflow, overlap, blank-region, or font/encoding defects; no teaser figure present."
+}

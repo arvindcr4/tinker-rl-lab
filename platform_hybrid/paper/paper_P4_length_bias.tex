@@ -39,17 +39,16 @@
 \input{sections/length_bias_react_shaping}
 \input{sections/frontier_synthesis_length_bias}
 \input{sections/p4_conclusion}
-\bibliographystyle{plainnat}
-\bibliography{references}
 
-
+% --- appendix figures (moved before bibliography for denser last page) ---
 \begin{figure}[htbp]
 \centering
+\resizebox{\linewidth}{!}{
 \begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
     arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
 ]
     \node [b1] (n1) {Generated Tokens};
@@ -59,17 +58,19 @@
     \draw [arr] (n1) -- (n2);
     \draw [arr] (n2) -- (n3);
 \end{tikzpicture}
+}
 \caption{\textbf{Token Cap Boundary Fence}. Enforcing 200-token completion cap.}
 \label{fig:p04_f1}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
+\resizebox{\linewidth}{!}{
 \begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
     arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
 ]
     \node [b1] (n1) {Completion Length};
@@ -79,17 +80,19 @@
     \draw [arr] (n1) -- (n2);
     \draw [arr] (n2) -- (n3);
 \end{tikzpicture}
+}
 \caption{\textbf{Length-Controlled Null Model}. Testing length bias under controlled conditions.}
 \label{fig:p04_f2}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
+\resizebox{\linewidth}{!}{
 \begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
     arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
 ]
     \node [b1] (n1) {Length vs Reward};
@@ -99,17 +102,19 @@
     \draw [arr] (n1) -- (n2);
     \draw [arr] (n2) -- (n3);
 \end{tikzpicture}
+}
 \caption{\textbf{Reward-Length Correlation Surface}. Correlation between sequence length and reward.}
 \label{fig:p04_f3}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
+\resizebox{\linewidth}{!}{
 \begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
     arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
 ]
     \node [b1] (n1) {Token Loss};
@@ -119,17 +124,19 @@
     \draw [arr] (n1) -- (n2);
     \draw [arr] (n2) -- (n3);
 \end{tikzpicture}
+}
 \caption{\textbf{Length Normalization Ablation Pipeline}. Ablating length normalization mechanisms.}
 \label{fig:p04_f4}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
+\resizebox{\linewidth}{!}{
 \begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
     arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
 ]
     \node [b1] (n1) {Penalty Alpha};
@@ -139,17 +146,19 @@
     \draw [arr] (n1) -- (n2);
     \draw [arr] (n2) -- (n3);
 \end{tikzpicture}
+}
 \caption{\textbf{Verbosity Penalty Tradeoff}. Evaluating verbosity penalty hyperparameter.}
 \label{fig:p04_f5}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
+\resizebox{\linewidth}{!}{
 \begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
     arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
 ]
     \node [b1] (n1) {Output Tokens};
@@ -159,17 +168,19 @@
     \draw [arr] (n1) -- (n2);
     \draw [arr] (n2) -- (n3);
 \end{tikzpicture}
+}
 \caption{\textbf{Sequence Length Histogram Profiler}. Profiling sequence length distributions.}
 \label{fig:p04_f6}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
+\resizebox{\linewidth}{!}{
 \begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
     arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
 ]
     \node [b1] (n1) {Token Budget};
@@ -179,17 +190,19 @@
     \draw [arr] (n1) -- (n2);
     \draw [arr] (n2) -- (n3);
 \end{tikzpicture}
+}
 \caption{\textbf{Token-Budget Constrained Pass@k}. Pass@k calculation under strict token budgets.}
 \label{fig:p04_f7}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
+\resizebox{\linewidth}{!}{
 \begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
     arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
 ]
     \node [b1] (n1) {Training Steps};
@@ -199,17 +212,19 @@
     \draw [arr] (n1) -- (n2);
     \draw [arr] (n2) -- (n3);
 \end{tikzpicture}
+}
 \caption{\textbf{Autoregressive Length Growth Rate}. Tracking token length growth across training steps.}
 \label{fig:p04_f8}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
+\resizebox{\linewidth}{!}{
 \begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
     arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
 ]
     \node [b1] (n1) {Reward Factors};
@@ -219,17 +234,19 @@
     \draw [arr] (n1) -- (n2);
     \draw [arr] (n2) -- (n3);
 \end{tikzpicture}
+}
 \caption{\textbf{Length-Biased Reward Component Auditor}. Auditing individual reward components for implicit length bias.}
 \label{fig:p04_f9}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
+\resizebox{\linewidth}{!}{
 \begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    node distance=0.9cm and 1.0cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
     arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
 ]
     \node [b1] (n1) {Policy Generator};
@@ -239,8 +256,11 @@
     \draw [arr] (n1) -- (n2);
     \draw [arr] (n2) -- (n3);
 \end{tikzpicture}
+}
 \caption{\textbf{Unified Length Bias Mitigation Architecture}. Comprehensive pipeline for controlling length bias in RL.}
 \label{fig:p04_f10}
 \end{figure}
 
+\bibliographystyle{plainnat}
+\bibliography{references}
 \end{document}

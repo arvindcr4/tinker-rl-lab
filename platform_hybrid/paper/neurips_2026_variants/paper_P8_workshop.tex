@@ -798,4 +798,50 @@ ecosystem.
 \label{fig:r03_fig8}
 \end{figure}
 
+
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Control Task Cohort};
+    \node [b2, right=of n1] (n2) {\textbf{Held-Out Control Task Evaluation Pipeline}\\Evaluation Harness};
+    \node [b3, right=of n2] (n3) {Held-Out Pass@k Score};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Held-Out Control Task Evaluation Pipeline}. Evaluating generalization on non-training control tasks.}
+\label{fig:p08_new1}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [b1] (n1) {Submission Artifacts};
+    \node [b2, right=of n1] (n2) {\textbf{Workshop Reproducibility Checklist and Flow}\\Checklist Auditor};
+    \node [b3, right=of n2] (n3) {Verified Benchmark Badge};
+
+    \draw [arr] (n1) -- (n2);
+    \draw [arr] (n2) -- (n3);
+\end{tikzpicture}
+}
+\caption{\textbf{Workshop Reproducibility Checklist and Flow}. Verifying compliance with workshop reproducibility standards.}
+\label{fig:p08_new2}
+\end{figure}
+
 \end{document}

@@ -1,0 +1,18 @@
+{
+  "paper": "P11",
+  "angle": "A",
+  "pages_inspected": [
+    "page_001-01.png",
+    "page_002-02.png"
+  ],
+  "verdict": "FAIL",
+  "findings": [
+    {
+      "severity": "major",
+      "page": "page_001-01.png",
+      "issue": "Unresolved citation placeholders visible as literal [? ] / [? ? ] in abstract and introduction",
+      "evidence": "Abstract and intro body show multiple empty cite tokens: 'documented flip lever [? ]', 'reward parser [? ? ]', 'Min-Report-RL position paper [? ]', and 'GRPO-Registry catalog [? ]' — bibliography keys did not resolve in the rendered PDF."
+    }
+  ],
+  "summary": "Title, author block, abstract density, margins, and intro claim-boundary layout on pp.1–2 are clean; Figure 1–2 teasers on p.2 are readable with no overflow or overlap. FAIL solely due to multiple unresolved [? ] citation placeholders on the title/abstract/intro page."
+}

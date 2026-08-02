@@ -1,0 +1,158 @@
+{
+  "agents": 24,
+  "papers": 12,
+  "findings_files": 24,
+  "per_paper": {
+    "P1": "PASS",
+    "P2": "PASS_WITH_NOTES",
+    "P3": "PASS_WITH_NOTES",
+    "P4": "FAIL",
+    "P5": "PASS",
+    "P6": "PASS_WITH_NOTES",
+    "P7": "PASS",
+    "P8": "PASS",
+    "P9": "PASS_WITH_NOTES",
+    "P10": "FAIL",
+    "P11": "FAIL",
+    "P12": "PASS_WITH_NOTES"
+  },
+  "counts": {
+    "PASS": 4,
+    "PASS_WITH_NOTES": 5,
+    "FAIL": 3
+  },
+  "findings": [
+    {
+      "paper": "P10",
+      "angle": "B",
+      "severity": "major",
+      "page": "page_015-15.png",
+      "issue": "Figure 24 rightmost node text truncated",
+      "evidence": "Green output box of Figure 24 reads 'Verified ZVF Theo' with the label cut off at the right edge of the node; full wording is not visible."
+    },
+    {
+      "paper": "P10",
+      "angle": "B",
+      "severity": "minor",
+      "page": "page_015-15.png",
+      "issue": "Sparse last page",
+      "evidence": "Page 15 holds five small three-box flowcharts (Figs 20\u201324) stacked with large vertical whitespace; layout is sparse for a final page though captions and margins are fine."
+    },
+    {
+      "paper": "P11",
+      "angle": "A",
+      "severity": "major",
+      "page": "page_001-01.png",
+      "issue": "Unresolved citation placeholders visible as literal [? ] / [? ? ] in abstract and introduction",
+      "evidence": "Abstract and intro body show multiple empty cite tokens: 'documented flip lever [? ]', 'reward parser [? ? ]', 'Min-Report-RL position paper [? ]', and 'GRPO-Registry catalog [? ]' \u2014 bibliography keys"
+    },
+    {
+      "paper": "P11",
+      "angle": "B",
+      "severity": "major",
+      "page": "11",
+      "issue": "Right-side flowchart nodes systematically clipped at page margin",
+      "evidence": "Figures 21\u201326 are three-box horizontal pipelines; the rightmost (green) boxes are cut off mid-text: Fig 21 ends at '95% Confidence I', Fig 22 at 'Disappears Ver', Fig 23 at 'Inconclusiv', Fig 24 at 'I"
+    },
+    {
+      "paper": "P11",
+      "angle": "B",
+      "severity": "minor",
+      "page": "11",
+      "issue": "Figure 20 right node may be tight or lightly clipped at margin",
+      "evidence": "Top pipeline ends with a green box 'Clean Telemetry Logs' that sits at the right margin; less clearly truncated than Figs 21\u201326 but aligned with the same overflow pattern."
+    },
+    {
+      "paper": "P12",
+      "angle": "B",
+      "severity": "minor",
+      "page": "16",
+      "issue": "Sparse last page: only two small flowcharts with large empty regions",
+      "evidence": "Page 16 contains only Figure 33 (Zero-Variance Fraction Diagnostic Pipeline) near the upper mid area and Figure 34 (Multi-Arm Controlled Exploration Protocol) lower mid, each a simple three-box flowch"
+    },
+    {
+      "paper": "P2",
+      "angle": "B",
+      "severity": "minor",
+      "page": "23",
+      "issue": "Truncated or incomplete running header at top of page",
+      "evidence": "A faint partial line of text is visible above Figure 11 (appears cut off mid-phrase, e.g. ending in 'that is'); content is incomplete and low-contrast relative to body text."
+    },
+    {
+      "paper": "P3",
+      "angle": "B",
+      "severity": "minor",
+      "page": "26",
+      "issue": "Duplicate identical figures on last page",
+      "evidence": "Figure 11 and Figure 13 are visually identical flowcharts (Group G=2 \u2192 GRPO to DPO Bridge / Preference Margin \u2192 DPO Limit) with the same caption text aside from the figure number; two copies of the sa"
+    },
+    {
+      "paper": "P4",
+      "angle": "A",
+      "severity": "major",
+      "page": "page_002-02.png",
+      "issue": "Figure 1 caption does not match the diagram content (teaser quality)",
+      "evidence": "Caption reads 'Taxonomy of RL libraries in TINKERRL-BENCH' and lists libraries (TRL, SB3, CleanRL, Tianshou, PufferLib, rl_games, d3rlpy), but the figure shows a task/domain tree: TinkerRL Benchmark \u2192"
+    },
+    {
+      "paper": "P4",
+      "angle": "A",
+      "severity": "minor",
+      "page": "page_002-02.png",
+      "issue": "Figure 1 legend is faint and hard to read",
+      "evidence": "The status legend under the diagram (Complete / In progress / Planned with symbols) is rendered in very light gray and is barely legible against the white background."
+    },
+    {
+      "paper": "P6",
+      "angle": "B",
+      "severity": "minor",
+      "page": "64",
+      "issue": "Sparse last page",
+      "evidence": "Page 64 contains only a single bibliography entry ([25] GSPO/arXiv:2507.18071) near the top, with the rest of the page almost entirely blank white space and page number 64 at the bottom center."
+    },
+    {
+      "paper": "P6",
+      "angle": "B",
+      "severity": "minor",
+      "page": "32",
+      "issue": "Side note cramped against table right margin",
+      "evidence": "A short note ('Note: adaptiveg's measured rows use a different panel\u2026') sits flush to the right of Table 21's body and wraps under the table; placement is readable but tight relative to the table grid"
+    },
+    {
+      "paper": "P9",
+      "angle": "A",
+      "severity": "major",
+      "page": "page_002-02.png",
+      "issue": "Unresolved cross-reference renders as Table [?]",
+      "evidence": "In the Introduction, the phrase about the per-run auditability matrix shows a broken citation: 'matrix (Table [?])' with a literal question mark instead of a table number."
+    },
+    {
+      "paper": "P9",
+      "angle": "A",
+      "severity": "minor",
+      "page": "page_002-02.png",
+      "issue": "Green rectangular border around wrapped URL path",
+      "evidence": "The anonymous.4open.science URL wraps across two lines; the second line (agentic-grpo-bench-anon-2C6B) is enclosed in a bright green box that reads as a link-annotation or highlight artifact rather th"
+    },
+    {
+      "paper": "P9",
+      "angle": "A",
+      "severity": "minor",
+      "page": "page_002-02.png",
+      "issue": "Stray mark near left margin on URL continuation line",
+      "evidence": "Left of the green-boxed URL path segment there is a small lone '0' (or similar mark) between the line-number gutter and the link text, not part of the sentence flow."
+    },
+    {
+      "paper": "P9",
+      "angle": "B",
+      "severity": "minor",
+      "page": "40",
+      "issue": "Sparse last page",
+      "evidence": "Page 40 contains only Table 13 (caption + 5-row energy/carbon table) in the upper portion; the lower ~half of the page is empty white space before the page number."
+    }
+  ],
+  "notes": {
+    "P6_pdf": "Used frozen sem4 P6-grpo-registry.pdf (live paper_P6_registry.pdf failed to build)",
+    "P11_pdf": "Rebuilt; undefined citations remain in log"
+  }
+}

@@ -1,8 +1,8 @@
 {
-  "iteration": 3,
+  "iteration": 4,
   "status": "complete",
-  "last_seen": "2026-08-02T14:40:13+05:30",
-  "current_direction": "consolidate_18_paper_portfolio",
+  "last_seen": "2026-08-02T15:03:35+05:30",
+  "current_direction": "reconcile_12_active_6_absorbed_and_validate",
   "completed": [
     "claim inventory",
     "statistical refutation",
@@ -20,7 +20,10 @@
     "18-manuscript source and compile audit",
     "18-paper evidence and prior-art verdicts",
     "portfolio consolidation ledger",
-    "12-slide progress deck with publication route"
+    "12-slide progress deck with publication route",
+    "12-active plus 6-absorbed roster reconciliation",
+    "P1-P12 clean rebuild and PDF structural verification",
+    "historical and current portfolio manifests"
   ],
   "pending": [
     "external hold only: final overlap recheck after NeurIPS review closes or withdrawal becomes effective"

@@ -1,0 +1,15 @@
+{
+  "paper": "P2",
+  "angle": "B",
+  "pages_inspected": ["23", "46"],
+  "verdict": "PASS_WITH_NOTES",
+  "findings": [
+    {
+      "severity": "minor",
+      "page": "23",
+      "issue": "Truncated or incomplete running header at top of page",
+      "evidence": "A faint partial line of text is visible above Figure 11 (appears cut off mid-phrase, e.g. ending in 'that is'); content is incomplete and low-contrast relative to body text."
+    }
+  ],
+  "summary": "Page 23 body layout is clean: Figure 11 panels and caption, section text, and equations render without overflow or cutoffs; only a faint truncated running header is noted. Page 46 (last page) is fully populated with seven pipeline figures (18–24), captions aligned, no sparse last-page issue, and no footer/header collisions or contrast problems."
+}

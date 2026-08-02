@@ -1,0 +1,15 @@
+{
+  "paper": "P9",
+  "angle": "B",
+  "pages_inspected": ["20", "40"],
+  "verdict": "PASS_WITH_NOTES",
+  "findings": [
+    {
+      "severity": "minor",
+      "page": "40",
+      "issue": "Sparse last page",
+      "evidence": "Page 40 contains only Table 13 (caption + 5-row energy/carbon table) in the upper portion; the lower ~half of the page is empty white space before the page number."
+    }
+  ],
+  "summary": "Mid-document page 20 is clean: Tables 6–7 and equations (1)–(2) are fully visible with readable captions and no overflow or collisions. Last page 40 is sparse, holding only Table 13 above a large empty region."
+}

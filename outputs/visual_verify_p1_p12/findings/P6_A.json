@@ -1,0 +1,11 @@
+{
+  "paper": "P6",
+  "angle": "A",
+  "pages_inspected": [
+    "page_001-01.png",
+    "page_002-02.png"
+  ],
+  "verdict": "PASS",
+  "findings": [],
+  "summary": "Title page and abstract/intro render cleanly: title and two-column author block are readable, abstract and introduction text are well-justified with adequate margins, and Figure 1 taxonomy has clear boxes, arrows, and status chips with no overflow or overlap. No front-matter layout, density, or encoding defects observed."
+}

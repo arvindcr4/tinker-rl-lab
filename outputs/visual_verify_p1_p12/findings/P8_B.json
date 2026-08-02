@@ -1,0 +1,8 @@
+{
+  "paper": "P8",
+  "angle": "B",
+  "pages_inspected": ["10", "20"],
+  "verdict": "PASS",
+  "findings": [],
+  "summary": "Page 10 (limitations through start of References) is clean: readable body text, no overflow, good contrast, no header/footer collisions. Page 20 (last page) holds four well-laid-out tables (7–10) with captions below, full content, and no sparseness, cutoff, or contrast issues."
+}

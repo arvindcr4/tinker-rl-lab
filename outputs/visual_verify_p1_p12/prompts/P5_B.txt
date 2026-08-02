@@ -1,0 +1,32 @@
+You are a visual PDF QA auditor for academic papers.
+
+Paper: P5
+PDF: platform_hybrid/paper/paper_P5_minreport.pdf (81 pages)
+Angle: B — BODY/END: mid-document + last page. Check: figure/table quality, caption placement, column overflow, equation cutoffs, sparse last page, footer/header collisions, dark/light contrast issues, truncated content.
+
+IMAGE PATHS (absolute) — you MUST open each with the Read tool (image) and inspect visually:
+- /Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/visual_verify_p1_p12/P5/page_040-40.png
+- /Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/visual_verify_p1_p12/P5/page_081-81.png
+
+For each image, note defects. Severity: blocker | major | minor | none.
+
+Write EXACTLY one JSON file to:
+/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/visual_verify_p1_p12/findings/P5_B.json
+
+Schema:
+{
+  "paper": "P5",
+  "angle": "B",
+  "pages_inspected": ["..."],
+  "verdict": "PASS" | "PASS_WITH_NOTES" | "FAIL",
+  "findings": [
+    {"severity": "blocker|major|minor", "page": "...", "issue": "...", "evidence": "what you saw in the image"}
+  ],
+  "summary": "1-3 sentences"
+}
+
+Rules:
+- Base findings ONLY on what you see in the images (not on LaTeX source).
+- If nothing wrong: findings=[] and verdict=PASS.
+- Do not invent issues. Be specific about visual evidence.
+- Create parent dirs if needed. Use Write tool for the JSON.

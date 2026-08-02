@@ -65,42 +65,44 @@ confirmatory matrix passes the frozen gate.
 | Full internal review bundle | Clean extraction passes | `09293f0dd83137642afe3fbc56cb919db41b878d96d1586306e852eb594b153f` |
 | Anonymous TMLR PDF | Official TMLR style, 12 pages | `2f18d499f3fe5226d24c1c759ce48b8376ddcdb2b7a73559688081393c1fdb60` |
 | Anonymous TMLR supplement | 33 files, clean extraction passes | `44fd058fd96097640e04af66f0d33905e2d1beeebe85be16993bfa8ab8920fd1` |
-| Three-week progress deck | 12 editable slides; corrected E1 verdicts and 18-paper review | `170b68f2d99d0405cc15bb3b686ed1348d32911fe7e9a4e2f2616f83d6dba7d5` |
-| Progress deck PDF | 12-page preview | `e6d1edc30af9819e78511fe53cdded1b3a6fce3bbd01b52c16b65fa83309072e` |
-| 18-paper portfolio review | All 18 rebuilt and given an explicit disposition | `f3152549ce5b56150c2855de8ed39571a85702708cca437e9ea2b3193268b53c` |
-| Machine-readable paper verdicts | 18 data rows | `477a4f3a548305cbab1e6b25f83ac0fc06ce1348afdb8f7f2da852dad4b20544` |
+| Three-week progress deck | 12 editable slides; 18 reviewed vs. 12 active made explicit | `2a878cad35ecd8a82bcb79122681b421678eb162a17ffd024a7cb7fbfac57ce2` |
+| Progress deck PDF | 12-page preview | `d9b883fc37b29bcea0b3033c8e614e8631df2cc75476ded411b3854d6b0526fd` |
+| 18-paper portfolio review | Historical 18-file audit reconciled to current 12+6 roster | `ee7395f6c551579226228aee3f9584c18c5aa73abf6e2fbca9ee0ac3d801f95c` |
+| Machine-readable paper verdicts | 18 reconciled data rows | `311bbe1f9c9d2c51a6cdd2973cfd6dbab6fc02ced4ca86c3191cc0e1a5dcee0f` |
+| Current paper manifest | 12 active + 6 absorbed paths, pages, and hashes | `01710772876797cb9086b5c0f0125c69d082951756a5bfa06400d6c7beba0356` |
 
 The anonymous supplement includes all 600 stored gradient relations, both S1
 receipt projections, unchanged S1 source and tests, the executed objective
 snapshot, an internal manifest, and an offline verifier. It has no hits for the
 author name, institution, email, home path, or public account handle.
 
-## Eighteen-paper portfolio review
+## Eighteen-file review and current paper queue
 
-The current roster in `platform_hybrid/paper/PAPERS_README.md` has now been read
-and rebuilt in full. It totals 868 compiled pages over 329 distinct included
-source files. All 18 PDFs compile, with no missing input hooks or unresolved
-citations.
+The source audit covered the full pre-consolidation 18-file snapshot: 868 PDF
+pages and 329 distinct included source files. That frozen corpus is preserved as
+the review evidence. It is not the current submission queue.
 
-The source-overlap and claim audit reduces the 18 files to about six
-contribution families plus one internal compendium. None should be submitted
-unchanged.
+The repository now has 12 active roots, P1-P12, and six absorbed archives. The
+12 active PDFs were freshly rebuilt, pass structural PDF checks, and total 488
+pages. The six archives are readable history, not extra paper slots. U01 was
+repaired to 232 pages but still has unresolved citation warnings and remains a
+thesis/evidence compendium only.
 
-- Keep R08 as a bounded audit case study. Its four comparisons remain
-  `INCONCLUSIVE`.
-- Cut R02 to one workshop-sized stratification result.
-- Treat R04 as an artifact candidate only after an anonymous clean-machine
-  release check.
-- Merge P05/P06/R06/R07 into one reporting and registry resource, then obtain
-  external entries and a user decision study.
-- Park the controller, scaling, length, signal-starvation, and fraud claims until
-  their declared evidence gates pass.
-- Retire R01 as a separate paper and keep U01 as the internal compendium.
+- Keep P11 (former R08) as a bounded audit case study. Its four comparisons
+  remain `INCONCLUSIVE`.
+- Cut P2, including the former R02 stratification result, to one question.
+- Treat P9 (former R04) as an artifact candidate only after an anonymous
+  clean-machine release check; use P8 as documentation.
+- Build P5/P6 into one reporting and registry resource, then obtain external
+  entries and a user decision study.
+- Run prospective experiments before promoting P1, P4, P7, or P12.
+- Keep P08_fraud, R01, R02, R06, R07, and U01 absorbed.
 
 The paper-by-paper evidence, nearest prior art, fatal gate, and disposition are
-recorded in `audits/18_PAPER_PORTFOLIO_REVIEW.md`; the 18-row ledger is
-`audits/18_PAPER_VERDICTS.tsv`. This review does not replace the flagship TMLR
-route. It explains why none of the 18 derivative or program papers should jump
+recorded in `audits/18_PAPER_PORTFOLIO_REVIEW.md`; the 18-row reconciliation
+ledger is `audits/18_PAPER_VERDICTS.tsv`, and current paths/hashes are in
+`audits/paper_portfolio/current_manifest.tsv`. This review does not replace the
+flagship TMLR route. It explains why none of the reviewed material should jump
 ahead of it.
 
 ## OpenReview record

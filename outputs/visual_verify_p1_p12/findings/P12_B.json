@@ -1,0 +1,15 @@
+{
+  "paper": "P12",
+  "angle": "B",
+  "pages_inspected": ["8", "16"],
+  "verdict": "PASS_WITH_NOTES",
+  "findings": [
+    {
+      "severity": "minor",
+      "page": "16",
+      "issue": "Sparse last page: only two small flowcharts with large empty regions",
+      "evidence": "Page 16 contains only Figure 33 (Zero-Variance Fraction Diagnostic Pipeline) near the upper mid area and Figure 34 (Multi-Arm Controlled Exploration Protocol) lower mid, each a simple three-box flowchart with caption; large unbroken white space above Fig 33, between the two figures, and below Fig 34 before the centered page number 16. No body text. No overflow, truncation, or caption/figure collisions."
+    }
+  ],
+  "summary": "Page 8 body text (Section 7 preregistered evaluation) is clean: no overflow, equation cutoffs, or header/footer collisions. Page 16 is a sparse final page with two small, well-rendered flowcharts and captions but extensive unused whitespace; no contrast, truncation, or layout-collision defects."
+}

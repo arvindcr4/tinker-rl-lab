@@ -1,0 +1,11 @@
+{
+  "paper": "P1",
+  "angle": "A",
+  "pages_inspected": [
+    "page_001-01.png",
+    "page_002-02.png"
+  ],
+  "verdict": "PASS",
+  "findings": [],
+  "summary": "Title page and abstract/intro are clean: readable title, balanced two-column author block, dense but well-justified abstract with a clear venue claim-boundary paragraph, and a tidy intro start. Page 2 continues cleanly with a legible Figure 1 taxonomy teaser and no overflow, overlap, margin, or encoding defects."
+}

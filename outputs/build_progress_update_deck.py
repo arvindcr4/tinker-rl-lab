@@ -439,21 +439,21 @@ def build() -> Presentation:
              7.10, 5.15, 4.95, 0.82, size=11, color=MUTED)
     add_footer(s, "Source: preflight_gate.json (confirmatory_execution_gate=blocked; evidence_class=preflight-gate-not-scientific-evidence)")
 
-    # 9 — eighteen-paper review
+    # 9 — eighteen-paper review and current queue
     s = new_slide(prs)
-    add_header(s, "Paper review", "I checked all 18 drafts", 9)
-    add_text(s, "Several drafts tell the same story in different formats, so the 18 files collapse into fewer paper ideas.",
+    add_header(s, "Paper review", "I checked the full 18-file history", 9)
+    add_text(s, "The live queue is now 12 papers. Six older versions were absorbed into those papers or the thesis.",
              0.68, 1.43, 11.7, 0.32, size=14.5, color=MUTED)
-    add_metric(s, 0.72, 2.00, 2.35, 1.25, "18/18", "drafts rebuilt", TEAL, "every current PDF compiles")
-    add_metric(s, 3.30, 2.00, 2.35, 1.25, "868", "pages reviewed", BLUE, "including the 239-page internal book")
-    add_metric(s, 5.88, 2.00, 2.35, 1.25, "329", "source files", LAV, "all included files entered the review")
-    add_metric(s, 8.46, 2.00, 2.35, 1.25, "6 + 1", "real story groups", AMBER, "six research themes + one internal book")
+    add_metric(s, 0.72, 2.00, 2.35, 1.25, "18", "files reviewed", TEAL, "868-page frozen review snapshot")
+    add_metric(s, 3.30, 2.00, 2.35, 1.25, "12", "active papers", BLUE, "the current P1-P12 queue")
+    add_metric(s, 5.88, 2.00, 2.35, 1.25, "6", "absorbed", LAV, "history, not extra submissions")
+    add_metric(s, 8.46, 2.00, 2.35, 1.25, "488", "active pages", AMBER, "freshly rebuilt and readable")
     add_metric(s, 11.04, 2.00, 1.60, 1.25, "0", "ready now", RED, "none unchanged")
     buckets = [
-        ("KEEP", "3", "R08 audit\nR02 short note\nR04 artifact", GREEN),
-        ("MERGE", "8", "useful pieces,\nbut overlapping", BLUE),
-        ("TEST FIRST", "5", "evidence still\nmissing", AMBER),
-        ("ARCHIVE", "2", "R01 + U01", RED),
+        ("FOCUS", "3", "P11 audit\nP2 short note\nP9 artifact", GREEN),
+        ("SUPPORT", "5", "P3, P5, P6,\nP8, P10", BLUE),
+        ("TEST FIRST", "4", "P1, P4,\nP7, P12", AMBER),
+        ("HISTORY", "6", "absorbed, not\nsubmission slots", RED),
     ]
     for i, (heading, count, body, color) in enumerate(buckets):
         x = 0.76 + i * 3.04
@@ -462,9 +462,9 @@ def build() -> Presentation:
         add_text(s, count, x + 1.82, 3.88, 0.54, 0.45, size=27, color=color, bold=True,
                  font=FONT_DISPLAY, align=PP_ALIGN.RIGHT)
         add_text(s, body, x + 0.22, 4.55, 2.20, 0.92, size=13, color=INK, bold=True)
-    add_text(s, "The page count got bigger. The publishable story got smaller and clearer.",
+    add_text(s, "The review covered 18 files. The publication queue has 12. Those are different counts.",
              0.78, 6.43, 9.0, 0.30, size=12.5, color=AMBER, bold=True)
-    add_footer(s, "Source: autoresearch/deli-neurips-tmlr-260802/audits/18_PAPER_PORTFOLIO_REVIEW.md; paper_portfolio inventory and overlap scan")
+    add_footer(s, "Sources: 18_PAPER_PORTFOLIO_REVIEW.md; current_manifest.tsv; frozen 18-file inventory and overlap scan")
 
     # 10 — publication route
     s = new_slide(prs)
@@ -474,7 +474,7 @@ def build() -> Presentation:
     route = [
         ("NOW", "Keep the evidence frozen", "Do not submit a second overlapping paper while the NeurIPS review is open.", RED),
         ("NEXT", "Send the flagship to TMLR", "If NeurIPS rejects or the paper is withdrawn, rerun the overlap and anonymity checks.", TEAL),
-        ("LATER", "Build the companions", "R08 audit, a short R02 note, and the R04 artifact each need their own missing gate.", BLUE),
+        ("LATER", "Build the companions", "P11 audit, a short P2 note, and the P9 artifact each need their own missing gate.", BLUE),
     ]
     for i, (when, title, body, color) in enumerate(route):
         y = 2.03 + i * 1.34
@@ -535,7 +535,7 @@ def build() -> Presentation:
             add_text(s, item, x + 0.50, 3.31 + j * 0.49, 2.75, 0.25, size=12.2, color=INK, bold=True)
     add_text(s, "Thank you", 0.86, 5.90, 3.0, 0.45, size=25, color=TEAL, bold=True, font=FONT_DISPLAY)
     add_text(s, "Questions / discussion", 0.88, 6.37, 3.5, 0.25, size=11, color=MUTED)
-    add_text(s, "Repository: /Users/arvind/Developer/tinker-rl-lab", 7.25, 5.98, 5.0, 0.24, size=9, color=MUTED, align=PP_ALIGN.RIGHT)
+    add_text(s, "Project: Tinker RL Lab", 7.25, 5.98, 5.0, 0.24, size=9, color=MUTED, align=PP_ALIGN.RIGHT)
     add_text(s, "02 Aug 2026", 7.25, 6.30, 5.0, 0.24, size=9, color=MUTED, align=PP_ALIGN.RIGHT)
     add_footer(s, "Primary references: audit/COLAB_EXECUTION_STATUS.md; experiments-next/*; next-submission/results/preflight/preflight_gate.json")
 

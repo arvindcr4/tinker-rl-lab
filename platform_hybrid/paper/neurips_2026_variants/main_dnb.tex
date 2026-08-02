@@ -26,6 +26,8 @@
 \usepackage{microtype}
 \usepackage{xcolor}
 \usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows.meta,positioning,calc}
 \usepackage{subcaption}
 \usepackage{algorithm}
 \usepackage{algorithmic}
@@ -62,6 +64,25 @@
 % Abstract & Introduction (artifact-first; A/B/C grades)
 % -----------------------------------------------------------------------------
 \input{sections/abstract_dnb}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.5cm and 2.0cm,
+    tierbox/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    harness/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=green!60!black}
+]
+    \node [tierbox] (t1) {Evidence Tier A\\(Executed Core Protocol)};
+    \node [tierbox, right=of t1] (t2) {Evidence Tier B\\(Bounded Empirical Cases)};
+    \node [harness, right=of t2] (repo) {\textbf{Tiered Reproduction Harness}\\Artifact-First Verification};
+
+    \draw [arrow] (t1) -- (t2);
+    \draw [arrow] (t2) -- (repo);
+\end{tikzpicture}
+\caption{\textbf{Tiered Benchmark Dataset \& Reproduction Harness Architecture (R04).} Categorizing artifact evidence into rigorous evidence tiers (A/B/C) with reproducible verification.}
+\label{fig:dnb_benchmark_architecture}
+\end{figure}
 \input{sections/intro_dnb}
 
 % -----------------------------------------------------------------------------
@@ -241,6 +262,13 @@ significant). (iv) Many cross-library comparisons are confounded by
 checkpoint, hardware, or default-config differences and should be read
 as stack-level rather than algorithm-level statements.
 
+\paragraph{Scope relative to companion ZVF vehicles.}
+Any ZVF identity or stratification result reported here is \emph{bench
+instrumentation} cross-cited for auditability. Readers seeking the
+descriptive diagnostic contribution or calibration theory should consult the
+companion pillar papers; this vehicle does not re-open those claims as
+independent main-track science.
+
 \input{sections/conclusion_dnb}
 
 % =============================================================================
@@ -291,5 +319,167 @@ Acknowledgments are withheld for blind review.
 
 % NeurIPS Paper Checklist (Mandatory, DNB-specific).
 \input{sections/checklist_anon}
+
+
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Raw Benchmark Data};
+    \node [box2, right=of n1] (n2) {\textbf{Dataset Tiering & Evidence Hierarchy (Tiers A/B/C)}\\Evidence Tier Classifier};
+    \node [box3, right=of n2] (n3) {Categorized Tier A/B/C};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Dataset Tiering & Evidence Hierarchy (Tiers A/B/C)}. Structured categorization of benchmark dataset evidence levels.}
+\label{fig:r04_dataset_tiering}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Dataset Files};
+    \node [box2, right=of n1] (n2) {\textbf{Artifact License & Open-Source Distribution}\\License Checker};
+    \node [box3, right=of n2] (n3) {Open-Source Release};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Artifact License & Open-Source Distribution}. Automated validation of data licenses and open access artifacts.}
+\label{fig:r04_license_pipeline}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Raw Math Prompts};
+    \node [box2, right=of n1] (n2) {\textbf{GSM8K & Math Reasoning Preprocessing Pipeline}\\Regex Extractor & Formatter};
+    \node [box3, right=of n2] (n3) {Clean Benchmark Dataset};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{GSM8K & Math Reasoning Preprocessing Pipeline}. Standardizing prompt formatting and answer extraction regex.}
+\label{fig:r04_preprocessing}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Synthetic Prompts};
+    \node [box2, right=of n1] (n2) {\textbf{Multi-Task Prompt Formatting & Synthetic Filtering}\\Quality Filter Engine};
+    \node [box3, right=of n2] (n3) {High-Fidelity Dataset};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Multi-Task Prompt Formatting & Synthetic Filtering}. Filtering synthetic dataset generations for quality assurance.}
+\label{fig:r04_synthetic_filter}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Model Checkpoints};
+    \node [box2, right=of n1] (n2) {\textbf{Benchmark Evaluation Harness & Execution Pipeline}\\Execution Harness};
+    \node [box3, right=of n2] (n3) {Evaluation Score Table};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Benchmark Evaluation Harness & Execution Pipeline}. Executing evaluation suites across model checkpoints.}
+\label{fig:r04_eval_harness}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Train / Test Splits};
+    \node [box2, right=of n1] (n2) {\textbf{Data Leakage Prevention & Contamination Audit}\\Contamination Checker};
+    \node [box3, right=of n2] (n3) {Clean Split Certificate};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Data Leakage Prevention & Contamination Audit}. Detecting n-gram overlap between training and test splits.}
+\label{fig:r04_leakage_audit}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Dataset Repositories};
+    \node [box2, right=of n1] (n2) {\textbf{Dataset Maintenance & Version Control Architecture}\\Version Manager};
+    \node [box3, right=of n2] (n3) {Immutable Version Tag};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Dataset Maintenance & Version Control Architecture}. Tracking dataset revisions and patch histories.}
+\label{fig:r04_version_control}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Artifact Package};
+    \node [box2, right=of n1] (n2) {\textbf{Reproduction Harness Execution & Verification}\\Verification Engine};
+    \node [box3, right=of n2] (n3) {Reproducibility Verdict};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Reproduction Harness Execution & Verification}. Verifying artifact reproduction end-to-end.}
+\label{fig:r04_repro_harness}
+\end{figure}
 
 \end{document}

@@ -28,6 +28,8 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{nicefrac}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows.meta,positioning,calc}
 \usepackage{microtype}
 \usepackage{xcolor}
 \usepackage{graphicx}
@@ -64,10 +66,35 @@
 
 \maketitle
 
+% ABSORBED → P02 (not an independent venue count; short vehicle of paper_P2_zvf)
+\paragraph{Absorption (roster R02).}
+This manuscript is a short stratified venue framing of the Pillar-2 ZVF
+diagnostic (\texttt{paper\_P2\_zvf.tex}). Evidence is shared with P02; do not
+submit both as independent papers. Canonical claims live under P02.
+
 % =============================================================================
 % Abstract --- ZVF as per-step zero-gradient sentinel; pooled cross-task
 % correlation does not survive within-task stratification.
 \input{sections/abstract_zvf}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.5cm and 2.0cm,
+    block/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    audit/.style={rectangle, draw=red!70!black, fill=red!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [block] (grpo) {GRPO Batch Rollouts\\$G = \{y_1, \dots, y_M\}$};
+    \node [block, right=of grpo] (sentinel) {\textbf{ZVF Sentinel Sensor}\\$Z_g = \mathbf{1}[\sigma_G^2 = 0]$};
+    \node [audit, right=of sentinel] (strat) {\textbf{Stratified Audit}\\Separating All-Correct ($r_i=1$)\\from All-Failed ($r_i=0$)};
+
+    \draw [arrow] (grpo) -- (sentinel);
+    \draw [arrow] (sentinel) -- (strat);
+\end{tikzpicture}
+\caption{\textbf{ZVF Sentinel Diagnostic \& Task-Stratification Architecture (R02).} Monitoring online zero-variance events and stratifying prompt difficulty.}
+\label{fig:zvf_sentinel_architecture}
+\end{figure}
 
 % Introduction --- per-step sentinel framing + pooled-correlation audit
 \input{sections/intro_zvf}
@@ -631,5 +658,107 @@ contrast, mean ZVF varies but does not predict last-10 reward
 \phantomsection
 \label{sec:appendix:ethics}%
 \input{ethics_statement_zvf}
+
+
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Rollout Batch};
+    \node [box2, right=of n1] (n2) {\textbf{Sentinel Event Telemetry & Real-Time Monitoring}\\ZVF Telemetry Collector};
+    \node [box3, right=of n2] (n3) {Real-Time Metric Stream};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Sentinel Event Telemetry & Real-Time Monitoring}. Real-time telemetry loop tracking zero-variance events during post-training.}
+\label{fig:r02_telemetry_loop}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Prompt Cohort};
+    \node [box2, right=of n1] (n2) {\textbf{Task Stratification: Easy vs Hard vs Flawed}\\Difficulty Stratifier};
+    \node [box3, right=of n2] (n3) {Stratified Task Clusters};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Task Stratification: Easy vs Hard vs Flawed}. Categorizing prompt cohorts based on reward distribution properties.}
+\label{fig:r02_task_stratification}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Batch Reward Variance};
+    \node [box2, right=of n1] (n2) {\textbf{Zero-Variance Detection & Early Termination}\\ZVF Detector Gate};
+    \node [box3, right=of n2] (n3) {Continue vs Terminate Step};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Zero-Variance Detection & Early Termination}. Triggering early step termination when zero variance is detected.}
+\label{fig:r02_early_termination}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Cross-Task Runs};
+    \node [box2, right=of n1] (n2) {\textbf{Stratified ZVF Heatmap & Difficulty Clusters}\\Cluster Mapper};
+    \node [box3, right=of n2] (n3) {Diagnostic Heatmap};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Stratified ZVF Heatmap & Difficulty Clusters}. Mapping prompt difficulty clusters against zero-variance frequencies.}
+\label{fig:r02_heatmap_clusters}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Trainer Engine};
+    \node [box2, right=of n1] (n2) {\textbf{ZVF Sentinel Deployment Architecture}\\ZVF Sentinel Module};
+    \node [box3, right=of n2] (n3) {Guaranteed Signal Quality};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{ZVF Sentinel Deployment Architecture}. Integration of ZVF sentinel in production RL post-training pipelines.}
+\label{fig:r02_deployment_sentinel}
+\end{figure}
 
 \end{document}

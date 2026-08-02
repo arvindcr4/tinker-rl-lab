@@ -25,6 +25,8 @@
 \usepackage{listings}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows.meta,positioning,calc}
 \usepackage[numbers,sort&compress]{natbib}
 
 \newcommand{\nr}{\textsc{nr}}
@@ -68,6 +70,12 @@ paper.}\\PES University\\\texttt{arvindcr4@gmail.com}}
 \begin{document}
 \maketitle
 
+% ABSORBED → P06 (not an independent venue count)
+\paragraph{Absorption (roster R07).}
+This condensed living-catalog draft is absorbed into
+\texttt{paper\_P6\_registry.tex} (or the Vehicle~B appendix with P05) and retires
+at submission. Do not count R07 as a separate venue paper.
+
 % =============================================================================
 \begin{abstract}
 % =============================================================================
@@ -91,6 +99,32 @@ update protocol so the catalog can stay current without a new paper for every
 new variant.
 \end{abstract}
 
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.6cm and 2.0cm,
+    block/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    registry/.style={rectangle, draw=orange!80!black, fill=orange!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [block] (source) {Base Run Manifest\\(7 Stack Fields)};
+    \node [registry, right=of source] (schema) {\textbf{GRPO-Registry}\\JSON Schema \& Hashes};
+    \node [block, right=of schema] (variants) {Variant Deltas\\(DAPO / GSPO / Dr.GRPO / AERO)};
+    \node [block, below=1.2cm of schema, fill=green!5, draw=green!60!black, minimum width=8.5cm] (provenance) {
+        \textbf{Provenance Tracking \& Audit Linkage}\\
+        $\mathtt{run\_id} \to \mathtt{stack\_hash} \to \mathtt{float64\_reference\_diff} \to \mathtt{eval\_report}$
+    };
+
+    \draw [arrow] (source) -- (schema);
+    \draw [arrow] (schema) -- (variants);
+    \draw [arrow, dashed] (schema) -- (provenance);
+    \draw [arrow, dashed] (source) |- (provenance);
+    \draw [arrow, dashed] (variants) |- (provenance);
+\end{tikzpicture}
+\caption{\textbf{GRPO-Registry Provenance and Variant Delta Schema (Pillar 1).} Machine-readable JSON schema binding 7 stack fields to variant deltas, sha256 hashes, and held-out evaluation reports.}
+\label{fig:grpo_registry_schema}
+\end{figure}
+
 % =============================================================================
 \section{Introduction: Why a Registry?}
 \label{sec:intro}
@@ -105,6 +139,27 @@ RL Stacks and Their Variant Deltas''}
 (\texttt{platform\_hybrid/paper/paper\_P6\_registry}). The Pillar-6 paper
 is canonical for the registry's content and evidence; this one for the
 catalog-as-community-resource framing.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.5cm and 2.0cm,
+    base/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    variant/.style={rectangle, draw=orange!80!black, fill=orange!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [base] (grpo) {\textbf{Base GRPO Stack}\\(Reference Config)};
+    \node [variant, above right=0.8cm and 1.8cm of grpo] (dapo) {DAPO Delta\\(Asymmetric Clip)};
+    \node [variant, right=1.8cm of grpo] (gspo) {GSPO Delta\\(Sequence-Level)};
+    \node [variant, below right=0.8cm and 1.8cm of grpo] (drgrpo) {Dr.GRPO Delta\\(Length Norm)};
+
+    \draw [arrow] (grpo) -- (dapo);
+    \draw [arrow] (grpo) -- (gspo);
+    \draw [arrow] (grpo) -- (drgrpo);
+\end{tikzpicture}
+\caption{\textbf{Variant Delta Inheritance Tree (R07).} Resolving exact implementation differences relative to canonical base GRPO.}
+\label{fig:grpo_registry_inheritance}
+\end{figure}
 
 A reviewer reading six recent \grpo{} papers can reasonably conclude that each
 paper compares against ``GRPO.'' But the word ``GRPO'' is attached to different
@@ -628,5 +683,167 @@ engineering work.
 
 \bibliographystyle{plainnat}
 \bibliography{../../platform_hybrid/paper/references}
+
+
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Catalog JSON File};
+    \node [box2, right=of n1] (n2) {\textbf{JSON Schema Validation Architecture}\\JSON Schema Validator};
+    \node [box3, right=of n2] (n3) {Valid Catalog Entry};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{JSON Schema Validation Architecture}. Schema validation for GRPO catalog entries.}
+\label{fig:r07_json_validation}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {User Filter Query};
+    \node [box2, right=of n1] (n2) {\textbf{Automated Query Auditor & Filter Flow}\\Query Execution Engine};
+    \node [box3, right=of n2] (n3) {Filtered Variant List};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Automated Query Auditor & Filter Flow}. Executing automated queries across registered GRPO variants.}
+\label{fig:r07_query_auditor}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Variant Spec & Baseline};
+    \node [box2, right=of n1] (n2) {\textbf{Variant Delta Resolution Algorithm}\\Delta Resolution Engine};
+    \node [box3, right=of n2] (n3) {Resolved Parameter Map};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Variant Delta Resolution Algorithm}. Algorithm for resolving exact parameter deltas relative to baseline.}
+\label{fig:r07_variant_resolution}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Experimental Evidence};
+    \node [box2, right=of n1] (n2) {\textbf{Evidence Tier Classification Matrix (Tiers A/B/C)}\\Tier Classifier};
+    \node [box3, right=of n2] (n3) {Assigned Tier Grade};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Evidence Tier Classification Matrix (Tiers A/B/C)}. Categorizing catalog entries by empirical verification strength.}
+\label{fig:r07_evidence_tiers}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Git Commit SHA};
+    \node [box2, right=of n1] (n2) {\textbf{Registry Provenance Hashing & Git Binding}\\SHA-256 Provenance Engine};
+    \node [box3, right=of n2] (n3) {Immutable Catalog Hash};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Registry Provenance Hashing & Git Binding}. Binding catalog entries to immutable Git commit SHAs.}
+\label{fig:r07_provenance_hashing}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Cross-Framework Config};
+    \node [box2, right=of n1] (n2) {\textbf{Cross-Library Equivalence Query Engine}\\Equivalence Matcher};
+    \node [box3, right=of n2] (n3) {Matched Config Set};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Cross-Library Equivalence Query Engine}. Querying equivalent configurations across different frameworks.}
+\label{fig:r07_cross_library_engine}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Default Config & Overrides};
+    \node [box2, right=of n1] (n2) {\textbf{Manifest Field Inheritance & Override Pipeline}\\Inheritance Resolver};
+    \node [box3, right=of n2] (n3) {Final Resolved Config};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Manifest Field Inheritance & Override Pipeline}. Inheriting default stack parameters with explicit variant overrides.}
+\label{fig:r07_manifest_override}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {PR Contribution};
+    \node [box2, right=of n1] (n2) {\textbf{Living Catalog Community Contribution Workflow}\\Automated CI Validator};
+    \node [box3, right=of n2] (n3) {Merged Registry Entry};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Living Catalog Community Contribution Workflow}. Workflow for community submission and verification of new entries.}
+\label{fig:r07_community_workflow}
+\end{figure}
 
 \end{document}

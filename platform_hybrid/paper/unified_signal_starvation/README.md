@@ -18,6 +18,8 @@ Single-Rollout Asynchronous Optimization (SAO).
 - Not claimed: causal held-out improvement from TriageRL, global optimality of
   group size 4, performance preservation after removing all-correct retries,
   or any PPO/SAO/GLM-5.2 training outcome from the new instrumentation.
+- Venue: workshop-short methods/proposal. PPO/SAO measurement is future work
+  and is not a gate on the diagnostic-plus-contract contribution.
 
 ## Reproduce evidence
 

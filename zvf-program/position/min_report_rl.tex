@@ -24,6 +24,8 @@
 \usepackage{microtype}
 \usepackage{graphicx} % for \resizebox on wide tables
 \usepackage{listings} % for JSON schema listings
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows.meta,positioning,calc}
 \usepackage[numbers,sort&compress]{natbib}
 \lstset{basicstyle=\small\ttfamily,frame=single,columns=fullflexible,breaklines=true}
 
@@ -43,6 +45,12 @@ PES University\\\texttt{arvindcr4@gmail.com}}
 
 \begin{document}
 \maketitle
+
+% ABSORBED → P05 (not an independent venue count)
+\paragraph{Absorption (roster R06).}
+This condensed community position is absorbed into
+\texttt{paper\_P5\_minreport.tex} (MIN-REPORT-RL) and retires when P05 is
+submitted. Do not count R06 as a separate venue paper.
 
 % =============================================================================
 \begin{abstract}
@@ -82,6 +90,36 @@ that, under current reporting, the field cannot \emph{know}, and that this is
 fixable with a few lines of telemetry.
 \end{abstract}
 
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.5cm and 1.8cm,
+    box/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.0cm, minimum width=2.4cm, font=\small},
+    evalbox/.style={rectangle, draw=teal!70!black, fill=teal!5, thick, rounded corners, align=center, minimum height=1.0cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=purple!60!black}
+]
+    \node [box] (m) {1. Base Model Revision};
+    \node [box, right=of m] (s) {2. Sampler Params\\(Temp, Top-$p$)};
+    \node [box, right=of s] (l) {3. Exact Loss Form};
+    \node [box, right=of l] (r) {4. Loss Reduction};
+
+    \node [box, below=1.0cm of m] (k) {5. KL Regularization};
+    \node [box, right=of k] (p) {6. Parser / Verifier};
+    \node [box, right=of p] (t) {7. Rollout Temp};
+    \node [evalbox, right=of t] (e) {\textbf{8. Held-Out Evaluation}\\($\text{pass}@k$ on test set)};
+
+    \draw [arrow] (m) -- (s);
+    \draw [arrow] (s) -- (l);
+    \draw [arrow] (l) -- (r);
+    \draw [arrow] (r) |- ($(r.east)+(0.4,-0.8)$) -| (k);
+    \draw [arrow] (k) -- (p);
+    \draw [arrow] (p) -- (t);
+    \draw [arrow] (t) -- (e);
+\end{tikzpicture}
+\caption{\textbf{MIN-REPORT-RL Stack Contract Architecture (Pillar 4).} The eight required stack elements: seven run-manifest fields (1--7) plus held-out evaluation linkage (8), preventing unannounced stack shifts.}
+\label{fig:min_report_architecture}
+\end{figure}
+
 % =============================================================================
 \section{Introduction: The Telemetry and Reporting Gap}
 \label{sec:intro}
@@ -96,6 +134,25 @@ Label: RL-for-LLM Results Are Stack-Conditioned''}
 (\texttt{platform\_hybrid/paper/paper\_P5\_minreport}). The two documents
 share the same eight-item standard; the Pillar-5 paper is canonical for
 evidence, this one for the community-facing statement.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.5cm and 2.0cm,
+    stepbox/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    gatebox/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [stepbox] (repo) {1. Repository Submission\\\& Run Manifest};
+    \node [gatebox, right=of repo] (audit) {\textbf{2. 8-Item Audit Gate}\\Verification of 7 Fields + pass@k};
+    \node [stepbox, right=of audit] (pub) {3. Certified Publication\\\& Provenance Hash};
+
+    \draw [arrow] (repo) -- (audit);
+    \draw [arrow] (audit) -- (pub);
+\end{tikzpicture}
+\caption{\textbf{Community Reproducibility Audit Lifecycle (R06).} Verifying stack compliance before accepting benchmark claims.}
+\label{fig:min_report_lifecycle}
+\end{figure}
 
 A reader of the 2023--2026 RL-for-LLM literature could be forgiven for
 believing that ``we trained with GRPO'' is a complete experimental
@@ -834,5 +891,167 @@ can actually trust.
 
 \bibliographystyle{plainnat}
 \bibliography{../../platform_hybrid/paper/references}
+
+
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Sampler Config};
+    \node [box2, right=of n1] (n2) {\textbf{Item 1: Sampler Precision & Logit Truncation}\\Precision Validator};
+    \node [box3, right=of n2] (n3) {Declared Precision Spec};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Item 1: Sampler Precision & Logit Truncation}. Specification requirement for floating-point sampler precision.}
+\label{fig:r06_item1_precision}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {KL Loss Config};
+    \node [box2, right=of n1] (n2) {\textbf{Item 2: Reference Policy & KL Penalty Placement}\\Reference Policy Checker};
+    \node [box3, right=of n2] (n3) {Declared KL Spec};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Item 2: Reference Policy & KL Penalty Placement}. Specification requirement for reference policy and KL terms.}
+\label{fig:r06_item2_reference}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Token Mask Spec};
+    \node [box2, right=of n1] (n2) {\textbf{Item 3: Completion-Only Masking & Loss}\\Masking Auditor};
+    \node [box3, right=of n2] (n3) {Declared Masking Spec};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Item 3: Completion-Only Masking & Loss}. Specification requirement for token loss masking rules.}
+\label{fig:r06_item3_masking}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Batch Schedule};
+    \node [box2, right=of n1] (n2) {\textbf{Item 4: Group Size Schedule & Batching Pipeline}\\Group Size Validator};
+    \node [box3, right=of n2] (n3) {Declared Batching Spec};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Item 4: Group Size Schedule & Batching Pipeline}. Specification requirement for group size and micro-batching.}
+\label{fig:r06_item4_batching}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Reward Parser Code};
+    \node [box2, right=of n1] (n2) {\textbf{Item 5: Reward Parser & Formatting Gate}\\Parser Auditor};
+    \node [box3, right=of n2] (n3) {Declared Parser Spec};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Item 5: Reward Parser & Formatting Gate}. Specification requirement for reward extraction rules.}
+\label{fig:r06_item5_parser}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Control Task Spec};
+    \node [box2, right=of n1] (n2) {\textbf{Item 6: Held-Out Control Evaluation Protocol}\\Evaluation Auditor};
+    \node [box3, right=of n2] (n3) {Declared Control Spec};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Item 6: Held-Out Control Evaluation Protocol}. Specification requirement for held-out task evaluation.}
+\label{fig:r06_item6_eval}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Run Artifacts};
+    \node [box2, right=of n1] (n2) {\textbf{Item 7: Run Manifest Hashing & Provenance Gate}\\Manifest Hash Generator};
+    \node [box3, right=of n2] (n3) {Declared Provenance Hash};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Item 7: Run Manifest Hashing & Provenance Gate}. Specification requirement for cryptographic run hashing.}
+\label{fig:r06_item7_manifest}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Raw Runs Array};
+    \node [box2, right=of n1] (n2) {\textbf{Item 8: Statistical Aggregation & rliable Engine}\\rliable Aggregator};
+    \node [box3, right=of n2] (n3) {Certified Benchmark Card};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Item 8: Statistical Aggregation & rliable Engine}. Specification requirement for statistical performance profiles.}
+\label{fig:r06_item8_aggregation}
+\end{figure}
 
 \end{document}

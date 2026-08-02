@@ -12,6 +12,9 @@
 % For submission/review (single-column, anonymous, line numbers):
 \documentclass[manuscript,review,anonymous]{acmart}
 
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows.meta,positioning,calc}
+
 % For camera-ready (two-column proceedings):
 % \documentclass[sigconf]{acmart}
 
@@ -163,14 +166,24 @@
 \begin{document}
 % =============================================================================
 
-% ACM-specific: teaser figure (optional, appears before abstract)
-% \begin{teaserfigure}
-%   \centering
-%   \includegraphics[width=\textwidth]{figures/teaser.pdf}
-%   \caption{Overview of \ours{}: a unified benchmark spanning 7 RL libraries
-%   and 11 implementations for RL post-training of language models.}
-%   \label{fig:teaser}
-% \end{teaserfigure}
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+      node distance=1.5cm and 2.0cm,
+      block/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+      audit/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.6cm, font=\small},
+      arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+  ]
+      \node [block] (input) {11 Implementations\\Across 7 RL Frameworks};
+      \node [audit, right=of input] (eval) {\textbf{Cross-Library Audit Protocol}\\Unified Reward \& Stack Mapping};
+      \node [block, right=of eval] (output) {rliable Performance Profiles\\\& Equivalence Verdicts};
+
+      \draw [arrow] (input) -- (eval);
+      \draw [arrow] (eval) -- (output);
+  \end{tikzpicture}
+  \caption{\textbf{Overview of Cross-Library RL Post-Training Audit (R01).} Standardized benchmark spanning 7 RL libraries (TRL, SB3, CleanRL, Tianshou, etc.) evaluated across math reasoning and preference tasks.}
+  \label{fig:acm_teaser_architecture}
+\end{figure}
 
 % =============================================================================
 \begin{abstract}
@@ -205,6 +218,12 @@ weights are not reproducible artifacts.
 
 \textbf{Code:} \url{https://anonymous.4open.science/r/tinker-rl-lab} \quad
 \textbf{Models:} \url{https://anonymous.4open.science/r/tinker-rl-lab}
+
+\paragraph{Absorption (roster R01).}
+This ACM compact draft is a format regenerate of the tiered artifact vehicle
+(\texttt{neurips\_2026\_variants/main\_dnb.tex}, R04). It is not an independent
+evidence source; rebuild from R04 on demand and do not count R01 as a second
+venue paper.
 \end{abstract}
 
 \maketitle
@@ -722,5 +741,47 @@ See \texttt{BASELINES.md} for floor/ceiling baselines and
 
 See \texttt{ARTIFACT.md} in the repository for the complete artifact
 description following ACM guidelines.
+
+
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Framework Implementations};
+    \node [box2, right=of n1] (n2) {\textbf{7-Library Conformance & Compatibility Matrix}\\Conformance Auditor};
+    \node [box3, right=of n2] (n3) {Compatibility Matrix};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{7-Library Conformance & Compatibility Matrix}. Mapping feature support across 7 reinforcement learning frameworks.}
+\label{fig:r01_conformance_matrix}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.4cm and 1.8cm,
+    box1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
+    box2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
+    box3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
+]
+    \node [box1] (n1) {Raw Library Metrics};
+    \node [box2, right=of n1] (n2) {\textbf{Unified RL Post-Training Metric Logging Engine}\\Unified Telemetry Engine};
+    \node [box3, right=of n2] (n3) {Standardized Metric Stream};
+
+    \draw [arrow] (n1) -- (n2);
+    \draw [arrow] (n2) -- (n3);
+\end{tikzpicture}
+\caption{\textbf{Unified RL Post-Training Metric Logging Engine}. Standardizing metric collection across disparate RL training loops.}
+\label{fig:r01_logging_engine}
+\end{figure}
 
 \end{document}

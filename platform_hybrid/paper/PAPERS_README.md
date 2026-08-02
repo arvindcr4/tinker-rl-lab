@@ -43,17 +43,35 @@ Canonical document roster:
 | P05 | `paper_P5_minreport.tex` | canonical evidence for the eight-item reporting standard |
 | P06 | `paper_P6_registry.tex` | canonical seven-field registry; position-artifact resource (shared 17× exhibit is not re-claimed) |
 | P07 | `paper_P7_zvf_controller.tex` | retrospective audit + prospective test plan only; adaptive G not promoted |
-| P08 | `paper_P8_fraud.tex` | parked cross-domain side study |
-| R01 | `acm_main.tex` | compact cross-library venue derivative |
-| R02 | `neurips_2026_variants/main_zvf.tex` | focused ZVF sentinel/stratification paper |
+| P08 | `paper_P8_fraud.tex` | **ABSORBED → thesis** measurement-discipline appendix (parked; not a standalone venue paper) |
+| R01 | `acm_main.tex` | **ABSORBED → R04** compact ACM regenerate of the tiered artifact vehicle |
+| R02 | `neurips_2026_variants/main_zvf.tex` | **ABSORBED → P02** optional short venue vehicle of the ZVF diagnostic (not a second paper) |
 | R03 | `neurips_2026_variants/main_workshop.tex` | exploratory artifact note |
-| R04 | `neurips_2026_variants/main_dnb.tex` | tiered artifact paper; ZVF is bench instrumentation not flagship claim |
+| R04 | `neurips_2026_variants/main_dnb.tex` | tiered artifact paper; ZVF is bench instrumentation not flagship claim; absorbs R01 + U01 bench packaging |
 | R05 | `zvf-program/theory/zvf_theory.tex` | calibration and reliability proof sketches; no adaptive set-point |
-| R06 | `zvf-program/position/min_report_rl.tex` | condensed community position statement |
-| R07 | `zvf-program/registry/grpo_registry.tex` | condensed living-catalog statement |
+| R06 | `zvf-program/position/min_report_rl.tex` | **ABSORBED → P05** condensed position; retires at P05 submission |
+| R07 | `zvf-program/registry/grpo_registry.tex` | **ABSORBED → P06** condensed catalog; retires at P06 submission |
 | R08 | `zvf-program/audit/reproducibility_audit.tex` | completed 40-unit single-stack survival audit; open-stack generalization remains gated |
-| U01 | `main.tex` | long evidence compendium, not a venue submission |
+| U01 | `main.tex` | **ABSORBED → thesis / R04** long evidence bank; not a venue submission |
 | N01 | `unified_signal_starvation/main.tex` | GRPO-grounded diagnostic + PPO/SAO evaluation contract; PPO/SAO outcomes non-claims |
+
+### Absorption map (2026-08-02) — the former “other 6”
+
+These six files remain on disk as satellites; they are **not** independent venue
+counts. Evidence and claims live under the parent vehicle:
+
+| Absorbed ID | Parent vehicle | Absorption rule |
+|---|---|---|
+| R02 | **P02** | Short stratified ZVF framing of the same diagnostic; submit P02 *or* R02, never both as independent papers |
+| R06 | **P05** | Condensed community position of MIN-REPORT-RL; retire when P05 submits |
+| R07 | **P06** | Condensed living-catalog of GRPO-Registry; retire when P06 submits (or ship as P05/P06 appendix) |
+| R01 | **R04** | ACM-format regenerate of the tiered bench artifact; rebuild from R04 on demand |
+| U01 | **thesis + R04** | Long evidence compendium for degree/thesis chapters and artifact packaging; not a conference paper |
+| P08 | **thesis** | Parked cross-domain measurement side study; thesis methods/reproducibility appendix only |
+
+**Independent venue-candidate set after absorption (12):** P01–P07, R03, R04, R05, R08, N01.  
+Machine-checked in `platform_hybrid/paper/scripts/publication_worthiness_check.py`
+(`ABSORPTION` / `OUT_OF_SET`).
 
 The older plans below are retained as history. Where they disagree with this
 section, this section is canonical.

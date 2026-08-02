@@ -1,48 +1,227 @@
-% refs.bib — canonical citations only. Entries here are limited to references the
-% drafting agent is certain of; all uncertain references are left as \todocite
-% markers in main.tex and MUST be resolved by a human before submission.
+% refs.bib — canonical citations only.
+%
+% Every entry below was verified against a primary bibliographic source on
+% 2026-08-02: the arXiv export API (http://export.arxiv.org/api/query?id_list=…)
+% for preprints, and Crossref (api.crossref.org) / OpenAlex (api.openalex.org)
+% for journal, conference, and book entries. Title, year, venue, and the FULL
+% author list of each entry were checked field-by-field against the API response;
+% author lists are reproduced in full and are not abbreviated with "and others".
+% The Semantic Scholar graph API returned HTTP 429 throughout the verification
+% window, so the arXiv/Crossref/OpenAlex primary records were used instead.
+%
+% Nothing here may be added without an API record that confirms it. If a
+% reference cannot be confirmed against a primary source, the corresponding
+% \todocite marker stays in main.tex.
+
+% ---------------------------------------------------------------------------
+% Models, datasets, and training stacks
+% ---------------------------------------------------------------------------
 
 @article{shao2024deepseekmath,
   title   = {DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models},
-  author  = {Shao, Zhihong and Wang, Peiyi and Zhu, Qihao and Xu, Runxin and Song, Junxiao and Bi, Xiao and Zhang, Haowei and Zhang, Mingchuan and Li, Y. K. and Wu, Y. and Guo, Daya},
+  author  = {Shao, Zhihong and Wang, Peiyi and Zhu, Qihao and Xu, Runxin and Song, Junxiao
+             and Bi, Xiao and Zhang, Haowei and Zhang, Mingchuan and Li, Y. K. and Wu, Y.
+             and Guo, Daya},
   journal = {arXiv preprint arXiv:2402.03300},
-  year    = {2024}
+  year    = {2024},
+  eprint  = {2402.03300},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL}
 }
 
 @article{cobbe2021gsm8k,
   title   = {Training Verifiers to Solve Math Word Problems},
-  author  = {Cobbe, Karl and Kosaraju, Vineet and Bavarian, Mohammad and Chen, Mark and Jun, Heewoo and Kaiser, Lukasz and Plappert, Matthias and Tworek, Jerry and Hilton, Jacob and Nakano, Reiichiro and Hesse, Christopher and Schulman, John},
+  author  = {Cobbe, Karl and Kosaraju, Vineet and Bavarian, Mohammad and Chen, Mark
+             and Jun, Heewoo and Kaiser, Lukasz and Plappert, Matthias and Tworek, Jerry
+             and Hilton, Jacob and Nakano, Reiichiro and Hesse, Christopher and Schulman, John},
   journal = {arXiv preprint arXiv:2110.14168},
-  year    = {2021}
+  year    = {2021},
+  eprint  = {2110.14168},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
 }
 
 @inproceedings{hendrycks2021math,
   title     = {Measuring Mathematical Problem Solving With the {MATH} Dataset},
-  author    = {Hendrycks, Dan and Burns, Collin and Kadavath, Saurav and Arora, Akul and Basart, Steven and Tang, Eric and Song, Dawn and Steinhardt, Jacob},
+  author    = {Hendrycks, Dan and Burns, Collin and Kadavath, Saurav and Arora, Akul
+               and Basart, Steven and Tang, Eric and Song, Dawn and Steinhardt, Jacob},
   booktitle = {Advances in Neural Information Processing Systems (NeurIPS) Datasets and Benchmarks Track},
-  year      = {2021}
+  year      = {2021},
+  eprint    = {2103.03874},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
 }
 
 @misc{vonwerra2020trl,
   title        = {{TRL}: Transformer Reinforcement Learning},
-  author       = {von Werra, Leandro and Belkada, Younes and Tunstall, Lewis and Beeching, Edward and Thrush, Tristan and Lambert, Nathan and Huang, Shengyi and Rasul, Kashif and Gallou{\'e}dec, Quentin},
+  author       = {von Werra, Leandro and Belkada, Younes and Tunstall, Lewis and Beeching, Edward
+                  and Thrush, Tristan and Lambert, Nathan and Huang, Shengyi and Rasul, Kashif
+                  and Gallou{\'e}dec, Quentin},
   howpublished = {\url{https://github.com/huggingface/trl}},
+  publisher    = {GitHub},
   year         = {2020}
 }
 
+% Author list verified against arXiv:2505.09388 (60 authors, in submission order).
 @article{qwen3report2025,
   title   = {Qwen3 Technical Report},
-  author  = {{Qwen Team}},
+  author  = {Yang, An and Li, Anfeng and Yang, Baosong and Zhang, Beichen and Hui, Binyuan and Zheng, Bo
+             and Yu, Bowen and Gao, Chang and Huang, Chengen and Lv, Chenxu and Zheng, Chujie
+             and Liu, Dayiheng and Zhou, Fan and Huang, Fei and Hu, Feng and Ge, Hao and Wei,
+             Haoran and Lin, Huan and Tang, Jialong and Yang, Jian and Tu, Jianhong and Zhang,
+             Jianwei and Yang, Jianxin and Yang, Jiaxi and Zhou, Jing and Zhou, Jingren and
+             Lin, Junyang and Dang, Kai and Bao, Keqin and Yang, Kexin and Yu, Le and Deng,
+             Lianghao and Li, Mei and Xue, Mingfeng and Li, Mingze and Zhang, Pei and Wang,
+             Peng and Zhu, Qin and Men, Rui and Gao, Ruize and Liu, Shixuan and Luo, Shuang
+             and Li, Tianhao and Tang, Tianyi and Yin, Wenbiao and Ren, Xingzhang and Wang,
+             Xinyu and Zhang, Xinyu and Ren, Xuancheng and Fan, Yang and Su, Yang and Zhang,
+             Yichang and Zhang, Yinger and Wan, Yu and Liu, Yuqiong and Wang, Zekun and Cui,
+             Zeyu and Zhang, Zhenru and Zhou, Zhipeng and Qiu, Zihan},
   journal = {arXiv preprint arXiv:2505.09388},
-  year    = {2025}
+  year    = {2025},
+  eprint  = {2505.09388},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL}
 }
 
+% ---------------------------------------------------------------------------
+% Group-relative RLVR and rollout-allocation mechanisms
+% ---------------------------------------------------------------------------
+
+% Author list verified against arXiv:2503.14476 (35 authors, in submission order).
 @article{yu2025dapo,
   title   = {{DAPO}: An Open-Source {LLM} Reinforcement Learning System at Scale},
-  author  = {Yu, Qiying and others},
+  author  = {Yu, Qiying and Zhang, Zheng and Zhu, Ruofei and Yuan, Yufeng and Zuo, Xiaochen and Yue, Yu and
+             Dai, Weinan and Fan, Tiantian and Liu, Gaohong and Liu, Lingjun and Liu, Xin and
+             Lin, Haibin and Lin, Zhiqi and Ma, Bole and Sheng, Guangming and Tong, Yuxuan and
+             Zhang, Chi and Zhang, Mofan and Zhang, Wang and Zhu, Hang and Zhu, Jinhua and
+             Chen, Jiaze and Chen, Jiangjie and Wang, Chengyi and Yu, Hongli and Song, Yuxuan
+             and Wei, Xiangpeng and Zhou, Hao and Liu, Jingjing and Ma, Wei-Ying and Zhang,
+             Ya-Qin and Yan, Lin and Qiao, Mu and Wu, Yonghui and Wang, Mingxuan},
   journal = {arXiv preprint arXiv:2503.14476},
-  year    = {2025}
+  year    = {2025},
+  eprint  = {2503.14476},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
 }
+
+@article{zheng2025greso,
+  title   = {Act Only When It Pays: Efficient Reinforcement Learning for {LLM} Reasoning via Selective Rollouts},
+  author  = {Zheng, Haizhong and Zhou, Yang and Bartoldson, Brian R. and Kailkhura, Bhavya
+             and Lai, Fan and Zhao, Jiawei and Chen, Beidi},
+  journal = {arXiv preprint arXiv:2506.02177},
+  year    = {2025},
+  eprint  = {2506.02177},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+% arXiv:2509.21880 carries the journal reference "The Fourteenth International
+% Conference on Learning Representations (ICLR 2026)"; cited at its published venue.
+@inproceedings{le2025rlzvp,
+  title     = {No Prompt Left Behind: Exploiting Zero-Variance Prompts in {LLM} Reinforcement Learning
+               via Entropy-Guided Advantage Shaping},
+  author    = {Le, Thanh-Long V. and Jeon, Myeongho and Vu, Kim and Lai, Viet and Yang, Eunho},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2026},
+  eprint    = {2509.21880},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@article{xiong2025reinforceada,
+  title   = {Reinforce-Ada: An Adaptive Sampling Framework under Non-linear {RL} Objectives},
+  author  = {Xiong, Wei and Ye, Chenlu and Liao, Baohao and Dong, Hanze and Xu, Xinxing
+             and Monz, Christof and Bian, Jiang and Jiang, Nan and Zhang, Tong},
+  journal = {arXiv preprint arXiv:2510.04996},
+  year    = {2025},
+  eprint  = {2510.04996},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@article{zhang2026aero,
+  title   = {Train Less, Learn More: Adaptive Efficient Rollout Optimization for Group-Based Reinforcement Learning},
+  author  = {Zhang, Zhi and Han, Zhen and Mavromatis, Costas and Zhu, Qi and Zhang, Yunyi
+             and Guan, Sheng and Wang, Dingmin and Zhou, Xiong and Wang, Shuai and Adeshina, Soji
+             and Ioannidis, Vassilis and Rangwala, Huzefa},
+  journal = {arXiv preprint arXiv:2602.14338},
+  year    = {2026},
+  eprint  = {2602.14338},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@article{jiang2026vigor,
+  title   = {Learning as Reasoning Unfolds: Progressive Rollout Allocation for Efficient Reinforcement Learning},
+  author  = {Jiang, Heyang and Liu, Henry and Mirzasoleiman, Baharan},
+  journal = {arXiv preprint arXiv:2607.22002},
+  year    = {2026},
+  eprint  = {2607.22002},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@article{nomand2026sara,
+  title   = {Early Verdicts, Better Budgets: Sequential Adaptive Rollout Allocation for Compute-Efficient {RLVR}},
+  author  = {Nomand, Pixel and Voss, Elena and Hale, Marcus and Reyes, Sofia},
+  journal = {arXiv preprint arXiv:2607.26253},
+  year    = {2026},
+  eprint  = {2607.26253},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+@article{schulman2017proximal,
+  title   = {Proximal Policy Optimization Algorithms},
+  author  = {Schulman, John and Wolski, Filip and Dhariwal, Prafulla and Radford, Alec and Klimov, Oleg},
+  journal = {arXiv preprint arXiv:1707.06347},
+  year    = {2017},
+  eprint  = {1707.06347},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
+}
+
+% ---------------------------------------------------------------------------
+% Verifier and reward-parser reliability
+% ---------------------------------------------------------------------------
+
+@article{huang2025verifierrobustness,
+  title   = {From Accuracy to Robustness: A Study of Rule- and Model-based Verifiers in Mathematical Reasoning},
+  author  = {Huang, Yuzhen and Zeng, Weihao and Zeng, Xingshan and Zhu, Qi and He, Junxian},
+  journal = {arXiv preprint arXiv:2505.22203},
+  year    = {2025},
+  eprint  = {2505.22203},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL}
+}
+
+@article{yan2025verifybench,
+  title   = {{VerifyBench}: Benchmarking Reference-based Reward Systems for Large Language Models},
+  author  = {Yan, Yuchen and Jiang, Jin and Ren, Zhenbang and Li, Yijun and Cai, Xudong and Liu, Yang and
+             Xu, Xin and Zhang, Mengdi and Shao, Jian and Shen, Yongliang and Xiao, Jun and
+             Zhuang, Yueting},
+  journal = {arXiv preprint arXiv:2505.15801},
+  year    = {2025},
+  eprint  = {2505.15801},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL}
+}
+
+@article{zhao2025onetoken,
+  title   = {One Token to Fool {LLM}-as-a-Judge},
+  author  = {Zhao, Yulai and Liu, Haolin and Yu, Dian and Kung, Sunyuan and Chen, Meijia and Mi, Haitao and
+             Yu, Dong},
+  journal = {arXiv preprint arXiv:2507.08794},
+  year    = {2025},
+  eprint  = {2507.08794},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL}
+}
+
+% ---------------------------------------------------------------------------
+% Sequential allocation, stopping, and bandits
+% ---------------------------------------------------------------------------
 
 @article{lai1985asymptotically,
   title   = {Asymptotically Efficient Adaptive Allocation Rules},
@@ -51,7 +230,8 @@
   volume  = {6},
   number  = {1},
   pages   = {4--22},
-  year    = {1985}
+  year    = {1985},
+  doi     = {10.1016/0196-8858(85)90002-8}
 }
 
 @article{auer2002finite,
@@ -61,7 +241,8 @@
   volume  = {47},
   number  = {2--3},
   pages   = {235--256},
-  year    = {2002}
+  year    = {2002},
+  doi     = {10.1023/A:1013689704352}
 }
 
 @article{evendar2006action,
@@ -69,22 +250,44 @@
   author  = {Even-Dar, Eyal and Mannor, Shie and Mansour, Yishay},
   journal = {Journal of Machine Learning Research},
   volume  = {7},
+  number  = {39},
   pages   = {1079--1105},
   year    = {2006}
 }
 
+@inproceedings{bengio2009curriculum,
+  title     = {Curriculum Learning},
+  author    = {Bengio, Yoshua and Louradour, J{\'e}r{\^o}me and Collobert, Ronan and Weston, Jason},
+  booktitle = {Proceedings of the 26th Annual International Conference on Machine Learning (ICML)},
+  pages     = {41--48},
+  year      = {2009},
+  doi       = {10.1145/1553374.1553380}
+}
+
+% ---------------------------------------------------------------------------
+% Reproducibility and statistical methodology
+% ---------------------------------------------------------------------------
+
 @inproceedings{henderson2018deep,
   title     = {Deep Reinforcement Learning that Matters},
-  author    = {Henderson, Peter and Islam, Riashat and Bachman, Philip and Pineau, Joelle and Precup, Doina and Meger, David},
+  author    = {Henderson, Peter and Islam, Riashat and Bachman, Philip and Pineau, Joelle
+               and Precup, Doina and Meger, David},
   booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
-  year      = {2018}
+  year      = {2018},
+  eprint    = {1709.06560},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
 }
 
 @inproceedings{agarwal2021deep,
   title     = {Deep Reinforcement Learning at the Edge of the Statistical Precipice},
-  author    = {Agarwal, Rishabh and Schwarzer, Max and Castro, Pablo Samuel and Courville, Aaron and Bellemare, Marc G.},
-  booktitle = {Advances in Neural Information Processing Systems},
-  year      = {2021}
+  author    = {Agarwal, Rishabh and Schwarzer, Max and Castro, Pablo Samuel and Courville, Aaron
+               and Bellemare, Marc G.},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2021},
+  eprint    = {2108.13264},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG}
 }
 
 @article{holm1979simple,
@@ -100,62 +303,49 @@
 @book{efron1993bootstrap,
   title     = {An Introduction to the Bootstrap},
   author    = {Efron, Bradley and Tibshirani, Robert J.},
+  series    = {Monographs on Statistics and Applied Probability},
+  number    = {57},
   publisher = {Chapman \& Hall},
+  address   = {New York},
   year      = {1993}
 }
 
-@inproceedings{bengio2009curriculum,
-  title     = {Curriculum Learning},
-  author    = {Bengio, Yoshua and Louradour, J{\'e}r{\^o}me and Collobert, Ronan and Weston, Jason},
-  booktitle = {Proceedings of the 26th International Conference on Machine Learning (ICML)},
-  year      = {2009}
+% ---------------------------------------------------------------------------
+% Non-inferiority and equivalence testing methodology
+% ---------------------------------------------------------------------------
+
+@article{blackwelder1982proving,
+  title   = {``{P}roving the Null Hypothesis'' in Clinical Trials},
+  author  = {Blackwelder, William C.},
+  journal = {Controlled Clinical Trials},
+  volume  = {3},
+  number  = {4},
+  pages   = {345--353},
+  year    = {1982},
+  doi     = {10.1016/0197-2456(82)90024-1}
 }
 
-@article{schulman2017proximal,
-  title   = {Proximal Policy Optimization Algorithms},
-  author  = {Schulman, John and Wolski, Filip and Dhariwal, Prafulla and Radford, Alec and Klimov, Oleg},
-  journal = {arXiv preprint arXiv:1707.06347},
-  year    = {2017}
+@article{schuirmann1987tost,
+  title   = {A Comparison of the Two One-Sided Tests Procedure and the Power Approach for
+             Assessing the Equivalence of Average Bioavailability},
+  author  = {Schuirmann, Donald J.},
+  journal = {Journal of Pharmacokinetics and Biopharmaceutics},
+  volume  = {15},
+  number  = {6},
+  pages   = {657--680},
+  year    = {1987},
+  doi     = {10.1007/BF01068419}
 }
 
-@article{zheng2025greso,
-  title   = {Act Only When It Pays: Efficient Reinforcement Learning for {LLM} Reasoning via Selective Rollouts},
-  author  = {Zheng, Haizhong and Zhou, Yang and Bartoldson, Brian R. and Kailkhura, Bhavya and Lai, Fan and Zhao, Jiawei and Chen, Beidi},
-  journal = {arXiv preprint arXiv:2506.02177},
-  year    = {2025}
-}
-
-@article{le2025rlzvp,
-  title   = {No Prompt Left Behind: Exploiting Zero-Variance Prompts in {LLM} Reinforcement Learning via Entropy-Guided Advantage Shaping},
-  author  = {Le, Thanh-Long V. and Jeon, Myeongho and Vu, Kim and Lai, Viet and Yang, Eunho},
-  journal = {arXiv preprint arXiv:2509.21880},
-  year    = {2025}
-}
-
-@article{xiong2025reinforceada,
-  title   = {Reinforce-Ada: An Adaptive Sampling Framework under Non-linear {RL} Objectives},
-  author  = {Xiong, Wei and Ye, Chenlu and Liao, Baohao and Dong, Hanze and Xu, Xinxing and Monz, Christof and Bian, Jiang and Jiang, Nan and Zhang, Tong},
-  journal = {arXiv preprint arXiv:2510.04996},
-  year    = {2025}
-}
-
-@article{zhang2026aero,
-  title   = {Train Less, Learn More: Adaptive Efficient Rollout Optimization for Group-Based Reinforcement Learning},
-  author  = {Zhang, Zhi and Han, Zhen and Mavromatis, Costas and Zhu, Qi and Zhang, Yunyi and Guan, Sheng and Wang, Dingmin and Zhou, Xiong and Wang, Shuai and Adeshina, Soji and Ioannidis, Vassilis and Rangwala, Huzefa},
-  journal = {arXiv preprint arXiv:2602.14338},
-  year    = {2026}
-}
-
-@article{jiang2026vigor,
-  title   = {Learning as Reasoning Unfolds: Progressive Rollout Allocation for Efficient Reinforcement Learning},
-  author  = {Jiang, Heyang and Liu, Henry and Mirzasoleiman, Baharan},
-  journal = {arXiv preprint arXiv:2607.22002},
-  year    = {2026}
-}
-
-@article{nomand2026sara,
-  title   = {Early Verdicts, Better Budgets: Sequential Adaptive Rollout Allocation for Compute-Efficient {RLVR}},
-  author  = {Nomand, Pixel and Voss, Elena and Hale, Marcus and Reyes, Sofia},
-  journal = {arXiv preprint arXiv:2607.26253},
-  year    = {2026}
+@article{piaggio2012consort,
+  title   = {Reporting of Noninferiority and Equivalence Randomized Trials: Extension of the
+             {CONSORT} 2010 Statement},
+  author  = {Piaggio, Gilda and Elbourne, Diana R. and Pocock, Stuart J. and Evans, Stephen J. W.
+             and Altman, Douglas G. and {for the CONSORT Group}},
+  journal = {JAMA},
+  volume  = {308},
+  number  = {24},
+  pages   = {2594},
+  year    = {2012},
+  doi     = {10.1001/jama.2012.87802}
 }

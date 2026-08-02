@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """
-vast.ai Runner for SkyRL tx (Tinker API Server)
+vast.ai Runner — framework-aware GPU provisioning.
 
-Provisions GPU instances on vast.ai and runs SkyRL tx server,
-allowing any Tinker cookbook script to connect remotely.
+Provisions GPU instances on vast.ai and runs the chosen RL framework
+(trl/tinker/verl/openrlhf/skyrl) on-instance via the unified launcher's
+in-process dispatch — the same per-framework code path as the local backend.
 
 Usage:
-    python -m skyrl.backends.vastai_runner \
-        --model Qwen/Qwen2.5-1.5B-Instruct \
+    python -m platform_hybrid.skyrl.backends.vastai_runner \
+        --framework skyrl \
+        --model Qwen/Qwen3-8B \
         --algorithm grpo \
-        --epochs 20
+        --num-instances 1
 """
 
 import argparse
@@ -17,10 +19,8 @@ import asyncio
 import json
 import os
 import subprocess
-import sys
 import time
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Optional, List, Dict, Any
 
 import asyncssh
@@ -232,15 +232,41 @@ cat /root/skyrl_server.log
     def generate_setup_script(
         self,
         model_name: str,
+        framework: str = "skyrl",
         algorithm: str = "grpo",
-        training_script: Optional[str] = None,
     ) -> str:
-        """Generate the instance setup script."""
+        """Generate the on-instance setup script for the chosen framework.
+
+        Clones this repo, installs its deps plus the framework's, and (for
+        skyrl) clones the SkyRL checkout the unified dispatcher's ``_run_skyrl``
+        needs. Training itself is launched separately via :meth:`run_training`
+        as ``python -m platform_local.unified --framework <fw> --backend local``,
+        so every framework runs its own code, not just SkyRL.
+        """
+        # Per-framework extra install (best-effort; matches what the unified
+        # launcher's _run_<fw> assumes). trl ships with the repo core install.
+        fw_install = {
+            "tinker": "uv pip install 'tinker>=0.5.0' 'tinker-cookbook>=0.2.0'",
+            "verl": "uv pip install 'verl==0.3.0.post1'",
+            "openrlhf": "uv pip install openrlhf",
+            "skyrl": "true",  # SkyRL cloned below; deps via its own uv sync
+            "trl": "true",
+        }.get(framework, "true")
+
+        # SkyRL needs its own checkout; the unified _run_skyrl reads $SKYRL_CHECKOUT.
+        skyrl_block = (
+            "git clone --depth 1 --branch skyrl_train-v0.4.0 "
+            "https://github.com/NovaSky-AI/SkyRL.git /root/SkyRL\n"
+            "cd /root/SkyRL/skyrl-train && uv sync --extra vllm --extra gpu --extra tinker\n"
+            "cd /root/tinker-rl-lab\n"
+            'export SKYRL_CHECKOUT="/root/SkyRL"'
+        ) if framework == "skyrl" else "true"
+
         script = f'''#!/bin/bash
 set -euo pipefail
 exec > /root/setup.log 2>&1
 
-echo "=== $(date) | Setting up SkyRL ==="
+echo "=== $(date) | Setting up framework={framework} ==="
 
 # System prep
 apt-get update -qq
@@ -253,23 +279,35 @@ nvidia-smi || echo "No NVIDIA GPU detected"
 curl -LsSf https://astral.sh/uv/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
 
-# Clone SkyRL
-git clone --depth 1 --branch skyrl_train-v0.4.0 \\
-    https://github.com/NovaSky-AI/SkyRL.git /root/SkyRL
+# Clone this repo (carries platform_local.unified + the per-framework drivers)
+git clone https://github.com/pes-llm-research/tinker-rl-lab.git /root/tinker-rl-lab
+cd /root/tinker-rl-lab
 
-cd /root/SkyRL/skyrl-train
-
-# Create venv and install
 uv venv --python 3.12 --seed
 source .venv/bin/activate
-uv sync --extra vllm --extra gpu --extra tinker
+uv pip install -e .
+uv pip install wandb datasets math-verify latex2sympy2-extended peft accelerate
+{fw_install}
 
-# Install additional deps
-uv pip install wandb datasets math-verify latex2sympy2-extended trl peft accelerate
+# SkyRL checkout (only for skyrl)
+{skyrl_block}
 
-echo "=== Setup Complete ==="
+echo "=== Setup Complete (framework={framework}) ==="
 '''
         return script
+
+    def training_command_for(self, framework: str, model_name: str, algorithm: str) -> str:
+        """The on-instance command that actually trains ``framework``.
+
+        Runs the unified launcher's in-process dispatch — the same ``_run_<fw>``
+        code path as the local backend — so trl/tinker/verl/openrlhf/skyrl each
+        run their own entry point on the rented GPU.
+        """
+        return (
+            "cd /root/tinker-rl-lab && source .venv/bin/activate && "
+            f"python -m platform_local.unified --framework {framework} --backend local "
+            f"--model {model_name} --algorithm {algorithm}"
+        )
 
     async def run_training(
         self,
@@ -327,18 +365,30 @@ bash -c '{training_script}'
     async def run(
         self,
         model_name: str,
+        framework: str = "skyrl",
         algorithm: str = "grpo",
         epochs: int = 20,
         num_instances: int = 1,
         training_command: Optional[str] = None,
     ):
-        """Main execution flow."""
+        """Main execution flow.
+
+        ``framework`` selects what trains on the rented GPU via the unified
+        launcher's in-process dispatch (trl/tinker/verl/openrlhf/skyrl). An
+        explicit ``training_command`` overrides the generated unified-dispatch
+        command.
+        """
         print(f"\n{'='*60}")
-        print(f"  SkyRL vast.ai Launcher")
+        print(f"  vast.ai Launcher (framework={framework})")
         print(f"  Model: {model_name}")
         print(f"  Algorithm: {algorithm}")
         print(f"  Instances: {num_instances}")
         print(f"{'='*60}\n")
+
+        # The on-instance training command: run the chosen framework through the
+        # unified launcher unless the caller supplied an explicit override.
+        if training_command is None:
+            training_command = self.training_command_for(framework, model_name, algorithm)
 
         try:
             # 1. Search for instances
@@ -368,39 +418,28 @@ bash -c '{training_script}'
                 print("ERROR: No instances became ready")
                 return
 
-            # 4. Setup SkyRL on each instance
-            setup_script = self.generate_setup_script(model_name, algorithm)
+            # 4. Setup the chosen framework on each instance
+            setup_script = self.generate_setup_script(model_name, framework, algorithm)
 
             for instance in ready_instances:
                 if not await self.setup_instance(instance, setup_script):
                     print(f"WARNING: Setup failed for instance {instance.id}")
 
-            # 5. Start SkyRL tx server
-            for instance in ready_instances:
-                await self.start_skyrl_server(instance, model_name)
+            # 5. Run training (unified dispatch for the chosen framework on each box)
+            tasks = []
+            for i, inst in enumerate(ready_instances):
+                env_vars = {
+                    "WANDB_API_KEY": os.environ.get("WANDB_API_KEY", ""),
+                    "HF_TOKEN": os.environ.get("HF_TOKEN", ""),
+                    # Frameworks that need the Tinker service get a real key from env;
+                    # the unified dispatcher (_run_tinker/_run_skyrl) reads TINKER_API_KEY.
+                    "TINKER_API_KEY": os.environ.get("TINKER_API_KEY", ""),
+                    # Unique SEED per instance so multi-instance runs are statistically sound.
+                    "SEED": str(42 + i),
+                }
+                tasks.append(self.run_training(inst, training_command, env_vars))
 
-            # 6. Run training
-            if training_command:
-                # TODO: Address "Closed-Source Confound" limitation.
-                # The managed API performance gap might be due to undocumented defaults rather than algorithmic differences.
-                
-                # TODO: Address "Failure to Prove Generalization" limitation.
-                # Ensure training_command includes evaluation on a held-out test set to prove true reasoning uplift.
-                
-                tasks = []
-                for i, inst in enumerate(ready_instances):
-                    env_vars = {
-                        "TINKER_API_KEY": "tml-dummy",
-                        "TINKER_BASE_URL": f"http://{inst.ssh_host}:8000",
-                        "WANDB_API_KEY": os.environ.get("WANDB_API_KEY", ""),
-                        "HF_TOKEN": os.environ.get("HF_TOKEN", ""),
-                        # TODO: Fix "Single-Seed Extrapolations" limitation.
-                        # We inject a unique SEED per instance so multi-instance runs are statistically sound.
-                        "SEED": str(42 + i),
-                    }
-                    tasks.append(self.run_training(inst, training_command, env_vars))
-                
-                await asyncio.gather(*tasks)
+            await asyncio.gather(*tasks)
 
             print("\n" + "=" * 60)
             print("  All tasks completed!")
@@ -414,8 +453,11 @@ bash -c '{training_script}'
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Launch SkyRL on vast.ai")
+    parser = argparse.ArgumentParser(description="Launch an RL framework on vast.ai")
 
+    parser.add_argument("--framework", type=str, default="skyrl",
+                        choices=["trl", "tinker", "verl", "openrlhf", "skyrl"],
+                        help="RL framework to train on the rented GPU")
     parser.add_argument("--model", type=str, default="Qwen/Qwen2.5-1.5B-Instruct",
                         help="Model to use")
     parser.add_argument("--algorithm", type=str, default="grpo",
@@ -430,7 +472,7 @@ def main():
     parser.add_argument("--tensor-parallel-size", type=int, default=1,
                         help="Tensor parallelism size")
     parser.add_argument("--training-command", type=str, default=None,
-                        help="Training command to run")
+                        help="Override the on-instance training command")
     parser.add_argument("--api-key", type=str, default=None,
                         help="vast.ai API key (or set VAST_API_KEY)")
 
@@ -440,6 +482,7 @@ def main():
 
     asyncio.run(launcher.run(
         model_name=args.model,
+        framework=args.framework,
         algorithm=args.algorithm,
         epochs=args.epochs,
         num_instances=args.num_instances,

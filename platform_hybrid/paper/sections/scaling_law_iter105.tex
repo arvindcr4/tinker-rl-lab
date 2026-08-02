@@ -108,7 +108,7 @@ The visual evidence is in
 two 8B dense anchors \emph{bracket} the panel (Qwen3-8B
 $R_\mathrm{max}^\star = 0.34$, Llama-3.1-8B-Instruct
 $R_\mathrm{max}^\star = 0.84$); a 27B dense model sits at $0.00$
-while a 20B MoE sits at $0.88$; a 671B MoE is at $0.81$ and a 1000B
+while a 20B MoE sits at $0.88$; a 685B-class MoE is at $0.81$ and a 1000B
 MoE is at $0.75$.  Size alone does not predict ceiling.
 
 \paragraph{F3. Family-asymmetric residuals: the MoE-only fit predicts all dense anchors badly.}
@@ -124,7 +124,7 @@ $-0.79$.  Three other dense anchors (Qwen3-32B $-0.67$, Qwen3-8B
 $-0.39$, Llama-3.1-8B-Instruct $+0.11$) also miss by more than
 $0.10$.  The MoE family alone cannot reproduce the dense family's
 $R_\mathrm{max}^\star$ distribution; the inverse also fails
-(Nemotron-120B, the collapse outlier, is held out from MoE fit and
+(Nemotron-120B, the collapse outlier (MoE / LatentMoE, previously mislabelled dense), is held out from one family fit and
 over-predicted by $+0.05$, while gpt-oss-20B is under-predicted by
 $+0.48$ when held out from dense).
 
@@ -190,9 +190,9 @@ Qwen3.5-27B           &   27 & dense & 0.00 & drift \\
 Qwen3-32B             &   32 & dense & 0.13 & drift \\
 Qwen3-30B-MoE         &   30 & moe   & 0.44 & plateau \\
 Qwen3-30B-MoE-Inst    &   30 & moe   & 1.00 & converged \\
-Nemotron-120B         &  120 & dense & 0.88 & collapse \\
+Nemotron-120B         &  120 & moe   & 0.88 & collapse \\
 Qwen3-235B-MoE        &  235 & moe   & 1.00 & converged \\
-DeepSeek-V3.1         &  671 & moe   & 0.81 & plateau \\
+DeepSeek-V3.1         &  685 & moe   & 0.81 & plateau \\
 Kimi-K2-Thinking      & 1000 & moe   & 0.75 & drift \\
 \bottomrule
 \end{tabular}

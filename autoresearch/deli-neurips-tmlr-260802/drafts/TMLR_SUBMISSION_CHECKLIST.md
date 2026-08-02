@@ -62,3 +62,9 @@ Stop the upload if any of these is true:
 - an inconclusive held-out comparison is described as improvement;
 - the supplement verifier or manifest fails; or
 - the uploaded PDF differs from the locally reviewed digest.
+
+## Spine selection (2026-08-02)
+
+- Target manuscript: P11 `zvf-program/audit/paper_P11_reproducibility_audit.tex` (GRPO-Stack-Audit), not the NeurIPS 36320 flagship.
+- Overlap check: `drafts/P11_NEURIPS_OVERLAP_CHECK.md` — clean.
+- Do not upload until human freezes PDF hash and anonymity package.

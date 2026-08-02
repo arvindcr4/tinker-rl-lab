@@ -2,7 +2,7 @@
 """Build the comprehensive faculty program-review deck for Tinker RL Lab.
 
 Covers ALL work done in the program (Semester 3 Group 6 capstone, Semester 4
-solo continuation, the E1 confirmatory campaign, preregistration, and the
+solo continuation, the E1 confirmatory campaign, protocol freezing, and the
 publication program). Every number is read from / grounded in the repository.
 
 Visual language matches outputs/build_progress_update_deck.py (dark navy,
@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from pypdf import PdfReader
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
@@ -42,6 +43,28 @@ GRID = "2B3A52"
 
 FONT = "Aptos"
 FONT_DISPLAY = "Aptos Display"
+
+
+# The live publication queue. Archived/absorbed roots are deliberately absent.
+ACTIVE_PAPERS = [
+    ("P1", "Scaling limits", "MoE headline fails; limits only", "platform_hybrid/paper/paper_P1_scaling.pdf", BLUE),
+    ("P2", "Zero-Variance Fraction", "diagnostic; causal claims unearned", "platform_hybrid/paper/paper_P2_zvf.pdf", TEAL),
+    ("P3", "Group size", "measured bounds", "platform_hybrid/paper/paper_P3_group_size.pdf", LAV),
+    ("P4", "Length bias", "bounded null", "platform_hybrid/paper/paper_P4_length_bias.pdf", AMBER),
+    ("P5", "MIN-REPORT-RL", "eight-item standard", "platform_hybrid/paper/paper_P5_minreport.pdf", GREEN),
+    ("P6", "GRPO-Registry", "seven-field run schema", "platform_hybrid/paper/paper_P6_registry.pdf", RED),
+    ("P7", "ZVF controller", "test plan; not promoted", "platform_hybrid/paper/paper_P7_zvf_controller.pdf", BLUE),
+    ("P8", "Workshop note", "exploratory artifact", "platform_hybrid/paper/neurips_2026_variants/paper_P8_workshop.pdf", TEAL),
+    ("P9", "D&B artifact", "benchmark candidate", "platform_hybrid/paper/neurips_2026_variants/paper_P9_dnb.pdf", LAV),
+    ("P10", "ZVF theory", "calibration proof sketches", "zvf-program/theory/paper_P10_zvf_theory.pdf", AMBER),
+    ("P11", "Reproducibility audit", "40 units; bounded result", "zvf-program/audit/paper_P11_reproducibility_audit.pdf", GREEN),
+    ("P12", "Signal starvation", "method + evaluation contract", "platform_hybrid/paper/unified_signal_starvation/paper_P12_signal_starvation.pdf", RED),
+]
+
+
+def page_count(relative_pdf: str) -> int:
+    """Read the page count from the PDF that will be represented in the deck."""
+    return len(PdfReader(str(ROOT / relative_pdf)).pages)
 
 
 def rgb(hex_color: str) -> RGBColor:
@@ -109,9 +132,38 @@ def add_line(slide, x1, y1, x2, y2, color=GRID, width=1.0):
     return line
 
 
+# Slide titles must stay on ONE line: a wrapped title overruns its box and
+# collides with the header rule at y=1.17. Aptos is absent on the render host,
+# so LibreOffice substitutes DejaVu Sans Bold — measure against that.
+_METRIC_FONT = Path(
+    "/Applications/LibreOffice.app/Contents/Resources/fonts/truetype/DejaVuSans-Bold.ttf"
+)
+
+
+def text_width_pt(text: str, size: float) -> float:
+    """Rendered width of `text` at `size` pt, in points."""
+    try:
+        from PIL import ImageFont
+
+        font = ImageFont.truetype(str(_METRIC_FONT), 1000)
+        return font.getlength(text) * size / 1000.0
+    except Exception:
+        return len(text) * size * 0.585  # conservative DejaVu Sans Bold average
+
+
+def title_fit_size(text: str, width_in: float, max_size=25.0, min_size=17.0) -> float:
+    """Largest size in [min_size, max_size] at which `text` fits one line."""
+    usable = (width_in - 0.10) * 72.0  # 0.04in text-frame margins, plus slack
+    size = max_size
+    while size > min_size and text_width_pt(text, size) > usable:
+        size -= 1.0
+    return size
+
+
 def add_header(slide, kicker, title, number):
     add_text(slide, kicker.upper(), 0.55, 0.26, 8.0, 0.22, size=8.5, color=TEAL, bold=True)
-    add_text(slide, title, 0.55, 0.54, 11.9, 0.52, size=25, color=INK, bold=True, font=FONT_DISPLAY)
+    add_text(slide, title, 0.55, 0.54, 11.9, 0.52, size=title_fit_size(title, 11.9),
+             color=INK, bold=True, font=FONT_DISPLAY)
     add_text(slide, f"{number:02d}", 12.27, 0.28, 0.45, 0.25, size=10, color=MUTED, bold=True, align=PP_ALIGN.RIGHT)
     add_line(slide, 0.55, 1.17, 12.78, 1.17, GRID, 0.8)
 
@@ -124,7 +176,8 @@ def add_footer(slide, source: str):
 def add_metric(slide, x, y, w, h, value, label, accent=TEAL, detail=None):
     add_shape(slide, MSO_SHAPE.RECTANGLE, x, y, w, h, PANEL, GRID, radius=True)
     add_shape(slide, MSO_SHAPE.RECTANGLE, x, y, 0.06, h, accent)
-    add_text(slide, value, x + 0.22, y + 0.16, w - 0.35, 0.42, size=25, color=INK, bold=True, font=FONT_DISPLAY)
+    add_text(slide, value, x + 0.22, y + 0.16, w - 0.35, 0.42,
+             size=title_fit_size(value, w - 0.35, 25.0, 13.0), color=INK, bold=True, font=FONT_DISPLAY)
     add_text(slide, label, x + 0.22, y + 0.62, w - 0.35, 0.28, size=10, color=MUTED, bold=True)
     if detail:
         add_text(slide, detail, x + 0.22, y + 0.92, w - 0.35, h - 1.02, size=8.2, color=MUTED)
@@ -158,41 +211,44 @@ def build() -> Presentation:
     prs = Presentation()
     prs.slide_width = Inches(W)
     prs.slide_height = Inches(H)
+    paper_pages = {pid: page_count(pdf) for pid, _, _, pdf, _ in ACTIVE_PAPERS}
+    active_page_total = sum(paper_pages.values())
+    thesis_pages = page_count("thesis/main.pdf")
 
     # ── 1. Title ────────────────────────────────────────────────────────────
     s = new_slide(prs)
     add_text(s, "TINKER RL LAB  /  PES UNIVERSITY", 0.65, 0.55, 6.0, 0.25, size=10, color=TEAL, bold=True)
     add_text(s, "Reinforcement Learning Post-Training\nof Large Language Models", 0.65, 1.30, 12.0, 1.9, size=40, color=INK, bold=True, font=FONT_DISPLAY)
-    add_text(s, "Program review — every phase, paper, and experiment from Semester 3 capstone to today", 0.69, 3.62, 11.0, 0.42, size=17, color=MUTED)
+    add_text(s, "Program review — every phase, the 12-paper portfolio, and the experiments behind it", 0.69, 3.62, 11.0, 0.42, size=17, color=MUTED)
     add_text(s, "02 AUG 2026  ·  FACULTY REVIEW  ·  ARVIND C R", 0.69, 4.26, 6.5, 0.25, size=9.5, color=AMBER, bold=True)
     add_text(s, "M.Tech candidate  ·  Guide: Prof. Ramesh Prakash Guledgudd", 0.69, 4.56, 7.0, 0.25, size=12, color=INK, bold=True)
     add_line(s, 0.72, 5.72, 12.45, 5.72, GRID, 2.3)
     phases = [
         (1.30, "SEM 3", "Group 6 capstone\nTinkerRL-Bench · NeurIPS", TEAL),
-        (4.90, "SEM 4", "Solo continuation\n8 pillar papers · thesis", BLUE),
-        (8.50, "JUL–AUG 26", "E1 campaign · audit\npreregistration", AMBER),
+        (4.90, "SEM 4", "Solo continuation\n12 active papers · thesis", BLUE),
+        (8.50, "JUL–AUG 26", "E1 campaign · audit\nprotocol freeze", AMBER),
     ]
     for x, tag, label, color in phases:
         add_shape(s, MSO_SHAPE.OVAL, x + 0.15, 5.54, 0.36, 0.36, color, color)
         add_text(s, tag, x - 0.15, 6.05, 0.85, 0.20, size=8.0, color=color, bold=True, align=PP_ALIGN.CENTER)
         add_text(s, label, x - 0.75, 6.30, 2.5, 0.50, size=9.5, color=INK, bold=True, align=PP_ALIGN.CENTER)
-    add_text(s, "One question, two semesters, eighteen manuscripts, and a fail-closed path to the next result.",
+    add_text(s, "One question, two semesters, twelve active papers, and a fail-closed path to the next result.",
              0.69, 7.02, 11.8, 0.23, size=9.5, color=MUTED, italic=True)
 
     # ── 2. Program at a glance ─────────────────────────────────────────────
     s = new_slide(prs)
     add_header(s, "Overview", "The program in one slide", 2)
     add_metric(s, 0.65, 1.42, 2.30, 1.24, "1,001", "commits", TEAL, "14 Mar → 02 Aug 2026")
-    add_metric(s, 3.12, 1.42, 2.30, 1.24, "18", "manuscripts", BLUE, "8 pillar papers + venue variants + synthesis")
-    add_metric(s, 5.59, 1.42, 2.30, 1.24, "480", "paper pages", LAV, "P1–P8 compiled cleanly, 0 errors")
+    add_metric(s, 3.12, 1.42, 2.30, 1.24, "12", "active papers", BLUE, "one canonical queue: P1–P12")
+    add_metric(s, 5.59, 1.42, 2.30, 1.24, str(active_page_total), "portfolio pages", LAV, "live P1–P12 PDFs, counted at build time")
     add_metric(s, 8.06, 1.42, 2.30, 1.24, "40/40", "E1 units verified", AMBER, "5 arms × 8 seeds, Colab A100")
     add_metric(s, 10.53, 1.42, 2.30, 1.24, "INCONCL.", "E1 verdicts", RED, "correct statistics, honest result")
     row = [
         ("01", "QUESTION", "Does group-relative RL post-training starve of gradient signal — and can we measure it?", TEAL),
-        ("02", "BENCHMARK", "TinkerRL-Bench: unified benchmark for RL post-training across 4 frameworks, 6 backends", BLUE),
-        ("03", "DISCOVERY", "ZVF: the zero-variance fraction — an exact identity verified to 1.11e-16 on 505 tasks", LAV),
+        ("02", "BENCHMARK", "TinkerRL-Bench spans 4 frameworks and 6 backends; the current results ledger is not yet fully comparable", BLUE),
+        ("03", "DIAGNOSTIC", "ZVF: the fraction of homogeneous-reward groups; raw tensors recompute, predictive value is not established", LAV),
         ("04", "EVIDENCE", "40-unit confirmatory campaign, 983-run audit workbook, W&B 153-run public record", AMBER),
-        ("05", "DISCIPLINE", "Preregistered, hash-bound, fail-closed protocols — no claim until the evidence clears", GREEN),
+        ("05", "DISCIPLINE", "Frozen, hash-bound, fail-closed protocols — no claim until the evidence clears", GREEN),
     ]
     for i, (num, kicker, body, color) in enumerate(row):
         y = 2.98 + i * 0.80
@@ -241,7 +297,7 @@ def build() -> Presentation:
     add_text(s, "Deliverables", 0.68, 2.95, 3.0, 0.30, size=15, color=INK, bold=True, font=FONT_DISPLAY)
     bullets = [
         ("NeurIPS 2026 Datasets & Benchmarks submission", "compiled blind review bundle; 0 PII hits; tag v1.0.0-neurips-2026", TEAL),
-        ("ACM artifact review — three badges", "Available · Evaluated-Functional (< 10 min smoke test) · Reusable", BLUE),
+        ("Artifact package — three badge targets", "Available · Evaluated-Functional · Reusable are targets, not awarded badges", BLUE),
         ("Reproducibility engineering", "pinned Docker (CUDA 12.4 + Ubuntu 22.04), seeds, ±2 pp claim checks", LAV),
         ("Recipes across environments", "Atropos, GSM8K, MATH, HumanEval, tool use — math RL hit 100% accuracy", AMBER),
     ]
@@ -266,7 +322,7 @@ def build() -> Presentation:
         ("Preference shorter", "concise-response reward", "Complete", BLUE),
         ("Distillation off-policy", "SFT on OpenThoughts3", "Complete", LAV),
         ("Distillation on-policy", "KL to teacher, no SFT copy", "Complete", AMBER),
-        ("GSM8K GRPO vs PPO", "Qwen3-8B, held-out 500", "GRPO ≈ PPO (±0.1 pp)", BLUE),
+        ("GSM8K GRPO / PPO", "Qwen3-8B, one panel", "traces only", BLUE),
     ]
     for i, (name, desc, status, color) in enumerate(recipes):
         y = 1.50 + i * 0.55
@@ -278,7 +334,7 @@ def build() -> Presentation:
     add_text(s, "The platform works; the science question is what the recipes reveal.", 0.68, 5.10, 5.6, 0.30, size=12, color=AMBER, bold=True)
     # figure
     add_picture(s, FIG / "ppo_vs_grpo.png", 6.65, 1.42, 6.10, 4.08)
-    add_text(s, "GRPO vs PPO learning curves, Qwen3-8B / GSM8K — the flagship comparison that the E1 campaign later re-ran under a frozen protocol.", 6.68, 5.66, 6.05, 0.60, size=9.2, color=MUTED)
+    add_text(s, "GRPO and PPO learning curves, Qwen3-8B / GSM8K — an early descriptive panel that motivated later auditing. E1 did not rerun PPO and does not establish an algorithm ranking.", 6.68, 5.66, 6.05, 0.60, size=9.2, color=MUTED)
     add_text(s, "statistical floor: 10 seeds · IQM · bootstrap 95% CI (Agarwal et al., 2021)", 0.68, 6.60, 6.0, 0.26, size=9, color=MUTED, italic=True)
     add_footer(s, "Sources: README.md recipe table; experiments/ results; figures/v2/ppo_vs_grpo.png")
 
@@ -324,50 +380,40 @@ def build() -> Presentation:
     add_header(s, "Phase 2 · Semester 4 · Solo", "From benchmark to a falsifiable thesis on signal starvation", 7)
     add_text(s, "The Zero-Variance Fraction: Diagnosing and Budgeting Signal Starvation in Group-Relative RL Post-Training of LLMs",
              0.65, 1.40, 12.0, 0.62, size=15, color=INK, bold=True, font=FONT_DISPLAY)
-    add_text(s, "M.Tech thesis · Arvind C R · guide Prof. Ramesh Prakash Guledgudd · July 2026 · 31-page current draft, chapter ↔ paper provenance map",
+    add_text(s, f"M.Tech thesis · Arvind C R · guide Prof. Ramesh Prakash Guledgudd · July 2026 · {thesis_pages}-page current draft, chapter ↔ paper provenance map",
              0.68, 2.06, 11.8, 0.28, size=10.5, color=MUTED)
-    add_metric(s, 0.65, 2.62, 2.30, 1.10, "206", "analysis iterations", TEAL, "recorded, versioned")
-    add_metric(s, 3.12, 2.62, 2.30, 1.10, "8", "pillar papers", BLUE, "P1–P8, each compiles clean")
-    add_metric(s, 5.59, 2.62, 2.30, 1.10, "480", "paper pages", LAV, "P5 80p · P6 65p · P7 81p · P8 94p")
-    add_metric(s, 8.06, 2.62, 2.30, 1.10, "17→18", "document roster", AMBER, "unified synthesis added")
-    add_metric(s, 10.53, 2.62, 2.30, 1.10, "2", "bounded claims", GREEN, "diagnostic + group-size")
-    papers = [
-        ("P1", "Scaling Laws for GRPO", "limits & identifiability audit — cross-library, cross-scale", 45, BLUE),
-        ("P2", "The Zero-Variance Fraction", "descriptive diagnostic + exact accounting", 45, TEAL),
-        ("P3", "Group Size in GRPO", "contrast density and the bridge to DPO", 25, LAV),
-        ("P4", "Length Bias", "held-out generalization in GRPO & Dr.GRPO", 45, AMBER),
-        ("P5", "Report the Stack", "8-item minimum-report standard", 80, GREEN),
-        ("P6", "GRPO-Registry", "machine-readable catalog, 7-field runs", 65, RED),
-        ("P7", "ZVF Controller", "signal-starvation theory; adaptive G not promoted", 81, BLUE),
-        ("P8", "LLM vs XGBoost Fraud", "sensor and scribe, not scorer — parked side study", 94, TEAL),
-    ]
-    for i, (pid, title, body, pages, color) in enumerate(papers):
+    add_metric(s, 0.65, 2.52, 2.30, 0.88, "206", "analysis iterations", TEAL)
+    add_metric(s, 3.12, 2.52, 2.30, 0.88, "12", "active papers", BLUE)
+    add_metric(s, 5.59, 2.52, 2.30, 0.88, str(active_page_total), "portfolio pages", LAV)
+    add_metric(s, 8.06, 2.52, 2.30, 0.88, "6", "absorbed roots", AMBER)
+    add_metric(s, 10.53, 2.52, 2.30, 0.88, "2", "bounded claims", GREEN)
+    for i, (pid, title, body, _, color) in enumerate(ACTIVE_PAPERS):
         x = 0.65 + (i % 4) * 3.05
-        y = 4.02 + (i // 4) * 1.42
-        add_shape(s, MSO_SHAPE.RECTANGLE, x, y, 2.88, 1.26, PANEL, GRID, radius=True)
+        y = 3.62 + (i // 4) * 1.05
+        add_shape(s, MSO_SHAPE.RECTANGLE, x, y, 2.88, 0.91, PANEL, GRID, radius=True)
         add_shape(s, MSO_SHAPE.RECTANGLE, x, y, 2.88, 0.05, color)
-        add_text(s, f"{pid} · {pages}p", x + 0.16, y + 0.14, 2.5, 0.22, size=8.6, color=color, bold=True)
-        add_text(s, title, x + 0.16, y + 0.40, 2.55, 0.26, size=10.2, color=INK, bold=True)
-        add_text(s, body, x + 0.16, y + 0.70, 2.55, 0.52, size=8.0, color=MUTED)
-    add_footer(s, "Sources: platform_hybrid/sem 4 work/README.md; PAPERS_README.md; PDF page counts (mdls); thesis/main.tex")
+        add_text(s, f"{pid} · {paper_pages[pid]}p", x + 0.14, y + 0.11, 0.82, 0.18, size=7.7, color=color, bold=True)
+        add_text(s, title, x + 0.98, y + 0.10, 1.72, 0.20, size=8.5, color=INK, bold=True)
+        add_text(s, body, x + 0.14, y + 0.40, 2.58, 0.38, size=7.7, color=MUTED)
+    add_footer(s, "Sources: PAPERS_README.md active roster; live P1–P12 PDFs; thesis/main.pdf")
 
-    # ── 8. Core discovery — ZVF ────────────────────────────────────────────
+    # ── 8. Core diagnostic — ZVF ───────────────────────────────────────────
     s = new_slide(prs)
-    add_header(s, "Core discovery", "ZVF — the Zero-Variance Fraction", 8)
+    add_header(s, "Core diagnostic", "ZVF — the Zero-Variance Fraction", 8)
     add_shape(s, MSO_SHAPE.RECTANGLE, 0.65, 1.42, 6.05, 1.06, PANEL, GRID, radius=True)
     add_text(s, "ZVF = fraction of groups whose completions share one reward — all-correct or all-wrong — and therefore contribute zero advantage (zero gradient).",
              0.88, 1.58, 5.6, 0.72, size=11.5, color=INK)
     add_shape(s, MSO_SHAPE.RECTANGLE, 0.65, 2.62, 6.05, 0.86, PANEL_2, GRID, radius=True)
-    add_text(s, "Exact identity · pass@G − p^G = 1 − ZVF", 0.88, 2.80, 5.6, 0.26, size=12, color=TEAL, bold=True)
-    add_text(s, "reproduced to 1.11e-16 across the 505-task audit", 0.88, 3.10, 5.6, 0.24, size=10, color=MUTED)
+    add_text(s, "Model identity · pass@G − p^G = 1 − ZVF", 0.88, 2.80, 5.6, 0.26, size=12, color=TEAL, bold=True)
+    add_text(s, "algebraic under the stated iid-Bernoulli model; not a predictive result", 0.88, 3.10, 5.6, 0.24, size=10, color=MUTED)
     add_text(s, "Claim 1 — diagnostic", 0.88, 3.72, 5.0, 0.26, size=12, color=BLUE, bold=True)
-    add_text(s, "ZVF + mean reward reveals zero-advantage regimes that reward curves alone cannot show — including reward ≈ 1.0 while every update carries no signal. Wilson CI coverage 0.95–0.98.",
+    add_text(s, "ZVF + mean reward separates all-correct from all-wrong homogeneous groups under binary rewards. Three stored group tensors recompute exactly; that does not establish prediction or causation.",
              0.88, 4.04, 5.55, 0.90, size=10.2, color=INK)
     add_text(s, "Claim 2 — group size", 0.88, 5.02, 5.0, 0.26, size=12, color=LAV, bold=True)
-    add_text(s, "At a matched rollout budget on Qwen3-8B/GSM8K, G controls which end of training starves (see next slide).",
+    add_text(s, "One matched-rollout, two-seed Qwen3-8B/GSM8K panel shows different late-run ZVF at G=2 and G=16; it is not a universal group-size law.",
              0.88, 5.34, 5.55, 0.62, size=10.2, color=INK)
     add_picture(s, FIG / "zvf_heatmap.png", 6.95, 1.42, 5.85, 2.18)
-    add_text(s, "ZVF heatmap across iterations and group sizes — the wall at small G is visible before reward collapses.", 6.98, 3.68, 5.75, 0.30, size=9, color=MUTED)
+    add_text(s, "Descriptive ZVF heatmap across iterations and group sizes; it does not establish prediction of reward collapse.", 6.98, 3.68, 5.75, 0.30, size=9, color=MUTED)
     add_shape(s, MSO_SHAPE.RECTANGLE, 6.95, 4.12, 5.85, 2.30, PANEL, GRID, radius=True)
     add_text(s, "WHY IT MATTERS", 7.20, 4.38, 2.5, 0.24, size=9.5, color=AMBER, bold=True)
     add_text(s, "GRPO's signal is the group contrast. When the contrast dies, training continues but learns nothing — and standard reward/loss curves hide it. ZVF makes the starvation observable, cheap, and online.",
@@ -377,14 +423,29 @@ def build() -> Presentation:
 
     # ── 9. Group size & the bridge to DPO ──────────────────────────────────
     s = new_slide(prs)
-    add_header(s, "Pillar P3", "Group size controls which end of training starves", 9)
+    add_header(s, "Pillar P3", "One matched group-size panel that survives the audit", 9)
     add_text(s, "Matched-token, two-seed panel: G=2 × 160 vs G=16 × 20 · 2,560 rollouts per arm · Qwen3-8B / GSM8K", 0.65, 1.40, 7.6, 0.30, size=12.5, color=MUTED)
-    add_picture(s, FIG / "group_size_ablation.png", 6.75, 1.95, 5.95, 3.70)
-    add_text(s, "Group-size ablation — small G saturates then starves; large G holds contrast.", 6.78, 5.78, 5.85, 0.28, size=9, color=MUTED)
+    add_shape(s, MSO_SHAPE.RECTANGLE, 6.75, 1.95, 5.95, 3.70, PANEL, GRID, radius=True)
+    add_text(s, "MATCHED READBACK · 2,560 ROLLOUTS PER ARM", 7.00, 2.18, 5.40, 0.24, size=9.5, color=TEAL, bold=True)
+    add_text(s, "seed", 7.00, 2.65, 0.70, 0.22, size=9, color=MUTED, bold=True)
+    add_text(s, "G=2 · last10 / terminal ZVF", 7.85, 2.65, 2.15, 0.22, size=9, color=RED, bold=True)
+    add_text(s, "G=16 · last10 / terminal ZVF", 10.20, 2.65, 2.20, 0.22, size=9, color=GREEN, bold=True)
+    matched_rows = [
+        ("123", "0.9000 / 1.000", "0.3219 / 0.250"),
+        ("456", "0.9625 / 1.000", "0.3891 / 0.125"),
+    ]
+    for i, (seed, g2, g16) in enumerate(matched_rows):
+        y = 3.12 + i * 0.67
+        add_shape(s, MSO_SHAPE.RECTANGLE, 6.98, y - 0.08, 5.48, 0.48, PANEL_2, GRID, radius=True)
+        add_text(s, seed, 7.08, y, 0.55, 0.22, size=10.5, color=INK, bold=True)
+        add_text(s, g2, 7.85, y, 2.00, 0.22, size=10.5, color=RED, bold=True)
+        add_text(s, g16, 10.20, y, 2.00, 0.22, size=10.5, color=GREEN, bold=True)
+    add_text(s, "This is not an accuracy win for large G. It shows a late-run signal-availability difference at the same rollout budget, in two seeds.",
+             7.00, 4.65, 5.35, 0.70, size=10.5, color=INK)
     cards = [
-        ("G = 2", "ends in a sustained all-correct zero-variance wall", "ZVF ≈ 0.75–1.0 at reward ≈ 1.0", RED),
-        ("G = 16", "keeps contrast throughout training", "ZVF ≤ 0.25 at all steps", GREEN),
-        ("G = 4", "best conditional utility on the 505-task cohort", "selected by (1 − ZVF)/√G audit", TEAL),
+        ("G = 2", "both seeds end all-correct and homogeneous", "terminal ZVF 1.0; mean 0.820 / 0.837", RED),
+        ("G = 16", "lower late-run starvation in this panel", "terminal ZVF 0.250 / 0.125; not low at every step", GREEN),
+        ("G = 4", "selected by a proxy on one 505-row subset", "a cohort result, not a universal optimum", TEAL),
         ("G ≈ 32", "reconstructed hypotheses, different budgets", "not universal prescriptions", MUTED),
     ]
     for i, (g, body, num, color) in enumerate(cards):
@@ -394,9 +455,9 @@ def build() -> Presentation:
         add_text(s, g, 0.85, y + 0.10, 1.1, 0.26, size=13, color=color, bold=True, font=FONT_DISPLAY)
         add_text(s, body, 1.95, y + 0.08, 4.4, 0.26, size=10.5, color=INK, bold=True)
         add_text(s, num, 1.95, y + 0.40, 4.4, 0.24, size=9.3, color=MUTED)
-    add_text(s, "Adaptive G is NOT promoted: 92.3% of logged escalation fires are on all-correct groups; promotion needs a seed-paired, fixed-token bakeoff against static G=16.",
+    add_text(s, "Adaptive G is NOT promoted: the current evidence is an offline replay, not a controller run. Promotion needs a seed-paired, fixed-token bakeoff against static G=16.",
              0.68, 6.30, 12.0, 0.50, size=11, color=AMBER, bold=True)
-    add_footer(s, "Sources: PAPERS_README.md items 2–4; thesis abstract Claim 2; figures/v2/group_size_ablation.png")
+    add_footer(s, "Sources: experiments/tinker-runs/results/er2b_g{2,16}_s{123,456}.json; 18_PAPER_PORTFOLIO_REVIEW.md")
 
     # ── 10. Length bias & held-out generalization ──────────────────────────
     s = new_slide(prs)
@@ -410,31 +471,35 @@ def build() -> Presentation:
     add_text(s, "Length-bias analysis — reward vs response-length trajectories across GRPO variants.", 8.52, 5.00, 4.2, 0.28, size=9, color=MUTED)
     add_shape(s, MSO_SHAPE.RECTANGLE, 0.65, 5.02, 7.55, 1.42, PANEL, GRID, radius=True)
     add_text(s, "P1 in one line", 0.88, 5.24, 3.0, 0.24, size=10, color=BLUE, bold=True)
-    add_text(s, "Scaling-law claims for GRPO are stack-conditioned: the same recipe can look like a law on one stack and nothing on another. P1 is a limits & identifiability audit — the honest reading of multi-seed evidence, not a positive scaling law.",
+    add_text(s, "P1's MoE-vs-dense headline fails after correcting Nemotron-3-Super from dense to MoE (exact one-sided p: .0238 → .1780). Trace lengths, stacks, recipes, and budgets also differ. Keep P1 only as an identifiability audit.",
              0.88, 5.56, 7.05, 0.74, size=10.5, color=INK)
-    add_footer(s, "Sources: PAPERS_README.md (P04/P01 roles); execution-notes.md TRL semantics audit; figures/v2/p2_length_bias.png")
+    add_footer(s, "Sources: 18_PAPER_PORTFOLIO_REVIEW.md; NVIDIA Nemotron-3-Super model card; figures/v2/p2_length_bias.png")
 
-    # ── 11. Standards, registry, controller, side study ───────────────────
+    # ── 11. Standards, artifacts, theory, audit, and methods ───────────────
     s = new_slide(prs)
-    add_header(s, "Pillars P5–P8", "Standards, registry, controller, and a measurement-discipline study", 11)
+    add_header(s, "Portfolio · P5–P12", "Standards, artifacts, theory, audit, and the next test", 11)
     cards = [
-        ("P5 · MIN-REPORT-RL", "Eight-item minimum-report standard", "7 run-manifest fields + held-out pass@k — the canonical reporting standard so results stop being stack-conditioned by omission.", 80, GREEN),
-        ("P6 · GRPO-Registry", "Machine-readable living catalog", "seven-field run-start JSON per run; position-artifact resource for the community, evidence-mapped per paper.", 65, TEAL),
-        ("P7 · ZVF Controller", "Diagnostic → controller, honestly scoped", "retrospective audit + prospective test plan only; adaptive G explicitly NOT promoted until a fixed-token bakeoff.", 81, BLUE),
-        ("P8 · Fraud study", "LLM vs XGBoost, parked side study", "LLM as sensor & scribe, not scorer; demonstrates measurement discipline — contributes no RL evidence.", 94, AMBER),
+        ("P5 · MIN-REPORT-RL", "Useful checklist; remove the confounded 17x and forced eta-squared exhibits.", GREEN),
+        ("P6 · GRPO-Registry", "Seven-field run schema; pair with P5 as one resource paper.", TEAL),
+        ("P7 · ZVF controller", "Offline replay, not a tested controller; several tables need repair.", BLUE),
+        ("P8 · Workshop note", "Headline table conflicts with its manifest; use only after a ledger rebuild.", AMBER),
+        ("P9 · D&B artifact", "Run counts, compute card, task list, and source tables do not yet reconcile.", LAV),
+        ("P10 · ZVF theory", "One G-in-{2,3} theorem survives; remove placeholder figures and invalid empirical claims.", RED),
+        ("P11 · Reproducibility audit", "Four INCONCLUSIVE results; pilot arm summaries are effectively n=1; replay, timing, and estimand limits remain.", GREEN),
+        ("P12 · Signal starvation", "GRPO diagnostic plus PPO/SAO evaluation contract; benefits unmeasured.", BLUE),
     ]
-    for i, (title, sub, body, pages, color) in enumerate(cards):
+    for i, (title, body, color) in enumerate(cards):
         x = 0.65 + (i % 2) * 6.12
-        y = 1.50 + (i // 2) * 2.62
-        add_shape(s, MSO_SHAPE.RECTANGLE, x, y, 5.92, 2.42, PANEL, GRID, radius=True)
-        add_shape(s, MSO_SHAPE.RECTANGLE, x, y, 5.92, 0.06, color)
-        add_text(s, title, x + 0.22, y + 0.18, 3.6, 0.26, size=12.5, color=color, bold=True)
-        add_text(s, f"{pages} pages", x + 4.60, y + 0.20, 1.1, 0.22, size=9, color=MUTED, align=PP_ALIGN.RIGHT)
-        add_text(s, sub, x + 0.22, y + 0.52, 5.4, 0.26, size=10.5, color=INK, bold=True)
-        add_text(s, body, x + 0.22, y + 0.88, 5.45, 1.30, size=10.2, color=MUTED)
-    add_text(s, "These four pillars turn a single diagnostic into community infrastructure — but the controller stays un-promoted until measured.",
-             0.68, 6.48, 12.0, 0.30, size=11.5, color=AMBER, bold=True)
-    add_footer(s, "Sources: PAPERS_README.md (P05–P08 roles); sem 4 work/papers PDFs")
+        y = 1.47 + (i // 2) * 1.27
+        pid = title.split(" · ", 1)[0]
+        add_shape(s, MSO_SHAPE.RECTANGLE, x, y, 5.92, 1.12, PANEL, GRID, radius=True)
+        add_shape(s, MSO_SHAPE.RECTANGLE, x, y, 5.92, 0.05, color)
+        add_text(s, title, x + 0.20, y + 0.16, 4.2, 0.24, size=10.7, color=color, bold=True)
+        add_text(s, f"{paper_pages[pid]}p", x + 4.82, y + 0.17, 0.85, 0.20, size=8.3, color=MUTED, align=PP_ALIGN.RIGHT)
+        add_text(s, body, x + 0.20, y + 0.51, 5.45, 0.44, size=8.9, color=INK)
+    add_text(s, "Six older roots were absorbed into these papers or the thesis. They are archive history, not extra submissions.",
+             0.68, 6.66, 12.0, 0.25, size=9.5, color=AMBER, bold=True)
+    add_footer(s, "Sources: PAPERS_README.md active roster and absorption map; live P5–P12 PDFs")
 
 
     # ── 12. E1 confirmatory campaign ───────────────────────────────────────
@@ -448,7 +513,7 @@ def build() -> Presentation:
     add_text(s, "Campaign facts", 0.68, 2.95, 3.0, 0.30, size=15, color=INK, bold=True, font=FONT_DISPLAY)
     bullets = [
         ("Executed on NVIDIA A100-SXM4-40GB via Colab CLI, OAuth2 account arvindcr4@gmail.com", TEAL),
-        ("DAPO preregistered dynamic sampling realized 1,472–2,112 rollouts per unit; GRPO/GSPO 480 completions each", BLUE),
+        ("DAPO's protocol-declared dynamic sampling realized 1,472–2,112 rollouts per unit; GRPO/GSPO 480 completions each", BLUE),
         ("Six legacy manifests predating completion hashes repaired via evaluation-only checkpoint replay; GSPO seed 71 byte-identical manifest re-verified", LAV),
         ("GRPO held-out ≈ 0.63–0.65 — near-identical across arms; the real story is in the statistics, not the mean", AMBER),
     ]
@@ -459,14 +524,14 @@ def build() -> Presentation:
     add_shape(s, MSO_SHAPE.RECTANGLE, 9.70, 2.95, 2.95, 3.62, PANEL, GRID, radius=True)
     add_text(s, "HEADLINE", 9.95, 3.22, 2.4, 0.24, size=9, color=AMBER, bold=True)
     add_text(s, "Every arm finished.\nNo arm won.\n\nFour verdicts, all\nINCONCLUSIVE after\ncorrect statistics.", 9.95, 3.60, 2.45, 1.9, size=14, color=INK, bold=True, font=FONT_DISPLAY, valign=MSO_ANCHOR.MIDDLE)
-    add_text(s, "That is the honest\nanswer — and it is\nwhat fail-closed\npreregistration is for.", 9.95, 5.72, 2.45, 0.75, size=9, color=MUTED)
+    add_text(s, "That is the honest\nanswer — and it is\nwhat a fail-closed\nprotocol is for.", 9.95, 5.72, 2.45, 0.75, size=9, color=MUTED)
     add_footer(s, "Sources: zvf-program/audit/COLAB_EXECUTION_STATUS.md; results/audit.json")
 
 
     # ── 13. Statistical reanalysis ─────────────────────────────────────────
     s = new_slide(prs)
     add_header(s, "Evidence · statistics", "Why the corrected answer is INCONCLUSIVE — and why that is a feature", 13)
-    add_text(s, "The run records and scores never changed. The correction was in the analysis code: exact paired-t power replaces the large-sample normal approximation, and the preregistered Benjamini–Hochberg step is now executed.",
+    add_text(s, "The run records and scores never changed. The correction was in the analysis code: exact paired-t power replaces the large-sample normal approximation, and the declared Benjamini–Hochberg step is now executed.",
              0.65, 1.40, 11.9, 0.62, size=12.5, color=INK)
     cols = ["Arm", "Paired Δ", "95% bootstrap CI", "MDE80", "Raw p", "BH", "Verdict"]
     widths = [1.5, 1.5, 3.0, 1.5, 1.2, 1.0, 1.9]
@@ -497,9 +562,9 @@ def build() -> Presentation:
     add_footer(s, "Sources: zvf-program/audit/STATISTICAL_REANALYSIS.md (table verbatim); execution-notes.md 2026-08-02 correction")
 
 
-    # ── 14. Preregistration discipline ─────────────────────────────────────
+    # ── 14. Frozen-protocol discipline ─────────────────────────────────────
     s = new_slide(prs)
-    add_header(s, "Discipline", "Preregistered, hash-bound, fail-closed science", 14)
+    add_header(s, "Discipline", "Frozen, hash-bound, fail-closed science", 14)
     add_text(s, "Stage 5 is fail-closed on a proven joint-zero-gradient contradiction — 62/100 reward-degenerate groups (59 all-wrong, 3 all-correct) in the accepted corpus. No replacement unit may run until an explicit amendment is authorized.",
              0.65, 1.42, 11.9, 0.72, size=12, color=INK)
     rows = [
@@ -521,15 +586,15 @@ def build() -> Presentation:
     add_footer(s, "Sources: execution-notes.md current-gate & evidence sections; pilot_preregistration.json")
 
 
-    # ── 15. Publication program ────────────────────────────────────────────
+    # ── 15. Publication sequence ───────────────────────────────────────────
     s = new_slide(prs)
-    add_header(s, "Publications", "Eighteen documents aimed at five venues", 15)
+    add_header(s, "Publications", "What to fix first before choosing a venue", 15)
     venues = [
-        ("NeurIPS 2026 · Main D&B", "submitted (blind, anon. 52 pp)", "OpenReview ID CXbcYe69BQ · 239-page compendium source · 7/7 integration checks", TEAL, "SUBMITTED"),
-        ("NeurIPS 2026 · Workshop", "main_zvf · main_workshop · main_dnb", "ZVF sentinel paper, exploratory artifact note, tiered artifact paper", BLUE, "READY"),
-        ("ACM (compact)", "acm_main, 11 pp", "cross-library derivative with ethics statement; R2R3 fixes applied", LAV, "READY"),
-        ("Springer variant", "springer_main", "book-chapter-style derivation of the program", AMBER, "DRAFT"),
-        ("TMLR / venue track", "target for the flagship result", "after the pilot completes with confirmed evidence", GREEN, "PLANNED"),
+        ("P11 · bounded audit", "best bounded dataset; draft needs a hard cut", "Lead with four INCONCLUSIVE results; disclose effective n=1 arm summaries, replay shift, date-only timing, and absent estimand.", TEAL, "FIX FIRST"),
+        ("P2 · descriptive ZVF", "repair the evidence labels first", "Separate synthetic projections from measurements, fix the seed mapping and citation, and drop the unsupported 505-task claim.", BLUE, "REPAIR"),
+        ("P9 + P8 · benchmark artifact", "rebuild from one source ledger", "Run counts, steps, compute estimates, task coverage, and duplicate cells must reconcile before a clean-machine rerun.", LAV, "HOLD"),
+        ("P5 + P6 · resource paper", "remove invalid exhibits, then merge", "Replace the confounded 17x comparison and forced eta-squared table; then add external entries and a user study.", AMBER, "REBUILD"),
+        ("Flagship / TMLR", "only after new prospective evidence", "Resolve overlap with the NeurIPS record, then add matched cross-seed evidence for the strongest general claim.", GREEN, "LATER"),
     ]
     for i, (name, meta, body, color, status) in enumerate(venues):
         y = 1.50 + i * 1.06
@@ -539,14 +604,73 @@ def build() -> Presentation:
         add_text(s, meta, 0.88, y + 0.42, 3.4, 0.24, size=9.0, color=INK)
         add_text(s, body, 4.35, y + 0.10, 5.45, 0.72, size=9.3, color=MUTED)
         add_chip(s, status, 10.25, y + 0.33, color=color, w=1.50)
-    add_text(s, "Every manuscript compiles with 0 errors / 0 undefined refs; ethics statements included; blind-review tarball re-scanned with zero residual identifiers.",
+    add_text(s, "None of the twelve should be submitted unchanged. The immediate repair order is P11 → P2 → P9; the rest stay gated by new evidence.",
              0.68, 6.62, 12.0, 0.30, size=10.5, color=INK, bold=True)
-    add_footer(s, "Sources: PAPERS_README.md roster; CHANGELOG.md v3.0; autoresearch/reason-260727-2155/ (OpenReview audit)")
+    add_footer(s, "Sources: 18_PAPER_PORTFOLIO_REVIEW.md; PAPERS_README.md; TMLR editorial policies; NeurIPS 2026 handbook")
 
-
-    # ── 16. Reproducibility & artifacts ────────────────────────────────────
+    # ── 16. NeurIPS review → rebuttal → lesson ─────────────────────────────
     s = new_slide(prs)
-    add_header(s, "Reproducibility", "Artifacts a reviewer can actually run", 16)
+    add_header(s, "Peer review · criticism → correction", "What the NeurIPS review changed—and what survived", 16)
+    # Panel A — what reviewers said
+    add_shape(s, MSO_SHAPE.RECTANGLE, 0.65, 1.42, 3.95, 4.86, PANEL, GRID, radius=True)
+    add_shape(s, MSO_SHAPE.RECTANGLE, 0.65, 1.42, 3.95, 0.06, RED)
+    add_text(s, "THE REVIEW · APR 2026", 0.88, 1.62, 3.4, 0.26, size=11, color=RED, bold=True)
+    add_text(s, "Submission 36320 · forum CXbcYe69BQ · 17-page reviewed PDF (SHA-256 b15ac7e5)", 0.88, 1.94, 3.5, 0.52, size=8.6, color=MUTED)
+    add_text(s, "17 logged weaknesses · 5 critical", 0.88, 2.54, 3.5, 0.24, size=10.5, color=INK, bold=True)
+    rev_pts = [
+        ("ZVF risks tautological correlation with reward — no partial-correlation ablation", RED),
+        ("G=32 claim conflicts the G=8 table; \"gradient utilization\" left undefined", RED),
+        ("\"byte-identical\" framework claim contradicts tuned rollout defaults", RED),
+        ("single-seed Tinker runs (20–30 steps) power headline claims; BH aggregates them", AMBER),
+        ("missing variance-mitigation baselines: AERO · CPPO · NGRPO · Scaf-GRPO", AMBER),
+    ]
+    for i, (body, color) in enumerate(rev_pts):
+        y = 2.92 + i * 0.60
+        add_shape(s, MSO_SHAPE.OVAL, 0.84, y + 0.08, 0.16, 0.16, color, color)
+        add_text(s, body, 1.08, y, 3.4, 0.56, size=8.8, color=INK)
+    add_text(s, "Reviewers still valued separating reward, proxy metrics, held-out capability, and algorithm labels.", 0.88, 5.82, 3.5, 0.40, size=8.2, color=TEAL, bold=True)
+    # Panel B — our rebuttal
+    add_shape(s, MSO_SHAPE.RECTANGLE, 4.75, 1.42, 3.95, 4.86, PANEL, GRID, radius=True)
+    add_shape(s, MSO_SHAPE.RECTANGLE, 4.75, 1.42, 3.95, 0.06, AMBER)
+    add_text(s, "THE REBUTTAL · JUL 2026", 4.98, 1.62, 3.4, 0.26, size=11, color=AMBER, bold=True)
+    add_text(s, "We audited our own claims before responding — then replaced all three responses + the AC comment.", 4.98, 1.94, 3.5, 0.60, size=8.8, color=MUTED)
+    reb_pts = [
+        ("Withdrew 92.6/92.1 five-seed claim — W&B shows seeds 42–44 are zero-runtime backfills with no upstream IDs", AMBER),
+        ("Quarantined PPO 0.225 vs 0.350 — two distinct Modal runs misattributed to one row", AMBER),
+        ("Removed AUROC 0.929 built on synthetic anchors; re-described p=.256 as one-sample (McNemar all non-significant)", AMBER),
+        ("Reviewer 9kjk rejected structural promises & file relocations: answered \"missing cells are missing evidence\", asked no score reconsideration", RED),
+        ("E1 40-unit audit kept as separate post-submission context — not retrospective repair", TEAL),
+    ]
+    for i, (body, color) in enumerate(reb_pts):
+        y = 2.66 + i * 0.66
+        add_shape(s, MSO_SHAPE.OVAL, 4.94, y + 0.08, 0.16, 0.16, color, color)
+        add_text(s, body, 5.18, y, 3.4, 0.62, size=8.8, color=INK)
+    add_text(s, "Response lengths: PYUJ 4,854 · 4G4H 5,661 · 9kjk 4,733; AC comment 4,627.", 4.98, 5.84, 3.5, 0.34, size=7.8, color=MUTED)
+    # Panel C — what survived / next
+    add_shape(s, MSO_SHAPE.RECTANGLE, 8.85, 1.42, 3.95, 4.86, PANEL, GRID, radius=True)
+    add_shape(s, MSO_SHAPE.RECTANGLE, 8.85, 1.42, 3.95, 0.06, GREEN)
+    add_text(s, "WHAT SURVIVED → NEXT", 9.08, 1.62, 3.4, 0.26, size=11, color=GREEN, bold=True)
+    surv_pts = [
+        ("Kept: the exact within-run consequence of homogeneous rewards (zero contrast) — bounded methodology, not a controller", GREEN),
+        ("Kept: E1 40-unit, 5-arm × 8-seed same-stack audit; protocol timing is only date-level", GREEN),
+        ("Next-submission plan: predeclared estimands, ≥ 5 seeds per primary cell, claim ledger, explicit missing-cell accounting", BLUE),
+        ("Stop/go gates: no submission until the ledger generates every table and every discrepancy is quarantined", BLUE),
+    ]
+    for i, (body, color) in enumerate(surv_pts):
+        y = 2.10 + i * 0.90
+        add_shape(s, MSO_SHAPE.OVAL, 9.04, y + 0.08, 0.16, 0.16, color, color)
+        add_text(s, body, 9.28, y, 3.4, 0.82, size=9.2, color=INK)
+    add_text(s, "Best current route: a narrow methods / reproducibility paper after a hard scope cut.", 9.08, 5.72, 3.5, 0.48, size=9.2, color=TEAL, bold=True)
+    # Bottom lesson strip
+    add_shape(s, MSO_SHAPE.RECTANGLE, 0.65, 6.44, 12.15, 0.58, PANEL_2, GRID, radius=True)
+    add_text(s, "The lesson: the review rejected an over-claimed omnibus paper — not the diagnostic. Concede scope · correct the record · preserve the methodology.",
+             0.88, 6.57, 11.7, 0.30, size=11, color=AMBER, bold=True)
+    add_footer(s, "Sources: platform_hybrid/paper/reviewer_points.yaml; zvf-program/flagship/paper/NEURIPS_2026_OPENREVIEW_REBUTTAL_FINAL.md; NEURIPS_2026_REVIEWER_9KJK_FOLLOWUP.md; autoresearch/reason-260727-2155/ & orchestrator-260730-1818/ summaries")
+
+
+    # ── 17. Reproducibility & artifacts ────────────────────────────────────
+    s = new_slide(prs)
+    add_header(s, "Reproducibility", "Artifacts a reviewer can actually run", 17)
     checks = [
         ("< 10 min", "smoke test, 7 checks", "platform_modal/scripts/smoke_test.sh", TEAL),
         ("7/7", "integration audit", "scripts/integration_audit.py", BLUE),
@@ -573,19 +697,19 @@ def build() -> Presentation:
     add_footer(s, "Sources: ARTIFACT.md §§1,7,8; CHANGELOG.md; run_all_audits.py")
 
 
-    # ── 17. Evidence base ──────────────────────────────────────────────────
+    # ── 18. Evidence base ──────────────────────────────────────────────────
     s = new_slide(prs)
-    add_header(s, "Evidence", "Everything traces to a named artifact", 17)
+    add_header(s, "Evidence", "Everything traces to a named artifact", 18)
     add_metric(s, 0.65, 1.45, 2.90, 1.30, "983", "Tinker runs in workbook", TEAL, "audited, linked, defensible")
     add_metric(s, 3.72, 1.45, 2.90, 1.30, "153", "public W&B runs", BLUE, "Sem 3 record, 23.9 h")
-    add_metric(s, 6.79, 1.45, 2.90, 1.30, "505", "task ZVF identity audit", LAV, "1.11e-16 worst-case residual")
+    add_metric(s, 6.79, 1.45, 2.90, 1.30, "3", "raw group-tensor seeds", LAV, "pooled ZVF 0.1583, recomputed")
     add_metric(s, 9.86, 1.45, 2.90, 1.30, "206", "analysis iterations", AMBER, "sem 4, version-controlled")
     add_text(s, "Provenance rules", 0.68, 3.05, 3.0, 0.30, size=15, color=INK, bold=True, font=FONT_DISPLAY)
     rules = [
         ("Every quantitative claim traces to a named artifact — no numbers typed by hand into prose.", TEAL),
         ("Frozen corpora carry full-split hashes + PCG64 seed-specific row orders for GSM8K and MATH-500.", BLUE),
         ("Stale or superseded records are kept as history but marked non-evidence (e.g., the 39/40 snapshot).", LAV),
-        ("Verdicts require the executed preregistered procedure — multiplicity step included, always.", AMBER),
+        ("Verdicts require the declared procedure — multiplicity step included, always.", AMBER),
     ]
     for i, (body, color) in enumerate(rules):
         y = 3.52 + i * 0.76
@@ -593,9 +717,9 @@ def build() -> Presentation:
         add_text(s, body, 1.32, y, 11.4, 0.60, size=11.5, color=INK)
     add_footer(s, "Sources: tinker_runs_audit_2026-07-12.xlsx; ARTIFACT.md; PAPERS_README.md item 1; execution-notes.md")
 
-    # ── 18. Engineering discipline ─────────────────────────────────────────
+    # ── 19. Engineering discipline ─────────────────────────────────────────
     s = new_slide(prs)
-    add_header(s, "Engineering", "Research-grade software discipline", 18)
+    add_header(s, "Engineering", "Research-grade software discipline", 19)
     cards = [
         ("VERSION CONTROL", "1,001 commits, semantic releases, frozen semester boundaries and tags (capstone-final-2026-04-25).", TEAL),
         ("LOCKED BUILD", "uv-locked deps, ruff lint, pre-commit hooks, pytest suite, wheel-content verification.", BLUE),
@@ -615,16 +739,16 @@ def build() -> Presentation:
              0.68, 6.55, 12.0, 0.28, size=11, color=MUTED, italic=True)
     add_footer(s, "Sources: CONTRIBUTING.md; Makefile; pyproject.toml; CHANGELOG.md")
 
-    # ── 19. Timeline ───────────────────────────────────────────────────────
+    # ── 20. Timeline ───────────────────────────────────────────────────────
     s = new_slide(prs)
-    add_header(s, "Timeline", "Aug 2025 → Aug 2026", 19)
+    add_header(s, "Timeline", "Aug 2025 → Aug 2026", 20)
     add_line(s, 0.85, 4.10, 12.45, 4.10, GRID, 2.2)
     milestones = [
         (0.95, "AUG 25", "RL gym\nfoundations", TEAL),
         (2.60, "JAN 26", "Tinker\ncookbook", BLUE),
         (4.25, "MAR 26", "Atropos +\nframeworks", LAV),
         (5.90, "APR 26", "NeurIPS D&B\nsubmission", AMBER),
-        (7.55, "MAY 26", "Sem 4 solo:\nP1–P8 papers", GREEN),
+        (7.55, "MAY 26", "Sem 4 solo:\nP1–P12 portfolio", GREEN),
         (9.20, "JUL 26", "Defense +\nthesis", TEAL),
         (10.85, "JUL–AUG 26", "E1 campaign\n+ reanalysis", RED),
     ]
@@ -638,9 +762,9 @@ def build() -> Presentation:
     add_text(s, "No claim is on the table until the pilot's confirmatory matrix runs on A100.", 0.68, 5.90, 11.9, 0.28, size=11.5, color=AMBER, bold=True)
     add_footer(s, "Sources: PROJECT_HISTORY.md; git log; execution-notes.md")
 
-    # ── 20. What's next ────────────────────────────────────────────────────
+    # ── 21. What's next ────────────────────────────────────────────────────
     s = new_slide(prs)
-    add_header(s, "Forward path", "The next three gates", 20)
+    add_header(s, "Forward path", "The next three gates", 21)
     steps = [
         ("01", "Authorize the amendment", "A joint-zero representation/scoring amendment for the fail-closed gate — the only blocker before GPU spend.", RED),
         ("02", "Run the 24-unit pilot matrix", "4 semantic conditions × 2 regimes × seeds 11/23/37 on A100; replay contract; hash-bound receipts; dry-run plans already generated.", TEAL),
@@ -660,15 +784,15 @@ def build() -> Presentation:
     add_text(s, "check it → then explain it", 10.78, 5.55, 1.72, 0.55, size=9.5, color=TEAL, bold=True, align=PP_ALIGN.CENTER)
     add_footer(s, "Sources: execution-notes.md current gate; pilot_preregistration.json; PAPERS_README.md remaining gates")
 
-    # ── 21. Takeaways ──────────────────────────────────────────────────────
+    # ── 22. Takeaways ──────────────────────────────────────────────────────
     s = new_slide(prs)
-    add_header(s, "Bottom line", "What the program stands on", 21)
+    add_header(s, "Bottom line", "What the program stands on", 22)
     takes = [
-        ("A real discovery", "ZVF is an exact, cheap, online diagnostic of GRPO signal starvation — verified to 1.11e-16 on 505 tasks, with two bounded thesis claims.", TEAL),
-        ("A serious benchmark", "TinkerRL-Bench ships NeurIPS 2026 D&B, three ACM artifact badges, and a 983-run audited evidence base.", BLUE),
+        ("A useful diagnostic", "ZVF is a cheap count of homogeneous-reward groups. Stored group tensors recompute; prediction, causation, and a universal controller do not.", TEAL),
+        ("A benchmark project", "TinkerRL-Bench has a large audit trail, but its run counts, tasks, compute card, and source tables must reconcile before publication.", BLUE),
         ("Standards that stick", "MIN-REPORT-RL (8 items) and GRPO-Registry (7 fields) turn stack-conditioned results into comparable ones.", LAV),
         ("Honest statistics", "The E1 campaign finished 40/40 and answered INCONCLUSIVE — the corrected analysis caught our own earlier over-claim.", AMBER),
-        ("Fail-closed discipline", "Preregistered, hash-bound, replay-controlled protocols: no claim until the evidence clears, on every gate.", GREEN),
+        ("Fail-closed discipline", "Frozen, hash-bound, replay-controlled protocols: no claim until the evidence clears, on every gate.", GREEN),
     ]
     for i, (title, body, color) in enumerate(takes):
         y = 1.55 + i * 1.02
@@ -679,7 +803,7 @@ def build() -> Presentation:
     add_text(s, "The result is still to be earned. Everything that earns it is now checkable.", 0.68, 6.62, 12.0, 0.30, size=12.5, color=AMBER, bold=True)
     add_footer(s, "Primary references: thesis/main.tex; ARTIFACT.md; PAPERS_README.md; STATISTICAL_REANALYSIS.md")
 
-    # ── 22. Thank you ──────────────────────────────────────────────────────
+    # ── 23. Thank you ──────────────────────────────────────────────────────
     s = new_slide(prs)
     add_text(s, "THANK YOU", 0.85, 2.10, 4.0, 0.60, size=34, color=TEAL, bold=True, font=FONT_DISPLAY)
     add_text(s, "Questions & discussion", 0.88, 3.00, 4.0, 0.32, size=14, color=MUTED)

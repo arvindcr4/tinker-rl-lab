@@ -269,7 +269,7 @@ def build() -> Presentation:
     add_text(s, "Each step made the next experiment a little easier to check.",
              0.65, 1.42, 11.4, 0.30, size=14.5, color=MUTED)
     # Vertical axis
-    add_line(s, 1.36, 2.14, 1.36, 6.42, GRID, 1.2)
+    add_line(s, 1.75, 2.14, 1.75, 6.42, GRID, 1.2)
     phases = [
         ("12 JUL", "Finish the defense", "I rebuilt the 17-slide defense, added the demo, and linked each important result to its source.", TEAL, "delivery"),
         ("20–21 JUL", "Check the old runs", "I finished the 40/40 audit and kept the unclear results marked unclear.", BLUE, "evidence"),
@@ -278,14 +278,14 @@ def build() -> Presentation:
     ]
     ys = [2.12, 3.18, 4.24, 5.30]
     for (date, title, body, accent, _), y in zip(phases, ys):
-        add_shape(s, MSO_SHAPE.OVAL, 1.17, y + 0.10, 0.38, 0.38, accent, accent)
-        add_text(s, date, 0.65, y, 0.75, 0.26, size=8.6, color=accent, bold=True, align=PP_ALIGN.RIGHT)
-        add_text(s, title, 1.78, y - 0.02, 5.4, 0.28, size=14.2, color=INK, bold=True)
-        add_text(s, body, 1.78, y + 0.33, 8.8, 0.48, size=10.5, color=MUTED)
+        add_shape(s, MSO_SHAPE.OVAL, 1.56, y + 0.10, 0.38, 0.38, accent, accent)
+        add_text(s, date, 0.30, y, 1.15, 0.26, size=8.6, color=accent, bold=True, align=PP_ALIGN.RIGHT)
+        add_text(s, title, 2.17, y - 0.02, 5.4, 0.28, size=14.2, color=INK, bold=True)
+        add_text(s, body, 2.17, y + 0.33, 8.55, 0.48, size=10.5, color=MUTED)
     add_shape(s, MSO_SHAPE.RECTANGLE, 10.95, 2.04, 1.75, 4.35, PANEL, GRID, radius=True)
     add_text(s, "MY RULE", 11.15, 2.32, 1.35, 0.45, size=8, color=TEAL, bold=True, align=PP_ALIGN.CENTER)
-    add_text(s, "I will not\ncall it\nlearning\nuntil I\nsee the\nupdate.", 11.13, 3.20, 1.4, 1.55, size=18, color=INK, bold=True, font=FONT_DISPLAY, align=PP_ALIGN.CENTER, valign=MSO_ANCHOR.MIDDLE)
-    add_text(s, "check it →\nthen explain it", 11.16, 5.18, 1.38, 0.58, size=10, color=AMBER, bold=True, align=PP_ALIGN.CENTER)
+    add_text(s, "I will not call it learning until I see the update.", 11.08, 3.20, 1.50, 1.55, size=18, color=INK, bold=True, font=FONT_DISPLAY, align=PP_ALIGN.CENTER, valign=MSO_ANCHOR.MIDDLE)
+    add_text(s, "check it → then explain it", 11.05, 5.18, 1.55, 0.58, size=9, color=AMBER, bold=True, align=PP_ALIGN.CENTER)
     add_footer(s, "Sources: commit log; outputs/build_session1_deck.py; zvf-program/audit/COLAB_EXECUTION_STATUS.md; experiments-next audit files")
 
     # 4 — shipped evidence
@@ -447,10 +447,10 @@ def build() -> Presentation:
     add_metric(s, 0.72, 2.00, 2.35, 1.25, "18", "files reviewed", TEAL, "868-page frozen review snapshot")
     add_metric(s, 3.30, 2.00, 2.35, 1.25, "12", "active papers", BLUE, "the current P1-P12 queue")
     add_metric(s, 5.88, 2.00, 2.35, 1.25, "6", "absorbed", LAV, "history, not extra submissions")
-    add_metric(s, 8.46, 2.00, 2.35, 1.25, "488", "active pages", AMBER, "freshly rebuilt and readable")
+    add_metric(s, 8.46, 2.00, 2.35, 1.25, "486", "active pages", AMBER, "freshly rebuilt and readable")
     add_metric(s, 11.04, 2.00, 1.60, 1.25, "0", "ready now", RED, "none unchanged")
     buckets = [
-        ("FOCUS", "3", "P11 audit\nP2 short note\nP9 artifact", GREEN),
+        ("REPAIR", "3", "P11 audit\nP2 short note\nP9 artifact", GREEN),
         ("SUPPORT", "5", "P3, P5, P6,\nP8, P10", BLUE),
         ("TEST FIRST", "4", "P1, P4,\nP7, P12", AMBER),
         ("HISTORY", "6", "absorbed, not\nsubmission slots", RED),
@@ -474,7 +474,7 @@ def build() -> Presentation:
     route = [
         ("NOW", "Keep the evidence frozen", "Do not submit a second overlapping paper while the NeurIPS review is open.", RED),
         ("NEXT", "Send the flagship to TMLR", "If NeurIPS rejects or the paper is withdrawn, rerun the overlap and anonymity checks.", TEAL),
-        ("LATER", "Build the companions", "P11 audit, a short P2 note, and the P9 artifact each need their own missing gate.", BLUE),
+        ("LATER", "Repair the companions", "P11, P2, and P9 each have evidence-ledger problems to fix before a venue decision.", BLUE),
     ]
     for i, (when, title, body, color) in enumerate(route):
         y = 2.03 + i * 1.34

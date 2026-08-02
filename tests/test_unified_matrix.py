@@ -2,8 +2,10 @@
 
 Real GPU/Modal/GCP runs are not feasible in CI, so this test gates on what is:
 every (framework, backend) cell resolves to a non-stub ``LaunchPlan`` whose driver
-file exists in the repo, the manifest matches the live backend code, and a sample
-of cells resolve end-to-end through the CLI ``--dry-run``.
+file exists in the repo, the manifest matches the live backend code, **every cell
+actually dispatches its named framework** (no silent framework swaps), the colab
+path runs in-process (no entry-point recursion), and every cell resolves
+end-to-end through the CLI ``--dry-run``.
 
 This is the concrete check that "all frameworks × all backends have experiment run
 code" (slide 06, Infrastructure).
@@ -86,17 +88,57 @@ def test_each_framework_has_local_run_code(registry):
         assert plan.driver_file != "?", f"local/{fw}: unresolved driver"
 
 
+def test_each_cell_threads_its_framework(spec, registry):
+    """Every cell must actually dispatch its NAMED framework — no silent swaps.
+
+    This is the check the original gate was missing: a backend can resolve a cell
+    to a real driver file while quietly running a *different* framework (e.g. a
+    vast runner that provisions SkyRL for every --framework). We require each
+    plan to reference its framework in the command (``--framework trl``), in the
+    driver filename, OR in the driver file's text (the frozen GCP trl launcher
+    is TRL-by-construction — its command/filename don't contain "trl", but its
+    source pins ``trl==1.8.0``).
+    """
+    failures = []
+    for fw in FRAMEWORKS:
+        for be in BACKEND_NAMES:
+            plan = registry[be].plan(fw, spec)
+            driver = REPO / plan.driver_file
+            content = driver.read_text(errors="ignore") if driver.exists() else ""
+            if fw not in plan.command and fw not in plan.driver_file and fw not in content:
+                failures.append(
+                    f"{be}/{fw}: framework absent from command ({plan.command}), "
+                    f"driver filename ({plan.driver_file}), and driver content"
+                )
+    assert not failures, (
+        "cells that don't dispatch their named framework:\n  " + "\n  ".join(failures)
+    )
+
+
+def test_colab_dispatches_in_process_no_recursion(monkeypatch):
+    """Colab trains in-process via dispatch_framework — it must not shell back out
+    to ``run_canonical.py`` (the original entry-point self-recursion)."""
+    from platform_local.unified.launcher import UnifiedLauncher
+    from platform_local.unified.backends.colab import ColabBackend
+
+    launcher = UnifiedLauncher()
+    launcher.framework = "trl"
+    launcher.backend = "colab"
+    launcher.dry_run = False
+    launcher.spec = load_spec()
+
+    dispatched = {"count": 0}
+    monkeypatch.setattr(launcher, "dispatch_framework", lambda: dispatched.__setitem__("count", dispatched["count"] + 1))
+
+    ColabBackend().run("trl", launcher.spec, dry_run=False, launcher=launcher)
+    assert dispatched["count"] == 1, (
+        "ColabBackend.run did not delegate to dispatch_framework (would recurse)"
+    )
+
+
 @pytest.mark.parametrize(
     "backend,framework",
-    [
-        ("local", "tinker"),
-        ("modal", "trl"),
-        ("modal", "verl"),
-        ("gcp", "trl"),
-        ("vast", "tinker"),
-        ("hfspaces", "trl"),
-        ("colab", "trl"),
-    ],
+    [(be, fw) for be in BACKEND_NAMES for fw in FRAMEWORKS],
 )
 def test_cli_dry_run_resolves_cell(backend, framework):
     """The unified CLI resolves a sample of cells to a LaunchPlan without compute."""

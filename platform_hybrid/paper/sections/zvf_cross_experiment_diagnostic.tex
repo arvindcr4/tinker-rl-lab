@@ -154,19 +154,21 @@ deterministically from peak-vs-last10 alone.
 \subsection{Cross-Library Diagnostic vs AERO/RL-ZVP}
 \label{sec:zvf-cross-experiment:aero}
 
-Le \etal~\cite{le2025rlzvp} introduce AERO (also reported as
-RL-ZVP), an adaptive-rollout variant of GRPO that explicitly
-targets zero-variance prompts by reshaping the advantage signal.
+Zhang \etal~\cite{zhang2026aero} introduce AERO, while
+Le \etal~\cite{le2025rlzvp} introduce RL-ZVP. Both methods target
+zero-variance prompts with adaptive rollout or advantage-shaping mechanisms.
 Their central empirical claim is that vanilla GRPO suffers from
 ``zero-variance prompts''---groups where every rollout earns the
 same reward and therefore produce zero gradient---and that this
 failure mode can be detected and mitigated at the group-size
-level. The ZVF diagnostic studied in this section is the
-empirical prevalence metric that AERO predicts should differ
-across libraries. We test that prediction directly by aggregating
-per-step ZVF and the per-step \texttt{collapse} flag across the
-variance-mitigation runs in
-\texttt{experiments/results/variance\_mitigation.tsv}.
+level. The ZVF diagnostic studied in this section is the prevalence metric that
+these methods predict should differ across conditions.
+
+\paragraph{Evidence boundary.} The rows in
+\texttt{experiments/results/variance\_mitigation.tsv} are a simulation
+projection, not model-training runs. We use them only to illustrate expected
+diagnostic behavior. They cannot support an empirical ranking, mitigation
+claim, or statement that AERO or RL-ZVP works in this repository.
 
 \begin{table}[ht]
 \centering

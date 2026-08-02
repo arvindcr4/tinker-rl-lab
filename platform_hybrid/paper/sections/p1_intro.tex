@@ -20,12 +20,12 @@ algorithm with its plumbing. This paper isolates the scaling question inside a
 single, fixed benchmark.
 
 We study GRPO scaling as one pillar of \ours{}, a controlled benchmark of 70+ runs
-across seven RL libraries and five model families ($0.6$B--$\sim$671B) on GSM8K
+across seven RL libraries and five model families ($0.6$B--$1$T) on GSM8K
 \citep{cobbe2021training}, HumanEval~\citep{chen2021codex}, and synthetic tool-use
 tasks. Rather than assert a new law, we report what the data will and will not
 support. Our contributions are: (i) a same-benchmark measurement showing the
 cross-scale mean training-reward slope is statistically indistinguishable from zero
-over the measured 2--3-decade parameter range; (ii) a pre-registered falsification of a clean
+over the measured 2--3-decade parameter range; (ii) an internal falsification check of a clean
 three-phase saturation hypothesis; (iii) an identifiability audit showing no
 universal saturation exponent is estimable on this data, so the defensible object
 is a local, stack-conditioned saturation law with the endpoint ceiling regressed

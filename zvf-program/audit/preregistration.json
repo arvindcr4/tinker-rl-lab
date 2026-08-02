@@ -1,6 +1,6 @@
 {
   "schema_version": "grpo-survival-audit-v1",
-  "status": "preregistered-not-run",
+  "status": "completed",
   "frozen_at": "2026-07-14",
   "core_stratum": {
     "model": "Qwen/Qwen3-8B",
@@ -13,7 +13,16 @@
       "n": 500,
       "checkpoint": "final"
     },
-    "seeds": [11, 23, 37, 53, 71, 89, 107, 131],
+    "seeds": [
+      11,
+      23,
+      37,
+      53,
+      71,
+      89,
+      107,
+      131
+    ],
     "baseline_arm": "grpo",
     "arms": {
       "grpo": {
@@ -22,22 +31,34 @@
         "published_metric": null
       },
       "dapo": {
-        "allowed_changes": ["clip_bounds", "dynamic_sampling"],
+        "allowed_changes": [
+          "clip_bounds",
+          "dynamic_sampling"
+        ],
         "published_delta": null,
         "published_metric": null
       },
       "gspo": {
-        "allowed_changes": ["importance_ratio_granularity", "clip_granularity"],
+        "allowed_changes": [
+          "importance_ratio_granularity",
+          "clip_granularity"
+        ],
         "published_delta": null,
         "published_metric": null
       },
       "drgrpo": {
-        "allowed_changes": ["advantage_normalization"],
+        "allowed_changes": [
+          "advantage_normalization"
+        ],
         "published_delta": null,
         "published_metric": null
       },
       "aero": {
-        "allowed_changes": ["rollout_allocation", "selective_rejection", "posterior_state"],
+        "allowed_changes": [
+          "rollout_allocation",
+          "selective_rejection",
+          "posterior_state"
+        ],
         "published_delta": null,
         "published_metric": null
       }
@@ -86,5 +107,6 @@
     "stack_fingerprint",
     "treatment_changes",
     "manifest_path"
-  ]
+  ],
+  "execution_status_note": "Core 40 arm-seed units completed and aggregated; status flipped from preregistered-not-run after fail-closed COMPLETE. The A100 amendment record is date-only (2026-07-15), the same calendar day the first confirmatory unit completed; priority cannot be established from the artifacts alone (disclosed in the manuscript Limitations)."
 }

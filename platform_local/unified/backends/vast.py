@@ -1,7 +1,10 @@
-"""VAST.AI backend — rented GPUs via the existing SkyRL vast.ai provisioner.
+"""VAST.AI backend — rented GPUs via the framework-aware vast.ai provisioner.
 
-Reuses ``platform_hybrid/skyrl/backends/vastai_runner.py`` (``VastAILauncher``).
-The thin on-instance shim is ``platform_vast/run_experiment.py``.
+Reuses ``platform_hybrid/skyrl/backends/vastai_runner.py`` (``VastAILauncher``),
+which provisions a vast.ai A100 and runs the chosen framework on-instance via the
+unified launcher's in-process dispatch (``--framework`` is threaded all the way
+through, so trl/tinker/verl/openrlhf/skyrl each run their own code, not just
+SkyRL). The thin on-instance shim is ``platform_vast/run_experiment.py``.
 """
 from __future__ import annotations
 
@@ -19,11 +22,15 @@ class VastBackend(Backend):
             framework=framework,
             command=(
                 f"python -m platform_hybrid.skyrl.backends.vastai_runner "
-                f"--model {spec.model} --algorithm {spec.algorithm} "
-                f"--instance-type a100-80gb --num-instances 1"
+                f"--framework {framework} --model {spec.model} "
+                f"--algorithm {spec.algorithm} --instance-type a100-80gb "
+                f"--num-instances 1"
             ),
             driver_file=_DRIVER,
             output="/root/tinker-rl-lab/platform_tinker/atropos/checkpoints/ + /root/results_summary.json",
             env=["VAST_API_KEY", "TINKER_API_KEY", "HF_TOKEN", "WANDB_API_KEY"],
-            notes="provisions a vast.ai A100; on-instance script runs the canonical GSM8K config",
+            notes=(
+                "provisions a vast.ai A100; runs unified in-process dispatch for "
+                f"{framework} on the instance"
+            ),
         )

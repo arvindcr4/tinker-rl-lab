@@ -1,3 +1,8 @@
+> **2026-08-02 zero-GPU freeze:** canonical spine is **P11** (see
+> `drafts/PORTFOLIO_DECISION.md`, `drafts/PORTFOLIO_ROSTER_DISPOSITION.md`,
+> `drafts/P11_NEURIPS_OVERLAP_CHECK.md`). Other active roots are demoted;
+> do not treat the 12-PDF roster as a 12-submission queue.
+
 # Paper portfolio evidence
 
 This folder contains two different views of the manuscript set.
@@ -12,6 +17,6 @@ This folder contains two different views of the manuscript set.
   P1-P12 queue and the six absorbed archive roots. It records current paths,
   page counts, hashes, and PDF readability after the 2026-08-02 rebuild.
 
-The current active queue totals 488 pages. The six absorbed archives total 412
+The current active queue totals 486 pages. The six absorbed archives total 412
 pages and are history only. U01 is readable after repair, but its LaTeX build
 still has unresolved citation warnings; it is not a venue candidate.

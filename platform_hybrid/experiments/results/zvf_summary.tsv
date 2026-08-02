@@ -9,9 +9,9 @@
 #   converged last10_avg >= 0.85 * peak
 # Source: scripts/zvf_diagnostic.py
 experiment	model	task	phase	group_size	n_seeds	mean_zvf	min_zvf	max_zvf	mean_reward	peak	last10_avg	failure_label	n_steps	evidence_path	seed
-tinker_gsm8k_zvf	Qwen/Qwen3-8B	gsm8k		8	1	0.1300	0.0000	1.0000	0.6942	0.7125	0.7125	converged	200	experiments/results/tinker_gsm8k_zvf_s42.json	42
-tinker_gsm8k_zvf	Qwen/Qwen3-8B	gsm8k		8	1	0.1900	0.0000	1.0000	0.6942	0.6969	0.6969	converged	200	experiments/results/tinker_gsm8k_zvf_s123.json	123
-tinker_gsm8k_zvf	Qwen/Qwen3-8B	gsm8k		8	1	0.1550	0.0000	1.0000	0.6942	0.6731	0.6731	converged	200	experiments/results/tinker_gsm8k_zvf_s456.json	456
+tinker_gsm8k_zvf	Qwen/Qwen3-8B	gsm8k		8	1	0.1300	0.0000	1.0000	0.6969	0.6969	0.6969	converged	200	experiments/results/tinker_gsm8k_zvf_s42.json	42
+tinker_gsm8k_zvf	Qwen/Qwen3-8B	gsm8k		8	1	0.1900	0.0000	1.0000	0.7125	0.7125	0.7125	converged	200	experiments/results/tinker_gsm8k_zvf_s123.json	123
+tinker_gsm8k_zvf	Qwen/Qwen3-8B	gsm8k		8	1	0.1550	0.0000	1.0000	0.6731	0.6731	0.6731	converged	200	experiments/results/tinker_gsm8k_zvf_s456.json	456
 tinker_gsm8k_zvf	Qwen/Qwen3-8B	gsm8k		8	3	0.1583	0.1300	0.1900	0.6942	0.7125	0.6942	converged	600	experiments/results/tinker_gsm8k_zvf_summary.json	agg
 groupsize_zvf_sweep	Qwen/Qwen2.5-0.5B	arithmetic_synthetic		2	3	0.8380	0.8336	0.8424	0.8398	0.9861	0.9771	converged	120	experiments/results/groupsize_zvf_sweep.tsv	agg
 groupsize_zvf_sweep	Qwen/Qwen2.5-0.5B	arithmetic_synthetic		4	3	0.7635	0.7618	0.7652	0.8625	0.9900	0.9714	converged	120	experiments/results/groupsize_zvf_sweep.tsv	agg

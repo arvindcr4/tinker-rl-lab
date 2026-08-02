@@ -153,7 +153,7 @@ template predicts slow start $\to$ rapid improvement $\to$
 \emph{plateau}, with collapse as a degenerate tail.  Nemotron-120B
 is the only run in this set whose per-step peak
 ($\hat R_{\text{peak}} = 0.875$, step 3) is followed by a
-sustained decay: only $4$ of $20$ steps reach reward $> 0.25$, and
+sustained decay: only $5$ of $20$ steps reach reward $> 0.25$, and
 $55\%$ of steps report \emph{zero reward}.  The fitted $\lambda
 = 0.99$ and $t_{80} = 1.63$ step are the only identifiable
 parameters in Table~\ref{tab:scaling-fits} precisely because the
@@ -214,7 +214,7 @@ $t_{80} \cdot N$ scatter, and (d)~Nemotron-120B collapse autopsy.
     well-identified $t_{80}$ (other four runs hit $\lambda = 10$
     bound), so the regression is effectively 1 point and degenerate.
     (d)~\emph{Nemotron-120B autopsy}: peak at step 3, post-peak
-    region shaded; only 4/20 steps exceed 0.25 and 55\% are zero.}
+    region shaded; only 5/20 steps exceed 0.25 and 55\% are zero.}
   \label{fig:scaling-elevated}
 \end{figure}
 We extend the canonical saturation fit with a parametric bootstrap on
@@ -437,44 +437,30 @@ on the same 12 anchors gives the same null.
 The headline \emph{positive} result of the extension is on the
 \emph{architecture} axis.  Stratifying the 12 anchors into six MoE
 models (GPT-OSS-20B, Qwen3-30B-MoE / -MoE-Inst, DeepSeek-V3.1,
-Qwen3-235B-MoE, Kimi-K2-Thinking) versus six dense models
+Qwen3-235B-MoE, Kimi-K2-Thinking, and Nemotron-120B LatentMoE)
+versus five remaining dense models
 (Qwen3.5-4B, Qwen3-8B, Llama-3.1-8B-Instruct, Qwen3-32B,
-Qwen3.5-27B, Nemotron-120B):
+Qwen3.5-27B).  An earlier draft misclassified Nemotron as dense; that
+split and its permutation test are withdrawn below:
 
 \begin{table}[t]
   \centering
   \small
-  \begin{tabular}{lrrrrr}
+  \begin{tabular}{lp{0.72\linewidth}}
     \toprule
-    arch & $n$ & mean $\bar R$ & std & min & max \\
+    Item & Status \\
     \midrule
-    MoE    & 6 & \textbf{0.810} & 0.228 & 0.325 & 1.000 \\
-    dense  & 6 & 0.472           & 0.274 & 0.175 & 0.869 \\
-    \midrule
-    gap (MoE $-$ dense)        & \multicolumn{5}{l}{$+0.338$} \\
-    permutation $p$ (one-sided) & \multicolumn{5}{l}{$\mathbf{0.023}$} \\
-    permutation $p$ (two-sided) & \multicolumn{5}{l}{$0.046$} \\
+    Original claim & 6-vs-6 MoE/dense mean-$\bar R$ gap $+0.338$, one-sided perm $p=0.023$ \\
+    Defect & Nemotron-3-Super-120B-A12B is LatentMoE (12B active), not dense; it was the sole collapse anchor in the ``dense'' set \\
+    Disposition & \textbf{Withdrawn.} Reclassification removes the architecture headline (corrected one-sided perm $p\approx 0.178$) \\
+    Leave-Nemotron sensitivity & Also withdrawn: no checked-in TSV; recomputation ($+0.278$, $p\approx 0.049$) reverses the paper's earlier non-significant claim \\
     \bottomrule
   \end{tabular}
-  \caption{\textbf{MoE vs dense head-to-head on $\bar R$.}
-    A 5000-replicate permutation test on the 6-vs-6 mean-reward gap
-    rejects the null at $p = 0.023$ one-sided ($p = 0.046$
-    two-sided).  The MoE set includes both the high-mean frontier
-    (Qwen3-235B $\bar R = 1.0$, DeepSeek-V3.1 $= 0.844$, Kimi-K2
-    $= 0.850$) and the early-window-only MoE run
-    (Qwen3-30B-MoE $\bar R = 0.325$, where the trace is a 5-step
-    probe with R$(1) = 0.188$, R$(5) = 0.438$, i.e.\ still
-    increasing).  The dense set contains the same Llama-3.1-8B
-    $\bar R = 0.869$ and Qwen3.5-4B $\bar R = 0.817$ as the MoE
-    set's high-mean ceiling, but it also carries the collapse run
-    Nemotron-120B ($\bar R = 0.175$) and the unsaturated
-    Qwen3-8B ($\bar R = 0.285$).  After collapsing Nemotron the gap
-    shrinks to $+0.20$ and is no longer significant at $p < 0.05$,
-    so the headline $+0.34$ is partly driven by the Nemotron
-    collapse and not exclusively by MoE-vs-dense.  We report it
-    as a \emph{descriptive} comparison, not as a causal claim.
-    \texttt{scripts/scaling\_law\_extended.py}
-    $\to$ \texttt{scaling\_law\_moe\_vs\_dense.tsv}.}
+  \caption{\textbf{Withdrawn MoE-vs-dense stratification.} The only positive
+    architecture claim in this section rested on a mislabelled Nemotron dense
+    assignment. Primary sources: NVIDIA model card and Nemotron~3 Super technical
+    report (LatentMoE). See also
+    \texttt{autoresearch/deli-neurips-tmlr-260802/state/nemotron\_architecture\_resolution.md}.}
   \label{tab:scaling-moe-vs-dense}
 \end{table}
 
@@ -504,8 +490,8 @@ the right diagnostic for that trace rather than the first-final gap.
     triangles = MoE.  Spearman $\rho = -0.036$, $p = 0.91$.
     (b)~\emph{Mean reward} $\bar R$ vs $\log_{10} N$ with OLS fit
     (slope $+0.081$/dec, $R^2 = 0.038$, perm $p = 0.54$).
-    (c)~\emph{MoE vs dense} head-to-head boxplot: gap $+0.338$,
-    perm $p = 0.023$ one-sided, $p = 0.046$ two-sided (caveat:
+    (c)~\emph{MoE vs dense} boxplot (\textbf{withdrawn}): gap $+0.338$,
+    perm $p = 0.023$ one-sided was computed under a mislabelled dense Nemotron (caveat:
     partly driven by Nemotron collapse in the dense set).
     (d)~\emph{First-final gap} $R(1) - R(T)$ per model; the
     positive side means the trace is collapsing.  Qwen3.5-27B is
@@ -524,18 +510,15 @@ MoE frontiers up to 1\,T parameters -- still fails to reject
 slope-of-zero;
 (ii)~\emph{non-parametric} Spearman rank test on the same 12
 anchors also fails to reject rank-zero;
-(iii)~\emph{architecture} stratification reveals the only signal
-that survives: MoE-vs-dense mean gap of $+0.34$, permutation
-$p = 0.023$ one-sided, but this gap is \emph{partly explained}
-by the Nemotron-120B collapse sitting in the dense set.
-After removing Nemotron, the gap shrinks to $\sim +0.20$ and the
-permutation $p$ rises above $0.05$; the MoE-vs-dense effect is
-\emph{descriptive} rather than causal.
+(iii)~\emph{architecture} stratification that previously reported a
+MoE-vs-dense gap of $+0.34$ ($p=0.023$) is \textbf{withdrawn}
+(\tableref{tab:scaling-moe-vs-dense}): Nemotron-120B is LatentMoE, so the
+6-vs-6 split was invalid. No architecture-axis positive claim remains.
 
 The benchmark-time consequence is the same as in iter 9: at this
 $T \le 30$ step budget and $N \le 1$\,T parameter range, there is
-no detectable cross-scale GRPO signal on \textsc{gsm8k} outside
-of the architecture axis.  Combined with
+no detectable cross-scale GRPO signal on \textsc{gsm8k}, and no
+valid architecture-axis positive claim after the Nemotron correction.  Combined with
 \tableref{tab:scaling-holdout} (saturation fit adds no
 out-of-sample predictive power) and
 \tableref{tab:scaling-nemotron-autopsy} (Nemotron-120B is the

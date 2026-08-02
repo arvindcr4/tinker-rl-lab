@@ -11,21 +11,22 @@
   "n_seeds": 3,
   "n_problems_per_seed": 200,
   "n_problems_total": 600,
-  "sampling_accuracy_mean": 0.6942,
+  "sampling_accuracy_mean": 0.6941666666666667,
   "sampling_accuracy_per_seed": [
+    0.696875,
     0.7125,
-    0.6969,
-    0.6731
+    0.673125
   ],
-  "mean_zvf": 0.1583,
+  "mean_zvf": 0.15833333333333333,
   "zvf_per_seed": [
-    0.19,
     0.13,
+    0.19,
     0.155
   ],
   "zvf_theory_corr": 0.9266,
   "zvf_theory_mean_abs_err": 0.1224,
   "frac_all_correct": 0.1267,
   "frac_all_wrong": 0.0317,
-  "frac_mixed": 0.8417
+  "frac_mixed": 0.8417,
+  "seed_alignment_note": "zvf_per_seed and sampling_accuracy_per_seed aligned to seeds[i] from per-seed JSON (fixed 2026-08-02 seed-swap)"
 }

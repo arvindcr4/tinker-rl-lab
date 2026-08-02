@@ -124,7 +124,11 @@ class UnifiedLauncher:
 
         start_time = time.time()
 
-        if self.backend == "local":
+        if self.backend in ("local", "colab"):
+            # Both run in-process on the GPU box they execute on (Colab is an
+            # on-box A100 runtime, same as local). Going through dispatch_framework
+            # here — rather than shelling back out to run_canonical.py — is what
+            # breaks the colab entry's self-recursion.
             result = self.dispatch_framework()
         else:
             from platform_local.unified.backends import get_backend

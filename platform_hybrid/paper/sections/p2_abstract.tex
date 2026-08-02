@@ -8,21 +8,17 @@ rewards stop training the policy. We study ZVF as one pillar of \ours{}, a
 benchmark of 70+ RL runs across seven libraries and five model families
 ($0.6$B--$\sim$671B) on GSM8K, HumanEval, and tool-use tasks. We characterize ZVF
 descriptively and, deliberately, decline to promote it to a causal or
-incrementally predictive statistic. Empirically, ZVF tracks training-time signal
-starvation and correlates with catastrophic collapse (Spearman
-$\rho = 0.56$; Pearson point-biserial $0.62$), but only weakly with the final held-out outcome
-($\rho \approx 0.27$); it is temporally sticky (late-phase $0.87$--$0.97$, versus
-early-phase $0.04$--$0.13$ for variance-mitigation GRPO and the largest group size,
-with smaller groups starting higher at $0.25$--$0.61$; lag-1 autocorrelation $\approx 0.94$) and mechanically
-coupled to reward sparsity, group size, and baseline accuracy. A concluding
-cross-examination shows ZVF's core weakness is that it aliases mastery with
-incapacity. On 505 unique prompt-seed tasks we additionally verify the exact
-binary-reward accounting identity
-$\operatorname{pass@}G-p^G=1-\mathrm{ZVF}$ to numerical error
-$1.11\times10^{-16}$: ZVF is the complement of contrastive group yield, not an
-independent performance predictor. This identity sharpens the diagnostic's
-interpretation and motivates magnitude- and sign-aware replacements. We release code,
-logs, and per-group reward tensors.
+incrementally predictive statistic. Three stored GSM8K group tensors recompute
+their reported ZVF values exactly (0.130, 0.190, and 0.155; pooled 0.1583).
+Across the small measured matrix, the association with final held-out outcome
+is weak ($\rho\approx0.27$), and the same ZVF can describe mastery or
+incapacity. A separate variance-mitigation table is a declared simulation
+projection used for sensitivity analysis; it is not evidence that any named
+method mitigates failure. Under the stated iid-Bernoulli model, the relation
+$\operatorname{pass@}G-p^G=1-\mathrm{ZVF}$ follows algebraically. It identifies
+ZVF with contrastive group yield under that model, not with held-out improvement
+or causal intervention value. We release code, logs, and the three per-group
+reward tensors used for the measured recomputation.
 \paragraph{Absorbed satellite (retired).}
 The former short stratified NeurIPS framing (roster R02) is retired from the
 live tree to \texttt{archive/absorbed/R02\_main\_zvf/}. Its evidence is this

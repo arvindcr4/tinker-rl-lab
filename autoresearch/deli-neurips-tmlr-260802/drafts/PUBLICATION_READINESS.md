@@ -1,6 +1,24 @@
 # Publication readiness decision
 
-Date: 2026-08-02
+Date: 2026-08-02 (updated same day after portfolio decision + P11 §3.1)
+
+## Portfolio freeze (zero GPU)
+
+**Canonical spine:** P11 — *GRPO-Stack-Audit* (single-stack preregistered audit +
+MDE-bounded cost of dynamic sampling). §3.1 edits applied; PDF rebuilt (11 pp).
+Overlap vs NeurIPS 36320: **no material dual-submission risk**
+(`drafts/P11_NEURIPS_OVERLAP_CHECK.md`). Roster demotions recorded in
+`drafts/PORTFOLIO_ROSTER_DISPOSITION.md`. Claim ledger extended
+(`platform_hybrid/experiments/results/claim_to_run/claim_to_run_table.md`).
+
+**Do not send a new archival submission today** unless the human freezes the
+P11 PDF hash and completes the TMLR checklist. The flagship remains blocked for
+TMLR while NeurIPS 36320 is live.
+
+**GPU options** (not taken): see `PORTFOLIO_DECISION.md` §4.3 — zero GPU /
+~$45 DAPO n=12 / full matrix. Confirmatory runner remains unbound.
+
+---
 
 ## Decision
 
@@ -49,6 +67,9 @@ confirmatory matrix passes the frozen gate.
   runs, and reward alone flags the same two cases.
 - Any PPO-versus-GRPO, TRL-versus-verl, estimator, or framework ranking from the
   reviewed tables.
+- P1's MoE-versus-dense headline. Nemotron-3-Super is MoE, not dense; the
+  corrected exact one-sided permutation value is 0.1780, and the claim that no
+  MoE anchor collapses is false.
 - The spectral draft's benchmark gains, ZVF reduction, or learning claims. Its
   checked implementation is a synthetic diagnostic, and the cited 77-case raw
   audit bundle is absent.
@@ -65,11 +86,13 @@ confirmatory matrix passes the frozen gate.
 | Full internal review bundle | Clean extraction passes | `09293f0dd83137642afe3fbc56cb919db41b878d96d1586306e852eb594b153f` |
 | Anonymous TMLR PDF | Official TMLR style, 12 pages | `2f18d499f3fe5226d24c1c759ce48b8376ddcdb2b7a73559688081393c1fdb60` |
 | Anonymous TMLR supplement | 33 files, clean extraction passes | `44fd058fd96097640e04af66f0d33905e2d1beeebe85be16993bfa8ab8920fd1` |
-| Three-week progress deck | 12 editable slides; 18 reviewed vs. 12 active made explicit | `2a878cad35ecd8a82bcb79122681b421678eb162a17ffd024a7cb7fbfac57ce2` |
-| Progress deck PDF | 12-page preview | `d9b883fc37b29bcea0b3033c8e614e8631df2cc75476ded411b3854d6b0526fd` |
-| 18-paper portfolio review | Historical 18-file audit reconciled to current 12+6 roster | `ee7395f6c551579226228aee3f9584c18c5aa73abf6e2fbca9ee0ac3d801f95c` |
-| Machine-readable paper verdicts | 18 reconciled data rows | `311bbe1f9c9d2c51a6cdd2973cfd6dbab6fc02ced4ca86c3191cc0e1a5dcee0f` |
-| Current paper manifest | 12 active + 6 absorbed paths, pages, and hashes | `01710772876797cb9086b5c0f0125c69d082951756a5bfa06400d6c7beba0356` |
+| Three-week progress deck | 12 editable slides; 18 reviewed vs. 12 active made explicit | `07a9eac350e74f1ac8c36be047fa0bbc3850d15cf230c6a26eebad4139e48e91` |
+| Progress deck PDF | 12-page preview | `88d5044d2550f5a3264d62ee4ade1670168f3071903472f549c1cbbcf457cefd` |
+| All-work program review deck | 23 editable slides; current portfolio is P1-P12 only | `80c1b2179cd6ced172679892900aa8d77aa5e8ed2e87cca5181a304fa3186c24` |
+| All-work program review PDF | 23-page preview | `510412b704429e5cc8af34c61a8dad41350459c6d2f1ba4d0f8d06b1d1122526` |
+| 18-file portfolio review | Historical 18-file audit reconciled to current 12+6 roster | `590a03dc6fd25c5141c34efd5e76f25864b20f86945e0c04146e936476850810` |
+| Machine-readable paper verdicts | 18 reconciled data rows | `047171eedf4607de268eaa8e01d7d7aa947bf1ebf34b47246bee65bb868efe2a` |
+| Current paper manifest | 12 active + 6 absorbed paths, pages, and hashes | `943b77b8d613c450a15cb67c61f4992c073b711ed1baf5bd23d8b7fedd81d45f` |
 
 The anonymous supplement includes all 600 stored gradient relations, both S1
 receipt projections, unchanged S1 source and tests, the executed objective
@@ -83,19 +106,24 @@ pages and 329 distinct included source files. That frozen corpus is preserved as
 the review evidence. It is not the current submission queue.
 
 The repository now has 12 active roots, P1-P12, and six absorbed archives. The
-12 active PDFs were freshly rebuilt, pass structural PDF checks, and total 488
+12 active PDFs were freshly rebuilt, pass structural PDF checks, and total 486
 pages. The six archives are readable history, not extra paper slots. U01 was
 repaired to 232 pages but still has unresolved citation warnings and remains a
 thesis/evidence compendium only.
 
-- Keep P11 (former R08) as a bounded audit case study. Its four comparisons
+- Keep P11 (former R08) as a bounded audit case study only after making its
+  effective n=1 arm aggregates, unavailable published-gain estimand, 0.004
+  replay shift, and date-only amendment timing prominent. Its four comparisons
   remain `INCONCLUSIVE`.
-- Cut P2, including the former R02 stratification result, to one question.
-- Treat P9 (former R04) as an artifact candidate only after an anonymous
-  clean-machine release check; use P8 as documentation.
-- Build P5/P6 into one reporting and registry resource, then obtain external
-  entries and a user decision study.
-- Run prospective experiments before promoting P1, P4, P7, or P12.
+- Repair P2's synthetic-versus-measured labels, seed mapping, and citation;
+  remove the unsupported 505-task validation claim; then cut it to one question.
+- Rebuild P9 from one source ledger. Its run count, task list, compute card,
+  step counts, and duplicate cells must reconcile before a clean-machine check;
+  use P8 as documentation only after that repair.
+- Remove P5's confounded 17x and forced $\eta^2$ exhibits, then build P5/P6 into
+  one reporting/registry resource with external entries and a user study.
+- Delete P1's architecture headline and keep only an identifiability note; run
+  prospective experiments before promoting P1, P4, P7, or P12.
 - Keep P08_fraud, R01, R02, R06, R07, and U01 absorbed.
 
 The paper-by-paper evidence, nearest prior art, fatal gate, and disposition are

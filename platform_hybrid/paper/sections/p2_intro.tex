@@ -33,9 +33,11 @@ incapacity---and motivates magnitude- and sign-aware replacements.
 \paragraph{Exact accounting, bounded interpretation.}
 For a binary-reward prompt with success probability $p$, pass@$G$ is
 $1-(1-p)^G$ and unanimous success is $p^G$. Their gap is therefore
-$1-p^G-(1-p)^G=1-\mathrm{ZVF}$. The checked-in 505-task audit reproduces this
-identity to $1.11\times10^{-16}$. This is useful because it tells us exactly
-what ZVF measures---contrastive group yield---and exactly what it does not:
+$1-p^G-(1-p)^G=1-\mathrm{ZVF}$ under the stated iid-Bernoulli model. This is an
+algebraic identity, not an empirical validation result. Three checked-in
+per-group reward tensors independently recompute their reported ZVF values; no
+separate 505-task identity-audit artifact is claimed. The identity tells us what
+ZVF measures under the model---contrastive group yield---and what it does not:
 held-out improvement, gradient direction, or causal value of an intervention.
 
 \subsection{Related Work}

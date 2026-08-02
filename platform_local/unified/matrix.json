@@ -54,7 +54,7 @@
         "HF_TOKEN",
         "WANDB_API_KEY"
       ],
-      "notes": "Modal H100 serverless; per-framework driver"
+      "notes": "Modal H100 serverless; per-framework driver (trl)"
     },
     {
       "framework": "trl",
@@ -66,12 +66,12 @@
         "HF_TOKEN",
         "WANDB_API_KEY"
       ],
-      "notes": "A100 runtime; interactive alt: platform_colab/advanced_rl_colab.ipynb"
+      "notes": "A100 runtime; runs unified in-process dispatch (--backend local on the box); interactive alt: platform_colab/advanced_rl_colab.ipynb"
     },
     {
       "framework": "trl",
       "backend": "vast",
-      "command": "python -m platform_hybrid.skyrl.backends.vastai_runner --model Qwen/Qwen3-8B --algorithm grpo --instance-type a100-80gb --num-instances 1",
+      "command": "python -m platform_hybrid.skyrl.backends.vastai_runner --framework trl --model Qwen/Qwen3-8B --algorithm grpo --instance-type a100-80gb --num-instances 1",
       "driver_file": "platform_hybrid/skyrl/backends/vastai_runner.py",
       "output": "/root/tinker-rl-lab/platform_tinker/atropos/checkpoints/ + /root/results_summary.json",
       "env": [
@@ -80,20 +80,20 @@
         "HF_TOKEN",
         "WANDB_API_KEY"
       ],
-      "notes": "provisions a vast.ai A100; on-instance script runs the canonical GSM8K config"
+      "notes": "provisions a vast.ai A100; runs unified in-process dispatch for trl on the instance"
     },
     {
       "framework": "trl",
       "backend": "gcp",
       "command": "python zvf-program/next-submission/run_gcp_preflight.py --task gsm8k --arm grpo_g8 --seed 211 --wait",
-      "driver_file": "zvf-program/next-submission/remote_preflight.py",
+      "driver_file": "zvf-program/next-submission/run_gcp_preflight.py",
       "output": "HF repo arvindcr4/tinker-rl-next-preflight-gcp-* + W&B tinker-rl-lab + GCS receipts",
       "env": [
         "GCP_PROJECT",
         "WANDB_API_KEY",
         "HF_TOKEN"
       ],
-      "notes": "single A100 Spot (a2-highgpu-1g); reuse preflight provisioning (launcher: zvf-program/next-submission/run_gcp_preflight.py)"
+      "notes": "single A100 Spot (a2-highgpu-1g); validated TRL preflight (frozen, hash-anchored) with HF/W&B/GCS receipts"
     },
     {
       "framework": "trl",
@@ -121,8 +121,8 @@
     {
       "framework": "tinker",
       "backend": "modal",
-      "command": "modal run platform_hybrid/experiments/modal_runner.py --exp trl_grpo --seeds 1",
-      "driver_file": "platform_hybrid/experiments/modal_runner.py",
+      "command": "modal run platform_hybrid/experiments/modal/modal_grpo_tinker.py",
+      "driver_file": "platform_hybrid/experiments/modal/modal_grpo_tinker.py",
       "output": "Modal volume 'tinker-results' + /home/user/workspace/elevation_outputs/",
       "env": [
         "MODAL_TOKEN_ID",
@@ -130,7 +130,7 @@
         "HF_TOKEN",
         "WANDB_API_KEY"
       ],
-      "notes": "Modal A10G sweep runner (tinker/skyrl delegate here)"
+      "notes": "Modal H100 serverless; per-framework driver (tinker)"
     },
     {
       "framework": "tinker",
@@ -142,12 +142,12 @@
         "HF_TOKEN",
         "WANDB_API_KEY"
       ],
-      "notes": "A100 runtime; interactive alt: platform_colab/advanced_rl_colab.ipynb"
+      "notes": "A100 runtime; runs unified in-process dispatch (--backend local on the box); interactive alt: platform_colab/advanced_rl_colab.ipynb"
     },
     {
       "framework": "tinker",
       "backend": "vast",
-      "command": "python -m platform_hybrid.skyrl.backends.vastai_runner --model Qwen/Qwen3-8B --algorithm grpo --instance-type a100-80gb --num-instances 1",
+      "command": "python -m platform_hybrid.skyrl.backends.vastai_runner --framework tinker --model Qwen/Qwen3-8B --algorithm grpo --instance-type a100-80gb --num-instances 1",
       "driver_file": "platform_hybrid/skyrl/backends/vastai_runner.py",
       "output": "/root/tinker-rl-lab/platform_tinker/atropos/checkpoints/ + /root/results_summary.json",
       "env": [
@@ -156,20 +156,20 @@
         "HF_TOKEN",
         "WANDB_API_KEY"
       ],
-      "notes": "provisions a vast.ai A100; on-instance script runs the canonical GSM8K config"
+      "notes": "provisions a vast.ai A100; runs unified in-process dispatch for tinker on the instance"
     },
     {
       "framework": "tinker",
       "backend": "gcp",
-      "command": "python zvf-program/next-submission/run_gcp_preflight.py --task gsm8k --arm grpo_g8 --seed 211 --wait",
-      "driver_file": "zvf-program/next-submission/remote_preflight.py",
+      "command": "python platform_gcp/run_unified_dispatch.py --framework tinker --task gsm8k --seed 211 --wait",
+      "driver_file": "platform_gcp/run_unified_dispatch.py",
       "output": "HF repo arvindcr4/tinker-rl-next-preflight-gcp-* + W&B tinker-rl-lab + GCS receipts",
       "env": [
         "GCP_PROJECT",
         "WANDB_API_KEY",
         "HF_TOKEN"
       ],
-      "notes": "single A100 Spot (a2-highgpu-1g); reuse preflight provisioning (launcher: zvf-program/next-submission/run_gcp_preflight.py)"
+      "notes": "single A100 Spot (a2-highgpu-1g); non-frozen launcher runs unified in-process dispatch for tinker on the VM"
     },
     {
       "framework": "tinker",
@@ -204,7 +204,7 @@
         "HF_TOKEN",
         "WANDB_API_KEY"
       ],
-      "notes": "Modal H100 serverless; per-framework driver"
+      "notes": "Modal H100 serverless; per-framework driver (verl)"
     },
     {
       "framework": "verl",
@@ -216,12 +216,12 @@
         "HF_TOKEN",
         "WANDB_API_KEY"
       ],
-      "notes": "A100 runtime; interactive alt: platform_colab/advanced_rl_colab.ipynb"
+      "notes": "A100 runtime; runs unified in-process dispatch (--backend local on the box); interactive alt: platform_colab/advanced_rl_colab.ipynb"
     },
     {
       "framework": "verl",
       "backend": "vast",
-      "command": "python -m platform_hybrid.skyrl.backends.vastai_runner --model Qwen/Qwen3-8B --algorithm grpo --instance-type a100-80gb --num-instances 1",
+      "command": "python -m platform_hybrid.skyrl.backends.vastai_runner --framework verl --model Qwen/Qwen3-8B --algorithm grpo --instance-type a100-80gb --num-instances 1",
       "driver_file": "platform_hybrid/skyrl/backends/vastai_runner.py",
       "output": "/root/tinker-rl-lab/platform_tinker/atropos/checkpoints/ + /root/results_summary.json",
       "env": [
@@ -230,20 +230,20 @@
         "HF_TOKEN",
         "WANDB_API_KEY"
       ],
-      "notes": "provisions a vast.ai A100; on-instance script runs the canonical GSM8K config"
+      "notes": "provisions a vast.ai A100; runs unified in-process dispatch for verl on the instance"
     },
     {
       "framework": "verl",
       "backend": "gcp",
-      "command": "python zvf-program/next-submission/run_gcp_preflight.py --task gsm8k --arm grpo_g8 --seed 211 --wait",
-      "driver_file": "zvf-program/next-submission/remote_preflight.py",
+      "command": "python platform_gcp/run_unified_dispatch.py --framework verl --task gsm8k --seed 211 --wait",
+      "driver_file": "platform_gcp/run_unified_dispatch.py",
       "output": "HF repo arvindcr4/tinker-rl-next-preflight-gcp-* + W&B tinker-rl-lab + GCS receipts",
       "env": [
         "GCP_PROJECT",
         "WANDB_API_KEY",
         "HF_TOKEN"
       ],
-      "notes": "single A100 Spot (a2-highgpu-1g); reuse preflight provisioning (launcher: zvf-program/next-submission/run_gcp_preflight.py)"
+      "notes": "single A100 Spot (a2-highgpu-1g); non-frozen launcher runs unified in-process dispatch for verl on the VM"
     },
     {
       "framework": "verl",
@@ -278,7 +278,7 @@
         "HF_TOKEN",
         "WANDB_API_KEY"
       ],
-      "notes": "Modal H100 serverless; per-framework driver"
+      "notes": "Modal H100 serverless; per-framework driver (openrlhf)"
     },
     {
       "framework": "openrlhf",
@@ -290,12 +290,12 @@
         "HF_TOKEN",
         "WANDB_API_KEY"
       ],
-      "notes": "A100 runtime; interactive alt: platform_colab/advanced_rl_colab.ipynb"
+      "notes": "A100 runtime; runs unified in-process dispatch (--backend local on the box); interactive alt: platform_colab/advanced_rl_colab.ipynb"
     },
     {
       "framework": "openrlhf",
       "backend": "vast",
-      "command": "python -m platform_hybrid.skyrl.backends.vastai_runner --model Qwen/Qwen3-8B --algorithm grpo --instance-type a100-80gb --num-instances 1",
+      "command": "python -m platform_hybrid.skyrl.backends.vastai_runner --framework openrlhf --model Qwen/Qwen3-8B --algorithm grpo --instance-type a100-80gb --num-instances 1",
       "driver_file": "platform_hybrid/skyrl/backends/vastai_runner.py",
       "output": "/root/tinker-rl-lab/platform_tinker/atropos/checkpoints/ + /root/results_summary.json",
       "env": [
@@ -304,20 +304,20 @@
         "HF_TOKEN",
         "WANDB_API_KEY"
       ],
-      "notes": "provisions a vast.ai A100; on-instance script runs the canonical GSM8K config"
+      "notes": "provisions a vast.ai A100; runs unified in-process dispatch for openrlhf on the instance"
     },
     {
       "framework": "openrlhf",
       "backend": "gcp",
-      "command": "python zvf-program/next-submission/run_gcp_preflight.py --task gsm8k --arm grpo_g8 --seed 211 --wait",
-      "driver_file": "zvf-program/next-submission/remote_preflight.py",
+      "command": "python platform_gcp/run_unified_dispatch.py --framework openrlhf --task gsm8k --seed 211 --wait",
+      "driver_file": "platform_gcp/run_unified_dispatch.py",
       "output": "HF repo arvindcr4/tinker-rl-next-preflight-gcp-* + W&B tinker-rl-lab + GCS receipts",
       "env": [
         "GCP_PROJECT",
         "WANDB_API_KEY",
         "HF_TOKEN"
       ],
-      "notes": "single A100 Spot (a2-highgpu-1g); reuse preflight provisioning (launcher: zvf-program/next-submission/run_gcp_preflight.py)"
+      "notes": "single A100 Spot (a2-highgpu-1g); non-frozen launcher runs unified in-process dispatch for openrlhf on the VM"
     },
     {
       "framework": "openrlhf",
@@ -345,8 +345,8 @@
     {
       "framework": "skyrl",
       "backend": "modal",
-      "command": "modal run platform_hybrid/experiments/modal_runner.py --exp trl_grpo --seeds 1",
-      "driver_file": "platform_hybrid/experiments/modal_runner.py",
+      "command": "modal run platform_hybrid/experiments/modal/modal_grpo_skyrl.py",
+      "driver_file": "platform_hybrid/experiments/modal/modal_grpo_skyrl.py",
       "output": "Modal volume 'tinker-results' + /home/user/workspace/elevation_outputs/",
       "env": [
         "MODAL_TOKEN_ID",
@@ -354,7 +354,7 @@
         "HF_TOKEN",
         "WANDB_API_KEY"
       ],
-      "notes": "Modal A10G sweep runner (tinker/skyrl delegate here)"
+      "notes": "Modal H100 serverless; per-framework driver (skyrl)"
     },
     {
       "framework": "skyrl",
@@ -366,12 +366,12 @@
         "HF_TOKEN",
         "WANDB_API_KEY"
       ],
-      "notes": "A100 runtime; interactive alt: platform_colab/advanced_rl_colab.ipynb"
+      "notes": "A100 runtime; runs unified in-process dispatch (--backend local on the box); interactive alt: platform_colab/advanced_rl_colab.ipynb"
     },
     {
       "framework": "skyrl",
       "backend": "vast",
-      "command": "python -m platform_hybrid.skyrl.backends.vastai_runner --model Qwen/Qwen3-8B --algorithm grpo --instance-type a100-80gb --num-instances 1",
+      "command": "python -m platform_hybrid.skyrl.backends.vastai_runner --framework skyrl --model Qwen/Qwen3-8B --algorithm grpo --instance-type a100-80gb --num-instances 1",
       "driver_file": "platform_hybrid/skyrl/backends/vastai_runner.py",
       "output": "/root/tinker-rl-lab/platform_tinker/atropos/checkpoints/ + /root/results_summary.json",
       "env": [
@@ -380,20 +380,20 @@
         "HF_TOKEN",
         "WANDB_API_KEY"
       ],
-      "notes": "provisions a vast.ai A100; on-instance script runs the canonical GSM8K config"
+      "notes": "provisions a vast.ai A100; runs unified in-process dispatch for skyrl on the instance"
     },
     {
       "framework": "skyrl",
       "backend": "gcp",
-      "command": "python zvf-program/next-submission/run_gcp_preflight.py --task gsm8k --arm grpo_g8 --seed 211 --wait",
-      "driver_file": "zvf-program/next-submission/remote_preflight.py",
+      "command": "python platform_gcp/run_unified_dispatch.py --framework skyrl --task gsm8k --seed 211 --wait",
+      "driver_file": "platform_gcp/run_unified_dispatch.py",
       "output": "HF repo arvindcr4/tinker-rl-next-preflight-gcp-* + W&B tinker-rl-lab + GCS receipts",
       "env": [
         "GCP_PROJECT",
         "WANDB_API_KEY",
         "HF_TOKEN"
       ],
-      "notes": "single A100 Spot (a2-highgpu-1g); reuse preflight provisioning (launcher: zvf-program/next-submission/run_gcp_preflight.py)"
+      "notes": "single A100 Spot (a2-highgpu-1g); non-frozen launcher runs unified in-process dispatch for skyrl on the VM"
     },
     {
       "framework": "skyrl",

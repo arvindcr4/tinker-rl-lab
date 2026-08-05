@@ -72,6 +72,7 @@ contributing to lower step means. The picture is one of
 \begin{table}[htbp]
 \centering
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lcccccc}
 \toprule
 Task & Algo & $n$ & $\rho(\text{step},\text{len})$
@@ -83,7 +84,8 @@ Arithmetic (Qwen2.5-0.5B)   & Dr.~GRPO & 5 & $-0.307 \pm 0.181$ & $+0.753 \pm 0.
 GSM8K-CoT (Qwen2.5-1.5B)    & GRPO     & 3 & $-0.622 \pm 0.301$ & $+0.046 \pm 0.162$ & $-0.501 \pm 0.258$ & $0.265$ \\
 GSM8K-CoT (Qwen2.5-1.5B)    & Dr.~GRPO & 3 & $-0.355 \pm 0.255$ & $+0.025 \pm 0.091$ & $-0.618 \pm 0.118$ & $0.252$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Per-step Spearman correlations across training runs. $\rho(\text{step},\text{len})$ is the
 length trend (negative = compression); $\rho(\text{step},\text{reward})$ is the reward trend; and
 $\rho(\text{len},\text{reward})$ is the within-run coupling evaluated across steps. All four
@@ -263,6 +265,7 @@ iteration.
 \begin{table}[htbp]
 \centering
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lcccccc}
 \toprule
 & \multicolumn{3}{c}{Length behaviour} & \multicolumn{3}{c}{Reward behaviour} \\
@@ -272,7 +275,8 @@ Horizon & Easy & Hard & Ref. & Easy & Hard & Ref. \\
 $30$--$40$ steps (this paper)         & compresses & compresses & §5.X, here & grows    & flat    & §5.X, here \\
 $200{+}$ steps (Dr.~GRPO paper)        & grows      & grows      & \cite{tong2025drgrpo} & collapses & collapses & \cite{tong2025drgrpo} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Cross-horizon reconciliation. At short horizons the model compresses under
 reinforcement; at long horizons Dr.~GRPO's authors observe the predicted length growth
 followed by reward collapse. Our data is consistent with the early phase of the
@@ -375,6 +379,7 @@ significance at $n{=}5$.
 \begin{table}[htbp]
 \centering
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lccc}
 \toprule
 Task & $\Delta\rho(\text{step},\text{len})$
@@ -384,7 +389,8 @@ Task & $\Delta\rho(\text{step},\text{len})$
 Arithmetic (Qwen2.5-0.5B)   & $+0.098\,[+0.073,+0.119]$ & $+0.043\,[-0.024,+0.112]$ & $+0.126\,[+0.045,+0.201]$ \\
 GSM8K-CoT (Qwen2.5-1.5B)    & $+0.267\,[+0.164,+0.419]$ & $-0.020\,[-0.069,+0.065]$ & $-0.117\,[-0.265,+0.015]$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Paired bootstrap $95\%$ CIs on the Dr.GRPO $-$ GRPO
 difference for the three Spearman quantities. Positive
 $\Delta\rho(\text{step},\text{len})$ means Dr.GRPO compresses
@@ -631,6 +637,7 @@ $B{=}5000$ resamples and a $2000$-permutation $p$-value.
 
 \begin{table}[htbp]
 \centering\small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{l c c c c c}
 \hline
 \textbf{Task} & \textbf{Algo} & \textbf{$n$ seeds} & \textbf{$\overline{\rho}(L,R)$} & \textbf{$\overline{\text{slope}}$ (Theil--Sen)} & \textbf{$\Delta_{\rho}$ 95\% CI}\\
@@ -640,7 +647,8 @@ arithmetic\_easy\_qwen2.5-0.5b & Dr.GRPO & 5 & $-0.294$ & $-0.1069$ & $+0.102$ $
 gsm8k\_cot\_hard\_qwen2.5-1.5b  & GRPO    & 3 & $-0.514$ & $-0.0076$ & --- \\
 gsm8k\_cot\_hard\_qwen2.5-1.5b  & Dr.GRPO & 3 & $-0.618$ & $-0.0127$ & $-0.104$ $[-0.217, -0.013]$ \\
 \hline
-\end{tabular}
+\end{tabular}%
+}
 \caption{\textbf{Reward-shape decomposition (iter 16).}
 Per-run Spearman $\rho(\texttt{len},\texttt{reward})$ and Theil--Sen slope
 of the conditional reward curve $E[R\mid L]$, aggregated across seeds

@@ -18,7 +18,7 @@ rollout workers, identical reward parser, identical $\beta{=}0$ KL, and
 identical chat template). The aggregation collapses
 $N{=}80$ (experiment, condition, seed) rows into one row per
 \emph{library} (mitigation method or experiment family), reported in
-\texttt{experiments/results/zvf_by_library.tsv}.
+\texttt{experiments/results/zvf\_by\_library.tsv}.
 
 \begin{table}[htbp]
 \centering
@@ -43,7 +43,7 @@ ES               & 0.114    & 0.316  & 0/5 & 1/5 & 4/5 \\
 ($K{=}8$, 5 seeds each, 100 rollout steps). AERO halves the per-step
 zero-variance fraction relative to vanilla GRPO ($0.22$ vs $0.48$)
 and ties SCAFGRPO on last-10 accuracy ($0.399$ vs $0.409$).
-Source: \texttt{experiments/results/zvf_by_library.tsv}; rows derived from the
+Source: \protect\path{experiments/results/zvf_by_library.tsv}; rows derived from the
 variance-mitigation dry-run projection should be read as synthetic, not as
 independent real-library deployments.}
 \label{tab:zvf-by-library}
@@ -96,7 +96,9 @@ LoRA rank~4, batch~8) supplies the sharpest instance of ZVF carrying
 information mean reward cannot. Late in the $G{=}2$ arms, mean train
 reward sits near 1.0 --- by the reward axis alone, training is
 succeeding --- while $\mathrm{ZVF}$ sits at $0.75$--$1.0$: nearly every
-group is all-correct and contributes zero gradient. The $G{=}16$ arms at
+group is all-correct and has zero centered reward contrast in the submitted
+GRPO term; this does not imply that every total-gradient contribution vanishes.
+The $G{=}16$ arms at
 the same rollout budget hold $\mathrm{ZVF}\le0.25$. Reward reports
 \emph{where the policy is}; ZVF reports \emph{whether training is still
 moving} --- and at the high-accuracy end the two disagree completely.

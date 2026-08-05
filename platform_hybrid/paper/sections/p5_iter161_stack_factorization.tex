@@ -55,6 +55,7 @@ the same scale. The headline read-out:
 
 \begin{table}[ht]
 \centering\small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lrrrll}
 \toprule
 Axis & Source & $n_{\mathrm{rows}}$ & $\eta^2$ & Ratio vs algo & Verdict \\
@@ -68,7 +69,8 @@ $G$                 & mega                & 98 & 0.0304 & \textbf{4.1$\times$}  
 \texttt{seed}       & mega                & 98 & 0.0000 & 0.0$\times$  & DECISIVE ($\leq 0.10$) \\
 \texttt{step} (within-run) & N2 same-stack & 160 & 0.9284 & 124.0$\times$ & NULL (within-run drift dominates) \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Head-to-head $\eta^2$ decomposition: algorithm axis (N2 same-stack,
 Tier A) vs each stack axis (mega panel, Tier B). $\eta^2_{\mathrm{algo}} =
 0.0075$ is the Ivison (NeurIPS 2024) baseline. Three of four individual

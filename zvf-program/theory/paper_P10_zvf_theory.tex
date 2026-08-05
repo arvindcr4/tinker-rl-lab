@@ -70,8 +70,9 @@ indicators and gives binomial-proportion confidence intervals; under curriculum
 ordering these intervals cover a local-stage estimand unless batch composition is
 stratified. \textbf{T2} converts a population \ZVF{} into a reliability budget:
 the number of independent groups required to observe at least one informative
-group with probability $1-\delta$. This bounds rollouts to a nonzero
-reward-gradient event, not rollouts to policy improvement. \textbf{T3} audits a
+group with probability $1-\delta$. Under the stated assumptions, this bounds
+rollouts to a potentially nonzero centered reward-contrast contribution, not
+rollouts to policy improvement or a total update. \textbf{T3} audits a
 proposed signal-per-rollout objective. Under that declared objective its optimum
 collapses to the prior-independent tie $G\in\{2,3\}$; it therefore supplies no
 data-adaptive group-size set-point. A richer variance-, Fisher-, wall-clock-, or
@@ -81,16 +82,20 @@ assumption and scope boundary is stated inline. The result is a calibrated senso
 conservative reliability trigger---not a proof that a particular controller or
 group size improves held-out performance.
 \end{abstract}
+\paragraph{August 2026 evidence boundary.} Theoretical homogeneous-reward
+statements concern centered reward contrast and do not assert zero total
+gradient, canonical-GRPO equivalence, or an intervention outcome.
 
 %==============================================================================
 \section{Introduction}
 %==============================================================================
 The ZVF Program's Pillar~1 contributed a \emph{mechanism}: in group-relative,
-critic-free RL (GRPO and relatives \cite{shao2024deepseekmath}), the policy gradient
-of a prompt-group is mediated entirely by the within-group spread of rewards.
+critic-free RL (GRPO and relatives \cite{shao2024deepseekmath}), the submitted
+runner's centered reward-contrast term depends on the within-group spread of rewards.
 When all $K$ rollouts of a group collapse to the same binary outcome, the
-group-relative advantage is identically zero and the group contributes no
-gradient. The \ZVF{} counts the fraction of such ``dead'' groups in a batch.
+group-relative advantage is identically zero and that centered term is zero under
+the stated assumptions; this does not assert a zero total gradient. The \ZVF{}
+counts the fraction of such degenerate groups in a batch.
 Pillar~1 made this definition rigorous, showed it is \emph{not} a tautological
 re-expression of the mean reward, and validated it as a portable early-warning
 signal \cite{zvfaudit2026}.
@@ -107,7 +112,9 @@ rather than merely annotate a training curve:
         need its sampling distribution and a confidence interval, or any
         threshold $\tau_{\ZVF}$ is a point estimate masquerading as a decision.
   \item \textbf{A reliability cost.} The operational claim of Pillar~1 is local
-        and mechanical: at $\ZVF_t = 1$ no gradient flows. We strengthen this
+        and mechanical: at $\ZVF_t = 1$ the centered reward-contrast term is
+        zero under the stated GRPO assumptions; this does not rule out other
+        total-gradient contributions. We strengthen this
         into a \emph{finite-sample} statement: high \ZVF{} raises the budget
         required to observe at least one informative group with stated reliability.
   \item \textbf{Limits of action.} If high \ZVF{} wastes rollouts, can a
@@ -345,7 +352,8 @@ observing a non-degenerate reward-gradient event. The result does not imply a
 policy-improvement guarantee.
 
 \paragraph{What ``improvement is possible'' means.} A GRPO update at step $t$
-produces a nonzero gradient only if at least one group in the batch is
+can contribute a nonzero centered reward-gradient term under the stated
+assumptions only if at least one group in the batch is
 \emph{informative}, i.e.\ has $Z_g=0$ (non-uniform outcomes). Define the
 per-prompt informativeness probability $q_g \coloneqq 1-h_K(p_g) =
 1-p_g^K-(1-p_g)^K$, the population fraction of informative groups
@@ -391,11 +399,13 @@ that the \emph{entire batch} is uninformative. \textbf{This is a
 reliability/budget statement, not an impossibility bound}: an
 informative group arrives within the first $K$ rollouts with
 probability $1-\ZVF$, which can be large. Fewer than $N$ rollouts does
-not make a gradient improbable; it makes the \emph{guarantee} of one
+not make a potentially nonzero centered reward-gradient contribution improbable;
+it makes the \emph{guarantee} of one
 unavailable at confidence $1-\delta$. (\textbf{Important}: the theorem bounds
-rollouts-to-nonzero-\emph{gradient}; it does NOT bound rollouts-to-
+rollouts to a potentially nonzero centered reward-contrast contribution under the stated assumptions; it does NOT bound rollouts to
 \emph{policy improvement} in the sense of monotone reward gain. A
-single informative group yields a nonzero update direction, not a
+single informative group permits a potentially nonzero centered reward-contrast
+contribution under the stated assumptions, not a
 guaranteed monotone reward increment; the latter would require a
 separate improvement lemma under a policy-gradient / NPG
 improvement guarantee. Treat the corollary as a wasted-\emph{gradient}
@@ -405,14 +415,22 @@ $N(\ZVF)-N(\ZVF_{\text{ref}})$ relative to a healthy reference rate
 $\ZVF_{\text{ref}}$.
 \end{theorem}
 \begin{proof}
-With i.i.d.\ groups each uninformative with probability $\ZVF$, the probability
-that all $n_g$ drawn groups are uninformative is $\ZVF^{\,n_g}$. Requiring
-$\ZVF^{\,n_g}\le\delta$ gives $n_g\ge \ln(1/\delta)/(-\ln \ZVF)$; multiplying by
-$K$ rollouts per group gives \eqref{eq:T2-groups}. The smallest integer group
-budget is $\lceil\ln(1/\delta)/(-\ln\ZVF)\rceil$. The divergence as
+With i.i.d.\ groups, each is uninformative with probability $\ZVF$, so all
+$n_g$ drawn groups are uninformative with probability $\ZVF^{\,n_g}$. Requiring
+this probability to be at most $\delta$ gives
+\[
+  n_g \ge \frac{\ln(1/\delta)}{-\ln \ZVF}.
+\]
+Multiplying by $K$ rollouts per group gives \eqref{eq:T2-groups}; the smallest
+integer group budget is
+\[
+  \left\lceil \frac{\ln(1/\delta)}{-\ln \ZVF} \right\rceil.
+\]
+The divergence as
 $\ZVF\to1$ follows since $-\ln \ZVF\to0^+$. The result is explicitly about an
-informative group/nonzero reward-gradient event; no policy-improvement claim is
-used in the proof. Corollary~\ref{cor:T2-traj} handles estimation of the
+informative group that can supply a potentially nonzero centered
+reward-contrast contribution under the stated assumptions; no total-update or
+policy-improvement claim is used in the proof. Corollary~\ref{cor:T2-traj} handles estimation of the
 population rate. Under correlated groups the product probability
 $\ZVF^{n_g}$ need not hold, so the theorem's i.i.d.\ condition is essential.
 \end{proof}
@@ -606,7 +624,7 @@ Pillar~7 rather than asserted as a theorem here.
 All three theorems, plus the controller-pilot implied by
 Section~\ref{sec:controller}, were validated against real sampling data
 under a pre-registered protocol (decision rules fixed before scoring; see
-\texttt{experiments-next/README.md}). The measurements test assumptions and
+\path{experiments-next/README.md}). The measurements test assumptions and
 operational relevance; they are not used to prove the mathematical statements.
 
 \paragraph{Setup.} One sampling pool: Qwen3-8B, GSM8K train split,
@@ -642,7 +660,10 @@ an invalidation.
 
 \paragraph{E-T2: the waiting-time quantile.} With $G{=}8$ and
 $\delta{=}0.1$, the geometric $(1{-}\delta)$-quantile
-$G\lceil\ln\delta/\ln\mathrm{ZVF}\rceil$ matched the observed
+\[
+G\left\lceil\frac{\ln\delta}{\ln\mathrm{ZVF}}\right\rceil
+\]
+matched the observed
 $(1{-}\delta)$-quantile of rollouts-to-first-informative-group within
 0--5\% in all six difficulty strata. In the hardest stratum
 ($\hat p\approx 0.01$, $\mathrm{ZVF}=0.886$) the quantile is
@@ -729,7 +750,8 @@ reward types.
 verifiable rewards: (T1) $\ZVF_t$ is an unbiased, asymptotically normal
 estimator of a well-defined population quantity with a closed-form CI; (T2)
 high \ZVF{} implies a logarithmically diverging \emph{reliability budget} ---
-the $(1{-}\delta)$-quantile of rollouts to a nonzero update; (T3) the
+the $(1{-}\delta)$-quantile of rollouts to a potentially nonzero centered
+reward-contrast contribution under the stated assumptions; (T3) the
 signal-per-rollout objective has a well-defined optimum, which is the
 \emph{universal} $G^\star\in\{2,3\}$ (eq.~\ref{eq:J23}), prior-independent.
 
@@ -738,8 +760,9 @@ signal-per-rollout objective has a well-defined optimum, which is the
   \item \textbf{T1 is a binomial-proportion result, not a new U-statistic
         theorem.} A different degree-2 estimand would require a separate
         degeneracy analysis; no such claim is made here.
-  \item \textbf{T2 bounds rollouts-to-nonzero-gradient, not
-        rollouts-to-improvement.} Corollary~\ref{cor:T2-traj} supplies an exact-
+  \item \textbf{T2 bounds rollouts to a potentially nonzero centered
+        reward-contrast contribution under the stated assumptions, not
+        rollouts to improvement or a total gradient.} Corollary~\ref{cor:T2-traj} supplies an exact-
         coverage lower bound when the population $\ZVF$ is estimated.
   \item \textbf{T3's objective $S(p,G)$ is a modelling choice,} and under it
         the optimum is the universal, prior-independent $\{2,3\}$
@@ -771,294 +794,6 @@ illustrative algebraic constants or drawn from the checked-in
 
 %==============================================================================
 
-% --- appendix figures (moved before bibliography for denser last page) ---
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Probability $p$ and Group $G$};
-    \node [b2, right=of n1] (n2) {\textbf{Binomial Variance Surface Function}\\Binomial Function};
-    \node [b3, right=of n2] (n3) {Variance Surface Curve};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Binomial Variance Surface Function}. Surface plot of variance as a function of success probability.}
-\label{fig:r05_fig1}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Group Size Schedule};
-    \node [b2, right=of n1] (n2) {\textbf{Asymmetric Group Size Escalation and Efficiency}\\Efficiency Evaluator};
-    \node [b3, right=of n2] (n3) {Optimal Sample Curve};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Asymmetric Group Size Escalation and Efficiency}. Evaluating sample budget efficiency under adaptive G scaling.}
-\label{fig:r05_fig2}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Rollout Outcomes};
-    \node [b2, right=of n1] (n2) {\textbf{Mastered vs Failed Task Separation}\\Task Classifier};
-    \node [b3, right=of n2] (n3) {Identified Task Classes};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Mastered vs Failed Task Separation}. Separating mastered tasks from failed tasks.}
-\label{fig:r05_fig3}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Predicted Probabilities};
-    \node [b2, right=of n1] (n2) {\textbf{Empirical Calibration Error Decomposition}\\ECE Decomposer};
-    \node [b3, right=of n2] (n3) {Calibration Curve};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Empirical Calibration Error Decomposition}. Decomposing probability calibration errors in RL post-training.}
-\label{fig:r05_fig4}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Task Cohort Data};
-    \node [b2, right=of n1] (n2) {\textbf{Multi-Task Pass@k Convergence Bounds}\\Convergence Bound Engine};
-    \node [b3, right=of n2] (n3) {Theoretical Bound Plot};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Multi-Task Pass@k Convergence Bounds}. Mathematical convergence bounds for pass@k across task cohorts.}
-\label{fig:r05_fig5}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Bernoulli Rewards};
-    \node [b2, right=of n1] (n2) {\textbf{Bernoulli Process Gradient Noise Variance}\\Noise Calculator};
-    \node [b3, right=of n2] (n3) {Gradient Noise Metric};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Bernoulli Process Gradient Noise Variance}. Analyzing gradient noise variance under Bernoulli reward models.}
-\label{fig:r05_fig6}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {ZVF Feedback Signal};
-    \node [b2, right=of n1] (n2) {\textbf{Closed-Loop ZVF Controller Feedback Loop}\\Optimizer Controller};
-    \node [b3, right=of n2] (n3) {Stabilized Trajectory};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Closed-Loop ZVF Controller Feedback Loop}. Theoretical closed-loop dynamics of ZVF-guided optimization.}
-\label{fig:r05_fig7}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Core Axioms};
-    \node [b2, right=of n1] (n2) {\textbf{Theoretical Proof and Derivation Dependency Map}\\Theorem Graph};
-    \node [b3, right=of n2] (n3) {Verified ZVF Theorem};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Theoretical Proof and Derivation Dependency Map}. Graph of mathematical proofs establishing ZVF properties.}
-\label{fig:r05_fig8}
-\end{figure}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 \bibliographystyle{plainnat}
 \bibliography{../../platform_hybrid/paper/references}
-
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {ZVF Feedback Signal};
-    \node [b2, right=of n1] (n2) {\textbf{Closed-Loop ZVF Controller Feedback Loop}\\Optimizer Controller};
-    \node [b3, right=of n2] (n3) {Stabilized Trajectory};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Closed-Loop ZVF Controller Feedback Loop}. Theoretical closed-loop dynamics of ZVF-guided optimization.}
-\label{fig:p10_unique_1}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=1.4cm and 1.8cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.4cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Core Axioms};
-    \node [b2, right=of n1] (n2) {\textbf{Theoretical Proof and Derivation Dependency Map}\\Theorem Graph};
-    \node [b3, right=of n2] (n3) {Verified ZVF Theorem};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Theoretical Proof and Derivation Dependency Map}. Graph of mathematical proofs establishing ZVF properties.}
-\label{fig:p10_unique_2}
-\end{figure}
-
-
-
-\section{AntiVibe Senior Architectural \& Pedagogical Audit (P10)}
-\label{sec:antivibe_audit_p10}
-
-This section applies the \textbf{AntiVibe Framework} (AntiVibe Framework; mohi-devhub/antivibe) to provide a senior-level architectural review, computer science grounding, and explicit failure-mode analysis for ZVF Mathematical Theory Note.
-
-\subsection{Architectural Rationale \& Computer Science Foundations}
-\begin{itemize}[leftmargin=1.4em, itemsep=3pt]
-  \item \textbf{Why This Design:} Traditional RL post-training often relies on superficial baseline subtraction without accounting for zero-variance fractions (ZVF) or length-bias degeneration. P10 introduces closed-loop control dynamics to stabilize policy gradients.
-  \item \textbf{Core CS Mechanisms:} Employs $O(G)$ sample-variance computation per prompt group, streaming token-level credit assignment, and non-parametric quantile filtering.
-  \item \textbf{Trade-off Analysis:} Trades marginal rollout compute ($G=4 \to G=16$) for guaranteed variance non-degeneracy, preventing catastrophic collapse in deterministic prompt regimes.
-\end{itemize}
-
-\subsection{Failure Modes, Edge Cases, and Boundary Conditions}
-\begin{tabular}{@{}p{0.28\linewidth}p{0.32\linewidth}p{0.34\linewidth}@{}}
-\toprule
-\textbf{Failure Mode} & \textbf{Trigger Condition} & \textbf{AntiVibe Mitigation Rule} \\
-\midrule
-ZVF Collapse (ZVF $\to 1$) & All $G$ rollouts achieve identical reward $r_i = r_j$. & Dynamic group scaling $G \gets \min(2G, 64)$ or prompt injection. \\
-Length Bias Distortion & Long completions exploit dense verbosity rewards. & Length-normalized advantage centering $\tilde{A}_i = A_i / \sqrt{L_i}$. \\
-Gradient Starvation & Advantage norms $\|A\|_2 < 10^{-5}$ paralyze policy updates. & Adaptive reward scaling sentinel with automatic learning-rate boost. \\
-\bottomrule
-\end{tabular}
-
-\subsection{Implementation \& Verification Ledger}
-To audit this implementation against vibe-coding, every claim in ZVF Mathematical Theory Note must satisfy three automated verification gates: (1) Seed-matched baseline reproducibility within $\pm 1\%$, (2) Monotonic ZVF reduction under adaptive control, and (3) Zero unhandled numerical exceptions during zero-variance rollout states.
-
-
 \end{document}

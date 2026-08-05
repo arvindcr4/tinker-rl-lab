@@ -46,6 +46,7 @@ verdict drift.
 The script classifies every gap between the three evidence layers and emits
 a severity-ranked \texttt{p6\_iter106\_audit\_gaps.tsv}. The 5 gap classes:
 
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lcll}
 \hline
 Gap & Severity & $n$ & Description \\
@@ -57,7 +58,8 @@ D CLAIM-ONLY             & HIGH   & 3 & entry declares expected\_effects but ZER
 E SKELETON               & INFO   & 2 & entry has neither expected\_effects nor measured[] \\
 F INCONSISTENT-VERDICT   & MEDIUM & 0 & stored verdict disagrees with machine recomputation \\
 \hline
-\end{tabular}
+\end{tabular}%
+}
 
 \paragraph{H2 (continued) -- 3 HIGH-severity CLAIM-ONLY entries.}
 \texttt{delta\_dapo}, \texttt{delta\_gspo}, \texttt{delta\_ppo} each declare

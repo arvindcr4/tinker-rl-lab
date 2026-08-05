@@ -8,6 +8,15 @@ now absorbed into a parent paper or the thesis. They are not extra evidence or
 extra submission vehicles.
 The canonical evidence hierarchy remains thesis-first:
 
+### Reviewer #36320 descendant boundary (2026-08-05)
+
+`paper.tex` is a current local descendant of NeurIPS submission #36320, not
+the authenticated reviewed PDF. Its correction manifest is
+`REVIEWER_36320_CORRECTION_MANIFEST.md`. The 12-root roster below remains the
+only live set; the six absorbed roots are audit-only history. The descendant
+does not pool selected checkpoints, treats the Qwen PPO row as quarantined, and
+keeps later per-run or single-stack evidence separate from the reviewed record.
+
 1. Per-step ZVF is a mechanical diagnostic of contrastive group yield. For
    binary rewards, `pass@G - p^G = 1 - ZVF`; the 505-task audit reproduces the
    identity to `1.11e-16`.

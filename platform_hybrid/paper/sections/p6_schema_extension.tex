@@ -310,6 +310,7 @@ schema \texttt{PASS} preserved.
 \begin{table}[ht]
 \centering
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{l l l l}
 \toprule
 delta\_id & component & old \texttt{field:} & new \texttt{field:} \\
@@ -320,7 +321,8 @@ delta\_id & component & old \texttt{field:} & new \texttt{field:} \\
 \texttt{delta\_dapo} & \texttt{kl\_removed} & \texttt{reference\_kl} & \texttt{reference\_kl.kl\_beta} \\
 \texttt{delta\_gspo} & \texttt{sequence\_level\_clip} & \texttt{loss\_form.clip} & \texttt{see delta-list and citation} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Iter-42 drift repair table. The five drift rows from the
 delta-$\leftrightarrow$-schema audit (which run on the 14/18 schema-anchored
 components; the other 4 are \texttt{see delta-list and citation} placeholders).

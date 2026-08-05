@@ -126,7 +126,7 @@ All four methods in \texttt{experiments/results/variance\_mitigation.tsv}
 reach $\ell < 0.03$ from a peak $p \approx 0.40$, so they are
 \texttt{drift}: the runs \emph{learned} something but lost it within
 $\approx 30$ steps. Mean-ZVF over the trajectory averages
-$0.10$–$0.13$, well below the GRPO baseline ($0.48$) on the same
+$0.10$--$0.13$, well below the GRPO baseline ($0.48$) on the same
 data; we discuss the implication in
 the companion paper on variance honesty.
 
@@ -159,7 +159,8 @@ Le \etal~\cite{le2025rlzvp} introduce RL-ZVP. Both methods target
 zero-variance prompts with adaptive rollout or advantage-shaping mechanisms.
 Their central empirical claim is that vanilla GRPO suffers from
 ``zero-variance prompts''---groups where every rollout earns the
-same reward and therefore produce zero gradient---and that this
+same reward and therefore have zero centered reward contrast in the stated
+GRPO estimator, rather than necessarily a zero total gradient---and that this
 failure mode can be detected and mitigated at the group-size
 level. The ZVF diagnostic studied in this section is the prevalence metric that
 these methods predict should differ across conditions.
@@ -199,6 +200,10 @@ by \texttt{scripts/zvf\_diagnostic.py}. Source TSV:
 \label{tab:zvf-by-library-diagnostic}
 \end{table}
 
+\paragraph{Reviewed-record correction.} Any cross-library AERO/GRPO comparison
+below is later or heterogeneous evidence, not reviewed \#36320 evidence and
+not an algorithm ranking. In particular, do not use aggregate GU fields from
+\texttt{zvf\_audit\_summary.json}: submitted GU means $1-\mathrm{ZVF}$.
 The headline read of Table~\ref{tab:zvf-by-library} is the
 contrast between AERO and the GRPO baseline:
 
@@ -321,6 +326,7 @@ is regime-dependent rather than uniform.
 \begin{table}[ht]
 \centering
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lrrrrl}
 \toprule
 Source & $n$ & mean $\delta_{\mathrm{div}}$ & 95\% boot.\ CI & frac$(\delta_{\mathrm{div}} > 0)$ & verdict \\
@@ -329,7 +335,8 @@ tinker\_gsm8k (real reasoning)        & 600 & $+0.1224$ & $[+0.1116,\,+0.1334]$ 
 groupsize\_zvf\_sweep (synthetic)     & 480 & $-0.0668$ & $[-0.0786,\,-0.0561]$ & 0.298 & herd \\
 groupsize\_zvf\_sweep\_agg (per-step) &  12 & $-0.2994$ & $[-0.3890,\,-0.2100]$ & 0.000 & herd \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Cross-source $\delta_{\mathrm{div}}$ statistics pooled at the
 per-problem level. Bootstrap CIs use $B{=}2000$ percentile resamples
 over per-problem rows (one row per (source, seed, problem\_id)). The

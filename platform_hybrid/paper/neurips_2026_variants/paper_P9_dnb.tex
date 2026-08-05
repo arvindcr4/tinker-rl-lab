@@ -5,9 +5,9 @@
 % main-body cap, evidence-tier (A/B/C) labels, hype-name purge.
 % =============================================================================
 % Anonymous-submission PDF metadata strip
-\pdfsuppressptexinfo=-1
-\pdfinfoomitdate=1
-\pdftrailerid{}
+\ifdefined\pdfsuppressptexinfo\pdfsuppressptexinfo=-1\fi
+\ifdefined\pdfinfoomitdate\pdfinfoomitdate=1\fi
+\ifdefined\pdftrailerid\pdftrailerid{}\fi
 
 \documentclass{article}
 
@@ -19,7 +19,7 @@
 \usepackage{hyperref}
 \usepackage{url}
 % Avoid green link boxes / annotation artifacts on wrapped URLs
-\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue,pdfborder={0 0 0}}
+\hypersetup{hidelinks}
 \usepackage{booktabs}
 \usepackage{amsfonts}
 \usepackage{amsmath}
@@ -262,9 +262,10 @@ descriptively. (ii) Most A-grade evidence is concentrated on
 short-horizon GSM8K with binary verifiable rewards; tool-use,
 code-generation, and non-math coverage are sparser. (iii) Inferential
 claims are limited to the mechanical
-$\mathrm{ZVF} = p^G + (1{-}p)^G$ identity and the held-out 5-seed
-Qwen3-8B GSM8K control ($+1.3$pp, $t{=}1.32$, $p{=}0.26$, not
-significant). (iv) Many cross-library comparisons are confounded by
+$\mathrm{ZVF} = p^G + (1{-}p)^G$ identity and later, separate five-seed
+Qwen3-8B GSM8K evidence ($+1.3$pp; one-sample seed-level $p{=}0.26$ against
+a fixed baseline, not a paired-seed or reviewed-record test). (iv) Many
+cross-library comparisons are confounded by
 checkpoint, hardware, or default-config differences and should be read
 as stack-level rather than algorithm-level statements.
 
@@ -458,182 +459,6 @@ independent main-track science.
 \label{fig:r04_repro_harness}
 \end{figure}
 
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Raw Benchmark Data};
-    \node [b2, right=of n1] (n2) {\textbf{Dataset Tiering and Evidence Hierarchy (Tiers A/B/C)}\\Evidence Tier Classifier};
-    \node [b3, right=of n2] (n3) {Categorized Tier A/B/C};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Dataset Tiering and Evidence Hierarchy (Tiers A/B/C)}. Structured categorization of benchmark dataset evidence levels.}
-\label{fig:r04_fig1}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Dataset Files};
-    \node [b2, right=of n1] (n2) {\textbf{Artifact License and Open-Source Distribution}\\License Checker};
-    \node [b3, right=of n2] (n3) {Open-Source Release};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Artifact License and Open-Source Distribution}. Automated validation of data licenses and open access artifacts.}
-\label{fig:r04_fig2}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Raw Math Prompts};
-    \node [b2, right=of n1] (n2) {\textbf{GSM8K and Math Reasoning Preprocessing Pipeline}\\Regex Extractor};
-    \node [b3, right=of n2] (n3) {Clean Benchmark Dataset};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{GSM8K and Math Reasoning Preprocessing Pipeline}. Standardizing prompt formatting and answer extraction regex.}
-\label{fig:r04_fig3}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Synthetic Prompts};
-    \node [b2, right=of n1] (n2) {\textbf{Multi-Task Prompt Formatting and Synthetic Filtering}\\Quality Filter Engine};
-    \node [b3, right=of n2] (n3) {High-Fidelity Dataset};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Multi-Task Prompt Formatting and Synthetic Filtering}. Filtering synthetic dataset generations for quality assurance.}
-\label{fig:r04_fig4}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Model Checkpoints};
-    \node [b2, right=of n1] (n2) {\textbf{Benchmark Evaluation Harness and Execution Pipeline}\\Execution Harness};
-    \node [b3, right=of n2] (n3) {Evaluation Score Table};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Benchmark Evaluation Harness and Execution Pipeline}. Executing evaluation suites across model checkpoints.}
-\label{fig:r04_fig5}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Train / Test Splits};
-    \node [b2, right=of n1] (n2) {\textbf{Data Leakage Prevention and Contamination Audit}\\Contamination Checker};
-    \node [b3, right=of n2] (n3) {Clean Split Certificate};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Data Leakage Prevention and Contamination Audit}. Detecting n-gram overlap between training and test splits.}
-\label{fig:r04_fig6}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Dataset Repositories};
-    \node [b2, right=of n1] (n2) {\textbf{Dataset Maintenance and Version Control Architecture}\\Version Manager};
-    \node [b3, right=of n2] (n3) {Immutable Version Tag};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Dataset Maintenance and Version Control Architecture}. Tracking dataset revisions and patch histories.}
-\label{fig:r04_fig7}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Artifact Package};
-    \node [b2, right=of n1] (n2) {\textbf{Reproduction Harness Execution and Verification}\\Verification Engine};
-    \node [b3, right=of n2] (n3) {Reproducibility Verdict};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Reproduction Harness Execution and Verification}. Verifying artifact reproduction end-to-end.}
-\label{fig:r04_fig8}
-\end{figure}
-
 \bibliographystyle{plainnat}
 \bibliography{../references}
 % =============================================================================
@@ -750,33 +575,6 @@ Acknowledgments are withheld for blind review.
 
 
 
-
-
-\section{AntiVibe Senior Architectural \& Pedagogical Audit (P9)}
-\label{sec:antivibe_audit_p9}
-
-This section applies the \textbf{AntiVibe Framework} (AntiVibe Framework; mohi-devhub/antivibe) to provide a senior-level architectural review, computer science grounding, and explicit failure-mode analysis for NeurIPS Datasets & Benchmarks Variant.
-
-\subsection{Architectural Rationale \& Computer Science Foundations}
-\begin{itemize}[leftmargin=1.4em, itemsep=3pt]
-  \item \textbf{Why This Design:} Traditional RL post-training often relies on superficial baseline subtraction without accounting for zero-variance fractions (ZVF) or length-bias degeneration. P9 introduces closed-loop control dynamics to stabilize policy gradients.
-  \item \textbf{Core CS Mechanisms:} Employs $O(G)$ sample-variance computation per prompt group, streaming token-level credit assignment, and non-parametric quantile filtering.
-  \item \textbf{Trade-off Analysis:} Trades marginal rollout compute ($G=4 \to G=16$) for guaranteed variance non-degeneracy, preventing catastrophic collapse in deterministic prompt regimes.
-\end{itemize}
-
-\subsection{Failure Modes, Edge Cases, and Boundary Conditions}
-\begin{tabular}{@{}p{0.28\linewidth}p{0.32\linewidth}p{0.34\linewidth}@{}}
-\toprule
-\textbf{Failure Mode} & \textbf{Trigger Condition} & \textbf{AntiVibe Mitigation Rule} \\
-\midrule
-ZVF Collapse (ZVF $\to 1$) & All $G$ rollouts achieve identical reward $r_i = r_j$. & Dynamic group scaling $G \gets \min(2G, 64)$ or prompt injection. \\
-Length Bias Distortion & Long completions exploit dense verbosity rewards. & Length-normalized advantage centering $\tilde{A}_i = A_i / \sqrt{L_i}$. \\
-Gradient Starvation & Advantage norms $||A||_2 < 10^{-5}$ paralyze policy updates. & Adaptive reward scaling sentinel with automatic learning-rate boost. \\
-\bottomrule
-\end{tabular}
-
-\subsection{Implementation \& Verification Ledger}
-To audit this implementation against vibe-coding, every claim in NeurIPS Datasets & Benchmarks Variant must satisfy three automated verification gates: (1) Seed-matched baseline reproducibility within $\pm 1\%$, (2) Monotonic ZVF reduction under adaptive control, and (3) Zero unhandled numerical exceptions during zero-variance rollout states.
 
 
 \end{document}

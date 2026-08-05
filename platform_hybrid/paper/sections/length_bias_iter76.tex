@@ -1,4 +1,4 @@
-% Iter 76 — Pillar 4 (Length Bias / Dr.GRPO): Reward-Shock Mean-Reversion
+% Iter 76 --- Pillar 4 (Length Bias / Dr.GRPO): Reward-Shock Mean-Reversion
 % and Phase-Plane Dissipativity. Three paired statistics: half-life tau of
 % |L - baseline| after a top-quartile |dR| shock (H = 10 steps), damping
 % ratio zeta from a 2nd-order AR fit to the post-shock L response, and
@@ -97,7 +97,7 @@ From the same summary table, paired bootstrap ($B = 2000$, $3$ seeds):
 \item $\mathcal{A}^{\mathrm{Dr.GRPO}} - \mathcal{A}^{\mathrm{GRPO}}
       = -0.85$ (CI $[-2.39,\,+1.49]$, $n = 3$). The Dr.GRPO mean
       $\mathcal{A} = -1.26$ vs GRPO mean $\mathcal{A} = -0.41$ on
-      GSM8K CoT — Dr.GRPO sweeps a larger clockwise loop. CI overlaps
+      GSM8K CoT --- Dr.GRPO sweeps a larger clockwise loop. CI overlaps
       zero.
 \end{itemize}
 
@@ -105,7 +105,7 @@ From the same summary table, paired bootstrap ($B = 2000$, $3$ seeds):
 The arithmetic-easy $\tau$ result is the cleanest single iter76
 finding: under Dr.GRPO, a top-quartile reward shock dissipates ~4
 steps faster than under GRPO. This is \emph{not} a length-elasticity
-claim (iter60) — both algorithms have converged to the same mean
+claim (iter60) --- both algorithms have converged to the same mean
 length by step~5 on the easy task. It is a \emph{transient} claim
 about how quickly the policy returns to the local length baseline
 after a perturbation. Dr.GRPO's clipped advantage
@@ -114,7 +114,7 @@ the \emph{magnitude} of the gradient update on
 high-variance-reward groups. On the easy task, where most groups are
 near-zero-variance (all-correct or all-wrong), the clip is rarely
 active, so Dr.GRPO's transient response is governed by the
-\emph{unclipped} advantage — and the unclipped advantage, on a binary
+\emph{unclipped} advantage --- and the unclipped advantage, on a binary
 reward, induces a sharper, faster-recovering length response than
 GRPO's noisier estimator.
 
@@ -159,7 +159,7 @@ by shock sign, $\zeta$ vs 1.0, loop area) mirrored to
 
 \paragraph{Falsifiability note.}
 The arithmetic-easy $\tau$ CI $[-7.05,\,-1.44]$ has length 5.6
-steps — well-bracketed, but anchored on the easy task where the
+steps --- well-bracketed, but anchored on the easy task where the
 trajectory is nearly stationary by step~5. The GSM8K CoT results are
 $n = 3$ seeds with wide CIs (length $\sim 20$ steps). A larger
 follow-up (8+ seeds, 60+ steps on GSM8K CoT) is needed to refine

@@ -18,8 +18,9 @@ where $\widehat{\mathrm{Var}}$ is the unbiased sample variance and
 $\varepsilon$ is a small numerical tolerance
 (we use $\varepsilon = 10^{-6}$ for rewards normalized to $[0,1]$).
 Intuitively, $\mathrm{ZVF}_t$ is the fraction of groups at step $t$ whose
-rollouts all collapsed to the same outcome; those groups contribute zero
-group-relative advantage and thus zero gradient signal to the GRPO update.
+rollouts all collapsed to the same outcome; those groups have zero centered
+reward-contrast signal in the submitted GRPO term. Whether the total objective update
+vanishes remains loss-specific.
 
 \subsection{Why ZVF Is Not a Tautological Re-expression of Mean Reward}
 
@@ -57,8 +58,8 @@ result beyond the already released summary traces as rerun required.
 The narrower empirical claim made in the revised paper is the one directly
 supported by the released evidence: in outcome-reward GRPO, high ZVF
 coincides with the disappearance of within-group contrast, and at any step
-where $\mathrm{ZVF}=1$ the group-relative advantage is mechanically zero so
-no gradient flows from that batch. We additionally observe co-occurrence
+where $\mathrm{ZVF}=1$ the group-relative advantage is mechanically zero, so
+the centered reward-contrast term is zero in the stated objective. We additionally observe co-occurrence
 between elevated ZVF and reward plateaus or regressions in some runs, but
 we do not establish a causal link: the within-task stratified analysis in
 Section~\ref{sec:zvf-analysis} does not support a within-task predictive

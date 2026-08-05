@@ -15,7 +15,7 @@
 
 \paragraph{Motivation.}
 The Wu et~al.\ (2025) ``It Takes Two: Your GRPO Is Secretly DPO''
-paper~\cite{wu2025grpo_dpo} makes a single sharp operational claim:
+paper~\cite{wu2025grpodpo} makes a single sharp operational claim:
 \textbf{2-GRPO retains $97.6\%$ of 16-GRPO performance} at one-eighth
 of the rollout cost. The natural practitioner question is therefore
 \emph{``does this scale to G=4 vs G=32, the regime that actually
@@ -44,6 +44,7 @@ gives the full per-$G$ row including SNR and TOST verdict.
 \begin{table}[htbp]
 \centering
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{rcccccccc}
 \hline
 $G$ & $n$ & last10 reward & ret.\ vs $G{=}2$ & 95\% CI & SNR(adv) & SNR 95\% CI & TOST vs $G{=}2$ ($\epsilon{=}0.02$) & above Wu? \\
@@ -53,7 +54,8 @@ $G$ & $n$ & last10 reward & ret.\ vs $G{=}2$ & 95\% CI & SNR(adv) & SNR 95\% CI 
 8  & 3 & 0.9732 & 0.9960 & [0.989,\,1.004] & 1.94 & [1.58,\,2.54] & yes ($p<10^{-9}$)  & yes \\
 16 & 3 & 0.9837 & 1.0068 & [0.998,\,1.013] & 2.16 & [1.72,\,2.86] & yes ($p<10^{-4}$)  & yes \\
 \hline
-\end{tabular}
+\end{tabular}%
+}
 \caption{\textbf{Iter 27 Pillar 3 unified synthesis row.} Per-$G$
 canonical measurements on the Qwen2.5-0.5B / arithmetic sweep: 3 seeds,
 40 steps. Retention is computed against the $G{=}2$ reference with

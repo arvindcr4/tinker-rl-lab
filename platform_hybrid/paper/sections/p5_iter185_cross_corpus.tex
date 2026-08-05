@@ -69,6 +69,7 @@ if N10 fill drops below 7/13 or value-correctness drops below 90\%.
 \begin{table}[t]
 \centering
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{l r r r r r r r r r r r r}
 \toprule
 & \multicolumn{4}{c}{\textbf{mega\_20260704 (98 cells)}} & \multicolumn{4}{c}{\textbf{n10 (5 cells)}} & \multicolumn{4}{c}{\textbf{n2 (3 cells)}} \\
@@ -91,7 +92,8 @@ sampled\_tokens       & 98 & 1.00 & 6.61 & STRONG & 5 & 0.00 & 0.00 & \textbf{GA
 \midrule
 \textbf{TOTAL H bits} & & & \textbf{39.23} & & & & \textbf{8.89} & & & & \textbf{8.84} & \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Cross-corpus v2.5 portability matrix (13 fields $\times$ 3 corpora).
 \textbf{Bold GAPs} are the N10 structural gaps surfaced by H1 FAIL.
 Per-field verdict: STRONG ($H_{\text{bits}} \geq 1.5$ AND fill $\geq 0.80$),

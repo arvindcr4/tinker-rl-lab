@@ -41,6 +41,7 @@ $\tau = 0.70$.
 \begin{table}[ht]
 \centering
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lrrrrrr}
 \toprule
 method & $n$ & $n_{\mathrm{boundary}}$ & $n_{\mathrm{contrast}}$ & mean $G_N^*$ & mean $G_N^*\,(c)$ & savings frac [CI] \\
@@ -52,7 +53,8 @@ method & $n$ & $n_{\mathrm{boundary}}$ & $n_{\mathrm{contrast}}$ & mean $G_N^*$ 
 \midrule
 \textbf{mean (4 methods)} & 328 & 270 & 59 & 8.722 & 12.000 & $\mathbf{+0.455\,[+0.444,\,+0.465]}$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Per-method per-prompt cost-effective optimum on the 1,312
 fired prompts of the iter-119 C4 controller at $\tau = 0.70$ on the
 N2 four-method $\times$ 40-step panel. ``$n_c$'' is the number of
@@ -155,8 +157,8 @@ restoration-maximising endpoint.
 \item \textbf{P7 iter-175 (C6 calibrated-hybrid)}: iter-175 chose
 $G_N = 16$ as the static default. Iter-192 closes the loop: C6's
 static default is the restoration endpoint; the per-prompt optimum is
-the cost-effective endpoint. The right operational choice is
-budget-conditioned.
+the cost-effective endpoint.  These are budget-conditioned candidates for
+matched-budget held-out evaluation, not operational choices.
 \item \textbf{P7 iter-119 (CCC unified controller)}: iter-119's
 DEGENERATE regime uses $G_N = 32$ as the cap. Iter-192's monotone-DEC
 result says cap at the SMALLEST $G_N$ that exceeds the trigger, not

@@ -38,11 +38,11 @@ derives the exact identity
   \sum_{i}(r_i - \bar r)\, s_i \;=\; \frac{1}{G}\sum_{i,j}(r_i - r_j)\, s_i,
   \label{eq:fs-contrast}
 \end{equation}
-so the mean-centred GRPO update \emph{is} an all-pairs preference (DPO)
-update in which every ordered pair contributes its reward margin
+so the mean-centred GRPO reward-contrast term has an all-pairs preference
+(DPO) form in which every ordered pair contributes its reward margin
 $r_i-r_j$. Two consequences follow. First, any group with zero reward
-variance ($r_i \equiv r_j$) is projected out and contributes no
-gradient---the exact algebraic origin of the zero-variance floor
+variance ($r_i \equiv r_j$) is projected out of that centered term; this
+does not assert a zero total gradient. This is the algebraic origin of the zero-variance floor
 $\mathrm{ZVF}(p,G)=p^G+(1-p)^G$ used throughout
 Section~\ref{sec:group-size}. Second, unlike DPO, GRPO supplies its own
 margins: it self-induces a preference signal \emph{only} on

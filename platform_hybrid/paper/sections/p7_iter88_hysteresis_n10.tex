@@ -24,7 +24,7 @@ the average ZVF over escalated steps).
 At $\tau = 0.60$, raw zvf-triage fires on 6--10/15 steps per seed and flips
 7--10 times per trajectory. The mean raw flip-rate is
 $9.0/15 = 0.6$ flips/step. Hysteresis@$K{=}2$ reduces this to
-$\mathbf{2.0/15 = 0.13}$ flips/step — a $\mathbf{5.0\times}$ reduction
+$\mathbf{2.0/15 = 0.13}$ flips/step --- a $\mathbf{5.0\times}$ reduction
 in flip-rate. Paired-seed bootstrap median flip-ratio $\mathbf{= 0.157}$,
 95\% CI $[0.111,\, 0.212]$, excludes $1.0$.
 
@@ -46,7 +46,7 @@ $\tau$ & flip-ratio (median) & 95\% CI & yield-retention (median) \\
 \caption{Paired-seed bootstrap on (flip-ratio, yield-retention) for
 $K=(2,2)$ across N10 5-seed GRPO panel. The $\tau \in \{0.40, 0.50\}$
 cells are Pareto-dominant: flip-ratio CI excludes 1.0 and yield-retention
-CI brackets 1.0. $\tau = 0.50$ is the recommended operating point.}
+CI brackets 1.0. $\tau = 0.50$ is the observed operating point on this panel.}
 \label{tab:p7-hyst-n10}
 \end{table}
 
@@ -70,22 +70,24 @@ K{=}(2,2)$ is \textbf{replicated across panels and seeds}.}
 
 The cross-panel agreement on the **direction** (hysteresis reduces flips
 to $\le 40\%$ of raw, yield preserved at $\ge 95\%$ level) is the
-operational result. The quantitative difference — N2 yield-retention
-above 1.0 — is a \emph{gift-specific} effect (iter-87 H5): gift's steep
+operational result. The quantitative difference --- N2 yield-retention
+above 1.0 --- is a \emph{gift-specific} effect (iter-87 H5): gift's steep
 local ZVF drops create over-escalation in raw zvf-triage; hysteresis
 filters these out and \emph{raises} gift's effective yield. N10 is
 GRPO-only, so the gift effect cannot transfer.
 
-\subsubsection{Operational recommendation}
+\subsubsection{Prospective candidate policy}
 \begin{itemize}
-\item \textbf{Deploy hysteresis@$\tau{=}0.50, K_\text{up}{=}K_\text{dn}{=}2$}
-      as the default zvf-triage filter on \emph{every} GRPO panel.
-      N10 panel (5 seeds × 15 steps) shows flip-ratio 0.40 of raw
+\item \textbf{Hysteresis@$\tau{=}0.50, K_\text{up}{=}K_\text{dn}{=}2$}
+      is a pre-registered candidate policy, not a default filter; it requires
+      matched-budget held-out evaluation on each target panel. The N10 panel
+      (5 seeds × 15 steps) descriptively shows flip-ratio 0.40 of raw
       (CI $[0.17, 0.74]$ excludes 1.0), yield-retention 1.009 of raw
       (CI $[0.97, 1.05]$ brackets 1.0).
 \item At $\tau = 0.60$ hysteresis is too aggressive on N10 (yield drops
       to 81\%); at $\tau = 0.70$ it is over-aggressive (yield 36\%).
-      $\tau = 0.50$ is the \textbf{operating point}.
+      These descriptive comparisons make $\tau = 0.50$ a candidate to test,
+      not an established operating point.
 \end{itemize}
 
 \subsubsection{Cross-paper coupling}

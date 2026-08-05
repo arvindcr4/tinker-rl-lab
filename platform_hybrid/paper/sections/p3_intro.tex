@@ -14,7 +14,7 @@ The question connects GRPO to preference optimization. Direct Preference
 Optimization~\citep{rafailov2024direct} learns from explicit pairwise preferences;
 GRPO, by centering rewards within a group, induces \emph{implicit} pairwise
 contrasts from a scalar reward. Recent analyses formalize this
-correspondence~\citep{wu2025grpo_dpo, liu2026gdpo}, and it reframes $G$ as a control
+correspondence~\citep{wu2025grpodpo}, and it reframes $G$ as a control
 on how many endogenous preference pairs each prompt contributes---nonzero only for
 mixed-reward groups.
 
@@ -46,7 +46,7 @@ Group-relative and critic-free RL objectives have proliferated around
 GRPO~\citep{shao2024deepseekmath, ahmadian2024backtobasics, lin2025cppo, gift2025}.
 The preference-learning view descends from
 DPO~\citep{rafailov2024direct} and its relatives~\citep{azar2024ipo, ethayarajh2024kto, hong2024orpo}, and the GRPO$\leftrightarrow$DPO correspondence has been examined
-directly~\citep{wu2025grpo_dpo, liu2026gdpo}. Our contribution is empirical: rather
+directly~\citep{wu2025grpodpo}. Our contribution is empirical: rather
 than derive the bridge in isolation, we validate the all-pairs contrast identity
 against logged GRPO diagnostic signatures and connect the group-size effect to preference
 density on a fixed benchmark.

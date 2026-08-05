@@ -3,6 +3,10 @@
 \section{Cross-Framework ZVF Computation Pipeline}
 \label{sec:appendix:zvf-pipeline}
 
+\paragraph{Scope correction.} This parser normalizes reward logs; it does not
+make its runner canonical GRPO or show that clipping, reference KL, auxiliary
+losses, or completion-only masking are negligible for total gradients.
+
 \subsection{Canonical Definition and Pseudocode}
 
 Given per-step, per-group, per-rollout outcome rewards

@@ -43,10 +43,6 @@
 \providecommand{\figref}[1]{Figure~\ref{#1}}
 \providecommand{\eqnref}[1]{Eq.~\eqref{#1}}
 
-% Sections use bare underscores in text (e.g. R_max, file_name); make _ robust in text
-% while preserving math subscripts. Load late.
-\usepackage[strings]{underscore}
-
 % Resolve both explicit paths and the canonical figures/ directory before
 % degrading to a visible missing-artifact box. \IfFileExists alone does not
 % honor \graphicspath, which previously hid checked-in figures in pillar PDFs.
@@ -60,12 +56,14 @@
 % Math operators + stray Unicode math chars used by some sections
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\argmin}{arg\,min}
+\ifdefined\DeclareUnicodeCharacter
 \DeclareUnicodeCharacter{0394}{\ensuremath{\Delta}}
 \DeclareUnicodeCharacter{03B4}{\ensuremath{\delta}}
 \DeclareUnicodeCharacter{00D7}{\ensuremath{\times}}
 \DeclareUnicodeCharacter{2264}{\ensuremath{\leq}}
 \DeclareUnicodeCharacter{2265}{\ensuremath{\geq}}
 \DeclareUnicodeCharacter{2248}{\ensuremath{\approx}}
+\fi
 
 % Expectation + grouping-variable name macros used by the length-bias sections
 \newcommand{\E}{\mathbb{E}}
@@ -84,3 +82,10 @@
 
 % Resolve both figures/X.pdf and bare X.pdf references
 \graphicspath{{figures/}{./}}
+
+% Must load last: literal prose/path underscores occur throughout the inherited
+% section corpus. Extend the package defaults only for label and natbib's
+% first-string commands; do not wrap \includegraphics, whose optional width
+% argument is numeric rather than a string token.
+\newcommand{\UnderscoreCommands}{\do\label \do\citep \do\citet}
+\usepackage[strings]{underscore}

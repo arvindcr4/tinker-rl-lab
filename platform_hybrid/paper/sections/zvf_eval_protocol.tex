@@ -29,12 +29,10 @@ magnitude channel --- and the best-3/mid-3/worst-3 partition is
 $1.0$-stable under leave-one-seed-out re-ranking
 (\texttt{experiments/results/berkeley/eval\_protocol\_summary.json}).
 
-An independent audit of seven portfolio headline numbers under the
-statistical recipe of \citet{miller2024errorbars} (paired and non-paired
-bootstrap plus TOST equivalence testing) confirms that the Pillar-2
-headline survives: $\mathrm{AUROC}(\texttt{zvf\_risk\_max}) = 0.929$
-with bootstrap CI $[0.83, 1.00]$, decisive against the $0.5$ null
-(\texttt{experiments/results/berkeley/adding\_error\_bars\_audit.tsv}).
-Four of the seven audited headlines across the portfolio were decisive
-and three were null; the null verdicts are reported in the papers they
-concern.
+The earlier fused-risk AUROC and threshold analysis is withdrawn. It used
+synthetic/imputed anchors and cannot validate calibrated monitoring, a safe
+threshold, compute savings, or a stopping policy. The reviewed early-triage
+set has only two collapsed cases, both synthetic tool use and both with early
+reward zero; it provides no incremental diagnostic evidence over early reward.
+Future evaluation must prospectively declare the positive class, estimand,
+threshold policy, and held-out decision outcome.

@@ -73,6 +73,7 @@ not the contemporaneous $\mathrm{ZVF}_t$ alone.
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lrrrrrrrr}
 \hline
 Library      & $r(L{=}{-}10)$ & $r(L{=}{-}5)$ & $r(L{=}{-}1)$ & $r(L{=}0)$ & $r(L{=}{+}1)$ & $r(L{=}{+}5)$ & $r(L{=}{+}10)$ & monotone? \\
@@ -87,7 +88,8 @@ GIFT         & 0.503 & 0.527 & 0.547 & 0.552 & 0.557 & 0.573 & \textbf{0.594} & 
 AREAL        & 0.513 & 0.540 & 0.559 & 0.571 & 0.571 & 0.590 & \textbf{0.624} & yes \\
 ES           & 0.722 & 0.742 & 0.766 & 0.771 & 0.776 & 0.807 & \textbf{0.839} & yes \\
 \hline
-\end{tabular}
+\end{tabular}%
+}
 \caption{Lag profile of Pearson $r(\mathrm{reward}_t,\mathrm{ZVF}_{t+L})$
 across the nine variance-mitigation libraries, mean over five seeds.
 Bold = argmax over the seven tested lags. All nine libraries are

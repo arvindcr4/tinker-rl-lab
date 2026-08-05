@@ -47,7 +47,10 @@ G_{\mathrm{CCC}} =
   \begin{cases}
     \min(G_{\mathrm{dualformer}}, G_{\mathrm{base}}) & \text{if } z_{\mathrm{obs}} < 0.50 \quad \text{(FAST)} \\
     G_{\mathrm{base}} & \text{if } 0.50 \leq z_{\mathrm{obs}} < \tau_{\mathrm{degen}}=0.70 \quad \text{(BASELINE)} \\
-    \max\!\bigl(G_{\mathrm{base}}, \min(G_{\mathrm{adaptive-g^*}}, G=32)\bigr) & \text{if } z_{\mathrm{obs}} \geq 0.70 \quad \text{(DEGENERATE)}
+    \begin{gathered}
+      \max\!\bigl(G_{\mathrm{base}},\\[-2pt]
+      \min(G_{\mathrm{adaptive-g^*}}, G=32)\bigr)
+    \end{gathered} & \substack{\text{if } z_{\mathrm{obs}} \geq 0.70\\\text{(DEGENERATE)}}
   \end{cases}
 \end{align}
 The $G=32$ cap in DEGENERATE encodes the iter-115 finding that the
@@ -115,28 +118,27 @@ sister findings:
   capped at $G=32$ per the iter-115 finding.
 \end{itemize}
 
-\subsubsection*{Operational recommendation}
+\subsubsection*{Prospective controller-bank hypothesis}
 
-CCC is the recommended controller bank for GRPO-family training when
-the operator has access to per-step $z_{\mathrm{obs}}$ telemetry and
-wishes to compose the published Dualformer-auto and Adaptive-$G^*$
-findings. Specifically:
+CCC is a pre-registered controller-bank candidate for matched-budget
+held-out evaluation when per-step $z_{\mathrm{obs}}$ telemetry is available.
+The following rules define that candidate rather than a deployment prescription:
 \begin{itemize}
-\item Always run \textbf{Alphaproof $\gamma^*=0$} (zero compute cost;
-  $12/12$ DECISIVE on magnitude).
-\item Run \textbf{FAST regime} ($G=2$ to $8$) on steps where
+\item The candidate includes \textbf{Alphaproof $\gamma^*=0$} (zero compute
+  cost; $12/12$ DECISIVE on magnitude).
+\item Its \textbf{FAST regime} uses $G=2$ to $8$ on steps where
   $z_{\mathrm{obs}}<0.50$ OR $\mathrm{reward}_{\mathrm{mean}}\geq 0.85$
   (saturation detected). Pessimistic trigger: use the dual of
   (low-zvf, high-reward).
-\item Run \textbf{BASELINE regime} ($G=G_{\mathrm{base}}=8$) on interior
+\item Its \textbf{BASELINE regime} keeps $G=G_{\mathrm{base}}=8$ on interior
   $z_{\mathrm{obs}}\in[0.50, 0.70)$; no intervention needed.
-\item Run \textbf{DEGENERATE regime} ($G\in\{8, 16, 32\}$ capped) on
+\item Its \textbf{DEGENERATE regime} considers $G\in\{8,16,32\}$ on
   $z_{\mathrm{obs}}\geq 0.70$; smallest $G^*$ that closes the contrast
   gap with the closed-form inversion.
 \end{itemize}
-\textit{Do not} escalate to $G=64$ on step-aggregate data (iter-115
-negative finding); restrict the candidate set to $\{16, 32\}$ in
-production until per-prompt $k_p$ inversion is logged.
+The held-out protocol excludes $G=64$ on step-aggregate data because of the
+iter-115 negative finding and limits the candidate set to $\{16,32\}$ until
+per-prompt $k_p$ inversion is logged.
 
 \subsubsection*{Reproducibility}
 

@@ -77,7 +77,7 @@ Target KL & 0.01 & 0.01 & 0.01 & N/A & N/A & N/A \\
 verifiable rewards reduce reliance on reward models, but they can still induce
 reward hacking through parser artifacts, format shortcuts, length effects, and
 train-prompt overfitting. Verifiable rewards do not eliminate reward hacking.}
-\label{fig:reward_flow}
+\label{fig:reward-flow}
 \end{figure}
 
 \subsection{Baselines: Floor and Ceiling}
@@ -1314,7 +1314,7 @@ ZVF is driven entirely by tool-use experiments.}
 \label{sec:grpo-dpo}
 % ---------------------------------------------------------------------------
 
-Wu et al.~\cite{wu2025grpo_dpo} prove that GRPO is algebraically equivalent to
+Wu et al.~\cite{wu2025grpodpo} prove that GRPO is algebraically equivalent to
 an implicit contrastive objective (DPO), with group size $G$ affecting only
 the Monte Carlo variance of that objective. Their headline finding: \textbf{2-GRPO}
 ($G=2$) retains 98.1\% of 16-GRPO performance while requiring 12.5\% of rollouts
@@ -1483,7 +1483,7 @@ interpretation rather than a universal framework ranking.
 
 \paragraph{Base vs.~Instruct Models.}
 A clear pattern emerges: base models (Llama-3.1-70B at 36.4\%, Llama-3.1-8B at 11.5\%, DeepSeek-V3.1-Base at 57.3\%) struggle substantially compared to instruct counterparts (qualitative, no statistical test).
-This aligns with the GRPO-as-DPO interpretation~\cite{wu2025grpo_dpo}: GRPO requires models that already produce \emph{some} correct completions to generate meaningful preference pairs.
+This aligns with the GRPO-as-DPO interpretation~\cite{wu2025grpodpo}: GRPO requires models that already produce \emph{some} correct completions to generate meaningful preference pairs.
 Base models lacking instruction-following capability produce uniformly low-quality completions, yielding zero-variance groups that prevent learning.
 
 \paragraph{Group Size Ablation.}
@@ -1634,7 +1634,7 @@ failed, Tinker is closed-source, and the HuggingFace checkpoint inventory is
 partial; we support review with Docker, ledgers, local CSV traces, and some
 public model cards, but do not claim end-to-end reproducibility for every run.
 (xi)~\textit{GRPO-as-DPO}: the theoretical connection
-\citep{wu2025grpo_dpo} informs our interpretation of mixed groups; we do not
+\citep{wu2025grpodpo} informs our interpretation of mixed groups; we do not
 empirically establish DPO equivalence for our runner. The full rectification
 mapping lives in \texttt{reports/final/HOSTILE\_REVIEW\_RECTIFICATION.md} and
 the companion 55-point claim log.
@@ -2015,7 +2015,7 @@ We recommend that practitioners verify monotonicity before applying early
 stopping rules derived from the saturation model.
 
 \paragraph{``It Takes Two'' and the 2-GRPO/DPO equivalence.}
-\citet{wu2025grpo_dpo} specifically design against the zero-contrast failure mode
+\citet{wu2025grpodpo} specifically design against the zero-contrast failure mode
 of standard GRPO training: without any positive reward signal in a group,
 the advantage is uniformly zero and no gradient flows.
 TPO's target-distribution construction ($q \propto p_\text{old} \exp(u)$)

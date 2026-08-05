@@ -37,6 +37,7 @@ completions by $\sim$31 tokens and reduce length-CV. GIFT raises ZVF
 constant.}
 \label{tab:p6-measured-deltas}
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lllrrr}
 \toprule
 Metric (scope)        & variant & grpo mean & var. mean & $\Delta$ & 95\% CI \\
@@ -55,7 +56,8 @@ reward\_mean (per-prompt, $n{=}16$) & aero  & --- & --- & $-0.007$ & $[-0.050,\,
 reward\_mean (per-prompt, $n{=}16$) & gift  & --- & --- & $+0.011$ & $[-0.013,\,+0.031]$ \\
 reward\_mean (per-prompt, $n{=}16$) & areal & --- & --- & $-0.006$ & $[-0.044,\,+0.016]$ \\
 \bottomrule
-\end{tabular}\\
+\end{tabular}%
+}\\
 \footnotesize{$^{\dagger}$ CI excludes $0$; per-prompt means omitted
 (trivial). Source: \texttt{experiments/results/n2\_reward\_tensor\_resume/}.
 }

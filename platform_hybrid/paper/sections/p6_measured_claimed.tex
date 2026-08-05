@@ -53,6 +53,7 @@ claimants = number of stack records that list the delta in
 $8/8$ measured variants.}
 \label{tab:p6-measured-claimed}
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lllrrrrr}
 \toprule
 delta & method & N2 verdict & N2 sup./tot. & zvf130 mean & zvf130 $\Delta$ & claimants & claimant statuses \\
@@ -71,7 +72,8 @@ delta\_scafgrpo& scafgrpo& NO\_DATA & 0/5 & 0.317 & $-0.164$ & 1  & unknown \\
 \midrule
 grpo (baseline) & grpo  & ---      & ---  & 0.481 & $+0.000$ & 6  & (self) \\
 \bottomrule
-\end{tabular}\\
+\end{tabular}%
+}\\
 \footnotesize{All scripts and outputs:
 \texttt{platform_modal/scripts/p5p8/registry\_measured\_claimed.py},
 \texttt{experiments/results/p5p8/registry\_measured\_claimed.tsv} (11

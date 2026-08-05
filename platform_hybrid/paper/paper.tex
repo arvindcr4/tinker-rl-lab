@@ -20,6 +20,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{hyperref}
+\hypersetup{hidelinks}
 \usepackage{url}
 \usepackage{booktabs}
 \usepackage{amsfonts}
@@ -104,6 +105,9 @@ A Diagnostic Audit of Critic-Free Group-Relative RL for LLMs}
 % =============================================================================
 % Related Work (v2)
 \input{sections/related_work_v2}
+
+% =============================================================================
+\input{sections/diagnostic_method}
 
 % =============================================================================
 \section{Audit Corpus and Evidence Design}
@@ -198,7 +202,7 @@ Target KL & 0.01 & 0.01 & 0.01 & N/A & N/A & N/A \\
 verifiable rewards reduce reliance on reward models, but they can still induce
 reward hacking through parser artifacts, format shortcuts, length effects, and
 train-prompt overfitting. Verifiable rewards do not eliminate reward hacking.}
-\label{fig:reward_flow}
+\label{fig:reward-flow}
 \end{figure}
 
 \subsection{Baselines: Floor and Ceiling}
@@ -416,7 +420,7 @@ Rank & Comparison & Raw $p$ & BH-adj.\ $p$ & Sig. \\
         17 & GRPO vs PPO Peak-to-Tail Drift (t-test) & 0.018 & 0.02076 & $\checkmark$ \\
         18 & Tinker GRPO vs TRL GRPO (Mann-Whitney) & 0.01869 & 0.02076 & $\checkmark$ \\
         19 & Stability Index vs Last-10 (Pearson) & 0.02024 & 0.0213 & $\checkmark$ \\
-        20 & PPO vs GRPO on Qwen3-8B (Welch t-test) & 0.7605 & 0.7605 & $\times$ \\
+        20 & PPO vs GRPO on Qwen3-8B: provenance conflict; not estimable & --- & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -484,7 +488,7 @@ summarizes the evidence hierarchy used throughout the paper.
 \textbf{Evidence type} & \textbf{Runs} & \textbf{Independent unit} & \textbf{Can support} \\
 \midrule
 Tinker GRPO traces & Mostly single-seed, 30-step & run/checkpoint & descriptive dynamics only \\
-GSM8K held-out base-vs-GRPO & 5 seeds, 200 prompts & paired prompt/seed & narrow capability check; null result \\
+GSM8K held-out base-vs-GRPO & 5 seeds, 200 prompts & one-sample seed-level vs fixed baseline & narrow capability check; null result \\
 Top-checkpoint GSM8K audit & selected checkpoints, 500 prompts & checkpoint & selection/overfitting audit, not causal effect \\
 ZVF validation & 22 deduplicated runs & run & triage claim only \\
 Tool-use / HumanEval / MATH & proxy or harness-bound & task-specific trace & no broad capability claim \\
@@ -563,7 +567,7 @@ GRPO & OpenRLHF (Modal-H100) & Qwen3-8B & 8B & 30 & see Fig.~\ref{fig:framework_
 \midrule
 \multicolumn{7}{l}{\textit{PPO on Modal H100 (GSM8K)}} \\
 \midrule
-PPO & Modal & Qwen3-8B & 8B & 30 & 75.0\% & 22.5\% ledger / 35.0\% stat summary \\
+PPO & Modal & Qwen3-8B & 8B & 30 & quarantined & provenance conflict; not available \\
 PPO & Modal & Llama-3.1-8B-Inst & 8B & 30 & 100\% & 97.5\% \\
 \midrule
 \multicolumn{7}{l}{\textit{Cross-task (Tool-Call Schema Compliance), GRPO on Tinker API}} \\
@@ -643,7 +647,7 @@ general LLM post-training framework ranking.}
 % Figure 6: Performance profiles
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.85\linewidth]{figures/v2/performance_profiles.pdf}
+\includegraphics[width=0.85\linewidth]{figures/v2/performance_profiles.png}
 \caption{Performance profiles for the arithmetic sanity task, showing the
 fraction of runs above a given normalized score threshold following
 Agarwal et al.~\cite{agarwal2021deep}.  They summarize that toy environment
@@ -654,17 +658,14 @@ only; they are not held-out LLM capability profiles.}
 \subsection{GSM8K Results}
 \label{sec:gsm8k_results}
 
-Tables~\ref{tab:results_gsm8k} and~\ref{tab:heldout_gsm8k} report GSM8K
-evidence from two complementary angles: (i) a secondary cross-source summary
-that mixes protocols and should be read as descriptive context, and (ii) a
-held-out test-set evaluation of the
-ten Tinker checkpoints whose training \emph{last-10} reward was highest.
-The held-out evaluation partially checks whether \emph{last-10} reward survives
-outside the rollout distribution, but it remains a checkpoint-selection analysis.
+	Table~\ref{tab:results_gsm8k} is a heterogeneous secondary GSM8K summary.
+	It is not a pooled estimate, a replication panel, or a reviewed capability
+	claim; individually selected historical checkpoints are discussed only as
+	selection analysis below.
 
 \begin{table}[htbp]
 \centering
-\caption{GSM8K scale summary under the secondary 5-seed evaluation protocol. Baseline and post-training values are accuracy scores from this protocol, not online last-10 training reward and not the primary held-out Tinker checkpoint evaluation in Table~\ref{tab:heldout_gsm8k}. Mean $\pm$ SE across 5 seeds where available. These rows mix protocols and are not the primary held-out capability claim; the stricter Qwen3-8B control is $82.0\%\!\to\!83.3\%$ with $p=0.26$.}
+\caption{GSM8K scale summary under a secondary 5-seed evaluation protocol. Baseline and post-training values are protocol-specific accuracy scores, not online last-10 reward or a reviewed capability result. Mean $\pm$ SE is shown only where this secondary protocol names five seeds; rows remain heterogeneous and are not pooled with other evidence.}
 \label{tab:results_gsm8k}
 \begin{tabular}{lccc}
 \toprule
@@ -681,97 +682,14 @@ Qwen3-30B-A3B (MoE) & 91.8 & 95.4 $\pm$ 0.5 & +3.6 \\
 \end{tabular}
 \end{table}
 
-\paragraph{Post-selection warning.}
-The ten checkpoints in Table~\ref{tab:heldout_gsm8k} below are chosen by
-ranking all $\sim$70 campaign runs by training \emph{last-10} mean reward and
-taking the top ten.  This is a checkpoint-selection analysis, not a
-single-model held-out generalization result.  It is not comparable to, and
-does not contradict, the abstract's clean paired control on Qwen3-8B, where
-held-out GSM8K improves only from $82.0\%$ to $83.3\%$ ($p=0.26$).  Reading
-this table as ``GRPO lifts GSM8K to 87--95\%'' would be the selection-induced
-overclaim that the abstract explicitly warns against.
-
-\paragraph{Held-out GSM8K evaluation of the top-10 checkpoints.}
-To separate optimisation from generalisation we selected the ten Tinker
-checkpoints with the highest training \emph{last-10} mean reward across our
-campaign (\S\ref{sec:main_results}) and re-evaluated every checkpoint on a
-deterministic, held-out slice of $N=500$ problems drawn from the GSM8K
-\texttt{test} split --- strictly disjoint from every training batch
-(\texttt{train} split only). Decoding is greedy ($T{=}0$, \texttt{max\_tokens}
-$=512$) and we score with the same boxed-answer reward used during training,
-so held-out accuracy is directly comparable to \emph{last-10}.
-The evaluator and the raw per-problem trace are released at
-\texttt{experiments/modal/modal\_heldout\_eval.py} and
-\texttt{experiments/results/heldout\_gsm8k.json}.
-
-\begin{table}[htbp]
-\centering
-\caption{\textbf{Held-out GSM8K evaluation of the top-10 Tinker checkpoints.}
-Ranked by training \emph{last-10} mean reward (checkpoint-selection, not random held-out split). Each checkpoint is re-evaluated greedily on a fixed $N=500$ slice of the GSM8K \texttt{test} split (\texttt{seed}$=0$). \emph{Acc.} is the boxed-answer accuracy on the held-out slice; \emph{CI95} is a Wilson 95\% interval. This is a checkpoint-selection analysis, not a clean held-out generalization result.}
-\label{tab:heldout_gsm8k}
-\small
-\begin{tabular}{@{}r l r r r r r@{}}
-\toprule
-\textbf{\#} & \textbf{Checkpoint (model, seed)} & \textbf{Last-10} &
-\textbf{Held-out Acc.} & \textbf{CI95} & \textbf{N} & \textbf{$\Delta$} \\
-\midrule
-1  & Qwen3-8B-Base (s=42)                   & 98.8\% & 90.8\% & [87.9, 93.0] & 500 & $-8.0$ \\
-2  & Llama-3.3-70B-Inst (s=456)              & 98.1\% & 95.0\% & [92.7, 96.6] & 500 & $-3.1$ \\
-3  & Llama-3.3-70B-Inst (s=123)              & 96.9\% & 95.0\% & [92.7, 96.6] & 500 & $-1.9$ \\
-4  & Llama-3.3-70B-Inst (s=789)              & 95.6\% & 95.0\% & [92.7, 96.6] & 500 & $-0.6$ \\
-5  & Llama-3.3-70B-Inst (s=42)               & 95.0\% & 95.0\% & [92.7, 96.6] & 500 & $\pm0.0$ \\
-6  & GPT-OSS-120B (s=42)                     & 91.9\% & 90.2\% & [87.3, 92.5] & 500 & $-1.7$ \\
-7  & Qwen3.5-397B-A17B (s=42)                & 91.9\% & 87.2\% & [84.0, 89.8] & 500 & $-4.7$ \\
-8  & DeepSeek-V3.1 (s=123)                   & 90.6\% & 91.2\% & [88.4, 93.4] & 500 & $+0.6$ \\
-9  & DeepSeek-V3.1 (s=789)                   & 90.6\% & 90.6\% & [87.7, 92.9] & 500 & $\pm0.0$ \\
-10 & GPT-OSS-20B (s=42)                      & 87.5\% & 90.8\% & [87.9, 92.9] & 500 & $+3.3$ \\
-\midrule
-\multicolumn{3}{@{}l}{\textit{mean (10 fully-evaluated checkpoints)}} &
-92.08\% & --- & 500 & $-1.6$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\paragraph{Artifact reconciliation (Table~\ref{tab:heldout_gsm8k} vs.\ the $82.0\%\!\to\!83.3\%$ control).}
-A careful reviewer will notice that \texttt{experiments/results/heldout\_gsm8k.json}
-reports a mean held-out accuracy of $92.08\%$ across these ten checkpoints,
-while the abstract reports $82.0\%\!\to\!83.3\%$ ($p=0.26$) for Qwen3-8B.
-These numbers describe \emph{different experiments} and should not be compared
-directly.  Table~\ref{tab:heldout_gsm8k} and the JSON artifact are a
-\emph{top-$k$-by-training-reward} checkpoint-selection study over ten
-heterogeneous checkpoints (seven distinct models, $N=500$), post-selected from
-roughly seventy campaign runs; its $92.08\%$ mean is therefore a
-selection-induced ceiling, not a causal lift attributable to GRPO.  The
-$82.0\%\!\to\!83.3\%$ number in the abstract is the only clean paired control
-in the paper: a single model (Qwen3-8B, instruct), five seeds, the same
-$N{=}200$ held-out slice used for both base and post-training evaluation, and
-a one-sample test against the base.  That comparison is the defensible
-capability claim; Table~\ref{tab:heldout_gsm8k} is a checkpoint-selection analysis.
-
-\noindent Held-out accuracy sits in a 87.2--95.0\% band across the
-ten fully-evaluated checkpoints (mean $91.6\%$, mean absolute deviation
-from \emph{last-10} of $2.1$ pp, mean signed gap $-1.6$ pp).  This table is a
-checkpoint-selection analysis, not evidence that GRPO caused a significant
-held-out capability gain.  Selected high-training-reward checkpoints often
-retain high held-out GSM8K accuracy, and held-out accuracy is within a single
-CI95 of \emph{last-10} on all ten checkpoints, but this should be read as a
-dynamics/selection observation rather than a generalization claim.  Ranking
-checkpoints by \emph{last-10} within this band is
-unreliable: the Spearman rank correlation between \emph{last-10} and
-held-out accuracy is modest ($\rho$ varies with the exact selection), reflecting
-the fact that Monte-Carlo noise on a 16-sample-per-step run is comparable to the
-true spread between strong 30-step fine-tunes. The clearest example is the four
-Llama-3.3-70B-Instruct seeds (s=42, 123, 456, 789): their training
-\emph{last-10} values range from 95.0\% to 98.1\% yet all land on held-out
-95.0\%, showing that \emph{last-10} variance reflects late-batch sampling noise
-rather than genuine generalisation differences.
-
-\paragraph{Capacity ceiling warning.}
-The capacity ceiling estimates in this section (95.0\% for Llama-3.3-70B-Instruct, $\approx$91\% for Qwen3-8B-Base and DeepSeek-V3.1) are single-seed, checkpoint-selected observations, not controlled ceiling estimates. Four Llama-3.3-70B-Instruct seeds range from 95.0\% to 98.1\% last-10 reward but all land on 95.0\% held-out accuracy, showing that last-10 variance reflects late-batch sampling noise rather than genuine generalization differences.
-
-The Qwen3.5-397B-A17B run completed all 500 held-out problems in this
-rerun (previously truncated at 263); its held-out accuracy of 87.2\% is
-now reported over the full set.
+	\paragraph{Selection analysis only.}
+	The ten named checkpoints in the historical ledger were selected by high
+	training last-10 reward across heterogeneous models and runs. Their individual
+	held-out rows may be inspected as a selection analysis, but no mean, range
+	summary, capacity ceiling, or causal capability conclusion is reported here.
+	They are not comparable to the reviewed record. The reviewed held-out record is
+	limited to named cells; absent cells are \emph{not evaluated} or \emph{not
+	available}, not inferred from selected checkpoints.
 
 \subsection{Descriptive Reward-Scale Context}
 \label{sec:scaling}
@@ -794,7 +712,7 @@ models to each reward trace $\{R(t)\}_{t=1}^{T}$.
 
 \paragraph{Exponential Saturation Model.}
 For descriptive context, and using functional forms common in neural scaling
-work~\cite{nimmaturi2025scalinglaws}, we adopt:
+work~\cite{nimmaturi2025predictive}, we adopt:
 \begin{equation}
   \label{eq:exp_sat}
   R(t) = R_{\max}\!\left(1 - e^{-k\,(t - t_0)}\right),
@@ -816,7 +734,7 @@ best-explained saturation curve ($R^{2} = 0.797$), but this is a single
 short-horizon descriptive fit.
 
 \paragraph{Three-Phase Learning Dynamics.}
-Following~\citet{nimmaturi2025scalinglaws}, 15 of 28 experiments (53.6\%) satisfy
+Following~\citet{nimmaturi2025predictive}, 15 of 28 experiments (53.6\%) satisfy
 a three-phase criterion (slow start~$\to$ rapid improvement~$\to$ saturation).
 The fraction rises to 73\% for LLM fine-tuning experiments.  However, with
 only 20--30 data points per trace and mean $R^2{=}0.210$, the three-phase
@@ -878,7 +796,7 @@ the figure script is \texttt{paper/figures/wave6\_sensitivity.py}.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\linewidth]{figures/wave6_sensitivity.pdf}
+\includegraphics[width=\linewidth]{figures/wave6_sensitivity.png}
 \caption{Wave~6 Qwen3-8B / GSM8K sensitivity ablations. \textbf{Left:}
 sampling temperature $T\in\{0.2,0.4,0.6,0.8,1.0\}$. \textbf{Middle:}
 LoRA rank $r\in\{4,8,16,32,64\}$. \textbf{Right:} per-step batch size
@@ -956,6 +874,7 @@ measures behavior under a broken verifier.
 \caption{Task-specific proxy reward summaries from independently implemented team experiments. Entries report task-specific post-training metrics; they are not directly comparable to GSM8K online training reward or held-out GSM8K accuracy. Rows use different datasets, rewards, and harnesses, so they support breadth and hypothesis generation rather than a pooled capability claim.}
 \label{tab:task_grpo}
 \footnotesize
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}l l l c c p{2.8cm}@{}}
 \toprule
 \textbf{Task} & \textbf{Model} & \textbf{Method} & \textbf{Pre} & \textbf{Post-training} & \textbf{Notes} \\
@@ -968,6 +887,7 @@ Tools (SFT+GRPO) & Qwen3-8B & SFT$\to$GRPO & 52\% & 70\% & Schema 97$\to$100\% \
 Multi-stage Reas. & Qwen3-4B-Inst & GRPO & Base & Impr. & Single setup; not architecture claim \\
 \bottomrule
 \end{tabular}
+}
 \end{table*}
 
 \paragraph{Auxiliary dynamics.}
@@ -1134,39 +1054,29 @@ PPO/GRPO rows as stack-conditioned evidence, not as an algorithm diagnostic base
 \centering
 \caption{PPO vs.~GRPO comparison as stack-conditioned evidence.  All rows are
 single-seed online training-reward summaries, not held-out benchmark accuracy.
-The Qwen PPO value is artifact-sensitive: the source ledger records 22.5\%,
-while the statistical summary records a 35.0\% PPO last-10 mean.}
+The Qwen PPO row is quarantined: candidate values came from different runs, so
+no numerical PPO--GRPO comparison is reported.}
 \label{tab:ppo_grpo}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{llccc}
 \toprule
 \textbf{Method} & \textbf{Model} & \textbf{Steps} & \textbf{Peak} & \textbf{Last-10 Avg} \\
 \midrule
 GRPO (Tinker) & Qwen3-8B & 30 & 62.5\% & \textbf{34.4\%} \\
-PPO (Modal H100) & Qwen3-8B & 30 & 75.0\% & 22.5\% in ledger; 35.0\% in statistics summary \\
+PPO (Modal H100) & Qwen3-8B & 30 & quarantined & provenance conflict; not available \\
 \midrule
 GRPO (Tinker) & Llama-3.1-8B-Instruct & 30 & 100\% & 84.4\% \\
 PPO (Modal H100) & Llama-3.1-8B-Instruct & 30 & 100\% & \textbf{97.5\%} \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.95\linewidth]{figures/v2/ppo_vs_grpo.pdf}
-\caption{Artifact-specific step-level reward comparison between GRPO (Tinker)
-and PPO (Modal H100) on Qwen3-8B GSM8K.  Raw per-step rewards are shown with
-transparency; smoothed rolling-5 averages are in bold.  Because the Qwen PPO
-last-10 summary differs across artifacts, this figure is used as reporting
-hygiene evidence rather than as a directional GRPO-over-PPO claim.}
-\label{fig:ppo_vs_grpo}
-\end{figure}
-
-Figure~\ref{fig:ppo_vs_grpo} reveals why a source-of-truth ledger is necessary.
-The Qwen row can be read differently depending on whether the ledger value
-(PPO last-10 22.5\%) or the statistical summary value (35.0\%) is treated as
-canonical.  We therefore withhold a directional Qwen algorithm claim.
-The Llama-3.1-8B-Instruct row favors PPO in the recorded setting, but it is
-still single-seed and backend-confounded.  The appropriate conclusion is
+\paragraph{Qwen PPO provenance quarantine.}
+The Qwen candidate values came from different runs and remain quarantined; no
+chart is shown because it would visually invite a forbidden comparison. The later
+provenance audit also retains unresolved exact-ID/model conflicts. The Llama row
+is single-seed and backend-confounded. The appropriate conclusion is
 identifiability rather than ranking: ``PPO'' and ``GRPO'' are incomplete
 treatment labels unless the model family, backend, reward implementation,
 sampler, optimizer, checkpoint-selection rule, and evaluator are
@@ -1181,8 +1091,8 @@ reported and controlled.
 \toprule
 \textbf{Comparison} & $n_A$ & $n_B$ & \textbf{Cohen's $d$} & \textbf{95\% CI} & $p$-value & \textbf{Power} & \textbf{MDE} \\
 \midrule
-GRPO vs PPO (Qwen3-8B) & $10$ & $10$ & $-0.14$ & $[-1.02, 0.74]$ & 0.761 & $0.06$ & $1.25$ \\
-PPO vs GRPO (Llama-3.1-8B-Inst) & $10$ & $10$ & $12.75$ & $[8.49, 17.00]$ & $<$0.001$^{*\dag}$ & $1.00$ & $1.25$ \\
+PPO/GRPO (Qwen3-8B) & --- & --- & quarantined & provenance conflict & --- & --- & --- \\
+PPO/GRPO (Llama-3.1-8B-Inst) & $1$ & $1$ & not estimable & backend-confounded & --- & --- & --- \\
 LLM-native vs Classic RL & $5$ & $15$ & $21.84$ & $[14.63, 29.04]$ & $<$0.001$^{*\dag}$ & $1.00$ & $1.45$ \\
 Dense vs MoE Qwen3 & $30$ & $3$ & $-4.79$ & $[-6.47, -3.11]$ & $<$0.001$^{*\dag}$ & $1.00$ & $1.70$ \\
 Tinker vs TRL (LLM-native) & $20$ & $5$ & $1.17$ & $[0.13, 2.21]$ & 0.016$^\dag$ & $0.65$ & $1.40$ \\
@@ -1306,7 +1216,8 @@ for which all $G$ completions receive identical rewards:
   \mathrm{ZVF}_t = \frac{1}{|\mathcal{P}_t|}\sum_{p \in \mathcal{P}_t}
   \mathbf{1}\bigl[\operatorname{Var}_{c \sim \mathcal{C}(p)}\,r(c) = 0\bigr].
 \]
-When $\mathrm{ZVF}_t = 1$, every prompt contributes zero gradient.
+When $\mathrm{ZVF}_t = 1$, every prompt has zero centered reward-contrast
+coefficient in the submitted runner; this does not assert a zero total gradient.
 \textbf{Gradient Utilization} $\mathrm{GU}_t = 1 - \mathrm{ZVF}_t$ measures
 the fraction of prompts providing informative signal.
 
@@ -1325,10 +1236,12 @@ informative than parameter count for maintaining gradient flow in this corpus. A
 across model families yields $F(4,10) = 0.949$, $p = 0.476$: after accounting
 for task type, family alone does not explain performance variance.
 
-We use ZVF/GU as an operational GRPO triage diagnostic across libraries and
-scales. We recommend monitoring $\mathrm{GU}_t$ in real time and interpreting
-it jointly with reward level: low reward plus high ZVF suggests cold-start
-collapse, while high reward plus high ZVF suggests saturation.
+We use ZVF/GU as a descriptive GRPO triage diagnostic across libraries and
+scales. Jointly with reward level, low reward plus high ZVF identifies a
+cold-start-like regime, while high reward plus high ZVF identifies a possible
+saturation regime. Unsigned ZVF does not choose an action: retire/distill and
+retry/resample/warm-start require opposite choices and a prospective operator
+policy must be evaluated under a matched budget.
 
 % ---------------------------------------------------------------------------
 \subsection{ZVF Lagged Regression: Disentangling Prediction from Tautology}
@@ -1389,8 +1302,9 @@ Lag $k$ & $N$ & $r(\mathrm{ZVF}_t, R_{t+k})$ & Partial $r \mid R_t$ & $p$ \\
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/v2/zvf_heatmap}
-\caption{Per-step ZVF heatmap. Red: ZVF$=1$ (zero gradient); blue: ZVF$=0$ (gradient
-flows); grey: no data. Experiments sorted by aggregate ZVF (descending).}
+\caption{Per-step ZVF heatmap. Red: ZVF$=1$ (zero centered reward contrast);
+blue: ZVF$=0$ (mixed rewards observed); grey: no data. Experiments sorted by
+aggregate ZVF (descending).}
 \label{fig:zvf-heatmap}
 \end{figure}
 
@@ -1408,7 +1322,7 @@ ZVF is driven entirely by tool-use experiments.}
 \label{sec:grpo-dpo}
 % ---------------------------------------------------------------------------
 
-Wu et al.~\cite{wu2025grpo_dpo} prove that GRPO is algebraically equivalent to
+Wu et al.~\cite{wu2025grpodpo} prove that GRPO is algebraically equivalent to
 an implicit contrastive objective (DPO), with group size $G$ affecting only
 the Monte Carlo variance of that objective. Their headline finding: \textbf{2-GRPO}
 ($G=2$) retains 98.1\% of 16-GRPO performance while requiring 12.5\% of rollouts
@@ -1432,7 +1346,8 @@ High-accuracy frontier models ($p > 0.8$) show \emph{negative} residuals
 (observed ZVF $<$ theoretical), consistent with adaptive difficulty sampling.
 Moderate-accuracy experiments ($p \approx 0.3$--$0.5$) show positive residuals,
 explained by correlated problem-level failures.
-For our G=8 DeepSeek-V3.1 run ($p=0.85$), 27\% of steps were zero-gradient;
+For our G=8 DeepSeek-V3.1 run ($p=0.85$), 27\% of steps had zero centered
+reward contrast;
 switching to $G=2$ would reduce rollouts by 75\% but would not preserve all
 informative contrastive signal given the group-size effect on mixed-group rate
 noted above.
@@ -1577,7 +1492,7 @@ interpretation rather than a universal framework ranking.
 
 \paragraph{Base vs.~Instruct Models.}
 A clear pattern emerges: base models (Llama-3.1-70B at 36.4\%, Llama-3.1-8B at 11.5\%, DeepSeek-V3.1-Base at 57.3\%) struggle substantially compared to instruct counterparts (qualitative, no statistical test).
-This aligns with the GRPO-as-DPO interpretation~\cite{wu2025grpo_dpo}: GRPO requires models that already produce \emph{some} correct completions to generate meaningful preference pairs.
+This aligns with the GRPO-as-DPO interpretation~\cite{wu2025grpodpo}: GRPO requires models that already produce \emph{some} correct completions to generate meaningful preference pairs.
 Base models lacking instruction-following capability produce uniformly low-quality completions, yielding zero-variance groups that prevent learning.
 
 \paragraph{Group Size Ablation.}
@@ -1643,38 +1558,36 @@ To ensure transparency, we explicitly calibrate the claims of this report agains
 \end{itemize}
 
 % ---------------------------------------------------------------------------
-\subsection{Concrete Intervention: When ZVF Persists}
+\subsection{Prospective hypotheses when ZVF persists}
 \label{sec:zvf_intervention}
 
-The ZVF/GU triage diagnostic identifies regimes, but identifying a problem is
-not the same as fixing it.  When ZVF $= 1$ persists past the first five
-training steps (cold-start collapse), we recommend three concrete interventions
-in order of increasing implementation cost:
+The ZVF/GU diagnostic identifies regimes, but it does not identify a remedy.
+The following are related or prospective hypotheses, not interventions supported
+by the reviewed record. Any comparison requires a predeclared, matched-budget
+evaluation with held-out outcomes.
 
-\paragraph{Intervention 1: Group-size reduction to $G=2$.}
+\paragraph{Hypothesis 1: a $G=2$ comparison.}
 Wu et al. (2025) prove that GRPO at $G=2$ is algebraically equivalent to DPO.
 At $G=2$, Gradient Utilization is GU$(p,2) = 2p(1-p)$, the Bernoulli variance of
-per-prompt accuracy $p$.  For high-accuracy models ($p > 0.8$), this reduces
-rollouts by 75\% while preserving all informative contrastive signal
-(Section~\ref{sec:grpo-dpo}).
+per-prompt accuracy $p$. For high-accuracy models ($p > 0.8$), this identity
+motivates a matched-budget comparison; it does not establish a rollout-saving
+intervention in this record.
 
-\paragraph{Intervention 2: Prompt re-sampling from harder sub-distributions.}
+\paragraph{Hypothesis 2: resampling or warm-start.}
 AERO (Zhang et al., 2026) proposes a Bayesian posterior over prompt difficulty
 to pre-screen prompts for GRPO training.  Our ZVF/GU data provide an empirical
 calibration: tool-use experiments saturate at ZVF $= 100\%$ regardless of model
-size, meaning the task itself is poorly matched to the model's prior
-capabilities.  Re-sampling from easier sub-distributions (or curating a
-warm-start SFT checkpoint) reduces ZVF by increasing $p_x$ toward 0.5.
+size, but those two reviewed all-wrong cells do not establish why. Resampling
+or a warm-start SFT checkpoint are prospective arms whose effect on reward,
+ZVF/GU, and held-out outcomes must be measured.
 
-\paragraph{Intervention 3: TPO-style objectives for sparse-reward regimes.}
-Kaddour et al. (2026) show that when all rollout rewards are zero (ZVF $= 1$),
-the standard GRPO advantage is uniformly zero and no gradient flows.
+\paragraph{Hypothesis 3: a TPO-style objective.}
+Kaddour et al. (2026) study an external objective. For the submitted runner,
+all-equal rewards make only the centered reward-contrast coefficient zero.
 TPO's target-distribution construction ($q \propto p_{\text{old}} \exp(u)$) fits to
 the \emph{implied} contrastive distribution rather than observed rewards,
-providing a training signal even when all groups are zero-variance.
-We recommend TPO-style objectives as the next intervention when both
-(1) ZVF $= 1$ persists past step 5 and (2) group-size reduction does not
-recover GU $> 0$.
+providing a training signal even when all groups are zero-variance. Whether it
+improves a named corpus cell is a prospective, matched-budget question.
 
 % =============================================================================
 % =============================================================================
@@ -1683,7 +1596,7 @@ recover GU $> 0$.
 \section*{Claims We Explicitly Do Not Make}
 \label{sec:claims_we_do_not_make}
 
-This paper is an engineering diagnostic, not a benchmark result, not a new algorithm, and not a clean causal study. The runner is GRPO-style but omits the PPO ratio/clip, the frozen reference policy, and the completion-only token mask, and uses one optimizer step per rollout batch (a P1-A diagnostic finds $61.6\%$--$89.6\%$ of the loss magnitude comes from prompt tokens); the HumanEval-style sandbox strips Python built-ins; the tool-use reward scores JSON schema rather than tool execution; the MATH-500 and HumanEval training pools are loaded from the \texttt{test} splits and are reward-environment probes, not generalization tests; most Tinker runs are single-seed on a 30-step horizon; PPO/GRPO comparisons are backend-, sampler-, optimizer-, LoRA-, and checkpoint-confounded; the held-out GSM8K control lift is $82.0\%\!\to\!83.3\%$ ($p=0.26$) and is the only clean capability result. Table~\ref{tab:heldout_gsm8k} is a post-selection top-$k$ ledger with a selection-induced $92.08\%$ mean and should not be compared to the $82.0\%\!\to\!83.3\%$ control. Readers should treat the manuscript as a candid engineering audit whose narrow defensible contribution is reward-diversity triage (ZVF/GU) plus stack-identifiability reporting discipline, not a leaderboard or algorithm paper.
+This paper is an engineering diagnostic, not a benchmark result, not a new algorithm, and not a clean causal study. The runner is GRPO-style but omits the PPO ratio/clip, the frozen reference policy, and the completion-only token mask; the HumanEval-style sandbox strips Python built-ins; the tool-use reward scores JSON schema rather than tool execution; and most Tinker runs are single-seed on a 30-step horizon. PPO/GRPO comparisons are backend-, sampler-, optimizer-, LoRA-, and checkpoint-confounded. The historical selected-checkpoint aggregate is withdrawn rather than compared with the reviewed record. Readers should treat the manuscript as a candid engineering audit whose narrow defensible contribution is reward-diversity triage (ZVF/GU) plus stack-identifiability reporting discipline, not a leaderboard or algorithm paper.
 
 To bound the attack surface of this empirical study, we explicitly disclaim the following:
 
@@ -1694,7 +1607,7 @@ To bound the attack surface of this empirical study, we explicitly disclaim the 
     \item We do not claim generalization from test-split reward probes (MATH-500, HumanEval training pools).
     \item We do not claim frontier scaling laws from short, noisy training traces.
     \item We do not claim PPO-vs-GRPO algorithm superiority rankings.
-    \item We do not claim GRPO universally improves reasoning or achieves state-of-the-art GSM8K/MATH performance. We report training reward trajectories and a checkpoint-selection held-out analysis; we do not claim a statistically significant held-out math effect (the clean Qwen3-8B control: $82.0\% \to 83.3\%$, $p=0.26$).
+    \item We do not claim GRPO universally improves reasoning or achieves state-of-the-art GSM8K/MATH performance. The later, separate five-seed Qwen3-8B held-out comparison is not reviewed-record evidence: $82.0\% \to 83.3\%$ has $p=0.26$ from a one-sample seed-level test against a fixed baseline, not a paired-seed test.
     \item We do not claim ZVF predicts final performance. ZVF is a triage diagnostic that identifies training regimes (cold-start collapse vs. saturation vs. healthy contrast); it is not a calibrated performance predictor. The zero-order correlation ($r = -0.769$) is largely confounded by current reward level on binary tasks; the partial correlation controlling for $R_t$ at lag 5 is only $r = 0.059$ ($p = 0.096$).
     \item We do not claim group size $G=8$ is globally optimal. The group-size ablation was single-seed and 30-step; multi-seed validation is needed before calling $G=8$ optimal.
     \item We do not claim Dense models outperform MoE architectures at matched active parameters. The Dense vs MoE comparison is confounded by base vs instruct initialization; the architecture effect cannot be isolated from the initialization effect.
@@ -1707,9 +1620,9 @@ To bound the attack surface of this empirical study, we explicitly disclaim the 
 This paper contributes a diagnostic and reporting framework for group-relative RLVR experiments:
 
 \begin{itemize}
-    \item \textbf{Group-relative RL needs within-group reward diversity.} The mixed-group probability $P(\text{usable}) = 1 - p^G - (1-p)^G$ shows that a group-relative update has usable signal only when completions receive mixed rewards. All-identical rewards yield zero gradient.
-    \item \textbf{ZVF and GU are useful early triage diagnostics.} Zero-Variance Fraction and Gradient Utilization distinguish cold-start collapse (high ZVF + low reward), saturation (high ZVF + high reward), and healthy contrast (low ZVF) regimes. They tell a practitioner what action to take next.
-    \item \textbf{Online training reward is dynamics evidence, not capability evidence.} A clean held-out GSM8K control (Qwen3-8B, 5 seeds, 200 prompts) shows only $82.0\% \to 83.3\%$ improvement ($p=0.26$, non-significant). Training reward and held-out accuracy are not interchangeable.
+    \item \textbf{Group-relative RL needs within-group reward diversity.} The mixed-group probability $P(\text{usable}) = 1 - p^G - (1-p)^G$ shows that the submitted centered reward-contrast term has usable signal only when completions receive mixed rewards. All-identical rewards yield zero centered contrast; total-gradient terms remain objective-specific.
+    \item \textbf{ZVF and GU are descriptive triage diagnostics.} They distinguish cold-start-like, possible-saturation, and mixed-reward regimes, but unsigned ZVF cannot choose retire/distill versus retry/resample/warm-start. An operator policy is prospective and needs matched-budget evaluation.
+    \item \textbf{Online training reward is dynamics evidence, not capability evidence.} A later, separate five-seed Qwen3-8B comparison reports $82.0\% \to 83.3\%$ in a one-sample seed-level $p=0.26$ test against the fixed baseline, not paired-seed or reviewed-record evidence. Training reward and held-out accuracy are not interchangeable.
     \item \textbf{Algorithm labels (PPO/GRPO/DPO) are incomplete without stack details.} Model, sampler, reward parser, loss mask, KL/reference handling, LoRA targets, backend, checkpoint-selection rule, and evaluator are co-determinants of outcome in ways that hyperparameter tables do not capture.
 \end{itemize}
 
@@ -1786,10 +1699,11 @@ separately; otherwise numbers should be read descriptively, consistent with the
 replication cautions of \citet{henderson2018deep}.
 
 \paragraph{Held-out capability evidence is narrow.}
-The clean held-out capability check is the separate GSM8K 200-example slice,
-which improves from $82.0\%$ to $83.3\%$ and is not statistically significant
-($p=0.26$).  Consequently, the paper does not claim a significant held-out math
-improvement.  Training rewards support statements about optimization dynamics
+The later, separate five-seed GSM8K 200-example comparison reports $82.0\%$ to
+$83.3\%$. Its $p=0.26$ is a one-sample seed-level test against the fixed
+baseline, not a paired-seed test, and it is not reviewed-record evidence.
+Consequently, the paper does not claim a significant held-out math improvement.
+Training rewards support statements about optimization dynamics
 inside a particular reward environment; they do not establish general reasoning,
 code, or tool-use capability.
 
@@ -2035,7 +1949,7 @@ regime where standard GRPO training is most wasteful.
 Our ZVF measurements can serve as a calibration dataset for AERO's Beta prior.
 
 \paragraph{Descriptive saturation fits and their limits.}
-\citet{nimmaturi2025scalinglaws} derive a three-phase exponential saturation
+\citet{nimmaturi2025predictive} derive a three-phase exponential saturation
 law for GRPO, finding that 80\% of training steps contribute marginally and
 proposing early stopping.
 We observe a compatible three-phase pattern in 73\% of LLM fine-tuning
@@ -2050,9 +1964,10 @@ We recommend that practitioners verify monotonicity before applying early
 stopping rules derived from the saturation model.
 
 \paragraph{``It Takes Two'' and the 2-GRPO/DPO equivalence.}
-\citet{wu2025grpo_dpo} specifically design against the zero-contrast failure mode
+\citet{wu2025grpodpo} specifically design against the zero-contrast failure mode
 of standard GRPO training: without any positive reward signal in a group,
-the advantage is uniformly zero and no gradient flows.
+the centered reward-contrast coefficient is uniformly zero in the stated
+group-relative objective; this does not imply a zero total gradient elsewhere.
 TPO's target-distribution construction ($q \propto p_\text{old} \exp(u)$)
 provides a training signal even when all rollout rewards are zero, by fitting
 to the \emph{implied} contrastive distribution rather than observed rewards.
@@ -2199,7 +2114,7 @@ PPO-REINFORCE = 4 runs; Tinker GRPO frontier = 9 runs; team members =
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.5\linewidth]{figures/v2/old_trl_seeds.pdf}
+\includegraphics[width=0.5\linewidth]{figures/v2/old_trl_seeds.png}
 \caption{Cross-seed reproducibility for TRL GRPO on Qwen2.5-0.5B (GSM8K, 125 steps, NVIDIA L4). Five seeds show mean verifier score 73.4\% with CV = 0.096. Violin plot shows the distribution; individual seeds are labeled. We report the five-seed spread rather than a null-hypothesis test: a $t$-test against $50\%$ is not an appropriate null for GSM8K (a random-guess baseline is closer to $0\%$ than $50\%$), so the low CV is the defensible finding here.}
 \label{fig:trl_seeds}
 \end{figure}
@@ -2257,9 +2172,10 @@ and \texttt{BENCHMARKS\_COMPARISON.md} for the full comparison table with existi
           \item \textbf{Telemetry gaps.} Direct KL tracking and some W\&B
                 step-level exports are unavailable, so reward-stability proxies
                 are not treated as KL measurements.
-          \item \textbf{Train reward versus capability.} The only clean
-                held-out capability check is GSM8K $82.0\%\to83.3\%$ with
-                $p=0.26$; training rewards support dynamics claims only.
+          \item \textbf{Train reward versus capability.} A later, separate
+                five-seed GSM8K comparison reports $82.0\%\to83.3\%$; its
+                $p=0.26$ is a one-sample seed-level test against a fixed
+                baseline, not a paired-seed test or reviewed-record evidence.
           \item \textbf{Proxy reward environments.} Tool-use, HumanEval-style,
                 and MATH-style rows are verifier/proxy probes rather than broad
                 end-to-end capability evaluations.

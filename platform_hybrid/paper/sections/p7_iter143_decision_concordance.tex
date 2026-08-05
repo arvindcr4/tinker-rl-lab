@@ -104,9 +104,9 @@ At the naïve argmax $\tau=0.90$, $\mathrm{CV}(\kappa)=0.0$ by
 construction (every pair has $\kappa=1.0$). The informative analogue
 at $\tau=0.30$ gives $\mathrm{CV}(\kappa)=1.62$, reflecting the
 wide variance in pair-level $\kappa$ (some pairs agree strongly,
-others weakly) but a positive mean. We adopt $\tau=0.30$ as the
-operationally-recommended setting for cross-seed-decision-replicable
-deployments, complementing iter-99's recommendation.
+others weakly) but a positive mean.  Thus $\tau=0.30$ is a
+pre-registered candidate for a cross-seed matched-budget held-out evaluation;
+the observed concordance does not establish a deployment setting.
 
 \paragraph{Operational interpretation.}
 The canonical $\tau=0.65$ trigger is \emph{count-stable} (per-seed

@@ -72,7 +72,7 @@ std-normalization and length terms bias the update \citep{tong2025drgrpo};
 GSPO moves the importance ratio from token to sequence level
 \citep{qwen2025gspo}; and the group-relative loss family is close enough to
 preference optimization that GRPO admits a DPO reading
-\citep{rafailov2024direct, wu2025grpo_dpo}, making the exact contrast structure
+\citep{rafailov2024direct, wu2025grpodpo}, making the exact contrast structure
 part of the objective's identity. The reportable unit is therefore the tuple
 (ratio level, clip low/high, token mask, advantage normalization,
 dynamic-sampling status), not the name.
@@ -151,7 +151,7 @@ open-trainer audit escalated $G$ from 4 to 6 to 8 live on ZVF spikes
 (\secref{sec:p5-toolchain})---reporting a single scalar $G$ is no longer
 sufficient; the schedule is part of the optimizer. The companion Pillar-3
 paper of \ours{} treats group size in depth, including the rollout-budget
-trade-off highlighted by 2-GRPO-style analyses \citep{wu2025grpo_dpo,
+trade-off highlighted by 2-GRPO-style analyses \citep{wu2025grpodpo,
 tan2025scalingrl}.
 
 \begin{table}[t]

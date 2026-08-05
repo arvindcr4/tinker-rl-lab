@@ -16,9 +16,10 @@ Fraction (ZVF) diagnostics.
 We organize all claims into three explicit evidence tiers.
 \textbf{(A-grade, analytic or multi-seed inferential)}: a mechanical
 $\mathrm{ZVF}=p^{G}+(1{-}p)^{G}$ identity for binary-reward GRPO (analytic,
-not an empirical multi-seed claim), and a 5-seed
-held-out Qwen3-8B GSM8K control showing only a $+1.3$pp delta over the base
-model ($p{=}0.26$, not significant). \textbf{(B-grade, single-seed descriptive)}:
+not an empirical multi-seed claim), and later, separate five-seed Qwen3-8B
+GSM8K evidence showing only a $+1.3$pp delta over a fixed base. Its $p{=}0.26$
+is a one-sample seed-level, not paired-seed, test and is not reviewed-record
+evidence. \textbf{(B-grade, single-seed descriptive)}:
 case-study runs across model scale on the closed-backend Tinker API, including
 group-size sweeps and frontier-scale checkpoints, reported as illustrative not
 inferential. \textbf{(C-grade, listed for honesty)}: failed or partially
@@ -51,3 +52,6 @@ Code, traces, checkpoints, and a one-command \texttt{make reproduce-main}
 target are at
 \url{https://anonymous.4open.science/r/agentic-grpo-bench-anon-2C6B}.
 \end{abstract}
+\paragraph{August 2026 evidence boundary.} Evidence tiers distinguish named
+cells from unavailable outcomes; provenance conflicts are quarantines, not
+numerical comparisons.

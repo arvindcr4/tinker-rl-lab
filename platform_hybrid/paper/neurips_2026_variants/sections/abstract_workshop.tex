@@ -17,10 +17,11 @@ at an anonymous repository documented in
 Section~\ref{sec:limitations}.
 
 \textbf{Claim hierarchy (descending strength).}
-\textit{(i)} ZVF~$=1\Rightarrow$~zero gradient is mechanical
+\textit{(i)} ZVF~$=1\Rightarrow$~zero centered reward contrast is mechanical
 (Appendix~\ref{sec:appendix:zvf-formalization}).
-\textit{(ii)} On a five-seed Qwen3-8B GSM8K held-out test, post-GRPO
-$83.3\%$ vs.\ base $82.0\%$ ($t{=}1.32$, $p{=}0.26$): not significant.
+\textit{(ii)} Later, separate five-seed Qwen3-8B GSM8K evidence reports
+$83.3\%$ vs.\ fixed-baseline $82.0\%$ as a one-sample seed-level
+$p{=}0.26$ test, not paired-seed or reviewed-record evidence.
 \textit{(iii)} The pooled ZVF--last-10 correlation
 ($r{=}{-}0.769$, $N{=}15$, $p{=}0.0008$) is task-confounded; within
 GSM8K only ($N{=}19$), $r{=}{+}0.40$ ($p{=}0.09$).
@@ -30,3 +31,6 @@ single-seed case studies, released for honesty and not as benchmark numbers.
 The rest of this artifact note is a candid evidence-grade table and three
 discussion prompts for the workshop.
 \end{abstract}
+\paragraph{August 2026 evidence boundary.} This workshop artifact preserves
+case-specific rows and does not pool them as an algorithm ranking or a validated
+operator policy.

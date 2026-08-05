@@ -22,11 +22,10 @@ Mechanical identity
  (Section~\ref{sec:zvf-analysis}, Appendix~\ref{sec:appendix:zvf-formalization})
  & A & Closed-form derivation; verified against all logged groups
  & \checkmark & open \\
-Held-out 5-seed Qwen3-8B GSM8K control
- ($83.3\%$ vs.\ base $82.0\%$, $\Delta{=}{+}1.3$pp, $p{=}0.26$;
- not significant; Section~\ref{sec:limitations})
- & A & 5 seeds, paired greedy eval on held-out test split
- & \checkmark & open \\
+Later, separate 5-seed Qwen3-8B GSM8K comparison
+ ($83.3\%$ vs.\ fixed-base $82.0\%$, $\Delta{=}{+}1.3$pp, $p{=}0.26$)
+ & future & One-sample seed-level test against a fixed baseline; not paired-seed
+ & --- & not reviewed \\
 Tier-A classic-RL multi-seed Modal arms
  (CleanRL, SB3, Tianshou, Qwen2.5-0.5B, 5 seeds each;
  Llama-3.3-70B-Inst, 4 seeds; Qwen3-8B Wave-6 ablation, 12 cells)

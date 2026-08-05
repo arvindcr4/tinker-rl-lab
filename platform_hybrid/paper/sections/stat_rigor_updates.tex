@@ -36,7 +36,7 @@ GRPO (Tinker) & DeepSeek-V3.1 & 20 & 85.0\% [75.0\%, 93.8\%] & 84.4\% [78.1\%, 9
 GRPO (Tinker) & Nemotron-120B & 20 & 16.2\% [5.0\%, 28.7\%] & 17.5\% [7.5\%, 28.7\%] & -0.10 & [-0.97, 0.78] & 0.868 & 1.000 \\
 GRPO (Tinker) & Qwen3-8B-Base & 30 & 85.6\% [76.9\%, 93.1\%] & 87.5\% [82.5\%, 92.1\%] & +0.13 & [-0.75, 1.01] & 0.818 & 1.000 \\
 GRPO (Tinker) & GPT-OSS-120B & 6 & 87.5\% [78.2\%, 95.9\%] & 87.5\% [78.2\%, 95.9\%] & --- & --- & --- & --- \\
-PPO (Modal H100) & Qwen3-8B & 30 & 35.0\% [17.5\%, 52.5\%] & 28.3\% [18.3\%, 38.3\%] & +0.08 & [-0.80, 0.96] & 0.782 & 1.000 \\
+PPO (Modal H100) & Qwen3-8B & 30 & quarantined & provenance conflict & --- & --- & --- & --- \\
 PPO (Modal H100) & Llama-3.1-8B-Inst & 30 & 95.0\% [87.5\%, 100.0\%] & 95.0\% [90.0\%, 99.2\%] & -0.27 & [-1.15, 0.61] & 0.583 & 1.000 \\
 GRPO (tool-use) & Llama-3.1-8B-Inst & 30 & 0.0\% [0.0\%, 0.0\%] & 0.0\% [0.0\%, 0.0\%] & +0.00 & [0.00, 0.00] & 1.000 & 1.000 \\
 GRPO (tool-use) & Qwen3-32B & 30 & 0.0\% [0.0\%, 0.0\%] & 0.0\% [0.0\%, 0.0\%] & +0.00 & [0.00, 0.00] & 1.000 & 1.000 \\
@@ -98,7 +98,7 @@ Qwen3-30B-A3B (MoE) & 91.8 & 95.4$\pm$0.5 & +3.6 & [2.8, 4.5] & +3.22 & [1.04, 5
 \toprule
 \textbf{Model} & \textbf{GRPO last-10 [95\% CI]} & \textbf{PPO last-10 [95\% CI]} & \textbf{$\Delta$ [95\% CI]} & \textbf{Cohen's $d$} & \textbf{$d$ 95\% CI} & \textbf{Welch $p$} & \textbf{Welch $p$ (Bonf.)} & \textbf{MW $p$} & \textbf{MW $p$ (Bonf.)} \\
 \midrule
-Qwen3-8B & 0.344 [0.263, 0.431] & 0.350 [0.175, 0.525] & +0.002 [-0.119, 0.119] & +0.01 & [-0.50, 0.51] & 0.973 & 1.000 & 0.709 & 1.000 \\
+Qwen3-8B & quarantined & provenance conflict & not estimable & --- & --- & --- & --- & --- & --- \\
 Llama-3.1-8B-Inst & 0.844 [0.731, 0.944] & 0.950 [0.875, 1.000] & -0.081 [-0.154, -0.010] & -0.56 & [-1.08, -0.04] & 0.035 & 0.070 & 0.006 & 0.012$^{\ddagger}$ \\
 \bottomrule
 \end{tabular}%
@@ -231,14 +231,14 @@ the $k$-test family used for Bonferroni correction.
 26 & Table 1 & Late-10 vs Early-10 reward (scale\_gsm8k\_qwen3.5-4b) & Mann-Whitney U (late vs early) & +0.18 & 0.633 & 1.000 \\
 27 & Table 1 & Late-10 vs Early-10 reward (modal\_trl\_trl\_llama32\_3b) & Mann-Whitney U (late vs early) & -0.33 & 0.643 & 1.000 \\
 28 & Table 1 & Late-10 vs Early-10 reward (frontier\_gsm8k\_deepseek-v3.1) & Mann-Whitney U (late vs early) & +0.09 & 0.694 & 1.000 \\
-29 & Table 4 & Qwen3-8B: PPO vs GRPO (Mann-Whitney U) & Mann-Whitney U & +0.01 & 0.709 & 1.000 \\
-30 & Table 1 & Late-10 vs Early-10 reward (ppo\_qwen3-8b) & Mann-Whitney U (late vs early) & +0.08 & 0.782 & 1.000 \\
+29 & Table 4 & Qwen3-8B PPO vs GRPO: provenance conflict; not estimable & --- & --- & --- & --- \\
+30 & Table 1 & Qwen3-8B PPO trace: provenance conflict; not estimable & --- & --- & --- & --- \\
 31 & Table 1 & Late-10 vs Early-10 reward (tianshou\_ppo\_math\_s789) & Mann-Whitney U (late vs early) & +0.00 & 0.813 & 1.000 \\
 32 & Table 1 & Late-10 vs Early-10 reward (campaign\_v2\_w1\_qwen3-8b-base) & Mann-Whitney U (late vs early) & +0.13 & 0.818 & 1.000 \\
 33 & Table 1 & Late-10 vs Early-10 reward (frontier\_gsm8k\_nemotron-120b) & Mann-Whitney U (late vs early) & -0.10 & 0.868 & 1.000 \\
 34 & Table 1 & Late-10 vs Early-10 reward (tianshou\_ppo\_math\_s1024) & Mann-Whitney U (late vs early) & +0.00 & 0.938 & 1.000 \\
 35 & Table 1 & Late-10 vs Early-10 reward (modal\_trl\_trl\_qwen3\_8b) & Mann-Whitney U (late vs early) & +0.27 & 0.957 & 1.000 \\
-36 & Table 4 & Qwen3-8B: PPO vs GRPO (full trace, n=30) & Welch t-test & +0.01 & 0.973 & 1.000 \\
+36 & Table 4 & Qwen3-8B PPO vs GRPO full trace: provenance conflict; not estimable & --- & --- & --- & --- \\
 37 & Table 1 & Late-10 vs Early-10 reward (cross\_tool\_llama-8b-inst) & Mann-Whitney U (late vs early) & +0.00 & 1.000 & 1.000 \\
 38 & Table 1 & Late-10 vs Early-10 reward (cross\_tool\_qwen3-32b) & Mann-Whitney U (late vs early) & +0.00 & 1.000 & 1.000 \\
 \bottomrule

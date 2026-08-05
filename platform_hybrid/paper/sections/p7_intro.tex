@@ -3,8 +3,9 @@
 \label{sec:p7-intro}
 GRPO~\citep{shao2024deepseekmath, guo2025deepseekr1} centers rewards within a
 group of $G$ completions per prompt. Under binary, verifiable rewards, any
-group whose completions are all correct or all incorrect contributes exactly
-zero gradient. The fraction of such degenerate groups---the Zero-Variance
+group whose completions are all correct or all incorrect has zero centered
+reward contrast in the stated GRPO term; this does not imply that every
+total-gradient contribution vanishes. The fraction of such degenerate groups---the Zero-Variance
 Fraction (ZVF)---was the subject of our companion Pillar-2 paper, which
 measured it across libraries, model scales, and training phases and
 deliberately stopped at description: ZVF tracks collapse, drifts upward, and
@@ -79,7 +80,7 @@ guided by the closed-form $h_G(p)$. Dr.~GRPO \citep{tong2025drgrpo} and GSPO
 respectively, and serve as fixed-recipe baselines in our audit. The
 contrast term $p(1-p)$ at the heart of our model echoes the reduction of
 group-relative RL to pairwise preference objectives
-\citep{wu2025grpo_dpo, rafailov2024direct}: a group is exactly as informative
+\citep{wu2025grpodpo, rafailov2024direct}: a group is exactly as informative
 as the correct/incorrect pairs it contains. Empirical scaling studies of
 GRPO post-training \citep{tan2025scalingrl} treat group size as a budget
 knob; we treat it as a feedback-controlled variable. All tasks are built on

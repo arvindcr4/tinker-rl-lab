@@ -107,15 +107,14 @@ $95\%$ level.  Symmetric $(2,2)$ and $(3,3)$ cells have wide CIs
 spanning 1.0 (i.e.\ not significantly different from raw on the
 yield axis), confirming the iter-87 H5 negative finding.
 
-\paragraph{Operational recommendation.}
-Replace the iter-87 default $(2,2)$ with the asymmetric
-$(1,4)$ at $\tau{=}0.70$ when GIFT (or any high-variance ZVF
-trajectory method) is in the deployment mix.  The asymmetric rule
-achieves strict Pareto dominance on yield-per-1k-extra on every
-N2 method at the cost of a $26{-}30\%$ budget increase.  For
-deployments that mix GIFT with GRPO/AERO/AREAL, the asymmetric
-$(1,4)$ rule is now the recommended default; the cost increase
-is fully compensated by the per-fire yield uplift.
+\paragraph{Prospective candidate comparison.}
+The asymmetric $(1,4)$ rule at $\tau{=}0.70$ is a pre-registered candidate
+for matched-budget held-out evaluation against iter-87's $(2,2)$ rule when
+GIFT or another high-variance ZVF trajectory method is represented. On the
+N2 corpus it descriptively achieves strict Pareto dominance on
+yield-per-1k-extra for every method at a $26{-}30\%$ budget increase. The
+held-out evaluation must establish whether the observed per-fire yield uplift
+compensates for that cost in a mixed-method setting.
 
 \paragraph{Cross-paper coupling.}
 \emph{(i)} \textbf{iter-87 row 103 H5}: this iteration is the

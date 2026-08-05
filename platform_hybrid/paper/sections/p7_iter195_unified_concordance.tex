@@ -34,12 +34,11 @@ For each (method, step) cell we compute three binary decisions:
 \mathrm{naive}(s)\right], \quad
 \begin{cases}
 \mathrm{smoothed}(s) = \frac{\bar{k}^2 + (G - \bar{k})^2}{G^2} \\[2pt]
-\mathrm{naive}(s) = \frac{\bar{k}(G - \bar{k})}{G^2}
+    \mathrm{naive}(s) = \frac{\bar{k}(G - \bar{k})}{G^2}
 \end{cases}
-\quad\text{(Berkeley row 19, depth-0)}
 \end{align}
 
-\noindent where $\bar{k}$ is the mean success count over contrast
+\noindent The preceding pair is Berkeley row 19 at depth 0. Here $\bar{k}$ is the mean success count over contrast
 prompts in the step and $G = G_{\mathrm{base}} = 8$.  Concordance is
 Cohen's $\kappa$ on the three pairs (AG$\times$DF, AG$\times$AP,
 DF$\times$AP), with bootstrap percentile CIs (B$=2000$,
@@ -116,13 +115,12 @@ N2 panel (where boundary cases are common).
 
 \subsubsection*{Paper-grade conclusion}
 
-The right unification is at the \textbf{latent-signal level}, not the
+The unification is at the \textbf{latent-signal level}, not the
 \textbf{decision-rule level}.  Each rule is a valid projection of the
 latent "needs adaptive $G$" condition, but at three distinct
-information-loss rates.  We recommend the calibrated controller
-section present the three rules side-by-side with their structural
-failure modes rather than asserting interchangeability.  When the
-prompt distribution contains boundary cases (N2), the Bayesian rule
-(iter-171) is preferred; when the distribution is mid-range (N10,
-iter-187), the AG rule at $\tau = 0.70$ remains the
-information-preserving fallback.
+information-loss rates.  The calibrated-controller section reports the three
+rules side-by-side with their structural failure modes rather than asserting
+interchangeability.  The N2 boundary-case and N10 mid-range observations
+motivate Bayesian and AG@$\tau=0.70$, respectively, as pre-registered
+candidates for matched-budget held-out evaluation, not as preferred
+deployments.

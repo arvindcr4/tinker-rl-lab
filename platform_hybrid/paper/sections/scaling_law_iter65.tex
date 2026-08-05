@@ -19,9 +19,11 @@ We fit three OLS segments per trace
 sum of within-segment squared errors.  The three canonical slope
 targets are
 \begin{equation}
-  |m_1| < \text{SLOW\_SLOPE\_MAX} = 0.020,\quad
-  |m_2| \geq \text{FAST\_SLOPE\_MIN} = 0.040,\quad
-  |m_3| < \text{PLATEAU\_SLOPE\_MAX} = 0.015,
+  \begin{aligned}
+    |m_1| &< \text{SLOW\_SLOPE\_MAX} = 0.020,\\
+    |m_2| &\geq \text{FAST\_SLOPE\_MIN} = 0.040,\\
+    |m_3| &< \text{PLATEAU\_SLOPE\_MAX} = 0.015,
+  \end{aligned}
   \label{eq:iter65-pci}
 \end{equation}
 in reward units per step.  The PCI is then
@@ -76,6 +78,7 @@ the late-trace partial recovery after the early collapse.
 \begin{table}[t]
   \centering
   \small
+  \resizebox{\linewidth}{!}{%
   \begin{tabular}{lrlrrrrrl}
     \toprule
     Model & $N$ (B) & arch & $m_1$ & $m_2$ & $m_3$ & $c_1$ & $c_2$ & class \\
@@ -87,7 +90,8 @@ the late-trace partial recovery after the early collapse.
       gpt-oss-20B & 20.0 & moe & +0.0027 & -0.0000 & +0.0054 & 0.70 & 0.80 & valley \\
       Qwen3.5-4B & 4.0 & dense & +0.0187 & -0.0000 & +0.0037 & 0.17 & 0.23 & valley \\
     \bottomrule
-  \end{tabular}
+  \end{tabular}%
+  }
   \caption{\textbf{Top-6 traces by $|m_3|$.}  Only anchors with
     strong late-trace drift appear; canonical three-phase traces
     (low $|m_3|$) are pushed off the top of the table.  $c_1$ and

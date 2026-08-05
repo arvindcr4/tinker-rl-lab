@@ -48,12 +48,14 @@ claim depends on and what its tier is.
 \paragraph{Two narrow scientific take-aways.}
 The artifact supports two A-grade results stated conservatively. First, the
 mechanical identity $\mathrm{ZVF}(p, G) = p^{G} + (1{-}p)^{G}$ characterises
-when binary-reward GRPO produces zero within-group gradient; we use it as
+when binary rewards produce zero centered reward contrast in the
+group-standardized runner; we use it as
 a descriptive diagnostic, not as a standalone causal predictor of
 downstream performance, because ZVF is mechanically coupled to reward
-sparsity, group size, and baseline accuracy. Second, a 5-seed held-out
-Qwen3-8B GSM8K control yields only a $+1.3$pp delta over the base model
-($p{=}0.26$), so strong online reward curves on a closed backend do not by
+sparsity, group size, and baseline accuracy. Second, later, separate five-seed
+Qwen3-8B GSM8K evidence yields only a $+1.3$pp delta over a fixed base;
+$p{=}0.26$ is a one-sample seed-level test, not a paired-seed test or
+reviewed-record evidence. Strong online reward curves on a closed backend do not by
 themselves establish generalization gains. All B-grade single-seed
 case-study runs across model scale are reported as illustrative.
 

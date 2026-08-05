@@ -112,13 +112,12 @@ method & zvf-triage fires & zvf-triage $\overline{\Delta_z}$ & zvf-then-drop fir
 \end{table}
 
 \paragraph{The trade is explicit.}
-zvf-then-drop gives up $65\%$ of the total $\overline{\Delta_z}$
-($1.84$ vs $5.27$) to gain $85\%$ in efficiency ($7.64$ vs $4.12$).
-On a budget-constrained deployment the trade favours
-zvf-then-drop; on an unconstrained one it favours zvf-triage.
-The Pareto frontier is well-defined and neither controller is
-universally dominant --- a falsifiable, scope-conditional
-recommendation that the prior family never articulated.
+On the N2 same-stack corpus, zvf-then-drop gives up $65\%$ of the total
+$\overline{\Delta_z}$ ($1.84$ vs $5.27$) while yielding $85\%$ higher
+efficiency ($7.64$ vs $4.12$).  These two operating points lie on a
+well-defined Pareto frontier; neither is universally dominant.  They are
+therefore pre-registered candidates for a matched-budget held-out comparison
+under the target budget condition, rather than a deployment prescription.
 
 \paragraph{Mechanism: per-prompt benefit is dominated by $k{\in}\{1,7\}$.}
 The $\eta{=}0.05$ benefit floor fires only on steps containing at
@@ -133,16 +132,13 @@ combined trigger identifies those steps exactly, while zvf-triage
 fires on every step that \emph{contains} boundary prompts (which
 is essentially every step on this saturated-prompt regime).
 
-\paragraph{Updated operational recommendation.}
-Replace the iter-87 recommendation ``\texttt{zvf-triage} with
-hysteresis $K{=}(2,2)$'' with the combined trigger
-``\texttt{zvf-then-drop}@$\tau{=}0.50{+}\eta{=}0.05$ with hysteresis
-$K{=}(2,2)$''. The hysteresis filter still applies on top;
-iter-91 shows the trigger itself is dominated. On the N2
-evidence base the combined trigger fires 5.3$\times$ less often
-than zvf-triage@$\tau{=}0.50$, achieves $1.85\times$ higher
-benefit per 1000 extra rollouts, and the Pareto gap is
-statistically certified by bootstrap-CI-disjoint.
+\paragraph{Prospective candidate comparison.}
+The combined trigger ``\texttt{zvf-then-drop}@$\tau{=}0.50{+}\eta{=}0.05$
+with hysteresis $K{=}(2,2)$'' is a pre-registered candidate to compare with
+the prior zvf-triage-with-hysteresis candidate in a matched-budget held-out
+evaluation.  On the N2 evidence base, it fires 5.3$\times$ less often than
+zvf-triage@$\tau{=}0.50$ and has $1.85\times$ higher benefit per 1000 extra
+rollouts; the observed Pareto gap has bootstrap-CI-disjoint support.
 
 \paragraph{Cross-paper coupling.}
 \emph{(i)} \textbf{P7 iter-87} (\S\ref{sec:p7-iter87-hysteresis})

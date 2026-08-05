@@ -176,17 +176,15 @@ first MIN-REPORT-compatible CIs for the C3 sub-panel.  (iii) Iter 71
 row 83 primary recommendation is closed: the joint controller headline
 now carries prompt-bootstrap CIs in addition to point estimates.
 
-\paragraph{Operational recommendation.}
-For trigger-axis selection on the N10 / N2 corpora, the joint
-trigger is the recommended deployment: it is $5\times$ more
-seed-stable than $T_2$ alone, it surfaces every fired step's
-$\delta_{\mathrm{div}}$ sign so anti-herding failures are visible,
-and its cost-ratio CI width is $\leq$10\% at the canonical
-$\tau{=}0.05$ operating point.  Reviewers weighting
-\emph{seed-stability} should pick the joint trigger;
-reviewers weighting \emph{anti-herding purity} should pick $T_3$
-alone (zero false-fires on $\delta_{\mathrm{div}}{<}0$ steps by
-construction).
+\paragraph{Prospective candidate policy.}
+For trigger-axis selection on the N10 / N2 corpora, the joint trigger is a
+pre-registered candidate for matched-budget held-out evaluation, not a deployment
+recommendation. Descriptively, it is $5\times$ more seed-stable than $T_2$
+alone, surfaces every fired step's $\delta_{\mathrm{div}}$ sign so anti-herding
+failures are visible, and has cost-ratio CI width $\leq$10\% at
+$\tau{=}0.05$. A future evaluation can compare this seed-stability candidate
+with $T_3$'s anti-herding-purity candidate (zero false-fires on
+$\delta_{\mathrm{div}}{<}0$ steps by construction).
 
 \paragraph{Reproduction.}
 \texttt{python3 scripts/p5p8/p7\_multitrigger\_seed\_robust.py}

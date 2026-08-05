@@ -29,15 +29,15 @@ $z(\hat{p}, G) = 1$ for all $G$ (boundary is absorbing under the iid model).
 \paragraph{Controllers (5).}
 
 \begin{itemize}
-\item \textbf{STATIC\_G8} — baseline (what N2 actually ran).
-\item \textbf{STATIC\_G16} — always pay $2\times$ cost.
-\item \textbf{ADAPTIVE\_PP} — per-prompt $G^* = \min G \in \{8,16,32,64\}$
+\item \textbf{STATIC\_G8} --- baseline (what N2 actually ran).
+\item \textbf{STATIC\_G16} --- always pay $2\times$ cost.
+\item \textbf{ADAPTIVE\_PP} --- per-prompt $G^* = \min G \in \{8,16,32,64\}$
       such that $z(\hat{p}, G) < z(\hat{p}, G_{\mathrm{base}}) / 2$
       (halve the contrast loss from baseline); refuse to escalate boundary
       prompts.
-\item \textbf{ADAPTIVE\_PP\_ORACLE} — per-prompt $G^* = \min G \in \{8,16,32,64\}$
+\item \textbf{ADAPTIVE\_PP\_ORACLE} --- per-prompt $G^* = \min G \in \{8,16,32,64\}$
       that \emph{minimizes} $z(\hat{p}, G)$ (max salvage); refuse boundary.
-\item \textbf{DUALFORMER\_PP} — Berkeley row~01 per-prompt auto-$G$ rule:
+\item \textbf{DUALFORMER\_PP} --- Berkeley row~01 per-prompt auto-$G$ rule:
       $G^*=2$ if $\hat{p}\geq 0.95$; $4$ if $\geq 0.85$; $8$ if $\geq 0.70$;
       $16$ if $\geq 0.50$; $32$ otherwise.
 \end{itemize}
@@ -112,23 +112,22 @@ gift   & 0.7703 & 147 / 640 & 6296 & 0.02216         & 1 \\
 > net of cost = $+0.39$ (CI $[+0.17, +0.59]$, excludes zero) on the N2
 > four-method panel, at 64\% of the cost of STATIC\_G16 and with
 > 1.56$\times$ higher contrast\_magnitude per rollout. ADAPTIVE\_PP
-> uses only $G^* \in \{8, 16\}$ on N2 — the iter-111 candidate set
+> uses only $G^* \in \{8, 16\}$ on N2 --- the iter-111 candidate set
 > $\{16, 32, 64\}$ is over-allocated at per-prompt granularity.}
 
-\paragraph{Operational recommendation.}
+\paragraph{Prospective candidate comparison.}
 
 \begin{enumerate}
-\item Adopt ADAPTIVE\_PP as the recommended P7 controller for binary-reward
-      GRPO-family training when per-prompt $z_{\mathrm{obs}}$ telemetry
-      is available.
-\item Refuse to escalate boundary prompts ($k \in \{0, 8\}$) in any future
-      P7 controller — the honest policy.
-\item Use $G^* \in \{8, 16\}$ only at per-prompt granularity on N2-like
-      panels; the iter-111 $\{16, 32, 64\}$ candidate set was over-allocated.
-\item Report per-method cost-equivalent contrast ranking alongside the
-      step-aggregate CCC ranking in §4.17/§4.18. The two rankings measure
-      different things (compute recommendation vs cost-efficient
-      deployment) and are complementary.
+\item ADAPTIVE\_PP is a pre-registered candidate for a matched-budget
+      held-out binary-reward GRPO evaluation when per-prompt
+      $z_{\mathrm{obs}}$ telemetry is available.
+\item That evaluation can test the hypothesis that boundary prompts
+      ($k \in \{0,8\}$) should not be escalated.
+\item On N2-like panels it can compare the $G^* \in \{8,16\}$ menu with
+      the iter-111 $\{16,32,64\}$ menu, which was over-allocated here.
+\item The protocol reports per-method cost-equivalent contrast ranking
+      alongside the step-aggregate CCC ranking; these are complementary
+      descriptive measurements rather than deployment choices.
 \item Berkeley row~01 Dualformer-Auto underperforms at N2 granularity
       (mean net = $-0.06$, CI includes zero); the rule was designed for
       cost-saving on high-$\hat{p}$ prompts, not for contrast restoration.

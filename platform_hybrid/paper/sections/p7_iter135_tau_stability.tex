@@ -88,19 +88,14 @@ difficulty: the partial cells are exactly the borderline-signal cells
 where the controller's decision is fundamentally a borderline-handling
 decision.
 
-\paragraph{Operational recommendation.}
-(a) Document $\tau=0.70$ as the canonical DEGENERATE-regime boundary
-on N10, but acknowledge it sits on a sigmoid plateau (operationally
-identical to $\tau \in [0.65, 0.75]$). (b) The choice of $\tau$ in
-$[0.65, 0.75]$ is robust at N10 granularity; any selection in this
-band fires on the same $21/75 = 28\%$ of cells. (c) For reviewer-facing
-claims about the canonical operating point, report
-$\tau = 0.70 \pm \text{plateau width } [0.65, 0.75]$ to honestly scope
-the choice. (d) For the inflection-band claim, $\tau \in [0.60, 0.65]$
-is the natural transition zone where the fire-rate changes most
-rapidly; production deployments should avoid this band unless
-intentional. (e) Wire \texttt{p7\_iter135\_summary.json} into
-$\S\ref{sec:p7-controller}$ as the $\tau$-stability audit trail.
+\paragraph{Descriptive stability result and prospective candidates.}
+On N10, $\tau=0.70$ lies on a sigmoid plateau that is operationally identical
+to $\tau \in [0.65, 0.75]$: every value in this interval fires on the same
+$21/75 = 28\%$ of cells.  The interval and its adjacent transition band
+$[0.60,0.65]$ are descriptive audit results.  Any $\tau$ selected from the
+plateau is a pre-registered candidate for matched-budget held-out evaluation;
+this study does not designate a production boundary.  The accompanying
+\texttt{p7\_iter135\_summary.json} records the stability audit trail.
 
 \begin{table}[t]
 \centering

@@ -33,6 +33,7 @@ step-level reward traces are released for every Tier-A and Tier-B row.
 \begin{table}[h]
 \centering\scriptsize
 \setlength{\tabcolsep}{3pt}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lllllrrrcccc}
 \toprule
 Tier & Backend & Model & Task & Split & N & Seeds & Steps$_{\max}$ & Reward & Held-out & Logs & Ckpt \\
@@ -99,6 +100,7 @@ C & Tinker      & qwen3-32b                 & gsm8k (partial)     & train   & 1 
 C & Tinker      & qwen3.5-27b               & gsm8k (partial)     & train   & 1 & 1 & 10 & BV & --- & \checkmark & --- \\
 \bottomrule
 \end{tabular}
+}
 \caption{Per-(backend, model, task) run manifest at submission time.
 Tier classification: \textbf{A}~$\geq3$ seeds completed (or, for the
 Wave-6 single-seed sensitivity ablation, $\geq12$ runs at fixed seed

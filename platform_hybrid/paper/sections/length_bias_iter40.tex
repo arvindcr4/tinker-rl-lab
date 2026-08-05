@@ -123,6 +123,7 @@ gsm8k\_cot       & dr\_grpo & $-0.012$ & $-0.021$ & $+0.00061$ & $-0.0113$ \\
 (4000 resamples, paired over seeds).  Positive $\Delta$ means
 Dr.GRPO lowers the metric.}
 \label{tab:length-iter40-cross}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{llrrrrr}
 \toprule
 task & metric & GRPO mean & Dr.GRPO mean & $\Delta$ & 95\% CI & $p(\Delta\le 0)$ \\
@@ -134,7 +135,8 @@ gsm8k & $\beta^{(\mathrm{late})}{}-\beta^{(\mathrm{early})}$ & $+0.008$ & $-0.00
 gsm8k & $R/L$ drift & $+0.0004$ & $+0.0003$ & $+0.00009$ & $[+0.00004, +0.00014]$ & $0.00$ \\
 gsm8k & pooled anti-trap & $-0.0089$ & $-0.0138$ & $+0.005$ & $[+0.001, +0.008]$ & $0.00$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \paragraph{Cross-pillar synthesis (P4 $\times$ P1, P4 $\times$ P3).}

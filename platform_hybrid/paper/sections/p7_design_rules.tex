@@ -67,7 +67,8 @@ matched-budget panel (2{,}560 rollouts per arm: $G{=}2\times160$ steps
 vs.\ $G{=}16\times20$ steps, Qwen3-8B/GSM8K, batch~8) shows the wall the
 rules above exist to avoid, at the \emph{high}-accuracy end: the $G{=}2$
 arms reach train reward near 1.0 and then idle at
-$\mathrm{ZVF}\approx0.75$--$1.0$ --- all-correct groups, zero gradient
+$\mathrm{ZVF}\approx0.75$--$1.0$ --- all-correct groups with zero centered
+reward contrast in the stated runner, not necessarily zero total gradient
 --- while $G{=}16$ holds $\mathrm{ZVF}\le0.25$ on the same budget. A
 fixed small $G$ buys more optimizer steps early and starves in the
 endgame; a fixed large $G$ pays for contrast it does not yet need. The

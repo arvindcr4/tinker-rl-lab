@@ -1,0 +1,30 @@
+% Reviewed-record descendant: method and scope before corpus results.
+\section{Diagnostic Method and Objective Scope}
+\label{sec:diagnostic-method}
+
+For a prompt with a sampled group of rewards, the submitted runner centers each
+reward by the group mean. If all rewards are homogeneous, every centered
+reward-contrast coefficient is zero; hence the submitted reward-contrast term
+is zero. We call the fraction of such groups ZVF and write its submitted
+complement as Gradient Utilization, $\mathrm{GU}=1-\mathrm{ZVF}$. This is an
+accounting identity for this runner, not a measurement of a total optimizer gradient.
+
+The diagnostic runner is \emph{not canonical GRPO}. It was deliberately minimal
+for a narrow audit of centered rewards: it omits a PPO probability ratio and
+clipping, frozen-reference KL, and completion-only token masking. Those omissions
+do not make the omitted terms irrelevant. Clipping and completion-only masking can
+change which token contributions survive, while reference KL or auxiliary losses
+can make the total gradient nonzero even when the centered reward-contrast term is
+zero. The results therefore neither establish canonical-GRPO equivalence nor
+transfer to a different objective.
+
+We organize observations by evidence tier and estimand rather than pooling
+heterogeneous models, tasks, runners, checkpoints, and evaluators as replications.
+In the reviewed record, the two synthetic tool-use cells have reward 0, ZVF 1,
+GU 0, and held-out outcome \emph{not evaluated}; GSM8K ZVF is only a heterogeneous
+descriptive aggregate unless a named per-run source is given. Later files such as
+\texttt{zvf\_iter70\_per\_run\_zvf\_acc.tsv} are future-paper evidence and do not
+repair the reviewed record. Under binary rewards, high-reward/high-ZVF is a
+theoretical solved-task regime, not an observed claim here: it yields zero centered
+contrast, may waste rollout budget, and cannot by unsigned ZVF alone choose
+retire/distill over retry/resample/warm-start.

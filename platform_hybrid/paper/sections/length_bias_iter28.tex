@@ -53,6 +53,7 @@ $n{=}5$ for arithmetic Qwen2.5-0.5B).
 $R$-slope is in probability/step. $\rho(L,\mathrm{ZVF})$ and $\rho(L,R)$
 are Spearman within-step; 95\% CIs are bootstrap over seeds.
 \label{tab:length-bias-iter28}}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{llcccc}
 \hline
 Task & Algo & $\beta_L$ & $\rho(L,\mathrm{ZVF})$ & $\rho(L,R)$ & Dr.GRPO sig.\ ($\rho_{\beta_L\beta_R}$, $p$) \\
@@ -62,7 +63,8 @@ GSM8K-CoT & Dr.GRPO & $-0.22\,[-0.32,-0.05]$ & $+0.187\,[+0.148,+0.225]$ & $-0.6
 Arithmetic & GRPO & $-0.0297\,[-0.0329,-0.0270]$ & $-0.449\,[-0.584,-0.324]$ & $-0.419\,[-0.544,-0.301]$ & $\mathbf{-0.93}$, $p{=}0.023$ \\
 Arithmetic & Dr.GRPO & $-0.0264\,[-0.0284,-0.0245]$ & $-0.291\,[-0.444,-0.139]$ & $-0.293\,[-0.438,-0.148]$ & $+0.47$, $p{=}0.42$ \\
 \hline
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \paragraph{Within-step ZVF coupling is task-dependent and signs the

@@ -64,14 +64,16 @@ exceeds 1 with CI-lo $>1$ on $\geq 2/4$ channels. Reward $R=2.97$
 $[2.25, 28.95]$, mean\_len $R=3.17$ $[1.88, 881.98]$ --- both
 $P(R>1)=1.0$; zvf and loss have $R<1$ with $P(R>1)\approx 0.34$.
 
+\begin{sloppypar}
 \textbf{H3 (REFUTED)} --- the iter-125 cross-corpus portability claim
 $R \geq 4$ on the zvf channel does NOT transfer from mega-98 to N10.
 On mega-98 multi-stack panel, $R_{\mathrm{zvf}}^{\mathrm{stack/algo}}=10.32$;
 on N10 single-stack panel, $R_{\mathrm{zvf}}^{\mathrm{band/seed}}=0.34$.
-\underline{The 10.32-vs-0.34 inversion is the first measured refusal of
+\textbf{The 10.32-vs-0.34 inversion is the first measured refusal of
 cross-corpus portability on the contrast-signal channel.} reward and
 mean\_len carry the cross-corpus invariant (both regimes show band-curriculum
 dominance); the zvf/stack behaviour is corpus-shape-dependent.
+\end{sloppypar}
 
 \textbf{H4 (INSUFFICIENT)} --- $\eta^2(\mathrm{step\_band}, \mathrm{zvf}) = 0.035$
 does NOT meet the operational gate $\geq 0.10$ that the iter-119 / iter-131

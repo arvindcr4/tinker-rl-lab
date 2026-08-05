@@ -88,11 +88,11 @@ handle).}
 
 \subsection*{Falsifiable headlines}
 
-\paragraph{H1 (PASS — DECISIVE).} \textbf{98/98 manifests pass all 8
+\paragraph{H1 (PASS --- DECISIVE).} \textbf{98/98 manifests pass all 8
 cross-reference checks (100.0\% fully-consistent rate, 784/784 individual
 PASS).} The corpus is end-to-end internally consistent.
 
-\paragraph{H2 (PASS — sharpest finding).} \textbf{Naming-convention drift is
+\paragraph{H2 (PASS --- sharpest finding).} \textbf{Naming-convention drift is
 98/98 (100.0\%) without canonicalization.} The manifest encodes model
 identity as ``Qwen-Qwen3-5-4B'' or ``meta-llama-Llama-3-2-3B'' (slashes and
 dots replaced by dashes) while the tensor stores the canonical HuggingFace
@@ -103,7 +103,7 @@ schema's `secret glue' is this canonicalization rule} --- it is currently
 implicit in every manifest reader and should be promoted to MIN-REPORT
 v2.3 as an explicit field-comparison rule.
 
-\paragraph{H3 (PASS — non-vacuity).} \textbf{20/20 synthetic perturbations
+\paragraph{H3 (PASS --- non-vacuity).} \textbf{20/20 synthetic perturbations
 detected by the audit (100\% detect rate).} Per-kind detection rate:
 \texttt{heldout\_split} swap 4/4, \texttt{group\_size\_schedule} swap 1/1,
 \texttt{decontamination\_notes} swap 2/2, \texttt{per\_step\_zvf\_path}

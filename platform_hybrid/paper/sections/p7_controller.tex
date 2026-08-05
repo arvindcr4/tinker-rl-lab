@@ -197,6 +197,7 @@ each a 15-step trajectory; bootstrap percentile CIs, $n_{\text{boot}}{=}10{,}000
 ``Wrong fires'' counts trigger events on steps with $\mathrm{zvf} > 0.99$
 (i.e.\ on saturated prompts that cannot benefit from escalation).}
 \label{tab:p7-seed-robust}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
 $\tau$ & fires/seed mean & 95\% CI & wrong-fires/seed & 95\% CI & selectivity \\
@@ -207,7 +208,8 @@ $\tau$ & fires/seed mean & 95\% CI & wrong-fires/seed & 95\% CI & selectivity \\
 0.80 &  0.60 &  [0.00,  1.40] & 0.00 & [0.00, 0.00] & 0.96 \\
 0.90 &  0.00 &  [0.00,  0.00] & 0.00 & [0.00, 0.00] & 1.00 \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \paragraph{Threshold sweep replicates across five seeds.}
@@ -669,6 +671,7 @@ $\mathrm{CP}_\text{exact}$. ``Extra saving'' is binomial minus exact
 rollout spend; ``phantom'' is prompts the binomial model wrongly labels
 un-economizable that exact accounting recovers.}
 \label{tab:p7-exact-finite-pool}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lrrrr}
 \toprule
 $\tau_c$ & ratio (binom) & ratio (exact) & extra saving & phantom recovered \\
@@ -677,7 +680,8 @@ $0.3$ & $0.811$ & $0.811$ & $0.0\%$ ($0$) & $0$ \\
 $0.5$ & $0.868$ & $\mathbf{0.834}$ & $\mathbf{3.46\%}$ ($709$) & $0$ \\
 $0.7$ & $0.918$ & $\mathbf{0.881}$ & $\mathbf{3.66\%}$ ($749$) & $\mathbf{287}$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \paragraph{Reproduction.}
@@ -903,9 +907,9 @@ closed-form benefit metric}
 The four controller comparisons above all use the proxy metric
 ``saved prompts = number of fired prompts'' (any escalation
 counts as a save). This section introduces a strictly stronger
-metric — the \emph{closed-form Beta-Binomial posterior predictive
+metric --- the \emph{closed-form Beta-Binomial posterior predictive
 probability that escalating $G{=}8 \to G'{=}16$ restores
-within-group contrast} — and shows that on the N2 four-method
+within-group contrast} --- and shows that on the N2 four-method
 evidence base the metric \textbf{reverses the iter-11 Pareto
 conclusion}.
 
@@ -927,7 +931,7 @@ P(Y'{=}16 \mid k, G{=}8)
 \end{align}
 For $k{=}0$ or $k{=}8$ this evaluates to
 $\Pr(\text{restore}) = 1 - 9/25 - 9/25 = 7/25 \approx 0.280$
-… but actually via the closed form the $k{=}0$ case gives
+\ldots{} but actually via the closed form the $k{=}0$ case gives
 $\mathrm{B}(1, 25)/\mathrm{B}(1, 9) + \mathrm{B}(17, 9)/\mathrm{B}(1, 9)
 = 9/25 + 9/25 = 18/25$, so $\Pr(\text{restore}) = 7/25 \approx 0.28$.
 \textbf{This is the posterior-predictive benefit of escalating a
@@ -972,7 +976,7 @@ method & $n_{\text{degenerate}}$ & mean restore (all $2{,}560$) & 95\% bootstrap
 data, measured as expected restored prompts per $1{,}000$ extra
 rollouts (the posterior-predictive analogue of the iter-11
 ``saved prompts'' metric). The Bayesian controller at
-$\tau_{\text{post}}{=}0.60$ — Pareto-dominant in iter 11 — is
+$\tau_{\text{post}}{=}0.60$ --- Pareto-dominant in iter 11 --- is
 \textbf{dominated} on this metric by every zvf-triage setting
 because its principled prior fires on the hardest-to-restore
 degenerate prompts (where restore probability is exactly
@@ -983,10 +987,10 @@ $7/25$). zvf-triage@$\tau{=}0.5$ is the Pareto winner.}
 Controller & $\tau$ & fires/method & extra rollouts & restored & restored / $1$k extra \\
 \midrule
 \textbf{zvf-triage}        & $0.50$ & $40$        & $5{,}120$ & $\mathbf{463}$ & $\mathbf{90.4}$ \\
-zvf-triage                  & $0.70$ & $17$–$26$  & $2{,}176$–$3{,}328$ & $211$–$286$ & $87.0$ \\
-zvf-triage                  & $0.90$ & $1$–$8$    & $128$–$1{,}024$ & $11$–$84$ & $82.7$ \\
-Dualformer-Auto             & ---    & $529$–$553$ & $4{,}232$–$4{,}424$ & $354$–$368$ & $84.2$ \\
-Bayesian                    & $0.60$ & $461$–$493$ & $3{,}688$–$3{,}944$ & $\mathbf{295}$–$316$ & $\mathbf{80.0}$ \\
+zvf-triage                  & $0.70$ & $17$--$26$  & $2{,}176$--$3{,}328$ & $211$--$286$ & $87.0$ \\
+zvf-triage                  & $0.90$ & $1$--$8$    & $128$--$1{,}024$ & $11$--$84$ & $82.7$ \\
+Dualformer-Auto             & ---    & $529$--$553$ & $4{,}232$--$4{,}424$ & $354$--$368$ & $84.2$ \\
+Bayesian                    & $0.60$ & $461$--$493$ & $3{,}688$--$3{,}944$ & $\mathbf{295}$--$316$ & $\mathbf{80.0}$ \\
 Bayesian                    & $\geq 0.65$ & $0$ & $0$ & $0$ & (silenced) \\
 \bottomrule
 \end{tabular}
@@ -1027,7 +1031,7 @@ restored-per-$1{,}000$-extra-rollouts with a symmetry-based caveat
 step-level resampling of the $160$ (method, step) pairs, seed
 $20260704$, independently per controller) and reports $95\%$ CIs
 on every cell. The headline is that \textbf{all Pareto-rank gaps
-are statistically detectable} on the N2 evidence base — the
+are statistically detectable} on the N2 evidence base --- the
 empirical ordering is supported by the data, not an artefact of
 method-level symmetry.
 
@@ -1139,18 +1143,17 @@ prior and refusing to fire on the easy wins.
 \paragraph{Take-away.}
 \textbf{On the N2 saturated regime (mean ZVF $0.71$--$0.77$),
 zvf-triage@$\tau{=}0.5$ is operationally equivalent to
-``escalate every step''} — the step-level trigger has zero
+``escalate every step''} --- the step-level trigger has zero
 discriminative power here, and its apparent cost-efficiency
 advantage over Bayesian ($90.1$ vs $80.0$/1k) is mechanical
 exposure to non-degenerate prompts in the same step rather than
 a smarter controller. \textbf{On a future hard regime
 ($ZVF \in [0.05, 0.40]$)} the step-level trigger would be
 discriminative and the Pareto ordering might reverse. The
-principled recommendation is to use the Bayesian controller
-when the prompt distribution has both boundary and easy prompts,
-because its per-prompt precision never fires on an unnecessary
-escalation; zvf-triage remains Pareto-optimal only on the
-saturated end of the spectrum.
+N2 observations motivate the Bayesian controller and zvf-triage as separate,
+pre-registered candidates for matched-budget held-out evaluation on
+boundary/easy and saturated prompt distributions, respectively; they do not
+establish an operational controller choice.
 
 \paragraph{Reproduction.}
 \texttt{scripts/p5p8/p7\_costeff\_boot.py} ($\leq 350$ LoC,
@@ -1248,19 +1251,16 @@ literally zero because every C3 $G_t$ vector is bit-identical to the
 corresponding C1 $G_t$ vector on every seed.
 
 \paragraph{The unification license is panel-conditional.}
-\textbf{On a panel that reaches the saturation band (zvf $\geq 0.9$), C3 would de-escalate those steps to $G_{\mathrm{des}}{=}4$, strictly dominating both C1 (which keeps them at $G_{\mathrm{esc}}{=}16$) and C2 (which already de-escalates them).} The N10 panel does not exercise this branch. The principled recommendation:
+\textbf{On a panel that reaches the saturation band (zvf $\geq 0.9$), C3 would de-escalate those steps to $G_{\mathrm{des}}{=}4$, a prospective comparison with C1 (which keeps them at $G_{\mathrm{esc}}{=}16$) and C2 (which already de-escalates them).} The N10 panel does not exercise this branch. The following are pre-registered candidates for matched-budget held-out evaluation:
 \begin{itemize}
-\item Use \textbf{C2 Dualformer-Auto} when the per-step ZVF trajectory
-stays mostly in the intermediate band $\tau \leq z_t < \tau{+}\delta$ ---
-saves $14\%$ on N10 with CI $[+0.10, +0.18]$.
-\item Use \textbf{C3 Hybrid} when the trajectory reaches the saturation
-band $z_t \geq \tau{+}\delta$ --- strictly dominates both C1 and C2 on
-that panel (falsifiable prediction: future iter with the
-mega-manifest corpus will test this branch).
-\item \textbf{Avoid C1 zvf-triage} on GRPO at $G_{\mathrm{base}}{=}8$
-unless the trajectory never reaches the saturation band \emph{and}
-the budget is unconstrained --- C1 strictly spends more compute than
-the baseline on N10 (CI on savings $[-0.36, -0.20]$ entirely below zero).
+\item \textbf{C2 Dualformer-Auto} for an intermediate-band trajectory
+($\tau \leq z_t < \tau{+}\delta$); it shows $14\%$ savings on N10 with
+CI $[+0.10, +0.18]$.
+\item \textbf{C3 Hybrid} for a trajectory that reaches the saturation band
+$z_t \geq \tau{+}\delta$; a future mega-manifest evaluation can test this branch.
+\item \textbf{C1 zvf-triage} as the unconstrained-budget comparison arm;
+on N10 it spends more compute than baseline (savings CI
+$[-0.36, -0.20]$).
 \end{itemize}
 
 \paragraph{Headroom-bad calibration check.}
@@ -1446,15 +1446,15 @@ Dualformer-Auto is $+0.42$ $[+0.37, +0.46]$, zvf-triage is $-0.84$
 $[-0.92, -0.75]$. The CIs do not overlap. The same pattern holds at
 $\tau \in \{0.55, 0.60\}$ ($+0.30$ vs $-0.60$), at $\tau \in \{0.65,
 0.70, 0.75\}$ ($+0.14$ vs $-0.28$), and at $\tau \in \{0.80, 0.85\}$
-($+0.02$ vs $-0.04$ — both degenerate toward zero).
+($+0.02$ vs $-0.04$ --- both degenerate toward zero).
 \item \textbf{Hybrid is intermediate but inconsistent.} Hybrid at
-$\tau{=}0.50$ saves only $+0.06$ $[-0.01, +0.14]$ — the CI straddles
+$\tau{=}0.50$ saves only $+0.06$ $[-0.01, +0.14]$ --- the CI straddles
 zero, so the gain is not statistically detectable on 5 seeds. At
 $\tau \in \{0.55, 0.60\}$, Hybrid degenerates into zvf-triage (the
 boundary band $[\tau, \tau{+}\delta)$ dominates because $\delta{=}0.10$
 is narrow); savings $= -0.18$ $[-0.23, -0.12]$. At $\tau{=}0.65$,
 Hybrid \emph{agrees with} Dualformer-Auto: savings $= +0.14$ $[+0.10,
-+0.18]$ — identical because the boundary band $[0.65, 0.75)$ captures
++0.18]$ --- identical because the boundary band $[0.65, 0.75)$ captures
 the same steps as Dualformer's $\tau{=}0.65$ de-escalation. At
 $\tau \in \{0.70, 0.75\}$, Hybrid reverts to zvf-triage-like behavior
 ($-0.22$ $[-0.28, -0.16]$).
@@ -1478,10 +1478,10 @@ zero), the lowest-CV operating point is
 \texttt{Dualformer-Auto} at $\tau \in \{0.65, 0.70, 0.75\}$
 (CV $= 0.057$, savings $= +0.14$ $[+0.10, +0.18]$). \texttt{zvf-triage}
 has consistently worse CV on every fire-active $\tau$ (e.g. CV $= 0.077$
-at $\tau \in \{0.65, 0.70, 0.75\}$ vs $0.057$ for Dualformer — 35\%
+at $\tau \in \{0.65, 0.70, 0.75\}$ vs $0.057$ for Dualformer --- 35\%
 worse).
 
-\paragraph{Best-$\tau$ recommendation under headroom-bad $= 0$.}
+\paragraph{Observed best-$\tau$ values under headroom-bad $= 0$.}
 Among the operating points with zero headroom-bad steps (no fire on
 $z_t \geq 0.99$), the best-$\tau$ for each controller under
 maximize-savings are: \texttt{zvf-triage} $\tau{=}0.90$ (savings
@@ -1489,7 +1489,7 @@ $+0.0000$, controller never fires); \texttt{Dualformer-Auto}
 $\tau{=}0.50$ (savings $+0.42$, CI excludes zero); Hybrid $\tau{=}0.65$
 (savings $+0.14$, CI excludes zero). On the headroom-clean subset,
 Dualformer-Auto@0.50 strictly Pareto-dominates Hybrid@0.65, which in
-turn Pareto-dominates zvf-triage@0.90 — the same $C_2 < C_3 < C_1$
+turn Pareto-dominates zvf-triage@0.90 --- the same $C_2 < C_3 < C_1$
 ordering as iter~27 but now quantified across the full $\tau$ grid.
 
 \paragraph{Reproduction.}
@@ -1573,6 +1573,7 @@ signal (higher iid-ZVF = more starvation). The Hybrid's de-escalation
 is signal-preserving on the 181 saturated prompts (ZVF$=1.0$ either
 way) and signal-harmful on the 11 mixed prompts.}
 \label{tab:p7-satband-perprompt}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
 regime (per $k$) & $n$ & Hybrid $G'$ & iid-ZvF at $G{=}8$ & iid-ZvF at $G{=}4$ & $\Delta$ \\
@@ -1583,7 +1584,8 @@ mid $k{\in}\{2,\ldots,6\}$ & 8 & 4 & $\le 0.1001$ & $\ge 0.1250$ & $+0.0249$ to 
 \midrule
 \textbf{all 192 sat-band} & 192 & 4 & 0.9501 & 0.9609 & $+0.0108$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \paragraph{Falsifiable headline (this iteration).}
@@ -1600,6 +1602,7 @@ entirely above zero; zvf-triage's rate is $0.00\%$ (CI is degenerate at
 zero because escalation never worsens signal on already-saturated
 prompts); Dualformer-Auto's rate is $1.04\%$ with CI including zero.}
 \label{tab:p7-satband-overdeesc}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lrrrr}
 \toprule
 controller & over-deesc rate & 95\% CI & mean $\Delta\mathrm{ZvF}$ & 95\% CI \\
@@ -1608,7 +1611,8 @@ Hybrid (de-escalate to $G{=}4$) & \textbf{5.73\%} & [4.69\%, 6.25\%] & $+0.0108$
 zvf-triage$\,\tau{=}0.70$ (escalate to $G{=}16$) & 0.00\% & [0.00\%, 0.00\%] & $-0.0054$ & [$-$0.0085, $-$0.0024] \\
 Dualformer-Auto (per-prompt rule) & 1.04\% & [0.00\%, 2.60\%] & $0.0000$ & [$-$0.0043, $+$0.0043] \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \paragraph{What the iter-31 prediction says vs what the per-prompt
@@ -1684,6 +1688,7 @@ controller acts on and the per-prompt headroom ceiling that recovery
 would consume. $\rho \le 0.31$ across all four methods: the step-level
 ZVF is a POOR predictor of per-prompt headroom.}
 \label{tab:p7-headroom-recovery}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lrrrr}
 \toprule
 method & $n_{\mathrm{mixed}}$ & C1 zvf-triage & C2 Dualformer & C3 Hybrid \\
@@ -1695,7 +1700,8 @@ areal & 188 & $\mathbf{0.6380}$ [$0.455$, $0.824$] & $\mathbf{-1.0078}$ [$-1.298
 \midrule
 \multicolumn{2}{l}{$\rho(z_{\mathrm{step}}, \mathrm{headroom})$} & $0.2339$ (grpo) & $0.3125$ (aero) & $0.0133$ (gift) / $0.2034$ (areal) \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \paragraph{Three falsifiable findings.}
@@ -1754,7 +1760,8 @@ $\ge 90\%$ of the ceiling.
 
 (ii) On the same panel, Dualformer-Auto's contrast recovery should
 rise from $-100\%$ to $\ge 50\%$, eliminating the compute-vs-contrast
-trade-off and validating Dualformer-Auto as the default controller.
+trade-off and supporting a future matched-budget comparison of
+Dualformer-Auto as a candidate controller.
 
 (iii) The Hybrid's contrast recovery on boundary-band steps
 ($45$\%--$65\%$) is robust to $\tau$ choice (the boundary-band width
@@ -1811,6 +1818,7 @@ reports the Pareto-efficient operating points on the
 \begin{table}[t]
 \centering
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{cccccccc}
 \toprule
 rank & $\tau_{\mathrm{esc}}$ & $\tau_{\mathrm{des}}$ & $\delta$ &
@@ -1822,7 +1830,8 @@ $\mathrm{seed{-}CV}_{G_{\mathrm{tot}}}$ & $N2$ $\mathrm{savings}$ \\
 3 & 0.65 & 0.75 & 0.10 & $+0.1400$ & $[+0.1000, +0.1733]$ & 0.0514 & $+0.3646$ \\
 4 & 0.70 & 0.75 & 0.05 & $+0.1400$ & $[+0.0933, +0.1733]$ & 0.0514 & $+0.3646$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Calibrated Adaptive-G Controller Bank Pareto-efficient
 operating points (headroom-bad $= 0$ on all four ranks).
 The calibrated row (2) is the lowest $\mathrm{seed{-}CV}$ operating
@@ -1946,16 +1955,15 @@ by escalating}. A structurally degenerate group is degenerate at
 every $G$ -- no amount of additional sampling can restore
 within-group contrast.
 
-\paragraph{Design recommendation.}
+\paragraph{Descriptive branch result and prospective candidate.}
 The escalation branch of the iter-51 unified controller is
 operationally inert on the boundary-degenerate regime. Its savings
 come \emph{entirely from de-escalation}. A leaner controller that
 omits the escalation branch -- the simple
-``if $z_{t,p}=1$: $G = G_{\mathrm{base}}/2$'' rule -- would
-recover the full $+9.39\%$ savings with half the trigger surface.
-The escalation band is kept for cross-paper transferability
-(e.g.\ future non-binary per-prompt zvf panels) but contributes
-zero marginal savings on the empirical N2 panel.
+``if $z_{t,p}=1$: $G = G_{\mathrm{base}}/2$'' rule -- is a
+pre-registered candidate for matched-budget held-out evaluation. On this
+empirical N2 panel it would recover the observed $+9.39\%$ savings with half
+the trigger surface; the escalation band contributes zero marginal savings.
 
 \paragraph{When does each controller fire? -- granularly.}
 On the $2560$-decision N2 panel: per-step controller fires
@@ -2164,8 +2172,8 @@ substitutable: Dualformer de-escalates contrast prompts that need
 fewer rollouts (cheap); $\delta_{\mathrm{div}}$-triage escalates
 boundary prompts whose headroom is large (targeted). A
 \emph{joint} controller that applies Dualformer on contrast prompts
-\emph{and} $\delta_{\mathrm{div}}$-triage on boundary prompts would
-combine both savings; this is the iter-71 primary recommendation.
+\emph{and} $\delta_{\mathrm{div}}$-triage on boundary prompts is a
+prospective joint-controller hypothesis for matched-budget held-out evaluation.
 
 \paragraph{Headline F4 (per-method $\delta_{\mathrm{div}}$ save-rate CIs).}
 The saves/100-prompts metric (rate per prompt, $n{=}640$ obs, $n_{\mathrm{boot}}{=}2000$) is a stable alternative to the noisier saved/fire ratio:
@@ -2211,17 +2219,16 @@ G{=}16 & \text{if $\delta_{\mathrm{div}} \geq \tau$} \\
 Each branch is a well-defined boundary case of the parametric family
 $\bigl(G_{\mathrm{low}}, G_{\mathrm{base}}, G_{\mathrm{high}}; \tau\bigr)$
 with Berkeley row 01, row 19, and iter-67 fixing
-$(2, 8, 16; 0.05)$ respectively. The calibrated operating point in
-this iteration-71 framing is the one maximising saved/fire at the matched
-cost ratio closest to $1.0$; from F2 above that is
-$\delta_{\mathrm{div}}$-triage@$\tau{=}0.05$ on grpo/aero
-(saved/fire $\approx 0.40$, cost ratio $\approx 1.18$).
+$(2, 8, 16; 0.05)$ respectively. On this iteration-71 N2 framing,
+$\delta_{\mathrm{div}}$-triage@$\tau{=}0.05$ maximises saved/fire at the
+matched cost ratio closest to $1.0$ (saved/fire $\approx 0.40$, cost ratio
+$\approx 1.18$). It is an observed operating point, not a deployment designation.
 
 \paragraph{Why this matters.}
 \begin{itemize}
     \item \textbf{Refutes Berkeley row 01 on N2}: the 56.2\% saving
         claim is corpus-mix-dependent; the falsifiable sub-claim is
-        ``on a contrast-rich corpus (≥ 50\% contrast prompts),
+        ``on a contrast-rich corpus ($\geq 50\%$ contrast prompts),
         Dualformer-Auto recovers the 56.2\% saving headline''.
     \item \textbf{Closes the loop from iter-66 row 77
         $\delta_{\mathrm{div}}$ to a per-prompt counterfactual
@@ -2233,8 +2240,8 @@ $\delta_{\mathrm{div}}$-triage@$\tau{=}0.05$ on grpo/aero
         independent measurements fixing the operating point.
     \item \textbf{Mints an open follow-up}: a joint controller that
         applies Dualformer on contrast prompts AND
-        $\delta_{\mathrm{div}}$-triage on boundary prompts would
-        combine both savings and is the iter-71 primary recommendation.
+        $\delta_{\mathrm{div}}$-triage on boundary prompts is a
+        prospective joint-controller hypothesis for held-out evaluation.
 \end{itemize}
 
 \paragraph{Reproduction.}
@@ -2253,7 +2260,7 @@ $n_{\mathrm{obs\ total}}{=}2560$.
 $\delta_{\mathrm{div}}$-triage on fired steps (iter 72)}
 \label{sec:p7-joint-controller}
 
-The iter-71 primary recommendation explicitly asked: \emph{can a single
+The iter-71 prospective hypothesis asked: \emph{can a single
 controller combine Dualformer-Auto (de-escalate contrast to $G'{=}2$)
 and $\delta_{\mathrm{div}}$-triage (escalate high-headroom steps to
 $G'{=}16$) into one end-to-end policy?} This sub-subsection answers
@@ -2321,20 +2328,21 @@ on $\mathrm{net\_saves}$: \texttt{grpo} $529$ $[493, 564]$;
 $\sim 70$ to $75$), so the joint controller's net saves is statistically
 well-determined on this corpus.
 
-\paragraph{$\tau$-sweep and best operating point.}
+\paragraph{$\tau$-sweep and observed trade-off.}
 Across $\tau \in \{0.03, 0.04, 0.05, 0.06, 0.07\}$, $\mathrm{net\_saves}$
 is monotonically increasing in $\tau$ for every method (because higher
 $\tau$ means fewer fired steps, hence more contrast prompts routed to
 the cheaper Dualformer branch). All four methods peak at
 $\tau{=}0.07$: \texttt{grpo} $731$, \texttt{aero} $910$,
-\texttt{areal} $662$, \texttt{gift} $646$ — but at lower ZVF recovery
-($16$–$32$ per method vs $35$–$51$ at $\tau{=}0.05$). The
-$\tau{=}0.05$ operating point is the best trade-off between rollout
-saves and ZVF recovery; the canonical headline.
+\texttt{areal} $662$, \texttt{gift} $646$ --- but at lower ZVF recovery
+($16$--$32$ per method vs $35$--$51$ at $\tau{=}0.05$). On this N2
+same-stack corpus, $\tau{=}0.05$ is the observed trade-off point between
+rollout saves and ZVF recovery and a prospective candidate for a
+matched-budget held-out comparison.
 
 \paragraph{Cross-paper coupling.}
-The joint controller operationalises the iter-71 row-83 mint
-recommendation. P6 iter-70 row-82
+The joint controller instantiates the iter-71 row-83 prospective
+hypothesis. P6 iter-70 row-82
 \texttt{controller\_predicted\_savings\_per\_rollout} block now has a
 machine-readable savings entry per method $\times \tau$ for the joint
 controller; future P6 audit can ask ``which method has the largest
@@ -2344,18 +2352,18 @@ anti-herding diversity bonus; this iteration applies it as a step-level
 escalation trigger, the same axis it was measured on. Berkeley row-01
 Dualformer's 56.2\% saving claim is not reproducible on N2 (iter-71
 row 83), but this iteration recovers 426 to 546 saves per method all from
-contrast prompts at $G'{=}2$ — exactly the Berkeley saving mechanism,
+contrast prompts at $G'{=}2$ --- exactly the Berkeley saving mechanism,
 bounded above by the contrast-prompt fraction.
 
-\paragraph{Operational recommendation.}
-For adaptive-G selection on the N2 same-stack corpus, the joint
-controller strictly dominates $\delta_{\mathrm{div}}$-only at every
-$\tau$ (additive Dualformer rollout savings). The recommended
-operating point is $\tau{=}0.05$, with $\mathrm{net\_saves} \in [477,
-587]$ per method at cost ratio $[1.24, 1.42]$. Reviewers weighting
-cost linearly should pick dualformer-only at the contrast-only
-operating point ($0.79$–$0.83$); reviewers weighting ZVF recovery
-should pick the joint controller.
+\paragraph{Prospective candidate comparison.}
+For adaptive-G selection, the joint and $\delta_{\mathrm{div}}$-only rules
+are pre-registered candidates for a matched-budget held-out evaluation, not
+controller recommendations. On the N2 same-stack corpus, the joint rule
+descriptively dominates $\delta_{\mathrm{div}}$-only at every $\tau$
+(additive Dualformer rollout savings). At $\tau{=}0.05$, its
+$\mathrm{net\_saves} \in [477,587]$ per method at cost ratio $[1.24,1.42]$.
+That future evaluation can compare this ZVF-recovery candidate with the
+dualformer-only contrast-only candidate ($0.79$--$0.83$).
 
 \paragraph{Reproduction.}
 \texttt{python3 scripts/p5p8/p7\_joint\_controller.py}

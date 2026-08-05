@@ -32,7 +32,7 @@ g_{\mathrm{dual}}(p_{\mathrm{hat}}) &=
 \gamma^*{=}0 \text{ anchor} &:= \text{do not escalate unless both signals agree} \quad\text{(Berkeley row 19)} \notag \\
 \mathrm{fire}_{\mathrm{dual}} &:= \bigl[g_{\mathrm{dual}}(p_{\mathrm{hat}}) \ne G_{\mathrm{base}}\bigr]
    \wedge \bigl[4\,p_{\mathrm{hat}}(1-p_{\mathrm{hat}}) > 0.05\bigr] \notag \\
-\mathrm{fire}_{\mathrm{zvf}}  &:= z_{\mathrm{obs}} \geq \tau_{z} \quad\text{(default $\tau_{z}=0.70$)} \notag
+\mathrm{fire}_{\mathrm{zvf}}  &:= z_{\mathrm{obs}} \geq \tau_{z} \quad\text{(candidate reference $\tau_{z}=0.70$)} \notag
 \intertext{then}
 G_{C_6}(p_{\mathrm{hat}}, z_{\mathrm{obs}}) &=
   \begin{cases}
@@ -43,9 +43,9 @@ G_{C_6}(p_{\mathrm{hat}}, z_{\mathrm{obs}}) &=
 \end{align}
 The first branch (both signals agree) is the calibrated-hybrid core;
 the second branch is the safe-$z_{\mathrm{obs}}$ fallback; the
-third is the $\gamma^*{=}0$ anchor. $C_6$'s default
+third is the $\gamma^*{=}0$ anchor.  $C_6$'s candidate reference
 $\tau_{z} = 0.70$ matches iter-167 $C_1$'s threshold for direct
-comparability.
+comparability and remains subject to matched-budget held-out evaluation.
 
 \subsubsection*{Headline --- Pareto frontier on N2 ($z_{\mathrm{obs}} \geq 0.70$)}
 

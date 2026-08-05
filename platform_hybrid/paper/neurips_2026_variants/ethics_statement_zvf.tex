@@ -35,17 +35,17 @@ enable, and we describe the existing guardrails and the residual risk we
 judge acceptable for publication.
 
 \paragraph{M1. Weaponisation of mathematical reasoning.}
-The most capability-relevant artefact we release is GRPO training code that
-improves grade-school arithmetic and multi-step reasoning. A malicious
+The most capability-relevant artefact we release is GRPO training code evaluated
+on grade-school arithmetic and multi-step reasoning; the reviewed evidence is
+inconclusive about a capability improvement. A malicious
 operator could attempt to extend this pipeline to tasks of greater
 dual-use concern, e.g., chemistry olympiad problems, cryptographic key
 recovery, or financial fraud. We judge the \emph{marginal} uplift provided
-by our release to be small for three reasons. First, GRPO at our training
-scale does not create new capabilities; the base-model control for GSM8K
-(Section~\ref{sec:results}, 82.0\%) shows that the bulk of held-out
-accuracy is attributable to Qwen3-8B's pretraining. Our full GRPO run only
-adds \(+1.3\) percentage points ($p{=}0.26$, not statistically significant).
-Second, the public literature already contains GRPO implementations
+by our release to be small for three reasons. First, the later, separate
+five-seed Qwen3-8B GSM8K comparison reports $83.3\%$ versus a fixed-base
+$82.0\%$; its $p{=}0.26$ is a one-sample seed-level test against that fixed
+baseline, not a paired-seed test and not reviewed-record evidence of capability
+improvement. It therefore does not establish an uplift. Second, the public literature already contains GRPO implementations
 \cite{shao2024deepseekmath, openrlhf2024, verl2024, trl2020} that are at
 least as capable. Third, any reasoning uplift is bounded by the rewarder:
 GSM8K rewards use exact-match against a human-written gold answer, which
@@ -356,10 +356,12 @@ stack can achieve for critic-free RL at our scales.
   \item Every figure and every summary statistic derived solely from
         Tinker data is marked with ``\dag'' and a footnote stating that
         independent replication requires Tinker API access.
-  \item Primary inferential claims are limited to (i) the mechanical
-        zero-gradient theorem (Appendix~\ref{sec:appendix:zvf-formalization})
-        and (ii) the held-out 5-seed Qwen3-8B GSM8K control reported in
-        Section~\ref{sec:limitations}. The Tinker-derived stratified ZVF
+  \item The only reviewed-record inferential claim is the mechanical centered
+        reward-contrast identity under the stated runner assumptions
+        (Appendix~\ref{sec:appendix:zvf-formalization}). The later held-out
+        5-seed Qwen3-8B GSM8K comparison is one-sample seed-level,
+        fixed-baseline future-paper evidence, not paired-seed or
+        reviewed-record evidence and not a primary claim. The Tinker-derived stratified ZVF
         correlations (Section~\ref{sec:zvf-analysis}) are reported as
         artifact analyses with explicit closed-backend caveats and
         single-seed-per-cell limitations, not as platform-independent
@@ -392,8 +394,10 @@ methodological limits.
 All Tinker GRPO runs were capped at 30--50 gradient steps. This is a
 deliberate cost-control choice and means our Tinker numbers are
 \emph{early-training snapshots}. We cannot rule out that longer training
-would change the qualitative picture (e.g., the 82\%$\to$83.3\% held-out
-gain might widen, or might collapse to reward hacking).
+would change the qualitative picture. The later, separate five-seed
+$82.0\%\to83.3\%$ comparison is a one-sample seed-level test against a fixed
+baseline ($p{=}0.26$), not paired-seed or reviewed-record evidence; it cannot
+support an extrapolation about longer training.
 
 \paragraph{Single-seed Tinker experiments.}
 Each Tinker configuration was run once, not 3--5 times as best practice

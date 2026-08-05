@@ -57,11 +57,11 @@ addition to the nominal RL algorithm. They do \emph{not} yet justify a
 universal optimal group size or a general ``SFT dominates RL'' law.
 
 Finally, we explicitly separate training reward from held-out generalization.
-For Qwen3-8B-Instruct on GSM8K, a five-seed post-GRPO held-out evaluation yields
-83.3\% accuracy, but the same instruction-tuned checkpoint's pre-RL held-out
-accuracy under the identical greedy protocol is already 82.0\%; the
-+1.3 percentage-point delta is not statistically significant ($p{=}0.26$).
-This negative control matters: strong online reward curves do not by themselves
+A later, separate five-seed Qwen3-8B GSM8K comparison reports 83.3\% after
+GRPO versus a fixed-base 82.0\% under the same greedy protocol. Its
+$p{=}0.26$ is a one-sample seed-level test against that fixed baseline, not a
+paired-seed test, and it is not reviewed-record capability evidence. This
+negative control matters: strong online reward curves do not by themselves
 establish generalization gains. We release the benchmark, step-level traces,
 and checkpoints so that stronger follow-up work can test exactly these failure
 points.

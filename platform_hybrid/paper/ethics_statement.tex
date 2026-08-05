@@ -35,8 +35,9 @@ enable, and we describe the existing guardrails and the residual risk we
 judge acceptable for publication.
 
 \paragraph{M1. Weaponisation of mathematical reasoning.}
-The most capability-relevant artefact we release is GRPO training code that
-improves grade-school arithmetic and multi-step reasoning. A malicious
+The most capability-relevant artefact we release is GRPO training code evaluated
+on grade-school arithmetic and multi-step reasoning; the reviewed evidence is
+inconclusive about a capability improvement. A malicious
 operator could attempt to extend this pipeline to tasks of greater
 dual-use concern, e.g., chemistry olympiad problems, cryptographic key
 recovery, or financial fraud. We judge the \emph{marginal} uplift provided
@@ -44,8 +45,9 @@ by our release to be small for three reasons. First, GRPO at our training
 scale does not create new capabilities; the pre-RL held-out accuracy of
 Qwen3-8B-Instruct for GSM8K (Section~\ref{sec:results}, 82.0\%) shows that the
 bulk of held-out accuracy is attributable to the checkpoint's pretraining and
-instruction tuning. Our full GRPO run only adds \(+1.3\) percentage points
-($p{=}0.26$, not statistically significant).
+instruction tuning. Our 5-seed one-sample seed-level comparison against a fixed
+baseline estimates \(+1.3\) percentage points ($p{=}0.26$); it is neither
+paired-seed nor reviewed-record evidence of improvement.
 Second, the public literature already contains GRPO implementations
 \cite{shao2024deepseekmath, openrlhf2024, verl2024, trl2020} that are at
 least as capable. Third, any reasoning uplift is bounded by the rewarder:
@@ -376,8 +378,9 @@ methodological limits.
 All Tinker GRPO runs were capped at 30--50 gradient steps. This is a
 deliberate cost-control choice and means our Tinker numbers are
 \emph{early-training snapshots}. We cannot rule out that longer training
-would change the qualitative picture (e.g., the 82\%$\to$83.3\% held-out
-gain might widen, or might collapse to reward hacking).
+would change the qualitative picture. The later 82\%$\to$83.3\% comparison
+is one-sample fixed-baseline evidence, not paired-seed or reviewed-record
+evidence; it is not a held-out gain whose size can be extrapolated.
 
 \paragraph{Single-seed Tinker experiments.}
 Each Tinker configuration was run once, not 3--5 times as best practice

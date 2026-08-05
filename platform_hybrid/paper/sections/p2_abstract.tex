@@ -1,8 +1,9 @@
 % Pillar-2 (ZVF) standalone abstract
 \begin{abstract}
-In GRPO, a prompt produces no learning signal when all $G$ sampled completions
-receive identical rewards: the group-centered advantages are zero and the gradient
-vanishes. The \emph{Zero-Variance Fraction} (ZVF)---the share of groups in this
+In the submitted GRPO runner, a prompt has a zero centered reward-contrast term
+when all $G$ sampled completions receive identical rewards: the group-centered
+advantages are zero. This does not assert that the total gradient vanishes. The
+\emph{Zero-Variance Fraction} (ZVF)---the share of groups in this
 degenerate state---is therefore a natural diagnostic of when binary, verifiable
 rewards stop training the policy. We study ZVF as one pillar of \ours{}, a
 benchmark of 70+ RL runs across seven libraries and five model families
@@ -24,3 +25,6 @@ The former short stratified NeurIPS framing (roster R02) is retired from the
 live tree to \texttt{archive/absorbed/R02\_main\_zvf/}. Its evidence is this
 paper; do not count R02 as a separate submission.
 \end{abstract}
+\paragraph{August 2026 evidence boundary.} ZVF is a descriptive accounting
+quantity. Homogeneous rewards zero the submitted centered reward-contrast term,
+not necessarily a total gradient in objectives with KL, clipping, or auxiliary loss.

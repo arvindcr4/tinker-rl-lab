@@ -32,6 +32,7 @@ plateau template for GRPO learning curves.
 \begin{table}[t]
   \centering
   \small
+  \resizebox{\linewidth}{!}{%
   \begin{tabular}{lrrrrrrrrl}
     \toprule
     Model & $N$ (B) & $n$ & mean $R$ & peak $R$ &
@@ -45,7 +46,8 @@ plateau template for GRPO learning curves.
     DeepSeek-V3.1          & 671.0 & 20 & 0.844 & 1.000 & 0.833 $\to$ 0.813 & $+0.0001$ & 0.844 & $10.0^{\dagger}$ & plateau \\
     Nemotron-120B          & 120.0 & 20 & 0.175 & 0.875 & 0.146 $\to$ 0.208 & $+0.0026$ & 0.182 & \textbf{0.99} & \textbf{collapse} \\
     \bottomrule
-  \end{tabular}
+  \end{tabular}%
+  }
   \caption{\textbf{Saturation-model fits across 4B--671B.}
     $\dagger$: the canonical
     $R(t) = R_{\max}(1 - e^{-\lambda t})$ fit hits the upper
@@ -446,6 +448,7 @@ split and its permutation test are withdrawn below:
 \begin{table}[t]
   \centering
   \small
+  \resizebox{\linewidth}{!}{%
   \begin{tabular}{lp{0.72\linewidth}}
     \toprule
     Item & Status \\
@@ -455,7 +458,8 @@ split and its permutation test are withdrawn below:
     Disposition & \textbf{Withdrawn.} Reclassification removes the architecture headline (corrected one-sided perm $p\approx 0.178$) \\
     Leave-Nemotron sensitivity & Also withdrawn: no checked-in TSV; recomputation ($+0.278$, $p\approx 0.049$) reverses the paper's earlier non-significant claim \\
     \bottomrule
-  \end{tabular}
+  \end{tabular}%
+  }
   \caption{\textbf{Withdrawn MoE-vs-dense stratification.} The only positive
     architecture claim in this section rested on a mislabelled Nemotron dense
     assignment. Primary sources: NVIDIA model card and Nemotron~3 Super technical
@@ -1049,6 +1053,7 @@ $\bar R_{\text{seg}_1} < 0.15$ AND $\bar R_{\text{seg}_3} > 0.40$):
 \begin{table}[t]
   \centering
   \small
+  \resizebox{\linewidth}{!}{%
   \begin{tabular}{lrrrrl}
     \toprule
     Model & best $k$ & $\Delta$BIC$_{3v1}$ & Phase &
@@ -1061,7 +1066,8 @@ $\bar R_{\text{seg}_1} < 0.15$ AND $\bar R_{\text{seg}_3} > 0.40$):
     DeepSeek-V3.1          & 3 & $-2.31$ & non-monotone & 0.867 / 0.844 & no \\
     Nemotron-120B          & 3 & $-6.53$ & \textbf{collapse} & 0.875 / 0.154 & \textbf{no} \\
     \bottomrule
-  \end{tabular}
+  \end{tabular}%
+  }
   \caption{\textbf{Iter 117 BIC-segmentation three-phase test against
     \citet{nimmaturi2025predictive} (arXiv:2507.18014).}
     $\Delta$BIC$_{3v1}$ is the BIC difference between $k=3$ and
@@ -1106,6 +1112,7 @@ outcome-reward RL post-training evidence base}.
 \begin{table}[t]
   \centering
   \small
+  \resizebox{\linewidth}{!}{%
   \begin{tabular}{lrrrrl}
     \toprule
     Regression & $n$ & intercept & slope / decade &
@@ -1114,7 +1121,8 @@ outcome-reward RL post-training evidence base}.
     $\log_{10}(t_{80}) \sim \log_{10}(N)$              & 5 & $-0.841$ & $+0.170$ & 4/5 & degenerate (4/5 anchored) \\
     $\log_{10}(t_{80}) \sim \log_{10}(N)$ [$\lambda$-free] & 1 & n/a     & n/a       & 4/5 & single-point (Nemotron only) \\
     \bottomrule
-  \end{tabular}
+  \end{tabular}%
+  }
   \caption{\textbf{$t_{80}$-vs-$N$ scaling law test (iter 117 fresh
     angle).}  The full-pool OLS gives slope $+0.170$/decade with
     SE $0.254$ (CI brackets zero).  Restricting to anchors with
@@ -1281,6 +1289,7 @@ fit entirely and use the variance-based \textsc{zvf} gate
 \begin{table}[t]
   \centering
   \small
+  \resizebox{\linewidth}{!}{%
   \begin{tabular}{lrrrl}
     \toprule
     Test & statistic & 95\% CI / $p$ & verdict & note \\
@@ -1301,7 +1310,8 @@ fit entirely and use the variance-based \textsc{zvf} gate
       $0.07$ & M=200 reps &
       undetectable & bound-fraction dominates \\
     \bottomrule
-  \end{tabular}
+  \end{tabular}%
+  }
   \caption{\textbf{Iter 121 detection-power calibration.}
     Three independent statistical tests on the five-anchor pool
     all fail to reject $H_0$ of no scaling signal.  The synthetic
@@ -1542,7 +1552,7 @@ Across the seven reliable anchors the iter~125 three-phase
 diagnostic finds only $2/7$ anchors (Qwen3-8B and gpt-oss-20B)
 satisfying the \textsc{nimmaturi}-style ``improvement $\to$ plateau
 $\to$ collapse'' template.  Per-anchor phase-combo counts show the
-dominant pattern is still collapse_only ($5/7$), so the template is
+dominant pattern is still \texttt{collapse\_only} ($5/7$), so the template is
 not universal across the reliable anchor pool even though two anchors
 match the full signature.
 

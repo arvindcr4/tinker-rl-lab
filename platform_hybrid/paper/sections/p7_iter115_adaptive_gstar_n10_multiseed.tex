@@ -74,10 +74,12 @@ $\tau$-points. Bootstrap CI B=2000, seed=20260705.
   ADAPTIVE-G* Pareto-dominates (N2 mean nb $\approx+0.06$,
   $19.2\%$ GIFT-only salvage rate); the same rule underperforms on
   step-aggregate inversion (N10 mean nb $-0.37$).
-\item Operational: at the N10 step-aggregate regime, the $G=64$
-  escape hatch is a pessimal choice; \texttt{DUALFORMER\_d4}
-  ($1.5\times$ cost) is the cost-conscious Pareto winner among
-  dynamic rules with mean nb $-0.09$ vs STATIC\_G16.
+\item On the N10 step-aggregate regime, the observed $G=64$ escape-hatch
+  result has the lowest net-benefit proxy among the replayed rules, while
+  \texttt{DUALFORMER\_d4} ($1.5\times$ cost) has the highest observed
+  proxy among the dynamic rules (mean nb $-0.09$ vs STATIC\_G16).  These
+  rules are prospective candidates for a matched-budget held-out evaluation,
+  not operational selections.
 \item Cross-couples to the Dualformer row 01 (the Berkeley row 01
   rule that iter-115 reduces to $d_4$); the Alphaproof row 19
   ($\gamma^*=0$ says ``no look-ahead smoothing is best'', consistent

@@ -44,16 +44,26 @@ model without supervised cold-start data. A second wave of refinements
 dissects the biases of vanilla GRPO. Dr.~GRPO~\cite{tong2025drgrpo} removes a
 response-length bias and a question-difficulty amplification bias by using a
 constant loss normaliser and dropping the standard-deviation denominator in the
-advantage. GDPO~\cite{liu2026gdpo} decouples group-relative normalisation per
-reward component, preventing advantage collapse when rewards are multi-valued.
-MC-GRPO (median-centered advantage)~\cite{mcgrpo2025} replaces the
+advantage. MC-GRPO (median-centered advantage)~\cite{mcgrpo2025} replaces the
 group-mean baseline in the advantage with the group median to stabilise
 group-relative normalisation under small rollout counts. G$^{2}$RPO~\cite{hu2026openvlthinker} forces per-prompt
 advantages to match $\mathcal{N}(0,1)$ to fix reward-topology variance in
-multimodal settings. Wu et al.~\cite{wu2025grpo_dpo} prove that GRPO is
+multimodal settings. Wu et al.~\cite{wu2025grpodpo} prove that GRPO is
 ``secretly DPO'' --- the group-level advantage is an implicit contrastive
 objective --- and show that 2-GRPO retains $98.1\%$ of the performance of
 16-GRPO at $12.5\%$ of the rollout budget.
+
+Recent 2026 work further raises the bar for this diagnostic. Advantage
+Collapse/AVSPO studies diagnosis and mitigation of homogeneous-group
+updates~\cite{he2026advantage}; query recycling treats zero-variance queries
+as candidates for later resampling~\cite{coelho2026recycling}; and ConSPO
+analyzes a clipped, contrastive GRPO objective and proposes a distinct
+sequence-level alternative~\cite{zhang2026conspo}. Goldilocks RL instead
+adapts task difficulty under a GRPO training setup~\cite{mahrooghi2026goldilocks}.
+These works are prior or concurrent interventions, not evidence for our reviewed
+runner. Accordingly, this paper claims neither priority nor an intervention
+effect: it confines itself to a submitted-runner accounting identity and an
+evidence audit.
 
 A parallel thread focuses on \emph{production-scale} refinements. GSPO, from
 the Qwen team~\cite{qwen2025gspo}, redefines the importance ratio at the

@@ -41,8 +41,9 @@ G^\star \;=\; \min\bigl\{G' \in \{2,4,6,8,10,12,16,24,32\} :
 with $\tau_y \in \{0.50, 0.70, 0.90, 0.95\}$ swept.  The cost-efficiency
 metric is \emph{yield-restored per 1000 extra rollouts} (analog of
 iter-80 row 95's per-1k bit-coupling, applied to the per-prompt
-contrastive-yield axis).  Default to $G_{\text{base}}$ if no $G'$
-achieves the target.
+contrastive-yield axis).  In this candidate definition, the formula returns
+$G_{\text{base}}$ when no $G'$ achieves the target; deployment use requires
+matched-budget held-out evaluation.
 
 \paragraph{Per-method cost-efficiency on the N2 four-method tensors.}
 Table~\ref{tab:p7-iso-g-cost-eff} reports the headline.  Iso-G@$\tau_y{=}0.90$
@@ -139,25 +140,23 @@ suggests the \textbf{per-step analog} of Items 14-17
 (per-step K\_unique\_count distribution) would identify Iso-G's
 fired-step set in a unified framework.
 
-\paragraph{Operational recommendation.}
-Deploy Iso-G@$\tau_y{=}0.90$ as the \textbf{default per-prompt
-controller} when the prompt distribution contains $\ge 5\%$
-mid-range $k$ values (i.e., at least one prompt per 20 has
-$k \in \{2,3,4,5,6\}$).  On the N2 four-method corpus
-($\approx$27\% mid-range) the gain is 6--10$\times$ over
-zvf-triage and 5--7$\times$ over Hybrid, with 95\% CIs that
-exclude 1.0 on every method.  On fully-saturated panels
-(e.g., iter-31 sat-band panels) Iso-G's de-escalation branch
-fires on every prompt and the controller degenerates to
-Dualformer-Auto, exactly as predicted by the menu-coarseness
-release.
+\paragraph{Prospective candidate policy.}
+Iso-G@$\tau_y{=}0.90$ is a pre-registered per-prompt candidate for
+matched-budget held-out evaluation when the prompt distribution contains
+$\ge 5\%$ mid-range $k$ values (at least one prompt per 20 has
+$k \in \{2,3,4,5,6\}$); it is not a default deployment controller. On the
+N2 four-method corpus ($\approx$27\% mid-range), the descriptive gain is
+6--10$\times$ over zvf-triage and 5--7$\times$ over Hybrid, with 95\% CIs
+excluding 1.0 on every method. On fully saturated panels (for example,
+iter-31 sat-band panels), Iso-G's de-escalation branch fires on every prompt
+and degenerates to Dualformer-Auto, as predicted by the menu-coarseness release.
 
 \paragraph{Reproduction.}
-\texttt{python3 platform\_modal/scripts/p5p8/p7\_iter83\_iso\_g.py} ($218$ LoC,
-stdlib only); \texttt{python3 platform\_modal/scripts/p5p8/p7\_iter83\_iso\_g_boot.py}
+\path{python3 platform_modal/scripts/p5p8/p7_iter83_iso_g.py} ($218$ LoC,
+stdlib only); \path{python3 platform_modal/scripts/p5p8/p7_iter83_iso_g_boot.py}
 ($138$ LoC, stdlib only, $B{=}2000$ paired-step bootstrap,
 seed $20260705$).  Outputs:
-\texttt{platform\_hybrid/experiments/results/p5p8/p7\_iter83\_iso\_g\_per\_prompt.tsv}
-and \texttt{p7\_iter83\_iso\_g\_per\_method.tsv}
-($36$ rows), \texttt{p7\_iter83\_iso\_g\_boot.tsv} ($4$ rows),
-\texttt{p7\_iter83\_iso\_g\_summary.json}.
+\path{platform_hybrid/experiments/results/p5p8/p7_iter83_iso_g_per_prompt.tsv}
+and \path{p7_iter83_iso_g_per_method.tsv}
+($36$ rows), \path{p7_iter83_iso_g_boot.tsv} ($4$ rows),
+\path{p7_iter83_iso_g_summary.json}.

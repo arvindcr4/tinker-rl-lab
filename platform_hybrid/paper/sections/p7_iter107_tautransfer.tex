@@ -47,12 +47,12 @@ Every pair achieves $r \ge 0.983$; every CI lower bound is $\ge 0.935$.
 \textbf{The trigger savings response is essentially method-invariant on the
 N2 panel}: a $\tau$ calibrated on any single method transfers to the other
 three at $r \ge 0.98$.  This is the empirical fingerprint of a method-agnostic
-controller and licenses a single-$\tau$ default in the design rules
-(Section~\ref{sec:p7-rules}).
+controller.  A single-$\tau$ candidate remains subject to matched-budget
+held-out evaluation rather than being licensed as a deployment default.
 
 \subsection{Per-method Pareto point is shared: $\tau^*{=}0.90$ on every method}
 
-On the savings $\times$ retention product, every method picks
+On the savings $\times$ retention product, every method has
 $\tau^*{=}0.90$ as the highest-scoring point on the grid
 (Table~\ref{tab:p7-iter107-pareto}).
 
@@ -123,7 +123,7 @@ not a bug -- it is the iter-103 design rule's saturation honesty.
 \centering\small
 \caption{Cohen's $\kappa$ on per-step failure-class assignment at three
 canonical $\tau$ operating points (Section~\ref{sec:p7-controller-cf};
-$\tau{=}0.70$ is the iter-103 originally recommended default,
+$\tau{=}0.70$ is the iter-103 original candidate default,
 $\tau{=}0.90$ is the per-method Pareto optimum).}
 \label{tab:p7-iter107-kappa}
 \vspace{2pt}
@@ -149,7 +149,7 @@ failure-share table.
 
 \subsection{Connection to the iter-103 unified controller}
 
-Iter-103 picked $\tau{=}0.70$ as the iter-103 default because that was
+Iter-103 recorded $\tau{=}0.70$ as its candidate setting because that was
 the cheapest non-trivial trigger.  Iter-107 shows that on the iter-103
 Pareto criterion ($\mathrm{sav} \times \mathrm{ret}$), $\tau{=}0.90$ is
 $1.46\times$ the joint score on every method; on the "max retention"
@@ -157,6 +157,8 @@ criterion (closest to iter-103's intent), $\tau{=}0.70$ wins because it
 exceeds baseline contrast by $\Delta = +0.0001 \cdot \mathrm{base\_mag}$
 ($\le 0.04$ of a single prompt's full contrast).  The two are NOT in
 tension; they reflect two Pareto-optimal operating points along the
-savings $\leftrightarrow$ retention frontier.  We retain $\tau{=}0.90$ as
-the default for budget-constrained deployment, and $\tau{=}0.70$ as the
-default for research settings that prioritise contrast recovery.
+savings $\leftrightarrow$ retention frontier. $\tau{=}0.90$ and
+$\tau{=}0.70$ are prospective, pre-registered candidate policies: the former
+for a budget-constrained matched-budget held-out comparison and the latter for
+a contrast-recovery comparison. Neither is a deployment default without that
+evaluation.

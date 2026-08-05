@@ -53,7 +53,8 @@ variance control per se.
 \paragraph{NGRPO (Negative-enhanced GRPO)~\cite{nan2025ngrpo}.}
 NGRPO~\citep{nan2025ngrpo} reshapes the contribution of \emph{all-incorrect}
 (``negative'') groups. In vanilla GRPO an all-wrong group has zero within-group
-reward variance and therefore contributes no gradient; NGRPO modifies the
+reward variance and therefore has a zero centered reward-contrast term under
+the stated runner assumptions; NGRPO modifies the
 advantage so that such negative groups still carry a learning signal, directly
 targeting the all-equal-outcome event that ZVF counts on the failure side.
 

@@ -19,7 +19,8 @@ $\varepsilon$ is a small numerical tolerance
 (we use $\varepsilon = 10^{-6}$ for rewards normalized to $[0,1]$).
 Intuitively, $\mathrm{ZVF}_t$ is the fraction of groups at step $t$ whose
 rollouts all collapsed to the same outcome; those groups contribute zero
-group-relative advantage and thus zero gradient signal to the GRPO update.
+group-relative advantage and hence zero centered reward-contrast signal in the
+stated group-standardized objective, not necessarily zero total gradient.
 
 \subsection{Why ZVF Is Not a Tautological Re-expression of Mean Reward}
 

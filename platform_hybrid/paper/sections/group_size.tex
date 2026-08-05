@@ -15,7 +15,7 @@
 \paragraph{Headline question.}
 A reviewer (and the recent theoretical literature) asks: \emph{is GRPO's
 group size $G$ a real hyperparameter or is it effectively constant?}
-Wu et al.~\cite{wu2025grpo_dpo} prove that GRPO is algebraically
+Wu et al.~\cite{wu2025grpodpo} prove that GRPO is algebraically
 equivalent to an implicit contrastive objective (DPO), with $G$ affecting
 only Monte Carlo variance, and report that \textbf{2-GRPO retains
 97.6\% of 16-GRPO performance} while requiring only 12.5\% of the
@@ -66,6 +66,7 @@ Table~\ref{tab:groupsize-summary}:
 \begin{table}[htbp]
 \centering
 \small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lcccc}
 \toprule
 Source & $G$ range & Optimum & Best heldout acc. & $G{=}2$ retains of $G{=}16$ \\
@@ -74,7 +75,8 @@ Qwen2.5-0.5B / arithmetic (measured) & 2--16 & 8 & $0.990 \pm 0.003$ & $100.3\%$
 Qwen3-8B / GSM8K, $T{=}1\,$M (illustrative)   & 4--64 & 8  & $0.48$ & n/a \\
 Qwen3-8B / GSM8K, $T{=}64\,$M (illustrative) & 4--64 & 32 & $\mathbf{0.88}$ & n/a \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Group-size sweep summary, three sources. \emph{Measured} entries
 are real per-seed runs ($n{=}3$); the \emph{illustrative} rows are the
 re-analysis in Appendix~\ref{sec:appendix:group-size-reconcile}. The
@@ -242,8 +244,9 @@ wall of $\mathrm{ZVF}(p,G)=p^G+(1-p)^G$), while the $G{=}16$ arms end
 mid-learning (train reward $\approx0.3$--$0.5$) with
 $\mathrm{ZVF}\le0.25$ throughout. On this budget the small-$G$ arm wins
 the train-reward race outright --- and that is precisely the trap: it
-spends its final optimizer steps in an endgame where most groups carry
-zero gradient, while the reward curve reads success. Artifacts:
+spends its final optimizer steps in an endgame where most groups have zero
+centered reward contrast in the stated runner, while the reward curve reads
+success; this does not transfer to every total-gradient contribution. Artifacts:
 \texttt{tinker-runs/results/er2b\_*.json}.
 
 \begin{table}[htbp]

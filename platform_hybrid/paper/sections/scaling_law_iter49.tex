@@ -42,6 +42,7 @@ The phase classifier in iter33 labels only Qwen3.5-27B as ``collapse'' (low vari
 \paragraph{Internally recorded predictions.}
 \begin{table}[ht]
 \centering\small
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{llcl}
 \toprule
 prediction & outcome & value & note \\
@@ -50,7 +51,8 @@ prediction & outcome & value & note \\
  P2: max $|{\rm resid}|$ is on Nemotron-120B & \textbf{YES} & $1.202$ & collapse signature unmistakable \\
  P3: at median $\log_{10}C=5.09$, optimal $P\in[4,30]$B & \textbf{YES} & $P^{\star}=4$B & \textbf{Qwen3.5-4B} selected at the operating point \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Three internally recorded predictions P1--P3 with measured outcomes. 2/3 pass; the lone miss is informative (saturation floor on $R_{\max}\le 1.0$ causes the linear model to underfit the ceiling).}
 \end{table}
 

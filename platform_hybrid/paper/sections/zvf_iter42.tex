@@ -1,5 +1,5 @@
 % ---------------------------------------------------------------------------
-% Pillar 2: Zero-Variance Fraction diagnostic — Iter 42 early-trace ZVF
+% Pillar 2: Zero-Variance Fraction diagnostic --- Iter 42 early-trace ZVF
 % identifiability of late failure mode (cross-pillar P1×P2 closure).
 % Materialised from scripts/zvf_iter42.py outputs:
 %   experiments/results/zvf_iter42_early_predicts.tsv
@@ -60,7 +60,7 @@ The single most informative early feature is \texttt{burden\_05}: its
 univariate AUC for the \texttt{converged} vs \texttt{plateau} binary
 is $0.975$ (\texttt{burden\_07}: $0.978$). The earliest-crossing
 features (\texttt{fp05\_frac}, \texttt{fp07\_frac}, \texttt{fp09\_frac})
-by themselves have AUC $\approx 0$ on this pool — the signal is in
+by themselves have AUC $\approx 0$ on this pool --- the signal is in
 the cumulative \emph{burden} above the threshold, not in the timing
 of the first crossing. \texttt{zvf\_lag1} has AUC $0.105$ (the
 autocorrelation structure does not separate the two classes). The
@@ -86,8 +86,8 @@ informative. The first-pass threshold captures \emph{when} ZVF first
 spiked, but every cluster in this pool \emph{does} spike ZVF past
 0.5 at some point (mean $\mathrm{fp05\_frac}$ is finite for every
 cluster). What separates \texttt{converged} from \texttt{plateau} is
-how long ZVF \emph{stays} above the threshold — the cumulative
-contrastive-loss burden — not whether it ever crossed. This is
+how long ZVF \emph{stays} above the threshold --- the cumulative
+contrastive-loss burden --- not whether it ever crossed. This is
 consistent with the iter-30 finding that the time-averaged
 \texttt{trailing\_mean\_25} (a windowed burden statistic) is the
 single most informative ZVF summary, and with iter-34's
@@ -101,7 +101,7 @@ well above the $0.05$ threshold). The corresponding collapse runs
 identified by the wider cross-experiment pool (Nemotron-120B GSM8K,
 tool-use Qwen3-32B / Llama-8B-Instruct) carry $\mathrm{ZVF}{=}1.0$
 throughout the entire trace and would be trivially separable by any
-feature — they would also be trivially separable by the i.i.d.\
+feature --- they would also be trivially separable by the i.i.d.\
 baseline $\mathrm{ZVF}_{\mathrm{iid}}(p,G)$, which is what the
 frontier synthesis flagged. The contribution of iter~42 is the
 \emph{plateau-vs-converged} identifiability claim, not a re-derivation

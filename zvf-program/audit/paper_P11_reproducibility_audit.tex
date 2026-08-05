@@ -71,9 +71,13 @@ telemetry pilot (effective $n{=}1$ per arm) is reported only as infrastructure
 evidence. The contribution is the protocol, the power-aware analysis, and one
 MDE-bounded cost observation---not an algorithm ranking.
 \end{abstract}
+\paragraph{August 2026 evidence boundary.} This later single-stack audit is
+future-paper evidence, not a repair of the reviewed \#36320 record or an
+algorithm-ranking result.
 
 \begin{figure}[htbp]
 \centering
+\resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[
     node distance=1.5cm and 1.8cm,
     stepbox/.style={rectangle, draw=red!70!black, fill=red!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.0cm, font=\small},
@@ -94,6 +98,7 @@ MDE-bounded cost observation---not an algorithm ranking.
     \draw [arrow] (p3) |- (res);
     \draw [arrow] (p1) |- (res);
 \end{tikzpicture}
+}
 \caption{\textbf{40-Unit Single-Stack Reproducibility Audit Protocol (Pillar 3).} Pre-registered execution flowchart binding stack hashes, private commit fingerprints, and aggregate equivalence verdicts.}
 \label{fig:reproducibility_audit_protocol}
 \end{figure}
@@ -124,6 +129,7 @@ secondary cost telemetry---not a fraction of a claimed gain.
 
 \begin{figure}[htbp]
 \centering
+\resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[
     node distance=1.5cm and 2.0cm,
     arm/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=3.2cm, font=\small},
@@ -137,6 +143,7 @@ secondary cost telemetry---not a fraction of a claimed gain.
     \draw [arrow] (grpo) -- (dapo);
     \draw [arrow] (dapo) -- (verdict);
 \end{tikzpicture}
+}
 \caption{\textbf{Colab A100 Treatment Equivalence Decision Tree (R08).} Statistical evaluation tree for seed-paired single-stack controlled comparisons.}
 \label{fig:reproducibility_treatment_matrix}
 \end{figure}
@@ -220,6 +227,7 @@ hierarchical trajectory schema; pooling it with arithmetic arms would violate
 the stack-lock requirement. Its separate frozen contract is
 \path{zvf-program/audit/preregistration_mgrpo.json}.
 
+\begin{sloppypar}
 \paragraph{Pre-registration.} The full audit is locked to Qwen3-8B, GSM8K,
 30 training steps, batch size 4, 1,024-token completions, a fixed held-out set
 of 500 prompts, and eight paired seeds
@@ -231,6 +239,7 @@ and wall-clock time are secondary. The machine-readable record is
 new version and is not pooled with this study. Pre-registration prevents the
 selection-by-reward bias that the audit is designed to diagnose
 \cite{zvfaudit2026}.
+\end{sloppypar}
 
 \paragraph{Hook interface.} A variant is added by implementing a small hook
 object with the following interface:
@@ -287,6 +296,7 @@ The $50\%$ retention threshold is a preregistered convention, not a comparison
 between incommensurate benchmark deltas. The equivalence margin is 0.01 in
 absolute held-out success. Sensitivity analyses at 0.005 and 0.02 are secondary.
 
+\begin{sloppypar}
 \paragraph{Executable estimand in this case study.} The frozen
 preregistration stores \texttt{published\_delta=null} for every arm. Therefore
 the \textsc{retains} rule and any fraction-of-published-gain (``survival'')
@@ -296,6 +306,7 @@ the \textsc{survives}, \textsc{disappears}, \textsc{reverses}, or
 \textsc{inconclusive} rules defined above. Historical notes that quote DAPO as
 \texttt{DISAPPEARS} are superseded by the exact-power correction
 (\S\ref{sec:stats}); that label does not appear as a result in this manuscript.
+\end{sloppypar}
 
 % =============================================================================
 \section{Statistical Protocol}
@@ -338,12 +349,14 @@ whether any unapproved lever differs. The audit proceeds only if every pairwise
 comparison returns \texttt{STACK\_MATCHED} (or \texttt{STACK\_MATERIAL} for
 levers the protocol explicitly tolerates).
 
+\begin{sloppypar}
 If a hook inadvertently changes a non-target lever---for example, a dynamic
 sampling rule that also changes the effective tokenizer chat template because
 it filters on string prefixes---\texttt{grpo-stackdiff} flags it as a
 DISTRIBUTIONAL or SEMANTIC\_OBJECTIVE diff. The hook must then be rewritten so
 that only the declared delta remains. This check is the difference between a
 ``single-trainer'' audit and a genuinely ``single-stack'' audit.
+\end{sloppypar}
 
 % =============================================================================
 \section{Locked Outputs and Execution Status}
@@ -588,212 +601,6 @@ record, and \texttt{grpo-stackdiff} verification step make it operational to
 ask of a GRPO-family result not ``did it win?'' but ``what controlled delta,
 at what cost, did the evidence actually resolve?''
 
-% --- appendix figures (moved before bibliography for denser last page) ---
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Unified Codebase};
-    \node [b2, right=of n1] (n2) {\textbf{Single-Stack Shared Codebase Isolation}\\Isolation Boundary Gate};
-    \node [b3, right=of n2] (n3) {Clean Algorithmic Delta};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Single-Stack Shared Codebase Isolation}. Isolation of algorithmic deltas within a single unified stack.}
-\label{fig:r08_fig1}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Execution Job Grid};
-    \node [b2, right=of n1] (n2) {\textbf{40-Unit Colab A100 Execution and Monitoring}\\Hardware Monitoring Engine};
-    \node [b3, right=of n2] (n3) {Clean Telemetry Logs};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{40-Unit Colab A100 Execution and Monitoring}. Execution pipeline across 40 controlled Colab A100 GPU runs.}
-\label{fig:r08_fig2}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Paired Seed Runs};
-    \node [b2, right=of n1] (n2) {\textbf{Seed-Paired Statistical Power and Bootstrapped CIs}\\Bootstrap Evaluator};
-    \node [b3, right=of n2] (n3) {95\% Confidence Bounds};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Seed-Paired Statistical Power and Bootstrapped CIs}. Bootstrapping confidence intervals for paired seed evaluations.}
-\label{fig:r08_fig3}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Claimed vs Audit Run};
-    \node [b2, right=of n1] (n2) {\textbf{DAPO controlled comparison}\\Exact-power evaluator};
-    \node [b3, right=of n2] (n3) {Inconclusive Verdict};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{DAPO controlled comparison under the single-stack audit.} The corrected finite-sample verdict is \texttt{INCONCLUSIVE}.}
-\label{fig:r08_fig4}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Claimed vs Audit Run};
-    \node [b2, right=of n1] (n2) {\textbf{GSPO controlled comparison: sequence vs token masking}\\Exact-power evaluator};
-    \node [b3, right=of n2] (n3) {Inconclusive Verdict};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{GSPO controlled comparison: sequence vs token masking.} Seed-paired single-stack evaluation; verdict \texttt{INCONCLUSIVE}.}
-\label{fig:r08_fig5}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Claimed vs Audit Run};
-    \node [b2, right=of n1] (n2) {\textbf{Dr.GRPO controlled comparison: length normalization}\\Exact-power evaluator};
-    \node [b3, right=of n2] (n3) {Inconclusive Verdict};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Dr.GRPO controlled comparison: length normalization.} Seed-paired single-stack evaluation; verdict \texttt{INCONCLUSIVE}.}
-\label{fig:r08_fig6}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Claimed vs Audit Run};
-    \node [b2, right=of n1] (n2) {\textbf{AERO controlled comparison: asymmetric clip}\\Exact-power evaluator};
-    \node [b3, right=of n2] (n3) {Inconclusive Verdict};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{AERO controlled comparison: asymmetric clip.} Seed-paired single-stack evaluation; verdict \texttt{INCONCLUSIVE}.}
-\label{fig:r08_fig7}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tikzpicture}[
-    node distance=0.9cm and 1.0cm,
-    b1/.style={rectangle, draw=blue!70!black, fill=blue!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.2cm, font=\small},
-    b2/.style={rectangle, draw=purple!70!black, fill=purple!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.6cm, font=\small},
-    b3/.style={rectangle, draw=green!70!black, fill=green!5, thick, rounded corners, align=center, minimum height=1.1cm, minimum width=2.4cm, font=\small},
-    arr/.style={-{Stealth[scale=1.2]}, thick, draw=blue!60!black}
-]
-    \node [b1] (n1) {Audit Metrics Array};
-    \node [b2, right=of n1] (n2) {\textbf{Single-Stack Audit Verdict Tree and Decision Protocol}\\Verdict Classifier Tree};
-    \node [b3, right=of n2] (n3) {Final controlled verdict};
-
-    \draw [arr] (n1) -- (n2);
-    \draw [arr] (n2) -- (n3);
-\end{tikzpicture}
-}
-\caption{\textbf{Single-Stack Audit Verdict Tree and Decision Protocol}. Decision tree mapping single-stack audit results to final verdicts.}
-\label{fig:r08_fig8}
-\end{figure}
-
 \bibliographystyle{plainnat}
 \bibliography{../../platform_hybrid/paper/references}
-
-
-\section{AntiVibe Senior Architectural \& Pedagogical Audit (P11)}
-\label{sec:antivibe_audit_p11}
-
-This section applies the \textbf{AntiVibe Framework} (AntiVibe Framework; mohi-devhub/antivibe) to provide a senior-level architectural review, computer science grounding, and explicit failure-mode analysis for Single-Stack Survival Audit.
-
-\subsection{Architectural Rationale \& Computer Science Foundations}
-\begin{itemize}[leftmargin=1.4em, itemsep=3pt]
-  \item \textbf{Why This Design:} Traditional RL post-training often relies on superficial baseline subtraction without accounting for zero-variance fractions (ZVF) or length-bias degeneration. P11 introduces closed-loop control dynamics to stabilize policy gradients.
-  \item \textbf{Core CS Mechanisms:} Employs $O(G)$ sample-variance computation per prompt group, streaming token-level credit assignment, and non-parametric quantile filtering.
-  \item \textbf{Trade-off Analysis:} Trades marginal rollout compute ($G=4 \to G=16$) for guaranteed variance non-degeneracy, preventing catastrophic collapse in deterministic prompt regimes.
-\end{itemize}
-
-\subsection{Failure Modes, Edge Cases, and Boundary Conditions}
-\begin{tabular}{@{}p{0.28\linewidth}p{0.32\linewidth}p{0.34\linewidth}@{}}
-\toprule
-\textbf{Failure Mode} & \textbf{Trigger Condition} & \textbf{AntiVibe Mitigation Rule} \\
-\midrule
-ZVF Collapse (ZVF $\to 1$) & All $G$ rollouts achieve identical reward $r_i = r_j$. & Dynamic group scaling $G \gets \min(2G, 64)$ or prompt injection. \\
-Length Bias Distortion & Long completions exploit dense verbosity rewards. & Length-normalized advantage centering $\tilde{A}_i = A_i / \sqrt{L_i}$. \\
-Gradient Starvation & Advantage norms $\|A\|_2 < 10^{-5}$ paralyze policy updates. & Adaptive reward scaling sentinel with automatic learning-rate boost. \\
-\bottomrule
-\end{tabular}
-
-\subsection{Implementation \& Verification Ledger}
-To audit this implementation against vibe-coding, every claim in Single-Stack Survival Audit must satisfy three automated verification gates: (1) Seed-matched baseline reproducibility within $\pm 1\%$, (2) Monotonic ZVF reduction under adaptive control, and (3) Zero unhandled numerical exceptions during zero-variance rollout states.
-
-
 \end{document}

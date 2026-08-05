@@ -109,7 +109,7 @@ Target KL & 0.01 & 0.01 & 0.01 & N/A & N/A & N/A \\
 \caption{Verifiable reward paradigm in \ours{}. Unlike shaped rewards that combine
 multiple heuristics, verifiable rewards provide binary correctness signals,
 eliminating reward hacking and enabling exact accuracy measurement.}
-\label{fig:reward_flow}
+\label{fig:reward-flow}
 \end{figure}
 
 \subsection{Baselines: Floor and Ceiling}
@@ -334,7 +334,7 @@ Rank & Comparison & Raw $p$ & BH-adj.\ $p$ & Sig. \\
         17 & GRPO vs PPO Peak-to-Tail Drift (t-test) & 0.018 & 0.02076 & $\checkmark$ \\
         18 & Tinker GRPO vs TRL GRPO (Mann-Whitney) & 0.01869 & 0.02076 & $\checkmark$ \\
         19 & Stability Index vs Last-10 (Pearson) & 0.02024 & 0.0213 & $\checkmark$ \\
-        20 & PPO vs GRPO on Qwen3-8B (Welch t-test)$^{\ddag}$ & 0.7605 & 0.7605 & $\times$ \\
+        20 & PPO vs GRPO on Qwen3-8B: provenance conflict; not estimable & --- & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}

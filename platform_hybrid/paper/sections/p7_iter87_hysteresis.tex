@@ -98,15 +98,15 @@ and $53\%$ (K$=$3).  Gift motivates an asymmetric rule
 $K_{\uparrow}{=}1$, $K_{\downarrow}{=}4$ -- flagged as a
 follow-up that does not fit on the current corpus.
 
-\paragraph{Operational recommendation.}
-\textbf{Deploy hysteresis@$\tau = 0.70$, $K_{\uparrow} = 2$,
-$K_{\downarrow} = 2$ as the default zvf-triage filter.}
-Flip-count drops to $22$--$33\%$ of raw, yield retention $\ge 95\%$
-on grpo/aero/areal.  Mean dwell at escalated state rises from
-$\sim 2.5$ to $\sim 10$ steps -- the controller commits for half
-a training window.  Gift's exception motivates a method-specific
-$K_{\uparrow} = 1$, $K_{\downarrow} = 4$ variant (not tested
-on N2 because GIFT's persistence signature is method-specific).
+\paragraph{Prospective candidate policy.}
+Hysteresis@$\tau = 0.70$, $K_{\uparrow} = 2$, $K_{\downarrow} = 2$ is a
+pre-registered zvf-triage candidate requiring matched-budget held-out
+evaluation before any default use. On this corpus, flip-count drops to
+$22$--$33\%$ of raw and yield retention is $\ge 95\%$ on grpo/aero/areal.
+Mean dwell at escalated state rises from $\sim 2.5$ to $\sim 10$ steps. Gift's
+exception motivates a method-specific $K_{\uparrow} = 1$,
+$K_{\downarrow} = 4$ candidate (not tested on N2 because GIFT's persistence
+signature is method-specific).
 
 \paragraph{Cross-paper coupling.}
 Hysteresis is \emph{complementary} to iter-83's per-prompt

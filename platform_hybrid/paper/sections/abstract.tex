@@ -1,38 +1,23 @@
 % =============================================================================
 % Abstract — conservative, evidence-aligned framing
 % Drop-in include: \input{sections/abstract}
-% Target: <= 250 words
+% Reviewed-record descendant; target: 150--180 words
 % =============================================================================
 \begin{abstract}
-RL post-training of language models is now shaped by a small set of
-algorithms (PPO, GRPO, DPO) and a growing set of frameworks (TRL,
-\tinker{}, OpenRLHF, veRL), yet it remains unclear which empirical conclusions
-transfer across implementations, model families, and scales. We present
-\ours{}, a benchmark spanning 70+ runs across 7 RL libraries and 5 model
-families (0.6B--$\sim$671B parameters) on GSM8K, HumanEval, and synthetic
-tool-use tasks. Results to date cover five end-to-end stacks (TRL, \tinker{},
-SB3, CleanRL, Tianshou); the remaining libraries are scaffolded but not yet run.
-The strongest evidence in the current release comes
-from short-horizon GSM8K training dynamics; held-out evaluation and non-math
-coverage remain narrower.
-
-Three conclusions are supported conservatively. First, Zero-Variance Fraction
-(ZVF)---the share of GRPO groups with identical rewards---tracks when binary
-outcome rewards stop producing within-group learning signal. Because ZVF is
-mechanically coupled to reward sparsity, group size, and baseline accuracy, we
-use it as a descriptive diagnostic rather than a standalone causal predictor.
-Second, trainability in our current sweeps varies substantially with
-initialization and rollout regime: instruction-tuned checkpoints were
-generally easier to optimize than comparable base models, and intermediate
-group sizes often behaved better than the smallest or largest settings we
-tested, but we do not claim a universal optimal group size. Third, PPO/GRPO
-rankings and frontier-model stability are heterogeneous across model families
-and end-to-end stacks; our single-seed API runs should be read as case studies,
-not universal laws. A separate held-out GSM8K control shows that the mean
-Qwen3-8B-Instruct GRPO delta over the same checkpoint's pre-RL held-out accuracy
-is small and not statistically significant (83.3\% vs.\ 82.0\%, $p{=}0.26$), while
-tool-use and code results remain limited by sparse rewards and custom evaluation.
-
-We release code, logs, and checkpoints at
-\url{https://github.com/arvindcr4/tinker-rl-lab}.
+Group-relative RL can lose its reward-driven learning signal when every
+completion for a prompt receives the same reward. This manuscript is a
+descendant of NeurIPS submission \#36320, not its authenticated or byte-identical
+reviewed PDF. We audit that submitted record rather than claiming that local edits
+change it. Our diagnostic, Zero-Variance Fraction (ZVF), records homogeneous reward
+groups; its submitted complement is Gradient Utilization (GU=$1-\mathrm{ZVF}$).
+In the two reviewed synthetic tool-use cells, reward is 0, ZVF is 1, GU is 0,
+and held-out performance was not evaluated. These are two descriptive all-wrong
+cases, not a validated predictor or stopping policy. For the submitted
+group-standardized runner, homogeneous rewards make the centered reward-contrast
+term zero. The runner is not canonical GRPO: it omits ratio/clipping, reference-KL,
+and completion-only masking, so this identity does not imply a zero total gradient
+or transfer to other implementations. GSM8K and later per-run artifacts are kept
+separate by estimand and provenance; the historical heterogeneous checkpoint mean
+is withdrawn. We provide an evidence-tiered reporting audit and a prospective
+operator-decision contract, not a deployment benefit or algorithm-ranking claim.
 \end{abstract}

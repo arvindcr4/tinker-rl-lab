@@ -4,8 +4,10 @@
 GRPO~\citep{shao2024deepseekmath, guo2025deepseekr1} learns from a group-relative
 baseline: for each prompt it samples $G$ completions, scores them with a verifier,
 and centers the rewards within the group. With binary correctness rewards, a group
-whose completions are all correct or all incorrect has zero within-group variance,
-zero centered advantage, and hence contributes no gradient. As training proceeds
+whose completions are all correct or all incorrect has zero within-group variance
+and zero centered advantage; under the submitted-runner assumptions, its centered
+reward-contrast term is therefore zero. This does not assert that every
+total-gradient contribution vanishes. As training proceeds
 and the policy masters easy prompts or stalls on hard ones, the fraction of such
 degenerate groups grows, and the effective batch that actually moves the policy
 shrinks. We call this fraction the \emph{Zero-Variance Fraction} (ZVF) and ask how
@@ -13,7 +15,7 @@ well it diagnoses when GRPO stops learning.
 
 ZVF is attractive because it is cheap, stack-agnostic, and mechanistically
 motivated: it measures exactly the condition under which the group baseline nulls
-the update. But a diagnostic is only as good as its predictive validity, and it is
+that centered reward-contrast term. But a diagnostic is only as good as its predictive validity, and it is
 easy to over-read a quantity that is mechanically entangled with reward sparsity,
 group size, and accuracy. This paper therefore treats ZVF conservatively---as a
 descriptive instrument whose reach we bound rather than a causal predictor.
@@ -48,5 +50,5 @@ normalization to preserve signal~\citep{lin2025cppo, gift2025, liu2025rlsubnetwo
 our aim is orthogonal---not to propose a new estimator but to test how well a
 simple degeneracy statistic predicts outcomes. In relating group reward variance
 to the update, we connect to analyses that recast group-relative RL as an implicit
-contrast or preference objective~\citep{wu2025grpo_dpo, liu2026gdpo}, a link we make
+contrast or preference objective~\citep{wu2025grpodpo}, a link we make
 explicit when discussing gradient utilization.

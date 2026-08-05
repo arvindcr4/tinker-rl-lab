@@ -41,7 +41,8 @@ same label run on a closed training stack---where dynamic sampling is not
 expressible and the practitioner substitutes the standard surrogate of GRPO
 with asymmetric clipping---produced mean ZVF $0.58$. Same label, opposite
 telemetry: one run never wastes a group, the other spends more than half its
-groups on zero-gradient updates. Any downstream comparison citing both runs as
+groups on updates with a zero centered reward-contrast term under that runner.
+Any downstream comparison citing both runs as
 ``DAPO'' is comparing two different objects. This is not an indictment of
 either stack; it is an indictment of the label as an experimental
 specification.
@@ -404,6 +405,7 @@ upper CI bound, and the four method arms differ by $1.6$--$9.8$ pp of
 reward at the last-10 step window. Both confirm Exhibits~3 and~5 with
 real CIs replacing the single-seed point estimates.}
 \label{tab:p5-headline-cis}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{llrrrrrl}
 \toprule
 Claim & Metric & $n_{\text{groups}}$ & $n_{\text{per\_group}}$ &
@@ -413,7 +415,8 @@ H4 & $\eta^{2}$(algorithm, ZVF)        & $4$ & $40$ & $0.0454$ & $[0.0014,\, 0.0
 H4 & $\eta^{2}$(algorithm, reward\_mean) & $4$ & $40$ & $0.0075$ & $[0.0014,\, 0.0577]$ & DECISIVE & $\le 6\%$ at $95\%$ upper \\
 H5 & spread last-10 reward            & $4$ & $10$ & $0.0359$ & $[0.0164,\, 0.0984]$ & TINY     & $\le 10$ pp at $95\%$ upper \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 The first observation is that \textbf{the algorithm-axis $\eta^{2}$
@@ -513,6 +516,7 @@ with full coverage (\texttt{mc\_eval\_data}) is the Mitchell axis
 that Item 6 (held-out split) was designed to operationalise.
 Source: \texttt{p5\_minreport\_external\_alignment.tsv}.}
 \label{tab:p5-external-alignment}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lllrrrl}
 \toprule
 Axis & Source & Map & Cov. & Honest-n/a & Gap & Status \\
@@ -534,7 +538,8 @@ Intended uses         & Gebru    & --  & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEE
 Distribution          & Gebru    & --  & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEEDED \\
 Tasks                 & Gebru    & --  & 0.000 & 0.000 & 1.000 & MIN-REPORT\_NEEDED \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \subsection{Exhibit 11: Per-MIN-REPORT-item Validation Rate at $n{=}98$ Cells}
@@ -570,7 +575,7 @@ The exhibit makes two reviewer-facing facts visible at a glance:
 \item \textbf{Six of seven manifest fields are validated on $\ge 99\%$ of the
 $98$ cells}. The corpus does report what MIN-REPORT asks for, on
 every other axis.
-\item \textbf{One item — the reference-policy / KL coefficient pair —
+\item \textbf{One item --- the reference-policy / KL coefficient pair ---
 is reported on zero of $98$ cells}. This is the single highest-leverage
 gap the audit has surfaced. KL is the dominant lever in PPO/GRPO
 ($\beta \in \{0.0, 0.04\}$ changes the same-stack outcome by orders of
@@ -597,7 +602,7 @@ so the auditor was \emph{not} cherry-picked.
 The auditor's per-axis summary (\secref{sec:p5-exhibit-auditor}) gives a
 one-line per-stratum mean, hiding which (item, axis) cells drive the
 variance. This exhibit decomposes the per-(item, axis) coverage on the
-98 mega_20260704 manifests and asks: \emph{does the manifest emitter
+98 \texttt{mega\_20260704} manifests and asks: \emph{does the manifest emitter
 treat every stack uniformly, or does coverage differ by model / task /
 G / temperature / seed?}
 (\tableref{tab:p5-stratified-eta2}; analysed by
@@ -607,7 +612,7 @@ G / temperature / seed?}
 \begin{table}[t]
 \centering
 \caption{$\eta^{2}$ of per-cell \texttt{item\_score} across stack axes
-on $n{=}98$ mega_20260704 manifests, 7 manifest fields $\times$ 5 stack axes
+on $n{=}98$ \texttt{mega\_20260704} manifests, 7 manifest fields $\times$ 5 stack axes
 (plus reward and ZVF quartiles as outcome-stratified sanity checks).
 NaN entries (items 1--6 on every axis) are \emph{not} missing values:
 they are the strongest possible stack-invariance signal --- every cell
@@ -772,7 +777,7 @@ choices---not the nominal algorithm---govern reported RL outcomes.
 \texttt{p5\_field\_sufficiency\_summary.json}, and
 \texttt{figures/p5\_field\_sufficiency.\{png,pdf\}}.
 
-\subsection{Exhibit 14: Claim-measurement alignment — the corpus is honest on every declared stack axis}
+\subsection{Exhibit 14: Claim-measurement alignment --- the corpus is honest on every declared stack axis}
 \label{sec:p5-exhibit-claim-measurement}
 The auditor of \secref{sec:p5-exhibit-auditor} measures whether the
 manifest \emph{declares} the seven MIN-REPORT run-manifest fields; Exhibit~13 measures
@@ -794,7 +799,7 @@ declared stack axis ($\textit{n}{=}98/98$ cells, mean
 $100.00$, bootstrap 95\% CI $[100.00, 100.00]$).
 Per-axis match rate: model $100/98$, task $100/98$, $G$ $100/98$,
 temperature $100/98$, seed $100/98$, decontam $100/98$
-(\texttt{declared\_recognised\_class} for all 98 — the manifest emitter
+(\texttt{declared\_recognised\_class} for all 98 --- the manifest emitter
 emits the corpus-actual tokens \texttt{gsm8k-train-slice} and
 \texttt{humaneval-openai-subset}, both now part of the recognised-class
 list).
@@ -803,7 +808,7 @@ list).
 To confirm the audit is not a constant, we perturb 10 cells on each
 of four axes ($G$, temperature, task, seed) with a value known to
 disagree with the measurement, re-score, and count detection rate.
-The audit detects all $40/40$ perturbations ($100\%$) — per-axis
+The audit detects all $40/40$ perturbations ($100\%$) --- per-axis
 $10/10$ on each of $G$ / temperature / task / seed. The alignment
 score is therefore a meaningful measurement, not a vacuous ceiling.
 
@@ -821,7 +826,7 @@ corpus honest on it.
 The audit was run on a single corpus (mega\_20260704) emitted by a
 single manifest emitter; the alignment property may not generalise.
 A falsifiable next step is to apply the same audit to the N2
-four-method tensors and the N10 8-seed panel — both have
+four-method tensors and the N10 8-seed panel --- both have
 experimental-level manifests rather than cell-level manifests, so a
 different scoring policy is needed (per-experiment rather than
 per-cell) but the same axis-comparison logic applies.
@@ -1068,7 +1073,7 @@ value for those items.}
 \label{fig:p5-discriminative-entropy}
 \end{figure}
 
-\subsection{Exhibit 17: MIN-REPORT manifest self-sufficiency — the standard is sufficient for the diagnostic metric, incomplete for the downstream outcome}
+\subsection{Exhibit 17: MIN-REPORT manifest self-sufficiency --- the standard is sufficient for the diagnostic metric, incomplete for the downstream outcome}
 \label{sec:p5-exhibit-manifest-self-suff}
 
 Exhibits~11 (\emph{coverage}),~14 (\emph{truthfulness}),~16
@@ -1560,11 +1565,12 @@ are reported jointly.
 $\times$ 5 stack axes, $n{=}98$ cells, block-bootstrap 95\% CI
 $B{=}2{,}000$ seed $20260704$). All five fields PASS the
 $0.50$ stack-dominance threshold (cross-axis sum
-$\geq 0.7310$), and each field's dominant axis is DIFFERENT —
+$\geq 0.7310$), and each field's dominant axis is DIFFERENT ---
 the 5-tuple is not a redundant re-encoding. $\mathrm{seed}$ is
 near-zero on every field (upper CI $\leq 0.061$), confirming the
 iter-32 noise-axis finding at per-MVE-field granularity.}
 \label{tab:p5-mve-field}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{lccccc}
 \toprule
 Field & $\eta^2_{\mathrm{model}}$ & $\eta^2_{\mathrm{task}}$ &
@@ -1591,10 +1597,11 @@ $0.159\,[0.052,0.319]$ & $0.413\,[0.291,0.569]$ &
 $0.034\,[0.011,0.176]$ & $0.123\,[0.026,0.294]$ &
 $0.002\,[0.000,0.061]$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
-\textbf{Headline finding 1 — per-field cross-axis $\eta^2$ all exceed
+\textbf{Headline finding 1 --- per-field cross-axis $\eta^2$ all exceed
 $0.50$.} $\mathrm{zvf}$ leads with $0.927$ (task + G dominate), then
 $\mathrm{pcd}$ $0.784$, $\mathrm{mean\_reward}$ $0.756$,
 $\mathrm{mean\_comp\_len}$ $0.734$, $\mathrm{std\_comp\_len}$
@@ -1603,7 +1610,7 @@ per-field granularity: each field is at least $73\%$ stack-explained,
 and every field's upper CI bound on the dominant axis is
 $>\!0.50$.
 
-\textbf{Headline finding 2 — the 5-tuple is not redundant.} Each
+\textbf{Headline finding 2 --- the 5-tuple is not redundant.} Each
 field has a \emph{different} dominant axis:
 $\mathrm{mean\_reward} \leftarrow \mathrm{model}$;
 $\mathrm{zvf} \leftarrow \mathrm{task} + G$;
@@ -1617,7 +1624,7 @@ pair has $|r| < 0.83$, and 8/10 pairs have $|r| < 0.67$. The
 5-tuple measures \emph{different} signals, not the same signal five
 ways.
 
-\textbf{Headline finding 3 — $\mathrm{seed}$ is the noise axis on
+\textbf{Headline finding 3 --- $\mathrm{seed}$ is the noise axis on
 every field.} Per-field $\eta^2_{\mathrm{seed}}$ upper CI
 $\leq 0.061$ on all 5 fields (max $0.061$ on
 $\mathrm{std\_comp\_len}$, min $0.051$ on $\mathrm{zvf}$). Once
@@ -1627,14 +1634,14 @@ This is the per-MVE-field re-statement of iter-32's
 load-bearing finding that \texttt{seed} is a nuisance axis on the
 disclosed stack.
 
-\textbf{Headline finding 4 — $100\%$ unique 5-tuples.}
+\textbf{Headline finding 4 --- $100\%$ unique 5-tuples.}
 Every one of the 98 mega cells carries a distinct 5-tuple
 ($\mathrm{max\_dup\_count} = 1$). The iter-53
 ``distinct profiles $15 \rightarrow 98$'' cardinality claim is
 recovered at per-cell granularity: on the empirical
 \texttt{cells.tsv}, no two cells share the same 5-tuple.
 
-\textbf{Headline finding 5 — $\mathrm{humaneval\_subset}$ is
+\textbf{Headline finding 5 --- $\mathrm{humaneval\_subset}$ is
 completely degenerate on 3/5 fields.} On the 34
 $\mathrm{humaneval\_subset}$ cells, $\mathrm{mean\_reward} \equiv 0$,
 $\mathrm{zvf} \equiv 1$, $\mathrm{pcd} \equiv 0$ (zero variance on
@@ -1646,7 +1653,7 @@ $\mathrm{humaneval\_subset}$ reduces to a 2-tuple
 ``distinct profiles'' headroom is dominantly driven by the
 humaneval cells splitting on length.
 
-\textbf{Headline finding 6 — outlier density.}
+\textbf{Headline finding 6 --- outlier density.}
 $36/98$ cells ($36.7\%$) have $\mathrm{zvf} \in \{0, 1\}$
 (saturated); $35/98$ ($35.7\%$) have
 $\mathrm{mean\_reward} \in \{0,1\}$ (all on

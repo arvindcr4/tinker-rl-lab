@@ -33,9 +33,9 @@ restricted to rollouts whose group advantage is nonzero:
 \end{equation}
 where $A_g$ is the within-group advantage, $K$ the rollouts per group,
 and $\bar{L}_\text{rollout}$ the mean rollout length.
-Intuitively, $\mathrm{GE}_{\text{tok}}$ penalizes compute spent on rollouts that
-contribute zero gradient ($\mathbb{1}[A_g\!=\!0]$, i.e.~ZVF-group
-members) and rewards concentrating token budget where advantage is
+Intuitively, $\mathrm{GE}_{\text{tok}}$ penalizes compute spent on rollouts with
+zero centered group-relative reward contrast ($\mathbb{1}[A_g\!=\!0]$,
+i.e.~ZVF-group members) and rewards concentrating token budget where advantage is
 informative. An estimator that avoids explicit gradient storage uses
 advantage variance as a proxy:
 $\widehat{\mathrm{GE}}_{\text{tok}}(G,B) \!\propto\!

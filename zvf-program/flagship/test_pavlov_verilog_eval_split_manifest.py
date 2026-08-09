@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import tempfile
 import unittest
 from importlib import import_module
 from pathlib import Path
@@ -197,6 +198,187 @@ class VerilogEvalSplitManifestBoundaryTests(unittest.TestCase):
         finally:
             if temporary.exists():
                 temporary.unlink()
+
+
+_PINNED_CHECKOUT = (
+    Path(__file__).resolve().parents[2]
+    / "outputs/e11_verilog_eval/nvlabs_verilog_eval_c498220d"
+)
+
+
+def _write_synthetic_checkout(root: Path, *, problems: dict[str, list[str]]) -> Path:
+    """Create a miniature checkout with the same file contract as upstream."""
+
+    for dataset_name, problem_ids in problems.items():
+        dataset_dir = root / f"dataset_{dataset_name}"
+        dataset_dir.mkdir(parents=True, exist_ok=True)
+        (dataset_dir / "problems.txt").write_text(
+            "\n".join(problem_ids) + "\n", encoding="utf-8"
+        )
+        for problem_id in problem_ids:
+            (dataset_dir / f"{problem_id}_prompt.txt").write_text(
+                f"prompt for {dataset_name}/{problem_id}\n", encoding="utf-8"
+            )
+            (dataset_dir / f"{problem_id}_ref.sv").write_text(
+                "module RefModule (\n  output zero\n);\n  assign zero = 1'b0;\nendmodule\n",
+                encoding="utf-8",
+            )
+            (dataset_dir / f"{problem_id}_test.sv").write_text(
+                "module tb;\nendmodule\n", encoding="utf-8"
+            )
+            if dataset_name == "code-complete-iccad2023":
+                (dataset_dir / f"{problem_id}_ifc.txt").write_text(
+                    "module TopModule (\n  output zero\n);\n", encoding="utf-8"
+                )
+    return root
+
+
+class VerilogEvalSplitManifestBuilderTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._temp = tempfile.TemporaryDirectory()
+        self.root = Path(self._temp.name)
+        self.addCleanup(self._temp.cleanup)
+        self.problems = {
+            "code-complete-iccad2023": ["Prob001_zero", "Prob002_m2014_q4i"],
+            "spec-to-rtl": ["Prob001_zero", "Prob002_m2014_q4i"],
+        }
+        _write_synthetic_checkout(self.root, problems=self.problems)
+
+    def test_canonical_task_id_disambiguates_the_two_task_framings(self) -> None:
+        code_complete = validator.canonical_task_id("code-complete-iccad2023", "Prob001_zero")
+        spec_to_rtl = validator.canonical_task_id("spec-to-rtl", "Prob001_zero")
+        self.assertEqual(code_complete, "verilog_eval/code-complete-iccad2023/Prob001_zero")
+        self.assertNotEqual(code_complete, spec_to_rtl)
+        self.assertNotEqual(
+            validator.task_id_hash("code-complete-iccad2023", "Prob001_zero"),
+            validator.task_id_hash("spec-to-rtl", "Prob001_zero"),
+        )
+
+    def test_task_id_hash_is_sha256_of_canonical_id(self) -> None:
+        self.assertEqual(
+            validator.task_id_hash("spec-to-rtl", "Prob001_zero"),
+            _sha256("verilog_eval/spec-to-rtl/Prob001_zero"),
+        )
+
+    def test_manifest_hashes_are_internally_consistent(self) -> None:
+        manifest = validator.build_manifest_from_checkout(self.root)
+        task_hashes = manifest["task_id_hashes"]
+
+        self.assertEqual(len(task_hashes), 4)
+        self.assertEqual(task_hashes, sorted(task_hashes))
+        self.assertEqual(len(set(task_hashes)), 4)
+
+        aggregate = _aggregate(task_hashes)
+        self.assertEqual(manifest["split"]["hash"], "sha256:" + aggregate)
+        self.assertEqual(manifest["split_hashes"]["primary_eval"], "sha256:" + aggregate)
+        self.assertEqual(manifest["split_manifest_hash"], _split_manifest_hash(aggregate))
+        self.assertEqual(manifest["split"]["primary_eval"], task_hashes)
+
+    def test_per_task_content_hashes_are_present_and_deterministic(self) -> None:
+        first = validator.build_manifest_from_checkout(self.root)
+        second = validator.build_manifest_from_checkout(self.root)
+        self.assertEqual(first["tasks"], second["tasks"])
+
+        by_id = {task["canonical_task_id"]: task for task in first["tasks"]}
+        code_complete = by_id["verilog_eval/code-complete-iccad2023/Prob001_zero"]
+        spec_to_rtl = by_id["verilog_eval/spec-to-rtl/Prob001_zero"]
+
+        self.assertEqual(
+            sorted(code_complete["artifact_sha256"]), ["ifc.txt", "prompt.txt", "ref.sv", "test.sv"]
+        )
+        # spec-to-rtl ships no interface file, by upstream design.
+        self.assertEqual(sorted(spec_to_rtl["artifact_sha256"]), ["prompt.txt", "ref.sv", "test.sv"])
+        self.assertEqual(
+            code_complete["content_digest"],
+            _sha256(_canonical_json(code_complete["artifact_sha256"])),
+        )
+
+    def test_artifact_present_but_unlisted_is_rejected(self) -> None:
+        dataset_dir = self.root / "dataset_spec-to-rtl"
+        (dataset_dir / "Prob999_smuggled_ref.sv").write_text("module RefModule ();\n", encoding="utf-8")
+        with self.assertRaises(validator.VerilogEvalSplitManifestError) as caught:
+            validator.build_manifest_from_checkout(self.root)
+        self.assertIn("absent from problems.txt", str(caught.exception))
+
+    def test_listed_problem_without_reference_is_rejected(self) -> None:
+        dataset_dir = self.root / "dataset_spec-to-rtl"
+        (dataset_dir / "problems.txt").write_text(
+            "Prob001_zero\nProb002_m2014_q4i\nProb003_ghost\n", encoding="utf-8"
+        )
+        with self.assertRaises(validator.VerilogEvalSplitManifestError) as caught:
+            validator.build_manifest_from_checkout(self.root)
+        self.assertIn("no reference", str(caught.exception))
+
+    def test_missing_required_artifact_is_rejected(self) -> None:
+        (self.root / "dataset_code-complete-iccad2023" / "Prob001_zero_ifc.txt").unlink()
+        with self.assertRaises(validator.VerilogEvalSplitManifestError) as caught:
+            validator.build_manifest_from_checkout(self.root)
+        self.assertIn("missing required artifact", str(caught.exception))
+
+    def test_duplicate_problem_list_entry_is_rejected(self) -> None:
+        (self.root / "dataset_spec-to-rtl" / "problems.txt").write_text(
+            "Prob001_zero\nProb001_zero\nProb002_m2014_q4i\n", encoding="utf-8"
+        )
+        with self.assertRaises(validator.VerilogEvalSplitManifestError) as caught:
+            validator.build_manifest_from_checkout(self.root)
+        self.assertIn("duplicates", str(caught.exception))
+
+    def test_receipt_blocks_on_missing_decontamination_only(self) -> None:
+        receipt = validator.build_split_manifest_receipt(self.root)
+        self.assertEqual(receipt["status"], "BLOCKED")
+        self.assertEqual(receipt["task_count"], 4)
+        self.assertFalse(receipt["is_model_score"])
+        self.assertIsNone(receipt["score"])
+        self.assertFalse(receipt["launch"]["paid_work_launched"])
+        self.assertEqual(receipt["validation"]["blockers"], ["decontamination must be an object"])
+
+    def test_receipt_is_ready_once_a_decontamination_receipt_exists(self) -> None:
+        receipt = validator.build_split_manifest_receipt(
+            self.root,
+            decontamination={
+                "status": "verified",
+                "receipt_id": "b" * 40,
+                "visibility": "private",
+                "safe_public_artifact": True,
+            },
+        )
+        self.assertEqual(receipt["status"], "READY")
+        self.assertEqual(receipt["validation"]["split"]["primary_eval"]["count"], 4)
+        self.assertFalse(receipt["validation"]["paid_launch_allowed"])
+
+    @unittest.skipUnless(_PINNED_CHECKOUT.is_dir(), "pinned NVlabs checkout not present")
+    def test_pinned_checkout_yields_312_tasks(self) -> None:
+        manifest = validator.build_manifest_from_checkout(_PINNED_CHECKOUT)
+        self.assertEqual(len(manifest["task_id_hashes"]), 312)
+        self.assertEqual(manifest["dataset"]["revision"], validator.PINNED_REVISION)
+        self.assertEqual(manifest["dataset"]["license"], "MIT")
+        self.assertEqual(
+            manifest["datasets"]["code-complete-iccad2023"]["problem_count"], 156
+        )
+        self.assertEqual(manifest["datasets"]["spec-to-rtl"]["problem_count"], 156)
+        self.assertEqual(
+            manifest["split_hashes"]["primary_eval"],
+            "sha256:" + _aggregate(manifest["task_id_hashes"]),
+        )
+
+    @unittest.skipUnless(_PINNED_CHECKOUT.is_dir(), "pinned NVlabs checkout not present")
+    def test_pinned_checkout_manifest_is_reproducible(self) -> None:
+        first = validator.build_manifest_from_checkout(_PINNED_CHECKOUT)
+        second = validator.build_manifest_from_checkout(_PINNED_CHECKOUT)
+        self.assertEqual(first["split_manifest_hash"], second["split_manifest_hash"])
+        self.assertEqual(
+            first["split_manifest_receipt_ref"], second["split_manifest_receipt_ref"]
+        )
+
+    def test_main_checkout_mode_writes_a_receipt(self) -> None:
+        output = self.root / "receipt.json"
+        exit_code = validator.main(
+            ["--checkout", str(self.root), "--output", str(output)]
+        )
+        self.assertEqual(exit_code, 1)  # blocked on decontamination
+        payload = json.loads(output.read_text(encoding="utf-8"))
+        self.assertEqual(payload["task_count"], 4)
+        self.assertEqual(payload["manifest"]["suite_id"], "verilog_eval")
 
 
 if __name__ == "__main__":

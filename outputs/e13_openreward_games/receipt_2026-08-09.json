@@ -1,0 +1,174 @@
+{
+  "schema_version": "e13-openreward-games-receipt-v1",
+  "lane": "E13 openreward_games_eval",
+  "suite": "openreward_games_eval",
+  "generated_at_utc": "2026-08-09T07:38:38Z",
+  "status": "PARTIAL",
+  "run_kind": "harness_validation",
+  "is_model_score": false,
+  "score": null,
+  "score_withheld_because": [
+    "run_kind='harness_validation' is not a scored model rollout"
+  ],
+  "episodes_verified": 3,
+  "episodes_accepted": 3,
+  "seed_separation": {
+    "environment": "GeneralReasoning/Wordle",
+    "train_split": "train",
+    "eval_split": "test",
+    "train_manifest_sha256": "31965f81b59a70f2a4026cde53d78b16b4e9cd548314962785d99bad56534a04",
+    "eval_manifest_sha256": "8ee28687571be61fa04b7baa846147b77bbb5cec43cf86ac3f2bfeb791fe25ba",
+    "instance_key": "(variant, seed)",
+    "train_instance_count": 200,
+    "eval_instance_count": 200,
+    "shared_instances": [],
+    "shared_seeds": [],
+    "shared_task_ids": [],
+    "variant_coverage_matches": true,
+    "violations": [],
+    "holds": true
+  },
+  "evidence": {
+    "headline_finding": "E13 is NOT gated. The OpenReward catalogue is served by an unauthenticated public API (api.openreward.ai/v1), and the game environment source, seed split, and verifier are public at github.com/EnvCommons. The prior blocked_receipt.json and asset-inventory row for E13 are superseded.",
+    "public_access_determination": {
+      "public_catalogue_api": "https://api.openreward.ai/v1/environments",
+      "catalogue_requires_credentials": false,
+      "environments_total": 21812,
+      "environments_github_connected": 377,
+      "game_environments_tagged_decision_making_in_games": 77,
+      "generalreasoning_game_envs_with_train_and_test_splits": 74,
+      "environment_source_public": true,
+      "source_org": "https://github.com/EnvCommons",
+      "envcommons_public_repos": 277,
+      "envcommons_repos_with_license_file": 0,
+      "sdk": {
+        "pypi": "openreward",
+        "version": "0.1.152",
+        "license": "MIT",
+        "sdist_sha256": "dedf4252767c138c38d414e87b3e1078672f71cb3b0dc994ed85175e4ad925c5",
+        "wheel_sha256": "34873ae77b4deff0e3b80be6f3afc83ff9f45ed4453c0ab32736d65bd1ab7215"
+      },
+      "game_engine": {
+        "pypi": "textarena",
+        "version": "0.7.4",
+        "license": "MIT"
+      },
+      "requires_account": [
+        "hosted environment sessions (OPENREWARD_API_KEY)",
+        "platform-served authoritative task list",
+        "run/rollout recording and leaderboard submission",
+        "orwd CLI"
+      ],
+      "does_not_require_account": [
+        "environment catalogue, splits, task counts",
+        "environment cards including license and task structure",
+        "environment source, seed split definition, reward path",
+        "stepping a game environment locally"
+      ],
+      "account_created": false,
+      "terms_accepted": false,
+      "credentials_used": []
+    },
+    "pinned_environment": {
+      "name": "GeneralReasoning/Wordle",
+      "source_repo": "https://github.com/EnvCommons/wordle",
+      "commit": "92bea32efa102e86275dedd2e0367e86d3754754",
+      "tree_sha": "8b768b3e3bae83381672d0596f371d60a1b0affe",
+      "committed_at": "2026-07-31T00:08:28+01:00",
+      "repo_license_file": null,
+      "card_declared_license": "MIT (via TextArena LICENSE; wrapper carries no own grant)",
+      "env_py_sha256": "4bedc3f9942d83b9ee290f288747702c6a83ebe5f8587f0b41520848d6bac2e7",
+      "test_local_py_sha256": "290f0d2eac89b2d89f9c3ba29b9e3f24e01759904e18ff8e5f7d251ac1a7286e",
+      "local_path": "outputs/e13_openreward_games/pinned/wordle"
+    },
+    "seed_split_convention": {
+      "source": "env.py list_tasks()",
+      "rule": "seed = seed_idx if split == 'train' else seed_idx + 10000",
+      "tasks_per_variant": 50,
+      "verified_identical_in_repos": [
+        "wordle",
+        "tictactoe",
+        "sudoku",
+        "snake",
+        "connect_four",
+        "battleship",
+        "game_2048",
+        "tower_of_hanoi",
+        "frozen_lake",
+        "taboo",
+        "nim"
+      ]
+    },
+    "harness_validation": {
+      "self_test_command": "cd outputs/e13_openreward_games/pinned/wordle && ../../venv/bin/python test_local.py",
+      "self_test_result": "PASSED, no credentials",
+      "credentials_required": false,
+      "determinism_same_seed_prompt_hash_stable": true,
+      "gold_action_episodes": [
+        {
+          "task_id": "Wordle-v0_seed10000",
+          "gold": "value",
+          "reward": 1.0,
+          "finished": true
+        },
+        {
+          "task_id": "Wordle-v0_seed10001",
+          "gold": "price",
+          "reward": 1.0,
+          "finished": true
+        },
+        {
+          "task_id": "Wordle-v0_seed10002",
+          "gold": "round",
+          "reward": 1.0,
+          "finished": true
+        }
+      ],
+      "interpretation": "Proves the verifier and stepping path work end to end. NOT a model score."
+    },
+    "manifests": {
+      "train": {
+        "path": "outputs/e13_openreward_games/manifests/wordle_train.json",
+        "sha256": "64270965e8acbc2b279c8ca67c99a3d61e598651507c899bcbc56cde081c96eb",
+        "tasks": 200
+      },
+      "eval": {
+        "path": "outputs/e13_openreward_games/manifests/wordle_test.json",
+        "sha256": "3a62745869a12f4ac77e5b72565cf8fef427684160d77f137a7e8f1a586dde97",
+        "tasks": 200
+      }
+    },
+    "local_code": {
+      "runner": "zvf-program/flagship/e13_openreward_games_local_runner.py",
+      "runner_sha256": "a073a47993b96c0c82ea443d963df88b23a5a05dedba68939078f28e425b0df0",
+      "tests": "zvf-program/flagship/test_e13_openreward_games_local_runner.py",
+      "tests_sha256": "811e78eebc9e36cfb78be25b81fae7334efefb12ac97c0dfd5128d2c1c91f9d3",
+      "test_command": "PYTHONPATH=zvf-program/flagship outputs/e13_openreward_games/venv/bin/python -m unittest test_e13_openreward_games_local_runner",
+      "tests_run": 39,
+      "tests_passed": 39,
+      "tests_failed": 0,
+      "e12_owned_adapter_modified": false
+    },
+    "documentation_defects": [
+      "docs footer links github.com/OpenReward -> unrelated squatted org (OPENREWARD); real source org is EnvCommons",
+      "docs.openreward.ai/api-reference/openapi.json is an unmodified Mintlify placeholder ('OpenAPI Plant Store')",
+      "Wordle card links github.com/LeonGuertwordle/TextArena (typo for LeonGuertler/TextArena)"
+    ],
+    "supersedes": "outputs/e13_openreward_games/blocked_receipt.json",
+    "cost": {
+      "paid_model_calls": 0,
+      "paid_tinker_calls": 0,
+      "usd": 0.0,
+      "wandb_runs": 0,
+      "hf_pushes": 0,
+      "git_commits": 0
+    }
+  },
+  "blockers": [
+    "No LICENSE file in any of the 277 EnvCommons repos; wrapper code has no explicit grant. Needs written confirmation or a LICENSE commit from GR Inc.",
+    "No official named 'openreward_games_eval' held-out suite is published; the 74-environment set is our selection, not the provider's.",
+    "Deployed environment revision cannot be bound to the pinned public commit without an account; hosted scores are not reproducible until it can.",
+    "A model score requires a paid provider key (OpenAI/Anthropic/OpenRouter); not crossed per the lane cost boundary.",
+    "The 'test' split is public, so it is not held out from anyone; whether E13 intends a narrower private holdout is unestablished."
+  ]
+}

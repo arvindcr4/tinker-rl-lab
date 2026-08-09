@@ -1,0 +1,308 @@
+{
+  "blockers": [
+    {
+      "code": "benchmark_license_missing",
+      "message": "the official checkout has no root LICENSE/LICENCE/COPYING/NOTICE at the pinned revision; README, SCORING.md and pyproject.toml declare no license; the GitHub API reports license: null",
+      "required_receipt": "a license receipt or explicit maintainer authorization binding https://github.com/Proximal-Labs/frontier-swe@422b9bb95deb8efe436becb0ed3c44be23611e10",
+      "verified_this_session": true
+    },
+    {
+      "code": "submission_missing",
+      "message": "no model-produced candidate workspace exists",
+      "required_receipt": "a candidate /app/revideo tree per candidate_workspace_contract, produced by an agent rollout with a paid model key",
+      "verified_this_session": true
+    },
+    {
+      "code": "arch_mismatch_amd64_image_on_arm64_host",
+      "message": "the published image is linux/amd64 only; the Colima VM is aarch64 with plain QEMU user-mode emulation and no Rosetta. Headless Chrome core-dumps inside QEMU (rcu_read_unlock assertion, rc=134), so no scene renders and the frozen read-only baseline cannot be timed.",
+      "required_receipt": "an x86-64 Linux runner for the native verifier",
+      "verified_this_session": true
+    }
+  ],
+  "budget": {
+    "lane_hard_maximum_usd": 2.0,
+    "spent_usd": 0.0,
+    "suite_projected_tinker_usd": 0.5
+  },
+  "candidate_workspace_contract": {
+    "compute_reward_hard_fail_invocation": "python3 /tests/compute_reward.py --fail \"<reason>\" --output-dir /logs/verifier",
+    "compute_reward_invocation": "python3 /tests/compute_reward.py --baseline-results /logs/verifier/baseline_output/benchmark_results.json --candidate-results /logs/verifier/candidate_output/benchmark_results.json --correctness-results /logs/verifier/correctness_results.json --output-dir /logs/verifier --total-time-ms <int> [--oracle]",
+    "contents": "a full copy of the image's /app/revideo (Revideo v0.4.2) with agent edits applied in place",
+    "docker_invocation": "docker run --rm --network none --cpus 8 --memory 32768m --entrypoint /bin/bash -v <task>/tests:/tests:ro -v <submission>:/app/revideo:rw -v <out>:/logs/verifier:rw ghcr.io/proximal-labs/frontier-swe/revideo-perf-opt:v4 /tests/test.sh",
+    "documented_in": "outputs/e2_frontier_swe/lane_status_2026-08-09.md",
+    "form": "bind-mounted directory, not a patch file",
+    "frozen_reference": "/baseline/revideo (Revideo v0.4.4), shipped chmod a-w, not part of the submission",
+    "mount_point": "/app/revideo",
+    "returns": {
+      "exit_code": "0 on both the normal and hard-fail paths",
+      "files": [
+        "/logs/verifier/reward.json",
+        "/logs/verifier/reward.txt"
+      ],
+      "leaderboard_mapping": "scripts/score_from_reward.py: revideo-perf-opt is category 'performance', gated score = correctness*0.5, or 0.5 + 0.5*speedup once correctness == 1.0",
+      "reward_json_keys": [
+        "reward",
+        "score",
+        "geometric_mean_speedup",
+        "num_hidden_scenes",
+        "num_speedups_computed",
+        "hard_fail_reasons",
+        "correctness_ok",
+        "is_oracle",
+        "total_time_ms",
+        "per_scene",
+        "correctness_details",
+        "subscores",
+        "reason"
+      ],
+      "semantics": "reward = geometric mean of baseline_ms/candidate_ms over the 8 hidden_* scenes, capped at 100.0, forced to 0.0 on any hard-fail reason. Timings use an ABBA schedule; correctness is ffmpeg SSIM >= 0.95 plus a +/-2% duration check."
+    }
+  },
+  "checkout": {
+    "clone_type": "full clone, all blobs, no sparse cone",
+    "commit_date": "2026-08-07T13:48:30+05:30",
+    "commit_subject": "update: fix grok cli list if else bug (#84)",
+    "durable": true,
+    "head": "422b9bb95deb8efe436becb0ed3c44be23611e10",
+    "path": "outputs/e2_frontier_swe/frontier-swe",
+    "revision_matches_pin": true,
+    "size_on_disk": "1.4GB",
+    "supersedes": "/private/tmp/frontier-swe-sparse-3xvxdf (ephemeral, sparse, blob:none)",
+    "tree_object": "cf29dbbec20fe3f95de4c902d354742c6933eb02",
+    "working_tree_clean": true
+  },
+  "cli_help": {
+    "adapter": {
+      "log": "outputs/e2_frontier_swe/logs/cli_help_adapter_rerun.txt",
+      "status": "PASS"
+    },
+    "runner": {
+      "log": "outputs/e2_frontier_swe/logs/cli_help_runner_rerun.txt",
+      "status": "PASS"
+    }
+  },
+  "created_at": "2026-08-09T08:34:39.233087+00:00",
+  "execution_source": {
+    "branch": "main",
+    "checkout": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab",
+    "commit": "8fdade2f1425908f8d961bced6dc89f45bcc47f4"
+  },
+  "harness_validation": {
+    "artifacts": [
+      "outputs/e2_frontier_swe/harness_validation/abba_b1.log",
+      "outputs/e2_frontier_swe/harness_validation/abba_b2.log",
+      "outputs/e2_frontier_swe/harness_validation/abba_c1.log",
+      "outputs/e2_frontier_swe/harness_validation/abba_c2.log",
+      "outputs/e2_frontier_swe/harness_validation/baseline_output/benchmark_results.json",
+      "outputs/e2_frontier_swe/harness_validation/candidate_output/benchmark_results.json",
+      "outputs/e2_frontier_swe/harness_validation/correctness_results.json",
+      "outputs/e2_frontier_swe/harness_validation/reward.json",
+      "outputs/e2_frontier_swe/harness_validation/reward.txt"
+    ],
+    "candidate": "unmodified /app/revideo as shipped in the image (no agent, no patch)",
+    "caveat": "correctness_ok is true and the correctness subscore is 1.0 ('PASS: 0/0 correct') only because zero scenes were rendered -- a vacuous pass. The top-level reward is still 0.0 because the missing-results hard fails fire first, and score_from_reward.py also returns 0.0, so it is not exploitable. correctness_ok alone must never be read as evidence that anything rendered.",
+    "does_not_prove": "anything about performance. The 0.0 describes this host, not any candidate.",
+    "exit_code": 0,
+    "failure_mode": "every scene failed on Puppeteer's 30s default timeout; one variant read 'Timed out after 30000 ms while waiting for the WS endpoint URL to appear in stdout', i.e. Chrome core-dumped before printing its DevTools endpoint",
+    "is_model_score": false,
+    "label": "harness_validation",
+    "leaderboard_score_via_score_from_reward": {
+      "category": "performance",
+      "command": "python3 outputs/e2_frontier_swe/frontier-swe/scripts/score_from_reward.py --task revideo-perf-opt outputs/e2_frontier_swe/harness_validation/reward.json",
+      "correctness": 0.0,
+      "score": 0.0,
+      "speedup": null
+    },
+    "log": "outputs/e2_frontier_swe/logs/harness_validation_verifier.log",
+    "promoted_to_suite_score": false,
+    "proves": "container start, source scan, prep_build + six package builds, hidden-scene injection, ABBA orchestration, merge, SSIM step, compute_reward.py emitting a schema-correct reward.json/reward.txt, and score_from_reward.py consuming it",
+    "render_attempts": 32,
+    "render_successes": 0,
+    "reward_json": {
+      "correctness_details": [],
+      "correctness_ok": true,
+      "geometric_mean_speedup": 0.0,
+      "hard_fail_reasons": [
+        "baseline_results_missing",
+        "candidate_results_missing"
+      ],
+      "is_oracle": false,
+      "num_hidden_scenes": 0,
+      "num_speedups_computed": 0,
+      "per_scene": [],
+      "reason": "HARD FAIL: ['baseline_results_missing', 'candidate_results_missing']",
+      "reward": 0.0,
+      "score": 0.0,
+      "subscores": [
+        {
+          "score": 0.0,
+          "stderr": "",
+          "stdout": "Geo-mean speedup: 0.00x across 0 scenes",
+          "subtask": "geometric_mean_speedup"
+        },
+        {
+          "score": 1.0,
+          "stderr": "",
+          "stdout": "PASS: 0/0 correct",
+          "subtask": "correctness"
+        }
+      ],
+      "total_time_ms": 3804241
+    },
+    "reward_json_path": "outputs/e2_frontier_swe/harness_validation/reward.json",
+    "steps": {
+      "1_source_scan": "PASS (1576 files scanned)",
+      "2_rebuild_candidate": "PASS by the verifier's own gate; note @revideo/2d build-lib exited non-zero on TS2339/TS2550 type errors. test.sh appends '|| true' and only checks that package.json.main exists, and tspc emits despite type errors, so the gate passed on freshly-emitted output. Architecture-independent; reproduces on x86-64.",
+      "3_hidden_scenes": "PASS (8 scenes copied)",
+      "4_abba_rendering": "ran to completion inside the 600s cap (A1 349.4s, B1 336.9s, B2 404.3s, A2 353.1s) but 0/8 scenes succeeded in every phase",
+      "5_merge": "ran; both merged result sets empty",
+      "6_ssim_correctness": "ran; 0/0 scenes compared",
+      "7_compute_reward": "wrote reward.json and reward.txt"
+    },
+    "summary": {
+      "correctness_ok": true,
+      "hard_fail_reasons": [
+        "baseline_results_missing",
+        "candidate_results_missing"
+      ],
+      "num_hidden_scenes": 0,
+      "num_speedups_computed": 0,
+      "reward": 0.0
+    },
+    "task_id": "revideo-perf-opt",
+    "verifier": "tests/test.sh + tests/compute_reward.py, byte-identical to the pinned checkout",
+    "verifier_file_sha256": {
+      "compute_reward.py": "b8ceb06a8d9aa8b73463cdc6e9910b106f706d6f47c7074f3fbceebc8dd54f00",
+      "hidden-scenes.tar.gz": "4cb4a332ad02782f07d374304f764cedfa2993f2ee0ae0ea5db82415af9991df",
+      "prep_build.py": "f09a7bfb32b529ef4a5c4c16c8e7a1185014eddc8ee4732dbcc2e70685ccb595",
+      "test.sh": "e77b3e48fec45685c15ceaaef79f1d26cbe35c509a12f3bdccdb5d362905ae90"
+    },
+    "wall_clock_ms": 3804241
+  },
+  "image": {
+    "config_digest": "sha256:291ff2584113385f988a5594c3d7979ac72a071fa77a1a3752c6766110cdd73b",
+    "config_digest_note": "the prior receipt's native_container_digest is this config digest, not the manifest digest; both are verified against the registry",
+    "deleted": false,
+    "layer_count": 34,
+    "local_disk_size": "14.8GB",
+    "manifest_digest": "sha256:675d298493278f891a50e41ed31ffdb71590d4583dfc1987385a48d872f25103",
+    "platform": {
+      "architecture": "amd64",
+      "os": "linux"
+    },
+    "pulled": true,
+    "reference": "ghcr.io/proximal-labs/frontier-swe/revideo-perf-opt:v4",
+    "repulled_this_session": false
+  },
+  "lane": "E2",
+  "license": {
+    "github_api_license_field": null,
+    "license_files_anywhere_in_tree": [
+      "tasks/dart-style-haskell/solution/dart-sdk/LICENSE",
+      "tasks/dart-style-haskell/solution/dart-sdk/bin/resources/devtools/assets/NOTICES",
+      "tasks/dart-style-haskell/solution/dart-sdk/bin/resources/devtools/assets/icons/material_symbols/LICENSE",
+      "tasks/git-to-zig/environment/git-src/COPYING",
+      "tasks/git-to-zig/environment/git-src/compat/nedmalloc/License.txt",
+      "tasks/git-to-zig/environment/git-src/contrib/persistent-https/LICENSE",
+      "tasks/git-to-zig/environment/git-src/contrib/subtree/COPYING",
+      "tasks/git-to-zig/environment/git-src/reftable/LICENSE",
+      "tasks/git-to-zig/environment/git-src/sha1dc/LICENSE.txt",
+      "tasks/notebook-compression/sources/license_manifest.json"
+    ],
+    "note": "every hit is a vendored third-party fixture inside a task payload; none licenses FrontierSWE itself",
+    "pyproject_declares_license": false,
+    "readme_declares_license": false,
+    "root_entries": [
+      ".gitignore",
+      "README.md",
+      "SCORING.md",
+      "docker",
+      "harbor_ext",
+      "pyproject.toml",
+      "scripts",
+      "tasks",
+      "uv.lock"
+    ],
+    "root_license_files": [],
+    "source_url": "https://github.com/Proximal-Labs/frontier-swe/blob/422b9bb95deb8efe436becb0ed3c44be23611e10/LICENSE",
+    "status": "missing"
+  },
+  "model": {
+    "artifact_produced": false,
+    "evaluated_hf_commit": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "model_id": "Qwen/Qwen3.6-35B-A3B",
+    "source": "immutable_base_model_revision"
+  },
+  "next_action": "request written license clearance for Proximal-Labs/frontier-swe@422b9bb95deb8efe436becb0ed3c44be23611e10 -- it is the cheapest gate, it blocks preflight ahead of everything else, and unlike the architecture blocker it does not require new hardware",
+  "preflight": {
+    "benchmark_repo": "outputs/e2_frontier_swe/frontier-swe",
+    "exit_code": 2,
+    "log": "outputs/e2_frontier_swe/logs/preflight_durable.txt",
+    "mode": "preflight",
+    "network": "none",
+    "receipt": "outputs/e2_frontier_swe/e2_frontier_swe_preflight_durable_20260809.json",
+    "score": null,
+    "status": "BLOCKED"
+  },
+  "schema_version": "e2-frontier-swe-lane-receipt-v2",
+  "side_effects": {
+    "bytes_added": "1.4GB durable clone plus a transient container layer",
+    "docker_mutex_note": "nothing over 2GB was pulled or built by this lane",
+    "docker_mutex_taken": false,
+    "git_commits": 0,
+    "image_pulls": 0,
+    "paid_api_calls": 0
+  },
+  "status": "BLOCKED",
+  "suite": {
+    "authoritative_repository": "https://github.com/Proximal-Labs/frontier-swe",
+    "benchmark_name": "FrontierSWE",
+    "frozen_roster_matches_checkout": true,
+    "native_verifier": "official task tests/test.sh + compute_reward.py",
+    "official_task_count": 17,
+    "official_task_ids": [
+      "cranelift-codegen-opt",
+      "dart-style-haskell",
+      "dependent-type-checker",
+      "ffmpeg-swscale-rewrite",
+      "frogsgame-rl",
+      "git-to-zig",
+      "granite-mamba2-inference-optimization",
+      "inference-system-optimization",
+      "libexpat-to-x86asm",
+      "lua-native-compiler",
+      "modular-stack-wan21",
+      "notebook-compression",
+      "optimizer-design",
+      "pcqm4mv2-autoresearch",
+      "postgres-sqlite-wire-adapter",
+      "pyright-type-checking-optimization",
+      "revideo-perf-opt"
+    ],
+    "pinned_revision": "422b9bb95deb8efe436becb0ed3c44be23611e10",
+    "score": null,
+    "score_note": "null by policy: no model artifact exists and the suite cannot execute on this host. The harness_validation reward is NOT a suite score.",
+    "smallest_task_id": "revideo-perf-opt",
+    "suite_id": "frontier_swe_eval"
+  },
+  "tests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=zvf-program python3 -m unittest -v flagship.test_frontier_swe_eval flagship.test_pavlov_frontier_swe_eval_adapter",
+    "errors": 0,
+    "failed": 0,
+    "log": "outputs/e2_frontier_swe/logs/focused_tests_rerun.txt",
+    "passed": 25,
+    "python": "3.14.6",
+    "status": "PASS"
+  },
+  "tinker": {
+    "attempts": 0,
+    "cost_usd": 0.0,
+    "status": "not_called"
+  },
+  "wandb": {
+    "reason": "no experiment was permitted; preflight is BLOCKED",
+    "run_id": null,
+    "status": "not_initialized",
+    "url": null
+  }
+}

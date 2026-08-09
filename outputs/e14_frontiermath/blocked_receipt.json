@@ -1,0 +1,140 @@
+{
+  "schema_version": "pavlov-e14-frontiermath-local-receipt-v1",
+  "status": "BLOCKED",
+  "recorded_at": "2026-08-09",
+  "suite": {
+    "suite_id": "frontiermath_eval",
+    "suite_role": "primary_eval",
+    "domain": "math",
+    "contract_split": "private held-out evaluation",
+    "contract_url": "https://epoch.ai/frontiermath/tiers-1-4/the-benchmark",
+    "adapter_path": "zvf-program/flagship/pavlov_agentharm_frontiermath_adapter.py",
+    "adapter_id": "pavlov-e10-e14-official-boundary-adapter-v1",
+    "adapter_schema_version": "pavlov-agentharm-frontiermath-adapter-v1",
+    "native_contract": {
+      "environment": "frontiermath_native/native-math",
+      "verifier": "frontiermath_verifier/math-native-v1",
+      "artifact_mode": "stateless",
+      "artifact_required": false,
+      "contract_signatures_present": true,
+      "runtime_receipt_present": false,
+      "verifier_receipt_present": false
+    }
+  },
+  "execution_source": {
+    "checkout": "/Users/arvind/Developer/tinker-rl-lab",
+    "branch": "main",
+    "commit": "8fdade2f1425908f8d961bced6dc89f45bcc47f4",
+    "output_directory": "/Users/arvind/Developer/tinker-rl-lab/outputs/e14_frontiermath",
+    "temporary_directory": "/tmp/e14-frontiermath.vou3E1"
+  },
+  "focused_test": {
+    "command": "PYTHONPATH=zvf-program /tmp/e14-frontiermath.vou3E1/venv/bin/python -m unittest flagship.test_pavlov_agentharm_frontiermath_adapter",
+    "exit_code": 0,
+    "status": "PASS",
+    "tests_run": 21
+  },
+  "cli_help": {
+    "command": "PYTHONPATH=zvf-program /tmp/e14-frontiermath.vou3E1/venv/bin/python -m flagship.pavlov_agentharm_frontiermath_adapter --help",
+    "exit_code": 0,
+    "status": "NO_CLI",
+    "observed": "No help text was emitted; the module has no argparse entrypoint or __main__ block."
+  },
+  "preflight": {
+    "command": "PYTHONPATH=zvf-program /tmp/e14-frontiermath.vou3E1/venv/bin/python - <<'PY'\nimport json\nfrom flagship import pavlov_agentharm_frontiermath_adapter as adapter\nbundle = adapter.generate_boundary_bundle()\nvalidation_errors = adapter.validate_adapter_bundle(bundle)\nevaluation = adapter.evaluate_bundle(bundle)\nprint(json.dumps({\n    \"suite_count\": bundle.get(\"suite_count\"),\n    \"suite_ids\": [b.get(\"suite_id\") for b in bundle.get(\"boundaries\", [])],\n    \"validation_errors\": validation_errors,\n    \"evaluation\": evaluation,\n}, sort_keys=True, indent=2))\nPY",
+    "status": "BLOCKED",
+    "bundle_suite_count": 2,
+    "bundle_suite_ids": ["agentharm_eval", "frontiermath_eval"],
+    "frontiermath_readiness": {
+      "structural_heldout": true,
+      "heldout_receipt_proven": false,
+      "primary_eval_claim_allowed": false
+    },
+    "validator_errors": [
+      "agentharm_eval: dataset_id is missing",
+      "agentharm_eval: dataset_id is missing",
+      "agentharm_eval: dataset_or_source_revision must be immutable",
+      "agentharm_eval: license_or_approval is required",
+      "agentharm_eval: task_id_hashes must be a non-empty list",
+      "agentharm_eval: split_manifest_hash must be a SHA-256 digest",
+      "agentharm_eval: container_runtime_digest must be a SHA-256 digest",
+      "agentharm_eval: verifier_hash must be a SHA-256 digest",
+      "agentharm_eval: decontamination_status must be an object",
+      "agentharm_eval: budget_receipt must be an object",
+      "agentharm_eval: wandb_run_identity.online must be true",
+      "agentharm_eval: wandb_run_identity.entity is missing",
+      "agentharm_eval: wandb_run_identity.project is missing",
+      "agentharm_eval: wandb_run_identity.group is missing",
+      "agentharm_eval: wandb_run_identity.run_id is missing",
+      "agentharm_eval: wandb_run_identity.run_url is missing",
+      "agentharm_eval: wandb_run_identity.run_url must be https URL",
+      "agentharm_eval: tinker_run_identity.run_id is missing",
+      "agentharm_eval: tinker_run_identity.cost_status is invalid",
+      "agentharm_eval: cost_status is invalid",
+      "agentharm_eval: hf_checkpoints must be a non-empty list",
+      "frontiermath_eval: dataset_id is missing",
+      "frontiermath_eval: dataset_id is missing",
+      "frontiermath_eval: dataset_or_source_revision must be immutable",
+      "frontiermath_eval: license_or_approval is required",
+      "frontiermath_eval: task_id_hashes must be a non-empty list",
+      "frontiermath_eval: split_manifest_hash must be a SHA-256 digest",
+      "frontiermath_eval: container_runtime_digest must be a SHA-256 digest",
+      "frontiermath_eval: verifier_hash must be a SHA-256 digest",
+      "frontiermath_eval: decontamination_status must be an object",
+      "frontiermath_eval: budget_receipt must be an object",
+      "frontiermath_eval: wandb_run_identity.online must be true",
+      "frontiermath_eval: wandb_run_identity.entity is missing",
+      "frontiermath_eval: wandb_run_identity.project is missing",
+      "frontiermath_eval: wandb_run_identity.group is missing",
+      "frontiermath_eval: wandb_run_identity.run_id is missing",
+      "frontiermath_eval: wandb_run_identity.run_url is missing",
+      "frontiermath_eval: wandb_run_identity.run_url must be https URL",
+      "frontiermath_eval: tinker_run_identity.run_id is missing",
+      "frontiermath_eval: tinker_run_identity.cost_status is invalid",
+      "frontiermath_eval: cost_status is invalid",
+      "frontiermath_eval: hf_checkpoints must be a non-empty list"
+    ]
+  },
+  "public_asset": {
+    "source_url": "https://epoch.ai/files/sample_question_transcripts.zip",
+    "local_path": "/Users/arvind/Developer/tinker-rl-lab/outputs/e14_frontiermath/frontiermath_public_samples.zip",
+    "sha256": "7bdf3231086cc7de000ea57380c36a64abdf2644f1111b044d1bab0b383b0ff8",
+    "bytes": 750459,
+    "archive_jsonl_entries": 150,
+    "distinct_problem_tokens": ["ALL3", "CWA2", "CWD31", "RAP1", "TIK2"],
+    "license_basis": "Epoch AI states the work is available under Creative Commons Attribution with source and author credit.",
+    "evaluation_use": "not_used_as_e14_score",
+    "reason_not_used": "The official download is representative sample transcripts, not the contract's private held-out FrontierMath task manifest; it has no local immutable task/split/verifier receipt for the primary suite."
+  },
+  "experiment": {
+    "attempted": false,
+    "evaluated_task_count": 0,
+    "evaluated_sample_count": 0,
+    "measured_metrics": null,
+    "related_benchmark_substitution": false,
+    "wandb": {
+      "project": "codex",
+      "online": false,
+      "run_id": null,
+      "run_url": null,
+      "reason": "No experiment started because the exact suite boundary is not runnable locally."
+    },
+    "huggingface_revisions": [],
+    "tinker": {
+      "run_id": null,
+      "cost_usd": 0.0,
+      "paid_attempts": 0
+    }
+  },
+  "blockers": [
+    "Only a metadata-only E10/E14 adapter exists; no standalone FrontierMath runner or CLI is present.",
+    "Full-suite dataset identity and immutable source revision are missing.",
+    "Full-suite license/approval receipt and task ID/split-manifest hashes are missing.",
+    "The native runtime/container receipt and verifier implementation/hash receipt are missing.",
+    "Decontamination, budget, W&B, Tinker, and Hugging Face receipts are missing.",
+    "The public representative sample archive cannot substitute for the private held-out primary suite."
+  ],
+  "credentials_read": false,
+  "network_activity": "Official Epoch AI metadata and the linked public sample archive only; no paid service, W&B, HF push, Tinker run, or credential access.",
+  "git_observation": "main...origin/main; no tracked modifications; pre-existing untracked output lanes plus this e14 output directory."
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": "e13-openreward-games-receipt-v1",
+  "lane": "E13 openreward_games_eval",
+  "suite": "openreward_games_eval",
+  "generated_at_utc": "2026-08-09T07:35:07Z",
+  "status": "PARTIAL",
+  "run_kind": "manifest_validation",
+  "is_model_score": false,
+  "score": null,
+  "score_withheld_because": [
+    "run_kind='manifest_validation' is not a scored model rollout",
+    "no verified episodes"
+  ],
+  "episodes_verified": 0,
+  "episodes_accepted": 0,
+  "seed_separation": {
+    "environment": "GeneralReasoning/Wordle",
+    "train_split": "train",
+    "eval_split": "test",
+    "train_manifest_sha256": "31965f81b59a70f2a4026cde53d78b16b4e9cd548314962785d99bad56534a04",
+    "eval_manifest_sha256": "8ee28687571be61fa04b7baa846147b77bbb5cec43cf86ac3f2bfeb791fe25ba",
+    "instance_key": "(variant, seed)",
+    "train_instance_count": 200,
+    "eval_instance_count": 200,
+    "shared_instances": [],
+    "shared_seeds": [],
+    "shared_task_ids": [],
+    "variant_coverage_matches": true,
+    "violations": [],
+    "holds": true
+  },
+  "evidence": {
+    "train_manifest": "outputs/e13_openreward_games/manifests/wordle_train.json",
+    "eval_manifest": "outputs/e13_openreward_games/manifests/wordle_test.json"
+  },
+  "blockers": []
+}

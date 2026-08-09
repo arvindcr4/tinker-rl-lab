@@ -1,0 +1,279 @@
+{
+  "access_request": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/ACCESS_REQUEST_HALLUMINATE_2026-08-09.md",
+  "benchmark": "Halluminate/WebBench",
+  "blockers": [
+    {
+      "external_receipt_required": {
+        "fields": [
+          "approved=true",
+          "access_receipt_id",
+          "environment.environment_id",
+          "environment.environment_revision (40-hex immutable)",
+          "environment.container_image_digest (sha256:<64 hex>)",
+          "environment.browser_revision",
+          "environment.screenshot_capture=true",
+          "environment.dom_capture=true",
+          "environment.task_reset=true",
+          "environment.credential_scope"
+        ],
+        "provider": "Halluminate"
+      },
+      "id": "halluminate_live_environment",
+      "severity": "terminal_without_provider",
+      "unblock_command": "python3 zvf-program/flagship/webbench_eval.py --native-receipt <halluminate_receipt.json> ... --launch",
+      "why": "The public repo ships the task CSV and MIT license only. The live browser environment, credentials, and reset contract are not public."
+    },
+    {
+      "evidence_url": "https://github.com/Halluminate/WebBench/issues/2",
+      "external_receipt_required": {
+        "fields": [
+          "native_verifier.available=true",
+          "native_verifier.ground_truth_available=true",
+          "native_verifier.verifier_id",
+          "native_verifier.verifier_revision (40-hex immutable)",
+          "native_verifier.verifier_sha256",
+          "native_verifier.command (argv list)",
+          "native_verifier.receipt_url (https)"
+        ],
+        "provider": "Halluminate"
+      },
+      "id": "halluminate_native_verifier",
+      "severity": "terminal_without_provider",
+      "why": "No public ground truth or scoring script; the repo's ground-truth issue is open. Human annotation is not native verification."
+    },
+    {
+      "external_receipt_required": {
+        "fields": [
+          "allowed_task_ids",
+          "credential_scope",
+          "side_effect_policy",
+          "terms_or_license_signoff"
+        ],
+        "provider": "Halluminate"
+      },
+      "id": "webbench_task_authorization",
+      "severity": "policy",
+      "why": "1010 of 2647 tasks (38.2%) are write-class against 448 live third-party domains. MIT covers the repo contents, not automated writes to those services."
+    },
+    {
+      "external_receipt_required": {
+        "fields": [
+          "evaluation_task_id_hash",
+          "heldout_exists",
+          "heldout_relationship_to_public_csv"
+        ],
+        "provider": "Halluminate"
+      },
+      "id": "official_heldout_split",
+      "severity": "informational",
+      "why": "Public CSV IDs are sparse over 0..2724 with 78 absent. Whether the absent IDs are a withheld split is unconfirmed."
+    },
+    {
+      "id": "model_artifact",
+      "severity": "downstream",
+      "why": "No completed compatible Tinker sampler checkpoint. Preflight falls back to base-model binding Qwen/Qwen3-VL-30B-A3B-Instruct@9c4b90e1e4ba969fd3b5378b57d966d725f1b86c. Moot until the environment/verifier land."
+    }
+  ],
+  "characterization": {
+    "categories": {
+      "CREATE": 594,
+      "DELETE": 166,
+      "FILE_MANIPULATION": 44,
+      "READ": 1637,
+      "UPDATE": 206
+    },
+    "category_share": {
+      "CREATE": 0.2244,
+      "DELETE": 0.0627,
+      "FILE_MANIPULATION": 0.0166,
+      "READ": 0.6184,
+      "UPDATE": 0.0778
+    },
+    "csv_id_gap_count": 78,
+    "csv_id_max": 2724,
+    "csv_id_min": 0,
+    "csv_ids_contiguous": false,
+    "distinct_hosts": 449,
+    "distinct_registrable_domains": 448,
+    "distinct_task_texts": 2647,
+    "keyword_probe_counts": {
+      "captcha": 0,
+      "credential_or_account": 536,
+      "payment_or_checkout": 20
+    },
+    "task_char_len_max": 453,
+    "task_char_len_median": 265,
+    "task_char_len_min": 160,
+    "task_count": 2647,
+    "tasks_per_domain_max": 40,
+    "tasks_per_domain_median": 3.0,
+    "tasks_per_domain_min": 2,
+    "url_schemes": {
+      "http": 14,
+      "https": 2633
+    },
+    "verifier_fields_absent_from_public_csv": [
+      "success_criteria",
+      "expected_final_state",
+      "answer_key_or_rubric",
+      "allowed_side_effects",
+      "credential_scope",
+      "reset_procedure"
+    ],
+    "write_class_share": 0.3816,
+    "write_class_task_count": 1010
+  },
+  "disjointness": {
+    "disjoint": true,
+    "errors": [],
+    "evaluation_task_count": 2647,
+    "evaluation_task_id_hash": "e677af69aa5d1dc7137e54c18c41d99343a41b3e5e77377f7512f42c1a34d2b5",
+    "overlap_count": 0,
+    "overlap_task_ids": [],
+    "training_declared_task_id_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "training_declared_task_id_hash_verified": true,
+    "training_manifest_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/eval_only_training_task_manifest.json",
+    "training_manifest_sha256": "d37abd66b0a9dd6d8eef32355480e2bf094eac514b9b14cce5c0e0789e35faeb",
+    "training_task_count": 0,
+    "training_task_id_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "valid": true
+  },
+  "evidence": {
+    "ACCESS_REQUEST_HALLUMINATE_2026-08-09.md": {
+      "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/ACCESS_REQUEST_HALLUMINATE_2026-08-09.md",
+      "sha256": "9a747c7381581966386120bd3138f9ff9107b3eeb716fe20cbcd2757dddb0c7b"
+    },
+    "boundary_manifest_full_eval.json": {
+      "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/boundary_manifest_full_eval.json",
+      "sha256": "e2f03ac8ac7cb053977572fd6910fb2e95e201aa87ed57dc563722333f3a2e53"
+    },
+    "logs/boundary_check_full_eval_2026-08-09.json": {
+      "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/logs/boundary_check_full_eval_2026-08-09.json",
+      "sha256": "eadfe5b000413d70a9cf20867ccc6cb167f64be7e67593ae5b5d2284500de29e"
+    },
+    "logs/build_split_2026-08-09.json": {
+      "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/logs/build_split_2026-08-09.json",
+      "sha256": "cd84386df0bd9fed03d6b47bd26ec161b436b93c577a1a4c76b936d7a0953d45"
+    },
+    "logs/pytest_adapter_2026-08-09.log": {
+      "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/logs/pytest_adapter_2026-08-09.log",
+      "sha256": "12b0dbe332f2e87d1b98e6fec044aa35ae4e1d77082035f20c533900f09400c8"
+    },
+    "logs/runner_preflight_2026-08-09.json": {
+      "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/logs/runner_preflight_2026-08-09.json",
+      "sha256": "f5f722f200a4d8d5218553bfa3496f4fb62731cf5dd97a08e9aff2f97937f75e"
+    },
+    "split/webbench_disjointness_proof.json": {
+      "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/split/webbench_disjointness_proof.json",
+      "sha256": "dbdbcd6ce8287627f28d82c3bc95be2b0ae93265d7fdc42727a22e218119fac9"
+    },
+    "split/webbench_eval_split_manifest.json": {
+      "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/split/webbench_eval_split_manifest.json",
+      "sha256": "77df6f02c36944ff5acf8da42c35283979a962ecfe36aca239801dfc93c80d6a"
+    },
+    "split/webbench_split_derivation.json": {
+      "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/split/webbench_split_derivation.json",
+      "sha256": "76523ab8f4e5b971789ffc2f0e8dfa812712a3ab88b42b5cac8a960b54622f8d"
+    },
+    "split/webbench_task_characterization.json": {
+      "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/split/webbench_task_characterization.json",
+      "sha256": "a5ba1101a4bde57f2256f260055b9704b64398b9ca58fe4ce6a251d134dda692"
+    },
+    "split/webbench_task_index.jsonl": {
+      "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/split/webbench_task_index.jsonl",
+      "sha256": "b28275dae3c1d32360a9bee5ea2d64f22cf5c89b37d431771889f0b0250178ee"
+    }
+  },
+  "executed": {
+    "adapter_unit_tests": {
+      "command": "python3 -m pytest flagship/test_pavlov_webbench_eval_adapter.py -v",
+      "cwd": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program",
+      "failed": 0,
+      "passed": 35,
+      "subtests_passed": 6
+    },
+    "boundary_check": {
+      "blocker_codes": [
+        "source_receipt_invalid",
+        "source_receipt_invalid",
+        "task_receipt_invalid",
+        "split_receipt_invalid",
+        "environment_contract_missing"
+      ],
+      "checks": {
+        "environment": false,
+        "provenance_receipts_complete": false,
+        "source": false,
+        "tasks_and_split": false
+      },
+      "command": "python3 zvf-program/flagship/pavlov_webbench_eval_adapter.py --manifest outputs/e6_webbench/boundary_manifest_full_eval.json",
+      "exit_code": 1,
+      "status": "BLOCKED"
+    },
+    "runner_preflight": {
+      "blockers": [
+        "official Halluminate environment/verifier access receipt is missing"
+      ],
+      "command": "python3 zvf-program/flagship/webbench_eval.py --dataset outputs/e6_webbench/webbenchfinal.csv --training-task-manifest outputs/e6_webbench/eval_only_training_task_manifest.json --env outputs/e6_webbench/lane.w3we70/venv --receipt outputs/e6_webbench/preflight_receipt_2026-08-09.json",
+      "exit_code": 2,
+      "gates_pass": 7,
+      "gates_total": 8,
+      "status": "BLOCKED"
+    },
+    "split_derivation": {
+      "command": "python3 zvf-program/flagship/pavlov_webbench_eval_adapter.py --build-split --dataset outputs/e6_webbench/webbenchfinal.csv --training-task-manifest outputs/e6_webbench/eval_only_training_task_manifest.json --license outputs/e6_webbench/WEBBENCH_LICENSE --out-dir outputs/e6_webbench/split",
+      "exit_code": 0
+    }
+  },
+  "generated_at_utc": "2026-08-09T07:25:15Z",
+  "is_model_score": false,
+  "lane": "E6",
+  "model_artifact_exists": false,
+  "network_accessed": false,
+  "paid_calls_executed": false,
+  "schema_version": "pavlov-e6-lane-receipt-v1",
+  "score": null,
+  "source": {
+    "dataset_file": "webbenchfinal.csv",
+    "dataset_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/webbenchfinal.csv",
+    "dataset_sha256": "fd5311a38bdb6f941e8f544150735656c114d76fbfb17193da973d5de0165217",
+    "license": "MIT",
+    "license_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/WEBBENCH_LICENSE",
+    "license_sha256": "96804aa272fe40cdfb8b5c8f4d1d94757bcfaf1bf5596fb829214843d2371e58",
+    "license_sha256_matches_pin": true,
+    "name": "Halluminate/WebBench",
+    "revision": "ea7a1628443321363989f354401f0653e0cba6f4",
+    "suite_id": "webbench_eval",
+    "url": "https://github.com/Halluminate/WebBench"
+  },
+  "split": {
+    "authenticated_receipt": null,
+    "cross_implementation_check": {
+      "legacy_runner_manifest_hash": "66da44a04ec48fe356b3b0d1c420c40679faa1a7ac650728e254b625bb674a07",
+      "legacy_runner_task_id_hash": "22afbdd3cc47e6dba1e3c57ddbe5f762b54be5d2af6ac76bbd206c19eb83b12e",
+      "matches_webbench_eval_constants": true,
+      "note": "webbench_eval.py hashes the same CSV with an independent scheme; both constants reproduce"
+    },
+    "derivation_hash": "6d93f512ac1ffdcf609603878cf86c9592fc0adb028e616854dd62ec8014150d",
+    "receipt_class": "local_derivation",
+    "role": "primary_eval",
+    "split": "evaluation",
+    "split_manifest": {
+      "role": "primary_eval",
+      "split": "evaluation",
+      "suite_id": "webbench_eval",
+      "task_id_hash": "e677af69aa5d1dc7137e54c18c41d99343a41b3e5e77377f7512f42c1a34d2b5"
+    },
+    "split_manifest_hash": "feb368884a41c994567cd7067cf22c47fc67e27158dd635df7ab4a594cf93f0c",
+    "task_count": 2647,
+    "task_digest_hash": "061fd64b235505d3218f087c01b9b5946c6a7ef2baa5893c549b0ce8ad68a32a",
+    "task_id_hash": "e677af69aa5d1dc7137e54c18c41d99343a41b3e5e77377f7512f42c1a34d2b5",
+    "task_index_hash": "84921790fdd4cf20af876324311ea2d6399fc6032cd4ce4ca44fa5b7fe6f85e8",
+    "task_uid_hash": "2929daef72aa6ec9f0db8c9878f412ce5af0c2c03872096d1ad4fcd2bf910187"
+  },
+  "status": "BLOCKED",
+  "substitution_policy": "related_browser_benchmarks_forbidden; BrowserGym/WebArena/MiniWoB/Playwright are not webbench_eval",
+  "suite_id": "webbench_eval",
+  "tasks_executed": 0,
+  "zero_cost": true
+}

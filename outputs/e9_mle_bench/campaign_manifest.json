@@ -1,0 +1,5744 @@
+{
+  "allocation_allowed": false,
+  "arms": [
+    {
+      "arm_id": "lr-1e-5",
+      "blockers": [
+        "missing immutable train/eval split receipt",
+        "missing dataset revision receipt",
+        "missing dataset and benchmark license receipt",
+        "missing split manifest and disjoint task-ID hash receipt",
+        "missing container/environment digest receipt",
+        "missing decontamination receipt",
+        "missing budget authorization receipt",
+        "missing online W&B initialization receipt",
+        "missing Hugging Face publication for every checkpoint receipt",
+        "missing verifier revision/digest receipt",
+        "missing model revision receipt",
+        "dataset and benchmark licenses require recorded sign-off",
+        "dataset revisions and disjoint task-ID hashes require freezing",
+        "training and primary_eval suites lack per-suite immutable provenance receipts: agentdojo_train, agentharm_eval, apex_agents_eval, api_bank_rlvr_train, appbench_eval, banker_toolbench_eval, bfcl_train, binaryaudit_eval, browsergym_train, crafter_train, frontier_swe_eval, frontiermath_eval, lifescibench_eval, mle_bench_eval, openr1_math_train, openreward_games_eval, openreward_train, rtlcoder_train, scienceworld_train, sdab_eval, swe_bench_pro_eval, swe_gym_train, unix_ctf_train, verilog_eval, visual_app_train, webbench_eval"
+      ],
+      "held_out_suite_ids": [
+        "agentharm_eval",
+        "apex_agents_eval",
+        "appbench_eval",
+        "banker_toolbench_eval",
+        "frontiermath_eval",
+        "openreward_games_eval"
+      ],
+      "hf_publication_policy": {
+        "allowed_visibility": [
+          "public",
+          "private"
+        ],
+        "checkpoint_identity_fields": [
+          "stage",
+          "repo_url",
+          "revision",
+          "url"
+        ],
+        "every_checkpoint": true,
+        "periodic_and_final": true,
+        "receipt_required_before_launch": true,
+        "safe_public_artifact_rule": {
+          "private_allowed_when_publication_is_not_safe": true,
+          "public_only_when_quota_and_data_license_safe": true,
+          "required": true
+        },
+        "unique_repo_revision_url_required": true,
+        "visibility": "decide_per_checkpoint",
+        "visibility_options": [
+          "public",
+          "private"
+        ],
+        "visibility_policy": "public_or_private_per_quota_and_data_license_safety"
+      },
+      "id": "lr-1e-5",
+      "launchable": false,
+      "learning_rate": 1e-05,
+      "learning_rate_label": "1e-5",
+      "lr": 1e-05,
+      "lr_label": "1e-5",
+      "missing_receipts": [
+        "immutable_split",
+        "dataset_revision",
+        "license",
+        "split_manifest_hash",
+        "container_digest",
+        "decontamination",
+        "budget",
+        "wandb_online",
+        "hf_publication",
+        "verifier",
+        "model_revision"
+      ],
+      "model_id": "Qwen/Qwen3.6-35B-A3B",
+      "model_role": "primary",
+      "pending_primary_eval_receipts": [
+        "agentharm_eval",
+        "apex_agents_eval",
+        "appbench_eval",
+        "banker_toolbench_eval",
+        "binaryaudit_eval",
+        "frontier_swe_eval",
+        "frontiermath_eval",
+        "lifescibench_eval",
+        "mle_bench_eval",
+        "openreward_games_eval",
+        "sdab_eval",
+        "swe_bench_pro_eval",
+        "verilog_eval",
+        "webbench_eval"
+      ],
+      "pending_suite_receipts": [
+        "agentdojo_train",
+        "agentharm_eval",
+        "apex_agents_eval",
+        "api_bank_rlvr_train",
+        "appbench_eval",
+        "banker_toolbench_eval",
+        "bfcl_train",
+        "binaryaudit_eval",
+        "browsergym_train",
+        "crafter_train",
+        "frontier_swe_eval",
+        "frontiermath_eval",
+        "lifescibench_eval",
+        "mle_bench_eval",
+        "openr1_math_train",
+        "openreward_games_eval",
+        "openreward_train",
+        "rtlcoder_train",
+        "scienceworld_train",
+        "sdab_eval",
+        "swe_bench_pro_eval",
+        "swe_gym_train",
+        "unix_ctf_train",
+        "verilog_eval",
+        "visual_app_train",
+        "webbench_eval"
+      ],
+      "pending_training_receipts": [
+        "agentdojo_train",
+        "api_bank_rlvr_train",
+        "bfcl_train",
+        "browsergym_train",
+        "crafter_train",
+        "openr1_math_train",
+        "openreward_train",
+        "rtlcoder_train",
+        "scienceworld_train",
+        "swe_gym_train",
+        "unix_ctf_train",
+        "visual_app_train"
+      ],
+      "primary_eval_suite_ids": [
+        "agentharm_eval",
+        "apex_agents_eval",
+        "appbench_eval",
+        "banker_toolbench_eval",
+        "binaryaudit_eval",
+        "frontier_swe_eval",
+        "frontiermath_eval",
+        "lifescibench_eval",
+        "mle_bench_eval",
+        "openreward_games_eval",
+        "sdab_eval",
+        "swe_bench_pro_eval",
+        "verilog_eval",
+        "webbench_eval"
+      ],
+      "primary_eval_suite_receipt_status": {
+        "agentharm_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "apex_agents_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "appbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "banker_toolbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "binaryaudit_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "frontier_swe_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "frontiermath_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "lifescibench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "mle_bench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "openreward_games_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "sdab_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "swe_bench_pro_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "verilog_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "webbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        }
+      },
+      "receipt_status": {
+        "budget": false,
+        "container_digest": false,
+        "dataset_revision": false,
+        "decontamination": false,
+        "hf_publication": false,
+        "immutable_split": false,
+        "license": false,
+        "model_revision": false,
+        "split_manifest_hash": false,
+        "verifier": false,
+        "wandb_online": false
+      },
+      "required_receipts": [
+        "immutable_split",
+        "dataset_revision",
+        "license",
+        "split_manifest_hash",
+        "container_digest",
+        "decontamination",
+        "budget",
+        "wandb_online",
+        "hf_publication",
+        "verifier",
+        "model_revision"
+      ],
+      "stage": "short_screening",
+      "status": "BLOCKED",
+      "steps": 10,
+      "suite_receipt_status": {
+        "agentdojo_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "agentharm_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "apex_agents_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "api_bank_rlvr_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "appbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "banker_toolbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "bfcl_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "binaryaudit_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "browsergym_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "crafter_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "frontier_swe_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "frontiermath_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "lifescibench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "mle_bench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "openr1_math_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "openreward_games_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "openreward_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "rtlcoder_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "scienceworld_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "sdab_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "swe_bench_pro_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "swe_gym_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "unix_ctf_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "verilog_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "visual_app_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "webbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        }
+      },
+      "training_suite_ids": [
+        "agentdojo_train",
+        "api_bank_rlvr_train",
+        "bfcl_train",
+        "browsergym_train",
+        "crafter_train",
+        "openr1_math_train",
+        "openreward_train",
+        "rtlcoder_train",
+        "scienceworld_train",
+        "swe_gym_train",
+        "unix_ctf_train",
+        "visual_app_train"
+      ],
+      "wandb": {
+        "entity": "arvindcr4-pes-university",
+        "group": "pavlov-successive-halving",
+        "mode": "online",
+        "project": "tinker-rl-lab-pavlov",
+        "receipt_required_before_launch": true
+      }
+    },
+    {
+      "arm_id": "lr-2e-5",
+      "blockers": [
+        "missing immutable train/eval split receipt",
+        "missing dataset revision receipt",
+        "missing dataset and benchmark license receipt",
+        "missing split manifest and disjoint task-ID hash receipt",
+        "missing container/environment digest receipt",
+        "missing decontamination receipt",
+        "missing budget authorization receipt",
+        "missing online W&B initialization receipt",
+        "missing Hugging Face publication for every checkpoint receipt",
+        "missing verifier revision/digest receipt",
+        "missing model revision receipt",
+        "dataset and benchmark licenses require recorded sign-off",
+        "dataset revisions and disjoint task-ID hashes require freezing",
+        "training and primary_eval suites lack per-suite immutable provenance receipts: agentdojo_train, agentharm_eval, apex_agents_eval, api_bank_rlvr_train, appbench_eval, banker_toolbench_eval, bfcl_train, binaryaudit_eval, browsergym_train, crafter_train, frontier_swe_eval, frontiermath_eval, lifescibench_eval, mle_bench_eval, openr1_math_train, openreward_games_eval, openreward_train, rtlcoder_train, scienceworld_train, sdab_eval, swe_bench_pro_eval, swe_gym_train, unix_ctf_train, verilog_eval, visual_app_train, webbench_eval"
+      ],
+      "held_out_suite_ids": [
+        "agentharm_eval",
+        "apex_agents_eval",
+        "appbench_eval",
+        "banker_toolbench_eval",
+        "frontiermath_eval",
+        "openreward_games_eval"
+      ],
+      "hf_publication_policy": {
+        "allowed_visibility": [
+          "public",
+          "private"
+        ],
+        "checkpoint_identity_fields": [
+          "stage",
+          "repo_url",
+          "revision",
+          "url"
+        ],
+        "every_checkpoint": true,
+        "periodic_and_final": true,
+        "receipt_required_before_launch": true,
+        "safe_public_artifact_rule": {
+          "private_allowed_when_publication_is_not_safe": true,
+          "public_only_when_quota_and_data_license_safe": true,
+          "required": true
+        },
+        "unique_repo_revision_url_required": true,
+        "visibility": "decide_per_checkpoint",
+        "visibility_options": [
+          "public",
+          "private"
+        ],
+        "visibility_policy": "public_or_private_per_quota_and_data_license_safety"
+      },
+      "id": "lr-2e-5",
+      "launchable": false,
+      "learning_rate": 2e-05,
+      "learning_rate_label": "2e-5",
+      "lr": 2e-05,
+      "lr_label": "2e-5",
+      "missing_receipts": [
+        "immutable_split",
+        "dataset_revision",
+        "license",
+        "split_manifest_hash",
+        "container_digest",
+        "decontamination",
+        "budget",
+        "wandb_online",
+        "hf_publication",
+        "verifier",
+        "model_revision"
+      ],
+      "model_id": "Qwen/Qwen3.6-35B-A3B",
+      "model_role": "primary",
+      "pending_primary_eval_receipts": [
+        "agentharm_eval",
+        "apex_agents_eval",
+        "appbench_eval",
+        "banker_toolbench_eval",
+        "binaryaudit_eval",
+        "frontier_swe_eval",
+        "frontiermath_eval",
+        "lifescibench_eval",
+        "mle_bench_eval",
+        "openreward_games_eval",
+        "sdab_eval",
+        "swe_bench_pro_eval",
+        "verilog_eval",
+        "webbench_eval"
+      ],
+      "pending_suite_receipts": [
+        "agentdojo_train",
+        "agentharm_eval",
+        "apex_agents_eval",
+        "api_bank_rlvr_train",
+        "appbench_eval",
+        "banker_toolbench_eval",
+        "bfcl_train",
+        "binaryaudit_eval",
+        "browsergym_train",
+        "crafter_train",
+        "frontier_swe_eval",
+        "frontiermath_eval",
+        "lifescibench_eval",
+        "mle_bench_eval",
+        "openr1_math_train",
+        "openreward_games_eval",
+        "openreward_train",
+        "rtlcoder_train",
+        "scienceworld_train",
+        "sdab_eval",
+        "swe_bench_pro_eval",
+        "swe_gym_train",
+        "unix_ctf_train",
+        "verilog_eval",
+        "visual_app_train",
+        "webbench_eval"
+      ],
+      "pending_training_receipts": [
+        "agentdojo_train",
+        "api_bank_rlvr_train",
+        "bfcl_train",
+        "browsergym_train",
+        "crafter_train",
+        "openr1_math_train",
+        "openreward_train",
+        "rtlcoder_train",
+        "scienceworld_train",
+        "swe_gym_train",
+        "unix_ctf_train",
+        "visual_app_train"
+      ],
+      "primary_eval_suite_ids": [
+        "agentharm_eval",
+        "apex_agents_eval",
+        "appbench_eval",
+        "banker_toolbench_eval",
+        "binaryaudit_eval",
+        "frontier_swe_eval",
+        "frontiermath_eval",
+        "lifescibench_eval",
+        "mle_bench_eval",
+        "openreward_games_eval",
+        "sdab_eval",
+        "swe_bench_pro_eval",
+        "verilog_eval",
+        "webbench_eval"
+      ],
+      "primary_eval_suite_receipt_status": {
+        "agentharm_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "apex_agents_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "appbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "banker_toolbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "binaryaudit_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "frontier_swe_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "frontiermath_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "lifescibench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "mle_bench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "openreward_games_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "sdab_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "swe_bench_pro_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "verilog_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "webbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        }
+      },
+      "receipt_status": {
+        "budget": false,
+        "container_digest": false,
+        "dataset_revision": false,
+        "decontamination": false,
+        "hf_publication": false,
+        "immutable_split": false,
+        "license": false,
+        "model_revision": false,
+        "split_manifest_hash": false,
+        "verifier": false,
+        "wandb_online": false
+      },
+      "required_receipts": [
+        "immutable_split",
+        "dataset_revision",
+        "license",
+        "split_manifest_hash",
+        "container_digest",
+        "decontamination",
+        "budget",
+        "wandb_online",
+        "hf_publication",
+        "verifier",
+        "model_revision"
+      ],
+      "stage": "short_screening",
+      "status": "BLOCKED",
+      "steps": 10,
+      "suite_receipt_status": {
+        "agentdojo_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "agentharm_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "apex_agents_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "api_bank_rlvr_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "appbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "banker_toolbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "bfcl_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "binaryaudit_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "browsergym_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "crafter_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "frontier_swe_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "frontiermath_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "lifescibench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "mle_bench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "openr1_math_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "openreward_games_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "openreward_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "rtlcoder_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "scienceworld_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "sdab_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "swe_bench_pro_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "swe_gym_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "unix_ctf_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "verilog_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "visual_app_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "webbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        }
+      },
+      "training_suite_ids": [
+        "agentdojo_train",
+        "api_bank_rlvr_train",
+        "bfcl_train",
+        "browsergym_train",
+        "crafter_train",
+        "openr1_math_train",
+        "openreward_train",
+        "rtlcoder_train",
+        "scienceworld_train",
+        "swe_gym_train",
+        "unix_ctf_train",
+        "visual_app_train"
+      ],
+      "wandb": {
+        "entity": "arvindcr4-pes-university",
+        "group": "pavlov-successive-halving",
+        "mode": "online",
+        "project": "tinker-rl-lab-pavlov",
+        "receipt_required_before_launch": true
+      }
+    },
+    {
+      "arm_id": "lr-4e-5",
+      "blockers": [
+        "missing immutable train/eval split receipt",
+        "missing dataset revision receipt",
+        "missing dataset and benchmark license receipt",
+        "missing split manifest and disjoint task-ID hash receipt",
+        "missing container/environment digest receipt",
+        "missing decontamination receipt",
+        "missing budget authorization receipt",
+        "missing online W&B initialization receipt",
+        "missing Hugging Face publication for every checkpoint receipt",
+        "missing verifier revision/digest receipt",
+        "missing model revision receipt",
+        "dataset and benchmark licenses require recorded sign-off",
+        "dataset revisions and disjoint task-ID hashes require freezing",
+        "training and primary_eval suites lack per-suite immutable provenance receipts: agentdojo_train, agentharm_eval, apex_agents_eval, api_bank_rlvr_train, appbench_eval, banker_toolbench_eval, bfcl_train, binaryaudit_eval, browsergym_train, crafter_train, frontier_swe_eval, frontiermath_eval, lifescibench_eval, mle_bench_eval, openr1_math_train, openreward_games_eval, openreward_train, rtlcoder_train, scienceworld_train, sdab_eval, swe_bench_pro_eval, swe_gym_train, unix_ctf_train, verilog_eval, visual_app_train, webbench_eval"
+      ],
+      "held_out_suite_ids": [
+        "agentharm_eval",
+        "apex_agents_eval",
+        "appbench_eval",
+        "banker_toolbench_eval",
+        "frontiermath_eval",
+        "openreward_games_eval"
+      ],
+      "hf_publication_policy": {
+        "allowed_visibility": [
+          "public",
+          "private"
+        ],
+        "checkpoint_identity_fields": [
+          "stage",
+          "repo_url",
+          "revision",
+          "url"
+        ],
+        "every_checkpoint": true,
+        "periodic_and_final": true,
+        "receipt_required_before_launch": true,
+        "safe_public_artifact_rule": {
+          "private_allowed_when_publication_is_not_safe": true,
+          "public_only_when_quota_and_data_license_safe": true,
+          "required": true
+        },
+        "unique_repo_revision_url_required": true,
+        "visibility": "decide_per_checkpoint",
+        "visibility_options": [
+          "public",
+          "private"
+        ],
+        "visibility_policy": "public_or_private_per_quota_and_data_license_safety"
+      },
+      "id": "lr-4e-5",
+      "launchable": false,
+      "learning_rate": 4e-05,
+      "learning_rate_label": "4e-5",
+      "lr": 4e-05,
+      "lr_label": "4e-5",
+      "missing_receipts": [
+        "immutable_split",
+        "dataset_revision",
+        "license",
+        "split_manifest_hash",
+        "container_digest",
+        "decontamination",
+        "budget",
+        "wandb_online",
+        "hf_publication",
+        "verifier",
+        "model_revision"
+      ],
+      "model_id": "Qwen/Qwen3.6-35B-A3B",
+      "model_role": "primary",
+      "pending_primary_eval_receipts": [
+        "agentharm_eval",
+        "apex_agents_eval",
+        "appbench_eval",
+        "banker_toolbench_eval",
+        "binaryaudit_eval",
+        "frontier_swe_eval",
+        "frontiermath_eval",
+        "lifescibench_eval",
+        "mle_bench_eval",
+        "openreward_games_eval",
+        "sdab_eval",
+        "swe_bench_pro_eval",
+        "verilog_eval",
+        "webbench_eval"
+      ],
+      "pending_suite_receipts": [
+        "agentdojo_train",
+        "agentharm_eval",
+        "apex_agents_eval",
+        "api_bank_rlvr_train",
+        "appbench_eval",
+        "banker_toolbench_eval",
+        "bfcl_train",
+        "binaryaudit_eval",
+        "browsergym_train",
+        "crafter_train",
+        "frontier_swe_eval",
+        "frontiermath_eval",
+        "lifescibench_eval",
+        "mle_bench_eval",
+        "openr1_math_train",
+        "openreward_games_eval",
+        "openreward_train",
+        "rtlcoder_train",
+        "scienceworld_train",
+        "sdab_eval",
+        "swe_bench_pro_eval",
+        "swe_gym_train",
+        "unix_ctf_train",
+        "verilog_eval",
+        "visual_app_train",
+        "webbench_eval"
+      ],
+      "pending_training_receipts": [
+        "agentdojo_train",
+        "api_bank_rlvr_train",
+        "bfcl_train",
+        "browsergym_train",
+        "crafter_train",
+        "openr1_math_train",
+        "openreward_train",
+        "rtlcoder_train",
+        "scienceworld_train",
+        "swe_gym_train",
+        "unix_ctf_train",
+        "visual_app_train"
+      ],
+      "primary_eval_suite_ids": [
+        "agentharm_eval",
+        "apex_agents_eval",
+        "appbench_eval",
+        "banker_toolbench_eval",
+        "binaryaudit_eval",
+        "frontier_swe_eval",
+        "frontiermath_eval",
+        "lifescibench_eval",
+        "mle_bench_eval",
+        "openreward_games_eval",
+        "sdab_eval",
+        "swe_bench_pro_eval",
+        "verilog_eval",
+        "webbench_eval"
+      ],
+      "primary_eval_suite_receipt_status": {
+        "agentharm_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "apex_agents_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "appbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "banker_toolbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "binaryaudit_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "frontier_swe_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "frontiermath_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "lifescibench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "mle_bench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "openreward_games_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "sdab_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "swe_bench_pro_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "verilog_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "webbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        }
+      },
+      "receipt_status": {
+        "budget": false,
+        "container_digest": false,
+        "dataset_revision": false,
+        "decontamination": false,
+        "hf_publication": false,
+        "immutable_split": false,
+        "license": false,
+        "model_revision": false,
+        "split_manifest_hash": false,
+        "verifier": false,
+        "wandb_online": false
+      },
+      "required_receipts": [
+        "immutable_split",
+        "dataset_revision",
+        "license",
+        "split_manifest_hash",
+        "container_digest",
+        "decontamination",
+        "budget",
+        "wandb_online",
+        "hf_publication",
+        "verifier",
+        "model_revision"
+      ],
+      "stage": "short_screening",
+      "status": "BLOCKED",
+      "steps": 10,
+      "suite_receipt_status": {
+        "agentdojo_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "agentharm_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "apex_agents_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "api_bank_rlvr_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "appbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "banker_toolbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "bfcl_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "binaryaudit_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "browsergym_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "crafter_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "frontier_swe_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "frontiermath_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "lifescibench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "mle_bench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "openr1_math_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "openreward_games_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "openreward_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "rtlcoder_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "scienceworld_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "sdab_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "swe_bench_pro_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "swe_gym_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "unix_ctf_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "verilog_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "visual_app_train": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        },
+        "webbench_eval": {
+          "container_digest": false,
+          "dataset_revision": false,
+          "decontamination": false,
+          "immutable_split": false,
+          "license": false,
+          "split_manifest_hash": false
+        }
+      },
+      "training_suite_ids": [
+        "agentdojo_train",
+        "api_bank_rlvr_train",
+        "bfcl_train",
+        "browsergym_train",
+        "crafter_train",
+        "openr1_math_train",
+        "openreward_train",
+        "rtlcoder_train",
+        "scienceworld_train",
+        "swe_gym_train",
+        "unix_ctf_train",
+        "visual_app_train"
+      ],
+      "wandb": {
+        "entity": "arvindcr4-pes-university",
+        "group": "pavlov-successive-halving",
+        "mode": "online",
+        "project": "tinker-rl-lab-pavlov",
+        "receipt_required_before_launch": true
+      }
+    }
+  ],
+  "blockers": [
+    "missing immutable train/eval split receipt",
+    "missing dataset revision receipt",
+    "missing dataset and benchmark license receipt",
+    "missing split manifest and disjoint task-ID hash receipt",
+    "missing container/environment digest receipt",
+    "missing decontamination receipt",
+    "missing budget authorization receipt",
+    "missing online W&B initialization receipt",
+    "missing Hugging Face publication for every checkpoint receipt",
+    "missing verifier revision/digest receipt",
+    "missing model revision receipt",
+    "dataset and benchmark licenses require recorded sign-off",
+    "dataset revisions and disjoint task-ID hashes require freezing",
+    "training and primary_eval suites lack per-suite immutable provenance receipts: agentdojo_train, agentharm_eval, apex_agents_eval, api_bank_rlvr_train, appbench_eval, banker_toolbench_eval, bfcl_train, binaryaudit_eval, browsergym_train, crafter_train, frontier_swe_eval, frontiermath_eval, lifescibench_eval, mle_bench_eval, openr1_math_train, openreward_games_eval, openreward_train, rtlcoder_train, scienceworld_train, sdab_eval, swe_bench_pro_eval, swe_gym_train, unix_ctf_train, verilog_eval, visual_app_train, webbench_eval"
+  ],
+  "budget_guard": {
+    "budget_status": "AUTHORIZED_TINKER_ONLY",
+    "contract_status": "authorized",
+    "maximum_usd": 18.0,
+    "operational_cap_usd": 16.5,
+    "paid_jobs_may_launch": true,
+    "provider": "Tinker",
+    "receipt_required": true,
+    "safety_reserve_usd": 1.5,
+    "status_reconciled": true
+  },
+  "claim_policy": {
+    "company_usefulness_requires_all_named_domains": true,
+    "domain_coverage_is_not_production_readiness": true,
+    "gsm8k_role": "calibration_only",
+    "held_out_suite_claim_allowed": false,
+    "held_out_suite_claim_ids": [],
+    "held_out_suite_claim_requires_receipts": true,
+    "primary_eval_suite_claim_requires_independent_receipts": true,
+    "xlam_observation_claim_allowed": false,
+    "xlam_observation_status": "observed seed-809 slice only; not frozen portfolio evidence",
+    "xlam_only_claim_allowed": false,
+    "xlam_only_launch_allowed": false,
+    "xlam_only_scope_detected": false,
+    "xlam_requires_immutable_revisions_and_split_hashes": true
+  },
+  "company_domain_coverage": {
+    "ARIMLABS": {
+      "primary_eval": {
+        "long_horizon": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "lifescibench_eval",
+          "mle_bench_eval",
+          "openreward_games_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval"
+        ],
+        "security": [
+          "agentharm_eval",
+          "binaryaudit_eval"
+        ]
+      },
+      "training": {
+        "long_horizon": [
+          "api_bank_rlvr_train",
+          "browsergym_train",
+          "crafter_train",
+          "openreward_train",
+          "scienceworld_train",
+          "swe_gym_train"
+        ],
+        "security": [
+          "agentdojo_train",
+          "unix_ctf_train"
+        ]
+      }
+    },
+    "AfterQuery": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ],
+        "enterprise": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "sdab_eval",
+          "webbench_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ],
+        "enterprise": [
+          "agentdojo_train",
+          "api_bank_rlvr_train",
+          "browsergym_train"
+        ]
+      }
+    },
+    "Akhara": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ],
+        "enterprise": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "sdab_eval",
+          "webbench_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ],
+        "enterprise": [
+          "agentdojo_train",
+          "api_bank_rlvr_train",
+          "browsergym_train"
+        ]
+      }
+    },
+    "Andromede": {
+      "primary_eval": {
+        "long_horizon": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "lifescibench_eval",
+          "mle_bench_eval",
+          "openreward_games_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval"
+        ]
+      },
+      "training": {
+        "long_horizon": [
+          "api_bank_rlvr_train",
+          "browsergym_train",
+          "crafter_train",
+          "openreward_train",
+          "scienceworld_train",
+          "swe_gym_train"
+        ]
+      }
+    },
+    "BenchFlow": {
+      "primary_eval": {
+        "browser": [
+          "webbench_eval"
+        ],
+        "enterprise": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "sdab_eval",
+          "webbench_eval"
+        ]
+      },
+      "training": {
+        "browser": [
+          "browsergym_train",
+          "openreward_train"
+        ],
+        "enterprise": [
+          "agentdojo_train",
+          "api_bank_rlvr_train",
+          "browsergym_train"
+        ]
+      }
+    },
+    "Bespoke Labs": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ]
+      }
+    },
+    "Chakra Labs": {
+      "primary_eval": {
+        "computer_use": [
+          "appbench_eval",
+          "webbench_eval"
+        ],
+        "tool_use": [
+          "agentharm_eval",
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "lifescibench_eval",
+          "openreward_games_eval"
+        ]
+      },
+      "training": {
+        "computer_use": [
+          "browsergym_train",
+          "visual_app_train"
+        ],
+        "tool_use": [
+          "agentdojo_train",
+          "api_bank_rlvr_train",
+          "bfcl_train",
+          "browsergym_train",
+          "openreward_train",
+          "scienceworld_train",
+          "unix_ctf_train"
+        ]
+      }
+    },
+    "Collinear": {
+      "primary_eval": {
+        "enterprise": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "sdab_eval",
+          "webbench_eval"
+        ],
+        "long_horizon": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "lifescibench_eval",
+          "mle_bench_eval",
+          "openreward_games_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval"
+        ]
+      },
+      "training": {
+        "enterprise": [
+          "agentdojo_train",
+          "api_bank_rlvr_train",
+          "browsergym_train"
+        ],
+        "long_horizon": [
+          "api_bank_rlvr_train",
+          "browsergym_train",
+          "crafter_train",
+          "openreward_train",
+          "scienceworld_train",
+          "swe_gym_train"
+        ]
+      }
+    },
+    "Cua": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ],
+        "computer_use": [
+          "appbench_eval",
+          "webbench_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ],
+        "computer_use": [
+          "browsergym_train",
+          "visual_app_train"
+        ]
+      }
+    },
+    "Datacurve": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ]
+      }
+    },
+    "Deeptune": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ],
+        "computer_use": [
+          "appbench_eval",
+          "webbench_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ],
+        "computer_use": [
+          "browsergym_train",
+          "visual_app_train"
+        ]
+      }
+    },
+    "Diffuse Labs": {
+      "primary_eval": {
+        "long_horizon": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "lifescibench_eval",
+          "mle_bench_eval",
+          "openreward_games_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval"
+        ],
+        "ml": [
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval"
+        ]
+      },
+      "training": {
+        "long_horizon": [
+          "api_bank_rlvr_train",
+          "browsergym_train",
+          "crafter_train",
+          "openreward_train",
+          "scienceworld_train",
+          "swe_gym_train"
+        ],
+        "ml": [
+          "openreward_train",
+          "unix_ctf_train"
+        ]
+      }
+    },
+    "Dissei": {
+      "primary_eval": {
+        "finance": [
+          "apex_agents_eval",
+          "banker_toolbench_eval"
+        ]
+      },
+      "training": {
+        "finance": [
+          "api_bank_rlvr_train"
+        ]
+      }
+    },
+    "EdotEnv": {
+      "primary_eval": {
+        "long_horizon": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "lifescibench_eval",
+          "mle_bench_eval",
+          "openreward_games_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval"
+        ],
+        "ml": [
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval"
+        ]
+      },
+      "training": {
+        "long_horizon": [
+          "api_bank_rlvr_train",
+          "browsergym_train",
+          "crafter_train",
+          "openreward_train",
+          "scienceworld_train",
+          "swe_gym_train"
+        ],
+        "ml": [
+          "openreward_train",
+          "unix_ctf_train"
+        ]
+      }
+    },
+    "Emulated": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ],
+        "ml": [
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ],
+        "ml": [
+          "openreward_train",
+          "unix_ctf_train"
+        ]
+      }
+    },
+    "Exabite": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ]
+      }
+    },
+    "Fleet": {
+      "primary_eval": {
+        "enterprise": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "sdab_eval",
+          "webbench_eval"
+        ],
+        "multi_domain": [
+          "apex_agents_eval"
+        ]
+      },
+      "training": {
+        "enterprise": [
+          "agentdojo_train",
+          "api_bank_rlvr_train",
+          "browsergym_train"
+        ],
+        "multi_domain": [
+          "openreward_train"
+        ]
+      }
+    },
+    "General Reasoning": {
+      "primary_eval": {
+        "finance": [
+          "apex_agents_eval",
+          "banker_toolbench_eval"
+        ]
+      },
+      "training": {
+        "finance": [
+          "api_bank_rlvr_train"
+        ]
+      }
+    },
+    "Good Start Labs": {
+      "primary_eval": {
+        "games": [
+          "openreward_games_eval"
+        ],
+        "long_horizon": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "lifescibench_eval",
+          "mle_bench_eval",
+          "openreward_games_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval"
+        ]
+      },
+      "training": {
+        "games": [
+          "crafter_train",
+          "openreward_train"
+        ],
+        "long_horizon": [
+          "api_bank_rlvr_train",
+          "browsergym_train",
+          "crafter_train",
+          "openreward_train",
+          "scienceworld_train",
+          "swe_gym_train"
+        ]
+      }
+    },
+    "HUD": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ],
+        "long_horizon": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "lifescibench_eval",
+          "mle_bench_eval",
+          "openreward_games_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ],
+        "long_horizon": [
+          "api_bank_rlvr_train",
+          "browsergym_train",
+          "crafter_train",
+          "openreward_train",
+          "scienceworld_train",
+          "swe_gym_train"
+        ]
+      }
+    },
+    "Halluminate": {
+      "primary_eval": {
+        "enterprise": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "sdab_eval",
+          "webbench_eval"
+        ],
+        "finance": [
+          "apex_agents_eval",
+          "banker_toolbench_eval"
+        ]
+      },
+      "training": {
+        "enterprise": [
+          "agentdojo_train",
+          "api_bank_rlvr_train",
+          "browsergym_train"
+        ],
+        "finance": [
+          "api_bank_rlvr_train"
+        ]
+      }
+    },
+    "Handshake": {
+      "primary_eval": {
+        "multi_domain": [
+          "apex_agents_eval"
+        ]
+      },
+      "training": {
+        "multi_domain": [
+          "openreward_train"
+        ]
+      }
+    },
+    "Hillclimb": {
+      "primary_eval": {
+        "math": [
+          "frontiermath_eval"
+        ]
+      },
+      "training": {
+        "math": [
+          "openr1_math_train"
+        ]
+      }
+    },
+    "Huzzle Labs": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ],
+        "long_horizon": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "lifescibench_eval",
+          "mle_bench_eval",
+          "openreward_games_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ],
+        "long_horizon": [
+          "api_bank_rlvr_train",
+          "browsergym_train",
+          "crafter_train",
+          "openreward_train",
+          "scienceworld_train",
+          "swe_gym_train"
+        ]
+      }
+    },
+    "Idler": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ]
+      }
+    },
+    "Latch": {
+      "primary_eval": {
+        "science": [
+          "lifescibench_eval"
+        ]
+      },
+      "training": {
+        "science": [
+          "openreward_train",
+          "scienceworld_train"
+        ]
+      }
+    },
+    "Mechanize": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ]
+      }
+    },
+    "Mercor": {
+      "primary_eval": {
+        "multi_domain": [
+          "apex_agents_eval"
+        ]
+      },
+      "training": {
+        "multi_domain": [
+          "openreward_train"
+        ]
+      }
+    },
+    "Metaphi": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ],
+        "enterprise": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "sdab_eval",
+          "webbench_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ],
+        "enterprise": [
+          "agentdojo_train",
+          "api_bank_rlvr_train",
+          "browsergym_train"
+        ]
+      }
+    },
+    "Originator": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ],
+        "computer_use": [
+          "appbench_eval",
+          "webbench_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ],
+        "computer_use": [
+          "browsergym_train",
+          "visual_app_train"
+        ]
+      }
+    },
+    "Pareto": {
+      "primary_eval": {
+        "multi_domain": [
+          "apex_agents_eval"
+        ],
+        "tool_use": [
+          "agentharm_eval",
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "lifescibench_eval",
+          "openreward_games_eval"
+        ]
+      },
+      "training": {
+        "multi_domain": [
+          "openreward_train"
+        ],
+        "tool_use": [
+          "agentdojo_train",
+          "api_bank_rlvr_train",
+          "bfcl_train",
+          "browsergym_train",
+          "openreward_train",
+          "scienceworld_train",
+          "unix_ctf_train"
+        ]
+      }
+    },
+    "Phinity": {
+      "primary_eval": {
+        "chip_design": [
+          "verilog_eval"
+        ]
+      },
+      "training": {
+        "chip_design": [
+          "rtlcoder_train"
+        ]
+      }
+    },
+    "Plato": {
+      "primary_eval": {
+        "browser": [
+          "webbench_eval"
+        ],
+        "enterprise": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "sdab_eval",
+          "webbench_eval"
+        ]
+      },
+      "training": {
+        "browser": [
+          "browsergym_train",
+          "openreward_train"
+        ],
+        "enterprise": [
+          "agentdojo_train",
+          "api_bank_rlvr_train",
+          "browsergym_train"
+        ]
+      }
+    },
+    "Preference Model": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ],
+        "ml": [
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ],
+        "ml": [
+          "openreward_train",
+          "unix_ctf_train"
+        ]
+      }
+    },
+    "Proximal": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ]
+      }
+    },
+    "Quesma": {
+      "primary_eval": {
+        "security": [
+          "agentharm_eval",
+          "binaryaudit_eval"
+        ]
+      },
+      "training": {
+        "security": [
+          "agentdojo_train",
+          "unix_ctf_train"
+        ]
+      }
+    },
+    "ReasonCore": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ],
+        "science": [
+          "lifescibench_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ],
+        "science": [
+          "openreward_train",
+          "scienceworld_train"
+        ]
+      }
+    },
+    "Refresh": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ],
+        "computer_use": [
+          "appbench_eval",
+          "webbench_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ],
+        "computer_use": [
+          "browsergym_train",
+          "visual_app_train"
+        ]
+      }
+    },
+    "Scale": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ],
+        "multi_domain": [
+          "apex_agents_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ],
+        "multi_domain": [
+          "openreward_train"
+        ]
+      }
+    },
+    "Sepal AI": {
+      "primary_eval": {
+        "science": [
+          "lifescibench_eval"
+        ]
+      },
+      "training": {
+        "science": [
+          "openreward_train",
+          "scienceworld_train"
+        ]
+      }
+    },
+    "Snorkel": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ],
+        "multi_domain": [
+          "apex_agents_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ],
+        "multi_domain": [
+          "openreward_train"
+        ]
+      }
+    },
+    "Surge": {
+      "primary_eval": {
+        "multi_domain": [
+          "apex_agents_eval"
+        ]
+      },
+      "training": {
+        "multi_domain": [
+          "openreward_train"
+        ]
+      }
+    },
+    "Tacit Labs": {
+      "primary_eval": {
+        "long_horizon": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "lifescibench_eval",
+          "mle_bench_eval",
+          "openreward_games_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval"
+        ],
+        "science": [
+          "lifescibench_eval"
+        ]
+      },
+      "training": {
+        "long_horizon": [
+          "api_bank_rlvr_train",
+          "browsergym_train",
+          "crafter_train",
+          "openreward_train",
+          "scienceworld_train",
+          "swe_gym_train"
+        ],
+        "science": [
+          "openreward_train",
+          "scienceworld_train"
+        ]
+      }
+    },
+    "Taste Labs": {
+      "primary_eval": {
+        "design": [
+          "appbench_eval"
+        ]
+      },
+      "training": {
+        "design": [
+          "visual_app_train"
+        ]
+      }
+    },
+    "Theta": {
+      "primary_eval": {
+        "enterprise": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "sdab_eval",
+          "webbench_eval"
+        ]
+      },
+      "training": {
+        "enterprise": [
+          "agentdojo_train",
+          "api_bank_rlvr_train",
+          "browsergym_train"
+        ]
+      }
+    },
+    "Trajectory Labs": {
+      "primary_eval": {
+        "alignment": [
+          "agentharm_eval"
+        ]
+      },
+      "training": {
+        "alignment": [
+          "agentdojo_train"
+        ]
+      }
+    },
+    "Turing": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ]
+      }
+    },
+    "Ulam": {
+      "primary_eval": {
+        "math": [
+          "frontiermath_eval"
+        ]
+      },
+      "training": {
+        "math": [
+          "openr1_math_train"
+        ]
+      }
+    },
+    "Verita AI": {
+      "primary_eval": {
+        "design": [
+          "appbench_eval"
+        ]
+      },
+      "training": {
+        "design": [
+          "visual_app_train"
+        ]
+      }
+    },
+    "Vetto AI": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ],
+        "computer_use": [
+          "appbench_eval",
+          "webbench_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ],
+        "computer_use": [
+          "browsergym_train",
+          "visual_app_train"
+        ]
+      }
+    },
+    "Vmax": {
+      "primary_eval": {
+        "ml": [
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval"
+        ]
+      },
+      "training": {
+        "ml": [
+          "openreward_train",
+          "unix_ctf_train"
+        ]
+      }
+    },
+    "dmodel": {
+      "primary_eval": {
+        "alignment": [
+          "agentharm_eval"
+        ],
+        "ml": [
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval"
+        ]
+      },
+      "training": {
+        "alignment": [
+          "agentdojo_train"
+        ],
+        "ml": [
+          "openreward_train",
+          "unix_ctf_train"
+        ]
+      }
+    },
+    "pre.dev": {
+      "primary_eval": {
+        "code": [
+          "appbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "mle_bench_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval",
+          "verilog_eval"
+        ],
+        "long_horizon": [
+          "apex_agents_eval",
+          "banker_toolbench_eval",
+          "binaryaudit_eval",
+          "frontier_swe_eval",
+          "lifescibench_eval",
+          "mle_bench_eval",
+          "openreward_games_eval",
+          "sdab_eval",
+          "swe_bench_pro_eval"
+        ]
+      },
+      "training": {
+        "code": [
+          "bfcl_train",
+          "rtlcoder_train",
+          "swe_gym_train",
+          "unix_ctf_train",
+          "visual_app_train"
+        ],
+        "long_horizon": [
+          "api_bank_rlvr_train",
+          "browsergym_train",
+          "crafter_train",
+          "openreward_train",
+          "scienceworld_train",
+          "swe_gym_train"
+        ]
+      }
+    }
+  },
+  "company_eval_coverage": {
+    "ARIMLABS": [
+      "agentharm_eval",
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "lifescibench_eval",
+      "mle_bench_eval",
+      "openreward_games_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval"
+    ],
+    "AfterQuery": [
+      "apex_agents_eval",
+      "appbench_eval",
+      "banker_toolbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval",
+      "webbench_eval"
+    ],
+    "Akhara": [
+      "apex_agents_eval",
+      "appbench_eval",
+      "banker_toolbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval",
+      "webbench_eval"
+    ],
+    "Andromede": [
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "lifescibench_eval",
+      "mle_bench_eval",
+      "openreward_games_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval"
+    ],
+    "BenchFlow": [
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "sdab_eval",
+      "webbench_eval"
+    ],
+    "Bespoke Labs": [
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval"
+    ],
+    "Chakra Labs": [
+      "agentharm_eval",
+      "apex_agents_eval",
+      "appbench_eval",
+      "banker_toolbench_eval",
+      "lifescibench_eval",
+      "openreward_games_eval",
+      "webbench_eval"
+    ],
+    "Collinear": [
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "lifescibench_eval",
+      "mle_bench_eval",
+      "openreward_games_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "webbench_eval"
+    ],
+    "Cua": [
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval",
+      "webbench_eval"
+    ],
+    "Datacurve": [
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval"
+    ],
+    "Deeptune": [
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval",
+      "webbench_eval"
+    ],
+    "Diffuse Labs": [
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "lifescibench_eval",
+      "mle_bench_eval",
+      "openreward_games_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval"
+    ],
+    "Dissei": [
+      "apex_agents_eval",
+      "banker_toolbench_eval"
+    ],
+    "EdotEnv": [
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "lifescibench_eval",
+      "mle_bench_eval",
+      "openreward_games_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval"
+    ],
+    "Emulated": [
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval"
+    ],
+    "Exabite": [
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval"
+    ],
+    "Fleet": [
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "sdab_eval",
+      "webbench_eval"
+    ],
+    "General Reasoning": [
+      "apex_agents_eval",
+      "banker_toolbench_eval"
+    ],
+    "Good Start Labs": [
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "lifescibench_eval",
+      "mle_bench_eval",
+      "openreward_games_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval"
+    ],
+    "HUD": [
+      "apex_agents_eval",
+      "appbench_eval",
+      "banker_toolbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "lifescibench_eval",
+      "mle_bench_eval",
+      "openreward_games_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval"
+    ],
+    "Halluminate": [
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "sdab_eval",
+      "webbench_eval"
+    ],
+    "Handshake": [
+      "apex_agents_eval"
+    ],
+    "Hillclimb": [
+      "frontiermath_eval"
+    ],
+    "Huzzle Labs": [
+      "apex_agents_eval",
+      "appbench_eval",
+      "banker_toolbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "lifescibench_eval",
+      "mle_bench_eval",
+      "openreward_games_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval"
+    ],
+    "Idler": [
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval"
+    ],
+    "Latch": [
+      "lifescibench_eval"
+    ],
+    "Mechanize": [
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval"
+    ],
+    "Mercor": [
+      "apex_agents_eval"
+    ],
+    "Metaphi": [
+      "apex_agents_eval",
+      "appbench_eval",
+      "banker_toolbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval",
+      "webbench_eval"
+    ],
+    "Originator": [
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval",
+      "webbench_eval"
+    ],
+    "Pareto": [
+      "agentharm_eval",
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "lifescibench_eval",
+      "openreward_games_eval"
+    ],
+    "Phinity": [
+      "verilog_eval"
+    ],
+    "Plato": [
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "sdab_eval",
+      "webbench_eval"
+    ],
+    "Preference Model": [
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval"
+    ],
+    "Proximal": [
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval"
+    ],
+    "Quesma": [
+      "agentharm_eval",
+      "binaryaudit_eval"
+    ],
+    "ReasonCore": [
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "lifescibench_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval"
+    ],
+    "Refresh": [
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval",
+      "webbench_eval"
+    ],
+    "Scale": [
+      "apex_agents_eval",
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval"
+    ],
+    "Sepal AI": [
+      "lifescibench_eval"
+    ],
+    "Snorkel": [
+      "apex_agents_eval",
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval"
+    ],
+    "Surge": [
+      "apex_agents_eval"
+    ],
+    "Tacit Labs": [
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "lifescibench_eval",
+      "mle_bench_eval",
+      "openreward_games_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval"
+    ],
+    "Taste Labs": [
+      "appbench_eval"
+    ],
+    "Theta": [
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "sdab_eval",
+      "webbench_eval"
+    ],
+    "Trajectory Labs": [
+      "agentharm_eval"
+    ],
+    "Turing": [
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval"
+    ],
+    "Ulam": [
+      "frontiermath_eval"
+    ],
+    "Verita AI": [
+      "appbench_eval"
+    ],
+    "Vetto AI": [
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval",
+      "webbench_eval"
+    ],
+    "Vmax": [
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval"
+    ],
+    "dmodel": [
+      "agentharm_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval"
+    ],
+    "pre.dev": [
+      "apex_agents_eval",
+      "appbench_eval",
+      "banker_toolbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "lifescibench_eval",
+      "mle_bench_eval",
+      "openreward_games_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval"
+    ]
+  },
+  "company_train_coverage": {
+    "ARIMLABS": [
+      "agentdojo_train",
+      "api_bank_rlvr_train",
+      "browsergym_train",
+      "crafter_train",
+      "openreward_train",
+      "scienceworld_train",
+      "swe_gym_train",
+      "unix_ctf_train"
+    ],
+    "AfterQuery": [
+      "agentdojo_train",
+      "api_bank_rlvr_train",
+      "bfcl_train",
+      "browsergym_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Akhara": [
+      "agentdojo_train",
+      "api_bank_rlvr_train",
+      "bfcl_train",
+      "browsergym_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Andromede": [
+      "api_bank_rlvr_train",
+      "browsergym_train",
+      "crafter_train",
+      "openreward_train",
+      "scienceworld_train",
+      "swe_gym_train"
+    ],
+    "BenchFlow": [
+      "agentdojo_train",
+      "api_bank_rlvr_train",
+      "browsergym_train",
+      "openreward_train"
+    ],
+    "Bespoke Labs": [
+      "bfcl_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Chakra Labs": [
+      "agentdojo_train",
+      "api_bank_rlvr_train",
+      "bfcl_train",
+      "browsergym_train",
+      "openreward_train",
+      "scienceworld_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Collinear": [
+      "agentdojo_train",
+      "api_bank_rlvr_train",
+      "browsergym_train",
+      "crafter_train",
+      "openreward_train",
+      "scienceworld_train",
+      "swe_gym_train"
+    ],
+    "Cua": [
+      "bfcl_train",
+      "browsergym_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Datacurve": [
+      "bfcl_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Deeptune": [
+      "bfcl_train",
+      "browsergym_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Diffuse Labs": [
+      "api_bank_rlvr_train",
+      "browsergym_train",
+      "crafter_train",
+      "openreward_train",
+      "scienceworld_train",
+      "swe_gym_train",
+      "unix_ctf_train"
+    ],
+    "Dissei": [
+      "api_bank_rlvr_train"
+    ],
+    "EdotEnv": [
+      "api_bank_rlvr_train",
+      "browsergym_train",
+      "crafter_train",
+      "openreward_train",
+      "scienceworld_train",
+      "swe_gym_train",
+      "unix_ctf_train"
+    ],
+    "Emulated": [
+      "bfcl_train",
+      "openreward_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Exabite": [
+      "bfcl_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Fleet": [
+      "agentdojo_train",
+      "api_bank_rlvr_train",
+      "browsergym_train",
+      "openreward_train"
+    ],
+    "General Reasoning": [
+      "api_bank_rlvr_train"
+    ],
+    "Good Start Labs": [
+      "api_bank_rlvr_train",
+      "browsergym_train",
+      "crafter_train",
+      "openreward_train",
+      "scienceworld_train",
+      "swe_gym_train"
+    ],
+    "HUD": [
+      "api_bank_rlvr_train",
+      "bfcl_train",
+      "browsergym_train",
+      "crafter_train",
+      "openreward_train",
+      "rtlcoder_train",
+      "scienceworld_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Halluminate": [
+      "agentdojo_train",
+      "api_bank_rlvr_train",
+      "browsergym_train"
+    ],
+    "Handshake": [
+      "openreward_train"
+    ],
+    "Hillclimb": [
+      "openr1_math_train"
+    ],
+    "Huzzle Labs": [
+      "api_bank_rlvr_train",
+      "bfcl_train",
+      "browsergym_train",
+      "crafter_train",
+      "openreward_train",
+      "rtlcoder_train",
+      "scienceworld_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Idler": [
+      "bfcl_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Latch": [
+      "openreward_train",
+      "scienceworld_train"
+    ],
+    "Mechanize": [
+      "bfcl_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Mercor": [
+      "openreward_train"
+    ],
+    "Metaphi": [
+      "agentdojo_train",
+      "api_bank_rlvr_train",
+      "bfcl_train",
+      "browsergym_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Originator": [
+      "bfcl_train",
+      "browsergym_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Pareto": [
+      "agentdojo_train",
+      "api_bank_rlvr_train",
+      "bfcl_train",
+      "browsergym_train",
+      "openreward_train",
+      "scienceworld_train",
+      "unix_ctf_train"
+    ],
+    "Phinity": [
+      "rtlcoder_train"
+    ],
+    "Plato": [
+      "agentdojo_train",
+      "api_bank_rlvr_train",
+      "browsergym_train",
+      "openreward_train"
+    ],
+    "Preference Model": [
+      "bfcl_train",
+      "openreward_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Proximal": [
+      "bfcl_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Quesma": [
+      "agentdojo_train",
+      "unix_ctf_train"
+    ],
+    "ReasonCore": [
+      "bfcl_train",
+      "openreward_train",
+      "rtlcoder_train",
+      "scienceworld_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Refresh": [
+      "bfcl_train",
+      "browsergym_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Scale": [
+      "bfcl_train",
+      "openreward_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Sepal AI": [
+      "openreward_train",
+      "scienceworld_train"
+    ],
+    "Snorkel": [
+      "bfcl_train",
+      "openreward_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Surge": [
+      "openreward_train"
+    ],
+    "Tacit Labs": [
+      "api_bank_rlvr_train",
+      "browsergym_train",
+      "crafter_train",
+      "openreward_train",
+      "scienceworld_train",
+      "swe_gym_train"
+    ],
+    "Taste Labs": [
+      "visual_app_train"
+    ],
+    "Theta": [
+      "agentdojo_train",
+      "api_bank_rlvr_train",
+      "browsergym_train"
+    ],
+    "Trajectory Labs": [
+      "agentdojo_train"
+    ],
+    "Turing": [
+      "bfcl_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Ulam": [
+      "openr1_math_train"
+    ],
+    "Verita AI": [
+      "visual_app_train"
+    ],
+    "Vetto AI": [
+      "bfcl_train",
+      "browsergym_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "Vmax": [
+      "openreward_train",
+      "unix_ctf_train"
+    ],
+    "dmodel": [
+      "agentdojo_train",
+      "openreward_train",
+      "unix_ctf_train"
+    ],
+    "pre.dev": [
+      "api_bank_rlvr_train",
+      "bfcl_train",
+      "browsergym_train",
+      "crafter_train",
+      "openreward_train",
+      "rtlcoder_train",
+      "scienceworld_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ]
+  },
+  "contamination_contract": {
+    "required_receipts": [
+      "dataset_revision",
+      "license",
+      "task_id_hashes",
+      "split_manifest_hash",
+      "container_digest",
+      "model_revision",
+      "adapter_revision"
+    ],
+    "rule": "primary evaluation tasks, repositories, environment seeds, and hidden tests must be disjoint from training",
+    "same_family_exception": "allowed only when the provider publishes immutable disjoint splits and the held-out task identifiers are unavailable to the training job"
+  },
+  "contract_schema_version": "pavlovs-domain-contract-v1",
+  "domain_held_out_suite_ids": {
+    "alignment": [
+      "agentharm_eval"
+    ],
+    "browser": [],
+    "chip_design": [],
+    "code": [
+      "appbench_eval"
+    ],
+    "computer_use": [
+      "appbench_eval"
+    ],
+    "design": [
+      "appbench_eval"
+    ],
+    "enterprise": [
+      "apex_agents_eval",
+      "banker_toolbench_eval"
+    ],
+    "finance": [
+      "apex_agents_eval",
+      "banker_toolbench_eval"
+    ],
+    "games": [
+      "openreward_games_eval"
+    ],
+    "long_horizon": [
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "openreward_games_eval"
+    ],
+    "math": [
+      "frontiermath_eval"
+    ],
+    "ml": [],
+    "multi_domain": [
+      "apex_agents_eval"
+    ],
+    "science": [],
+    "security": [
+      "agentharm_eval"
+    ],
+    "tool_use": [
+      "agentharm_eval",
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "openreward_games_eval"
+    ]
+  },
+  "domain_primary_eval_suite_ids": {
+    "alignment": [
+      "agentharm_eval"
+    ],
+    "browser": [
+      "webbench_eval"
+    ],
+    "chip_design": [
+      "verilog_eval"
+    ],
+    "code": [
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval"
+    ],
+    "computer_use": [
+      "appbench_eval",
+      "webbench_eval"
+    ],
+    "design": [
+      "appbench_eval"
+    ],
+    "enterprise": [
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "sdab_eval",
+      "webbench_eval"
+    ],
+    "finance": [
+      "apex_agents_eval",
+      "banker_toolbench_eval"
+    ],
+    "games": [
+      "openreward_games_eval"
+    ],
+    "long_horizon": [
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "lifescibench_eval",
+      "mle_bench_eval",
+      "openreward_games_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval"
+    ],
+    "math": [
+      "frontiermath_eval"
+    ],
+    "ml": [
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval"
+    ],
+    "multi_domain": [
+      "apex_agents_eval"
+    ],
+    "science": [
+      "lifescibench_eval"
+    ],
+    "security": [
+      "agentharm_eval",
+      "binaryaudit_eval"
+    ],
+    "tool_use": [
+      "agentharm_eval",
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "lifescibench_eval",
+      "openreward_games_eval"
+    ]
+  },
+  "domain_to_held_out_suite_ids": {
+    "alignment": [
+      "agentharm_eval"
+    ],
+    "browser": [],
+    "chip_design": [],
+    "code": [
+      "appbench_eval"
+    ],
+    "computer_use": [
+      "appbench_eval"
+    ],
+    "design": [
+      "appbench_eval"
+    ],
+    "enterprise": [
+      "apex_agents_eval",
+      "banker_toolbench_eval"
+    ],
+    "finance": [
+      "apex_agents_eval",
+      "banker_toolbench_eval"
+    ],
+    "games": [
+      "openreward_games_eval"
+    ],
+    "long_horizon": [
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "openreward_games_eval"
+    ],
+    "math": [
+      "frontiermath_eval"
+    ],
+    "ml": [],
+    "multi_domain": [
+      "apex_agents_eval"
+    ],
+    "science": [],
+    "security": [
+      "agentharm_eval"
+    ],
+    "tool_use": [
+      "agentharm_eval",
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "openreward_games_eval"
+    ]
+  },
+  "domain_to_primary_eval_suite_ids": {
+    "alignment": [
+      "agentharm_eval"
+    ],
+    "browser": [
+      "webbench_eval"
+    ],
+    "chip_design": [
+      "verilog_eval"
+    ],
+    "code": [
+      "appbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval",
+      "verilog_eval"
+    ],
+    "computer_use": [
+      "appbench_eval",
+      "webbench_eval"
+    ],
+    "design": [
+      "appbench_eval"
+    ],
+    "enterprise": [
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "sdab_eval",
+      "webbench_eval"
+    ],
+    "finance": [
+      "apex_agents_eval",
+      "banker_toolbench_eval"
+    ],
+    "games": [
+      "openreward_games_eval"
+    ],
+    "long_horizon": [
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "binaryaudit_eval",
+      "frontier_swe_eval",
+      "lifescibench_eval",
+      "mle_bench_eval",
+      "openreward_games_eval",
+      "sdab_eval",
+      "swe_bench_pro_eval"
+    ],
+    "math": [
+      "frontiermath_eval"
+    ],
+    "ml": [
+      "frontier_swe_eval",
+      "mle_bench_eval",
+      "sdab_eval"
+    ],
+    "multi_domain": [
+      "apex_agents_eval"
+    ],
+    "science": [
+      "lifescibench_eval"
+    ],
+    "security": [
+      "agentharm_eval",
+      "binaryaudit_eval"
+    ],
+    "tool_use": [
+      "agentharm_eval",
+      "apex_agents_eval",
+      "banker_toolbench_eval",
+      "lifescibench_eval",
+      "openreward_games_eval"
+    ]
+  },
+  "domain_to_training_suite_ids": {
+    "alignment": [
+      "agentdojo_train"
+    ],
+    "browser": [
+      "browsergym_train",
+      "openreward_train"
+    ],
+    "chip_design": [
+      "rtlcoder_train"
+    ],
+    "code": [
+      "bfcl_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "computer_use": [
+      "browsergym_train",
+      "visual_app_train"
+    ],
+    "design": [
+      "visual_app_train"
+    ],
+    "enterprise": [
+      "agentdojo_train",
+      "api_bank_rlvr_train",
+      "browsergym_train"
+    ],
+    "finance": [
+      "api_bank_rlvr_train"
+    ],
+    "games": [
+      "crafter_train",
+      "openreward_train"
+    ],
+    "long_horizon": [
+      "api_bank_rlvr_train",
+      "browsergym_train",
+      "crafter_train",
+      "openreward_train",
+      "scienceworld_train",
+      "swe_gym_train"
+    ],
+    "math": [
+      "openr1_math_train"
+    ],
+    "ml": [
+      "openreward_train",
+      "unix_ctf_train"
+    ],
+    "multi_domain": [
+      "openreward_train"
+    ],
+    "science": [
+      "openreward_train",
+      "scienceworld_train"
+    ],
+    "security": [
+      "agentdojo_train",
+      "unix_ctf_train"
+    ],
+    "tool_use": [
+      "agentdojo_train",
+      "api_bank_rlvr_train",
+      "bfcl_train",
+      "browsergym_train",
+      "openreward_train",
+      "scienceworld_train",
+      "unix_ctf_train"
+    ]
+  },
+  "domain_training_suite_ids": {
+    "alignment": [
+      "agentdojo_train"
+    ],
+    "browser": [
+      "browsergym_train",
+      "openreward_train"
+    ],
+    "chip_design": [
+      "rtlcoder_train"
+    ],
+    "code": [
+      "bfcl_train",
+      "rtlcoder_train",
+      "swe_gym_train",
+      "unix_ctf_train",
+      "visual_app_train"
+    ],
+    "computer_use": [
+      "browsergym_train",
+      "visual_app_train"
+    ],
+    "design": [
+      "visual_app_train"
+    ],
+    "enterprise": [
+      "agentdojo_train",
+      "api_bank_rlvr_train",
+      "browsergym_train"
+    ],
+    "finance": [
+      "api_bank_rlvr_train"
+    ],
+    "games": [
+      "crafter_train",
+      "openreward_train"
+    ],
+    "long_horizon": [
+      "api_bank_rlvr_train",
+      "browsergym_train",
+      "crafter_train",
+      "openreward_train",
+      "scienceworld_train",
+      "swe_gym_train"
+    ],
+    "math": [
+      "openr1_math_train"
+    ],
+    "ml": [
+      "openreward_train",
+      "unix_ctf_train"
+    ],
+    "multi_domain": [
+      "openreward_train"
+    ],
+    "science": [
+      "openreward_train",
+      "scienceworld_train"
+    ],
+    "security": [
+      "agentdojo_train",
+      "unix_ctf_train"
+    ],
+    "tool_use": [
+      "agentdojo_train",
+      "api_bank_rlvr_train",
+      "bfcl_train",
+      "browsergym_train",
+      "openreward_train",
+      "scienceworld_train",
+      "unix_ctf_train"
+    ]
+  },
+  "domains": [
+    "alignment",
+    "browser",
+    "chip_design",
+    "code",
+    "computer_use",
+    "design",
+    "enterprise",
+    "finance",
+    "games",
+    "long_horizon",
+    "math",
+    "ml",
+    "multi_domain",
+    "science",
+    "security",
+    "tool_use"
+  ],
+  "dry_run_only": true,
+  "evaluation_contract": {
+    "company_usefulness_rule": "every company inherits at least one primary evaluation suite from each listed domain; aggregate success may not hide a domain regression",
+    "metrics": [
+      "task_success",
+      "rubric_score",
+      "state_integrity",
+      "safety_violation_rate",
+      "tokens_per_success",
+      "tool_calls_per_success",
+      "wall_time_per_success"
+    ],
+    "primary_unit": "seed within model x environment-family x stack",
+    "required_slices": [
+      "domain",
+      "horizon",
+      "reward_type",
+      "verifier_type",
+      "artifact_vs_stateful",
+      "seen_vs_unseen_environment_family"
+    ]
+  },
+  "gsm8k_role": "calibration_only",
+  "held_out_suite_count": 6,
+  "held_out_suite_domain_map": {
+    "agentharm_eval": [
+      "alignment",
+      "security",
+      "tool_use"
+    ],
+    "apex_agents_eval": [
+      "enterprise",
+      "finance",
+      "long_horizon",
+      "multi_domain",
+      "tool_use"
+    ],
+    "appbench_eval": [
+      "code",
+      "computer_use",
+      "design"
+    ],
+    "banker_toolbench_eval": [
+      "enterprise",
+      "finance",
+      "long_horizon",
+      "tool_use"
+    ],
+    "frontiermath_eval": [
+      "math"
+    ],
+    "openreward_games_eval": [
+      "games",
+      "long_horizon",
+      "tool_use"
+    ]
+  },
+  "held_out_suite_domains": {
+    "agentharm_eval": [
+      "alignment",
+      "security",
+      "tool_use"
+    ],
+    "apex_agents_eval": [
+      "enterprise",
+      "finance",
+      "long_horizon",
+      "multi_domain",
+      "tool_use"
+    ],
+    "appbench_eval": [
+      "code",
+      "computer_use",
+      "design"
+    ],
+    "banker_toolbench_eval": [
+      "enterprise",
+      "finance",
+      "long_horizon",
+      "tool_use"
+    ],
+    "frontiermath_eval": [
+      "math"
+    ],
+    "openreward_games_eval": [
+      "games",
+      "long_horizon",
+      "tool_use"
+    ]
+  },
+  "held_out_suite_ids": [
+    "agentharm_eval",
+    "apex_agents_eval",
+    "appbench_eval",
+    "banker_toolbench_eval",
+    "frontiermath_eval",
+    "openreward_games_eval"
+  ],
+  "held_out_suites": [
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "alignment",
+        "security",
+        "tool_use"
+      ],
+      "id": "agentharm_eval",
+      "role": "primary_eval",
+      "split": "held-out evaluation",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "enterprise",
+        "finance",
+        "long_horizon",
+        "multi_domain",
+        "tool_use"
+      ],
+      "id": "apex_agents_eval",
+      "role": "primary_eval",
+      "split": "held-out worlds",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "code",
+        "computer_use",
+        "design"
+      ],
+      "id": "appbench_eval",
+      "role": "primary_eval",
+      "split": "held-out evaluation prompts",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "enterprise",
+        "finance",
+        "long_horizon",
+        "tool_use"
+      ],
+      "id": "banker_toolbench_eval",
+      "role": "primary_eval",
+      "split": "held-out evaluation tasks",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": false,
+      "domains": [
+        "math"
+      ],
+      "id": "frontiermath_eval",
+      "role": "primary_eval",
+      "split": "private held-out evaluation",
+      "stateful": false
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "games",
+        "long_horizon",
+        "tool_use"
+      ],
+      "id": "openreward_games_eval",
+      "role": "primary_eval",
+      "split": "held-out environment families absent from training",
+      "stateful": true
+    }
+  ],
+  "heldout_suite_ids": [
+    "agentharm_eval",
+    "apex_agents_eval",
+    "appbench_eval",
+    "banker_toolbench_eval",
+    "frontiermath_eval",
+    "openreward_games_eval"
+  ],
+  "hf_checkpoint_policy": {
+    "allowed_visibility": [
+      "public",
+      "private"
+    ],
+    "checkpoint_identity_fields": [
+      "stage",
+      "repo_url",
+      "revision",
+      "url"
+    ],
+    "every_checkpoint": true,
+    "periodic_and_final": true,
+    "receipt_required_before_launch": true,
+    "safe_public_artifact_rule": {
+      "private_allowed_when_publication_is_not_safe": true,
+      "public_only_when_quota_and_data_license_safe": true,
+      "required": true
+    },
+    "unique_repo_revision_url_required": true,
+    "visibility": "decide_per_checkpoint",
+    "visibility_options": [
+      "public",
+      "private"
+    ],
+    "visibility_policy": "public_or_private_per_quota_and_data_license_safety"
+  },
+  "hf_publication_policy": {
+    "allowed_visibility": [
+      "public",
+      "private"
+    ],
+    "checkpoint_identity_fields": [
+      "stage",
+      "repo_url",
+      "revision",
+      "url"
+    ],
+    "every_checkpoint": true,
+    "periodic_and_final": true,
+    "receipt_required_before_launch": true,
+    "safe_public_artifact_rule": {
+      "private_allowed_when_publication_is_not_safe": true,
+      "public_only_when_quota_and_data_license_safe": true,
+      "required": true
+    },
+    "unique_repo_revision_url_required": true,
+    "visibility": "decide_per_checkpoint",
+    "visibility_options": [
+      "public",
+      "private"
+    ],
+    "visibility_policy": "public_or_private_per_quota_and_data_license_safety"
+  },
+  "launchable": false,
+  "launches_any_job": false,
+  "missing_receipts": [
+    "immutable_split",
+    "dataset_revision",
+    "license",
+    "split_manifest_hash",
+    "container_digest",
+    "decontamination",
+    "budget",
+    "wandb_online",
+    "hf_publication",
+    "verifier",
+    "model_revision"
+  ],
+  "model_revision_receipts": {
+    "all_present_and_pinned": false,
+    "by_role": {
+      "primary": false,
+      "replication": false
+    },
+    "missing": [
+      "model_revision:primary",
+      "model_revision:replication"
+    ]
+  },
+  "models": [
+    {
+      "model_id": "Qwen/Qwen3.6-35B-A3B",
+      "required_capabilities": [
+        "multimodal_input",
+        "tool_calling",
+        "long_context",
+        "computer_use",
+        "code_generation"
+      ],
+      "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+      "role": "primary"
+    },
+    {
+      "model_id": "Qwen/Qwen3.5-9B",
+      "required_capabilities": [
+        "multimodal_input",
+        "tool_calling",
+        "long_context",
+        "computer_use",
+        "code_generation"
+      ],
+      "revision": "c202236235762e1c871ad0ccb60c8ee5ba337b9a",
+      "role": "replication"
+    }
+  ],
+  "non_claims": [
+    "GSM8K or MATH performance alone establishes company usefulness",
+    "domain coverage establishes production readiness",
+    "a public benchmark score substitutes for a company-specific acceptance test",
+    "one aggregate score can compensate for failure in a listed domain",
+    "planned paid runs are evidence before immutable result receipts exist"
+  ],
+  "pending_held_out_suite_ids": [
+    "binaryaudit_eval",
+    "frontier_swe_eval",
+    "lifescibench_eval",
+    "mle_bench_eval",
+    "sdab_eval",
+    "swe_bench_pro_eval",
+    "verilog_eval",
+    "webbench_eval"
+  ],
+  "pending_primary_eval_receipts": [
+    "agentharm_eval",
+    "apex_agents_eval",
+    "appbench_eval",
+    "banker_toolbench_eval",
+    "binaryaudit_eval",
+    "frontier_swe_eval",
+    "frontiermath_eval",
+    "lifescibench_eval",
+    "mle_bench_eval",
+    "openreward_games_eval",
+    "sdab_eval",
+    "swe_bench_pro_eval",
+    "verilog_eval",
+    "webbench_eval"
+  ],
+  "pending_primary_eval_suite_ids": [
+    "binaryaudit_eval",
+    "frontier_swe_eval",
+    "lifescibench_eval",
+    "mle_bench_eval",
+    "sdab_eval",
+    "swe_bench_pro_eval",
+    "verilog_eval",
+    "webbench_eval"
+  ],
+  "pending_suite_receipts": [
+    "agentdojo_train",
+    "agentharm_eval",
+    "apex_agents_eval",
+    "api_bank_rlvr_train",
+    "appbench_eval",
+    "banker_toolbench_eval",
+    "bfcl_train",
+    "binaryaudit_eval",
+    "browsergym_train",
+    "crafter_train",
+    "frontier_swe_eval",
+    "frontiermath_eval",
+    "lifescibench_eval",
+    "mle_bench_eval",
+    "openr1_math_train",
+    "openreward_games_eval",
+    "openreward_train",
+    "rtlcoder_train",
+    "scienceworld_train",
+    "sdab_eval",
+    "swe_bench_pro_eval",
+    "swe_gym_train",
+    "unix_ctf_train",
+    "verilog_eval",
+    "visual_app_train",
+    "webbench_eval"
+  ],
+  "pending_training_receipts": [
+    "agentdojo_train",
+    "api_bank_rlvr_train",
+    "bfcl_train",
+    "browsergym_train",
+    "crafter_train",
+    "openr1_math_train",
+    "openreward_train",
+    "rtlcoder_train",
+    "scienceworld_train",
+    "swe_gym_train",
+    "unix_ctf_train",
+    "visual_app_train"
+  ],
+  "primary_eval_evidence_ready": false,
+  "primary_eval_suite_count": 14,
+  "primary_eval_suite_domain_map": {
+    "agentharm_eval": [
+      "alignment",
+      "security",
+      "tool_use"
+    ],
+    "apex_agents_eval": [
+      "enterprise",
+      "finance",
+      "long_horizon",
+      "multi_domain",
+      "tool_use"
+    ],
+    "appbench_eval": [
+      "code",
+      "computer_use",
+      "design"
+    ],
+    "banker_toolbench_eval": [
+      "enterprise",
+      "finance",
+      "long_horizon",
+      "tool_use"
+    ],
+    "binaryaudit_eval": [
+      "code",
+      "long_horizon",
+      "security"
+    ],
+    "frontier_swe_eval": [
+      "code",
+      "long_horizon",
+      "ml"
+    ],
+    "frontiermath_eval": [
+      "math"
+    ],
+    "lifescibench_eval": [
+      "long_horizon",
+      "science",
+      "tool_use"
+    ],
+    "mle_bench_eval": [
+      "code",
+      "long_horizon",
+      "ml"
+    ],
+    "openreward_games_eval": [
+      "games",
+      "long_horizon",
+      "tool_use"
+    ],
+    "sdab_eval": [
+      "code",
+      "enterprise",
+      "long_horizon",
+      "ml"
+    ],
+    "swe_bench_pro_eval": [
+      "code",
+      "long_horizon"
+    ],
+    "verilog_eval": [
+      "chip_design",
+      "code"
+    ],
+    "webbench_eval": [
+      "browser",
+      "computer_use",
+      "enterprise"
+    ]
+  },
+  "primary_eval_suite_domains": {
+    "agentharm_eval": [
+      "alignment",
+      "security",
+      "tool_use"
+    ],
+    "apex_agents_eval": [
+      "enterprise",
+      "finance",
+      "long_horizon",
+      "multi_domain",
+      "tool_use"
+    ],
+    "appbench_eval": [
+      "code",
+      "computer_use",
+      "design"
+    ],
+    "banker_toolbench_eval": [
+      "enterprise",
+      "finance",
+      "long_horizon",
+      "tool_use"
+    ],
+    "binaryaudit_eval": [
+      "code",
+      "long_horizon",
+      "security"
+    ],
+    "frontier_swe_eval": [
+      "code",
+      "long_horizon",
+      "ml"
+    ],
+    "frontiermath_eval": [
+      "math"
+    ],
+    "lifescibench_eval": [
+      "long_horizon",
+      "science",
+      "tool_use"
+    ],
+    "mle_bench_eval": [
+      "code",
+      "long_horizon",
+      "ml"
+    ],
+    "openreward_games_eval": [
+      "games",
+      "long_horizon",
+      "tool_use"
+    ],
+    "sdab_eval": [
+      "code",
+      "enterprise",
+      "long_horizon",
+      "ml"
+    ],
+    "swe_bench_pro_eval": [
+      "code",
+      "long_horizon"
+    ],
+    "verilog_eval": [
+      "chip_design",
+      "code"
+    ],
+    "webbench_eval": [
+      "browser",
+      "computer_use",
+      "enterprise"
+    ]
+  },
+  "primary_eval_suite_ids": [
+    "agentharm_eval",
+    "apex_agents_eval",
+    "appbench_eval",
+    "banker_toolbench_eval",
+    "binaryaudit_eval",
+    "frontier_swe_eval",
+    "frontiermath_eval",
+    "lifescibench_eval",
+    "mle_bench_eval",
+    "openreward_games_eval",
+    "sdab_eval",
+    "swe_bench_pro_eval",
+    "verilog_eval",
+    "webbench_eval"
+  ],
+  "primary_eval_suite_receipt_status": {
+    "agentdojo_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "agentharm_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "apex_agents_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "api_bank_rlvr_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "appbench_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "banker_toolbench_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "bfcl_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "binaryaudit_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "browsergym_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "crafter_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "frontier_swe_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "frontiermath_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "lifescibench_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "mle_bench_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "openr1_math_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "openreward_games_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "openreward_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "rtlcoder_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "scienceworld_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "sdab_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "swe_bench_pro_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "swe_gym_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "unix_ctf_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "verilog_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "visual_app_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "webbench_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    }
+  },
+  "primary_eval_suites": [
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "alignment",
+        "security",
+        "tool_use"
+      ],
+      "id": "agentharm_eval",
+      "role": "primary_eval",
+      "split": "held-out evaluation",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "enterprise",
+        "finance",
+        "long_horizon",
+        "multi_domain",
+        "tool_use"
+      ],
+      "id": "apex_agents_eval",
+      "role": "primary_eval",
+      "split": "held-out worlds",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "code",
+        "computer_use",
+        "design"
+      ],
+      "id": "appbench_eval",
+      "role": "primary_eval",
+      "split": "held-out evaluation prompts",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "enterprise",
+        "finance",
+        "long_horizon",
+        "tool_use"
+      ],
+      "id": "banker_toolbench_eval",
+      "role": "primary_eval",
+      "split": "held-out evaluation tasks",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "code",
+        "long_horizon",
+        "security"
+      ],
+      "id": "binaryaudit_eval",
+      "role": "primary_eval",
+      "split": "evaluation binaries",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "code",
+        "long_horizon",
+        "ml"
+      ],
+      "id": "frontier_swe_eval",
+      "role": "primary_eval",
+      "split": "evaluation",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": false,
+      "domains": [
+        "math"
+      ],
+      "id": "frontiermath_eval",
+      "role": "primary_eval",
+      "split": "private held-out evaluation",
+      "stateful": false
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "long_horizon",
+        "science",
+        "tool_use"
+      ],
+      "id": "lifescibench_eval",
+      "role": "primary_eval",
+      "split": "evaluation",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "code",
+        "long_horizon",
+        "ml"
+      ],
+      "id": "mle_bench_eval",
+      "role": "primary_eval",
+      "split": "evaluation competitions",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "games",
+        "long_horizon",
+        "tool_use"
+      ],
+      "id": "openreward_games_eval",
+      "role": "primary_eval",
+      "split": "held-out environment families absent from training",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "code",
+        "enterprise",
+        "long_horizon",
+        "ml"
+      ],
+      "id": "sdab_eval",
+      "role": "primary_eval",
+      "split": "evaluation",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "code",
+        "long_horizon"
+      ],
+      "id": "swe_bench_pro_eval",
+      "role": "primary_eval",
+      "split": "public evaluation",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "chip_design",
+        "code"
+      ],
+      "id": "verilog_eval",
+      "role": "primary_eval",
+      "split": "evaluation",
+      "stateful": false
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "browser",
+        "computer_use",
+        "enterprise"
+      ],
+      "id": "webbench_eval",
+      "role": "primary_eval",
+      "split": "evaluation",
+      "stateful": true
+    }
+  ],
+  "primary_evaluation_suite_ids": [
+    "agentharm_eval",
+    "apex_agents_eval",
+    "appbench_eval",
+    "banker_toolbench_eval",
+    "binaryaudit_eval",
+    "frontier_swe_eval",
+    "frontiermath_eval",
+    "lifescibench_eval",
+    "mle_bench_eval",
+    "openreward_games_eval",
+    "sdab_eval",
+    "swe_bench_pro_eval",
+    "verilog_eval",
+    "webbench_eval"
+  ],
+  "receipt_policy": {
+    "checkpoint_rule": "every periodic and final sampler checkpoint must have an HF receipt",
+    "descriptions": {
+      "budget": "budget authorization",
+      "container_digest": "container/environment digest",
+      "dataset_revision": "dataset revision",
+      "decontamination": "decontamination",
+      "hf_publication": "Hugging Face publication for every checkpoint",
+      "immutable_split": "immutable train/eval split",
+      "license": "dataset and benchmark license",
+      "model_revision": "model revision",
+      "split_manifest_hash": "split manifest and disjoint task-ID hash",
+      "verifier": "verifier revision/digest",
+      "wandb_online": "online W&B initialization"
+    },
+    "fail_closed": true,
+    "required": [
+      "immutable_split",
+      "dataset_revision",
+      "license",
+      "split_manifest_hash",
+      "container_digest",
+      "decontamination",
+      "budget",
+      "wandb_online",
+      "hf_publication",
+      "verifier",
+      "model_revision"
+    ]
+  },
+  "receipt_sources": {
+    "budget": null,
+    "container_digest": null,
+    "dataset_revision": null,
+    "decontamination": null,
+    "hf_publication": null,
+    "immutable_split": null,
+    "license": null,
+    "model_revision": null,
+    "split_manifest_hash": null,
+    "verifier": null,
+    "wandb_online": null
+  },
+  "receipt_status": {
+    "budget": false,
+    "container_digest": false,
+    "dataset_revision": false,
+    "decontamination": false,
+    "hf_publication": false,
+    "immutable_split": false,
+    "license": false,
+    "model_revision": false,
+    "split_manifest_hash": false,
+    "verifier": false,
+    "wandb_online": false
+  },
+  "required_receipts": [
+    "immutable_split",
+    "dataset_revision",
+    "license",
+    "split_manifest_hash",
+    "container_digest",
+    "decontamination",
+    "budget",
+    "wandb_online",
+    "hf_publication",
+    "verifier",
+    "model_revision"
+  ],
+  "reward_contract": {
+    "anti_reward_hacking": "keep hidden behavioral tests and verifier state outside the policy-visible workspace",
+    "components": [
+      "environment_task_success",
+      "artifact_or_state_integrity",
+      "rubric_partial_credit",
+      "safety_and_policy_constraints",
+      "cost_and_latency"
+    ],
+    "normalization": "normalize within environment family before cross-domain aggregation",
+    "verifier_rule": "primary reward must inspect environment state or native artifacts whenever task correctness depends on them"
+  },
+  "sampling_contract": {
+    "curriculum": "single-step tool calls -> multi-step state changes -> long-horizon artifact and live-system tasks",
+    "domain_reweighting": "inverse-frequency at the domain family level; no company count may make code dominate the mixture",
+    "maximum_math_fraction": 0.05,
+    "minimum_artifact_or_side_effect_fraction": 0.5,
+    "minimum_primary_domains_per_training_batch": 6,
+    "minimum_stateful_fraction": 0.6,
+    "unit": "environment episode, not isolated prompt"
+  },
+  "schema_version": "pavlovs-campaign-manifest-v1",
+  "split_policy": {
+    "immutable_receipt_required": true,
+    "selection_split_and_final_eval_split_must_be_disjoint": true,
+    "train_eval_task_ids_must_be_disjoint": true
+  },
+  "status": "BLOCKED",
+  "structural_held_out_suite_ids": [
+    "agentharm_eval",
+    "apex_agents_eval",
+    "appbench_eval",
+    "banker_toolbench_eval",
+    "frontiermath_eval",
+    "openreward_games_eval"
+  ],
+  "successive_halving": {
+    "arms": [
+      "lr-1e-5",
+      "lr-2e-5",
+      "lr-4e-5"
+    ],
+    "checkpoint_steps": [
+      5,
+      10
+    ],
+    "decision_gates": [
+      {
+        "id": "receipt_preflight",
+        "on_failure": "BLOCKED; do not allocate a job",
+        "requires": [
+          "every arm has all required immutable provenance receipts",
+          "online W&B initialization is verified before paid work",
+          "every periodic and final checkpoint has an HF publication receipt"
+        ]
+      },
+      {
+        "decision": "select by sealed selection slice perfect-call rate",
+        "id": "short_screening",
+        "requires": [
+          "all three LR arms use the identical immutable train split, seed, sampler, reward, and sealed selection slice",
+          "each arm completes the short tracked screening horizon"
+        ]
+      },
+      {
+        "decision": "break ties by strict mean reward, then lower estimated cost",
+        "id": "tie_break",
+        "requires": [
+          "a tie at the primary metric"
+        ]
+      },
+      {
+        "decision": "extend only the winning arm with fixed-interval checkpoints",
+        "id": "winner_extension",
+        "requires": [
+          "exactly one winner is selected and its receipts remain valid"
+        ]
+      },
+      {
+        "decision": "evaluate the selected arm once; never promote xLAM-only evidence to company usefulness",
+        "id": "final_evaluation",
+        "requires": [
+          "the final evaluation split is immutable and disjoint from the sealed selection slice",
+          "the final evaluation split is not consulted during arm selection"
+        ]
+      }
+    ],
+    "held_out_separation": {
+      "final_eval_split": {
+        "consulted_during_selection": false,
+        "name": "primary_eval_final",
+        "purpose": "final unbiased evaluation of the selected arm",
+        "receipt_required": true
+      },
+      "held_out_label_requires_independent_receipt": true,
+      "must_be_disjoint": true,
+      "selection_split": {
+        "consulted_during_selection": true,
+        "name": "sealed_selection_slice",
+        "purpose": "select among the three screening arms",
+        "receipt_required": true
+      }
+    },
+    "method": "successive_halving",
+    "screening_arm_ids": [
+      "lr-1e-5",
+      "lr-2e-5",
+      "lr-4e-5"
+    ],
+    "screening_learning_rates": [
+      1e-05,
+      2e-05,
+      4e-05
+    ],
+    "selection_metric": "sealed selection slice perfect-call rate",
+    "selection_rule": "maximize sealed selection slice perfect-call rate",
+    "short_screening_steps": 10,
+    "tie_breakers": [
+      "strict mean reward",
+      "lower estimated cost"
+    ],
+    "winner_extension": "extend only the winning arm"
+  },
+  "suite_receipt_status": {
+    "agentdojo_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "agentharm_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "apex_agents_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "api_bank_rlvr_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "appbench_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "banker_toolbench_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "bfcl_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "binaryaudit_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "browsergym_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "crafter_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "frontier_swe_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "frontiermath_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "lifescibench_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "mle_bench_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "openr1_math_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "openreward_games_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "openreward_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "rtlcoder_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "scienceworld_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "sdab_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "swe_bench_pro_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "swe_gym_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "unix_ctf_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "verilog_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "visual_app_train": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    },
+    "webbench_eval": {
+      "container_digest": false,
+      "dataset_revision": false,
+      "decontamination": false,
+      "immutable_split": false,
+      "license": false,
+      "split_manifest_hash": false
+    }
+  },
+  "training_suite_count": 12,
+  "training_suite_domain_map": {
+    "agentdojo_train": [
+      "alignment",
+      "enterprise",
+      "security",
+      "tool_use"
+    ],
+    "api_bank_rlvr_train": [
+      "enterprise",
+      "finance",
+      "long_horizon",
+      "tool_use"
+    ],
+    "bfcl_train": [
+      "code",
+      "tool_use"
+    ],
+    "browsergym_train": [
+      "browser",
+      "computer_use",
+      "enterprise",
+      "long_horizon",
+      "tool_use"
+    ],
+    "crafter_train": [
+      "games",
+      "long_horizon"
+    ],
+    "openr1_math_train": [
+      "math"
+    ],
+    "openreward_train": [
+      "browser",
+      "games",
+      "long_horizon",
+      "ml",
+      "multi_domain",
+      "science",
+      "tool_use"
+    ],
+    "rtlcoder_train": [
+      "chip_design",
+      "code"
+    ],
+    "scienceworld_train": [
+      "long_horizon",
+      "science",
+      "tool_use"
+    ],
+    "swe_gym_train": [
+      "code",
+      "long_horizon"
+    ],
+    "unix_ctf_train": [
+      "code",
+      "ml",
+      "security",
+      "tool_use"
+    ],
+    "visual_app_train": [
+      "code",
+      "computer_use",
+      "design"
+    ]
+  },
+  "training_suite_domains": {
+    "agentdojo_train": [
+      "alignment",
+      "enterprise",
+      "security",
+      "tool_use"
+    ],
+    "api_bank_rlvr_train": [
+      "enterprise",
+      "finance",
+      "long_horizon",
+      "tool_use"
+    ],
+    "bfcl_train": [
+      "code",
+      "tool_use"
+    ],
+    "browsergym_train": [
+      "browser",
+      "computer_use",
+      "enterprise",
+      "long_horizon",
+      "tool_use"
+    ],
+    "crafter_train": [
+      "games",
+      "long_horizon"
+    ],
+    "openr1_math_train": [
+      "math"
+    ],
+    "openreward_train": [
+      "browser",
+      "games",
+      "long_horizon",
+      "ml",
+      "multi_domain",
+      "science",
+      "tool_use"
+    ],
+    "rtlcoder_train": [
+      "chip_design",
+      "code"
+    ],
+    "scienceworld_train": [
+      "long_horizon",
+      "science",
+      "tool_use"
+    ],
+    "swe_gym_train": [
+      "code",
+      "long_horizon"
+    ],
+    "unix_ctf_train": [
+      "code",
+      "ml",
+      "security",
+      "tool_use"
+    ],
+    "visual_app_train": [
+      "code",
+      "computer_use",
+      "design"
+    ]
+  },
+  "training_suite_ids": [
+    "agentdojo_train",
+    "api_bank_rlvr_train",
+    "bfcl_train",
+    "browsergym_train",
+    "crafter_train",
+    "openr1_math_train",
+    "openreward_train",
+    "rtlcoder_train",
+    "scienceworld_train",
+    "swe_gym_train",
+    "unix_ctf_train",
+    "visual_app_train"
+  ],
+  "training_suites": [
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "alignment",
+        "enterprise",
+        "security",
+        "tool_use"
+      ],
+      "id": "agentdojo_train",
+      "role": "train",
+      "split": "training and development tasks",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "enterprise",
+        "finance",
+        "long_horizon",
+        "tool_use"
+      ],
+      "id": "api_bank_rlvr_train",
+      "role": "train",
+      "split": "train; pin the dataset revision and exclude all held-out BankerToolBench task identifiers",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": false,
+      "domains": [
+        "code",
+        "tool_use"
+      ],
+      "id": "bfcl_train",
+      "role": "train",
+      "split": "released training and development calls",
+      "stateful": false
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "browser",
+        "computer_use",
+        "enterprise",
+        "long_horizon",
+        "tool_use"
+      ],
+      "id": "browsergym_train",
+      "role": "train",
+      "split": "training environments only",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "games",
+        "long_horizon"
+      ],
+      "id": "crafter_train",
+      "role": "train",
+      "split": "procedural training seeds",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": false,
+      "domains": [
+        "math"
+      ],
+      "id": "openr1_math_train",
+      "role": "train",
+      "split": "train; decontaminate against FrontierMath and all primary evaluation prompts",
+      "stateful": false
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "browser",
+        "games",
+        "long_horizon",
+        "ml",
+        "multi_domain",
+        "science",
+        "tool_use"
+      ],
+      "id": "openreward_train",
+      "role": "train",
+      "split": "license-approved train tasks only",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "chip_design",
+        "code"
+      ],
+      "id": "rtlcoder_train",
+      "role": "train",
+      "split": "train",
+      "stateful": false
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "long_horizon",
+        "science",
+        "tool_use"
+      ],
+      "id": "scienceworld_train",
+      "role": "train",
+      "split": "training variations",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "code",
+        "long_horizon"
+      ],
+      "id": "swe_gym_train",
+      "role": "train",
+      "split": "train repositories and issues",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "code",
+        "ml",
+        "security",
+        "tool_use"
+      ],
+      "id": "unix_ctf_train",
+      "role": "train",
+      "split": "procedurally generated training instances",
+      "stateful": true
+    },
+    {
+      "artifact_or_side_effect": true,
+      "domains": [
+        "code",
+        "computer_use",
+        "design"
+      ],
+      "id": "visual_app_train",
+      "role": "train",
+      "split": "training prompts and synthetic variants only",
+      "stateful": true
+    }
+  ],
+  "verifier_policy": {
+    "revision_or_digest_receipt_required": true,
+    "rule": "primary reward must inspect environment state or native artifacts whenever task correctness depends on them"
+  },
+  "wandb": {
+    "entity": "arvindcr4-pes-university",
+    "group": "pavlov-successive-halving",
+    "mode": "online",
+    "project": "tinker-rl-lab-pavlov",
+    "receipt_required_before_launch": true
+  },
+  "wandb_entity": "arvindcr4-pes-university",
+  "wandb_group": "pavlov-successive-halving",
+  "wandb_project": "tinker-rl-lab-pavlov"
+}

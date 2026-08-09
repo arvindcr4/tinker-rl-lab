@@ -55,6 +55,73 @@ RECEIPT_STATUS_OBSERVED = "OBSERVED_PRIMARY_EVAL_RECEIPT"
 CLAIM_BOUNDARY = "E8_PRIMARY_EVAL_RECEIPT_ONLY"
 UNPINNED = "UNPINNED_REQUIRED"
 
+# ---------------------------------------------------------------------------
+# Published LifeSciBench facts (primary source, retrieved 2026-08-09).
+#
+# Announcement: https://openai.com/index/introducing-life-sci-bench/ (2026-06-17)
+# Preprint:     https://cdn.openai.com/pdf/b4299379-0a97-4ffa-8b9b-c3fbb299caa9/
+#               lifescibench_preprint.pdf
+#
+# These constants record what the provider has *documented*.  They are not a
+# local copy of the task package: no task text, artifact, or rubric is present
+# in this repository, and preprint appendix A.5 ("Data Availability and Safety
+# Disclosure") states that public release of tasks, rubrics, artifacts, or
+# evaluation materials may be limited by licensing, privacy, proprietary
+# information, or biological safety considerations.
+#
+# NOTE ON ``domain`` vs ``bio_domain``: ``ALLOWED_DOMAINS`` above is the
+# *campaign* capability tag set declared in ``pavlovs_domain_contract.json``
+# for suite ``lifescibench_eval``.  It is deliberately NOT the benchmark's own
+# biological taxonomy.  ``PUBLISHED_BIO_DOMAINS`` below is the provider's
+# stratification taxonomy, carried on task rows as ``bio_domain``.
+# ---------------------------------------------------------------------------
+PUBLISHED_SOURCE_PAPER_URL = (
+    "https://cdn.openai.com/pdf/b4299379-0a97-4ffa-8b9b-c3fbb299caa9/"
+    "lifescibench_preprint.pdf"
+)
+PUBLISHED_ANNOUNCEMENT_DATE = "2026-06-17"
+PUBLISHED_TASK_COUNT = 750
+PUBLISHED_RUBRIC_CRITERIA_COUNT = 19020
+PUBLISHED_ARTIFACT_COUNT = 1062
+PUBLISHED_PASS_THRESHOLD = "0.70"
+PUBLISHED_WORKFLOWS = (
+    "evidence_handling",
+    "analysis",
+    "design_and_optimization",
+    "scientific_reasoning",
+    "validation_and_operations",
+    "translation",
+    "scientific_communication",
+)
+PUBLISHED_BIO_DOMAINS = (
+    "genomics",
+    "chemistry_medchem",
+    "protein_structural_biology",
+    "molecular_cell_biology",
+    "assays_screening",
+    "bioinformatics_comp_bio",
+    "clinical_translational_science",
+)
+# The provider reports two metrics; neither is produced anywhere in this module.
+PUBLISHED_METRICS = ("normalized_rubric_score", "task_pass_rate")
+
+# ---------------------------------------------------------------------------
+# Synthetic fixture marker.
+#
+# Every value emitted by ``build_synthetic_fixture`` carries this marker, and
+# both validators reject any payload containing it.  The fixture exists solely
+# to exercise local plumbing (hashing, manifest construction, disjointness
+# proof, receipt emission).  It can never be mistaken for Life-Sci-Bench data
+# and can never be promoted into a result.
+# ---------------------------------------------------------------------------
+SYNTHETIC_MARKER = "SYNTHETIC-NOT-LIFESCIBENCH"
+SYNTHETIC_TASK_ID_PREFIX = f"{SYNTHETIC_MARKER}-"
+SYNTHETIC_REJECTION_ERROR = (
+    f"payload carries the {SYNTHETIC_MARKER} marker: a synthetic fixture is "
+    "local plumbing scaffolding and can never be Life-Sci-Bench data, a "
+    "Life-Sci-Bench result, or a score"
+)
+
 _IMMUTABLE_REVISION_RE = re.compile(r"^(?:sha256:[0-9a-f]{64}|[0-9a-f]{40})$")
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _GIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -222,6 +289,425 @@ def task_manifest_hash(task_manifest: Sequence[Mapping[str, Any]]) -> str:
     return sha256_json([dict(item) for item in task_manifest])
 
 
+def task_id_hash(task_id: str, dataset_revision: str) -> str:
+    """Public, deterministic task-ID hash bound to the dataset revision.
+
+    The hash covers both the task identifier and the dataset revision, so the
+    same task identifier under a different package revision produces a
+    different digest.  This is what makes an immutable task manifest verifiable
+    against the package it came from.
+    """
+
+    if not isinstance(task_id, str) or not task_id:
+        raise LifeSciBenchSchemaError("task_id must be a non-empty string")
+    if not isinstance(dataset_revision, str) or not dataset_revision:
+        raise LifeSciBenchSchemaError("dataset_revision must be a non-empty string")
+    return _task_hash(task_id, dataset_revision)
+
+
+def contains_synthetic_marker(value: Any) -> bool:
+    """True when any part of ``value`` carries the synthetic-fixture marker."""
+
+    try:
+        return SYNTHETIC_MARKER in _canonical_json(value)
+    except LifeSciBenchSchemaError:
+        return SYNTHETIC_MARKER in repr(value)
+
+
+def build_task_row(
+    task_id: str,
+    *,
+    dataset_revision: str,
+    family: str,
+    domain: str,
+    workflow: str | None = None,
+    bio_domain: str | None = None,
+    split: str = SPLIT,
+    artifact_expected: bool = True,
+) -> dict[str, Any]:
+    """Build one immutable task-manifest row with a deterministic task hash.
+
+    ``domain`` is the campaign capability tag (``ALLOWED_DOMAINS``).
+    ``workflow`` / ``bio_domain`` are the provider's published taxonomies and
+    are optional so that rows predating the published taxonomy still validate.
+    """
+
+    if not isinstance(family, str) or not family:
+        raise LifeSciBenchSchemaError("family must be a non-empty string")
+    if domain not in ALLOWED_DOMAINS:
+        raise LifeSciBenchSchemaError(
+            f"domain must be one of {ALLOWED_DOMAINS!r}, got {domain!r}"
+        )
+    if workflow is not None and workflow not in PUBLISHED_WORKFLOWS:
+        raise LifeSciBenchSchemaError(
+            f"workflow must be a published LifeSciBench workflow, got {workflow!r}"
+        )
+    if bio_domain is not None and bio_domain not in PUBLISHED_BIO_DOMAINS:
+        raise LifeSciBenchSchemaError(
+            f"bio_domain must be a published LifeSciBench domain, got {bio_domain!r}"
+        )
+    if artifact_expected is not True:
+        raise LifeSciBenchSchemaError("artifact_expected must be true for E8 rows")
+    row: dict[str, Any] = {
+        "task_id": task_id,
+        "task_id_hash": task_id_hash(task_id, dataset_revision),
+        "family": family,
+        "domain": domain,
+        "split": split,
+        "artifact_expected": True,
+    }
+    if workflow is not None:
+        row["workflow"] = workflow
+    if bio_domain is not None:
+        row["bio_domain"] = bio_domain
+    return row
+
+
+def build_split_manifest(
+    task_specs: Sequence[Mapping[str, Any]],
+    *,
+    dataset_revision: str,
+    split: str,
+) -> dict[str, Any]:
+    """Build a split manifest (ordered rows plus its content hash).
+
+    ``task_specs`` rows need ``task_id``, ``family`` and ``domain``; they may
+    also carry ``workflow`` and ``bio_domain``.  Duplicate task identifiers are
+    rejected, because a duplicated identifier would let one episode stand in
+    for two manifest entries.
+    """
+
+    if not isinstance(task_specs, Sequence) or isinstance(task_specs, (str, bytes)):
+        raise LifeSciBenchSchemaError("task_specs must be a sequence of mappings")
+    if not task_specs:
+        raise LifeSciBenchSchemaError("task_specs must not be empty")
+    rows: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for index, spec in enumerate(task_specs):
+        if not _is_mapping(spec):
+            raise LifeSciBenchSchemaError(f"task_specs[{index}] must be an object")
+        data = dict(spec)
+        task_id = data.get("task_id")
+        if not isinstance(task_id, str) or not task_id:
+            raise LifeSciBenchSchemaError(f"task_specs[{index}].task_id is required")
+        if task_id in seen:
+            raise LifeSciBenchSchemaError(f"task_specs[{index}] duplicates task_id {task_id!r}")
+        seen.add(task_id)
+        rows.append(
+            build_task_row(
+                task_id,
+                dataset_revision=dataset_revision,
+                family=data.get("family"),
+                domain=data.get("domain"),
+                workflow=data.get("workflow"),
+                bio_domain=data.get("bio_domain"),
+                split=split,
+                artifact_expected=data.get("artifact_expected", True),
+            )
+        )
+    return {
+        "split": split,
+        "dataset_revision": dataset_revision,
+        "task_count": len(rows),
+        "rows": rows,
+        "manifest_hash": task_manifest_hash(rows),
+    }
+
+
+def build_heldout_proof(
+    *,
+    train_manifest: Mapping[str, Any],
+    eval_manifest: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Prove the evaluation split is held out from the training split.
+
+    Fails closed on any overlap.  Task-ID disjointness alone is not enough: a
+    reworded near-duplicate of a trained task carries a different identifier but
+    the same family, so family disjointness is proven separately.
+    """
+
+    train = _mapping(train_manifest, "train_manifest")
+    evaluation = _mapping(eval_manifest, "eval_manifest")
+    train_hash = train.get("manifest_hash")
+    eval_hash = evaluation.get("manifest_hash")
+    if not isinstance(train_hash, str) or _SHA256_RE.fullmatch(train_hash) is None:
+        raise LifeSciBenchSchemaError("train_manifest.manifest_hash must be a SHA-256 digest")
+    if not isinstance(eval_hash, str) or _SHA256_RE.fullmatch(eval_hash) is None:
+        raise LifeSciBenchSchemaError("eval_manifest.manifest_hash must be a SHA-256 digest")
+    if train_hash == eval_hash:
+        raise LifeSciBenchSchemaError("train and evaluation split hashes are identical")
+
+    def _ids_and_families(manifest: Mapping[str, Any], label: str) -> tuple[set[str], set[str]]:
+        rows = manifest.get("rows")
+        if not isinstance(rows, list) or not rows:
+            raise LifeSciBenchSchemaError(f"{label}.rows must be a non-empty list")
+        ids: set[str] = set()
+        families: set[str] = set()
+        for index, row in enumerate(rows):
+            if not _is_mapping(row):
+                raise LifeSciBenchSchemaError(f"{label}.rows[{index}] must be an object")
+            data = dict(row)
+            task_id = data.get("task_id")
+            family = data.get("family")
+            if not isinstance(task_id, str) or not task_id:
+                raise LifeSciBenchSchemaError(f"{label}.rows[{index}].task_id is required")
+            if not isinstance(family, str) or not family:
+                raise LifeSciBenchSchemaError(f"{label}.rows[{index}].family is required")
+            ids.add(task_id)
+            families.add(family)
+        return ids, families
+
+    train_ids, train_families = _ids_and_families(train, "train_manifest")
+    eval_ids, eval_families = _ids_and_families(evaluation, "eval_manifest")
+    shared_ids = sorted(train_ids & eval_ids)
+    if shared_ids:
+        raise LifeSciBenchSchemaError(
+            f"train/evaluation task_ids overlap: {shared_ids[:5]}"
+        )
+    shared_families = sorted(train_families & eval_families)
+    if shared_families:
+        raise LifeSciBenchSchemaError(
+            f"train/evaluation families overlap: {shared_families[:5]}"
+        )
+    proof: dict[str, Any] = {
+        "train_split_manifest_hash": train_hash,
+        "eval_split_manifest_hash": eval_hash,
+        "disjoint_task_ids": True,
+        "disjoint_family_ids": True,
+        "unseen_families": sorted(eval_families),
+    }
+    proof["proof_hash"] = sha256_json(proof)
+    return proof
+
+
+def build_pinned_boundary(
+    *,
+    dataset_revision: str,
+    license_id: str,
+    environment_revision: str,
+    verifier_revision: str,
+    eval_manifest: Mapping[str, Any],
+    train_split_manifest_hash: str,
+) -> dict[str, Any]:
+    """Pin the offline boundary against acquired package/environment identities.
+
+    This is the function the campaign calls once the six access-gated artifacts
+    arrive.  Until then it has nothing real to pin.
+    """
+
+    evaluation = _mapping(eval_manifest, "eval_manifest")
+    boundary = build_offline_e8_boundary()
+    boundary["dataset"].update(
+        {
+            "revision": dataset_revision,
+            "license_id": license_id,
+            "license_status": "approved",
+        }
+    )
+    boundary["native_environment"]["revision"] = environment_revision
+    boundary["native_verifier"]["revision"] = verifier_revision
+    boundary["task_manifest"] = [dict(row) for row in evaluation.get("rows", [])]
+    boundary["eval_split_manifest_hash"] = evaluation.get("manifest_hash")
+    boundary["train_split_manifest_hash"] = train_split_manifest_hash
+    boundary["metadata_status"] = "PINNED_PENDING_OBSERVED_RECEIPT"
+    return boundary
+
+
+def build_e8_result_receipt(
+    *,
+    boundary: Mapping[str, Any],
+    heldout_proof: Mapping[str, Any],
+    episode_rows: Sequence[Mapping[str, Any]],
+    wandb_evidence: Mapping[str, Any],
+    tinker_evidence: Mapping[str, Any],
+    hf_evidence: Mapping[str, Any],
+    cost: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Assemble a canonical E8 result receipt and seal it with ``receipt_hash``.
+
+    Emission is deliberately separate from validation: this builds the exact
+    payload shape, and ``validate_e8_receipt`` decides whether it is acceptable.
+    """
+
+    data = _mapping(boundary, "boundary")
+    dataset = dict(data.get("dataset") or {})
+    receipt: dict[str, Any] = {
+        "schema_version": RECEIPT_SCHEMA_VERSION,
+        "receipt_status": RECEIPT_STATUS_OBSERVED,
+        "source": dict(data.get("source") or {}),
+        "dataset": dataset,
+        "role": ROLE,
+        "split": SPLIT,
+        "dataset_revision": dataset.get("revision"),
+        "license_id": dataset.get("license_id"),
+        "task_manifest": [dict(row) for row in data.get("task_manifest") or []],
+        "eval_split_manifest_hash": data.get("eval_split_manifest_hash"),
+        "heldout_proof": dict(heldout_proof),
+        "native_verifier": {
+            "name": NATIVE_VERIFIER_NAME,
+            "environment_name": NATIVE_ENVIRONMENT_NAME,
+            "environment_revision": dict(data.get("native_environment") or {}).get("revision"),
+            "observation_schema": NATIVE_OBSERVATION_SCHEMA,
+            "verifier_revision": dict(data.get("native_verifier") or {}).get("revision"),
+            "checked": True,
+            "stateful": True,
+            "artifact_or_side_effect": True,
+            "artifact_required": True,
+            "episode_rows": [dict(row) for row in episode_rows],
+        },
+        "wandb": dict(wandb_evidence),
+        "tinker": dict(tinker_evidence),
+        "hf": dict(hf_evidence),
+        "cost": dict(cost),
+        "substitute_suite_id": None,
+        "e6_substitute": False,
+        "xlam_substitute": False,
+        "portfolio_evidence": False,
+        "claim_boundary": CLAIM_BOUNDARY,
+    }
+    receipt["receipt_hash"] = sha256_json(receipt)
+    return receipt
+
+
+def _synthetic_digest(label: str) -> str:
+    return sha256_json({"marker": SYNTHETIC_MARKER, "label": label})
+
+
+def build_synthetic_fixture() -> dict[str, Any]:
+    """Build an end-to-end SYNTHETIC fixture that exercises local plumbing only.
+
+    Every identifier carries ``SYNTHETIC_MARKER``, so both validators reject the
+    whole payload.  No score, pass rate, or rubric value is produced anywhere:
+    ``task_success`` is ``False`` on every row and every metric is ``0.0``,
+    present only because the receipt schema requires the keys to exist.
+    """
+
+    dataset_revision = _synthetic_digest("dataset-revision")[:40]
+    environment_revision = _synthetic_digest("environment-revision")[:40]
+    verifier_revision = _synthetic_digest("verifier-revision")[:40]
+    license_id = f"{SYNTHETIC_MARKER}-license"
+
+    eval_specs = [
+        {
+            "task_id": f"{SYNTHETIC_TASK_ID_PREFIX}eval-0001",
+            "family": f"{SYNTHETIC_MARKER}-family-eval-alpha",
+            "domain": "science",
+            "workflow": "evidence_handling",
+            "bio_domain": "genomics",
+        },
+        {
+            "task_id": f"{SYNTHETIC_TASK_ID_PREFIX}eval-0002",
+            "family": f"{SYNTHETIC_MARKER}-family-eval-beta",
+            "domain": "long_horizon",
+            "workflow": "analysis",
+            "bio_domain": "bioinformatics_comp_bio",
+        },
+        {
+            "task_id": f"{SYNTHETIC_TASK_ID_PREFIX}eval-0003",
+            "family": f"{SYNTHETIC_MARKER}-family-eval-gamma",
+            "domain": "tool_use",
+            "workflow": "translation",
+            "bio_domain": "clinical_translational_science",
+        },
+    ]
+    train_specs = [
+        {
+            "task_id": f"{SYNTHETIC_TASK_ID_PREFIX}train-0001",
+            "family": f"{SYNTHETIC_MARKER}-family-train-delta",
+            "domain": "science",
+            "workflow": "scientific_reasoning",
+            "bio_domain": "molecular_cell_biology",
+        },
+        {
+            "task_id": f"{SYNTHETIC_TASK_ID_PREFIX}train-0002",
+            "family": f"{SYNTHETIC_MARKER}-family-train-epsilon",
+            "domain": "tool_use",
+            "workflow": "design_and_optimization",
+            "bio_domain": "chemistry_medchem",
+        },
+    ]
+    eval_manifest = build_split_manifest(
+        eval_specs, dataset_revision=dataset_revision, split=SPLIT
+    )
+    train_manifest = build_split_manifest(
+        train_specs, dataset_revision=dataset_revision, split="train"
+    )
+    heldout_proof = build_heldout_proof(
+        train_manifest=train_manifest, eval_manifest=eval_manifest
+    )
+    boundary = build_pinned_boundary(
+        dataset_revision=dataset_revision,
+        license_id=license_id,
+        environment_revision=environment_revision,
+        verifier_revision=verifier_revision,
+        eval_manifest=eval_manifest,
+        train_split_manifest_hash=train_manifest["manifest_hash"],
+    )
+    episode_rows = [
+        {
+            "task_id": row["task_id"],
+            "task_id_hash": row["task_id_hash"],
+            "family": row["family"],
+            "domain": row["domain"],
+            "observation_hash": _synthetic_digest(f"observation::{row['task_id']}"),
+            "action_hash": _synthetic_digest(f"action::{row['task_id']}"),
+            "state_hash": _synthetic_digest(f"state::{row['task_id']}"),
+            "artifact_digest": _synthetic_digest(f"artifact::{row['task_id']}"),
+            # Always False: the fixture must never look like a measurement.
+            "task_success": False,
+        }
+        for row in eval_manifest["rows"]
+    ]
+    receipt = build_e8_result_receipt(
+        boundary=boundary,
+        heldout_proof=heldout_proof,
+        episode_rows=episode_rows,
+        wandb_evidence={
+            "observed": True,
+            "run_id": f"{SYNTHETIC_MARKER}-wandb-run",
+            "url": f"https://wandb.ai/{SYNTHETIC_MARKER}/e8-fixture/runs/synthetic",
+            "project": f"{SYNTHETIC_MARKER}-project",
+            "config_hash": _synthetic_digest("wandb-config"),
+            "sample_manifest_hash": _synthetic_digest("wandb-sample-manifest"),
+            # Zeroed placeholders; the keys exist only to satisfy the schema.
+            "metrics": {name: 0.0 for name in WANDB_REQUIRED_METRICS},
+        },
+        tinker_evidence={
+            "observed": True,
+            "run_id": f"{SYNTHETIC_MARKER}-tinker-run",
+            "initial_sampler": f"tinker://{SYNTHETIC_MARKER}/initial",
+            "periodic_samplers": [f"tinker://{SYNTHETIC_MARKER}/step-0001"],
+            "final_sampler": f"tinker://{SYNTHETIC_MARKER}/final",
+            "checkpoint_receipt": f"{SYNTHETIC_MARKER}/checkpoint.json",
+        },
+        hf_evidence={
+            "observed": True,
+            "repository": f"{SYNTHETIC_MARKER}/e8-fixture",
+            "revision": _synthetic_digest("hf-revision")[:40],
+            "checkpoint_manifest": f"{SYNTHETIC_MARKER}/checkpoint-manifest.json",
+            "c0_receipt": f"{SYNTHETIC_MARKER}/c0-receipt.json",
+            "exported": True,
+        },
+        cost={"currency": "USD", "charged_usd": 0.0, "cap_usd": 1.0, "within_cap": True},
+    )
+    return {
+        "marker": SYNTHETIC_MARKER,
+        "notice": (
+            "Synthetic local-plumbing fixture. Contains no Life-Sci-Bench task, "
+            "artifact, rubric, or measurement. Produces no score. Rejected by "
+            "validate_e8_boundary and validate_e8_receipt by design."
+        ),
+        "score": None,
+        "dataset_revision": dataset_revision,
+        "license_id": license_id,
+        "train_manifest": train_manifest,
+        "eval_manifest": eval_manifest,
+        "heldout_proof": heldout_proof,
+        "boundary": boundary,
+        "receipt": receipt,
+    }
+
+
 def build_offline_e8_boundary() -> dict[str, Any]:
     """Return metadata-only E8 protocol scaffolding; it intentionally stays blocked."""
 
@@ -364,6 +850,14 @@ def _validate_task_manifest(
         if not isinstance(row.get("family"), str) or not row["family"]:
             errors.append(f"task_manifest[{index}].family is required for held-out proof")
             valid = False
+        workflow = row.get("workflow")
+        if workflow is not None and workflow not in PUBLISHED_WORKFLOWS:
+            errors.append(f"task_manifest[{index}].workflow is not a published LifeSciBench workflow")
+            valid = False
+        bio_domain = row.get("bio_domain")
+        if bio_domain is not None and bio_domain not in PUBLISHED_BIO_DOMAINS:
+            errors.append(f"task_manifest[{index}].bio_domain is not a published LifeSciBench domain")
+            valid = False
     return valid, rows
 
 
@@ -377,6 +871,8 @@ def validate_e8_boundary(boundary: Mapping[str, Any]) -> BoundaryValidationResul
         t3_adapter.assert_secret_free(boundary)
     except t3_adapter.SecretMaterialError as exc:
         errors.append(str(exc))
+    if contains_synthetic_marker(boundary):
+        errors.append(SYNTHETIC_REJECTION_ERROR)
     data = dict(boundary)
     for field_name in REQUIRED_BOUNDARY_FIELDS:
         if field_name not in data:
@@ -652,6 +1148,8 @@ def validate_e8_receipt(
         t3_adapter.assert_secret_free(result_receipt)
     except t3_adapter.SecretMaterialError as exc:
         errors.append(str(exc))
+    if contains_synthetic_marker(result_receipt):
+        errors.append(SYNTHETIC_REJECTION_ERROR)
     data = dict(result_receipt)
     for field_name in REQUIRED_RECEIPT_FIELDS:
         if field_name not in data:

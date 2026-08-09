@@ -64,6 +64,12 @@ PLACEHOLDER_VALUES = {
 }
 SHA256_RE = re.compile(r"^(?:sha256:)?([0-9a-fA-F]{64})$")
 
+# Any identifier carrying this marker is a locally generated harness fixture.
+# It exercises the ingestion plumbing and must never reach an authoritative
+# boundary, a runtime manifest, or a score.
+SYNTHETIC_MARKER = "SYNTHETIC-NOT-SDAB"
+_SYNTHETIC_TOKENS = ("synthetic", "fixture-not-real", "not-sdab")
+
 RELATED_SUBSTITUTES = {
     "xlam",
     "pavlov_xlam",
@@ -209,6 +215,23 @@ def _normalise_provider(value: Any, field: str) -> str:
     if provider.casefold() not in {"emulated", "emulated, inc.", "emulated inc"}:
         raise SdabBoundaryError(f"{field} must identify Emulated, Inc.")
     return PROVIDER
+
+
+def _looks_synthetic(value: Any) -> bool:
+    """Return True when a value is marked as a locally generated fixture."""
+
+    if not isinstance(value, str):
+        return False
+    normalised = value.strip().casefold().replace("_", "-").replace(" ", "-")
+    return any(token in normalised for token in _SYNTHETIC_TOKENS)
+
+
+def _reject_synthetic(value: Any, field: str) -> None:
+    if _looks_synthetic(value):
+        raise SdabBoundaryError(
+            f"{field}={value!r} is a synthetic harness fixture and can never be "
+            "used as authoritative SDAB evidence"
+        )
 
 
 def _reject_substitute(value: Any, field: str) -> None:
@@ -359,6 +382,8 @@ def _task_ids(spec: Mapping[str, Any]) -> tuple[list[str], list[dict[str, Any]]]
         ids = [_immutable_string(value, f"boundary.task_ids[{index}]") for index, value in enumerate(supplied_ids)]
     if len(set(ids)) != len(ids) or len({item.casefold() for item in ids}) != len(ids):
         raise SdabBoundaryError("boundary.task_ids must be unique without case-fold collisions")
+    for index, task_id in enumerate(ids):
+        _reject_synthetic(task_id, f"boundary.task_ids[{index}]")
     task_record_ids = [record["task_id"] for record in task_records]
     if len(set(task_record_ids)) != len(task_record_ids) or len(
         {item.casefold() for item in task_record_ids}
@@ -440,8 +465,14 @@ def build_sdab_boundary(spec: Mapping[str, Any]) -> dict[str, Any]:
 
     if not isinstance(spec, Mapping):
         raise SdabBoundaryError("SDAB boundary must be an object")
+    if spec.get("synthetic") or spec.get("is_synthetic") or spec.get("fixture"):
+        raise SdabBoundaryError(
+            "boundary.synthetic is set; a harness fixture can never become an "
+            "authoritative SDAB boundary"
+        )
     identity = _source_identity(spec)
     source_revision = _immutable_string(spec.get("source_revision"), "boundary.source_revision")
+    _reject_synthetic(source_revision, "boundary.source_revision")
     source_revision_digest = _digest(
         spec.get("source_revision_digest"), "boundary.source_revision_digest"
     )
@@ -962,6 +993,559 @@ adapt_result = build_result_receipt
 validate_result = validate_result_receipt
 
 
+# ---------------------------------------------------------------------------
+# Provider bundle ingestion
+#
+# Everything below is ready *before* provider access exists.  It turns a
+# provider-issued 80-task SDAB evaluation bundle into (a) a validated bundle
+# report, (b) a split manifest, (c) a train/eval disjointness proof, (d) an
+# authoritative boundary, and (e) the metadata-only runtime manifest that
+# ``flagship.eval_pavlov_sdab`` accepts.  None of it can invent a score.
+# ---------------------------------------------------------------------------
+
+BUNDLE_SCHEMA_VERSION = "pavlov-sdab-eval-bundle-v1"
+INGEST_SCHEMA_VERSION = "pavlov-sdab-eval-bundle-ingest-v1"
+DISJOINTNESS_SCHEMA_VERSION = "pavlov-sdab-eval-disjointness-v1"
+RUNTIME_MANIFEST_SCHEMA_VERSION = "pavlov-sdab-e3-runtime-manifest-v1"
+
+INGEST_MODES = ("authoritative", "harness_validation")
+
+# Keys that may carry raw benchmark content.  They are permitted inside the
+# provider bundle (that is the data) but are stripped from every derived
+# artifact so raw prompts/targets never cross a receipt boundary.
+RAW_CONTENT_KEYS = (
+    "answer",
+    "answers",
+    "gold",
+    "gold_patch",
+    "hidden_tests",
+    "instructions",
+    "patch",
+    "prompt",
+    "prompts",
+    "rubric",
+    "solution",
+    "solutions",
+    "target",
+    "targets",
+    "test",
+    "tests",
+    "trajectory",
+    "trajectories",
+)
+
+
+class SdabBundleError(SdabBoundaryError):
+    """Raised when a provider bundle is unsafe to ingest."""
+
+
+def newline_task_id_sha256(task_ids: Sequence[str]) -> str:
+    """Hash ordered task IDs the way ``flagship.eval_pavlov_sdab`` does.
+
+    The runtime manifest gate hashes ``"\\n".join(task_ids)`` and returns bare
+    hex.  The boundary hashes the canonical JSON array and returns a
+    ``sha256:`` digest.  Both are emitted so the two receipt families stay
+    reconcilable instead of silently disagreeing.
+    """
+
+    ids = [_immutable_string(value, f"task_ids[{index}]") for index, value in enumerate(task_ids)]
+    return hashlib.sha256("\n".join(ids).encode("utf-8")).hexdigest()
+
+
+def _bundle_synthetic_flag(bundle: Mapping[str, Any]) -> bool:
+    flags = [
+        bundle[key]
+        for key in ("synthetic", "is_synthetic", "fixture")
+        if key in bundle and bundle[key] is not None
+    ]
+    parsed = set()
+    for value in flags:
+        if isinstance(value, bool):
+            parsed.add(value)
+        elif isinstance(value, str):
+            parsed.add(value.strip().casefold() in {"true", "1", "yes", "synthetic"})
+        else:
+            raise SdabBundleError("bundle.synthetic must be boolean")
+    if len(parsed) > 1:
+        raise SdabBundleError("bundle synthetic flags disagree")
+    return bool(parsed and next(iter(parsed)))
+
+
+def _strip_raw_content(record: Mapping[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    stripped = sorted(key for key in record if key.casefold() in RAW_CONTENT_KEYS)
+    metadata = {key: record[key] for key in record if key.casefold() not in RAW_CONTENT_KEYS}
+    return metadata, stripped
+
+
+def validate_task_bundle(
+    bundle: Mapping[str, Any],
+    *,
+    expected_task_count: int = OFFICIAL_TASK_COUNT,
+    allow_synthetic: bool = False,
+) -> dict[str, Any]:
+    """Validate a provider-issued SDAB evaluation bundle and hash its task IDs.
+
+    Returns a metadata-only bundle report.  Raw task content present in the
+    bundle is recorded by key name and dropped, never copied forward.
+    """
+
+    if not isinstance(bundle, Mapping):
+        raise SdabBundleError("SDAB bundle must be an object")
+    synthetic = _bundle_synthetic_flag(bundle)
+    if synthetic and not allow_synthetic:
+        raise SdabBundleError(
+            "bundle is marked synthetic; ingest it with mode='harness_validation' "
+            "or supply the authentic provider bundle"
+        )
+
+    benchmark_id = _required_string(bundle, "benchmark_id", "bundle")
+    if benchmark_id.casefold() != BENCHMARK_ID:
+        _reject_substitute(benchmark_id, "bundle.benchmark_id")
+        raise SdabBundleError("bundle.benchmark_id must be 'sdab'")
+    for key in ("benchmark", "related_benchmark", "substitute_for", "evaluation_substitute"):
+        _reject_substitute(bundle.get(key), f"bundle.{key}")
+    if "benchmark_name" in bundle:
+        name = _required_string(bundle, "benchmark_name", "bundle")
+        if name.casefold() != BENCHMARK_NAME.casefold():
+            _reject_substitute(name, "bundle.benchmark_name")
+            raise SdabBundleError(f"bundle.benchmark_name must be {BENCHMARK_NAME!r}")
+    if "canonical_url" in bundle and _required_string(
+        bundle, "canonical_url", "bundle"
+    ).rstrip("/") != CANONICAL_URL:
+        raise SdabBundleError(f"bundle.canonical_url must be {CANONICAL_URL!r}")
+    provider = _normalise_provider(
+        bundle.get("provider", PROVIDER), "bundle.provider"
+    )
+
+    split = _required_string(bundle, "split", "bundle")
+    if split != "evaluation":
+        raise SdabBundleError("sdab_eval ingests only the evaluation split")
+
+    revision_keys = [key for key in ("revision", "source_revision") if key in bundle]
+    if not revision_keys:
+        raise SdabBundleError("bundle.revision is required and must be immutable")
+    revisions = {_immutable_string(bundle[key], f"bundle.{key}") for key in revision_keys}
+    if len(revisions) != 1:
+        raise SdabBundleError("bundle revision aliases disagree")
+    revision = next(iter(revisions))
+    if not synthetic:
+        _reject_synthetic(revision, "bundle.revision")
+
+    license_identity: dict[str, Any]
+    raw_license = bundle.get("license", bundle.get("license_id"))
+    if isinstance(raw_license, str):
+        license_identity = {"name": _immutable_string(raw_license, "bundle.license")}
+    elif isinstance(raw_license, Mapping):
+        license_identity = _canonical(raw_license, "bundle.license")
+        if not any(
+            isinstance(license_identity.get(key), str) and license_identity[key].strip()
+            for key in ("name", "spdx_id", "identifier")
+        ):
+            raise SdabBundleError("bundle.license needs a name or SPDX identifier")
+    else:
+        raise SdabBundleError("bundle.license must be a string or object")
+    raw_license_receipt = bundle.get("license_receipt")
+    if not isinstance(raw_license_receipt, Mapping):
+        raise SdabBundleError("bundle.license_receipt must be an immutable receipt object")
+    license_receipt = _immutable_receipt(raw_license_receipt, "bundle.license_receipt")
+
+    raw_tasks = bundle.get("tasks")
+    if not isinstance(raw_tasks, list) or not raw_tasks:
+        raise SdabBundleError("bundle.tasks must be a non-empty list")
+    if expected_task_count is not None and len(raw_tasks) != expected_task_count:
+        raise SdabBundleError(
+            f"bundle.tasks must contain exactly {expected_task_count} tasks; got {len(raw_tasks)}"
+        )
+
+    ordered_ids: list[str] = []
+    records: list[dict[str, Any]] = []
+    stripped_keys: set[str] = set()
+    categories: dict[str, int] = {}
+    for index, raw in enumerate(raw_tasks):
+        if not isinstance(raw, Mapping):
+            raise SdabBundleError(f"bundle.tasks[{index}] must be an object")
+        task_id = _immutable_string(raw.get("task_id"), f"bundle.tasks[{index}].task_id")
+        if synthetic:
+            if not _looks_synthetic(task_id):
+                raise SdabBundleError(
+                    f"bundle.tasks[{index}].task_id must carry the {SYNTHETIC_MARKER} "
+                    "marker in a synthetic bundle"
+                )
+        else:
+            _reject_synthetic(task_id, f"bundle.tasks[{index}].task_id")
+        metadata, stripped = _strip_raw_content(raw)
+        stripped_keys.update(stripped)
+        record = dict(_canonical(metadata, f"bundle.tasks[{index}]"))
+        record["task_id"] = task_id
+        category = record.get("category")
+        if category is not None:
+            if not isinstance(category, str) or category.strip() not in OFFICIAL_CATEGORIES:
+                raise SdabBundleError(
+                    f"bundle.tasks[{index}].category is not an SDAB category"
+                )
+            record["category"] = category.strip()
+            categories[record["category"]] = categories.get(record["category"], 0) + 1
+        ordered_ids.append(task_id)
+        records.append(record)
+
+    if len(set(ordered_ids)) != len(ordered_ids) or len(
+        {item.casefold() for item in ordered_ids}
+    ) != len(ordered_ids):
+        raise SdabBundleError("bundle task IDs must be unique without case-fold collisions")
+
+    sorted_ids = sorted(ordered_ids)
+    report = {
+        "schema_version": BUNDLE_SCHEMA_VERSION,
+        "synthetic": synthetic,
+        "authoritative": not synthetic,
+        "benchmark_id": BENCHMARK_ID,
+        "benchmark_name": BENCHMARK_NAME,
+        "canonical_url": CANONICAL_URL,
+        "provider": provider,
+        "revision": revision,
+        "split": "evaluation",
+        "license": license_identity,
+        "license_receipt": license_receipt,
+        "task_count": len(sorted_ids),
+        "expected_task_count": expected_task_count,
+        "task_ids": sorted_ids,
+        "task_order": ordered_ids,
+        "tasks": sorted(records, key=lambda item: item["task_id"]),
+        "categories": dict(sorted(categories.items())),
+        # Both hash schemes, so the runtime manifest and the boundary receipt
+        # can be reconciled against one another.
+        "task_id_sha256": newline_task_id_sha256(sorted_ids),
+        "task_id_sha256_supplied_order": newline_task_id_sha256(ordered_ids),
+        "task_id_digest": sha256_digest(sorted_ids),
+        "raw_content_keys_stripped": sorted(stripped_keys),
+    }
+    report["bundle_digest"] = sha256_digest(
+        {key: value for key, value in report.items() if key != "bundle_digest"}
+    )
+    return report
+
+
+def build_split_manifest(
+    bundle_report: Mapping[str, Any],
+    *,
+    revision: str | None = None,
+    digest: str | None = None,
+) -> dict[str, Any]:
+    """Construct the evaluation split manifest from a validated bundle."""
+
+    task_ids = list(bundle_report["task_ids"])
+    manifest_revision = _immutable_string(
+        revision if revision is not None else f"{bundle_report['revision']}#evaluation-split",
+        "split_manifest.revision",
+    )
+    manifest_digest = (
+        _digest(digest, "split_manifest.digest")
+        if digest is not None
+        else sha256_digest({"revision": manifest_revision, "task_ids": task_ids})
+    )
+    return {
+        "name": "evaluation",
+        "revision": manifest_revision,
+        "digest": manifest_digest,
+        "task_ids": task_ids,
+    }
+
+
+def prove_split_disjointness(
+    eval_task_ids: Sequence[str],
+    train_task_ids: Sequence[str],
+    *,
+    strict: bool = True,
+) -> dict[str, Any]:
+    """Prove that evaluation and training task IDs do not overlap.
+
+    Overlap is checked case-insensitively: a training ID differing only in case
+    is still contamination.  With ``strict`` the function fails closed.
+    """
+
+    eval_ids = sorted(
+        _immutable_string(value, f"eval_task_ids[{index}]")
+        for index, value in enumerate(eval_task_ids)
+    )
+    train_ids = sorted(
+        _immutable_string(value, f"train_task_ids[{index}]")
+        for index, value in enumerate(train_task_ids)
+    )
+    if not eval_ids:
+        raise SdabBundleError("disjointness proof needs a non-empty evaluation split")
+    exact = sorted(set(eval_ids) & set(train_ids))
+    folded = sorted(
+        task_id
+        for task_id in eval_ids
+        if task_id.casefold() in {item.casefold() for item in train_ids}
+    )
+    eval_hash = newline_task_id_sha256(eval_ids)
+    train_hash = newline_task_id_sha256(train_ids) if train_ids else None
+    disjoint = not exact and not folded and (train_hash is None or train_hash != eval_hash)
+    proof = {
+        "schema_version": DISJOINTNESS_SCHEMA_VERSION,
+        "method": "case-folded set intersection over immutable task IDs",
+        "eval_task_count": len(eval_ids),
+        "train_task_count": len(train_ids),
+        "eval_task_id_sha256": eval_hash,
+        "train_task_id_sha256": train_hash,
+        "eval_task_id_digest": sha256_digest(eval_ids),
+        "train_task_id_digest": sha256_digest(train_ids) if train_ids else None,
+        "intersection_count": len(exact),
+        "casefold_intersection_count": len(folded),
+        "overlapping_task_ids": exact,
+        "disjoint": disjoint,
+        "train_split_supplied": bool(train_ids),
+    }
+    proof["proof_digest"] = sha256_digest(proof)
+    if strict and not disjoint:
+        raise SdabBundleError(
+            "train/eval task IDs are not disjoint; overlap="
+            + (",".join(exact or folded) or "task_id_hash_collision")
+        )
+    if strict and not train_ids:
+        raise SdabBundleError(
+            "a disjointness proof requires the provider's training task-ID list; "
+            "none was supplied"
+        )
+    return proof
+
+
+def build_boundary_spec_from_bundle(
+    bundle_report: Mapping[str, Any],
+    *,
+    source_revision_digest: str,
+    split_manifest: Mapping[str, Any] | None = None,
+    container_digest: str | None = None,
+) -> dict[str, Any]:
+    """Derive the offline boundary spec that :func:`build_sdab_boundary` accepts."""
+
+    manifest = dict(split_manifest) if split_manifest is not None else build_split_manifest(bundle_report)
+    spec: dict[str, Any] = {
+        "suite_id": SUITE_ID,
+        "role": ROLE,
+        "source_identity": {
+            "provider": bundle_report["provider"],
+            "benchmark_id": BENCHMARK_ID,
+            "benchmark_name": BENCHMARK_NAME,
+            "canonical_url": CANONICAL_URL,
+        },
+        "source_revision": bundle_report["revision"],
+        "source_revision_digest": _digest(source_revision_digest, "bundle.source_revision_digest"),
+        "license": bundle_report["license"],
+        "license_receipt": bundle_report["license_receipt"],
+        "split": "evaluation",
+        "tasks": [dict(record) for record in bundle_report["tasks"]],
+        "task_ids": list(bundle_report["task_ids"]),
+        "task_count": bundle_report["task_count"],
+        "split_manifest": manifest,
+    }
+    if container_digest is not None:
+        spec["container_digest"] = _digest(container_digest, "bundle.container_digest")
+    return spec
+
+
+def build_runtime_manifest(
+    ingest_report: Mapping[str, Any],
+    *,
+    container_digest: str,
+    environment_digest: str,
+    verifier_sha256: str,
+    verifier_identity: str,
+    adapter_entrypoint: str,
+    disjointness_receipt: str,
+    license_id: str | None = None,
+    license_receipt: str | None = None,
+) -> dict[str, Any]:
+    """Emit the metadata-only runtime manifest ``eval_pavlov_sdab`` accepts.
+
+    Raw task content never reaches this manifest: only task IDs, hashes, and
+    provider digests.  A synthetic ingest is refused outright, so the fixture
+    can never launch a run.
+    """
+
+    if ingest_report.get("synthetic"):
+        raise SdabBundleError(
+            "a synthetic harness fixture can never produce an SDAB runtime manifest"
+        )
+    bundle = ingest_report["bundle"]
+    proof = ingest_report["disjointness_proof"]
+    if not proof.get("disjoint"):
+        raise SdabBundleError("runtime manifest requires a proven disjoint split")
+    train_hash = proof.get("train_task_id_sha256")
+    if not isinstance(train_hash, str) or not train_hash:
+        raise SdabBundleError("runtime manifest requires the training task-ID hash")
+    task_ids = list(bundle["task_ids"])
+    resolved_license = license_id
+    if resolved_license is None:
+        license_identity = bundle["license"]
+        resolved_license = (
+            license_identity
+            if isinstance(license_identity, str)
+            else license_identity.get("spdx_id") or license_identity.get("name")
+        )
+    manifest = {
+        "schema_version": RUNTIME_MANIFEST_SCHEMA_VERSION,
+        "suite_id": SUITE_ID,
+        "benchmark_name": BENCHMARK_NAME,
+        "provider": "Emulated",
+        "official_url": CANONICAL_URL,
+        "benchmark_revision": _immutable_string(
+            bundle["revision"], "runtime_manifest.benchmark_revision"
+        ),
+        "license_id": _immutable_string(resolved_license, "runtime_manifest.license_id"),
+        "license_receipt": _immutable_string(
+            license_receipt
+            if license_receipt is not None
+            else bundle["license_receipt"]["reference"],
+            "runtime_manifest.license_receipt",
+        ),
+        "split": "evaluation",
+        "task_ids": task_ids,
+        "task_count": len(task_ids),
+        "task_id_sha256": newline_task_id_sha256(task_ids),
+        "train_task_id_sha256": train_hash,
+        "disjointness_receipt": _immutable_string(
+            disjointness_receipt, "runtime_manifest.disjointness_receipt"
+        ),
+        "container_digest": _digest(container_digest, "runtime_manifest.container_digest"),
+        "environment_digest": _digest(environment_digest, "runtime_manifest.environment_digest"),
+        "verifier_sha256": _immutable_string(verifier_sha256, "runtime_manifest.verifier_sha256"),
+        "verifier_identity": _immutable_string(
+            verifier_identity, "runtime_manifest.verifier_identity"
+        ),
+        "adapter_entrypoint": _immutable_string(
+            adapter_entrypoint, "runtime_manifest.adapter_entrypoint"
+        ),
+        "native_verifier": True,
+        "stateful": True,
+        "artifact_or_side_effect": True,
+    }
+    forbidden = sorted(set(manifest) & set(RAW_CONTENT_KEYS))
+    if forbidden:
+        raise SdabBundleError(
+            "runtime manifest must be metadata-only; found " + ",".join(forbidden)
+        )
+    return manifest
+
+
+def ingest_task_bundle(
+    bundle: Mapping[str, Any],
+    *,
+    train_task_ids: Sequence[str] = (),
+    mode: str = "authoritative",
+    source_revision_digest: str | None = None,
+    container_digest: str | None = None,
+    split_manifest_revision: str | None = None,
+    split_manifest_digest: str | None = None,
+    expected_task_count: int = OFFICIAL_TASK_COUNT,
+) -> dict[str, Any]:
+    """Ingest an SDAB evaluation bundle end to end.
+
+    ``mode='authoritative'`` requires an authentic provider bundle and builds
+    the canonical boundary.  ``mode='harness_validation'`` accepts a synthetic
+    fixture, exercises exactly the same plumbing, and proves the fixture is
+    rejected by the authoritative boundary.  Neither mode produces a score.
+    """
+
+    if mode not in INGEST_MODES:
+        raise SdabBundleError(f"unsupported ingest mode {mode!r}")
+    harness_only = mode == "harness_validation"
+    bundle_report = validate_task_bundle(
+        bundle, expected_task_count=expected_task_count, allow_synthetic=harness_only
+    )
+    if harness_only and not bundle_report["synthetic"]:
+        raise SdabBundleError(
+            "mode='harness_validation' is only for synthetic fixtures; an authentic "
+            "bundle must be ingested with mode='authoritative'"
+        )
+    split_manifest = build_split_manifest(
+        bundle_report, revision=split_manifest_revision, digest=split_manifest_digest
+    )
+    proof = prove_split_disjointness(
+        bundle_report["task_ids"], train_task_ids, strict=not harness_only
+    )
+
+    report: dict[str, Any] = {
+        "schema_version": INGEST_SCHEMA_VERSION,
+        "mode": mode,
+        "suite_id": SUITE_ID,
+        "role": ROLE,
+        "synthetic": bundle_report["synthetic"],
+        "authoritative": not harness_only,
+        "bundle": bundle_report,
+        "split_manifest": split_manifest,
+        "split_manifest_hash": None,
+        "disjointness_proof": proof,
+        "boundary": None,
+        "boundary_rejection": None,
+        # A bundle ingest describes plumbing, never performance.
+        "score": None,
+        "is_model_score": False,
+        "evidence_kind": "harness_validation" if harness_only else "boundary_pin",
+        "related_benchmarks_are_not_substitutes": True,
+    }
+
+    spec = build_boundary_spec_from_bundle(
+        bundle_report,
+        source_revision_digest=source_revision_digest
+        or sha256_digest({"revision": bundle_report["revision"], "bundle_digest": bundle_report["bundle_digest"]}),
+        split_manifest=split_manifest,
+        container_digest=container_digest,
+    )
+    if harness_only:
+        # The fixture must be refused by the authoritative path.  If it is not,
+        # the guard has regressed and ingestion fails closed.
+        errors = validate_sdab_boundary(spec)
+        if not errors:
+            raise SdabBundleError(
+                "synthetic fixture was accepted by the authoritative boundary; "
+                "refusing to continue"
+            )
+        report["boundary_rejection"] = errors
+    else:
+        boundary = build_sdab_boundary(spec)
+        report["boundary"] = boundary
+        report["split_manifest_hash"] = boundary["split_manifest_hash"]
+    report["ingest_digest"] = sha256_digest(report)
+    return report
+
+
+def build_ingest_receipt(
+    ingest_report: Mapping[str, Any],
+    *,
+    status: str,
+    blockers: Sequence[str] = (),
+) -> dict[str, Any]:
+    """Emit a receipt for a bundle ingest.  Never carries a score."""
+
+    if status not in {"READY", "BLOCKED", "PARTIAL"}:
+        raise SdabBundleError(f"unsupported ingest receipt status {status!r}")
+    receipt = {
+        "schema_version": "pavlov-sdab-eval-ingest-receipt-v1",
+        "suite_id": SUITE_ID,
+        "role": ROLE,
+        "status": status,
+        "mode": ingest_report["mode"],
+        "synthetic": ingest_report["synthetic"],
+        "authoritative": ingest_report["authoritative"],
+        "score": None,
+        "is_model_score": False,
+        "evidence_kind": ingest_report["evidence_kind"],
+        "task_count": ingest_report["bundle"]["task_count"],
+        "task_id_sha256": ingest_report["bundle"]["task_id_sha256"],
+        "task_id_digest": ingest_report["bundle"]["task_id_digest"],
+        "split_manifest": ingest_report["split_manifest"],
+        "split_manifest_hash": ingest_report["split_manifest_hash"],
+        "disjointness_proof": ingest_report["disjointness_proof"],
+        "boundary_rejection": ingest_report["boundary_rejection"],
+        "ingest_digest": ingest_report["ingest_digest"],
+        "blockers": list(blockers),
+    }
+    receipt["receipt_digest"] = sha256_digest(receipt)
+    return receipt
+
+
 def _load_json(path: Path, field: str) -> Any:
     if not path.is_file():
         raise SdabBoundaryError(f"{field} is missing: {path}")
@@ -984,19 +1568,83 @@ def _display(value: Any) -> Any:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("boundary", type=Path, help="offline SDAB boundary JSON")
+    parser.add_argument(
+        "boundary", type=Path, nargs="?", help="offline SDAB boundary JSON"
+    )
     parser.add_argument("--result", type=Path, help="optional offline backend result receipt JSON")
     parser.add_argument("--backend", choices=RESULT_BACKENDS)
+    parser.add_argument(
+        "--bundle",
+        type=Path,
+        help="provider-issued SDAB evaluation bundle JSON to ingest",
+    )
+    parser.add_argument(
+        "--train-task-ids",
+        type=Path,
+        help="JSON list (or object with task_ids) of the training split task IDs",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=INGEST_MODES,
+        default="authoritative",
+        help="'harness_validation' accepts a synthetic fixture and never scores",
+    )
+    parser.add_argument("--source-revision-digest")
+    parser.add_argument("--container-digest")
+    parser.add_argument("--out", type=Path, help="write the ingest receipt to this path")
     args = parser.parse_args(argv)
-    try:
-        boundary = build_sdab_boundary(_load_json(args.boundary, "boundary"))
-        output: dict[str, Any] = {"boundary": boundary}
-        if args.result is not None:
-            if args.backend is None:
-                raise SdabBoundaryError("--backend is required with --result")
-            output["result_receipt"] = build_result_receipt(
-                boundary, _load_json(args.result, "result receipt"), args.backend
+    if args.bundle is None and args.boundary is None:
+        print(
+            json.dumps(
+                {"status": "ERROR", "errors": ["either a boundary path or --bundle is required"]},
+                indent=2,
             )
+        )
+        return 1
+    try:
+        output: dict[str, Any] = {}
+        if args.bundle is not None:
+            train_ids: list[str] = []
+            if args.train_task_ids is not None:
+                raw_train = _load_json(args.train_task_ids, "training task IDs")
+                if isinstance(raw_train, Mapping):
+                    raw_train = raw_train.get("task_ids")
+                if not isinstance(raw_train, list):
+                    raise SdabBoundaryError("training task IDs must be a JSON list")
+                train_ids = [str(item) for item in raw_train]
+            ingest = ingest_task_bundle(
+                _load_json(args.bundle, "bundle"),
+                train_task_ids=train_ids,
+                mode=args.mode,
+                source_revision_digest=args.source_revision_digest,
+                container_digest=args.container_digest,
+            )
+            receipt = build_ingest_receipt(
+                ingest,
+                status="BLOCKED" if ingest["synthetic"] else "READY",
+                blockers=(
+                    ["synthetic fixture: harness validation only, never a model score"]
+                    if ingest["synthetic"]
+                    else []
+                ),
+            )
+            output["ingest"] = ingest
+            output["ingest_receipt"] = receipt
+            if args.out is not None:
+                args.out.parent.mkdir(parents=True, exist_ok=True)
+                args.out.write_text(
+                    json.dumps(_display(receipt), indent=2, sort_keys=True) + "\n",
+                    encoding="utf-8",
+                )
+        if args.boundary is not None:
+            boundary = build_sdab_boundary(_load_json(args.boundary, "boundary"))
+            output["boundary"] = boundary
+            if args.result is not None:
+                if args.backend is None:
+                    raise SdabBoundaryError("--backend is required with --result")
+                output["result_receipt"] = build_result_receipt(
+                    boundary, _load_json(args.result, "result receipt"), args.backend
+                )
         print(json.dumps(_display(output), indent=2, sort_keys=True))
         return 0
     except SdabBoundaryError as exc:

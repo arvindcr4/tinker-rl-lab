@@ -1,0 +1,18 @@
+{
+  "disjoint": true,
+  "errors": [],
+  "evaluation_split_manifest_hash": "feb368884a41c994567cd7067cf22c47fc67e27158dd635df7ab4a594cf93f0c",
+  "evaluation_task_count": 2647,
+  "evaluation_task_id_hash": "e677af69aa5d1dc7137e54c18c41d99343a41b3e5e77377f7512f42c1a34d2b5",
+  "overlap_count": 0,
+  "overlap_task_ids": [],
+  "schema_version": "pavlov-webbench-split-derivation-v1",
+  "suite_id": "webbench_eval",
+  "training_declared_task_id_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "training_declared_task_id_hash_verified": true,
+  "training_manifest_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/eval_only_training_task_manifest.json",
+  "training_manifest_sha256": "d37abd66b0a9dd6d8eef32355480e2bf094eac514b9b14cce5c0e0789e35faeb",
+  "training_task_count": 0,
+  "training_task_id_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "valid": true
+}

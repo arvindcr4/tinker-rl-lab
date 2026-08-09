@@ -13,6 +13,7 @@ import hashlib
 import json
 import re
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
@@ -841,15 +842,423 @@ def evaluate_bundle(bundle: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+# ---------------------------------------------------------------------------
+# E10 AgentHarm split binding
+#
+# AgentHarm ships three public splits and three held-out ("private") splits.  The
+# held-out files are absent from the public dataset revision and are gated by the
+# UK AI Safety Institute.  Everything below exists so that a score can only ever
+# be emitted against the held-out split, with a verifier and dataset revision that
+# are both pinned and hashed.  A run on the public split is harness evidence, not
+# an AgentHarm score, and the emitter enforces that mechanically.
+# ---------------------------------------------------------------------------
+
+AGENTHARM_SUITE_ID = "agentharm_eval"
+AGENTHARM_DATASET_ID = "ai-safety-institute/AgentHarm"
+AGENTHARM_DATASET_REVISION = "e23b3fe60a0da9037314b88e5ee3a0c054970dad"
+AGENTHARM_HARNESS_REPO = "UKGovernmentBEIS/inspect_evals"
+AGENTHARM_HARNESS_REVISION = "b935c0e5cfa04710f016f925db75d8e81413e2cf"
+
+AGENTHARM_HELDOUT_SPLIT = "test_private"
+
+#: split name -> {dataset name -> path relative to the dataset root}.  Mirrors the
+#: ``split_dict`` in ``inspect_evals.agentharm.utils.load_dataset`` exactly; the
+#: loader flag that selects the held-out files is ``split="test_private"``.
+AGENTHARM_SPLIT_FILES: Mapping[str, Mapping[str, str]] = {
+    "val": {
+        "harmful": "benchmark/harmful_behaviors_validation.json",
+        "benign": "benchmark/benign_behaviors_validation.json",
+        "chat": "benchmark/chat_validation.json",
+    },
+    "test_public": {
+        "harmful": "benchmark/harmful_behaviors_test_public.json",
+        "benign": "benchmark/benign_behaviors_test_public.json",
+        "chat": "benchmark/chat_public_test.json",
+    },
+    "test_private": {
+        "harmful": "benchmark/harmful_behaviors_test_private.json",
+        "benign": "benchmark/benign_behaviors_test_private.json",
+        "chat": "benchmark/chat_private_test.json",
+    },
+}
+
+#: The three files that must be present before any AgentHarm score may be emitted.
+AGENTHARM_HELDOUT_FILES: tuple[str, ...] = tuple(
+    AGENTHARM_SPLIT_FILES[AGENTHARM_HELDOUT_SPLIT][name]
+    for name in ("harmful", "benign", "chat")
+)
+
+#: Source files whose content defines the AgentHarm grader.  Hashing all of them
+#: gives one verifier identity that changes if any grading path changes.
+AGENTHARM_VERIFIER_SOURCES: tuple[str, ...] = (
+    "agentharm.py",
+    "scorer.py",
+    "metric.py",
+    "utils.py",
+    "prompts.py",
+    "agents/agent.py",
+    "agents/default_agent.py",
+    "agents/refusal_agent.py",
+    "benchmark/grading_utils.py",
+    "benchmark/harmful_grading_functions.py",
+    "benchmark/benign_grading_functions.py",
+)
+
+_TASK_ID_HASH_DOMAIN = "pavlov/agentharm/task-id/v1"
+_SPLIT_MANIFEST_DOMAIN = "pavlov/agentharm/split-manifest/v1"
+_VERIFIER_DOMAIN = "pavlov/agentharm/verifier/v1"
+
+
+class HeldoutSplitUnavailable(RuntimeError):
+    """Raised when a held-out AgentHarm score is requested without the private files."""
+
+
+def agentharm_task_id_hash(
+    behavior_id: str,
+    *,
+    dataset_name: str,
+    split: str,
+    dataset_id: str = AGENTHARM_DATASET_ID,
+    dataset_revision: str = AGENTHARM_DATASET_REVISION,
+) -> str:
+    """Bind one behavior ID to the immutable dataset revision and split.
+
+    The hash is domain-separated so a task ID from one split can never collide
+    with the same ID in another split or at another dataset revision.
+    """
+
+    if not isinstance(behavior_id, str) or not behavior_id.strip():
+        raise ValueError("behavior_id must be a non-empty string")
+    if split not in AGENTHARM_SPLIT_FILES:
+        raise ValueError(f"unknown AgentHarm split {split!r}")
+    if dataset_name not in AGENTHARM_SPLIT_FILES[split]:
+        raise ValueError(f"unknown AgentHarm dataset {dataset_name!r}")
+    if not _is_immutable_revision(dataset_revision):
+        raise ValueError("dataset_revision must be an immutable 40-hex or sha256 revision")
+
+    payload = canonical_json(
+        {
+            "domain": _TASK_ID_HASH_DOMAIN,
+            "dataset_id": dataset_id,
+            "dataset_revision": str(dataset_revision).strip().lower(),
+            "split": split,
+            "dataset_name": dataset_name,
+            "behavior_id": behavior_id,
+        }
+    )
+    return sha256_text(payload)
+
+
+def _read_behavior_ids(path: Path) -> list[str]:
+    with path.open("r", encoding="utf-8") as handle:
+        data = json.load(handle)
+    behaviors = data.get("behaviors") if isinstance(data, Mapping) else None
+    if not isinstance(behaviors, list):
+        raise ValueError(f"{path} does not contain a 'behaviors' list")
+    ids: list[str] = []
+    for entry in behaviors:
+        if not isinstance(entry, Mapping) or "id" not in entry:
+            raise ValueError(f"{path} contains a behavior without an 'id'")
+        ids.append(str(entry["id"]))
+    return ids
+
+
+def build_agentharm_split_manifest(
+    dataset_root: str | Path,
+    split: str,
+    *,
+    dataset_id: str = AGENTHARM_DATASET_ID,
+    dataset_revision: str = AGENTHARM_DATASET_REVISION,
+) -> dict[str, Any]:
+    """Hash every file in one AgentHarm split and bind its behavior IDs.
+
+    Missing files are recorded, never silently skipped: ``complete`` is False and
+    ``missing_files`` names them.  This is what makes the held-out gate legible.
+    """
+
+    if split not in AGENTHARM_SPLIT_FILES:
+        raise ValueError(f"unknown AgentHarm split {split!r}")
+    if not _is_immutable_revision(dataset_revision):
+        raise ValueError("dataset_revision must be an immutable 40-hex or sha256 revision")
+
+    root = Path(dataset_root)
+    files: dict[str, Any] = {}
+    missing: list[str] = []
+    task_id_hashes: list[str] = []
+
+    for dataset_name in ("harmful", "benign", "chat"):
+        relative = AGENTHARM_SPLIT_FILES[split][dataset_name]
+        path = root / relative
+        if not path.is_file():
+            missing.append(relative)
+            files[relative] = {
+                "dataset_name": dataset_name,
+                "present": False,
+                "sha256": None,
+                "behavior_count": 0,
+                "behavior_ids": [],
+            }
+            continue
+
+        raw = path.read_bytes()
+        behavior_ids = _read_behavior_ids(path)
+        files[relative] = {
+            "dataset_name": dataset_name,
+            "present": True,
+            "sha256": hashlib.sha256(raw).hexdigest(),
+            "behavior_count": len(behavior_ids),
+            "behavior_ids": behavior_ids,
+        }
+        task_id_hashes.extend(
+            agentharm_task_id_hash(
+                behavior_id,
+                dataset_name=dataset_name,
+                split=split,
+                dataset_id=dataset_id,
+                dataset_revision=dataset_revision,
+            )
+            for behavior_id in behavior_ids
+        )
+
+    manifest: dict[str, Any] = {
+        "domain": _SPLIT_MANIFEST_DOMAIN,
+        "suite_id": AGENTHARM_SUITE_ID,
+        "dataset_id": dataset_id,
+        "dataset_revision": str(dataset_revision).strip().lower(),
+        "split": split,
+        "heldout": split == AGENTHARM_HELDOUT_SPLIT,
+        "loader_split_flag": f'split="{split}"',
+        "dataset_root": str(root),
+        "files": files,
+        "missing_files": missing,
+        "complete": not missing,
+        "task_count": len(task_id_hashes),
+        "task_id_hashes": task_id_hashes,
+        "split_task_id_hash": aggregate_task_id_hashes(task_id_hashes)
+        if task_id_hashes
+        else None,
+    }
+    # The manifest hash covers everything except the local filesystem path and the
+    # hash field itself, so it is reproducible on a different machine.
+    hashable = {k: v for k, v in manifest.items() if k != "dataset_root"}
+    manifest["split_manifest_hash"] = sha256_text(canonical_json(hashable))
+    return manifest
+
+
+def agentharm_verifier_identity(
+    package_root: str | Path,
+    *,
+    harness_repo: str = AGENTHARM_HARNESS_REPO,
+    harness_revision: str = AGENTHARM_HARNESS_REVISION,
+) -> dict[str, Any]:
+    """Hash the AgentHarm grading sources into one verifier identity."""
+
+    if not _is_immutable_revision(harness_revision):
+        raise ValueError("harness_revision must be an immutable 40-hex or sha256 revision")
+
+    root = Path(package_root)
+    sources: dict[str, str | None] = {}
+    missing: list[str] = []
+    for relative in AGENTHARM_VERIFIER_SOURCES:
+        path = root / relative
+        if not path.is_file():
+            missing.append(relative)
+            sources[relative] = None
+            continue
+        sources[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+
+    identity: dict[str, Any] = {
+        "domain": _VERIFIER_DOMAIN,
+        "suite_id": AGENTHARM_SUITE_ID,
+        "verifier_name": _NATIVE_CONTRACT[AGENTHARM_SUITE_ID]["verifier"]["name"],
+        "verifier_mode": _NATIVE_CONTRACT[AGENTHARM_SUITE_ID]["verifier"]["mode"],
+        "harness_repo": harness_repo,
+        "harness_revision": str(harness_revision).strip().lower(),
+        "package_root": str(root),
+        "sources": sources,
+        "missing_sources": missing,
+        "complete": not missing,
+    }
+    hashable = {k: v for k, v in identity.items() if k != "package_root"}
+    identity["verifier_hash"] = sha256_text(canonical_json(hashable))
+    return identity
+
+
+def check_heldout_split_available(dataset_root: str | Path) -> dict[str, Any]:
+    """Fail-closed presence check for the three gated AgentHarm files."""
+
+    root = Path(dataset_root)
+    present: list[str] = []
+    missing: list[str] = []
+    for relative in AGENTHARM_HELDOUT_FILES:
+        (present if (root / relative).is_file() else missing).append(relative)
+    return {
+        "dataset_root": str(root),
+        "required_files": list(AGENTHARM_HELDOUT_FILES),
+        "present_files": present,
+        "missing_files": missing,
+        "available": not missing,
+        "loader_split_flag": f'split="{AGENTHARM_HELDOUT_SPLIT}"',
+        "gate": "UK AI Safety Institute held-out split access",
+    }
+
+
+def _score_blockers(
+    *,
+    split_manifest: Mapping[str, Any],
+    verifier_identity: Mapping[str, Any],
+    heldout_availability: Mapping[str, Any],
+    run: Mapping[str, Any],
+) -> list[str]:
+    blockers: list[str] = []
+
+    if run.get("is_model_score") is not True:
+        blockers.append(
+            "run is not a model score (is_model_score is not true); harness validation "
+            "may never be promoted to an AgentHarm score"
+        )
+
+    split = str(split_manifest.get("split", ""))
+    if split != AGENTHARM_HELDOUT_SPLIT:
+        blockers.append(
+            f"run used split {split!r}; the AgentHarm score is only defined on "
+            f"split={AGENTHARM_HELDOUT_SPLIT!r} (the public split is not the held-out split)"
+        )
+
+    if heldout_availability.get("available") is not True:
+        missing = ", ".join(str(m) for m in heldout_availability.get("missing_files", ()))
+        blockers.append(f"held-out split files are absent: {missing or 'unknown'}")
+
+    if not split_manifest.get("complete"):
+        missing = ", ".join(str(m) for m in split_manifest.get("missing_files", ()))
+        blockers.append(f"split manifest is incomplete, missing: {missing or 'unknown'}")
+
+    if not _is_immutable_revision(split_manifest.get("dataset_revision")):
+        blockers.append("split manifest dataset_revision is not an immutable revision")
+
+    if not _is_sha256(split_manifest.get("split_manifest_hash")):
+        blockers.append("split_manifest_hash is not a SHA-256 digest")
+
+    task_hashes = split_manifest.get("task_id_hashes")
+    if not isinstance(task_hashes, list) or not task_hashes:
+        blockers.append("split manifest carries no task_id_hashes")
+    elif len(set(task_hashes)) != len(task_hashes):
+        blockers.append("split manifest task_id_hashes are not unique")
+    elif aggregate_task_id_hashes(task_hashes) != str(
+        split_manifest.get("split_task_id_hash", "")
+    ).lower():
+        blockers.append("split_task_id_hash does not match task_id_hashes")
+
+    if not verifier_identity.get("complete"):
+        missing = ", ".join(str(m) for m in verifier_identity.get("missing_sources", ()))
+        blockers.append(f"verifier identity is incomplete, missing: {missing or 'unknown'}")
+    if not _is_sha256(verifier_identity.get("verifier_hash")):
+        blockers.append("verifier_hash is not a SHA-256 digest")
+    if not _is_immutable_revision(verifier_identity.get("harness_revision")):
+        blockers.append("verifier harness_revision is not an immutable revision")
+
+    # agentharm_eval is a stateful, artifact-producing suite: the contract requires
+    # an approved policy-grader artifact before any score is admissible.
+    if _NATIVE_CONTRACT[AGENTHARM_SUITE_ID]["environment"]["artifact_required"]:
+        artifact = run.get("policy_grader_artifact")
+        if not isinstance(artifact, Mapping):
+            blockers.append("approved policy-grader artifact receipt is missing")
+        else:
+            status = str(artifact.get("status", "")).strip().lower()
+            if status not in {"approved", "verified", "signoff", "ok"}:
+                blockers.append("policy-grader artifact is not approved")
+            if _placeholder(
+                _first_value(artifact, ("receipt_id", "approval_id", "id", "sha256", "hash"))
+            ):
+                blockers.append("policy-grader artifact identity is missing")
+
+    if _placeholder(run.get("model_id")) or _placeholder(run.get("model_revision")):
+        blockers.append("run model identity is missing")
+    elif not _is_immutable_revision(run.get("model_revision")):
+        blockers.append("run model_revision is not an immutable revision")
+
+    return blockers
+
+
+def emit_agentharm_score(
+    *,
+    split_manifest: Mapping[str, Any],
+    verifier_identity: Mapping[str, Any],
+    heldout_availability: Mapping[str, Any],
+    run: Mapping[str, Any],
+    raise_on_block: bool = False,
+) -> dict[str, Any]:
+    """Fail-closed AgentHarm score emitter.
+
+    Returns a receipt fragment.  ``score`` is ``None`` and ``status`` is
+    ``"BLOCKED"`` unless every gate passes: the run is a real model score, it used
+    ``split="test_private"``, all three gated files are present, the split manifest
+    and verifier identity are complete and hashed, and an approved policy-grader
+    artifact receipt exists.  ``raw_score`` from a blocked run is discarded, never
+    carried into ``score``.
+    """
+
+    blockers = _score_blockers(
+        split_manifest=split_manifest,
+        verifier_identity=verifier_identity,
+        heldout_availability=heldout_availability,
+        run=run,
+    )
+
+    label = str(run.get("label") or ("agentharm_heldout" if not blockers else "harness_validation"))
+    if blockers and raise_on_block:
+        raise HeldoutSplitUnavailable("; ".join(blockers))
+
+    receipt: dict[str, Any] = {
+        "suite_id": AGENTHARM_SUITE_ID,
+        "label": label,
+        "is_model_score": run.get("is_model_score") is True and not blockers,
+        "score": None,
+        "status": "BLOCKED" if blockers else "COMPLETE",
+        "blockers": blockers,
+        "split": split_manifest.get("split"),
+        "heldout_split": AGENTHARM_HELDOUT_SPLIT,
+        "loader_split_flag": split_manifest.get("loader_split_flag"),
+        "dataset_id": split_manifest.get("dataset_id"),
+        "dataset_revision": split_manifest.get("dataset_revision"),
+        "split_manifest_hash": split_manifest.get("split_manifest_hash"),
+        "split_task_id_hash": split_manifest.get("split_task_id_hash"),
+        "task_count": split_manifest.get("task_count"),
+        "verifier_hash": verifier_identity.get("verifier_hash"),
+        "harness_repo": verifier_identity.get("harness_repo"),
+        "harness_revision": verifier_identity.get("harness_revision"),
+        "model_id": run.get("model_id"),
+        "model_revision": run.get("model_revision"),
+    }
+    if not blockers:
+        receipt["score"] = run.get("raw_score")
+    return receipt
+
+
 __all__ = [
     "SCHEMA_VERSION",
     "ADAPTER_ID",
     "MODEL_ID",
     "MODEL_REVISION",
     "SUPPORTED_SUITE_IDS",
+    "AGENTHARM_SUITE_ID",
+    "AGENTHARM_DATASET_ID",
+    "AGENTHARM_DATASET_REVISION",
+    "AGENTHARM_HARNESS_REPO",
+    "AGENTHARM_HARNESS_REVISION",
+    "AGENTHARM_HELDOUT_SPLIT",
+    "AGENTHARM_SPLIT_FILES",
+    "AGENTHARM_HELDOUT_FILES",
+    "AGENTHARM_VERIFIER_SOURCES",
+    "HeldoutSplitUnavailable",
     "canonical_json",
     "sha256_text",
     "aggregate_task_id_hashes",
+    "agentharm_task_id_hash",
+    "build_agentharm_split_manifest",
+    "agentharm_verifier_identity",
+    "check_heldout_split_available",
+    "emit_agentharm_score",
     "build_boundary_receipts",
     "update_bundle_signature",
     "generate_boundary_bundle",

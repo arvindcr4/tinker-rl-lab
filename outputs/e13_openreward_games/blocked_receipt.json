@@ -1,0 +1,139 @@
+{
+  "status": "BLOCKED",
+  "lane": "E13 openreward_games_eval",
+  "generated_at_utc": "2026-08-09T06:49:05Z",
+  "source_checkout": {
+    "path": "/Users/arvind/Developer/tinker-rl-lab",
+    "branch": "main",
+    "commit": "8fdade2f1425908f8d961bced6dc89f45bcc47f4",
+    "adapter_path": "zvf-program/flagship/pavlov_appbench_openreward_games_adapter.py",
+    "adapter_sha256": "a2cc152e56c8ad0c3af12ae33b04dab10ab83af225576ce456f6206db747e889",
+    "focused_test_path": "zvf-program/flagship/test_pavlov_appbench_openreward_games_adapter.py",
+    "focused_test_sha256": "00a7caae87767149bc3ab30ed175a75e16c4c876a65aa3ebe82bceff9002b16a"
+  },
+  "contract_preflight": {
+    "adapter_is_offline_validator": true,
+    "exact_boundaries": ["E12 appbench_eval", "E13 openreward_games_eval"],
+    "local_roadmap_classification": "metadata-only",
+    "local_roadmap_reference": "zvf-program/flagship/PAVLOV_SUITE_EXECUTION_ROADMAP_2026-08-09.md:101-102",
+    "runner_paths": [],
+    "runner_command": null,
+    "registry_entry": {
+      "name": "openreward_games_eval",
+      "role": "primary_eval",
+      "url": "https://openreward.ai/",
+      "split": "held-out environment families absent from training",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "contract_only": true,
+    "paid_launch_allowed": false
+  },
+  "offline_checks": {
+    "lane_temp": "/tmp/e13_openreward_games.8HIi1g",
+    "virtualenv": "/tmp/e13_openreward_games.8HIi1g/venv",
+    "focused_tests": {
+      "command": "PYTHONPATH=zvf-program/flagship /tmp/e13_openreward_games.8HIi1g/venv/bin/python -m unittest -v test_pavlov_appbench_openreward_games_adapter",
+      "exit_code": 0,
+      "tests_run": 15,
+      "tests_passed": 15,
+      "tests_failed": 0,
+      "tests_skipped": 0
+    },
+    "broad_discovery_diagnostic": {
+      "command": "PYTHONPATH=zvf-program/flagship /tmp/e13_openreward_games.8HIi1g/venv/bin/python -m unittest discover -s zvf-program/flagship -p 'test_pavlov_appbench_openreward_games_adapter.py' -v",
+      "exit_code": 1,
+      "adapter_tests_passed": 15,
+      "unrelated_package_import_errors": 2,
+      "errors": [
+        "pilot package import requires numpy",
+        "s1 package import requires torch"
+      ],
+      "interpretation": "The module-only focused run is clean; discovery errors are optional dependencies outside E13."
+    },
+    "cli_help": {
+      "command": "/tmp/e13_openreward_games.8HIi1g/venv/bin/python zvf-program/flagship/pavlov_appbench_openreward_games_adapter.py --help",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "",
+      "interpretation": "No CLI parser or runner is implemented; --help is accepted only because the module has no command-line entry point."
+    }
+  },
+  "official_metadata": {
+    "read_only": true,
+    "urls": [
+      "https://openreward.ai/",
+      "https://openreward.ai/environments",
+      "https://docs.openreward.ai/",
+      "https://docs.openreward.ai/environments/environment-cards"
+    ],
+    "observations": [
+      "The official home page describes OpenReward as a platform for training and evaluating agents across 370+ environments.",
+      "The official registry exposes many train/test environments and gaming categories, but no named openreward_games_eval held-out suite or pinned E13 task manifest.",
+      "The official documentation defines environment tasks and splits and requires an OpenReward account/API key for the quickstart; no credential was used.",
+      "Individual public game environments are not interchangeable with the exact E13 held-out suite and were not substituted."
+    ],
+    "pinned_assets": {
+      "attempted": true,
+      "acquired": [],
+      "reason": "No exact E13 public task package, immutable revision, license receipt, procedural seed-separation manifest, or native game-state verifier was exposed by the official metadata or checkout."
+    }
+  },
+  "experiment": {
+    "executed": false,
+    "reason": "The exact suite is metadata-only and has no local runner, held-out environments, task hashes, or native verifier.",
+    "task_count": 0,
+    "sample_count": 0,
+    "measured_metrics": {},
+    "score": null,
+    "substitutions_attempted": [],
+    "network_calls": {
+      "official_metadata_read_only": true,
+      "paid_calls": false,
+      "openreward_api_key_used": false,
+      "model_provider_api_key_used": false
+    }
+  },
+  "receipts": {
+    "wandb": {
+      "project": "codex",
+      "run_url": null,
+      "run_id": null,
+      "status": "not_initialized_no_experiment"
+    },
+    "hugging_face": {
+      "checkpoint_revisions": [],
+      "status": "not_applicable_no_weight_changing_run"
+    },
+    "tinker": {
+      "paid_attempts": 0,
+      "cost_usd": 0.0,
+      "cap_usd": 0.5,
+      "run_id": null,
+      "status": "not_attempted"
+    }
+  },
+  "blockers": [
+    "No exact E13 OpenReward held-out game environments are present locally.",
+    "No official E13 task/sample manifest, immutable public revision, or license receipt is available locally or in the public metadata inspected.",
+    "No procedural seed-separation proof disjoint from training exists.",
+    "No native game-state reset/verifier or artifact receipt exists.",
+    "No exact-suite runner or CLI exists; the available adapter is contract-only.",
+    "A real rollout would require gated OpenReward/model-provider access and would violate the no-credential/no-paid-call boundary for this preflight."
+  ],
+  "git_status_command": "git -C /Users/arvind/Developer/tinker-rl-lab status --short",
+  "git_status_snapshot_before_receipt": [
+    "?? outputs/e10_agentharm/",
+    "?? outputs/e11_verilog_eval/",
+    "?? outputs/e14_frontiermath/",
+    "?? outputs/e1_swe_bench_pro/local_receipt.json",
+    "?? outputs/e1_swe_bench_pro/luna_receipt.json",
+    "?? outputs/e1_swe_bench_pro/luna_receipt_bootstrap.json",
+    "?? outputs/e2_frontier_swe/",
+    "?? outputs/e3_sdab/",
+    "?? outputs/e4_banker_toolbench/",
+    "?? outputs/e5_webbench/",
+    "?? outputs/e8_lifescibench/",
+    "?? outputs/e9_mle_bench/"
+  ]
+}

@@ -62,6 +62,35 @@ DEFAULT_MAX_RESPONSE_TOKENS = 512
 DEFAULT_TIMEOUT_SECONDS = 3600
 DEFAULT_NATIVE_VERIFIER_PATH = "grading"
 
+# ---------------------------------------------------------------------------
+# APEX-Agents dataset schema.
+#
+# Every field below is required by Mercor's OWN loader, not inferred by us:
+# `archipelago/examples/hugging_face_task/main.py` at revision
+# 1c3dcd4694b313020cd626699c9c7cc1c0a2fc58 reads
+#   task["task_id"], task["world_id"], task["task_name"], task["domain"],
+#   task["prompt"], task.get("task_input_files"), task.get("rubric", []),
+#   rubric_entry["verifier_id"], rubric_entry["criteria"],
+#   world["world_id"], world["world_name"]
+# and resolves `world_files_zipped/<world_id>.zip` plus
+# `task_files/<task_id>/**`.
+#
+# Validating against this contract BEFORE a run means a malformed or
+# unexpectedly-reshaped dataset fails at ingestion with a named field, instead
+# of failing halfway through a paid agent rollout.
+# ---------------------------------------------------------------------------
+APEX_TASK_REQUIRED_FIELDS = ("task_id", "world_id", "task_name", "domain", "prompt")
+APEX_TASK_OPTIONAL_FIELDS = ("task_input_files", "rubric")
+APEX_RUBRIC_REQUIRED_FIELDS = ("verifier_id", "criteria")
+APEX_WORLD_REQUIRED_FIELDS = ("world_id", "world_name")
+# `DEFAULT_TASK = "task_9ba58a6197114140877a1df1754d2993"` in the upstream
+# example: the literal prefix `task_` plus a 32-character lowercase hex uuid4.
+APEX_TASK_ID_RE = re.compile(r"^task_[0-9a-f]{32}$")
+APEX_EXPECTED_TASK_COUNT = 480
+APEX_EXPECTED_WORLD_COUNT = 33
+APEX_WORLD_ZIP_TEMPLATE = "world_files_zipped/{world_id}.zip"
+APEX_TASK_FILES_TEMPLATE = "task_files/{task_id}"
+
 _HEX40_RE = re.compile(r"^[0-9a-fA-F]{40}$")
 _HEX64_RE = re.compile(r"^[0-9a-fA-F]{64}$")
 _SHA256_DIGEST_RE = re.compile(r"^sha256:[0-9a-fA-F]{64}$")
@@ -232,6 +261,40 @@ def _json_body(probe: Probe, label: str) -> Mapping[str, Any] | list[Any] | None
     return value
 
 
+def _gating_facts(metadata: Mapping[str, Any]) -> dict[str, Any]:
+    """Report *how* the repo is gated, not merely *that* it is.
+
+    The HF Hub reports three states for ``gated``: ``false`` (open),
+    ``"auto"`` (automatic approval -- any logged-in user is granted access the
+    moment they accept the terms), and ``"manual"`` (the repo owner reviews
+    each request).  The difference decides whether the blocker is "log in" or
+    "wait for a human", so the receipt must carry it verbatim.
+    """
+    gated = metadata.get("gated")
+    if gated is False or gated is None:
+        mode, unblock = "open", "no access request needed"
+    elif gated == "auto":
+        mode = "auto"
+        unblock = (
+            "log in to Hugging Face and accept the dataset terms;"
+            " access is granted automatically, with no human review"
+        )
+    elif gated == "manual":
+        mode = "manual"
+        unblock = "request access and wait for the repo owner to approve"
+    else:
+        mode = str(gated)
+        unblock = "unrecognised gating mode; inspect the dataset page"
+    return {
+        "gated": gated,
+        "gating_mode": mode,
+        "gating_unblock": unblock,
+        "private": metadata.get("private"),
+        "disabled": metadata.get("disabled"),
+        "file_count": len(metadata.get("siblings") or []),
+    }
+
+
 def _dataset_metadata_gate(
     *, token: str | None, opener: Callable[..., Any] | None = None
 ) -> tuple[Gate, Mapping[str, Any] | None]:
@@ -284,6 +347,7 @@ def _dataset_metadata_gate(
             "dataset_revision": DATASET_REVISION,
             "license": DATASET_LICENSE,
             "license_url": DATASET_LICENSE_URL,
+            **_gating_facts(metadata),
         },
     ), metadata
 
@@ -319,6 +383,16 @@ def _dataset_access_gate(
                     "kind": "huggingface_dataset_access",
                     "action": "accept Mercor's dataset terms/request access, then download the exact revision",
                     "url": f"https://huggingface.co/datasets/{DATASET_ID}",
+                    # `gated: auto` on this repo -> acceptance is granted
+                    # immediately, so both steps are self-service.
+                    "commands": [
+                        "hf auth login",
+                        f"open https://huggingface.co/datasets/{DATASET_ID}"
+                        " and click 'Agree and access repository'",
+                        f"hf download {DATASET_ID} --repo-type dataset"
+                        f" --revision {DATASET_REVISION}"
+                        " tasks_and_rubrics.json world_descriptions.json eval.yaml",
+                    ],
                     "required": [
                         "HTTP 200 for tasks_and_rubrics.json, world_descriptions.json, and eval.yaml",
                         f"resolved commit {DATASET_REVISION}",
@@ -348,6 +422,213 @@ def _load_json_file(path: Path, label: str) -> Any:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise PreflightError(f"{label} is unavailable or malformed: {exc}") from exc
+
+
+def validate_task_records(records: Any) -> list[str]:
+    """Validate ``tasks_and_rubrics.json`` against the upstream loader contract.
+
+    Returns a list of human-readable errors; an empty list means the file
+    matches what Archipelago's own HuggingFace example expects.  This never
+    raises on bad input -- callers turn the error list into a BLOCKED gate.
+    """
+    errors: list[str] = []
+    if not isinstance(records, list):
+        return ["tasks_and_rubrics.json must be a JSON array of task objects"]
+    if not records:
+        return ["tasks_and_rubrics.json contains zero task records"]
+
+    seen_task_ids: set[str] = set()
+    seen_verifier_ids: set[str] = set()
+    for index, record in enumerate(records):
+        where = f"tasks[{index}]"
+        if not isinstance(record, Mapping):
+            errors.append(f"{where} is not a JSON object")
+            continue
+        for field in APEX_TASK_REQUIRED_FIELDS:
+            value = record.get(field)
+            if not isinstance(value, str) or not value.strip():
+                errors.append(f"{where}.{field} must be a non-empty string")
+        task_id = record.get("task_id")
+        if isinstance(task_id, str):
+            if not APEX_TASK_ID_RE.match(task_id):
+                errors.append(
+                    f"{where}.task_id {task_id!r} does not match {APEX_TASK_ID_RE.pattern}"
+                )
+            if task_id in seen_task_ids:
+                errors.append(f"{where}.task_id {task_id!r} is duplicated")
+            seen_task_ids.add(task_id)
+
+        rubric = record.get("rubric")
+        if rubric is None:
+            errors.append(f"{where}.rubric is missing; the task cannot be graded")
+            continue
+        if not isinstance(rubric, list) or not rubric:
+            errors.append(f"{where}.rubric must be a non-empty JSON array")
+            continue
+        for r_index, criterion in enumerate(rubric):
+            r_where = f"{where}.rubric[{r_index}]"
+            if not isinstance(criterion, Mapping):
+                errors.append(f"{r_where} is not a JSON object")
+                continue
+            for field in APEX_RUBRIC_REQUIRED_FIELDS:
+                value = criterion.get(field)
+                if not isinstance(value, str) or not value.strip():
+                    errors.append(f"{r_where}.{field} must be a non-empty string")
+            verifier_id = criterion.get("verifier_id")
+            if isinstance(verifier_id, str):
+                if verifier_id in seen_verifier_ids:
+                    errors.append(f"{r_where}.verifier_id {verifier_id!r} is duplicated")
+                seen_verifier_ids.add(verifier_id)
+    return errors
+
+
+def validate_world_records(records: Any) -> list[str]:
+    """Validate ``world_descriptions.json`` against the upstream loader contract."""
+    errors: list[str] = []
+    if not isinstance(records, list):
+        return ["world_descriptions.json must be a JSON array of world objects"]
+    if not records:
+        return ["world_descriptions.json contains zero world records"]
+    seen: set[str] = set()
+    for index, record in enumerate(records):
+        where = f"worlds[{index}]"
+        if not isinstance(record, Mapping):
+            errors.append(f"{where} is not a JSON object")
+            continue
+        for field in APEX_WORLD_REQUIRED_FIELDS:
+            value = record.get(field)
+            if not isinstance(value, str) or not value.strip():
+                errors.append(f"{where}.{field} must be a non-empty string")
+        world_id = record.get("world_id")
+        if isinstance(world_id, str):
+            if world_id in seen:
+                errors.append(f"{where}.world_id {world_id!r} is duplicated")
+            seen.add(world_id)
+    return errors
+
+
+def validate_dataset_references(tasks: Any, worlds: Any) -> list[str]:
+    """Every ``task.world_id`` must resolve in ``world_descriptions.json``."""
+    if not isinstance(tasks, list) or not isinstance(worlds, list):
+        return ["cannot cross-check references: one or both files are not JSON arrays"]
+    known = {
+        record.get("world_id")
+        for record in worlds
+        if isinstance(record, Mapping) and isinstance(record.get("world_id"), str)
+    }
+    errors: list[str] = []
+    for index, record in enumerate(tasks):
+        if not isinstance(record, Mapping):
+            continue
+        world_id = record.get("world_id")
+        if isinstance(world_id, str) and world_id not in known:
+            errors.append(
+                f"tasks[{index}].world_id {world_id!r} has no entry in world_descriptions.json"
+            )
+    return errors
+
+
+def dataset_ingestion_report(tasks: Any, worlds: Any) -> dict[str, Any]:
+    """Full ingestion report for the exact dataset revision.
+
+    ``errors`` empty means the dataset can be handed to Archipelago as-is.
+    ``count_warnings`` are advisory: a changed task/world count is not
+    automatically wrong, but it does mean the pinned revision is not the one
+    the published numbers were produced against.
+    """
+    errors = validate_task_records(tasks)
+    errors.extend(validate_world_records(worlds))
+    if not errors:
+        errors.extend(validate_dataset_references(tasks, worlds))
+
+    task_count = len(tasks) if isinstance(tasks, list) else 0
+    world_count = len(worlds) if isinstance(worlds, list) else 0
+    warnings: list[str] = []
+    if task_count != APEX_EXPECTED_TASK_COUNT:
+        warnings.append(
+            f"task count {task_count} != documented {APEX_EXPECTED_TASK_COUNT}"
+        )
+    if world_count != APEX_EXPECTED_WORLD_COUNT:
+        warnings.append(
+            f"world count {world_count} != documented {APEX_EXPECTED_WORLD_COUNT}"
+        )
+
+    task_ids = sorted(
+        str(record["task_id"])
+        for record in (tasks if isinstance(tasks, list) else [])
+        if isinstance(record, Mapping) and isinstance(record.get("task_id"), str)
+    )
+    world_ids = sorted(
+        str(record["world_id"])
+        for record in (worlds if isinstance(worlds, list) else [])
+        if isinstance(record, Mapping) and isinstance(record.get("world_id"), str)
+    )
+    return {
+        "dataset_id": DATASET_ID,
+        "dataset_revision": DATASET_REVISION,
+        "task_count": task_count,
+        "world_count": world_count,
+        "expected_task_count": APEX_EXPECTED_TASK_COUNT,
+        "expected_world_count": APEX_EXPECTED_WORLD_COUNT,
+        "task_id_sha256": sha256_json(task_ids),
+        "world_id_sha256": sha256_json(world_ids),
+        "errors": errors,
+        "count_warnings": warnings,
+        "valid": not errors,
+    }
+
+
+def required_task_assets(task: Mapping[str, Any]) -> list[str]:
+    """Repo-relative dataset paths the runner must download for one task."""
+    paths = [
+        "tasks_and_rubrics.json",
+        "world_descriptions.json",
+        APEX_WORLD_ZIP_TEMPLATE.format(world_id=task.get("world_id", "")),
+    ]
+    if task.get("task_input_files"):
+        paths.append(APEX_TASK_FILES_TEMPLATE.format(task_id=task.get("task_id", "")))
+    return paths
+
+
+def _dataset_schema_gate(downloaded: Mapping[str, Path] | None) -> Gate:
+    if downloaded is None:
+        return Gate(
+            "dataset_schema",
+            "BLOCKED",
+            {
+                "reason": "exact dataset content was not acquired",
+                "validated": False,
+                "contract_source": (
+                    "archipelago/examples/hugging_face_task/main.py"
+                    f" @ {ARCHIPELAGO_REVISION}"
+                ),
+                "required_task_fields": list(APEX_TASK_REQUIRED_FIELDS),
+                "required_rubric_fields": list(APEX_RUBRIC_REQUIRED_FIELDS),
+                "required_world_fields": list(APEX_WORLD_REQUIRED_FIELDS),
+            },
+            {
+                "kind": "huggingface_dataset_access",
+                "action": "download the exact dataset revision, then re-run preflight",
+                "url": f"https://huggingface.co/datasets/{DATASET_ID}",
+            },
+        )
+    tasks = _load_json_file(downloaded["tasks"], "tasks_and_rubrics.json")
+    worlds = _load_json_file(downloaded["worlds"], "world_descriptions.json")
+    report = dataset_ingestion_report(tasks, worlds)
+    if not report["valid"]:
+        return Gate(
+            "dataset_schema",
+            "BLOCKED",
+            report,
+            {
+                "kind": "dataset_schema_mismatch",
+                "action": (
+                    "the pinned revision does not match the Archipelago loader"
+                    " contract; re-pin the dataset or update the field contract"
+                ),
+            },
+        )
+    return Gate("dataset_schema", "PASS", report)
 
 
 def _task_ids_from_file(path: Path | None) -> list[str]:
@@ -694,6 +975,29 @@ def _budget_gate(
     )
 
 
+def _wandb_credential_source() -> str | None:
+    """Where a W&B credential would come from, without reading its value.
+
+    ``wandb.login()`` falls back to ``~/.netrc`` when ``WANDB_API_KEY`` is
+    unset, so checking only the environment variable over-reports the blocker.
+    Only the *presence* of a machine entry is inspected -- never the secret.
+    """
+    if os.environ.get("WANDB_API_KEY"):
+        return "WANDB_API_KEY"
+    netrc_path = Path(os.environ.get("NETRC") or (Path.home() / ".netrc"))
+    if not netrc_path.is_file():
+        return None
+    try:
+        import netrc as _netrc
+
+        entry = _netrc.netrc(str(netrc_path)).authenticators("api.wandb.ai")
+    except Exception:  # pragma: no cover - malformed/unreadable netrc
+        return None
+    if entry and entry[2]:
+        return "netrc:api.wandb.ai"
+    return None
+
+
 def _tracking_gate() -> Gate:
     mode = os.environ.get("WANDB_MODE", "").strip().lower()
     disabled = os.environ.get("WANDB_DISABLED", "").strip().lower()
@@ -704,6 +1008,7 @@ def _tracking_gate() -> Gate:
     except Exception as exc:  # pragma: no cover - exercised in the live receipt
         importable = False
         import_error = f"{type(exc).__name__}: {exc}"
+    credential_source = _wandb_credential_source()
     errors: list[str] = []
     if mode and mode != "online":
         errors.append("WANDB_MODE must be online or unset")
@@ -711,8 +1016,8 @@ def _tracking_gate() -> Gate:
         errors.append("WANDB_DISABLED disables tracking")
     if not importable:
         errors.append("wandb dependency is unavailable in the isolated runtime")
-    if not os.environ.get("WANDB_API_KEY"):
-        errors.append("WANDB_API_KEY is missing")
+    if credential_source is None:
+        errors.append("no W&B credential in WANDB_API_KEY or ~/.netrc")
     return Gate(
         "wandb_online_before_tinker",
         "BLOCKED" if errors else "PENDING_RUNTIME_ONLINE_HANDSHAKE",
@@ -721,6 +1026,7 @@ def _tracking_gate() -> Gate:
             "importable": importable,
             "import_error": import_error,
             "api_key_present": bool(os.environ.get("WANDB_API_KEY")),
+            "credential_source": credential_source,
             "entity": WANDB_ENTITY,
             "project": WANDB_PROJECT,
             "group": WANDB_GROUP,
@@ -729,7 +1035,7 @@ def _tracking_gate() -> Gate:
         },
         {
             "kind": "wandb_online_run",
-            "action": "install wandb in the per-worktree environment, provide WANDB_API_KEY, and retain a verified online run_id/run_url initialized before Tinker",
+            "action": "install wandb in the per-worktree environment, supply a W&B credential (WANDB_API_KEY or ~/.netrc), and retain a verified online run_id/run_url initialized before Tinker",
             "required": ["mode=online", "run_id", "run_url", "config acknowledged"],
         } if errors else None,
     )
@@ -915,6 +1221,7 @@ def _all_launch_gates_pass(gates: Sequence[Gate]) -> bool:
     required = {
         "benchmark_metadata",
         "benchmark_access",
+        "dataset_schema",
         "task_split",
         "native_verifier",
         "isolated_runtime",
@@ -970,6 +1277,11 @@ def run_preflight(args: argparse.Namespace, *, opener: Callable[..., Any] | None
     access_gate, downloaded = _dataset_access_gate(
         token=os.environ.get("HF_TOKEN"), cache_dir=args.cache_dir, opener=opener
     )
+    schema_gate = _dataset_schema_gate(downloaded)
+    # A schema mismatch must not be papered over by task selection succeeding
+    # on the one record that happens to be well-formed.
+    if schema_gate.status != "PASS":
+        downloaded = None
     split_gate, selected_tasks = _task_split_gate(
         downloaded=downloaded,
         task_id=args.task_id,
@@ -1001,6 +1313,7 @@ def run_preflight(args: argparse.Namespace, *, opener: Callable[..., Any] | None
     gates = [
         metadata_gate,
         access_gate,
+        schema_gate,
         split_gate,
         native_gate,
         runtime_gate,

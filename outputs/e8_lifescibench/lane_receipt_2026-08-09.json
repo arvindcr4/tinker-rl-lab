@@ -1,0 +1,309 @@
+{
+  "artifacts": {
+    "ACCESS_REQUEST_lifescibench_2026-08-09.md": {
+      "bytes": 10254,
+      "path": "outputs/e8_lifescibench/ACCESS_REQUEST_lifescibench_2026-08-09.md",
+      "sha256": "a41c170a700bbae66dfc662ccd805cfba1344753e79bc40c38d22ad8ffdda374"
+    },
+    "adapter_preflight.json": {
+      "bytes": 3381,
+      "path": "outputs/e8_lifescibench/adapter_preflight.json",
+      "sha256": "2eab9345f15579cf56552d4f8d673a28b5c10cb33119b384db0688bd881abac7"
+    },
+    "adapter_preflight_2026-08-09.json": {
+      "bytes": 1029,
+      "path": "outputs/e8_lifescibench/adapter_preflight_2026-08-09.json",
+      "sha256": "df5140f6eabeb20753897430a41a3438ac916076ab368f29baef22620cdd4108"
+    },
+    "cli_help.txt": {
+      "bytes": 815,
+      "path": "outputs/e8_lifescibench/cli_help.txt",
+      "sha256": "67cdcdb520e3667adf55aae2f4b4237d16421426cbaac40b06ffb9e6b342d6c8"
+    },
+    "command_status.txt": {
+      "bytes": 96,
+      "path": "outputs/e8_lifescibench/command_status.txt",
+      "sha256": "df3bdcbafa5f856b711b80bce80cd8f064a21f1000d98980172cc6bb36201ebe"
+    },
+    "e8_blocked_receipt.json": {
+      "bytes": 8467,
+      "path": "outputs/e8_lifescibench/e8_blocked_receipt.json",
+      "sha256": "7f5adb6eba9a31bba5076ab9e78b3655043882f6341743a06ef667bb40467995"
+    },
+    "focused_tests.log": {
+      "bytes": 2592,
+      "path": "outputs/e8_lifescibench/focused_tests.log",
+      "sha256": "0aad600ecc4e4b7f289adfe81c95ee63aaee189223054900e87f2a543b8d2b13"
+    },
+    "focused_tests_2026-08-09.log": {
+      "bytes": 4962,
+      "path": "outputs/e8_lifescibench/focused_tests_2026-08-09.log",
+      "sha256": "9400d8b685a669256a833f43e2e91001bb094a651bceb94745c9dd9d449ade5a"
+    },
+    "git_status.txt": {
+      "bytes": 410,
+      "path": "outputs/e8_lifescibench/git_status.txt",
+      "sha256": "6d8223a14dec95b537d5ba14b7ddc677847520173329e8d26368d0367ee26cea"
+    },
+    "lane_status_2026-08-09.md": {
+      "bytes": 6434,
+      "path": "outputs/e8_lifescibench/lane_status_2026-08-09.md",
+      "sha256": "ac5dc55dabc6a2bc4fd3ee770df69f84c52e6f7f0baaf8c67d240201177fe570"
+    },
+    "pavlov_lifescibench_eval_adapter.py": {
+      "bytes": 61986,
+      "path": "zvf-program/flagship/pavlov_lifescibench_eval_adapter.py",
+      "sha256": "f379ab26c7daa3d8771679660b8c0289666fa0b6ab393ff9cabf2de1aab11bcb"
+    },
+    "runnable_resolver_help.txt": {
+      "bytes": 746,
+      "path": "outputs/e8_lifescibench/runnable_resolver_help.txt",
+      "sha256": "d2523ffaf14d0781186e3373e7b447ebda4a69e40e9c1f9cf655215f6c5949f2"
+    },
+    "runnable_resolver_resolve_help.txt": {
+      "bytes": 451,
+      "path": "outputs/e8_lifescibench/runnable_resolver_resolve_help.txt",
+      "sha256": "b622cf4bf1c31577666491360d9e2f4d4d090abff0af361b6fced82575e80505"
+    },
+    "synthetic_fixture_demo_2026-08-09.log": {
+      "bytes": 1283,
+      "path": "outputs/e8_lifescibench/synthetic_fixture_demo_2026-08-09.log",
+      "sha256": "f7aa69470c11bb7ebfc9ba1643a285280be05cdd1952d8fb9782f8ad3e9cf156"
+    },
+    "temp_env_path.txt": {
+      "bytes": 28,
+      "path": "outputs/e8_lifescibench/temp_env_path.txt",
+      "sha256": "ab4be17816e98ea0206ccbcf14294278fc7df0f7686434fff1f5823ba6f2febc"
+    },
+    "test_pavlov_lifescibench_eval_adapter.py": {
+      "bytes": 28227,
+      "path": "zvf-program/flagship/test_pavlov_lifescibench_eval_adapter.py",
+      "sha256": "b215f93d155afb323541b2812fe3e2ce54d06b902fc95e7611212139415e4834"
+    },
+    "venv_create.log": {
+      "bytes": 0,
+      "path": "outputs/e8_lifescibench/venv_create.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "asset_acquisition": {
+    "attempted": false,
+    "public_assets_acquired": [],
+    "reason": "No public LifeSciBench task package, evaluation interface, rubric set, or grader exists. No substitute benchmark was downloaded."
+  },
+  "blockers": [
+    {
+      "access_gated": true,
+      "code": "E8_DATASET_REVISION",
+      "external_receipt_needed": "Task package at a stated immutable revision (commit SHA or sha256 digest).",
+      "preflight_error": "dataset.revision must be an immutable 40-hex or sha256: revision",
+      "provider_term": "the 750 expert-authored LifeSciBench tasks with prompts, artifacts, and rubrics (preprint \u00a73.3)"
+    },
+    {
+      "access_gated": true,
+      "code": "E8_LICENSE_RECEIPT",
+      "external_receipt_needed": "Named licence identifier or a dated written access grant.",
+      "preflight_error": "dataset license must be explicitly approved; dataset.license_id must be pinned, not UNPINNED_REQUIRED",
+      "provider_term": "licence or terms of use governing the evaluation materials (preprint appendix A.5)"
+    },
+    {
+      "access_gated": true,
+      "code": "E8_NATIVE_ENVIRONMENT_REVISION",
+      "external_receipt_needed": "Interface container digest or commit SHA, plus the single-turn and browsing settings.",
+      "preflight_error": "native_environment.revision must be an immutable 40-hex or sha256: revision",
+      "provider_term": "the evaluation interface that presents task artifacts to the model (preprint \u00a75.1)"
+    },
+    {
+      "access_gated": true,
+      "code": "E8_NATIVE_VERIFIER_REVISION",
+      "external_receipt_needed": "Grader revision and, where model-assisted, the grader model identity and version.",
+      "preflight_error": "native_verifier.revision must be an immutable 40-hex or sha256: revision",
+      "provider_term": "the rubric grader that scores each criterion independently (preprint \u00a75.1, appendix A.3)"
+    },
+    {
+      "access_gated": true,
+      "code": "E8_TASK_MANIFEST",
+      "external_receipt_needed": "Task-ID list at a stated package revision.",
+      "preflight_error": "task_manifest must contain immutable evaluation task rows",
+      "provider_term": "the ordered 750 task identifiers with workflow and biological-domain stratification labels"
+    },
+    {
+      "access_gated": true,
+      "code": "E8_HELDOUT_DISJOINTNESS",
+      "external_receipt_needed": "Written provider statement; the preprint contains zero mentions of contamination, decontamination, leakage, or held-out controls.",
+      "note": "A statement that no contamination analysis was performed is equally usable: the result would then be reported as not proven held-out.",
+      "preflight_error": "train_split_manifest_hash must be a lowercase SHA-256 digest",
+      "provider_term": "train/evaluation disjointness and contamination controls"
+    }
+  ],
+  "contact_routes": {
+    "access_form": {
+      "purpose": "GPT-Rosalind research-preview MODEL access. Not benchmark data. Requires legal entity, OpenAI Org ID, government-ID verification.",
+      "url": "https://openai.com/form/life-sciences-access/"
+    },
+    "benchmark_data_request_route_published": false,
+    "co_developer": "Tacit Labs (4 of 19 preprint authors)",
+    "contributor_form": {
+      "purpose": "Recruits Ph.D. life scientists to author future benchmark tasks. Not a data-request route.",
+      "url": "https://openai.com/form/life-science-contributors/"
+    },
+    "paper_correspondence_address": null,
+    "recommended_route": "https://openai.com/contact-sales/"
+  },
+  "cost": {
+    "charged_usd": 0.0,
+    "currency": "USD",
+    "paid_model_api_calls": 0,
+    "tinker_attempted": false,
+    "wandb_runs_created": 0
+  },
+  "created_at_utc": "2026-08-09T07:23:00.233096+00:00",
+  "is_model_score": false,
+  "lane": "E8",
+  "local_capability_now_complete": {
+    "boundary_pinning": "e8.build_pinned_boundary",
+    "disjointness_proof": "e8.build_heldout_proof",
+    "receipt_emission": "e8.build_e8_result_receipt",
+    "schema_validation": "e8.validate_e8_boundary / e8.validate_e8_receipt",
+    "split_manifest_construction": "e8.build_split_manifest",
+    "synthetic_fixture": "e8.build_synthetic_fixture",
+    "task_id_hashing": "e8.task_id_hash / e8.build_task_row",
+    "verified_by": "test_builder_chain_is_schema_complete_without_the_synthetic_marker"
+  },
+  "local_checks": {
+    "boundary_preflight": {
+      "exit_code": 1,
+      "ok": false,
+      "receipt": "outputs/e8_lifescibench/adapter_preflight_2026-08-09.json"
+    },
+    "focused_unit_tests": {
+      "exit_code": 0,
+      "failed": 0,
+      "log": "outputs/e8_lifescibench/focused_tests_2026-08-09.log",
+      "passed": 25
+    },
+    "synthetic_fixture_demo": {
+      "exit_code": 0,
+      "log": "outputs/e8_lifescibench/synthetic_fixture_demo_2026-08-09.log"
+    }
+  },
+  "public_record": {
+    "biological_domain_categories": [
+      "genomics",
+      "chemistry_medchem",
+      "protein_structural_biology",
+      "molecular_cell_biology",
+      "assays_screening",
+      "bioinformatics_comp_bio",
+      "clinical_translational_science"
+    ],
+    "contamination_controls_documented": false,
+    "contamination_mentions_in_preprint": 0,
+    "data_availability_statement": "Preprint appendix A.5: public release of tasks, rubrics, artifacts, or evaluation materials may be limited by licensing, privacy, proprietary information, or biological safety considerations.",
+    "evaluation_protocol": "single-turn; unrestricted internet browsing permitted",
+    "expert_task_writers": 173,
+    "independent_validation_reviewers": 453,
+    "metrics": [
+      "normalized_rubric_score",
+      "task_pass_rate"
+    ],
+    "pass_threshold": "0.70",
+    "public_harness_exists": false,
+    "public_rubrics_exist": false,
+    "public_task_subset_exists": false,
+    "published_reference_results": {
+      "GPT-5.4": {
+        "normalized_score": 0.479,
+        "task_pass_rate": 0.207
+      },
+      "GPT-5.5": {
+        "normalized_score": 0.519,
+        "task_pass_rate": 0.257
+      },
+      "GPT-Rosalind": {
+        "normalized_score": 0.576,
+        "task_pass_rate": 0.361
+      },
+      "Gemini-3.1-Pro": {
+        "normalized_score": 0.515,
+        "task_pass_rate": 0.236
+      },
+      "Grok-4.3": {
+        "normalized_score": 0.399,
+        "task_pass_rate": 0.13
+      },
+      "note": "Provider-reported, for context only. NOT a measurement by this lane."
+    },
+    "retrieved_utc": "2026-08-09",
+    "rubric_criteria_total": 19020,
+    "task_artifacts_total": 1062,
+    "task_count": 750,
+    "tasks_with_prompt_urls": 37,
+    "verified_from_primary_source": true,
+    "workflow_categories": [
+      "evidence_handling",
+      "analysis",
+      "design_and_optimization",
+      "scientific_reasoning",
+      "validation_and_operations",
+      "translation",
+      "scientific_communication"
+    ]
+  },
+  "schema_reconciliation_findings": [
+    {
+      "action": "Reconcile once the evaluation interface is obtained. Not changed unilaterally: pavlovs_domain_contract.json declares stateful=true for this suite.",
+      "finding": "The local boundary models an agentic, stateful, observation-action-artifact environment (NATIVE_OBSERVATION_SCHEMA, stateful=true, reset_per_task=true). The published benchmark is SINGLE-TURN free-response with rubric grading.",
+      "severity": "medium"
+    },
+    {
+      "action": "Metric keys must be remapped before any real run, or the logged numbers will not mean what their names say.",
+      "finding": "WANDB_REQUIRED_METRICS are eval/lifescibench_{success_rate,reward_mean,action_count_mean}. The provider's metrics are normalized rubric score and task pass rate at a 0.70 threshold.",
+      "severity": "medium"
+    },
+    {
+      "action": "Resolved: the published taxonomy is now carried separately on task rows as workflow and bio_domain.",
+      "finding": "ALLOWED_DOMAINS is the campaign capability tag set (science/long_horizon/tool_use) from pavlovs_domain_contract.json, not LifeSciBench's biological taxonomy.",
+      "severity": "low"
+    }
+  ],
+  "schema_version": "e8-lifescibench-lane-receipt-v2",
+  "score": null,
+  "score_fabricated": false,
+  "source_checkout": {
+    "branch": "main",
+    "commit": "8fdade2f1425908f8d961bced6dc89f45bcc47f4"
+  },
+  "status": "BLOCKED",
+  "suite": {
+    "announced": "2026-06-17",
+    "authoritative_source_url": "https://openai.com/index/introducing-life-sci-bench/",
+    "benchmark_name": "LifeSciBench",
+    "primary_paper_url": "https://cdn.openai.com/pdf/b4299379-0a97-4ffa-8b9b-c3fbb299caa9/lifescibench_preprint.pdf",
+    "rejected_substitutes": [
+      "xlam",
+      "browsergym_train",
+      "webbench_eval",
+      "scienceworld_train",
+      "scibench"
+    ],
+    "role": "primary_eval",
+    "sample_count": 0,
+    "source_reported_task_count": 750,
+    "split": "evaluation",
+    "suite_id": "lifescibench_eval",
+    "task_count_observed": 0
+  },
+  "synthetic_fixture": {
+    "eval_manifest_hash": "0d3e257e58662433fe9ee96d74f5d479f87eb22698090513ccda1b0057c43a57",
+    "heldout_proof_hash": "d771dc1b2ba5163fc70781b80489320e47901c8c72f28724f78dab63bba48889",
+    "is_synthetic": true,
+    "marker": "SYNTHETIC-NOT-LIFESCIBENCH",
+    "notice": "Synthetic local-plumbing fixture. Contains no Life-Sci-Bench task, artifact, rubric, or measurement. Produces no score. Rejected by validate_e8_boundary and validate_e8_receipt by design.",
+    "produces_score": false,
+    "receipt_hash": "42a7d5de5683eb5b818598cb1d2faa98c39db8ea956c936a7317e378f8dafae4",
+    "rejected_by_validators": true,
+    "sole_boundary_error": "payload carries the SYNTHETIC-NOT-LIFESCIBENCH marker: a synthetic fixture is local plumbing scaffolding and can never be Life-Sci-Bench data, a Life-Sci-Bench result, or a score",
+    "train_manifest_hash": "ded291a9b716edb51146a45e775bac4fa6f2d0128e5e1e5706b762103ef8f60d"
+  }
+}

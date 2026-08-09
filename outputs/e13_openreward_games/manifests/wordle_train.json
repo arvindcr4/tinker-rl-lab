@@ -1,0 +1,1208 @@
+{
+ "environment": "GeneralReasoning/Wordle",
+ "split": "train",
+ "source_revision": "92bea32efa102e86275dedd2e0367e86d3754754",
+ "synthetic": false,
+ "tasks": [
+  {
+   "id": "Wordle-v0_seed0",
+   "env_id": "Wordle-v0",
+   "seed": 0,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed1",
+   "env_id": "Wordle-v0",
+   "seed": 1,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed2",
+   "env_id": "Wordle-v0",
+   "seed": 2,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed3",
+   "env_id": "Wordle-v0",
+   "seed": 3,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed4",
+   "env_id": "Wordle-v0",
+   "seed": 4,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed5",
+   "env_id": "Wordle-v0",
+   "seed": 5,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed6",
+   "env_id": "Wordle-v0",
+   "seed": 6,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed7",
+   "env_id": "Wordle-v0",
+   "seed": 7,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed8",
+   "env_id": "Wordle-v0",
+   "seed": 8,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed9",
+   "env_id": "Wordle-v0",
+   "seed": 9,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed10",
+   "env_id": "Wordle-v0",
+   "seed": 10,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed11",
+   "env_id": "Wordle-v0",
+   "seed": 11,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed12",
+   "env_id": "Wordle-v0",
+   "seed": 12,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed13",
+   "env_id": "Wordle-v0",
+   "seed": 13,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed14",
+   "env_id": "Wordle-v0",
+   "seed": 14,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed15",
+   "env_id": "Wordle-v0",
+   "seed": 15,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed16",
+   "env_id": "Wordle-v0",
+   "seed": 16,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed17",
+   "env_id": "Wordle-v0",
+   "seed": 17,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed18",
+   "env_id": "Wordle-v0",
+   "seed": 18,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed19",
+   "env_id": "Wordle-v0",
+   "seed": 19,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed20",
+   "env_id": "Wordle-v0",
+   "seed": 20,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed21",
+   "env_id": "Wordle-v0",
+   "seed": 21,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed22",
+   "env_id": "Wordle-v0",
+   "seed": 22,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed23",
+   "env_id": "Wordle-v0",
+   "seed": 23,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed24",
+   "env_id": "Wordle-v0",
+   "seed": 24,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed25",
+   "env_id": "Wordle-v0",
+   "seed": 25,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed26",
+   "env_id": "Wordle-v0",
+   "seed": 26,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed27",
+   "env_id": "Wordle-v0",
+   "seed": 27,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed28",
+   "env_id": "Wordle-v0",
+   "seed": 28,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed29",
+   "env_id": "Wordle-v0",
+   "seed": 29,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed30",
+   "env_id": "Wordle-v0",
+   "seed": 30,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed31",
+   "env_id": "Wordle-v0",
+   "seed": 31,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed32",
+   "env_id": "Wordle-v0",
+   "seed": 32,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed33",
+   "env_id": "Wordle-v0",
+   "seed": 33,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed34",
+   "env_id": "Wordle-v0",
+   "seed": 34,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed35",
+   "env_id": "Wordle-v0",
+   "seed": 35,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed36",
+   "env_id": "Wordle-v0",
+   "seed": 36,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed37",
+   "env_id": "Wordle-v0",
+   "seed": 37,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed38",
+   "env_id": "Wordle-v0",
+   "seed": 38,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed39",
+   "env_id": "Wordle-v0",
+   "seed": 39,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed40",
+   "env_id": "Wordle-v0",
+   "seed": 40,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed41",
+   "env_id": "Wordle-v0",
+   "seed": 41,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed42",
+   "env_id": "Wordle-v0",
+   "seed": 42,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed43",
+   "env_id": "Wordle-v0",
+   "seed": 43,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed44",
+   "env_id": "Wordle-v0",
+   "seed": 44,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed45",
+   "env_id": "Wordle-v0",
+   "seed": 45,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed46",
+   "env_id": "Wordle-v0",
+   "seed": 46,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed47",
+   "env_id": "Wordle-v0",
+   "seed": 47,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed48",
+   "env_id": "Wordle-v0",
+   "seed": 48,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0_seed49",
+   "env_id": "Wordle-v0",
+   "seed": 49,
+   "variant": "Wordle-v0"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed0",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 0,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed1",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 1,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed2",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 2,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed3",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 3,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed4",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 4,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed5",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 5,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed6",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 6,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed7",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 7,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed8",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 8,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed9",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 9,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed10",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 10,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed11",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 11,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed12",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 12,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed13",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 13,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed14",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 14,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed15",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 15,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed16",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 16,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed17",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 17,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed18",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 18,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed19",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 19,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed20",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 20,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed21",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 21,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed22",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 22,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed23",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 23,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed24",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 24,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed25",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 25,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed26",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 26,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed27",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 27,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed28",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 28,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed29",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 29,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed30",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 30,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed31",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 31,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed32",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 32,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed33",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 33,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed34",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 34,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed35",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 35,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed36",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 36,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed37",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 37,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed38",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 38,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed39",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 39,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed40",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 40,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed41",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 41,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed42",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 42,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed43",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 43,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed44",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 44,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed45",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 45,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed46",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 46,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed47",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 47,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed48",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 48,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-hardcore_seed49",
+   "env_id": "Wordle-v0-hardcore",
+   "seed": 49,
+   "variant": "Wordle-v0-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long_seed0",
+   "env_id": "Wordle-v0-long",
+   "seed": 0,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed1",
+   "env_id": "Wordle-v0-long",
+   "seed": 1,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed2",
+   "env_id": "Wordle-v0-long",
+   "seed": 2,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed3",
+   "env_id": "Wordle-v0-long",
+   "seed": 3,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed4",
+   "env_id": "Wordle-v0-long",
+   "seed": 4,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed5",
+   "env_id": "Wordle-v0-long",
+   "seed": 5,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed6",
+   "env_id": "Wordle-v0-long",
+   "seed": 6,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed7",
+   "env_id": "Wordle-v0-long",
+   "seed": 7,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed8",
+   "env_id": "Wordle-v0-long",
+   "seed": 8,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed9",
+   "env_id": "Wordle-v0-long",
+   "seed": 9,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed10",
+   "env_id": "Wordle-v0-long",
+   "seed": 10,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed11",
+   "env_id": "Wordle-v0-long",
+   "seed": 11,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed12",
+   "env_id": "Wordle-v0-long",
+   "seed": 12,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed13",
+   "env_id": "Wordle-v0-long",
+   "seed": 13,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed14",
+   "env_id": "Wordle-v0-long",
+   "seed": 14,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed15",
+   "env_id": "Wordle-v0-long",
+   "seed": 15,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed16",
+   "env_id": "Wordle-v0-long",
+   "seed": 16,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed17",
+   "env_id": "Wordle-v0-long",
+   "seed": 17,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed18",
+   "env_id": "Wordle-v0-long",
+   "seed": 18,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed19",
+   "env_id": "Wordle-v0-long",
+   "seed": 19,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed20",
+   "env_id": "Wordle-v0-long",
+   "seed": 20,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed21",
+   "env_id": "Wordle-v0-long",
+   "seed": 21,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed22",
+   "env_id": "Wordle-v0-long",
+   "seed": 22,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed23",
+   "env_id": "Wordle-v0-long",
+   "seed": 23,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed24",
+   "env_id": "Wordle-v0-long",
+   "seed": 24,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed25",
+   "env_id": "Wordle-v0-long",
+   "seed": 25,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed26",
+   "env_id": "Wordle-v0-long",
+   "seed": 26,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed27",
+   "env_id": "Wordle-v0-long",
+   "seed": 27,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed28",
+   "env_id": "Wordle-v0-long",
+   "seed": 28,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed29",
+   "env_id": "Wordle-v0-long",
+   "seed": 29,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed30",
+   "env_id": "Wordle-v0-long",
+   "seed": 30,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed31",
+   "env_id": "Wordle-v0-long",
+   "seed": 31,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed32",
+   "env_id": "Wordle-v0-long",
+   "seed": 32,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed33",
+   "env_id": "Wordle-v0-long",
+   "seed": 33,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed34",
+   "env_id": "Wordle-v0-long",
+   "seed": 34,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed35",
+   "env_id": "Wordle-v0-long",
+   "seed": 35,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed36",
+   "env_id": "Wordle-v0-long",
+   "seed": 36,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed37",
+   "env_id": "Wordle-v0-long",
+   "seed": 37,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed38",
+   "env_id": "Wordle-v0-long",
+   "seed": 38,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed39",
+   "env_id": "Wordle-v0-long",
+   "seed": 39,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed40",
+   "env_id": "Wordle-v0-long",
+   "seed": 40,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed41",
+   "env_id": "Wordle-v0-long",
+   "seed": 41,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed42",
+   "env_id": "Wordle-v0-long",
+   "seed": 42,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed43",
+   "env_id": "Wordle-v0-long",
+   "seed": 43,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed44",
+   "env_id": "Wordle-v0-long",
+   "seed": 44,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed45",
+   "env_id": "Wordle-v0-long",
+   "seed": 45,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed46",
+   "env_id": "Wordle-v0-long",
+   "seed": 46,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed47",
+   "env_id": "Wordle-v0-long",
+   "seed": 47,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed48",
+   "env_id": "Wordle-v0-long",
+   "seed": 48,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long_seed49",
+   "env_id": "Wordle-v0-long",
+   "seed": 49,
+   "variant": "Wordle-v0-long"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed0",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 0,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed1",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 1,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed2",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 2,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed3",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 3,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed4",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 4,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed5",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 5,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed6",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 6,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed7",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 7,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed8",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 8,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed9",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 9,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed10",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 10,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed11",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 11,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed12",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 12,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed13",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 13,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed14",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 14,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed15",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 15,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed16",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 16,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed17",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 17,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed18",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 18,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed19",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 19,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed20",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 20,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed21",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 21,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed22",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 22,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed23",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 23,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed24",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 24,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed25",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 25,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed26",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 26,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed27",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 27,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed28",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 28,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed29",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 29,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed30",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 30,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed31",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 31,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed32",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 32,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed33",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 33,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed34",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 34,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed35",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 35,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed36",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 36,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed37",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 37,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed38",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 38,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed39",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 39,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed40",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 40,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed41",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 41,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed42",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 42,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed43",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 43,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed44",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 44,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed45",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 45,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed46",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 46,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed47",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 47,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed48",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 48,
+   "variant": "Wordle-v0-long-hardcore"
+  },
+  {
+   "id": "Wordle-v0-long-hardcore_seed49",
+   "env_id": "Wordle-v0-long-hardcore",
+   "seed": 49,
+   "variant": "Wordle-v0-long-hardcore"
+  }
+ ]
+}

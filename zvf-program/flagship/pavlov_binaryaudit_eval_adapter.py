@@ -650,18 +650,251 @@ def validate_binaryaudit_result_receipt(
 validate_binaryaudit_receipt = validate_binaryaudit_result_receipt
 
 
+# ---------------------------------------------------------------------------
+# Split-manifest construction
+#
+# Upstream BinaryAudit ships no split manifest.  The partition below is
+# LANE-CONSTRUCTED, not official, and is derived from two rules that are fully
+# determined by repository content -- no sampling, no seed, no judgement call:
+#
+#   R1 (quarantine)  A task directory carrying an upstream status marker
+#                    (STATUS_FAILING.md / STATUS_NOT_FINISHED.md) is excluded
+#                    from every scored split.
+#   R2 (role)        Tool-operation baselines (ghidra/radare2 targets) are
+#                    excluded from scored splits; upstream documents them as
+#                    "baseline tasks verifying that agents can operate reverse
+#                    engineering tools correctly", not as detection evaluation.
+#   R3 (held-out)    Remaining tasks are held out iff their target application
+#                    is not written in C.  Family granularity is whole-target,
+#                    so no obfuscation variant of a scored family can leak into
+#                    the held-out set.
+#
+# ``train`` therefore means "never scored" (quarantined + tool-operation), not
+# "used for gradient updates".  The name is fixed by the boundary schema.
+# ---------------------------------------------------------------------------
+
+SPLIT_MANIFEST_SCHEMA_VERSION = "binaryaudit-split-manifest-v1"
+TASKS_SUBDIR = "tasks"
+UPSTREAM_QUARANTINE_MARKERS = ("STATUS_FAILING.md", "STATUS_NOT_FINISHED.md")
+TARGET_LANGUAGES = {
+    "lighttpd": "C",
+    "dnsmasq": "C",
+    "dropbear": "C",
+    "sozu": "Rust",
+    "caddy": "Go",
+    "pingora": "Rust",
+    "ghidra": "tool",
+    "radare2": "tool",
+}
+TOOL_OPERATION_TARGETS = frozenset({"ghidra", "radare2"})
+NOT_SCORED_SPLIT = "train"
+
+
+def _target_family(raw_task_id: str) -> str:
+    """Return the target application implied by a BinaryAudit task name."""
+
+    return _string("raw_task_id", raw_task_id).split("-", 1)[0]
+
+
+def _task_category(raw_task_id: str, target: str) -> str:
+    name = raw_task_id.lower()
+    if target in TOOL_OPERATION_TARGETS:
+        return "tool_operation"
+    if "negative" in name:
+        return "negative_control"
+    if "timebomb" in name:
+        return "timebomb"
+    return "backdoor_detect"
+
+
+def _verifier_kind(task_dir: Path) -> str:
+    if (task_dir / "tests" / "test_outputs.py").is_file():
+        return "pytest_result_json"
+    script = task_dir / "tests" / "test.sh"
+    try:
+        text = script.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return "unknown"
+    if "EXPECTED_FUNC_START" in text:
+        return "bash_address_range"
+    if '= "NO"' in text:
+        return "bash_exact_no"
+    return "bash_content_check"
+
+
+def hash_task_directory(task_dir: Path | str) -> dict[str, Any]:
+    """Hash every file in one task directory, content-addressed and ordered."""
+
+    task_dir = Path(task_dir)
+    if not task_dir.is_dir():
+        raise BinaryAuditBoundaryError((f"task directory not found: {task_dir}",))
+    files: dict[str, str] = {}
+    total_bytes = 0
+    for path in sorted(p for p in task_dir.rglob("*") if p.is_file()):
+        payload = path.read_bytes()
+        total_bytes += len(payload)
+        files[path.relative_to(task_dir).as_posix()] = hashlib.sha256(payload).hexdigest()
+    if not files:
+        raise BinaryAuditBoundaryError((f"task directory is empty: {task_dir}",))
+    return {
+        "content_sha256": canonical_sha256(files),
+        "file_count": len(files),
+        "total_bytes": total_bytes,
+        "files": files,
+    }
+
+
+def _assign_split(raw_task_id: str, target: str, quarantined: bool) -> tuple[str, str]:
+    if quarantined:
+        return NOT_SCORED_SPLIT, "R1_upstream_quarantine_marker"
+    if target in TOOL_OPERATION_TARGETS:
+        return NOT_SCORED_SPLIT, "R2_tool_operation_baseline"
+    language = TARGET_LANGUAGES.get(target)
+    if language is None:
+        raise BinaryAuditBoundaryError(
+            (f"unknown target family {target!r} for task {raw_task_id!r}; extend TARGET_LANGUAGES",)
+        )
+    if language != "C":
+        return RECEIPT_PROVEN_HELDOUT, "R3_non_c_target_family_heldout"
+    return PRIMARY_EVAL, "R3_c_target_family_scored"
+
+
+def enumerate_binaryaudit_tasks(
+    tasks_root: Path | str,
+    source_revision: str,
+    *,
+    source_id: str = AUTHORITATIVE_SOURCE_ID,
+) -> tuple[dict[str, Any], ...]:
+    """Enumerate every BinaryAudit task directory into an ordered record list."""
+
+    root = Path(tasks_root)
+    if not root.is_dir():
+        raise BinaryAuditBoundaryError((f"tasks root not found: {root}",))
+    revision = _immutable_revision("source_revision", source_revision)
+    records: list[dict[str, Any]] = []
+    for task_dir in sorted(p for p in root.iterdir() if p.is_dir()):
+        raw_task_id = task_dir.name
+        target = _target_family(raw_task_id)
+        markers = tuple(m for m in UPSTREAM_QUARANTINE_MARKERS if (task_dir / m).is_file())
+        digest = hash_task_directory(task_dir)
+        split, rule = _assign_split(raw_task_id, target, bool(markers))
+        records.append(
+            {
+                "raw_task_id": raw_task_id,
+                "task_id": deterministic_task_id(raw_task_id, revision, source_id=source_id),
+                "target": target,
+                "target_language": TARGET_LANGUAGES.get(target, "unknown"),
+                "category": _task_category(raw_task_id, target),
+                "verifier_kind": _verifier_kind(task_dir),
+                "upstream_status_markers": list(markers),
+                "scored": split != NOT_SCORED_SPLIT,
+                "split": split,
+                "split_rule": rule,
+                "content_sha256": digest["content_sha256"],
+                "file_count": digest["file_count"],
+                "total_bytes": digest["total_bytes"],
+            }
+        )
+    if not records:
+        raise BinaryAuditBoundaryError((f"no task directories under {root}",))
+    return tuple(records)
+
+
+def build_binaryaudit_split_manifest(
+    tasks_root: Path | str,
+    source_revision: str,
+    *,
+    source_id: str = AUTHORITATIVE_SOURCE_ID,
+) -> dict[str, Any]:
+    """Build the deterministic split manifest plus its disjointness proof."""
+
+    records = enumerate_binaryaudit_tasks(tasks_root, source_revision, source_id=source_id)
+    revision = _immutable_revision("source_revision", source_revision)
+
+    split_manifest: dict[str, list[str]] = {key: [] for key in SPLIT_KEYS}
+    for record in records:
+        split_manifest[record["split"]].append(record["task_id"])
+    for key in SPLIT_KEYS:
+        split_manifest[key].sort()
+
+    task_ids = sorted(record["task_id"] for record in records)
+    if len(set(task_ids)) != len(task_ids):
+        raise BinaryAuditBoundaryError(("deterministic task IDs collided",))
+
+    sets = {key: set(split_manifest[key]) for key in SPLIT_KEYS}
+    pairwise = {
+        f"{left}|{right}": len(sets[left] & sets[right])
+        for index, left in enumerate(SPLIT_KEYS)
+        for right in SPLIT_KEYS[index + 1 :]
+    }
+    union = set().union(*sets.values())
+    proof = {
+        "total_tasks": len(records),
+        "split_sizes": {key: len(split_manifest[key]) for key in SPLIT_KEYS},
+        "pairwise_intersection_sizes": pairwise,
+        "pairwise_disjoint": all(size == 0 for size in pairwise.values()),
+        "union_size": len(union),
+        "union_equals_task_ids": union == set(task_ids),
+        "size_sum_equals_total": sum(len(split_manifest[k]) for k in SPLIT_KEYS) == len(records),
+        "task_id_collision_free": True,
+    }
+    if not (proof["pairwise_disjoint"] and proof["union_equals_task_ids"] and proof["size_sum_equals_total"]):
+        raise BinaryAuditBoundaryError(("split manifest failed its own disjointness proof",))
+
+    # Reuse the boundary normalizer so a manifest that this builder emits can
+    # never be one the validator would later reject on ordering/overlap.
+    _normalize_split_manifest(split_manifest)
+
+    return {
+        "schema_version": SPLIT_MANIFEST_SCHEMA_VERSION,
+        "suite_id": SUITE_ID,
+        "benchmark_id": BENCHMARK_ID,
+        "manifest_provenance": "lane_constructed_not_upstream_official",
+        "source_identity": {
+            "id": source_id,
+            "url": AUTHORITATIVE_SOURCE_URL,
+            "revision": revision,
+        },
+        "split_rules": {
+            "R1_upstream_quarantine_marker": list(UPSTREAM_QUARANTINE_MARKERS),
+            "R2_tool_operation_baseline": sorted(TOOL_OPERATION_TARGETS),
+            "R3_heldout_predicate": "target_language != 'C'",
+            "not_scored_split": NOT_SCORED_SPLIT,
+        },
+        "tasks": [dict(record) for record in records],
+        "task_ids": task_ids,
+        "task_id_manifest_sha256": task_id_manifest_sha256(task_ids),
+        "raw_task_ids": sorted(record["raw_task_id"] for record in records),
+        "task_content_manifest_sha256": canonical_sha256(
+            {record["raw_task_id"]: record["content_sha256"] for record in records}
+        ),
+        "split_manifest": split_manifest,
+        "split_manifest_sha256": split_manifest_sha256(split_manifest),
+        "disjointness_proof": proof,
+    }
+
+
 __all__ = [
     "AUTHORITATIVE_SOURCE_ID",
     "AUTHORITATIVE_SOURCE_URL",
     "BENCHMARK_ID",
     "BoundaryValidationError",
     "BinaryAuditBoundaryError",
+    "NOT_SCORED_SPLIT",
     "PRIMARY_EVAL",
     "RECEIPT_PROVEN_HELDOUT",
     "RESULT_SCHEMA_VERSION",
+    "SPLIT_MANIFEST_SCHEMA_VERSION",
     "SUITE_ID",
+    "TARGET_LANGUAGES",
+    "TASKS_SUBDIR",
+    "TOOL_OPERATION_TARGETS",
+    "UPSTREAM_QUARANTINE_MARKERS",
+    "build_binaryaudit_split_manifest",
     "canonical_sha256",
     "deterministic_task_id",
+    "enumerate_binaryaudit_tasks",
+    "hash_task_directory",
     "split_manifest_sha256",
     "task_id_manifest_sha256",
     "validate_binaryaudit_boundary",

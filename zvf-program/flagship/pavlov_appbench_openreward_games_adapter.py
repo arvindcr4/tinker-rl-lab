@@ -110,12 +110,31 @@ def _validate_split_hash(value: Any, task_ids: list[str], label: str) -> str:
     return split_hash
 
 
+def _fold_source(text: str) -> str:
+    """Lowercase and drop every non-alphanumeric character.
+
+    Upstream identifiers are punctuated inconsistently: the E12 dataset is
+    ``AfterQuery/App-Bench`` on the Hub and ``app-bench`` in the leaderboard URL,
+    while the marker is spelled ``appbench``. Folding punctuation lets a receipt
+    cite the real source URL verbatim. It also strengthens the substitution ban,
+    since ``x-lam`` and ``related_benchmark`` fold onto their banned forms.
+    """
+
+    return "".join(ch for ch in text.lower() if ch.isalnum())
+
+
 def _validate_source(value: Any, label: str, required_marker: str) -> str:
     source = _require_text(value, label)
-    lowered = source.lower()
+    folded = _fold_source(source)
     for marker in BANNED_SOURCE_MARKERS:
-        _require(marker not in lowered, f"{label} references blocked source marker: {marker}")
-    _require(required_marker in lowered, f"{label} must identify the authoritative source {required_marker!r}")
+        _require(
+            _fold_source(marker) not in folded,
+            f"{label} references blocked source marker: {marker}",
+        )
+    _require(
+        _fold_source(required_marker) in folded,
+        f"{label} must identify the authoritative source {required_marker!r}",
+    )
     return source
 
 

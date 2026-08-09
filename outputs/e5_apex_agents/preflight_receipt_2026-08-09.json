@@ -1,0 +1,391 @@
+{
+  "benchmark": {
+    "dataset_id": "mercor/apex-agents",
+    "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+    "license": "cc-by-4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "native_verifier_repository": "https://github.com/Mercor-Intelligence/archipelago",
+    "native_verifier_revision": "1c3dcd4694b313020cd626699c9c7cc1c0a2fc58"
+  },
+  "config": {
+    "benchmark": {
+      "dataset_id": "mercor/apex-agents",
+      "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+      "license": "cc-by-4.0",
+      "native_verifier": {
+        "path": "grading",
+        "repository": "https://github.com/Mercor-Intelligence/archipelago",
+        "revision": "1c3dcd4694b313020cd626699c9c7cc1c0a2fc58"
+      }
+    },
+    "budget": {
+      "errors": [],
+      "hard_cap_usd": "18.00",
+      "max_prompt_tokens": 8192,
+      "max_response_tokens": 512,
+      "max_steps": 50,
+      "maximum_tinker_spend_usd": "0.50",
+      "operational_cap_usd": "16.50",
+      "projected_maximum_usd": "0.25536",
+      "safety_reserve_usd": "1.50"
+    },
+    "campaign": "pavlov-18usd",
+    "dataset_access_status": "BLOCKED",
+    "exact_benchmark_only": true,
+    "limits": {
+      "max_prompt_tokens": 8192,
+      "max_response_tokens": 512,
+      "max_steps": 50,
+      "tasks": 1,
+      "timeout_seconds": 3600
+    },
+    "model": {
+      "base_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+      "hf_checkpoint_repo": null,
+      "hf_checkpoint_revision": null,
+      "id": "Qwen/Qwen3.6-35B-A3B",
+      "mode": "base_model",
+      "sampler_path": null
+    },
+    "provenance": {
+      "dataset_id": "mercor/apex-agents",
+      "dataset_license": "cc-by-4.0",
+      "dataset_license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+      "evaluated_hf_checkpoint": null,
+      "model_id": "Qwen/Qwen3.6-35B-A3B",
+      "model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+      "native_verifier_repository": "https://github.com/Mercor-Intelligence/archipelago",
+      "native_verifier_revision": "1c3dcd4694b313020cd626699c9c7cc1c0a2fc58",
+      "native_verifier_tree_sha256": "5b5f627d90b55a1e9ca9fd7b3ee6dc23e387d1df95ffd7fc63912efa6e8d7d89",
+      "split_manifest_sha256": null,
+      "task_id_sha256": null
+    },
+    "schema_version": "pavlov-e5-apex-agents-config-v1",
+    "stage": "primary-evaluation",
+    "substitutions": [],
+    "suite_id": "apex_agents_eval",
+    "suite_role": "primary_eval",
+    "task_selection": {
+      "disjoint": false,
+      "reason": "exact dataset content was not acquired",
+      "task_ids": null,
+      "training_task_ids": []
+    },
+    "wandb": {
+      "entity": "arvindcr4-pes-university",
+      "group": "pavlov-e5-apex-agents",
+      "mode": "online",
+      "project": "tinker-rl-lab-pavlov"
+    }
+  },
+  "config_sha256": "6f9bd8c536f7cef161f99386af76ac0a4acb08901dd85671ecb6f3c77c0d1e61",
+  "created_at": "2026-08-09T07:22:51.853024+00:00",
+  "gates": [
+    {
+      "details": {
+        "dataset_id": "mercor/apex-agents",
+        "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+        "disabled": false,
+        "error": null,
+        "error_code": null,
+        "file_count": 319,
+        "gated": "auto",
+        "gating_mode": "auto",
+        "gating_unblock": "log in to Hugging Face and accept the dataset terms; access is granted automatically, with no human review",
+        "http_status": 200,
+        "license": "cc-by-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "private": false,
+        "response_sha256": "aa57b8894f9b1db3c937fbcf07d39448747d2a8e18baeed15055487207d32583",
+        "url": "https://huggingface.co/api/datasets/mercor/apex-agents"
+      },
+      "name": "benchmark_metadata",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "dataset_id": "mercor/apex-agents",
+        "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+        "file": "tasks_and_rubrics.json",
+        "message": "HF dataset content is gated; request access and retain a successful download receipt",
+        "probes": [
+          {
+            "error": "Unauthorized",
+            "error_code": "gated_or_unauthorized",
+            "http_status": 401,
+            "response_sha256": "155ad9884b472d5905322bc4c14540262002757b17a38fcb40fe0b24bf2bf04f",
+            "url": "https://huggingface.co/datasets/mercor/apex-agents/resolve/92c86856cf1b11f9833a8a076b3a45a63afa3929/tasks_and_rubrics.json"
+          }
+        ]
+      },
+      "name": "benchmark_access",
+      "required_external_receipt": {
+        "action": "accept Mercor's dataset terms/request access, then download the exact revision",
+        "commands": [
+          "hf auth login",
+          "open https://huggingface.co/datasets/mercor/apex-agents and click 'Agree and access repository'",
+          "hf download mercor/apex-agents --repo-type dataset --revision 92c86856cf1b11f9833a8a076b3a45a63afa3929 tasks_and_rubrics.json world_descriptions.json eval.yaml"
+        ],
+        "kind": "huggingface_dataset_access",
+        "required": [
+          "HTTP 200 for tasks_and_rubrics.json, world_descriptions.json, and eval.yaml",
+          "resolved commit 92c86856cf1b11f9833a8a076b3a45a63afa3929",
+          "SHA-256 for each downloaded file"
+        ],
+        "url": "https://huggingface.co/datasets/mercor/apex-agents"
+      },
+      "status": "BLOCKED"
+    },
+    {
+      "details": {
+        "contract_source": "archipelago/examples/hugging_face_task/main.py @ 1c3dcd4694b313020cd626699c9c7cc1c0a2fc58",
+        "reason": "exact dataset content was not acquired",
+        "required_rubric_fields": [
+          "verifier_id",
+          "criteria"
+        ],
+        "required_task_fields": [
+          "task_id",
+          "world_id",
+          "task_name",
+          "domain",
+          "prompt"
+        ],
+        "required_world_fields": [
+          "world_id",
+          "world_name"
+        ],
+        "validated": false
+      },
+      "name": "dataset_schema",
+      "required_external_receipt": {
+        "action": "download the exact dataset revision, then re-run preflight",
+        "kind": "huggingface_dataset_access",
+        "url": "https://huggingface.co/datasets/mercor/apex-agents"
+      },
+      "status": "BLOCKED"
+    },
+    {
+      "details": {
+        "disjoint": false,
+        "reason": "exact dataset content was not acquired",
+        "task_ids": null,
+        "training_task_ids": []
+      },
+      "name": "task_split",
+      "required_external_receipt": {
+        "action": "download the exact dataset revision and seal selected task IDs plus training task IDs",
+        "kind": "split_manifest",
+        "required": [
+          "split_manifest_sha256",
+          "task_id_sha256",
+          "disjoint=true"
+        ]
+      },
+      "status": "BLOCKED"
+    },
+    {
+      "details": {
+        "grading_tree_sha256": "5b5f627d90b55a1e9ca9fd7b3ee6dc23e387d1df95ffd7fc63912efa6e8d7d89",
+        "license": "Apache-2.0",
+        "repository": "https://github.com/Mercor-Intelligence/archipelago",
+        "revision": "1c3dcd4694b313020cd626699c9c7cc1c0a2fc58",
+        "verifier_path": "grading"
+      },
+      "name": "native_verifier",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "archipelago_environment": "outputs/e5_apex_agents/sprint.8cEFaN/archipelago/environment",
+        "environment_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex/e5/venv",
+        "global_python_mutation": false,
+        "python313": "/opt/homebrew/opt/python@3.13/bin/python3.13",
+        "worktree_root": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab"
+      },
+      "name": "isolated_runtime",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "base_model": "Qwen/Qwen3.6-35B-A3B",
+        "base_model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+        "checkpoint_binding": "immutable base-model revision (no compatible completed sampler checkpoint supplied)",
+        "mode": "base_model"
+      },
+      "name": "model_identity",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "errors": [],
+        "hard_cap_usd": "18.00",
+        "max_prompt_tokens": 8192,
+        "max_response_tokens": 512,
+        "max_steps": 50,
+        "maximum_tinker_spend_usd": "0.50",
+        "operational_cap_usd": "16.50",
+        "projected_maximum_usd": "0.25536",
+        "safety_reserve_usd": "1.50"
+      },
+      "name": "budget",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "api_key_present": false,
+        "credential_source": "netrc:api.wandb.ai",
+        "entity": "arvindcr4-pes-university",
+        "errors": [
+          "wandb dependency is unavailable in the isolated runtime"
+        ],
+        "group": "pavlov-e5-apex-agents",
+        "import_error": "ModuleNotFoundError: No module named 'wandb'",
+        "importable": false,
+        "project": "tinker-rl-lab-pavlov",
+        "required_mode": "online",
+        "tinker_calls_allowed_before_run": false
+      },
+      "name": "wandb_online_before_tinker",
+      "required_external_receipt": {
+        "action": "install wandb in the per-worktree environment, supply a W&B credential (WANDB_API_KEY or ~/.netrc), and retain a verified online run_id/run_url initialized before Tinker",
+        "kind": "wandb_online_run",
+        "required": [
+          "mode=online",
+          "run_id",
+          "run_url",
+          "config acknowledged"
+        ]
+      },
+      "status": "BLOCKED"
+    },
+    {
+      "details": {
+        "api_key_present": false,
+        "calls_made": false,
+        "import_error": "ModuleNotFoundError: No module named 'tinker'",
+        "importable": false
+      },
+      "name": "tinker_access",
+      "required_external_receipt": {
+        "action": "install the pinned Tinker client in the isolated runtime and provide TINKER_API_KEY",
+        "kind": "tinker_access",
+        "required": [
+          "Tinker client import",
+          "authenticated ServiceClient",
+          "estimated cost <= $0.50"
+        ]
+      },
+      "status": "BLOCKED"
+    },
+    {
+      "details": {
+        "provider_key_present": null
+      },
+      "name": "native_grader_credentials",
+      "required_external_receipt": {
+        "action": "provide one official Archipelago grading-provider key for the native rubric judge",
+        "kind": "archipelago_grading_credentials",
+        "required": [
+          "OPENAI_API_KEY",
+          "GOOGLE_API_KEY",
+          "ANTHROPIC_API_KEY"
+        ]
+      },
+      "status": "BLOCKED"
+    }
+  ],
+  "invocation": {
+    "global_python_mutation": false,
+    "launch_requested": false,
+    "worktree": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab"
+  },
+  "launch": {
+    "score": null,
+    "score_status": "not_run",
+    "tinker_calls": 0
+  },
+  "model": {
+    "base_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "hf_checkpoint_repo": null,
+    "hf_checkpoint_revision": null,
+    "id": "Qwen/Qwen3.6-35B-A3B",
+    "mode": "base_model",
+    "sampler_path": null
+  },
+  "no_score_claim": true,
+  "required_external_receipts": [
+    {
+      "action": "accept Mercor's dataset terms/request access, then download the exact revision",
+      "commands": [
+        "hf auth login",
+        "open https://huggingface.co/datasets/mercor/apex-agents and click 'Agree and access repository'",
+        "hf download mercor/apex-agents --repo-type dataset --revision 92c86856cf1b11f9833a8a076b3a45a63afa3929 tasks_and_rubrics.json world_descriptions.json eval.yaml"
+      ],
+      "kind": "huggingface_dataset_access",
+      "required": [
+        "HTTP 200 for tasks_and_rubrics.json, world_descriptions.json, and eval.yaml",
+        "resolved commit 92c86856cf1b11f9833a8a076b3a45a63afa3929",
+        "SHA-256 for each downloaded file"
+      ],
+      "url": "https://huggingface.co/datasets/mercor/apex-agents"
+    },
+    {
+      "action": "download the exact dataset revision, then re-run preflight",
+      "kind": "huggingface_dataset_access",
+      "url": "https://huggingface.co/datasets/mercor/apex-agents"
+    },
+    {
+      "action": "download the exact dataset revision and seal selected task IDs plus training task IDs",
+      "kind": "split_manifest",
+      "required": [
+        "split_manifest_sha256",
+        "task_id_sha256",
+        "disjoint=true"
+      ]
+    },
+    {
+      "action": "install wandb in the per-worktree environment, supply a W&B credential (WANDB_API_KEY or ~/.netrc), and retain a verified online run_id/run_url initialized before Tinker",
+      "kind": "wandb_online_run",
+      "required": [
+        "mode=online",
+        "run_id",
+        "run_url",
+        "config acknowledged"
+      ]
+    },
+    {
+      "action": "install the pinned Tinker client in the isolated runtime and provide TINKER_API_KEY",
+      "kind": "tinker_access",
+      "required": [
+        "Tinker client import",
+        "authenticated ServiceClient",
+        "estimated cost <= $0.50"
+      ]
+    },
+    {
+      "action": "provide one official Archipelago grading-provider key for the native rubric judge",
+      "kind": "archipelago_grading_credentials",
+      "required": [
+        "OPENAI_API_KEY",
+        "GOOGLE_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ]
+    }
+  ],
+  "schema_version": "pavlov-e5-apex-agents-receipt-v1",
+  "source_urls": {
+    "archipelago": "https://github.com/Mercor-Intelligence/archipelago",
+    "dataset_card": "https://huggingface.co/datasets/mercor/apex-agents",
+    "dataset_metadata": "https://huggingface.co/api/datasets/mercor/apex-agents",
+    "model_metadata": "https://huggingface.co/api/models/Qwen/Qwen3.6-35B-A3B"
+  },
+  "status": "BLOCKED",
+  "suite_id": "apex_agents_eval",
+  "task_selection": {
+    "count": 0,
+    "disjoint": false,
+    "selected_task_ids": []
+  }
+}

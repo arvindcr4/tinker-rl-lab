@@ -55,10 +55,15 @@ PUBLIC_MANIFEST_HASH = "66da44a04ec48fe356b3b0d1c420c40679faa1a7ac650728e254b625
 LICENSE_URL = f"{BENCHMARK_REPO_URL}/blob/{BENCHMARK_REVISION}/LICENSE"
 GROUND_TRUTH_ISSUE_URL = f"{BENCHMARK_REPO_URL}/issues/2"
 
-MODEL_ID = "Qwen/Qwen3-VL-30B-A3B-Instruct"
+# Tinker-only policy: every suite binds a model that the Tinker service actually
+# serves.  The previous binding here was ``Qwen/Qwen3-VL-30B-A3B-Instruct``, which
+# get_server_capabilities() does not list at all -- a run against it could never
+# have launched, and it silently diverged from the contract's authorized
+# candidates.  See flagship/tinker_model_registry.json for the served set.
+MODEL_ID = "Qwen/Qwen3.6-35B-A3B"
 # Immutable HF commit resolved from refs/heads/main during this lane's
 # read-only preflight.  The runner never follows a mutable branch at launch.
-BASE_MODEL_REVISION = "9c4b90e1e4ba969fd3b5378b57d966d725f1b86c"
+BASE_MODEL_REVISION = "995ad96eacd98c81ed38be0c5b274b04031597b0"
 BASE_MODEL_URL = f"https://huggingface.co/{MODEL_ID}"
 BASE_MODEL_COMMIT_URL = f"{BASE_MODEL_URL}/commit/{BASE_MODEL_REVISION}"
 

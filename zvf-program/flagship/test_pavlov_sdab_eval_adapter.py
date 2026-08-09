@@ -18,15 +18,25 @@ from .pavlov_sdab_eval_adapter import (
     REQUIRED_HELDOUT_RECEIPTS,
     ROLE,
     SUITE_ID,
+    SYNTHETIC_MARKER,
     SdabBoundaryError,
+    SdabBundleError,
+    build_ingest_receipt,
     build_result_receipt,
+    build_runtime_manifest,
     build_sdab_boundary,
+    build_split_manifest,
     canonical_json,
+    ingest_task_bundle,
     main,
+    newline_task_id_sha256,
+    prove_split_disjointness,
     sha256_digest,
     validate_result_receipt,
     validate_sdab_boundary,
+    validate_task_bundle,
 )
+from .eval_pavlov_sdab import task_ids_sha256, validate_native_manifest
 
 
 def _digest(character: str) -> str:
@@ -498,6 +508,361 @@ class SdabCliTests(unittest.TestCase):
         output = io.StringIO()
         with redirect_stdout(output):
             exit_code = main(["/tmp/does-not-exist-sdab-boundary.json"])
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(json.loads(output.getvalue())["status"], "ERROR")
+
+
+# ---------------------------------------------------------------------------
+# Bundle-ingestion fixtures
+#
+# ``synthetic_bundle`` is the deliverable fixture: every task ID carries the
+# SYNTHETIC-NOT-SDAB marker and the bundle sets ``synthetic: true``.  It is not
+# SDAB data, it is never written into a boundary, and it can never yield a
+# score.  ``_shape_only_bundle`` is a test double used solely to prove the
+# authoritative code path compiles a boundary and a runtime manifest; it lives
+# in test code and is never written to disk as data.
+# ---------------------------------------------------------------------------
+
+SYNTHETIC_NOTICE = (
+    "SYNTHETIC FIXTURE - GENERATED LOCALLY BY THE E3 TEST SUITE - "
+    "THIS IS NOT SDAB DATA AND CAN NEVER PRODUCE A SCORE"
+)
+_CATEGORY_CYCLE = (
+    "infrastructure_debugging",
+    "migrations_and_upgrades",
+    "ci_cd_and_deployment",
+    "observability_and_incident_response",
+    "distributed_systems",
+)
+
+
+def _bundle_license() -> dict:
+    return {
+        "license": {"spdx_id": "LicenseRef-SDAB-Evaluation", "name": "SDAB evaluation terms"},
+        "license_receipt": {
+            "receipt_id": "sdab-license-receipt-1",
+            "digest": _digest("c"),
+            "reference": "local://sdab/license/receipt-1",
+        },
+    }
+
+
+def synthetic_bundle(task_count: int = OFFICIAL_TASK_COUNT) -> dict:
+    """Return the clearly-marked synthetic 80-task fixture."""
+
+    return {
+        "synthetic": True,
+        "provenance": SYNTHETIC_NOTICE,
+        "benchmark_id": BENCHMARK_ID,
+        "benchmark_name": BENCHMARK_NAME,
+        "canonical_url": CANONICAL_URL,
+        "provider": "Emulated, Inc.",
+        "split": "evaluation",
+        "revision": f"{SYNTHETIC_MARKER}-revision-0000",
+        **_bundle_license(),
+        "tasks": [
+            {
+                "task_id": f"{SYNTHETIC_MARKER}-{index:04d}",
+                "category": _CATEGORY_CYCLE[index % len(_CATEGORY_CYCLE)],
+                "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+                "targets": ["SYNTHETIC PLACEHOLDER"],
+            }
+            for index in range(1, task_count + 1)
+        ],
+    }
+
+
+def synthetic_train_task_ids(count: int = 20) -> list[str]:
+    return [f"{SYNTHETIC_MARKER}-TRAIN-{index:04d}" for index in range(1, count + 1)]
+
+
+def _shape_only_bundle(task_count: int = OFFICIAL_TASK_COUNT) -> dict:
+    """Shape-only double for the authoritative path.  Not SDAB data."""
+
+    return {
+        "benchmark_id": BENCHMARK_ID,
+        "benchmark_name": BENCHMARK_NAME,
+        "canonical_url": CANONICAL_URL,
+        "provider": "Emulated, Inc.",
+        "split": "evaluation",
+        # The runner requires a 40- or 64-hex immutable revision.
+        "revision": "a" * 40,
+        **_bundle_license(),
+        "tasks": [
+            {
+                "task_id": f"eval-{index:04d}",
+                "category": _CATEGORY_CYCLE[index % len(_CATEGORY_CYCLE)],
+            }
+            for index in range(1, task_count + 1)
+        ],
+    }
+
+
+def _shape_only_train_ids(count: int = 20) -> list[str]:
+    return [f"train-{index:04d}" for index in range(1, count + 1)]
+
+
+class SdabBundleSchemaTests(unittest.TestCase):
+    def test_synthetic_fixture_is_unmistakably_marked(self) -> None:
+        bundle = synthetic_bundle()
+        self.assertTrue(bundle["synthetic"])
+        self.assertIn("NOT SDAB DATA", bundle["provenance"])
+        self.assertEqual(len(bundle["tasks"]), OFFICIAL_TASK_COUNT)
+        for task in bundle["tasks"]:
+            self.assertIn(SYNTHETIC_MARKER, task["task_id"])
+
+    def test_bundle_requires_exactly_the_official_task_count(self) -> None:
+        short = synthetic_bundle(task_count=OFFICIAL_TASK_COUNT - 1)
+        with self.assertRaises(SdabBundleError) as ctx:
+            validate_task_bundle(short, allow_synthetic=True)
+        self.assertIn(str(OFFICIAL_TASK_COUNT), str(ctx.exception))
+
+    def test_synthetic_bundle_is_refused_unless_explicitly_allowed(self) -> None:
+        with self.assertRaises(SdabBundleError):
+            validate_task_bundle(synthetic_bundle())
+
+    def test_duplicate_and_casefold_colliding_task_ids_fail_closed(self) -> None:
+        bundle = synthetic_bundle()
+        bundle["tasks"][1]["task_id"] = bundle["tasks"][0]["task_id"]
+        with self.assertRaises(SdabBundleError):
+            validate_task_bundle(bundle, allow_synthetic=True)
+        bundle = synthetic_bundle()
+        bundle["tasks"][1]["task_id"] = bundle["tasks"][0]["task_id"].lower()
+        with self.assertRaises(SdabBundleError):
+            validate_task_bundle(bundle, allow_synthetic=True)
+
+    def test_unknown_category_and_substitute_benchmarks_fail_closed(self) -> None:
+        bundle = synthetic_bundle()
+        bundle["tasks"][0]["category"] = "prompt_only_qa"
+        with self.assertRaises(SdabBundleError):
+            validate_task_bundle(bundle, allow_synthetic=True)
+        bundle = synthetic_bundle()
+        bundle["related_benchmark"] = "xlam"
+        with self.assertRaises(SdabBoundaryError):
+            validate_task_bundle(bundle, allow_synthetic=True)
+
+    def test_raw_task_content_is_stripped_from_the_report(self) -> None:
+        report = validate_task_bundle(synthetic_bundle(), allow_synthetic=True)
+        self.assertEqual(report["raw_content_keys_stripped"], ["prompt", "targets"])
+        for record in report["tasks"]:
+            self.assertNotIn("prompt", record)
+            self.assertNotIn("targets", record)
+        self.assertNotIn("prompt", canonical_json(report["tasks"]))
+
+    def test_task_id_hashing_matches_the_runner_hash_scheme(self) -> None:
+        report = validate_task_bundle(synthetic_bundle(), allow_synthetic=True)
+        self.assertEqual(
+            report["task_id_sha256"], task_ids_sha256(report["task_ids"])
+        )
+        self.assertEqual(
+            report["task_id_sha256"], newline_task_id_sha256(report["task_ids"])
+        )
+        self.assertEqual(report["task_id_digest"], sha256_digest(report["task_ids"]))
+        self.assertEqual(report["task_count"], OFFICIAL_TASK_COUNT)
+
+    def test_split_manifest_is_deterministic_and_order_independent(self) -> None:
+        bundle = synthetic_bundle()
+        first = build_split_manifest(validate_task_bundle(bundle, allow_synthetic=True))
+        shuffled = synthetic_bundle()
+        shuffled["tasks"] = list(reversed(shuffled["tasks"]))
+        second = build_split_manifest(validate_task_bundle(shuffled, allow_synthetic=True))
+        self.assertEqual(first, second)
+        self.assertEqual(first["name"], "evaluation")
+        self.assertEqual(len(first["task_ids"]), OFFICIAL_TASK_COUNT)
+
+
+class SdabDisjointnessTests(unittest.TestCase):
+    def test_disjoint_split_produces_a_proof(self) -> None:
+        proof = prove_split_disjointness(["eval-1", "eval-2"], ["train-1"])
+        self.assertTrue(proof["disjoint"])
+        self.assertEqual(proof["intersection_count"], 0)
+        self.assertNotEqual(proof["eval_task_id_sha256"], proof["train_task_id_sha256"])
+        self.assertTrue(proof["proof_digest"].startswith("sha256:"))
+
+    def test_overlapping_split_fails_closed(self) -> None:
+        with self.assertRaises(SdabBundleError):
+            prove_split_disjointness(["eval-1", "shared"], ["shared"])
+
+    def test_casefold_overlap_is_still_contamination(self) -> None:
+        with self.assertRaises(SdabBundleError):
+            prove_split_disjointness(["Eval-1"], ["eval-1"])
+
+    def test_missing_training_split_fails_closed_in_strict_mode(self) -> None:
+        with self.assertRaises(SdabBundleError):
+            prove_split_disjointness(["eval-1"], [])
+        lenient = prove_split_disjointness(["eval-1"], [], strict=False)
+        self.assertFalse(lenient["train_split_supplied"])
+        self.assertIsNone(lenient["train_task_id_sha256"])
+
+
+class SdabBundleIngestTests(unittest.TestCase):
+    def test_synthetic_fixture_is_rejected_by_the_authoritative_path(self) -> None:
+        with self.assertRaises(SdabBundleError):
+            ingest_task_bundle(
+                synthetic_bundle(),
+                train_task_ids=synthetic_train_task_ids(),
+                mode="authoritative",
+            )
+
+    def test_harness_validation_ingest_never_produces_a_score(self) -> None:
+        report = ingest_task_bundle(
+            synthetic_bundle(),
+            train_task_ids=synthetic_train_task_ids(),
+            mode="harness_validation",
+        )
+        self.assertIsNone(report["score"])
+        self.assertFalse(report["is_model_score"])
+        self.assertTrue(report["synthetic"])
+        self.assertFalse(report["authoritative"])
+        self.assertIsNone(report["boundary"])
+        self.assertEqual(report["evidence_kind"], "harness_validation")
+        # The fixture is provably refused by build_sdab_boundary.
+        self.assertTrue(report["boundary_rejection"])
+        self.assertIn("synthetic", report["boundary_rejection"][0])
+        # Plumbing still ran end to end.
+        self.assertEqual(report["bundle"]["task_count"], OFFICIAL_TASK_COUNT)
+        self.assertEqual(len(report["split_manifest"]["task_ids"]), OFFICIAL_TASK_COUNT)
+        self.assertTrue(report["disjointness_proof"]["disjoint"])
+
+    def test_harness_validation_refuses_an_authentic_shaped_bundle(self) -> None:
+        with self.assertRaises(SdabBundleError):
+            ingest_task_bundle(
+                _shape_only_bundle(),
+                train_task_ids=_shape_only_train_ids(),
+                mode="harness_validation",
+            )
+
+    def test_authoritative_ingest_builds_a_boundary_that_reconciles(self) -> None:
+        report = ingest_task_bundle(
+            _shape_only_bundle(),
+            train_task_ids=_shape_only_train_ids(),
+            mode="authoritative",
+            source_revision_digest=_digest("a"),
+            container_digest=_digest("b"),
+        )
+        boundary = report["boundary"]
+        self.assertIsNotNone(boundary)
+        self.assertEqual(boundary["task_count"], OFFICIAL_TASK_COUNT)
+        self.assertEqual(boundary["official_task_count"], OFFICIAL_TASK_COUNT)
+        self.assertEqual(boundary["split"], "evaluation")
+        self.assertEqual(boundary["task_id_hash"], report["bundle"]["task_id_digest"])
+        self.assertEqual(boundary["split_manifest_hash"], report["split_manifest_hash"])
+        self.assertFalse(boundary["receipt_proven_heldout"])
+        self.assertEqual(
+            sorted(boundary["heldout_missing_receipts"]), sorted(REQUIRED_HELDOUT_RECEIPTS)
+        )
+        self.assertIsNone(report["score"])
+
+    def test_ingest_is_deterministic(self) -> None:
+        kwargs = {
+            "train_task_ids": _shape_only_train_ids(),
+            "mode": "authoritative",
+            "source_revision_digest": _digest("a"),
+            "container_digest": _digest("b"),
+        }
+        first = ingest_task_bundle(_shape_only_bundle(), **kwargs)
+        second = ingest_task_bundle(_shape_only_bundle(), **kwargs)
+        self.assertEqual(first["ingest_digest"], second["ingest_digest"])
+
+
+class SdabRuntimeManifestTests(unittest.TestCase):
+    def _authoritative_ingest(self) -> dict:
+        return ingest_task_bundle(
+            _shape_only_bundle(),
+            train_task_ids=_shape_only_train_ids(),
+            mode="authoritative",
+            source_revision_digest=_digest("a"),
+            container_digest=_digest("b"),
+        )
+
+    def _manifest(self, ingest: dict) -> dict:
+        return build_runtime_manifest(
+            ingest,
+            container_digest=_digest("b"),
+            environment_digest=_digest("1"),
+            verifier_sha256="f" * 64,
+            verifier_identity="emulated-native-sdab-verifier",
+            adapter_entrypoint="emulated_sdab.runtime:create_runtime",
+            disjointness_receipt="provider://sdab/split-receipt-1",
+        )
+
+    def test_runtime_manifest_is_accepted_by_the_runner_gate(self) -> None:
+        manifest = self._manifest(self._authoritative_ingest())
+        validated = validate_native_manifest(manifest, required_tasks=1)
+        self.assertEqual(validated["task_count"], OFFICIAL_TASK_COUNT)
+        self.assertEqual(validated["split"], "evaluation")
+        self.assertTrue(validated["native_verifier"])
+        self.assertNotEqual(
+            validated["task_id_sha256"], validated["train_task_id_sha256"]
+        )
+
+    def test_runtime_manifest_is_metadata_only(self) -> None:
+        manifest = self._manifest(self._authoritative_ingest())
+        serialized = canonical_json(manifest)
+        for key in ("prompt", "prompts", "target", "targets", "trajectory"):
+            self.assertNotIn(key, manifest)
+        self.assertNotIn("PLACEHOLDER", serialized)
+
+    def test_runtime_manifest_refuses_a_synthetic_ingest(self) -> None:
+        synthetic = ingest_task_bundle(
+            synthetic_bundle(),
+            train_task_ids=synthetic_train_task_ids(),
+            mode="harness_validation",
+        )
+        with self.assertRaises(SdabBundleError):
+            self._manifest(synthetic)
+
+
+class SdabIngestReceiptTests(unittest.TestCase):
+    def test_ingest_receipt_never_carries_a_score(self) -> None:
+        report = ingest_task_bundle(
+            synthetic_bundle(),
+            train_task_ids=synthetic_train_task_ids(),
+            mode="harness_validation",
+        )
+        receipt = build_ingest_receipt(
+            report, status="BLOCKED", blockers=["synthetic fixture only"]
+        )
+        self.assertIsNone(receipt["score"])
+        self.assertFalse(receipt["is_model_score"])
+        self.assertEqual(receipt["status"], "BLOCKED")
+        self.assertTrue(receipt["synthetic"])
+        self.assertTrue(receipt["receipt_digest"].startswith("sha256:"))
+
+    def test_cli_bundle_ingest_writes_a_blocked_synthetic_receipt(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            bundle_path = Path(directory) / "synthetic_bundle.json"
+            train_path = Path(directory) / "synthetic_train_ids.json"
+            out_path = Path(directory) / "ingest_receipt.json"
+            bundle_path.write_text(json.dumps(synthetic_bundle()), encoding="utf-8")
+            train_path.write_text(json.dumps(synthetic_train_task_ids()), encoding="utf-8")
+            output = io.StringIO()
+            with redirect_stdout(output):
+                exit_code = main(
+                    [
+                        "--bundle",
+                        str(bundle_path),
+                        "--train-task-ids",
+                        str(train_path),
+                        "--mode",
+                        "harness_validation",
+                        "--out",
+                        str(out_path),
+                    ]
+                )
+            self.assertEqual(exit_code, 0)
+            parsed = json.loads(output.getvalue())
+            self.assertIsNone(parsed["ingest"]["score"])
+            self.assertIsNone(parsed["ingest"]["boundary"])
+            receipt = json.loads(out_path.read_text(encoding="utf-8"))
+            self.assertEqual(receipt["status"], "BLOCKED")
+            self.assertIsNone(receipt["score"])
+            self.assertFalse(receipt["is_model_score"])
+
+    def test_cli_requires_a_boundary_or_a_bundle(self) -> None:
+        output = io.StringIO()
+        with redirect_stdout(output):
+            exit_code = main([])
         self.assertEqual(exit_code, 1)
         self.assertEqual(json.loads(output.getvalue())["status"], "ERROR")
 

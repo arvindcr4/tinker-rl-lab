@@ -1,0 +1,318 @@
+{
+  "aggregates": {
+    "legacy_runner_manifest_hash": "66da44a04ec48fe356b3b0d1c420c40679faa1a7ac650728e254b625bb674a07",
+    "legacy_runner_task_id_hash": "22afbdd3cc47e6dba1e3c57ddbe5f762b54be5d2af6ac76bbd206c19eb83b12e",
+    "task_count": 2647,
+    "task_digest_hash": "061fd64b235505d3218f087c01b9b5946c6a7ef2baa5893c549b0ce8ad68a32a",
+    "task_id_hash": "e677af69aa5d1dc7137e54c18c41d99343a41b3e5e77377f7512f42c1a34d2b5",
+    "task_index_hash": "84921790fdd4cf20af876324311ea2d6399fc6032cd4ce4ca44fa5b7fe6f85e8",
+    "task_uid_hash": "2929daef72aa6ec9f0db8c9878f412ce5af0c2c03872096d1ad4fcd2bf910187"
+  },
+  "authenticated_receipt": null,
+  "characterization": {
+    "categories": {
+      "CREATE": 594,
+      "DELETE": 166,
+      "FILE_MANIPULATION": 44,
+      "READ": 1637,
+      "UPDATE": 206
+    },
+    "category_share": {
+      "CREATE": 0.2244,
+      "DELETE": 0.0627,
+      "FILE_MANIPULATION": 0.0166,
+      "READ": 0.6184,
+      "UPDATE": 0.0778
+    },
+    "csv_id_gap_count": 78,
+    "csv_id_gaps": [
+      14,
+      18,
+      278,
+      280,
+      282,
+      283,
+      284,
+      285,
+      286,
+      289,
+      301,
+      342,
+      467,
+      469,
+      470,
+      473,
+      475,
+      476,
+      477,
+      511,
+      512,
+      513,
+      514,
+      515,
+      516,
+      522,
+      523,
+      596,
+      611,
+      903,
+      972,
+      1066,
+      1067,
+      1068,
+      1069,
+      1070,
+      1071,
+      1072,
+      1073,
+      1079,
+      1127,
+      1128,
+      1129,
+      1453,
+      1454,
+      1457,
+      1459,
+      1460,
+      1461,
+      1471,
+      1473,
+      1474,
+      1475,
+      2111,
+      2112,
+      2118,
+      2119,
+      2120,
+      2121,
+      2152,
+      2153,
+      2154,
+      2155,
+      2156,
+      2157,
+      2236,
+      2237,
+      2238,
+      2239,
+      2240,
+      2241,
+      2242,
+      2243,
+      2244,
+      2245,
+      2246,
+      2247,
+      2265
+    ],
+    "csv_id_max": 2724,
+    "csv_id_min": 0,
+    "csv_id_span": 2725,
+    "csv_ids_contiguous": false,
+    "distinct_domains_per_category": {
+      "CREATE": 110,
+      "DELETE": 93,
+      "FILE_MANIPULATION": 23,
+      "READ": 448,
+      "UPDATE": 91
+    },
+    "distinct_hosts": 449,
+    "distinct_registrable_domains": 448,
+    "distinct_task_texts": 2647,
+    "http_only_urls": [
+      "http://indeed.com",
+      "http://www.barnesandnoble.com"
+    ],
+    "keyword_probe_counts": {
+      "captcha": 0,
+      "credential_or_account": 536,
+      "payment_or_checkout": 20
+    },
+    "keyword_probe_note": "regex probes over task prose; heuristic, not a classification",
+    "public_task_fields": [
+      "csv_id",
+      "starting_url",
+      "category",
+      "task"
+    ],
+    "task_char_len_max": 453,
+    "task_char_len_median": 265,
+    "task_char_len_min": 160,
+    "task_count": 2647,
+    "tasks_per_domain_max": 40,
+    "tasks_per_domain_median": 3.0,
+    "tasks_per_domain_min": 2,
+    "top_domains": [
+      {
+        "domain": "stackexchange.com",
+        "task_count": 40
+      },
+      {
+        "domain": "grubhub.com",
+        "task_count": 28
+      },
+      {
+        "domain": "linkedin.com",
+        "task_count": 28
+      },
+      {
+        "domain": "stackoverflow.com",
+        "task_count": 28
+      },
+      {
+        "domain": "streeteasy.com",
+        "task_count": 28
+      },
+      {
+        "domain": "open.spotify.com",
+        "task_count": 27
+      },
+      {
+        "domain": "github.com",
+        "task_count": 24
+      },
+      {
+        "domain": "crunchbase.com",
+        "task_count": 21
+      },
+      {
+        "domain": "facebook.com",
+        "task_count": 21
+      },
+      {
+        "domain": "instacart.com",
+        "task_count": 21
+      },
+      {
+        "domain": "allrecipes.com",
+        "task_count": 20
+      },
+      {
+        "domain": "flickr.com",
+        "task_count": 19
+      },
+      {
+        "domain": "bing.com",
+        "task_count": 19
+      },
+      {
+        "domain": "glassdoor.com",
+        "task_count": 18
+      },
+      {
+        "domain": "x.com",
+        "task_count": 18
+      },
+      {
+        "domain": "deezer.com",
+        "task_count": 17
+      },
+      {
+        "domain": "homedepot.com",
+        "task_count": 16
+      },
+      {
+        "domain": "ikea.com",
+        "task_count": 16
+      },
+      {
+        "domain": "khanacademy.org",
+        "task_count": 16
+      },
+      {
+        "domain": "olympics.com",
+        "task_count": 16
+      },
+      {
+        "domain": "sportskeeda.com",
+        "task_count": 16
+      },
+      {
+        "domain": "telegraph.co.uk",
+        "task_count": 16
+      },
+      {
+        "domain": "answers.com",
+        "task_count": 16
+      },
+      {
+        "domain": "crunchyroll.com",
+        "task_count": 15
+      },
+      {
+        "domain": "expedia.com",
+        "task_count": 15
+      }
+    ],
+    "url_schemes": {
+      "http": 14,
+      "https": 2633
+    },
+    "verifier_fields_absent_from_public_csv": [
+      "success_criteria",
+      "expected_final_state",
+      "answer_key_or_rubric",
+      "allowed_side_effects",
+      "credential_scope",
+      "reset_procedure"
+    ],
+    "write_class_categories": [
+      "CREATE",
+      "DELETE",
+      "FILE_MANIPULATION",
+      "UPDATE"
+    ],
+    "write_class_share": 0.3816,
+    "write_class_task_count": 1010
+  },
+  "derivation_hash": "6d93f512ac1ffdcf609603878cf86c9592fc0adb028e616854dd62ec8014150d",
+  "disjointness": {
+    "disjoint": true,
+    "errors": [],
+    "evaluation_task_count": 2647,
+    "evaluation_task_id_hash": "e677af69aa5d1dc7137e54c18c41d99343a41b3e5e77377f7512f42c1a34d2b5",
+    "overlap_count": 0,
+    "overlap_task_ids": [],
+    "training_declared_task_id_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "training_declared_task_id_hash_verified": true,
+    "training_manifest_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/eval_only_training_task_manifest.json",
+    "training_manifest_sha256": "d37abd66b0a9dd6d8eef32355480e2bf094eac514b9b14cce5c0e0789e35faeb",
+    "training_task_count": 0,
+    "training_task_id_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "valid": true
+  },
+  "externally_bound": false,
+  "network_accessed": false,
+  "paid_calls_executed": false,
+  "receipt_class": "local_derivation",
+  "role": "primary_eval",
+  "schema_version": "pavlov-webbench-split-derivation-v1",
+  "source": {
+    "dataset_file": "webbenchfinal.csv",
+    "dataset_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/webbenchfinal.csv",
+    "dataset_sha256": "fd5311a38bdb6f941e8f544150735656c114d76fbfb17193da973d5de0165217",
+    "license": "MIT",
+    "license_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/WEBBENCH_LICENSE",
+    "license_sha256": "96804aa272fe40cdfb8b5c8f4d1d94757bcfaf1bf5596fb829214843d2371e58",
+    "license_sha256_matches_pin": true,
+    "name": "Halluminate/WebBench",
+    "revision": "ea7a1628443321363989f354401f0653e0cba6f4",
+    "suite_id": "webbench_eval",
+    "url": "https://github.com/Halluminate/WebBench"
+  },
+  "split": "evaluation",
+  "split_manifest": {
+    "role": "primary_eval",
+    "split": "evaluation",
+    "suite_id": "webbench_eval",
+    "task_id_hash": "e677af69aa5d1dc7137e54c18c41d99343a41b3e5e77377f7512f42c1a34d2b5"
+  },
+  "split_manifest_hash": "feb368884a41c994567cd7067cf22c47fc67e27158dd635df7ab4a594cf93f0c",
+  "suite_id": "webbench_eval",
+  "task_id_scheme": {
+    "ordering": "lexicographic task_id, which equals numeric csv_id order",
+    "task_digest": "sha256(canonical_json({category, csv_id, starting_url, task}))",
+    "task_id": "webbench-task-<csv_id zero-padded to 4>",
+    "task_uid": "webbench-uid-<task_digest[:16]>"
+  }
+}

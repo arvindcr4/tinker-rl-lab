@@ -284,6 +284,42 @@ class PavlovAppbenchOpenrewardGamesAdapterTests(unittest.TestCase):
         ):
             adapter.validate_pavlov_openreward_games_adapter(bad)
 
+    def test_real_upstream_source_urls_satisfy_the_markers(self) -> None:
+        """The marker check must accept the punctuation upstream actually uses.
+
+        E12's dataset is ``AfterQuery/App-Bench`` on the Hub and ``app-bench`` in
+        the leaderboard URL; neither contains the literal substring ``appbench``.
+        """
+
+        for source in (
+            "https://huggingface.co/datasets/AfterQuery/App-Bench",
+            "https://www.afterquery.com/leaderboard/app-bench",
+            "AfterQuery App Bench official task CSV",
+            "AppBench official evaluation source",
+        ):
+            with self.subTest(source=source):
+                ok = copy.deepcopy(self.contract)
+                ok["boundaries"]["E12"]["authoritative_source"] = source
+                normalized = adapter.validate_pavlov_openreward_games_adapter(ok)
+                self.assertEqual(
+                    normalized["boundaries"]["E12"]["authoritative_source"], source
+                )
+
+    def test_punctuated_substitution_markers_are_still_blocked(self) -> None:
+        for source in (
+            "x-LAM benchmark mirror for AppBench",
+            "AppBench via related_benchmark bundle",
+            "AppBench (related-benchmark stand-in)",
+        ):
+            with self.subTest(source=source):
+                bad = copy.deepcopy(self.contract)
+                bad["boundaries"]["E12"]["authoritative_source"] = source
+                with self.assertRaisesRegex(
+                    adapter.PavlovAppbenchOpenrewardGamesAdapterError,
+                    "references blocked source marker",
+                ):
+                    adapter.validate_pavlov_openreward_games_adapter(bad)
+
     def test_artifact_environment_and_verifier_contracts_are_required(self) -> None:
         missing = copy.deepcopy(self.contract)
         del missing["boundaries"]["E12"]["native_contract"]

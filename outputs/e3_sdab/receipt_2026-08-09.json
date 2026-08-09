@@ -1,0 +1,143 @@
+{
+  "access_request_document": "outputs/e3_sdab/ACCESS_REQUEST_SDAB_2026-08-09.md",
+  "benchmark": {
+    "access_status": "private_access_required",
+    "canonical_url": "https://emulated.so/sdab",
+    "name": "Software Development Automation Benchmark",
+    "provider": "Emulated, Inc.",
+    "split": "evaluation",
+    "task_count": 80
+  },
+  "blockers": [
+    {
+      "detail": "The 80-task SDAB evaluation bundle is private. No public mirror, no dataset card, no revision identifier.",
+      "external_receipt_needed": "Provider-issued bundle with a 40- or 64-hex immutable revision, the 80 task IDs, category and difficulty-variant labels, and a license identifier or evaluation-agreement reference.",
+      "gate_it_unblocks": "exact_native_sdab_runtime (schema, task hashing, split manifest)",
+      "id": "official_task_bundle"
+    },
+    {
+      "detail": "No train/eval split receipt exists. train_task_id_sha256 is null, so the runtime manifest cannot be emitted.",
+      "external_receipt_needed": "Provider statement of the training/development/public task IDs (or an explicit 'no train split exists'), with an immutable reference.",
+      "gate_it_unblocks": "runtime manifest emission",
+      "id": "disjointness_receipt"
+    },
+    {
+      "detail": "The live enterprise runtime with deterministic reset, running infrastructure, and traffic generator is private. The only failing preflight gate is the missing provider adapter module.",
+      "external_receipt_needed": "Container digest, environment/seed digest, cloudbox provisioning path, and a module:factory adapter entrypoint exposing list_tasks/evaluate_task/verify_result.",
+      "gate_it_unblocks": "exact_native_sdab_runtime",
+      "id": "native_environment"
+    },
+    {
+      "detail": "The grading harness (behavioral tests, engineering rubrics, LLM judge, hidden state validation) is private and sits outside the agent workspace by design.",
+      "external_receipt_needed": "Verifier identity, revision, sha256, behavioral-test/rubric/state-validation digests, judge model and configuration, and the composite weighting.",
+      "gate_it_unblocks": "result admissibility (every per-task score is discarded without it)",
+      "id": "native_verifier"
+    }
+  ],
+  "code_changes": [
+    {
+      "change": "REPO_ROOT was HERE.parents[2] (the directory ABOVE the checkout), which put the default isolated environment outside the worktree and made the isolation gate unsatisfiable. Now parents[1]; default environment root is outputs/e3_sdab/venv-sdab-e3.",
+      "path": "zvf-program/flagship/eval_pavlov_sdab.py"
+    },
+    {
+      "change": "Added provider-bundle ingestion: validate_task_bundle, newline_task_id_sha256, build_split_manifest, prove_split_disjointness, build_boundary_spec_from_bundle, build_runtime_manifest, ingest_task_bundle, build_ingest_receipt, plus synthetic-fixture rejection in build_sdab_boundary and a --bundle CLI mode.",
+      "path": "zvf-program/flagship/pavlov_sdab_eval_adapter.py"
+    },
+    {
+      "change": "Added 23 tests covering bundle schema validation, task-ID hashing (including cross-check against the runner's hash scheme), split-manifest determinism, disjointness proof, runtime-manifest emission accepted by validate_native_manifest, and receipt emission that can never carry a score.",
+      "path": "zvf-program/flagship/test_pavlov_sdab_eval_adapter.py"
+    }
+  ],
+  "cost": {
+    "estimated_cost_to_cross_the_boundary_usd": 0.0204288,
+    "note": "Projected maximum is for a 1-task slice at the configured token ceilings (max_actions=8, max_prompt_tokens=4096, max_response_tokens=256). A full 80-task run at those same ceilings projects to $1.634304, which already exceeds the $0.50 E3 suite cap. Separately, those ceilings are not realistic for SDAB: the provider states tasks run up to 12 hours on live infrastructure, so a real episode will use far more than 8 actions and 4096 prompt tokens. The budget model must be re-derived from the provider's actual scaffold and action budget before any paid run is authorized.",
+    "paid_model_api_calls": 0,
+    "paid_tinker_calls": 0,
+    "projected_full_run_at_configured_ceilings_usd": 1.634304,
+    "suite_cap_usd": 0.5,
+    "wandb_runs": 0
+  },
+  "created_at": "2026-08-09T07:23:13.506133+00:00",
+  "environment": {
+    "install_log": "outputs/e3_sdab/lane_e3_20260809/venv_install.txt",
+    "isolated_venv": "outputs/e3_sdab/venv-sdab-e3",
+    "python": "3.12.13",
+    "tinker": "0.24.1",
+    "tinker_source": "public PyPI; no private index and no credential required",
+    "wandb": "0.21.0"
+  },
+  "evidence_boundary": "Local harness is complete up to the provider access boundary. No SDAB task data was obtained, no environment was launched, no grader was run, and no score exists.",
+  "evidence_paths": [
+    "outputs/e3_sdab/lane_e3_20260809",
+    "outputs/e3_sdab/synthetic_fixture",
+    "outputs/e3_sdab/ACCESS_REQUEST_SDAB_2026-08-09.md"
+  ],
+  "is_model_score": false,
+  "lane": "E3",
+  "not_blockers_anymore": [
+    "tinker package availability in the isolated environment - resolved, public PyPI install",
+    "wandb availability in the isolated environment - resolved",
+    "isolated worktree environment gate - resolved by the REPO_ROOT fix plus outputs/e3_sdab/venv-sdab-e3"
+  ],
+  "receipt_sha256": "cfac7cee71bac48beaf22181ffa50b550079a6b8764c6cafe0f8f4edee82bbb5",
+  "result": null,
+  "rows": [],
+  "schema_version": "pavlov-lane-receipt-v1",
+  "score": null,
+  "status": "BLOCKED",
+  "suite_id": "sdab_eval",
+  "synthetic_fixture": {
+    "can_produce_a_score": false,
+    "files": {
+      "README_SYNTHETIC.txt": "sha256:1c4806c72669e1d7a4e90e295b07b6f9f15da950c8c23c88d67312857889f24f",
+      "SYNTHETIC_bundle_NOT_SDAB_DATA.json": "sha256:1d7896e54918b78216fd0938278d6a28760c1caa83ebdf264ceb8556530db247",
+      "SYNTHETIC_train_task_ids_NOT_SDAB_DATA.json": "sha256:26ec51fba244fe5d316ea369ef7b529e7e2504dc8c3ede04fa22c427daa3580a"
+    },
+    "guarantees": [
+      "every task ID carries the SYNTHETIC-NOT-SDAB marker",
+      "bundle sets synthetic=true; the adapter raises if flag and markers disagree",
+      "build_sdab_boundary refuses any spec carrying a synthetic marker",
+      "build_runtime_manifest refuses a synthetic ingest, so the fixture can never launch a run",
+      "ingest and receipt emit score=null and is_model_score=false in every mode"
+    ],
+    "is_sdab_data": false,
+    "marker": "SYNTHETIC-NOT-SDAB",
+    "path": "outputs/e3_sdab/synthetic_fixture/"
+  },
+  "what_executed": {
+    "focused_tests": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=zvf-program outputs/e3_sdab/venv-sdab-e3/bin/python -m unittest -v flagship.test_pavlov_sdab_eval_adapter flagship.test_eval_pavlov_sdab",
+      "log": "outputs/e3_sdab/lane_e3_20260809/focused_tests_after.txt",
+      "result": "OK",
+      "tests_run": 50,
+      "tests_run_before_this_lane": 27
+    },
+    "preflight": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=zvf-program outputs/e3_sdab/venv-sdab-e3/bin/python -m flagship.eval_pavlov_sdab --preflight --out <path>",
+      "gates": {
+        "authorized_model_revision": "PASS",
+        "exact_native_sdab_runtime": "BLOCKED",
+        "isolated_dependencies": "PASS",
+        "isolated_worktree_environment": "PASS",
+        "tinker_cost_envelope": "PASS"
+      },
+      "receipt": "outputs/e3_sdab/lane_e3_20260809/preflight_receipt_isolated.json",
+      "status": "BLOCKED"
+    },
+    "synthetic_bundle_ingest": {
+      "authoritative_path_refusal": [
+        "boundary.source_revision='SYNTHETIC-NOT-SDAB-revision-0000' is a synthetic harness fixture and can never be used as authoritative SDAB evidence"
+      ],
+      "command": "PYTHONPATH=zvf-program outputs/e3_sdab/venv-sdab-e3/bin/python -m flagship.pavlov_sdab_eval_adapter --bundle outputs/e3_sdab/synthetic_fixture/SYNTHETIC_bundle_NOT_SDAB_DATA.json --train-task-ids outputs/e3_sdab/synthetic_fixture/SYNTHETIC_train_task_ids_NOT_SDAB_DATA.json --mode harness_validation --out <path>",
+      "disjointness_proven": true,
+      "harness_validation": true,
+      "is_model_score": false,
+      "receipt": "outputs/e3_sdab/lane_e3_20260809/synthetic_ingest_receipt.json",
+      "score": null,
+      "status": "BLOCKED",
+      "synthetic": true,
+      "task_count": 80,
+      "task_id_sha256": "e64d1cae7298c27221dccc4aa5655c6a800aeead6d82135a9950cf7a6ad0ae30"
+    }
+  }
+}

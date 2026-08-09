@@ -1,0 +1,156 @@
+{
+  "benchmark": {
+    "api_url": "https://huggingface.co/api/datasets/ScaleAI/SWE-bench_Pro",
+    "authority": "ScaleAI public SWE-bench Pro",
+    "dataset_id": "ScaleAI/SWE-bench_Pro",
+    "dataset_url": "https://huggingface.co/datasets/ScaleAI/SWE-bench_Pro",
+    "declared_license": null,
+    "disabled": false,
+    "gated": false,
+    "last_modified": "2026-02-23T20:54:47.000Z",
+    "private": false,
+    "readme_sha256": "5c1f08d52eee489d19dec4b380b2442af451e3c2dc548e3fee8a0a41fa47c30d",
+    "readme_url": "https://huggingface.co/datasets/ScaleAI/SWE-bench_Pro/raw/7ab5114912baf22bb098818e604c02fe7ad2c11f/README.md",
+    "revision": "7ab5114912baf22bb098818e604c02fe7ad2c11f",
+    "revision_expected": "7ab5114912baf22bb098818e604c02fe7ad2c11f",
+    "row_count": 731,
+    "selected_row_count": 1,
+    "selected_split_manifest_hash": "6d57c86a3d179b98e946c46ceb2f2f0f183ccfd5b0a2c503e8816abfb96cf2f0",
+    "selected_task_id_hash": "2c562bc4603567a8786a20c6eb540bff32768d962e00c7a73ae20c973162c445",
+    "selected_task_ids": [
+      "instance_NodeBB__NodeBB-04998908ba6721d64eba79ae3b65a351dcfbc5b5-vnan"
+    ],
+    "split": "test",
+    "task_ids_disjoint": true,
+    "total_row_count": 731,
+    "training_task_id_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "training_task_ids": []
+  },
+  "blockers": [
+    "benchmark dependencies must run in the per-worktree isolated venv; bootstrap it before launch",
+    "Docker host is below the official evaluator recommendation of 8 CPUs and 16 GiB RAM",
+    "authoritative dataset data license is not approved; provide an immutable license receipt",
+    "no model patch artifact supplied; preflight cannot launch an evaluation"
+  ],
+  "budget": {
+    "operational_cap_usd": 16.5,
+    "projected_tinker_usd": 0.0,
+    "safety_reserve_usd": 1.5,
+    "shared_cap_preserved": true,
+    "shared_maximum_usd": 18.0,
+    "suite_maximum_usd": 0.5,
+    "within_suite_cap": true
+  },
+  "evaluator": {
+    "authority": "https://github.com/scaleapi/SWE-bench_Pro-os",
+    "commit_url": "https://api.github.com/repos/scaleapi/SWE-bench_Pro-os/commits/ca10a60a5fcae51e6948ffe1485d4153d421e6c5",
+    "docker_images": [
+      {
+        "available": true,
+        "digest": "sha256:e49637ebe82a479ca43b4663525955bc9cdd58c457140ee31c20958d621d3cf7",
+        "platform": {
+          "architecture": "amd64",
+          "os": "linux"
+        },
+        "uri": "jefzda/sweap-images:nodebb.nodebb-NodeBB__NodeBB-04998908ba6721d64eba79ae3b65a351dcfbc5b5"
+      }
+    ],
+    "license": "MIT",
+    "license_blob_sha": "27dc0c8983e0cac304b15419b40219b5c28d7167",
+    "license_sha256": "03a44b2f703779d3f34c18e056da5b893537ca61588e6b15b615a4a612e77fb9",
+    "license_url": "https://api.github.com/repos/scaleapi/SWE-bench_Pro-os/contents/LICENSE?ref=ca10a60a5fcae51e6948ffe1485d4153d421e6c5",
+    "local": {
+      "has_instance_dockerfiles": true,
+      "has_run_scripts": true,
+      "has_runner": true,
+      "license": "MIT",
+      "license_sha256": "03a44b2f703779d3f34c18e056da5b893537ca61588e6b15b615a4a612e77fb9",
+      "present": true,
+      "revision": "ca10a60a5fcae51e6948ffe1485d4153d421e6c5"
+    },
+    "repository": "scaleapi/SWE-bench_Pro-os",
+    "revision": "ca10a60a5fcae51e6948ffe1485d4153d421e6c5",
+    "revision_expected": "ca10a60a5fcae51e6948ffe1485d4153d421e6c5"
+  },
+  "evidence_class": "preflight_or_blocked",
+  "external_access_receipt_needed": [
+    {
+      "kind": "dataset_license",
+      "required_fields": [
+        "dataset_id",
+        "dataset_revision",
+        "license",
+        "source_url",
+        "approved=true"
+      ]
+    },
+    {
+      "kind": "model_patch_artifact",
+      "required_fields": [
+        "instance_id",
+        "patch",
+        "model_revision",
+        "generation_run_id"
+      ]
+    }
+  ],
+  "generated_at": "2026-08-09T06:45:21Z",
+  "launchable": false,
+  "launches_any_job": false,
+  "license": {
+    "approved": false,
+    "present": false,
+    "status": "not_declared_by_authoritative_dataset_card"
+  },
+  "model": {
+    "adapter_revision": null,
+    "hf_commit": null,
+    "hub_gated": false,
+    "hub_private": false,
+    "hub_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "model_id": "Qwen/Qwen3.6-35B-A3B",
+    "model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "selection_reason": "no completed compatible Tinker sampler checkpoint supplied",
+    "source": "base_model"
+  },
+  "native_environment": {
+    "docker": {
+      "architecture": "aarch64",
+      "available": true,
+      "cpus": 2,
+      "meets_recommended_resources": false,
+      "memory_bytes": 2055749632,
+      "memory_gib": 1.915,
+      "recommended_cpus": 8,
+      "recommended_memory_gib": 16
+    },
+    "host_platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+    "isolated": {
+      "all_required_packages": false,
+      "packages": {},
+      "present": false,
+      "python": null,
+      "runtime_dir": "/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/e1-swe-bench-pro-luna.ylSB5R6SVl",
+      "venv_dir": "/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/e1-swe-bench-pro-luna.ylSB5R6SVl/venv"
+    }
+  },
+  "patch_artifact": {
+    "count": 0,
+    "path": null,
+    "present": false,
+    "valid": false
+  },
+  "schema_version": "e1-swe-bench-pro-receipt-v1",
+  "score": null,
+  "status": "BLOCKED",
+  "suite_id": "swe_bench_pro_eval",
+  "wandb": {
+    "api_key_present": false,
+    "initialized": false,
+    "mode": "online",
+    "project": "tinker-rl-lab-pavlov",
+    "required_before_tinker_call": true,
+    "tinker_call_requested": false
+  }
+}

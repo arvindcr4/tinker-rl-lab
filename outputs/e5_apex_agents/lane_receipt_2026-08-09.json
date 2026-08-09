@@ -1,0 +1,283 @@
+{
+  "schema_version": "pavlov-e5-apex-agents-lane-receipt-v1",
+  "lane": "E5",
+  "suite_id": "apex_agents_eval",
+  "benchmark_name": "APEX-Agents",
+  "created_at": "2026-08-09T07:20:00+00:00",
+  "status": "PARTIAL",
+  "score": null,
+  "score_status": "not_run",
+  "no_score_claim": true,
+  "is_model_score": false,
+  "exact_benchmark_only": true,
+  "substitutions": [],
+  "summary": "Native Archipelago grading verifier installs and runs end to end (harness_validation, is_model_score=false). Dataset ingestion path built and unit-tested against a synthetic fixture. Suite itself is BLOCKED on one self-service Hugging Face login: mercor/apex-agents is gated:auto, i.e. auto-approved on acceptance, not owner-reviewed.",
+  "cost": {
+    "tinker_calls": 0,
+    "tinker_spend_usd": "0.00",
+    "paid_model_api_calls": 0,
+    "wandb_runs_started": 0,
+    "hf_pushes": 0,
+    "git_commits": 0
+  },
+  "benchmark": {
+    "dataset_id": "mercor/apex-agents",
+    "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+    "license": "cc-by-4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "dataset_card": "https://huggingface.co/datasets/mercor/apex-agents",
+    "paper": "https://arxiv.org/abs/2601.14242",
+    "native_verifier_repository": "https://github.com/Mercor-Intelligence/archipelago",
+    "native_verifier_revision": "1c3dcd4694b313020cd626699c9c7cc1c0a2fc58",
+    "grading_runner_tree_sha256": "6878aa81ade65a8b058ea916f8acda0a69b586161d566525ea10f00e5b8f74f4"
+  },
+  "gating_verification": {
+    "conclusion": "AUTH_GATE_NOT_DENIAL",
+    "corrects_prior_sprint_claim": "prior note said 'exact HF task files return 403 gated access'; observed status is 401 with x-error-code GatedRepo, and gating mode is auto-approval",
+    "api_url": "https://huggingface.co/api/datasets/mercor/apex-agents",
+    "api_http_status": 200,
+    "api_response_sha256": "aa57b8894f9b1db3c937fbcf07d39448747d2a8e18baeed15055487207d32583",
+    "observed": {
+      "gated": "auto",
+      "private": false,
+      "disabled": false,
+      "sha": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+      "cardData.license": "cc-by-4.0",
+      "file_count": 319,
+      "usedStorage_bytes": 20093539877,
+      "usedStorage_gb": 20.09
+    },
+    "file_probes": [
+      {
+        "url": "https://huggingface.co/datasets/mercor/apex-agents/resolve/92c86856cf1b11f9833a8a076b3a45a63afa3929/tasks_and_rubrics.json",
+        "method": "HEAD",
+        "http_status": 401,
+        "x_error_code": "GatedRepo"
+      },
+      {
+        "url": "https://huggingface.co/datasets/mercor/apex-agents/resolve/92c86856cf1b11f9833a8a076b3a45a63afa3929/world_descriptions.json",
+        "method": "HEAD",
+        "http_status": 401,
+        "x_error_code": "GatedRepo"
+      },
+      {
+        "url": "https://huggingface.co/datasets/mercor/apex-agents/resolve/92c86856cf1b11f9833a8a076b3a45a63afa3929/eval.yaml",
+        "method": "HEAD",
+        "http_status": 401,
+        "x_error_code": "GatedRepo"
+      },
+      {
+        "url": "https://huggingface.co/api/datasets/mercor/apex-agents/auth-check",
+        "method": "GET",
+        "http_status": 401,
+        "x_error_code": "GatedRepo",
+        "x_error_message": "Access to dataset mercor/apex-agents is restricted. You must have access to it and be authenticated to access it. Please log in."
+      }
+    ],
+    "gating_mode_semantics": {
+      "value": "auto",
+      "meaning": "automatic approval - access is granted to any logged-in user the moment they accept the terms; there is no owner review queue",
+      "source": "https://huggingface.co/docs/hub/datasets-gated",
+      "human_approval_required": false
+    },
+    "bypass_attempted": false,
+    "evidence_path": "outputs/e5_apex_agents/evidence/hf_dataset_meta.json"
+  },
+  "harness_validation": {
+    "kind": "harness_validation",
+    "is_model_score": false,
+    "suite_score": null,
+    "status": "PASS",
+    "claim": "The pinned Archipelago native grading verifier installs and runs end to end on this host against a synthetic fixture.",
+    "not_claimed": [
+      "any APEX-Agents suite score",
+      "any model capability measurement",
+      "that mercor/apex-agents data was obtained (it was not)"
+    ],
+    "fixture_kind": "SYNTHETIC - derived from archipelago/examples/simple_task/original_snapshot.zip plus one generated file; contains no mercor/apex-agents content",
+    "python": "3.13.14",
+    "install_command": "UV_PROJECT_ENVIRONMENT=outputs/e5_apex_agents/venv-grading uv sync --locked --python 3.13",
+    "run_command": "python3 outputs/e5_apex_agents/harness_validation/run_harness_validation.py",
+    "registry_loaded": {
+      "evals": 69,
+      "programmatic_only_evals": 42,
+      "scoring_methods": 9
+    },
+    "evals_exercised": [
+      {
+        "eval_defn_id": "content_length_check",
+        "eval_types": ["PROGRAMMATIC"],
+        "llm_judge_used": false
+      }
+    ],
+    "helpers_exercised": ["snapshot_diff", "final_answer"],
+    "scoring_method": "task_score_unweighted_and_universal_penalty",
+    "observed": {
+      "grading_run_status": "completed",
+      "verifier_scores": {
+        "ver_pass_at_least": 1.0,
+        "ver_fail_at_least": 0.0,
+        "ver_pass_exact": 1.0
+      },
+      "final_score": 0.6666666666666666
+    },
+    "discriminates": true,
+    "discrimination_note": "ver_fail_at_least is constructed to fail, so the run proves the harness distinguishes pass from fail rather than returning 1.0 unconditionally",
+    "paid_api_calls": 0,
+    "evidence": {
+      "receipt": "outputs/e5_apex_agents/harness_validation/out/harness_validation_receipt.json",
+      "receipt_sha256": "80d4fca6d12b9a8e7ac73f80d952f09696abba8607c759d4820ed1aecab25ed5",
+      "grades_json": "outputs/e5_apex_agents/harness_validation/out/grades.json",
+      "grades_json_sha256": "ac226b3ce0ec41468297d25c64a1826e0e756adb6076badfe281df3e5f448947",
+      "log": "outputs/e5_apex_agents/harness_validation/out/grading_run.log"
+    }
+  },
+  "ingestion_path": {
+    "built": true,
+    "contract_source": "archipelago/examples/hugging_face_task/main.py @ 1c3dcd4694b313020cd626699c9c7cc1c0a2fc58",
+    "required_task_fields": ["task_id", "world_id", "task_name", "domain", "prompt"],
+    "required_rubric_fields": ["verifier_id", "criteria"],
+    "required_world_fields": ["world_id", "world_name"],
+    "task_id_pattern": "^task_[0-9a-f]{32}$",
+    "capabilities": [
+      "schema validation of tasks_and_rubrics.json",
+      "schema validation of world_descriptions.json",
+      "referential integrity: task.world_id resolves in world_descriptions.json",
+      "duplicate task_id / verifier_id detection",
+      "order-independent task_id_sha256 and world_id_sha256",
+      "split manifest with training/eval disjointness check (pre-existing)",
+      "per-task asset path resolution to scope the download",
+      "receipt emission with a new dataset_schema gate"
+    ],
+    "new_gate": "dataset_schema",
+    "tests": {
+      "command": "PYTHONPATH=zvf-program python3 -m unittest flagship.test_eval_apex_agents_ingestion flagship.test_pavlov_apex_agents_eval_adapter",
+      "result": "OK",
+      "total": 39,
+      "new": 29,
+      "pre_existing": 10,
+      "fixtures": "synthetic, labelled 'SYNTHETIC FIXTURE - NOT mercor/apex-agents CONTENT'"
+    }
+  },
+  "preflight": {
+    "receipt": "outputs/e5_apex_agents/preflight_receipt_2026-08-09.json",
+    "receipt_sha256": "1bd911327496bafa172b7c1ab0ec7b1f1be9296e973e5890443a90e99be3740e",
+    "status": "BLOCKED",
+    "gates": {
+      "benchmark_metadata": "PASS",
+      "benchmark_access": "BLOCKED",
+      "dataset_schema": "BLOCKED",
+      "task_split": "BLOCKED",
+      "native_verifier": "PASS",
+      "isolated_runtime": "PASS",
+      "model_identity": "PASS",
+      "budget": "PASS",
+      "wandb_online_before_tinker": "BLOCKED",
+      "tinker_access": "BLOCKED",
+      "native_grader_credentials": "BLOCKED"
+    },
+    "gates_newly_passing_this_session": ["native_verifier", "isolated_runtime"]
+  },
+  "blockers": [
+    {
+      "id": "hf_dataset_access",
+      "severity": "terminal_for_score",
+      "description": "mercor/apex-agents is gated:auto; the exact files return 401 GatedRepo without an authenticated, terms-accepted account",
+      "credential": "HF_TOKEN (or ~/.cache/huggingface/token via hf auth login)",
+      "human_approval_required": false,
+      "unblock_commands": [
+        "hf auth login",
+        "open https://huggingface.co/datasets/mercor/apex-agents and click 'Agree and access repository'",
+        "hf download mercor/apex-agents --repo-type dataset --revision 92c86856cf1b11f9833a8a076b3a45a63afa3929 tasks_and_rubrics.json world_descriptions.json eval.yaml"
+      ],
+      "required_external_receipt": {
+        "kind": "huggingface_dataset_access",
+        "required": [
+          "HTTP 200 for tasks_and_rubrics.json, world_descriptions.json, eval.yaml",
+          "resolved commit 92c86856cf1b11f9833a8a076b3a45a63afa3929",
+          "SHA-256 for each downloaded file"
+        ]
+      }
+    },
+    {
+      "id": "wandb_package_missing",
+      "severity": "blocks_tracked_run",
+      "description": "the wandb package is not installed; the credential itself IS present in ~/.netrc for api.wandb.ai",
+      "credential_present": true,
+      "credential_source": "netrc:api.wandb.ai",
+      "unblock_commands": ["uv pip install wandb  # inside the E5 isolated runtime"],
+      "note": "a leftover wandb/ directory at the repo root resolves 'import wandb' to an empty namespace package for any process with cwd on sys.path; flagged as a separate cross-lane cleanup",
+      "required_external_receipt": {
+        "kind": "wandb_online_run",
+        "required": ["mode=online", "run_id", "run_url", "config acknowledged", "initialized before any Tinker call"]
+      }
+    },
+    {
+      "id": "tinker_client_missing",
+      "severity": "blocks_model_rollout",
+      "description": "the tinker package is not importable in the isolated runtime; TINKER_API_KEY exists in .env and was deliberately not used",
+      "credential_present": true,
+      "credential_source": ".env:TINKER_API_KEY",
+      "required_external_receipt": {
+        "kind": "tinker_access",
+        "required": ["Tinker client import", "authenticated ServiceClient", "estimated cost <= $0.50"]
+      }
+    },
+    {
+      "id": "agent_and_judge_model_keys_missing",
+      "severity": "blocks_model_rollout_and_grading",
+      "description": "Archipelago's agent runner needs one of ANTHROPIC_API_KEY / OPENAI_API_KEY / GOOGLE_API_KEY, and the official APEX grading path maps every rubric criterion to eval_config_id 'ec_output_llm', i.e. one LLM judge call per criterion per task",
+      "credential_present": false,
+      "cost_note": "judge spend scales with rubric criteria, not task count; it is a separate cost centre from the agent rollout",
+      "required_external_receipt": {
+        "kind": "archipelago_grading_credentials",
+        "required": ["OPENAI_API_KEY", "GOOGLE_API_KEY", "ANTHROPIC_API_KEY"]
+      }
+    },
+    {
+      "id": "environment_container_not_built",
+      "severity": "blocks_model_rollout",
+      "description": "archipelago/environment docker image is not built; a run needs docker compose up --build plus all 9 MCP servers",
+      "docker_available": true,
+      "docker_runtime": "Colima 28.4.0, 8 CPU / 16.54 GiB",
+      "note": "build is >2 GB and must take the shared outputs/_setup/docker.lock mutex"
+    }
+  ],
+  "download_budget": {
+    "full_dataset_gb": 20.09,
+    "single_task_needs": [
+      "tasks_and_rubrics.json",
+      "world_descriptions.json",
+      "world_files_zipped/<world_id>.zip  (33 worlds total)",
+      "task_files/<task_id>/**  (present for 142 of 480 tasks)"
+    ],
+    "guidance": "use hf_hub_download / allow_patterns; do not snapshot_download the whole repo",
+    "gold_files_task_dirs": 58,
+    "host_disk_free_gib_at_write": 37
+  },
+  "upstream_findings": [
+    {
+      "kind": "reproducibility_gap",
+      "where": "archipelago/examples/hugging_face_task/main.py",
+      "detail": "hf_hub_download is called without a revision, so the upstream example silently tracks main; our runner pins 92c86856cf1b11f9833a8a076b3a45a63afa3929"
+    },
+    {
+      "kind": "broken_build_task",
+      "where": "archipelago/grading/mise.toml",
+      "detail": "the 'start' task runs validate_config.py and test_local.py, neither of which exists at the pinned revision; [tool.pytest.ini_options] testpaths=['tests'] points at a directory the grading package does not ship. The documented 'python -m runner.main' CLI path works."
+    }
+  ],
+  "integrity": {
+    "score_fabricated": false,
+    "benchmark_substituted": false,
+    "harness_validation_promoted_to_score": false,
+    "gating_bypass_attempted": false,
+    "pinned_checkout_modified": false,
+    "files_written_outside_lane": [
+      "zvf-program/flagship/eval_apex_agents.py",
+      "zvf-program/flagship/test_eval_apex_agents_ingestion.py"
+    ],
+    "files_written_outside_lane_authorized_by": "lane prompt: 'Runner + adapter ... + tests (yours to edit)'"
+  },
+  "next_action": "Run 'hf auth login', then accept the terms at https://huggingface.co/datasets/mercor/apex-agents. Access is auto-granted with no human review; re-running preflight then flips benchmark_access, dataset_schema and task_split to PASS."
+}

@@ -1,0 +1,10 @@
+{
+  "companies": 53,
+  "domains": 16,
+  "errors": [],
+  "gsm8k_role": "calibration_only",
+  "paid_jobs_may_launch": true,
+  "primary_eval_suites": 14,
+  "status": "PASS",
+  "training_suites": 12
+}

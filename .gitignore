@@ -113,3 +113,28 @@ graphify-out/
 
 # Stale regenerated blind bundle (removed from tracking 2026-07-10; regenerate via blind_review/anonymize_*.py)
 blind_review/tinker-rl-lab-anon.tar.gz
+
+# --- E1-E14 lane artifacts: acquired assets, not source (2026-08-09) ---
+# Cloned benchmark repos (nested git), downloaded datasets, built toolchains,
+# per-lane venvs and container/job scratch. All are re-derivable and their
+# immutable revisions/digests are recorded in the lane receipts.
+outputs/*/hf_dataset/
+outputs/*/hf-cache/
+outputs/*/data/
+outputs/*/runtime/
+outputs/*/jobs/
+outputs/*/venv/
+outputs/_setup/venvs/
+outputs/e1_swe_bench_pro/evaluator/
+outputs/e2_frontier_swe/frontier-swe/
+outputs/e4_banker_toolbench/official_repo_*/
+outputs/e5_apex_agents/sprint.*/archipelago/
+outputs/e7_binaryaudit/BinaryAudit/
+outputs/e9_mle_bench/mle-bench-source/
+outputs/e11_verilog_eval/nvlabs_verilog_eval_*/
+outputs/e11_verilog_eval/toolchain/
+outputs/e13_openreward_games/pinned/
+outputs/e14_frontiermath/public_samples/
+outputs/e14_frontiermath/*.zip
+outputs/e6_webbench/lane.*/
+outputs/e3_sdab/local_sprint_*/venv.*/

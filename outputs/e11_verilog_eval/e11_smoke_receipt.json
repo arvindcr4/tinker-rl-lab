@@ -1,0 +1,112 @@
+{
+  "cost": {
+    "actual_usd": 0.0036,
+    "projection": {
+      "gate_usd": 4.0,
+      "max_tokens": 4096,
+      "projected_output_tokens": 16384,
+      "projected_prefill_tokens": 216,
+      "projected_usd": 0.02,
+      "prompts": 4,
+      "within_gate": true
+    },
+    "prompt_tokens": 184,
+    "response_tokens": 2610
+  },
+  "evidence_class": "primary_evaluation/pass@1",
+  "extraction_failures": 0,
+  "is_model_score": true,
+  "limit_applied": 2,
+  "model": {
+    "adapter_revision": null,
+    "model_id": "Qwen/Qwen3.6-35B-A3B",
+    "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "source": "immutable_base_model_revision"
+  },
+  "outstanding_blockers": [
+    "decontamination receipt ID does not exist; the split-manifest validator still fails on it"
+  ],
+  "pass_at_1": {
+    "corrected": {
+      "denominator": 0,
+      "excluded": [],
+      "note": "excludes tasks whose reference fails its own test bench",
+      "pass_at_1": null,
+      "passes": 0
+    },
+    "raw": {
+      "denominator": 0,
+      "note": "all pinned tasks, including the upstream-defective one",
+      "pass_at_1": null,
+      "passes": 0
+    },
+    "reporting_rule": "Both denominators must be reported together. no tasks excluded from the corrected figure because the shipped reference cannot elaborate against its own test bench, so no candidate can pass.",
+    "unscoreable_tasks": []
+  },
+  "per_dataset": {
+    "code-complete-iccad2023": {
+      "build_dir": "/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/e11_paid_code-complete-iccad2023_83exey9q",
+      "harness": {
+        "analyze_exit": 0,
+        "analyze_tail": "ce241_2014_q3 Prob094_gatesv Prob095_review2015_fsmshift Prob096_review2015_fsmseq Prob097_mux9to1v Prob098_circuit7 Prob099_m2014_q6c Prob100_fsm3comb Prob101_circuit4 Prob102_circuit3 Prob103_circuit2 Prob104_mt2015_muxdff Prob105_rotate100 Prob106_always_nolatches Prob107_fsm1s Prob108_rule90 Prob109_fsm1 Prob110_fsm2 Prob111_fsm2s Prob112_always_case2 Prob113_2012_q1g Prob114_bugs_case Prob115_shift18 Prob116_m2014_q3 Prob117_circuit9 Prob118_history_shift Prob119_fsm3 Prob120_fsm3s Prob121_2014_q3bfsm Prob122_kmap4 Prob123_bugs_addsubz Prob124_rule110 Prob125_kmap3 Prob126_circuit6 Prob127_lemmings1 Prob128_fsm_ps2 Prob129_ece241_2013_q8 Prob130_circuit5 Prob131_mt2015_q4 Prob132_always_if2 Prob133_2014_q3fsm Prob134_2014_q3c Prob135_m2014_q6b Prob136_m2014_q6 Prob137_fsm_serial Prob138_2012_q2fsm Prob139_2013_q2bfsm Prob140_fsm_hdlc Prob141_count_clock Prob142_lemmings2 Prob143_fsm_onehot Prob144_conwaylife Prob145_circuit8 Prob146_fsm_serialdata Prob147_circuit10 Prob148_2013_q2afsm Prob149_ece241_2013_q4 Prob150_review2015_fsmonehot Prob151_review2015_fsm Prob152_lemmings3 Prob153_gshare Prob154_fsm_ps2data Prob155_lemmings4 Prob156_review2015_fancytimer  | tee summary.txt\n",
+        "test_exit": 0,
+        "test_tail": ""
+      },
+      "sampled": {
+        "actual_prompt_tokens": 74,
+        "actual_resp_tokens": 1226,
+        "actual_usd": 0.0017,
+        "extraction_failures": 0,
+        "max_tokens": 4096,
+        "model": "Qwen/Qwen3.6-35B-A3B",
+        "problems": 2,
+        "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+        "samples_per_problem": 1
+      },
+      "scored_problems": 0
+    },
+    "spec-to-rtl": {
+      "build_dir": "/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/e11_paid_spec-to-rtl_w3vkp4p8",
+      "harness": {
+        "analyze_exit": 0,
+        "analyze_tail": "ce241_2014_q3 Prob094_gatesv Prob095_review2015_fsmshift Prob096_review2015_fsmseq Prob097_mux9to1v Prob098_circuit7 Prob099_m2014_q6c Prob100_fsm3comb Prob101_circuit4 Prob102_circuit3 Prob103_circuit2 Prob104_mt2015_muxdff Prob105_rotate100 Prob106_always_nolatches Prob107_fsm1s Prob108_rule90 Prob109_fsm1 Prob110_fsm2 Prob111_fsm2s Prob112_always_case2 Prob113_2012_q1g Prob114_bugs_case Prob115_shift18 Prob116_m2014_q3 Prob117_circuit9 Prob118_history_shift Prob119_fsm3 Prob120_fsm3s Prob121_2014_q3bfsm Prob122_kmap4 Prob123_bugs_addsubz Prob124_rule110 Prob125_kmap3 Prob126_circuit6 Prob127_lemmings1 Prob128_fsm_ps2 Prob129_ece241_2013_q8 Prob130_circuit5 Prob131_mt2015_q4 Prob132_always_if2 Prob133_2014_q3fsm Prob134_2014_q3c Prob135_m2014_q6b Prob136_m2014_q6 Prob137_fsm_serial Prob138_2012_q2fsm Prob139_2013_q2bfsm Prob140_fsm_hdlc Prob141_count_clock Prob142_lemmings2 Prob143_fsm_onehot Prob144_conwaylife Prob145_circuit8 Prob146_fsm_serialdata Prob147_circuit10 Prob148_2013_q2afsm Prob149_ece241_2013_q4 Prob150_review2015_fsmonehot Prob151_review2015_fsm Prob152_lemmings3 Prob153_gshare Prob154_fsm_ps2data Prob155_lemmings4 Prob156_review2015_fancytimer  | tee summary.txt\n",
+        "test_exit": 0,
+        "test_tail": ""
+      },
+      "sampled": {
+        "actual_prompt_tokens": 110,
+        "actual_resp_tokens": 1384,
+        "actual_usd": 0.0019,
+        "extraction_failures": 0,
+        "max_tokens": 4096,
+        "model": "Qwen/Qwen3.6-35B-A3B",
+        "problems": 2,
+        "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+        "samples_per_problem": 1
+      },
+      "scored_problems": 0
+    }
+  },
+  "sampling": {
+    "max_tokens": 4096,
+    "retries": 0,
+    "samples_per_problem": 1,
+    "seed": 1337,
+    "temperature": 0.2,
+    "top_p": 0.95
+  },
+  "schema_version": "e11-pass-at-1-receipt-v1",
+  "score": null,
+  "status": "SCORED",
+  "suite_id": "verilog_eval",
+  "verifier": {
+    "iverilog": "12.0",
+    "native_target": "sv-iv-test + sv-iv-analyze (VERBOSE=1)",
+    "verilator": "5.050"
+  },
+  "wandb": {
+    "project": "tinker-rl-lab-pavlov",
+    "run_id": null,
+    "url": null
+  }
+}

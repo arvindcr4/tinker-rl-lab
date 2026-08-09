@@ -491,6 +491,228 @@ def build_split_manifest_record(
         }
 
 
+# ---------------------------------------------------------------------------
+# Manifest construction from the pinned NVlabs checkout
+# ---------------------------------------------------------------------------
+#
+# The prior E11 receipt refused to promote a local directory listing to an
+# authoritative task manifest, and that refusal was correct.  What makes the
+# manifest below authoritative is that the task list is read from
+# ``dataset_<name>/problems.txt``, a file upstream committed at the pinned
+# revision, and every entry is then cross-checked against the artifacts on disk
+# in both directions.  A listing that upstream does not vouch for is rejected,
+# and an artifact upstream does not list is rejected too.
+
+DATASET_NAMES = ("code-complete-iccad2023", "spec-to-rtl")
+PINNED_REVISION = "c498220d0a52248f8e3fdffe279075215bde2da6"
+DATASET_LICENSE = "MIT"
+
+#: Artifacts every problem must ship, per dataset.  ``code-complete-iccad2023``
+#: additionally ships ``_ifc.txt``; ``spec-to-rtl`` ships none, by design.
+_REQUIRED_ARTIFACTS = {
+    "code-complete-iccad2023": ("_prompt.txt", "_ifc.txt", "_ref.sv", "_test.sv"),
+    "spec-to-rtl": ("_prompt.txt", "_ref.sv", "_test.sv"),
+}
+
+
+def canonical_task_id(dataset_name: str, problem_id: str) -> str:
+    """Return the stable cross-dataset task identity string.
+
+    A bare ``Prob001_zero`` is ambiguous because it names one problem in each of
+    the two task framings, and the two framings ship different prompts (and, for
+    9 problems, different references and 7 different test benches).  Qualifying
+    the ID with the dataset is what makes the 312 prompts individually
+    addressable.
+    """
+
+    return f"{SUITE_ID}/{dataset_name}/{problem_id}"
+
+
+def task_id_hash(dataset_name: str, problem_id: str) -> str:
+    return _sha256(canonical_task_id(dataset_name, problem_id))
+
+
+def read_authoritative_problem_ids(checkout: Path, dataset_name: str) -> list[str]:
+    """Read upstream's own committed problem list for one dataset."""
+
+    listing = Path(checkout) / f"dataset_{dataset_name}" / "problems.txt"
+    try:
+        text = listing.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise VerilogEvalSplitManifestError(
+            f"cannot read upstream problem list {listing}: {exc}"
+        ) from exc
+
+    problems = [line.strip() for line in text.splitlines() if line.strip()]
+    if not problems:
+        raise VerilogEvalSplitManifestError(f"upstream problem list is empty: {listing}")
+    if len(set(problems)) != len(problems):
+        raise VerilogEvalSplitManifestError(f"upstream problem list has duplicates: {listing}")
+    return problems
+
+
+def build_task_table(checkout: Path, dataset_name: str) -> list[dict[str, Any]]:
+    """Return per-task identity and content hashes, cross-checked both ways."""
+
+    checkout = Path(checkout)
+    dataset_dir = checkout / f"dataset_{dataset_name}"
+    if not dataset_dir.is_dir():
+        raise VerilogEvalSplitManifestError(f"missing dataset directory: {dataset_dir}")
+
+    required = _REQUIRED_ARTIFACTS.get(dataset_name)
+    if required is None:
+        raise VerilogEvalSplitManifestError(f"unknown dataset: {dataset_name}")
+
+    problems = read_authoritative_problem_ids(checkout, dataset_name)
+    listed = set(problems)
+
+    # Reverse check: every problem that has artifacts on disk must be listed.
+    on_disk = {
+        path.name[: -len("_ref.sv")]
+        for path in dataset_dir.iterdir()
+        if path.name.endswith("_ref.sv")
+    }
+    unlisted = sorted(on_disk - listed)
+    if unlisted:
+        raise VerilogEvalSplitManifestError(
+            f"{dataset_name}: artifacts present but absent from problems.txt: {unlisted}"
+        )
+    missing_artifacts = sorted(listed - on_disk)
+    if missing_artifacts:
+        raise VerilogEvalSplitManifestError(
+            f"{dataset_name}: problems.txt lists problems with no reference: {missing_artifacts}"
+        )
+
+    table: list[dict[str, Any]] = []
+    for problem_id in problems:
+        artifacts: dict[str, str] = {}
+        for suffix in required:
+            path = dataset_dir / f"{problem_id}{suffix}"
+            try:
+                artifacts[suffix.lstrip("_")] = hashlib.sha256(path.read_bytes()).hexdigest()
+            except OSError as exc:
+                raise VerilogEvalSplitManifestError(
+                    f"{dataset_name}/{problem_id}: missing required artifact {path.name}: {exc}"
+                ) from exc
+
+        table.append(
+            {
+                "canonical_task_id": canonical_task_id(dataset_name, problem_id),
+                "task_id_hash": task_id_hash(dataset_name, problem_id),
+                "dataset": dataset_name,
+                "problem_id": problem_id,
+                "artifact_sha256": artifacts,
+                "content_digest": _sha256(canonical_json(artifacts)),
+            }
+        )
+    return table
+
+
+def build_manifest_from_checkout(
+    checkout: str | Path,
+    *,
+    revision: str = PINNED_REVISION,
+    dataset_license: str = DATASET_LICENSE,
+    datasets: Sequence[str] = DATASET_NAMES,
+    decontamination: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build the exact verilog_eval split manifest from the pinned checkout.
+
+    ``decontamination`` is deliberately not synthesised.  Decontamination needs
+    an external receipt that does not exist locally, so omitting it makes
+    :func:`build_split_manifest_record` return ``BLOCKED`` with that single
+    reason, which is the honest outcome.
+    """
+
+    checkout = Path(checkout)
+    tasks: list[dict[str, Any]] = []
+    per_dataset: dict[str, Any] = {}
+    for dataset_name in datasets:
+        table = build_task_table(checkout, dataset_name)
+        tasks.extend(table)
+        per_dataset[dataset_name] = {
+            "problem_count": len(table),
+            "problems_source": f"dataset_{dataset_name}/problems.txt",
+            "task_id_hashes": sorted(item["task_id_hash"] for item in table),
+        }
+
+    task_hashes = sorted(item["task_id_hash"] for item in tasks)
+    if len(set(task_hashes)) != len(task_hashes):
+        raise VerilogEvalSplitManifestError("canonical task IDs collided across datasets")
+
+    aggregate = _sha256("\n".join(task_hashes))
+    tasks_by_id = sorted(tasks, key=lambda item: item["canonical_task_id"])
+    receipt_ref = f"sha256:{_sha256(canonical_json(tasks_by_id))}"
+
+    manifest: dict[str, Any] = {
+        "suite_id": SUITE_ID,
+        "source": EXPECTED_DATASET_SOURCE,
+        "category": _EXPECTED_CATEGORY,
+        "role": SUITE_ROLE,
+        "dataset": {
+            "name": "NVlabs/verilog-eval",
+            "revision": revision,
+            "license": dataset_license,
+            "source": EXPECTED_DATASET_SOURCE,
+        },
+        "task_id_hashes": task_hashes,
+        "split": {"primary_eval": list(task_hashes), "hash": f"sha256:{aggregate}"},
+        "split_hashes": {"primary_eval": f"sha256:{aggregate}"},
+        "split_manifest_hash": f"sha256:{_sha256(canonical_json({'primary_eval': aggregate}))}",
+        "split_manifest_receipt_ref": receipt_ref,
+        "requires_network": False,
+        "task_id_scheme": {
+            "template": f"{SUITE_ID}/<dataset>/<problem_id>",
+            "hash": "sha256 of the canonical task id, lowercase hex",
+            "aggregate": "sha256 of the newline-joined sorted task id hashes",
+            "authority": (
+                "dataset_<name>/problems.txt as committed at the pinned revision, cross-checked "
+                "against on-disk artifacts in both directions"
+            ),
+        },
+        "tasks": tasks_by_id,
+        "datasets": per_dataset,
+    }
+    if decontamination is not None:
+        manifest["decontamination"] = dict(decontamination)
+    return manifest
+
+
+def build_split_manifest_receipt(
+    checkout: str | Path,
+    *,
+    revision: str = PINNED_REVISION,
+    dataset_license: str = DATASET_LICENSE,
+    datasets: Sequence[str] = DATASET_NAMES,
+    decontamination: Mapping[str, Any] | None = None,
+    contract_path: str | Path | None = None,
+) -> dict[str, Any]:
+    """Return the split manifest plus its validation record, as one receipt."""
+
+    manifest = build_manifest_from_checkout(
+        checkout,
+        revision=revision,
+        dataset_license=dataset_license,
+        datasets=datasets,
+        decontamination=decontamination,
+    )
+    record = build_split_manifest_record(manifest, contract_path=contract_path)
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "manifest_type": "verilog_eval_split_manifest_receipt",
+        "suite_id": SUITE_ID,
+        "checkout": str(Path(checkout)),
+        "dataset_revision": revision,
+        "task_count": len(manifest["task_id_hashes"]),
+        "manifest": manifest,
+        "validation": record,
+        "status": record["status"],
+        "is_model_score": False,
+        "score": None,
+        "launch": {"paid_work_launched": False, "weight_changing_run_launched": False},
+    }
+
+
 def validate_split_manifest_record(record: Mapping[str, Any]) -> list[str]:
     if not isinstance(record, Mapping):
         return ["record root must be a JSON object"]
@@ -502,13 +724,44 @@ def validate_split_manifest_record(record: Mapping[str, Any]) -> list[str]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--manifest", type=Path, required=True)
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--manifest", type=Path, help="Validate an existing manifest JSON file.")
+    group.add_argument(
+        "--checkout",
+        type=Path,
+        help="Build the manifest from a pinned NVlabs/verilog-eval checkout, then validate it.",
+    )
+    parser.add_argument("--revision", default=PINNED_REVISION)
+    parser.add_argument("--output", type=Path, help="Write the receipt JSON here.")
     args = parser.parse_args(argv)
 
-    payload = json.loads(args.manifest.read_text(encoding="utf-8"))
-    if not isinstance(payload, Mapping):
+    if args.checkout is not None:
+        receipt = build_split_manifest_receipt(args.checkout, revision=args.revision)
+        payload = json.dumps(receipt, indent=2, sort_keys=True) + "\n"
+        if args.output is not None:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(payload, encoding="utf-8")
+            print(
+                json.dumps(
+                    {
+                        "status": receipt["status"],
+                        "task_count": receipt["task_count"],
+                        "split_manifest_hash": receipt["manifest"]["split_manifest_hash"],
+                        "aggregate": receipt["manifest"]["split_hashes"]["primary_eval"],
+                        "blockers": receipt["validation"]["blockers"],
+                        "output": str(args.output),
+                    },
+                    indent=2,
+                )
+            )
+        else:
+            print(payload)
+        return 0 if receipt["status"] == "READY" else 1
+
+    payload_obj = json.loads(args.manifest.read_text(encoding="utf-8"))
+    if not isinstance(payload_obj, Mapping):
         raise SystemExit("manifest must be a JSON object")
-    report = build_split_manifest_record(payload)
+    report = build_split_manifest_record(payload_obj)
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0 if report["status"] == "READY" else 1
 

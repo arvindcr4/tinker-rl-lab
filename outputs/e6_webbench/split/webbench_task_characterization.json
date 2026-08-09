@@ -1,0 +1,271 @@
+{
+  "categories": {
+    "CREATE": 594,
+    "DELETE": 166,
+    "FILE_MANIPULATION": 44,
+    "READ": 1637,
+    "UPDATE": 206
+  },
+  "category_share": {
+    "CREATE": 0.2244,
+    "DELETE": 0.0627,
+    "FILE_MANIPULATION": 0.0166,
+    "READ": 0.6184,
+    "UPDATE": 0.0778
+  },
+  "csv_id_gap_count": 78,
+  "csv_id_gaps": [
+    14,
+    18,
+    278,
+    280,
+    282,
+    283,
+    284,
+    285,
+    286,
+    289,
+    301,
+    342,
+    467,
+    469,
+    470,
+    473,
+    475,
+    476,
+    477,
+    511,
+    512,
+    513,
+    514,
+    515,
+    516,
+    522,
+    523,
+    596,
+    611,
+    903,
+    972,
+    1066,
+    1067,
+    1068,
+    1069,
+    1070,
+    1071,
+    1072,
+    1073,
+    1079,
+    1127,
+    1128,
+    1129,
+    1453,
+    1454,
+    1457,
+    1459,
+    1460,
+    1461,
+    1471,
+    1473,
+    1474,
+    1475,
+    2111,
+    2112,
+    2118,
+    2119,
+    2120,
+    2121,
+    2152,
+    2153,
+    2154,
+    2155,
+    2156,
+    2157,
+    2236,
+    2237,
+    2238,
+    2239,
+    2240,
+    2241,
+    2242,
+    2243,
+    2244,
+    2245,
+    2246,
+    2247,
+    2265
+  ],
+  "csv_id_max": 2724,
+  "csv_id_min": 0,
+  "csv_id_span": 2725,
+  "csv_ids_contiguous": false,
+  "distinct_domains_per_category": {
+    "CREATE": 110,
+    "DELETE": 93,
+    "FILE_MANIPULATION": 23,
+    "READ": 448,
+    "UPDATE": 91
+  },
+  "distinct_hosts": 449,
+  "distinct_registrable_domains": 448,
+  "distinct_task_texts": 2647,
+  "http_only_urls": [
+    "http://indeed.com",
+    "http://www.barnesandnoble.com"
+  ],
+  "keyword_probe_counts": {
+    "captcha": 0,
+    "credential_or_account": 536,
+    "payment_or_checkout": 20
+  },
+  "keyword_probe_note": "regex probes over task prose; heuristic, not a classification",
+  "public_task_fields": [
+    "csv_id",
+    "starting_url",
+    "category",
+    "task"
+  ],
+  "schema_version": "pavlov-webbench-split-derivation-v1",
+  "source": {
+    "dataset_file": "webbenchfinal.csv",
+    "dataset_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/webbenchfinal.csv",
+    "dataset_sha256": "fd5311a38bdb6f941e8f544150735656c114d76fbfb17193da973d5de0165217",
+    "license": "MIT",
+    "license_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/WEBBENCH_LICENSE",
+    "license_sha256": "96804aa272fe40cdfb8b5c8f4d1d94757bcfaf1bf5596fb829214843d2371e58",
+    "license_sha256_matches_pin": true,
+    "name": "Halluminate/WebBench",
+    "revision": "ea7a1628443321363989f354401f0653e0cba6f4",
+    "suite_id": "webbench_eval",
+    "url": "https://github.com/Halluminate/WebBench"
+  },
+  "suite_id": "webbench_eval",
+  "task_char_len_max": 453,
+  "task_char_len_median": 265,
+  "task_char_len_min": 160,
+  "task_count": 2647,
+  "tasks_per_domain_max": 40,
+  "tasks_per_domain_median": 3.0,
+  "tasks_per_domain_min": 2,
+  "top_domains": [
+    {
+      "domain": "stackexchange.com",
+      "task_count": 40
+    },
+    {
+      "domain": "grubhub.com",
+      "task_count": 28
+    },
+    {
+      "domain": "linkedin.com",
+      "task_count": 28
+    },
+    {
+      "domain": "stackoverflow.com",
+      "task_count": 28
+    },
+    {
+      "domain": "streeteasy.com",
+      "task_count": 28
+    },
+    {
+      "domain": "open.spotify.com",
+      "task_count": 27
+    },
+    {
+      "domain": "github.com",
+      "task_count": 24
+    },
+    {
+      "domain": "crunchbase.com",
+      "task_count": 21
+    },
+    {
+      "domain": "facebook.com",
+      "task_count": 21
+    },
+    {
+      "domain": "instacart.com",
+      "task_count": 21
+    },
+    {
+      "domain": "allrecipes.com",
+      "task_count": 20
+    },
+    {
+      "domain": "flickr.com",
+      "task_count": 19
+    },
+    {
+      "domain": "bing.com",
+      "task_count": 19
+    },
+    {
+      "domain": "glassdoor.com",
+      "task_count": 18
+    },
+    {
+      "domain": "x.com",
+      "task_count": 18
+    },
+    {
+      "domain": "deezer.com",
+      "task_count": 17
+    },
+    {
+      "domain": "homedepot.com",
+      "task_count": 16
+    },
+    {
+      "domain": "ikea.com",
+      "task_count": 16
+    },
+    {
+      "domain": "khanacademy.org",
+      "task_count": 16
+    },
+    {
+      "domain": "olympics.com",
+      "task_count": 16
+    },
+    {
+      "domain": "sportskeeda.com",
+      "task_count": 16
+    },
+    {
+      "domain": "telegraph.co.uk",
+      "task_count": 16
+    },
+    {
+      "domain": "answers.com",
+      "task_count": 16
+    },
+    {
+      "domain": "crunchyroll.com",
+      "task_count": 15
+    },
+    {
+      "domain": "expedia.com",
+      "task_count": 15
+    }
+  ],
+  "url_schemes": {
+    "http": 14,
+    "https": 2633
+  },
+  "verifier_fields_absent_from_public_csv": [
+    "success_criteria",
+    "expected_final_state",
+    "answer_key_or_rubric",
+    "allowed_side_effects",
+    "credential_scope",
+    "reset_procedure"
+  ],
+  "write_class_categories": [
+    "CREATE",
+    "DELETE",
+    "FILE_MANIPULATION",
+    "UPDATE"
+  ],
+  "write_class_share": 0.3816,
+  "write_class_task_count": 1010
+}

@@ -1,0 +1,176 @@
+{
+ "Wordle-v0": {
+  "turns": [
+   {
+    "turn": 0,
+    "kind": "prompt",
+    "chars": 748
+   },
+   {
+    "turn": 1,
+    "kind": "obs",
+    "chars": 515,
+    "reward": 0.0,
+    "finished": false
+   },
+   {
+    "turn": 2,
+    "kind": "obs",
+    "chars": 615,
+    "reward": 0.0,
+    "finished": false
+   },
+   {
+    "turn": 3,
+    "kind": "obs",
+    "chars": 795,
+    "reward": 0.0,
+    "finished": false
+   },
+   {
+    "turn": 4,
+    "kind": "obs",
+    "chars": 895,
+    "reward": 0.0,
+    "finished": false
+   },
+   {
+    "turn": 5,
+    "kind": "obs",
+    "chars": 995,
+    "reward": 0.0,
+    "finished": false
+   },
+   {
+    "turn": 6,
+    "kind": "obs",
+    "chars": 1095,
+    "reward": 0.0,
+    "finished": false
+   },
+   {
+    "turn": 7,
+    "kind": "obs",
+    "chars": 187,
+    "reward": 0.0,
+    "finished": true
+   }
+  ],
+  "n_turns": 7,
+  "prompt_chars": 748,
+  "total_obs_chars": 5097
+ },
+ "Wordle-v0-hardcore": {
+  "turns": [
+   {
+    "turn": 0,
+    "kind": "prompt",
+    "chars": 748
+   },
+   {
+    "turn": 1,
+    "kind": "obs",
+    "chars": 515,
+    "reward": 0.0,
+    "finished": false
+   },
+   {
+    "turn": 2,
+    "kind": "obs",
+    "chars": 615,
+    "reward": 0.0,
+    "finished": false
+   },
+   {
+    "turn": 3,
+    "kind": "obs",
+    "chars": 795,
+    "reward": 0.0,
+    "finished": false
+   },
+   {
+    "turn": 4,
+    "kind": "obs",
+    "chars": 895,
+    "reward": 0.0,
+    "finished": false
+   },
+   {
+    "turn": 5,
+    "kind": "obs",
+    "chars": 995,
+    "reward": 0.0,
+    "finished": false
+   },
+   {
+    "turn": 6,
+    "kind": "obs",
+    "chars": 1095,
+    "reward": 0.0,
+    "finished": false
+   },
+   {
+    "turn": 7,
+    "kind": "obs",
+    "chars": 188,
+    "reward": 0.1,
+    "finished": true
+   }
+  ],
+  "n_turns": 7,
+  "prompt_chars": 748,
+  "total_obs_chars": 5098
+ },
+ "Wordle-v0-long": {
+  "turns": [
+   {
+    "turn": 0,
+    "kind": "prompt",
+    "chars": 748
+   },
+   {
+    "turn": 1,
+    "kind": "obs",
+    "chars": 600,
+    "reward": 0.0,
+    "finished": false
+   },
+   {
+    "turn": 2,
+    "kind": "obs",
+    "chars": 74,
+    "reward": 0.0,
+    "finished": true
+   }
+  ],
+  "n_turns": 2,
+  "prompt_chars": 748,
+  "total_obs_chars": 674
+ },
+ "Wordle-v0-long-hardcore": {
+  "turns": [
+   {
+    "turn": 0,
+    "kind": "prompt",
+    "chars": 748
+   },
+   {
+    "turn": 1,
+    "kind": "obs",
+    "chars": 600,
+    "reward": 0.0,
+    "finished": false
+   },
+   {
+    "turn": 2,
+    "kind": "obs",
+    "chars": 74,
+    "reward": 0.0,
+    "finished": true
+   }
+  ],
+  "n_turns": 2,
+  "prompt_chars": 748,
+  "total_obs_chars": 674
+ }
+}

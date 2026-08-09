@@ -1,0 +1,211 @@
+{
+  "schema_version": "e9-mle-bench-preflight-receipt-v1",
+  "observed_at": "2026-08-09",
+  "status": "BLOCKED",
+  "runnable_now": false,
+  "claim_status": "preflight_only_not_scientific_evidence",
+  "execution_source": {
+    "repo": "/Users/arvind/Developer/tinker-rl-lab",
+    "branch": "main",
+    "commit": "8fdade2f1425908f8d961bced6dc89f45bcc47f4"
+  },
+  "suite": {
+    "id": "mle_bench_eval",
+    "role": "primary_eval",
+    "domains": ["ml", "code", "long_horizon"],
+    "registry_entry": {
+      "role": "primary_eval",
+      "url": "https://github.com/openai/mle-bench",
+      "split": "evaluation competitions",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "roadmap_status": "metadata-only",
+    "roadmap_path": "zvf-program/flagship/PAVLOV_SUITE_EXECUTION_ROADMAP_2026-08-09.md",
+    "runner_path": "zvf-program/flagship/mle_bench_eval.py",
+    "runner_present": false
+  },
+  "authoritative_public_source": {
+    "repository_url": "https://github.com/openai/mle-bench",
+    "revision": "507f92e1138bb6e40dac5c6ee7a6758e6424bf97",
+    "revision_url": "https://github.com/openai/mle-bench/commit/507f92e1138bb6e40dac5c6ee7a6758e6424bf97",
+    "checkout_path": "/Users/arvind/Developer/tinker-rl-lab/outputs/e9_mle_bench/mle-bench-source",
+    "license": "MIT (repository code only)",
+    "license_sha256": "8a44e3d54b33babc0c79b9c86cf9069e4c132fcd9ddf6f7e3b0f552ccc52c198",
+    "license_scope": "The pinned LICENSE states that external datasets and files downloaded while using the package are not covered by the repository license.",
+    "acquired": true
+  },
+  "source_split_inventory": {
+    "competition_count": 75,
+    "split_files": {
+      "low": {
+        "count": 22,
+        "sha256": "590270f007fa96b4060f59f3861500159c73ca50f7f30ff6bd38303c236c799b"
+      },
+      "medium": {
+        "count": 38,
+        "sha256": "de4f94b6daeb10ed5fb543305f0ef4342ee070759b73fd78eddd7072a30a2d9c"
+      },
+      "high": {
+        "count": 15,
+        "sha256": "3100d7a779b15d0d5ad2465c9d19f5923a56c588b38537a11aaa7c109b2e2470"
+      },
+      "split75": {
+        "count": 75,
+        "path": "experiments/splits/split75.txt",
+        "sha256": "aa6a4dbfd19fee0536235be78361968603c84f0d4e06d4ed0ddc9bb212023057"
+      }
+    },
+    "task_id_kind": "competition_id",
+    "task_ids_sha256": "440ecb5c6a13bc54e0d671e19eb532ee33c8305cca862e4d5b2af49f3d44f85b",
+    "task_ids_sha256_algorithm": "sha256(UTF-8 of sorted split75 competition IDs joined by newline with a terminal newline)",
+    "task_hash_scope": "source competition IDs only; per-sample prepared task IDs are unavailable",
+    "prepared_task_sample_count": 0,
+    "prepared_competition_count": 0
+  },
+  "split_semantics": {
+    "role": "primary_eval",
+    "heldout_claim": false,
+    "heldout_status": "not_proven",
+    "selection_split_and_final_eval_split_disjoint": null,
+    "train_eval_task_ids_disjoint": null,
+    "disjoint_receipt": null,
+    "note": "The local contract permits primary_eval only after an immutable split/task receipt; no heldout/private proof is asserted here."
+  },
+  "contamination_policy": {
+    "status": "BLOCKED",
+    "rule": "primary evaluation tasks, repositories, environment seeds, and hidden tests must be disjoint from training",
+    "same_family_exception": "allowed only when the provider publishes immutable disjoint splits and held-out task identifiers are unavailable to the training job",
+    "training_task_ids_sha256": null,
+    "evaluation_task_ids_sha256": null,
+    "decontamination_receipt": null,
+    "reason": "No prepared competition task bundle or training provenance is available to prove disjointness."
+  },
+  "native_environment_artifact_verifier_contract": {
+    "environment": {
+      "required_runtime": "Docker",
+      "required_image": "mlebench-env",
+      "docker_available": true,
+      "image_present": false,
+      "image_digest": null,
+      "dockerfile_sha256": "4f85dbaa65cca098565c15d4ca1dc3804cce6a3cce48d273ac117850ddf4910e"
+    },
+    "artifact": {
+      "required_format": "CSV submission per competition",
+      "aggregate_format": "JSONL with competition_id and submission_path",
+      "native_artifact_required": true,
+      "artifact_verifier_source": "mlebench.grade.grade_csv / mlebench.grade.grade_jsonl",
+      "artifact_verifier_sha256": "cd4634bb08c78f13582405c30456cc69b9ac1a95c301e893ca37bc5c1fae988d"
+    },
+    "verifier": {
+      "required_kind": "per-competition native grade.py plus hidden test data",
+      "grading_server_source": "environment/grading_server.py",
+      "grading_server_sha256": "fd623a48e1b4e529748bd1a99768bf8934bc7f26f24949b37dd929488b2ae6cc",
+      "runtime_verifier_digest": null,
+      "private_test_data_mount": "/private/data",
+      "status": "BLOCKED"
+    }
+  },
+  "preflight": {
+    "focused_tests": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=zvf-program /tmp/e9-mle-bench-env.iPapZw/bin/python -m unittest -q flagship.test_pavlovs_domain_contract flagship.test_build_pavlovs_campaign_manifest flagship.test_eval_pavlov_xlam flagship.test_pavlov_protocol_validator flagship.test_pavlov_portfolio_split_registry flagship.test_pavlov_claim_boundary",
+      "status": "PASS",
+      "tests_run": 89
+    },
+    "local_cli_help": [
+      {
+        "command": "PYTHONDONTWRITEBYTECODE=1 /tmp/e9-mle-bench-env.iPapZw/bin/python zvf-program/flagship/pavlovs_domain_contract.py --help",
+        "status": "PASS",
+        "exit_code": 0
+      },
+      {
+        "command": "PYTHONDONTWRITEBYTECODE=1 /tmp/e9-mle-bench-env.iPapZw/bin/python zvf-program/flagship/build_pavlovs_campaign_manifest.py --help",
+        "status": "PASS",
+        "exit_code": 0
+      },
+      {
+        "command": "PYTHONDONTWRITEBYTECODE=1 /tmp/e9-mle-bench-env.iPapZw/bin/python zvf-program/flagship/pavlov_claim_boundary.py --help",
+        "status": "PASS",
+        "exit_code": 0
+      },
+      {
+        "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=outputs/e9_mle_bench/mle-bench-source /tmp/e9-mle-bench-env.iPapZw/bin/python -m mlebench.cli --help",
+        "status": "BLOCKED",
+        "exit_code": 1,
+        "error": "ModuleNotFoundError: No module named 'diskcache'"
+      },
+      {
+        "command": "PYTHONDONTWRITEBYTECODE=1 /tmp/e9-mle-bench-env.iPapZw/bin/python zvf-program/flagship/mle_bench_eval.py --help",
+        "status": "BLOCKED",
+        "exit_code": 127,
+        "error": "runner file is absent"
+      }
+    ],
+    "contract_preflight": {
+      "path": "/Users/arvind/Developer/tinker-rl-lab/outputs/e9_mle_bench/contract_preflight.json",
+      "status": "PASS",
+      "sha256": "adfcf7ca769d2301c457287f28c22b0339e10922c7125c8b311092f5a0b6497f"
+    },
+    "campaign_manifest": {
+      "path": "/Users/arvind/Developer/tinker-rl-lab/outputs/e9_mle_bench/campaign_manifest.json",
+      "status": "BLOCKED",
+      "launches_any_job": false,
+      "sha256": "2ad79ad44e3e41044c103094b7ce67273bc50b8b545f562d2b17e59f801888f3"
+    }
+  },
+  "metrics": {
+    "task_sample_count": 0,
+    "measured_metrics": {},
+    "score": null,
+    "status": "not_measured",
+    "reason": "No official task was executable; no benchmark result is claimed."
+  },
+  "tracking": {
+    "wandb": {
+      "required_for_actual_experiment": true,
+      "mode": "online",
+      "project": "codex",
+      "run_id": null,
+      "run_url": null,
+      "status": "not_started"
+    },
+    "tinker": {
+      "run_id": null,
+      "checkpoint_ids": [],
+      "paid_attempts": 0,
+      "cost_usd": 0.0,
+      "lane_cap_usd": 1.0,
+      "status": "not_started"
+    },
+    "huggingface": {
+      "weight_changing_run": false,
+      "checkpoint_revisions": [],
+      "immutable_commit_receipts": [],
+      "status": "not_applicable_no_weight_changing_run"
+    }
+  },
+  "blockers": [
+    "No zvf-program/flagship/mle_bench_eval.py runner or native E9 adapter exists; the repository roadmap marks E9 metadata-only.",
+    "The pinned source provides competition definitions and graders but no prepared competition task bundle in this lane.",
+    "Official preparation requires Kaggle credentials and external dataset downloads; no Kaggle access was used or provisioned for this lane.",
+    "The repository MIT license excludes external competition datasets, so per-dataset license sign-off is missing.",
+    "The required mlebench-env Docker image and immutable runtime digest are absent.",
+    "The isolated official CLI cannot start because its declared runtime dependency diskcache is not installed; installing the full dependency stack was not warranted for a blocked preflight.",
+    "Immutable per-sample task hashes, train/evaluation disjointness, decontamination receipt, and hidden-test/verifier runtime receipt are unavailable.",
+    "No model/adapter revision, online W&B run, Tinker run, or Hugging Face checkpoint commit receipt exists because no experiment launched."
+  ],
+  "safety": {
+    "paid_calls": false,
+    "tinker_launched": false,
+    "wandb_published": false,
+    "huggingface_published": false,
+    "substitute_benchmark_used": false,
+    "disallowed_substitutes": ["xLAM", "GSM8K", "related_benchmarks"]
+  },
+  "artifacts": [
+    "/Users/arvind/Developer/tinker-rl-lab/outputs/e9_mle_bench/e9_mle_bench_blocked_receipt.json",
+    "/Users/arvind/Developer/tinker-rl-lab/outputs/e9_mle_bench/contract_preflight.json",
+    "/Users/arvind/Developer/tinker-rl-lab/outputs/e9_mle_bench/campaign_manifest.json",
+    "/Users/arvind/Developer/tinker-rl-lab/outputs/e9_mle_bench/mle-bench-source"
+  ]
+}

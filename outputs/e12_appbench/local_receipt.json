@@ -1,0 +1,180 @@
+{
+  "schema_version": "e12-appbench-local-receipt-v1",
+  "created_at": "2026-08-09T06:47:36Z",
+  "status": "BLOCKED",
+  "evidence_class": "preflight_or_blocked",
+  "claim_boundary": "No AppBench task was executed and no AppBench score or scientific result was produced.",
+  "execution_source": {
+    "repository": "/Users/arvind/Developer/tinker-rl-lab",
+    "branch": "main",
+    "commit": "8fdade2f1425908f8d961bced6dc89f45bcc47f4",
+    "source_commit_requested": "8fdade2f",
+    "shared_campaign_or_contract_files_modified": false
+  },
+  "lane_environment": {
+    "temporary_root": "/tmp/e12_appbench.EzIt5J",
+    "python": "3.14.6",
+    "venv": "/tmp/e12_appbench.EzIt5J/venv",
+    "shared_venv_used": false
+  },
+  "suite": {
+    "boundary_id": "E12",
+    "suite_id": "appbench_eval",
+    "domains": ["design", "computer_use", "code"],
+    "registry_role": "primary_eval",
+    "registry_split": "held-out evaluation prompts",
+    "registry_stateful": true,
+    "registry_artifact_or_side_effect": true,
+    "adapter_evaluation_role": "receipt_proven_heldout",
+    "xlam_substitution": false
+  },
+  "authoritative_source": {
+    "source_url": "https://www.afterquery.com/leaderboard/app-bench",
+    "source_http_status": 200,
+    "source_capture_bytes": 135008,
+    "source_capture_sha256": "89afc7bec26fd3fc22bb77e8344649af23d757192fa37be8335c642d8cb6d338",
+    "source_etag": "8dbdc22fae96937a6aa78d8ab1eb9756",
+    "source_revision_kind": "immutable local capture hash; no upstream code revision exposed",
+    "license_status": "not_declared_on_source_page"
+  },
+  "pinned_public_asset_probe": {
+    "dataset_id": "AfterQuery/App-Bench",
+    "metadata_api": "https://huggingface.co/api/datasets/AfterQuery/App-Bench",
+    "revision": "de80d5bcd404adee5307311571e512b5c37e6112",
+    "last_modified": "2025-12-10T06:56:05.000Z",
+    "private": false,
+    "gated": false,
+    "metadata_sha256": "734639fe1b73131c7b3e17ee8e4953fd2f99b5f2ea2902f14b70b439fc3c82db",
+    "files": [".gitattributes", "AppBench vExternal.csv"],
+    "license_card_data": null,
+    "asset_status": "public_file_detected_but_not_acquired",
+    "asset_reason": "No license receipt or license file was available; task CSV was not downloaded or executed."
+  },
+  "license_probe": {
+    "revision": "de80d5bcd404adee5307311571e512b5c37e6112",
+    "README.md": 404,
+    "LICENSE": 404,
+    "LICENSE.md": 404,
+    ".gitattributes": 200,
+    "AppBench%20vExternal.csv": 200,
+    "license_receipt": null
+  },
+  "adapter_and_runner": {
+    "adapter_path": "zvf-program/flagship/pavlov_appbench_openreward_games_adapter.py",
+    "adapter_sha256": "a2cc152e56c8ad0c3af12ae33b04dab10ab83af225576ce456f6206db747e889",
+    "focused_test_path": "zvf-program/flagship/test_pavlov_appbench_openreward_games_adapter.py",
+    "focused_test_sha256": "00a7caae87767149bc3ab30ed175a75e16c4c876a65aa3ebe82bceff9002b16a",
+    "runner_discovery": [
+      "zvf-program/flagship/pavlov_appbench_openreward_games_adapter.py",
+      "zvf-program/flagship/test_pavlov_appbench_openreward_games_adapter.py"
+    ],
+    "official_runner_present": false,
+    "gui_executor_present": false,
+    "artifact_or_side_effect_verifier_present": false,
+    "roadmap_evidence": "PAVLOV_SUITE_EXECUTION_ROADMAP_2026-08-09.md records E12 as metadata-only with no AppBench prompt set, GUI executor, artifact/side-effect verifier, or command."
+  },
+  "contract_semantics": {
+    "primary_eval_is_portfolio_role_only": true,
+    "heldout_proof_required": true,
+    "task_id_sha256": null,
+    "split_manifest_sha256": null,
+    "aggregate_sha256": null,
+    "task_count": 0,
+    "sample_count": 0,
+    "reason": "The official task CSV was not license-cleared and no local task/split manifest or native verifier is available."
+  },
+  "native_contract": {
+    "stateful_trajectory_required": true,
+    "artifact_or_side_effect_required": true,
+    "environment_digest": null,
+    "artifact_sha256": null,
+    "artifact_verifier_sha256": null,
+    "state_verifier_sha256": null,
+    "native_receipt": null
+  },
+  "preflight_measurements": {
+    "focused_unit_tests": {
+      "command": "PYTHONPATH=/Users/arvind/Developer/tinker-rl-lab/zvf-program /tmp/e12_appbench.EzIt5J/venv/bin/python -m unittest flagship.test_pavlov_appbench_openreward_games_adapter flagship.test_eval_pavlov_xlam",
+      "exit_code": 0,
+      "tests_run": 30,
+      "failures": 0,
+      "errors": 0
+    },
+    "cli_help": {
+      "command": "/tmp/e12_appbench.EzIt5J/venv/bin/python /Users/arvind/Developer/tinker-rl-lab/zvf-program/flagship/eval_pavlov_xlam.py --help",
+      "exit_code": 0,
+      "reported_suite": "xLAM observed seed-809 evaluation slice",
+      "appbench_supported": false
+    },
+    "official_page_capture": {
+      "command": "curl -L --max-time 30 -sS -D /tmp/e12_appbench.EzIt5J/appbench_headers.txt -o /tmp/e12_appbench.EzIt5J/appbench_source.html https://www.afterquery.com/leaderboard/app-bench",
+      "exit_code": 0,
+      "http_status": 200,
+      "bytes": 135008,
+      "sha256": "89afc7bec26fd3fc22bb77e8344649af23d757192fa37be8335c642d8cb6d338"
+    },
+    "hf_metadata": {
+      "command": "curl -L --max-time 30 -sS -o /tmp/e12_appbench.EzIt5J/hf_appbench_metadata.json https://huggingface.co/api/datasets/AfterQuery/App-Bench",
+      "exit_code": 0,
+      "revision": "de80d5bcd404adee5307311571e512b5c37e6112",
+      "bytes": 556,
+      "sha256": "734639fe1b73131c7b3e17ee8e4953fd2f99b5f2ea2902f14b70b439fc3c82db"
+    },
+    "cost": {
+      "paid_attempts": 0,
+      "tinker_cost_usd": 0.0,
+      "non_tinker_paid_service_used": false
+    }
+  },
+  "mandatory_receipts": {
+    "wandb": {
+      "required_for_actual_experiment": true,
+      "initialized": false,
+      "project": null,
+      "run_id": null,
+      "run_url": null,
+      "reason": "No experiment was launched because the official task/license/native verifier gates failed."
+    },
+    "tinker": {
+      "attempted": false,
+      "job_id": null,
+      "cost_usd": 0.0,
+      "receipt_sha256": null
+    },
+    "hugging_face": {
+      "checkpoint_publication_attempted": false,
+      "checkpoint_revisions": [],
+      "receipt_sha256": null
+    }
+  },
+  "blockers": [
+    {
+      "code": "LICENSE_RECEIPT_MISSING",
+      "severity": "launch_blocking",
+      "detail": "AfterQuery/App-Bench is public and ungated at the pinned revision, but cardData is null and README.md/LICENSE/LICENSE.md are absent; the task CSV was not acquired without a license receipt."
+    },
+    {
+      "code": "NATIVE_APPBENCH_RUNNER_MISSING",
+      "severity": "launch_blocking",
+      "detail": "The checkout exposes only the E12/E13 contract validator and tests; no AppBench task runner, GUI executor, deployment harness, artifact verifier, or side-effect verifier is present."
+    },
+    {
+      "code": "HELDOUT_TASK_SPLIT_UNPROVEN",
+      "severity": "launch_blocking",
+      "detail": "No immutable task IDs, split manifest hash, aggregate hash, or disjointness/held-out proof is available, so primary_eval cannot be treated as a runnable or truly held-out score."
+    },
+    {
+      "code": "MANDATORY_PLATFORM_RECEIPTS_ABSENT",
+      "severity": "launch_blocking",
+      "detail": "No W&B, Tinker, or Hugging Face checkpoint receipts exist because no actual experiment was attempted."
+    }
+  ],
+  "commands": [
+    "git status --short --branch && git rev-parse HEAD",
+    "python3 zvf-program/flagship/eval_pavlov_xlam.py --help",
+    "PYTHONPATH=/Users/arvind/Developer/tinker-rl-lab/zvf-program /tmp/e12_appbench.EzIt5J/venv/bin/python -m unittest flagship.test_pavlov_appbench_openreward_games_adapter flagship.test_eval_pavlov_xlam",
+    "rg --files zvf-program/flagship | rg -i 'appbench|app-bench' | sort",
+    "curl -L --max-time 30 -sS -D /tmp/e12_appbench.EzIt5J/appbench_headers.txt -o /tmp/e12_appbench.EzIt5J/appbench_source.html https://www.afterquery.com/leaderboard/app-bench",
+    "curl -L --max-time 30 -sS -o /tmp/e12_appbench.EzIt5J/hf_appbench_metadata.json https://huggingface.co/api/datasets/AfterQuery/App-Bench"
+  ]
+}

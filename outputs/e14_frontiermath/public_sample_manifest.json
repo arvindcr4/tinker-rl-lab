@@ -1,0 +1,4012 @@
+{
+  "schema_version": "e14-frontiermath-public-samples-v1",
+  "module_id": "e14-frontiermath-public-sample-parser",
+  "artifact_label": "REPRESENTATIVE_PUBLIC_SAMPLES_NOT_THE_BENCHMARK",
+  "artifact_disclaimer": "These artifacts are derived from Epoch AI's PUBLIC REPRESENTATIVE SAMPLE TRANSCRIPTS (5 published sample problems). They are NOT the FrontierMath benchmark. FrontierMath is a private held-out problem set that is not distributed. No number computed from these samples is a FrontierMath score, an approximation of one, or a lower/upper bound on one. The sample corpus contains no ground-truth answers and no grader verdicts.",
+  "not_a_substitute": "GSM8K, MATH / MATH-500, MathArena, AIME sets, and any other public math benchmark are NOT substitutes for FrontierMath. A score on any of them is not a FrontierMath score.",
+  "is_benchmark_split": false,
+  "is_model_score": false,
+  "source_url": "https://epoch.ai/files/sample_question_transcripts.zip",
+  "samples_dir": "outputs/e14_frontiermath/public_samples/sample_question_transcripts",
+  "corpus": {
+    "transcript_count": 150,
+    "expected_transcript_count": 150,
+    "grid_is_complete": true,
+    "models": {
+      "claude-3-5-sonnet-20241022": 25,
+      "gemini-1.5-pro-002": 25,
+      "gpt-4o-2024-08-06": 25,
+      "grok-beta": 25,
+      "o1-mini": 25,
+      "o1-preview": 25
+    },
+    "problem_tokens": {
+      "ALL3": 30,
+      "CWA2": 30,
+      "CWD31": 30,
+      "RAP1": 30,
+      "TIK2": 30
+    },
+    "runs_per_index": {
+      "1": 30,
+      "2": 30,
+      "3": 30,
+      "4": 30,
+      "5": 30
+    },
+    "model_by_problem": {
+      "claude-3-5-sonnet-20241022": {
+        "ALL3": 5,
+        "CWA2": 5,
+        "CWD31": 5,
+        "RAP1": 5,
+        "TIK2": 5
+      },
+      "gemini-1.5-pro-002": {
+        "ALL3": 5,
+        "CWA2": 5,
+        "CWD31": 5,
+        "RAP1": 5,
+        "TIK2": 5
+      },
+      "gpt-4o-2024-08-06": {
+        "ALL3": 5,
+        "CWA2": 5,
+        "CWD31": 5,
+        "RAP1": 5,
+        "TIK2": 5
+      },
+      "grok-beta": {
+        "ALL3": 5,
+        "CWA2": 5,
+        "CWD31": 5,
+        "RAP1": 5,
+        "TIK2": 5
+      },
+      "o1-mini": {
+        "ALL3": 5,
+        "CWA2": 5,
+        "CWD31": 5,
+        "RAP1": 5,
+        "TIK2": 5
+      },
+      "o1-preview": {
+        "ALL3": 5,
+        "CWA2": 5,
+        "CWD31": 5,
+        "RAP1": 5,
+        "TIK2": 5
+      }
+    }
+  },
+  "prompt_contract": {
+    "distinct_preamble_hashes": [
+      "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9"
+    ],
+    "preamble_is_uniform": true,
+    "final_answer_marker": "# This is the final answer",
+    "final_answer_pickle": "final_answer.p",
+    "problem_statement_hashes": {
+      "ALL3": [
+        "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108"
+      ],
+      "CWA2": [
+        "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13"
+      ],
+      "CWD31": [
+        "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7"
+      ],
+      "RAP1": [
+        "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c"
+      ],
+      "TIK2": [
+        "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c"
+      ]
+    },
+    "declared_return_types": {
+      "ALL3": [
+        "Python integer"
+      ],
+      "CWA2": [
+        "Integer"
+      ],
+      "CWD31": [
+        "Python integer"
+      ],
+      "RAP1": [
+        "Python integer"
+      ],
+      "TIK2": [
+        "Python integer"
+      ]
+    }
+  },
+  "harness_turn_totals": {
+    "code_execution_result": 265,
+    "final_answer_failed_stderr": 6,
+    "final_answer_failed_timeout": 4,
+    "task_prompt": 150
+  },
+  "gradability": {
+    "ground_truth_present_anywhere": false,
+    "grader_verdict_present_anywhere": false,
+    "transcripts_with_final_answer_block": 149,
+    "transcripts_without_final_answer_block": [
+      "o1-mini_TIK2_run-4.jsonl"
+    ],
+    "gradable_locally": false,
+    "gradable_locally_reason": "The public sample corpus carries no ground-truth answers and no grader verdicts. Correctness cannot be computed. Even with ground truth, five published sample problems are not the FrontierMath benchmark."
+  },
+  "hashes": {
+    "corpus_sha256": "9d618deb664cfce7de7721f1ce4c3199f9a90860c11efbc4cc6292924dd04345",
+    "file_sha256": {
+      "claude-3-5-sonnet-20241022_ALL3_run-1.jsonl": "51a5f938686b61fdc824454ccf662d8a9498be50de1bec2b35f13c8a2ce0847b",
+      "claude-3-5-sonnet-20241022_ALL3_run-2.jsonl": "98b6cf8f29ba2cfb15cedb51aa7df016ee366a4bb38f0137289e9aebb26dd7d9",
+      "claude-3-5-sonnet-20241022_ALL3_run-3.jsonl": "d23ed266050b5766443f8afbf4bff5e96dfa620b8ccbe17a946ea360eeaa2861",
+      "claude-3-5-sonnet-20241022_ALL3_run-4.jsonl": "b12e6ee920527aa62f6811eb12bf477d03da96953f6822f867fb882acdd7bfd6",
+      "claude-3-5-sonnet-20241022_ALL3_run-5.jsonl": "a26f613685db08ca350b2dd73fd9f999b4228a369f4cad23fefb9cc10fab45f6",
+      "claude-3-5-sonnet-20241022_CWA2_run-1.jsonl": "fa1689327fa0ed87b6d8ca6cdea3b468c67aa639a3a0cf5bb1dda008547db7d5",
+      "claude-3-5-sonnet-20241022_CWA2_run-2.jsonl": "81515acccd84485acec28053d83939aa515eeaf33ae76f81bcae892485362f02",
+      "claude-3-5-sonnet-20241022_CWA2_run-3.jsonl": "a710f459721933abaebd25b3db3564f75663ba7e73eae4d6c905a64b653ca92f",
+      "claude-3-5-sonnet-20241022_CWA2_run-4.jsonl": "c707ed6e60288489edb9325e992c9f33863ddfbe08e666df151be3e5716e1f20",
+      "claude-3-5-sonnet-20241022_CWA2_run-5.jsonl": "36550c65a6d5aa5d7c98b2e5c6d0967449eba742d917554e46d5097d59e1bff6",
+      "claude-3-5-sonnet-20241022_CWD31_run-1.jsonl": "694d2547ac38646a1dcd949320d2f63da9402dc8154d330e5133b91e761e892b",
+      "claude-3-5-sonnet-20241022_CWD31_run-2.jsonl": "fb5bb58bad65d4a2fb5272c8da6b23c59ad3ab97cb0abfcf119a15a235a930b4",
+      "claude-3-5-sonnet-20241022_CWD31_run-3.jsonl": "b3ee65f8da727dddd10634e6414d5c2ec88c5ed79597be21ef7cd884cdf790ef",
+      "claude-3-5-sonnet-20241022_CWD31_run-4.jsonl": "a69087230af066b24349b8bad9f95c7087dde10d185daa0e0caddece3817209a",
+      "claude-3-5-sonnet-20241022_CWD31_run-5.jsonl": "7541697d52ef64317d3e2da3f2bbdc0c3b1de83834061fd37217bae75786baae",
+      "claude-3-5-sonnet-20241022_RAP1_run-1.jsonl": "b609e07b06b5fe647e6ec959fedf81ff21962946927c4227b1a5c6fee3c4ea2a",
+      "claude-3-5-sonnet-20241022_RAP1_run-2.jsonl": "5f48fdb7a58eb7dc956d75f8f6fb194b2312448a4377e0eba298b81318a01ba9",
+      "claude-3-5-sonnet-20241022_RAP1_run-3.jsonl": "ec77fa43b4b0e477feb622ea77f9715de1a044648cb47051241a84412893800f",
+      "claude-3-5-sonnet-20241022_RAP1_run-4.jsonl": "a042a3a128050f19cc5fec2fe3f1f9c9b91e8ffad80fa7b82d02b3523b2df5bb",
+      "claude-3-5-sonnet-20241022_RAP1_run-5.jsonl": "db88bafc6e2f7d6fa96c849c67e575455baf9f63211db298a3cecb085f1cb588",
+      "claude-3-5-sonnet-20241022_TIK2_run-1.jsonl": "dc0edfae1929cf316cf1d032d5a756801deed07568d60f7e99f7f848b7587862",
+      "claude-3-5-sonnet-20241022_TIK2_run-2.jsonl": "2be2be19d14566c995a51fcf56d9058594861d7814c7c81ad5ee9bc3063cb1fd",
+      "claude-3-5-sonnet-20241022_TIK2_run-3.jsonl": "77bd1626c1d3fada396b87264042810cdd81db012f3aa05e6fa5d7de8a6836a1",
+      "claude-3-5-sonnet-20241022_TIK2_run-4.jsonl": "881763f4affaf0842503c64f0351139edf12592a1795e7a1c1497e9fffd4b0e6",
+      "claude-3-5-sonnet-20241022_TIK2_run-5.jsonl": "664fdb1566c147c0ebbc303d5e8b7d421b555a975747448719ec6e76f4b26e90",
+      "gemini-1.5-pro-002_ALL3_run-1.jsonl": "0fa7b2790cf6b28edbcbb73116c68589110c971c8e18daa2698b132571743a67",
+      "gemini-1.5-pro-002_ALL3_run-2.jsonl": "009c58d5fda062f7e5f1f47b3226a6d5abb7b2f53028db7b54d3c963aafb80e3",
+      "gemini-1.5-pro-002_ALL3_run-3.jsonl": "03d5d1a1a45a4636d88c87c1e428c48196f354974ebbd19f2c24e27a2968eb04",
+      "gemini-1.5-pro-002_ALL3_run-4.jsonl": "7df5c4fa8c3f57effb5a6bef95c71a2f63d7475620d971d1f326d5bf8efab646",
+      "gemini-1.5-pro-002_ALL3_run-5.jsonl": "0c8efc05fc974fc00d7767ce9d0da9beeada39ba16a671d3210c09d7ee21e96f",
+      "gemini-1.5-pro-002_CWA2_run-1.jsonl": "c84915d1583b8e412376b6f1678700361487f5e31f89dac10a4b71fd2126305b",
+      "gemini-1.5-pro-002_CWA2_run-2.jsonl": "1e0968598a388b8a1aaeb1e833572fa19deb654bedddaae0cf1ea8911b6396f8",
+      "gemini-1.5-pro-002_CWA2_run-3.jsonl": "78b4c3c851cd017254886f17ac47794158dc8c79b5776d9d9805e193f359a80e",
+      "gemini-1.5-pro-002_CWA2_run-4.jsonl": "2991c6151eb1538c2aab03097b37cec79f7e2bc780d8f75b3d94b7d5c980715c",
+      "gemini-1.5-pro-002_CWA2_run-5.jsonl": "6def615182c399f1785415b54170dd0ffbbbf657cff12d5a1fa1811d34dc2dec",
+      "gemini-1.5-pro-002_CWD31_run-1.jsonl": "a173762871c1462de8524ae4d3149cfd37c4d1bbbfc8f6ebb5b4d27d3b121c64",
+      "gemini-1.5-pro-002_CWD31_run-2.jsonl": "3f0a22bdba2bad5064c9d5ca10d35bbf2bbf988298203ec2ca1251f9d795a20f",
+      "gemini-1.5-pro-002_CWD31_run-3.jsonl": "fefc09fb6f1b917f14fc72b56637b40237e772d396ed61be8b6f99b7cabd586c",
+      "gemini-1.5-pro-002_CWD31_run-4.jsonl": "29042cacae2928d61b7d71dc163aeddb9efa180e7370fa16d98fcd19f6c3eba4",
+      "gemini-1.5-pro-002_CWD31_run-5.jsonl": "97826391b73c540817008d3d0b7ce3c3bdca68e36f8d87548c7bc627b075d98e",
+      "gemini-1.5-pro-002_RAP1_run-1.jsonl": "27c7884a0fbe585e1cd021a1cc9ced7344b3411f2d45fca3c6dd0ee309da312a",
+      "gemini-1.5-pro-002_RAP1_run-2.jsonl": "e4f2279763dba75bed27e39902b0dfbf3a5fa32dfd006a4dbfddd2cbfc7e47eb",
+      "gemini-1.5-pro-002_RAP1_run-3.jsonl": "207ba73b4a340b46d05860ce860f18071b9f765a59247b1d46a75722922cd81e",
+      "gemini-1.5-pro-002_RAP1_run-4.jsonl": "519a9d9cc649eadb79f53739e9752e7ba8b1c8dbfd71d78e46bf8f464cb294aa",
+      "gemini-1.5-pro-002_RAP1_run-5.jsonl": "9742774c51040c5ee01e1f60fc506f43440caceeb1c9a4331a69f2597dbb6f65",
+      "gemini-1.5-pro-002_TIK2_run-1.jsonl": "5cb2c967ac442cebfb21bf12570c7b8c1939d521d03cd463a24bf2e0cd14c374",
+      "gemini-1.5-pro-002_TIK2_run-2.jsonl": "d86cceb575e9a413d5662586548fa77571cf4ac1ebf89faa6b71df967350da3b",
+      "gemini-1.5-pro-002_TIK2_run-3.jsonl": "1d0fd5c91dafc609bf6b3a868b87d964ac1658143fcf265a3dd1be8ac6726267",
+      "gemini-1.5-pro-002_TIK2_run-4.jsonl": "447f6028e2dde5781b16ceab91350127fcdaf5755b717956976d4ca256591865",
+      "gemini-1.5-pro-002_TIK2_run-5.jsonl": "33defe56d1ee7f1cdd27dd3824db25f29b4856e0dfd6fdf2217d9f2cfdf79844",
+      "gpt-4o-2024-08-06_ALL3_run-1.jsonl": "ff06d040f4fca4ae7014c748dd3d6b719d5222a3ca87d6a772168eb5131e2f6a",
+      "gpt-4o-2024-08-06_ALL3_run-2.jsonl": "8683089907b4df28ec021e202cc85dac37e1ec051fc22df8088142ec214d8188",
+      "gpt-4o-2024-08-06_ALL3_run-3.jsonl": "e9b1dbace06eb60fd068533de30d49e5b2481a4acf9eab66d269e5316c0575f6",
+      "gpt-4o-2024-08-06_ALL3_run-4.jsonl": "ce891cdf9b0381a2fdb3061d9cda86f434f04f42f6d9cffac39ef09b6d8bbf13",
+      "gpt-4o-2024-08-06_ALL3_run-5.jsonl": "e8588168e357d1a205072ef47580df76f51db805926a208ef60bd861bab28f1f",
+      "gpt-4o-2024-08-06_CWA2_run-1.jsonl": "86bd2c8f1608dff06bf1f04fe7a26b23927e61889bc41bee48d7991a8ae58d80",
+      "gpt-4o-2024-08-06_CWA2_run-2.jsonl": "ca32c966977d2b7a5187b5438cb5f696b56b81b2a0dbbf91f88be6630fb39717",
+      "gpt-4o-2024-08-06_CWA2_run-3.jsonl": "159663ff5b9e576b2ac97a92863f656bd4dfd5294a0b7c206b2e343363eee053",
+      "gpt-4o-2024-08-06_CWA2_run-4.jsonl": "fb509af883814f48667e891b38d0a9f37b134365e6c0923800e42ca7d3e7ace3",
+      "gpt-4o-2024-08-06_CWA2_run-5.jsonl": "cbbe1e798b5f128b4ec2ee52bf5cab88fb9c518116b41a2f02984ea9aad5559c",
+      "gpt-4o-2024-08-06_CWD31_run-1.jsonl": "cd6c52c2d0ec9578f411d5af8e3411596c46cb193d2c1420d2101b552ea3609d",
+      "gpt-4o-2024-08-06_CWD31_run-2.jsonl": "769a75a1de7e8b5ecf767897e2f118317621c0efde6d7f701a8f572a6c25d75f",
+      "gpt-4o-2024-08-06_CWD31_run-3.jsonl": "00227d519b085c0d89cfca832c8b89ed623e24019d63755cecf6470db945d5fa",
+      "gpt-4o-2024-08-06_CWD31_run-4.jsonl": "fb69aafa0787b42952e90efdd4f826c675b7f1f25140897d88a823124986879c",
+      "gpt-4o-2024-08-06_CWD31_run-5.jsonl": "267c5c662055625af468e1e3d1f38d67ec6e2cfd45a6c546363936e39197f085",
+      "gpt-4o-2024-08-06_RAP1_run-1.jsonl": "07052a007dd399e867040cb75eb0fa32b16c7083b29522788cb1a293b253d5f8",
+      "gpt-4o-2024-08-06_RAP1_run-2.jsonl": "aea69ad70f312b3e8f2f62494383e3d8ac1e52a56bc13b6033c278f94248e0c9",
+      "gpt-4o-2024-08-06_RAP1_run-3.jsonl": "d22b186b77d1cd8c37435bc624b30aa5dd3a7dcb97c6b44fda70d44094f8a306",
+      "gpt-4o-2024-08-06_RAP1_run-4.jsonl": "ed37b37d334e5b322c372c94d25dfae98113009b358c83d242580380c06949be",
+      "gpt-4o-2024-08-06_RAP1_run-5.jsonl": "1705b8acabee0bf72c1bca8de50a5daca97a1ebcc35b3bad8e83f9db93b4baea",
+      "gpt-4o-2024-08-06_TIK2_run-1.jsonl": "f61380fb4cd7f5d4fcd5a95b130a76a69a44effbcab3e2ea849c6b5d8e01d934",
+      "gpt-4o-2024-08-06_TIK2_run-2.jsonl": "c23ef7d13468a2e8c1fe2fd7bcc60f7d045b2554812b02da59c74e382a27587a",
+      "gpt-4o-2024-08-06_TIK2_run-3.jsonl": "10e99b71f92f0fec4dfccb119e10339aa821f3b152a6f2f1f5e8607c97a71a16",
+      "gpt-4o-2024-08-06_TIK2_run-4.jsonl": "089a6a079ab05350ecb7892634aa6478f2cf16f49c9f7a629969534c03d101e0",
+      "gpt-4o-2024-08-06_TIK2_run-5.jsonl": "3ea8a0eeb178cd12775ed89c47e6eb9307eefeb5d6f5b4fb6e6c1d86f955baa7",
+      "grok-beta_ALL3_run-1.jsonl": "4a842f9759ec8e0bd6f3aeff156852a9a5c713aca3c7b44782ff969b1f97083e",
+      "grok-beta_ALL3_run-2.jsonl": "a3b5fd03fab4b2107b262785f9cfdaf6d658952eded243ea393e4893fb08b61a",
+      "grok-beta_ALL3_run-3.jsonl": "36f28883aeabde7156b7570261fa283f42551d0be1fcd00c33a219d7a1f915f9",
+      "grok-beta_ALL3_run-4.jsonl": "445e6d695cca0fdc8ba720206487b09c9871b23dd4dd12280ab4175558d59c65",
+      "grok-beta_ALL3_run-5.jsonl": "c429526bcc1eccd11142d357fe71959fe0bb1c0abbc58859a89d826bc36e4f59",
+      "grok-beta_CWA2_run-1.jsonl": "a21188b582fde4eeb6d4c79798b743f097c121c72f294ca0f61bf83b160dfc0d",
+      "grok-beta_CWA2_run-2.jsonl": "de67f202b9935a453fb43788ede55b0fc198f2422a6e66bc844e85abdc88f315",
+      "grok-beta_CWA2_run-3.jsonl": "cee1dabd9c910a091aad9a6d86a535cf953fe53b06d3286699dfa152c70409d0",
+      "grok-beta_CWA2_run-4.jsonl": "9c1ffdd4610262ae6116d8bdc58de524721436f3fd2fee3a326acab722368a2e",
+      "grok-beta_CWA2_run-5.jsonl": "c7bec161718f3fa455ff0c0548552393e3f0db7bae5dfeff2a6f17521366c62c",
+      "grok-beta_CWD31_run-1.jsonl": "4b50f9af31b21bb59ae41395f640c83287b96d193f60abfbd2a347ffd5ded14f",
+      "grok-beta_CWD31_run-2.jsonl": "d49cb092deac28ba0150a1db27911fe96988f6a599a8ad700a41d768504080ec",
+      "grok-beta_CWD31_run-3.jsonl": "410f64221668cf341035b3f3b68e1ad9133f57c178938afd4d0657453f982c83",
+      "grok-beta_CWD31_run-4.jsonl": "b78388a449a9e29c9a9de850b34b8298face64522b7433dff3404b4372e7b001",
+      "grok-beta_CWD31_run-5.jsonl": "8a2e58e01753d75ab863b46f6680dd5913de199a7b9248be4e40999d68596581",
+      "grok-beta_RAP1_run-1.jsonl": "cff0c061ae5179e4fc46da0fc6c6cd482ae7725ca3a3f72a9db48d4c403a41bc",
+      "grok-beta_RAP1_run-2.jsonl": "4c75c10f7e6b5c6b18e35d8eb4902a3b250b3311c20617a88eee2dacb00a54c5",
+      "grok-beta_RAP1_run-3.jsonl": "c6ae3a2c47bbf3ed57c8777083b0c77320fcad99185889b52fd4a70192acdccf",
+      "grok-beta_RAP1_run-4.jsonl": "d725054ac41a96ecff678244ddf9fe5cc52bfaa89edd0c1a9e054d8097f3f71d",
+      "grok-beta_RAP1_run-5.jsonl": "0060a7a21b132c0bdd94ff34531a8e75d38bce7a1dbc62330b48ca5887e661a4",
+      "grok-beta_TIK2_run-1.jsonl": "158cbdc2e58ccfbc383ce4937da809655c602494f7983403f47948d5991e2a25",
+      "grok-beta_TIK2_run-2.jsonl": "e1674e016332947238830fbd76930634dcfdff52b39edaf15759ff9963a10d7a",
+      "grok-beta_TIK2_run-3.jsonl": "a856345df70a05080d46046091a62a5bd6c7c54cb7473cacf51925c614eddc35",
+      "grok-beta_TIK2_run-4.jsonl": "e5e5ffad577d94122fb5cc84bb0767f91eecae5c2009f5d3dc916e4f12f02496",
+      "grok-beta_TIK2_run-5.jsonl": "1af5f4e26de9a1a07965988e73ef992583ecd8f2f06f9e783ccd78f21549e4c9",
+      "o1-mini_ALL3_run-1.jsonl": "20f2fd1eeef36180be66f1e1c07c4207f371b40f6b462158b97e78b96fb3911d",
+      "o1-mini_ALL3_run-2.jsonl": "d93c5a69416939b42c7df537e052d4c8a2985b0abc4f7e9b5260a9e98e8561e5",
+      "o1-mini_ALL3_run-3.jsonl": "404ff1cfffc318bd80abeca87fb1c6986fa57f05c013743bc69dfdabf1f824cc",
+      "o1-mini_ALL3_run-4.jsonl": "9f3e1b3cd7a5f004306b376529c9d19307261330dc71f78b8c4c8ee39f987b12",
+      "o1-mini_ALL3_run-5.jsonl": "c8aa5a68f16d7b15d4b6df288b4a51c9d370d3fc97e15705276ad49e8b2291a4",
+      "o1-mini_CWA2_run-1.jsonl": "ed7878af6e29cf0f5f84267b2c644f9e2badff5774e939a61410150d9a960495",
+      "o1-mini_CWA2_run-2.jsonl": "530502502057f358b2703aa9bdb5dbe7af4e56837ebde0fed6d1c3e1fcf1ee3b",
+      "o1-mini_CWA2_run-3.jsonl": "3fdaaa5418280f0730fcb14ec86f0c2fa851ace29e6c13e46b5d3434272be5b5",
+      "o1-mini_CWA2_run-4.jsonl": "c7522ae4072933364e6ae48feb25c6cdcc30d7ce30d7028b4ea1d6dca509c137",
+      "o1-mini_CWA2_run-5.jsonl": "f0386a3ecf2e5271b89e1e2c1403cd84a65efa9bb762f3f8df4cfce43dda7cc2",
+      "o1-mini_CWD31_run-1.jsonl": "238c86b18d44ecd37ca38e8057ca1fda88fe9494e2a8f853c41d2df3c0a9dfb6",
+      "o1-mini_CWD31_run-2.jsonl": "ddacdd0563e5f228ac4a0636a5efe2a6ebfef22a5ec650f739fc4c51d706aaa7",
+      "o1-mini_CWD31_run-3.jsonl": "f81513ee0762deaddd2a98daac33786e73ec1b17c76dc18ae5e3436a9f41b8e8",
+      "o1-mini_CWD31_run-4.jsonl": "41876bbba5ad06caf3cb0c5d5073f576bc6e83a140c419f0252d15e4c834722d",
+      "o1-mini_CWD31_run-5.jsonl": "46012dd21f9b6e3d498b2ae61b4ba57580deacf47d5b18a229676cfc72d9d912",
+      "o1-mini_RAP1_run-1.jsonl": "5abf7c44acddc872289cd7710a8d4d72404c8c2953777356d89f5170a04593ee",
+      "o1-mini_RAP1_run-2.jsonl": "88be33f168a5be13119895ded9185a177e47ccf448211d21f2c17246ceeb5154",
+      "o1-mini_RAP1_run-3.jsonl": "8aa9bf92f81b9ed15d6fc532ccb225c98f1918fe862f38274fc328fc595ed542",
+      "o1-mini_RAP1_run-4.jsonl": "3e9d6ccdfc1570c38d3cebcd0c004216f1daa65d1d5fff46b617864e27e402e6",
+      "o1-mini_RAP1_run-5.jsonl": "2c185f4b382ea059856d325ba0c83a507902c3988f241076c3f03d63e7828587",
+      "o1-mini_TIK2_run-1.jsonl": "c2288d2cf6cf419b389e3a5c21e50bab8f9bc3f5df728889b11ea2ea6e742c98",
+      "o1-mini_TIK2_run-2.jsonl": "24e007ff0c10db54e5c0f2f00279d1bb3b7ff135cdb65af765766d98fbecb80e",
+      "o1-mini_TIK2_run-3.jsonl": "3cccaa301751bb4c6eba4a446535a9e33660d4ee2db164ae19ba3d23a0dab52e",
+      "o1-mini_TIK2_run-4.jsonl": "13ff05495e35a32f29035112da13415d03e11d8a006d4f3e494084c98c8ed836",
+      "o1-mini_TIK2_run-5.jsonl": "1fd56496f7bfb1618b85f54524942a0c895e097cd06e7053eebe62da1b654eb9",
+      "o1-preview_ALL3_run-1.jsonl": "fbbd88ac6b0f878aa3bef1f02135f72a567f04e83e8b47ea3cd386c4ab0357d5",
+      "o1-preview_ALL3_run-2.jsonl": "204ab671cd82400e89b3117ab9b86cdadbbb1065284d9a1b5dcb5c2289c3e478",
+      "o1-preview_ALL3_run-3.jsonl": "8a129f6ac5d1feeb0e01812ad927015378125efdd00d78387689018e998134de",
+      "o1-preview_ALL3_run-4.jsonl": "0b5c363967b8dda1e7fcb054b5473bf7588a30f1b46bc53c21e8a62571e85a7a",
+      "o1-preview_ALL3_run-5.jsonl": "3cfdd68877141fdb0e8e43611ebf78aac776bc0d8d495ca2f6f263dcd19519cc",
+      "o1-preview_CWA2_run-1.jsonl": "15be00d33087fa0fe87a9cd6819d0bcc9e6b33c2c72a3a8b30baf951288133ef",
+      "o1-preview_CWA2_run-2.jsonl": "a02677fd8ce67853497825711023a6d761f4e609d93134d3565bdacf51896d84",
+      "o1-preview_CWA2_run-3.jsonl": "404cbed3f2a84768857356a7463634f38dd5fedf7f5edd158321f6f6e1e6a6d8",
+      "o1-preview_CWA2_run-4.jsonl": "2f75d42ddb949bbded267468434322695a3d6cb989f2adb86c8603ae5eef4418",
+      "o1-preview_CWA2_run-5.jsonl": "1471ed819bccd67d5428d8e349af802b2a20757dcc42d48af9a874c2e84e371e",
+      "o1-preview_CWD31_run-1.jsonl": "8360cc6c589e95c0ca23e1005adc58c002516a4c5f7c9403398dd1d0d9cb161b",
+      "o1-preview_CWD31_run-2.jsonl": "3b2ad65bd8653a76aac0663e1139cd47df65d5c32915648f55b6a37bb3c0fc46",
+      "o1-preview_CWD31_run-3.jsonl": "b382cfca3c45bd403bd934e2d8322e8c7c847722659c5a33b280c181b401058c",
+      "o1-preview_CWD31_run-4.jsonl": "b25269619561a73e1cb8856b036402d66ead8927ac651ec78861ff998ed71d4e",
+      "o1-preview_CWD31_run-5.jsonl": "e91c292125ec77b05444be8a778c0ae9b5f0864eeacad2beab1c942b7edd3a05",
+      "o1-preview_RAP1_run-1.jsonl": "dfe14921b4757d0fb2a55e9ee5f740bffc89c2805d01512a22849a2ba4008754",
+      "o1-preview_RAP1_run-2.jsonl": "50f86e979ca0b7f5168c1baea130542f9d8a4bb803fd1d9faf64882867e8b845",
+      "o1-preview_RAP1_run-3.jsonl": "0f4746bc53e3a5c43a09ce9b21033498016bed75ef6d361e077ee3e7c68c2b83",
+      "o1-preview_RAP1_run-4.jsonl": "a136f6eaa719954ece204243c0cebbae5a2f691487b1eb803d08d7f87166e6d6",
+      "o1-preview_RAP1_run-5.jsonl": "8679152854c6c0a37b8a59fe0799f3ba39a555e061cbff56bb83034220d278fd",
+      "o1-preview_TIK2_run-1.jsonl": "9275c7594366f4590e8a57f7063769f709c1156ecab014bcbb2fab2eb2d80dd6",
+      "o1-preview_TIK2_run-2.jsonl": "b9f147ac36183b28b1c335a531953f8fd22db63e155e5743fda75af41bad2e60",
+      "o1-preview_TIK2_run-3.jsonl": "93eb7b9b7b6d871a80547539a8d6d8c9d8f35161a68cf437a697b8735f0cb50d",
+      "o1-preview_TIK2_run-4.jsonl": "818892c3a219c371a094d4ce9260430691b966a1a5e6e64c6ef99c4981c77808",
+      "o1-preview_TIK2_run-5.jsonl": "0a1a3f6047e110aa8056f2f78927c40982806d4fa82edc4b94f9c8833eb0f2ac"
+    }
+  },
+  "schema_validation": {
+    "all_transcripts_valid": true,
+    "invalid_transcripts": {}
+  },
+  "score": null,
+  "score_refusal_reason": "Fail-closed: this module never emits a score for frontiermath_eval. See gradability.gradable_locally_reason.",
+  "facts": [
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "ALL3",
+        "run_index": 1,
+        "filename": "claude-3-5-sonnet-20241022_ALL3_run-1.jsonl"
+      },
+      "sha256": "51a5f938686b61fdc824454ccf662d8a9498be50de1bec2b35f13c8a2ce0847b",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "ALL3",
+        "run_index": 2,
+        "filename": "claude-3-5-sonnet-20241022_ALL3_run-2.jsonl"
+      },
+      "sha256": "98b6cf8f29ba2cfb15cedb51aa7df016ee366a4bb38f0137289e9aebb26dd7d9",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 7,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "ALL3",
+        "run_index": 3,
+        "filename": "claude-3-5-sonnet-20241022_ALL3_run-3.jsonl"
+      },
+      "sha256": "d23ed266050b5766443f8afbf4bff5e96dfa620b8ccbe17a946ea360eeaa2861",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "ALL3",
+        "run_index": 4,
+        "filename": "claude-3-5-sonnet-20241022_ALL3_run-4.jsonl"
+      },
+      "sha256": "b12e6ee920527aa62f6811eb12bf477d03da96953f6822f867fb882acdd7bfd6",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "ALL3",
+        "run_index": 5,
+        "filename": "claude-3-5-sonnet-20241022_ALL3_run-5.jsonl"
+      },
+      "sha256": "a26f613685db08ca350b2dd73fd9f999b4228a369f4cad23fefb9cc10fab45f6",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "CWA2",
+        "run_index": 1,
+        "filename": "claude-3-5-sonnet-20241022_CWA2_run-1.jsonl"
+      },
+      "sha256": "fa1689327fa0ed87b6d8ca6cdea3b468c67aa639a3a0cf5bb1dda008547db7d5",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 12,
+      "final_answer_block_count": 2,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "CWA2",
+        "run_index": 2,
+        "filename": "claude-3-5-sonnet-20241022_CWA2_run-2.jsonl"
+      },
+      "sha256": "81515acccd84485acec28053d83939aa515eeaf33ae76f81bcae892485362f02",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "CWA2",
+        "run_index": 3,
+        "filename": "claude-3-5-sonnet-20241022_CWA2_run-3.jsonl"
+      },
+      "sha256": "a710f459721933abaebd25b3db3564f75663ba7e73eae4d6c905a64b653ca92f",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 9,
+      "final_answer_block_count": 2,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "CWA2",
+        "run_index": 4,
+        "filename": "claude-3-5-sonnet-20241022_CWA2_run-4.jsonl"
+      },
+      "sha256": "c707ed6e60288489edb9325e992c9f33863ddfbe08e666df151be3e5716e1f20",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 6,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "CWA2",
+        "run_index": 5,
+        "filename": "claude-3-5-sonnet-20241022_CWA2_run-5.jsonl"
+      },
+      "sha256": "36550c65a6d5aa5d7c98b2e5c6d0967449eba742d917554e46d5097d59e1bff6",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 8,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "CWD31",
+        "run_index": 1,
+        "filename": "claude-3-5-sonnet-20241022_CWD31_run-1.jsonl"
+      },
+      "sha256": "694d2547ac38646a1dcd949320d2f63da9402dc8154d330e5133b91e761e892b",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "CWD31",
+        "run_index": 2,
+        "filename": "claude-3-5-sonnet-20241022_CWD31_run-2.jsonl"
+      },
+      "sha256": "fb5bb58bad65d4a2fb5272c8da6b23c59ad3ab97cb0abfcf119a15a235a930b4",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "CWD31",
+        "run_index": 3,
+        "filename": "claude-3-5-sonnet-20241022_CWD31_run-3.jsonl"
+      },
+      "sha256": "b3ee65f8da727dddd10634e6414d5c2ec88c5ed79597be21ef7cd884cdf790ef",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "CWD31",
+        "run_index": 4,
+        "filename": "claude-3-5-sonnet-20241022_CWD31_run-4.jsonl"
+      },
+      "sha256": "a69087230af066b24349b8bad9f95c7087dde10d185daa0e0caddece3817209a",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "CWD31",
+        "run_index": 5,
+        "filename": "claude-3-5-sonnet-20241022_CWD31_run-5.jsonl"
+      },
+      "sha256": "7541697d52ef64317d3e2da3f2bbdc0c3b1de83834061fd37217bae75786baae",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "RAP1",
+        "run_index": 1,
+        "filename": "claude-3-5-sonnet-20241022_RAP1_run-1.jsonl"
+      },
+      "sha256": "b609e07b06b5fe647e6ec959fedf81ff21962946927c4227b1a5c6fee3c4ea2a",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "RAP1",
+        "run_index": 2,
+        "filename": "claude-3-5-sonnet-20241022_RAP1_run-2.jsonl"
+      },
+      "sha256": "5f48fdb7a58eb7dc956d75f8f6fb194b2312448a4377e0eba298b81318a01ba9",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "RAP1",
+        "run_index": 3,
+        "filename": "claude-3-5-sonnet-20241022_RAP1_run-3.jsonl"
+      },
+      "sha256": "ec77fa43b4b0e477feb622ea77f9715de1a044648cb47051241a84412893800f",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 6,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "RAP1",
+        "run_index": 4,
+        "filename": "claude-3-5-sonnet-20241022_RAP1_run-4.jsonl"
+      },
+      "sha256": "a042a3a128050f19cc5fec2fe3f1f9c9b91e8ffad80fa7b82d02b3523b2df5bb",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "RAP1",
+        "run_index": 5,
+        "filename": "claude-3-5-sonnet-20241022_RAP1_run-5.jsonl"
+      },
+      "sha256": "db88bafc6e2f7d6fa96c849c67e575455baf9f63211db298a3cecb085f1cb588",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "TIK2",
+        "run_index": 1,
+        "filename": "claude-3-5-sonnet-20241022_TIK2_run-1.jsonl"
+      },
+      "sha256": "dc0edfae1929cf316cf1d032d5a756801deed07568d60f7e99f7f848b7587862",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "TIK2",
+        "run_index": 2,
+        "filename": "claude-3-5-sonnet-20241022_TIK2_run-2.jsonl"
+      },
+      "sha256": "2be2be19d14566c995a51fcf56d9058594861d7814c7c81ad5ee9bc3063cb1fd",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 8,
+      "final_answer_block_count": 2,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "TIK2",
+        "run_index": 3,
+        "filename": "claude-3-5-sonnet-20241022_TIK2_run-3.jsonl"
+      },
+      "sha256": "77bd1626c1d3fada396b87264042810cdd81db012f3aa05e6fa5d7de8a6836a1",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 7,
+      "final_answer_block_count": 2,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "TIK2",
+        "run_index": 4,
+        "filename": "claude-3-5-sonnet-20241022_TIK2_run-4.jsonl"
+      },
+      "sha256": "881763f4affaf0842503c64f0351139edf12592a1795e7a1c1497e9fffd4b0e6",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "claude-3-5-sonnet-20241022",
+        "problem_token": "TIK2",
+        "run_index": 5,
+        "filename": "claude-3-5-sonnet-20241022_TIK2_run-5.jsonl"
+      },
+      "sha256": "664fdb1566c147c0ebbc303d5e8b7d421b555a975747448719ec6e76f4b26e90",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "ALL3",
+        "run_index": 1,
+        "filename": "gemini-1.5-pro-002_ALL3_run-1.jsonl"
+      },
+      "sha256": "0fa7b2790cf6b28edbcbb73116c68589110c971c8e18daa2698b132571743a67",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "ALL3",
+        "run_index": 2,
+        "filename": "gemini-1.5-pro-002_ALL3_run-2.jsonl"
+      },
+      "sha256": "009c58d5fda062f7e5f1f47b3226a6d5abb7b2f53028db7b54d3c963aafb80e3",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "ALL3",
+        "run_index": 3,
+        "filename": "gemini-1.5-pro-002_ALL3_run-3.jsonl"
+      },
+      "sha256": "03d5d1a1a45a4636d88c87c1e428c48196f354974ebbd19f2c24e27a2968eb04",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "ALL3",
+        "run_index": 4,
+        "filename": "gemini-1.5-pro-002_ALL3_run-4.jsonl"
+      },
+      "sha256": "7df5c4fa8c3f57effb5a6bef95c71a2f63d7475620d971d1f326d5bf8efab646",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "ALL3",
+        "run_index": 5,
+        "filename": "gemini-1.5-pro-002_ALL3_run-5.jsonl"
+      },
+      "sha256": "0c8efc05fc974fc00d7767ce9d0da9beeada39ba16a671d3210c09d7ee21e96f",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "final_answer_failed_timeout": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 5,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "CWA2",
+        "run_index": 1,
+        "filename": "gemini-1.5-pro-002_CWA2_run-1.jsonl"
+      },
+      "sha256": "c84915d1583b8e412376b6f1678700361487f5e31f89dac10a4b71fd2126305b",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "CWA2",
+        "run_index": 2,
+        "filename": "gemini-1.5-pro-002_CWA2_run-2.jsonl"
+      },
+      "sha256": "1e0968598a388b8a1aaeb1e833572fa19deb654bedddaae0cf1ea8911b6396f8",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "CWA2",
+        "run_index": 3,
+        "filename": "gemini-1.5-pro-002_CWA2_run-3.jsonl"
+      },
+      "sha256": "78b4c3c851cd017254886f17ac47794158dc8c79b5776d9d9805e193f359a80e",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "CWA2",
+        "run_index": 4,
+        "filename": "gemini-1.5-pro-002_CWA2_run-4.jsonl"
+      },
+      "sha256": "2991c6151eb1538c2aab03097b37cec79f7e2bc780d8f75b3d94b7d5c980715c",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "CWA2",
+        "run_index": 5,
+        "filename": "gemini-1.5-pro-002_CWA2_run-5.jsonl"
+      },
+      "sha256": "6def615182c399f1785415b54170dd0ffbbbf657cff12d5a1fa1811d34dc2dec",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "CWD31",
+        "run_index": 1,
+        "filename": "gemini-1.5-pro-002_CWD31_run-1.jsonl"
+      },
+      "sha256": "a173762871c1462de8524ae4d3149cfd37c4d1bbbfc8f6ebb5b4d27d3b121c64",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "CWD31",
+        "run_index": 2,
+        "filename": "gemini-1.5-pro-002_CWD31_run-2.jsonl"
+      },
+      "sha256": "3f0a22bdba2bad5064c9d5ca10d35bbf2bbf988298203ec2ca1251f9d795a20f",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "CWD31",
+        "run_index": 3,
+        "filename": "gemini-1.5-pro-002_CWD31_run-3.jsonl"
+      },
+      "sha256": "fefc09fb6f1b917f14fc72b56637b40237e772d396ed61be8b6f99b7cabd586c",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "final_answer_failed_stderr": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 6,
+      "final_answer_block_count": 3,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "CWD31",
+        "run_index": 4,
+        "filename": "gemini-1.5-pro-002_CWD31_run-4.jsonl"
+      },
+      "sha256": "29042cacae2928d61b7d71dc163aeddb9efa180e7370fa16d98fcd19f6c3eba4",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "CWD31",
+        "run_index": 5,
+        "filename": "gemini-1.5-pro-002_CWD31_run-5.jsonl"
+      },
+      "sha256": "97826391b73c540817008d3d0b7ce3c3bdca68e36f8d87548c7bc627b075d98e",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "RAP1",
+        "run_index": 1,
+        "filename": "gemini-1.5-pro-002_RAP1_run-1.jsonl"
+      },
+      "sha256": "27c7884a0fbe585e1cd021a1cc9ced7344b3411f2d45fca3c6dd0ee309da312a",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "RAP1",
+        "run_index": 2,
+        "filename": "gemini-1.5-pro-002_RAP1_run-2.jsonl"
+      },
+      "sha256": "e4f2279763dba75bed27e39902b0dfbf3a5fa32dfd006a4dbfddd2cbfc7e47eb",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "RAP1",
+        "run_index": 3,
+        "filename": "gemini-1.5-pro-002_RAP1_run-3.jsonl"
+      },
+      "sha256": "207ba73b4a340b46d05860ce860f18071b9f765a59247b1d46a75722922cd81e",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "RAP1",
+        "run_index": 4,
+        "filename": "gemini-1.5-pro-002_RAP1_run-4.jsonl"
+      },
+      "sha256": "519a9d9cc649eadb79f53739e9752e7ba8b1c8dbfd71d78e46bf8f464cb294aa",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "RAP1",
+        "run_index": 5,
+        "filename": "gemini-1.5-pro-002_RAP1_run-5.jsonl"
+      },
+      "sha256": "9742774c51040c5ee01e1f60fc506f43440caceeb1c9a4331a69f2597dbb6f65",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "TIK2",
+        "run_index": 1,
+        "filename": "gemini-1.5-pro-002_TIK2_run-1.jsonl"
+      },
+      "sha256": "5cb2c967ac442cebfb21bf12570c7b8c1939d521d03cd463a24bf2e0cd14c374",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "TIK2",
+        "run_index": 2,
+        "filename": "gemini-1.5-pro-002_TIK2_run-2.jsonl"
+      },
+      "sha256": "d86cceb575e9a413d5662586548fa77571cf4ac1ebf89faa6b71df967350da3b",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "TIK2",
+        "run_index": 3,
+        "filename": "gemini-1.5-pro-002_TIK2_run-3.jsonl"
+      },
+      "sha256": "1d0fd5c91dafc609bf6b3a868b87d964ac1658143fcf265a3dd1be8ac6726267",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "TIK2",
+        "run_index": 4,
+        "filename": "gemini-1.5-pro-002_TIK2_run-4.jsonl"
+      },
+      "sha256": "447f6028e2dde5781b16ceab91350127fcdaf5755b717956976d4ca256591865",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gemini-1.5-pro-002",
+        "problem_token": "TIK2",
+        "run_index": 5,
+        "filename": "gemini-1.5-pro-002_TIK2_run-5.jsonl"
+      },
+      "sha256": "33defe56d1ee7f1cdd27dd3824db25f29b4856e0dfd6fdf2217d9f2cfdf79844",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "ALL3",
+        "run_index": 1,
+        "filename": "gpt-4o-2024-08-06_ALL3_run-1.jsonl"
+      },
+      "sha256": "ff06d040f4fca4ae7014c748dd3d6b719d5222a3ca87d6a772168eb5131e2f6a",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "ALL3",
+        "run_index": 2,
+        "filename": "gpt-4o-2024-08-06_ALL3_run-2.jsonl"
+      },
+      "sha256": "8683089907b4df28ec021e202cc85dac37e1ec051fc22df8088142ec214d8188",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "ALL3",
+        "run_index": 3,
+        "filename": "gpt-4o-2024-08-06_ALL3_run-3.jsonl"
+      },
+      "sha256": "e9b1dbace06eb60fd068533de30d49e5b2481a4acf9eab66d269e5316c0575f6",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "ALL3",
+        "run_index": 4,
+        "filename": "gpt-4o-2024-08-06_ALL3_run-4.jsonl"
+      },
+      "sha256": "ce891cdf9b0381a2fdb3061d9cda86f434f04f42f6d9cffac39ef09b6d8bbf13",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "ALL3",
+        "run_index": 5,
+        "filename": "gpt-4o-2024-08-06_ALL3_run-5.jsonl"
+      },
+      "sha256": "e8588168e357d1a205072ef47580df76f51db805926a208ef60bd861bab28f1f",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "CWA2",
+        "run_index": 1,
+        "filename": "gpt-4o-2024-08-06_CWA2_run-1.jsonl"
+      },
+      "sha256": "86bd2c8f1608dff06bf1f04fe7a26b23927e61889bc41bee48d7991a8ae58d80",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "CWA2",
+        "run_index": 2,
+        "filename": "gpt-4o-2024-08-06_CWA2_run-2.jsonl"
+      },
+      "sha256": "ca32c966977d2b7a5187b5438cb5f696b56b81b2a0dbbf91f88be6630fb39717",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "CWA2",
+        "run_index": 3,
+        "filename": "gpt-4o-2024-08-06_CWA2_run-3.jsonl"
+      },
+      "sha256": "159663ff5b9e576b2ac97a92863f656bd4dfd5294a0b7c206b2e343363eee053",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "CWA2",
+        "run_index": 4,
+        "filename": "gpt-4o-2024-08-06_CWA2_run-4.jsonl"
+      },
+      "sha256": "fb509af883814f48667e891b38d0a9f37b134365e6c0923800e42ca7d3e7ace3",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "CWA2",
+        "run_index": 5,
+        "filename": "gpt-4o-2024-08-06_CWA2_run-5.jsonl"
+      },
+      "sha256": "cbbe1e798b5f128b4ec2ee52bf5cab88fb9c518116b41a2f02984ea9aad5559c",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "CWD31",
+        "run_index": 1,
+        "filename": "gpt-4o-2024-08-06_CWD31_run-1.jsonl"
+      },
+      "sha256": "cd6c52c2d0ec9578f411d5af8e3411596c46cb193d2c1420d2101b552ea3609d",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "CWD31",
+        "run_index": 2,
+        "filename": "gpt-4o-2024-08-06_CWD31_run-2.jsonl"
+      },
+      "sha256": "769a75a1de7e8b5ecf767897e2f118317621c0efde6d7f701a8f572a6c25d75f",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "CWD31",
+        "run_index": 3,
+        "filename": "gpt-4o-2024-08-06_CWD31_run-3.jsonl"
+      },
+      "sha256": "00227d519b085c0d89cfca832c8b89ed623e24019d63755cecf6470db945d5fa",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "CWD31",
+        "run_index": 4,
+        "filename": "gpt-4o-2024-08-06_CWD31_run-4.jsonl"
+      },
+      "sha256": "fb69aafa0787b42952e90efdd4f826c675b7f1f25140897d88a823124986879c",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "CWD31",
+        "run_index": 5,
+        "filename": "gpt-4o-2024-08-06_CWD31_run-5.jsonl"
+      },
+      "sha256": "267c5c662055625af468e1e3d1f38d67ec6e2cfd45a6c546363936e39197f085",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "RAP1",
+        "run_index": 1,
+        "filename": "gpt-4o-2024-08-06_RAP1_run-1.jsonl"
+      },
+      "sha256": "07052a007dd399e867040cb75eb0fa32b16c7083b29522788cb1a293b253d5f8",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "RAP1",
+        "run_index": 2,
+        "filename": "gpt-4o-2024-08-06_RAP1_run-2.jsonl"
+      },
+      "sha256": "aea69ad70f312b3e8f2f62494383e3d8ac1e52a56bc13b6033c278f94248e0c9",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "RAP1",
+        "run_index": 3,
+        "filename": "gpt-4o-2024-08-06_RAP1_run-3.jsonl"
+      },
+      "sha256": "d22b186b77d1cd8c37435bc624b30aa5dd3a7dcb97c6b44fda70d44094f8a306",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "RAP1",
+        "run_index": 4,
+        "filename": "gpt-4o-2024-08-06_RAP1_run-4.jsonl"
+      },
+      "sha256": "ed37b37d334e5b322c372c94d25dfae98113009b358c83d242580380c06949be",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "RAP1",
+        "run_index": 5,
+        "filename": "gpt-4o-2024-08-06_RAP1_run-5.jsonl"
+      },
+      "sha256": "1705b8acabee0bf72c1bca8de50a5daca97a1ebcc35b3bad8e83f9db93b4baea",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "TIK2",
+        "run_index": 1,
+        "filename": "gpt-4o-2024-08-06_TIK2_run-1.jsonl"
+      },
+      "sha256": "f61380fb4cd7f5d4fcd5a95b130a76a69a44effbcab3e2ea849c6b5d8e01d934",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "TIK2",
+        "run_index": 2,
+        "filename": "gpt-4o-2024-08-06_TIK2_run-2.jsonl"
+      },
+      "sha256": "c23ef7d13468a2e8c1fe2fd7bcc60f7d045b2554812b02da59c74e382a27587a",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "TIK2",
+        "run_index": 3,
+        "filename": "gpt-4o-2024-08-06_TIK2_run-3.jsonl"
+      },
+      "sha256": "10e99b71f92f0fec4dfccb119e10339aa821f3b152a6f2f1f5e8607c97a71a16",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "TIK2",
+        "run_index": 4,
+        "filename": "gpt-4o-2024-08-06_TIK2_run-4.jsonl"
+      },
+      "sha256": "089a6a079ab05350ecb7892634aa6478f2cf16f49c9f7a629969534c03d101e0",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "gpt-4o-2024-08-06",
+        "problem_token": "TIK2",
+        "run_index": 5,
+        "filename": "gpt-4o-2024-08-06_TIK2_run-5.jsonl"
+      },
+      "sha256": "3ea8a0eeb178cd12775ed89c47e6eb9307eefeb5d6f5b4fb6e6c1d86f955baa7",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "ALL3",
+        "run_index": 1,
+        "filename": "grok-beta_ALL3_run-1.jsonl"
+      },
+      "sha256": "4a842f9759ec8e0bd6f3aeff156852a9a5c713aca3c7b44782ff969b1f97083e",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "ALL3",
+        "run_index": 2,
+        "filename": "grok-beta_ALL3_run-2.jsonl"
+      },
+      "sha256": "a3b5fd03fab4b2107b262785f9cfdaf6d658952eded243ea393e4893fb08b61a",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "ALL3",
+        "run_index": 3,
+        "filename": "grok-beta_ALL3_run-3.jsonl"
+      },
+      "sha256": "36f28883aeabde7156b7570261fa283f42551d0be1fcd00c33a219d7a1f915f9",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "final_answer_failed_stderr": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 6,
+      "final_answer_block_count": 3,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "ALL3",
+        "run_index": 4,
+        "filename": "grok-beta_ALL3_run-4.jsonl"
+      },
+      "sha256": "445e6d695cca0fdc8ba720206487b09c9871b23dd4dd12280ab4175558d59c65",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "ALL3",
+        "run_index": 5,
+        "filename": "grok-beta_ALL3_run-5.jsonl"
+      },
+      "sha256": "c429526bcc1eccd11142d357fe71959fe0bb1c0abbc58859a89d826bc36e4f59",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "CWA2",
+        "run_index": 1,
+        "filename": "grok-beta_CWA2_run-1.jsonl"
+      },
+      "sha256": "a21188b582fde4eeb6d4c79798b743f097c121c72f294ca0f61bf83b160dfc0d",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 6,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "CWA2",
+        "run_index": 2,
+        "filename": "grok-beta_CWA2_run-2.jsonl"
+      },
+      "sha256": "de67f202b9935a453fb43788ede55b0fc198f2422a6e66bc844e85abdc88f315",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "final_answer_failed_stderr": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 2,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "CWA2",
+        "run_index": 3,
+        "filename": "grok-beta_CWA2_run-3.jsonl"
+      },
+      "sha256": "cee1dabd9c910a091aad9a6d86a535cf953fe53b06d3286699dfa152c70409d0",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "CWA2",
+        "run_index": 4,
+        "filename": "grok-beta_CWA2_run-4.jsonl"
+      },
+      "sha256": "9c1ffdd4610262ae6116d8bdc58de524721436f3fd2fee3a326acab722368a2e",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "CWA2",
+        "run_index": 5,
+        "filename": "grok-beta_CWA2_run-5.jsonl"
+      },
+      "sha256": "c7bec161718f3fa455ff0c0548552393e3f0db7bae5dfeff2a6f17521366c62c",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "CWD31",
+        "run_index": 1,
+        "filename": "grok-beta_CWD31_run-1.jsonl"
+      },
+      "sha256": "4b50f9af31b21bb59ae41395f640c83287b96d193f60abfbd2a347ffd5ded14f",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "CWD31",
+        "run_index": 2,
+        "filename": "grok-beta_CWD31_run-2.jsonl"
+      },
+      "sha256": "d49cb092deac28ba0150a1db27911fe96988f6a599a8ad700a41d768504080ec",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "CWD31",
+        "run_index": 3,
+        "filename": "grok-beta_CWD31_run-3.jsonl"
+      },
+      "sha256": "410f64221668cf341035b3f3b68e1ad9133f57c178938afd4d0657453f982c83",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "CWD31",
+        "run_index": 4,
+        "filename": "grok-beta_CWD31_run-4.jsonl"
+      },
+      "sha256": "b78388a449a9e29c9a9de850b34b8298face64522b7433dff3404b4372e7b001",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 8,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "CWD31",
+        "run_index": 5,
+        "filename": "grok-beta_CWD31_run-5.jsonl"
+      },
+      "sha256": "8a2e58e01753d75ab863b46f6680dd5913de199a7b9248be4e40999d68596581",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "RAP1",
+        "run_index": 1,
+        "filename": "grok-beta_RAP1_run-1.jsonl"
+      },
+      "sha256": "cff0c061ae5179e4fc46da0fc6c6cd482ae7725ca3a3f72a9db48d4c403a41bc",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "RAP1",
+        "run_index": 2,
+        "filename": "grok-beta_RAP1_run-2.jsonl"
+      },
+      "sha256": "4c75c10f7e6b5c6b18e35d8eb4902a3b250b3311c20617a88eee2dacb00a54c5",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "RAP1",
+        "run_index": 3,
+        "filename": "grok-beta_RAP1_run-3.jsonl"
+      },
+      "sha256": "c6ae3a2c47bbf3ed57c8777083b0c77320fcad99185889b52fd4a70192acdccf",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "RAP1",
+        "run_index": 4,
+        "filename": "grok-beta_RAP1_run-4.jsonl"
+      },
+      "sha256": "d725054ac41a96ecff678244ddf9fe5cc52bfaa89edd0c1a9e054d8097f3f71d",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "RAP1",
+        "run_index": 5,
+        "filename": "grok-beta_RAP1_run-5.jsonl"
+      },
+      "sha256": "0060a7a21b132c0bdd94ff34531a8e75d38bce7a1dbc62330b48ca5887e661a4",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "TIK2",
+        "run_index": 1,
+        "filename": "grok-beta_TIK2_run-1.jsonl"
+      },
+      "sha256": "158cbdc2e58ccfbc383ce4937da809655c602494f7983403f47948d5991e2a25",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "TIK2",
+        "run_index": 2,
+        "filename": "grok-beta_TIK2_run-2.jsonl"
+      },
+      "sha256": "e1674e016332947238830fbd76930634dcfdff52b39edaf15759ff9963a10d7a",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "TIK2",
+        "run_index": 3,
+        "filename": "grok-beta_TIK2_run-3.jsonl"
+      },
+      "sha256": "a856345df70a05080d46046091a62a5bd6c7c54cb7473cacf51925c614eddc35",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "TIK2",
+        "run_index": 4,
+        "filename": "grok-beta_TIK2_run-4.jsonl"
+      },
+      "sha256": "e5e5ffad577d94122fb5cc84bb0767f91eecae5c2009f5d3dc916e4f12f02496",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 4,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "grok-beta",
+        "problem_token": "TIK2",
+        "run_index": 5,
+        "filename": "grok-beta_TIK2_run-5.jsonl"
+      },
+      "sha256": "1af5f4e26de9a1a07965988e73ef992583ecd8f2f06f9e783ccd78f21549e4c9",
+      "message_count": 10,
+      "assistant_turns": 5,
+      "user_turns": 5,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "final_answer_failed_stderr": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 5,
+      "final_answer_block_count": 2,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "ALL3",
+        "run_index": 1,
+        "filename": "o1-mini_ALL3_run-1.jsonl"
+      },
+      "sha256": "20f2fd1eeef36180be66f1e1c07c4207f371b40f6b462158b97e78b96fb3911d",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "ALL3",
+        "run_index": 2,
+        "filename": "o1-mini_ALL3_run-2.jsonl"
+      },
+      "sha256": "d93c5a69416939b42c7df537e052d4c8a2985b0abc4f7e9b5260a9e98e8561e5",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "ALL3",
+        "run_index": 3,
+        "filename": "o1-mini_ALL3_run-3.jsonl"
+      },
+      "sha256": "404ff1cfffc318bd80abeca87fb1c6986fa57f05c013743bc69dfdabf1f824cc",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "ALL3",
+        "run_index": 4,
+        "filename": "o1-mini_ALL3_run-4.jsonl"
+      },
+      "sha256": "9f3e1b3cd7a5f004306b376529c9d19307261330dc71f78b8c4c8ee39f987b12",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "ALL3",
+        "run_index": 5,
+        "filename": "o1-mini_ALL3_run-5.jsonl"
+      },
+      "sha256": "c8aa5a68f16d7b15d4b6df288b4a51c9d370d3fc97e15705276ad49e8b2291a4",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "CWA2",
+        "run_index": 1,
+        "filename": "o1-mini_CWA2_run-1.jsonl"
+      },
+      "sha256": "ed7878af6e29cf0f5f84267b2c644f9e2badff5774e939a61410150d9a960495",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "CWA2",
+        "run_index": 2,
+        "filename": "o1-mini_CWA2_run-2.jsonl"
+      },
+      "sha256": "530502502057f358b2703aa9bdb5dbe7af4e56837ebde0fed6d1c3e1fcf1ee3b",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "CWA2",
+        "run_index": 3,
+        "filename": "o1-mini_CWA2_run-3.jsonl"
+      },
+      "sha256": "3fdaaa5418280f0730fcb14ec86f0c2fa851ace29e6c13e46b5d3434272be5b5",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "CWA2",
+        "run_index": 4,
+        "filename": "o1-mini_CWA2_run-4.jsonl"
+      },
+      "sha256": "c7522ae4072933364e6ae48feb25c6cdcc30d7ce30d7028b4ea1d6dca509c137",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "CWA2",
+        "run_index": 5,
+        "filename": "o1-mini_CWA2_run-5.jsonl"
+      },
+      "sha256": "f0386a3ecf2e5271b89e1e2c1403cd84a65efa9bb762f3f8df4cfce43dda7cc2",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "CWD31",
+        "run_index": 1,
+        "filename": "o1-mini_CWD31_run-1.jsonl"
+      },
+      "sha256": "238c86b18d44ecd37ca38e8057ca1fda88fe9494e2a8f853c41d2df3c0a9dfb6",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "CWD31",
+        "run_index": 2,
+        "filename": "o1-mini_CWD31_run-2.jsonl"
+      },
+      "sha256": "ddacdd0563e5f228ac4a0636a5efe2a6ebfef22a5ec650f739fc4c51d706aaa7",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "CWD31",
+        "run_index": 3,
+        "filename": "o1-mini_CWD31_run-3.jsonl"
+      },
+      "sha256": "f81513ee0762deaddd2a98daac33786e73ec1b17c76dc18ae5e3436a9f41b8e8",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "CWD31",
+        "run_index": 4,
+        "filename": "o1-mini_CWD31_run-4.jsonl"
+      },
+      "sha256": "41876bbba5ad06caf3cb0c5d5073f576bc6e83a140c419f0252d15e4c834722d",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "CWD31",
+        "run_index": 5,
+        "filename": "o1-mini_CWD31_run-5.jsonl"
+      },
+      "sha256": "46012dd21f9b6e3d498b2ae61b4ba57580deacf47d5b18a229676cfc72d9d912",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "RAP1",
+        "run_index": 1,
+        "filename": "o1-mini_RAP1_run-1.jsonl"
+      },
+      "sha256": "5abf7c44acddc872289cd7710a8d4d72404c8c2953777356d89f5170a04593ee",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "RAP1",
+        "run_index": 2,
+        "filename": "o1-mini_RAP1_run-2.jsonl"
+      },
+      "sha256": "88be33f168a5be13119895ded9185a177e47ccf448211d21f2c17246ceeb5154",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "RAP1",
+        "run_index": 3,
+        "filename": "o1-mini_RAP1_run-3.jsonl"
+      },
+      "sha256": "8aa9bf92f81b9ed15d6fc532ccb225c98f1918fe862f38274fc328fc595ed542",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "RAP1",
+        "run_index": 4,
+        "filename": "o1-mini_RAP1_run-4.jsonl"
+      },
+      "sha256": "3e9d6ccdfc1570c38d3cebcd0c004216f1daa65d1d5fff46b617864e27e402e6",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "RAP1",
+        "run_index": 5,
+        "filename": "o1-mini_RAP1_run-5.jsonl"
+      },
+      "sha256": "2c185f4b382ea059856d325ba0c83a507902c3988f241076c3f03d63e7828587",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "TIK2",
+        "run_index": 1,
+        "filename": "o1-mini_TIK2_run-1.jsonl"
+      },
+      "sha256": "c2288d2cf6cf419b389e3a5c21e50bab8f9bc3f5df728889b11ea2ea6e742c98",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "TIK2",
+        "run_index": 2,
+        "filename": "o1-mini_TIK2_run-2.jsonl"
+      },
+      "sha256": "24e007ff0c10db54e5c0f2f00279d1bb3b7ff135cdb65af765766d98fbecb80e",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "TIK2",
+        "run_index": 3,
+        "filename": "o1-mini_TIK2_run-3.jsonl"
+      },
+      "sha256": "3cccaa301751bb4c6eba4a446535a9e33660d4ee2db164ae19ba3d23a0dab52e",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "TIK2",
+        "run_index": 4,
+        "filename": "o1-mini_TIK2_run-4.jsonl"
+      },
+      "sha256": "13ff05495e35a32f29035112da13415d03e11d8a006d4f3e494084c98c8ed836",
+      "message_count": 6,
+      "assistant_turns": 3,
+      "user_turns": 3,
+      "harness_turn_kinds": {
+        "code_execution_result": 2,
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 0,
+      "has_final_answer": false,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-mini",
+        "problem_token": "TIK2",
+        "run_index": 5,
+        "filename": "o1-mini_TIK2_run-5.jsonl"
+      },
+      "sha256": "1fd56496f7bfb1618b85f54524942a0c895e097cd06e7053eebe62da1b654eb9",
+      "message_count": 8,
+      "assistant_turns": 4,
+      "user_turns": 4,
+      "harness_turn_kinds": {
+        "code_execution_result": 3,
+        "task_prompt": 1
+      },
+      "code_block_count": 4,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "ALL3",
+        "run_index": 1,
+        "filename": "o1-preview_ALL3_run-1.jsonl"
+      },
+      "sha256": "fbbd88ac6b0f878aa3bef1f02135f72a567f04e83e8b47ea3cd386c4ab0357d5",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "final_answer_failed_stderr": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 2,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "ALL3",
+        "run_index": 2,
+        "filename": "o1-preview_ALL3_run-2.jsonl"
+      },
+      "sha256": "204ab671cd82400e89b3117ab9b86cdadbbb1065284d9a1b5dcb5c2289c3e478",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "ALL3",
+        "run_index": 3,
+        "filename": "o1-preview_ALL3_run-3.jsonl"
+      },
+      "sha256": "8a129f6ac5d1feeb0e01812ad927015378125efdd00d78387689018e998134de",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "ALL3",
+        "run_index": 4,
+        "filename": "o1-preview_ALL3_run-4.jsonl"
+      },
+      "sha256": "0b5c363967b8dda1e7fcb054b5473bf7588a30f1b46bc53c21e8a62571e85a7a",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "ALL3",
+        "run_index": 5,
+        "filename": "o1-preview_ALL3_run-5.jsonl"
+      },
+      "sha256": "3cfdd68877141fdb0e8e43611ebf78aac776bc0d8d495ca2f6f263dcd19519cc",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "CWA2",
+        "run_index": 1,
+        "filename": "o1-preview_CWA2_run-1.jsonl"
+      },
+      "sha256": "15be00d33087fa0fe87a9cd6819d0bcc9e6b33c2c72a3a8b30baf951288133ef",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "CWA2",
+        "run_index": 2,
+        "filename": "o1-preview_CWA2_run-2.jsonl"
+      },
+      "sha256": "a02677fd8ce67853497825711023a6d761f4e609d93134d3565bdacf51896d84",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "CWA2",
+        "run_index": 3,
+        "filename": "o1-preview_CWA2_run-3.jsonl"
+      },
+      "sha256": "404cbed3f2a84768857356a7463634f38dd5fedf7f5edd158321f6f6e1e6a6d8",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "CWA2",
+        "run_index": 4,
+        "filename": "o1-preview_CWA2_run-4.jsonl"
+      },
+      "sha256": "2f75d42ddb949bbded267468434322695a3d6cb989f2adb86c8603ae5eef4418",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "CWA2",
+        "run_index": 5,
+        "filename": "o1-preview_CWA2_run-5.jsonl"
+      },
+      "sha256": "1471ed819bccd67d5428d8e349af802b2a20757dcc42d48af9a874c2e84e371e",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Integer",
+      "problem_statement_sha256": "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "CWD31",
+        "run_index": 1,
+        "filename": "o1-preview_CWD31_run-1.jsonl"
+      },
+      "sha256": "8360cc6c589e95c0ca23e1005adc58c002516a4c5f7c9403398dd1d0d9cb161b",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "code_execution_result": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "CWD31",
+        "run_index": 2,
+        "filename": "o1-preview_CWD31_run-2.jsonl"
+      },
+      "sha256": "3b2ad65bd8653a76aac0663e1139cd47df65d5c32915648f55b6a37bb3c0fc46",
+      "message_count": 4,
+      "assistant_turns": 2,
+      "user_turns": 2,
+      "harness_turn_kinds": {
+        "final_answer_failed_stderr": 1,
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 2,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "CWD31",
+        "run_index": 3,
+        "filename": "o1-preview_CWD31_run-3.jsonl"
+      },
+      "sha256": "b382cfca3c45bd403bd934e2d8322e8c7c847722659c5a33b280c181b401058c",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "CWD31",
+        "run_index": 4,
+        "filename": "o1-preview_CWD31_run-4.jsonl"
+      },
+      "sha256": "b25269619561a73e1cb8856b036402d66ead8927ac651ec78861ff998ed71d4e",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "CWD31",
+        "run_index": 5,
+        "filename": "o1-preview_CWD31_run-5.jsonl"
+      },
+      "sha256": "e91c292125ec77b05444be8a778c0ae9b5f0864eeacad2beab1c942b7edd3a05",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "RAP1",
+        "run_index": 1,
+        "filename": "o1-preview_RAP1_run-1.jsonl"
+      },
+      "sha256": "dfe14921b4757d0fb2a55e9ee5f740bffc89c2805d01512a22849a2ba4008754",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 2,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "RAP1",
+        "run_index": 2,
+        "filename": "o1-preview_RAP1_run-2.jsonl"
+      },
+      "sha256": "50f86e979ca0b7f5168c1baea130542f9d8a4bb803fd1d9faf64882867e8b845",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "RAP1",
+        "run_index": 3,
+        "filename": "o1-preview_RAP1_run-3.jsonl"
+      },
+      "sha256": "0f4746bc53e3a5c43a09ce9b21033498016bed75ef6d361e077ee3e7c68c2b83",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "RAP1",
+        "run_index": 4,
+        "filename": "o1-preview_RAP1_run-4.jsonl"
+      },
+      "sha256": "a136f6eaa719954ece204243c0cebbae5a2f691487b1eb803d08d7f87166e6d6",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "RAP1",
+        "run_index": 5,
+        "filename": "o1-preview_RAP1_run-5.jsonl"
+      },
+      "sha256": "8679152854c6c0a37b8a59fe0799f3ba39a555e061cbff56bb83034220d278fd",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 3,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "TIK2",
+        "run_index": 1,
+        "filename": "o1-preview_TIK2_run-1.jsonl"
+      },
+      "sha256": "9275c7594366f4590e8a57f7063769f709c1156ecab014bcbb2fab2eb2d80dd6",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "TIK2",
+        "run_index": 2,
+        "filename": "o1-preview_TIK2_run-2.jsonl"
+      },
+      "sha256": "b9f147ac36183b28b1c335a531953f8fd22db63e155e5743fda75af41bad2e60",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "TIK2",
+        "run_index": 3,
+        "filename": "o1-preview_TIK2_run-3.jsonl"
+      },
+      "sha256": "93eb7b9b7b6d871a80547539a8d6d8c9d8f35161a68cf437a697b8735f0cb50d",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "TIK2",
+        "run_index": 4,
+        "filename": "o1-preview_TIK2_run-4.jsonl"
+      },
+      "sha256": "818892c3a219c371a094d4ce9260430691b966a1a5e6e64c6ef99c4981c77808",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    },
+    {
+      "identity": {
+        "model": "o1-preview",
+        "problem_token": "TIK2",
+        "run_index": 5,
+        "filename": "o1-preview_TIK2_run-5.jsonl"
+      },
+      "sha256": "0a1a3f6047e110aa8056f2f78927c40982806d4fa82edc4b94f9c8833eb0f2ac",
+      "message_count": 2,
+      "assistant_turns": 1,
+      "user_turns": 1,
+      "harness_turn_kinds": {
+        "task_prompt": 1
+      },
+      "code_block_count": 1,
+      "final_answer_block_count": 1,
+      "has_final_answer": true,
+      "declared_return_type": "Python integer",
+      "problem_statement_sha256": "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c",
+      "preamble_sha256": "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9",
+      "ground_truth_present": false,
+      "grader_verdict_present": false,
+      "schema_errors": []
+    }
+  ]
+}

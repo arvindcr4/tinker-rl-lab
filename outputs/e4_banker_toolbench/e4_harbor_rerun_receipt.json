@@ -1,0 +1,108 @@
+{
+  "blockers": [
+    "native Harbor environment is not ready: BUILD_INVALIDATED_BY_CONCURRENT_CLEANUP",
+    "online W&B project codex cannot be initialized: WANDB_API_KEY is absent",
+    "Tinker sampler/evaluation access is absent: TINKER_API_KEY is absent",
+    "native Gandalf verifier cannot run: GEMINI_API_KEY is absent",
+    "no immutable Hugging Face checkpoint receipt exists for a weight-changing run",
+    "no projected paid lane cost is recorded at or below USD 1.00"
+  ],
+  "evidence_scope": "exact native Harbor preflight only; no task result or benchmark score is asserted",
+  "execution": {
+    "executed_task_count": 0,
+    "metrics": null,
+    "paid_calls": 0,
+    "result_claims": null,
+    "sample_count": 0,
+    "score": null
+  },
+  "gates": {
+    "authorization": {
+      "launch_authorized": false,
+      "maximum_usd": 1.0
+    },
+    "credentials": {
+      "GEMINI_API_KEY": "ABSENT",
+      "TINKER_API_KEY": "ABSENT",
+      "WANDB_API_KEY": "ABSENT"
+    },
+    "hf": {
+      "state": "PINNED_PUBLIC_DATA_LOCAL_NO_IMMUTABLE_MODEL_CHECKPOINT"
+    },
+    "tinker": {
+      "cost_usd": 0.0,
+      "paid_attempts": 0,
+      "state": "NOT_CALLED"
+    },
+    "wandb": {
+      "project": "codex",
+      "state": "NOT_INITIALIZED_NO_EXPERIMENT"
+    }
+  },
+  "harbor": {
+    "auth_discovery": "harbor auth status: not authenticated; legacy credentials require login",
+    "commands": {
+      "auth": "/Users/arvind/.local/bin/harbor auth status",
+      "native_start": "/Users/arvind/.local/bin/harbor task start-env --path /Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/native-tasks/btb-707cba99 --env docker --non-interactive",
+      "plugins": "/Users/arvind/.local/bin/harbor plugins list",
+      "task_generation": "BTB_HF_REVISION=2c63d3b6d429687d2c29550e820dd136baafee95 uv run python -m adapters.btb.run_adapter --data-dir /Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/native-data --output-dir /Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/native-tasks --task-ids 707cba99-59a7-47bd-bc4d-7f36212e99f3",
+      "version": "/Users/arvind/.local/bin/harbor --version"
+    },
+    "executable": "/Users/arvind/.local/bin/harbor",
+    "native_start_command": "/Users/arvind/.local/bin/harbor task start-env --path /Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/native-tasks/btb-707cba99 --env docker --non-interactive",
+    "native_start_state": "BUILD_INVALIDATED_BY_CONCURRENT_CLEANUP",
+    "operational_event": "Four concurrent Harbor/Docker builds were observed for the same pinned task; three duplicate process groups were terminated, then the retained build exited after its output tree was concurrently removed. The pinned manifest and one-task native metadata were restored without another Harbor/Docker run.",
+    "plugins_discovery": "harbor plugins list: no installed Harbor plugins",
+    "version": "0.20.0"
+  },
+  "native_environment": {
+    "compose_sha256": "4fb70f3b488ef8383bca1087d5746d6dd1e49e1bd889f062575e2fc1cdc806be",
+    "environment": {
+      "allow_internet": true,
+      "build_timeout_sec": 600.0,
+      "cpus": 4,
+      "gpus": 0,
+      "mcp_servers": [
+        {
+          "command": "/usr/bin/mcp-server",
+          "name": "mcp-server",
+          "transport": "stdio"
+        }
+      ],
+      "memory_mb": 8192,
+      "storage_mb": 10240
+    },
+    "grader_toml_sha256": "3c57654c718f8d4ab53308e3f9ea124a30676650d809b83cb7b155c6307ca4e5",
+    "task_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/native-tasks/btb-707cba99",
+    "task_toml_sha256": "33b29382c541f10ee1ea2c531c564319c94388842e4599892f467527017c01d7",
+    "verifier": {
+      "key_reference": "${GEMINI_API_KEY}",
+      "mcp_servers": [
+        {
+          "command": "/usr/bin/mcp-server",
+          "name": "mcp-server",
+          "transport": "stdio"
+        }
+      ],
+      "mode": "batch",
+      "model": "gemini/gemini-3-flash-preview",
+      "rubric_path": "/tests/rubric.json"
+    }
+  },
+  "schema_version": "e4-banker-toolbench-harbor-rerun-v1",
+  "source": {
+    "dataset_id": "handshake-ai-research/bankertoolbench",
+    "dataset_revision": "2c63d3b6d429687d2c29550e820dd136baafee95",
+    "manifest_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/native-data/tasks.jsonl",
+    "manifest_sha256": "18f132d929c898d319ea1cc229f523bd8bb799406c9c037355b8ceac6930199a",
+    "official_repo_revision": "ff6db552a44632643df20393065056e5f1f0092c",
+    "selected_task_count": 1,
+    "selected_task_id": "707cba99-59a7-47bd-bc4d-7f36212e99f3",
+    "selected_task_id_sha256": "0864acac593d75a2cb0ad41314dd0e273c392324383f49552543c2d7c885c505",
+    "task_count": 100,
+    "unique_task_count": 100
+  },
+  "status": "BLOCKED",
+  "suite_id": "banker_toolbench_eval",
+  "terminal_status": "BLOCKED"
+}

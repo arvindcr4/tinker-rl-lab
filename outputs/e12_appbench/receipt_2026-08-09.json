@@ -1,0 +1,327 @@
+{
+  "schema_version": "e12-appbench-lane-receipt-v2",
+  "supersedes": "outputs/e12_appbench/local_receipt.json (e12-appbench-local-receipt-v1)",
+  "created_at": "2026-08-09T00:00:00Z",
+  "status": "BLOCKED",
+  "score": null,
+  "is_model_score": false,
+  "evidence_class": "offline_split_work_complete_executor_and_license_blocked",
+  "claim_boundary": "No AppBench task was executed, no application was generated or deployed, and no AppBench score was produced. This receipt reports data characterization, an immutable evaluation split manifest, a disjointness proof, and a primary-source license position. Nothing here is a model result.",
+  "execution_source": {
+    "repository": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab",
+    "branch": "main",
+    "commit": "8fdade2f1425908f8d961bced6dc89f45bcc47f4",
+    "python": "3.14.6",
+    "git_operations_performed": "none (no commit, push, checkout, or branch change)"
+  },
+  "suite": {
+    "boundary_id": "E12",
+    "suite_id": "appbench_eval",
+    "registry_role": "primary_eval",
+    "adapter_evaluation_role": "receipt_proven_heldout",
+    "substitution_used": false,
+    "substitution_note": "No BrowserGym, Playwright, WebArena or other web-automation suite was used or proposed as an AppBench stand-in."
+  },
+  "data_characterization": {
+    "acquired": true,
+    "dataset_id": "AfterQuery/App-Bench",
+    "revision": "de80d5bcd404adee5307311571e512b5c37e6112",
+    "file": "AppBench vExternal.csv",
+    "local_path": "outputs/e12_appbench/hf_dataset/AppBench vExternal.csv",
+    "bytes": 38546,
+    "sha256": "b28b74959e81602f0a8b7e8985547915cf3de98822b87f736bc86269518900ba",
+    "git_blob_sha1": "f156b93ede86d3c03daa82d75e2ca3b2612fefc2",
+    "blob_matches_pinned_revision": true,
+    "blob_match_method": "local git blob sha1 recomputed and compared against the oid in https://huggingface.co/api/datasets/AfterQuery/App-Bench/tree/de80d5bcd404adee5307311571e512b5c37e6112",
+    "row_count": 6,
+    "columns": [
+      "#",
+      "App Name",
+      "App Description",
+      "Prompt",
+      "Addition for CLI Tools",
+      "Rubric",
+      "Claude Code",
+      "Codex CLI",
+      "Cursor CLI",
+      "Gemini CLI",
+      "Orchids",
+      "Lovable",
+      "Bolt",
+      "Replit",
+      "v0"
+    ],
+    "per_tool_score_columns_populated": false,
+    "per_tool_score_columns_note": "All nine per-tool columns are empty at the pinned revision (one cell holds a single space). The CSV contains no reference scores, so no gold-answer harness validation is possible from it.",
+    "total_rubric_items": 151,
+    "rubric_items_match_upstream_published_total": true,
+    "rubric_items_match_note": "AfterQuery states '151 rubric items (totaled across all 6 apps)'. The local parse yields exactly 151 (24/33/22/25/23/24), corroborating that the public CSV is the complete scored task set. AfterQuery makes no explicit 'this is the full set' statement.",
+    "six_official_tasks_present": true,
+    "tasks": [
+      {"ordinal": 1, "app_name": "Financial Dashboard", "rubric_items": 24},
+      {"ordinal": 2, "app_name": "Hospital Dashboard", "rubric_items": 33},
+      {"ordinal": 3, "app_name": "Legal Assistant", "rubric_items": 22},
+      {"ordinal": 4, "app_name": "Pharmacy System", "rubric_items": 25},
+      {"ordinal": 5, "app_name": "Drawing Game", "rubric_items": 23},
+      {"ordinal": 6, "app_name": "Rental Booking", "rubric_items": 24}
+    ],
+    "what_a_task_specifies": "A markdown Prompt (# Task / ## Functionality Overview / ## Feature Requirements numbered list), an identical per-task CLI addendum naming a Next.js template in an isolated Docker container with Supabase for auth and database, and a Rubric whose numbered items are 1:1 with the Feature Requirements. Verified: rubric item count equals requirement item count for all six tasks.",
+    "what_the_csv_does_not_specify": [
+      "the Next.js starter template (contents, version, dependencies)",
+      "the Supabase project schema or provisioning",
+      "any wall-clock, token, or turn budget",
+      "the deployment and health-check procedure",
+      "the grading procedure (defined only in leaderboard prose, not in the data)"
+    ]
+  },
+  "split_work": {
+    "blocker_closed": "HELDOUT_TASK_SPLIT_UNPROVEN (manifest half only)",
+    "manifest_path": "outputs/e12_appbench/split_manifest.json",
+    "manifest_sha256": "ee9de54f596322d8eced32a26917bffe1ee38c962721be1c5e69ae9d126f0415",
+    "builder_path": "outputs/e12_appbench/appbench_split_manifest.py",
+    "builder_sha256": "89c86a23bbd382080f8f3122cb64cc6d3a0e5b1858322e8018fc36e38faf2ded",
+    "test_path": "outputs/e12_appbench/test_appbench_split_manifest.py",
+    "test_sha256": "9f35dfa1a35a0d2019b06c4565c00c683561b5ef986ff08f2513619f43651475",
+    "task_count": 6,
+    "unique_task_count": 6,
+    "task_id_algorithm": "sha256(canonical_json({content, dataset_id, revision, source_file, suite_id})) where canonical_json = json.dumps(sort_keys=True, separators=(',',':'), ensure_ascii=True) and text is normalized CRLF/CR -> LF plus per-field strip",
+    "task_ids": [
+      "18fbcb512cd30c311035641699cc74630f7cd6a5710800a5849e255aebfc59d2",
+      "4b1037939be6ececaa4a56b69d832e08c78869fda596738af061199dd4a0d0bc",
+      "66d78599b80d3148352fb8a406a4bade85bde08be34d5f41d8f2ae8bc26b0092",
+      "dd5089d3ad4cdd77bfc772faa2ed96b81d0d4b874085151d8668668df1420486",
+      "1599ded6809617d340bb9460e26db4181badea5bc908dfcea4c5a9c5c80f74a1",
+      "1f0b79dc2ea5847d29570da6ccc41ab550ef77718d042cdc099c96f387116353"
+    ],
+    "split_hash": "ee8bb522e82505a1b9690c0b691c36a2bb73a524023ab15dff670fe7cc34601d",
+    "split_hash_algorithm": "sha256(canonical_json(sorted(task_ids)))",
+    "split_hash_matches_adapter": true,
+    "split_hash_matches_adapter_note": "Asserted in test against pavlov_appbench_openreward_games_adapter._deterministic_split_hash, so the manifest drops straight into the E12 contract boundary.",
+    "aggregate_sha256": "7e4989acee0f1d8e39edd36cb5ce64a497b24aa11aa02f097cade6d9febcaa3d",
+    "disjointness_proof_path": "outputs/e12_appbench/disjointness_proof.json",
+    "disjointness_proof_sha256": "ed3f86ec71477d420d5d82b98beb43679bdd0c4c0c1175f84793f8b62e3bc0e6",
+    "disjointness": {
+      "intra_split_duplicates": 0,
+      "foreign_json_files_scanned": 41,
+      "foreign_unique_task_ids": 900,
+      "intersection_with_eval_split": 0,
+      "e13_openreward_task_ids_available": false,
+      "e13_note": "E13 has no task IDs in this checkout, so the adapter's E12/E13 cross-boundary rule is not yet exercised against real E13 IDs."
+    }
+  },
+  "heldout_status": {
+    "immutable_task_ids": true,
+    "split_manifest_hashed": true,
+    "disjointness_proven": true,
+    "held_out_from_model_training": null,
+    "held_out_reason": "The source is the public 'vExternal' CSV published on the Hugging Face Hub on 2025-12-10, ungated, with a nonzero public download count (85 at probe time). Publication predates evaluation, so contamination cannot be excluded for any model whose training corpus postdates that date. No private held-out partition is published or mentioned by AfterQuery anywhere that primary-source search reached.",
+    "conclusion": "The mechanical half of HELDOUT_TASK_SPLIT_UNPROVEN is closed. The contamination half cannot be closed from public artifacts and must not be asserted."
+  },
+  "license_position": {
+    "verdict": "NO_LICENSE_PUBLISHED",
+    "verdict_kind": "absent, not ambiguous",
+    "checked_2026_08_09": true,
+    "hugging_face": {
+      "dataset_url": "https://huggingface.co/datasets/AfterQuery/App-Bench",
+      "api_url": "https://huggingface.co/api/datasets/AfterQuery/App-Bench",
+      "private": false,
+      "gated": false,
+      "cardData_key_present_in_api_response": false,
+      "license_tag_present": false,
+      "tags": [
+        "size_categories:n<1K",
+        "format:csv",
+        "modality:tabular",
+        "modality:text",
+        "library:datasets",
+        "library:pandas",
+        "library:mlcroissant",
+        "library:polars",
+        "region:us"
+      ],
+      "files_at_pinned_revision": [".gitattributes", "AppBench vExternal.csv"],
+      "file_probes_at_pinned_revision": {
+        "README.md": 404,
+        "LICENSE": 404,
+        "LICENSE.md": 404,
+        "LICENSE.txt": 404,
+        "license.txt": 404,
+        "COPYING": 404,
+        "NOTICE": 404,
+        "TERMS.md": 404,
+        "dataset_infos.json": 404,
+        ".gitattributes": 307
+      },
+      "dataset_card_text": "No dataset card yet",
+      "community_tab": "one thread only: '[bot] Conversion to Parquet' by parquet-converter; no license discussion"
+    },
+    "corroborating_signal": {
+      "observation": "AfterQuery does declare licenses on other datasets it publishes, so the absence here is specific rather than an org-wide omission.",
+      "afterquery_datasets": {
+        "AfterQuery/FinanceQA": "license:apache-2.0",
+        "AfterQuery/vader": "license:cc-by-4.0",
+        "AfterQuery/OmicsBench-grader-databases": "license:mit",
+        "AfterQuery/ui-bench": "none",
+        "AfterQuery/MCP-Universe": "none",
+        "AfterQuery/App-Bench": "none"
+      }
+    },
+    "afterquery_site": {
+      "terms_url": "https://www.afterquery.com/terms",
+      "terms_http_status": 200,
+      "privacy_url": "https://www.afterquery.com/privacy",
+      "terms_of_service_alt_url_status": {"": 404, "/terms-of-service": 404, "/legal": 404},
+      "scope_clause_verbatim": "These Terms of Service govern your access to and use of AfterQuery's website and services.",
+      "ip_clause_verbatim": "The service and its original content, features, and functionality are owned by AfterQuery and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.",
+      "grant_to_users": "none - the clause reserves rights and grants nothing; it does not address downloading, redistributing, or reusing published benchmark data",
+      "governing_law": "Delaware",
+      "contact": "founders@afterquery.com"
+    },
+    "leaderboard_page": {
+      "url": "https://www.afterquery.com/leaderboard/app-bench",
+      "license_string_occurrences_in_html": 0,
+      "footer_links": ["Terms of Service", "Privacy Policy"]
+    },
+    "csv_body": {
+      "license_or_copyright_or_terms_string_occurrences": 0
+    },
+    "practical_position": "AfterQuery has published no license and no terms grant covering App-Bench task data. Default copyright applies and there is no grant of use. This is a policy decision for the user, not a technical one. The unblock is a written permission or license from founders@afterquery.com.",
+    "action_required_by_user": "Email founders@afterquery.com requesting a license or written permission for evaluation use of AfterQuery/App-Bench, or accept the risk explicitly in writing. This lane will not run scored evaluation until one of those exists."
+  },
+  "native_runner_status": {
+    "blocker_open": true,
+    "spec_written": true,
+    "spec_path": "outputs/e12_appbench/native_runner_spec.md",
+    "spec_sha256": "876f6fd41802c02d58a0c5631459bba2c87e104be41ae991686fcd612a4b5616",
+    "official_harness_published": false,
+    "official_harness_search": {
+      "github_org": "AfterQuery",
+      "public_repos_enumerated": 13,
+      "repos": ["SkyRL", "verl", "harbor", "terminal-bench-3", "swift-anvil", "anvil", "mle-reasoning-environment", "IDE-Bench", "RL-Take-Home", "appbench.ai-docs", "FullStackBoilerplate", "vader", "FinanceQA"],
+      "only_appbench_repo": "https://github.com/AfterQuery/appbench.ai-docs",
+      "only_appbench_repo_head_sha": "678a9a65632e3f146efcd879074e52f0c0e9622e",
+      "only_appbench_repo_head_sha_verified_locally": "git ls-remote https://github.com/AfterQuery/appbench.ai-docs HEAD",
+      "only_appbench_repo_contents": ["README.md (56 bytes)", "financial-dashboard-prompt.md", "financial-dashboard-rubric.md"],
+      "only_appbench_repo_contains_code": false,
+      "only_appbench_repo_license_probes": {"LICENSE": 404, "LICENSE.md": 404, "LICENSE.txt": 404},
+      "unrelated_runners_checked": "AfterQuery/anvil is a SWE-bench-Pro runner; AfterQuery/harbor is a Terminal-Bench 2.0 fork; AfterQuery/FullStackBoilerplate is a hiring take-home, not the AppBench template. None references App-Bench.",
+      "paper": "none - the leaderboard 'Read paper' link points at appbench.ai (a website); arXiv returns no App-Bench result"
+    },
+    "unpublished_prerequisites": [
+      "the pre-initialized Next.js starter template referenced by every task",
+      "the Supabase project schema / provisioning",
+      "per-tool trajectories and per-item scores (CSV score columns are empty)",
+      "any wall-clock, token, or turn budget"
+    ],
+    "official_grading_protocol": {
+      "grader": "human",
+      "detail": "Two experienced full-stack developers graded each trajectory independently; contradicting grades were re-evaluated jointly to consensus. Graders exercised every rubric feature on the deployed app, verified database persistence, and tested multi-user flows.",
+      "scoring": "binary 1/0 per rubric item, no partial credit, summed across all 6 apps",
+      "metric": "total points earned / total possible points across all tasks (labelled 'Percentile' on the leaderboard, but computed as a percentage)",
+      "attempts": "3 per task, one-shot each, best run scored; no interactive debugging or fix probes",
+      "environment": "isolated Docker container with Node.js, pre-initialized Next.js template, Supabase URL and keys provided; web builders got no template and deployed on their own cloud",
+      "human_intervention": "supplying API keys and service credentials on request only",
+      "time_limit": "not stated anywhere",
+      "source": "https://www.afterquery.com/leaderboard/app-bench"
+    },
+    "reproducibility_consequence": "Because the official verifier is two human graders, any automated or LLM-judge verifier built locally is a different measurement. Its output must be labelled harness_validation with is_model_score false and must never be reported as an AppBench score or compared to the published leaderboard."
+  },
+  "adapter_change": {
+    "path": "zvf-program/flagship/pavlov_appbench_openreward_games_adapter.py",
+    "sha256": "4c4657814e5e26b1d83ba68caf7a08e39c601051ac4d5d8a0a2d88739a7b7510",
+    "test_path": "zvf-program/flagship/test_pavlov_appbench_openreward_games_adapter.py",
+    "test_sha256": "00dc3be081dad7825625b5b135bede11fdedb571a8c11b8a95745ee8e71f60d3",
+    "defect_found": "_validate_source matched the marker 'appbench' as a raw lowercase substring, so the real upstream identifiers ('AfterQuery/App-Bench', 'app-bench') were rejected and no receipt could cite the authoritative source URL verbatim.",
+    "fix": "Added _fold_source: lowercase and drop non-alphanumerics before matching both the required marker and the banned substitution markers.",
+    "safety": "The change strengthens the substitution ban rather than loosening it - 'x-LAM' and 'related_benchmark' now fold onto their banned forms and are rejected. Two tests were added covering both directions.",
+    "blast_radius": "zero external importers; every other flagship adapter defines its own private _validate_source",
+    "e13_scope": "E13's required marker, evaluation role, and boundary semantics are unchanged."
+  },
+  "commands_that_work": [
+    "python3 outputs/e12_appbench/appbench_split_manifest.py build",
+    "python3 outputs/e12_appbench/appbench_split_manifest.py verify",
+    "python3 outputs/e12_appbench/appbench_split_manifest.py disjoint",
+    "python3 -m unittest discover -s outputs/e12_appbench -p 'test_*.py' -v",
+    "cd zvf-program/flagship && python3 -m unittest test_pavlov_appbench_openreward_games_adapter"
+  ],
+  "tests": {
+    "e12_split_manifest": {
+      "command": "python3 -m unittest discover -s outputs/e12_appbench -p 'test_*.py'",
+      "tests_run": 30,
+      "failures": 0,
+      "errors": 0,
+      "exit_code": 0
+    },
+    "e12_e13_contract_adapter": {
+      "command": "cd zvf-program/flagship && python3 -m unittest test_pavlov_appbench_openreward_games_adapter",
+      "tests_run": 17,
+      "baseline_before_change": 15,
+      "failures": 0,
+      "errors": 0,
+      "exit_code": 0
+    },
+    "fail_closed_assertion": {
+      "test": "TestFailClosedAgainstAdapter.test_adapter_rejects_the_real_boundary_for_missing_license",
+      "asserts": "the real E12 boundary, built from the real task IDs and split hash, is still rejected by the contract adapter because the license receipt and native contract are absent"
+    }
+  },
+  "cost": {
+    "paid_attempts": 0,
+    "tinker_cost_usd": 0.0,
+    "tinker_api_key_used": false,
+    "paid_model_api_calls": 0,
+    "wandb_runs": 0,
+    "hf_pushes": 0,
+    "docker_images_pulled": 0,
+    "disk_added_bytes": 0,
+    "cost_to_cross_the_boundary_usd_estimate": "unpriced - requires an agent model credential plus 6 tasks x 3 attempts x N tools of full-stack app generation with live third-party APIs; no credential is present in this environment"
+  },
+  "mandatory_receipts": {
+    "wandb": {"required_for_actual_experiment": true, "initialized": false, "run_id": null, "run_url": null, "reason": "no experiment launched"},
+    "tinker": {"attempted": false, "job_id": null, "cost_usd": 0.0, "receipt_sha256": null},
+    "hugging_face": {"checkpoint_publication_attempted": false, "checkpoint_revisions": [], "receipt_sha256": null}
+  },
+  "blockers": [
+    {
+      "code": "LICENSE_RECEIPT_MISSING",
+      "severity": "launch_blocking",
+      "state": "OPEN",
+      "detail": "AfterQuery publishes no license and no terms grant for App-Bench. Verified 2026-08-09: the HF dataset has no cardData key, no license tag, no README/LICENSE/NOTICE/TERMS at the pinned revision, and an empty dataset card; the leaderboard HTML contains zero occurrences of 'license'; the site ToS reserves rights over AfterQuery content and grants users nothing. The absence is specific - AfterQuery licenses three of its other six public datasets.",
+      "external_receipt_needed": "written license or permission from founders@afterquery.com, or an explicit written risk acceptance by the user",
+      "who_can_unblock": "the user (policy decision) or AfterQuery (grant)"
+    },
+    {
+      "code": "NATIVE_APPBENCH_RUNNER_MISSING",
+      "severity": "launch_blocking",
+      "state": "OPEN",
+      "detail": "No AppBench task runner, deployment harness, artifact verifier, or side-effect verifier exists locally, and none is published upstream. The only App-Bench repo AfterQuery publishes is a 3-file documentation repo with no code. Three prerequisites (Next.js template, Supabase project, human graders) have no upstream artifact to pin against. A specification is now written at outputs/e12_appbench/native_runner_spec.md; it is a spec, not an implementation.",
+      "external_receipt_needed": "none - this is buildable work, but steps 1-3 of the spec are unbuilt and step 4 needs an agent model credential",
+      "who_can_unblock": "engineering time, plus an agent model key for the generation step"
+    },
+    {
+      "code": "HUMAN_GRADER_PROTOCOL_NOT_REPRODUCIBLE",
+      "severity": "score_invalidating",
+      "state": "OPEN",
+      "detail": "The official AppBench verifier is two experienced full-stack developers grading each deployed app by hand against the rubric, with joint re-adjudication of disagreements. Any automated or LLM-judge verifier built locally measures something else. This blocker does not prevent building a harness; it prevents calling the harness output an AppBench score.",
+      "external_receipt_needed": "two qualified human graders following the published dual-grading protocol, or an explicit downgrade of the claim to harness_validation",
+      "who_can_unblock": "the user"
+    },
+    {
+      "code": "HELDOUT_TASK_SPLIT_UNPROVEN",
+      "severity": "launch_blocking",
+      "state": "PARTIALLY_RESOLVED",
+      "detail": "Resolved: immutable content-addressed task IDs, a deterministic split hash byte-compatible with the contract adapter, an aggregate manifest hash, and a disjointness proof against 900 foreign task IDs across 41 files, all unit-tested (30 tests). Still open: the tasks are public on the Hugging Face Hub since 2025-12-10, so freedom from training contamination cannot be proven and is recorded as null, not true. Upstream publishes no private held-out partition.",
+      "external_receipt_needed": "a private held-out partition from AfterQuery, or a model whose training cutoff provably predates 2025-12-10",
+      "who_can_unblock": "AfterQuery, or model-provenance evidence"
+    },
+    {
+      "code": "MANDATORY_PLATFORM_RECEIPTS_ABSENT",
+      "severity": "launch_blocking",
+      "state": "OPEN",
+      "detail": "No W&B, Tinker, or Hugging Face checkpoint receipts exist because no experiment was attempted. Consistent with the cost boundary for this sprint.",
+      "external_receipt_needed": "none until an actual run is authorized",
+      "who_can_unblock": "the user, by authorizing a paid run"
+    }
+  ],
+  "next_action": "Decide the license question. Everything downstream of it is engineering; nothing downstream of it is legal. Until there is a license grant or a written risk acceptance, this lane stops at the artifacts in this receipt."
+}

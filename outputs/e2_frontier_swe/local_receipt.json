@@ -1,0 +1,87 @@
+{
+  "benchmark": {
+    "checkout_path": "/private/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/tmp.ZBEbvbWhjm/frontier-swe",
+    "container_digests": {
+      "revideo-perf-opt": "sha256:291ff2584113385f988a5594c3d7979ac72a071fa77a1a3752c6766110cdd73b"
+    },
+    "id": "frontier_swe_eval",
+    "license": {
+      "source_url": "https://github.com/Proximal-Labs/frontier-swe/blob/422b9bb95deb8efe436becb0ed3c44be23611e10/LICENSE",
+      "status": "missing"
+    },
+    "name": "FrontierSWE",
+    "official_task_ids": [
+      "cranelift-codegen-opt",
+      "dart-style-haskell",
+      "dependent-type-checker",
+      "ffmpeg-swscale-rewrite",
+      "frogsgame-rl",
+      "git-to-zig",
+      "granite-mamba2-inference-optimization",
+      "inference-system-optimization",
+      "libexpat-to-x86asm",
+      "lua-native-compiler",
+      "modular-stack-wan21",
+      "notebook-compression",
+      "optimizer-design",
+      "pcqm4mv2-autoresearch",
+      "postgres-sqlite-wire-adapter",
+      "pyright-type-checking-optimization",
+      "revideo-perf-opt"
+    ],
+    "pinned_revision": "422b9bb95deb8efe436becb0ed3c44be23611e10",
+    "repository": "https://github.com/Proximal-Labs/frontier-swe",
+    "revision": "422b9bb95deb8efe436becb0ed3c44be23611e10",
+    "split": {
+      "disjoint": true,
+      "kind": "task_id_disjoint",
+      "prior_task_ids": []
+    },
+    "task_hashes": {
+      "revideo-perf-opt": "909a84f530ec392d6f10bbbfe2b7296e633323f2b55040455ee9cab51c4b4d52"
+    },
+    "task_id_sha256": "95327b025712876e0be86a4e221a525a4bd2608ccd7c9b608f0cf4578d4aa473",
+    "task_ids": [
+      "revideo-perf-opt"
+    ],
+    "task_manifest_sha256": "3d503eb5d5622dcb4d5b4e3ef0da79c01185f50eb5d98ec106f19d2adf1cf17a",
+    "verifier_sha256": {
+      "revideo-perf-opt": "dd2e08343937ed4684589d710d5ec1a9798e484f3ced19f54c99d2438ae25c42"
+    }
+  },
+  "blockers": [
+    {
+      "code": "benchmark_license_missing",
+      "message": "the official benchmark checkout has no root license file",
+      "required_receipt": "a license receipt or explicit maintainer authorization binding https://github.com/Proximal-Labs/frontier-swe@422b9bb95deb8efe436becb0ed3c44be23611e10"
+    }
+  ],
+  "budget": {
+    "projected_tinker_usd": 0.5,
+    "reserve_preserved": true,
+    "safety_reserve_usd": 1.5,
+    "shared_hard_maximum_usd": 18.0,
+    "shared_operational_cap_usd": 16.5,
+    "suite_maximum_usd": 0.5
+  },
+  "created_at": "2026-08-09T06:41:16.562499+00:00",
+  "environment": {
+    "native_verifier": "official task tests/test.sh + compute_reward.py",
+    "network": "none",
+    "submission_dir": null
+  },
+  "mode": "preflight",
+  "model": {
+    "base_model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "model_id": "Qwen/Qwen3.6-35B-A3B",
+    "source": {
+      "evaluated_hf_commit": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+      "kind": "base_model",
+      "model_id": "Qwen/Qwen3.6-35B-A3B",
+      "model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0"
+    }
+  },
+  "schema_version": "frontier-swe-eval-v1",
+  "score": null,
+  "status": "BLOCKED"
+}

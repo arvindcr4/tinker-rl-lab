@@ -8,17 +8,59 @@ import unittest
 from pathlib import Path
 
 from flagship.pavlov_webbench_eval_adapter import (
+    WEBBENCH_CATEGORIES,
+    WEBBENCH_DATASET_SHA256,
     WEBBENCH_DOMAINS,
+    WEBBENCH_PUBLIC_TASK_COUNT,
     WEBBENCH_RECEIPT_FIELDS,
     WEBBENCH_ROLE,
     WEBBENCH_SOURCE_URL,
     WEBBENCH_SUITE_ID,
+    WebBenchDatasetError,
+    aggregate_task_hashes,
+    build_split_artifacts,
+    build_split_manifest,
+    characterize_task_set,
+    derive_task_records,
+    format_task_id,
+    load_training_task_manifest,
+    prove_split_disjointness,
+    read_webbench_csv,
     receipt_digest,
+    registrable_host,
     sha256_hex,
     split_manifest_hash,
+    task_digest,
     task_ids_hash,
     validate_webbench_manifest,
+    write_split_artifacts,
 )
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+REAL_DATASET = REPO_ROOT / "outputs" / "e6_webbench" / "webbenchfinal.csv"
+REAL_TRAINING_MANIFEST = REPO_ROOT / "outputs" / "e6_webbench" / "eval_only_training_task_manifest.json"
+
+# Recomputed by webbench_eval.py's independent hashing scheme over the same
+# pinned CSV.  If either implementation drifts, these stop matching.
+RUNNER_TASK_ID_HASH = "22afbdd3cc47e6dba1e3c57ddbe5f762b54be5d2af6ac76bbd206c19eb83b12e"
+RUNNER_MANIFEST_HASH = "66da44a04ec48fe356b3b0d1c420c40679faa1a7ac650728e254b625bb674a07"
+
+CSV_HEADER = "ID,Starting URL,Category,Task\n"
+
+
+def _csv(rows: list[tuple[int, str, str, str]], header: str = CSV_HEADER) -> str:
+    lines = [header.rstrip("\n")]
+    for csv_id, url, category, task in rows:
+        escaped = task.replace('"', '""')
+        lines.append(f'{csv_id},{url},{category},"{escaped}"')
+    return "\n".join(lines) + "\n"
+
+
+FIXTURE_ROWS = [
+    (7, "https://www.example-shop.test", "READ", "List the price.\nOnly use the site."),
+    (3, "https://docs.example-wiki.test", "CREATE", "Create a page.\nOnly use the site."),
+    (1200, "http://example-jobs.test", "FILE_MANIPULATION", "Upload a resume.\nOnly use the site."),
+]
 
 
 class PavlovWebBenchBoundaryTests(unittest.TestCase):
@@ -366,6 +408,357 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
         self.assertEqual(report["status"], "READY_PRIMARY_EVAL_PENDING_RECEIPTS")
         self.assertFalse(report["receipt_proven_heldout"])
         self.assertNotIn("Traceback", process.stderr)
+
+
+class WebBenchSplitDerivationTests(unittest.TestCase):
+    """Offline derivation of task identities, hashes, and the split manifest."""
+
+    def _write_fixture(self, directory: Path, rows: list[tuple[int, str, str, str]] | None = None) -> Path:
+        path = directory / "webbenchfinal.csv"
+        path.write_text(_csv(rows if rows is not None else FIXTURE_ROWS), encoding="utf-8")
+        return path
+
+    def _records(self, directory: Path, rows: list[tuple[int, str, str, str]] | None = None) -> list[dict]:
+        return derive_task_records(read_webbench_csv(self._write_fixture(directory, rows), expected_sha256=None))
+
+    def test_task_ids_are_zero_padded_so_lexicographic_equals_numeric_order(self) -> None:
+        ids = [format_task_id(value) for value in (0, 9, 10, 999, 1000, 2724)]
+
+        self.assertEqual(ids[0], "webbench-task-0000")
+        self.assertEqual(ids[-1], "webbench-task-2724")
+        self.assertEqual(sorted(ids), ids)
+        with self.assertRaises(WebBenchDatasetError):
+            format_task_id(-1)
+        with self.assertRaises(WebBenchDatasetError):
+            format_task_id(True)
+
+    def test_registrable_host_only_strips_leading_www(self) -> None:
+        self.assertEqual(registrable_host("www.indeed.com"), "indeed.com")
+        self.assertEqual(registrable_host("open.spotify.com"), "open.spotify.com")
+        self.assertEqual(registrable_host("WWW.Example.COM"), "example.com")
+
+    def test_task_digest_is_content_addressed_and_row_order_independent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            forward = self._records(Path(tmp))
+            reversed_rows = list(reversed(FIXTURE_ROWS))
+            reverse = self._records(Path(tmp), reversed_rows)
+
+        self.assertEqual([item["task_id"] for item in forward], [item["task_id"] for item in reverse])
+        self.assertEqual([item["task_digest"] for item in forward], [item["task_digest"] for item in reverse])
+        self.assertEqual([item["task_uid"] for item in forward], [item["task_uid"] for item in reverse])
+        # The digest binds content, not the derived label.
+        mutated = dict(forward[0])
+        mutated["task"] = forward[0]["task"] + " extra"
+        self.assertNotEqual(task_digest(mutated), forward[0]["task_digest"])
+
+    def test_derived_records_are_sorted_unique_and_carry_stable_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            records = self._records(Path(tmp))
+
+        task_ids = [item["task_id"] for item in records]
+        self.assertEqual(task_ids, sorted(task_ids))
+        self.assertEqual(len(task_ids), len(set(task_ids)))
+        self.assertEqual([item["csv_id"] for item in records], [3, 7, 1200])
+        self.assertEqual(records[0]["registrable_domain"], "docs.example-wiki.test")
+        self.assertEqual(records[2]["scheme"], "http")
+        self.assertTrue(all(item["task_uid"].startswith("webbench-uid-") for item in records))
+
+    def test_csv_reader_fails_closed_on_malformed_input(self) -> None:
+        cases = {
+            "bad_columns": ("id,url,category,task\n1,https://a.test,READ,x\n", "columns"),
+            "bad_category": (_csv([(1, "https://a.test", "BROWSE", "do it")]), "category"),
+            "empty_task": (_csv([(1, "https://a.test", "READ", "")]), "empty task"),
+            "bad_url": (_csv([(1, "ftp://a.test", "READ", "do it")]), "Starting URL"),
+            "noninteger_id": ("ID,Starting URL,Category,Task\nx,https://a.test,READ,\"do it\"\n", "non-integer"),
+            "duplicate_id": (
+                _csv([(1, "https://a.test", "READ", "one"), (1, "https://b.test", "READ", "two")]),
+                "duplicate",
+            ),
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            for name, (body, fragment) in cases.items():
+                path = Path(tmp) / f"{name}.csv"
+                path.write_text(body, encoding="utf-8")
+                with self.subTest(case=name):
+                    with self.assertRaises(WebBenchDatasetError) as ctx:
+                        read_webbench_csv(path, expected_sha256=None)
+                    self.assertIn(fragment, str(ctx.exception))
+
+    def test_csv_reader_enforces_the_dataset_pin(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write_fixture(Path(tmp))
+            with self.assertRaises(WebBenchDatasetError) as ctx:
+                read_webbench_csv(path, expected_sha256="0" * 64)
+            self.assertIn("SHA-256 mismatch", str(ctx.exception))
+            missing = Path(tmp) / "absent.csv"
+            with self.assertRaises(WebBenchDatasetError):
+                read_webbench_csv(missing, expected_sha256=None)
+
+    def test_aggregate_hashes_are_deterministic_and_order_independent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            records = self._records(Path(tmp))
+            shuffled = list(reversed(records))
+
+        first = aggregate_task_hashes(records)
+        second = aggregate_task_hashes(shuffled)
+        self.assertEqual(first, second)
+        self.assertEqual(first["task_count"], 3)
+        self.assertEqual(first["task_id_hash"], task_ids_hash([item["task_id"] for item in records]))
+        self.assertEqual(first["task_digest_hash"], sha256_hex([item["task_digest"] for item in records]))
+        # A single content change must move the content hashes but not the ID hash.
+        mutated = [dict(item) for item in records]
+        mutated[0]["task"] = mutated[0]["task"] + "!"
+        mutated[0]["task_digest"] = task_digest(mutated[0])
+        third = aggregate_task_hashes(mutated)
+        self.assertEqual(third["task_id_hash"], first["task_id_hash"])
+        self.assertNotEqual(third["task_digest_hash"], first["task_digest_hash"])
+        self.assertNotEqual(third["legacy_runner_manifest_hash"], first["legacy_runner_manifest_hash"])
+
+    def test_built_split_manifest_satisfies_the_boundary_task_and_split_checks(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            records = self._records(Path(tmp))
+        task_ids = [item["task_id"] for item in records]
+        split = build_split_manifest(task_ids)
+
+        self.assertEqual(split["suite_id"], WEBBENCH_SUITE_ID)
+        self.assertEqual(split["role"], WEBBENCH_ROLE)
+        self.assertEqual(split["split"], "evaluation")
+        self.assertEqual(split["task_id_hash"], task_ids_hash(task_ids))
+
+        manifest = PavlovWebBenchBoundaryTests()._manifest()
+        manifest["task_ids"] = task_ids
+        manifest["task_id_hash"] = task_ids_hash(task_ids)
+        manifest["split_manifest"] = split
+        manifest["split_manifest_hash"] = split_manifest_hash(split)
+        manifest["task_receipt"]["payload"]["task_id_hash"] = task_ids_hash(task_ids)
+        manifest["task_receipt"]["digest"] = receipt_digest(
+            manifest["task_receipt"]["binding"], manifest["task_receipt"]["payload"]
+        )
+        manifest["split_receipt"]["payload"]["split_manifest_hash"] = split_manifest_hash(split)
+        manifest["split_receipt"]["digest"] = receipt_digest(
+            manifest["split_receipt"]["binding"], manifest["split_receipt"]["payload"]
+        )
+
+        report = validate_webbench_manifest(manifest)
+        self.assertTrue(report["checks"]["tasks_and_split"], report["blocker_codes"])
+        self.assertNotIn("task_id_hash_mismatch", report["blocker_codes"])
+        self.assertNotIn("split_manifest_hash_mismatch", report["blocker_codes"])
+
+        with self.assertRaises(WebBenchDatasetError):
+            build_split_manifest(task_ids + task_ids[:1])
+
+    def test_training_manifest_accepts_int_string_and_object_forms(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            as_list = root / "list.json"
+            as_list.write_text(json.dumps([7, 3]), encoding="utf-8")
+            self.assertEqual(
+                load_training_task_manifest(as_list)["task_ids"],
+                ["webbench-task-0003", "webbench-task-0007"],
+            )
+
+            as_strings = root / "strings.json"
+            as_strings.write_text(json.dumps({"task_ids": ["webbench-task-0007"]}), encoding="utf-8")
+            loaded = load_training_task_manifest(as_strings)
+            self.assertEqual(loaded["task_ids"], ["webbench-task-0007"])
+            self.assertIsNone(loaded["legacy_runner_task_id_hash"])
+
+            duplicated = root / "dupes.json"
+            duplicated.write_text(json.dumps([5, 5]), encoding="utf-8")
+            with self.assertRaises(WebBenchDatasetError):
+                load_training_task_manifest(duplicated)
+
+            malformed = root / "malformed.json"
+            malformed.write_text("{not json", encoding="utf-8")
+            with self.assertRaises(WebBenchDatasetError):
+                load_training_task_manifest(malformed)
+
+            with self.assertRaises(WebBenchDatasetError):
+                load_training_task_manifest(root / "absent.json")
+
+    def test_disjointness_proof_detects_overlap_and_bad_declared_hash(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            eval_ids = ["webbench-task-0003", "webbench-task-0007"]
+
+            empty = root / "empty.json"
+            # sha256 of the empty string: the runner's hash of an empty ID list.
+            empty.write_text(
+                json.dumps(
+                    {
+                        "task_ids": [],
+                        "task_id_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            clean = prove_split_disjointness(eval_ids, load_training_task_manifest(empty))
+            self.assertTrue(clean["disjoint"])
+            self.assertTrue(clean["valid"])
+            self.assertTrue(clean["training_declared_task_id_hash_verified"])
+            self.assertEqual(clean["overlap_count"], 0)
+
+            overlapping = root / "overlap.json"
+            overlapping.write_text(json.dumps([3]), encoding="utf-8")
+            dirty = prove_split_disjointness(eval_ids, load_training_task_manifest(overlapping))
+            self.assertFalse(dirty["disjoint"])
+            self.assertFalse(dirty["valid"])
+            self.assertEqual(dirty["overlap_task_ids"], ["webbench-task-0003"])
+
+            wrong_hash = root / "wrong.json"
+            wrong_hash.write_text(json.dumps({"task_ids": [], "task_id_hash": "f" * 64}), encoding="utf-8")
+            bad = prove_split_disjointness(eval_ids, load_training_task_manifest(wrong_hash))
+            self.assertFalse(bad["valid"])
+            self.assertFalse(bad["training_declared_task_id_hash_verified"])
+
+    def test_characterization_reports_id_gaps_and_domain_shape(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            records = self._records(Path(tmp))
+        profile = characterize_task_set(records)
+
+        self.assertEqual(profile["task_count"], 3)
+        self.assertEqual(profile["csv_id_min"], 3)
+        self.assertEqual(profile["csv_id_max"], 1200)
+        self.assertFalse(profile["csv_ids_contiguous"])
+        self.assertEqual(profile["csv_id_gap_count"], 1195)
+        self.assertEqual(profile["distinct_registrable_domains"], 3)
+        self.assertEqual(profile["url_schemes"], {"http": 1, "https": 2})
+        self.assertEqual(profile["http_only_urls"], ["http://example-jobs.test"])
+        self.assertEqual(set(profile["categories"]) - set(WEBBENCH_CATEGORIES), set())
+        # CREATE + FILE_MANIPULATION mutate live sites; READ does not.
+        self.assertEqual(profile["write_class_task_count"], 2)
+        self.assertEqual(profile["keyword_probe_counts"]["captcha"], 0)
+
+    def test_bundle_is_labelled_a_local_derivation_not_a_receipt(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            dataset = self._write_fixture(root)
+            training = root / "training.json"
+            training.write_text(json.dumps({"task_ids": []}), encoding="utf-8")
+            bundle = build_split_artifacts(
+                dataset, training_manifest_path=training, expected_dataset_sha256=None
+            )
+            written = write_split_artifacts(bundle, root / "out")
+
+            derivation = bundle["derivation"]
+            self.assertEqual(derivation["receipt_class"], "local_derivation")
+            self.assertIsNone(derivation["authenticated_receipt"])
+            self.assertFalse(derivation["externally_bound"])
+            self.assertFalse(derivation["network_accessed"])
+            self.assertTrue(derivation["disjointness"]["valid"])
+            self.assertEqual(len(Path(written["task_index"]).read_text(encoding="utf-8").splitlines()), 3)
+            split_payload = json.loads(Path(written["split_manifest"]).read_text(encoding="utf-8"))
+            self.assertEqual(split_payload["task_count"], 3)
+            self.assertIsNone(split_payload["authenticated_receipt"])
+
+            # Re-running is byte-identical: the derivation is deterministic.
+            again = build_split_artifacts(
+                dataset, training_manifest_path=training, expected_dataset_sha256=None
+            )
+            self.assertEqual(again["derivation"]["derivation_hash"], derivation["derivation_hash"])
+
+    def test_derived_split_alone_never_unblocks_the_environment_boundary(self) -> None:
+        """A local split manifest must not make WebBench look runnable."""
+
+        with tempfile.TemporaryDirectory() as tmp:
+            records = self._records(Path(tmp))
+        task_ids = [item["task_id"] for item in records]
+        split = build_split_manifest(task_ids)
+        manifest = {
+            "suite_id": WEBBENCH_SUITE_ID,
+            "role": WEBBENCH_ROLE,
+            "domains": list(WEBBENCH_DOMAINS),
+            "heldout_status": "pending_receipts",
+            "source": {
+                "suite_id": WEBBENCH_SUITE_ID,
+                "name": "Halluminate/WebBench",
+                "url": WEBBENCH_SOURCE_URL,
+                "revision": "a" * 40,
+                "license": "MIT",
+            },
+            "task_ids": task_ids,
+            "task_id_hash": task_ids_hash(task_ids),
+            "split_manifest": split,
+            "split_manifest_hash": split_manifest_hash(split),
+        }
+
+        report = validate_webbench_manifest(manifest)
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertIn("environment_contract_missing", report["blocker_codes"])
+        self.assertIn("task_receipt_invalid", report["blocker_codes"])
+        self.assertIn("split_receipt_invalid", report["blocker_codes"])
+        self.assertFalse(report["receipt_proven_heldout"])
+
+
+@unittest.skipUnless(REAL_DATASET.is_file(), "pinned WebBench CSV is not on disk")
+class WebBenchPinnedDatasetTests(unittest.TestCase):
+    """Assertions against the real, pinned, MIT-licensed public CSV."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.records = derive_task_records(read_webbench_csv(REAL_DATASET, expected_sha256=WEBBENCH_DATASET_SHA256))
+        cls.aggregates = aggregate_task_hashes(cls.records)
+
+    def test_public_task_count_and_identity_scheme(self) -> None:
+        self.assertEqual(len(self.records), WEBBENCH_PUBLIC_TASK_COUNT)
+        task_ids = [item["task_id"] for item in self.records]
+        self.assertEqual(task_ids, sorted(task_ids))
+        self.assertEqual(len(set(task_ids)), WEBBENCH_PUBLIC_TASK_COUNT)
+        self.assertEqual(len({item["task_uid"] for item in self.records}), WEBBENCH_PUBLIC_TASK_COUNT)
+        self.assertEqual(len({item["task_digest"] for item in self.records}), WEBBENCH_PUBLIC_TASK_COUNT)
+
+    def test_aggregates_agree_with_the_independent_runner_implementation(self) -> None:
+        self.assertEqual(self.aggregates["legacy_runner_task_id_hash"], RUNNER_TASK_ID_HASH)
+        self.assertEqual(self.aggregates["legacy_runner_manifest_hash"], RUNNER_MANIFEST_HASH)
+
+    def test_public_ids_are_sparse_which_is_why_ids_must_be_sorted_explicitly(self) -> None:
+        profile = characterize_task_set(self.records)
+        self.assertFalse(profile["csv_ids_contiguous"])
+        self.assertEqual(profile["csv_id_min"], 0)
+        self.assertEqual(profile["csv_id_max"], 2724)
+        self.assertEqual(profile["csv_id_gap_count"], 78)
+        self.assertEqual(sum(profile["categories"].values()), WEBBENCH_PUBLIC_TASK_COUNT)
+        self.assertEqual(profile["categories"]["READ"], 1637)
+        self.assertEqual(profile["write_class_task_count"], 1010)
+        self.assertEqual(profile["distinct_registrable_domains"], 448)
+        self.assertEqual(profile["keyword_probe_counts"]["credential_or_account"], 536)
+
+    @unittest.skipUnless(REAL_TRAINING_MANIFEST.is_file(), "training manifest is not on disk")
+    def test_evaluation_split_is_disjoint_from_the_training_manifest(self) -> None:
+        training = load_training_task_manifest(REAL_TRAINING_MANIFEST)
+        proof = prove_split_disjointness([item["task_id"] for item in self.records], training)
+
+        self.assertTrue(proof["disjoint"], proof["overlap_task_ids"][:10])
+        self.assertTrue(proof["valid"], proof["errors"])
+        self.assertEqual(proof["evaluation_task_count"], WEBBENCH_PUBLIC_TASK_COUNT)
+        self.assertTrue(proof["training_declared_task_id_hash_verified"])
+
+    def test_cli_build_split_is_offline_and_writes_artifacts(self) -> None:
+        script = Path(__file__).with_name("pavlov_webbench_eval_adapter.py")
+        with tempfile.TemporaryDirectory() as tmp:
+            process = subprocess.run(
+                [
+                    sys.executable,
+                    str(script),
+                    "--build-split",
+                    "--dataset",
+                    str(REAL_DATASET),
+                    "--training-task-manifest",
+                    str(REAL_TRAINING_MANIFEST),
+                    "--out-dir",
+                    tmp,
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(process.returncode, 0, process.stderr)
+            self.assertNotIn("Traceback", process.stderr)
+            payload = json.loads(process.stdout)
+            self.assertEqual(payload["derivation"]["aggregates"]["task_count"], WEBBENCH_PUBLIC_TASK_COUNT)
+            self.assertFalse(payload["derivation"]["network_accessed"])
+            index_lines = Path(payload["written"]["task_index"]).read_text(encoding="utf-8").splitlines()
+            self.assertEqual(len(index_lines), WEBBENCH_PUBLIC_TASK_COUNT)
 
 
 if __name__ == "__main__":

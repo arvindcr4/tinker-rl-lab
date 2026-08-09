@@ -1,0 +1,221 @@
+{
+  "benchmark": {
+    "dataset_file": "webbenchfinal.csv",
+    "full_public_manifest_hash": "66da44a04ec48fe356b3b0d1c420c40679faa1a7ac650728e254b625bb674a07",
+    "full_public_task_id_hash": "22afbdd3cc47e6dba1e3c57ddbe5f762b54be5d2af6ac76bbd206c19eb83b12e",
+    "license": "MIT",
+    "manifest_hash": "f1ba71c2419195e271f06ead31113cf961a71a27584024042e5bccec379a4878",
+    "name": "Halluminate/WebBench",
+    "revision": "ea7a1628443321363989f354401f0653e0cba6f4",
+    "source_url": "https://github.com/Halluminate/WebBench",
+    "task_count": 1,
+    "task_id_hash": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+    "task_ids": [
+      0
+    ]
+  },
+  "blockers": [
+    "explicit training task-ID manifest/hash is required for disjointness",
+    "isolated benchmark environment is missing pyvenv.cfg: /Users/arvind/Developer/agentic_repos/tinker-rl-lab/.venv-webbench",
+    "isolated benchmark environment has no interpreter: /Users/arvind/Developer/agentic_repos/tinker-rl-lab/.venv-webbench",
+    "official Halluminate environment/verifier access receipt is missing"
+  ],
+  "budget": {
+    "global_max_usd": 18.0,
+    "global_operational_cap_usd": 16.5,
+    "global_safety_reserve_usd": 1.5,
+    "projected_tinker_usd": 0.0,
+    "suite_tinker_max_usd": 0.5
+  },
+  "evidence_boundary": {
+    "ground_truth_issue_url": "https://github.com/Halluminate/WebBench/issues/2",
+    "human_annotation_is_not_native_verification": true,
+    "reason": "No score is accepted without the official native verifier receipt and complete trajectory evidence.",
+    "score_is_claimable": false
+  },
+  "experiment": {
+    "base_model_revision": "9c4b90e1e4ba969fd3b5378b57d966d725f1b86c",
+    "dom_required": true,
+    "evaluation_mode": "eval_only",
+    "model_binding": {
+      "evaluated_hf_commit": "9c4b90e1e4ba969fd3b5378b57d966d725f1b86c",
+      "evaluated_hf_commit_url": "https://huggingface.co/Qwen/Qwen3-VL-30B-A3B-Instruct/commit/9c4b90e1e4ba969fd3b5378b57d966d725f1b86c",
+      "mode": "base_model",
+      "model_id": "Qwen/Qwen3-VL-30B-A3B-Instruct",
+      "reason": "no completed compatible Tinker sampler checkpoint supplied"
+    },
+    "model_id": "Qwen/Qwen3-VL-30B-A3B-Instruct",
+    "native_verifier_required": true,
+    "screenshots_required": true,
+    "substitution_policy": "related_browser_benchmarks_forbidden"
+  },
+  "external_access_receipt_needed": [
+    {
+      "id": "halluminate_webbench_environment_access",
+      "provider": "Halluminate",
+      "required_fields": [
+        "approved=true",
+        "access_receipt_id",
+        "environment.environment_id",
+        "environment.environment_revision (immutable)",
+        "environment.container_image_digest (sha256)",
+        "environment.browser_revision",
+        "environment.screenshot_capture=true",
+        "environment.dom_capture=true",
+        "environment.task_reset=true",
+        "environment.credential_scope"
+      ],
+      "why": "The public repository contains task CSVs, not the official live browser environment, credentials, or reset contract."
+    },
+    {
+      "evidence_url": "https://github.com/Halluminate/WebBench/issues/2",
+      "id": "halluminate_webbench_native_verifier",
+      "provider": "Halluminate",
+      "required_fields": [
+        "native_verifier.available=true",
+        "native_verifier.ground_truth_available=true",
+        "native_verifier.verifier_id",
+        "native_verifier.verifier_revision (immutable)",
+        "native_verifier.verifier_sha256",
+        "native_verifier.command",
+        "native_verifier.receipt_url"
+      ],
+      "why": "The official repository's open Ground Truth issue requests the missing ground truth/script; no native verifier is public."
+    },
+    {
+      "id": "webbench_task_authorization",
+      "provider": "Halluminate",
+      "required_fields": [
+        "allowed_task_ids or explicit task-ID manifest",
+        "credential_scope",
+        "side_effect_policy",
+        "terms_or_license_signoff"
+      ],
+      "why": "WRITE tasks can mutate live websites; a launch needs an explicit authorization/credential scope rather than inferred permission."
+    }
+  ],
+  "gates": [
+    {
+      "blockers": [],
+      "evidence": {
+        "dataset_file": "webbenchfinal.csv",
+        "dataset_raw_url": "https://raw.githubusercontent.com/Halluminate/WebBench/ea7a1628443321363989f354401f0653e0cba6f4/webbenchfinal.csv",
+        "dataset_sha256": "fd5311a38bdb6f941e8f544150735656c114d76fbfb17193da973d5de0165217",
+        "expected_dataset_sha256": "fd5311a38bdb6f941e8f544150735656c114d76fbfb17193da973d5de0165217",
+        "expected_public_manifest_hash": "66da44a04ec48fe356b3b0d1c420c40679faa1a7ac650728e254b625bb674a07",
+        "expected_public_task_count": 2647,
+        "expected_public_task_id_hash": "22afbdd3cc47e6dba1e3c57ddbe5f762b54be5d2af6ac76bbd206c19eb83b12e",
+        "license": "MIT",
+        "license_sha256": "96804aa272fe40cdfb8b5c8f4d1d94757bcfaf1bf5596fb829214843d2371e58",
+        "license_url": "https://github.com/Halluminate/WebBench/blob/ea7a1628443321363989f354401f0653e0cba6f4/LICENSE",
+        "manifest_hash": "66da44a04ec48fe356b3b0d1c420c40679faa1a7ac650728e254b625bb674a07",
+        "path": "/private/var/folders/yp/3vqv_j_967l8r6rmn_60jf740000gn/T/tmp.IYWDmJb16w/webbenchfinal.csv",
+        "revision": "ea7a1628443321363989f354401f0653e0cba6f4",
+        "revision_url": "https://github.com/Halluminate/WebBench/tree/ea7a1628443321363989f354401f0653e0cba6f4",
+        "source_url": "https://github.com/Halluminate/WebBench",
+        "task_count": 2647,
+        "task_id_hash": "22afbdd3cc47e6dba1e3c57ddbe5f762b54be5d2af6ac76bbd206c19eb83b12e"
+      },
+      "id": "authoritative_dataset",
+      "status": "PASS"
+    },
+    {
+      "blockers": [
+        "explicit training task-ID manifest/hash is required for disjointness"
+      ],
+      "evidence": {
+        "evaluation_task_id_hash": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+        "evaluation_task_ids": [
+          0
+        ],
+        "training_task_id_hash": null,
+        "training_task_ids": null
+      },
+      "id": "disjoint_task_ids",
+      "status": "BLOCKED"
+    },
+    {
+      "blockers": [
+        "isolated benchmark environment is missing pyvenv.cfg: /Users/arvind/Developer/agentic_repos/tinker-rl-lab/.venv-webbench",
+        "isolated benchmark environment has no interpreter: /Users/arvind/Developer/agentic_repos/tinker-rl-lab/.venv-webbench"
+      ],
+      "evidence": {
+        "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.venv-webbench",
+        "scope": "per-worktree"
+      },
+      "id": "isolated_benchmark_environment",
+      "status": "BLOCKED"
+    },
+    {
+      "blockers": [],
+      "evidence": {
+        "evaluated_hf_commit": "9c4b90e1e4ba969fd3b5378b57d966d725f1b86c",
+        "evaluated_hf_commit_url": "https://huggingface.co/Qwen/Qwen3-VL-30B-A3B-Instruct/commit/9c4b90e1e4ba969fd3b5378b57d966d725f1b86c",
+        "mode": "base_model",
+        "model_id": "Qwen/Qwen3-VL-30B-A3B-Instruct",
+        "reason": "no completed compatible Tinker sampler checkpoint supplied"
+      },
+      "id": "model_or_sampler_binding",
+      "status": "PASS"
+    },
+    {
+      "blockers": [
+        "official Halluminate environment/verifier access receipt is missing"
+      ],
+      "evidence": {
+        "status": "not_acquired"
+      },
+      "id": "official_native_environment_and_verifier",
+      "status": "BLOCKED"
+    },
+    {
+      "blockers": [],
+      "evidence": {
+        "global_max_usd": 18.0,
+        "global_operational_cap_usd": 16.5,
+        "global_safety_reserve_usd": 1.5,
+        "projected_tinker_usd": 0.0,
+        "suite_max_usd": 0.5
+      },
+      "id": "budget_cap",
+      "status": "PASS"
+    },
+    {
+      "blockers": [],
+      "evidence": {
+        "initialized": false,
+        "required": true,
+        "will_initialize_before_tinker": false
+      },
+      "id": "wandb_online_before_tinker",
+      "status": "PASS"
+    },
+    {
+      "blockers": [],
+      "evidence": {
+        "command": []
+      },
+      "id": "native_agent_command",
+      "status": "PASS"
+    }
+  ],
+  "generated_at_utc": "2026-08-09T06:40:43.973683+00:00",
+  "launch": {
+    "attempted": false,
+    "requested": false,
+    "result_rows": [],
+    "score": null,
+    "tinker_call_count": 0
+  },
+  "schema_version": "pavlov-e6-webbench-receipt-v1",
+  "split": {
+    "evaluation_task_id_hash": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+    "evaluation_task_ids": [
+      0
+    ],
+    "training_task_id_hash": null,
+    "training_task_ids": null
+  },
+  "status": "BLOCKED",
+  "suite_id": "webbench_eval"
+}

@@ -1,0 +1,165 @@
+{
+  "schema_version": "e13-openreward-games-tinker-train-v1",
+  "generated_at_utc": "2026-08-09T08:59:26Z",
+  "mode": "plan",
+  "spent_usd": 0.0,
+  "model": "Qwen/Qwen3.5-9B",
+  "model_policy": "assert_candidate_allowed passed",
+  "config": {
+    "name": "e13_openreward_wordle_grpo",
+    "model": "Qwen/Qwen3.5-9B",
+    "lora_rank": 32,
+    "seed": 1337,
+    "steps": 20,
+    "batch_size": 4,
+    "group_size": 4,
+    "lr": 1e-05,
+    "max_prompt_tokens": 4096,
+    "max_response_tokens": 256,
+    "max_turns": 7,
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "wandb_project": "tinker-rl-lab-pavlov",
+    "wandb_entity": null,
+    "wandb_group": "e13-openreward-games",
+    "wandb_tags": [
+      "e13",
+      "openreward",
+      "wordle",
+      "grpo",
+      "lora"
+    ],
+    "eval_tasks": 20,
+    "eval_every": 10,
+    "environment": "GeneralReasoning/Wordle",
+    "source_revision": "92bea32efa102e86275dedd2e0367e86d3754754",
+    "checkpoint_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e13_openreward_games/checkpoints",
+    "base_url": null
+  },
+  "split_firewall": {
+    "holdout_seed_base": 10000,
+    "separation_proof": {
+      "environment": "GeneralReasoning/Wordle",
+      "train_split": "train",
+      "eval_split": "test",
+      "train_manifest_sha256": "31965f81b59a70f2a4026cde53d78b16b4e9cd548314962785d99bad56534a04",
+      "eval_manifest_sha256": "8ee28687571be61fa04b7baa846147b77bbb5cec43cf86ac3f2bfeb791fe25ba",
+      "instance_key": "(variant, seed)",
+      "train_instance_count": 200,
+      "eval_instance_count": 200,
+      "shared_instances": [],
+      "shared_seeds": [],
+      "shared_task_ids": [],
+      "variant_coverage_matches": true,
+      "violations": [],
+      "holds": true
+    },
+    "admitted_train_instances": 0,
+    "admitted_eval_instances": 0,
+    "admitted_overlap": 0
+  },
+  "license": {
+    "asset": "EnvCommons/wordle",
+    "pinned_revision": "92bea32efa102e86275dedd2e0367e86d3754754",
+    "observed_state": "absent_at_pinned_revision",
+    "claimed_spdx": null,
+    "proceeding_under": "outputs/_setup/LICENSE_RISK_ACCEPTANCE_2026-08-09.md",
+    "decision": "owner_risk_acceptance_2026-08-09"
+  },
+  "measured_episode_profile": {
+    "source": "outputs/e13_openreward_games/manifests/episode_token_profile.json",
+    "worst_case_variant": "Wordle-v0",
+    "prompt_chars": 748,
+    "total_observation_chars": 5097,
+    "max_turns": 7
+  },
+  "projections": {
+    "one_smoke_episode": {
+      "episodes_sampled": 1,
+      "episodes_trained": 1,
+      "per_episode": {
+        "turns": 7,
+        "prefill_tokens": 11242,
+        "sample_tokens": 1792,
+        "train_tokens": 3462
+      },
+      "tokens": {
+        "prefill": 11242,
+        "sample": 1792,
+        "train": 3462
+      },
+      "usd": {
+        "prefill": 0.0061,
+        "sample": 0.0024,
+        "train": 0.0041,
+        "total": 0.0125
+      },
+      "pricing_source": "https://tinker-docs.thinkingmachines.ai/tinker/models.json",
+      "accounting": "conservative: uncached prefill every turn, full max_response_tokens charged"
+    },
+    "short_pilot": {
+      "episodes_sampled": 360,
+      "episodes_trained": 320,
+      "per_episode": {
+        "turns": 7,
+        "prefill_tokens": 11242,
+        "sample_tokens": 1792,
+        "train_tokens": 3462
+      },
+      "tokens": {
+        "prefill": 4047120,
+        "sample": 645120,
+        "train": 1107840
+      },
+      "usd": {
+        "prefill": 2.1854,
+        "sample": 0.8612,
+        "train": 1.3039,
+        "total": 4.3506
+      },
+      "pricing_source": "https://tinker-docs.thinkingmachines.ai/tinker/models.json",
+      "accounting": "conservative: uncached prefill every turn, full max_response_tokens charged",
+      "shape": {
+        "updates": 20,
+        "batch_size": 4,
+        "group_size": 4,
+        "train_episodes": 320,
+        "eval_episodes": 40
+      }
+    },
+    "full_pass_200_train_tasks": {
+      "episodes_sampled": 820,
+      "episodes_trained": 800,
+      "per_episode": {
+        "turns": 7,
+        "prefill_tokens": 11242,
+        "sample_tokens": 1792,
+        "train_tokens": 3462
+      },
+      "tokens": {
+        "prefill": 9218440,
+        "sample": 1469440,
+        "train": 2769600
+      },
+      "usd": {
+        "prefill": 4.978,
+        "sample": 1.9617,
+        "train": 3.2598,
+        "total": 10.1995
+      },
+      "pricing_source": "https://tinker-docs.thinkingmachines.ai/tinker/models.json",
+      "accounting": "conservative: uncached prefill every turn, full max_response_tokens charged",
+      "shape": {
+        "train_tasks": 200,
+        "group_size": 4,
+        "train_episodes": 800,
+        "eval_episodes": 20
+      }
+    }
+  },
+  "budget": {
+    "operational_cap_usd": 16.5,
+    "safety_reserve_usd": 1.5,
+    "spendable_usd": 15.0
+  }
+}

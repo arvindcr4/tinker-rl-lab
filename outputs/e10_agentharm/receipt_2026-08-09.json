@@ -1,0 +1,393 @@
+{
+  "binding": {
+    "dataset_id": "ai-safety-institute/AgentHarm",
+    "dataset_license": "hf_dataset/LICENSE (AISI AgentHarm license, present)",
+    "dataset_revision": "e23b3fe60a0da9037314b88e5ee3a0c054970dad",
+    "dataset_revision_immutable": true,
+    "harness_repo": "UKGovernmentBEIS/inspect_evals",
+    "harness_revision": "b935c0e5cfa04710f016f925db75d8e81413e2cf",
+    "heldout_availability": {
+      "inspect_evals_cache": {
+        "available": false,
+        "dataset_root": "/Users/arvind/Library/Caches/inspect_evals/agentharm_dataset/AgentHarm",
+        "gate": "UK AI Safety Institute held-out split access",
+        "loader_split_flag": "split=\"test_private\"",
+        "missing_files": [
+          "benchmark/harmful_behaviors_test_private.json",
+          "benchmark/benign_behaviors_test_private.json",
+          "benchmark/chat_private_test.json"
+        ],
+        "present_files": [],
+        "required_files": [
+          "benchmark/harmful_behaviors_test_private.json",
+          "benchmark/benign_behaviors_test_private.json",
+          "benchmark/chat_private_test.json"
+        ]
+      },
+      "lane_dataset_copy": {
+        "available": false,
+        "dataset_root": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e10_agentharm/hf_dataset",
+        "gate": "UK AI Safety Institute held-out split access",
+        "loader_split_flag": "split=\"test_private\"",
+        "missing_files": [
+          "benchmark/harmful_behaviors_test_private.json",
+          "benchmark/benign_behaviors_test_private.json",
+          "benchmark/chat_private_test.json"
+        ],
+        "present_files": [],
+        "required_files": [
+          "benchmark/harmful_behaviors_test_private.json",
+          "benchmark/benign_behaviors_test_private.json",
+          "benchmark/chat_private_test.json"
+        ]
+      }
+    },
+    "inspect_ai_version": "0.3.254",
+    "split_manifests": {
+      "test_private": {
+        "complete": false,
+        "dataset_id": "ai-safety-institute/AgentHarm",
+        "dataset_revision": "e23b3fe60a0da9037314b88e5ee3a0c054970dad",
+        "dataset_root": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e10_agentharm/hf_dataset",
+        "domain": "pavlov/agentharm/split-manifest/v1",
+        "files": {
+          "benchmark/benign_behaviors_test_private.json": {
+            "behavior_count": 0,
+            "dataset_name": "benign",
+            "present": false,
+            "sha256": null
+          },
+          "benchmark/chat_private_test.json": {
+            "behavior_count": 0,
+            "dataset_name": "chat",
+            "present": false,
+            "sha256": null
+          },
+          "benchmark/harmful_behaviors_test_private.json": {
+            "behavior_count": 0,
+            "dataset_name": "harmful",
+            "present": false,
+            "sha256": null
+          }
+        },
+        "heldout": true,
+        "loader_split_flag": "split=\"test_private\"",
+        "missing_files": [
+          "benchmark/harmful_behaviors_test_private.json",
+          "benchmark/benign_behaviors_test_private.json",
+          "benchmark/chat_private_test.json"
+        ],
+        "split": "test_private",
+        "split_manifest_hash": "4d8850da233169a5750d3e1e92bfc5e3257935573715de451c0b02bf9a14d7eb",
+        "split_task_id_hash": null,
+        "suite_id": "agentharm_eval",
+        "task_count": 0,
+        "task_id_hashes_artifact": "evidence/public_split_task_id_hashes.json"
+      },
+      "test_public": {
+        "complete": true,
+        "dataset_id": "ai-safety-institute/AgentHarm",
+        "dataset_revision": "e23b3fe60a0da9037314b88e5ee3a0c054970dad",
+        "dataset_root": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e10_agentharm/hf_dataset",
+        "domain": "pavlov/agentharm/split-manifest/v1",
+        "files": {
+          "benchmark/benign_behaviors_test_public.json": {
+            "behavior_count": 176,
+            "dataset_name": "benign",
+            "present": true,
+            "sha256": "65b4ebd4d8d2e7c9a79db4e11bc642f1800e642be0626ba0a990c763a325957a"
+          },
+          "benchmark/chat_public_test.json": {
+            "behavior_count": 44,
+            "dataset_name": "chat",
+            "present": true,
+            "sha256": "699a8325ce6dc355fd6ebef07bd2a9e76cca4c0ca7b6971774f2ff117e8f4512"
+          },
+          "benchmark/harmful_behaviors_test_public.json": {
+            "behavior_count": 176,
+            "dataset_name": "harmful",
+            "present": true,
+            "sha256": "fc3e4abbcd812022b85150b0e6f81c0bdbdfabb486e5b82ec46f1ba135f3ba08"
+          }
+        },
+        "heldout": false,
+        "loader_split_flag": "split=\"test_public\"",
+        "missing_files": [],
+        "split": "test_public",
+        "split_manifest_hash": "304d40b51526518ad0d4dadf84ec01790085bf592c6edc7d5ee2e5318ffa70c3",
+        "split_task_id_hash": "9b09bb353c649dac24a16334fe8d2f0115969625ae5fcc1b02b6f836951f7301",
+        "suite_id": "agentharm_eval",
+        "task_count": 396,
+        "task_id_hashes_artifact": "evidence/public_split_task_id_hashes.json"
+      },
+      "val": {
+        "complete": true,
+        "dataset_id": "ai-safety-institute/AgentHarm",
+        "dataset_revision": "e23b3fe60a0da9037314b88e5ee3a0c054970dad",
+        "dataset_root": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e10_agentharm/hf_dataset",
+        "domain": "pavlov/agentharm/split-manifest/v1",
+        "files": {
+          "benchmark/benign_behaviors_validation.json": {
+            "behavior_count": 32,
+            "dataset_name": "benign",
+            "present": true,
+            "sha256": "b74ffb781ce54182775a8b2843ea341ab2fb4cfea5743bfa89a368e52a76c27a"
+          },
+          "benchmark/chat_validation.json": {
+            "behavior_count": 8,
+            "dataset_name": "chat",
+            "present": true,
+            "sha256": "06684a6968e0bb65bcb15bc1cdaf3bd8c486fc54164e7623a35e3ee58bf93565"
+          },
+          "benchmark/harmful_behaviors_validation.json": {
+            "behavior_count": 32,
+            "dataset_name": "harmful",
+            "present": true,
+            "sha256": "40cd099915258b41142acfc88a9f2b4e15cd631c5490ad02a0dce0cf2b9c175e"
+          }
+        },
+        "heldout": false,
+        "loader_split_flag": "split=\"val\"",
+        "missing_files": [],
+        "split": "val",
+        "split_manifest_hash": "78f371349bca67ad2060a71bffa22bfdd5fef08dadf72a3789fbee916c9f66f2",
+        "split_task_id_hash": "f37eb7384191ec7e37dc1ac1b8982007fd3f110a029b6bd95299d19cd1d021f0",
+        "suite_id": "agentharm_eval",
+        "task_count": 72,
+        "task_id_hashes_artifact": "evidence/public_split_task_id_hashes.json"
+      }
+    },
+    "task_registry_name": "inspect_evals/agentharm",
+    "verifier_identity": {
+      "complete": true,
+      "domain": "pavlov/agentharm/verifier/v1",
+      "harness_repo": "UKGovernmentBEIS/inspect_evals",
+      "harness_revision": "b935c0e5cfa04710f016f925db75d8e81413e2cf",
+      "missing_sources": [],
+      "sources": {
+        "agentharm.py": "8b6de106e783f1d761cd015bd42f8346720c3c5ce60a7f32febe03c9ad0ee158",
+        "agents/agent.py": "26b5e3a6d925cfa71454ae3e3c8785b0151a6576ce148b0a7a27ad47b3b2f0c7",
+        "agents/default_agent.py": "eb26c0adb0f322740091e69be910b9eedc3b2708acdc25e0bb1d650e27f0db31",
+        "agents/refusal_agent.py": "88d8da5462c02de2e3fda8a48afefd6ea308e5c63197e0511bea12be74b6015a",
+        "benchmark/benign_grading_functions.py": "0688f0df1dc2b231ed33aec5ebdf717ab9a55b021729a411c34e62cbb8ebacb8",
+        "benchmark/grading_utils.py": "08623a958c6cfb2b2e9b0a92370d9b596b7e39a34d5051f9076dc442ef2789cc",
+        "benchmark/harmful_grading_functions.py": "104932177ccc91c61808310eb697abaca20dc5bebc1f50d9ed6067ff6aa31337",
+        "metric.py": "cb699dd67891806fdd0416c27cdf1d022489e12e1962f09db7996097c9115b2b",
+        "prompts.py": "78ef81a8edec9c7a81b3c23b90bab6a6f155f95db8c24bbb5fae3ae01a08d8f2",
+        "scorer.py": "a49f279ae724a7cf7643ff859a70f44e708d1b89d79d810aa5c0b3e74d5f7847",
+        "utils.py": "5453e15000831066968f8bbb83abcc7f242c5b32172c03a388d323205ab5cbc2"
+      },
+      "suite_id": "agentharm_eval",
+      "verifier_hash": "3c1582148add3f4c4df5c58c45ce0a934de6da9ca12f55b0a2d436e9ae80d79a",
+      "verifier_mode": "policy-v1",
+      "verifier_name": "agentharm_policy_verifier"
+    }
+  },
+  "blockers": [
+    {
+      "external_receipt_needed": "Written AISI grant of held-out AgentHarm access, plus the file revision/checksums AISI publishes with the grant.",
+      "id": "E10-HELDOUT-SPLIT",
+      "loader_flag": "split=\"test_private\"",
+      "request_artifact": "outputs/e10_agentharm/AISI_ACCESS_REQUEST.md",
+      "required_files": [
+        "benchmark/harmful_behaviors_test_private.json",
+        "benchmark/benign_behaviors_test_private.json",
+        "benchmark/chat_private_test.json"
+      ],
+      "summary": "AgentHarm held-out split files are absent from the public dataset revision and gated by the UK AI Safety Institute."
+    },
+    {
+      "external_receipt_needed": "AISI-approved policy grader / refusal-and-semantic judge specification with a pinned identity hash.",
+      "id": "E10-POLICY-GRADER-ARTIFACT",
+      "request_artifact": "outputs/e10_agentharm/AISI_ACCESS_REQUEST.md",
+      "summary": "The contract marks agentharm_eval artifact_required; the approved policy-grader artifact is not present locally."
+    },
+    {
+      "external_receipt_needed": "Budget authorization plus an OpenAI key (or the AISI-approved judge substitute) before any scored run.",
+      "id": "E10-JUDGE-MODEL-KEY",
+      "summary": "The official grader defaults to openai/gpt-4o-2024-08-06 for both the refusal judge and the semantic judge. No paid model key is authorized for benchmark use in this lane."
+    },
+    {
+      "external_receipt_needed": "Tinker/W&B run identity and budget receipt.",
+      "id": "E10-MODEL-ARTIFACT",
+      "summary": "No agent artifact exists for Qwen/Qwen3.6-35B-A3B@995ad96eacd9; the scored run needs an agent model, which is a paid call this lane may not make."
+    }
+  ],
+  "date": "2026-08-09",
+  "environment": {
+    "hf_hub_offline": true,
+    "network_used_during_validation": false,
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "python": "3.12.13",
+    "venv": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/_setup/venvs/e10"
+  },
+  "evidence": {
+    "access_request": "outputs/e10_agentharm/AISI_ACCESS_REQUEST.md",
+    "adapter": "zvf-program/flagship/pavlov_agentharm_frontiermath_adapter.py",
+    "adapter_tests": "zvf-program/flagship/test_pavlov_agentharm_frontiermath_adapter.py",
+    "adapter_unit_tests": "outputs/e10_agentharm/evidence/adapter_unit_tests.log",
+    "eval_logs": "outputs/e10_agentharm/logs/harness_validation/",
+    "harness_validation_log_probe": "outputs/e10_agentharm/evidence/harness_validation_log_probe.json",
+    "harness_validation_result": "outputs/e10_agentharm/evidence/harness_validation_result.json",
+    "inspect_eval_help": "outputs/e10_agentharm/evidence/inspect_eval_help.txt",
+    "public_split_task_id_hashes": "outputs/e10_agentharm/evidence/public_split_task_id_hashes.json",
+    "receipt_builder": "outputs/e10_agentharm/build_receipt.py",
+    "runner": "outputs/e10_agentharm/harness_validation_run.py",
+    "task_registry_entry": "outputs/e10_agentharm/evidence/agentharm_registry_entry.json"
+  },
+  "harness_validation": {
+    "configs": [
+      {
+        "agent": "refusal",
+        "config": "refusal_agent",
+        "eval_model": "mockllm/model",
+        "eval_status": "success",
+        "log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e10_agentharm/logs/harness_validation/refusal_agent/2026-08-09T07-16-08-00-00_agentharm_Y4Naz3zhY73C82MkpjTEEh.eval",
+        "metrics": {
+          "combined_scorer/Copyright_avg_refusals": 1.0,
+          "combined_scorer/Copyright_avg_scores": 0.0,
+          "combined_scorer/Cybercrime_avg_refusals": 1.0,
+          "combined_scorer/Cybercrime_avg_scores": 0.0,
+          "combined_scorer/Disinformation_avg_refusals": 1.0,
+          "combined_scorer/Disinformation_avg_scores": 0.0,
+          "combined_scorer/Drugs_avg_refusals": 1.0,
+          "combined_scorer/Drugs_avg_scores": 0.0,
+          "combined_scorer/Fraud_avg_refusals": 1.0,
+          "combined_scorer/Fraud_avg_scores": 0.0,
+          "combined_scorer/Harassment_avg_refusals": 1.0,
+          "combined_scorer/Harassment_avg_scores": 0.0,
+          "combined_scorer/Hate_avg_refusals": 1.0,
+          "combined_scorer/Hate_avg_scores": 0.0,
+          "combined_scorer/Sexual_avg_refusals": 1.0,
+          "combined_scorer/Sexual_avg_scores": 0.0,
+          "combined_scorer/avg_full_score": 0.0,
+          "combined_scorer/avg_refusals": 1.0,
+          "combined_scorer/avg_score": 0.0,
+          "combined_scorer/avg_score_non_refusals": 0.0
+        },
+        "refusal_judge_model": "mockllm/model",
+        "samples_completed": 176,
+        "semantic_judge_model": "mockllm/model"
+      },
+      {
+        "agent": "default",
+        "config": "default_agent_mockllm",
+        "eval_model": "mockllm/model",
+        "eval_status": "success",
+        "log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e10_agentharm/logs/harness_validation/default_agent_mockllm/2026-08-09T07-16-10-00-00_agentharm_GA4CS78sWQQUQZXnvEk6Tb.eval",
+        "metrics": {
+          "combined_scorer/Copyright_avg_refusals": 1.0,
+          "combined_scorer/Copyright_avg_scores": 0.0,
+          "combined_scorer/Cybercrime_avg_refusals": 1.0,
+          "combined_scorer/Cybercrime_avg_scores": 0.0,
+          "combined_scorer/Disinformation_avg_refusals": 1.0,
+          "combined_scorer/Disinformation_avg_scores": 0.0,
+          "combined_scorer/Drugs_avg_refusals": 1.0,
+          "combined_scorer/Drugs_avg_scores": 0.0,
+          "combined_scorer/Fraud_avg_refusals": 1.0,
+          "combined_scorer/Fraud_avg_scores": 0.0,
+          "combined_scorer/Harassment_avg_refusals": 1.0,
+          "combined_scorer/Harassment_avg_scores": 0.0,
+          "combined_scorer/Hate_avg_refusals": 1.0,
+          "combined_scorer/Hate_avg_scores": 0.0,
+          "combined_scorer/Sexual_avg_refusals": 1.0,
+          "combined_scorer/Sexual_avg_scores": 0.0,
+          "combined_scorer/avg_full_score": 0.0,
+          "combined_scorer/avg_refusals": 1.0,
+          "combined_scorer/avg_score": 0.0,
+          "combined_scorer/avg_score_non_refusals": 0.0
+        },
+        "refusal_judge_model": "mockllm/model",
+        "samples_completed": 176,
+        "semantic_judge_model": "mockllm/model"
+      }
+    ],
+    "dataset": "harmful",
+    "estimated_cost_usd": 0.0,
+    "is_model_score": false,
+    "label": "harness_validation",
+    "note": "Harness validation only. Every model is mockllm/model (no paid calls). Run on the PUBLIC split. This is NOT the AgentHarm score and the public split is NOT the held-out split.",
+    "paid_model_calls": 0,
+    "plumbing_proven": {
+      "categories_scored": [
+        "Copyright",
+        "Cybercrime",
+        "Disinformation",
+        "Drugs",
+        "Fraud",
+        "Harassment",
+        "Hate",
+        "Sexual"
+      ],
+      "dataset_loaded": true,
+      "distinct_target_tools_instantiated": 76,
+      "refusal_judge_exercised": true,
+      "samples_completed_per_config": 176,
+      "samples_with_grading_breakdown": 176,
+      "target_tool_slots": 652
+    },
+    "samples": 176,
+    "score": null,
+    "split": "test_public"
+  },
+  "is_model_score": false,
+  "lane": "E10",
+  "score": null,
+  "score_gate": {
+    "blockers": [
+      "run is not a model score (is_model_score is not true); harness validation may never be promoted to an AgentHarm score",
+      "held-out split files are absent: benchmark/harmful_behaviors_test_private.json, benchmark/benign_behaviors_test_private.json, benchmark/chat_private_test.json",
+      "split manifest is incomplete, missing: benchmark/harmful_behaviors_test_private.json, benchmark/benign_behaviors_test_private.json, benchmark/chat_private_test.json",
+      "split manifest carries no task_id_hashes",
+      "approved policy-grader artifact receipt is missing"
+    ],
+    "dataset_id": "ai-safety-institute/AgentHarm",
+    "dataset_revision": "e23b3fe60a0da9037314b88e5ee3a0c054970dad",
+    "harness_repo": "UKGovernmentBEIS/inspect_evals",
+    "harness_revision": "b935c0e5cfa04710f016f925db75d8e81413e2cf",
+    "heldout_split": "test_private",
+    "is_model_score": false,
+    "label": "agentharm_heldout",
+    "loader_split_flag": "split=\"test_private\"",
+    "model_id": "Qwen/Qwen3.6-35B-A3B",
+    "model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "score": null,
+    "split": "test_private",
+    "split_manifest_hash": "4d8850da233169a5750d3e1e92bfc5e3257935573715de451c0b02bf9a14d7eb",
+    "split_task_id_hash": null,
+    "status": "BLOCKED",
+    "suite_id": "agentharm_eval",
+    "task_count": 0,
+    "verifier_hash": "3c1582148add3f4c4df5c58c45ce0a934de6da9ca12f55b0a2d436e9ae80d79a"
+  },
+  "score_gate_applied_to_harness_run": {
+    "blockers": [
+      "run is not a model score (is_model_score is not true); harness validation may never be promoted to an AgentHarm score",
+      "run used split 'test_public'; the AgentHarm score is only defined on split='test_private' (the public split is not the held-out split)",
+      "held-out split files are absent: benchmark/harmful_behaviors_test_private.json, benchmark/benign_behaviors_test_private.json, benchmark/chat_private_test.json",
+      "approved policy-grader artifact receipt is missing",
+      "run model identity is missing"
+    ],
+    "dataset_id": "ai-safety-institute/AgentHarm",
+    "dataset_revision": "e23b3fe60a0da9037314b88e5ee3a0c054970dad",
+    "harness_repo": "UKGovernmentBEIS/inspect_evals",
+    "harness_revision": "b935c0e5cfa04710f016f925db75d8e81413e2cf",
+    "heldout_split": "test_private",
+    "is_model_score": false,
+    "label": "harness_validation",
+    "loader_split_flag": "split=\"test_public\"",
+    "model_id": "mockllm/model",
+    "model_revision": null,
+    "score": null,
+    "split": "test_public",
+    "split_manifest_hash": "304d40b51526518ad0d4dadf84ec01790085bf592c6edc7d5ee2e5318ffa70c3",
+    "split_task_id_hash": "9b09bb353c649dac24a16334fe8d2f0115969625ae5fcc1b02b6f836951f7301",
+    "status": "BLOCKED",
+    "suite_id": "agentharm_eval",
+    "task_count": 396,
+    "verifier_hash": "3c1582148add3f4c4df5c58c45ce0a934de6da9ca12f55b0a2d436e9ae80d79a"
+  },
+  "status": "PARTIAL",
+  "suite_id": "agentharm_eval",
+  "why_no_score": "The AgentHarm score is defined on the held-out (test_private) split. All three held-out files are absent from the public dataset revision and are gated by the UK AI Safety Institute. No paid model artifact exists either. The emitter refuses to produce a score; see score_gate.blockers."
+}

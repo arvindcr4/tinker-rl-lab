@@ -1,0 +1,372 @@
+{
+  "count": 32,
+  "dataset_revision": "2eec72c90dd8803d40f1eb12b108dd8e76f04a1771cc26a12a6160d25ce778c6",
+  "evidence_class": "portfolio_source_validation",
+  "exact_match_rate": 0.28125,
+  "is_e1_e14_score": false,
+  "is_model_score": true,
+  "mean_reward": 0.3960068347483514,
+  "model": {
+    "hf_commit": null,
+    "hf_repo": null,
+    "hf_revision": null,
+    "model_id": "Qwen/Qwen3.6-35B-A3B",
+    "model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "sampler_path": null
+  },
+  "records": [
+    {
+      "exact": false,
+      "prompt_sha256": "d31d4d6bc19ea96cb681578bccaf595fcacaee865444b380db577a04b317d467",
+      "prompt_tokens": 553,
+      "response_sha256": "865c001e0540fa9b1a379697d069083085bbdc26480cce3a04528ada167b9d15",
+      "response_tokens": 232,
+      "score": 0.0,
+      "source_id": "5",
+      "suite_id": "api_bank_rlvr_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "d2417d005f13e97d85624e67ee239d549dc32b78d725e97238f6fc104f2e4b2d",
+      "prompt_tokens": 314,
+      "response_sha256": "cdce3b3324157935354678a11a43aa7cf913cd5e0db0cd65e5ea7a42f80f4bb2",
+      "response_tokens": 222,
+      "score": 0.7333333333333333,
+      "source_id": "54",
+      "suite_id": "api_bank_rlvr_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "b9b1a2bb0fafb42605ab71ae18e47b9bffb4bafe7431bc0404b1307e8745bfa3",
+      "prompt_tokens": 549,
+      "response_sha256": "31c5ff81d9a745ede8f039614b726a67df7a5c49d3f44c7e115a42288f79b04f",
+      "response_tokens": 384,
+      "score": 0.0,
+      "source_id": "66",
+      "suite_id": "api_bank_rlvr_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "413c49b1da99861a9c021a799e211edf0f7f33b6462e0bdbcffd8ce74e658cfe",
+      "prompt_tokens": 1288,
+      "response_sha256": "8cebead705a4a11840c91211dc82951622061820c49d823dfb80605f2998221e",
+      "response_tokens": 140,
+      "score": 0.34825046040515656,
+      "source_id": "Project-MONAI__MONAI-6935",
+      "suite_id": "swe_gym_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "600860f1f24a5b2831cf8e63aa9ec447a4269cc36fa95b5039a8e405481c6c1d",
+      "prompt_tokens": 2048,
+      "response_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "response_tokens": 1,
+      "score": 0.0,
+      "source_id": "pandas-dev__pandas-48686",
+      "suite_id": "swe_gym_train"
+    },
+    {
+      "exact": true,
+      "prompt_sha256": "84fa9b83dd89150d46613b8a7cde284d34327cdd0d77f8521acb8470049ca5fe",
+      "prompt_tokens": 483,
+      "response_sha256": "93499e98fa81d1639319b981f5126396f934e00d6aed30056b668c51f776dc02",
+      "response_tokens": 330,
+      "score": 1.0,
+      "source_id": "69",
+      "suite_id": "api_bank_rlvr_train"
+    },
+    {
+      "exact": true,
+      "prompt_sha256": "3c4756b6e992cbeab2cab8d9e9d7cd0e6e0c3b65cd33e815f642e951289b17d9",
+      "prompt_tokens": 217,
+      "response_sha256": "19382f5d5d85a3d797dddc90b436a89378a61fa0029fbc3c5c151fd783990449",
+      "response_tokens": 171,
+      "score": 1.0,
+      "source_id": "11",
+      "suite_id": "api_bank_rlvr_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "89085e8eb84f0efddfac3355385bf09d72c25e2ab873db73c2ab6c6ce36909c8",
+      "prompt_tokens": 926,
+      "response_sha256": "7a0bbe16a8c96067a45ce5ae07107b2966808e75841ee1e7286dd0da5ab873cc",
+      "response_tokens": 384,
+      "score": 0.0,
+      "source_id": "getmoto__moto-5513",
+      "suite_id": "swe_gym_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "4ab1564c2748feb8d2412a39c50c05c3f2f6ce9cfbcb04e843409f9e751f4b4d",
+      "prompt_tokens": 782,
+      "response_sha256": "302410f4ce789ab6bae5c5f2613c8a6c0b9a776311509f71b4447c00987231ca",
+      "response_tokens": 384,
+      "score": 0.0,
+      "source_id": "getmoto__moto-5044",
+      "suite_id": "swe_gym_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "fc48d484d7772883e2f9d7e272497605ecdd53458146bd8262610f71ab40822d",
+      "prompt_tokens": 441,
+      "response_sha256": "2c8a4e60edf995b8b9d9343466aea7dc62d81d2ff151f4ee9a5c59468ecde868",
+      "response_tokens": 184,
+      "score": 0.0,
+      "source_id": "12",
+      "suite_id": "api_bank_rlvr_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "809bbf978b790a71af018d20aa4b7d787e3c20e3e48e7f622c04d67b1b1bebb7",
+      "prompt_tokens": 435,
+      "response_sha256": "726ada407227e8c55afc937b9c6f749eab6b852a5d7bb95d240db7e7013aab0d",
+      "response_tokens": 384,
+      "score": 0.0,
+      "source_id": "1",
+      "suite_id": "api_bank_rlvr_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "2e12346b81b0f3dfdaec9c2d02853af2cff1a8939137936f1c9c26fe6f12d019",
+      "prompt_tokens": 536,
+      "response_sha256": "a4af7f45f6e4d11d6992cc7f0a3540bc418fcd3df051990c5cf57652eb248055",
+      "response_tokens": 384,
+      "score": 0.0,
+      "source_id": "pandas-dev__pandas-55895",
+      "suite_id": "swe_gym_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "45dffa1dfc6893244827532b2a4b9169db4b5b7bd2a3ddfcfae562febd5b4b69",
+      "prompt_tokens": 484,
+      "response_sha256": "7bb4774675cde958a89f8508c46408e2f51f85fc9e8330946404fed55fff7fda",
+      "response_tokens": 384,
+      "score": 0.0,
+      "source_id": "conan-io__conan-11655",
+      "suite_id": "swe_gym_train"
+    },
+    {
+      "exact": true,
+      "prompt_sha256": "005f982b35ed5108e1765c67481ad88f24597e559009fa22bf01831adc3f975f",
+      "prompt_tokens": 328,
+      "response_sha256": "4d30f56f6f44e8ae725f2cc4dde669f6e1d3399ec449e3ad73ebd16f8fd88222",
+      "response_tokens": 202,
+      "score": 1.0,
+      "source_id": "20",
+      "suite_id": "api_bank_rlvr_train"
+    },
+    {
+      "exact": true,
+      "prompt_sha256": "41e4b6f29aac2dead621b28451db00a7722a3bc15b4f3de1d4f5ef6760b6727b",
+      "prompt_tokens": 210,
+      "response_sha256": "7d617480da27391936c0ab2424460d3a54ba55491ea65207532c88a82c1ef11c",
+      "response_tokens": 304,
+      "score": 1.0,
+      "source_id": "40",
+      "suite_id": "api_bank_rlvr_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "12ff97f9bb1267d0601f218073a08dfccae68ec58418fcb068bf1c91c4a5a175",
+      "prompt_tokens": 349,
+      "response_sha256": "3e0e676132f310228ea05ef2c8c411023424df03440f854981a475ac44ba6d56",
+      "response_tokens": 170,
+      "score": 0.0,
+      "source_id": "58",
+      "suite_id": "api_bank_rlvr_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "3781aeb12a0538fedd8ba2b6b10d57cc931caab5f764b78b0c81d54bc1b4832d",
+      "prompt_tokens": 671,
+      "response_sha256": "f483a3ecf2a2dc12163544295fc856b3e8a545bbf224b1e66315d0f208a35273",
+      "response_tokens": 384,
+      "score": 0.0,
+      "source_id": "pandas-dev__pandas-53458",
+      "suite_id": "swe_gym_train"
+    },
+    {
+      "exact": true,
+      "prompt_sha256": "156b94dc3b0b5e18842b73a232883f59c896f45c9c7d76d3828252f988b2c2a5",
+      "prompt_tokens": 170,
+      "response_sha256": "d07a2733edb80b30a70100fdf5bf32f1af745dd12b6f59684b562e227bd0a8e0",
+      "response_tokens": 124,
+      "score": 1.0,
+      "source_id": "49",
+      "suite_id": "api_bank_rlvr_train"
+    },
+    {
+      "exact": true,
+      "prompt_sha256": "17abc8c8beaf5ce888f0708ee1886897e39b0b8c31187eea8365057dbb31297f",
+      "prompt_tokens": 211,
+      "response_sha256": "8a778c1b76640cd5de03d26e935f8df722e0e4c62ac7e433a583f8b9fb05886c",
+      "response_tokens": 193,
+      "score": 1.0,
+      "source_id": "37",
+      "suite_id": "api_bank_rlvr_train"
+    },
+    {
+      "exact": true,
+      "prompt_sha256": "8933602834506d0ac0d5fbe67b6276a3e8f4085b2e7781822df3899ca80233e6",
+      "prompt_tokens": 233,
+      "response_sha256": "2e06de747ed360ab15e775c48319ce5ee54ba1c8ccbd89bf0bf070d0563ccf02",
+      "response_tokens": 204,
+      "score": 1.0,
+      "source_id": "42",
+      "suite_id": "api_bank_rlvr_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "7170d2cdead1e3a2b56d3df56455b92d037c7eee06e735251a6447d930b2c021",
+      "prompt_tokens": 425,
+      "response_sha256": "85cdbdd62583e90ae179fdcace4e614171772897c07adb3357e8fffcad06c05b",
+      "response_tokens": 384,
+      "score": 0.0,
+      "source_id": "32",
+      "suite_id": "api_bank_rlvr_train"
+    },
+    {
+      "exact": true,
+      "prompt_sha256": "7a175785ec29c57161ce17a61080c3b48425b3915e1d1591fbed91f25d947367",
+      "prompt_tokens": 179,
+      "response_sha256": "2f4d3c67d23cbe9d86e8942162d54e2c5a0e9d36c523d46f479fef0b86d8c5f0",
+      "response_tokens": 157,
+      "score": 1.0,
+      "source_id": "47",
+      "suite_id": "api_bank_rlvr_train"
+    },
+    {
+      "exact": true,
+      "prompt_sha256": "eb5d9ce64f8ec4898a9beb8fa85352f9defe5aa60f935c85f79a79d084969abc",
+      "prompt_tokens": 331,
+      "response_sha256": "177a8ee4e55dfc29ab074facb2abd89a065a391a7133a931f5dfa63bc10d0840",
+      "response_tokens": 257,
+      "score": 1.0,
+      "source_id": "15",
+      "suite_id": "api_bank_rlvr_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "bff850cf5e2470ef8ddca428ae3c6e18780e9be03aae15b46bbe0173be746784",
+      "prompt_tokens": 1131,
+      "response_sha256": "4bb6d5f948099c5b86ef3bae9438bd4a42048cfde1074b2eff89866828d65caa",
+      "response_tokens": 384,
+      "score": 0.0,
+      "source_id": "getmoto__moto-6255",
+      "suite_id": "swe_gym_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "ebb71311cdc0979a6ff515429470db3ff7537532ab2e6f377ac897b794185bb4",
+      "prompt_tokens": 861,
+      "response_sha256": "1c720ecc20ff26c21e751092ade17e6c049cab40f87a4cf32e97bce4becff021",
+      "response_tokens": 384,
+      "score": 0.3183055975794251,
+      "source_id": "iterative__dvc-6954",
+      "suite_id": "swe_gym_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "533378e97455edaf0b4ea8c7c597fc6ccbdd704f79f15353faa5d4b9d3c1a008",
+      "prompt_tokens": 1449,
+      "response_sha256": "6585e8880e0a99474990e89c8c3fffbe1af4a6fb8f8a839574594e7a7a6b2aad",
+      "response_tokens": 186,
+      "score": 0.3174295184536889,
+      "source_id": "getmoto__moto-5893",
+      "suite_id": "swe_gym_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "c14604c8680081abbef620efbcdfd80c44b368432f024ca32e0a5f9e70f5a80d",
+      "prompt_tokens": 836,
+      "response_sha256": "6bfafde040658af077268c0c0f33c44180835eb86fccd93bd353dfa37138fc91",
+      "response_tokens": 240,
+      "score": 0.7053072625698324,
+      "source_id": "pandas-dev__pandas-50319",
+      "suite_id": "swe_gym_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "d5aac6c78c6d710da5e81afc351597092ab289a941d2f2cc01708409d9981f5c",
+      "prompt_tokens": 454,
+      "response_sha256": "a40da4dae227cfae34189b1cb54f0743f6438ad7b5cee67827028d9c270fa00f",
+      "response_tokens": 384,
+      "score": 0.23548216263059074,
+      "source_id": "Project-MONAI__MONAI-3208",
+      "suite_id": "swe_gym_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "0fca0d34bcc1f8566c0b660ea0d8ad46c9817f5f283b05d62079a229ccf1cec8",
+      "prompt_tokens": 563,
+      "response_sha256": "21ae23808551ecfe7d63c01bc0ec530f0f690453bea02cc7467a004d9d917c7f",
+      "response_tokens": 384,
+      "score": 0.3628498727735369,
+      "source_id": "modin-project__modin-6772",
+      "suite_id": "swe_gym_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "11aad4f2acf8e5227e8074202953b1eb213a3b172a0f4bb306283a9fd59796a5",
+      "prompt_tokens": 885,
+      "response_sha256": "e45e898afe9ca0022e139be7d21cb627c78897c4707f700f5f3c14932a8d39e0",
+      "response_tokens": 384,
+      "score": 0.0,
+      "source_id": "Project-MONAI__MONAI-7180",
+      "suite_id": "swe_gym_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "da3b6db2b7ebc070c7c8cdee3f4c835da63a37b3823b0d63d8ed842b40add06c",
+      "prompt_tokens": 516,
+      "response_sha256": "0be269193a7331f95bbae448413f7e6179ccd37767215b0a8022086047bef3d8",
+      "response_tokens": 384,
+      "score": 0.6512605042016807,
+      "source_id": "Project-MONAI__MONAI-5686",
+      "suite_id": "swe_gym_train"
+    },
+    {
+      "exact": false,
+      "prompt_sha256": "549d63a9e61bee82fe3f7ae2f14382262f548d539dc3284008746b4662056f2a",
+      "prompt_tokens": 492,
+      "response_sha256": "0a639739c46f6731c167b0d1798526f5ab5c8995ead28730b34f82c022261701",
+      "response_tokens": 384,
+      "score": 0.0,
+      "source_id": "getmoto__moto-7065",
+      "suite_id": "swe_gym_train"
+    }
+  ],
+  "role": "base",
+  "sampling": {
+    "max_tokens": 384,
+    "retries": 0,
+    "samples_per_problem": 1,
+    "seed": 1810,
+    "temperature": 0.1
+  },
+  "schema_version": "pavlov-portfolio-source-eval-v1",
+  "source_revisions": {
+    "SWE-Gym/SWE-Gym": "bb94ed9e39bbeb96a7fcbfb533b80f25a7fd59cb",
+    "Simu-Env/API-Bank-RLVR": "bf67c42626f02c305514b1df16dcabc5fc616333"
+  },
+  "status": "SCORED",
+  "suites": {
+    "api_bank_rlvr_train": {
+      "count": 16,
+      "exact_match_rate": 0.5625,
+      "exact_matches": 9,
+      "mean_reward": 0.6083333333333333
+    },
+    "swe_gym_train": {
+      "count": 16,
+      "exact_match_rate": 0.0,
+      "exact_matches": 0,
+      "mean_reward": 0.18368033616336946
+    }
+  },
+  "wandb": {
+    "project": "tinker-rl-lab-pavlov",
+    "run_id": "fcsr357r",
+    "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/fcsr357r"
+  }
+}

@@ -1,0 +1,299 @@
+{
+  "schema_version": "e14-frontiermath-blocked-receipt-v1",
+  "status": "BLOCKED",
+  "score": null,
+  "is_model_score": false,
+  "recorded_at": "2026-08-09",
+  "suite": {
+    "suite_id": "frontiermath_eval",
+    "suite_role": "primary_eval",
+    "domain": "math",
+    "benchmark_owner": "Epoch AI",
+    "contract_split": "private held-out evaluation set",
+    "data_release_model": "not distributed to third parties"
+  },
+  "score_refusal": {
+    "refused": true,
+    "guard": "e14-frontiermath-public-sample-parser.compute_frontiermath_score",
+    "reason": "These artifacts are derived from Epoch AI's PUBLIC REPRESENTATIVE SAMPLE TRANSCRIPTS (5 published sample problems). They are NOT the FrontierMath benchmark. FrontierMath is a private held-out problem set that is not distributed. No number computed from these samples is a FrontierMath score, an approximation of one, or a lower/upper bound on one. The sample corpus contains no ground-truth answers and no grader verdicts.",
+    "not_a_substitute": "GSM8K, MATH / MATH-500, MathArena, AIME sets, and any other public math benchmark are NOT substitutes for FrontierMath. A score on any of them is not a FrontierMath score."
+  },
+  "execution_source": {
+    "checkout": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab",
+    "commit": "8fdade2f1425908f8d961bced6dc89f45bcc47f4"
+  },
+  "public_sample_asset": {
+    "artifact_label": "REPRESENTATIVE_PUBLIC_SAMPLES_NOT_THE_BENCHMARK",
+    "artifact_disclaimer": "These artifacts are derived from Epoch AI's PUBLIC REPRESENTATIVE SAMPLE TRANSCRIPTS (5 published sample problems). They are NOT the FrontierMath benchmark. FrontierMath is a private held-out problem set that is not distributed. No number computed from these samples is a FrontierMath score, an approximation of one, or a lower/upper bound on one. The sample corpus contains no ground-truth answers and no grader verdicts.",
+    "source_url": "https://epoch.ai/files/sample_question_transcripts.zip",
+    "archive_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e14_frontiermath/frontiermath_public_samples.zip",
+    "archive_sha256": "7bdf3231086cc7de000ea57380c36a64abdf2644f1111b044d1bab0b383b0ff8",
+    "samples_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e14_frontiermath/public_samples/sample_question_transcripts",
+    "transcript_count": 150,
+    "corpus_sha256": "9d618deb664cfce7de7721f1ce4c3199f9a90860c11efbc4cc6292924dd04345",
+    "is_benchmark_split": false,
+    "evaluation_use": "characterization_only_not_used_as_score"
+  },
+  "corpus_facts": {
+    "corpus": {
+      "transcript_count": 150,
+      "expected_transcript_count": 150,
+      "grid_is_complete": true,
+      "models": {
+        "claude-3-5-sonnet-20241022": 25,
+        "gemini-1.5-pro-002": 25,
+        "gpt-4o-2024-08-06": 25,
+        "grok-beta": 25,
+        "o1-mini": 25,
+        "o1-preview": 25
+      },
+      "problem_tokens": {
+        "ALL3": 30,
+        "CWA2": 30,
+        "CWD31": 30,
+        "RAP1": 30,
+        "TIK2": 30
+      },
+      "runs_per_index": {
+        "1": 30,
+        "2": 30,
+        "3": 30,
+        "4": 30,
+        "5": 30
+      },
+      "model_by_problem": {
+        "claude-3-5-sonnet-20241022": {
+          "ALL3": 5,
+          "CWA2": 5,
+          "CWD31": 5,
+          "RAP1": 5,
+          "TIK2": 5
+        },
+        "gemini-1.5-pro-002": {
+          "ALL3": 5,
+          "CWA2": 5,
+          "CWD31": 5,
+          "RAP1": 5,
+          "TIK2": 5
+        },
+        "gpt-4o-2024-08-06": {
+          "ALL3": 5,
+          "CWA2": 5,
+          "CWD31": 5,
+          "RAP1": 5,
+          "TIK2": 5
+        },
+        "grok-beta": {
+          "ALL3": 5,
+          "CWA2": 5,
+          "CWD31": 5,
+          "RAP1": 5,
+          "TIK2": 5
+        },
+        "o1-mini": {
+          "ALL3": 5,
+          "CWA2": 5,
+          "CWD31": 5,
+          "RAP1": 5,
+          "TIK2": 5
+        },
+        "o1-preview": {
+          "ALL3": 5,
+          "CWA2": 5,
+          "CWD31": 5,
+          "RAP1": 5,
+          "TIK2": 5
+        }
+      }
+    },
+    "prompt_contract": {
+      "distinct_preamble_hashes": [
+        "7f376fef71c43b73ebe71c902a7e3e9296e687df9881bef5da7b07d052b4b5d9"
+      ],
+      "preamble_is_uniform": true,
+      "final_answer_marker": "# This is the final answer",
+      "final_answer_pickle": "final_answer.p",
+      "problem_statement_hashes": {
+        "ALL3": [
+          "062d0961dd550278cb004c12f062efaf2942e79f9442d0d647a6183972853108"
+        ],
+        "CWA2": [
+          "9a34f51d19ccda9f3cb2be21720f771b4730d9544ea0abe6d179854cf9a13c13"
+        ],
+        "CWD31": [
+          "0ed9c1fa9f31e02cc45cc4525fa5cdb529963c5e0dbab320d163b14bbab03bb7"
+        ],
+        "RAP1": [
+          "b816bc50d0b708f54a45d56c4505d1739939a5331ee3e05f28c9ec106fc8644c"
+        ],
+        "TIK2": [
+          "eb3dd63ed6fbe4338a513fd6637d078427295054abd6233eb890c11798ede77c"
+        ]
+      },
+      "declared_return_types": {
+        "ALL3": [
+          "Python integer"
+        ],
+        "CWA2": [
+          "Integer"
+        ],
+        "CWD31": [
+          "Python integer"
+        ],
+        "RAP1": [
+          "Python integer"
+        ],
+        "TIK2": [
+          "Python integer"
+        ]
+      }
+    },
+    "harness_turn_totals": {
+      "code_execution_result": 265,
+      "final_answer_failed_stderr": 6,
+      "final_answer_failed_timeout": 4,
+      "task_prompt": 150
+    },
+    "gradability": {
+      "ground_truth_present_anywhere": false,
+      "grader_verdict_present_anywhere": false,
+      "transcripts_with_final_answer_block": 149,
+      "transcripts_without_final_answer_block": [
+        "o1-mini_TIK2_run-4.jsonl"
+      ],
+      "gradable_locally": false,
+      "gradable_locally_reason": "The public sample corpus carries no ground-truth answers and no grader verdicts. Correctness cannot be computed. Even with ground truth, five published sample problems are not the FrontierMath benchmark."
+    },
+    "schema_validation": {
+      "all_transcripts_valid": true,
+      "invalid_transcripts": {}
+    }
+  },
+  "experiment": {
+    "attempted": false,
+    "evaluated_task_count": 0,
+    "evaluated_sample_count": 0,
+    "measured_metrics": null,
+    "related_benchmark_substitution": false,
+    "harness_validation": null
+  },
+  "blockers": [
+    "TERMINAL \u2014 the dataset is never released. Epoch AI is contractually unable to share Tiers 1-4 questions and answers without OpenAI's written permission. There is no download, no gated Hugging Face repo, no data-use agreement, and no request form that yields the problems. No local action can ever unblock this lane.",
+    "Evaluation is HOSTED BY EPOCH AI, not submitted to a portal. A FrontierMath number requires Epoch to run the eval on their own infrastructure against a model they can reach (public API, pre-release access, or a UI session their staff drive). This is an organisational agreement, not a credential this repo can set.",
+    "No grader is public. Reference solutions and the answer-checking logic ship with the private set. The public transcripts contain neither ground truth nor verdicts, so nothing here is gradable.",
+    "The public sample corpus (150 transcripts over the ORIGINAL 5 public problems from the 2024 paper) is characterization evidence only. It is ~1.5% of the 338-problem post-v2 private set, is outdated relative to the 12 problems Epoch currently publishes, and is not a benchmark split.",
+    "No official FrontierMath dataset exists on Hugging Face or GitHub. Every repo claiming to be FrontierMath is a solver or a reconstruction and cannot produce a comparable score. Using one would be fabrication.",
+    "Any local math result (GSM8K, MATH-500, AIME, MathArena) is a different benchmark and must never be reported under frontiermath_eval."
+  ],
+  "access_document": "outputs/e14_frontiermath/ACCESS_REQUEST_2026-08-09.md",
+  "evidence_paths": [
+    "outputs/e14_frontiermath/public_sample_manifest.json",
+    "outputs/e14_frontiermath/public_samples/sample_question_transcripts/",
+    "outputs/e14_frontiermath/frontiermath_public_samples.zip",
+    "zvf-program/flagship/e14_frontiermath_public_samples.py",
+    "zvf-program/flagship/test_e14_frontiermath_public_samples.py",
+    "outputs/e14_frontiermath/ACCESS_REQUEST_2026-08-09.md",
+    "outputs/e14_frontiermath/lane_status_2026-08-09.md"
+  ],
+  "executed": {
+    "unit_tests": {
+      "command": "PYTHONPATH=zvf-program python3 -m unittest flagship.test_e14_frontiermath_public_samples -v",
+      "exit_code": 0,
+      "status": "PASS",
+      "tests_run": 51,
+      "is_model_score": false,
+      "note": "Harness/parser validation only. Proves the transcript schema, the hashing, and the score-refusal guards behave. NOT a benchmark result."
+    },
+    "manifest_build": {
+      "command": "PYTHONPATH=zvf-program python3 -m flagship.e14_frontiermath_public_samples --samples-dir outputs/e14_frontiermath/public_samples/sample_question_transcripts --archive outputs/e14_frontiermath/frontiermath_public_samples.zip --manifest-out outputs/e14_frontiermath/public_sample_manifest.json --recorded-at 2026-08-09 --summary-only",
+      "exit_code": 0,
+      "status": "PASS",
+      "is_model_score": false
+    },
+    "paid_calls": {
+      "tinker": 0,
+      "model_api": 0,
+      "wandb_runs": 0,
+      "hf_pushes": 0,
+      "cost_usd": 0.0
+    }
+  },
+  "access_path": {
+    "mechanism": "hosted_evaluation_by_benchmark_owner",
+    "dataset_ever_released_to_third_parties": false,
+    "download_available": false,
+    "request_form_available": false,
+    "official_hf_or_github_dataset_exists": false,
+    "products": {
+      "tiers_1_4": {
+        "description": "Classic OpenAI-commissioned FrontierMath.",
+        "owner": "commissioned by OpenAI; Epoch retains right to evaluate on full set",
+        "size_post_v2": {
+          "total": 338,
+          "tiers_1_3": 295,
+          "tier_4": 43
+        },
+        "size_superseded": {
+          "total": 350,
+          "note": "300 core + 50 Tier 4; superseded by the v2 correction pass"
+        },
+        "v2_correction": {
+          "tiers_1_3_revised": 123,
+          "tier_4_revised": 12,
+          "error_rate_found": "42% of problems"
+        },
+        "holdout_structure": {
+          "openai_holds": "all problems and solutions except withheld items",
+          "solutions_withheld_from_openai": 53,
+          "whole_tier4_problems_withheld_from_openai": 20,
+          "all_other_parties_hold": "only the 12 public sample problems",
+          "restated_against_v2": false,
+          "restated_against_v2_note": "Epoch has NOT published a holdout count restated against v2. Whether 53/20 still holds post-correction is NOT ESTABLISHED."
+        },
+        "purchasable": false,
+        "contact": "math_evals@epoch.ai",
+        "legacy_contact_in_paper": "math_evals@epochai.org"
+      },
+      "open_problems": {
+        "description": "FrontierMath: Open Problems, launched July 2026.",
+        "funder": "Schmidt Sciences",
+        "owner": "Epoch AI solely",
+        "purchasable": true,
+        "access_commitment": "verifiers purchasable by any party; uniform, non-exclusive",
+        "sole_purchaser_as_of_2026_07": "OpenAI",
+        "contact": "math@epoch.ai"
+      }
+    },
+    "routes_to_a_score": [
+      "Epoch evaluates unilaterally off a public model API.",
+      "You grant Epoch pre-release API or UI access and Epoch runs it (precedent: Google DeepMind AI co-mathematician, evaluated blind with Epoch staff entering problems into the UI).",
+      "You commission a paid engagement via epoch.ai/about/consultations. Epoch's transparency page may omit engagements under $30,000."
+    ],
+    "harness": {
+      "implementation": "custom Inspect task",
+      "tools": "Python code execution",
+      "token_budget": 1000000
+    },
+    "contacts": {
+      "tiers_1_4_evaluations": "math_evals@epoch.ai",
+      "open_problems_verifier_and_solutions": "math@epoch.ai",
+      "benchmarking_hub_data": "benchmarks@epoch.ai",
+      "general_form": "https://epoch.ai/contact",
+      "commissioning": "https://epoch.ai/about/consultations"
+    },
+    "public_material": {
+      "current_public_problems": 12,
+      "current_public_problems_breakdown": "10 from Tiers 1-3, 2 from Tier 4",
+      "current_public_problems_url": "https://epoch.ai/frontiermath/tiers-1-4/benchmark-problems",
+      "this_lane_archive_covers": "the ORIGINAL 5 public problems from the 2024 paper",
+      "archive_license": "NOT_ESTABLISHED",
+      "archive_license_note": "No terms are stated for the zip specifically. Epoch's site is broadly CC-BY with a carve-out that benchmark questions and answers remain the property of their respective creators. Do not redistribute."
+    },
+    "forward_looking": {
+      "epoch_commitment": "For future benchmarks Epoch commits to retaining ownership and providing equitable access; the Tiers 1-4 arrangement will not repeat.",
+      "tiers_1_4_ever_opens_to_non_openai": "NOT_ESTABLISHED"
+    },
+    "actionable_next_step": "Send the prepared engagement email in outputs/e14_frontiermath/ACCESS_REQUEST_2026-08-09.md to math_evals@epoch.ai (Tiers 1-4) or math@epoch.ai (Open Problems). Framed as a hosted-evaluation/submission request, NOT a data request, because Epoch is contractually unable to release the data.",
+    "lane_created_accounts_or_submitted_forms": false
+  }
+}

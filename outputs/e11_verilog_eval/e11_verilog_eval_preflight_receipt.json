@@ -1,0 +1,118 @@
+{
+  "schema_version": "e11-verilog-eval-local-preflight-v1",
+  "suite_id": "verilog_eval",
+  "role": "primary_eval",
+  "status": "BLOCKED",
+  "evidence_class": "preflight_or_blocked",
+  "launchable": false,
+  "launches_any_job": false,
+  "score": null,
+  "measured_metrics": null,
+  "official_task_execution": {
+    "status": "BLOCKED",
+    "attempted": false,
+    "executed_task_count": 0,
+    "executed_sample_count": 0,
+    "result_receipt": null
+  },
+  "authoritative_source": {
+    "url": "https://github.com/NVlabs/verilog-eval",
+    "upstream_commit": "c498220d0a52248f8e3fdffe279075215bde2da6",
+    "source_kind": "public_git_repository",
+    "license": "MIT",
+    "license_sha256": "57ba983be500462670e5e6de0655ed6fb0a30b4b17be8030ec935bb514b562d1",
+    "local_path": "outputs/e11_verilog_eval/nvlabs_verilog_eval_c498220d",
+    "acquired": true
+  },
+  "asset_inventory": {
+    "dataset_code-complete-iccad2023": {
+      "prompt_count": 156,
+      "test_count": 156,
+      "reference_count": 156,
+      "filename_inventory_sha256": "6d801f0873afe7db60050da16b89bfdab2e700e59335590f1fc489f821a047ed"
+    },
+    "dataset_spec-to-rtl": {
+      "prompt_count": 156,
+      "test_count": 156,
+      "reference_count": 156,
+      "filename_inventory_sha256": "6d801f0873afe7db60050da16b89bfdab2e700e59335590f1fc489f821a047ed"
+    },
+    "task_count_available": 312,
+    "task_hash_manifest_authoritative": false,
+    "note": "Counts and filename inventory are local asset metadata, not an evaluation result or an authoritative Pavlov split receipt."
+  },
+  "blockers": [
+    {
+      "kind": "runtime.iverilog",
+      "status": "missing",
+      "detail": "Upstream configure requires iverilog; command is absent and configure exited 1 with: Must have iverilog installed!"
+    },
+    {
+      "kind": "runtime.verilator",
+      "status": "missing",
+      "detail": "The upstream README lists verilator as a required HDL runtime; command is absent."
+    },
+    {
+      "kind": "runtime.python",
+      "status": "mismatch",
+      "detail": "The host provides Python 3.14.6 while the pinned upstream README documents Python 3.11; a per-lane venv was created, but no official runner execution was attempted."
+    },
+    {
+      "kind": "verifier",
+      "status": "missing",
+      "detail": "No native Pavlov VerilogEval artifact/verifier receipt binds HDL compile/simulation verdicts; the checked-in adapter, receipt, and split modules are metadata validators only."
+    },
+    {
+      "kind": "task_split_receipt",
+      "status": "missing",
+      "detail": "The public files are acquired, but no authoritative Pavlov task-ID hash list, aggregate hash, or split-manifest receipt is materialized; local filename inventory is not promoted to that role."
+    },
+    {
+      "kind": "model_result_receipts",
+      "status": "missing",
+      "detail": "No model-generated candidate HDL, online W&B run, Tinker run, or initial/periodic/final Hugging Face checkpoint revisions exist for this lane."
+    }
+  ],
+  "wandb": {
+    "initialized": false,
+    "online": false,
+    "project": "codex",
+    "run_url": null,
+    "run_id": null
+  },
+  "huggingface": {
+    "checkpoint_revisions": [],
+    "result_receipt": null
+  },
+  "tinker": {
+    "run_id": null,
+    "paid_attempts": 0,
+    "cost_usd": 0.0,
+    "suite_cap_usd": 1.0,
+    "reason_not_called": "runtime preflight blocked before any launch"
+  },
+  "commands": [
+    "git status --short --branch && git rev-parse --short HEAD",
+    "git ls-remote https://github.com/NVlabs/verilog-eval.git HEAD refs/heads/main",
+    "git clone --depth 1 https://github.com/NVlabs/verilog-eval.git outputs/e11_verilog_eval/nvlabs_verilog_eval_c498220d",
+    "python3 -m venv $(mktemp -d /tmp/e11_verilog_eval.XXXXXX)/venv",
+    "PYTHONPATH=zvf-program python -m unittest flagship.test_pavlov_verilog_eval_adapter flagship.test_pavlov_verilog_eval_receipt flagship.test_pavlov_verilog_eval_split_manifest -v",
+    "PYTHONPATH=zvf-program python -m flagship.pavlov_verilog_eval_adapter --help",
+    "PYTHONPATH=zvf-program python -m flagship.pavlov_verilog_eval_receipt --help",
+    "PYTHONPATH=zvf-program python -m flagship.pavlov_verilog_eval_split_manifest --help",
+    "outputs/e11_verilog_eval/nvlabs_verilog_eval_c498220d/configure --with-task=code-complete-iccad2023 --with-model=offline-preflight --with-examples=0 --with-samples=1 --with-temperature=0 --with-top-p=0.01"
+  ],
+  "test_evidence": {
+    "focused_command": "PYTHONPATH=zvf-program python3 -m unittest flagship.test_pavlov_verilog_eval_adapter flagship.test_pavlov_verilog_eval_receipt flagship.test_pavlov_verilog_eval_split_manifest -v",
+    "focused_result": "Ran 36 tests in 0.013s; OK",
+    "cli_help": "adapter, receipt, and split-manifest --help all exited 0",
+    "configure_result": "checking for iverilog... no; configure: error: Must have iverilog installed!"
+  },
+  "git_source": {
+    "checkout": "/Users/arvind/Developer/tinker-rl-lab",
+    "branch": "main",
+    "commit": "8fdade2f",
+    "shared_files_modified": false
+  },
+  "evidence_scope": "Local validator/preflight and licensed public asset inventory only; no official score or scientific result is asserted."
+}

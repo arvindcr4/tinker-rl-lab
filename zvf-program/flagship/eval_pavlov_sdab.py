@@ -39,7 +39,12 @@ from typing import Any, Mapping, Protocol, Sequence
 
 
 HERE = Path(__file__).resolve().parent
-REPO_ROOT = HERE.parents[2]
+# ``flagship`` lives at ``<repo>/zvf-program/flagship``; parents[1] is the repo
+# root.  Using parents[2] resolved to the directory *above* the checkout, which
+# put the default isolated environment outside the worktree and made the
+# isolation gate unsatisfiable.
+REPO_ROOT = HERE.parents[1]
+DEFAULT_ENVIRONMENT_ROOT = REPO_ROOT / "outputs" / "e3_sdab" / "venv-sdab-e3"
 
 SDAB_SUITE_ID = "sdab_eval"
 SDAB_BENCHMARK_NAME = "Software Development Automation Benchmark"
@@ -592,7 +597,7 @@ def preflight(
     """Run all zero-side-effect gates and return a JSON-safe report."""
 
     if environment_root is None:
-        environment_root = Path(worktree_root).resolve() / ".venv-sdab-e3"
+        environment_root = DEFAULT_ENVIRONMENT_ROOT
     gates = [
         {
             "name": "exact_native_sdab_runtime",

@@ -1,0 +1,235 @@
+{
+  "schema_version": "e7-binaryaudit-local-receipt-v2",
+  "generated_at_utc": "2026-08-09T07:26:21Z",
+  "lane": "E7",
+  "suite_id": "binaryaudit_eval",
+  "benchmark_id": "binaryaudit",
+  "status": "PARTIAL",
+  "score": null,
+  "is_model_score": false,
+  "scientific_evidence": false,
+  "substitutions": {
+    "used": false,
+    "rejected": ["xLAM", "BFCL", "AgentHarm", "WebBench", "any related security benchmark"]
+  },
+  "execution_source": {
+    "checkout": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab",
+    "branch": "main",
+    "commit": "8fdade2f1425908f8d961bced6dc89f45bcc47f4"
+  },
+  "authoritative_benchmark": {
+    "source_id": "QuesmaOrg/BinaryAudit",
+    "source_url": "https://github.com/QuesmaOrg/BinaryAudit",
+    "immutable_revision": "cbd86c7cd8519f01ae6b7ad7db7fdb653ea54f23",
+    "local_path": "outputs/e7_binaryaudit/BinaryAudit",
+    "files_at_revision": 400,
+    "task_directory_count": 46,
+    "readme_sha256": "2182bb880718216ce2efaa07e637ef5911a92e80927253c31fa10cb3c99af9f3"
+  },
+  "license_investigation": {
+    "status": "BLOCKED_NO_LICENSE_ARTIFACT_EXISTS",
+    "claimed_spdx": "Apache-2.0",
+    "claim_evidence": "README.md:127-129 at the pinned revision; the [LICENSE](LICENSE) link is dangling",
+    "checks": [
+      {"check": "git ls-tree -r HEAD --name-only | grep -iE 'licen|copying|notice'", "result": "no match (400 files)"},
+      {"check": "license blobs in every remote ref (main, HEAD, agent/add-benchmark-canaries, more-models)", "result": "0 in all 4 refs"},
+      {"check": "git log --all --diff-filter=A -- 'LICENSE*' 'COPYING*'", "result": "no commit ever added a license file"},
+      {"check": "git fetch origin main; git rev-parse origin/main", "result": "cbd86c7cd8519f01ae6b7ad7db7fdb653ea54f23 — identical to the pinned revision; no commits landed after it"},
+      {"check": "GET https://api.github.com/repos/QuesmaOrg/BinaryAudit", "result": "\"license\": null; pushed_at 2026-07-14T16:19:30Z; updated_at 2026-07-24T00:03:12Z; public; 97 stars"},
+      {"check": "GET https://api.github.com/repos/QuesmaOrg/BinaryAudit/license", "result": "HTTP 404"},
+      {"check": "GET https://raw.githubusercontent.com/QuesmaOrg/BinaryAudit/main/LICENSE", "result": "HTTP 404"}
+    ],
+    "conclusion": "No LICENSE was added after the pinned revision, because origin/main IS the pinned revision and no license file exists anywhere in the repository history. The README's Apache-2.0 claim is unbacked by any artifact.",
+    "adapter_enforcement": {
+      "evidence_path": "outputs/e7_binaryaudit/boundary_faildosed_license.json",
+      "boundary_status": "fails_closed",
+      "diagnostics": ["source_identity.license_spdx must be a non-empty string"]
+    },
+    "required_external_receipt": "A LICENSE text artifact at a pinned upstream revision (and its SHA-256), or written license confirmation from Quesma."
+  },
+  "base_image_build": {
+    "status": "SUCCESS",
+    "command": "docker build --platform linux/amd64 -t binaryaudit-base:latest -f docker/base.Dockerfile .",
+    "cwd": "outputs/e7_binaryaudit/BinaryAudit",
+    "dockerfile_sha256": "bd3d3211034572a316f11be60f4ea808bced771a09a1dc3d4e7cf4cbd843ffaa",
+    "started_utc": "2026-08-09T07:12:56Z",
+    "finished_utc": "2026-08-09T07:17:50Z",
+    "duration_sec": 294,
+    "host_arch": "arm64",
+    "image_arch": "amd64",
+    "emulated": true,
+    "image_id": "sha256:af88812981cfae8fb7718910a3a30e36934865144a580f9f88b23f1241958eeb",
+    "config_digest": "sha256:0882a111504d1882e12dd00aff28a9f9ab53d06ba52b28db399c2471cbb4ef6e",
+    "size_on_disk": "3.39GB",
+    "log": "outputs/e7_binaryaudit/logs/base_build.log"
+  },
+  "harbor_runs": [
+    {
+      "job": "e7_boundary_probe",
+      "purpose": "reproduce the README command verbatim, no agent key",
+      "outcome": "RuntimeError",
+      "duration_sec": 14,
+      "finding": "README's --task-name does not exist in harbor 0.20.0 (use --include-task-name); and stage 2 of every task Dockerfile is `FROM binaryaudit-base:latest` with no --platform, so on an arm64 host BuildKit fails with 'no match for platform in manifest: not found'",
+      "evidence": "outputs/e7_binaryaudit/jobs/e7_boundary_probe/dnsmasq-backdoor-detect__WLLu2Es/exception.txt"
+    },
+    {
+      "job": "e7_boundary_probe2",
+      "purpose": "credential boundary with DOCKER_DEFAULT_PLATFORM=linux/amd64",
+      "outcome": "AuthenticationError",
+      "duration_sec": 294,
+      "phases_that_succeeded": ["environment build (dnsmasq compiled with clang on debian:11-slim, amd64 emulated)", "agent container start", "tmux/asciinema runtime"],
+      "exact_error": "litellm.AuthenticationError: Missing Anthropic API Key - A call is being made to anthropic but no key is set either in the environment variables or via params. Please set `ANTHROPIC_API_KEY` or `ANTHROPIC_AUTH_TOKEN` in your environment vars",
+      "evidence": "outputs/e7_binaryaudit/jobs/e7_boundary_probe2/dnsmasq-backdoor-detect__Hs9wafj/trial.log"
+    },
+    {
+      "job": "e7_nop_harness",
+      "purpose": "prove the full harbor loop with zero credentials",
+      "outcome": "SUCCESS",
+      "duration_sec": 25,
+      "n_trials": 1,
+      "n_errors": 0,
+      "reward": 0.0,
+      "reward_is_correct": true,
+      "note": "reward 0 is the correct score for the nop agent, which writes no answer file; the verifier ran and emitted 'FAIL: backdoor-detected.txt does not exist'",
+      "kind": "harness_validation",
+      "is_model_score": false,
+      "evidence": "outputs/e7_binaryaudit/jobs/e7_nop_harness/dnsmasq-backdoor-detect__9RoG9iK/verifier/"
+    }
+  ],
+  "verifier_contract": {
+    "reward_path": "/logs/verifier/reward.txt",
+    "reward_values": [0, 1],
+    "partial_credit": false,
+    "answer_artifacts": ["/app/backdoor-detected.txt", "/app/result.json", "/app/decompiled_output.c"],
+    "kinds": {
+      "bash_address_range": {"count": 18, "criterion": "line 1 normalises to YES and line 2 is hex within [EXPECTED_FUNC_START, EXPECTED_FUNC_END]"},
+      "pytest_result_json": {"count": 12, "criterion": "/app/result.json per-binary {found: bool, timestamp: int} must match gold exactly"},
+      "bash_exact_no": {"count": 8, "criterion": "whole file normalises to NO (negative controls)"},
+      "bash_content_check": {"count": 8, "criterion": "decompile-output / tool-operation content checks"}
+    },
+    "selected_task": "dnsmasq-backdoor-detect",
+    "selected_verifier_path": "tasks/dnsmasq-backdoor-detect/tests/test.sh",
+    "selected_verifier_sha256": "122f9e467832ad8bb1e6f7555f219e347c65a3284927607a746464a28f40acc8",
+    "selected_gold_range": ["0x42dae0", "0x432836"]
+  },
+  "harness_validation": {
+    "kind": "harness_validation",
+    "is_model_score": false,
+    "claim": "Proves the BinaryAudit native verifier scores a supplied answer file correctly. Proves nothing about any model's backdoor-detection ability.",
+    "method": "unmodified upstream tests/test.sh mounted read-only into binaryaudit-base:latest; only the answer-file contents were supplied",
+    "n_cases": 14,
+    "n_matching_expectation": 14,
+    "all_cases_matched": true,
+    "script": "outputs/e7_binaryaudit/verifier_harness_validation.py",
+    "report": "outputs/e7_binaryaudit/verifier_harness_validation.json"
+  },
+  "split_manifest": {
+    "status": "BUILT_BY_THIS_LANE",
+    "provenance": "lane_constructed_not_upstream_official",
+    "upstream_split_manifest_exists": false,
+    "path": "outputs/e7_binaryaudit/split_manifest.json",
+    "builder": "zvf-program/flagship/pavlov_binaryaudit_eval_adapter.py:build_binaryaudit_split_manifest",
+    "schema_version": "binaryaudit-split-manifest-v1",
+    "total_tasks": 46,
+    "scored_tasks": 38,
+    "split_sizes": {"train": 8, "primary_eval": 28, "receipt_proven_heldout": 10},
+    "rules": {
+      "R1_upstream_quarantine_marker": "STATUS_FAILING.md / STATUS_NOT_FINISHED.md -> never scored",
+      "R2_tool_operation_baseline": "ghidra / radare2 targets -> never scored",
+      "R3_heldout_predicate": "target_language != 'C' -> receipt_proven_heldout (whole-target granularity, so no obfuscation variant leaks)"
+    },
+    "task_id_manifest_sha256": "c6c708d518303148efaf22c17537918e8659014c1121ecd49da35d099383fbca",
+    "split_manifest_sha256": "1420f980bf89e7778af8c7c2327c0d23d742f7f28c4cc294bc9889077207b1a2",
+    "task_content_manifest_sha256": "81f0d585d461b34dbda6e439a9f847edd7d665e7339d89c1f595cb0520d09157",
+    "disjointness_proof": {
+      "pairwise_disjoint": true,
+      "pairwise_intersection_sizes": {
+        "train|primary_eval": 0,
+        "train|receipt_proven_heldout": 0,
+        "primary_eval|receipt_proven_heldout": 0
+      },
+      "union_equals_task_ids": true,
+      "union_size": 46,
+      "size_sum_equals_total": true,
+      "task_id_collision_free": true
+    },
+    "upstream_quarantined_tasks": [
+      {"task": "caddy-backdoor-detect", "marker": "STATUS_FAILING.md", "upstream_note": "verification is based on threat enumeration; only edu value"},
+      {"task": "pingora-backdoor-detect", "marker": "STATUS_NOT_FINISHED.md", "upstream_note": "Not finished. This project is a library. The examples don't contain the backdoor."}
+    ],
+    "warning": "Reporting a denominator of 46 scores two tasks upstream disowned. Effective benchmark is 44; 38 after removing tool-operation baselines."
+  },
+  "adapter": {
+    "path": "zvf-program/flagship/pavlov_binaryaudit_eval_adapter.py",
+    "tests": "zvf-program/flagship/test_pavlov_binaryaudit_eval_adapter.py",
+    "test_command": "cd zvf-program && python3 -m pytest flagship/test_pavlov_binaryaudit_eval_adapter.py -q",
+    "tests_collected": 22,
+    "tests_passed": 22,
+    "tests_failed": 0,
+    "added_this_pass": [
+      "hash_task_directory",
+      "enumerate_binaryaudit_tasks",
+      "build_binaryaudit_split_manifest",
+      "pinned-checkout regression tests asserting the 46-task manifest hashes"
+    ]
+  },
+  "tooling": {
+    "harbor": "0.20.0",
+    "docker_server": "28.4.0",
+    "docker_runtime": "Colima",
+    "readme_command_drift": "README uses --task-name, removed in harbor 0.20.0; use --include-task-name / -i"
+  },
+  "resource_usage": {
+    "docker_mutex_held_utc": ["2026-08-09T07:12:49Z", "2026-08-09T07:26:21Z"],
+    "host_free_before": "64Gi",
+    "host_free_after": "26Gi",
+    "docker_accounted_gb": 24,
+    "note": "Colima's sparse VM disk grew during the emulated amd64 builds and does not shrink when layers are deleted. Task environment image auto-removed by harbor's default --delete; binaryaudit-base:latest kept deliberately (every task depends on it). No system prune run; E2's revideo-perf-opt:v4 untouched."
+  },
+  "cost": {
+    "paid_api_calls": 0,
+    "tinker_calls": 0,
+    "wandb_runs": 0,
+    "hf_pushes": 0,
+    "usd_spent": 0.0,
+    "estimated_cost_to_cross_boundary_usd": {
+      "single_task_single_attempt": "2-8",
+      "full_38_task_scored_set_n3": "250-900",
+      "basis": "7200s agent budget per trial doing agentic reverse engineering of a stripped binary with Ghidra/radare2"
+    }
+  },
+  "blockers": [
+    {
+      "kind": "credential",
+      "detail": "No agent model key. Exactly one env var is missing: ANTHROPIC_API_KEY (or OPENROUTER_API_KEY with an openrouter/... model).",
+      "unblock_command": "export ANTHROPIC_API_KEY=... && cd outputs/e7_binaryaudit/BinaryAudit && DOCKER_DEFAULT_PLATFORM=linux/amd64 harbor run --path tasks --include-task-name dnsmasq-backdoor-detect --agent terminus-2 --model anthropic/claude-opus-4-6-20260409 -o ../jobs --job-name e7_real",
+      "required_external_receipt": "An OpenRouter or Anthropic API key provisioned for benchmark use."
+    },
+    {
+      "kind": "license",
+      "detail": "No LICENSE artifact exists anywhere in the repository history or on GitHub; the README's Apache-2.0 claim is unbacked. Policy gate, not a download.",
+      "required_external_receipt": "A LICENSE file at a pinned upstream revision, or written license confirmation from Quesma."
+    },
+    {
+      "kind": "coverage",
+      "detail": "Only dnsmasq-backdoor-detect's task environment has been built on this arm64 host. The other 45 are unverified; upstream already documents that lighttpd-backdoor-multiple-arch-binaries-detect needs binfmt handlers registered.",
+      "required_external_receipt": null
+    }
+  ],
+  "evidence_paths": [
+    "outputs/e7_binaryaudit/lane_status_2026-08-09.md",
+    "outputs/e7_binaryaudit/split_manifest.json",
+    "outputs/e7_binaryaudit/verifier_harness_validation.py",
+    "outputs/e7_binaryaudit/verifier_harness_validation.json",
+    "outputs/e7_binaryaudit/boundary_faildosed_license.json",
+    "outputs/e7_binaryaudit/logs/base_build.log",
+    "outputs/e7_binaryaudit/logs/harbor_run_nokey.log",
+    "outputs/e7_binaryaudit/logs/harbor_run_nokey2.log",
+    "outputs/e7_binaryaudit/logs/harbor_run_nop.log",
+    "outputs/e7_binaryaudit/jobs/e7_boundary_probe/",
+    "outputs/e7_binaryaudit/jobs/e7_boundary_probe2/",
+    "outputs/e7_binaryaudit/jobs/e7_nop_harness/",
+    "zvf-program/flagship/pavlov_binaryaudit_eval_adapter.py",
+    "zvf-program/flagship/test_pavlov_binaryaudit_eval_adapter.py"
+  ]
+}

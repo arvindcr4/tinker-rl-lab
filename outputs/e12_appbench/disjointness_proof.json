@@ -1,0 +1,18 @@
+{
+  "schema_version": "e12-appbench-disjointness-proof-v1",
+  "boundary_id": "E12",
+  "eval_split_hash": "ee8bb522e82505a1b9690c0b691c36a2bb73a524023ab15dff670fe7cc34601d",
+  "eval_task_count": 6,
+  "method": "exact set intersection over 64-hex content-addressed task IDs",
+  "search_root": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs",
+  "foreign_files_scanned": 41,
+  "foreign_unique_ids": 900,
+  "intersection_with_eval": [],
+  "pairs_checked": 1,
+  "disjoint": true,
+  "e13_openreward_games": {
+    "task_ids_available": false,
+    "note": "E13's boundary has no task IDs in this checkout, so the adapter's E12/E13 cross-boundary disjointness rule is vacuously satisfiable but not yet exercised against real E13 IDs."
+  },
+  "does_not_prove": "Set-disjointness across boundaries is not evidence that the tasks were held out from model training. See heldout_claim in split_manifest.json."
+}

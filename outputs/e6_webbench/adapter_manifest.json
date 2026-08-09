@@ -1,0 +1,37 @@
+{
+  "asset": {
+    "dataset_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/webbenchfinal.csv",
+    "dataset_sha256": "fd5311a38bdb6f941e8f544150735656c114d76fbfb17193da973d5de0165217",
+    "license_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e6_webbench/WEBBENCH_LICENSE",
+    "license_sha256": "96804aa272fe40cdfb8b5c8f4d1d94757bcfaf1bf5596fb829214843d2371e58",
+    "public_task_count": 2647,
+    "selected_task_count": 1
+  },
+  "domains": [
+    "browser",
+    "computer_use",
+    "enterprise"
+  ],
+  "heldout_status": "pending_receipts",
+  "role": "primary_eval",
+  "schema_version": "pavlov-webbench-eval-boundary-v1",
+  "source": {
+    "license": "MIT",
+    "name": "Halluminate/WebBench",
+    "revision": "ea7a1628443321363989f354401f0653e0cba6f4",
+    "suite_id": "webbench_eval",
+    "url": "https://github.com/Halluminate/WebBench"
+  },
+  "split_manifest": {
+    "role": "primary_eval",
+    "split": "evaluation",
+    "suite_id": "webbench_eval",
+    "task_id_hash": "d6b80fb81fa6c0f43f792b5e5a02c337f23d205c1968450063122c17ccf2b3b4"
+  },
+  "split_manifest_hash": "a54ec890929c041b90d97b8d8bd98d47b07484480fd70c68f98cbd4efa7f2915",
+  "suite_id": "webbench_eval",
+  "task_id_hash": "d6b80fb81fa6c0f43f792b5e5a02c337f23d205c1968450063122c17ccf2b3b4",
+  "task_ids": [
+    "webbench-task-0"
+  ]
+}

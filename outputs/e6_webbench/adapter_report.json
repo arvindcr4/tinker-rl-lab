@@ -1,0 +1,63 @@
+{
+  "blocker_codes": [
+    "source_receipt_invalid",
+    "source_receipt_invalid",
+    "task_receipt_invalid",
+    "split_receipt_invalid",
+    "environment_contract_missing"
+  ],
+  "blockers": [
+    {
+      "code": "source_receipt_invalid",
+      "details": {
+        "field": "revision_receipt",
+        "reason": "receipt_not_object"
+      },
+      "message": "Pinned source identity/license needs a bound receipt."
+    },
+    {
+      "code": "source_receipt_invalid",
+      "details": {
+        "field": "license_receipt",
+        "reason": "receipt_not_object"
+      },
+      "message": "Pinned source identity/license needs a bound receipt."
+    },
+    {
+      "code": "task_receipt_invalid",
+      "details": {
+        "reason": "receipt_not_object"
+      },
+      "message": "Deterministic task IDs need a bound task receipt."
+    },
+    {
+      "code": "split_receipt_invalid",
+      "details": {
+        "reason": "receipt_not_object"
+      },
+      "message": "The split manifest needs a bound split receipt."
+    },
+    {
+      "code": "environment_contract_missing",
+      "details": {},
+      "message": "WebBench needs a native environment/artifact/verifier contract."
+    }
+  ],
+  "boundary_valid": false,
+  "checks": {
+    "environment": false,
+    "provenance_receipts_complete": false,
+    "source": false,
+    "tasks_and_split": false
+  },
+  "heldout_claim_allowed": false,
+  "network_accessed": false,
+  "paid_calls_executed": false,
+  "primary_eval": false,
+  "receipt_proven_heldout": false,
+  "result_material_present": false,
+  "result_receipts_complete": false,
+  "schema_version": "pavlov-webbench-eval-boundary-v1",
+  "status": "BLOCKED",
+  "zero_cost": true
+}

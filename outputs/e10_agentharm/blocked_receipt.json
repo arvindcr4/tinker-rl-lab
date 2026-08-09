@@ -1,0 +1,213 @@
+{
+  "artifacts": {
+    "focused_tests_log": "/Users/arvind/Developer/tinker-rl-lab/outputs/e10_agentharm/focused_tests.log",
+    "lane_tmp": "/tmp/e10_agentharm.ZZNnD5",
+    "native_preflight_log": "/Users/arvind/Developer/tinker-rl-lab/outputs/e10_agentharm/native_preflight.txt",
+    "private_split_preflight_log": "/Users/arvind/Developer/tinker-rl-lab/outputs/e10_agentharm/private_split_preflight.txt",
+    "public_asset_manifest": "/Users/arvind/Developer/tinker-rl-lab/outputs/e10_agentharm/public_asset_manifest.json",
+    "receipt_path": "/Users/arvind/Developer/tinker-rl-lab/outputs/e10_agentharm/blocked_receipt.json"
+  },
+  "asset_bindings": {
+    "agentharm_dataset": {
+      "files": {
+        "LICENSE": "b5f0803470d24b0b441e7cece4fe68df0bd4086f1dc118ca27718d31775f5cf9",
+        "README.md": "a161c8273e7c4212463be38aad8a03667940f7383ddabc712f9cf4ab69c99f0e",
+        "benchmark/benign_behaviors_test_public.json": "65b4ebd4d8d2e7c9a79db4e11bc642f1800e642be0626ba0a990c763a325957a",
+        "benchmark/benign_behaviors_validation.json": "b74ffb781ce54182775a8b2843ea341ab2fb4cfea5743bfa89a368e52a76c27a",
+        "benchmark/chat_public_test.json": "699a8325ce6dc355fd6ebef07bd2a9e76cca4c0ca7b6971774f2ff117e8f4512",
+        "benchmark/chat_validation.json": "06684a6968e0bb65bcb15bc1cdaf3bd8c486fc54164e7623a35e3ee58bf93565",
+        "benchmark/harmful_behaviors_test_public.json": "fc3e4abbcd812022b85150b0e6f81c0bdbdfabb486e5b82ec46f1ba135f3ba08",
+        "benchmark/harmful_behaviors_validation.json": "40cd099915258b41142acfc88a9f2b4e15cd631c5490ad02a0dce0cf2b9c175e"
+      },
+      "public_counts": {
+        "benchmark/benign_behaviors_test_public.json": 176,
+        "benchmark/benign_behaviors_validation.json": 32,
+        "benchmark/chat_public_test.json": 44,
+        "benchmark/chat_validation.json": 8,
+        "benchmark/harmful_behaviors_test_public.json": 176,
+        "benchmark/harmful_behaviors_validation.json": 32
+      },
+      "repo": "https://huggingface.co/datasets/ai-safety-institute/AgentHarm",
+      "revision": "e23b3fe60a0da9037314b88e5ee3a0c054970dad"
+    },
+    "inspect_evals": {
+      "files": {
+        "LICENSE": "c593c2afc81388521eaeb03f0d1a4b01bc3e5147ed9cb16c1f129e5be353b6af",
+        "src/inspect_evals/agentharm/README.md": "549b93937ad7d12bf018670cbef350c4d97daae547adf9046b339fcbe3448aaa",
+        "src/inspect_evals/agentharm/agentharm.py": "8b6de106e783f1d761cd015bd42f8346720c3c5ce60a7f32febe03c9ad0ee158",
+        "src/inspect_evals/agentharm/eval.yaml": "f7f635da778cb6676cb41ce0f327841e38d22343ff26f44bcd644097b13f4ef8",
+        "src/inspect_evals/agentharm/scorer.py": "a49f279ae724a7cf7643ff859a70f44e708d1b89d79d810aa5c0b3e74d5f7847",
+        "src/inspect_evals/agentharm/utils.py": "5453e15000831066968f8bbb83abcc7f242c5b32172c03a388d323205ab5cbc2"
+      },
+      "repo": "https://github.com/UKGovernmentBEIS/inspect_evals",
+      "revision": "b935c0e5cfa04710f016f925db75d8e81413e2cf"
+    },
+    "model": {
+      "repo": "https://huggingface.co/Qwen/Qwen3.6-35B-A3B",
+      "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0"
+    }
+  },
+  "blockers": [
+    "The pinned checkout contains no executable agentharm_eval runner; pavlov_agentharm_frontiermath_adapter.py is an offline metadata adapter only.",
+    "The official Inspect AgentHarm loader requires held-out test_private files that are absent from the authoritative public dataset revision.",
+    "A secure external access receipt is required for the private held-out task files, immutable task IDs/split manifest, and the approved native policy-grader/verifier artifact.",
+    "No Tinker client or completed compatible sampler checkpoint is available in this lane, so no Qwen Tinker call was attempted."
+  ],
+  "execution": {
+    "budget": {
+      "global_cap_usd": 18.0,
+      "lane_cost_usd": 0.0,
+      "operational_cap_usd": 16.5,
+      "safety_reserve_usd": 1.5
+    },
+    "huggingface": {
+      "checkpoint_revisions": [],
+      "evaluated_commit": null
+    },
+    "measured_metrics": null,
+    "sample_count": 0,
+    "score": null,
+    "score_claim_allowed": false,
+    "task_count": 0,
+    "tinker": {
+      "cost_usd": 0.0,
+      "hard_lane_cap_usd": 0.5,
+      "launched": false,
+      "paid_attempts": 0,
+      "run_id": null
+    },
+    "wandb": {
+      "initialized_online": false,
+      "reason": "Blocked before an experiment was launched.",
+      "run_id": null,
+      "run_url": null
+    }
+  },
+  "execution_source": {
+    "branch": "main",
+    "checkout": "/Users/arvind/Developer/tinker-rl-lab",
+    "commit": "8fdade2f1425908f8d961bced6dc89f45bcc47f4",
+    "source_scope": "read-only; no shared campaign/contract/budget/paper files changed"
+  },
+  "external_access_receipt_required": {
+    "official_urls": [
+      "https://github.com/UKGovernmentBEIS/inspect_evals/tree/b935c0e5cfa04710f016f925db75d8e81413e2cf/src/inspect_evals/agentharm",
+      "https://huggingface.co/datasets/ai-safety-institute/AgentHarm/tree/e23b3fe60a0da9037314b88e5ee3a0c054970dad/benchmark"
+    ],
+    "provider": "AgentHarm benchmark maintainers or approved secure evaluation service",
+    "required_artifacts": [
+      "benchmark/harmful_behaviors_test_private.json",
+      "benchmark/benign_behaviors_test_private.json",
+      "benchmark/chat_private_test.json",
+      "immutable held-out task-id manifest and SHA-256",
+      "train manifest and disjointness proof",
+      "native Inspect agent-tool environment and policy-grader/verifier digest"
+    ],
+    "required_receipt_fields": [
+      "dataset_revision",
+      "task_id_sha256",
+      "split_manifest_sha256",
+      "license/approval",
+      "runtime_digest",
+      "verifier_digest",
+      "access_authorization_id"
+    ]
+  },
+  "generated_at_utc": "2026-08-09T06:51:55.160909+00:00",
+  "license_receipt": {
+    "agentharm_license": "MIT with additional clause restricting use to improving AI safety and security",
+    "agentharm_license_sha256": "b5f0803470d24b0b441e7cece4fe68df0bd4086f1dc118ca27718d31775f5cf9",
+    "inspect_evals_license": "MIT",
+    "inspect_evals_license_sha256": "c593c2afc81388521eaeb03f0d1a4b01bc3e5147ed9cb16c1f129e5be353b6af",
+    "license_urls": [
+      "https://github.com/UKGovernmentBEIS/inspect_evals/blob/b935c0e5cfa04710f016f925db75d8e81413e2cf/LICENSE",
+      "https://huggingface.co/datasets/ai-safety-institute/AgentHarm/blob/e23b3fe60a0da9037314b88e5ee3a0c054970dad/LICENSE"
+    ],
+    "use_purpose": "AI safety/security evaluation"
+  },
+  "model_binding": {
+    "base_model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "base_model_url": "https://huggingface.co/Qwen/Qwen3.6-35B-A3B/tree/995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "evaluated_hf_commit": null,
+    "model_id": "Qwen/Qwen3.6-35B-A3B",
+    "sampler_checkpoint_used": null
+  },
+  "preflight": {
+    "adapter_help": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=zvf-program /tmp/e10_agentharm.ZZNnD5/venv/bin/python -m flagship.pavlov_agentharm_frontiermath_adapter --help",
+      "interpretation": "The adapter has no CLI entry point; it is metadata-only.",
+      "status": "PASS_NO_CLI_OUTPUT",
+      "stdout_bytes": 0
+    },
+    "available_runner_help": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=zvf-program /tmp/e10_agentharm.ZZNnD5/venv/bin/python zvf-program/flagship/eval_pavlov_xlam.py --help",
+      "interpretation": "Only unrelated xLAM runner is executable; it was not used for E10.",
+      "status": "PASS"
+    },
+    "focused_unit_tests": {
+      "command": "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=zvf-program /tmp/e10_agentharm.ZZNnD5/venv/bin/python -m unittest flagship.test_pavlov_agentharm_frontiermath_adapter -v",
+      "status": "PASS",
+      "tests_failed": 0,
+      "tests_run": 21
+    },
+    "heldout_loader_probe": {
+      "error": "File not found: /Users/arvind/Library/Caches/inspect_evals/agentharm_dataset/AgentHarm/benchmark/harmful_behaviors_test_private.json",
+      "error_type": "FileNotFoundError",
+      "missing_official_files": [
+        "benchmark/harmful_behaviors_test_private.json",
+        "benchmark/benign_behaviors_test_private.json",
+        "benchmark/chat_private_test.json"
+      ],
+      "public_revision_metadata": {
+        "gated": false,
+        "private": false
+      },
+      "status": "BLOCKED"
+    },
+    "native_inspect_runtime": {
+      "agentharm_import": true,
+      "agentharm_policy_grader_imported": true,
+      "inspect_ai_version": "0.3.254",
+      "inspect_cli_help": true,
+      "inspect_evals_import": true
+    },
+    "tinker_probe": {
+      "reason": "No Tinker client or exact E10 runner is present in the pinned checkout/lane environment.",
+      "tinker_import": false,
+      "tinker_run_started": false
+    }
+  },
+  "provenance_gates": {
+    "container_runtime_digest": null,
+    "decontamination": "NOT_RUN",
+    "split_manifest_sha256": null,
+    "task_id_hash": null,
+    "train_eval_disjointness": "NOT_PROVEN; held-out task IDs unavailable",
+    "verifier_digest": "a49f279ae724a7cf7643ff859a70f44e708d1b89d79d810aa5c0b3e74d5f7847"
+  },
+  "schema_version": "pavlov-agentharm-e10-local-result-v1",
+  "side_effect_note": "The native loader populated six public files in the default Inspect cache during probing; shell safety rejected cleanup of those explicit files. They are listed in the loader error path; no worktree/shared source file was modified.",
+  "status": "BLOCKED",
+  "status_reason": "The exact official AgentHarm held-out evaluation cannot run from the pinned checkout: only a metadata adapter exists, the authoritative public dataset has no test_private files, and no Tinker E10 runner/client is available.",
+  "suite": {
+    "authoritative_source": {
+      "dataset_repo": "https://huggingface.co/datasets/ai-safety-institute/AgentHarm",
+      "dataset_revision": "e23b3fe60a0da9037314b88e5ee3a0c054970dad",
+      "inspect_evals_path": "src/inspect_evals/agentharm",
+      "inspect_evals_repo": "https://github.com/UKGovernmentBEIS/inspect_evals",
+      "inspect_evals_revision": "b935c0e5cfa04710f016f925db75d8e81413e2cf",
+      "native_policy_grader": "inspect_evals.agentharm.scorer.combined_scorer",
+      "native_task": "inspect_evals.agentharm.agentharm",
+      "requested_split": "test_private",
+      "split_status": "not_present_in_authoritative_public_revision"
+    },
+    "benchmark": "AgentHarm",
+    "domains": [
+      "alignment",
+      "security",
+      "tool_use"
+    ],
+    "suite_id": "agentharm_eval",
+    "suite_role": "primary_eval"
+  }
+}

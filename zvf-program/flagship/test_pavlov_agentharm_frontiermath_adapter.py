@@ -4,7 +4,11 @@
 from __future__ import annotations
 
 import copy
+import json
+import shutil
+import tempfile
 import unittest
+from pathlib import Path
 from typing import Any
 
 from flagship import pavlov_agentharm_frontiermath_adapter as adapter
@@ -308,6 +312,314 @@ class PavlovAgentharmFrontiermathAdapterTests(unittest.TestCase):
             any("duplicate entries for stage initial" in error for error in errors),
             errors,
         )
+
+
+class AgentharmSplitBindingTests(unittest.TestCase):
+    """E10 held-out gate: task-ID hashes, split manifest, verifier identity, fail-closed."""
+
+    PUBLIC_BEHAVIORS = {
+        "harmful": ["1-1", "1-2"],
+        "benign": ["1-1", "2-1"],
+        "chat": ["c-1"],
+    }
+    PRIVATE_BEHAVIORS = {
+        "harmful": ["p1-1"],
+        "benign": ["p1-1"],
+        "chat": ["pc-1"],
+    }
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name) / "AgentHarm"
+        self._write_split("test_public", self.PUBLIC_BEHAVIORS)
+        self.package_root = Path(self._tmp.name) / "agentharm_pkg"
+        for relative in adapter.AGENTHARM_VERIFIER_SOURCES:
+            path = self.package_root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(f"# stub for {relative}\n", encoding="utf-8")
+        self.addCleanup(self._tmp.cleanup)
+
+    def _write_split(self, split: str, behaviors: dict[str, list[str]]) -> None:
+        for dataset_name, ids in behaviors.items():
+            relative = adapter.AGENTHARM_SPLIT_FILES[split][dataset_name]
+            path = self.root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            payload = {"behaviors": [{"id": bid, "prompt": f"prompt {bid}"} for bid in ids]}
+            path.write_text(json.dumps(payload), encoding="utf-8")
+
+    def _run(self, **overrides: Any) -> dict[str, Any]:
+        run: dict[str, Any] = {
+            "label": "agentharm_heldout",
+            "is_model_score": True,
+            "raw_score": 0.37,
+            "model_id": adapter.MODEL_ID,
+            "model_revision": adapter.MODEL_REVISION,
+            "policy_grader_artifact": {
+                "status": "approved",
+                "receipt_id": "aisi-policy-grader-001",
+            },
+        }
+        run.update(overrides)
+        return run
+
+    # -- split file mapping mirrors the loader ------------------------------
+
+    def test_split_files_match_inspect_evals_loader_mapping(self) -> None:
+        self.assertEqual(
+            adapter.AGENTHARM_SPLIT_FILES["test_private"],
+            {
+                "harmful": "benchmark/harmful_behaviors_test_private.json",
+                "benign": "benchmark/benign_behaviors_test_private.json",
+                "chat": "benchmark/chat_private_test.json",
+            },
+        )
+        self.assertEqual(
+            adapter.AGENTHARM_HELDOUT_FILES,
+            (
+                "benchmark/harmful_behaviors_test_private.json",
+                "benchmark/benign_behaviors_test_private.json",
+                "benchmark/chat_private_test.json",
+            ),
+        )
+
+    # -- task ID hashes ------------------------------------------------------
+
+    def test_task_id_hash_is_deterministic_and_domain_separated(self) -> None:
+        first = adapter.agentharm_task_id_hash(
+            "1-1", dataset_name="harmful", split="test_public"
+        )
+        again = adapter.agentharm_task_id_hash(
+            "1-1", dataset_name="harmful", split="test_public"
+        )
+        self.assertEqual(first, again)
+        self.assertRegex(first, r"^[0-9a-f]{64}$")
+
+        other_split = adapter.agentharm_task_id_hash(
+            "1-1", dataset_name="harmful", split="test_private"
+        )
+        other_dataset = adapter.agentharm_task_id_hash(
+            "1-1", dataset_name="benign", split="test_public"
+        )
+        other_revision = adapter.agentharm_task_id_hash(
+            "1-1",
+            dataset_name="harmful",
+            split="test_public",
+            dataset_revision="9" * 40,
+        )
+        self.assertEqual(4, len({first, other_split, other_dataset, other_revision}))
+
+    def test_task_id_hash_rejects_mutable_revision(self) -> None:
+        with self.assertRaises(ValueError):
+            adapter.agentharm_task_id_hash(
+                "1-1", dataset_name="harmful", split="test_public", dataset_revision="main"
+            )
+
+    def test_task_id_hash_rejects_unknown_split_and_dataset(self) -> None:
+        with self.assertRaises(ValueError):
+            adapter.agentharm_task_id_hash("1-1", dataset_name="harmful", split="test_holdout")
+        with self.assertRaises(ValueError):
+            adapter.agentharm_task_id_hash("1-1", dataset_name="gsm8k", split="test_public")
+
+    # -- split manifest ------------------------------------------------------
+
+    def test_public_split_manifest_is_complete_and_bound(self) -> None:
+        manifest = adapter.build_agentharm_split_manifest(self.root, "test_public")
+        self.assertTrue(manifest["complete"])
+        self.assertEqual([], manifest["missing_files"])
+        self.assertFalse(manifest["heldout"])
+        self.assertEqual(5, manifest["task_count"])
+        self.assertEqual(
+            adapter.aggregate_task_id_hashes(manifest["task_id_hashes"]),
+            manifest["split_task_id_hash"],
+        )
+        self.assertRegex(manifest["split_manifest_hash"], r"^[0-9a-f]{64}$")
+        self.assertEqual(adapter.AGENTHARM_DATASET_REVISION, manifest["dataset_revision"])
+
+    def test_split_manifest_hash_is_path_independent(self) -> None:
+        first = adapter.build_agentharm_split_manifest(self.root, "test_public")
+        moved = Path(self._tmp.name) / "copy" / "AgentHarm"
+        shutil.copytree(self.root, moved)
+        second = adapter.build_agentharm_split_manifest(moved, "test_public")
+        self.assertEqual(first["split_manifest_hash"], second["split_manifest_hash"])
+
+    def test_split_manifest_hash_changes_when_content_changes(self) -> None:
+        before = adapter.build_agentharm_split_manifest(self.root, "test_public")
+        self._write_split("test_public", {**self.PUBLIC_BEHAVIORS, "chat": ["c-1", "c-2"]})
+        after = adapter.build_agentharm_split_manifest(self.root, "test_public")
+        self.assertNotEqual(before["split_manifest_hash"], after["split_manifest_hash"])
+        self.assertNotEqual(before["split_task_id_hash"], after["split_task_id_hash"])
+
+    def test_private_split_manifest_reports_all_three_missing_files(self) -> None:
+        manifest = adapter.build_agentharm_split_manifest(self.root, "test_private")
+        self.assertFalse(manifest["complete"])
+        self.assertEqual(list(adapter.AGENTHARM_HELDOUT_FILES), manifest["missing_files"])
+        self.assertEqual(0, manifest["task_count"])
+        self.assertIsNone(manifest["split_task_id_hash"])
+        self.assertTrue(manifest["heldout"])
+        self.assertEqual('split="test_private"', manifest["loader_split_flag"])
+
+    # -- verifier identity ---------------------------------------------------
+
+    def test_verifier_identity_is_complete_and_hashed(self) -> None:
+        identity = adapter.agentharm_verifier_identity(self.package_root)
+        self.assertTrue(identity["complete"])
+        self.assertEqual([], identity["missing_sources"])
+        self.assertRegex(identity["verifier_hash"], r"^[0-9a-f]{64}$")
+        self.assertEqual(adapter.AGENTHARM_HARNESS_REVISION, identity["harness_revision"])
+
+    def test_verifier_hash_changes_when_a_grading_source_changes(self) -> None:
+        before = adapter.agentharm_verifier_identity(self.package_root)
+        (self.package_root / "benchmark/harmful_grading_functions.py").write_text(
+            "# tampered\n", encoding="utf-8"
+        )
+        after = adapter.agentharm_verifier_identity(self.package_root)
+        self.assertNotEqual(before["verifier_hash"], after["verifier_hash"])
+
+    def test_verifier_identity_reports_missing_sources(self) -> None:
+        (self.package_root / "scorer.py").unlink()
+        identity = adapter.agentharm_verifier_identity(self.package_root)
+        self.assertFalse(identity["complete"])
+        self.assertIn("scorer.py", identity["missing_sources"])
+
+    # -- held-out availability ----------------------------------------------
+
+    def test_heldout_check_is_blocked_without_private_files(self) -> None:
+        availability = adapter.check_heldout_split_available(self.root)
+        self.assertFalse(availability["available"])
+        self.assertEqual(list(adapter.AGENTHARM_HELDOUT_FILES), availability["missing_files"])
+
+    def test_heldout_check_requires_all_three_files(self) -> None:
+        self._write_split("test_private", {"harmful": ["p1-1"]})
+        availability = adapter.check_heldout_split_available(self.root)
+        self.assertFalse(availability["available"])
+        self.assertEqual(2, len(availability["missing_files"]))
+        self.assertEqual(1, len(availability["present_files"]))
+
+    def test_heldout_check_passes_once_all_three_present(self) -> None:
+        self._write_split("test_private", self.PRIVATE_BEHAVIORS)
+        availability = adapter.check_heldout_split_available(self.root)
+        self.assertTrue(availability["available"])
+        self.assertEqual([], availability["missing_files"])
+
+    # -- fail-closed emitter -------------------------------------------------
+
+    def test_emitter_blocks_score_when_private_files_absent(self) -> None:
+        receipt = adapter.emit_agentharm_score(
+            split_manifest=adapter.build_agentharm_split_manifest(self.root, "test_private"),
+            verifier_identity=adapter.agentharm_verifier_identity(self.package_root),
+            heldout_availability=adapter.check_heldout_split_available(self.root),
+            run=self._run(),
+        )
+        self.assertIsNone(receipt["score"])
+        self.assertEqual("BLOCKED", receipt["status"])
+        self.assertFalse(receipt["is_model_score"])
+        self.assertTrue(
+            any("held-out split files are absent" in b for b in receipt["blockers"]),
+            receipt["blockers"],
+        )
+
+    def test_emitter_never_promotes_a_public_split_run(self) -> None:
+        receipt = adapter.emit_agentharm_score(
+            split_manifest=adapter.build_agentharm_split_manifest(self.root, "test_public"),
+            verifier_identity=adapter.agentharm_verifier_identity(self.package_root),
+            heldout_availability=adapter.check_heldout_split_available(self.root),
+            run=self._run(raw_score=0.99),
+        )
+        self.assertIsNone(receipt["score"])
+        self.assertEqual("BLOCKED", receipt["status"])
+        self.assertTrue(
+            any("is not the held-out split" in b for b in receipt["blockers"]),
+            receipt["blockers"],
+        )
+
+    def test_emitter_never_promotes_harness_validation(self) -> None:
+        self._write_split("test_private", self.PRIVATE_BEHAVIORS)
+        receipt = adapter.emit_agentharm_score(
+            split_manifest=adapter.build_agentharm_split_manifest(self.root, "test_private"),
+            verifier_identity=adapter.agentharm_verifier_identity(self.package_root),
+            heldout_availability=adapter.check_heldout_split_available(self.root),
+            run=self._run(
+                label="harness_validation", is_model_score=False, raw_score=1.0
+            ),
+        )
+        self.assertIsNone(receipt["score"])
+        self.assertEqual("BLOCKED", receipt["status"])
+        self.assertTrue(
+            any("harness validation may never be promoted" in b for b in receipt["blockers"]),
+            receipt["blockers"],
+        )
+
+    def test_emitter_blocks_without_approved_policy_grader_artifact(self) -> None:
+        self._write_split("test_private", self.PRIVATE_BEHAVIORS)
+        receipt = adapter.emit_agentharm_score(
+            split_manifest=adapter.build_agentharm_split_manifest(self.root, "test_private"),
+            verifier_identity=adapter.agentharm_verifier_identity(self.package_root),
+            heldout_availability=adapter.check_heldout_split_available(self.root),
+            run=self._run(policy_grader_artifact=None),
+        )
+        self.assertIsNone(receipt["score"])
+        self.assertTrue(
+            any("policy-grader artifact receipt is missing" in b for b in receipt["blockers"]),
+            receipt["blockers"],
+        )
+
+    def test_emitter_blocks_when_verifier_sources_are_missing(self) -> None:
+        self._write_split("test_private", self.PRIVATE_BEHAVIORS)
+        (self.package_root / "benchmark/harmful_grading_functions.py").unlink()
+        receipt = adapter.emit_agentharm_score(
+            split_manifest=adapter.build_agentharm_split_manifest(self.root, "test_private"),
+            verifier_identity=adapter.agentharm_verifier_identity(self.package_root),
+            heldout_availability=adapter.check_heldout_split_available(self.root),
+            run=self._run(),
+        )
+        self.assertIsNone(receipt["score"])
+        self.assertTrue(
+            any("verifier identity is incomplete" in b for b in receipt["blockers"]),
+            receipt["blockers"],
+        )
+
+    def test_emitter_blocks_on_tampered_split_task_id_hash(self) -> None:
+        self._write_split("test_private", self.PRIVATE_BEHAVIORS)
+        manifest = adapter.build_agentharm_split_manifest(self.root, "test_private")
+        manifest["split_task_id_hash"] = "e" * 64
+        receipt = adapter.emit_agentharm_score(
+            split_manifest=manifest,
+            verifier_identity=adapter.agentharm_verifier_identity(self.package_root),
+            heldout_availability=adapter.check_heldout_split_available(self.root),
+            run=self._run(),
+        )
+        self.assertIsNone(receipt["score"])
+        self.assertTrue(
+            any("does not match task_id_hashes" in b for b in receipt["blockers"]),
+            receipt["blockers"],
+        )
+
+    def test_emitter_raises_when_asked_to_fail_loudly(self) -> None:
+        with self.assertRaises(adapter.HeldoutSplitUnavailable):
+            adapter.emit_agentharm_score(
+                split_manifest=adapter.build_agentharm_split_manifest(
+                    self.root, "test_private"
+                ),
+                verifier_identity=adapter.agentharm_verifier_identity(self.package_root),
+                heldout_availability=adapter.check_heldout_split_available(self.root),
+                run=self._run(),
+                raise_on_block=True,
+            )
+
+    def test_emitter_releases_score_only_when_every_gate_passes(self) -> None:
+        self._write_split("test_private", self.PRIVATE_BEHAVIORS)
+        receipt = adapter.emit_agentharm_score(
+            split_manifest=adapter.build_agentharm_split_manifest(self.root, "test_private"),
+            verifier_identity=adapter.agentharm_verifier_identity(self.package_root),
+            heldout_availability=adapter.check_heldout_split_available(self.root),
+            run=self._run(),
+        )
+        self.assertEqual([], receipt["blockers"])
+        self.assertEqual("COMPLETE", receipt["status"])
+        self.assertTrue(receipt["is_model_score"])
+        self.assertEqual(0.37, receipt["score"])
+        self.assertEqual("test_private", receipt["split"])
+        self.assertEqual(3, receipt["task_count"])
 
 
 if __name__ == "__main__":

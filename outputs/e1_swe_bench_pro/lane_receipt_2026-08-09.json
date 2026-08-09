@@ -1,0 +1,166 @@
+{
+  "benchmark": {
+    "authority": "ScaleAI public SWE-bench Pro",
+    "dataset_id": "ScaleAI/SWE-bench_Pro",
+    "declared_license": null,
+    "revision": "7ab5114912baf22bb098818e604c02fe7ad2c11f",
+    "row_count": 731,
+    "selected_task_ids": [
+      "instance_NodeBB__NodeBB-04998908ba6721d64eba79ae3b65a351dcfbc5b5-vnan"
+    ],
+    "split": "test"
+  },
+  "blockers": [
+    {
+      "detail": "HF cardData.license is null; no LICENSE* at pinned dataset revision; no license: field in README YAML",
+      "external_receipt_needed": {
+        "kind": "dataset_license",
+        "required_fields": [
+          "dataset_id",
+          "dataset_revision",
+          "license",
+          "source_url",
+          "approved=true"
+        ]
+      },
+      "id": "dataset_license_undeclared"
+    },
+    {
+      "detail": "No model-generated patch for the selected instance; gold is harness-only",
+      "external_receipt_needed": {
+        "kind": "model_patch_artifact",
+        "required_fields": [
+          "instance_id",
+          "patch",
+          "model_revision",
+          "generation_run_id"
+        ]
+      },
+      "id": "model_patch_artifact_absent"
+    },
+    {
+      "detail": "Official run_script.sh uses timeout 120 around mocha; under linux/amd64 QEMU on this host that is insufficient and yields empty tests. Gold resolves with timeout 1200.",
+      "external_receipt_needed": {
+        "kind": "native_amd64_host_or_script_timeout_policy",
+        "required_fields": [
+          "host_arch=amd64 OR approved_timeout_override_receipt"
+        ]
+      },
+      "id": "arm64_qemu_official_timeout"
+    }
+  ],
+  "evidence_class": "harness_validation",
+  "evidence_paths": [
+    "outputs/e1_swe_bench_pro/preflight_2026-08-09.json",
+    "outputs/e1_swe_bench_pro/gold_patch_nodebb.json",
+    "outputs/e1_swe_bench_pro/selected_sample_nodebb.jsonl",
+    "outputs/e1_swe_bench_pro/harness_validation/eval_results.json",
+    "outputs/e1_swe_bench_pro/harness_validation_run2.log",
+    "outputs/e1_swe_bench_pro/harness_validation_qemu/eval_results.json",
+    "outputs/e1_swe_bench_pro/harness_validation_qemu.log",
+    "outputs/e1_swe_bench_pro/PREDICTION_FORMAT.md",
+    "outputs/e1_swe_bench_pro/lane_status_2026-08-09.md"
+  ],
+  "generated_at": "2026-08-09T08:00:06Z",
+  "harness_validation": {
+    "image": {
+      "architecture": "amd64",
+      "digest": "sha256:e49637ebe82a479ca43b4663525955bc9cdd58c457140ee31c20958d621d3cf7",
+      "id": "sha256:e49637ebe82a479ca43b4663525955bc9cdd58c457140ee31c20958d621d3cf7",
+      "present": true,
+      "size_bytes": 845726582,
+      "uri": "jefzda/sweap-images:nodebb.nodebb-NodeBB__NodeBB-04998908ba6721d64eba79ae3b65a351dcfbc5b5"
+    },
+    "instance_id": "instance_NodeBB__NodeBB-04998908ba6721d64eba79ae3b65a351dcfbc5b5-vnan",
+    "is_model_score": false,
+    "label": "harness_validation",
+    "official_result": {
+      "eval_results_path": "outputs/e1_swe_bench_pro/harness_validation/eval_results.json",
+      "note": "mocha wall timeout 120s under linux/amd64 QEMU produced empty tests JSON; resolved=false",
+      "qemu_evidence": "stderr contains 'This is the expected behaviour if you are running under QEMU'",
+      "resolved": false
+    },
+    "official_run_scripts_timeout_s": 120,
+    "patch_path": "outputs/e1_swe_bench_pro/gold_patch_nodebb.json",
+    "patch_source": "dataset gold field (prefix=gold)",
+    "qemu_tolerant_result": {
+      "eval_results_path": "outputs/e1_swe_bench_pro/harness_validation_qemu/eval_results.json",
+      "fail_to_pass_covered": "3/3",
+      "mocha_timeout_s": 1200,
+      "note": "Not a model score. Proves official evaluator + local image + gold patch plumbing under arm64 QEMU when mocha timeout is raised.",
+      "pass_to_pass_covered": "288/288",
+      "resolved": true,
+      "scripts_dir": "outputs/e1_swe_bench_pro/run_scripts_qemu",
+      "tests_passed": 300
+    },
+    "sample_path": "outputs/e1_swe_bench_pro/selected_sample_nodebb.jsonl",
+    "timings": {
+      "image_pull_seconds": 316,
+      "official_script_eval_seconds": 521,
+      "qemu_tolerant_eval_seconds": 131
+    }
+  },
+  "is_model_score": false,
+  "launchable": false,
+  "launches_any_job": true,
+  "license": {
+    "approved": false,
+    "facts": {
+      "evaluator_license": "MIT",
+      "evaluator_license_path": "outputs/e1_swe_bench_pro/evaluator/LICENSE",
+      "evaluator_revision": "ca10a60a5fcae51e6948ffe1485d4153d421e6c5",
+      "hf_cardData_license": null,
+      "license_blob_at_pinned_revision": {
+        "COPYING": "HTTP 404",
+        "LICENSE": "HTTP 404",
+        "LICENSE.md": "HTTP 404",
+        "LICENSE.txt": "HTTP 404"
+      },
+      "readme_yaml_license_field": null,
+      "source_urls": [
+        "https://huggingface.co/datasets/ScaleAI/SWE-bench_Pro/raw/7ab5114912baf22bb098818e604c02fe7ad2c11f/README.md",
+        "https://huggingface.co/api/datasets/ScaleAI/SWE-bench_Pro"
+      ]
+    },
+    "present": false,
+    "status": "not_declared_by_authoritative_dataset_card"
+  },
+  "native_environment": {
+    "docker": {
+      "architecture": "aarch64",
+      "available": true,
+      "cpus": 8,
+      "meets_recommended_resources": true,
+      "memory_bytes": 17764413440,
+      "memory_gib": 16.544,
+      "recommended_cpus": 8,
+      "recommended_memory_gib": 16
+    },
+    "host_platform": "macOS arm64",
+    "isolated_venv": {
+      "packages": {
+        "datasets": true,
+        "docker": true,
+        "huggingface_hub": true,
+        "pandas": true,
+        "tqdm": true
+      },
+      "path": "outputs/e1_swe_bench_pro/runtime/venv",
+      "present": true
+    }
+  },
+  "prediction_format_doc": "outputs/e1_swe_bench_pro/PREDICTION_FORMAT.md",
+  "preflight": {
+    "docker_gate_now": "meets_recommended_resources=true (8 CPU / 16.544 GiB)",
+    "prior_docker_gate": "false at 2 CPU / 1.915 GiB",
+    "receipt": "outputs/e1_swe_bench_pro/preflight_2026-08-09.json"
+  },
+  "schema_version": "e1-swe-bench-pro-receipt-v1",
+  "score": null,
+  "status": "PARTIAL",
+  "suite_id": "swe_bench_pro_eval",
+  "tests": {
+    "adapter_unit": "14 passed",
+    "command": "PYTHONPATH=zvf-program python3 -m pytest zvf-program/flagship/test_pavlov_swe_bench_pro_eval_adapter.py -q"
+  }
+}

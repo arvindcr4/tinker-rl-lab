@@ -1,0 +1,316 @@
+{
+  "schema_version": "e9-mle-bench-eval-receipt-v2",
+  "observed_at": "2026-08-09",
+  "status": "BLOCKED",
+  "runnable_now": false,
+  "claim_status": "harness_and_binding_only_not_a_benchmark_result",
+  "suite": {
+    "id": "mle_bench_eval",
+    "role": "primary_eval",
+    "domains": [
+      "ml",
+      "code",
+      "long_horizon"
+    ],
+    "runner_path": "zvf-program/flagship/mle_bench_eval.py",
+    "runner_present": true
+  },
+  "authoritative_public_source": {
+    "repository_url": "https://github.com/openai/mle-bench",
+    "revision": "507f92e1138bb6e40dac5c6ee7a6758e6424bf97",
+    "revision_url": "https://github.com/openai/mle-bench/commit/507f92e1138bb6e40dac5c6ee7a6758e6424bf97",
+    "checkout_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/mle-bench-source",
+    "checkout_present": true,
+    "license_sha256": "8a44e3d54b33babc0c79b9c86cf9069e4c132fcd9ddf6f7e3b0f552ccc52c198",
+    "license_position": {
+      "repository_code": "MIT",
+      "competition_datasets": "not_covered_by_repository_license",
+      "per_competition_terms": "Kaggle competition rules, accepted per competition by a human",
+      "acceptance_is_automatable": false
+    }
+  },
+  "split_manifest": {
+    "task_id_kind": "competition_id",
+    "eval_split": {
+      "path": "experiments/splits/split75.txt",
+      "count": 75,
+      "sha256": "aa6a4dbfd19fee0536235be78361968603c84f0d4e06d4ed0ddc9bb212023057",
+      "task_ids_sha256": "440ecb5c6a13bc54e0d671e19eb532ee33c8305cca862e4d5b2af49f3d44f85b"
+    },
+    "complexity_splits": {
+      "low": {
+        "path": "experiments/splits/low.txt",
+        "count": 22,
+        "sha256": "590270f007fa96b4060f59f3861500159c73ca50f7f30ff6bd38303c236c799b",
+        "task_ids_sha256": "55574dcb4ae7006c22cc621124fa5b2e6d506ab060b88f6cb176a3bd965e6779"
+      },
+      "medium": {
+        "path": "experiments/splits/medium.txt",
+        "count": 38,
+        "sha256": "de4f94b6daeb10ed5fb543305f0ef4342ee070759b73fd78eddd7072a30a2d9c",
+        "task_ids_sha256": "de4f94b6daeb10ed5fb543305f0ef4342ee070759b73fd78eddd7072a30a2d9c"
+      },
+      "high": {
+        "path": "experiments/splits/high.txt",
+        "count": 15,
+        "sha256": "3100d7a779b15d0d5ad2465c9d19f5923a56c588b38537a11aaa7c109b2e2470",
+        "task_ids_sha256": "a3c8b502211a6acc914e352b840412febf32f07029cde99b3dbe19d8ac988adb"
+      }
+    },
+    "task_ids_sha256_algorithm": "sha256(UTF-8 of sorted competition IDs joined by newline with a terminal newline)",
+    "per_sample_task_hashes": null,
+    "per_sample_task_hash_status": "unavailable until the competition data is prepared; MLE-bench task IDs are competition IDs and per-sample rows only exist after `mlebench prepare`"
+  },
+  "competition_binding": {
+    "competition_id": "spooky-author-identification",
+    "selected_because": "smallest recorded download size across the 75 evaluation competitions",
+    "recorded_download_size_gb": 0.0019,
+    "recorded_download_size_mb": 1.9456,
+    "size_source": "experiments/competition_categories.csv",
+    "size_source_sha256": "5b6967e944e6b105f54f943cd13042158f49fec5206c0ff536d16d42cf39b634",
+    "in_eval_split": true,
+    "kaggle_rules": {
+      "competition_id": "spooky-author-identification",
+      "rules_url": "https://www.kaggle.com/c/spooky-author-identification/rules",
+      "accepted": true,
+      "accepted_evidence": "download endpoint served data",
+      "note": "Kaggle serves competition files only after a signed-in human accepts the competition rules. This cannot be automated by an agent.",
+      "verification_warning": "`kaggle competitions files` is NOT a valid acceptance check -- that metadata endpoint lists file names and sizes for un-accepted competitions too. Only the download endpoint is gated. Use check_rules_accepted().",
+      "verified_via": "download endpoint (the only gated one)"
+    },
+    "dataset_state": {
+      "data_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/data",
+      "competition_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/data/spooky-author-identification",
+      "raw_present": false,
+      "private_answers_present": true,
+      "private_answers_sha256": "2cf7dc57104a6b5467b44702e7a1ba4888f21f307b502a9707317d5c00ab636a",
+      "sample_submission_present": true,
+      "sample_submission_sha256": "5a9d701524a2659476f62e30fa4e61ecfbeb754e0e9c11a8528a7486992ad1f6",
+      "prepared": true
+    },
+    "other_competitions_rule_state": {
+      "accepted_count": 1,
+      "eval_split_size": 75,
+      "remaining_unaccepted": 74,
+      "note": "Kaggle rule acceptance is per competition and non-automatable. Only `spooky-author-identification` is accepted; a full 75-competition MLE-bench run requires 74 further manual acceptances by a signed-in human. This is a structural reproducibility property of the benchmark, not a lane defect."
+    }
+  },
+  "verifier": {
+    "kind": "per-competition native grade.py plus real Kaggle leaderboard thresholds",
+    "competition_id": "spooky-author-identification",
+    "config_sha256": "3b810f01991ad6fa08e9374e9e6736fdcf90e61a449c6020f53aaecf6347e57d",
+    "grader_name": "multi-class-log-loss",
+    "grade_fn": "mlebench.competitions.spooky-author-identification.grade:grade",
+    "grade_py_sha256": "a95bd5969572fe4d2224dd010640f316a83ea55810bdff91b39a705db0305f59",
+    "prepare_py_sha256": "56cd8152c848c65df466d6897d396af8004599494a2f4f4c2fb41aa704b7a401",
+    "expected_data_checksums_sha256": "ac708035ed0954a1e08a4e481784b4a6c13e7a131a2972c2d0e26bafc0c2f692",
+    "leaderboard_sha256": "1087afc671c8eddcca7f8dc792a4d55877213ce86ac9d1f8c7b280edd0eb2514",
+    "leaderboard_team_count": 1242,
+    "leaderboard_is_unresolved_lfs_pointer": false,
+    "grading_server_sha256": "fd623a48e1b4e529748bd1a99768bf8934bc7f26f24949b37dd929488b2ae6cc",
+    "resolved": true
+  },
+  "environment": {
+    "image": "mlebench-env",
+    "present": false,
+    "digest": null,
+    "error": "Error response from daemon: No such image: mlebench-env:latest",
+    "dockerfile_sha256": "4f85dbaa65cca098565c15d4ca1dc3804cce6a3cce48d273ac117850ddf4910e",
+    "dockerfile_target_platform": "linux/amd64 (Miniconda3-latest-Linux-x86_64.sh is hard-coded)",
+    "verifier_only_variant": {
+      "image": "mlebench-env:verifier-noheavy",
+      "present": true,
+      "digest": "mlebench-env@sha256:59b8e1c643c5b0959f4bdc6a06bb083cf01e3be9dd1d4bf6a744871251a2cc70",
+      "digest_kind": "repo_digest",
+      "repo_digests": [
+        "mlebench-env@sha256:59b8e1c643c5b0959f4bdc6a06bb083cf01e3be9dd1d4bf6a744871251a2cc70"
+      ],
+      "image_id": "sha256:59b8e1c643c5b0959f4bdc6a06bb083cf01e3be9dd1d4bf6a744871251a2cc70",
+      "architecture": "amd64",
+      "os": "linux",
+      "error": null,
+      "build_arg": "INSTALL_HEAVY_DEPENDENCIES=false",
+      "satisfies_container_gate": false,
+      "scope": "grading server and official mlebench package only; no agent ML stack, so it can grade a submission but cannot host an agent"
+    }
+  },
+  "model_artifact": {
+    "model_revision": null,
+    "submission_path": null,
+    "status": "absent_no_model_was_run"
+  },
+  "contamination_policy": {
+    "rule": "evaluation competitions must be disjoint from any training corpus",
+    "training_task_ids_sha256": null,
+    "evaluation_task_ids_sha256": "440ecb5c6a13bc54e0d671e19eb532ee33c8305cca862e4d5b2af49f3d44f85b",
+    "disjoint_receipt": null,
+    "status": "BLOCKED",
+    "reason": "No training provenance exists for this lane, so disjointness cannot be proven."
+  },
+  "metrics": {
+    "score": null,
+    "is_model_score": false,
+    "task_sample_count": 0,
+    "status": "not_measured",
+    "reason": "No model submission was graded; no benchmark result is claimed."
+  },
+  "harness_validation": {
+    "label": "harness_validation",
+    "is_model_score": false,
+    "competition_id": "spooky-author-identification",
+    "suite_score": null,
+    "note": "Grading the competition's own gold answers proves the metric, the grader and the submission format work. It is not a benchmark result and must never be promoted to one.",
+    "data_provenance": "official_prepared_competition_data",
+    "fixture": null,
+    "official_data": {
+      "answers_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/data/spooky-author-identification/prepared/private/test.csv",
+      "answers_sha256": "2cf7dc57104a6b5467b44702e7a1ba4888f21f307b502a9707317d5c00ab636a",
+      "sample_submission_sha256": "5a9d701524a2659476f62e30fa4e61ecfbeb754e0e9c11a8528a7486992ad1f6",
+      "prepared_by": "mlebench prepare (upstream preparer), checksums verified against the pinned checksums.yaml"
+    },
+    "upstream_reproduction": {
+      "upstream_expected_score": 1.08468,
+      "upstream_source": "tests/constants.py::sample_submission_scores",
+      "observed_score": 1.08468,
+      "applicable": true,
+      "absolute_delta": 0.0,
+      "relative_delta": 0.0,
+      "matches_upstream": true
+    },
+    "status": "PASS",
+    "checks": {
+      "leaderboard_is_real_kaggle_data": true,
+      "gold_submission_scored": true,
+      "gold_submission_earns_gold_medal": true,
+      "sample_submission_scored": true,
+      "sample_submission_earns_no_medal": true,
+      "gold_beats_sample": true,
+      "invalid_submission_rejected": true
+    },
+    "leaderboard": {
+      "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/mle-bench-source/mlebench/competitions/spooky-author-identification/leaderboard.csv",
+      "sha256": "1087afc671c8eddcca7f8dc792a4d55877213ce86ac9d1f8c7b280edd0eb2514",
+      "team_count": 1242,
+      "provenance": "real Kaggle leaderboard shipped in the pinned repository"
+    },
+    "grader": {
+      "name": "multi-class-log-loss",
+      "grade_py_sha256": "a95bd5969572fe4d2224dd010640f316a83ea55810bdff91b39a705db0305f59"
+    },
+    "reports": [
+      {
+        "competition_id": "spooky-author-identification",
+        "score": 0.0,
+        "gold_threshold": 0.16506,
+        "silver_threshold": 0.26996,
+        "bronze_threshold": 0.29381,
+        "median_threshold": 0.418785,
+        "any_medal": true,
+        "gold_medal": true,
+        "silver_medal": false,
+        "bronze_medal": false,
+        "above_median": true,
+        "submission_exists": true,
+        "valid_submission": true,
+        "is_lower_better": true,
+        "created_at": "2026-08-09T14:08:40.164073",
+        "submission_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/data/spooky-author-identification/prepared/private/test.csv",
+        "case": "gold_submission",
+        "case_description": "grader scoring the competition's own gold answers"
+      },
+      {
+        "competition_id": "spooky-author-identification",
+        "score": 1.08468,
+        "gold_threshold": 0.16506,
+        "silver_threshold": 0.26996,
+        "bronze_threshold": 0.29381,
+        "median_threshold": 0.418785,
+        "any_medal": false,
+        "gold_medal": false,
+        "silver_medal": false,
+        "bronze_medal": false,
+        "above_median": false,
+        "submission_exists": true,
+        "valid_submission": true,
+        "is_lower_better": true,
+        "created_at": "2026-08-09T14:08:40.170676",
+        "submission_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/data/spooky-author-identification/prepared/public/sample_submission.csv",
+        "case": "sample_submission",
+        "case_description": "the sample submission shipped by prepare.py"
+      },
+      {
+        "competition_id": "spooky-author-identification",
+        "score": null,
+        "gold_threshold": 0.16506,
+        "silver_threshold": 0.26996,
+        "bronze_threshold": 0.29381,
+        "median_threshold": 0.418785,
+        "any_medal": false,
+        "gold_medal": false,
+        "silver_medal": false,
+        "bronze_medal": false,
+        "above_median": false,
+        "submission_exists": true,
+        "valid_submission": false,
+        "is_lower_better": true,
+        "created_at": "2026-08-09T14:08:40.174005",
+        "submission_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/harness_controls/spooky-author-identification/invalid_submission.csv",
+        "case": "invalid_submission",
+        "case_description": "rows that violate the submission contract"
+      }
+    ]
+  },
+  "safety": {
+    "paid_calls": false,
+    "tinker_launched": false,
+    "wandb_published": false,
+    "checkpoints_pushed": false
+  },
+  "gates": {
+    "upstream_revision_pinned": true,
+    "split_manifest_resolved": true,
+    "verifier_identity_resolved": true,
+    "dataset_license_accepted": true,
+    "competition_data_prepared": true,
+    "container_image_digest_present": false,
+    "model_submission_artifact_present": false,
+    "contamination_disjointness_receipt": false
+  },
+  "lane_status": "PARTIAL",
+  "blockers": [
+    "container_image_digest_present",
+    "model_submission_artifact_present",
+    "contamination_disjointness_receipt"
+  ],
+  "blocker_details": [
+    {
+      "gate": "container_image_digest_present",
+      "missing": "The `mlebench-env` image is not built, so there is no container digest.",
+      "external_receipt": "a completed image build with an immutable digest",
+      "action": "docker build --platform linux/amd64 -t mlebench-env -f environment/Dockerfile . (take outputs/_setup/docker.lock first)"
+    },
+    {
+      "gate": "model_submission_artifact_present",
+      "missing": "No model produced a submission.csv for this competition.",
+      "external_receipt": "an agent run inside the container with a model API key",
+      "action": "not run in this lane: paid model calls are outside the cost boundary"
+    },
+    {
+      "gate": "contamination_disjointness_receipt",
+      "missing": "No proof that the evaluation competitions are disjoint from training data.",
+      "external_receipt": "a training-corpus task-ID manifest to diff against the eval split hash",
+      "action": "supply the training task-ID manifest, then re-emit this receipt"
+    }
+  ],
+  "evidence": {
+    "lane_status": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/lane_status_2026-08-09.md",
+    "competition_size_survey": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/evidence/competition_size_survey.json",
+    "kaggle_size_crosscheck": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/evidence/kaggle_files_spooky_author_identification.csv",
+    "prepare_failure_log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/evidence/prepare_spooky_author_identification.log",
+    "kaggle_rule_acceptance_probe": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/evidence/kaggle_rule_acceptance_probe.json",
+    "harness_validation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/evidence/harness_validation.json",
+    "official_cli_grade_sample_log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/evidence/mlebench_grade_sample_fixture.log",
+    "runner": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/mle_bench_eval.py",
+    "runner_tests": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/zvf-program/flagship/test_mle_bench_eval.py"
+  }
+}

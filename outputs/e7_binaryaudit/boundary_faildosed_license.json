@@ -1,0 +1,9 @@
+{
+  "kind": "license_gate_demonstration",
+  "is_model_score": false,
+  "note": "Boundary assembled from the real pinned checkout; the only missing inputs are the license fields, because no LICENSE exists at cbd86c7.",
+  "boundary_status": "fails_closed",
+  "diagnostics": [
+    "source_identity.license_spdx must be a non-empty string"
+  ]
+}

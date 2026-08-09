@@ -1,0 +1,28 @@
+{
+  "errors": [
+    "dataset.revision must be an immutable 40-hex or sha256: revision",
+    "dataset license must be explicitly approved",
+    "dataset.license_id must be pinned, not UNPINNED_REQUIRED",
+    "native_environment.revision must be an immutable 40-hex or sha256: revision",
+    "native_verifier.revision must be an immutable 40-hex or sha256: revision",
+    "task_manifest must contain immutable evaluation task rows",
+    "train_split_manifest_hash must be a lowercase SHA-256 digest"
+  ],
+  "exit_code": 1,
+  "metrics": {
+    "claims_valid": true,
+    "heldout_policy_valid": true,
+    "immutable_revision_valid": false,
+    "native_contract_valid": false,
+    "paid_launch_authorized": false,
+    "portfolio_evidence": false,
+    "primary_eval": true,
+    "receipt_contract_valid": true,
+    "receipt_proven_heldout": false,
+    "schema_valid": false,
+    "source_identity_valid": true,
+    "task_manifest_valid": false
+  },
+  "ok": false,
+  "receipt": "outputs/e8_lifescibench/adapter_preflight_2026-08-09.json"
+}

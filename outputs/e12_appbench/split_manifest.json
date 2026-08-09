@@ -1,0 +1,127 @@
+{
+  "schema_version": "e12-appbench-split-manifest-v1",
+  "boundary_id": "E12",
+  "suite_id": "appbench_eval",
+  "source": {
+    "dataset_id": "AfterQuery/App-Bench",
+    "revision": "de80d5bcd404adee5307311571e512b5c37e6112",
+    "revision_kind": "hugging_face_dataset_commit_sha",
+    "source_file": "AppBench vExternal.csv",
+    "file_bytes": 38546,
+    "file_sha256": "b28b74959e81602f0a8b7e8985547915cf3de98822b87f736bc86269518900ba",
+    "file_git_blob_sha1": "f156b93ede86d3c03daa82d75e2ca3b2612fefc2",
+    "expected_file_sha256": "b28b74959e81602f0a8b7e8985547915cf3de98822b87f736bc86269518900ba",
+    "expected_file_git_blob_sha1": "f156b93ede86d3c03daa82d75e2ca3b2612fefc2",
+    "local_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e12_appbench/hf_dataset/AppBench vExternal.csv"
+  },
+  "identity": {
+    "task_id_algorithm": "sha256(canonical_json({content, dataset_id, revision, source_file, suite_id}))",
+    "content_sha256_algorithm": "sha256(canonical_json(content))",
+    "canonical_json": "json.dumps(sort_keys=True, separators=(\",\",\":\"), ensure_ascii=True)",
+    "text_normalization": "CRLF/CR -> LF; strip leading/trailing whitespace per field",
+    "content_fields": [
+      "ordinal",
+      "app_name",
+      "app_description",
+      "prompt",
+      "cli_addition",
+      "rubric"
+    ],
+    "excluded_fields": [
+      "Claude Code",
+      "Codex CLI",
+      "Cursor CLI",
+      "Gemini CLI",
+      "Orchids",
+      "Lovable",
+      "Bolt",
+      "Replit",
+      "v0"
+    ],
+    "excluded_fields_reason": "per-tool leaderboard result columns are empty at the pinned revision; excluding them keeps task IDs stable if upstream backfills scores"
+  },
+  "split": {
+    "name": "eval",
+    "role": "receipt_proven_heldout",
+    "task_count": 6,
+    "unique_task_count": 6,
+    "split_hash": "ee8bb522e82505a1b9690c0b691c36a2bb73a524023ab15dff670fe7cc34601d",
+    "split_hash_algorithm": "sha256(canonical_json(sorted(task_ids))) - identical to pavlov_appbench_openreward_games_adapter._deterministic_split_hash"
+  },
+  "tasks": [
+    {
+      "task_id": "18fbcb512cd30c311035641699cc74630f7cd6a5710800a5849e255aebfc59d2",
+      "content_sha256": "28c2b0d3e03138b04b7b769fdf2a174dad009f1683daed077846a6aa3a959a08",
+      "ordinal": 1,
+      "app_name": "Financial Dashboard",
+      "rubric_item_count": 24,
+      "requirement_item_count": 24,
+      "prompt_chars": 3103,
+      "rubric_chars": 2258,
+      "cli_addition_chars": 173
+    },
+    {
+      "task_id": "4b1037939be6ececaa4a56b69d832e08c78869fda596738af061199dd4a0d0bc",
+      "content_sha256": "84c6bd1922d3fec4a8951bdc1ca4c908aa6487b68d742d49e501987782d26b4d",
+      "ordinal": 2,
+      "app_name": "Hospital Dashboard",
+      "rubric_item_count": 33,
+      "requirement_item_count": 33,
+      "prompt_chars": 4194,
+      "rubric_chars": 3314,
+      "cli_addition_chars": 173
+    },
+    {
+      "task_id": "66d78599b80d3148352fb8a406a4bade85bde08be34d5f41d8f2ae8bc26b0092",
+      "content_sha256": "9e326b72e5a4ee6dd6e4f0819a4b9f433b42ec8c9fc3d08155fcfa8106ea7540",
+      "ordinal": 3,
+      "app_name": "Legal Assistant",
+      "rubric_item_count": 22,
+      "requirement_item_count": 22,
+      "prompt_chars": 3270,
+      "rubric_chars": 2191,
+      "cli_addition_chars": 173
+    },
+    {
+      "task_id": "dd5089d3ad4cdd77bfc772faa2ed96b81d0d4b874085151d8668668df1420486",
+      "content_sha256": "9b5d970307e9c7c4b0ca3e70582b7d591de91e8ab3a0e534bd3769999fdb8cc2",
+      "ordinal": 4,
+      "app_name": "Pharmacy System",
+      "rubric_item_count": 25,
+      "requirement_item_count": 25,
+      "prompt_chars": 3455,
+      "rubric_chars": 2691,
+      "cli_addition_chars": 173
+    },
+    {
+      "task_id": "1599ded6809617d340bb9460e26db4181badea5bc908dfcea4c5a9c5c80f74a1",
+      "content_sha256": "f0b2e3e61aefe9ab9df7d11994c235687fa73f33c0acb6ea3eb4c51dfb41183a",
+      "ordinal": 5,
+      "app_name": "Drawing Game",
+      "rubric_item_count": 23,
+      "requirement_item_count": 23,
+      "prompt_chars": 3270,
+      "rubric_chars": 2564,
+      "cli_addition_chars": 173
+    },
+    {
+      "task_id": "1f0b79dc2ea5847d29570da6ccc41ab550ef77718d042cdc099c96f387116353",
+      "content_sha256": "b5aaa91289d276ad3b44a400799b6e2db46c49631a0c6b2883779340d5577cfa",
+      "ordinal": 6,
+      "app_name": "Rental Booking",
+      "rubric_item_count": 24,
+      "requirement_item_count": 24,
+      "prompt_chars": 3093,
+      "rubric_chars": 2509,
+      "cli_addition_chars": 173
+    }
+  ],
+  "heldout_claim": {
+    "immutable_task_ids": true,
+    "split_manifest_hashed": true,
+    "intra_split_disjointness_proven": true,
+    "held_out_from_model_training": null,
+    "held_out_reason": "The source is the public 'vExternal' CSV on the Hugging Face Hub (published 2025-12-10, publicly downloadable, no gating). Publication predates evaluation, so contamination cannot be excluded for any model whose training corpus postdates that date. Upstream publishes no private held-out partition that this lane can access."
+  },
+  "aggregate_sha256": "7e4989acee0f1d8e39edd36cb5ce64a497b24aa11aa02f097cade6d9febcaa3d"
+}

@@ -1,0 +1,170 @@
+{
+  "schema_version": "e7-binaryaudit-local-receipt-v1",
+  "status": "BLOCKED",
+  "blocking": true,
+  "scientific_evidence": false,
+  "execution_source": {
+    "checkout": "/Users/arvind/Developer/tinker-rl-lab",
+    "resolved_checkout": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab",
+    "branch": "main",
+    "commit": "8fdade2f1425908f8d961bced6dc89f45bcc47f4"
+  },
+  "adapter": {
+    "path": "/Users/arvind/Developer/tinker-rl-lab/zvf-program/flagship/pavlov_binaryaudit_eval_adapter.py",
+    "kind": "contract_validator_only",
+    "runner_present": false,
+    "focused_tests": {
+      "command": "PYTHONPATH=/Users/arvind/Developer/tinker-rl-lab/zvf-program /tmp/e7-binaryaudit-lane.s2Xvnj/venv/bin/python -m pytest /Users/arvind/Developer/tinker-rl-lab/zvf-program/flagship/test_pavlov_binaryaudit_eval_adapter.py -q",
+      "exit_code": 0,
+      "tests_collected": 11,
+      "tests_passed": 11,
+      "tests_failed": 0
+    },
+    "cli_help": {
+      "command": "PYTHONPATH=/Users/arvind/Developer/tinker-rl-lab/zvf-program /tmp/e7-binaryaudit-lane.s2Xvnj/venv/bin/python -m flagship.pavlov_binaryaudit_eval_adapter --help",
+      "exit_code": 0,
+      "stdout_bytes": 0,
+      "stderr_bytes": 0,
+      "interpretation": "No CLI entry point or executable evaluation runner is provided."
+    },
+    "boundary_preflight": {
+      "status": "BLOCKED",
+      "diagnostics": [
+        "source_identity.license_text_sha256 must be a 64-character hexadecimal hash",
+        "split_manifest.train must be non-empty",
+        "native_environment is required"
+      ]
+    }
+  },
+  "authoritative_benchmark": {
+    "suite_id": "binaryaudit_eval",
+    "benchmark_id": "binaryaudit",
+    "source_id": "QuesmaOrg/BinaryAudit",
+    "source_url": "https://github.com/QuesmaOrg/BinaryAudit",
+    "immutable_revision": "cbd86c7cd8519f01ae6b7ad7db7fdb653ea54f23",
+    "revision_evidence": "git ls-remote https://github.com/QuesmaOrg/BinaryAudit.git HEAD",
+    "license": {
+      "claimed_spdx": "Apache-2.0",
+      "claim_evidence": "README.md:127-129 at the pinned revision",
+      "license_file_present_at_revision": false,
+      "github_license_api_http": 404,
+      "status": "BLOCKED",
+      "required_external_receipt": "An immutable LICENSE text artifact (or authoritative license metadata) at the pinned revision and its SHA-256 digest."
+    },
+    "task_inventory": {
+      "official_task_directory_count": 46,
+      "task_inventory_sha256": "57539ff9174e29519a80eef41f9555af4a19a483e1f35b0a25f68813545f7125",
+      "selected_raw_task_ids": ["dnsmasq-backdoor-detect"],
+      "selected_task_count": 1,
+      "selected_bound_task_ids": ["bc0dfe0b313908e0544238e8738c94ede854b5b2dab7ee034de0ee0959fb8d0f"],
+      "selected_task_id_manifest_sha256": "ca35e612c6e2d2f4f9c6c169b42ef297dd209c8e7b28026cffb694f7beb2199e",
+      "split_manifest_status": "MISSING_IN_OFFICIAL_REPOSITORY",
+      "disjoint_split_ids_verified": false
+    },
+    "substitutions": {
+      "used": false,
+      "rejected": ["xLAM", "GSM8K", "BFCL", "AgentHarm", "WebBench", "other related benchmarks"]
+    }
+  },
+  "native_environment": {
+    "mode": "native",
+    "selected_task": "dnsmasq-backdoor-detect",
+    "instruction_sha256": "6f700c860078e9de99199dea31565feb26567aa020b11b8a435fe3b765c99d38",
+    "task_toml_sha256": "6f29689261bf038a01ffa1014067c18ab96f1b8de0e8dca3adaaa4593a3fa828",
+    "verifier_path": "tasks/dnsmasq-backdoor-detect/tests/test.sh",
+    "verifier_sha256": "122f9e467832ad8bb1e6f7555f219e347c65a3284927607a746464a28f40acc8",
+    "dockerfile_path": "tasks/dnsmasq-backdoor-detect/environment/Dockerfile",
+    "dockerfile_sha256": "0a701891cf33f7d0abbdbf2b1feb70da6773aac847b58c4fbb8fdd9268ae13b1",
+    "verifier_syntax_check": {
+      "command": "bash -n /tmp/e7-binaryaudit-lane.s2Xvnj/BinaryAudit/tasks/dnsmasq-backdoor-detect/tests/test.sh",
+      "exit_code": 0
+    },
+    "docker_available": true,
+    "docker_version": "Docker version 29.0.2, build 8108357bcb",
+    "harbor_available": false,
+    "official_base_image_present": false,
+    "runtime_status": "NOT_RUN",
+    "verdict_status": "NOT_MEASURED"
+  },
+  "model": {
+    "requested_model": "Qwen/Qwen3.6-35B-A3B",
+    "immutable_base_model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "revision_source": "https://huggingface.co/api/models/Qwen/Qwen3.6-35B-A3B",
+    "compatible_completed_sampler_checkpoint": null,
+    "selection": "immutable_base_model_revision_recorded; no compatible completed sampler checkpoint was available to this contract-only lane"
+  },
+  "tracking": {
+    "wandb": {
+      "project": "codex",
+      "mode": "online",
+      "status": "NOT_INITIALIZED_NO_EXPERIMENT",
+      "run_id": null,
+      "url": null
+    },
+    "tinker": {
+      "status": "NOT_LAUNCHED",
+      "run_id": null,
+      "cost_usd": 0.0,
+      "paid_attempts": 0
+    },
+    "huggingface": {
+      "status": "NOT_APPLICABLE_EVAL_NOT_RUN",
+      "evaluated_commit": null,
+      "published_revisions": []
+    },
+    "credential_presence_only": {
+      "TINKER_API_KEY": false,
+      "WANDB_API_KEY": false,
+      "HF_TOKEN": true
+    }
+  },
+  "limits": {
+    "lane_tinker_max_usd": 1.0,
+    "lane_max_paid_attempts": 1,
+    "global_cap_usd": 18.0,
+    "operational_cap_usd": 16.5,
+    "paid_non_tinker_services_used": false
+  },
+  "counts": {
+    "official_tasks_seen": 46,
+    "tasks_selected": 1,
+    "samples_attempted": 0,
+    "samples_scored": 0,
+    "metrics_status": "NOT_MEASURED"
+  },
+  "commands": [
+    "lane_tmp=\"$(mktemp -d /tmp/e7-binaryaudit-lane.XXXXXX)\"",
+    "uv venv /tmp/e7-binaryaudit-lane.s2Xvnj/venv --python python3",
+    "uv pip install --python /tmp/e7-binaryaudit-lane.s2Xvnj/venv/bin/python pytest",
+    "PYTHONPATH=/Users/arvind/Developer/tinker-rl-lab/zvf-program /tmp/e7-binaryaudit-lane.s2Xvnj/venv/bin/python -m pytest /Users/arvind/Developer/tinker-rl-lab/zvf-program/flagship/test_pavlov_binaryaudit_eval_adapter.py -q",
+    "PYTHONPATH=/Users/arvind/Developer/tinker-rl-lab/zvf-program /tmp/e7-binaryaudit-lane.s2Xvnj/venv/bin/python -m flagship.pavlov_binaryaudit_eval_adapter --help",
+    "git ls-remote https://github.com/QuesmaOrg/BinaryAudit.git HEAD",
+    "git clone --depth 1 https://github.com/QuesmaOrg/BinaryAudit.git /tmp/e7-binaryaudit-lane.s2Xvnj/BinaryAudit",
+    "bash -n /tmp/e7-binaryaudit-lane.s2Xvnj/BinaryAudit/tasks/dnsmasq-backdoor-detect/tests/test.sh",
+    "curl -fsSL https://huggingface.co/api/models/Qwen/Qwen3.6-35B-A3B",
+    "curl -sS -o /tmp/e7-binaryaudit-license.json -w '%{http_code}' https://api.github.com/repos/QuesmaOrg/BinaryAudit/license"
+  ],
+  "blockers": [
+    {
+      "kind": "license",
+      "detail": "The pinned upstream revision claims Apache-2.0 in README.md but has no LICENSE file and GitHub license metadata returned HTTP 404; an immutable license artifact/digest is required before durable benchmark acquisition."
+    },
+    {
+      "kind": "runner",
+      "detail": "The local E7 adapter is explicitly contract-validator-only and exposes no executable evaluation CLI; --help produced zero bytes."
+    },
+    {
+      "kind": "split_provenance",
+      "detail": "The acquired official repository has no authoritative train/primary_eval/receipt_proven_heldout split manifest, so disjoint split IDs cannot be asserted without inventing provenance."
+    },
+    {
+      "kind": "native_runtime",
+      "detail": "Harbor is required by the official README/pyproject but the harbor executable is absent; no official base image is present, so the isolated binary sandbox and native verifier were not run."
+    },
+    {
+      "kind": "paid_access",
+      "detail": "TINKER_API_KEY is unavailable; no paid Tinker attempt was made."
+    }
+  ],
+  "receipt_path": "/Users/arvind/Developer/tinker-rl-lab/outputs/e7_binaryaudit/e7_binaryaudit_blocked_receipt.json"
+}

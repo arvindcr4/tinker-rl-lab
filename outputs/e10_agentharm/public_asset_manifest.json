@@ -1,0 +1,40 @@
+{
+  "agentharm_dataset": {
+    "files": {
+      "LICENSE": "b5f0803470d24b0b441e7cece4fe68df0bd4086f1dc118ca27718d31775f5cf9",
+      "README.md": "a161c8273e7c4212463be38aad8a03667940f7383ddabc712f9cf4ab69c99f0e",
+      "benchmark/benign_behaviors_test_public.json": "65b4ebd4d8d2e7c9a79db4e11bc642f1800e642be0626ba0a990c763a325957a",
+      "benchmark/benign_behaviors_validation.json": "b74ffb781ce54182775a8b2843ea341ab2fb4cfea5743bfa89a368e52a76c27a",
+      "benchmark/chat_public_test.json": "699a8325ce6dc355fd6ebef07bd2a9e76cca4c0ca7b6971774f2ff117e8f4512",
+      "benchmark/chat_validation.json": "06684a6968e0bb65bcb15bc1cdaf3bd8c486fc54164e7623a35e3ee58bf93565",
+      "benchmark/harmful_behaviors_test_public.json": "fc3e4abbcd812022b85150b0e6f81c0bdbdfabb486e5b82ec46f1ba135f3ba08",
+      "benchmark/harmful_behaviors_validation.json": "40cd099915258b41142acfc88a9f2b4e15cd631c5490ad02a0dce0cf2b9c175e"
+    },
+    "public_counts": {
+      "benchmark/benign_behaviors_test_public.json": 176,
+      "benchmark/benign_behaviors_validation.json": 32,
+      "benchmark/chat_public_test.json": 44,
+      "benchmark/chat_validation.json": 8,
+      "benchmark/harmful_behaviors_test_public.json": 176,
+      "benchmark/harmful_behaviors_validation.json": 32
+    },
+    "repo": "https://huggingface.co/datasets/ai-safety-institute/AgentHarm",
+    "revision": "e23b3fe60a0da9037314b88e5ee3a0c054970dad"
+  },
+  "inspect_evals": {
+    "files": {
+      "LICENSE": "c593c2afc81388521eaeb03f0d1a4b01bc3e5147ed9cb16c1f129e5be353b6af",
+      "src/inspect_evals/agentharm/README.md": "549b93937ad7d12bf018670cbef350c4d97daae547adf9046b339fcbe3448aaa",
+      "src/inspect_evals/agentharm/agentharm.py": "8b6de106e783f1d761cd015bd42f8346720c3c5ce60a7f32febe03c9ad0ee158",
+      "src/inspect_evals/agentharm/eval.yaml": "f7f635da778cb6676cb41ce0f327841e38d22343ff26f44bcd644097b13f4ef8",
+      "src/inspect_evals/agentharm/scorer.py": "a49f279ae724a7cf7643ff859a70f44e708d1b89d79d810aa5c0b3e74d5f7847",
+      "src/inspect_evals/agentharm/utils.py": "5453e15000831066968f8bbb83abcc7f242c5b32172c03a388d323205ab5cbc2"
+    },
+    "repo": "https://github.com/UKGovernmentBEIS/inspect_evals",
+    "revision": "b935c0e5cfa04710f016f925db75d8e81413e2cf"
+  },
+  "model": {
+    "repo": "https://huggingface.co/Qwen/Qwen3.6-35B-A3B",
+    "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0"
+  }
+}

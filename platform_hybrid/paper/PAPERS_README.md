@@ -42,6 +42,25 @@ keeps later per-run or single-stack evidence separate from the reviewed record.
 8. P8 fraud is parked outside the ZVF thesis; it demonstrates measurement
    discipline but contributes no RL evidence.
 
+### Pavlov's List usefulness gate for all future fine-tunes (2026-08-08)
+
+The corrected papers may describe the historical GSM8K evidence within its
+frozen boundary, but no new fine-tuned model may be presented as the program's
+use-inspired or main-track model on GSM8K alone. New model training and primary
+evaluation are governed by
+[`../../zvf-program/flagship/PAVLOVS_LIST_TASK_CONTRACT.md`](../../zvf-program/flagship/PAVLOVS_LIST_TASK_CONTRACT.md)
+and its machine-readable contract. The campaign maps the 53-company snapshot
+to all 16 Pavlov domain tags and requires stateful tool, browser, artifact,
+code, enterprise/finance, science, ML, security, chip-design, design, game, and
+long-horizon task families. GSM8K is calibration-only and math is capped at 5%
+of the training mixture.
+
+This is a prospective experiment gate, not new evidence. Until the multi-domain
+runs and held-out company-family evaluations exist, the papers must say that
+the use-inspired model claim is untested. Domain-suite success would establish
+task-family usefulness, not automatic readiness for every company's private
+production workflow.
+
 Canonical document roster (**active independent set only — 12**):
 
 | ID | Source | Role after revision |

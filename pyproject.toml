@@ -38,7 +38,7 @@ dependencies = [
     "huggingface-hub==1.11.0",
     "wandb==0.21.0",
     "gymnasium>=0.29.0",
-    "tinker>=0.5.0",
+    "tinker>=0.24.0,<0.25.0",
     "codecarbon>=2.0.0",
 ]
 

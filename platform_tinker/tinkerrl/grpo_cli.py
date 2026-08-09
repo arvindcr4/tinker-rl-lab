@@ -20,9 +20,17 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from .grpo import (
+    PAVLOV_DECLARED_DOMAINS,
+    PAVLOV_DOMAIN_TAGS,
+    PAVLOV_HELDOUT_SUITE_IDS,
+    PAVLOV_PRIMARY_EVALUATION_SUITE_IDS,
+    PAVLOV_PRIMARY_EVALUATION_DOMAIN_UNION,
+    PAVLOV_TRAINING_DOMAIN_UNION,
+    PAVLOV_TRAINING_SUITE_IDS,
     GRPOConfig,
     ExactMathReward,
     MathReward,
+    StrictToolCallReward,
     ToolCallReward,
     make_synthetic_math_dataset,
     make_synthetic_tool_use_dataset,
@@ -129,6 +137,43 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "seed": 42,
         "evaluate_heldout": True,
     },
+    "pavlov_xlam": {
+        "name": "pavlov_xlam_qwen36",
+        "model": "Qwen/Qwen3.6-35B-A3B",
+        "lora_rank": 32,
+        "steps": 200,
+        "group_size": 4,
+        "batch_size": 2,
+        "lr": 2e-5,
+        "temperature": 0.7,
+        "top_p": 0.95,
+        "max_prompt_tokens": 1200,
+        "max_response_tokens": 128,
+        "save_every": 25,
+        "num_seeds": 1,
+        "seed": 809,
+        "evaluate_heldout": True,
+        "dataset_revision": "26d14ebfe18b1f7b524bd39b404b50af5dc97866",
+        "model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+        "wandb_project": "tinker-rl-lab-pavlov",
+        "wandb_entity": "arvindcr4-pes-university",
+        "wandb_group": "pavlov-tinker-18usd-20260809",
+        "hf_public": True,
+        "hf_repo_prefix": "pavlov-xlam-qwen36",
+        "checkpoint_name_prefix": "pavlov-xlam-qwen36",
+        "campaign_status": "authorized",
+        "budget_status": "AUTHORIZED_TINKER_ONLY",
+        "paid_jobs_may_launch": True,
+        "authorized_budget_usd": 18.0,
+        "maximum_usd": 18.0,
+        "training_suite_ids": PAVLOV_TRAINING_SUITE_IDS,
+        "heldout_suite_ids": PAVLOV_HELDOUT_SUITE_IDS,
+        "primary_evaluation_suite_ids": PAVLOV_PRIMARY_EVALUATION_SUITE_IDS,
+        "domain_tags": PAVLOV_DOMAIN_TAGS,
+        "declared_domains": PAVLOV_DECLARED_DOMAINS,
+        "training_domain_union": PAVLOV_TRAINING_DOMAIN_UNION,
+        "primary_evaluation_domain_union": PAVLOV_PRIMARY_EVALUATION_DOMAIN_UNION,
+    },
 }
 
 DATASET_FACTORIES = {
@@ -138,6 +183,7 @@ DATASET_FACTORIES = {
     "tooluse_xlam": make_xlam_dataset,
     "gsm8k": make_gsm8k_dataset,
     "math100": make_synthetic_math_dataset,
+    "pavlov_xlam": make_xlam_dataset,
 }
 
 REWARD_MAP = {
@@ -147,6 +193,7 @@ REWARD_MAP = {
     "tooluse_xlam": ToolCallReward,
     "gsm8k": ExactMathReward,
     "math100": MathReward,
+    "pavlov_xlam": StrictToolCallReward,
 }
 
 
@@ -155,7 +202,11 @@ def _build_dataset(args: argparse.Namespace, config: GRPOConfig) -> Any:
     factory = DATASET_FACTORIES.get(dataset_name)
     if factory is None:
         raise SystemExit(f"Unknown dataset preset: {dataset_name}")
-    if dataset_name in {"tooluse_xlam", "gsm8k"}:
+    if dataset_name in {"tooluse_xlam", "pavlov_xlam"}:
+        if config.dataset_revision is not None:
+            return factory(seed=config.seed, revision=config.dataset_revision)
+        return factory(seed=config.seed)
+    if dataset_name == "gsm8k":
         return factory(seed=config.seed)
     return factory()
 
@@ -164,6 +215,7 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
     """Override preset fields with any CLI values the user actually passed."""
     mapping = {
         "model": "model",
+        "model_revision": "model_revision",
         "lora_rank": "lora_rank",
         "steps": "steps",
         "group_size": "group_size",
@@ -175,9 +227,17 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
         "max_response_tokens": "max_response_tokens",
         "save_every": "save_every",
         "seed": "seed",
+        "dataset_revision": "dataset_revision",
         "num_seeds": "num_seeds",
         "name": "name",
         "checkpoint_dir": "checkpoint_dir",
+        "wandb_project": "wandb_project",
+        "wandb_entity": "wandb_entity",
+        "wandb_group": "wandb_group",
+        "wandb_mode": "wandb_mode",
+        "hf_owner": "hf_owner",
+        "hf_repo_prefix": "hf_repo_prefix",
+        "checkpoint_name_prefix": "checkpoint_name_prefix",
     }
     for cfg_key, attr in mapping.items():
         val = getattr(args, attr, None)
@@ -187,21 +247,27 @@ def _apply_overrides(cfg: Dict[str, Any], args: argparse.Namespace) -> Dict[str,
         cfg["evaluate_heldout"] = True
     if args.no_resume:
         cfg["resume"] = False
-    if args.no_wandb:
-        cfg["wandb_project"] = None
+    if args.hf_public:
+        cfg["hf_public"] = True
     return cfg
 
 
 def build_config(args: argparse.Namespace) -> GRPOConfig:
     if args.json_config:
         data = json.loads(args.json_config.read_text())
-        return GRPOConfig(**data)
+        config = GRPOConfig(**data)
+        config.validate_tracking()
+        config.validate_campaign_gate()
+        return config
 
     if args.preset not in PRESETS:
         raise SystemExit(f"Unknown preset: {args.preset!r}.  Choose from {list(PRESETS)}")
     cfg_dict = dict(PRESETS[args.preset])
     cfg_dict = _apply_overrides(cfg_dict, args)
-    return GRPOConfig(**cfg_dict)
+    config = GRPOConfig(**cfg_dict)
+    config.validate_tracking()
+    config.validate_campaign_gate()
+    return config
 
 
 def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
@@ -221,6 +287,7 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     # overrides
     parser.add_argument("--name", help="Experiment name.")
     parser.add_argument("--model")
+    parser.add_argument("--model-revision", dest="model_revision")
     parser.add_argument("--lora-rank", dest="lora_rank", type=int)
     parser.add_argument("--steps", type=int)
     parser.add_argument("--group-size", dest="group_size", type=int)
@@ -232,11 +299,19 @@ def _parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("--max-response-tokens", dest="max_response_tokens", type=int)
     parser.add_argument("--save-every", dest="save_every", type=int)
     parser.add_argument("--seed", type=int)
+    parser.add_argument("--dataset-revision")
     parser.add_argument("--num-seeds", dest="num_seeds", type=int)
     parser.add_argument("--evaluate-heldout", dest="evaluate_heldout", action="store_true")
     parser.add_argument("--checkpoint-dir")
     parser.add_argument("--no-resume", action="store_true")
-    parser.add_argument("--no-wandb", action="store_true")
+    parser.add_argument("--wandb-project")
+    parser.add_argument("--wandb-entity")
+    parser.add_argument("--wandb-group")
+    parser.add_argument("--wandb-mode")
+    parser.add_argument("--hf-owner")
+    parser.add_argument("--hf-repo-prefix")
+    parser.add_argument("--checkpoint-name-prefix")
+    parser.add_argument("--hf-public", action="store_true")
     parser.add_argument("--help-overrides", action="store_true", help="Show all override flags.")
     return parser.parse_args(argv)
 

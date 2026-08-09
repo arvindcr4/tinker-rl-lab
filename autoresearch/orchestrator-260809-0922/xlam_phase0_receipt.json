@@ -1,0 +1,252 @@
+{
+  "schema_version": "pavlov-xlam-phase0-receipt-v1",
+  "receipt_kind": "phase0-provenance",
+  "status": "BLOCKED",
+  "blocking": true,
+  "created_at": "2026-08-09T05:16:01Z",
+  "purpose": "Prepare the first paid xLAM smoke receipt without launching paid work.",
+  "scope": {
+    "model_id": "Qwen/Qwen3.6-35B-A3B",
+    "dataset_id": "Salesforce/xlam-function-calling-60k",
+    "suite_id": "xlam_function_calling",
+    "portfolio_id": "pavlov-primary-eval-14-suite-v1",
+    "portfolio_role": "primary_eval",
+    "component_only": true,
+    "seed": 809,
+    "evaluation_slice": "observed seed-809 xLAM evaluation slice",
+    "claim_boundary": "This is xLAM component provenance only; it does not establish full Pavlov portfolio or held-out coverage."
+  },
+  "required_receipts": {
+    "dataset_revision": {
+      "status": "VERIFIED",
+      "value": "26d14ebfe18b1f7b524bd39b404b50af5dc97866",
+      "format": "40 lowercase hexadecimal characters",
+      "source_url": "https://huggingface.co/api/datasets/Salesforce/xlam-function-calling-60k"
+    },
+    "split_manifest_sha256": {
+      "status": "BLOCKED",
+      "value": null,
+      "reason": "No materialized immutable xLAM split manifest is present locally, and metadata-only Hugging Face access does not expose the gated record set."
+    },
+    "task_id_sha256": {
+      "status": "BLOCKED",
+      "value": null,
+      "reason": "The local loader contains no task-ID list; task IDs cannot be hashed without accessing and verifying the gated records."
+    },
+    "license_identifier": {
+      "status": "VERIFIED",
+      "value": "cc-by-4.0",
+      "source_url": "https://huggingface.co/api/datasets/Salesforce/xlam-function-calling-60k"
+    },
+    "license_receipt": {
+      "status": "BLOCKED",
+      "value": null,
+      "reason": "The Hugging Face card exposes the license identifier and access notice, but no separate signed/local license receipt artifact was supplied."
+    },
+    "container_digest": {
+      "status": "BLOCKED",
+      "value": null,
+      "reason": "No container image identity or immutable image digest is exposed by this local macOS runtime."
+    },
+    "runtime_digest": {
+      "status": "VERIFIED",
+      "value": "ef9cd48e9195dde49a05383fbcb230550e8265f1d6f96d71d8a258036f7e2dc3",
+      "method": "SHA256 of the canonical runtime manifest recorded below"
+    },
+    "verifier_sha256": {
+      "status": "VERIFIED",
+      "value": "06c834d9f482adca5c07b48f823b2fd33897fb613b8c8df05a9b218a1042735a",
+      "source_path": "platform_tinker/tinkerrl/grpo.py",
+      "symbol": "StrictToolCallReward",
+      "source_lines": [
+        788,
+        840
+      ]
+    },
+    "base_model_revision": {
+      "status": "VERIFIED",
+      "value": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+      "source_url": "https://huggingface.co/api/models/Qwen/Qwen3.6-35B-A3B"
+    },
+    "tokenizer_revision": {
+      "status": "VERIFIED",
+      "value": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+      "basis": "Tokenizer files are in the same immutable Hugging Face repository commit as the model.",
+      "source_url": "https://huggingface.co/api/models/Qwen/Qwen3.6-35B-A3B/tree/995ad96eacd98c81ed38be0c5b274b04031597b0?recursive=false"
+    },
+    "adapter_revision": {
+      "status": "NOT_APPLICABLE",
+      "value": null,
+      "reason": "This receipt describes the base-model smoke before any sampler adapter checkpoint exists."
+    }
+  },
+  "dataset": {
+    "repo_id": "Salesforce/xlam-function-calling-60k",
+    "revision": "26d14ebfe18b1f7b524bd39b404b50af5dc97866",
+    "revision_verified": true,
+    "last_modified_from_api": "2025-01-24T19:25:58.000Z",
+    "license_identifier": "cc-by-4.0",
+    "gated": "auto",
+    "private": false,
+    "source_file": "xlam_function_calling_60k.json",
+    "provider_split": "train",
+    "metadata_only": true,
+    "source_urls": {
+      "metadata_api": "https://huggingface.co/api/datasets/Salesforce/xlam-function-calling-60k",
+      "dataset_card": "https://huggingface.co/datasets/Salesforce/xlam-function-calling-60k",
+      "dataset_readme": "https://huggingface.co/datasets/Salesforce/xlam-function-calling-60k/blob/26d14ebfe18b1f7b524bd39b404b50af5dc97866/README.md"
+    }
+  },
+  "model": {
+    "repo_id": "Qwen/Qwen3.6-35B-A3B",
+    "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "revision_verified": true,
+    "license_identifier": "apache-2.0",
+    "last_modified_from_api": "2026-04-24T02:53:42.000Z",
+    "source_urls": {
+      "metadata_api": "https://huggingface.co/api/models/Qwen/Qwen3.6-35B-A3B",
+      "model_card": "https://huggingface.co/Qwen/Qwen3.6-35B-A3B"
+    }
+  },
+  "tokenizer": {
+    "repo_id": "Qwen/Qwen3.6-35B-A3B",
+    "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "revision_verified": true,
+    "files_verified_at_revision": [
+      {
+        "path": "tokenizer.json",
+        "oid": "a73a846725794819aa6e1c9e97d8dc9671c2006d",
+        "size": 12807982
+      },
+      {
+        "path": "tokenizer_config.json",
+        "oid": "28d96ff303d1d20350185caf4bf037045916ed35",
+        "size": 16718
+      }
+    ],
+    "metadata_api": "https://huggingface.co/api/models/Qwen/Qwen3.6-35B-A3B/tree/995ad96eacd98c81ed38be0c5b274b04031597b0?recursive=false"
+  },
+  "reward_verifier": {
+    "name": "StrictToolCallReward",
+    "source_path": "platform_tinker/tinkerrl/grpo.py",
+    "source_lines": [
+      788,
+      840
+    ],
+    "source_sha256": "06c834d9f482adca5c07b48f823b2fd33897fb613b8c8df05a9b218a1042735a",
+    "module_sha256": "a748542e75c6eeb9af04982a06e286b7ab957d6d053633915df068aeebb73de8"
+  },
+  "split_manifest_reference": {
+    "status": "BLOCKED",
+    "manifest_sha256": null,
+    "task_id_sha256": null,
+    "reason": "No immutable split manifest or materialized task-ID list is available locally; do not treat the derived slice as a held-out receipt.",
+    "implementation_bundle_sha256": "3062e137a96beb8ce2c2b77044f472154ab68665b1f0de1b7fc934a658a4b4d9",
+    "implementation": {
+      "dataset_factory": {
+        "path": "platform_tinker/tinkerrl/grpo.py",
+        "symbol": "make_xlam_dataset",
+        "source_lines": [
+          704,
+          750
+        ],
+        "source_sha256": "9702f2692613050d1a4dacf517456e1186a4105bd807428541bd64539abfcfdf",
+        "dataset_id": "Salesforce/xlam-function-calling-60k",
+        "provider_split": "train",
+        "shuffle": "random.Random(seed).shuffle(examples)",
+        "train_slice": [
+          0,
+          3000
+        ],
+        "derived_test_slice": [
+          3000,
+          3500
+        ]
+      },
+      "evaluator": {
+        "path": "zvf-program/flagship/eval_pavlov_xlam.py",
+        "symbol": "main",
+        "source_lines": [
+          354,
+          626
+        ],
+        "source_sha256": "cbac341cf7f492b957052dbf01dbddd23e784ce3d4f560668b8f00ef8da85241",
+        "seed": 809,
+        "observed_selection": "list(dataset.test_examples())[:limit]"
+      }
+    },
+    "task_hash_reference": {
+      "status": "BLOCKED",
+      "value": null,
+      "reason": "The implementation derives rows from provider data but does not expose task IDs; gated record access was intentionally not attempted."
+    }
+  },
+  "git": {
+    "head_sha": "550127c7c288a7117e1eb427089251da34527b7f",
+    "head_tree_sha": "cb8d72f67936101d5e77cb75e6f843b397279f09",
+    "worktree_status": "dirty",
+    "note": "Pre-existing uncommitted and untracked work is preserved; this receipt is intentionally uncommitted.",
+    "source_file_sha256": {
+      "platform_tinker/tinkerrl/grpo.py": "a748542e75c6eeb9af04982a06e286b7ab957d6d053633915df068aeebb73de8",
+      "zvf-program/flagship/eval_pavlov_xlam.py": "fab300423c3115b1e5aa1f9be39a896163f23dde7e74551bddc5256a27ce6c00",
+      "zvf-program/flagship/build_pavlovs_campaign_manifest.py": "1fc92901149ca93313c63f039180483fb6aba2d3eb7d96a957765db942209413",
+      "zvf-program/flagship/pavlovs_domain_contract.py": "79b611fc7fcf0c2eb4b2901b43b2bbf02cacb8c19937f13cc105e581b38b99e1",
+      "zvf-program/flagship/pavlovs_domain_contract.json": "971033dc99bc6cf5c1adc9e4f64de32acfcb6ce811d21feb7885beb5bb462bbd"
+    }
+  },
+  "runtime": {
+    "python_version": "3.14.6 (main, Jun 10 2026, 10:03:53) [Clang 21.0.0 (clang-2100.0.123.102)]",
+    "python_implementation": "CPython",
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "processor": "arm",
+    "uname": {
+      "system": "Darwin",
+      "node": "Arvinds-MacBook-Pro-6.local",
+      "release": "27.0.0",
+      "version": "Darwin Kernel Version 27.0.0: Tue Jul 14 21:43:10 PDT 2026; root:xnu-13432.0.94.501.4~1/RELEASE_ARM64_T6041",
+      "machine": "arm64",
+      "processor": "arm"
+    },
+    "packages": {
+      "accelerate": "MISSING",
+      "datasets": "4.4.1",
+      "huggingface_hub": "1.1.2",
+      "ruff": "0.14.4",
+      "safetensors": "MISSING",
+      "tinker": "MISSING",
+      "tokenizers": "0.22.2",
+      "torch": "2.9.0",
+      "transformers": "MISSING",
+      "wandb": "MISSING"
+    },
+    "runtime_fingerprint_sha256": "ef9cd48e9195dde49a05383fbcb230550e8265f1d6f96d71d8a258036f7e2dc3"
+  },
+  "container_equivalent": {
+    "status": "BLOCKED",
+    "container_image_digest": null,
+    "reason": "No container image digest is available in this macOS worktree; runtime_fingerprint_sha256 is recorded as a non-container equivalent only.",
+    "runtime_fingerprint_sha256": "ef9cd48e9195dde49a05383fbcb230550e8265f1d6f96d71d8a258036f7e2dc3"
+  },
+  "evidence_urls": {
+    "dataset_metadata_api": "https://huggingface.co/api/datasets/Salesforce/xlam-function-calling-60k",
+    "dataset_card": "https://huggingface.co/datasets/Salesforce/xlam-function-calling-60k",
+    "model_metadata_api": "https://huggingface.co/api/models/Qwen/Qwen3.6-35B-A3B",
+    "model_card": "https://huggingface.co/Qwen/Qwen3.6-35B-A3B",
+    "tokenizer_tree_api": "https://huggingface.co/api/models/Qwen/Qwen3.6-35B-A3B/tree/995ad96eacd98c81ed38be0c5b274b04031597b0?recursive=false"
+  },
+  "verification": {
+    "huggingface_metadata_api_read_only": true,
+    "huggingface_writes": false,
+    "tinker_calls": false,
+    "wandb_initialization": false,
+    "paid_compute": false,
+    "secrets_or_env_files_read": false,
+    "local_source_hashing": true,
+    "notes": [
+      "Dataset/model/tokenizer revisions and license identifiers came from public Hugging Face metadata/API responses.",
+      "The gated dataset records were not downloaded or accessed; split/task hashes therefore remain BLOCKED.",
+      "No receipt claim is made that the observed xLAM slice is held out or covers all Pavlov domains."
+    ]
+  }
+}

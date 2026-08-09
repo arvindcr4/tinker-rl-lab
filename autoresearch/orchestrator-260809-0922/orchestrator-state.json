@@ -1,0 +1,53 @@
+{
+  "schema_version": "autoresearch-orchestrator-v1",
+  "status": "tracking_gate_implementation_pending",
+  "objective": "Maximize held-out Pavlov-domain agent performance using Tinker under an $18 hard cap",
+  "archetype": "optimize-metric",
+  "branch": "codex/pavlov-domain-main-track",
+  "budget": {
+    "provider": "Tinker",
+    "maximum_usd": 18.0,
+    "operational_cap_usd": 16.5,
+    "safety_reserve_usd": 1.5,
+    "estimated_spend_usd": 0.140038555,
+    "spend_note": "Includes the $0.040038555 base evaluation estimate and a conservative <$0.10 allowance for the interrupted four-step smoke; live billing may lag."
+  },
+  "incumbent": {
+    "kind": "base_model",
+    "model": "Qwen/Qwen3.6-35B-A3B",
+    "heldout_examples": 100,
+    "mean_strict_reward": 0.07,
+    "perfect_call_rate": 0.07,
+    "receipt": "base_eval_100.json",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/pavlovbasexlam100260809"
+  },
+  "pipeline": [
+    {
+      "stage": "preflight",
+      "outcome": "passed",
+      "evidence": "valid Tinker, W&B, and HF accounts; model supported; 58 relevant local tests passed"
+    },
+    {
+      "stage": "base_eval",
+      "outcome": "passed",
+      "evidence": "100-example frozen xLAM evaluation: mean strict reward 0.07, perfect-call rate 0.07, estimated cost $0.040038555"
+    },
+    {
+      "stage": "untracked_smoke",
+      "outcome": "rejected",
+      "evidence": "Stopped after four completed steps when broken W&B initialization was discovered; Tinker run 96e18cc8-84cb-5cae-9326-661f29394922:train:0 is provenance only; backfilled rejection record is in W&B and the untrained step-0 adapter is on HF"
+    }
+  ],
+  "tracking_invariant": {
+    "wandb": "online initialization required before paid Tinker work",
+    "huggingface": "every periodic and final sampler checkpoint must be exported",
+    "failure_policy": "fail_closed"
+  },
+  "tracking_receipts": {
+    "wandb_project": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov",
+    "base_eval_wandb": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/pavlovbasexlam100260809",
+    "rejected_smoke_wandb": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/pavlovuntrackedsmoke260809",
+    "rejected_step0_hf": "https://huggingface.co/arvindcr4/pavlov-xlam-smoke-260809-seed809-step0-aborted"
+  },
+  "next": "Implement and verify fail-closed W&B plus HF checkpoint receipts, then relaunch the 10-step Qwen3.6-35B-A3B xLAM smoke"
+}

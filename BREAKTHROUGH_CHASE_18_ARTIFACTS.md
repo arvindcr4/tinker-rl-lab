@@ -263,8 +263,9 @@ The breakthrough claim should be killed or narrowed if any of these occur:
    boundary-aware baselines.
 4. **Transport kill:** fresh-policy recollection does not beat widened clipping
    at matched generated tokens for high-PAM/low-GSR roots.
-5. **External-validity kill:** the effect does not reproduce across at least
-   two model scales/families and three reward regimes.
+5. **External-validity kill:** the effect does not reproduce across the two
+   frozen multimodal agent candidates and the complete 16-domain Pavlov's List
+   task contract. GSM8K is calibration-only and cannot satisfy this gate.
 6. **Treatment kill:** objective-differential receipts or immutable run
    evidence disagree with the declared arm.
 

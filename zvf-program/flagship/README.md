@@ -1,5 +1,12 @@
 # Variance-starvation flagship experiment
 
+> **Pavlov's List scope addendum.** New main-track/product-use post-training is
+> governed by [`PAVLOVS_LIST_TASK_CONTRACT.md`](PAVLOVS_LIST_TASK_CONTRACT.md)
+> and [`pavlovs_domain_contract.json`](pavlovs_domain_contract.json). GSM8K is
+> calibration-only; primary evidence must cover all 16 company-task domains
+> with stateful, artifact-producing, held-out evaluations. This addendum does
+> not rewrite the frozen v1 preregistration or retroactively broaden its claims.
+
 This directory contains the frozen, staged protocol for deciding whether the
 completed E1 audit supports a main-track mechanism-plus-controller paper.
 

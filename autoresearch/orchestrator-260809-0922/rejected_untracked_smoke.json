@@ -1,0 +1,30 @@
+{
+  "schema_version": "pavlov-rejected-run-v1",
+  "status": "rejected_untracked",
+  "evidence_status": "inadmissible_provenance_only",
+  "model": "Qwen/Qwen3.6-35B-A3B",
+  "seed": 809,
+  "planned_steps": 10,
+  "completed_steps": 4,
+  "tinker_run_id": "96e18cc8-84cb-5cae-9326-661f29394922:train:0",
+  "wandb_backfill": {
+    "run_id": "pavlovuntrackedsmoke260809",
+    "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/pavlovuntrackedsmoke260809",
+    "mode": "backfilled_after_interruption"
+  },
+  "recovered_console_reward_trace": [0.0, 0.0, 0.625, 0.0],
+  "recovered_console_loss_trace": [0.0, 0.0, -6.5681, 0.0],
+  "rejection_reason": "The run began before online W&B initialization was verified. It was interrupted during step 5 immediately after the defect was identified; no trained or final checkpoint was produced.",
+  "model_checkpoints": [
+    {
+      "kind": "initial_step_0_sampler",
+      "trained": false,
+      "tinker_path": "tinker://96e18cc8-84cb-5cae-9326-661f29394922:train:0/sampler_weights/pavlov_xlam_smoke_260809_seed809_step_0",
+      "hf_repo": "arvindcr4/pavlov-xlam-smoke-260809-seed809-step0-aborted",
+      "hf_commit": "639afffd5fc69c9329bb72770b7ef36ced223bb5",
+      "hf_visibility": "public",
+      "adapter_model_bytes": 2245975768
+    }
+  ],
+  "scientific_use": "Do not use the reward or loss trace as evidence of improvement. Retain only for operational provenance and cost reconciliation."
+}

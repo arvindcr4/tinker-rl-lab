@@ -1,0 +1,3 @@
+iteration	change	validator_status	companies	domains	train_suites	primary_eval_suites	gsm8k_role	paid_jobs
+1	initial Pavlov domain contract	FAIL	53	16	10	13	calibration_only	false
+2	add finance RLVR and research-math train/eval coverage	PASS	53	16	12	14	calibration_only	false

@@ -1,0 +1,17 @@
+{
+  "status": "blocked_pending_budget_cap",
+  "continue_from": "zvf-program/flagship/PAVLOVS_LIST_TASK_CONTRACT.md",
+  "validation_command": "PYTHONPATH=zvf-program python3 -m unittest flagship.test_pavlovs_domain_contract flagship.test_build_pavlovs_campaign_manifest -v",
+  "next_actions": [
+    "record explicit maximum_usd",
+    "audit all suite licenses and access requirements",
+    "pin dataset revisions and generate train/eval task hash manifests",
+    "run a local no-GPU environment smoke test",
+    "launch the smallest multi-domain pilot within the cap"
+  ],
+  "forbidden_until_unblocked": [
+    "paid GPU launch",
+    "claiming model improvement",
+    "claiming all-company production readiness"
+  ]
+}

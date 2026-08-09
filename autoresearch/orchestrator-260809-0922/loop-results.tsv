@@ -1,0 +1,4 @@
+iteration	arm	steps	lr	heldout_reward	estimated_max_usd	actual_usage_status	verdict
+0	preflight	0	NA	NA	0.0000	no August token usage	PASS
+1	base_qwen36_xlam_eval	0	NA	0.070	0.040038555	price-based estimate	BASELINE
+2	pavlov_xlam_smoke_untracked	4	2e-5	NA	0.100000000	billing pending; conservative upper allowance	REJECT_UNLOGGED

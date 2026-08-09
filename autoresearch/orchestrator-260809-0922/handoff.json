@@ -1,0 +1,29 @@
+{
+  "status": "tracking_gate_implementation_pending",
+  "budget_remaining_operational_usd": 16.359961445,
+  "budget_remaining_note": "Conservative estimate pending live billing reconciliation.",
+  "incumbent": {
+    "model": "Qwen/Qwen3.6-35B-A3B",
+    "heldout_examples": 100,
+    "mean_strict_reward": 0.07,
+    "perfect_call_rate": 0.07,
+    "estimated_cost_usd": 0.040038555
+  },
+  "rejected_run": {
+    "tinker_run_id": "96e18cc8-84cb-5cae-9326-661f29394922:train:0",
+    "completed_steps": 4,
+    "reason": "W&B initialization defect; no trained checkpoint or held-out result",
+    "wandb_backfill": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/pavlovuntrackedsmoke260809",
+    "hf_step0": "https://huggingface.co/arvindcr4/pavlov-xlam-smoke-260809-seed809-step0-aborted"
+  },
+  "next_command_kind": "fail-closed tracking verification followed by Tinker GRPO smoke test",
+  "success_predicate": "strict held-out xLAM reward exceeds the base-model baseline without crossing the operational cap",
+  "forbidden": [
+    "spend above 16.5 USD estimated usage",
+    "non-Tinker paid compute",
+    "GSM8K-only optimization",
+    "claiming all-company readiness from xLAM",
+    "starting paid work without online W&B",
+    "retaining an unpublished periodic or final sampler checkpoint"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "schema_version": "autoresearch-orchestrator-v1",
+  "status": "blocked_pending_budget_cap",
+  "objective": "Replace GSM8K-centric post-training with a Pavlov's List domain-complete agent campaign",
+  "branch": "codex/pavlov-domain-main-track",
+  "iterations": 2,
+  "best_metric": {
+    "name": "validated_domain_coverage",
+    "value": "16/16"
+  },
+  "coverage": {
+    "companies": 53,
+    "domains": 16,
+    "training_suites": 12,
+    "primary_evaluation_suites": 14
+  },
+  "paid_jobs_may_launch": false,
+  "blockers": [
+    "explicit maximum_usd not provided",
+    "dataset and benchmark license review not yet signed off",
+    "live experiment evidence does not yet exist"
+  ]
+}

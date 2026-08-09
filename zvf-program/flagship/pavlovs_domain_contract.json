@@ -1,0 +1,416 @@
+{
+  "schema_version": "pavlovs-domain-contract-v1",
+  "status": "authorized",
+  "source_snapshot": {
+    "url": "https://pavlovslist.com/",
+    "site_last_updated": "2026-08-03",
+    "accessed_at": "2026-08-08",
+    "company_count": 53,
+    "domain_count": 16
+  },
+  "objective": "Fine-tune and evaluate general agentic models on stateful, long-horizon, artifact-producing tasks representative of every domain on Pavlov's List; arithmetic QA is retained only as a low-cost diagnostic control.",
+  "model_candidates": [
+    {
+      "role": "primary",
+      "model_id": "Qwen/Qwen3.6-35B-A3B",
+      "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+      "required_capabilities": [
+        "multimodal_input",
+        "tool_calling",
+        "long_context",
+        "computer_use",
+        "code_generation"
+      ]
+    },
+    {
+      "role": "replication",
+      "model_id": "Qwen/Qwen3.5-9B",
+      "revision": "c202236235762e1c871ad0ccb60c8ee5ba337b9a",
+      "required_capabilities": [
+        "multimodal_input",
+        "tool_calling",
+        "long_context",
+        "computer_use",
+        "code_generation"
+      ]
+    }
+  ],
+  "domains": [
+    "alignment",
+    "browser",
+    "chip_design",
+    "code",
+    "computer_use",
+    "design",
+    "enterprise",
+    "finance",
+    "games",
+    "long_horizon",
+    "math",
+    "ml",
+    "multi_domain",
+    "science",
+    "security",
+    "tool_use"
+  ],
+  "companies": [
+    {"name": "Handshake", "domains": ["multi_domain"]},
+    {"name": "Mercor", "domains": ["multi_domain"]},
+    {"name": "Scale", "domains": ["multi_domain", "code"]},
+    {"name": "Turing", "domains": ["code"]},
+    {"name": "Snorkel", "domains": ["multi_domain", "code"]},
+    {"name": "Surge", "domains": ["multi_domain"]},
+    {"name": "AfterQuery", "domains": ["code", "enterprise"]},
+    {"name": "Mechanize", "domains": ["code"]},
+    {"name": "Datacurve", "domains": ["code"]},
+    {"name": "Halluminate", "domains": ["finance", "enterprise"]},
+    {"name": "Pareto", "domains": ["multi_domain", "tool_use"]},
+    {"name": "Proximal", "domains": ["code"]},
+    {"name": "Bespoke Labs", "domains": ["code"]},
+    {"name": "Collinear", "domains": ["enterprise", "long_horizon"]},
+    {"name": "Latch", "domains": ["science"]},
+    {"name": "Quesma", "domains": ["security"]},
+    {"name": "ReasonCore", "domains": ["science", "code"]},
+    {"name": "BenchFlow", "domains": ["enterprise", "browser"]},
+    {"name": "Cua", "domains": ["code", "computer_use"]},
+    {"name": "EdotEnv", "domains": ["long_horizon", "ml"]},
+    {"name": "Emulated", "domains": ["code", "ml"]},
+    {"name": "General Reasoning", "domains": ["finance"]},
+    {"name": "Metaphi", "domains": ["code", "enterprise"]},
+    {"name": "pre.dev", "domains": ["code", "long_horizon"]},
+    {"name": "Tacit Labs", "domains": ["science", "long_horizon"]},
+    {"name": "Ulam", "domains": ["math"]},
+    {"name": "Vmax", "domains": ["ml"]},
+    {"name": "Deeptune", "domains": ["code", "computer_use"], "status": "acquired"},
+    {"name": "Fleet", "domains": ["multi_domain", "enterprise"]},
+    {"name": "Huzzle Labs", "domains": ["long_horizon", "code"]},
+    {"name": "Verita AI", "domains": ["design"]},
+    {"name": "ARIMLABS", "domains": ["security", "long_horizon"]},
+    {"name": "Chakra Labs", "domains": ["computer_use", "tool_use"]},
+    {"name": "dmodel", "domains": ["ml", "alignment"]},
+    {"name": "HUD", "domains": ["long_horizon", "code"]},
+    {"name": "Idler", "domains": ["code"]},
+    {"name": "Preference Model", "domains": ["ml", "code"]},
+    {"name": "Taste Labs", "domains": ["design"]},
+    {"name": "Akhara", "domains": ["enterprise", "code"]},
+    {"name": "Andromede", "domains": ["long_horizon"]},
+    {"name": "Diffuse Labs", "domains": ["ml", "long_horizon"]},
+    {"name": "Dissei", "domains": ["finance"]},
+    {"name": "Exabite", "domains": ["code"]},
+    {"name": "Good Start Labs", "domains": ["games", "long_horizon"]},
+    {"name": "Hillclimb", "domains": ["math"]},
+    {"name": "Originator", "domains": ["computer_use", "code"]},
+    {"name": "Phinity", "domains": ["chip_design"]},
+    {"name": "Plato", "domains": ["browser", "enterprise"]},
+    {"name": "Refresh", "domains": ["code", "computer_use"]},
+    {"name": "Sepal AI", "domains": ["science"], "status": "acquired"},
+    {"name": "Theta", "domains": ["enterprise"]},
+    {"name": "Trajectory Labs", "domains": ["alignment"]},
+    {"name": "Vetto AI", "domains": ["code", "computer_use"]}
+  ],
+  "suite_registry": {
+    "openreward_train": {
+      "role": "train",
+      "url": "https://openreward.ai/",
+      "domains": ["multi_domain", "tool_use", "browser", "science", "ml", "games", "long_horizon"],
+      "split": "license-approved train tasks only",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "swe_gym_train": {
+      "role": "train",
+      "url": "https://github.com/SWE-Gym/SWE-Gym",
+      "domains": ["code", "long_horizon"],
+      "split": "train repositories and issues",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "browsergym_train": {
+      "role": "train",
+      "url": "https://github.com/ServiceNow/BrowserGym",
+      "domains": ["browser", "computer_use", "enterprise", "tool_use", "long_horizon"],
+      "split": "training environments only",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "bfcl_train": {
+      "role": "train",
+      "url": "https://gorilla.cs.berkeley.edu/leaderboard.html",
+      "domains": ["tool_use", "code"],
+      "split": "released training and development calls",
+      "stateful": false,
+      "artifact_or_side_effect": false
+    },
+    "scienceworld_train": {
+      "role": "train",
+      "url": "https://github.com/allenai/ScienceWorld",
+      "domains": ["science", "long_horizon", "tool_use"],
+      "split": "training variations",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "unix_ctf_train": {
+      "role": "train",
+      "url": "https://vmax.ai/team/unix-ctf-procedural-environments-for-unix-competence-reinforcement-learning",
+      "domains": ["security", "ml", "code", "tool_use"],
+      "split": "procedurally generated training instances",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "agentdojo_train": {
+      "role": "train",
+      "url": "https://github.com/ethz-spylab/agentdojo",
+      "domains": ["alignment", "security", "tool_use", "enterprise"],
+      "split": "training and development tasks",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "rtlcoder_train": {
+      "role": "train",
+      "url": "https://huggingface.co/datasets/ishorn5/RTLCoder-DeepSeek-v1.1",
+      "domains": ["chip_design", "code"],
+      "split": "train",
+      "stateful": false,
+      "artifact_or_side_effect": true
+    },
+    "crafter_train": {
+      "role": "train",
+      "url": "https://github.com/danijar/crafter",
+      "domains": ["games", "long_horizon"],
+      "split": "procedural training seeds",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "visual_app_train": {
+      "role": "train",
+      "url": "https://www.afterquery.com/leaderboard/app-bench",
+      "domains": ["design", "computer_use", "code"],
+      "split": "training prompts and synthetic variants only",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "api_bank_rlvr_train": {
+      "role": "train",
+      "url": "https://huggingface.co/datasets/Simu-Env/API-Bank-RLVR",
+      "domains": ["finance", "enterprise", "tool_use", "long_horizon"],
+      "split": "train; pin the dataset revision and exclude all held-out BankerToolBench task identifiers",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "openr1_math_train": {
+      "role": "train",
+      "url": "https://huggingface.co/datasets/open-r1/OpenR1-Math-220k",
+      "domains": ["math"],
+      "split": "train; decontaminate against FrontierMath and all primary evaluation prompts",
+      "stateful": false,
+      "artifact_or_side_effect": false
+    },
+    "math_control_train": {
+      "role": "control",
+      "url": "https://huggingface.co/datasets/openai/gsm8k",
+      "domains": ["math"],
+      "split": "train",
+      "stateful": false,
+      "artifact_or_side_effect": false
+    },
+    "swe_bench_pro_eval": {
+      "role": "primary_eval",
+      "url": "https://labs.scale.com/leaderboard/swe_bench_pro_public",
+      "domains": ["code", "long_horizon"],
+      "split": "public evaluation",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "frontier_swe_eval": {
+      "role": "primary_eval",
+      "url": "https://github.com/Proximal-Labs/frontier-swe",
+      "domains": ["code", "ml", "long_horizon"],
+      "split": "evaluation",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "sdab_eval": {
+      "role": "primary_eval",
+      "url": "https://emulated.so/sdab",
+      "domains": ["code", "ml", "long_horizon", "enterprise"],
+      "split": "evaluation",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "banker_toolbench_eval": {
+      "role": "primary_eval",
+      "url": "https://huggingface.co/datasets/handshake-ai-research/bankertoolbench",
+      "domains": ["finance", "enterprise", "tool_use", "long_horizon"],
+      "split": "held-out evaluation tasks",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "apex_agents_eval": {
+      "role": "primary_eval",
+      "url": "https://www.mercor.com/blog/introducing-apex-agents/",
+      "domains": ["multi_domain", "finance", "enterprise", "long_horizon", "tool_use"],
+      "split": "held-out worlds",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "webbench_eval": {
+      "role": "primary_eval",
+      "url": "https://github.com/Halluminate/WebBench",
+      "domains": ["browser", "computer_use", "enterprise"],
+      "split": "evaluation",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "binaryaudit_eval": {
+      "role": "primary_eval",
+      "url": "https://github.com/QuesmaOrg/BinaryAudit",
+      "domains": ["security", "code", "long_horizon"],
+      "split": "evaluation binaries",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "lifescibench_eval": {
+      "role": "primary_eval",
+      "url": "https://openai.com/index/introducing-life-sci-bench/",
+      "domains": ["science", "long_horizon", "tool_use"],
+      "split": "evaluation",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "mle_bench_eval": {
+      "role": "primary_eval",
+      "url": "https://github.com/openai/mle-bench",
+      "domains": ["ml", "code", "long_horizon"],
+      "split": "evaluation competitions",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "agentharm_eval": {
+      "role": "primary_eval",
+      "url": "https://github.com/UKGovernmentBEIS/inspect_evals/tree/main/src/inspect_evals/agentharm",
+      "domains": ["alignment", "security", "tool_use"],
+      "split": "held-out evaluation",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "verilog_eval": {
+      "role": "primary_eval",
+      "url": "https://github.com/NVlabs/verilog-eval",
+      "domains": ["chip_design", "code"],
+      "split": "evaluation",
+      "stateful": false,
+      "artifact_or_side_effect": true
+    },
+    "appbench_eval": {
+      "role": "primary_eval",
+      "url": "https://www.afterquery.com/leaderboard/app-bench",
+      "domains": ["design", "computer_use", "code"],
+      "split": "held-out evaluation prompts",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "openreward_games_eval": {
+      "role": "primary_eval",
+      "url": "https://openreward.ai/",
+      "domains": ["games", "long_horizon", "tool_use"],
+      "split": "held-out environment families absent from training",
+      "stateful": true,
+      "artifact_or_side_effect": true
+    },
+    "frontiermath_eval": {
+      "role": "primary_eval",
+      "url": "https://epoch.ai/frontiermath/tiers-1-4/the-benchmark",
+      "domains": ["math"],
+      "split": "private held-out evaluation",
+      "stateful": false,
+      "artifact_or_side_effect": false
+    },
+    "math500_eval": {
+      "role": "secondary_eval",
+      "url": "https://huggingface.co/datasets/HuggingFaceH4/MATH-500",
+      "domains": ["math"],
+      "split": "test",
+      "stateful": false,
+      "artifact_or_side_effect": false
+    },
+    "gsm8k_calibration": {
+      "role": "calibration_only",
+      "url": "https://huggingface.co/datasets/openai/gsm8k",
+      "domains": ["math"],
+      "split": "test",
+      "stateful": false,
+      "artifact_or_side_effect": false
+    }
+  },
+  "sampling_contract": {
+    "unit": "environment episode, not isolated prompt",
+    "minimum_primary_domains_per_training_batch": 6,
+    "maximum_math_fraction": 0.05,
+    "minimum_stateful_fraction": 0.6,
+    "minimum_artifact_or_side_effect_fraction": 0.5,
+    "domain_reweighting": "inverse-frequency at the domain family level; no company count may make code dominate the mixture",
+    "curriculum": "single-step tool calls -> multi-step state changes -> long-horizon artifact and live-system tasks"
+  },
+  "reward_contract": {
+    "components": [
+      "environment_task_success",
+      "artifact_or_state_integrity",
+      "rubric_partial_credit",
+      "safety_and_policy_constraints",
+      "cost_and_latency"
+    ],
+    "normalization": "normalize within environment family before cross-domain aggregation",
+    "verifier_rule": "primary reward must inspect environment state or native artifacts whenever task correctness depends on them",
+    "anti_reward_hacking": "keep hidden behavioral tests and verifier state outside the policy-visible workspace"
+  },
+  "evaluation_contract": {
+    "primary_unit": "seed within model x environment-family x stack",
+    "metrics": [
+      "task_success",
+      "rubric_score",
+      "state_integrity",
+      "safety_violation_rate",
+      "tokens_per_success",
+      "tool_calls_per_success",
+      "wall_time_per_success"
+    ],
+    "required_slices": [
+      "domain",
+      "horizon",
+      "reward_type",
+      "verifier_type",
+      "artifact_vs_stateful",
+      "seen_vs_unseen_environment_family"
+    ],
+    "company_usefulness_rule": "every company inherits at least one primary evaluation suite from each listed domain; aggregate success may not hide a domain regression"
+  },
+  "contamination_contract": {
+    "rule": "primary evaluation tasks, repositories, environment seeds, and hidden tests must be disjoint from training",
+    "same_family_exception": "allowed only when the provider publishes immutable disjoint splits and the held-out task identifiers are unavailable to the training job",
+    "required_receipts": [
+      "dataset_revision",
+      "license",
+      "task_id_hashes",
+      "split_manifest_hash",
+      "container_digest",
+      "model_revision",
+      "adapter_revision"
+    ]
+  },
+  "budget_gate": {
+    "status": "AUTHORIZED_TINKER_ONLY",
+    "provider": "Tinker",
+    "paid_jobs_may_launch": true,
+    "maximum_usd": 18.0,
+    "operational_cap_usd": 16.5,
+    "safety_reserve_usd": 1.5,
+    "authorized_at": "2026-08-09"
+  },
+  "non_claims": [
+    "GSM8K or MATH performance alone establishes company usefulness",
+    "domain coverage establishes production readiness",
+    "a public benchmark score substitutes for a company-specific acceptance test",
+    "one aggregate score can compensate for failure in a listed domain",
+    "planned paid runs are evidence before immutable result receipts exist"
+  ]
+}

@@ -1,0 +1,705 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/vfxnli",
+    "id": "vfxnli",
+    "slide": 11,
+    "layoutId": "f347a013-a63d-41b2-8af1-c3a90cef7789",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "5ce16e44-8c96-4fb1-b7ae-01303dd7107f",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#0B0F16",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Helvetica Neue"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "f347a013-a63d-41b2-8af1-c3a90cef7789",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "5ce16e44-8c96-4fb1-b7ae-01303dd7107f",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "5ce16e44-8c96-4fb1-b7ae-01303dd7107f",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5oji9cva",
+      "id": "1",
+      "bbox": [
+        42,
+        42,
+        540,
+        30
+      ],
+      "geometry": "rect",
+      "text": "THE NEW RESEARCH PROGRAM",
+      "textPreview": "THE NEW RESEARCH PROGRAM",
+      "resolvedFontSize": 16,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 16,
+        "typeface": "Helvetica Neue",
+        "color": "#7EA5FF",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "THE NEW RESEARCH PROGRAM"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "THE NEW RESEARCH PROGRAM",
+          "resolvedTextStyle": {
+            "fontSize": 16,
+            "typeface": "Helvetica Neue",
+            "color": "#7EA5FF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "THE NEW RESEARCH PROGRAM",
+              "fontSize": 16,
+              "typeface": "Helvetica Neue",
+              "color": "#7EA5FF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/i1sjexcj",
+      "id": "2",
+      "bbox": [
+        42,
+        168,
+        720,
+        220
+      ],
+      "geometry": "rect",
+      "text": "Less claiming.\nMore proving.",
+      "textPreview": "Less claiming. | More proving.",
+      "resolvedFontSize": 68,
+      "resolvedTextStyle": {
+        "anchor": 3,
+        "fontSize": 68,
+        "typeface": "Helvetica Neue",
+        "color": "#F4F7FB",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "bottom",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Less claiming."
+          },
+          {
+            "index": 2,
+            "text": "More proving."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Less claiming.",
+          "resolvedTextStyle": {
+            "fontSize": 68,
+            "typeface": "Helvetica Neue",
+            "color": "#F4F7FB",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Less claiming.",
+              "fontSize": 68,
+              "typeface": "Helvetica Neue",
+              "color": "#F4F7FB",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "More proving.",
+          "resolvedTextStyle": {
+            "fontSize": 68,
+            "typeface": "Helvetica Neue",
+            "color": "#F4F7FB",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "More proving.",
+              "fontSize": 68,
+              "typeface": "Helvetica Neue",
+              "color": "#F4F7FB",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/j21072d4",
+      "id": "3",
+      "bbox": [
+        42,
+        452,
+        830,
+        138
+      ],
+      "geometry": "rect",
+      "text": "12 research ideas now say exactly what their evidence supports.\n2 paper directions carry the real novelty.\n14 suites test whether the work matters beyond one math benchmark.",
+      "textPreview": "12 research ideas now say exactly what their evidence supports. | 2 paper directions carry the real novelty. | 14 suites test whether the...",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Helvetica Neue",
+        "color": "#AEB8C8",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "12 research ideas now say exactly what their evidence supports."
+          },
+          {
+            "index": 2,
+            "text": "2 paper directions carry the real novelty."
+          },
+          {
+            "index": 3,
+            "text": "14 suites test whether the work matters beyond one math benchmark."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "12 research ideas now say exactly what their evidence supports.",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "typeface": "Helvetica Neue",
+            "color": "#AEB8C8",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "12 research ideas now say exactly what their evidence supports.",
+              "fontSize": 24,
+              "typeface": "Helvetica Neue",
+              "color": "#AEB8C8",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "2 paper directions carry the real novelty.",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "typeface": "Helvetica Neue",
+            "color": "#AEB8C8",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "2 paper directions carry the real novelty.",
+              "fontSize": 24,
+              "typeface": "Helvetica Neue",
+              "color": "#AEB8C8",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 3,
+          "text": "14 suites test whether the work matters beyond one math benchmark.",
+          "resolvedTextStyle": {
+            "fontSize": 24,
+            "typeface": "Helvetica Neue",
+            "color": "#AEB8C8",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "14 suites test whether the work matters beyond one math benchmark.",
+              "fontSize": 24,
+              "typeface": "Helvetica Neue",
+              "color": "#AEB8C8",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/sru1k7ul",
+      "id": "4",
+      "name": "next-proof",
+      "bbox": [
+        920,
+        170,
+        318,
+        410
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#171D27",
+      "lineColor": "#2A3445",
+      "lineWidth": 1
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ts3idcv6",
+      "id": "5",
+      "bbox": [
+        950,
+        205,
+        258,
+        70
+      ],
+      "geometry": "rect",
+      "text": "What earns the next claim",
+      "textPreview": "What earns the next claim",
+      "resolvedFontSize": 25,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 25,
+        "typeface": "Helvetica Neue",
+        "color": "#F4F7FB",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "What earns the"
+          },
+          {
+            "index": 2,
+            "text": "next claim"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "What earns the next claim",
+          "resolvedTextStyle": {
+            "fontSize": 25,
+            "typeface": "Helvetica Neue",
+            "color": "#F4F7FB",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "What earns the next claim",
+              "fontSize": 25,
+              "typeface": "Helvetica Neue",
+              "color": "#F4F7FB",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/6psjihcv",
+      "id": "6",
+      "bbox": [
+        950,
+        300,
+        250,
+        240
+      ],
+      "geometry": "rect",
+      "text": "Exact data\n\nUnseen split\n\nNative verifier\n\nW&B run\n\nHF checkpoint\n\nMatched baseline",
+      "textPreview": "Exact data |  | Unseen split |  | Native verifier |  | W&B run |  | HF checkpoint |  | Matched baseline",
+      "resolvedFontSize": 20,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 20,
+        "typeface": "Helvetica Neue",
+        "color": "#F4F7FB",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 11,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Exact data"
+          },
+          {
+            "index": 2,
+            "text": ""
+          },
+          {
+            "index": 3,
+            "text": "Unseen split"
+          },
+          {
+            "index": 4,
+            "text": ""
+          },
+          {
+            "index": 5,
+            "text": "Native verifier"
+          },
+          {
+            "index": 6,
+            "text": ""
+          },
+          {
+            "index": 7,
+            "text": "W&B run"
+          },
+          {
+            "index": 8,
+            "text": ""
+          },
+          {
+            "index": 9,
+            "text": "HF checkpoint"
+          },
+          {
+            "index": 10,
+            "text": ""
+          },
+          {
+            "index": 11,
+            "text": "Matched baseline"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Exact data",
+          "resolvedTextStyle": {
+            "fontSize": 20,
+            "typeface": "Helvetica Neue",
+            "color": "#F4F7FB",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Exact data",
+              "fontSize": 20,
+              "typeface": "Helvetica Neue",
+              "color": "#F4F7FB",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 3,
+          "text": "Unseen split",
+          "resolvedTextStyle": {
+            "fontSize": 20,
+            "typeface": "Helvetica Neue",
+            "color": "#F4F7FB",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Unseen split",
+              "fontSize": 20,
+              "typeface": "Helvetica Neue",
+              "color": "#F4F7FB",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 5,
+          "text": "Native verifier",
+          "resolvedTextStyle": {
+            "fontSize": 20,
+            "typeface": "Helvetica Neue",
+            "color": "#F4F7FB",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Native verifier",
+              "fontSize": 20,
+              "typeface": "Helvetica Neue",
+              "color": "#F4F7FB",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 7,
+          "text": "W&B run",
+          "resolvedTextStyle": {
+            "fontSize": 20,
+            "typeface": "Helvetica Neue",
+            "color": "#F4F7FB",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "W&B run",
+              "fontSize": 20,
+              "typeface": "Helvetica Neue",
+              "color": "#F4F7FB",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 9,
+          "text": "HF checkpoint",
+          "resolvedTextStyle": {
+            "fontSize": 20,
+            "typeface": "Helvetica Neue",
+            "color": "#F4F7FB",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "HF checkpoint",
+              "fontSize": 20,
+              "typeface": "Helvetica Neue",
+              "color": "#F4F7FB",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 11,
+          "text": "Matched baseline",
+          "resolvedTextStyle": {
+            "fontSize": 20,
+            "typeface": "Helvetica Neue",
+            "color": "#F4F7FB",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Matched baseline",
+              "fontSize": 20,
+              "typeface": "Helvetica Neue",
+              "color": "#F4F7FB",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/7ql0bmdg",
+      "id": "7",
+      "bbox": [
+        42,
+        628,
+        1130,
+        38
+      ],
+      "geometry": "rect",
+      "text": "The goal is not fourteen green boxes today. The goal is fourteen results we can defend tomorrow.",
+      "textPreview": "The goal is not fourteen green boxes today. The goal is fourteen results we can defend tomorrow.",
+      "resolvedFontSize": 21,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 21,
+        "typeface": "Helvetica Neue",
+        "color": "#49D6AE",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "The goal is not fourteen green boxes today. The goal is fourteen results we can defend tomorrow."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "The goal is not fourteen green boxes today. The goal is fourteen results we can defend tomorrow.",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "typeface": "Helvetica Neue",
+            "color": "#49D6AE",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "The goal is not fourteen green boxes today. The goal is fourteen results we can defend tomorrow.",
+              "fontSize": 21,
+              "typeface": "Helvetica Neue",
+              "color": "#49D6AE",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

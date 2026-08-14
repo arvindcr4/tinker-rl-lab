@@ -1,0 +1,180 @@
+NEURIPS REVIEW, 12 RESEARCH IDEAS, AND E1 TO E14
+
+Speaking time: about 6 to 7 minutes
+
+
+SLIDE 1 - OVERVIEW
+
+Good morning.
+
+I will cover three points.
+
+First, what the NeurIPS reviewers said.
+
+Second, how I corrected twelve research ideas.
+
+Third, how I am expanding evaluation from one math dataset to fourteen practical domains.
+
+
+SLIDE 2 - REVIEW FEEDBACK
+
+The reviewers saw value in the main problem.
+
+Training reward alone can mislead us. ZVF and GU are cheap diagnostics. They help separate online reward, held-out ability, and the algorithm label.
+
+But the submission had serious issues.
+
+The writing was difficult. The abstract had too much detail. The runner was not standard GRPO, and this was not stated clearly. Results from different models, tasks, and software stacks were mixed. Some numbers had conflicting provenance. The paper also claimed practical usefulness without a completed real-world result.
+
+So the core idea had value. The evidence did not support the full story.
+
+
+SLIDE 3 - MY CORRECTION PROCESS
+
+I used four steps: admit, audit, narrow, and rebuild.
+
+I first listed the unsupported claims. Then I traced each important number to its run, seed, model, evaluator, and saved artifact. I reduced each claim to what the evidence could support. Finally, I designed stronger future tests.
+
+I removed the pooled mean across different checkpoints. I quarantined the conflicting PPO row. I removed the unsupported five-seed transfer comparison. I stopped calling high ZVF proof of reward saturation. I also removed broad deployment claims.
+
+Where evidence is missing, I now say that clearly.
+
+
+SLIDE 4 - IDEAS P1 TO P6
+
+P1 is now an audit of scaling limits and identifiability. It does not claim a universal scaling law.
+
+P2 treats ZVF as a descriptive diagnostic. It is not the complete gradient or a universal predictor.
+
+P3 reports group-size results only for the tested token budget.
+
+P4 reports a bounded null result under a two-hundred-token cap.
+
+P5 gives a minimum reporting standard: provenance, estimated quantity, missing experiment cells, and held-out pass-at-k.
+
+P6 is a run registry. Conflicting records are quarantined. They are not averaged.
+
+
+SLIDE 5 - IDEAS P7 TO P12
+
+P7 turns the ZVF controller into a retrospective audit and future test plan. No performance gain is claimed.
+
+P8 remains an exploratory workshop artifact.
+
+P9 uses evidence tiers. Weak evidence cannot support a strong claim.
+
+P10 limits its proof to centred reward contrast.
+
+P11 reports a completed forty-unit audit on one software stack. The algorithm comparison remains inconclusive.
+
+P12 proposes signal-starvation measures and TRIAGE-RL routing. It still needs prospective PPO and SAO experiments.
+
+These are twelve research ideas or manuscript directions. They are not twelve equally strong submissions.
+
+
+SLIDE 6 - TWO PAPER DIRECTIONS
+
+Two directions are now serious paper candidates.
+
+The first is treatment verification.
+
+An algorithm name is only a label. We must prove what code ran. Every claim must link to the exact stack, evaluator, seeds, and artifacts.
+
+This combines P5, P6, and P11. It is suitable for a methodology, artifact, or reproducibility paper.
+
+The second is TRIAGE-RL.
+
+Weak learning signals have different causes. A task may already be solved. It may be failing. The critic may be unreliable. Clipping may remove useful signal. The trajectory may also be unsafe.
+
+TRIAGE-RL routes these cases differently. It has higher research upside. But it needs a preregistered, matched-budget win against static and simple baselines.
+
+Today it is a strong proposal. It is not yet a positive result.
+
+
+SLIDE 7 - WHY GSM8K IS NOT ENOUGH
+
+GSM8K is one type of school maths worksheet. It shows narrow reasoning ability.
+
+Companies need models that use tools, edit repositories, browse websites, handle finance tasks, build artifacts, write chip-design code, follow safety rules, and complete long workflows.
+
+So GSM8K is now calibration only.
+
+I will train across multiple task families. I will evaluate on unseen families. I will report every domain separately.
+
+E1 to E14 gives fourteen separate report cards.
+
+
+SLIDE 8 - E1 TO E7
+
+E1 is SWE-bench Pro for repository repair.
+
+E2 is Frontier SWE.
+
+E3 is SDAB for production and enterprise work.
+
+E4 is BankerToolBench for finance tools and state changes.
+
+E5 is APEX Agents for long professional workflows.
+
+E6 is WebBench for browser and computer use.
+
+E7 is BinaryAudit for security analysis.
+
+E5 and E7 currently have partial harness evidence. The other lanes are blocked before a model score.
+
+Partial means that some plumbing or verifier logic worked. It is not a benchmark score.
+
+
+SLIDE 9 - E8 TO E14
+
+E8 is LifeSciBench.
+
+E9 is MLE-bench.
+
+E10 is AgentHarm.
+
+E11 is VerilogEval for chip-design code.
+
+E12 is AppBench.
+
+E13 is OpenReward Games.
+
+E14 is FrontierMath.
+
+E11 is the only lane with a trained-model score. E9 and E10 have partial harness evidence. Other lanes still need exact datasets, permissions, environments, private splits, or native verifiers.
+
+A public sample, mock model, synthetic fixture, or reference answer is never counted as a benchmark score.
+
+
+SLIDE 10 - RESULTS SO FAR
+
+I have one small, real portfolio result.
+
+I trained a Qwen 3.6 35B mixture-of-experts model for forty reinforcement-learning steps. Training used API tool tasks and software-repair examples.
+
+I evaluated the base and trained models on the same thirty-two unseen examples, with the same sampling and scoring.
+
+Mean reward improved from 0.396 to 0.599.
+
+The absolute gain is 0.203. The relative gain is about 51 percent.
+
+This is encouraging. It is not an official SWE-bench Pro result. The software-repair score uses a local partial-credit patch checker, not the full native verifier.
+
+For E11, the trained model passed four out of four sampled Verilog tasks, with zero extraction failures.
+
+The full suite has 312 prompts. Therefore, four out of four is only a smoke test.
+
+The present position is simple: one of fourteen lanes has a trained-model score. Thirteen still need exact model-level results.
+
+
+SLIDE 11 - CLOSING
+
+My approach now is: claim less and prove more.
+
+I have twelve corrected research ideas, two serious paper directions, and fourteen evaluation suites.
+
+Every future claim must have exact data, an unseen split, a native verifier, a Weights and Biases run, a Hugging Face checkpoint, and a matched baseline.
+
+My target is not fourteen green boxes. My target is fourteen defensible results.
+
+Thank you.

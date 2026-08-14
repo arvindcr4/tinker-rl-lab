@@ -1,0 +1,995 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/sxd1kx",
+    "id": "sxd1kx",
+    "slide": 3,
+    "layoutId": "f347a013-a63d-41b2-8af1-c3a90cef7789",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "5ce16e44-8c96-4fb1-b7ae-01303dd7107f",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#0B0F16",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Helvetica Neue"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "f347a013-a63d-41b2-8af1-c3a90cef7789",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "5ce16e44-8c96-4fb1-b7ae-01303dd7107f",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "5ce16e44-8c96-4fb1-b7ae-01303dd7107f",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/japk7mtc",
+      "id": "1",
+      "name": "kicker-3",
+      "bbox": [
+        42,
+        34,
+        620,
+        28
+      ],
+      "geometry": "rect",
+      "text": "CORRECTION STRATEGY",
+      "textPreview": "CORRECTION STRATEGY",
+      "resolvedFontSize": 15,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 15,
+        "typeface": "Helvetica Neue",
+        "color": "#7EA5FF",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "CORRECTION STRATEGY"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "CORRECTION STRATEGY",
+          "resolvedTextStyle": {
+            "fontSize": 15,
+            "typeface": "Helvetica Neue",
+            "color": "#7EA5FF",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "CORRECTION STRATEGY",
+              "fontSize": 15,
+              "typeface": "Helvetica Neue",
+              "color": "#7EA5FF",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4bi1grax",
+      "id": "2",
+      "name": "title-3",
+      "bbox": [
+        42,
+        70,
+        1170,
+        86
+      ],
+      "geometry": "rect",
+      "text": "I treated the review like a bug report",
+      "textPreview": "I treated the review like a bug report",
+      "resolvedFontSize": 39,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 39,
+        "typeface": "Helvetica Neue",
+        "color": "#F4F7FB",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "I treated the review like a bug report"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "I treated the review like a bug report",
+          "resolvedTextStyle": {
+            "fontSize": 39,
+            "typeface": "Helvetica Neue",
+            "color": "#F4F7FB",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "I treated the review like a bug report",
+              "fontSize": 39,
+              "typeface": "Helvetica Neue",
+              "color": "#F4F7FB",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/5cr29wbi",
+      "id": "3",
+      "name": "page-3",
+      "bbox": [
+        1184,
+        664,
+        54,
+        22
+      ],
+      "geometry": "rect",
+      "text": "03",
+      "textPreview": "03",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 13,
+        "typeface": "Helvetica Neue",
+        "color": "#AEB8C8",
+        "alignment": "right",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "03"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "03",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "typeface": "Helvetica Neue",
+            "color": "#AEB8C8",
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "03",
+              "fontSize": 13,
+              "typeface": "Helvetica Neue",
+              "color": "#AEB8C8",
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/6d0ji1s3",
+      "id": "4",
+      "bbox": [
+        100,
+        321,
+        1015,
+        1
+      ],
+      "geometry": "straightConnector1",
+      "lineColor": "#F4F7FB",
+      "lineWidth": 2
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/re9kb6to",
+      "id": "5",
+      "bbox": [
+        162,
+        310,
+        24,
+        24
+      ],
+      "geometry": "ellipse",
+      "fillColor": "#7EA5FF",
+      "lineColor": "#7EA5FF",
+      "lineWidth": 1
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/sfi1kba9",
+      "id": "6",
+      "bbox": [
+        80,
+        244,
+        190,
+        40
+      ],
+      "geometry": "rect",
+      "text": "1. Admit",
+      "textPreview": "1. Admit",
+      "resolvedFontSize": 21,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 21,
+        "typeface": "Helvetica Neue",
+        "color": "#7EA5FF",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "1. Admit"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "1. Admit",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "typeface": "Helvetica Neue",
+            "color": "#7EA5FF",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "1. Admit",
+              "fontSize": 21,
+              "typeface": "Helvetica Neue",
+              "color": "#7EA5FF",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/tgr2dwbe",
+      "id": "7",
+      "bbox": [
+        72,
+        370,
+        210,
+        135
+      ],
+      "geometry": "rect",
+      "text": "Say clearly which claims were unsupported.",
+      "textPreview": "Say clearly which claims were unsupported.",
+      "resolvedFontSize": 19,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 19,
+        "typeface": "Helvetica Neue",
+        "color": "#AEB8C8",
+        "alignment": "center",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Say clearly which"
+          },
+          {
+            "index": 2,
+            "text": "claims were"
+          },
+          {
+            "index": 3,
+            "text": "unsupported."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Say clearly which claims were unsupported.",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "typeface": "Helvetica Neue",
+            "color": "#AEB8C8",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Say clearly which claims were unsupported.",
+              "fontSize": 19,
+              "typeface": "Helvetica Neue",
+              "color": "#AEB8C8",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/eh0j61sz",
+      "id": "8",
+      "bbox": [
+        452,
+        310,
+        24,
+        24
+      ],
+      "geometry": "ellipse",
+      "fillColor": "#7EA5FF",
+      "lineColor": "#7EA5FF",
+      "lineWidth": 1
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fi9kf6tk",
+      "id": "9",
+      "bbox": [
+        370,
+        244,
+        190,
+        40
+      ],
+      "geometry": "rect",
+      "text": "2. Audit",
+      "textPreview": "2. Audit",
+      "resolvedFontSize": 21,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 21,
+        "typeface": "Helvetica Neue",
+        "color": "#7EA5FF",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "2. Audit"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "2. Audit",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "typeface": "Helvetica Neue",
+            "color": "#7EA5FF",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "2. Audit",
+              "fontSize": 21,
+              "typeface": "Helvetica Neue",
+              "color": "#7EA5FF",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fyp8ri9g",
+      "id": "10",
+      "bbox": [
+        362,
+        370,
+        210,
+        135
+      ],
+      "geometry": "rect",
+      "text": "Trace every number to its run, seed, model, and evaluator.",
+      "textPreview": "Trace every number to its run, seed, model, and evaluator.",
+      "resolvedFontSize": 19,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 19,
+        "typeface": "Helvetica Neue",
+        "color": "#AEB8C8",
+        "alignment": "center",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Trace every number to"
+          },
+          {
+            "index": 2,
+            "text": "its run, seed, model,"
+          },
+          {
+            "index": 3,
+            "text": "and evaluator."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Trace every number to its run, seed, model, and evaluator.",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "typeface": "Helvetica Neue",
+            "color": "#AEB8C8",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Trace every number to its run, seed, model, and evaluator.",
+              "fontSize": 19,
+              "typeface": "Helvetica Neue",
+              "color": "#AEB8C8",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/exg7idsv",
+      "id": "11",
+      "bbox": [
+        742,
+        310,
+        24,
+        24
+      ],
+      "geometry": "ellipse",
+      "fillColor": "#7EA5FF",
+      "lineColor": "#7EA5FF",
+      "lineWidth": 1
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/10rqtsr6",
+      "id": "12",
+      "bbox": [
+        660,
+        244,
+        190,
+        40
+      ],
+      "geometry": "rect",
+      "text": "3. Narrow",
+      "textPreview": "3. Narrow",
+      "resolvedFontSize": 21,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 21,
+        "typeface": "Helvetica Neue",
+        "color": "#7EA5FF",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "3. Narrow"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "3. Narrow",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "typeface": "Helvetica Neue",
+            "color": "#7EA5FF",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "3. Narrow",
+              "fontSize": 21,
+              "typeface": "Helvetica Neue",
+              "color": "#7EA5FF",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 13,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/0zipkna1",
+      "id": "13",
+      "bbox": [
+        652,
+        370,
+        210,
+        135
+      ],
+      "geometry": "rect",
+      "text": "Keep only claims the evidence can actually carry.",
+      "textPreview": "Keep only claims the evidence can actually carry.",
+      "resolvedFontSize": 19,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 19,
+        "typeface": "Helvetica Neue",
+        "color": "#AEB8C8",
+        "alignment": "center",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Keep only claims the"
+          },
+          {
+            "index": 2,
+            "text": "evidence can actually"
+          },
+          {
+            "index": 3,
+            "text": "carry."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Keep only claims the evidence can actually carry.",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "typeface": "Helvetica Neue",
+            "color": "#AEB8C8",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Keep only claims the evidence can actually carry.",
+              "fontSize": 19,
+              "typeface": "Helvetica Neue",
+              "color": "#AEB8C8",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 14,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/rap8ny94",
+      "id": "14",
+      "bbox": [
+        1032,
+        310,
+        24,
+        24
+      ],
+      "geometry": "ellipse",
+      "fillColor": "#49D6AE",
+      "lineColor": "#49D6AE",
+      "lineWidth": 1
+    },
+    {
+      "order": 15,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/69g7etsj",
+      "id": "15",
+      "bbox": [
+        950,
+        244,
+        190,
+        40
+      ],
+      "geometry": "rect",
+      "text": "4. Rebuild",
+      "textPreview": "4. Rebuild",
+      "resolvedFontSize": 21,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 21,
+        "typeface": "Helvetica Neue",
+        "color": "#49D6AE",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "4. Rebuild"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "4. Rebuild",
+          "resolvedTextStyle": {
+            "fontSize": 21,
+            "typeface": "Helvetica Neue",
+            "color": "#49D6AE",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "4. Rebuild",
+              "fontSize": 21,
+              "typeface": "Helvetica Neue",
+              "color": "#49D6AE",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 16,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/tw7qp8ra",
+      "id": "16",
+      "bbox": [
+        942,
+        370,
+        210,
+        135
+      ],
+      "geometry": "rect",
+      "text": "Make future claims pass stronger, multi-domain tests.",
+      "textPreview": "Make future claims pass stronger, multi-domain tests.",
+      "resolvedFontSize": 19,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 19,
+        "typeface": "Helvetica Neue",
+        "color": "#AEB8C8",
+        "alignment": "center",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 3,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Make future claims"
+          },
+          {
+            "index": 2,
+            "text": "pass stronger,"
+          },
+          {
+            "index": 3,
+            "text": "multi-domain tests."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Make future claims pass stronger, multi-domain tests.",
+          "resolvedTextStyle": {
+            "fontSize": 19,
+            "typeface": "Helvetica Neue",
+            "color": "#AEB8C8",
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Make future claims pass stronger, multi-domain tests.",
+              "fontSize": 19,
+              "typeface": "Helvetica Neue",
+              "color": "#AEB8C8",
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 17,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/sbypg3ap",
+      "id": "17",
+      "name": "big-correction",
+      "bbox": [
+        210,
+        548,
+        860,
+        70
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#171D27",
+      "lineColor": "#171D27",
+      "lineWidth": 1
+    },
+    {
+      "order": 18,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/b6t8z29o",
+      "id": "18",
+      "bbox": [
+        236,
+        568,
+        808,
+        32
+      ],
+      "geometry": "rect",
+      "text": "Biggest correction: a clean ‘I do not know yet’ is stronger than a shaky result.",
+      "textPreview": "Biggest correction: a clean ‘I do not know yet’ is stronger than a shaky result.",
+      "resolvedFontSize": 22,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 22,
+        "typeface": "Helvetica Neue",
+        "color": "#F4F7FB",
+        "bold": true,
+        "alignment": "center",
+        "verticalAlignment": "top",
+        "insets": {
+          "top": 4.8,
+          "right": 9.6,
+          "bottom": 4.8,
+          "left": 9.6
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Biggest correction: a clean ‘I do not know yet’ is stronger than a shaky"
+          },
+          {
+            "index": 2,
+            "text": "result."
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Biggest correction: a clean ‘I do not know yet’ is stronger than a shaky result.",
+          "resolvedTextStyle": {
+            "fontSize": 22,
+            "typeface": "Helvetica Neue",
+            "color": "#F4F7FB",
+            "bold": true,
+            "alignment": "center"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Biggest correction: a clean ‘I do not know yet’ is stronger than a shaky result.",
+              "fontSize": 22,
+              "typeface": "Helvetica Neue",
+              "color": "#F4F7FB",
+              "bold": true,
+              "alignment": "center"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

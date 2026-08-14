@@ -1,0 +1,259 @@
+{"kind":"deck","id":"pr/4e0ryr","name":"Deck"}
+{"kind":"layout","layoutId":"3395ec2c-ee7e-40ec-b675-1f2f92072c78","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"f3ee65e0-8dd0-4436-93e8-a7bf18166f75","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/b6c83q","slide":1,"title":"RESEARCH UPDATE · AUGUST 2026","textShapes":4}
+{"kind":"textbox","id":"sh/ne5sjuh0","slide":1,"text":"RESEARCH UPDATE · AUGUST 2026","textPreview":"RESEARCH UPDATE · AUGUST 2026","textChars":29,"textLines":1,"bbox":[42,42,620,32]}
+{"kind":"textbox","id":"sh/8zetczil","slide":1,"text":"How the NeurIPS review\nreshaped my research","textPreview":"How the NeurIPS review | reshaped my research","textChars":43,"textLines":2,"bbox":[42,176,1080,250]}
+{"kind":"textbox","id":"sh/907alkzq","slide":1,"text":"12 corrected research ideas · 2 serious paper directions · 14 new evaluation suites","textPreview":"12 corrected research ideas · 2 serious paper directions · 14 new evaluation suites","textChars":83,"textLines":1,"bbox":[42,500,1080,74]}
+{"kind":"textbox","id":"sh/e9wr6503","slide":1,"text":"Plain-language version","textPreview":"Plain-language version","textChars":22,"textLines":1,"bbox":[42,625,360,30]}
+{"kind":"notes","id":"nt/b6c83q","slide":1,"text":"Open with the simple message: the review forced the project to become smaller in claims and larger in evidence.\n\n[Sources]\n- /Users/arvind/.codex/attachments/191be32b-d5ed-4464-a778-7ed4c495f73f/pasted-text.txt\n- /Users/arvind/Developer/tinker-rl-lab/platform_hybrid/paper/PAPERS_README.md\n- /Users/arvind/Developer/tinker-rl-lab/BREAKTHROUGH_CHASE_18_ARTIFACTS.md\n- /Users/arvind/Developer/tinker-rl-lab/zvf-program/flagship/PAVLOVS_LIST_TASK_CONTRACT.md\n[/Sources]"}
+{"kind":"slide","id":"sl/6eqprl","slide":2,"title":"WHAT NEURIPS #36320 SAID","textShapes":7}
+{"kind":"textbox","id":"sh/4jyhk7i1","slide":2,"name":"kicker-2","text":"WHAT NEURIPS #36320 SAID","textPreview":"WHAT NEURIPS #36320 SAID","textChars":24,"textLines":1,"bbox":[42,34,620,28]}
+{"kind":"textbox","id":"sh/3ip0r2hg","slide":2,"name":"title-2","text":"The reviewers liked the idea—but could not trust the story","textPreview":"The reviewers liked the idea—but could not trust the story","textChars":58,"textLines":1,"bbox":[42,70,1170,86]}
+{"kind":"textbox","id":"sh/2hgzix0v","slide":2,"name":"page-2","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1184,664,54,22]}
+{"kind":"shape","id":"sh/hw7ipsza","slide":2,"name":"review-strengths","bbox":[42,182,565,430]}
+{"kind":"textbox","id":"sh/gvyhg7i5","slide":2,"text":"What they valued","textPreview":"What they valued","textChars":16,"textLines":1,"bbox":[72,214,480,42]}
+{"kind":"textbox","id":"sh/fu50n2hk","slide":2,"text":"• Important problem: RL training curves can mislead\n\n• Cheap diagnostics: ZVF and GU are easy to monitor\n\n• Good research instinct: separate reward, capability, and algorithm labels","textPreview":"• Important problem: RL training curves can mislead |  | • Cheap diagnostics: ZVF and GU are easy to monitor |  | • Good research instinc...","textChars":181,"textLines":5,"bbox":[72,278,485,280]}
+{"kind":"shape","id":"sh/utwzex0z","slide":2,"name":"review-problems","bbox":[635,182,603,430]}
+{"kind":"textbox","id":"sh/tsnylsze","slide":2,"text":"What broke confidence","textPreview":"What broke confidence","textChars":21,"textLines":1,"bbox":[665,214,520,42]}
+{"kind":"textbox","id":"sh/srehcnit","slide":2,"text":"• The paper was hard to follow\n\n• The runner was not standard GRPO\n\n• Different models and tasks were mixed together\n\n• Some rows had weak or conflicting provenance\n\n• “Use-inspired” was claimed without a real user outcome","textPreview":"• The paper was hard to follow |  | • The runner was not standard GRPO |  | • Different models and tasks were mixed together |  | • Some ...","textChars":222,"textLines":9,"bbox":[665,278,520,304]}
+{"kind":"notes","id":"nt/6eqprl","slide":2,"text":"Explain this like a school project: the idea was interesting, but the report mixed several experiments and did not show exactly which evidence proved each claim.\n\n[Sources]\n- /Users/arvind/.codex/attachments/191be32b-d5ed-4464-a778-7ed4c495f73f/pasted-text.txt\n[/Sources]"}
+{"kind":"slide","id":"sl/e80ldu","slide":3,"title":"CORRECTION STRATEGY","textShapes":12}
+{"kind":"textbox","id":"sh/oz2psveh","slide":3,"name":"kicker-3","text":"CORRECTION STRATEGY","textPreview":"CORRECTION STRATEGY","textChars":19,"textLines":1,"bbox":[42,34,620,28]}
+{"kind":"textbox","id":"sh/3yt8jadw","slide":3,"name":"title-3","text":"I treated the review like a bug report","textPreview":"I treated the review like a bug report","textChars":38,"textLines":1,"bbox":[42,70,1170,86]}
+{"kind":"textbox","id":"sh/2xk7q5wr","slide":3,"name":"page-3","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1184,664,54,22]}
+{"kind":"shape","id":"sh/d4vqpkve","slide":3,"bbox":[100,321,1015,1]}
+{"kind":"shape","id":"sh/c3mpwfet","slide":3,"bbox":[162,310,24,24]}
+{"kind":"textbox","id":"sh/b2d8nad8","slide":3,"text":"1. Admit","textPreview":"1. Admit","textChars":8,"textLines":1,"bbox":[80,244,190,40]}
+{"kind":"textbox","id":"sh/q147u5wn","slide":3,"text":"Say clearly which claims were unsupported.","textPreview":"Say clearly which claims were unsupported.","textChars":42,"textLines":1,"bbox":[72,370,210,135]}
+{"kind":"shape","id":"sh/t8r6dgvu","slide":3,"bbox":[452,310,24,24]}
+{"kind":"textbox","id":"sh/s7ipkbe9","slide":3,"text":"2. Audit","textPreview":"2. Audit","textChars":8,"textLines":1,"bbox":[370,244,190,40]}
+{"kind":"textbox","id":"sh/6t43ydsn","slide":3,"text":"Trace every number to its run, seed, model, and evaluator.","textPreview":"Trace every number to its run, seed, model, and evaluator.","textChars":58,"textLines":1,"bbox":[362,370,210,135]}
+{"kind":"shape","id":"sh/rud4ri9s","slide":3,"bbox":[742,310,24,24]}
+{"kind":"textbox","id":"sh/sfml03ad","slide":3,"text":"3. Narrow","textPreview":"3. Narrow","textChars":9,"textLines":1,"bbox":[660,244,190,40]}
+{"kind":"textbox","id":"sh/tgvmt8ry","slide":3,"text":"Keep only claims the evidence can actually carry.","textPreview":"Keep only claims the evidence can actually carry.","textChars":49,"textLines":1,"bbox":[652,370,210,135]}
+{"kind":"shape","id":"sh/eh432dsj","slide":3,"bbox":[1032,310,24,24]}
+{"kind":"textbox","id":"sh/fid4vi94","slide":3,"text":"4. Rebuild","textPreview":"4. Rebuild","textChars":10,"textLines":1,"bbox":[950,244,190,40]}
+{"kind":"textbox","id":"sh/gj6l4nap","slide":3,"text":"Make future claims pass stronger, multi-domain tests.","textPreview":"Make future claims pass stronger, multi-domain tests.","textChars":53,"textLines":1,"bbox":[942,370,210,135]}
+{"kind":"shape","id":"sh/1kfmxsra","slide":3,"name":"big-correction","bbox":[210,548,860,70]}
+{"kind":"textbox","id":"sh/2lo36xsf","slide":3,"text":"Biggest correction: a clean ‘I do not know yet’ is stronger than a shaky result.","textPreview":"Biggest correction: a clean ‘I do not know yet’ is stronger than a shaky result.","textChars":80,"textLines":1,"bbox":[236,568,808,32]}
+{"kind":"notes","id":"nt/e80ldu","slide":3,"text":"Walk through the four steps. Stress that withdrawing weak claims was a research improvement, not a defeat.\n\n[Sources]\n- /Users/arvind/Developer/tinker-rl-lab/zvf-program/flagship/paper/NEURIPS_2026_OPENREVIEW_REBUTTAL_FINAL.md\n- /Users/arvind/Developer/tinker-rl-lab/platform_hybrid/paper/REVIEWER_36320_CORRECTION_MANIFEST.md\n[/Sources]"}
+{"kind":"slide","id":"sl/benz24","slide":4,"title":"12-IDEA CORRECTION PASS · PART 1","textShapes":21}
+{"kind":"textbox","id":"sh/3qxsrihw","slide":4,"name":"kicker-4","text":"12-IDEA CORRECTION PASS · PART 1","textPreview":"12-IDEA CORRECTION PASS · PART 1","textChars":32,"textLines":1,"bbox":[42,34,620,28]}
+{"kind":"textbox","id":"sh/4rqtknyh","slide":4,"name":"title-4","text":"What changed in research ideas P1–P6","textPreview":"What changed in research ideas P1–P6","textChars":36,"textLines":1,"bbox":[42,70,1170,86]}
+{"kind":"textbox","id":"sh/5szutsz2","slide":4,"name":"page-4","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1184,664,54,22]}
+{"kind":"shape","id":"sh/u1obetgf","slide":4,"name":"paper-P1","bbox":[42,166,1196,70]}
+{"kind":"shape","id":"sh/vmxsnyh0","slide":4,"name":"paper-id-P1","bbox":[55,180,66,42]}
+{"kind":"textbox","id":"sh/gn6tg3yl","slide":4,"text":"P1","textPreview":"P1","textChars":2,"textLines":1,"bbox":[60,188,56,24]}
+{"kind":"textbox","id":"sh/hofap8z6","slide":4,"text":"Scaling","textPreview":"Scaling","textChars":7,"textLines":1,"bbox":[140,177,322,48]}
+{"kind":"textbox","id":"sh/6x4batgj","slide":4,"text":"Stopped pooling selected checkpoints. Now a limits and identifiability audit.","textPreview":"Stopped pooling selected checkpoints. Now a limits and identifiability audit.","textChars":77,"textLines":1,"bbox":[486,177,724,48]}
+{"kind":"shape","id":"sh/7ydsjyh4","slide":4,"name":"paper-P2","bbox":[42,242,1196,70]}
+{"kind":"shape","id":"sh/by1cjixc","slide":4,"name":"paper-id-P2","bbox":[55,256,66,42]}
+{"kind":"textbox","id":"sh/qxsvadwr","slide":4,"text":"P2","textPreview":"P2","textChars":2,"textLines":1,"bbox":[60,264,56,24]}
+{"kind":"textbox","id":"sh/d0julsfi","slide":4,"text":"ZVF diagnostic","textPreview":"ZVF diagnostic","textChars":14,"textLines":1,"bbox":[140,253,322,48]}
+{"kind":"textbox","id":"sh/czadcnex","slide":4,"text":"ZVF is a useful description—not the whole gradient and not a universal predictor.","textPreview":"ZVF is a useful description—not the whole gradient and not a universal predictor.","textChars":81,"textLines":1,"bbox":[486,253,724,48]}
+{"kind":"shape","id":"sh/z21wnixo","slide":4,"name":"paper-P3","bbox":[42,318,1196,70]}
+{"kind":"shape","id":"sh/y1svexw3","slide":4,"name":"paper-id-P3","bbox":[55,332,66,42]}
+{"kind":"textbox","id":"sh/l43epsfe","slide":4,"text":"P3","textPreview":"P3","textChars":2,"textLines":1,"bbox":[60,340,56,24]}
+{"kind":"textbox","id":"sh/03udgnet","slide":4,"text":"Group size","textPreview":"Group size","textChars":10,"textLines":1,"bbox":[140,329,322,48]}
+{"kind":"textbox","id":"sh/f6hcbyx4","slide":4,"text":"Reports budget-specific measurements; no one-size-fits-all group recommendation.","textPreview":"Reports budget-specific measurements; no one-size-fits-all group recommendation.","textChars":80,"textLines":1,"bbox":[486,329,724,48]}
+{"kind":"shape","id":"sh/e58v2twj","slide":4,"name":"paper-P4","bbox":[42,394,1196,70]}
+{"kind":"shape","id":"sh/i1wfa1g7","slide":4,"name":"paper-id-P4","bbox":[55,408,66,42]}
+{"kind":"textbox","id":"sh/j2pgj6hs","slide":4,"text":"P4","textPreview":"P4","textChars":2,"textLines":1,"bbox":[60,416,56,24]}
+{"kind":"textbox","id":"sh/4nyxcbyd","slide":4,"text":"Length bias","textPreview":"Length bias","textChars":11,"textLines":1,"bbox":[140,405,322,48]}
+{"kind":"textbox","id":"sh/5o7ylgfy","slide":4,"text":"Claims only a bounded null under a 200-token cap.","textPreview":"Claims only a bounded null under a 200-token cap.","textChars":49,"textLines":1,"bbox":[486,405,724,48]}
+{"kind":"shape","id":"sh/axwf6hgb","slide":4,"name":"paper-P5","bbox":[42,470,1196,70]}
+{"kind":"shape","id":"sh/vy5gfmhw","slide":4,"name":"paper-id-P5","bbox":[55,484,66,42]}
+{"kind":"textbox","id":"sh/wzex8ry1","slide":4,"text":"P5","textPreview":"P5","textChars":2,"textLines":1,"bbox":[60,492,56,24]}
+{"kind":"textbox","id":"sh/h0nyhwzm","slide":4,"text":"MIN-REPORT-RL","textPreview":"MIN-REPORT-RL","textChars":13,"textLines":1,"bbox":[140,481,322,48]}
+{"kind":"textbox","id":"sh/mtcf2hgz","slide":4,"text":"Requires provenance, estimands, missing cells, and held-out pass@k reporting.","textPreview":"Requires provenance, estimands, missing cells, and held-out pass@k reporting.","textChars":77,"textLines":1,"bbox":[486,481,724,48]}
+{"kind":"shape","id":"sh/nu5gbmhk","slide":4,"name":"paper-P6","bbox":[42,546,1196,70]}
+{"kind":"shape","id":"sh/p0vaxone","slide":4,"name":"paper-id-P6","bbox":[55,560,66,42]}
+{"kind":"textbox","id":"sh/ozm94jmt","slide":4,"text":"P6","textPreview":"P6","textChars":2,"textLines":1,"bbox":[60,568,56,24]}
+{"kind":"textbox","id":"sh/nydsve58","slide":4,"text":"Run registry","textPreview":"Run registry","textChars":12,"textLines":1,"bbox":[140,557,322,48]}
+{"kind":"textbox","id":"sh/2xkr294n","slide":4,"text":"Treats conflicting records as quarantined evidence, not as values to average away.","textPreview":"Treats conflicting records as quarantined evidence, not as values to average away.","textChars":82,"textLines":1,"bbox":[486,557,724,48]}
+{"kind":"notes","id":"nt/benz24","slide":4,"text":"Use one sentence per research idea. Each manuscript direction now has a smaller and more precise job.\n\n[Sources]\n- /Users/arvind/Developer/tinker-rl-lab/platform_hybrid/paper/PAPERS_README.md\n- /Users/arvind/Developer/tinker-rl-lab/platform_hybrid/paper/REVIEWER_36320_CORRECTION_MANIFEST.md\n[/Sources]"}
+{"kind":"slide","id":"sl/8vi3s5","slide":5,"title":"12-IDEA CORRECTION PASS · PART 2","textShapes":21}
+{"kind":"textbox","id":"sh/wn6p0zi9","slide":5,"name":"kicker-5","text":"12-IDEA CORRECTION PASS · PART 2","textPreview":"12-IDEA CORRECTION PASS · PART 2","textChars":32,"textLines":1,"bbox":[42,34,620,28]}
+{"kind":"textbox","id":"sh/vmxoru1o","slide":5,"name":"title-5","text":"What changed in research ideas P7–P12","textPreview":"What changed in research ideas P7–P12","textChars":37,"textLines":1,"bbox":[42,70,1170,86]}
+{"kind":"textbox","id":"sh/alonypk3","slide":5,"name":"page-5","text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1184,664,54,22]}
+{"kind":"shape","id":"sh/5cz6x4jq","slide":5,"name":"paper-P7","bbox":[42,166,1196,70]}
+{"kind":"shape","id":"sh/kbqp4zil","slide":5,"name":"paper-id-P7","bbox":[55,180,66,42]}
+{"kind":"textbox","id":"sh/jahovu10","slide":5,"text":"P7","textPreview":"P7","textChars":2,"textLines":1,"bbox":[60,188,56,24]}
+{"kind":"textbox","id":"sh/i987290f","slide":5,"text":"ZVF controller","textPreview":"ZVF controller","textChars":14,"textLines":1,"bbox":[140,177,322,48]}
+{"kind":"textbox","id":"sh/lgf6lkjm","slide":5,"text":"Now a retrospective audit and test plan; no claimed controller benefit.","textPreview":"Now a retrospective audit and test plan; no claimed controller benefit.","textChars":71,"textLines":1,"bbox":[486,177,724,48]}
+{"kind":"shape","id":"sh/0fm5sf21","slide":5,"name":"paper-P8","bbox":[42,242,1196,70]}
+{"kind":"shape","id":"sh/qp4bihsn","slide":5,"name":"paper-id-P8","bbox":[55,256,66,42]}
+{"kind":"textbox","id":"sh/rqdcbm98","slide":5,"text":"P8","textPreview":"P8","textChars":2,"textLines":1,"bbox":[60,264,56,24]}
+{"kind":"textbox","id":"sh/srmdkrat","slide":5,"text":"Workshop note","textPreview":"Workshop note","textChars":13,"textLines":1,"bbox":[140,253,322,48]}
+{"kind":"textbox","id":"sh/dsvudwre","slide":5,"text":"Kept as a case-specific artifact note; no rankings or broad benchmark claim.","textPreview":"Kept as a case-specific artifact note; no rankings or broad benchmark claim.","textChars":76,"textLines":1,"bbox":[486,253,724,48]}
+{"kind":"shape","id":"sh/et4vm18z","slide":5,"name":"paper-P9","bbox":[42,318,1196,70]}
+{"kind":"shape","id":"sh/fudcfm9k","slide":5,"name":"paper-id-P9","bbox":[55,332,66,42]}
+{"kind":"textbox","id":"sh/0v6dorq5","slide":5,"text":"P9","textPreview":"P9","textChars":2,"textLines":1,"bbox":[60,340,56,24]}
+{"kind":"textbox","id":"sh/1wfuhwra","slide":5,"text":"Dataset & benchmark","textPreview":"Dataset & benchmark","textChars":19,"textLines":1,"bbox":[140,329,322,48]}
+{"kind":"textbox","id":"sh/2hovq18v","slide":5,"text":"Uses evidence tiers and quarantines uncertain provenance.","textPreview":"Uses evidence tiers and quarantines uncertain provenance.","textChars":57,"textLines":1,"bbox":[486,329,724,48]}
+{"kind":"shape","id":"sh/nixcj69g","slide":5,"name":"paper-P10","bbox":[42,394,1196,70]}
+{"kind":"shape","id":"sh/zmxc76po","slide":5,"name":"paper-id-P10","bbox":[55,408,66,42]}
+{"kind":"textbox","id":"sh/yloby1o3","slide":5,"text":"P10","textPreview":"P10","textChars":3,"textLines":1,"bbox":[60,416,56,24]}
+{"kind":"textbox","id":"sh/lozu9g7u","slide":5,"text":"ZVF theory","textPreview":"ZVF theory","textChars":10,"textLines":1,"bbox":[140,405,322,48]}
+{"kind":"textbox","id":"sh/knqt0b69","slide":5,"text":"Limits proofs to centered reward contrast; does not claim total-gradient behavior.","textPreview":"Limits proofs to centered reward contrast; does not claim total-gradient behavior.","textChars":82,"textLines":1,"bbox":[486,405,724,48]}
+{"kind":"shape","id":"sh/byxs36ps","slide":5,"name":"paper-P11","bbox":[42,470,1196,70]}
+{"kind":"shape","id":"sh/axobu1o7","slide":5,"name":"paper-id-P11","bbox":[55,484,66,42]}
+{"kind":"textbox","id":"sh/xkfa5w7i","slide":5,"text":"P11","textPreview":"P11","textChars":3,"textLines":1,"bbox":[60,492,56,24]}
+{"kind":"textbox","id":"sh/cj6twr6x","slide":5,"text":"Survival audit","textPreview":"Survival audit","textChars":14,"textLines":1,"bbox":[140,481,322,48]}
+{"kind":"textbox","id":"sh/nudszmpg","slide":5,"text":"Reports the 40-unit single-stack result as bounded; conclusions remain inconclusive.","textPreview":"Reports the 40-unit single-stack result as bounded; conclusions remain inconclusive.","textChars":84,"textLines":1,"bbox":[486,481,724,48]}
+{"kind":"shape","id":"sh/2t4bqhov","slide":5,"name":"paper-P12","bbox":[42,546,1196,70]}
+{"kind":"shape","id":"sh/sz290nmt","slide":5,"name":"paper-id-P12","bbox":[55,560,66,42]}
+{"kind":"textbox","id":"sh/d0bq9sne","slide":5,"text":"P12","textPreview":"P12","textChars":3,"textLines":1,"bbox":[60,568,56,24]}
+{"kind":"textbox","id":"sh/qxkryd4n","slide":5,"text":"Signal starvation","textPreview":"Signal starvation","textChars":17,"textLines":1,"bbox":[140,557,322,48]}
+{"kind":"textbox","id":"sh/ryt87i58","slide":5,"text":"Keeps PPO/SAO routing as a proposal until prospective tests succeed.","textPreview":"Keeps PPO/SAO routing as a proposal until prospective tests succeed.","textChars":68,"textLines":1,"bbox":[486,557,724,48]}
+{"kind":"notes","id":"nt/8vi3s5","slide":5,"text":"Make clear that all 12 ideas remain useful, but only two are serious paper directions.\n\n[Sources]\n- /Users/arvind/Developer/tinker-rl-lab/platform_hybrid/paper/PAPERS_README.md\n- /Users/arvind/Developer/tinker-rl-lab/platform_hybrid/paper/REVIEWER_36320_CORRECTION_MANIFEST.md\n[/Sources]"}
+{"kind":"slide","id":"sl/8iic7c","slide":6,"title":"THE AUDIT’S SURVIVORS","textShapes":11}
+{"kind":"textbox","id":"sh/dsfu90ji","slide":6,"name":"kicker-6","text":"THE AUDIT’S SURVIVORS","textPreview":"THE AUDIT’S SURVIVORS","textChars":21,"textLines":1,"bbox":[42,34,620,28]}
+{"kind":"textbox","id":"sh/6pove507","slide":6,"name":"title-6","text":"Two paper directions now deserve serious submission work","textPreview":"Two paper directions now deserve serious submission work","textChars":56,"textLines":1,"bbox":[42,70,1170,86]}
+{"kind":"textbox","id":"sh/rqxc7a1c","slide":6,"name":"page-6","text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1184,664,54,22]}
+{"kind":"shape","id":"sh/4nmdcvi1","slide":6,"name":"paper-a","bbox":[42,180,570,434]}
+{"kind":"shape","id":"sh/5ofu50jm","slide":6,"name":"pill-DEFENSIBLE NOW-74","bbox":[74,208,190,34]}
+{"kind":"textbox","id":"sh/il4val0v","slide":6,"text":"DEFENSIBLE NOW","textPreview":"DEFENSIBLE NOW","textChars":14,"textLines":1,"bbox":[84,214,170,22]}
+{"kind":"textbox","id":"sh/jmdc3q1g","slide":6,"text":"Paper A\nVerify the treatment","textPreview":"Paper A | Verify the treatment","textChars":28,"textLines":2,"bbox":[74,264,490,104]}
+{"kind":"textbox","id":"sh/ojqdofi5","slide":6,"text":"Simple idea: an algorithm name is only a label. Prove what code actually ran, then bind every result to the exact stack and evidence.","textPreview":"Simple idea: an algorithm name is only a label. Prove what code actually ran, then bind every result to the exact stack and evidence.","textChars":133,"textLines":1,"bbox":[74,390,492,120]}
+{"kind":"textbox","id":"sh/pkzehkzq","slide":6,"text":"Best fit: artifact / methodology / reproducibility paper","textPreview":"Best fit: artifact / methodology / reproducibility paper","textChars":56,"textLines":1,"bbox":[74,540,492,42]}
+{"kind":"shape","id":"sh/t0rexw3i","slide":6,"name":"paper-b","bbox":[640,180,598,434]}
+{"kind":"shape","id":"sh/sfidormx","slide":6,"name":"pill-HIGH UPSIDE · GATED-672","bbox":[672,208,225,34]}
+{"kind":"textbox","id":"sh/re9wvmls","slide":6,"text":"HIGH UPSIDE · GATED","textPreview":"HIGH UPSIDE · GATED","textChars":19,"textLines":1,"bbox":[682,214,205,22]}
+{"kind":"textbox","id":"sh/6dgvmh47","slide":6,"text":"Paper B\nTRIAGE-RL","textPreview":"Paper B | TRIAGE-RL","textChars":17,"textLines":2,"bbox":[672,264,500,104]}
+{"kind":"textbox","id":"sh/5c7etc3m","slide":6,"text":"Simple idea: not all weak learning signals mean the same thing. Solved, failed, clipped, and unsafe cases need different actions.","textPreview":"Simple idea: not all weak learning signals mean the same thing. Solved, failed, clipped, and unsafe cases need different actions.","textChars":129,"textLines":1,"bbox":[672,390,510,120]}
+{"kind":"textbox","id":"sh/kbydkrm1","slide":6,"text":"Becomes flagship-worthy only if the matched-budget experiment wins","textPreview":"Becomes flagship-worthy only if the matched-budget experiment wins","textChars":66,"textLines":1,"bbox":[672,540,510,42]}
+{"kind":"notes","id":"nt/8iic7c","slide":6,"text":"Use the phrase ‘worthy of serious submission work,’ not ‘accepted’ or ‘finished.’ Paper A is evidence-backed now. Paper B is the high-upside bet but still has a kill test.\n\n[Sources]\n- /Users/arvind/Developer/tinker-rl-lab/BREAKTHROUGH_CHASE_18_ARTIFACTS.md\n[/Sources]"}
+{"kind":"slide","id":"sl/i8x50w","slide":7,"title":"THE EXPANSION DECISION","textShapes":11}
+{"kind":"textbox","id":"sh/jut4r6tg","slide":7,"name":"kicker-7","text":"THE EXPANSION DECISION","textPreview":"THE EXPANSION DECISION","textChars":22,"textLines":1,"bbox":[42,34,620,28]}
+{"kind":"textbox","id":"sh/kv250rul","slide":7,"name":"title-7","text":"Why GSM8K alone could never prove usefulness","textPreview":"Why GSM8K alone could never prove usefulness","textChars":44,"textLines":1,"bbox":[42,70,1170,86]}
+{"kind":"textbox","id":"sh/5wbmtwb6","slide":7,"name":"page-7","text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1184,664,54,22]}
+{"kind":"textbox","id":"sh/a503uhcj","slide":7,"text":"A model that passes one math worksheet may still fail at real work.","textPreview":"A model that passes one math worksheet may still fail at real work.","textChars":67,"textLines":1,"bbox":[42,176,1120,60]}
+{"kind":"shape","id":"sh/v694nmt4","slide":7,"name":"why-0","bbox":[42,278,374,290]}
+{"kind":"textbox","id":"sh/w7ilwrup","slide":7,"text":"Old test","textPreview":"Old test","textChars":8,"textLines":1,"bbox":[66,310,326,38]}
+{"kind":"textbox","id":"sh/x8rmpwba","slide":7,"text":"Mostly short math answers.\n\nUseful as calibration—not as the main claim.","textPreview":"Mostly short math answers. |  | Useful as calibration—not as the main claim.","textChars":72,"textLines":3,"bbox":[66,370,326,160]}
+{"kind":"shape","id":"sh/m1g3qhcn","slide":7,"name":"why-1","bbox":[453,278,374,290]}
+{"kind":"textbox","id":"sh/n294jmt8","slide":7,"text":"Missing abilities","textPreview":"Missing abilities","textChars":17,"textLines":1,"bbox":[477,310,326,38]}
+{"kind":"textbox","id":"sh/vuhcrqhk","slide":7,"text":"Use tools, edit files, browse, handle finance, write code, build artifacts, stay safe, work for many steps.","textPreview":"Use tools, edit files, browse, handle finance, write code, build artifacts, stay safe, work for many steps.","textChars":107,"textLines":1,"bbox":[477,370,326,160]}
+{"kind":"shape","id":"sh/utovyl0z","slide":7,"name":"why-2","bbox":[864,278,374,290]}
+{"kind":"textbox","id":"sh/hgzutgzq","slide":7,"text":"New rule","textPreview":"New rule","textChars":8,"textLines":1,"bbox":[888,310,326,38]}
+{"kind":"textbox","id":"sh/wfqd0vi5","slide":7,"text":"Train across domains.\n\nEvaluate on unseen task families.\n\nNever hide a weak domain inside one average.","textPreview":"Train across domains. |  | Evaluate on unseen task families. |  | Never hide a weak domain inside one average.","textChars":102,"textLines":5,"bbox":[888,370,326,160]}
+{"kind":"textbox","id":"sh/jihcvqhw","slide":7,"text":"E1–E14 turns ‘useful’ from a slogan into fourteen separate report cards.","textPreview":"E1–E14 turns ‘useful’ from a slogan into fourteen separate report cards.","textChars":72,"textLines":1,"bbox":[184,594,912,42]}
+{"kind":"notes","id":"nt/i8x50w","slide":7,"text":"Use the school analogy: GSM8K is one worksheet. E1–E14 is a report card covering different subjects and real tasks.\n\n[Sources]\n- /Users/arvind/Developer/tinker-rl-lab/zvf-program/flagship/PAVLOVS_LIST_TASK_CONTRACT.md\n[/Sources]"}
+{"kind":"slide","id":"sl/ldvz7i","slide":8,"title":"THE NEW USEFULNESS TEST · PART 1","textShapes":31}
+{"kind":"textbox","id":"sh/mp4bqt0z","slide":8,"name":"kicker-8","text":"THE NEW USEFULNESS TEST · PART 1","textPreview":"THE NEW USEFULNESS TEST · PART 1","textChars":32,"textLines":1,"bbox":[42,34,620,28]}
+{"kind":"textbox","id":"sh/9sva1ozq","slide":8,"name":"title-8","text":"E1–E7: code, enterprise, browsers, and security","textPreview":"E1–E7: code, enterprise, browsers, and security","textChars":47,"textLines":1,"bbox":[42,70,1170,86]}
+{"kind":"textbox","id":"sh/8rmts3i5","slide":8,"name":"page-8","text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[1184,664,54,22]}
+{"kind":"shape","id":"sh/z2tsveho","slide":8,"name":"lane-E1","bbox":[42,160,1196,61]}
+{"kind":"textbox","id":"sh/y1krm903","slide":8,"text":"E1","textPreview":"E1","textChars":2,"textLines":1,"bbox":[56,177,66,26]}
+{"kind":"textbox","id":"sh/lovaxoze","slide":8,"text":"SWE-bench Pro","textPreview":"SWE-bench Pro","textChars":13,"textLines":1,"bbox":[132,172,317,37]}
+{"kind":"textbox","id":"sh/0n29oji9","slide":8,"text":"Hard repository repair","textPreview":"Hard repository repair","textChars":22,"textLines":1,"bbox":[470,172,475,37]}
+{"kind":"shape","id":"sh/bytsrehc","slide":8,"name":"pill-BLOCKED-1028","bbox":[1028,174,174,34]}
+{"kind":"textbox","id":"sh/qxkri90r","slide":8,"text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[1038,180,154,22]}
+{"kind":"shape","id":"sh/gvilsbmh","slide":8,"name":"lane-E2","bbox":[42,226,1196,61]}
+{"kind":"textbox","id":"sh/hwrm1g32","slide":8,"text":"E2","textPreview":"E2","textChars":2,"textLines":1,"bbox":[56,243,66,26]}
+{"kind":"textbox","id":"sh/utg3q14b","slide":8,"text":"Frontier SWE","textPreview":"Frontier SWE","textChars":12,"textLines":1,"bbox":[132,238,317,37]}
+{"kind":"textbox","id":"sh/fu94z6lw","slide":8,"text":"Frontier code and ML work","textPreview":"Frontier code and ML work","textChars":25,"textLines":1,"bbox":[470,238,475,37]}
+{"kind":"shape","id":"sh/s7ylobml","slide":8,"name":"pill-BLOCKED-1028","bbox":[1028,240,174,34]}
+{"kind":"textbox","id":"sh/ts7mxw36","slide":8,"text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[1038,246,154,22]}
+{"kind":"shape","id":"sh/65g3m14f","slide":8,"name":"lane-E3","bbox":[42,292,1196,61]}
+{"kind":"textbox","id":"sh/76pkv6l0","slide":8,"text":"E3","textPreview":"E3","textChars":2,"textLines":1,"bbox":[56,309,66,26]}
+{"kind":"textbox","id":"sh/c32l0vmp","slide":8,"text":"SDAB","textPreview":"SDAB","textChars":4,"textLines":1,"bbox":[132,304,317,37]}
+{"kind":"textbox","id":"sh/dobm903a","slide":8,"text":"Production systems and enterprise","textPreview":"Production systems and enterprise","textChars":33,"textLines":1,"bbox":[470,304,475,37]}
+{"kind":"shape","id":"sh/lk7mt0ve","slide":8,"name":"pill-BLOCKED-1028","bbox":[1028,306,174,34]}
+{"kind":"textbox","id":"sh/0jylkvet","slide":8,"text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[1038,312,154,22]}
+{"kind":"shape","id":"sh/zip4rqd8","slide":8,"name":"lane-E4","bbox":[42,358,1196,61]}
+{"kind":"textbox","id":"sh/yhg3ilwn","slide":8,"text":"E4","textPreview":"E4","textChars":2,"textLines":1,"bbox":[56,375,66,26]}
+{"kind":"textbox","id":"sh/dgn2pgvi","slide":8,"text":"BankerToolBench","textPreview":"BankerToolBench","textChars":15,"textLines":1,"bbox":[132,370,317,37]}
+{"kind":"textbox","id":"sh/cfelgbex","slide":8,"text":"Finance tools and state changes","textPreview":"Finance tools and state changes","textChars":31,"textLines":1,"bbox":[470,370,475,37]}
+{"kind":"shape","id":"sh/be5knqdc","slide":8,"name":"pill-BLOCKED-1028","bbox":[1028,372,174,34]}
+{"kind":"textbox","id":"sh/qdw3elwr","slide":8,"text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[1038,378,154,22]}
+{"kind":"shape","id":"sh/psn2lgv6","slide":8,"name":"lane-E5","bbox":[42,424,1196,61]}
+{"kind":"textbox","id":"sh/orelcbel","slide":8,"text":"E5","textPreview":"E5","textChars":2,"textLines":1,"bbox":[56,441,66,26]}
+{"kind":"textbox","id":"sh/ulsr6d87","slide":8,"text":"APEX Agents","textPreview":"APEX Agents","textChars":11,"textLines":1,"bbox":[132,436,317,37]}
+{"kind":"textbox","id":"sh/vm1szips","slide":8,"text":"Long professional workflows","textPreview":"Long professional workflows","textChars":27,"textLines":1,"bbox":[470,436,475,37]}
+{"kind":"shape","id":"sh/gna98nqd","slide":8,"name":"pill-PARTIAL-1028","bbox":[1028,438,174,34]}
+{"kind":"textbox","id":"sh/h8ja1s7y","slide":8,"text":"PARTIAL","textPreview":"PARTIAL","textChars":7,"textLines":1,"bbox":[1038,444,154,22]}
+{"kind":"shape","id":"sh/6h8r2d8b","slide":8,"name":"lane-E6","bbox":[42,490,1196,61]}
+{"kind":"textbox","id":"sh/7ihsvipw","slide":8,"text":"E6","textPreview":"E6","textChars":2,"textLines":1,"bbox":[56,507,66,26]}
+{"kind":"textbox","id":"sh/8jq943q1","slide":8,"text":"WebBench","textPreview":"WebBench","textChars":8,"textLines":1,"bbox":[132,502,317,37]}
+{"kind":"textbox","id":"sh/tkjax87m","slide":8,"text":"Browser and computer use","textPreview":"Browser and computer use","textChars":24,"textLines":1,"bbox":[470,502,475,37]}
+{"kind":"shape","id":"sh/yd8ryt8z","slide":8,"name":"pill-BLOCKED-1028","bbox":[1028,504,174,34]}
+{"kind":"textbox","id":"sh/jeh8rypk","slide":8,"text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[1038,510,154,22]}
+{"kind":"shape","id":"sh/b61o3etg","slide":8,"name":"lane-E7","bbox":[42,556,1196,61]}
+{"kind":"textbox","id":"sh/a58nu9cv","slide":8,"text":"E7","textPreview":"E7","textChars":2,"textLines":1,"bbox":[56,573,66,26]}
+{"kind":"textbox","id":"sh/x8j654bm","slide":8,"text":"BinaryAudit","textPreview":"BinaryAudit","textChars":11,"textLines":1,"bbox":[132,568,317,37]}
+{"kind":"textbox","id":"sh/c7a5wzu1","slide":8,"text":"Security and binary analysis","textPreview":"Security and binary analysis","textChars":28,"textLines":1,"bbox":[470,568,475,37]}
+{"kind":"shape","id":"sh/n2hozut4","slide":8,"name":"pill-PARTIAL-1028","bbox":[1028,570,174,34]}
+{"kind":"textbox","id":"sh/218nqpcj","slide":8,"text":"PARTIAL","textPreview":"PARTIAL","textChars":7,"textLines":1,"bbox":[1038,576,154,22]}
+{"kind":"notes","id":"nt/ldvz7i","slide":8,"text":"Blocked means the exact benchmark score is not available yet. Partial means plumbing or a verifier ran on a controlled fixture, not that the model passed the benchmark.\n\n[Sources]\n- /Users/arvind/Developer/tinker-rl-lab/zvf-program/flagship/PAVLOV_PAPER_CITATION_PLAN_2026-08-09.md\n- /Users/arvind/Developer/tinker-rl-lab/outputs/PAVLOV_E1_E14_LOCAL_SPRINT_2026-08-09.md\n[/Sources]"}
+{"kind":"slide","id":"sl/fx537z","slide":9,"title":"THE NEW USEFULNESS TEST · PART 2","textShapes":31}
+{"kind":"textbox","id":"sh/fqd4nyt8","slide":9,"name":"kicker-9","text":"THE NEW USEFULNESS TEST · PART 2","textPreview":"THE NEW USEFULNESS TEST · PART 2","textChars":32,"textLines":1,"bbox":[42,34,620,28]}
+{"kind":"textbox","id":"sh/gbmlw3ut","slide":9,"name":"title-9","text":"E8–E14: science, ML, safety, chips, design, games, math","textPreview":"E8–E14: science, ML, safety, chips, design, games, math","textChars":55,"textLines":1,"bbox":[42,70,1170,86]}
+{"kind":"textbox","id":"sh/1cvmp8be","slide":9,"name":"page-9","text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[1184,664,54,22]}
+{"kind":"shape","id":"sh/6lk3qtcr","slide":9,"name":"lane-E8","bbox":[42,160,1196,61]}
+{"kind":"textbox","id":"sh/rmt4jetw","slide":9,"text":"E8","textPreview":"E8","textChars":2,"textLines":1,"bbox":[56,177,66,26]}
+{"kind":"textbox","id":"sh/sn2lsjuh","slide":9,"text":"LifeSciBench","textPreview":"LifeSciBench","textChars":12,"textLines":1,"bbox":[132,172,317,37]}
+{"kind":"textbox","id":"sh/tovmlob2","slide":9,"text":"Life science workflows","textPreview":"Life science workflows","textChars":22,"textLines":1,"bbox":[470,172,475,37]}
+{"kind":"shape","id":"sh/ihk3m9cf","slide":9,"name":"pill-BLOCKED-1028","bbox":[1028,174,174,34]}
+{"kind":"textbox","id":"sh/jitkfet0","slide":9,"text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[1038,180,154,22]}
+{"kind":"shape","id":"sh/rmx0rqd0","slide":9,"name":"lane-E9","bbox":[42,226,1196,61]}
+{"kind":"textbox","id":"sh/qlozilcf","slide":9,"text":"E9","textPreview":"E9","textChars":2,"textLines":1,"bbox":[56,243,66,26]}
+{"kind":"textbox","id":"sh/dofitgv6","slide":9,"text":"MLE-bench","textPreview":"MLE-bench","textChars":9,"textLines":1,"bbox":[132,238,317,37]}
+{"kind":"textbox","id":"sh/cn6hkvul","slide":9,"text":"Build and evaluate ML systems","textPreview":"Build and evaluate ML systems","textChars":29,"textLines":1,"bbox":[470,238,475,37]}
+{"kind":"shape","id":"sh/zqx0vqdw","slide":9,"name":"pill-PARTIAL-1028","bbox":[1028,240,174,34]}
+{"kind":"textbox","id":"sh/epozmlcb","slide":9,"text":"PARTIAL","textPreview":"PARTIAL","textChars":7,"textLines":1,"bbox":[1038,246,154,22]}
+{"kind":"shape","id":"sh/1szix0b2","slide":9,"name":"lane-E10","bbox":[42,292,1196,61]}
+{"kind":"textbox","id":"sh/0rqhovuh","slide":9,"text":"E10","textPreview":"E10","textChars":3,"textLines":1,"bbox":[56,309,66,26]}
+{"kind":"textbox","id":"sh/fudgj6ds","slide":9,"text":"AgentHarm","textPreview":"AgentHarm","textChars":9,"textLines":1,"bbox":[132,304,317,37]}
+{"kind":"textbox","id":"sh/ut4za1c7","slide":9,"text":"Safety under tool use","textPreview":"Safety under tool use","textChars":21,"textLines":1,"bbox":[470,304,475,37]}
+{"kind":"shape","id":"sh/y9s3y9wv","slide":9,"name":"pill-PARTIAL-1028","bbox":[1028,306,174,34]}
+{"kind":"textbox","id":"sh/jalkredg","slide":9,"text":"PARTIAL","textPreview":"PARTIAL","textChars":7,"textLines":1,"bbox":[1038,312,154,22]}
+{"kind":"shape","id":"sh/kbul0je1","slide":9,"name":"lane-E11","bbox":[42,358,1196,61]}
+{"kind":"textbox","id":"sh/lc32t4v6","slide":9,"text":"E11","textPreview":"E11","textChars":3,"textLines":1,"bbox":[56,375,66,26]}
+{"kind":"textbox","id":"sh/als3upwj","slide":9,"text":"VerilogEval","textPreview":"VerilogEval","textChars":11,"textLines":1,"bbox":[132,370,317,37]}
+{"kind":"textbox","id":"sh/bm1knux4","slide":9,"text":"Chip-design code","textPreview":"Chip-design code","textChars":16,"textLines":1,"bbox":[470,370,475,37]}
+{"kind":"shape","id":"sh/w7alwzep","slide":9,"name":"pill-SCORED-1028","bbox":[1028,372,174,34]}
+{"kind":"textbox","id":"sh/x8j2p4fa","slide":9,"text":"SCORED","textPreview":"SCORED","textChars":6,"textLines":1,"bbox":[1038,378,154,22]}
+{"kind":"shape","id":"sh/mh8jqpwn","slide":9,"name":"lane-E12","bbox":[42,424,1196,61]}
+{"kind":"textbox","id":"sh/nihkjux8","slide":9,"text":"E12","textPreview":"E12","textChars":3,"textLines":1,"bbox":[56,441,66,26]}
+{"kind":"textbox","id":"sh/pc76psfq","slide":9,"text":"AppBench","textPreview":"AppBench","textChars":8,"textLines":1,"bbox":[132,436,317,37]}
+{"kind":"textbox","id":"sh/4by5wny5","slide":9,"text":"Build usable visual apps","textPreview":"Build usable visual apps","textChars":24,"textLines":1,"bbox":[470,436,475,37]}
+{"kind":"shape","id":"sh/3aponixk","slide":9,"name":"pill-BLOCKED-1028","bbox":[1028,438,174,34]}
+{"kind":"textbox","id":"sh/29gnudgz","slide":9,"text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[1038,444,154,22]}
+{"kind":"shape","id":"sh/h8n6l8ze","slide":9,"name":"lane-E13","bbox":[42,490,1196,61]}
+{"kind":"textbox","id":"sh/g7e5s3y9","slide":9,"text":"E13","textPreview":"E13","textChars":3,"textLines":1,"bbox":[56,507,66,26]}
+{"kind":"textbox","id":"sh/v654jiho","slide":9,"text":"OpenReward Games","textPreview":"OpenReward Games","textChars":16,"textLines":1,"bbox":[132,502,317,37]}
+{"kind":"textbox","id":"sh/u5wnqdg3","slide":9,"text":"Planning in game worlds","textPreview":"Planning in game worlds","textChars":23,"textLines":1,"bbox":[470,502,475,37]}
+{"kind":"shape","id":"sh/t4nmh8zi","slide":9,"name":"pill-BLOCKED-1028","bbox":[1028,504,174,34]}
+{"kind":"textbox","id":"sh/83e5o3yx","slide":9,"text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[1038,510,154,22]}
+{"kind":"shape","id":"sh/876do7yt","slide":9,"name":"lane-E14","bbox":[42,556,1196,61]}
+{"kind":"textbox","id":"sh/t8fexcfe","slide":9,"text":"E14","textPreview":"E14","textChars":3,"textLines":1,"bbox":[56,573,66,26]}
+{"kind":"textbox","id":"sh/m5ovmxg3","slide":9,"text":"FrontierMath","textPreview":"FrontierMath","textChars":12,"textLines":1,"bbox":[132,568,317,37]}
+{"kind":"textbox","id":"sh/76xwv2xo","slide":9,"text":"Hard private mathematics","textPreview":"Hard private mathematics","textChars":24,"textLines":1,"bbox":[470,568,475,37]}
+{"kind":"shape","id":"sh/gb6xsry5","slide":9,"name":"pill-BLOCKED-1028","bbox":[1028,570,174,34]}
+{"kind":"textbox","id":"sh/hcze1cfq","slide":9,"text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[1038,576,154,22]}
+{"kind":"notes","id":"nt/fx537z","slide":9,"text":"E11 is now the one scored lane: a four-task smoke, not the full 312-task benchmark. The older sprint index predates that trained-model receipt, so the live E11 receipt takes precedence.\n\n[Sources]\n- /Users/arvind/Developer/tinker-rl-lab/zvf-program/flagship/PAVLOV_PAPER_CITATION_PLAN_2026-08-09.md\n- /Users/arvind/Developer/tinker-rl-lab/outputs/PAVLOV_E1_E14_LOCAL_SPRINT_2026-08-09.md\n- /Users/arvind/Developer/tinker-rl-lab/outputs/e11_verilog_eval/e11_trained_step40_receipt.json\n[/Sources]"}
+{"kind":"slide","id":"sl/f0kz9t","slide":10,"title":"WHAT HAS ACTUALLY RUN","textShapes":8}
+{"kind":"textbox","id":"sh/0nuxwzm1","slide":10,"name":"kicker-10","text":"WHAT HAS ACTUALLY RUN","textPreview":"WHAT HAS ACTUALLY RUN","textChars":21,"textLines":1,"bbox":[42,34,620,28]}
+{"kind":"textbox","id":"sh/zmlw3u5g","slide":10,"name":"title-10","text":"The expansion has one small win—and thirteen open gates","textPreview":"The expansion has one small win—and thirteen open gates","textChars":55,"textLines":1,"bbox":[42,70,1170,86]}
+{"kind":"textbox","id":"sh/ylcfu94v","slide":10,"name":"page-10","text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[1184,664,54,22]}
+{"kind":"shape","id":"sh/cjuxszmp","slide":10,"name":"portfolio-win","bbox":[690,194,548,178]}
+{"kind":"textbox","id":"sh/rilwzu5k","slide":10,"text":"+51%","textPreview":"+51%","textChars":4,"textLines":1,"bbox":[722,220,180,64]}
+{"kind":"textbox","id":"sh/qhcvqp4z","slide":10,"text":"mean reward on the same 32 unseen API and code examples","textPreview":"mean reward on the same 32 unseen API and code examples","textChars":55,"textLines":1,"bbox":[722,292,470,54]}
+{"kind":"shape","id":"sh/xg7edo3u","slide":10,"name":"e11-win","bbox":[690,396,548,188]}
+{"kind":"textbox","id":"sh/wfyx4jm9","slide":10,"text":"4 / 4","textPreview":"4 / 4","textChars":5,"textLines":1,"bbox":[722,422,180,64]}
+{"kind":"textbox","id":"sh/2l4z2lw7","slide":10,"text":"tiny E11 trained-model HDL smoke passed\nFull VerilogEval has 312 prompts, so this is not the full score.","textPreview":"tiny E11 trained-model HDL smoke passed | Full VerilogEval has 312 prompts, so this is not the full score.","textChars":104,"textLines":2,"bbox":[722,492,470,76]}
+{"kind":"textbox","id":"sh/3md0bqds","slide":10,"text":"Evidence boundary: 1 of 14 lanes scored today; 13 still need exact model-level results.","textPreview":"Evidence boundary: 1 of 14 lanes scored today; 13 still need exact model-level results.","textChars":87,"textLines":1,"bbox":[100,621,1080,32]}
+{"kind":"chart","id":"ch/t8zal0ri","slide":10,"name":"","chartType":"bar","bbox":[42,194,610,390]}
+{"kind":"notes","id":"nt/f0kz9t","slide":10,"text":"Explain the bar chart carefully: it is a matched local portfolio check, not an official SWE-bench Pro score. The E11 result is only four tasks.\n\n[Sources]\n- /Users/arvind/Developer/tinker-rl-lab/checkpoints/grpo/pavlov_portfolio_api_swegym_qwen36_20260809_seed809.json\n- /Users/arvind/Developer/tinker-rl-lab/outputs/pavlov_portfolio_eval/base_reasoning_stripped_seed1810.json\n- /Users/arvind/Developer/tinker-rl-lab/outputs/pavlov_portfolio_eval/trained_step40_seed1810.json\n- /Users/arvind/Developer/tinker-rl-lab/outputs/e11_verilog_eval/e11_trained_step40_receipt.json\n- https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/fcsr357r\n- https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/u9v7kh9w\n- https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/d2mbnyyz\n[/Sources]"}
+{"kind":"slide","id":"sl/46n0tt","slide":11,"title":"THE NEW RESEARCH PROGRAM","textShapes":6}
+{"kind":"textbox","id":"sh/y5cnyd0b","slide":11,"text":"THE NEW RESEARCH PROGRAM","textPreview":"THE NEW RESEARCH PROGRAM","textChars":24,"textLines":1,"bbox":[42,42,540,30]}
+{"kind":"textbox","id":"sh/l8369szm","slide":11,"text":"Less claiming.\nMore proving.","textPreview":"Less claiming. | More proving.","textChars":28,"textLines":2,"bbox":[42,168,720,220]}
+{"kind":"textbox","id":"sh/k7u50ni1","slide":11,"text":"12 research ideas now say exactly what their evidence supports.\n2 paper directions carry the real novelty.\n14 suites test whether the work matters beyond one math benchmark.","textPreview":"12 research ideas now say exactly what their evidence supports. | 2 paper directions carry the real novelty. | 14 suites test whether the...","textChars":173,"textLines":3,"bbox":[42,452,830,138]}
+{"kind":"shape","id":"sh/7ulobihs","slide":11,"name":"next-proof","bbox":[920,170,318,410]}
+{"kind":"textbox","id":"sh/mtcn2x07","slide":11,"text":"What earns the next claim","textPreview":"What earns the next claim","textChars":25,"textLines":1,"bbox":[950,205,258,70]}
+{"kind":"textbox","id":"sh/9w36dszy","slide":11,"text":"Exact data\n\nUnseen split\n\nNative verifier\n\nW&B run\n\nHF checkpoint\n\nMatched baseline","textPreview":"Exact data |  | Unseen split |  | Native verifier |  | W&B run |  | HF checkpoint |  | Matched baseline","textChars":83,"textLines":11,"bbox":[950,300,250,240]}
+{"kind":"textbox","id":"sh/8vup4nyd","slide":11,"text":"The goal is not fourteen green boxes today. The goal is fourteen results we can defend tomorrow.","textPreview":"The goal is not fourteen green boxes today. The goal is fourteen results we can defend tomorrow.","textChars":96,"textLines":1,"bbox":[42,628,1130,38]}
+{"kind":"notes","id":"nt/46n0tt","slide":11,"text":"Close on research maturity: the project is now designed to fail honestly and to earn claims one receipt at a time.\n\n[Sources]\n- /Users/arvind/Developer/tinker-rl-lab/platform_hybrid/paper/REVIEWER_36320_CORRECTION_MANIFEST.md\n- /Users/arvind/Developer/tinker-rl-lab/BREAKTHROUGH_CHASE_18_ARTIFACTS.md\n- /Users/arvind/Developer/tinker-rl-lab/zvf-program/flagship/PAVLOVS_LIST_TASK_CONTRACT.md\n- /Users/arvind/Developer/tinker-rl-lab/outputs/e11_verilog_eval/e11_trained_step40_receipt.json\n[/Sources]"}

@@ -6,6 +6,7 @@ import sys
 import subprocess
 import tempfile
 import types
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -16,6 +17,8 @@ from platform_tinker.tinkerrl.grpo import (
     InMemoryDataset,
     MathReward,
     ExactMathReward,
+    PatchReward,
+    PavlovNonXLAMReward,
     PAVLOV_DECLARED_DOMAINS,
     PAVLOV_DOMAIN_TAGS,
     PAVLOV_HELDOUT_SUITE_IDS,
@@ -27,6 +30,7 @@ from platform_tinker.tinkerrl.grpo import (
     StrictToolCallReward,
     TrainingExample,
     make_grpo_loss_fn,
+    make_pavlov_non_xlam_dataset,
     make_synthetic_math_dataset,
     make_synthetic_tool_use_dataset,
     make_xlam_dataset,
@@ -984,6 +988,149 @@ class TestXLAMDataset(unittest.TestCase):
             make_xlam_dataset()
 
         self.assertEqual(calls, [("Salesforce/xlam-function-calling-60k", {"split": "train"})])
+
+
+class TestPavlovPortfolioDataset(unittest.TestCase):
+    class _Rows(list):
+        def __getitem__(self, key):
+            if isinstance(key, str):
+                return [row[key] for row in self]
+            return super().__getitem__(key)
+
+    @staticmethod
+    def _api_row(index):
+        return {
+            "prompt": repr(
+                [
+                    {
+                        "role": "user",
+                        "content": (
+                            "**Available Tools**\n1. Name: search\nParameters: query: str\n"
+                            "**Output Format**\nJSON\n[USER] Find account 7"
+                        ),
+                    }
+                ]
+            ),
+            "ground_truth": json.dumps(
+                {"name": "search", "parameters": {"query": "account 7", "unused": None}}
+            ),
+            "extra_info": json.dumps({"index": index}),
+        }
+
+    @staticmethod
+    def _swe_row(index):
+        return {
+            "repo": f"owner/repo-{index}",
+            "instance_id": f"swe-{index}",
+            "base_commit": f"{index + 1:040x}"[-40:],
+            "problem_statement": f"Fix defect {index}",
+            "hints_text": "Keep the public interface stable.",
+            "FAIL_TO_PASS": [f"test_{index}"],
+            "PASS_TO_PASS": [],
+            "patch": (
+                f"diff --git a/file_{index}.py b/file_{index}.py\n"
+                f"--- a/file_{index}.py\n+++ b/file_{index}.py\n@@ -1 +1 @@\n-old\n+new"
+            ),
+        }
+
+    def test_builds_balanced_pinned_mix_and_prunes_null_tool_arguments(self):
+        datasets = types.ModuleType("datasets")
+        calls = []
+
+        def fake_load_dataset(name, **kwargs):
+            calls.append((name, kwargs))
+            if name == "parquet":
+                return self._Rows(
+                    [{"instance_id": "eval-e1", "repo": "eval/repo", "base_commit": "f" * 40}]
+                )
+            if name == "SWE-Gym/SWE-Gym":
+                return self._Rows([self._swe_row(i) for i in range(320)])
+            if name == "Simu-Env/API-Bank-RLVR":
+                return {
+                    "train": self._Rows([self._api_row(i) for i in range(256)]),
+                    "validation": self._Rows([self._api_row(1000 + i) for i in range(64)]),
+                }
+            raise AssertionError(name)
+
+        datasets.load_dataset = fake_load_dataset
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            e1 = root / "outputs/e1_swe_bench_pro/hf_dataset/data"
+            e1.mkdir(parents=True)
+            (e1 / "test-00000-of-00001.parquet").touch()
+            (root / "outputs/e2_frontier_swe/frontier-swe/tasks").mkdir(parents=True)
+            e4 = root / "outputs/e4_banker_toolbench/official_repo_ff6db552/native-data"
+            e4.mkdir(parents=True)
+            (e4 / "tasks.jsonl").write_text('{"task_id":"eval-e4"}\n')
+            with patch.dict(sys.modules, {"datasets": datasets}, clear=False):
+                dataset = make_pavlov_non_xlam_dataset(seed=809, repo_root=root)
+
+        self.assertEqual(len(dataset.train_examples()), 512)
+        self.assertEqual(len(dataset.test_examples()), 128)
+        self.assertEqual(
+            {example.metadata["suite_id"] for example in dataset.train_examples()},
+            {"api_bank_rlvr_train", "swe_gym_train"},
+        )
+        api_example = next(
+            example
+            for example in dataset.train_examples()
+            if example.metadata["reward_kind"] == "tool_call"
+        )
+        self.assertEqual(api_example.target, {"tool": "search", "arguments": {"query": "account 7"}})
+        self.assertNotIn("Output Format", api_example.prompt)
+        self.assertEqual(
+            calls[1],
+            (
+                "SWE-Gym/SWE-Gym",
+                {
+                    "split": "train",
+                    "revision": grpo.PAVLOV_NON_XLAM_SOURCE_REVISIONS["SWE-Gym/SWE-Gym"],
+                },
+            ),
+        )
+
+
+class TestPavlovPortfolioReward(unittest.TestCase):
+    def test_patch_reward_is_exact_and_format_gated(self):
+        expected = "diff --git a/a.py b/a.py\n--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-x\n+y"
+        example = TrainingExample(prompt="q", target=expected)
+        reward = PatchReward()
+
+        self.assertEqual(reward.score(expected, example), 1.0)
+        self.assertEqual(reward.score("prose", example), 0.0)
+        partial = reward.score(expected.replace("+y", "+z"), example)
+        self.assertGreater(partial, 0.2)
+        self.assertLess(partial, 1.0)
+
+    def test_routes_exact_tool_call_and_patch_rewards(self):
+        reward = PavlovNonXLAMReward()
+        tool = TrainingExample(
+            prompt="q",
+            target={"tool": "search", "arguments": {"query": "right"}},
+            metadata={"reward_kind": "tool_call"},
+        )
+        patch_text = "diff --git a/a.py b/a.py\n--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-x\n+y"
+        patch_example = TrainingExample(
+            prompt="q", target=patch_text, metadata={"reward_kind": "patch"}
+        )
+
+        self.assertEqual(
+            reward.score('{"tool":"search","arguments":{"query":"right"}}', tool),
+            1.0,
+        )
+        self.assertEqual(
+            reward.score(
+                '<think>private reasoning</think>\n'
+                '{"tool":"search","arguments":{"query":"right"}}',
+                tool,
+            ),
+            1.0,
+        )
+        self.assertEqual(reward.score(patch_text, patch_example), 1.0)
+        self.assertEqual(reward.score("not a diff", patch_example), 0.0)
+        self.assertEqual(
+            reward.score("anything", TrainingExample(prompt="q", metadata={})), 0.0
+        )
 
 
 class TestSyntheticMathDataset(unittest.TestCase):

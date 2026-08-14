@@ -16,8 +16,10 @@ step, and checkpoint cadence.
 
 from __future__ import annotations
 
-import json
+import ast
+import difflib
 import hashlib
+import json
 import math
 import os
 import random
@@ -126,6 +128,22 @@ PAVLOV_DECLARED_DOMAINS: Tuple[str, ...] = (
 )
 PAVLOV_TRAINING_DOMAIN_UNION = PAVLOV_DECLARED_DOMAINS
 PAVLOV_PRIMARY_EVALUATION_DOMAIN_UNION = PAVLOV_DECLARED_DOMAINS
+
+PAVLOV_NON_XLAM_SOURCE_REVISIONS: Dict[str, str] = {
+    "Simu-Env/API-Bank-RLVR": "bf67c42626f02c305514b1df16dcabc5fc616333",
+    "SWE-Gym/SWE-Gym": "bb94ed9e39bbeb96a7fcbfb533b80f25a7fd59cb",
+}
+PAVLOV_NON_XLAM_TRANSFORM_VERSION = "api-target-tool-swegym-compact-qwen-reasoning-v2"
+PAVLOV_NON_XLAM_DATASET_REVISION = hashlib.sha256(
+    json.dumps(
+        {
+            "sources": PAVLOV_NON_XLAM_SOURCE_REVISIONS,
+            "transform": PAVLOV_NON_XLAM_TRANSFORM_VERSION,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+).hexdigest()
 
 
 @dataclass(slots=True)
@@ -1593,6 +1611,221 @@ def make_xlam_dataset(
     return InMemoryDataset(train=examples[:3000], test=examples[3000:3500])
 
 
+def _api_bank_prompt(raw_prompt: str, tool_name: str) -> str:
+    """Convert one API-Bank dialogue into an unambiguous JSON-call prompt."""
+    try:
+        messages = ast.literal_eval(raw_prompt)
+    except (SyntaxError, ValueError) as exc:
+        raise ValueError("API-Bank prompt is not a literal message list") from exc
+    if not isinstance(messages, list) or len(messages) != 1 or not isinstance(messages[0], dict):
+        raise ValueError("API-Bank prompt must contain exactly one message object")
+    content = messages[0].get("content")
+    if not isinstance(content, str) or "**Available Tools**" not in content or "[USER]" not in content:
+        raise ValueError("API-Bank prompt is missing tools or dialogue history")
+    tools_section = re.split(
+        r"\*\*(?:Steps|Output Format)",
+        content.split("**Available Tools**", 1)[1],
+        maxsplit=1,
+    )[0]
+    tool_blocks = re.split(r"(?m)(?=^\d+\. Name:)", tools_section)
+    matching_blocks = [
+        block.strip()
+        for block in tool_blocks
+        if re.search(rf"(?m)^\d+\. Name:\s*{re.escape(tool_name)}\s*$", block)
+    ]
+    if len(matching_blocks) != 1:
+        raise ValueError(f"API-Bank prompt does not define target tool {tool_name!r} exactly once")
+    tool_contract = "Available tool:\n" + matching_blocks[0][:1800]
+    dialogue = content[content.rfind("[USER]") :].strip()[-3500:]
+    system = (
+        "You are an enterprise tool-calling assistant. Use the available tool contract and "
+        "dialogue history. Return ONLY one strict JSON object with keys 'tool' and "
+        "'arguments'. Do not emit reasoning, XML, Markdown, or prose."
+    )
+    return (
+        f"<|im_start|>system\n{system}\n\n{tool_contract}<|im_end|>\n"
+        f"<|im_start|>user\n{dialogue}<|im_end|>\n"
+        "<|im_start|>assistant\n"
+    )
+
+
+def _api_bank_target(raw_target: str) -> Dict[str, Any]:
+    """Reduce API-Bank's dense nullable schema to the actual tool arguments."""
+    try:
+        payload = json.loads(raw_target)
+    except (json.JSONDecodeError, TypeError) as exc:
+        raise ValueError("API-Bank ground truth is not JSON") from exc
+    name = payload.get("name") if isinstance(payload, dict) else None
+    parameters = payload.get("parameters") if isinstance(payload, dict) else None
+    if not isinstance(name, str) or not name or not isinstance(parameters, dict):
+        raise ValueError("API-Bank ground truth is missing name or parameters")
+    return {
+        "tool": name,
+        "arguments": {str(key): value for key, value in parameters.items() if value is not None},
+    }
+
+
+def _swe_gym_prompt(row: Dict[str, Any]) -> str:
+    """Build a patch-only prompt from one pinned SWE-Gym task."""
+    problem = str(row.get("problem_statement") or "").strip()
+    repo = str(row.get("repo") or "").strip()
+    base_commit = str(row.get("base_commit") or "").strip()
+    if not problem or not repo or not re.fullmatch(r"[0-9a-f]{40}", base_commit):
+        raise ValueError("SWE-Gym task is missing repo, problem statement, or base commit")
+    hints = str(row.get("hints_text") or "").strip()
+    tests = sorted(
+        str(item)
+        for key in ("FAIL_TO_PASS", "PASS_TO_PASS")
+        for item in (row.get(key) or [])
+    )
+    context = [
+        f"Repository: {repo}",
+        f"Base commit: {base_commit}",
+        "Issue:",
+        problem[:4000],
+    ]
+    if hints:
+        context.extend(("Hints:", hints[:1000]))
+    if tests:
+        context.extend(("Tests that must pass:", "\n".join(tests)[:1200]))
+    system = (
+        "You are a software repair agent. Produce ONLY a unified diff that implements the "
+        "requested fix. Start with 'diff --git'. Do not include Markdown fences or prose."
+    )
+    context_text = "\n".join(context)
+    return (
+        f"<|im_start|>system\n{system}<|im_end|>\n"
+        f"<|im_start|>user\n{context_text}<|im_end|>\n"
+        "<|im_start|>assistant\n"
+    )
+
+
+def make_pavlov_non_xlam_dataset(
+    seed: int = 809, *, repo_root: Optional[Path] = None
+) -> InMemoryDataset:
+    """Load the pinned, locally decontaminated API-Bank + SWE-Gym training mix.
+
+    This adapter deliberately excludes xLAM and OpenR1.  OpenR1 is held back
+    until FrontierMath decontamination can be proven.  SWE-Gym is rejected if
+    it overlaps the locally materialized E1/E2 identifiers; API-Bank is
+    rejected if it overlaps the locally materialized E4 identifiers.
+    """
+    from datasets import load_dataset
+
+    repo_root = repo_root or Path(__file__).resolve().parents[2]
+    e1_path = repo_root / "outputs/e1_swe_bench_pro/hf_dataset/data/test-00000-of-00001.parquet"
+    e2_path = repo_root / "outputs/e2_frontier_swe/frontier-swe/tasks"
+    e4_path = repo_root / "outputs/e4_banker_toolbench/official_repo_ff6db552/native-data/tasks.jsonl"
+    for required in (e1_path, e2_path, e4_path):
+        if not required.exists():
+            raise RuntimeError(f"required decontamination input is missing: {required}")
+
+    e1 = load_dataset("parquet", data_files=str(e1_path), split="train")
+    e1_ids = {str(value) for value in e1["instance_id"]}
+    e1_pairs = {
+        (str(repo), str(commit)) for repo, commit in zip(e1["repo"], e1["base_commit"])
+    }
+    e2_ids = {path.name for path in e2_path.iterdir() if path.is_dir()}
+
+    swe = load_dataset(
+        "SWE-Gym/SWE-Gym",
+        split="train",
+        revision=PAVLOV_NON_XLAM_SOURCE_REVISIONS["SWE-Gym/SWE-Gym"],
+    )
+    swe_rows: List[Dict[str, Any]] = []
+    for raw in swe:
+        row = dict(raw)
+        task_id = str(row.get("instance_id") or "")
+        pair = (str(row.get("repo") or ""), str(row.get("base_commit") or ""))
+        if task_id in e1_ids or pair in e1_pairs or task_id in e2_ids:
+            raise RuntimeError(f"SWE-Gym contamination detected for task {task_id}")
+        swe_rows.append(row)
+
+    e4_ids: set[str] = set()
+    for line in e4_path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        value = row.get("task_id") or row.get("id") or row.get("instance_id")
+        if value is not None:
+            e4_ids.add(str(value))
+
+    api = load_dataset(
+        "Simu-Env/API-Bank-RLVR",
+        revision=PAVLOV_NON_XLAM_SOURCE_REVISIONS["Simu-Env/API-Bank-RLVR"],
+    )
+    api_train: List[TrainingExample] = []
+    api_validation: List[TrainingExample] = []
+    for split_name, destination in (("train", api_train), ("validation", api_validation)):
+        for row in api[split_name]:
+            extra = json.loads(row["extra_info"])
+            task_id = str(extra.get("index"))
+            if task_id in e4_ids:
+                raise RuntimeError(f"API-Bank contamination detected for task {task_id}")
+            target = _api_bank_target(row["ground_truth"])
+            try:
+                prompt = _api_bank_prompt(row["prompt"], str(target["tool"]))
+            except ValueError:
+                # The pinned source contains a small number of rows whose
+                # label names a tool that is absent from the supplied contract.
+                # Those rows cannot be trained safely and are excluded.
+                continue
+            destination.append(
+                TrainingExample(
+                    prompt=prompt,
+                    target=target,
+                    metadata={
+                        "suite_id": "api_bank_rlvr_train",
+                        "source_id": task_id,
+                        "reward_kind": "tool_call",
+                        "source_revision": PAVLOV_NON_XLAM_SOURCE_REVISIONS[
+                            "Simu-Env/API-Bank-RLVR"
+                        ],
+                    },
+                )
+            )
+
+    rng = random.Random(seed)
+    rng.shuffle(api_train)
+    rng.shuffle(api_validation)
+    rng.shuffle(swe_rows)
+    swe_train_rows = swe_rows[:256]
+    swe_validation_rows = swe_rows[256:320]
+    swe_train = [
+        TrainingExample(
+            prompt=_swe_gym_prompt(row),
+            target=str(row["patch"]),
+            metadata={
+                "suite_id": "swe_gym_train",
+                "source_id": str(row["instance_id"]),
+                "reward_kind": "patch",
+                "source_revision": PAVLOV_NON_XLAM_SOURCE_REVISIONS["SWE-Gym/SWE-Gym"],
+            },
+        )
+        for row in swe_train_rows
+    ]
+    swe_validation = [
+        TrainingExample(
+            prompt=_swe_gym_prompt(row),
+            target=str(row["patch"]),
+            metadata={
+                "suite_id": "swe_gym_train",
+                "source_id": str(row["instance_id"]),
+                "reward_kind": "patch",
+                "source_revision": PAVLOV_NON_XLAM_SOURCE_REVISIONS["SWE-Gym/SWE-Gym"],
+            },
+        )
+        for row in swe_validation_rows
+    ]
+    train = api_train[:256] + swe_train
+    test = api_validation[:64] + swe_validation
+    rng.shuffle(train)
+    rng.shuffle(test)
+    if len(train) != 512 or len(test) != 128:
+        raise RuntimeError("non-xLAM dataset mix has unexpected train/test counts")
+    return InMemoryDataset(train=train, test=test)
+
+
 class ToolCallReward:
     """Scores tool-call completions the way the original ``grpo_exp_*.py`` scripts did."""
 
@@ -1788,4 +2021,49 @@ class ExactMathReward:
             except ValueError:
                 if candidate == answer:
                     return 1.0
+        return 0.0
+
+
+class PatchReward:
+    """Dense, format-aware reward for a SWE-Gym unified diff candidate."""
+
+    @staticmethod
+    def _normalise(value: str) -> str:
+        return "\n".join(line.rstrip() for line in value.strip().splitlines() if line.strip())
+
+    def score(self, response: str, example: TrainingExample) -> float:
+        expected = self._normalise(str(example.target or ""))
+        candidate = self._normalise(response)
+        if not expected or not candidate:
+            return 0.0
+        if candidate == expected:
+            return 1.0
+        if not candidate.startswith("diff --git"):
+            return 0.0
+        expected_files = set(re.findall(r"^diff --git a/(\S+) b/(\S+)$", expected, re.MULTILINE))
+        candidate_files = set(re.findall(r"^diff --git a/(\S+) b/(\S+)$", candidate, re.MULTILINE))
+        file_overlap = len(expected_files & candidate_files) / max(len(expected_files), 1)
+        similarity = difflib.SequenceMatcher(None, expected, candidate, autojunk=False).ratio()
+        return min(0.2 + 0.3 * file_overlap + 0.5 * similarity, 0.99)
+
+
+class PavlovNonXLAMReward:
+    """Route verifier-backed rewards for the non-xLAM training portfolio."""
+
+    def __init__(self) -> None:
+        self._tool = StrictToolCallReward()
+        self._patch = PatchReward()
+
+    def score(self, response: str, example: TrainingExample) -> float:
+        # Qwen's chat template exposes its reasoning channel in decoded token
+        # text.  Score only the answer after a completed reasoning block, just
+        # as the E11 verifier extracts HDL after ``</think>``.  An unclosed
+        # block remains invalid and receives no special treatment.
+        if "</think>" in response:
+            response = response.rsplit("</think>", 1)[1].lstrip()
+        reward_kind = example.metadata.get("reward_kind")
+        if reward_kind == "tool_call":
+            return self._tool.score(response, example)
+        if reward_kind == "patch":
+            return self._patch.score(response, example)
         return 0.0

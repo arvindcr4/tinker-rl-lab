@@ -6,10 +6,13 @@ from .grpo import (
     ToolCallReward,
     MathReward,
     ExactMathReward,
+    PatchReward,
+    PavlovNonXLAMReward,
     normalize_rewards,
     make_grpo_loss_fn,
     run_grpo,
     make_gsm8k_dataset,
+    make_pavlov_non_xlam_dataset,
     make_xlam_dataset,
 )
 
@@ -21,9 +24,12 @@ __all__ = [
     "ToolCallReward",
     "MathReward",
     "ExactMathReward",
+    "PatchReward",
+    "PavlovNonXLAMReward",
     "normalize_rewards",
     "make_grpo_loss_fn",
     "run_grpo",
     "make_gsm8k_dataset",
+    "make_pavlov_non_xlam_dataset",
     "make_xlam_dataset",
 ]

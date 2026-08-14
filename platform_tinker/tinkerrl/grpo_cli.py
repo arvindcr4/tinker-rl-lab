@@ -23,6 +23,7 @@ from .grpo import (
     PAVLOV_DECLARED_DOMAINS,
     PAVLOV_DOMAIN_TAGS,
     PAVLOV_HELDOUT_SUITE_IDS,
+    PAVLOV_NON_XLAM_DATASET_REVISION,
     PAVLOV_PRIMARY_EVALUATION_SUITE_IDS,
     PAVLOV_PRIMARY_EVALUATION_DOMAIN_UNION,
     PAVLOV_TRAINING_DOMAIN_UNION,
@@ -30,11 +31,13 @@ from .grpo import (
     GRPOConfig,
     ExactMathReward,
     MathReward,
+    PavlovNonXLAMReward,
     StrictToolCallReward,
     ToolCallReward,
     make_synthetic_math_dataset,
     make_synthetic_tool_use_dataset,
     make_gsm8k_dataset,
+    make_pavlov_non_xlam_dataset,
     make_xlam_dataset,
     run_grpo,
 )
@@ -98,7 +101,7 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "batch_size": 2,
         "lr": 3e-5,
         "temperature": 0.8,
-        "max_prompt_tokens": 1536,
+        "max_prompt_tokens": 2048,
         "max_response_tokens": 128,
         "save_every": 25,
         "num_seeds": 1,
@@ -174,6 +177,50 @@ PRESETS: Dict[str, Dict[str, Any]] = {
         "training_domain_union": PAVLOV_TRAINING_DOMAIN_UNION,
         "primary_evaluation_domain_union": PAVLOV_PRIMARY_EVALUATION_DOMAIN_UNION,
     },
+    "pavlov_portfolio": {
+        "name": "pavlov_portfolio_api_swegym_qwen36_20260809",
+        "model": "Qwen/Qwen3.6-35B-A3B",
+        "lora_rank": 32,
+        "steps": 40,
+        "group_size": 4,
+        "batch_size": 2,
+        "lr": 1e-5,
+        "temperature": 0.7,
+        "top_p": 0.95,
+        "max_prompt_tokens": 1536,
+        "max_response_tokens": 384,
+        "save_every": 20,
+        "num_seeds": 1,
+        "seed": 809,
+        "evaluate_heldout": False,
+        "dataset_revision": PAVLOV_NON_XLAM_DATASET_REVISION,
+        "model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+        "wandb_project": "tinker-rl-lab-pavlov",
+        "wandb_entity": "arvindcr4-pes-university",
+        "wandb_group": "pavlov-portfolio-20260809",
+        "wandb_tags": ("grpo", "tinker", "pavlov", "api-bank", "swe-gym"),
+        "hf_public": True,
+        "hf_repo_prefix": "pavlov-portfolio-qwen36",
+        "checkpoint_name_prefix": "pavlov-portfolio-qwen36",
+        "campaign_status": "authorized",
+        "budget_status": "AUTHORIZED_TINKER_ONLY",
+        "paid_jobs_may_launch": True,
+        "authorized_budget_usd": 16.5,
+        "maximum_usd": 18.0,
+        "training_suite_ids": ("api_bank_rlvr_train", "swe_gym_train"),
+        "heldout_suite_ids": (),
+        "primary_evaluation_suite_ids": PAVLOV_PRIMARY_EVALUATION_SUITE_IDS,
+        "domain_tags": ("code", "finance", "enterprise", "tools", "long_horizon"),
+        "declared_domains": ("code", "finance", "enterprise", "tool_use", "long_horizon"),
+        "training_domain_union": (
+            "code",
+            "finance",
+            "enterprise",
+            "tool_use",
+            "long_horizon",
+        ),
+        "primary_evaluation_domain_union": PAVLOV_PRIMARY_EVALUATION_DOMAIN_UNION,
+    },
 }
 
 DATASET_FACTORIES = {
@@ -184,6 +231,7 @@ DATASET_FACTORIES = {
     "gsm8k": make_gsm8k_dataset,
     "math100": make_synthetic_math_dataset,
     "pavlov_xlam": make_xlam_dataset,
+    "pavlov_portfolio": make_pavlov_non_xlam_dataset,
 }
 
 REWARD_MAP = {
@@ -194,6 +242,7 @@ REWARD_MAP = {
     "gsm8k": ExactMathReward,
     "math100": MathReward,
     "pavlov_xlam": StrictToolCallReward,
+    "pavlov_portfolio": PavlovNonXLAMReward,
 }
 
 
@@ -206,7 +255,7 @@ def _build_dataset(args: argparse.Namespace, config: GRPOConfig) -> Any:
         if config.dataset_revision is not None:
             return factory(seed=config.seed, revision=config.dataset_revision)
         return factory(seed=config.seed)
-    if dataset_name == "gsm8k":
+    if dataset_name in {"gsm8k", "pavlov_portfolio"}:
         return factory(seed=config.seed)
     return factory()
 

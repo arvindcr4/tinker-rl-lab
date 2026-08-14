@@ -111,6 +111,26 @@ def test_pavlov_xlam_dataset_factory_receives_pinned_revision():
     }
 
 
+def test_pavlov_portfolio_preset_is_exact_and_excludes_xlam():
+    config = build_config(_parse_args(["--preset", "pavlov_portfolio"]))
+
+    assert config.training_suite_ids == ("api_bank_rlvr_train", "swe_gym_train")
+    assert len(config.primary_evaluation_suite_ids) == 14
+    assert config.evaluate_heldout is False
+    assert config.dataset_revision == grpo.PAVLOV_NON_XLAM_DATASET_REVISION
+    assert config.authorized_budget_usd == 16.5
+    assert "xlam" not in json.dumps(grpo._immutable_config(config, config.seed)).lower()
+
+
+def test_pavlov_portfolio_dataset_factory_receives_seed_only():
+    config = build_config(_parse_args(["--preset", "pavlov_portfolio"]))
+    factories = {"pavlov_portfolio": lambda **kwargs: kwargs}
+    with patch("platform_tinker.tinkerrl.grpo_cli.DATASET_FACTORIES", factories):
+        dataset = _build_dataset(_parse_args(["--preset", "pavlov_portfolio"]), config)
+
+    assert dataset == {"seed": 809}
+
+
 def test_dataset_revision_cli_override_is_carried_into_config():
     config = build_config(
         _parse_args(

@@ -1,0 +1,419 @@
+Usage: inspect eval [OPTIONS] [TASKS]...
+
+  Evaluate tasks.
+
+  Monitor a running eval from another shell with `inspect ctl` (see `inspect
+  ctl --help`).
+
+Options:
+  --json                          Emit machine-readable launch output as JSON
+                                  lines on stdout (implies --display none): a
+                                  'launch' record printed once the control-
+                                  channel server is bound — reporting run_id,
+                                  pid, log_dir, and the control socket path
+                                  ('control' is null when the server is
+                                  disabled or failed to bind, so its presence
+                                  guarantees `inspect ctl` is usable) — and a
+                                  'done' record with each task's log location
+                                  and status when the eval finishes. To launch
+                                  in the background instead, use --detach
+                                  (which implies --json).
+  --detach / --no-detach          Run the eval in the background: prints the
+                                  launch record (implies --json) once the
+                                  control endpoint is bound, then returns,
+                                  leaving the eval running detached from the
+                                  terminal (the detached process's output goes
+                                  to a file reported as 'output_file' in the
+                                  launch record). While it runs, monitor with
+                                  `inspect ctl task list` and cancel with
+                                  `inspect ctl task cancel`. The process exits
+                                  when the eval finishes, leaving a 'done'
+                                  record — overall success plus each task's
+                                  status and log_location — as the output
+                                  file's last line; a process that exited
+                                  without one died mid-run, with diagnostics
+                                  in the same file. Pass --ctl-server=keep to
+                                  instead keep the process alive (and
+                                  queryable via `inspect ctl`) after the eval
+                                  finishes, until `inspect ctl process
+                                  release`.
+  --model TEXT                    Model used to evaluate tasks.
+  --model-base-url TEXT           Base URL for for model API
+  -M TEXT                         One or more native model arguments (e.g. -M
+                                  arg=value)
+  --model-config TEXT             YAML or JSON config file with model
+                                  arguments.
+  --run-config TEXT               YAML or JSON file with full run
+                                  configuration (task, model, model roles,
+                                  generate config, solver, eval config). CLI
+                                  flags override values from this file. Cannot
+                                  be combined with --generate-config, --task-
+                                  config, or --solver-config.
+  --model-role TEXT               Named model role with model name or
+                                  YAML/JSON config, e.g. --model-role
+                                  critic=openai/gpt-4o or --model-role
+                                  grader="{model: mockllm/model, temperature:
+                                  0.5}"
+  -T TEXT                         One or more task arguments (e.g. -T
+                                  arg=value)
+  --task-config TEXT              YAML or JSON config file with task
+                                  arguments.
+  --solver TEXT                   Solver to execute (overrides task default
+                                  solver)
+  -S TEXT                         One or more solver arguments (e.g. -S
+                                  arg=value)
+  --solver-config TEXT            YAML or JSON config file with solver
+                                  arguments.
+  --tags TEXT                     Tags to associate with this evaluation run.
+  --metadata TEXT                 Metadata to associate with this evaluation
+                                  run (more than one --metadata argument can
+                                  be specified).
+  --approval TEXT                 Config file for tool call approval.
+  --notification TEXT             Send out-of-band notifications when a human-
+                                  in-the-loop interaction (`ask_user` or human
+                                  approval) is posted. Bare `--notification`
+                                  reads URL(s) from the
+                                  `INSPECT_EVAL_NOTIFICATION` environment
+                                  variable (a single Apprise URL, a comma-
+                                  separated list, or a path to an Apprise
+                                  config file). `--notification <path>` reads
+                                  from an Apprise YAML/text config file. URLs
+                                  are not accepted directly on the command
+                                  line so secrets never end up in shell
+                                  history. Requires `pip install apprise`.
+  --sandbox TEXT                  Sandbox environment type (with optional
+                                  config file). e.g. 'docker' or
+                                  'docker:compose.yml'
+  --no-sandbox-cleanup            Do not cleanup sandbox environments after
+                                  task completes
+  --checkpoint TEXT               Periodically checkpoint sample state so the
+                                  eval can be resumed via `inspect eval
+                                  retry`. Specify --checkpoint for the default
+                                  (every 500k tokens),
+                                  --checkpoint=token:N{k,m,b} /
+                                  time:N{s,m,h,d} / turn:N / manual for a
+                                  shorthand trigger, or pass a YAML/JSON file
+                                  path for a full CheckpointConfig.
+  --acp-server TEXT               Expose this eval via an Agent Client
+                                  Protocol server for various clients (e.g.
+                                  the `inspect acp` command). Bare flag
+                                  enables a default AF_UNIX socket; pass an
+                                  integer to bind a TCP loopback port (e.g.
+                                  `--acp-server=4444`); pass `host:port` to
+                                  bind on a specific interface (e.g. `--acp-
+                                  server=0.0.0.0:4444`); pass a filesystem
+                                  path for a custom UNIX socket. When this
+                                  flag is set, all human-in-the-loop
+                                  interactions (`approver: human` and the
+                                  `ask_user` tool) route exclusively through
+                                  attached ACP clients; the in-proc Textual
+                                  panel and console handlers are bypassed. If
+                                  no client is connected when an interaction
+                                  fires, the eval parks until one attaches.
+  --ctl-server TEXT               Control-channel server for this eval process
+                                  (default: enabled on an AF_UNIX socket — the
+                                  endpoint the `inspect ctl` CLI, scripted
+                                  agents, and TUIs query). Pass `false` to
+                                  disable it. Pass `keep` to also keep the
+                                  process running after the eval finishes so
+                                  its state and results stay readable; the
+                                  process exits when `inspect ctl process
+                                  release` is run (or POST /release is sent to
+                                  the control endpoint). Without `keep` the
+                                  process exits as soon as the eval body
+                                  returns, taking the control surface with it.
+                                  Observe the run from another shell with
+                                  `inspect ctl task list`.
+  --limit TEXT                    Limit samples to evaluate e.g. 10 or 10-20
+  --sample-id TEXT                Evaluate specific sample(s) (comma separated
+                                  list of ids)
+  --sample-shuffle TEXT           Shuffle order of samples (pass a seed to
+                                  make the order deterministic)
+  --epochs INTEGER                Number of times to repeat dataset (defaults
+                                  to 1)
+  --epochs-reducer TEXT           Method for reducing per-epoch sample scores
+                                  into a single score. Built in reducers
+                                  include 'mean', 'median', 'mode', 'max', and
+                                  'at_least_{n}'.
+  --no-epochs-reducer             Do not reduce per-epoch sample scores.
+  --max-connections INTEGER       Maximum number of concurrent connections to
+                                  Model API (defaults to 10)
+  --adaptive-connections TEXT     Adaptive concurrency for Model API
+                                  connections, automatically scaling between
+                                  bounds based on rate-limit feedback
+                                  (default: enabled, with min=10, start=20,
+                                  max=100). Pass `false` to opt out, an
+                                  integer N for a custom max (e.g. `200`), or
+                                  bounds as `min-max` (e.g. `4-80`) or `min-
+                                  start-max` (e.g. `4-20-80`). Explicit
+                                  `--max-connections` and `--batch` take
+                                  precedence.
+  --max-retries INTEGER           Maximum number of times to retry model API
+                                  requests (defaults to unlimited)
+  --timeout INTEGER               Model API request timeout in seconds
+                                  (defaults to no timeout)
+  --attempt-timeout INTEGER       Timeout (in seconds) for any given attempt
+                                  (if exceeded, will abandon attempt and retry
+                                  according to max_retries).
+  --max-samples INTEGER           Maximum number of samples to run in parallel
+                                  (default is running all samples in parallel)
+  --max-dataset-memory INTEGER RANGE
+                                  Maximum MB of dataset sample data to hold in
+                                  memory per task. When exceeded, samples are
+                                  paged to disk.  [x>=0]
+  --max-tasks INTEGER             Maximum number of tasks to run in parallel
+                                  (default is 1 for eval and 10 for eval-set)
+  --max-subprocesses INTEGER      Maximum number of subprocesses to run in
+                                  parallel (default is os.cpu_count())
+  --max-sandboxes INTEGER         Maximum number of sandboxes (per-provider)
+                                  to run in parallel.
+  --message-limit INTEGER         Limit on total messages used for each
+                                  sample.
+  --token-limit TEXT              Limit on tokens used for each sample (e.g.
+                                  500000, '500k', or '1m'; prefix with
+                                  'output:' to limit only output tokens, e.g.
+                                  'output:1m', or with a formula over
+                                  'input'/'output', e.g.
+                                  '(input*0.1)+output:1m').
+  --turn-limit INTEGER            Limit on total turns (model generations)
+                                  used for each sample.
+  --cost-limit FLOAT              Limit on total cost (in dollars) for each
+                                  sample.
+  --model-cost-config TEXT        YAML or JSON file with model prices for cost
+                                  tracking.
+  --time-limit INTEGER            Limit on total running time for each sample.
+  --working-limit INTEGER         Limit on total working time (e.g. model
+                                  generation, tool calls, etc.) for each
+                                  sample.
+  --fail-on-error FLOAT           Threshold of sample errors to tolerage (by
+                                  default, evals fail when any error occurs).
+                                  Value between 0 to 1 to set a proportion;
+                                  value greater than 1 to set a count.
+  --no-fail-on-error              Do not fail the eval if errors occur within
+                                  samples (instead, continue running other
+                                  samples)
+  --continue-on-fail              Do not immediately fail the eval if the
+                                  error threshold is exceeded (instead,
+                                  continue running other samples until the
+                                  eval completes, and then possibly fail the
+                                  eval).
+  --retry-on-error TEXT           Retry samples if they encounter errors (by
+                                  default, no retries occur). Specify --retry-
+                                  on-error to retry a single time, or specify
+                                  e.g. `--retry-on-error=3` to retry multiple
+                                  times.
+  --score-on-error                Score samples that error rather than failing
+                                  the eval mid-run. Errors still count toward
+                                  the --fail-on-error threshold for marking
+                                  the log as 'error'. Only fires after retries
+                                  (if any) are exhausted.
+  --no-log-samples                Do not include samples in the log file.
+  --no-log-realtime               Do not log events in realtime (affects live
+                                  viewing of samples in inspect view)
+  --log-images / --no-log-images  Include base64 encoded versions of filename
+                                  or URL based images in the log file.
+  --log-model-api / --no-log-model-api
+                                  Log raw model api requests and responses.
+                                  Note that error requests/responses are
+                                  always logged.
+  --log-refusals / --no-log-refusals
+                                  Log warnings for model refusals.
+  --log-buffer INTEGER            Number of samples to buffer before writing
+                                  log file. If not specified, an appropriate
+                                  default for the format and filesystem is
+                                  chosen (10 for most all cases, 100 for JSON
+                                  logs on remote filesystems).
+  --log-shared TEXT               Sync sample events to log directory so that
+                                  users on other systems can see log updates
+                                  in realtime (defaults to no syncing). If
+                                  enabled will sync every 10 seconds (or pass
+                                  a value to sync every `n` seconds).
+  --no-score                      Do not score model output (use the inspect
+                                  score command to score output later)
+  --no-score-display              Do not display scoring metrics in realtime.
+  --generate-config TEXT          YAML or JSON config file with GenerateConfig
+                                  (alternatively, use the options for
+                                  individual config values).
+  --max-tokens INTEGER            The maximum number of tokens that can be
+                                  generated in the completion (default is
+                                  model specific)
+  --system-message TEXT           Override the default system message.
+  --best-of INTEGER               Generates best_of completions server-side
+                                  and returns the 'best' (the one with the
+                                  highest log probability per token). OpenAI
+                                  only.
+  --frequency-penalty FLOAT       Number between -2.0 and 2.0. Positive values
+                                  penalize new tokens based on their existing
+                                  frequency in the text so far, decreasing the
+                                  model's likelihood to repeat the same line
+                                  verbatim. OpenAI, Google, Grok, Groq, llama-
+                                  cpp-python and vLLM only.
+  --presence-penalty FLOAT        Number between -2.0 and 2.0. Positive values
+                                  penalize new tokens based on whether they
+                                  appear in the text so far, increasing the
+                                  model's likelihood to talk about new topics.
+                                  OpenAI, Google, Grok, Groq, llama-cpp-python
+                                  and vLLM only.
+  --logit-bias TEXT               Map token Ids to an associated bias value
+                                  from -100 to 100 (e.g. "42=10,43=-10").
+                                  OpenAI, Grok, and Grok only.
+  --seed INTEGER                  Random seed. OpenAI, Google, Groq, Mistral,
+                                  HuggingFace, and vLLM only.
+  --stop-seqs TEXT                Sequences where the API will stop generating
+                                  further tokens. The returned text will not
+                                  contain the stop sequence.
+  --temperature FLOAT             What sampling temperature to use, between 0
+                                  and 2. Higher values like 0.8 will make the
+                                  output more random, while lower values like
+                                  0.2 will make it more focused and
+                                  deterministic.
+  --top-p FLOAT                   An alternative to sampling with temperature,
+                                  called nucleus sampling, where the model
+                                  considers the results of the tokens with
+                                  top_p probability mass.
+  --top-k INTEGER                 Randomly sample the next word from the top_k
+                                  most likely next words. Anthropic, Google,
+                                  HuggingFace, and vLLM only.
+  --num-choices INTEGER           How many chat completion choices to generate
+                                  for each input message. OpenAI, Grok,
+                                  Google, TogetherAI, and vLLM only.
+  --logprobs                      Return log probabilities of the output
+                                  tokens. OpenAI, Google, TogetherAI,
+                                  Huggingface, llama-cpp-python, and vLLM
+                                  only.
+  --top-logprobs INTEGER          Number of most likely tokens (0-20) to
+                                  return at each token position, each with an
+                                  associated log probability. OpenAI, Google,
+                                  TogetherAI, Huggingface, and vLLM only.
+  --prompt-logprobs INTEGER       Number of log probabilities to return per
+                                  prompt token (1-20). vLLM only.
+  --parallel-tool-calls / --no-parallel-tool-calls
+                                  Whether to enable parallel function calling
+                                  during tool use (defaults to True) OpenAI
+                                  and Groq only.
+  --internal-tools / --no-internal-tools
+                                  Whether to automatically map tools to model
+                                  internal implementations (e.g. 'computer'
+                                  for anthropic).
+  --max-tool-output INTEGER       Maximum size of tool output (in bytes).
+                                  Defaults to 16 * 1024.
+  --cache-prompt [auto|true|false]
+                                  Whether to cache the prompt prefix. Enabled
+                                  by default. Set to False to disable.
+                                  Anthropic only.
+  --fallback-models TEXT          Fallback models (comma-separated, tried in
+                                  order) when the model's safety classifiers
+                                  refuse the request. Anthropic Claude API
+                                  only.
+  --verbosity [low|medium|high]   Constrains the verbosity of the model's
+                                  response. Lower values will result in more
+                                  concise responses, while higher values will
+                                  result in more verbose responses. GPT 5.x
+                                  models only (defaults to "medium" for OpenAI
+                                  models)
+  --effort [low|medium|high|xhigh|max]
+                                  Control how many tokens are used for a
+                                  response, trading off between response
+                                  thoroughness and token efficiency. Claude
+                                  4.5, 4.6, 4.7 only (`max` only supported on
+                                  4.6+, `xhigh` only supported on 4.7).
+  --reasoning-effort [none|minimal|low|medium|high|xhigh|max]
+                                  Constrains effort on reasoning. Defaults
+                                  vary by provider and model and not all
+                                  models support all values (please consult
+                                  provider documentation for details).
+  --reasoning-mode [standard|pro]
+                                  Reasoning mode. "pro" performs more model
+                                  work for greater reliability on difficult
+                                  tasks, at higher latency and token usage.
+                                  OpenAI GPT-5.6+ models only ("standard" is
+                                  the default).
+  --reasoning-tokens INTEGER      Maximum number of tokens to use for
+                                  reasoning. Anthropic Claude models only.
+  --reasoning-summary [none|concise|detailed|auto]
+                                  Provide summary of reasoning steps (OpenAI
+                                  reasoning models only). Use 'auto' to access
+                                  the most detailed summarizer available for
+                                  the current model (defaults to 'auto' if
+                                  your organization is verified by OpenAI).
+  --reasoning-history [none|all|last|auto]
+                                  Include reasoning in chat message history
+                                  sent to generate (defaults to "auto", which
+                                  uses the recommended default for each
+                                  provider)
+  --response-schema TEXT          JSON schema for desired response format
+                                  (output should still be validated). OpenAI,
+                                  Google, and Mistral only.
+  --cache TEXT                    Policy for caching of model generations.
+                                  Specify --cache to cache with 7 day
+                                  expiration (7D). Specify an explicit
+                                  duration (e.g. (e.g. 1h, 3d, 6M) to set the
+                                  expiration explicitly (durations can be
+                                  expressed as s, m, h, D, W, M, or Y).
+                                  Alternatively, pass the file path to a YAML
+                                  or JSON config file with a full
+                                  `CachePolicy` configuration.
+  --batch TEXT                    Batch requests together to reduce API calls
+                                  when using a model that supports batching
+                                  (by default, no batching). Specify --batch
+                                  to batch with default configuration,
+                                  specify a batch size e.g. `--batch=1000` to
+                                  configure batches of 1000 requests, or pass
+                                  the file path to a YAML or JSON config file
+                                  with batch configuration.
+  --modalities TEXT               Additional output modalities beyond text
+                                  (e.g. 'image'). Comma-separated names or a
+                                  YAML/JSON config file path. OpenAI and
+                                  Google only.
+  --log-format [eval|json]        Format for writing log files.
+  --log-level-transcript [debug|trace|http|info|warning|error|critical|notset]
+                                  Set the log level of the transcript
+                                  (defaults to 'info')
+  --log-level [debug|trace|http|info|warning|error|critical|notset]
+                                  Set the log level (defaults to 'warning')
+  --log-dir TEXT                  Directory for log files.
+  --display [full|conversation|rich|plain|log|none]
+                                  Set the display type (defaults to 'full')
+  --traceback-locals              Include values of local variables in
+                                  tracebacks (note that this can leak private
+                                  data e.g. API keys so should typically only
+                                  be enabled for targeted debugging).
+  --env TEXT                      Define an environment variable e.g. --env
+                                  NAME=value (--env can be specified multiple
+                                  times)
+  --debug                         Wait to attach debugger
+  --debug-port INTEGER            Port number for debugger
+  --debug-errors                  Raise task errors (rather than logging them)
+                                  so they can be debugged.
+  --help                          Show this message and exit.
+
+Scanner Options:
+  --scanner TEXT               Scanner(s) to apply after each sample. Pass a
+                               YAML/JSON config file (ScannerConfig schema), a
+                               Python file with @scanner functions (use
+                               file.py@func to pick one), or a registry
+                               reference (pkg/name).
+  --scanner-arg TEXT           One or more scanner arguments (e.g. --scanner-
+                               arg key=value).
+  --scans TEXT                 Location to write scan results to (defaults to
+                               <log-dir>/scans/).
+  --scan-name TEXT             Scan name written to _scan.json (defaults to
+                               "eval_set").
+  --scan-tags TEXT             Comma-separated tags written to the scan spec.
+  --scan-metadata TEXT         Metadata written to the scan spec (e.g. --scan-
+                               metadata key=value).
+  -F, --scan-filter TEXT       SQL WHERE clause(s) applied per-sample to skip
+                               transcripts that don't match (e.g. -F "error =
+                               ''").
+  --scan-model TEXT            Model used by scanners' get_model() (overrides
+                               the eval model).
+  --scan-model-base-url TEXT   Base URL for the scanner-side model API.
+  --scan-model-arg TEXT        One or more scanner-side model arguments (e.g.
+                               --scan-model-arg key=value).
+  --scan-model-config TEXT     YAML or JSON config file with scanner-side
+                               model arguments.
+  --scan-model-role TEXT       Named scanner-side model role with model name
+                               or YAML/JSON config (e.g. --scan-model-role
+                               grader=mockllm/model).
+  --scan-generate-config TEXT  YAML or JSON config file with GenerateConfig
+                               for scanner model calls.

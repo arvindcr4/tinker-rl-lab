@@ -1,0 +1,18 @@
+usage: pavlov_frontier_swe_eval_adapter.py [-h] [--boundary BOUNDARY]
+                                           [--out OUT]
+                                           receipt
+
+Offline FrontierSWE E2 boundary and result-receipt contract. This module
+deliberately does not run FrontierSWE, launch Tinker, initialize W&B, upload
+to Hugging Face, or fetch benchmark tasks. It makes the exact boundary
+explicit and validates locally supplied manifests and receipts. The source is
+a primary-evaluation component; a held-out claim is admissible only when an
+immutable exclusion receipt is present.
+
+positional arguments:
+  receipt
+
+options:
+  -h, --help           show this help message and exit
+  --boundary BOUNDARY
+  --out OUT

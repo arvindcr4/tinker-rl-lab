@@ -1,0 +1,106 @@
+{
+  "label": "harness_validation",
+  "is_model_score": false,
+  "competition_id": "spooky-author-identification",
+  "suite_score": null,
+  "note": "Grading the competition's own gold answers proves the metric, the grader and the submission format work. It is not a benchmark result and must never be promoted to one.",
+  "data_provenance": "official_prepared_competition_data",
+  "fixture": null,
+  "official_data": {
+    "answers_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/data/spooky-author-identification/prepared/private/test.csv",
+    "answers_sha256": "2cf7dc57104a6b5467b44702e7a1ba4888f21f307b502a9707317d5c00ab636a",
+    "sample_submission_sha256": "5a9d701524a2659476f62e30fa4e61ecfbeb754e0e9c11a8528a7486992ad1f6",
+    "prepared_by": "mlebench prepare (upstream preparer), checksums verified against the pinned checksums.yaml"
+  },
+  "upstream_reproduction": {
+    "upstream_expected_score": 1.08468,
+    "upstream_source": "tests/constants.py::sample_submission_scores",
+    "observed_score": 1.08468,
+    "applicable": true,
+    "absolute_delta": 0.0,
+    "relative_delta": 0.0,
+    "matches_upstream": true
+  },
+  "status": "PASS",
+  "checks": {
+    "leaderboard_is_real_kaggle_data": true,
+    "gold_submission_scored": true,
+    "gold_submission_earns_gold_medal": true,
+    "sample_submission_scored": true,
+    "sample_submission_earns_no_medal": true,
+    "gold_beats_sample": true,
+    "invalid_submission_rejected": true
+  },
+  "leaderboard": {
+    "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/mle-bench-source/mlebench/competitions/spooky-author-identification/leaderboard.csv",
+    "sha256": "1087afc671c8eddcca7f8dc792a4d55877213ce86ac9d1f8c7b280edd0eb2514",
+    "team_count": 1242,
+    "provenance": "real Kaggle leaderboard shipped in the pinned repository"
+  },
+  "grader": {
+    "name": "multi-class-log-loss",
+    "grade_py_sha256": "a95bd5969572fe4d2224dd010640f316a83ea55810bdff91b39a705db0305f59"
+  },
+  "reports": [
+    {
+      "competition_id": "spooky-author-identification",
+      "score": 0.0,
+      "gold_threshold": 0.16506,
+      "silver_threshold": 0.26996,
+      "bronze_threshold": 0.29381,
+      "median_threshold": 0.418785,
+      "any_medal": true,
+      "gold_medal": true,
+      "silver_medal": false,
+      "bronze_medal": false,
+      "above_median": true,
+      "submission_exists": true,
+      "valid_submission": true,
+      "is_lower_better": true,
+      "created_at": "2026-08-09T14:08:40.164073",
+      "submission_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/data/spooky-author-identification/prepared/private/test.csv",
+      "case": "gold_submission",
+      "case_description": "grader scoring the competition's own gold answers"
+    },
+    {
+      "competition_id": "spooky-author-identification",
+      "score": 1.08468,
+      "gold_threshold": 0.16506,
+      "silver_threshold": 0.26996,
+      "bronze_threshold": 0.29381,
+      "median_threshold": 0.418785,
+      "any_medal": false,
+      "gold_medal": false,
+      "silver_medal": false,
+      "bronze_medal": false,
+      "above_median": false,
+      "submission_exists": true,
+      "valid_submission": true,
+      "is_lower_better": true,
+      "created_at": "2026-08-09T14:08:40.170676",
+      "submission_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/data/spooky-author-identification/prepared/public/sample_submission.csv",
+      "case": "sample_submission",
+      "case_description": "the sample submission shipped by prepare.py"
+    },
+    {
+      "competition_id": "spooky-author-identification",
+      "score": null,
+      "gold_threshold": 0.16506,
+      "silver_threshold": 0.26996,
+      "bronze_threshold": 0.29381,
+      "median_threshold": 0.418785,
+      "any_medal": false,
+      "gold_medal": false,
+      "silver_medal": false,
+      "bronze_medal": false,
+      "above_median": false,
+      "submission_exists": true,
+      "valid_submission": false,
+      "is_lower_better": true,
+      "created_at": "2026-08-09T14:08:40.174005",
+      "submission_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e9_mle_bench/harness_controls/spooky-author-identification/invalid_submission.csv",
+      "case": "invalid_submission",
+      "case_description": "rows that violate the submission contract"
+    }
+  ]
+}

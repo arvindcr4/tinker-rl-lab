@@ -1,0 +1,128 @@
+{
+  "default_agent_mockllm": {
+    "assistant_message_models": [
+      "mockllm"
+    ],
+    "completed_samples": 176,
+    "distinct_target_tools": 76,
+    "eval_log": "outputs/e10_agentharm/logs/harness_validation/default_agent_mockllm/2026-08-09T07-16-10-00-00_agentharm_GA4CS78sWQQUQZXnvEk6Tb.eval",
+    "eval_model": "mockllm/model",
+    "model_usage": {
+      "mockllm/model": {
+        "input_tokens": 107228,
+        "input_tokens_cache_read": null,
+        "input_tokens_cache_write": null,
+        "output_tokens": 5808,
+        "reasoning_tokens": null,
+        "total_cost": null,
+        "total_tokens": 113036
+      }
+    },
+    "sample_ids_first5": [
+      "1-1",
+      "1-2",
+      "1-3",
+      "1-4",
+      "10-1"
+    ],
+    "samples_with_grading_breakdown": 176,
+    "status": "success",
+    "task": "inspect_evals/agentharm",
+    "task_args_agent": "default",
+    "task_args_split": "test_public",
+    "task_registry_name": "inspect_evals/agentharm",
+    "top_target_tools": [
+      [
+        "get_webpage",
+        68
+      ],
+      [
+        "query_google_search",
+        40
+      ],
+      [
+        "send_email",
+        40
+      ],
+      [
+        "post_on_x",
+        36
+      ],
+      [
+        "query_onion_search",
+        28
+      ],
+      [
+        "run_stable_diffusion_model",
+        20
+      ],
+      [
+        "post_on_facebook",
+        20
+      ],
+      [
+        "get_latest_emails",
+        20
+      ]
+    ],
+    "total_samples": 176,
+    "total_target_tool_slots": 652
+  },
+  "refusal_agent": {
+    "assistant_message_models": [],
+    "completed_samples": 176,
+    "distinct_target_tools": 76,
+    "eval_log": "outputs/e10_agentharm/logs/harness_validation/refusal_agent/2026-08-09T07-16-08-00-00_agentharm_Y4Naz3zhY73C82MkpjTEEh.eval",
+    "eval_model": "mockllm/model",
+    "model_usage": {},
+    "sample_ids_first5": [
+      "1-1",
+      "1-2",
+      "1-3",
+      "1-4",
+      "10-1"
+    ],
+    "samples_with_grading_breakdown": 176,
+    "status": "success",
+    "task": "inspect_evals/agentharm",
+    "task_args_agent": "refusal",
+    "task_args_split": "test_public",
+    "task_registry_name": "inspect_evals/agentharm",
+    "top_target_tools": [
+      [
+        "get_webpage",
+        68
+      ],
+      [
+        "query_google_search",
+        40
+      ],
+      [
+        "send_email",
+        40
+      ],
+      [
+        "post_on_x",
+        36
+      ],
+      [
+        "query_onion_search",
+        28
+      ],
+      [
+        "run_stable_diffusion_model",
+        20
+      ],
+      [
+        "post_on_facebook",
+        20
+      ],
+      [
+        "get_latest_emails",
+        20
+      ]
+    ],
+    "total_samples": 176,
+    "total_target_tool_slots": 652
+  }
+}

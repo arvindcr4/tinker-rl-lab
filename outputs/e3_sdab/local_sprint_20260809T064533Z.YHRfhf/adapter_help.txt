@@ -1,0 +1,24 @@
+usage: python -m flagship.pavlov_sdab_eval_adapter [-h] [--result RESULT]
+                                                   [--backend {wandb,tinker,hf}]
+                                                   boundary
+
+Offline boundary adapter for the SDAB primary evaluation suite. This module
+defines *what must be pinned before an SDAB evaluation can count*; it does not
+download SDAB, launch an environment, call Tinker, or invent a result. The
+source identity is the Pavlov contract's ``sdab_eval`` entry and the official
+Emulated benchmark page. A caller supplies the immutable source revision,
+license receipt, task identifiers, split manifest, native environment receipt,
+artifact receipt, verifier receipt, and backend run receipt. The adapter only
+canonicalizes and hashes those inputs. ``primary_eval`` is a role, not
+evidence that a split is held out. A receipt-proven held-out claim requires
+immutable split, license, task, container, and decontamination receipts, plus
+a completed result receipt. Related benchmarks and xLAM are never accepted as
+SDAB substitutes.
+
+positional arguments:
+  boundary              offline SDAB boundary JSON
+
+options:
+  -h, --help            show this help message and exit
+  --result RESULT       optional offline backend result receipt JSON
+  --backend {wandb,tinker,hf}

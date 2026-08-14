@@ -1,0 +1,5 @@
+inspect_ai_version=0.3.254
+inspect_evals_import=OK
+agentharm_import=OK
+agentharm_callable=True
+agentharm_benign_callable=True

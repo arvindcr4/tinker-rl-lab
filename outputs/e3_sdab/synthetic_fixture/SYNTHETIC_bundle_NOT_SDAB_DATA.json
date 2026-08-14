@@ -1,0 +1,661 @@
+{
+  "synthetic": true,
+  "provenance": "SYNTHETIC FIXTURE - GENERATED LOCALLY BY THE E3 TEST SUITE - THIS IS NOT SDAB DATA AND CAN NEVER PRODUCE A SCORE",
+  "benchmark_id": "sdab",
+  "benchmark_name": "Software Development Automation Benchmark",
+  "canonical_url": "https://emulated.so/sdab",
+  "provider": "Emulated, Inc.",
+  "split": "evaluation",
+  "revision": "SYNTHETIC-NOT-SDAB-revision-0000",
+  "license": {
+    "spdx_id": "LicenseRef-SDAB-Evaluation",
+    "name": "SDAB evaluation terms"
+  },
+  "license_receipt": {
+    "receipt_id": "sdab-license-receipt-1",
+    "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "reference": "local://sdab/license/receipt-1"
+  },
+  "tasks": [
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0001",
+      "category": "migrations_and_upgrades",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0002",
+      "category": "ci_cd_and_deployment",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0003",
+      "category": "observability_and_incident_response",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0004",
+      "category": "distributed_systems",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0005",
+      "category": "infrastructure_debugging",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0006",
+      "category": "migrations_and_upgrades",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0007",
+      "category": "ci_cd_and_deployment",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0008",
+      "category": "observability_and_incident_response",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0009",
+      "category": "distributed_systems",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0010",
+      "category": "infrastructure_debugging",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0011",
+      "category": "migrations_and_upgrades",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0012",
+      "category": "ci_cd_and_deployment",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0013",
+      "category": "observability_and_incident_response",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0014",
+      "category": "distributed_systems",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0015",
+      "category": "infrastructure_debugging",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0016",
+      "category": "migrations_and_upgrades",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0017",
+      "category": "ci_cd_and_deployment",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0018",
+      "category": "observability_and_incident_response",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0019",
+      "category": "distributed_systems",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0020",
+      "category": "infrastructure_debugging",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0021",
+      "category": "migrations_and_upgrades",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0022",
+      "category": "ci_cd_and_deployment",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0023",
+      "category": "observability_and_incident_response",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0024",
+      "category": "distributed_systems",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0025",
+      "category": "infrastructure_debugging",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0026",
+      "category": "migrations_and_upgrades",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0027",
+      "category": "ci_cd_and_deployment",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0028",
+      "category": "observability_and_incident_response",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0029",
+      "category": "distributed_systems",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0030",
+      "category": "infrastructure_debugging",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0031",
+      "category": "migrations_and_upgrades",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0032",
+      "category": "ci_cd_and_deployment",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0033",
+      "category": "observability_and_incident_response",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0034",
+      "category": "distributed_systems",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0035",
+      "category": "infrastructure_debugging",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0036",
+      "category": "migrations_and_upgrades",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0037",
+      "category": "ci_cd_and_deployment",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0038",
+      "category": "observability_and_incident_response",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0039",
+      "category": "distributed_systems",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0040",
+      "category": "infrastructure_debugging",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0041",
+      "category": "migrations_and_upgrades",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0042",
+      "category": "ci_cd_and_deployment",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0043",
+      "category": "observability_and_incident_response",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0044",
+      "category": "distributed_systems",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0045",
+      "category": "infrastructure_debugging",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0046",
+      "category": "migrations_and_upgrades",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0047",
+      "category": "ci_cd_and_deployment",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0048",
+      "category": "observability_and_incident_response",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0049",
+      "category": "distributed_systems",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0050",
+      "category": "infrastructure_debugging",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0051",
+      "category": "migrations_and_upgrades",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0052",
+      "category": "ci_cd_and_deployment",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0053",
+      "category": "observability_and_incident_response",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0054",
+      "category": "distributed_systems",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0055",
+      "category": "infrastructure_debugging",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0056",
+      "category": "migrations_and_upgrades",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0057",
+      "category": "ci_cd_and_deployment",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0058",
+      "category": "observability_and_incident_response",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0059",
+      "category": "distributed_systems",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0060",
+      "category": "infrastructure_debugging",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0061",
+      "category": "migrations_and_upgrades",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0062",
+      "category": "ci_cd_and_deployment",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0063",
+      "category": "observability_and_incident_response",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0064",
+      "category": "distributed_systems",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0065",
+      "category": "infrastructure_debugging",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0066",
+      "category": "migrations_and_upgrades",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0067",
+      "category": "ci_cd_and_deployment",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0068",
+      "category": "observability_and_incident_response",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0069",
+      "category": "distributed_systems",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0070",
+      "category": "infrastructure_debugging",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0071",
+      "category": "migrations_and_upgrades",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0072",
+      "category": "ci_cd_and_deployment",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0073",
+      "category": "observability_and_incident_response",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0074",
+      "category": "distributed_systems",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0075",
+      "category": "infrastructure_debugging",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0076",
+      "category": "migrations_and_upgrades",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0077",
+      "category": "ci_cd_and_deployment",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0078",
+      "category": "observability_and_incident_response",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0079",
+      "category": "distributed_systems",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    },
+    {
+      "task_id": "SYNTHETIC-NOT-SDAB-0080",
+      "category": "infrastructure_debugging",
+      "prompt": "SYNTHETIC PLACEHOLDER - NOT AN SDAB TASK",
+      "targets": [
+        "SYNTHETIC PLACEHOLDER"
+      ]
+    }
+  ]
+}

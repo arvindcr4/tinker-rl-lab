@@ -124,6 +124,7 @@ outputs/*/data/
 outputs/*/runtime/
 outputs/*/jobs/
 outputs/*/venv/
+outputs/*/venv-*/
 outputs/_setup/venvs/
 outputs/e1_swe_bench_pro/evaluator/
 outputs/e2_frontier_swe/frontier-swe/

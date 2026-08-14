@@ -1,0 +1,16 @@
+{
+  "tinker": {
+    "error": "ModuleNotFoundError: No module named 'tinker'",
+    "imported": false,
+    "origin": null,
+    "spec": false
+  },
+  "wandb": {
+    "has_init": false,
+    "has_service_client": false,
+    "imported": true,
+    "module_file": null,
+    "origin": null,
+    "spec": true
+  }
+}

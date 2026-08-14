@@ -1,0 +1,57 @@
+usage: python -m flagship.eval_pavlov_sdab [-h] [--preflight | --run]
+                                           [--runtime-manifest RUNTIME_MANIFEST]
+                                           [--worktree-root WORKTREE_ROOT]
+                                           [--environment-root ENVIRONMENT_ROOT]
+                                           [--base-model BASE_MODEL]
+                                           [--base-model-revision BASE_MODEL_REVISION]
+                                           [--sampler-path SAMPLER_PATH]
+                                           [--sampler-hf-commit SAMPLER_HF_COMMIT]
+                                           [--adapter-revision ADAPTER_REVISION]
+                                           [--seed SEED] [--limit LIMIT]
+                                           [--max-actions MAX_ACTIONS]
+                                           [--max-prompt-tokens MAX_PROMPT_TOKENS]
+                                           [--max-response-tokens MAX_RESPONSE_TOKENS]
+                                           [--max-cost-usd MAX_COST_USD]
+                                           [--wandb-entity WANDB_ENTITY]
+                                           [--wandb-project WANDB_PROJECT]
+                                           [--wandb-group WANDB_GROUP]
+                                           [--wandb-name WANDB_NAME] --out OUT
+
+Fail-closed runner for the exact Pavlov E3 SDAB evaluation. SDAB is not a
+prompt-only benchmark. The official environment starts a live software system,
+gives the agent operational tooling, and grades the resulting state with a
+provider-owned verifier. This runner therefore accepts only a provider-issued,
+metadata-only runtime manifest and a native adapter. Related benchmarks,
+synthetic tasks, local containers, and guessed verifiers are rejected before
+W&B or Tinker is touched. The command is safe to run in an ordinary checkout::
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=zvf-program \ python3 -m
+flagship.eval_pavlov_sdab \ --preflight --out
+autoresearch/orchestrator-260809-0922/sdab_e3_launch_receipt.json When the
+exact provider bundle has been granted, the same entry point can run the
+smallest one-task evaluation with ``--run``. The native adapter protocol is
+documented in :func:`load_native_runtime`; it deliberately carries no raw task
+prompts or targets in the local receipt.
+
+options:
+  -h, --help            show this help message and exit
+  --preflight           run zero-side-effect gates (default)
+  --run                 run one exact SDAB task after gates pass
+  --runtime-manifest RUNTIME_MANIFEST
+  --worktree-root WORKTREE_ROOT
+  --environment-root ENVIRONMENT_ROOT
+  --base-model BASE_MODEL
+  --base-model-revision BASE_MODEL_REVISION
+  --sampler-path SAMPLER_PATH
+  --sampler-hf-commit SAMPLER_HF_COMMIT
+  --adapter-revision ADAPTER_REVISION
+  --seed SEED
+  --limit LIMIT
+  --max-actions MAX_ACTIONS
+  --max-prompt-tokens MAX_PROMPT_TOKENS
+  --max-response-tokens MAX_RESPONSE_TOKENS
+  --max-cost-usd MAX_COST_USD
+  --wandb-entity WANDB_ENTITY
+  --wandb-project WANDB_PROJECT
+  --wandb-group WANDB_GROUP
+  --wandb-name WANDB_NAME
+  --out OUT

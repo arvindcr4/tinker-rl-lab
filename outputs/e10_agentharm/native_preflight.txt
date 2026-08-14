@@ -1,0 +1,57 @@
+inspect_ai=None
+inspect_evals=ModuleSpec(name='inspect_evals', loader=<_frozen_importlib_external.SourceFileLoader object at 0x109ea8440>, origin='/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/__init__.py', submodule_search_locations=['/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals'])
+datasets=None
+huggingface_hub=None
+tinker=None
+wandb=ModuleSpec(name='wandb', loader=None, submodule_search_locations=_NamespacePath(['/Users/arvind/Developer/agentic_repos/tinker-rl-lab/wandb']))
+transformers=None
+agentharm_import=BLOCKED:ModuleNotFoundError:No module named 'inspect_ai'
+inspect_cli=missing
+
+--- dataset metadata HEAD ---
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+content-length: 2231
+date: Sun, 09 Aug 2026 06:47:48 GMT
+etag: W/"8b7-L26UX0xeNDoDxTiYrm8bEwMaxq8"
+x-powered-by: huggingface-moon
+x-request-id: Root=1-6a782294-0317f3a4220d9d6240be6066
+ratelimit: "api";r=485;t=16
+ratelimit-policy: "fixed window";"api";q=500;w=300
+cross-origin-opener-policy: same-origin
+referrer-policy: strict-origin-when-cross-origin
+access-control-max-age: 86400
+access-control-allow-origin: https://huggingface.co
+vary: Origin
+access-control-expose-headers: X-Repo-Commit,X-Request-Id,X-Error-Code,X-Error-Message,X-Total-Count,ETag,Link,Accept-Ranges,Content-Range,X-Linked-Size,X-Linked-ETag,X-Xet-Hash
+x-cache: Miss from cloudfront
+via: 1.1 9b626a64a51376c0dd1f017c25a0dfa6.cloudfront.net (CloudFront)
+x-amz-cf-pop: BLR50-P4
+alt-svc: h3=":443"; ma=86400
+x-amz-cf-id: cC3duTIg0Ohr-q4MhIFdH4_VG0aRbuSb5xfQgUPVO8XJoNRzOW4KSA==
+
+--- source split/access references ---
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/utils.py:24:    INSPECT_EVALS_CACHE_PATH / "agentharm_dataset" / "AgentHarm"
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/utils.py:28:def load_dataset(
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/utils.py:30:    split: Literal["val", "test_public", "test_private"],
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/utils.py:34:    Load the AgentHarm dataset from Huggingface or cache.
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/utils.py:38:        split (str): Split name. Should be either "val", "test_public", or "test_private".
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/utils.py:44:    split_dict = {
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/utils.py:62:    if name not in split_dict:
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/utils.py:64:    if split not in split_dict[name]:
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/utils.py:65:        raise ValueError(f"Split {split} is not available.")
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/utils.py:67:    input_json_file = AGENTHARM_DATASET_LOCATION / split_dict[name][split]
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/utils.py:73:                repo_id="ai-safety-institute/AgentHarm",
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/README.md:1:# AgentHarm: A Benchmark for Measuring Harmfulness of LLM Agents
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/README.md:11:**Dataset**: <https://huggingface.co/datasets/ai-safety-institute/AgentHarm>
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/README.md:110:- `split` (`Literal['val', 'test_private', 'test_public']`): Split to evaluate on. (default: `'test_public'`)
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/README.md:124:- `split` (`Literal['val', 'test_private', 'test_public']`): Split to evaluate on. (default: `'test_public'`)
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/README.md:157:You can also pass arguments to a task to specify using the validation split
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/README.md:160:inspect eval inspect_evals/agentharm --model openai/gpt-4o-2024-08-06 -T split=val
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/README.md:161:inspect eval inspect_evals/agentharm --model anthropic/claude-3-5-sonnet-20240620 -T split=val 
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/README.md:209:The benchmark is licensed under the MIT License with an additional clause that can be found in `LICENSE`. The additional clause prohibits using the dataset and benchmark for purposes besides improving the safety and security of AI systems.
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/README.md:223:  title={AgentHarm: A Benchmark for Measuring Harmfulness of LLM Agents},
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/README.md:234:- Fix AgentHarm scoring so semantic judge model objects are not stored in sample metadata, allowing realtime eval logs to serialize successfully.
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/README.md:242:- Adds backoff policy for functions that connect to huggingface servers.
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/eval.yaml:1:title: 'AgentHarm: Harmfulness Potential in AI Agents'
+/tmp/e10_agentharm.ZZNnD5/inspect_evals/src/inspect_evals/agentharm/eval.yaml:22:    source: ai-safety-institute/AgentHarm

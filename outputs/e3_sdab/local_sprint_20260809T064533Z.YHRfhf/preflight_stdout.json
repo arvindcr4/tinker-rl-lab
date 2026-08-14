@@ -1,0 +1,155 @@
+{
+  "benchmark": {
+    "access_status": "private_access_required",
+    "license_id": null,
+    "name": "Software Development Automation Benchmark",
+    "official_url": "https://emulated.so/sdab",
+    "provider": "Emulated",
+    "revision": null,
+    "split": "evaluation",
+    "task_count": 80
+  },
+  "blockers": [
+    "exact_native_sdab_runtime: exact SDAB runtime manifest is missing; the official task bundle/native verifier is not present",
+    "isolated_dependencies: required package is unavailable in the isolated environment: tinker"
+  ],
+  "budget": {
+    "blockers": [],
+    "name": "tinker_cost_envelope",
+    "projected_max_cost_usd": 0.0204288,
+    "requested_cap_usd": 0.5,
+    "shared_hard_cap_usd": 18.0,
+    "shared_operational_cap_usd": 16.5,
+    "shared_safety_reserve_usd": 1.5,
+    "status": "PASS",
+    "suite_max_usd": 0.5
+  },
+  "created_at": "2026-08-09T06:46:00.684870+00:00",
+  "evidence_boundary": "BLOCKED preflight; no SDAB score or scientific result",
+  "gates": [
+    {
+      "blockers": [
+        "exact SDAB runtime manifest is missing; the official task bundle/native verifier is not present"
+      ],
+      "manifest": null,
+      "name": "exact_native_sdab_runtime",
+      "status": "BLOCKED"
+    },
+    {
+      "blockers": [],
+      "environment_root": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e3_sdab/local_sprint_20260809T064533Z.YHRfhf/venv.oGLBWU",
+      "isolated": true,
+      "name": "isolated_worktree_environment",
+      "status": "PASS",
+      "worktree_root": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab"
+    },
+    {
+      "adapter_revision": null,
+      "base_model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+      "blockers": [],
+      "evaluated_hf_commit": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+      "model_id": "Qwen/Qwen3.6-35B-A3B",
+      "name": "authorized_model_revision",
+      "source_kind": "base_model",
+      "status": "PASS"
+    },
+    {
+      "blockers": [],
+      "name": "tinker_cost_envelope",
+      "projected_max_cost_usd": 0.0204288,
+      "requested_cap_usd": 0.5,
+      "shared_hard_cap_usd": 18.0,
+      "shared_operational_cap_usd": 16.5,
+      "shared_safety_reserve_usd": 1.5,
+      "status": "PASS",
+      "suite_max_usd": 0.5
+    },
+    {
+      "blockers": [
+        "required package is unavailable in the isolated environment: tinker"
+      ],
+      "dependencies": {
+        "tinker": false,
+        "wandb": true
+      },
+      "name": "isolated_dependencies",
+      "status": "BLOCKED"
+    }
+  ],
+  "hf": {
+    "checkpoint_uploads": [],
+    "checkpoint_uploads_required": false,
+    "eval_only": true,
+    "evaluated_commit_bound": true
+  },
+  "launches_any_job": false,
+  "model": {
+    "adapter_revision": null,
+    "base_model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "evaluated_hf_commit": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "model_id": "Qwen/Qwen3.6-35B-A3B",
+    "source_kind": "base_model"
+  },
+  "receipt_sha256": "3239e08593ba0bdeb6340aa98dc97e198b5b88ea83fe81409bc17a00c26c8212",
+  "required_external_access": [
+    {
+      "item": "official_task_bundle",
+      "must_include": "immutable benchmark revision, license identifier and access receipt",
+      "needed": "Provider-issued SDAB evaluation bundle containing all 80 task IDs and the evaluation split"
+    },
+    {
+      "item": "disjoint_task_ids",
+      "must_include": "train_task_id_sha256, task_id_sha256, and a signed/immutable disjointness receipt",
+      "needed": "Provider or campaign split receipt proving train/evaluation task-ID disjointness"
+    },
+    {
+      "item": "native_environment",
+      "must_include": "container_digest, environment_digest, per-worktree venv, and adapter_entrypoint",
+      "needed": "Emulated enterprise/ML runtime adapter with live services and deterministic reset"
+    },
+    {
+      "item": "native_verifier",
+      "must_include": "verifier_identity, verifier_sha256, and a receipt proving state/artifact verification",
+      "needed": "Provider-native SDAB behavioral/operational/engineering grader outside the agent workspace"
+    },
+    {
+      "item": "model_binding",
+      "must_include": "base_model_revision or adapter_revision plus evaluated_hf_commit",
+      "needed": "Immutable Qwen/Qwen3.6-35B-A3B base commit or completed compatible Tinker sampler"
+    },
+    {
+      "item": "tracked_launch",
+      "must_include": "W&B identity initialized before the first Tinker call and a live budget ledger",
+      "needed": "Online W&B run and Tinker access in the isolated environment"
+    }
+  ],
+  "result": null,
+  "rows": [],
+  "runtime": {
+    "container_digest": null,
+    "environment_digest": null,
+    "manifest": null,
+    "native_verifier": false,
+    "verifier_identity": null,
+    "verifier_sha256": null
+  },
+  "schema_version": "pavlov-sdab-e3-receipt-v1",
+  "score": null,
+  "status": "BLOCKED",
+  "suite_id": "sdab_eval",
+  "task_ids": {
+    "disjointness_receipt": null,
+    "evaluation_sha256": null,
+    "training_sha256": null
+  },
+  "tinker": {
+    "calls": 0,
+    "run_id": null
+  },
+  "wandb": {
+    "initialized_before_tinker": false,
+    "online": false,
+    "run_id": null,
+    "run_url": null
+  }
+}

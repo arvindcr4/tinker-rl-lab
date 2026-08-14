@@ -1,0 +1,34 @@
+usage: frontier_swe_eval.py [-h] [--mode {preflight,run}]
+                            --benchmark-repo BENCHMARK_REPO
+                            [--task-id TASK_IDS] [--smallest]
+                            [--prior-receipt PRIOR_RECEIPT]
+                            [--license-receipt LICENSE_RECEIPT]
+                            [--sampler-receipt SAMPLER_RECEIPT]
+                            [--projected-tinker-usd PROJECTED_TINKER_USD]
+                            [--use-tinker] [--submission-dir SUBMISSION_DIR]
+                            [--candidate-mount CANDIDATE_MOUNT] --out OUT
+
+Fail-closed FrontierSWE preflight and native verifier runner. This module
+deliberately speaks only to the public ``Proximal-Labs/frontier- swe``
+checkout. It never substitutes another coding benchmark and it never turns a
+missing receipt into a score. ``preflight`` is zero-cost; ``run`` invokes the
+task's checked-in ``tests/test.sh`` inside the task's published Docker image
+only after every provenance, budget, and disjointness gate passes. The model
+is recorded even when the run falls back to the immutable base-model revision.
+A Tinker caller must use :func:`run_tinker_guarded`: the online W&B run is
+created and verified before the supplied Tinker factory is called.
+
+options:
+  -h, --help            show this help message and exit
+  --mode {preflight,run}
+  --benchmark-repo BENCHMARK_REPO
+  --task-id TASK_IDS
+  --smallest            select the one smallest official fixture
+  --prior-receipt PRIOR_RECEIPT
+  --license-receipt LICENSE_RECEIPT
+  --sampler-receipt SAMPLER_RECEIPT
+  --projected-tinker-usd PROJECTED_TINKER_USD
+  --use-tinker
+  --submission-dir SUBMISSION_DIR
+  --candidate-mount CANDIDATE_MOUNT
+  --out OUT

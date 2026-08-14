@@ -1,0 +1,82 @@
+[
+  {
+    "competition_id": "spooky-author-identification",
+    "registry_dataset_size_gb": 0.0019,
+    "rules_url": "https://www.kaggle.com/c/spooky-author-identification/rules",
+    "rules_accepted": false,
+    "blocked_on_rules": true,
+    "error": "ApiException: (403)\nReason: Forbidden\nHTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json', 'Date': 'Sun, 09 Aug 2026 08:32:17 GMT', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Origin': '*', 'Set-Cookie': 'ka_sessionid=893209efb0db3cdfbc527b4439189f68; max-age=2626560; path=/, .AspNetCore.Mvc.CookieTempDataProvider=CfDJ8Oxz6O_D_GNGkNy8kL7JFsVp-0jw4v0z0z_WDLlxFDFSX6oHpSg3IGOlrna1OYt3B4okB0HGeX0pQ2fiUdhTacliDXF09xR9xCECrV7N6QQCSpUra4N_59R6DgR_k3zz4jqZN70FjyaC14GRjUeO-wplfVP3DEk-K9ZMs-qcHLgeICfW0003xrqjTIjiraAFRUDwy0Jhon3aD0LgoiCyJIv_rfHaCtnm2oDVs8ljsjmg"
+  },
+  {
+    "competition_id": "detecting-insults-in-social-commentary",
+    "registry_dataset_size_gb": 0.002,
+    "rules_url": "https://www.kaggle.com/c/detecting-insults-in-social-commentary/rules",
+    "rules_accepted": false,
+    "blocked_on_rules": true,
+    "error": "ApiException: (403)\nReason: Forbidden\nHTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json', 'Date': 'Sun, 09 Aug 2026 08:32:18 GMT', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Origin': '*', 'Set-Cookie': 'ka_sessionid=842b41f4110e64c0f8034aa429a449f8; max-age=2626560; path=/, .AspNetCore.Mvc.CookieTempDataProvider=CfDJ8Oxz6O_D_GNGkNy8kL7JFsXAk681Seik0JsTVXqG-16MMcvisyXVDn4bBBrzwqXmVGcGLWQ3psG6fLrdze0i3FWuBY--Vf4-0CYUfe0aPYnWu7vnztDtPSIwg8pazSTXHiuB0nGqBRo2iZffh_vNogufQxT1sFwRqvEfl0AQ4Dwt7y4cXa75zjOgpoRpJBmTSdIZAxWXQJxlHL16402cKgc9TyFGqSqQsQYfyXrIa5RG"
+  },
+  {
+    "competition_id": "us-patent-phrase-to-phrase-matching",
+    "registry_dataset_size_gb": 0.00214,
+    "rules_url": "https://www.kaggle.com/c/us-patent-phrase-to-phrase-matching/rules",
+    "rules_accepted": false,
+    "blocked_on_rules": true,
+    "error": "ApiException: (403)\nReason: Forbidden\nHTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json', 'Date': 'Sun, 09 Aug 2026 08:32:18 GMT', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Origin': '*', 'Set-Cookie': 'ka_sessionid=ded3a88fdc3ba6b20f97a3d1d07efc50; max-age=2626560; path=/, .AspNetCore.Mvc.CookieTempDataProvider=CfDJ8Oxz6O_D_GNGkNy8kL7JFsWEEcV20iZkKGNUlueR6M9PhBjqyPnsZTN6-l2HQxtwHWqvyW94Vs1F19v4VuCP676ZlZOzyeXrelGWPbo7SAFXU3bTtIs5fLaDljE0WX61ibyjjh-JCwnnPI3-X4U64LXiEQ6NQyIuZgxncOsQnha2X52P37GhwMr5eCZEZ80JGGMz5rKgWgX1ZMAV4-nwwsHm_1IgD2Pgce67dx4aUCB8"
+  },
+  {
+    "competition_id": "random-acts-of-pizza",
+    "registry_dataset_size_gb": 0.003,
+    "rules_url": "https://www.kaggle.com/c/random-acts-of-pizza/rules",
+    "rules_accepted": false,
+    "blocked_on_rules": true,
+    "error": "ApiException: (403)\nReason: Forbidden\nHTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json', 'Date': 'Sun, 09 Aug 2026 08:32:18 GMT', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Origin': '*', 'Set-Cookie': 'ka_sessionid=a891419e2a2eeb891f429859b89e4773; max-age=2626560; path=/, .AspNetCore.Mvc.CookieTempDataProvider=CfDJ8Oxz6O_D_GNGkNy8kL7JFsVBE9J0aDCiKLjJm9L_xAgFAngPR4jZMaDnKDEAZ-GlnvQHjVly58x-1JJxYfFAcX--tVli3YwJCK9aFKTCAYcN2ihxEvNZNjIafdv_Wh3AsYc6ybvOWfPZeaEC271Cso81ypRhC5Z2DYOIMeMx-b2TbVg-Tciyfi1ZsA9sHrUkL8-eevxx-ashJ4sLadE2Rsppk6zpsdIwBoeRxQMKzwvG"
+  },
+  {
+    "competition_id": "tweet-sentiment-extraction",
+    "registry_dataset_size_gb": 0.003,
+    "rules_url": "https://www.kaggle.com/c/tweet-sentiment-extraction/rules",
+    "rules_accepted": false,
+    "blocked_on_rules": true,
+    "error": "ApiException: (403)\nReason: Forbidden\nHTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json', 'Date': 'Sun, 09 Aug 2026 08:32:19 GMT', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Origin': '*', 'Set-Cookie': 'ka_sessionid=9895ed05d99e822a556b914d03a49a3d; max-age=2626560; path=/, .AspNetCore.Mvc.CookieTempDataProvider=CfDJ8Oxz6O_D_GNGkNy8kL7JFsUe-LSNdEpeam1FxaNOWjNpD2lZusXtXQEvRODJHm_cJX9wLHjmAIb8-Mg2j6hei35sfL3SwU_1gYHbHC2s6fIA0lkCG14nEq7u1ojQpcZmRrdJfVdVVEPrEnSpkxPCLH-UkroT77XgPAy63lVIoj6PMISHaP4FnxTfKZABeS2WgIuXUOqzAr4vrpef1fus4C9jE3ONWhXYZPso1LZ7Mm9U"
+  },
+  {
+    "competition_id": "nomad2018-predict-transparent-conductors",
+    "registry_dataset_size_gb": 0.00624,
+    "rules_url": "https://www.kaggle.com/c/nomad2018-predict-transparent-conductors/rules",
+    "rules_accepted": false,
+    "blocked_on_rules": true,
+    "error": "ApiException: (403)\nReason: Forbidden\nHTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json', 'Date': 'Sun, 09 Aug 2026 08:32:19 GMT', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Origin': '*', 'Set-Cookie': 'ka_sessionid=737fd8bfd7881d80fb32de4998c35e83; max-age=2626560; path=/, .AspNetCore.Mvc.CookieTempDataProvider=CfDJ8Oxz6O_D_GNGkNy8kL7JFsV5Bg9O6R_b-L8JCjTuBAe0aa_uXAzb8PqlTClEvEaezwic4rISGFJoz2H5g_PP8S8qnGXPrOU0VGHB-_AOxJIzukHkE1lUAsanskxR0OTLJd7L702kEmCLVeCtqkBX7XqZEzqkehiNK2uMfbAZV31rrkk1JlKyGMte1LJGAckdbSB6d8puGPoS5vs6lW3C0BfMWwkCjg3-hnzx-510TfHy"
+  },
+  {
+    "competition_id": "text-normalization-challenge-english-language",
+    "registry_dataset_size_gb": 0.01,
+    "rules_url": "https://www.kaggle.com/c/text-normalization-challenge-english-language/rules",
+    "rules_accepted": false,
+    "blocked_on_rules": true,
+    "error": "ApiException: (403)\nReason: Forbidden\nHTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json', 'Date': 'Sun, 09 Aug 2026 08:32:19 GMT', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Origin': '*', 'Set-Cookie': 'ka_sessionid=200c74208bc2acdae7879cc5d9de9e69; max-age=2626560; path=/, .AspNetCore.Mvc.CookieTempDataProvider=CfDJ8Oxz6O_D_GNGkNy8kL7JFsUq7CYP2SCdLZp2OolOwK108uaHpCVK3_uH3jV9p4TCGWDWUHPZ0ci5r71LKNOKoNft5lXextojpHKKk1NVn0csMQfwEaJBIR6jJiXyPU5h97XH_7y4TDeq8DpYcekBptvgiq_TA-pXUw53wWsxZvpPG--vuDJITUd3APqxC_1EWZf97R9LjUbuKpzARKUT7Ksl8DhiKWLk7qACOuOSO2em"
+  },
+  {
+    "competition_id": "text-normalization-challenge-russian-language",
+    "registry_dataset_size_gb": 0.01,
+    "rules_url": "https://www.kaggle.com/c/text-normalization-challenge-russian-language/rules",
+    "rules_accepted": false,
+    "blocked_on_rules": true,
+    "error": "ApiException: (403)\nReason: Forbidden\nHTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json', 'Date': 'Sun, 09 Aug 2026 08:32:19 GMT', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Origin': '*', 'Set-Cookie': 'ka_sessionid=bb26ba933adaabe841599dd7a62789d6; max-age=2626560; path=/, .AspNetCore.Mvc.CookieTempDataProvider=CfDJ8Oxz6O_D_GNGkNy8kL7JFsWI9hNZfSJCyvtTEz8GUiENHTHggUKiuMZMzQnAkVnKjVgU_W5SYj6AGndBukmlZp5QKtpnF5LyyXzg4uldQlY9FGLDPfsBsfRTlMmHUkMJFyllezRKZbipWneRqP88JSaYl_Pzi3EzEIKz0USUfZQ0HxV9IXfUeJnpHNW-LbygDmRrwHZbseqLeXgFNrDdS78lUXb8Aji1_vCRpnuYyppW"
+  },
+  {
+    "competition_id": "google-quest-challenge",
+    "registry_dataset_size_gb": 0.015,
+    "rules_url": "https://www.kaggle.com/c/google-quest-challenge/rules",
+    "rules_accepted": false,
+    "blocked_on_rules": true,
+    "error": "ApiException: (403)\nReason: Forbidden\nHTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json', 'Date': 'Sun, 09 Aug 2026 08:32:20 GMT', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Origin': '*', 'Set-Cookie': 'ka_sessionid=124d462f28fb3ce813f98dca269d59ca; max-age=2626560; path=/, .AspNetCore.Mvc.CookieTempDataProvider=CfDJ8Oxz6O_D_GNGkNy8kL7JFsXNazbTlXMTPF0m5pYevyoZQeAzkfwfByKWKYNloa5k90OoYby0WceTWjCxyv-3va-Ga8ISdz0dU8h2Di6LwK6O-bCuxhEmLYH7dOp29wriefpCWwn5OoNOzw5BkDsektnnB0qKh_dBZBSXQn5O3fgbEHiFEjOA8zenx6BMFaZGe29G7gyAKFyGUmdCMmfXE906Zha1CMvEAWtJ1KqV-JxJ"
+  },
+  {
+    "competition_id": "aerial-cactus-identification",
+    "registry_dataset_size_gb": 0.0254,
+    "rules_url": "https://www.kaggle.com/c/aerial-cactus-identification/rules",
+    "rules_accepted": false,
+    "blocked_on_rules": true,
+    "error": "ApiException: (403)\nReason: Forbidden\nHTTP response headers: HTTPHeaderDict({'Content-Type': 'application/json', 'Date': 'Sun, 09 Aug 2026 08:32:20 GMT', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Origin': '*', 'Set-Cookie': 'ka_sessionid=6729db71819bf4a5fa3e277c515a340c; max-age=2626560; path=/, .AspNetCore.Mvc.CookieTempDataProvider=CfDJ8Oxz6O_D_GNGkNy8kL7JFsX-1t4fifmkuEtCiTIzH1iG6uonNey_ilee4FIEGpVzWBe1xy2zX1tB9pJEY2owwaIlMhKMQWS0CG0UVj7RrPvRyXmr6JEB2f7Hn6-sC3A4risA0O4pUPs14U9JbhVLU4EtS-XR_YDOpiinRQRkWVv_FUzElyro4QE_T-g_iSfIuufuDqu1mWSvl8tVuegY9HulsB7OpY6dwf6yl0TQgSms"
+  }
+]

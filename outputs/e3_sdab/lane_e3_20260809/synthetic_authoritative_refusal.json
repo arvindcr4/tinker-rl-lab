@@ -1,0 +1,6 @@
+{
+  "status": "ERROR",
+  "errors": [
+    "bundle is marked synthetic; ingest it with mode='harness_validation' or supply the authentic provider bundle"
+  ]
+}

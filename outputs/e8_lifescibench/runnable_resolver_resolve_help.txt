@@ -1,0 +1,11 @@
+usage: pavlov_runnable_suite_resolver.py resolve [-h] --registry REGISTRY
+                                                 --runtime-receipts RUNTIME_RECEIPTS
+                                                 [--contract CONTRACT]
+                                                 [--out OUT]
+
+options:
+  -h, --help            show this help message and exit
+  --registry REGISTRY
+  --runtime-receipts RUNTIME_RECEIPTS
+  --contract CONTRACT
+  --out OUT

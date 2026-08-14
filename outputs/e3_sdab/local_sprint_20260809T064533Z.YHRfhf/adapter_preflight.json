@@ -1,0 +1,11 @@
+{
+  "boundary_supplied": false,
+  "errors": [
+    "boundary.suite_id must be a non-empty string"
+  ],
+  "launches_any_job": false,
+  "schema_version": "pavlov-sdab-adapter-preflight-v1",
+  "score": null,
+  "status": "BLOCKED",
+  "suite_id": "sdab_eval"
+}

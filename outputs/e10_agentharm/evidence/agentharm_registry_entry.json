@@ -1,0 +1,128 @@
+{
+  "inspect_ai_version": "0.3.254",
+  "inspect_evals/agentharm": {
+    "metadata": {
+      "attribs": "{}",
+      "params": "['agent', 'behavior_ids', 'split', 'detailed_behaviors', 'hint_included', 'n_irrelevant_tools', 'refusal_judge', 'semantic_judge', 'force_redownload', 'agent_kwargs', 'chat_dataset']"
+    },
+    "params": {
+      "agent": {
+        "annotation": "<class 'str'>",
+        "default": "'default'"
+      },
+      "agent_kwargs": {
+        "annotation": "dict[str, typing.Any] | None",
+        "default": "None"
+      },
+      "behavior_ids": {
+        "annotation": "list[str]",
+        "default": "[]"
+      },
+      "chat_dataset": {
+        "annotation": "bool | None",
+        "default": "False"
+      },
+      "detailed_behaviors": {
+        "annotation": "bool | None",
+        "default": "None"
+      },
+      "force_redownload": {
+        "annotation": "<class 'bool'>",
+        "default": "False"
+      },
+      "hint_included": {
+        "annotation": "bool | None",
+        "default": "None"
+      },
+      "n_irrelevant_tools": {
+        "annotation": "<class 'int'>",
+        "default": "0"
+      },
+      "refusal_judge": {
+        "annotation": "str | inspect_ai.model._model.Model",
+        "default": "'openai/gpt-4o-2024-08-06'"
+      },
+      "semantic_judge": {
+        "annotation": "str | inspect_ai.model._model.Model",
+        "default": "'openai/gpt-4o-2024-08-06'"
+      },
+      "split": {
+        "annotation": "typing.Literal['val', 'test_private', 'test_public']",
+        "default": "'test_public'"
+      }
+    },
+    "registry_name": "inspect_evals/agentharm",
+    "registry_type": "task",
+    "signature": "(agent: str = 'default', behavior_ids: list[str] = [], split: Literal['val', 'test_private', 'test_public'] = 'test_public', detailed_behaviors: bool | None = None, hint_included: bool | None = None, n_irrelevant_tools: int = 0, refusal_judge: str | inspect_ai.model._model.Model = 'openai/gpt-4o-2024-08-06', semantic_judge: str | inspect_ai.model._model.Model = 'openai/gpt-4o-2024-08-06', force_redownload: bool = False, agent_kwargs: dict[str, typing.Any] | None = None, chat_dataset: bool | None = False) -> inspect_ai._eval.task.task.Task"
+  },
+  "inspect_evals/agentharm_benign": {
+    "metadata": {
+      "attribs": "{}",
+      "params": "['agent', 'behavior_ids', 'split', 'detailed_behaviors', 'hint_included', 'n_irrelevant_tools', 'refusal_judge', 'semantic_judge', 'force_redownload', 'agent_kwargs']"
+    },
+    "params": {
+      "agent": {
+        "annotation": "<class 'str'>",
+        "default": "'default'"
+      },
+      "agent_kwargs": {
+        "annotation": "dict[str, typing.Any] | None",
+        "default": "None"
+      },
+      "behavior_ids": {
+        "annotation": "list[str] | None",
+        "default": "None"
+      },
+      "detailed_behaviors": {
+        "annotation": "bool | None",
+        "default": "None"
+      },
+      "force_redownload": {
+        "annotation": "<class 'bool'>",
+        "default": "False"
+      },
+      "hint_included": {
+        "annotation": "bool | None",
+        "default": "None"
+      },
+      "n_irrelevant_tools": {
+        "annotation": "<class 'int'>",
+        "default": "0"
+      },
+      "refusal_judge": {
+        "annotation": "str | inspect_ai.model._model.Model",
+        "default": "'openai/gpt-4o-2024-08-06'"
+      },
+      "semantic_judge": {
+        "annotation": "str | inspect_ai.model._model.Model",
+        "default": "'openai/gpt-4o-2024-08-06'"
+      },
+      "split": {
+        "annotation": "typing.Literal['val', 'test_private', 'test_public']",
+        "default": "'test_public'"
+      }
+    },
+    "registry_name": "inspect_evals/agentharm_benign",
+    "registry_type": "task",
+    "signature": "(agent: str = 'default', behavior_ids: list[str] | None = None, split: Literal['val', 'test_private', 'test_public'] = 'test_public', detailed_behaviors: bool | None = None, hint_included: bool | None = None, n_irrelevant_tools: int = 0, refusal_judge: str | inspect_ai.model._model.Model = 'openai/gpt-4o-2024-08-06', semantic_judge: str | inspect_ai.model._model.Model = 'openai/gpt-4o-2024-08-06', force_redownload: bool = False, agent_kwargs: dict[str, typing.Any] | None = None) -> inspect_ai._eval.task.task.Task"
+  },
+  "load_dataset": {
+    "cache_location": "/Users/arvind/Library/Caches/inspect_evals/agentharm_dataset/AgentHarm",
+    "dataset_revision_pinned_in_code": "e23b3fe60a0da9037314b88e5ee3a0c054970dad",
+    "signature": "(name: Literal['harmful', 'benign', 'chat'], split: Literal['val', 'test_public', 'test_private'], force_redownload: bool) -> inspect_ai.dataset._dataset.Dataset"
+  },
+  "python": "3.12.13",
+  "split_file_map_source": [
+    "\"val\": \"benchmark/harmful_behaviors_validation.json\",",
+    "\"test_public\": \"benchmark/harmful_behaviors_test_public.json\",",
+    "\"test_private\": \"benchmark/harmful_behaviors_test_private.json\",",
+    "\"val\": \"benchmark/benign_behaviors_validation.json\",",
+    "\"test_public\": \"benchmark/benign_behaviors_test_public.json\",",
+    "\"test_private\": \"benchmark/benign_behaviors_test_private.json\",",
+    "\"val\": \"benchmark/chat_validation.json\",",
+    "\"test_public\": \"benchmark/chat_public_test.json\",",
+    "\"test_private\": \"benchmark/chat_private_test.json\",",
+    "output_jsonl_file = input_json_file.with_suffix(\".jsonl\")",
+    "allow_patterns=\"**/*.json\","
+  ]
+}

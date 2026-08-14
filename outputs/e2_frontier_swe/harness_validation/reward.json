@@ -1,0 +1,31 @@
+{
+  "reward": 0.0,
+  "score": 0.0,
+  "geometric_mean_speedup": 0.0,
+  "num_hidden_scenes": 0,
+  "num_speedups_computed": 0,
+  "hard_fail_reasons": [
+    "baseline_results_missing",
+    "candidate_results_missing"
+  ],
+  "correctness_ok": true,
+  "is_oracle": false,
+  "total_time_ms": 3804241,
+  "per_scene": [],
+  "correctness_details": [],
+  "subscores": [
+    {
+      "subtask": "geometric_mean_speedup",
+      "score": 0.0,
+      "stdout": "Geo-mean speedup: 0.00x across 0 scenes",
+      "stderr": ""
+    },
+    {
+      "subtask": "correctness",
+      "score": 1.0,
+      "stdout": "PASS: 0/0 correct",
+      "stderr": ""
+    }
+  ],
+  "reason": "HARD FAIL: ['baseline_results_missing', 'candidate_results_missing']"
+}

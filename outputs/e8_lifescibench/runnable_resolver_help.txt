@@ -1,0 +1,17 @@
+usage: pavlov_runnable_suite_resolver.py [-h] {resolve,verify} ...
+
+Resolve the Pavlov suites that have runnable, receipt-backed inputs. The
+portfolio split registry proves the immutable split metadata. This module adds
+the second, local gate: every suite selected for execution must have a runtime
+receipt bundle whose references and hashes agree with the registry. Only
+receipt references, revisions, task digests, and other metadata leave this
+module. Prompts, targets, datasets, network clients, and job launchers are not
+part of the resolver.
+
+positional arguments:
+  {resolve,verify}
+    resolve         resolve runnable suites
+    verify          verify an existing resolution
+
+options:
+  -h, --help        show this help message and exit

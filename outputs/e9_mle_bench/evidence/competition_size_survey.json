@@ -1,0 +1,548 @@
+{
+  "source": {
+    "size_table": "experiments/competition_categories.csv",
+    "size_table_sha256": "5b6967e944e6b105f54f943cd13042158f49fec5206c0ff536d16d42cf39b634",
+    "eval_split": "experiments/splits/split75.txt",
+    "eval_split_sha256": "aa6a4dbfd19fee0536235be78361968603c84f0d4e06d4ed0ddc9bb212023057",
+    "size_units": "GB as recorded by the upstream repository"
+  },
+  "eval_split_competition_count": 75,
+  "definition_dir_count": 82,
+  "sized_competition_count": 75,
+  "sized_covers_eval_split": true,
+  "total_dataset_size_gb": 3283.6898,
+  "smallest": {
+    "competition_id": "spooky-author-identification",
+    "dataset_size_gb": 0.0019,
+    "dataset_size_mb": 1.9456,
+    "category": "Text Classification",
+    "complexity": "Low"
+  },
+  "ranking": [
+    {
+      "competition_id": "spooky-author-identification",
+      "dataset_size_gb": 0.0019,
+      "dataset_size_mb": 1.9456,
+      "category": "Text Classification",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "detecting-insults-in-social-commentary",
+      "dataset_size_gb": 0.002,
+      "dataset_size_mb": 2.048,
+      "category": "Text Classification",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "us-patent-phrase-to-phrase-matching",
+      "dataset_size_gb": 0.00214,
+      "dataset_size_mb": 2.1914,
+      "category": "Text (Other)",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "random-acts-of-pizza",
+      "dataset_size_gb": 0.003,
+      "dataset_size_mb": 3.072,
+      "category": "Text Classification",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "tweet-sentiment-extraction",
+      "dataset_size_gb": 0.003,
+      "dataset_size_mb": 3.072,
+      "category": "Text Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "nomad2018-predict-transparent-conductors",
+      "dataset_size_gb": 0.00624,
+      "dataset_size_mb": 6.3898,
+      "category": "Tabular",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "text-normalization-challenge-english-language",
+      "dataset_size_gb": 0.01,
+      "dataset_size_mb": 10.24,
+      "category": "Sequence to Sequence",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "text-normalization-challenge-russian-language",
+      "dataset_size_gb": 0.01,
+      "dataset_size_mb": 10.24,
+      "category": "Sequence to Sequence",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "google-quest-challenge",
+      "dataset_size_gb": 0.015,
+      "dataset_size_mb": 15.36,
+      "category": "Training LLMs",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "aerial-cactus-identification",
+      "dataset_size_gb": 0.0254,
+      "dataset_size_mb": 26.0096,
+      "category": "Image Classification",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "chaii-hindi-and-tamil-question-answering",
+      "dataset_size_gb": 0.032,
+      "dataset_size_mb": 32.768,
+      "category": "Training LLMs",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "leaf-classification",
+      "dataset_size_gb": 0.036,
+      "dataset_size_mb": 36.864,
+      "category": "Image Classification",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "learning-agency-lab-automated-essay-scoring-2",
+      "dataset_size_gb": 0.036,
+      "dataset_size_mb": 36.864,
+      "category": "Text Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "denoising-dirty-documents",
+      "dataset_size_gb": 0.06,
+      "dataset_size_mb": 61.44,
+      "category": "Image to Image",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "jigsaw-toxic-comment-classification-challenge",
+      "dataset_size_gb": 0.06,
+      "dataset_size_mb": 61.44,
+      "category": "Text Classification",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "lmsys-chatbot-arena",
+      "dataset_size_gb": 0.18,
+      "dataset_size_mb": 184.32,
+      "category": "Text Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "the-icml-2013-whale-challenge-right-whale-redux",
+      "dataset_size_gb": 0.29314,
+      "dataset_size_mb": 300.1754,
+      "category": "Audio Classification",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "statoil-iceberg-classifier-challenge",
+      "dataset_size_gb": 0.3021,
+      "dataset_size_mb": 309.3504,
+      "category": "Image Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "tgs-salt-identification-challenge",
+      "dataset_size_gb": 0.5,
+      "dataset_size_mb": 512.0,
+      "category": "Image Segmentation",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "tabular-playground-series-may-2022",
+      "dataset_size_gb": 0.57,
+      "dataset_size_mb": 583.68,
+      "category": "Tabular",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "mlsp-2013-birds",
+      "dataset_size_gb": 0.5851,
+      "dataset_size_mb": 599.1424,
+      "category": "Audio Classification",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "tabular-playground-series-dec-2021",
+      "dataset_size_gb": 0.7,
+      "dataset_size_mb": 716.8,
+      "category": "Tabular",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "ventilator-pressure-prediction",
+      "dataset_size_gb": 0.7,
+      "dataset_size_mb": 716.8,
+      "category": "Forecasting",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "whale-categorization-playground",
+      "dataset_size_gb": 0.72674,
+      "dataset_size_mb": 744.1818,
+      "category": "Image Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "dog-breed-identification",
+      "dataset_size_gb": 0.75,
+      "dataset_size_mb": 768.0,
+      "category": "Image Classification",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "plant-pathology-2020-fgvc7",
+      "dataset_size_gb": 0.8,
+      "dataset_size_mb": 819.2,
+      "category": "Image Classification",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "dogs-vs-cats-redux-kernels-edition",
+      "dataset_size_gb": 0.85,
+      "dataset_size_mb": 870.4,
+      "category": "Image Classification",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "petfinder-pawpularity-score",
+      "dataset_size_gb": 1.04,
+      "dataset_size_mb": 1064.96,
+      "category": "Image (Other)",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "champs-scalar-coupling",
+      "dataset_size_gb": 1.22,
+      "dataset_size_mb": 1249.28,
+      "category": "Tabular",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "billion-word-imputation",
+      "dataset_size_gb": 1.7,
+      "dataset_size_mb": 1740.8,
+      "category": "Training LLMs",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "AI4Code",
+      "dataset_size_gb": 2.16,
+      "dataset_size_mb": 2211.84,
+      "category": "Text Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "jigsaw-unintended-bias-in-toxicity-classification",
+      "dataset_size_gb": 2.4,
+      "dataset_size_mb": 2457.6,
+      "category": "Text Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "uw-madison-gi-tract-image-segmentation",
+      "dataset_size_gb": 2.47,
+      "dataset_size_mb": 2529.28,
+      "category": "Image Segmentation",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "stanford-covid-vaccine",
+      "dataset_size_gb": 2.68,
+      "dataset_size_mb": 2744.32,
+      "category": "Tabular",
+      "complexity": "High"
+    },
+    {
+      "competition_id": "facebook-recruiting-iii-keyword-extraction",
+      "dataset_size_gb": 3.2,
+      "dataset_size_mb": 3276.8,
+      "category": "Text Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "tensorflow-speech-recognition-challenge",
+      "dataset_size_gb": 3.76,
+      "dataset_size_mb": 3850.24,
+      "category": "Audio Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "kuzushiji-recognition",
+      "dataset_size_gb": 4.51,
+      "dataset_size_mb": 4618.24,
+      "category": "Image Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "nfl-player-contact-detection",
+      "dataset_size_gb": 5.01,
+      "dataset_size_mb": 5130.24,
+      "category": "Video Classification",
+      "complexity": "High"
+    },
+    {
+      "competition_id": "new-york-city-taxi-fare-prediction",
+      "dataset_size_gb": 5.7,
+      "dataset_size_mb": 5836.8,
+      "category": "Tabular",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "cassava-leaf-disease-classification",
+      "dataset_size_gb": 6.19,
+      "dataset_size_mb": 6338.56,
+      "category": "Image Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "histopathologic-cancer-detection",
+      "dataset_size_gb": 7.76,
+      "dataset_size_mb": 7946.24,
+      "category": "Image (Other)",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "bms-molecular-translation",
+      "dataset_size_gb": 8.87,
+      "dataset_size_mb": 9082.88,
+      "category": "Image to Text",
+      "complexity": "High"
+    },
+    {
+      "competition_id": "aptos2019-blindness-detection",
+      "dataset_size_gb": 10.22,
+      "dataset_size_mb": 10465.28,
+      "category": "Image Classification",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "ranzcr-clip-catheter-line-classification",
+      "dataset_size_gb": 13.13,
+      "dataset_size_mb": 13445.12,
+      "category": "Image Classification",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "plant-pathology-2021-fgvc8",
+      "dataset_size_gb": 16.1,
+      "dataset_size_mb": 16486.4,
+      "category": "Image Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "tensorflow2-question-answering",
+      "dataset_size_gb": 17.47,
+      "dataset_size_mb": 17889.28,
+      "category": "Text (Other)",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "smartphone-decimeter-2022",
+      "dataset_size_gb": 22.9,
+      "dataset_size_mb": 23449.6,
+      "category": "Tabular",
+      "complexity": "High"
+    },
+    {
+      "competition_id": "multi-modal-gesture-recognition",
+      "dataset_size_gb": 23.23,
+      "dataset_size_mb": 23787.52,
+      "category": "Image Segmentation",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "osic-pulmonary-fibrosis-progression",
+      "dataset_size_gb": 23.99,
+      "dataset_size_mb": 24565.76,
+      "category": "Forecasting",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "freesound-audio-tagging-2019",
+      "dataset_size_gb": 26.15,
+      "dataset_size_mb": 26777.6,
+      "category": "Audio Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "hms-harmful-brain-activity-classification",
+      "dataset_size_gb": 26.4,
+      "dataset_size_mb": 27033.6,
+      "category": "Image Classification",
+      "complexity": "High"
+    },
+    {
+      "competition_id": "hotel-id-2021-fgvc8",
+      "dataset_size_gb": 26.65,
+      "dataset_size_mb": 27289.6,
+      "category": "Image Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "imet-2020-fgvc7",
+      "dataset_size_gb": 29.46,
+      "dataset_size_mb": 30167.04,
+      "category": "Image Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "predict-volcanic-eruptions-ingv-oe",
+      "dataset_size_gb": 31.25,
+      "dataset_size_mb": 32000.0,
+      "category": "Signal Processing",
+      "complexity": "High"
+    },
+    {
+      "competition_id": "alaska2-image-steganalysis",
+      "dataset_size_gb": 32.27,
+      "dataset_size_mb": 33044.48,
+      "category": "Image Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "hubmap-kidney-segmentation",
+      "dataset_size_gb": 32.97,
+      "dataset_size_mb": 33761.28,
+      "category": "Image Segmentation",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "h-and-m-personalized-fashion-recommendations",
+      "dataset_size_gb": 34.56,
+      "dataset_size_mb": 35389.44,
+      "category": "Tabular",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "vesuvius-challenge-ink-detection",
+      "dataset_size_gb": 37.02,
+      "dataset_size_mb": 37908.48,
+      "category": "Image to Image",
+      "complexity": "High"
+    },
+    {
+      "competition_id": "iwildcam-2019-fgvc6",
+      "dataset_size_gb": 46.68,
+      "dataset_size_mb": 47800.32,
+      "category": "Image Classification",
+      "complexity": "High"
+    },
+    {
+      "competition_id": "herbarium-2020-fgvc7",
+      "dataset_size_gb": 63.16,
+      "dataset_size_mb": 64675.84,
+      "category": "Image Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "cdiscount-image-classification-challenge",
+      "dataset_size_gb": 78.12,
+      "dataset_size_mb": 79994.88,
+      "category": "Image Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "inaturalist-2019-fgvc6",
+      "dataset_size_gb": 87.76,
+      "dataset_size_mb": 89866.24,
+      "category": "Image Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "siim-isic-melanoma-classification",
+      "dataset_size_gb": 116.16,
+      "dataset_size_mb": 118947.84,
+      "category": "Image Classification",
+      "complexity": "Low"
+    },
+    {
+      "competition_id": "icecube-neutrinos-in-deep-ice",
+      "dataset_size_gb": 117.18,
+      "dataset_size_mb": 119992.32,
+      "category": "Tabular",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "iwildcam-2020-fgvc7",
+      "dataset_size_gb": 118.59,
+      "dataset_size_mb": 121436.16,
+      "category": "Image Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "3d-object-detection-for-autonomous-vehicles",
+      "dataset_size_gb": 125.79,
+      "dataset_size_mb": 128808.96,
+      "category": "Image Segmentation",
+      "complexity": "High"
+    },
+    {
+      "competition_id": "siim-covid19-detection",
+      "dataset_size_gb": 128.51,
+      "dataset_size_mb": 131594.24,
+      "category": "Object Detection",
+      "complexity": "High"
+    },
+    {
+      "competition_id": "rsna-miccai-brain-tumor-radiogenomic-classification",
+      "dataset_size_gb": 135.85,
+      "dataset_size_mb": 139110.4,
+      "category": "Image (Other)",
+      "complexity": "High"
+    },
+    {
+      "competition_id": "seti-breakthrough-listen",
+      "dataset_size_gb": 156.02,
+      "dataset_size_mb": 159764.48,
+      "category": "Signal Processing",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "herbarium-2021-fgvc8",
+      "dataset_size_gb": 161.9,
+      "dataset_size_mb": 165785.6,
+      "category": "Image Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "herbarium-2022-fgvc9",
+      "dataset_size_gb": 163.17,
+      "dataset_size_mb": 167086.08,
+      "category": "Image Classification",
+      "complexity": "Medium"
+    },
+    {
+      "competition_id": "vinbigdata-chest-xray-abnormalities-detection",
+      "dataset_size_gb": 205.96,
+      "dataset_size_mb": 210903.04,
+      "category": "Object Detection",
+      "complexity": "High"
+    },
+    {
+      "competition_id": "rsna-breast-cancer-detection",
+      "dataset_size_gb": 314.72,
+      "dataset_size_mb": 322273.28,
+      "category": "Image Classification",
+      "complexity": "High"
+    },
+    {
+      "competition_id": "rsna-2022-cervical-spine-fracture-detection",
+      "dataset_size_gb": 343.51,
+      "dataset_size_mb": 351754.24,
+      "category": "Image Classification",
+      "complexity": "High"
+    },
+    {
+      "competition_id": "google-research-identify-contrails-reduce-global-warming",
+      "dataset_size_gb": 450.91,
+      "dataset_size_mb": 461731.84,
+      "category": "Image Segmentation",
+      "complexity": "High"
+    }
+  ]
+}

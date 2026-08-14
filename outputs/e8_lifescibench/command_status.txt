@@ -1,0 +1,6 @@
+tests_exit=0
+help_exit=0
+resolver_help_exit=0
+resolver_resolve_help_exit=0
+
+adapter_json_exit=1

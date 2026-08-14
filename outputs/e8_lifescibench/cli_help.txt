@@ -1,0 +1,15 @@
+usage: pavlov_lifescibench_eval_adapter.py [-h] [--json]
+
+Fail-closed E8 Life-Sci-Bench primary-evaluation boundary. The repository has
+no local Life-Sci-Bench data, environment, or verifier. This module therefore
+defines and validates the exact receipt boundary without downloading anything
+or fabricating a result. A protocol boundary may be schema-valid while still
+lacking an immutable dataset/license pin; an observed receipt is accepted only
+when its native state/artifact verifier and all W&B, Tinker, and HF evidence
+fields are present. Life-Sci-Bench is the contract's ``primary_eval`` suite
+E8. BrowserGym, WebBench, ScienceWorld, xLAM, and other related benchmarks are
+explicitly non-substitutes.
+
+options:
+  -h, --help  show this help message and exit
+  --json      emit the blocked offline E8 boundary

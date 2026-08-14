@@ -1,0 +1,9 @@
+{
+  "competition_id": "spooky-author-identification",
+  "rules_url": "https://www.kaggle.com/c/spooky-author-identification/rules",
+  "metadata_endpoint_ok": true,
+  "download_endpoint_ok": true,
+  "accepted": true,
+  "error": null,
+  "authenticated_as": "arvindcr"
+}

@@ -1,0 +1,289 @@
+{
+  "claim_boundary": "Only rows with is_model_score=true are benchmark results; blocked and harness-only rows are not model evidence.",
+  "schema_version": "pavlov-e1-e14-trained-ledger-v1",
+  "status": "PARTIAL",
+  "suites": [
+    {
+      "blockers": [
+        "{'detail': 'HF cardData.license is null; no LICENSE* at pinned dataset revision; no license: field in README YAML', 'external_receipt_needed': {'kind': 'dataset_license', 'required_fields': ['dataset_id', 'dataset_revision', 'license', 'source_url', 'approved=true']}, 'id': 'dataset_license_undeclared'}",
+        "{'detail': 'No model-generated patch for the selected instance; gold is harness-only', 'external_receipt_needed': {'kind': 'model_patch_artifact', 'required_fields': ['instance_id', 'patch', 'model_revision', 'generation_run_id']}, 'id': 'model_patch_artifact_absent'}",
+        "{'detail': 'Official run_script.sh uses timeout 120 around mocha; under linux/amd64 QEMU on this host that is insufficient and yields empty tests. Gold resolves with timeout 1200.', 'external_receipt_needed': {'kind': 'native_amd64_host_or_script_timeout_policy', 'required_fields': ['host_arch=amd64 OR approved_timeout_override_receipt']}, 'id': 'arm64_qemu_official_timeout'}"
+      ],
+      "evaluated_sampler": null,
+      "is_model_score": false,
+      "lane": "E1",
+      "model_executed": false,
+      "receipt_path": "outputs/e1_swe_bench_pro/lane_receipt_2026-08-09.json",
+      "receipt_sha256": "77da1d36912f28f704cd0222e721e51487d069ddbeb9d1971afc7a944460957b",
+      "score": null,
+      "source_evidence_class": "harness_validation",
+      "source_status": "PARTIAL",
+      "status": "BLOCKED_BEFORE_MODEL_SCORE",
+      "suite_id": "swe_bench_pro"
+    },
+    {
+      "blockers": [
+        "{'code': 'benchmark_license_missing', 'message': 'the official checkout has no root LICENSE/LICENCE/COPYING/NOTICE at the pinned revision; README, SCORING.md and pyproject.toml declare no license; the GitHub API reports license: null', 'required_receipt': 'a license receipt or explicit maintainer authorization binding https://github.com/Proximal-Labs/frontier-swe@422b9bb95deb8efe436becb0ed3c44be23611e10', 'verified_this_session': True}",
+        "{'code': 'submission_missing', 'message': 'no model-produced candidate workspace exists', 'required_receipt': 'a candidate /app/revideo tree per candidate_workspace_contract, produced by an agent rollout with a paid model key', 'verified_this_session': True}",
+        "{'code': 'arch_mismatch_amd64_image_on_arm64_host', 'message': 'the published image is linux/amd64 only; the Colima VM is aarch64 with plain QEMU user-mode emulation and no Rosetta. Headless Chrome core-dumps inside QEMU (rcu_read_unlock assertion, rc=134), so no scene renders and the frozen read-only baseline cannot be timed.', 'required_receipt': 'an x86-64 Linux runner for the native verifier', 'verified_this_session': True}"
+      ],
+      "evaluated_sampler": null,
+      "is_model_score": false,
+      "lane": "E2",
+      "model_executed": false,
+      "receipt_path": "outputs/e2_frontier_swe/e2_frontier_swe_lane_receipt_2026-08-09.json",
+      "receipt_sha256": "f7fbb166658f6e9c2ba19cd917a8b47764020946c5297837379d6e6229d5cfa5",
+      "score": null,
+      "source_evidence_class": null,
+      "source_status": "BLOCKED",
+      "status": "BLOCKED_BEFORE_MODEL_SCORE",
+      "suite_id": "frontier_swe"
+    },
+    {
+      "blockers": [
+        "{'detail': 'The 80-task SDAB evaluation bundle is private. No public mirror, no dataset card, no revision identifier.', 'external_receipt_needed': 'Provider-issued bundle with a 40- or 64-hex immutable revision, the 80 task IDs, category and difficulty-variant labels, and a license identifier or evaluation-agreement reference.', 'gate_it_unblocks': 'exact_native_sdab_runtime (schema, task hashing, split manifest)', 'id': 'official_task_bundle'}",
+        "{'detail': 'No train/eval split receipt exists. train_task_id_sha256 is null, so the runtime manifest cannot be emitted.', 'external_receipt_needed': \"Provider statement of the training/development/public task IDs (or an explicit 'no train split exists'), with an immutable reference.\", 'gate_it_unblocks': 'runtime manifest emission', 'id': 'disjointness_receipt'}",
+        "{'detail': 'The live enterprise runtime with deterministic reset, running infrastructure, and traffic generator is private. The only failing preflight gate is the missing provider adapter module.', 'external_receipt_needed': 'Container digest, environment/seed digest, cloudbox provisioning path, and a module:factory adapter entrypoint exposing list_tasks/evaluate_task/verify_result.', 'gate_it_unblocks': 'exact_native_sdab_runtime', 'id': 'native_environment'}",
+        "{'detail': 'The grading harness (behavioral tests, engineering rubrics, LLM judge, hidden state validation) is private and sits outside the agent workspace by design.', 'external_receipt_needed': 'Verifier identity, revision, sha256, behavioral-test/rubric/state-validation digests, judge model and configuration, and the composite weighting.', 'gate_it_unblocks': 'result admissibility (every per-task score is discarded without it)', 'id': 'native_verifier'}"
+      ],
+      "evaluated_sampler": null,
+      "is_model_score": false,
+      "lane": "E3",
+      "model_executed": false,
+      "receipt_path": "outputs/e3_sdab/receipt_2026-08-09.json",
+      "receipt_sha256": "659c3db0dd3951bdd7fbc7de69e3eec9e69572cd94f7594e2ba6bde617b8ca36",
+      "score": null,
+      "source_evidence_class": null,
+      "source_status": "BLOCKED",
+      "status": "BLOCKED_BEFORE_MODEL_SCORE",
+      "suite_id": "sdab"
+    },
+    {
+      "blockers": [
+        "native Harbor environment is not ready: BUILD_INVALIDATED_BY_CONCURRENT_CLEANUP",
+        "online W&B project codex cannot be initialized: WANDB_API_KEY is absent",
+        "Tinker sampler/evaluation access is absent: TINKER_API_KEY is absent",
+        "native Gandalf verifier cannot run: GEMINI_API_KEY is absent",
+        "no immutable Hugging Face checkpoint receipt exists for a weight-changing run",
+        "no projected paid lane cost is recorded at or below USD 1.00"
+      ],
+      "evaluated_sampler": null,
+      "is_model_score": false,
+      "lane": "E4",
+      "model_executed": false,
+      "receipt_path": "outputs/e4_banker_toolbench/e4_harbor_rerun_receipt.json",
+      "receipt_sha256": "deb743b1c41f60594269c6ef595739c2de9abef5d482ece124274b5f0dcd292a",
+      "score": null,
+      "source_evidence_class": null,
+      "source_status": "BLOCKED",
+      "status": "BLOCKED_BEFORE_MODEL_SCORE",
+      "suite_id": "banker_toolbench"
+    },
+    {
+      "blockers": [
+        "source receipt contains no completed trained-model score"
+      ],
+      "evaluated_sampler": null,
+      "is_model_score": false,
+      "lane": "E5",
+      "model_executed": false,
+      "receipt_path": "outputs/e5_apex_agents/harness_validation/out/harness_validation_receipt.json",
+      "receipt_sha256": "32da120a4293ce786a58218a8211a757f30d25252efb4682c14a20768513408f",
+      "score": null,
+      "source_evidence_class": null,
+      "source_status": "PASS",
+      "status": "BLOCKED_BEFORE_MODEL_SCORE",
+      "suite_id": "apex_agents"
+    },
+    {
+      "blockers": [
+        "{'external_receipt_required': {'fields': ['approved=true', 'access_receipt_id', 'environment.environment_id', 'environment.environment_revision (40-hex immutable)', 'environment.container_image_digest (sha256:<64 hex>)', 'environment.browser_revision', 'environment.screenshot_capture=true', 'environment.dom_capture=true', 'environment.task_reset=true', 'environment.credential_scope'], 'provider': 'Halluminate'}, 'id': 'halluminate_live_environment', 'severity': 'terminal_without_provider', 'unblock_command': 'python3 zvf-program/flagship/webbench_eval.py --native-receipt <halluminate_receipt.json> ... --launch', 'why': 'The public repo ships the task CSV and MIT license only. The live browser environment, credentials, and reset contract are not public.'}",
+        "{'evidence_url': 'https://github.com/Halluminate/WebBench/issues/2', 'external_receipt_required': {'fields': ['native_verifier.available=true', 'native_verifier.ground_truth_available=true', 'native_verifier.verifier_id', 'native_verifier.verifier_revision (40-hex immutable)', 'native_verifier.verifier_sha256', 'native_verifier.command (argv list)', 'native_verifier.receipt_url (https)'], 'provider': 'Halluminate'}, 'id': 'halluminate_native_verifier', 'severity': 'terminal_without_provider', 'why': \"No public ground truth or scoring script; the repo's ground-truth issue is open. Human annotation is not native verification.\"}",
+        "{'external_receipt_required': {'fields': ['allowed_task_ids', 'credential_scope', 'side_effect_policy', 'terms_or_license_signoff'], 'provider': 'Halluminate'}, 'id': 'webbench_task_authorization', 'severity': 'policy', 'why': '1010 of 2647 tasks (38.2%) are write-class against 448 live third-party domains. MIT covers the repo contents, not automated writes to those services.'}",
+        "{'external_receipt_required': {'fields': ['evaluation_task_id_hash', 'heldout_exists', 'heldout_relationship_to_public_csv'], 'provider': 'Halluminate'}, 'id': 'official_heldout_split', 'severity': 'informational', 'why': 'Public CSV IDs are sparse over 0..2724 with 78 absent. Whether the absent IDs are a withheld split is unconfirmed.'}",
+        "{'id': 'model_artifact', 'severity': 'downstream', 'why': 'No completed compatible Tinker sampler checkpoint. Preflight falls back to base-model binding Qwen/Qwen3-VL-30B-A3B-Instruct@9c4b90e1e4ba969fd3b5378b57d966d725f1b86c. Moot until the environment/verifier land.'}"
+      ],
+      "evaluated_sampler": null,
+      "is_model_score": false,
+      "lane": "E6",
+      "model_executed": false,
+      "receipt_path": "outputs/e6_webbench/e6_lane_receipt_2026-08-09.json",
+      "receipt_sha256": "53b32394fe4549fb74f178c2a52be287ed7792928e3706bd931d3734273c42b7",
+      "score": null,
+      "source_evidence_class": null,
+      "source_status": "BLOCKED",
+      "status": "BLOCKED_BEFORE_MODEL_SCORE",
+      "suite_id": "webbench"
+    },
+    {
+      "blockers": [
+        "{'kind': 'credential', 'detail': 'No agent model key. Exactly one env var is missing: ANTHROPIC_API_KEY (or OPENROUTER_API_KEY with an openrouter/... model).', 'unblock_command': 'export ANTHROPIC_API_KEY=... && cd outputs/e7_binaryaudit/BinaryAudit && DOCKER_DEFAULT_PLATFORM=linux/amd64 harbor run --path tasks --include-task-name dnsmasq-backdoor-detect --agent terminus-2 --model anthropic/claude-opus-4-6-20260409 -o ../jobs --job-name e7_real', 'required_external_receipt': 'An OpenRouter or Anthropic API key provisioned for benchmark use.'}",
+        "{'kind': 'license', 'detail': \"No LICENSE artifact exists anywhere in the repository history or on GitHub; the README's Apache-2.0 claim is unbacked. Policy gate, not a download.\", 'required_external_receipt': 'A LICENSE file at a pinned upstream revision, or written license confirmation from Quesma.'}",
+        "{'kind': 'coverage', 'detail': \"Only dnsmasq-backdoor-detect's task environment has been built on this arm64 host. The other 45 are unverified; upstream already documents that lighttpd-backdoor-multiple-arch-binaries-detect needs binfmt handlers registered.\", 'required_external_receipt': None}"
+      ],
+      "evaluated_sampler": null,
+      "is_model_score": false,
+      "lane": "E7",
+      "model_executed": false,
+      "receipt_path": "outputs/e7_binaryaudit/e7_binaryaudit_receipt_2026-08-09.json",
+      "receipt_sha256": "154b509127f741395ca0fadadb863574f18348554f54a25c3f9361370a3832cb",
+      "score": null,
+      "source_evidence_class": null,
+      "source_status": "PARTIAL",
+      "status": "BLOCKED_BEFORE_MODEL_SCORE",
+      "suite_id": "binaryaudit"
+    },
+    {
+      "blockers": [
+        "{'access_gated': True, 'code': 'E8_DATASET_REVISION', 'external_receipt_needed': 'Task package at a stated immutable revision (commit SHA or sha256 digest).', 'preflight_error': 'dataset.revision must be an immutable 40-hex or sha256: revision', 'provider_term': 'the 750 expert-authored LifeSciBench tasks with prompts, artifacts, and rubrics (preprint \u00a73.3)'}",
+        "{'access_gated': True, 'code': 'E8_LICENSE_RECEIPT', 'external_receipt_needed': 'Named licence identifier or a dated written access grant.', 'preflight_error': 'dataset license must be explicitly approved; dataset.license_id must be pinned, not UNPINNED_REQUIRED', 'provider_term': 'licence or terms of use governing the evaluation materials (preprint appendix A.5)'}",
+        "{'access_gated': True, 'code': 'E8_NATIVE_ENVIRONMENT_REVISION', 'external_receipt_needed': 'Interface container digest or commit SHA, plus the single-turn and browsing settings.', 'preflight_error': 'native_environment.revision must be an immutable 40-hex or sha256: revision', 'provider_term': 'the evaluation interface that presents task artifacts to the model (preprint \u00a75.1)'}",
+        "{'access_gated': True, 'code': 'E8_NATIVE_VERIFIER_REVISION', 'external_receipt_needed': 'Grader revision and, where model-assisted, the grader model identity and version.', 'preflight_error': 'native_verifier.revision must be an immutable 40-hex or sha256: revision', 'provider_term': 'the rubric grader that scores each criterion independently (preprint \u00a75.1, appendix A.3)'}",
+        "{'access_gated': True, 'code': 'E8_TASK_MANIFEST', 'external_receipt_needed': 'Task-ID list at a stated package revision.', 'preflight_error': 'task_manifest must contain immutable evaluation task rows', 'provider_term': 'the ordered 750 task identifiers with workflow and biological-domain stratification labels'}",
+        "{'access_gated': True, 'code': 'E8_HELDOUT_DISJOINTNESS', 'external_receipt_needed': 'Written provider statement; the preprint contains zero mentions of contamination, decontamination, leakage, or held-out controls.', 'note': 'A statement that no contamination analysis was performed is equally usable: the result would then be reported as not proven held-out.', 'preflight_error': 'train_split_manifest_hash must be a lowercase SHA-256 digest', 'provider_term': 'train/evaluation disjointness and contamination controls'}"
+      ],
+      "evaluated_sampler": null,
+      "is_model_score": false,
+      "lane": "E8",
+      "model_executed": false,
+      "receipt_path": "outputs/e8_lifescibench/lane_receipt_2026-08-09.json",
+      "receipt_sha256": "f0f6de0d578b8eec54443052a9eb423a68ad1cdf0e192f1e56b8398cc4359931",
+      "score": null,
+      "source_evidence_class": null,
+      "source_status": "BLOCKED",
+      "status": "BLOCKED_BEFORE_MODEL_SCORE",
+      "suite_id": "lifescibench"
+    },
+    {
+      "blockers": [
+        "container_image_digest_present",
+        "model_submission_artifact_present",
+        "contamination_disjointness_receipt"
+      ],
+      "evaluated_sampler": null,
+      "is_model_score": false,
+      "lane": "E9",
+      "model_executed": false,
+      "receipt_path": "outputs/e9_mle_bench/e9_mle_bench_receipt_2026-08-09.json",
+      "receipt_sha256": "3e769b8331d8a6d4448514c5a5ca62080516f3df60e7df0a2d3d7cb41d9d9b6c",
+      "score": null,
+      "source_evidence_class": null,
+      "source_status": "BLOCKED",
+      "status": "BLOCKED_BEFORE_MODEL_SCORE",
+      "suite_id": "mle_bench"
+    },
+    {
+      "blockers": [
+        "{'external_receipt_needed': 'Written AISI grant of held-out AgentHarm access, plus the file revision/checksums AISI publishes with the grant.', 'id': 'E10-HELDOUT-SPLIT', 'loader_flag': 'split=\"test_private\"', 'request_artifact': 'outputs/e10_agentharm/AISI_ACCESS_REQUEST.md', 'required_files': ['benchmark/harmful_behaviors_test_private.json', 'benchmark/benign_behaviors_test_private.json', 'benchmark/chat_private_test.json'], 'summary': 'AgentHarm held-out split files are absent from the public dataset revision and gated by the UK AI Safety Institute.'}",
+        "{'external_receipt_needed': 'AISI-approved policy grader / refusal-and-semantic judge specification with a pinned identity hash.', 'id': 'E10-POLICY-GRADER-ARTIFACT', 'request_artifact': 'outputs/e10_agentharm/AISI_ACCESS_REQUEST.md', 'summary': 'The contract marks agentharm_eval artifact_required; the approved policy-grader artifact is not present locally.'}",
+        "{'external_receipt_needed': 'Budget authorization plus an OpenAI key (or the AISI-approved judge substitute) before any scored run.', 'id': 'E10-JUDGE-MODEL-KEY', 'summary': 'The official grader defaults to openai/gpt-4o-2024-08-06 for both the refusal judge and the semantic judge. No paid model key is authorized for benchmark use in this lane.'}",
+        "{'external_receipt_needed': 'Tinker/W&B run identity and budget receipt.', 'id': 'E10-MODEL-ARTIFACT', 'summary': 'No agent artifact exists for Qwen/Qwen3.6-35B-A3B@995ad96eacd9; the scored run needs an agent model, which is a paid call this lane may not make.'}"
+      ],
+      "evaluated_sampler": null,
+      "is_model_score": false,
+      "lane": "E10",
+      "model_executed": false,
+      "receipt_path": "outputs/e10_agentharm/receipt_2026-08-09.json",
+      "receipt_sha256": "1c28e8fcd4e90d1b3a26392fff14968185d32d873f6fc2ee4407cdb1fbdced9d",
+      "score": null,
+      "source_evidence_class": null,
+      "source_status": "PARTIAL",
+      "status": "BLOCKED_BEFORE_MODEL_SCORE",
+      "suite_id": "agentharm"
+    },
+    {
+      "blockers": [],
+      "evaluated_sampler": "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler_weights/step_seed809_40",
+      "is_model_score": true,
+      "lane": "E11",
+      "model_executed": true,
+      "receipt_path": "outputs/e11_verilog_eval/e11_trained_step40_receipt.json",
+      "receipt_sha256": "6a88a5eef5209d835f31ef433034c2f837679303b8fa3954d0517328b245deed",
+      "score": 1.0,
+      "source_evidence_class": "primary_evaluation/pass@1",
+      "source_status": "SCORED",
+      "status": "SCORED",
+      "suite_id": "verilog_eval"
+    },
+    {
+      "blockers": [
+        "{'code': 'LICENSE_RECEIPT_MISSING', 'severity': 'launch_blocking', 'state': 'OPEN', 'detail': \"AfterQuery publishes no license and no terms grant for App-Bench. Verified 2026-08-09: the HF dataset has no cardData key, no license tag, no README/LICENSE/NOTICE/TERMS at the pinned revision, and an empty dataset card; the leaderboard HTML contains zero occurrences of 'license'; the site ToS reserves rights over AfterQuery content and grants users nothing. The absence is specific - AfterQuery licenses three of its other six public datasets.\", 'external_receipt_needed': 'written license or permission from founders@afterquery.com, or an explicit written risk acceptance by the user', 'who_can_unblock': 'the user (policy decision) or AfterQuery (grant)'}",
+        "{'code': 'NATIVE_APPBENCH_RUNNER_MISSING', 'severity': 'launch_blocking', 'state': 'OPEN', 'detail': 'No AppBench task runner, deployment harness, artifact verifier, or side-effect verifier exists locally, and none is published upstream. The only App-Bench repo AfterQuery publishes is a 3-file documentation repo with no code. Three prerequisites (Next.js template, Supabase project, human graders) have no upstream artifact to pin against. A specification is now written at outputs/e12_appbench/native_runner_spec.md; it is a spec, not an implementation.', 'external_receipt_needed': 'none - this is buildable work, but steps 1-3 of the spec are unbuilt and step 4 needs an agent model credential', 'who_can_unblock': 'engineering time, plus an agent model key for the generation step'}",
+        "{'code': 'HUMAN_GRADER_PROTOCOL_NOT_REPRODUCIBLE', 'severity': 'score_invalidating', 'state': 'OPEN', 'detail': 'The official AppBench verifier is two experienced full-stack developers grading each deployed app by hand against the rubric, with joint re-adjudication of disagreements. Any automated or LLM-judge verifier built locally measures something else. This blocker does not prevent building a harness; it prevents calling the harness output an AppBench score.', 'external_receipt_needed': 'two qualified human graders following the published dual-grading protocol, or an explicit downgrade of the claim to harness_validation', 'who_can_unblock': 'the user'}",
+        "{'code': 'HELDOUT_TASK_SPLIT_UNPROVEN', 'severity': 'launch_blocking', 'state': 'PARTIALLY_RESOLVED', 'detail': 'Resolved: immutable content-addressed task IDs, a deterministic split hash byte-compatible with the contract adapter, an aggregate manifest hash, and a disjointness proof against 900 foreign task IDs across 41 files, all unit-tested (30 tests). Still open: the tasks are public on the Hugging Face Hub since 2025-12-10, so freedom from training contamination cannot be proven and is recorded as null, not true. Upstream publishes no private held-out partition.', 'external_receipt_needed': 'a private held-out partition from AfterQuery, or a model whose training cutoff provably predates 2025-12-10', 'who_can_unblock': 'AfterQuery, or model-provenance evidence'}",
+        "{'code': 'MANDATORY_PLATFORM_RECEIPTS_ABSENT', 'severity': 'launch_blocking', 'state': 'OPEN', 'detail': 'No W&B, Tinker, or Hugging Face checkpoint receipts exist because no experiment was attempted. Consistent with the cost boundary for this sprint.', 'external_receipt_needed': 'none until an actual run is authorized', 'who_can_unblock': 'the user, by authorizing a paid run'}"
+      ],
+      "evaluated_sampler": null,
+      "is_model_score": false,
+      "lane": "E12",
+      "model_executed": false,
+      "receipt_path": "outputs/e12_appbench/receipt_2026-08-09.json",
+      "receipt_sha256": "12d6e2a463baf02b847a6548599fad13752a95552a2f8d543a90253fe0652039",
+      "score": null,
+      "source_evidence_class": "offline_split_work_complete_executor_and_license_blocked",
+      "source_status": "BLOCKED",
+      "status": "BLOCKED_BEFORE_MODEL_SCORE",
+      "suite_id": "appbench"
+    },
+    {
+      "blockers": [
+        "No LICENSE file in any of the 277 EnvCommons repos; wrapper code has no explicit grant. Needs written confirmation or a LICENSE commit from GR Inc.",
+        "No official named 'openreward_games_eval' held-out suite is published; the 74-environment set is our selection, not the provider's.",
+        "Deployed environment revision cannot be bound to the pinned public commit without an account; hosted scores are not reproducible until it can.",
+        "A model score requires a paid provider key (OpenAI/Anthropic/OpenRouter); not crossed per the lane cost boundary.",
+        "The 'test' split is public, so it is not held out from anyone; whether E13 intends a narrower private holdout is unestablished."
+      ],
+      "evaluated_sampler": null,
+      "is_model_score": false,
+      "lane": "E13",
+      "model_executed": false,
+      "receipt_path": "outputs/e13_openreward_games/receipt_2026-08-09.json",
+      "receipt_sha256": "2768c2f18ebca228b72a2d643a71ad32ece7d8cb2357563beee70f4ea63fed8c",
+      "score": null,
+      "source_evidence_class": null,
+      "source_status": "PARTIAL",
+      "status": "BLOCKED_BEFORE_MODEL_SCORE",
+      "suite_id": "openreward_games"
+    },
+    {
+      "blockers": [
+        "TERMINAL \u2014 the dataset is never released. Epoch AI is contractually unable to share Tiers 1-4 questions and answers without OpenAI's written permission. There is no download, no gated Hugging Face repo, no data-use agreement, and no request form that yields the problems. No local action can ever unblock this lane.",
+        "Evaluation is HOSTED BY EPOCH AI, not submitted to a portal. A FrontierMath number requires Epoch to run the eval on their own infrastructure against a model they can reach (public API, pre-release access, or a UI session their staff drive). This is an organisational agreement, not a credential this repo can set.",
+        "No grader is public. Reference solutions and the answer-checking logic ship with the private set. The public transcripts contain neither ground truth nor verdicts, so nothing here is gradable.",
+        "The public sample corpus (150 transcripts over the ORIGINAL 5 public problems from the 2024 paper) is characterization evidence only. It is ~1.5% of the 338-problem post-v2 private set, is outdated relative to the 12 problems Epoch currently publishes, and is not a benchmark split.",
+        "No official FrontierMath dataset exists on Hugging Face or GitHub. Every repo claiming to be FrontierMath is a solver or a reconstruction and cannot produce a comparable score. Using one would be fabrication.",
+        "Any local math result (GSM8K, MATH-500, AIME, MathArena) is a different benchmark and must never be reported under frontiermath_eval."
+      ],
+      "evaluated_sampler": null,
+      "is_model_score": false,
+      "lane": "E14",
+      "model_executed": false,
+      "receipt_path": "outputs/e14_frontiermath/receipt_2026-08-09.json",
+      "receipt_sha256": "c2a7b36e9483324f9ffb87490d08a85b0281042f595a69ef3a775c75403ad785",
+      "score": null,
+      "source_evidence_class": null,
+      "source_status": "BLOCKED",
+      "status": "BLOCKED_BEFORE_MODEL_SCORE",
+      "suite_id": "frontiermath"
+    }
+  ],
+  "summary": {
+    "blocked_before_model_score": 13,
+    "model_executed": 1,
+    "model_scored": 1,
+    "suite_count": 14
+  },
+  "training": {
+    "final_hf_commit": "64444133c55d88c3f1bf0df8a2f5d7ac646125c8",
+    "final_hf_repo": "https://huggingface.co/arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6",
+    "final_hf_revision": "checkpoint-seed809-stepfinal-9f777c4018b6",
+    "sampler_path": "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler_weights/seed809_final",
+    "tinker_run_id": "cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/bsv8vx04"
+  },
+  "wandb": {
+    "project": "tinker-rl-lab-pavlov",
+    "run_id": "wh8xzm2b",
+    "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/wh8xzm2b"
+  }
+}

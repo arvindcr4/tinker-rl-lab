@@ -262,6 +262,74 @@ class DatasetSchemaGateTests(unittest.TestCase):
         )
 
 
+class LocalDatasetGateTests(unittest.TestCase):
+    """`--dataset-dir` must prove the revision, not just the filenames."""
+
+    def _materialize(self, root: Path, *, commit: str | None) -> Path:
+        root.mkdir(parents=True, exist_ok=True)
+        payloads = {
+            "tasks_and_rubrics.json": json.dumps([synthetic_task("a")]),
+            "world_descriptions.json": json.dumps([synthetic_world()]),
+            "eval.yaml": "name: APEX-Agents\n",
+        }
+        cache = root / ".cache" / "huggingface" / "download"
+        cache.mkdir(parents=True, exist_ok=True)
+        for name, body in payloads.items():
+            (root / name).write_text(body, encoding="utf-8")
+            if commit is not None:
+                (cache / f"{name}.metadata").write_text(
+                    f"{commit}\netag\n123.0\n", encoding="utf-8"
+                )
+        return root
+
+    def test_pinned_revision_passes_and_records_digests(self):
+        with TemporaryDirectory() as tmp:
+            root = self._materialize(Path(tmp) / "ds", commit=runner.DATASET_REVISION)
+            gate, resolved = runner._dataset_access_gate(
+                token=None, cache_dir=Path(tmp) / "cache", dataset_dir=root
+            )
+        self.assertEqual(gate.status, "PASS")
+        self.assertEqual(gate.details["source"], "local_dataset_dir")
+        self.assertEqual(set(resolved), {"tasks", "worlds", "eval"})
+        for record in gate.details["files"].values():
+            self.assertEqual(record["recorded_commit"], runner.DATASET_REVISION)
+            self.assertEqual(len(record["sha256"]), 64)
+
+    def test_copy_from_another_revision_is_rejected(self):
+        with TemporaryDirectory() as tmp:
+            root = self._materialize(Path(tmp) / "ds", commit="0" * 40)
+            gate, resolved = runner._dataset_access_gate(
+                token=None, cache_dir=Path(tmp) / "cache", dataset_dir=root
+            )
+        self.assertEqual(gate.status, "BLOCKED")
+        self.assertIsNone(resolved)
+        self.assertTrue(gate.details["wrong_revision"])
+
+    def test_directory_without_cache_metadata_is_rejected(self):
+        """A hand-assembled directory cannot masquerade as the pinned revision."""
+        with TemporaryDirectory() as tmp:
+            root = self._materialize(Path(tmp) / "ds", commit=None)
+            gate, resolved = runner._dataset_access_gate(
+                token=None, cache_dir=Path(tmp) / "cache", dataset_dir=root
+            )
+        self.assertEqual(gate.status, "BLOCKED")
+        self.assertIsNone(resolved)
+        self.assertEqual(
+            [entry["recorded_commit"] for entry in gate.details["wrong_revision"]],
+            [None, None, None],
+        )
+
+    def test_missing_file_is_reported(self):
+        with TemporaryDirectory() as tmp:
+            root = self._materialize(Path(tmp) / "ds", commit=runner.DATASET_REVISION)
+            (root / "eval.yaml").unlink()
+            gate, _ = runner._dataset_access_gate(
+                token=None, cache_dir=Path(tmp) / "cache", dataset_dir=root
+            )
+        self.assertEqual(gate.status, "BLOCKED")
+        self.assertEqual(gate.details["missing"], ["eval.yaml"])
+
+
 class ReceiptEmissionTests(unittest.TestCase):
     """The receipt must stay honest when ingestion cannot happen."""
 

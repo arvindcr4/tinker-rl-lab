@@ -1,0 +1,148 @@
+{
+  "schema_version": "pavlov-e5-apex-agents-cost-projection-v1",
+  "suite_id": "apex_agents_eval",
+  "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+  "no_model_or_provider_was_called": true,
+  "measured_from_dataset": {
+    "tasks": 480,
+    "rubric_criteria_total": 1948,
+    "rubric_criteria_min": 1,
+    "rubric_criteria_max": 10,
+    "rubric_criteria_mean": 4.058,
+    "file_output_tasks": 58,
+    "file_output_criteria": 322,
+    "mean_task_prompt_tokens": 157,
+    "mean_criterion_tokens": 24
+  },
+  "measured_from_archipelago": {
+    "grading_system_prompt_tokens": 1027,
+    "artifact_selection_system_prompt_tokens": 506,
+    "negative_criteria_enabled": false,
+    "judge_calls_per_criterion": "1 grading + 1 artifact-selection when the snapshot diff is non-empty"
+  },
+  "assumptions": [
+    "4 characters per token",
+    "agent answer length is swept over 500 / 2000 / 8000 tokens rather than assumed",
+    "judge rate tiers are PLACEHOLDERS, not vendor quotes -- substitute the real rate card",
+    "Tinker cost uses the ceiling (every step saturates max_prompt_tokens); real usage is lower",
+    "artifact excerpt tokens inside the grading prompt are not modelled and push the judge cost up for the 58 file-output tasks"
+  ],
+  "remaining_budget_usd": "15.00",
+  "tinker_agent_cost": {
+    "max_steps_50": {
+      "per_task_ceiling_usd": "0.26",
+      "tasks_affordable_at_remaining_budget": 58,
+      "share_of_suite_affordable": "12.2%",
+      "pass@1": {
+        "rollouts_per_task": 1,
+        "total_usd": "122.57",
+        "over_remaining_budget_by": "8.2x"
+      },
+      "pass@8_leaderboard_parity": {
+        "rollouts_per_task": 8,
+        "total_usd": "980.58",
+        "over_remaining_budget_by": "65.4x"
+      }
+    },
+    "max_steps_100": {
+      "per_task_ceiling_usd": "0.51",
+      "tasks_affordable_at_remaining_budget": 29,
+      "share_of_suite_affordable": "6.1%",
+      "pass@1": {
+        "rollouts_per_task": 1,
+        "total_usd": "245.15",
+        "over_remaining_budget_by": "16.3x"
+      },
+      "pass@8_leaderboard_parity": {
+        "rollouts_per_task": 8,
+        "total_usd": "1961.16",
+        "over_remaining_budget_by": "130.7x"
+      }
+    }
+  },
+  "judge_call_counts": {
+    "grading_calls": 1948,
+    "artifact_selection_calls_floor": 322,
+    "artifact_selection_calls_ceiling": 1948,
+    "negative_criteria_calls": 0,
+    "negative_criteria_note": "NEGATIVE_CRITERIA_ENABLED is False in the pinned source, and the APEX rubric carries no negative_criteria field",
+    "total_floor": 2270,
+    "total_ceiling": 3896
+  },
+  "judge_cost": {
+    "agent_output_500_tokens": {
+      "grading_call_input_tokens": 1708,
+      "artifact_selection_call_input_tokens": 1187,
+      "by_rate_tier": {
+        "placeholder_cheap": {
+          "pass@1_floor_usd": "0.62",
+          "pass@1_ceiling_usd": "0.91",
+          "pass@8_floor_usd": "4.99"
+        },
+        "placeholder_mid": {
+          "pass@1_floor_usd": "6.87",
+          "pass@1_ceiling_usd": "10.02",
+          "pass@8_floor_usd": "54.98"
+        },
+        "placeholder_frontier": {
+          "pass@1_floor_usd": "20.62",
+          "pass@1_ceiling_usd": "30.07",
+          "pass@8_floor_usd": "164.95"
+        }
+      }
+    },
+    "agent_output_2000_tokens": {
+      "grading_call_input_tokens": 3208,
+      "artifact_selection_call_input_tokens": 1187,
+      "by_rate_tier": {
+        "placeholder_cheap": {
+          "pass@1_floor_usd": "0.92",
+          "pass@1_ceiling_usd": "1.21",
+          "pass@8_floor_usd": "7.33"
+        },
+        "placeholder_mid": {
+          "pass@1_floor_usd": "9.79",
+          "pass@1_ceiling_usd": "12.94",
+          "pass@8_floor_usd": "78.36"
+        },
+        "placeholder_frontier": {
+          "pass@1_floor_usd": "29.38",
+          "pass@1_ceiling_usd": "38.83",
+          "pass@8_floor_usd": "235.08"
+        }
+      }
+    },
+    "agent_output_8000_tokens": {
+      "grading_call_input_tokens": 9208,
+      "artifact_selection_call_input_tokens": 1187,
+      "by_rate_tier": {
+        "placeholder_cheap": {
+          "pass@1_floor_usd": "2.09",
+          "pass@1_ceiling_usd": "2.38",
+          "pass@8_floor_usd": "16.68"
+        },
+        "placeholder_mid": {
+          "pass@1_floor_usd": "21.48",
+          "pass@1_ceiling_usd": "24.63",
+          "pass@8_floor_usd": "171.86"
+        },
+        "placeholder_frontier": {
+          "pass@1_floor_usd": "64.45",
+          "pass@1_ceiling_usd": "73.90",
+          "pass@8_floor_usd": "515.59"
+        }
+      }
+    }
+  },
+  "wall_clock": {
+    "per_task_serial_minutes_estimate": "5-15 (docker env boot, world populate, agent loop, snapshot, grading)",
+    "full_suite_serial_hours_estimate": "40-120",
+    "note": "wall clock, not money, may be the binding constraint on a full run"
+  },
+  "verdict": {
+    "full_480_task_pass@1_affordable": false,
+    "headline": "A full 480-task pass@1 run costs about $122.57 in Tinker alone at max_steps=50 -- roughly 8x the $15.00 remaining, before a single judge call.",
+    "affordable_scope": "About 58 tasks (12% of the suite) at the Tinker ceiling, and that spends the entire remaining budget with nothing left for E11 or E13.",
+    "recommendation": "Do not attempt the full suite. If an APEX number is wanted, run a pre-registered stratified subset with the task IDs sealed in the split manifest before the run, and report it explicitly as a subset estimate with confidence intervals -- never as a suite score comparable to the published leaderboard, which is pass@8 over all 480."
+  }
+}

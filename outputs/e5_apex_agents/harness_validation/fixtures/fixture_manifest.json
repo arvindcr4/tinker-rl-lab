@@ -1,0 +1,14 @@
+{
+  "fixture_kind": "SYNTHETIC \u2014 not APEX-Agents benchmark data",
+  "purpose": "harness_validation of the Archipelago native grading runner",
+  "is_model_score": false,
+  "expected_word_count": 12,
+  "expected_verifier_scores": {
+    "ver_pass_at_least": 1.0,
+    "ver_fail_at_least": 0.0,
+    "ver_pass_exact": 1.0
+  },
+  "upstream_example_snapshot_sha256": "15e622d9e49b7225275994d6d2f936c50cba21b0e084b2ca6d173616dcc91432",
+  "initial_snapshot_sha256": "15e622d9e49b7225275994d6d2f936c50cba21b0e084b2ca6d173616dcc91432",
+  "final_snapshot_sha256": "6842859bc3d6041a23667fe5f7ac3902a0816012837e57584b59d43e88661c8b"
+}

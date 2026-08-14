@@ -1,0 +1,57 @@
+[
+  {
+    "verifier_id": "ver_pass_at_least",
+    "verifier_version": 1,
+    "world_id": null,
+    "task_id": "harness_validation_synthetic",
+    "eval_config_id": "ec_content_length",
+    "verifier_values": {
+      "is_primary_objective": true,
+      "content_source": "Created/Modified Files",
+      "target_file": "summary.txt",
+      "metric_type": "Word Count",
+      "comparison_type": "At least",
+      "min_value": 5,
+      "aggregation_mode": "sum"
+    },
+    "verifier_index": 0,
+    "verifier_dependencies": null
+  },
+  {
+    "verifier_id": "ver_fail_at_least",
+    "verifier_version": 1,
+    "world_id": null,
+    "task_id": "harness_validation_synthetic",
+    "eval_config_id": "ec_content_length",
+    "verifier_values": {
+      "is_primary_objective": false,
+      "content_source": "Created/Modified Files",
+      "target_file": "summary.txt",
+      "metric_type": "Word Count",
+      "comparison_type": "At least",
+      "min_value": 10000,
+      "aggregation_mode": "sum"
+    },
+    "verifier_index": 1,
+    "verifier_dependencies": null
+  },
+  {
+    "verifier_id": "ver_pass_exact",
+    "verifier_version": 1,
+    "world_id": null,
+    "task_id": "harness_validation_synthetic",
+    "eval_config_id": "ec_content_length",
+    "verifier_values": {
+      "is_primary_objective": false,
+      "content_source": "Created/Modified Files",
+      "target_file": "summary.txt",
+      "metric_type": "Word Count",
+      "comparison_type": "Exactly",
+      "expected_value": 12,
+      "tolerance": 0,
+      "aggregation_mode": "sum"
+    },
+    "verifier_index": 2,
+    "verifier_dependencies": null
+  }
+]

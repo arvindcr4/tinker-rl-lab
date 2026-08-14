@@ -1,0 +1,77 @@
+{
+  "schema_version": "pavlov-e5-apex-agents-harness-validation-v1",
+  "created_at": "2026-08-09T09:17:22.048382+00:00",
+  "suite_id": "apex_agents_eval",
+  "kind": "harness_validation",
+  "is_model_score": false,
+  "suite_score": null,
+  "status": "PASS",
+  "claim": "The pinned Archipelago native grading verifier installs and runs end to end on this host against a synthetic fixture. This is NOT an APEX-Agents result and implies nothing about any model.",
+  "not_claimed": [
+    "any APEX-Agents suite score",
+    "any model capability measurement",
+    "that mercor/apex-agents data was obtained (it was not)"
+  ],
+  "native_verifier": {
+    "repository": "https://github.com/Mercor-Intelligence/archipelago",
+    "revision": "1c3dcd4694b313020cd626699c9c7cc1c0a2fc58",
+    "grading_runner_tree_sha256": "6878aa81ade65a8b058ea916f8acda0a69b586161d566525ea10f00e5b8f74f4",
+    "python": "3.13",
+    "venv": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e5_apex_agents/venv-grading",
+    "install_command": "uv sync --locked --python 3.13"
+  },
+  "fixture": {
+    "fixture_kind": "SYNTHETIC \u2014 not APEX-Agents benchmark data",
+    "purpose": "harness_validation of the Archipelago native grading runner",
+    "is_model_score": false,
+    "expected_word_count": 12,
+    "expected_verifier_scores": {
+      "ver_pass_at_least": 1.0,
+      "ver_fail_at_least": 0.0,
+      "ver_pass_exact": 1.0
+    },
+    "upstream_example_snapshot_sha256": "15e622d9e49b7225275994d6d2f936c50cba21b0e084b2ca6d173616dcc91432",
+    "initial_snapshot_sha256": "15e622d9e49b7225275994d6d2f936c50cba21b0e084b2ca6d173616dcc91432",
+    "final_snapshot_sha256": "6842859bc3d6041a23667fe5f7ac3902a0816012837e57584b59d43e88661c8b"
+  },
+  "evals_exercised": [
+    {
+      "eval_defn_id": "content_length_check",
+      "eval_types": [
+        "PROGRAMMATIC"
+      ],
+      "llm_judge_used": false
+    }
+  ],
+  "scoring_method": "task_score_unweighted_and_universal_penalty",
+  "helpers_exercised": [
+    "snapshot_diff",
+    "final_answer"
+  ],
+  "observed": {
+    "grading_run_status": "completed",
+    "verifier_scores": {
+      "ver_pass_at_least": 1.0,
+      "ver_fail_at_least": 0.0,
+      "ver_pass_exact": 1.0
+    },
+    "final_score": 0.6666666666666666
+  },
+  "expected": {
+    "grading_run_status": "completed",
+    "verifier_scores": {
+      "ver_pass_at_least": 1.0,
+      "ver_fail_at_least": 0.0,
+      "ver_pass_exact": 1.0
+    },
+    "final_score": 0.6666666666666666
+  },
+  "problems": [],
+  "paid_api_calls": 0,
+  "tinker_calls": 0,
+  "evidence": {
+    "grades_json": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e5_apex_agents/harness_validation/out/grades.json",
+    "grading_run_log": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e5_apex_agents/harness_validation/out/grading_run.log",
+    "fixture_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e5_apex_agents/harness_validation/fixtures"
+  }
+}

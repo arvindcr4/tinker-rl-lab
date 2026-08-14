@@ -80,7 +80,19 @@ DEFAULT_NATIVE_VERIFIER_PATH = "grading"
 # of failing halfway through a paid agent rollout.
 # ---------------------------------------------------------------------------
 APEX_TASK_REQUIRED_FIELDS = ("task_id", "world_id", "task_name", "domain", "prompt")
-APEX_TASK_OPTIONAL_FIELDS = ("task_input_files", "rubric")
+# Confirmed against the real revision: `task_input_files` is `str | None` -- a
+# snapshot id like `snap_<32 hex>`, NOT a list of filenames. Only its
+# truthiness is meaningful; the per-task asset directory is keyed by task_id.
+# 141 tasks carry one, and that set matches the repo's `task_files/` dirs
+# exactly. The revision also carries three fields the upstream example never
+# reads: `expected_output`, `gold_response`, `gold_response_type`.
+APEX_TASK_OPTIONAL_FIELDS = (
+    "task_input_files",
+    "rubric",
+    "expected_output",
+    "gold_response",
+    "gold_response_type",
+)
 APEX_RUBRIC_REQUIRED_FIELDS = ("verifier_id", "criteria")
 APEX_WORLD_REQUIRED_FIELDS = ("world_id", "world_name")
 # `DEFAULT_TASK = "task_9ba58a6197114140877a1df1754d2993"` in the upstream
@@ -352,15 +364,99 @@ def _dataset_metadata_gate(
     ), metadata
 
 
+DATASET_ACCESS_FILES = {
+    "tasks": "tasks_and_rubrics.json",
+    "worlds": "world_descriptions.json",
+    "eval": "eval.yaml",
+}
+
+
+def _local_dataset_gate(dataset_dir: Path) -> tuple[Gate, dict[str, Path] | None]:
+    """Accept an already-downloaded copy, but only on proof of the revision.
+
+    ``hf download`` writes ``.cache/huggingface/download/<file>.metadata`` whose
+    first line is the resolved commit hash.  Requiring it means a hand-assembled
+    directory, or a copy pulled from ``main``, cannot masquerade as the pinned
+    revision.
+    """
+    missing: list[str] = []
+    wrong_revision: list[dict[str, Any]] = []
+    resolved: dict[str, Path] = {}
+    receipts: dict[str, Any] = {}
+    for label, filename in DATASET_ACCESS_FILES.items():
+        path = dataset_dir / filename
+        if not path.is_file():
+            missing.append(filename)
+            continue
+        meta_path = dataset_dir / ".cache" / "huggingface" / "download" / f"{filename}.metadata"
+        commit = None
+        if meta_path.is_file():
+            first_line = meta_path.read_text(encoding="utf-8").splitlines()
+            commit = first_line[0].strip() if first_line else None
+        if commit != DATASET_REVISION:
+            wrong_revision.append({"file": filename, "recorded_commit": commit})
+            continue
+        resolved[label] = path
+        receipts[filename] = {
+            "path": str(path),
+            "bytes": path.stat().st_size,
+            "sha256": sha256_bytes(path.read_bytes()),
+            "recorded_commit": commit,
+        }
+    if missing or wrong_revision:
+        return Gate(
+            "benchmark_access",
+            "BLOCKED",
+            {
+                "dataset_id": DATASET_ID,
+                "dataset_revision": DATASET_REVISION,
+                "source": "local_dataset_dir",
+                "dataset_dir": str(dataset_dir),
+                "missing": missing,
+                "wrong_revision": wrong_revision,
+                "message": (
+                    "local dataset copy is incomplete or does not carry the"
+                    " pinned commit in its Hugging Face cache metadata"
+                ),
+            },
+            {
+                "kind": "huggingface_dataset_access",
+                "action": "re-download the exact revision with hf download",
+                "url": f"https://huggingface.co/datasets/{DATASET_ID}",
+                "commands": [
+                    "hf auth login",
+                    f"hf download {DATASET_ID} --repo-type dataset"
+                    f" --revision {DATASET_REVISION}"
+                    f" --local-dir {dataset_dir}"
+                    " tasks_and_rubrics.json world_descriptions.json eval.yaml",
+                ],
+            },
+        ), None
+    return Gate(
+        "benchmark_access",
+        "PASS",
+        {
+            "dataset_id": DATASET_ID,
+            "dataset_revision": DATASET_REVISION,
+            "source": "local_dataset_dir",
+            "dataset_dir": str(dataset_dir),
+            "revision_proof": "hf cache metadata commit hash matches the pin",
+            "files": receipts,
+        },
+    ), resolved
+
+
 def _dataset_access_gate(
-    *, token: str | None, cache_dir: Path, opener: Callable[..., Any] | None = None
+    *,
+    token: str | None,
+    cache_dir: Path,
+    opener: Callable[..., Any] | None = None,
+    dataset_dir: Path | None = None,
 ) -> tuple[Gate, dict[str, Path] | None]:
+    if dataset_dir is not None:
+        return _local_dataset_gate(dataset_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
-    files = {
-        "tasks": "tasks_and_rubrics.json",
-        "worlds": "world_descriptions.json",
-        "eval": "eval.yaml",
-    }
+    files = dict(DATASET_ACCESS_FILES)
     downloaded: dict[str, Path] = {}
     probes: list[dict[str, Any]] = []
     for label, filename in files.items():
@@ -1243,6 +1339,15 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--dataset-revision", default=DATASET_REVISION)
     parser.add_argument("--archipelago-dir", type=Path, default=Path(".codex/e5/archipelago"))
     parser.add_argument("--cache-dir", type=Path, default=Path(".codex/e5/dataset-cache"))
+    parser.add_argument(
+        "--dataset-dir",
+        type=Path,
+        help=(
+            "consume an already-downloaded copy of the dataset instead of"
+            " re-fetching it; the directory must carry Hugging Face cache"
+            " metadata recording the pinned commit"
+        ),
+    )
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--launch", action="store_true")
     parser.add_argument("--base-model", default=MODEL_ID)
@@ -1275,7 +1380,10 @@ def run_preflight(args: argparse.Namespace, *, opener: Callable[..., Any] | None
         raise PreflightError("max steps and token limits must be positive")
     metadata_gate, _ = _dataset_metadata_gate(token=os.environ.get("HF_TOKEN"), opener=opener)
     access_gate, downloaded = _dataset_access_gate(
-        token=os.environ.get("HF_TOKEN"), cache_dir=args.cache_dir, opener=opener
+        token=os.environ.get("HF_TOKEN"),
+        cache_dir=args.cache_dir,
+        opener=opener,
+        dataset_dir=getattr(args, "dataset_dir", None),
     )
     schema_gate = _dataset_schema_gate(downloaded)
     # A schema mismatch must not be papered over by task selection succeeding

@@ -1,0 +1,50 @@
+usage: eval_apex_agents.py [-h] [--task-id TASK_ID] [--task-index TASK_INDEX]
+                           [--limit LIMIT]
+                           [--training-task-ids TRAINING_TASK_IDS]
+                           [--dataset-revision DATASET_REVISION]
+                           [--archipelago-dir ARCHIPELAGO_DIR]
+                           [--cache-dir CACHE_DIR] --out OUT [--launch]
+                           [--base-model BASE_MODEL]
+                           [--base-model-revision BASE_MODEL_REVISION]
+                           [--sampler-path SAMPLER_PATH]
+                           [--hf-checkpoint-repo HF_CHECKPOINT_REPO]
+                           [--hf-checkpoint-revision HF_CHECKPOINT_REVISION]
+                           [--maximum-tinker-spend-usd MAXIMUM_TINKER_SPEND_USD]
+                           [--max-steps MAX_STEPS]
+                           [--max-prompt-tokens MAX_PROMPT_TOKENS]
+                           [--max-response-tokens MAX_RESPONSE_TOKENS]
+                           [--timeout-seconds TIMEOUT_SECONDS]
+                           [--wandb-name WANDB_NAME]
+
+Run the smallest exact APEX-Agents evaluation through Archipelago. This runner
+is intentionally fail-closed. It binds the Mercor benchmark and the native
+Archipelago grader to immutable revisions, requires one disjoint task, starts
+W&B online before constructing a Tinker client, and enforces the E5-specific
+$0.50 Tinker ceiling inside the shared $16.50/$1.50 envelope. The benchmark is
+evaluation-only. It must never be replaced with xLAM, GSM8K, WebArena,
+BrowserGym, or another related task. If the gated dataset, the native
+environment, W&B, Tinker, or the runtime cannot be acquired, a machine-
+readable ``BLOCKED`` receipt is written and no Tinker call is made.
+
+options:
+  -h, --help            show this help message and exit
+  --task-id TASK_ID
+  --task-index TASK_INDEX
+  --limit LIMIT
+  --training-task-ids TRAINING_TASK_IDS
+  --dataset-revision DATASET_REVISION
+  --archipelago-dir ARCHIPELAGO_DIR
+  --cache-dir CACHE_DIR
+  --out OUT
+  --launch
+  --base-model BASE_MODEL
+  --base-model-revision BASE_MODEL_REVISION
+  --sampler-path SAMPLER_PATH
+  --hf-checkpoint-repo HF_CHECKPOINT_REPO
+  --hf-checkpoint-revision HF_CHECKPOINT_REVISION
+  --maximum-tinker-spend-usd MAXIMUM_TINKER_SPEND_USD
+  --max-steps MAX_STEPS
+  --max-prompt-tokens MAX_PROMPT_TOKENS
+  --max-response-tokens MAX_RESPONSE_TOKENS
+  --timeout-seconds TIMEOUT_SECONDS
+  --wandb-name WANDB_NAME

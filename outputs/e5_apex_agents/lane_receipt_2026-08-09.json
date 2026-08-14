@@ -3,7 +3,7 @@
   "lane": "E5",
   "suite_id": "apex_agents_eval",
   "benchmark_name": "APEX-Agents",
-  "created_at": "2026-08-09T07:20:00+00:00",
+  "created_at": "2026-08-09T09:10:00+00:00",
   "status": "PARTIAL",
   "score": null,
   "score_status": "not_run",
@@ -11,7 +11,7 @@
   "is_model_score": false,
   "exact_benchmark_only": true,
   "substitutions": [],
-  "summary": "Native Archipelago grading verifier installs and runs end to end (harness_validation, is_model_score=false). Dataset ingestion path built and unit-tested against a synthetic fixture. Suite itself is BLOCKED on one self-service Hugging Face login: mercor/apex-agents is gated:auto, i.e. auto-approved on acceptance, not owner-reviewed.",
+  "summary": "Dataset unblocked by owner login + terms acceptance (gated:auto held; no human review). Scoped 1.1 MB of JSON/YAML/MD at the pinned revision, validated it with the schema layer built pre-download, sealed a 480-task split manifest, and pushed real gold responses through the native Archipelago verifier with swap controls. 8 of 11 preflight gates PASS. Suite score remains null: no model was evaluated.",
   "cost": {
     "tinker_calls": 0,
     "tinker_spend_usd": "0.00",
@@ -32,7 +32,7 @@
     "grading_runner_tree_sha256": "6878aa81ade65a8b058ea916f8acda0a69b586161d566525ea10f00e5b8f74f4"
   },
   "gating_verification": {
-    "conclusion": "AUTH_GATE_NOT_DENIAL",
+    "conclusion": "RESOLVED_AUTH_GATE_WAS_NOT_A_DENIAL",
     "corrects_prior_sprint_claim": "prior note said 'exact HF task files return 403 gated access'; observed status is 401 with x-error-code GatedRepo, and gating mode is auto-approval",
     "api_url": "https://huggingface.co/api/datasets/mercor/apex-agents",
     "api_http_status": 200,
@@ -81,7 +81,29 @@
       "human_approval_required": false
     },
     "bypass_attempted": false,
-    "evidence_path": "outputs/e5_apex_agents/evidence/hf_dataset_meta.json"
+    "evidence_path": "outputs/e5_apex_agents/evidence/hf_dataset_meta.json",
+    "resolution": {
+      "unblocked": true,
+      "method": "hf auth login + accept dataset terms in the browser",
+      "human_review_involved": false,
+      "predicted_two_step_sequence_held": true,
+      "authenticated_probe": {
+        "http_status": 200,
+        "x_repo_commit": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+        "files": [
+          "tasks_and_rubrics.json",
+          "world_descriptions.json",
+          "eval.yaml"
+        ],
+        "content_lengths": [
+          1080670,
+          45846,
+          522
+        ],
+        "evidence": "outputs/e5_apex_agents/evidence/authenticated_access_probe.json",
+        "token_recorded": false
+      }
+    }
   },
   "harness_validation": {
     "kind": "harness_validation",
@@ -106,11 +128,16 @@
     "evals_exercised": [
       {
         "eval_defn_id": "content_length_check",
-        "eval_types": ["PROGRAMMATIC"],
+        "eval_types": [
+          "PROGRAMMATIC"
+        ],
         "llm_judge_used": false
       }
     ],
-    "helpers_exercised": ["snapshot_diff", "final_answer"],
+    "helpers_exercised": [
+      "snapshot_diff",
+      "final_answer"
+    ],
     "scoring_method": "task_score_unweighted_and_universal_penalty",
     "observed": {
       "grading_run_status": "completed",
@@ -135,9 +162,21 @@
   "ingestion_path": {
     "built": true,
     "contract_source": "archipelago/examples/hugging_face_task/main.py @ 1c3dcd4694b313020cd626699c9c7cc1c0a2fc58",
-    "required_task_fields": ["task_id", "world_id", "task_name", "domain", "prompt"],
-    "required_rubric_fields": ["verifier_id", "criteria"],
-    "required_world_fields": ["world_id", "world_name"],
+    "required_task_fields": [
+      "task_id",
+      "world_id",
+      "task_name",
+      "domain",
+      "prompt"
+    ],
+    "required_rubric_fields": [
+      "verifier_id",
+      "criteria"
+    ],
+    "required_world_fields": [
+      "world_id",
+      "world_name"
+    ],
     "task_id_pattern": "^task_[0-9a-f]{32}$",
     "capabilities": [
       "schema validation of tasks_and_rubrics.json",
@@ -147,27 +186,29 @@
       "order-independent task_id_sha256 and world_id_sha256",
       "split manifest with training/eval disjointness check (pre-existing)",
       "per-task asset path resolution to scope the download",
-      "receipt emission with a new dataset_schema gate"
+      "receipt emission with a new dataset_schema gate",
+      "--dataset-dir local ingestion with commit-hash revision proof"
     ],
     "new_gate": "dataset_schema",
     "tests": {
       "command": "PYTHONPATH=zvf-program python3 -m unittest flagship.test_eval_apex_agents_ingestion flagship.test_pavlov_apex_agents_eval_adapter",
       "result": "OK",
-      "total": 39,
-      "new": 29,
+      "total": 43,
+      "new": 33,
       "pre_existing": 10,
       "fixtures": "synthetic, labelled 'SYNTHETIC FIXTURE - NOT mercor/apex-agents CONTENT'"
-    }
+    },
+    "validated_against_real_data": true
   },
   "preflight": {
     "receipt": "outputs/e5_apex_agents/preflight_receipt_2026-08-09.json",
-    "receipt_sha256": "1bd911327496bafa172b7c1ab0ec7b1f1be9296e973e5890443a90e99be3740e",
+    "receipt_sha256": "09dc9aa64b2823bd1a173623a967db46df57160b80822a6c8636d62c2baccd12",
     "status": "BLOCKED",
     "gates": {
       "benchmark_metadata": "PASS",
-      "benchmark_access": "BLOCKED",
-      "dataset_schema": "BLOCKED",
-      "task_split": "BLOCKED",
+      "benchmark_access": "PASS",
+      "dataset_schema": "PASS",
+      "task_split": "PASS",
       "native_verifier": "PASS",
       "isolated_runtime": "PASS",
       "model_identity": "PASS",
@@ -176,28 +217,24 @@
       "tinker_access": "BLOCKED",
       "native_grader_credentials": "BLOCKED"
     },
-    "gates_newly_passing_this_session": ["native_verifier", "isolated_runtime"]
+    "gates_passing": 8,
+    "gates_total": 11,
+    "gates_flipped_this_round": [
+      "benchmark_access",
+      "dataset_schema",
+      "task_split"
+    ],
+    "selected_task_id": [
+      "task_0b9134a634c14f24a6c256d034a6c130"
+    ],
+    "new_capability": "--dataset-dir consumes a pre-downloaded copy but only on proof of the pinned commit from HF cache metadata"
   },
   "blockers": [
     {
       "id": "hf_dataset_access",
-      "severity": "terminal_for_score",
-      "description": "mercor/apex-agents is gated:auto; the exact files return 401 GatedRepo without an authenticated, terms-accepted account",
-      "credential": "HF_TOKEN (or ~/.cache/huggingface/token via hf auth login)",
-      "human_approval_required": false,
-      "unblock_commands": [
-        "hf auth login",
-        "open https://huggingface.co/datasets/mercor/apex-agents and click 'Agree and access repository'",
-        "hf download mercor/apex-agents --repo-type dataset --revision 92c86856cf1b11f9833a8a076b3a45a63afa3929 tasks_and_rubrics.json world_descriptions.json eval.yaml"
-      ],
-      "required_external_receipt": {
-        "kind": "huggingface_dataset_access",
-        "required": [
-          "HTTP 200 for tasks_and_rubrics.json, world_descriptions.json, eval.yaml",
-          "resolved commit 92c86856cf1b11f9833a8a076b3a45a63afa3929",
-          "SHA-256 for each downloaded file"
-        ]
-      }
+      "severity": "resolved",
+      "resolved": true,
+      "description": "owner authenticated and accepted the gated-repo terms; authenticated probes return 200 at the pinned revision"
     },
     {
       "id": "wandb_package_missing",
@@ -205,11 +242,19 @@
       "description": "the wandb package is not installed; the credential itself IS present in ~/.netrc for api.wandb.ai",
       "credential_present": true,
       "credential_source": "netrc:api.wandb.ai",
-      "unblock_commands": ["uv pip install wandb  # inside the E5 isolated runtime"],
+      "unblock_commands": [
+        "uv pip install wandb  # inside the E5 isolated runtime"
+      ],
       "note": "a leftover wandb/ directory at the repo root resolves 'import wandb' to an empty namespace package for any process with cwd on sys.path; flagged as a separate cross-lane cleanup",
       "required_external_receipt": {
         "kind": "wandb_online_run",
-        "required": ["mode=online", "run_id", "run_url", "config acknowledged", "initialized before any Tinker call"]
+        "required": [
+          "mode=online",
+          "run_id",
+          "run_url",
+          "config acknowledged",
+          "initialized before any Tinker call"
+        ]
       }
     },
     {
@@ -220,7 +265,11 @@
       "credential_source": ".env:TINKER_API_KEY",
       "required_external_receipt": {
         "kind": "tinker_access",
-        "required": ["Tinker client import", "authenticated ServiceClient", "estimated cost <= $0.50"]
+        "required": [
+          "Tinker client import",
+          "authenticated ServiceClient",
+          "estimated cost <= $0.50"
+        ]
       }
     },
     {
@@ -231,7 +280,11 @@
       "cost_note": "judge spend scales with rubric criteria, not task count; it is a separate cost centre from the agent rollout",
       "required_external_receipt": {
         "kind": "archipelago_grading_credentials",
-        "required": ["OPENAI_API_KEY", "GOOGLE_API_KEY", "ANTHROPIC_API_KEY"]
+        "required": [
+          "OPENAI_API_KEY",
+          "GOOGLE_API_KEY",
+          "ANTHROPIC_API_KEY"
+        ]
       }
     },
     {
@@ -241,6 +294,12 @@
       "docker_available": true,
       "docker_runtime": "Colima 28.4.0, 8 CPU / 16.54 GiB",
       "note": "build is >2 GB and must take the shared outputs/_setup/docker.lock mutex"
+    },
+    {
+      "id": "budget_insufficient_for_full_suite",
+      "severity": "scope",
+      "description": "a full 480-task pass@1 run costs ~$122.57 in Tinker alone at the E5 ceiling, about 8.2x the ~$15.00 remaining, before any judge call",
+      "unblock": "pre-register a stratified subset (~40-58 tasks max) and report it as a subset estimate with confidence intervals, never as a leaderboard-comparable suite score"
     }
   ],
   "download_budget": {
@@ -277,7 +336,174 @@
       "zvf-program/flagship/eval_apex_agents.py",
       "zvf-program/flagship/test_eval_apex_agents_ingestion.py"
     ],
-    "files_written_outside_lane_authorized_by": "lane prompt: 'Runner + adapter ... + tests (yours to edit)'"
+    "files_written_outside_lane_authorized_by": "lane prompt: 'Runner + adapter ... + tests (yours to edit)'",
+    "gold_responses_used_as_agent_answers": true,
+    "gold_response_validation_promoted_to_score": false,
+    "bulk_assets_downloaded": false,
+    "dataset_bytes_downloaded_mb": 1.1,
+    "hf_token_value_recorded": false
   },
-  "next_action": "Run 'hf auth login', then accept the terms at https://huggingface.co/datasets/mercor/apex-agents. Access is auto-granted with no human review; re-running preflight then flips benchmark_access, dataset_schema and task_split to PASS."
+  "next_action": "Decide scope before spending: a pre-registered stratified subset of roughly 40-58 tasks is the largest APEX evaluation the remaining ~$15 supports, and it consumes the whole budget. Everything upstream of the model call is built, validated and sealed.",
+  "dataset_validation": {
+    "validator_written_before_download": true,
+    "first_run_result": "valid=True, errors=0, count_warnings=[]",
+    "task_count": 480,
+    "world_count": 33,
+    "rubric_criteria_total": 1948,
+    "task_id_sha256": "0467d071bd800a9875e787a958c2d125f3a0748d7c058703035d57c6cb78f8c4",
+    "world_id_sha256": "4dda01d4cf5116f939e27714ea58b6657f0d08f803b323cd5425b2dc5a313558",
+    "order_independent_hashing_confirmed_on_real_data": true,
+    "referential_integrity": {
+      "world_refs_resolve": true,
+      "world_zip_set_matches": true,
+      "task_input_files_match_task_files_dirs": true,
+      "file_output_tasks_match_gold_files_dirs": true,
+      "all_four_are_exact_set_matches_not_count_matches": true,
+      "checked_against": "the 319-entry Hugging Face file listing; no bulk asset downloaded"
+    },
+    "schema_corrections_learned_from_real_data": [
+      "task_input_files is `str|None` (a snap_<32hex> snapshot id), not a list of filenames",
+      "three fields the upstream loader never reads: expected_output, gold_response, gold_response_type",
+      "rubric criteria carry only `criteria` and `verifier_id` - no weights, no is_primary_objective, no negative criteria"
+    ],
+    "file_digests": {
+      "tasks_and_rubrics.json": "94a85655bb983bb8bfff693182026f05f1df41ff17b2cd4589dd42a071531cb6",
+      "world_descriptions.json": "3836f308d122b7204a463ce43d23ec63fb27460f36f6bd5ac32d724183a3fdd8",
+      "eval.yaml": "231993cb91ab18596fb6c24c9fbb33fba2975dcea605de5696cf4c4245ec8151",
+      "metadata.json": "24584749c6307602944739262a2f3ddd59e8e0ecc9f151dc3459adf84ab934ea",
+      "README.md": "8526625cd155814b4e504a69d3c7df70edc6eb946efec0d9fa95772a7b33d07e"
+    }
+  },
+  "count_reconciliation": {
+    "discrepancy_found": false,
+    "sources_agree": [
+      "dataset card README.md",
+      "metadata.json export",
+      "tasks_and_rubrics.json itself"
+    ],
+    "tasks": {
+      "card": 480,
+      "metadata_json": 480,
+      "measured": 480
+    },
+    "worlds": {
+      "card": 33,
+      "metadata_json": 33,
+      "measured": 33
+    },
+    "mean_criteria_per_task": {
+      "card": 4.06,
+      "measured": 4.058
+    },
+    "criteria_range": {
+      "card": "1 to 10",
+      "measured": "min 1, max 10"
+    },
+    "per_domain_mean_criteria": {
+      "card": [
+        2.93,
+        4.57,
+        4.68
+      ],
+      "measured": [
+        2.925,
+        4.569,
+        4.681
+      ]
+    },
+    "file_output_tasks": {
+      "card": 58,
+      "measured": 58
+    },
+    "trajectory_arithmetic": "metadata.json 30720 trajectories = 480 tasks x 8 models x 8 rollouts, consistent with the card's Pass@8 leaderboard",
+    "findings_surfaced_instead": [
+      {
+        "kind": "usage_restriction",
+        "severity": "policy",
+        "detail": "the card forbids training/fine-tuning/parameter fitting on this dataset, and asks that it not be crawled or scraped. Access was via the sanctioned hf download path after accepting terms, limited to ~1.1 MB of JSON/YAML/MD. Must propagate to every other lane."
+      },
+      {
+        "kind": "footgun",
+        "severity": "medium",
+        "detail": "the HF card frontmatter maps tasks_and_rubrics.json to `split: train`, so load_dataset(...)['train'] reads as training data on a dataset where training is prohibited"
+      },
+      {
+        "kind": "upstream_junk_file",
+        "severity": "low",
+        "detail": "task_files/.DS_Store is committed to the dataset repo; it inflates a naive directory count from 141 to 142"
+      }
+    ]
+  },
+  "gold_response_validation": {
+    "kind": "harness_validation",
+    "is_model_score": false,
+    "suite_score": null,
+    "status": "PASS",
+    "tasks_graded": 12,
+    "tasks_fully_matching_expectation": 12,
+    "control_summary": {
+      "positive": {
+        "match": 12,
+        "total": 12
+      },
+      "swap": {
+        "match": 12,
+        "total": 12
+      },
+      "sentinel": {
+        "match": 12,
+        "total": 12
+      }
+    },
+    "controls_total": 36,
+    "controls_matching": 36,
+    "eval_defn_id": "pattern_match_check",
+    "eval_types": [
+      "PROGRAMMATIC"
+    ],
+    "llm_judge_used": false,
+    "paid_api_calls": 0,
+    "real_data_used": [
+      "gold_response text",
+      "task_id",
+      "world_id",
+      "verifier_id",
+      "task prompt"
+    ],
+    "swap_control_rationale": "a verifier returning 1.0 unconditionally passes the positive check and fails the swap; 12/12 swaps returned 0.0",
+    "limits_stated": [
+      "not graded against the real APEX rubric - the real rubric is LLM-judged and no judge was invoked",
+      "snapshot zips are inert synthetic scaffolding; world_files_zipped/ was deliberately not downloaded"
+    ],
+    "evidence": {
+      "receipt": "outputs/e5_apex_agents/harness_validation/gold_out/gold_response_validation_receipt.json",
+      "receipt_sha256": "605c13344453c219856316c115fa6f6e0086fa837c54740040bd11f1ba0f3d30",
+      "per_task_dirs": "outputs/e5_apex_agents/harness_validation/gold_out/<nn>_<task_id>/"
+    }
+  },
+  "split_manifest": {
+    "path": "outputs/e5_apex_agents/split_manifest_480.json",
+    "sha256": "782a9e68451696353e1b85a154707dfeeee69d3cfd62490a47543189db3b2fda",
+    "tasks_sealed": 480,
+    "worlds_sealed": 33,
+    "training_task_ids": [],
+    "training_prohibited": true,
+    "refuses_to_seal_invalid_dataset": true
+  },
+  "full_run_cost_projection": {
+    "path": "outputs/e5_apex_agents/full_run_cost_projection.json",
+    "sha256": "60aae962bdce72d2e9cf54cc3c9868ceb084cf9f33f0ee28d0dcb424b3031a5e",
+    "no_model_or_provider_called": true,
+    "tinker_per_task_ceiling_usd": "0.26",
+    "tinker_480_pass1_usd": "122.57",
+    "tinker_480_pass8_usd": "980.58",
+    "over_remaining_budget_by": "8.2x",
+    "tasks_affordable_at_15usd": 58,
+    "judge_calls_pass1": "2270-3896",
+    "judge_call_derivation": "1 grading call per criterion (1948) + 1 artifact-selection call per criterion with a non-empty snapshot diff (322-1948); NEGATIVE_CRITERIA_ENABLED is False so that path contributes nothing",
+    "judge_rate_tiers_are_placeholders": true,
+    "wall_clock_estimate_hours": "40-120 serial",
+    "full_480_task_pass1_affordable": false,
+    "recommendation": "Do not attempt the full suite. If an APEX number is wanted, run a pre-registered stratified subset with the task IDs sealed in the split manifest before the run, and report it explicitly as a subset estimate with confidence intervals -- never as a suite score comparable to the published leaderboard, which is pass@8 over all 480."
+  }
 }

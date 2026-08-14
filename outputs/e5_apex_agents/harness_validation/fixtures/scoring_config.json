@@ -1,0 +1,13 @@
+{
+  "scoring_config_id": "sc_harness_validation",
+  "scoring_config_name": "Task Score Unweighted + Universal Penalty",
+  "scoring_defn_id": "task_score_unweighted_and_universal_penalty",
+  "scoring_config_values": {
+    "task_primary_objective_scaling_factor": 2.0,
+    "task_non_primary_objective_scaling_factor": 1.0,
+    "task_negative_scaling_factor": 2.0,
+    "universal_penalty_cap": 0.2,
+    "final_score_ceiling": 1.0,
+    "final_score_floor": 0.0
+  }
+}

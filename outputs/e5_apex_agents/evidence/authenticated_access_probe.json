@@ -1,0 +1,21 @@
+{
+  "note": "authenticated HEAD probes after the owner accepted the gated-repo terms; token never recorded",
+  "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+  "probes": {
+    "tasks_and_rubrics.json": {
+      "http_status": 200,
+      "x_repo_commit": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+      "content_length": "1080670"
+    },
+    "world_descriptions.json": {
+      "http_status": 200,
+      "x_repo_commit": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+      "content_length": "45846"
+    },
+    "eval.yaml": {
+      "http_status": 200,
+      "x_repo_commit": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+      "content_length": "522"
+    }
+  }
+}

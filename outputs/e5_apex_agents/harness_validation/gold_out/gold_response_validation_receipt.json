@@ -1,0 +1,484 @@
+{
+  "schema_version": "pavlov-e5-apex-agents-gold-validation-v1",
+  "created_at": "2026-08-09T09:10:13.737159+00:00",
+  "suite_id": "apex_agents_eval",
+  "kind": "harness_validation",
+  "is_model_score": false,
+  "suite_score": null,
+  "status": "PASS",
+  "claim": "The pinned Archipelago grading runner ingests real APEX-Agents task/world/verifier identifiers and real expert-authored gold responses, runs its final_answer helper over them, and returns per-criterion verdicts that discriminate between the answer under test and a foreign answer.",
+  "not_claimed": [
+    "any APEX-Agents suite score",
+    "any model capability measurement",
+    "that gold responses were graded against the real APEX rubric (the real rubric is LLM-judged; no judge was invoked)"
+  ],
+  "dataset": {
+    "dataset_id": "mercor/apex-agents",
+    "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+    "tasks_and_rubrics_sha256": "94a85655bb983bb8bfff693182026f05f1df41ff17b2cd4589dd42a071531cb6",
+    "gold_responses_are_real": true,
+    "snapshots_are_synthetic_scaffolding": true,
+    "world_files_downloaded": false
+  },
+  "native_verifier": {
+    "repository": "https://github.com/Mercor-Intelligence/archipelago",
+    "revision": "1c3dcd4694b313020cd626699c9c7cc1c0a2fc58"
+  },
+  "eval_defn_id": "pattern_match_check",
+  "eval_types": [
+    "PROGRAMMATIC"
+  ],
+  "llm_judge_used": false,
+  "paid_api_calls": 0,
+  "tinker_calls": 0,
+  "tasks_graded": 12,
+  "tasks_fully_matching_expectation": 12,
+  "control_summary": {
+    "positive": {
+      "match": 12,
+      "total": 12
+    },
+    "swap": {
+      "match": 12,
+      "total": 12
+    },
+    "sentinel": {
+      "match": 12,
+      "total": 12
+    }
+  },
+  "cases": [
+    {
+      "task_id": "task_00b30f56f39a4a9891d9503443bafb27",
+      "world_id": "world_1e4d4288e63f4a08851a3cc441eb3ccb",
+      "domain": "Investment Banking",
+      "task_name": "World219_BW_02",
+      "rubric_criteria_count": 5,
+      "gold_response_len": 277,
+      "gold_response_sha256": "0e7d6f0cd2e5bc4f48dd55421584f9bfdc838ecb637be310d662be2ce72158c6",
+      "donor_task_id": "task_00cd552ee51b4254bae8ee3b0add42fa",
+      "grading_run_status": "completed",
+      "controls": [
+        {
+          "control": "positive",
+          "verifier_id": "ver_81652421c1434b269ec140a4a3d73334__positive",
+          "expected": 1.0,
+          "observed": 1.0,
+          "match": true
+        },
+        {
+          "control": "swap",
+          "verifier_id": "ver_81652421c1434b269ec140a4a3d73334__swap",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        },
+        {
+          "control": "sentinel",
+          "verifier_id": "ver_81652421c1434b269ec140a4a3d73334__sentinel",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        }
+      ],
+      "ok": true,
+      "evidence_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e5_apex_agents/harness_validation/gold_out/00_task_00b30f56f39a4a9891d9503443bafb27"
+    },
+    {
+      "task_id": "task_00cd552ee51b4254bae8ee3b0add42fa",
+      "world_id": "world_f83f49b3776b4b5e870c36091f7e2b0b",
+      "domain": "Investment Banking",
+      "task_name": "World221_oa_2",
+      "rubric_criteria_count": 2,
+      "gold_response_len": 369,
+      "gold_response_sha256": "c5bee1e81b18ad253a769134b0d6de4c2d2b2ba2946acd1ecdb28d137b5cea86",
+      "donor_task_id": "task_2802d722ce6d40279fd0931576d2ed88",
+      "grading_run_status": "completed",
+      "controls": [
+        {
+          "control": "positive",
+          "verifier_id": "ver_b0d13e4044334cb791eb3fb0c36d5d2c__positive",
+          "expected": 1.0,
+          "observed": 1.0,
+          "match": true
+        },
+        {
+          "control": "swap",
+          "verifier_id": "ver_b0d13e4044334cb791eb3fb0c36d5d2c__swap",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        },
+        {
+          "control": "sentinel",
+          "verifier_id": "ver_b0d13e4044334cb791eb3fb0c36d5d2c__sentinel",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        }
+      ],
+      "ok": true,
+      "evidence_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e5_apex_agents/harness_validation/gold_out/01_task_00cd552ee51b4254bae8ee3b0add42fa"
+    },
+    {
+      "task_id": "task_2802d722ce6d40279fd0931576d2ed88",
+      "world_id": "world_bc99fdca9e3b4ab99233d4d1c3e8b153",
+      "domain": "Investment Banking",
+      "task_name": "World 225_JE_04",
+      "rubric_criteria_count": 6,
+      "gold_response_len": 532,
+      "gold_response_sha256": "6f372f2fda6245234496e1343db5e944a30cc2536289b714ab8e35c923fb04d7",
+      "donor_task_id": "task_2b2666310e7e4712be0f2c0e4240d5a2",
+      "grading_run_status": "completed",
+      "controls": [
+        {
+          "control": "positive",
+          "verifier_id": "ver_1ab474462e8c47789402bff0fcd756b8__positive",
+          "expected": 1.0,
+          "observed": 1.0,
+          "match": true
+        },
+        {
+          "control": "swap",
+          "verifier_id": "ver_1ab474462e8c47789402bff0fcd756b8__swap",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        },
+        {
+          "control": "sentinel",
+          "verifier_id": "ver_1ab474462e8c47789402bff0fcd756b8__sentinel",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        }
+      ],
+      "ok": true,
+      "evidence_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e5_apex_agents/harness_validation/gold_out/02_task_2802d722ce6d40279fd0931576d2ed88"
+    },
+    {
+      "task_id": "task_2b2666310e7e4712be0f2c0e4240d5a2",
+      "world_id": "world_f83f49b3776b4b5e870c36091f7e2b0b",
+      "domain": "Investment Banking",
+      "task_name": "World221_TR_10",
+      "rubric_criteria_count": 6,
+      "gold_response_len": 718,
+      "gold_response_sha256": "3a1c90cb03a50ec66c900aa8e0fdcc976e281782062c6e4d76b4610700a84d63",
+      "donor_task_id": "task_01fef67b5576468d854319d4d8a84988",
+      "grading_run_status": "completed",
+      "controls": [
+        {
+          "control": "positive",
+          "verifier_id": "ver_d29bc40cddf64f1eb8c7e22fb034f8ff__positive",
+          "expected": 1.0,
+          "observed": 1.0,
+          "match": true
+        },
+        {
+          "control": "swap",
+          "verifier_id": "ver_d29bc40cddf64f1eb8c7e22fb034f8ff__swap",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        },
+        {
+          "control": "sentinel",
+          "verifier_id": "ver_d29bc40cddf64f1eb8c7e22fb034f8ff__sentinel",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        }
+      ],
+      "ok": true,
+      "evidence_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e5_apex_agents/harness_validation/gold_out/03_task_2b2666310e7e4712be0f2c0e4240d5a2"
+    },
+    {
+      "task_id": "task_01fef67b5576468d854319d4d8a84988",
+      "world_id": "world_e81842899beb4631b2e07feafb4018dd",
+      "domain": "Law",
+      "task_name": "LawWorld417_AS_03",
+      "rubric_criteria_count": 7,
+      "gold_response_len": 2919,
+      "gold_response_sha256": "73a3ba53caa255c001fe78abf9fa454967bef4dac7a5e548f10fcf74d3dbf3c0",
+      "donor_task_id": "task_08c22c6bd072423284c2da7fb190b8bd",
+      "grading_run_status": "completed",
+      "controls": [
+        {
+          "control": "positive",
+          "verifier_id": "ver_67d411cb765345348ac62094e4250dea__positive",
+          "expected": 1.0,
+          "observed": 1.0,
+          "match": true
+        },
+        {
+          "control": "swap",
+          "verifier_id": "ver_67d411cb765345348ac62094e4250dea__swap",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        },
+        {
+          "control": "sentinel",
+          "verifier_id": "ver_67d411cb765345348ac62094e4250dea__sentinel",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        }
+      ],
+      "ok": true,
+      "evidence_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e5_apex_agents/harness_validation/gold_out/04_task_01fef67b5576468d854319d4d8a84988"
+    },
+    {
+      "task_id": "task_08c22c6bd072423284c2da7fb190b8bd",
+      "world_id": "world_aa672f35da64403f81004c0223f26a01",
+      "domain": "Law",
+      "task_name": "World418_EK_01",
+      "rubric_criteria_count": 5,
+      "gold_response_len": 510,
+      "gold_response_sha256": "1d4bb9dfd7c0479f16fd569bdd3e4a8d7c0569fd5134cca374455fece0141f38",
+      "donor_task_id": "task_0ae01f72a4e34633855686b7b0e8d455",
+      "grading_run_status": "completed",
+      "controls": [
+        {
+          "control": "positive",
+          "verifier_id": "ver_8c683b0fba1645c998888c2c31ba97ac__positive",
+          "expected": 1.0,
+          "observed": 1.0,
+          "match": true
+        },
+        {
+          "control": "swap",
+          "verifier_id": "ver_8c683b0fba1645c998888c2c31ba97ac__swap",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        },
+        {
+          "control": "sentinel",
+          "verifier_id": "ver_8c683b0fba1645c998888c2c31ba97ac__sentinel",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        }
+      ],
+      "ok": true,
+      "evidence_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e5_apex_agents/harness_validation/gold_out/05_task_08c22c6bd072423284c2da7fb190b8bd"
+    },
+    {
+      "task_id": "task_0ae01f72a4e34633855686b7b0e8d455",
+      "world_id": "world_10631647211d4c2080c5774c0ac1224e",
+      "domain": "Law",
+      "task_name": "World421_TG_02",
+      "rubric_criteria_count": 10,
+      "gold_response_len": 3653,
+      "gold_response_sha256": "c32f10d84271c6ed2925aebe51868636331273130b4835667fe7299b0c64b153",
+      "donor_task_id": "task_0b6e147c84754379a4e8f3a9057336f8",
+      "grading_run_status": "completed",
+      "controls": [
+        {
+          "control": "positive",
+          "verifier_id": "ver_10544244631c4f51a15a2c446ca3e676__positive",
+          "expected": 1.0,
+          "observed": 1.0,
+          "match": true
+        },
+        {
+          "control": "swap",
+          "verifier_id": "ver_10544244631c4f51a15a2c446ca3e676__swap",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        },
+        {
+          "control": "sentinel",
+          "verifier_id": "ver_10544244631c4f51a15a2c446ca3e676__sentinel",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        }
+      ],
+      "ok": true,
+      "evidence_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e5_apex_agents/harness_validation/gold_out/06_task_0ae01f72a4e34633855686b7b0e8d455"
+    },
+    {
+      "task_id": "task_0b6e147c84754379a4e8f3a9057336f8",
+      "world_id": "world_eec3883ca3c54c41a62d3f220a27736c",
+      "domain": "Law",
+      "task_name": "World431_AVK_04",
+      "rubric_criteria_count": 6,
+      "gold_response_len": 1064,
+      "gold_response_sha256": "3b6d979c0b90a699b32b2b27470310a714c3cc4732e25e174db74154f02494e5",
+      "donor_task_id": "task_0b28f15c5185453aa21a5b90f05f203d",
+      "grading_run_status": "completed",
+      "controls": [
+        {
+          "control": "positive",
+          "verifier_id": "ver_75f198714cca4a53a33c06300845c5e3__positive",
+          "expected": 1.0,
+          "observed": 1.0,
+          "match": true
+        },
+        {
+          "control": "swap",
+          "verifier_id": "ver_75f198714cca4a53a33c06300845c5e3__swap",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        },
+        {
+          "control": "sentinel",
+          "verifier_id": "ver_75f198714cca4a53a33c06300845c5e3__sentinel",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        }
+      ],
+      "ok": true,
+      "evidence_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e5_apex_agents/harness_validation/gold_out/07_task_0b6e147c84754379a4e8f3a9057336f8"
+    },
+    {
+      "task_id": "task_0b28f15c5185453aa21a5b90f05f203d",
+      "world_id": "world_0f65ffc105a74cc79a207cbe7a2aff87",
+      "domain": "Management Consulting",
+      "task_name": "Task a9r09376",
+      "rubric_criteria_count": 9,
+      "gold_response_len": 765,
+      "gold_response_sha256": "acd758d2cc7a84c8fa4087a5bee4a8b7de6fdf7438149923ccf3550ced60834d",
+      "donor_task_id": "task_0be9d2d5771a49a097de9e7d22fac74b",
+      "grading_run_status": "completed",
+      "controls": [
+        {
+          "control": "positive",
+          "verifier_id": "ver_be5a4a0d87084ddc974c384e509abad5__positive",
+          "expected": 1.0,
+          "observed": 1.0,
+          "match": true
+        },
+        {
+          "control": "swap",
+          "verifier_id": "ver_be5a4a0d87084ddc974c384e509abad5__swap",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        },
+        {
+          "control": "sentinel",
+          "verifier_id": "ver_be5a4a0d87084ddc974c384e509abad5__sentinel",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        }
+      ],
+      "ok": true,
+      "evidence_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e5_apex_agents/harness_validation/gold_out/08_task_0b28f15c5185453aa21a5b90f05f203d"
+    },
+    {
+      "task_id": "task_0be9d2d5771a49a097de9e7d22fac74b",
+      "world_id": "world_2f84c98bb6ca4644937fa4f47b460c57",
+      "domain": "Management Consulting",
+      "task_name": "Task_W135_Camille_Moingeon_6",
+      "rubric_criteria_count": 3,
+      "gold_response_len": 365,
+      "gold_response_sha256": "46e8ac61f9b787e19294d7f8ba9636ea946eb6fa6f422a1c1c9f459bdcb12754",
+      "donor_task_id": "task_0c527e11cc1c436696561a15eead68b2",
+      "grading_run_status": "completed",
+      "controls": [
+        {
+          "control": "positive",
+          "verifier_id": "ver_8db7ad6405f14a3296801d97ce63f26d__positive",
+          "expected": 1.0,
+          "observed": 1.0,
+          "match": true
+        },
+        {
+          "control": "swap",
+          "verifier_id": "ver_8db7ad6405f14a3296801d97ce63f26d__swap",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        },
+        {
+          "control": "sentinel",
+          "verifier_id": "ver_8db7ad6405f14a3296801d97ce63f26d__sentinel",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        }
+      ],
+      "ok": true,
+      "evidence_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e5_apex_agents/harness_validation/gold_out/09_task_0be9d2d5771a49a097de9e7d22fac74b"
+    },
+    {
+      "task_id": "task_0c527e11cc1c436696561a15eead68b2",
+      "world_id": "world_d1b705c7393b40f9bb5e01bb63b99b91",
+      "domain": "Management Consulting",
+      "task_name": "World112-1_Task03_NA",
+      "rubric_criteria_count": 10,
+      "gold_response_len": 800,
+      "gold_response_sha256": "5eb66d42f9efc4244d5ae14912c2fa9042f607d30f46bc238fd215e84e0e7e74",
+      "donor_task_id": "task_0cc6381ab1db4902bdac1c95b3ffcc45",
+      "grading_run_status": "completed",
+      "controls": [
+        {
+          "control": "positive",
+          "verifier_id": "ver_f6bb89ca5f2d4f55996b322911ac196c__positive",
+          "expected": 1.0,
+          "observed": 1.0,
+          "match": true
+        },
+        {
+          "control": "swap",
+          "verifier_id": "ver_f6bb89ca5f2d4f55996b322911ac196c__swap",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        },
+        {
+          "control": "sentinel",
+          "verifier_id": "ver_f6bb89ca5f2d4f55996b322911ac196c__sentinel",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        }
+      ],
+      "ok": true,
+      "evidence_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e5_apex_agents/harness_validation/gold_out/10_task_0c527e11cc1c436696561a15eead68b2"
+    },
+    {
+      "task_id": "task_0cc6381ab1db4902bdac1c95b3ffcc45",
+      "world_id": "world_075ef4dff46146a580c8522e2ad29cb3",
+      "domain": "Management Consulting",
+      "task_name": "Task 14",
+      "rubric_criteria_count": 9,
+      "gold_response_len": 276,
+      "gold_response_sha256": "a12629ea8988014ff1a4b2daddcd5995a656f9d179c8bcb280ab7be1da17fc4f",
+      "donor_task_id": "task_00b30f56f39a4a9891d9503443bafb27",
+      "grading_run_status": "completed",
+      "controls": [
+        {
+          "control": "positive",
+          "verifier_id": "ver_bd81bf60a75c4e70b9f39a52912045a2__positive",
+          "expected": 1.0,
+          "observed": 1.0,
+          "match": true
+        },
+        {
+          "control": "swap",
+          "verifier_id": "ver_bd81bf60a75c4e70b9f39a52912045a2__swap",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        },
+        {
+          "control": "sentinel",
+          "verifier_id": "ver_bd81bf60a75c4e70b9f39a52912045a2__sentinel",
+          "expected": 0.0,
+          "observed": 0.0,
+          "match": true
+        }
+      ],
+      "ok": true,
+      "evidence_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e5_apex_agents/harness_validation/gold_out/11_task_0cc6381ab1db4902bdac1c95b3ffcc45"
+    }
+  ]
+}

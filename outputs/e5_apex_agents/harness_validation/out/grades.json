@@ -1,0 +1,94 @@
+{
+  "grading_run_id": "gr_harness_validation_001",
+  "grading_run_status": "completed",
+  "verifier_results": [
+    {
+      "verifier_id": "ver_pass_at_least",
+      "verifier_version": 1,
+      "score": 1.0,
+      "verifier_result_values": {
+        "passed": true,
+        "actual_value": 12,
+        "metric_type": "Word Count",
+        "comparison_type": "At least",
+        "aggregation_mode": "sum",
+        "min_value": 5.0,
+        "max_value": null,
+        "expected_value": null,
+        "tolerance": 0.0,
+        "per_source_values": [
+          12
+        ],
+        "per_source_passes": [
+          true
+        ],
+        "evaluated_artifacts": "summary.txt",
+        "rationale": "Word Count: 12 | comparison=At least (12.0 >= 5.0) | aggregation=sum"
+      },
+      "status": "ok",
+      "message": ""
+    },
+    {
+      "verifier_id": "ver_fail_at_least",
+      "verifier_version": 1,
+      "score": 0.0,
+      "verifier_result_values": {
+        "passed": false,
+        "actual_value": 12,
+        "metric_type": "Word Count",
+        "comparison_type": "At least",
+        "aggregation_mode": "sum",
+        "min_value": 10000.0,
+        "max_value": null,
+        "expected_value": null,
+        "tolerance": 0.0,
+        "per_source_values": [
+          12
+        ],
+        "per_source_passes": [
+          false
+        ],
+        "evaluated_artifacts": "summary.txt",
+        "rationale": "Word Count: 12 | comparison=At least (12.0 >= 10000.0) | aggregation=sum"
+      },
+      "status": "ok",
+      "message": ""
+    },
+    {
+      "verifier_id": "ver_pass_exact",
+      "verifier_version": 1,
+      "score": 1.0,
+      "verifier_result_values": {
+        "passed": true,
+        "actual_value": 12,
+        "metric_type": "Word Count",
+        "comparison_type": "Exactly",
+        "aggregation_mode": "sum",
+        "min_value": null,
+        "max_value": null,
+        "expected_value": 12.0,
+        "tolerance": 0.0,
+        "per_source_values": [
+          12
+        ],
+        "per_source_passes": [
+          true
+        ],
+        "evaluated_artifacts": "summary.txt",
+        "rationale": "Word Count: 12 | comparison=Exactly (12.0 ~= 12.0 (\u00b10.0)) | aggregation=sum"
+      },
+      "status": "ok",
+      "message": ""
+    }
+  ],
+  "scoring_results": {
+    "final_score": 0.6666666666666666,
+    "scoring_method_result_values": {
+      "task_score": 0.6666666666666666,
+      "universal_penalty": 0.0,
+      "capped_penalty": 0.0,
+      "task_verifier_count": 3,
+      "universal_verifier_count": 0
+    }
+  }
+}

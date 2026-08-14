@@ -1,0 +1,17 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Find the gorilla image and write summary.txt."
+    },
+    {
+      "role": "assistant",
+      "content": "The gorilla image is located at animals xk92m qz7fw png in filesystem."
+    }
+  ],
+  "output": {
+    "source": "harness_validation_synthetic_fixture"
+  },
+  "status": "completed",
+  "time_elapsed": 0.0
+}

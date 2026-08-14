@@ -1,0 +1,46 @@
+{
+  "grading_run_id": "gr_gold_03",
+  "grading_run_status": "completed",
+  "verifier_results": [
+    {
+      "verifier_id": "ver_d29bc40cddf64f1eb8c7e22fb034f8ff__positive",
+      "verifier_version": 1,
+      "score": 1.0,
+      "verifier_result_values": {
+        "passed": true,
+        "evaluated_artifacts": "final_answer",
+        "rationale": "Pattern found in final answer"
+      },
+      "status": "ok",
+      "message": ""
+    },
+    {
+      "verifier_id": "ver_d29bc40cddf64f1eb8c7e22fb034f8ff__swap",
+      "verifier_version": 1,
+      "score": 0.0,
+      "verifier_result_values": {
+        "passed": false,
+        "evaluated_artifacts": "final_answer",
+        "rationale": "Pattern not found in final answer"
+      },
+      "status": "ok",
+      "message": ""
+    },
+    {
+      "verifier_id": "ver_d29bc40cddf64f1eb8c7e22fb034f8ff__sentinel",
+      "verifier_version": 1,
+      "score": 0.0,
+      "verifier_result_values": {
+        "passed": false,
+        "evaluated_artifacts": "final_answer",
+        "rationale": "Pattern not found in final answer"
+      },
+      "status": "ok",
+      "message": ""
+    }
+  ],
+  "scoring_results": {
+    "final_score": 0.3333333333333333,
+    "scoring_method_result_values": {}
+  }
+}

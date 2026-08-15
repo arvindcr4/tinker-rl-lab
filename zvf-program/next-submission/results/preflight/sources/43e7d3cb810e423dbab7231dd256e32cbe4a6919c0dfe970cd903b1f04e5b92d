@@ -1,0 +1,21 @@
+{
+  "schema_version": "aiml-next-execution-authorization-v1",
+  "authorized_at": "2026-07-30T18:55:05+05:30",
+  "authorized_by": "user_in_active_codex_task",
+  "authorization_text": "authorize you for it",
+  "scope": {
+    "local_implementation": true,
+    "local_verification": true,
+    "remote_gpu_preflight": true,
+    "remote_confirmatory_matrix": true,
+    "external_user_recruitment": false,
+    "publish": false,
+    "submit": false,
+    "push": false,
+    "promote_result_claims_before_complete_receipts": false
+  },
+  "protocol_path": "zvf-program/next-submission/preregistration.json",
+  "protocol_canonical_sha256": "e34036175e8dda5912e05ad0cbaccb40146e1d78506e348f063157a68e8c322c",
+  "protocol_canonicalization": "JSON document parsed, with the values of bindings.execution_authorization_sha256 and authorization.receipt_sha256 set to the empty string, re-serialized with two-space indentation and a trailing newline",
+  "evidence_boundary": "Authorization permits execution. It does not turn preflight, partial, failed, or unverified rows into scientific results."
+}

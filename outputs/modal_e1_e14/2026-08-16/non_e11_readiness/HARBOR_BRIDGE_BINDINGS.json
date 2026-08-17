@@ -1,0 +1,43 @@
+{
+  "bridge_receipt": "non_e11_readiness/TINKER_BRIDGE.json",
+  "claim_boundary": "Harbor configuration resolution and paid-launch gate validation only. No agent trial, model sampling, verifier execution, or benchmark scoring occurred.",
+  "is_model_score": false,
+  "lanes": {
+    "E2": {
+      "config": "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/job-tinker-bridge.yaml",
+      "config_sha256": "a03f019d576f495efab4574f43b5bd895c5874bf43a7677c5234fbf570833ecf",
+      "harbor_print_config": "PASS",
+      "planned_scope": "revideo-perf-opt, pass@1",
+      "ready_to_execute": false,
+      "remaining_gate": "positive user-authorized total matching the persistent bridge maximum"
+    },
+    "E4": {
+      "config": "outputs/e4_banker_toolbench/official_repo_ff6db552/job-tinker-bridge.yaml",
+      "config_sha256": "351c96cd354aa3c66959249c5bac5642a3ac33a0851b9a07b040e1ea57f927ea",
+      "harbor_print_config": "PASS",
+      "planned_scope": "100-task Banker-TB suite, pass@1",
+      "ready_to_execute": false,
+      "remaining_gate": "a projected full-lane total at or below the existing USD 1.00 ceiling; bridge maximum is currently USD 0.00"
+    },
+    "E7": {
+      "config": "outputs/e7_binaryaudit/BinaryAudit/configs/tinker-bridge-dnsmasq-docker.yaml",
+      "config_sha256": "2fcbd697d998481cfd752f5ba9f22716f1eaba58d91fc3de8d1ca97b41fc02b0",
+      "harbor_print_config": "PASS",
+      "planned_scope": "dnsmasq-backdoor-detect, pass@1",
+      "ready_to_execute": false,
+      "remaining_gate": "positive user-authorized total matching the persistent bridge maximum"
+    }
+  },
+  "launcher": {
+    "execute_gate_check": "PASS_ZERO_BUDGET_REJECTED",
+    "path": "zvf-program/flagship/run_harbor_via_tinker_bridge.py",
+    "sha256": "827f534f66998aaf6970db97b21e1147ce45295ac6e56cb42621534fbd1a01f1",
+    "unit_tests_passed": 6
+  },
+  "recorded_at": "2026-08-16T12:31:51.009513Z",
+  "receipt_sha256": "228a13f1968883a8bb4254c440164f380acb2825564d58f35df3c845180017fe",
+  "schema_version": "pavlov-harbor-tinker-bindings-v1",
+  "scientific_evidence": false,
+  "score": null,
+  "status": "CONFIGURED_BLOCKED_ON_PAID_BUDGET"
+}

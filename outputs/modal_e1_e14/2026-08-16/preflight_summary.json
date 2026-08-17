@@ -1,0 +1,78 @@
+{
+  "adapter_ready": [
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "E5",
+    "E6",
+    "E7",
+    "E8",
+    "E9",
+    "E10",
+    "E12",
+    "E13",
+    "E14"
+  ],
+  "adapter_status": "READY",
+  "blocked": [
+    "E2",
+    "E3",
+    "E5",
+    "E6",
+    "E7",
+    "E8",
+    "E9",
+    "E10",
+    "E12",
+    "E13",
+    "E14"
+  ],
+  "is_model_score": false,
+  "lane_count": 13,
+  "locally_improvable": [
+    "E1",
+    "E2",
+    "E4",
+    "E5"
+  ],
+  "readiness_classes": {
+    "E1": "RECORDED_MODEL_RESULT",
+    "E10": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+    "E12": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+    "E13": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+    "E14": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+    "E2": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+    "E3": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+    "E4": "RECORDED_MODEL_RESULT",
+    "E5": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+    "E6": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+    "E7": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+    "E8": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+    "E9": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED"
+  },
+  "ready_for_full_modal_eval": [],
+  "receipts": {
+    "E1": "835f97344a503df0e306df3d96ae9da1eef68256bfa9c6d50a6f673d1f3474aa",
+    "E10": "d49def449a1c9d44855e4be693a2f8124d679507329bd7924ed7c87ea4c31c71",
+    "E12": "f5316016edc937c37d99181aeb77c3aca36b28c402fe448436cda9c2d2f01406",
+    "E13": "a972b5abee633a21b1370e735482fd98047dd82aa76957b5032d9d80dcd4596d",
+    "E14": "05681ffad6b38464227a097cdc370076f15a2b3b2c5ae957e0a9d76f79ad49fb",
+    "E2": "957717cd409f067c3f6ce116e627fb1adc402999494bb315111f7d8cf3f63868",
+    "E3": "45e405fc2a26f9acee0e85120bc88a44ab0e48b9839b523c3c412893bbf28df5",
+    "E4": "a92fe85587f3173eda174eb642c7ee6423abdd3a9fc2c9467cd488ef87b46d24",
+    "E5": "ec0d0ed61f5a1c917764bfb35417231f60dc9e3d55da0cc5628833b93aeb1ac3",
+    "E6": "c90ae0d89b8194fe92cea6f6747f60aa150737c14acc6d2700c0aee575517ab4",
+    "E7": "e7ae741be021c881c31c1fddf518e89e3a06267eb04767623a4222958cf1daa5",
+    "E8": "253264ee671a33dd78ec9b794c61420f5d6dbccfa551bd0922057a14a3169e06",
+    "E9": "cdda8c9e3744f4c34dad3010f39252612f7600cf4337e4b3a67021cf9b21fed6"
+  },
+  "recorded_at": "2026-08-16T16:21:15.523525Z",
+  "recorded_model_results": [
+    "E1",
+    "E4"
+  ],
+  "schema_version": "pavlov-modal-e1-e14-summary-v1",
+  "score": null,
+  "status": "PARTIAL"
+}

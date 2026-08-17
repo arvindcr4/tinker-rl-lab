@@ -1,0 +1,68 @@
+{
+  "actionability": {
+    "can_improve_without_external_input": false,
+    "next_action": "Obtain an official held-out suite, deployment binding, license grant, and OpenReward credential.",
+    "owner": "provider"
+  },
+  "adapter_tests": {
+    "exit_code": 0,
+    "modules": [
+      "flagship.test_e13_openreward_games_local_runner",
+      "flagship.test_e13_openreward_games_tinker_train"
+    ],
+    "output_tail": "{\n  \"seed_separation_holds\": false,\n  \"violations\": [\n    \"10 (variant, seed) instance(s) appear in both splits: [['DoNotScore-v0', 0], ['DoNotScore-v0', 1], ['DoNotScore-v0', 2], ['DoNotScore-v0', 3], ['DoNotScore-v0', 4], ['DoNotScore-v0-hardcore', 0], ['DoNotScore-v0-hardcore', 1], ['DoNotScore-v0-hardcore', 2], ['DoNotScore-v0-hardcore', 3], ['DoNotScore-v0-hardcore', 4]]\",\n    \"10 task id(s) appear in both splits: ['DoNotScore-v0-hardcore_seed0', 'DoNotScore-v0-hardcore_seed1', 'DoNotScore-v0-hardcore_seed2', 'DoNotScore-v0-hardcore_seed3', 'DoNotScore-v0-hardcore_seed4', 'DoNotScore-v0_seed0', 'DoNotScore-v0_seed1', 'DoNotScore-v0_seed2', 'DoNotScore-v0_seed3', 'DoNotScore-v0_seed4']\"\n  ],\n  \"receipt\": \"/tmp/tmpmzkpdjxn/receipt.json\",\n  \"score\": null\n}\n{\n  \"seed_separation_holds\": true,\n  \"violations\": [],\n  \"receipt\": \"/tmp/tmp54wsq36f/receipt.json\",\n  \"score\": null\n}\n\n----------------------------------------------------------------------\nRan 78 tests in 0.016s\n\nOK\n",
+    "passed": true,
+    "ran": "Ran 78 tests in 0.016s",
+    "summary": "OK"
+  },
+  "authoritative_source_probe": {
+    "content_type": "text/html; charset=utf-8",
+    "elapsed_ms": 319,
+    "final_url": "https://openreward.ai/",
+    "reachable": true,
+    "status": 200
+  },
+  "blockers": [
+    "A model score requires a paid provider key (OpenAI/Anthropic/OpenRouter); not crossed per the lane cost boundary.",
+    "Deployed environment revision cannot be bound to the pinned public commit without an account; hosted scores are not reproducible until it can.",
+    "No LICENSE file in any of the 277 EnvCommons repos; wrapper code has no explicit grant. Needs written confirmation or a LICENSE commit from GR Inc.",
+    "No official named 'openreward_games_eval' held-out suite is published; the 74-environment set is our selection, not the provider's.",
+    "The 'test' split is public, so it is not held out from anyone; whether E13 intends a narrower private holdout is unestablished."
+  ],
+  "claim_boundary": "Modal preflight is infrastructure evidence, never a benchmark score.",
+  "contract": {
+    "artifact_or_side_effect": true,
+    "domains": [
+      "games",
+      "long_horizon",
+      "tool_use"
+    ],
+    "source_url": "https://openreward.ai/",
+    "split": "held-out environment families absent from training",
+    "stateful": true
+  },
+  "is_model_score": false,
+  "lane": "E13",
+  "modal": {
+    "app": "pavlov-e1-e14",
+    "cpu_count": 17,
+    "function_call_id": null,
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "task_id": "ta-01M05P0ZEHYFP9EVG10G02263R"
+  },
+  "readiness_class": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+  "receipt_sha256": "a972b5abee633a21b1370e735482fd98047dd82aa76957b5032d9d80dcd4596d",
+  "recorded_at": "2026-08-16T16:21:12.666132Z",
+  "schema_version": "pavlov-modal-e1-e14-preflight-v1",
+  "score": null,
+  "source_receipt": {
+    "contains_model_score": false,
+    "launch_allowed": false,
+    "path": "outputs/e13_openreward_games/receipt_2026-08-09.json",
+    "sha256": "2768c2f18ebca228b72a2d643a71ad32ece7d8cb2357563beee70f4ea63fed8c",
+    "status": "PARTIAL"
+  },
+  "status": "BLOCKED",
+  "suite_id": "openreward_games_eval",
+  "suite_role": "primary_eval"
+}

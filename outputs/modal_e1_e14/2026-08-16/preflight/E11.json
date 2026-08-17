@@ -1,0 +1,55 @@
+{
+  "adapter_tests": {
+    "exit_code": 0,
+    "modules": [
+      "flagship.test_e11_verilog_eval_local_runner",
+      "flagship.test_pavlov_verilog_eval_split_manifest"
+    ],
+    "output_tail": "{\n  \"authoritative_source\": \"https://github.com/NVlabs/verilog-eval\",\n  \"blockers\": [],\n  \"category\": \"code\",\n  \"contract_authority\": {\n    \"artifact_or_side_effect\": true,\n    \"domains\": [\n      \"chip_design\",\n      \"code\"\n    ],\n    \"role\": \"primary_eval\",\n    \"source\": \"https://github.com/NVlabs/verilog-eval\",\n    \"stateful\": false\n  },\n  \"dataset_license\": \"apache-2.0\",\n  \"dataset_revision\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\n  \"dataset_source\": \"https://github.com/NVlabs/verilog-eval\",\n  \"declared_split_manifest_hash\": \"sha256:421f8903aec3168e0830c38720cf88d9c4df242c00586bc073fc70aa8da9fcab\",\n  \"decontamination\": {\n    \"receipt_id\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\n    \"safe_public_artifact\": true,\n    \"status\": \"verified\",\n    \"url\": null,\n    \"visibility\": \"private\"\n  },\n  \"exact_suite\": true,\n  \"launch\": {\n    \"allowed\": false,\n    \"reasons\": [\n      \"launch is intentionally disabled\"\n    ]\n  },\n  \"manifest_type\": \"verilog_eval_split_manifest\",\n  \"paid_launch_allowed\": false,\n  \"role\": \"primary_eval\",\n  \"schema_version\": \"pavlov-verilog-eval-split-manifest-v1\",\n  \"split\": {\n    \"primary_eval\": {\n      \"aggregate_sha256\": \"d5ef7b75f8b8306759ded58c00e0f30de2e78f7b80230dedb724b603ded74be2\",\n      \"aggregate_sha256_digest\": \"sha256:d5ef7b75f8b8306759ded58c00e0f30de2e78f7b80230dedb724b603ded74be2\",\n      \"count\": 3,\n      \"task_id_hashes\": [\n        \"753933da068a674825506656017933e6cafca1f8e62392414ae18579f3bd7555\",\n        \"bdce8a73466c5b940249cc7ccd80a8ef94551107e32df58206672db6667016a3\",\n        \"ffc20a14b0433476200e771d04a7b5534b66e2fbf21ce97046af1ff08372ff6b\"\n      ]\n    }\n  },\n  \"split_hashes\": {\n    \"primary_eval\": \"sha256:d5ef7b75f8b8306759ded58c00e0f30de2e78f7b80230dedb724b603ded74be2\"\n  },\n  \"split_manifest_hash\": \"sha256:421f8903aec3168e0830c38720cf88d9c4df242c00586bc073fc70aa8da9fcab\",\n  \"split_manifest_payload_digest\": \"sha256:032287bc42f40905093c068e6fd4950f422ad4cc4d7e418f41188d2d6f55aeeb\",\n  \"split_manifest_receipt_ref\": \"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\n  \"split_ready\": true,\n  \"status\": \"READY\",\n  \"suite_id\": \"verilog_eval\",\n  \"task_id_digest\": \"b6c06be1afa3e7cf477592fc6f11dde57c8f6802db91f12a3909cbe8bf1a7eae\"\n}\n{\n  \"authoritative_source\": null,\n  \"blockers\": [\n    \"suite_id must be 'verilog_eval'\"\n  ],\n  \"category\": \"code\",\n  \"contract_authority\": {},\n  \"dataset_license\": null,\n  \"dataset_revision\": null,\n  \"dataset_source\": null,\n  \"declared_split_manifest_hash\": \"sha256:421f8903aec3168e0830c38720cf88d9c4df242c00586bc073fc70aa8da9fcab\",\n  \"decontamination\": null,\n  \"exact_suite\": false,\n  \"launch\": {\n    \"allowed\": false,\n    \"reasons\": [\n      \"launch is intentionally disabled\"\n    ]\n  },\n  \"manifest_type\": \"verilog_eval_split_manifest\",\n  \"paid_launch_allowed\": false,\n  \"role\": \"primary_eval\",\n  \"schema_version\": \"pavlov-verilog-eval-split-manifest-v1\",\n  \"split\": {\n    \"primary_eval\": {}\n  },\n  \"split_hashes\": {},\n  \"split_manifest_hash\": \"sha256:421f8903aec3168e0830c38720cf88d9c4df242c00586bc073fc70aa8da9fcab\",\n  \"split_manifest_payload_digest\": null,\n  \"split_manifest_receipt_ref\": \"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\n  \"split_ready\": false,\n  \"status\": \"BLOCKED\",\n  \"suite_id\": \"not-verilog\",\n  \"task_id_digest\": null\n}\n{\n  \"status\": \"BLOCKED\",\n  \"task_count\": 4,\n  \"split_manifest_hash\": \"sha256:f81ea93d3b218d2e1628b41f1a4dc76449bbf285628eead0833ce7fd93eb3e28\",\n  \"aggregate\": \"sha256:5d70d6424318a03015d62cbb22d4429d78600fafa037f9d2b8f72b2fe4a3639f\",\n  \"blockers\": [\n    \"decontamination must be an object\"\n  ],\n  \"output\": \"/tmp/tmpv4gt97y2/receipt.json\"\n}\n\n----------------------------------------------------------------------\nRan 50 tests in 0.081s\n\nOK (skipped=6)\n",
+    "passed": true,
+    "ran": "Ran 50 tests in 0.081s",
+    "summary": null
+  },
+  "authoritative_source_probe": {
+    "content_type": "text/html; charset=utf-8",
+    "elapsed_ms": 438,
+    "final_url": "https://github.com/NVlabs/verilog-eval",
+    "reachable": true,
+    "status": 206
+  },
+  "blockers": [],
+  "claim_boundary": "Modal preflight is infrastructure evidence, never a benchmark score.",
+  "contract": {
+    "artifact_or_side_effect": true,
+    "domains": [
+      "chip_design",
+      "code"
+    ],
+    "source_url": "https://github.com/NVlabs/verilog-eval",
+    "split": "evaluation",
+    "stateful": false
+  },
+  "is_model_score": false,
+  "lane": "E11",
+  "modal": {
+    "app": "pavlov-e1-e14",
+    "cpu_count": 17,
+    "function_call_id": null,
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "task_id": "ta-01M04WXEH9SSDN71C0BW9C4WJR"
+  },
+  "receipt_sha256": "0eb4fd9cb30eb84f6a02918fa8825ba53ae0a7a56b6a785d44ac420d77f1c2b0",
+  "recorded_at": "2026-08-16T09:02:20.787984Z",
+  "schema_version": "pavlov-modal-e1-e14-preflight-v1",
+  "score": null,
+  "source_receipt": {
+    "contains_model_score": false,
+    "launch_allowed": true,
+    "path": "outputs/modal_e1_e14/2026-08-16/e11/launch_preflight_receipt.json",
+    "sha256": "e067e0cb465adb4133d0b1c6ec2f44d3ab4441e81e6c59f2f546fb8c89f013c7",
+    "status": "READY"
+  },
+  "status": "READY_FOR_FULL_MODAL_EVAL",
+  "suite_id": "verilog_eval",
+  "suite_role": "primary_eval"
+}

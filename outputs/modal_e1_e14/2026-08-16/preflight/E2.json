@@ -1,0 +1,65 @@
+{
+  "actionability": {
+    "can_improve_without_external_input": true,
+    "next_action": "Re-run the saved candidate with numeric-only Harbor rewards; obtain an explicit benchmark license receipt before publication.",
+    "owner": "local_then_maintainer"
+  },
+  "adapter_tests": {
+    "exit_code": 0,
+    "modules": [
+      "flagship.test_frontier_swe_eval"
+    ],
+    "output_tail": "----------------------------------------------------------------------\nRan 6 tests in 0.002s\n\nOK\n",
+    "passed": true,
+    "ran": "Ran 6 tests in 0.002s",
+    "summary": "OK"
+  },
+  "authoritative_source_probe": {
+    "content_type": "text/html; charset=utf-8",
+    "elapsed_ms": 442,
+    "final_url": "https://github.com/Proximal-Labs/frontier-swe",
+    "reachable": true,
+    "status": 206
+  },
+  "blockers": [
+    "arch_mismatch_amd64_image_on_arm64_host: the published image is linux/amd64 only; the Colima VM is aarch64 with plain QEMU user-mode emulation and no Rosetta. Headless Chrome core-dumps inside QEMU (rcu_read_unlock assertion, rc=134), so no scene renders and the frozen read-only baseline cannot be timed.",
+    "benchmark_license_missing: the official checkout has no root LICENSE/LICENCE/COPYING/NOTICE at the pinned revision; README, SCORING.md and pyproject.toml declare no license; the GitHub API reports license: null",
+    "submission_missing: no model-produced candidate workspace exists"
+  ],
+  "claim_boundary": "Modal preflight is infrastructure evidence, never a benchmark score.",
+  "contract": {
+    "artifact_or_side_effect": true,
+    "domains": [
+      "code",
+      "ml",
+      "long_horizon"
+    ],
+    "source_url": "https://github.com/Proximal-Labs/frontier-swe",
+    "split": "evaluation",
+    "stateful": true
+  },
+  "is_model_score": false,
+  "lane": "E2",
+  "modal": {
+    "app": "pavlov-e1-e14",
+    "cpu_count": 17,
+    "function_call_id": null,
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "task_id": "ta-01M05P0ZY3THDF6HME4TTZWCWR"
+  },
+  "readiness_class": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+  "receipt_sha256": "957717cd409f067c3f6ce116e627fb1adc402999494bb315111f7d8cf3f63868",
+  "recorded_at": "2026-08-16T16:21:10.905582Z",
+  "schema_version": "pavlov-modal-e1-e14-preflight-v1",
+  "score": null,
+  "source_receipt": {
+    "contains_model_score": false,
+    "launch_allowed": false,
+    "path": "outputs/e2_frontier_swe/e2_frontier_swe_lane_receipt_2026-08-09.json",
+    "sha256": "f7fbb166658f6e9c2ba19cd917a8b47764020946c5297837379d6e6229d5cfa5",
+    "status": "BLOCKED"
+  },
+  "status": "BLOCKED",
+  "suite_id": "frontier_swe_eval",
+  "suite_role": "primary_eval"
+}

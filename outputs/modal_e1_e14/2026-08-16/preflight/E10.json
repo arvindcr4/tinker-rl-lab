@@ -1,0 +1,66 @@
+{
+  "actionability": {
+    "can_improve_without_external_input": false,
+    "next_action": "Obtain AISI private held-out files and the approved policy-grader specification.",
+    "owner": "provider"
+  },
+  "adapter_tests": {
+    "exit_code": 0,
+    "modules": [
+      "flagship.test_pavlov_agentharm_frontiermath_adapter"
+    ],
+    "output_tail": "----------------------------------------------------------------------\nRan 43 tests in 0.094s\n\nOK\n",
+    "passed": true,
+    "ran": "Ran 43 tests in 0.094s",
+    "summary": "OK"
+  },
+  "authoritative_source_probe": {
+    "content_type": "text/html; charset=utf-8",
+    "elapsed_ms": 466,
+    "final_url": "https://github.com/UKGovernmentBEIS/inspect_evals/tree/main/src/inspect_evals/agentharm",
+    "reachable": true,
+    "status": 206
+  },
+  "blockers": [
+    "{\"external_receipt_needed\":\"AISI-approved policy grader / refusal-and-semantic judge specification with a pinned identity hash.\",\"id\":\"E10-POLICY-GRADER-ARTIFACT\",\"request_artifact\":\"outputs/e10_agentharm/AISI_ACCESS_REQUEST.md\",\"summary\":\"The contract marks agentharm_eval artifact_required; the approved policy-grader artifact is not present locally.\"}",
+    "{\"external_receipt_needed\":\"Budget authorization plus an OpenAI key (or the AISI-approved judge substitute) before any scored run.\",\"id\":\"E10-JUDGE-MODEL-KEY\",\"summary\":\"The official grader defaults to openai/gpt-4o-2024-08-06 for both the refusal judge and the semantic judge. No paid model key is authorized for benchmark use in this lane.\"}",
+    "{\"external_receipt_needed\":\"Tinker/W&B run identity and budget receipt.\",\"id\":\"E10-MODEL-ARTIFACT\",\"summary\":\"No agent artifact exists for Qwen/Qwen3.6-35B-A3B@995ad96eacd9; the scored run needs an agent model, which is a paid call this lane may not make.\"}",
+    "{\"external_receipt_needed\":\"Written AISI grant of held-out AgentHarm access, plus the file revision/checksums AISI publishes with the grant.\",\"id\":\"E10-HELDOUT-SPLIT\",\"loader_flag\":\"split=\\\"test_private\\\"\",\"request_artifact\":\"outputs/e10_agentharm/AISI_ACCESS_REQUEST.md\",\"required_files\":[\"benchmark/harmful_behaviors_test_private.json\",\"benchmark/benign_behaviors_test_private.json\",\"benchmark/chat_private_test.json\"],\"summary\":\"AgentHarm held-out split files are absent from the public dataset revision and gated by the UK AI Safety Institute.\"}"
+  ],
+  "claim_boundary": "Modal preflight is infrastructure evidence, never a benchmark score.",
+  "contract": {
+    "artifact_or_side_effect": true,
+    "domains": [
+      "alignment",
+      "security",
+      "tool_use"
+    ],
+    "source_url": "https://github.com/UKGovernmentBEIS/inspect_evals/tree/main/src/inspect_evals/agentharm",
+    "split": "held-out evaluation",
+    "stateful": true
+  },
+  "is_model_score": false,
+  "lane": "E10",
+  "modal": {
+    "app": "pavlov-e1-e14",
+    "cpu_count": 17,
+    "function_call_id": null,
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "task_id": "ta-01M05P0ZY3THDF6HME4TTZWCWR"
+  },
+  "readiness_class": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+  "receipt_sha256": "d49def449a1c9d44855e4be693a2f8124d679507329bd7924ed7c87ea4c31c71",
+  "recorded_at": "2026-08-16T16:21:12.140507Z",
+  "schema_version": "pavlov-modal-e1-e14-preflight-v1",
+  "score": null,
+  "source_receipt": {
+    "contains_model_score": false,
+    "launch_allowed": false,
+    "path": "outputs/e10_agentharm/receipt_2026-08-09.json",
+    "sha256": "1c28e8fcd4e90d1b3a26392fff14968185d32d873f6fc2ee4407cdb1fbdced9d",
+    "status": "PARTIAL"
+  },
+  "status": "BLOCKED",
+  "suite_id": "agentharm_eval",
+  "suite_role": "primary_eval"
+}

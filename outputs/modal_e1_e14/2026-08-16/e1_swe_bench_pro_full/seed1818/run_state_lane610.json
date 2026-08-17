@@ -1,0 +1,10 @@
+{
+  "generation_backend": "modal_gpu_vllm_merged_peft",
+  "gpu_type": "A100-80GB",
+  "index_max": 669,
+  "index_min": 610,
+  "lane": "lane610",
+  "pending_generations": 60,
+  "status": "GPU_GENERATING",
+  "updated_at": "2026-08-17T04:49:44.785149Z"
+}

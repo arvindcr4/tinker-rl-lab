@@ -1,0 +1,70 @@
+{
+  "actionability": {
+    "can_improve_without_external_input": true,
+    "next_action": "Build the Archipelago environment and pre-register a small stratified subset before any agent or judge calls.",
+    "owner": "local_then_budget"
+  },
+  "adapter_tests": {
+    "exit_code": 0,
+    "modules": [
+      "flagship.test_eval_apex_agents_ingestion"
+    ],
+    "output_tail": "----------------------------------------------------------------------\nRan 33 tests in 0.010s\n\nOK\n",
+    "passed": true,
+    "ran": "Ran 33 tests in 0.010s",
+    "summary": "OK"
+  },
+  "authoritative_source_probe": {
+    "content_type": "text/html; charset=utf-8",
+    "elapsed_ms": 327,
+    "final_url": "https://www.mercor.com/blog/introducing-apex-agents/",
+    "reachable": true,
+    "status": 200
+  },
+  "blockers": [
+    "{\"cost_note\":\"judge spend scales with rubric criteria, not task count; it is a separate cost centre from the agent rollout\",\"credential_present\":false,\"description\":\"Archipelago's agent runner needs one of ANTHROPIC_API_KEY / OPENAI_API_KEY / GOOGLE_API_KEY, and the official APEX grading path maps every rubric criterion to eval_config_id 'ec_output_llm', i.e. one LLM judge call per criterion per task\",\"id\":\"agent_and_judge_model_keys_missing\",\"required_external_receipt\":{\"kind\":\"archipelago_grading_credentials\",\"required\":[\"OPENAI_API_KEY\",\"GOOGLE_API_KEY\",\"ANTHROPIC_API_KEY\"]},\"severity\":\"blocks_model_rollout_and_grading\"}",
+    "{\"credential_present\":true,\"credential_source\":\".env:TINKER_API_KEY\",\"description\":\"the tinker package is not importable in the isolated runtime; TINKER_API_KEY exists in .env and was deliberately not used\",\"id\":\"tinker_client_missing\",\"required_external_receipt\":{\"kind\":\"tinker_access\",\"required\":[\"Tinker client import\",\"authenticated ServiceClient\",\"estimated cost <= $0.50\"]},\"severity\":\"blocks_model_rollout\"}",
+    "{\"credential_present\":true,\"credential_source\":\"netrc:api.wandb.ai\",\"description\":\"the wandb package is not installed; the credential itself IS present in ~/.netrc for api.wandb.ai\",\"id\":\"wandb_package_missing\",\"note\":\"a leftover wandb/ directory at the repo root resolves 'import wandb' to an empty namespace package for any process with cwd on sys.path; flagged as a separate cross-lane cleanup\",\"required_external_receipt\":{\"kind\":\"wandb_online_run\",\"required\":[\"mode=online\",\"run_id\",\"run_url\",\"config acknowledged\",\"initialized before any Tinker call\"]},\"severity\":\"blocks_tracked_run\",\"unblock_commands\":[\"uv pip install wandb  # inside the E5 isolated runtime\"]}",
+    "{\"description\":\"a full 480-task pass@1 run costs ~$122.57 in Tinker alone at the E5 ceiling, about 8.2x the ~$15.00 remaining, before any judge call\",\"id\":\"budget_insufficient_for_full_suite\",\"severity\":\"scope\",\"unblock\":\"pre-register a stratified subset (~40-58 tasks max) and report it as a subset estimate with confidence intervals, never as a leaderboard-comparable suite score\"}",
+    "{\"description\":\"archipelago/environment docker image is not built; a run needs docker compose up --build plus all 9 MCP servers\",\"docker_available\":true,\"docker_runtime\":\"Colima 28.4.0, 8 CPU / 16.54 GiB\",\"id\":\"environment_container_not_built\",\"note\":\"build is >2 GB and must take the shared outputs/_setup/docker.lock mutex\",\"severity\":\"blocks_model_rollout\"}",
+    "{\"description\":\"owner authenticated and accepted the gated-repo terms; authenticated probes return 200 at the pinned revision\",\"id\":\"hf_dataset_access\",\"resolved\":true,\"severity\":\"resolved\"}"
+  ],
+  "claim_boundary": "Modal preflight is infrastructure evidence, never a benchmark score.",
+  "contract": {
+    "artifact_or_side_effect": true,
+    "domains": [
+      "multi_domain",
+      "finance",
+      "enterprise",
+      "long_horizon",
+      "tool_use"
+    ],
+    "source_url": "https://www.mercor.com/blog/introducing-apex-agents/",
+    "split": "held-out worlds",
+    "stateful": true
+  },
+  "is_model_score": false,
+  "lane": "E5",
+  "modal": {
+    "app": "pavlov-e1-e14",
+    "cpu_count": 17,
+    "function_call_id": null,
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "task_id": "ta-01M05P10M9NT29TJPTSMFYRG4R"
+  },
+  "readiness_class": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+  "receipt_sha256": "ec0d0ed61f5a1c917764bfb35417231f60dc9e3d55da0cc5628833b93aeb1ac3",
+  "recorded_at": "2026-08-16T16:21:11.522954Z",
+  "schema_version": "pavlov-modal-e1-e14-preflight-v1",
+  "score": null,
+  "source_receipt": {
+    "contains_model_score": false,
+    "launch_allowed": false,
+    "path": "outputs/e5_apex_agents/lane_receipt_2026-08-09.json",
+    "sha256": "f0a6d1a2cf251e1bba37005e3ff0bb8052381a5313749b9de4f07d9178cca2d1",
+    "status": "PARTIAL"
+  },
+  "status": "BLOCKED",
+  "suite_id": "apex_agents_eval",
+  "suite_role": "primary_eval"
+}

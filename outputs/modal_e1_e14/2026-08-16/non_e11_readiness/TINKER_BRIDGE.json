@@ -1,0 +1,50 @@
+{
+  "authentication": {
+    "bearer_required": true,
+    "dedicated_bridge_credential": true,
+    "provider_credential_rejected": true,
+    "unauthorized_health_http_status": 401
+  },
+  "budget": {
+    "charged_usd": 0.0,
+    "maximum_usd": "0.00",
+    "reserved_usd": 0.0
+  },
+  "claim_boundary": "Authenticated infrastructure validation only. The zero-dollar persistent budget rejected the chat request before sampling; no paid inference or benchmark scoring occurred.",
+  "deployment": {
+    "base_url": "https://arvindcr4--pavlov-tinker-openai-bridge-tinkeropenaibridge-web.modal.run",
+    "dashboard_url": "https://modal.com/apps/arvindcr4/main/deployed/pavlov-tinker-openai-bridge"
+  },
+  "endpoint_checks": {
+    "health_http_status": 200,
+    "models_http_status": 200,
+    "zero_budget_chat_http_status": 402
+  },
+  "is_model_score": false,
+  "lane": "TINKER_BRIDGE",
+  "model": {
+    "alias": "pavlov-qwen36-tinker",
+    "hf_commit": "64444133c55d88c3f1bf0df8a2f5d7ac646125c8",
+    "hf_repo": "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6",
+    "hf_revision": "checkpoint-seed809-stepfinal-9f777c4018b6",
+    "id": "Qwen/Qwen3.6-35B-A3B",
+    "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "sampler_path": "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler_weights/seed809_final"
+  },
+  "recorded_at": "2026-08-16T12:35:47.643286Z",
+  "receipt_sha256": "989354f99897fe94ecd9d190910ee189e988f4ab0a6928d51e865d69c36780e4",
+  "schema_version": "pavlov-modal-tinker-openai-bridge-v1",
+  "scientific_evidence": false,
+  "score": null,
+  "source": {
+    "bridge_sha256": "f59c08b90c02463e05e9144bb8d9f8d2c9bf6505c2e541f5dc7f5788ec7a5601",
+    "protocol_sha256": "a9b62e73057efe3052a7696e1c8dcada56ac45a6dab8fbe28acf6f48df3de10b",
+    "protocol_tests_passed": 5
+  },
+  "status": "BRIDGE_READY_ZERO_BUDGET",
+  "wandb": {
+    "mode": "online",
+    "run_id": "2xqjk2du",
+    "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/2xqjk2du"
+  }
+}

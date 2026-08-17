@@ -1,0 +1,66 @@
+{
+  "actionability": {
+    "can_improve_without_external_input": false,
+    "next_action": "Obtain the licensed AppBench package and implement its native GUI/deployment verifier with two independent graders.",
+    "owner": "provider_then_humans"
+  },
+  "adapter_tests": {
+    "exit_code": 0,
+    "modules": [
+      "flagship.test_pavlov_appbench_openreward_games_adapter"
+    ],
+    "output_tail": "----------------------------------------------------------------------\nRan 17 tests in 0.009s\n\nOK\n",
+    "passed": true,
+    "ran": "Ran 17 tests in 0.009s",
+    "summary": "OK"
+  },
+  "authoritative_source_probe": {
+    "content_type": "text/html; charset=utf-8",
+    "elapsed_ms": 69,
+    "final_url": "https://www.afterquery.com/leaderboard/app-bench",
+    "reachable": true,
+    "status": 200
+  },
+  "blockers": [
+    "HELDOUT_TASK_SPLIT_UNPROVEN: No immutable task IDs, split manifest hash, aggregate hash, or disjointness/held-out proof is available, so primary_eval cannot be treated as a runnable or truly held-out score.",
+    "LICENSE_RECEIPT_MISSING: AfterQuery/App-Bench is public and ungated at the pinned revision, but cardData is null and README.md/LICENSE/LICENSE.md are absent; the task CSV was not acquired without a license receipt.",
+    "MANDATORY_PLATFORM_RECEIPTS_ABSENT: No W&B, Tinker, or Hugging Face checkpoint receipts exist because no actual experiment was attempted.",
+    "NATIVE_APPBENCH_RUNNER_MISSING: The checkout exposes only the E12/E13 contract validator and tests; no AppBench task runner, GUI executor, deployment harness, artifact verifier, or side-effect verifier is present."
+  ],
+  "claim_boundary": "Modal preflight is infrastructure evidence, never a benchmark score.",
+  "contract": {
+    "artifact_or_side_effect": true,
+    "domains": [
+      "design",
+      "computer_use",
+      "code"
+    ],
+    "source_url": "https://www.afterquery.com/leaderboard/app-bench",
+    "split": "held-out evaluation prompts",
+    "stateful": true
+  },
+  "is_model_score": false,
+  "lane": "E12",
+  "modal": {
+    "app": "pavlov-e1-e14",
+    "cpu_count": 17,
+    "function_call_id": null,
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "task_id": "ta-01M05P0ZR93ZVPH18F9MJ6K4MR"
+  },
+  "readiness_class": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+  "receipt_sha256": "f5316016edc937c37d99181aeb77c3aca36b28c402fe448436cda9c2d2f01406",
+  "recorded_at": "2026-08-16T16:21:12.076040Z",
+  "schema_version": "pavlov-modal-e1-e14-preflight-v1",
+  "score": null,
+  "source_receipt": {
+    "contains_model_score": false,
+    "launch_allowed": false,
+    "path": "outputs/e12_appbench/local_receipt.json",
+    "sha256": "1d4b426a1aa52a8d3167078d0ba5e8831e0a33f12f092a65bdbcc5bd1d9d8dda",
+    "status": "BLOCKED"
+  },
+  "status": "BLOCKED",
+  "suite_id": "appbench_eval",
+  "suite_role": "primary_eval"
+}

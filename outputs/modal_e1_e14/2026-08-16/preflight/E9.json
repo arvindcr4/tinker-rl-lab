@@ -1,0 +1,65 @@
+{
+  "actionability": {
+    "can_improve_without_external_input": false,
+    "next_action": "Accept the remaining Kaggle competition agreements, then pin the image, submission artifact, and disjointness receipt.",
+    "owner": "account_holder_then_local"
+  },
+  "adapter_tests": {
+    "exit_code": 0,
+    "modules": [
+      "flagship.test_mle_bench_eval"
+    ],
+    "output_tail": "wrote /tmp/tmp94toh96p/receipt.json\nwrote /tmp/tmpqai5v6r9/survey.json\n\n----------------------------------------------------------------------\nRan 53 tests in 0.106s\n\nOK (skipped=4)\n",
+    "passed": true,
+    "ran": "Ran 53 tests in 0.106s",
+    "summary": null
+  },
+  "authoritative_source_probe": {
+    "content_type": "text/html; charset=utf-8",
+    "elapsed_ms": 623,
+    "final_url": "https://github.com/openai/mle-bench",
+    "reachable": true,
+    "status": 206
+  },
+  "blockers": [
+    "container_image_digest_present",
+    "contamination_disjointness_receipt",
+    "model_submission_artifact_present"
+  ],
+  "claim_boundary": "Modal preflight is infrastructure evidence, never a benchmark score.",
+  "contract": {
+    "artifact_or_side_effect": true,
+    "domains": [
+      "ml",
+      "code",
+      "long_horizon"
+    ],
+    "source_url": "https://github.com/openai/mle-bench",
+    "split": "evaluation competitions",
+    "stateful": true
+  },
+  "is_model_score": false,
+  "lane": "E9",
+  "modal": {
+    "app": "pavlov-e1-e14",
+    "cpu_count": 17,
+    "function_call_id": null,
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "task_id": "ta-01M05P112H3QDSMPHWKWJ84ZAR"
+  },
+  "readiness_class": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+  "receipt_sha256": "cdda8c9e3744f4c34dad3010f39252612f7600cf4337e4b3a67021cf9b21fed6",
+  "recorded_at": "2026-08-16T16:21:12.147106Z",
+  "schema_version": "pavlov-modal-e1-e14-preflight-v1",
+  "score": null,
+  "source_receipt": {
+    "contains_model_score": false,
+    "launch_allowed": false,
+    "path": "outputs/e9_mle_bench/e9_mle_bench_receipt_2026-08-09.json",
+    "sha256": "3e769b8331d8a6d4448514c5a5ca62080516f3df60e7df0a2d3d7cb41d9d9b6c",
+    "status": "BLOCKED"
+  },
+  "status": "BLOCKED",
+  "suite_id": "mle_bench_eval",
+  "suite_role": "primary_eval"
+}

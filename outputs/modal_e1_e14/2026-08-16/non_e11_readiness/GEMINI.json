@@ -1,0 +1,15 @@
+{
+  "claim_boundary": "Read-only model listing only. No Gemini inference or paid call occurred.",
+  "is_model_score": false,
+  "lane": "GEMINI",
+  "provider": {
+    "authenticated": true,
+    "model_count": 50
+  },
+  "receipt_sha256": "8721064a291a782e00376131eb00d91d00b77b629eba2a6531dac22ef693e1a5",
+  "recorded_at": "2026-08-16T11:29:17.100112Z",
+  "schema_version": "pavlov-modal-gemini-auth-v1",
+  "scientific_evidence": false,
+  "score": null,
+  "status": "GEMINI_AUTH_READY"
+}

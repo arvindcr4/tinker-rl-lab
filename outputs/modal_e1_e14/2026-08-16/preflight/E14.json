@@ -1,0 +1,67 @@
+{
+  "actionability": {
+    "can_improve_without_external_input": false,
+    "next_action": "Arrange an Epoch-hosted evaluation against the immutable model endpoint; no local substitute is valid.",
+    "owner": "epoch_ai"
+  },
+  "adapter_tests": {
+    "exit_code": 0,
+    "modules": [
+      "flagship.test_pavlov_agentharm_frontiermath_adapter",
+      "flagship.test_e14_frontiermath_public_samples"
+    ],
+    "output_tail": "----------------------------------------------------------------------\nRan 94 tests in 0.130s\n\nOK (skipped=12)\n",
+    "passed": true,
+    "ran": "Ran 94 tests in 0.130s",
+    "summary": null
+  },
+  "authoritative_source_probe": {
+    "content_type": "text/html",
+    "elapsed_ms": 90,
+    "final_url": "https://epoch.ai/frontiermath/tiers-1-4/the-benchmark",
+    "reachable": true,
+    "status": 200
+  },
+  "blockers": [
+    "Any local math result (GSM8K, MATH-500, AIME, MathArena) is a different benchmark and must never be reported under frontiermath_eval.",
+    "Evaluation is HOSTED BY EPOCH AI, not submitted to a portal. A FrontierMath number requires Epoch to run the eval on their own infrastructure against a model they can reach (public API, pre-release access, or a UI session their staff drive). This is an organisational agreement, not a credential this repo can set.",
+    "No grader is public. Reference solutions and the answer-checking logic ship with the private set. The public transcripts contain neither ground truth nor verdicts, so nothing here is gradable.",
+    "No official FrontierMath dataset exists on Hugging Face or GitHub. Every repo claiming to be FrontierMath is a solver or a reconstruction and cannot produce a comparable score. Using one would be fabrication.",
+    "TERMINAL \u2014 the dataset is never released. Epoch AI is contractually unable to share Tiers 1-4 questions and answers without OpenAI's written permission. There is no download, no gated Hugging Face repo, no data-use agreement, and no request form that yields the problems. No local action can ever unblock this lane.",
+    "The public sample corpus (150 transcripts over the ORIGINAL 5 public problems from the 2024 paper) is characterization evidence only. It is ~1.5% of the 338-problem post-v2 private set, is outdated relative to the 12 problems Epoch currently publishes, and is not a benchmark split."
+  ],
+  "claim_boundary": "Modal preflight is infrastructure evidence, never a benchmark score.",
+  "contract": {
+    "artifact_or_side_effect": false,
+    "domains": [
+      "math"
+    ],
+    "source_url": "https://epoch.ai/frontiermath/tiers-1-4/the-benchmark",
+    "split": "private held-out evaluation",
+    "stateful": false
+  },
+  "is_model_score": false,
+  "lane": "E14",
+  "modal": {
+    "app": "pavlov-e1-e14",
+    "cpu_count": 17,
+    "function_call_id": null,
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "task_id": "ta-01M05P11MSEAYW6WB9JVEW95SR"
+  },
+  "readiness_class": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+  "receipt_sha256": "05681ffad6b38464227a097cdc370076f15a2b3b2c5ae957e0a9d76f79ad49fb",
+  "recorded_at": "2026-08-16T16:21:12.881657Z",
+  "schema_version": "pavlov-modal-e1-e14-preflight-v1",
+  "score": null,
+  "source_receipt": {
+    "contains_model_score": false,
+    "launch_allowed": false,
+    "path": "outputs/e14_frontiermath/receipt_2026-08-09.json",
+    "sha256": "c2a7b36e9483324f9ffb87490d08a85b0281042f595a69ef3a775c75403ad785",
+    "status": "BLOCKED"
+  },
+  "status": "BLOCKED",
+  "suite_id": "frontiermath_eval",
+  "suite_role": "primary_eval"
+}

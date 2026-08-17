@@ -1,0 +1,34 @@
+{
+  "blockers": [],
+  "claim_boundary": "Launch preflight only; no final-checkpoint E11 score exists yet.",
+  "decontamination": {
+    "path": "outputs/modal_e1_e14/2026-08-16/e11/decontamination_receipt.json",
+    "receipt_id": "ddc32a42a42ec6ecebfbbf6335ba16ecddbe3c89",
+    "receipt_sha256": "14efebaacc6c93de74e477fc785a1fc9ff3759417dc2609615b8e369f4665bc0"
+  },
+  "is_model_score": false,
+  "lane": "E11",
+  "launch_allowed": true,
+  "model": {
+    "hf_commit": "64444133c55d88c3f1bf0df8a2f5d7ac646125c8",
+    "hf_repo": "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6",
+    "hf_revision": "checkpoint-seed809-stepfinal-9f777c4018b6",
+    "model_id": "Qwen/Qwen3.6-35B-A3B",
+    "model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "sampler_path": "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler_weights/seed809_final",
+    "training_tinker_run_id": "cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0",
+    "training_wandb_run_id": "bsv8vx04"
+  },
+  "receipt_sha256": "baf488adf60b93f76b605f559ccd51063e01e2794d691712ddbc67b2d91c2ea7",
+  "recorded_at": "2026-08-16T08:59:12.495538Z",
+  "schema_version": "pavlov-modal-e11-final-launch-preflight-v1",
+  "score": null,
+  "split_manifest": {
+    "path": "outputs/modal_e1_e14/2026-08-16/e11/split_manifest_receipt.json",
+    "receipt_sha256": "3594fa8f80d712a4ff7b81a1841e6e6713aef967c43af5965b957dad850c9fbd",
+    "status": "READY"
+  },
+  "status": "READY",
+  "suite_id": "verilog_eval",
+  "suite_role": "primary_eval"
+}

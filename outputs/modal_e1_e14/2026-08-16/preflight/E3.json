@@ -1,0 +1,68 @@
+{
+  "actionability": {
+    "can_improve_without_external_input": false,
+    "next_action": "Obtain the immutable private 80-task bundle, split, runtime, and native grader from the provider.",
+    "owner": "provider"
+  },
+  "adapter_tests": {
+    "exit_code": 0,
+    "modules": [
+      "flagship.test_pavlov_sdab_eval_adapter",
+      "flagship.test_eval_pavlov_sdab"
+    ],
+    "output_tail": "----------------------------------------------------------------------\nRan 50 tests in 0.084s\n\nOK\n",
+    "passed": true,
+    "ran": "Ran 50 tests in 0.084s",
+    "summary": "OK"
+  },
+  "authoritative_source_probe": {
+    "content_type": "text/html; charset=utf-8",
+    "elapsed_ms": 192,
+    "final_url": "https://emulated.so/sdab",
+    "reachable": true,
+    "status": 200
+  },
+  "blockers": [
+    "No train/eval split receipt exists. train_task_id_sha256 is null, so the runtime manifest cannot be emitted.",
+    "The 80-task SDAB evaluation bundle is private. No public mirror, no dataset card, no revision identifier.",
+    "The grading harness (behavioral tests, engineering rubrics, LLM judge, hidden state validation) is private and sits outside the agent workspace by design.",
+    "The live enterprise runtime with deterministic reset, running infrastructure, and traffic generator is private. The only failing preflight gate is the missing provider adapter module."
+  ],
+  "claim_boundary": "Modal preflight is infrastructure evidence, never a benchmark score.",
+  "contract": {
+    "artifact_or_side_effect": true,
+    "domains": [
+      "code",
+      "ml",
+      "long_horizon",
+      "enterprise"
+    ],
+    "source_url": "https://emulated.so/sdab",
+    "split": "evaluation",
+    "stateful": true
+  },
+  "is_model_score": false,
+  "lane": "E3",
+  "modal": {
+    "app": "pavlov-e1-e14",
+    "cpu_count": 17,
+    "function_call_id": null,
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "task_id": "ta-01M05P10DDKRV9TB0V7MKZK2AR"
+  },
+  "readiness_class": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+  "receipt_sha256": "45e405fc2a26f9acee0e85120bc88a44ab0e48b9839b523c3c412893bbf28df5",
+  "recorded_at": "2026-08-16T16:21:11.430953Z",
+  "schema_version": "pavlov-modal-e1-e14-preflight-v1",
+  "score": null,
+  "source_receipt": {
+    "contains_model_score": false,
+    "launch_allowed": false,
+    "path": "outputs/e3_sdab/receipt_2026-08-09.json",
+    "sha256": "659c3db0dd3951bdd7fbc7de69e3eec9e69572cd94f7594e2ba6bde617b8ca36",
+    "status": "BLOCKED"
+  },
+  "status": "BLOCKED",
+  "suite_id": "sdab_eval",
+  "suite_role": "primary_eval"
+}

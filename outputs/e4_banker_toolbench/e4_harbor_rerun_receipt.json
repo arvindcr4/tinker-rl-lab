@@ -1,9 +1,5 @@
 {
   "blockers": [
-    "native Harbor environment is not ready: BUILD_INVALIDATED_BY_CONCURRENT_CLEANUP",
-    "online W&B project codex cannot be initialized: WANDB_API_KEY is absent",
-    "Tinker sampler/evaluation access is absent: TINKER_API_KEY is absent",
-    "native Gandalf verifier cannot run: GEMINI_API_KEY is absent",
     "no immutable Hugging Face checkpoint receipt exists for a weight-changing run",
     "no projected paid lane cost is recorded at or below USD 1.00"
   ],
@@ -22,9 +18,9 @@
       "maximum_usd": 1.0
     },
     "credentials": {
-      "GEMINI_API_KEY": "ABSENT",
-      "TINKER_API_KEY": "ABSENT",
-      "WANDB_API_KEY": "ABSENT"
+      "GEMINI_API_KEY": "PRESENT",
+      "TINKER_API_KEY": "PRESENT",
+      "WANDB_API_KEY": "PRESENT"
     },
     "hf": {
       "state": "PINNED_PUBLIC_DATA_LOCAL_NO_IMMUTABLE_MODEL_CHECKPOINT"
@@ -43,15 +39,15 @@
     "auth_discovery": "harbor auth status: not authenticated; legacy credentials require login",
     "commands": {
       "auth": "/Users/arvind/.local/bin/harbor auth status",
-      "native_start": "/Users/arvind/.local/bin/harbor task start-env --path /Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/native-tasks/btb-707cba99 --env docker --non-interactive",
+      "native_start": "harbor task start-env --path outputs/e4_banker_toolbench/official_repo_ff6db552/native-tasks/btb-707cba99 --env docker --non-interactive",
       "plugins": "/Users/arvind/.local/bin/harbor plugins list",
-      "task_generation": "BTB_HF_REVISION=2c63d3b6d429687d2c29550e820dd136baafee95 uv run python -m adapters.btb.run_adapter --data-dir /Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/native-data --output-dir /Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/native-tasks --task-ids 707cba99-59a7-47bd-bc4d-7f36212e99f3",
+      "task_generation": "BTB_HF_REVISION=2c63d3b6d429687d2c29550e820dd136baafee95 uv run python -m adapters.btb.run_adapter --data-dir /Users/arvind/Developer/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/native-data --output-dir /Users/arvind/Developer/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/native-tasks --task-ids 707cba99-59a7-47bd-bc4d-7f36212e99f3",
       "version": "/Users/arvind/.local/bin/harbor --version"
     },
     "executable": "/Users/arvind/.local/bin/harbor",
-    "native_start_command": "/Users/arvind/.local/bin/harbor task start-env --path /Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/native-tasks/btb-707cba99 --env docker --non-interactive",
-    "native_start_state": "BUILD_INVALIDATED_BY_CONCURRENT_CLEANUP",
-    "operational_event": "Four concurrent Harbor/Docker builds were observed for the same pinned task; three duplicate process groups were terminated, then the retained build exited after its output tree was concurrently removed. The pinned manifest and one-task native metadata were restored without another Harbor/Docker run.",
+    "native_start_command": "harbor task start-env --path outputs/e4_banker_toolbench/official_repo_ff6db552/native-tasks/btb-707cba99 --env docker --non-interactive",
+    "native_start_state": "READY",
+    "operational_event": "Pinned shared tools restored; exact Harbor native start exited 0 on 2026-08-16; no agent, verifier, or paid call was invoked.",
     "plugins_discovery": "harbor plugins list: no installed Harbor plugins",
     "version": "0.20.0"
   },
@@ -73,7 +69,7 @@
       "storage_mb": 10240
     },
     "grader_toml_sha256": "3c57654c718f8d4ab53308e3f9ea124a30676650d809b83cb7b155c6307ca4e5",
-    "task_dir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/native-tasks/btb-707cba99",
+    "task_dir": "/Users/arvind/Developer/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/native-tasks/btb-707cba99",
     "task_toml_sha256": "33b29382c541f10ee1ea2c531c564319c94388842e4599892f467527017c01d7",
     "verifier": {
       "key_reference": "${GEMINI_API_KEY}",
@@ -93,7 +89,7 @@
   "source": {
     "dataset_id": "handshake-ai-research/bankertoolbench",
     "dataset_revision": "2c63d3b6d429687d2c29550e820dd136baafee95",
-    "manifest_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/native-data/tasks.jsonl",
+    "manifest_path": "/Users/arvind/Developer/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/native-data/tasks.jsonl",
     "manifest_sha256": "18f132d929c898d319ea1cc229f523bd8bb799406c9c037355b8ceac6930199a",
     "official_repo_revision": "ff6db552a44632643df20393065056e5f1f0092c",
     "selected_task_count": 1,

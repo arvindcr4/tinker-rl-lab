@@ -1,0 +1,62 @@
+{
+  "actionability": {
+    "can_improve_without_external_input": true,
+    "next_action": "Re-run the recovered workbook after the Modal-compatible Gandalf cache fix, then expand only from a clean scored task.",
+    "owner": "local_then_provider_judge"
+  },
+  "adapter_tests": {
+    "exit_code": 0,
+    "modules": [
+      "flagship.test_pavlov_banker_toolbench_harbor_rerun"
+    ],
+    "output_tail": "----------------------------------------------------------------------\nRan 2 tests in 0.004s\n\nOK\n",
+    "passed": true,
+    "ran": "Ran 2 tests in 0.004s",
+    "summary": "OK"
+  },
+  "authoritative_source_probe": {
+    "content_type": "text/html; charset=utf-8",
+    "elapsed_ms": 421,
+    "final_url": "https://huggingface.co/datasets/handshake-ai-research/bankertoolbench",
+    "reachable": true,
+    "status": 200
+  },
+  "blockers": [],
+  "claim_boundary": "Modal preflight is infrastructure evidence, never a benchmark score.",
+  "contract": {
+    "artifact_or_side_effect": true,
+    "domains": [
+      "finance",
+      "enterprise",
+      "tool_use",
+      "long_horizon"
+    ],
+    "source_url": "https://huggingface.co/datasets/handshake-ai-research/bankertoolbench",
+    "split": "held-out evaluation tasks",
+    "stateful": true
+  },
+  "is_model_score": false,
+  "lane": "E4",
+  "modal": {
+    "app": "pavlov-e1-e14",
+    "cpu_count": 17,
+    "function_call_id": null,
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "task_id": "ta-01M05P1082ESE3C4Y48DZMQTKR"
+  },
+  "readiness_class": "RECORDED_MODEL_RESULT",
+  "receipt_sha256": "a92fe85587f3173eda174eb642c7ee6423abdd3a9fc2c9467cd488ef87b46d24",
+  "recorded_at": "2026-08-16T16:21:11.389475Z",
+  "schema_version": "pavlov-modal-e1-e14-preflight-v1",
+  "score": null,
+  "source_receipt": {
+    "contains_model_score": true,
+    "launch_allowed": false,
+    "path": "outputs/modal_e1_e14/2026-08-16/e4_recovery_pass16_receipt.json",
+    "sha256": "37f59d97d32bbf4d6f41da1bfaa45ae2bdd333cf43944402b5b88a0186963257",
+    "status": "SCORED"
+  },
+  "status": "RECORDED_MODEL_RESULT",
+  "suite_id": "banker_toolbench_eval",
+  "suite_role": "primary_eval"
+}

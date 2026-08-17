@@ -1,0 +1,67 @@
+{
+  "actionability": {
+    "can_improve_without_external_input": false,
+    "next_action": "Obtain Halluminate task authorization, deterministic live environment, ground truth, and native verifier.",
+    "owner": "provider"
+  },
+  "adapter_tests": {
+    "exit_code": 0,
+    "modules": [
+      "flagship.test_pavlov_webbench_eval_adapter"
+    ],
+    "output_tail": "----------------------------------------------------------------------\nRan 35 tests in 0.132s\n\nOK (skipped=5)\n",
+    "passed": true,
+    "ran": "Ran 35 tests in 0.132s",
+    "summary": null
+  },
+  "authoritative_source_probe": {
+    "content_type": "text/html; charset=utf-8",
+    "elapsed_ms": 326,
+    "final_url": "https://github.com/Halluminate/WebBench",
+    "reachable": true,
+    "status": 206
+  },
+  "blockers": [
+    "{\"evidence_url\":\"https://github.com/Halluminate/WebBench/issues/2\",\"external_receipt_required\":{\"fields\":[\"native_verifier.available=true\",\"native_verifier.ground_truth_available=true\",\"native_verifier.verifier_id\",\"native_verifier.verifier_revision (40-hex immutable)\",\"native_verifier.verifier_sha256\",\"native_verifier.command (argv list)\",\"native_verifier.receipt_url (https)\"],\"provider\":\"Halluminate\"},\"id\":\"halluminate_native_verifier\",\"severity\":\"terminal_without_provider\",\"why\":\"No public ground truth or scoring script; the repo's ground-truth issue is open. Human annotation is not native verification.\"}",
+    "{\"external_receipt_required\":{\"fields\":[\"allowed_task_ids\",\"credential_scope\",\"side_effect_policy\",\"terms_or_license_signoff\"],\"provider\":\"Halluminate\"},\"id\":\"webbench_task_authorization\",\"severity\":\"policy\",\"why\":\"1010 of 2647 tasks (38.2%) are write-class against 448 live third-party domains. MIT covers the repo contents, not automated writes to those services.\"}",
+    "{\"external_receipt_required\":{\"fields\":[\"approved=true\",\"access_receipt_id\",\"environment.environment_id\",\"environment.environment_revision (40-hex immutable)\",\"environment.container_image_digest (sha256:<64 hex>)\",\"environment.browser_revision\",\"environment.screenshot_capture=true\",\"environment.dom_capture=true\",\"environment.task_reset=true\",\"environment.credential_scope\"],\"provider\":\"Halluminate\"},\"id\":\"halluminate_live_environment\",\"severity\":\"terminal_without_provider\",\"unblock_command\":\"python3 zvf-program/flagship/webbench_eval.py --native-receipt <halluminate_receipt.json> ... --launch\",\"why\":\"The public repo ships the task CSV and MIT license only. The live browser environment, credentials, and reset contract are not public.\"}",
+    "{\"external_receipt_required\":{\"fields\":[\"evaluation_task_id_hash\",\"heldout_exists\",\"heldout_relationship_to_public_csv\"],\"provider\":\"Halluminate\"},\"id\":\"official_heldout_split\",\"severity\":\"informational\",\"why\":\"Public CSV IDs are sparse over 0..2724 with 78 absent. Whether the absent IDs are a withheld split is unconfirmed.\"}",
+    "{\"id\":\"model_artifact\",\"severity\":\"downstream\",\"why\":\"No completed compatible Tinker sampler checkpoint. Preflight falls back to base-model binding Qwen/Qwen3-VL-30B-A3B-Instruct@9c4b90e1e4ba969fd3b5378b57d966d725f1b86c. Moot until the environment/verifier land.\"}"
+  ],
+  "claim_boundary": "Modal preflight is infrastructure evidence, never a benchmark score.",
+  "contract": {
+    "artifact_or_side_effect": true,
+    "domains": [
+      "browser",
+      "computer_use",
+      "enterprise"
+    ],
+    "source_url": "https://github.com/Halluminate/WebBench",
+    "split": "evaluation",
+    "stateful": true
+  },
+  "is_model_score": false,
+  "lane": "E6",
+  "modal": {
+    "app": "pavlov-e1-e14",
+    "cpu_count": 17,
+    "function_call_id": null,
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.36",
+    "task_id": "ta-01M05P10X516Q5MG2NWC99GM9R"
+  },
+  "readiness_class": "EXTERNAL_OR_EXECUTION_INPUT_REQUIRED",
+  "receipt_sha256": "c90ae0d89b8194fe92cea6f6747f60aa150737c14acc6d2700c0aee575517ab4",
+  "recorded_at": "2026-08-16T16:21:11.812936Z",
+  "schema_version": "pavlov-modal-e1-e14-preflight-v1",
+  "score": null,
+  "source_receipt": {
+    "contains_model_score": false,
+    "launch_allowed": false,
+    "path": "outputs/e6_webbench/e6_lane_receipt_2026-08-09.json",
+    "sha256": "53b32394fe4549fb74f178c2a52be287ed7792928e3706bd931d3734273c42b7",
+    "status": "BLOCKED"
+  },
+  "status": "BLOCKED",
+  "suite_id": "webbench_eval",
+  "suite_role": "primary_eval"
+}

@@ -1,0 +1,63 @@
+{
+  "claim_boundary": "Credential presence and importability only. No Tinker sampling, W&B run creation, or Hugging Face write was performed.",
+  "credential_presence": {
+    "ANTHROPIC_API_KEY": false,
+    "GEMINI_API_KEY": true,
+    "GOOGLE_API_KEY": true,
+    "HF_TOKEN": true,
+    "KAGGLE_KEY": true,
+    "KAGGLE_USERNAME": true,
+    "OPENAI_API_KEY": true,
+    "OPENREWARD_API_KEY": false,
+    "OPENROUTER_API_KEY": false,
+    "TINKER_API_KEY": true,
+    "WANDB_API_KEY": true
+  },
+  "credential_requirements": {
+    "E10_official_judge": [
+      "OPENAI_API_KEY"
+    ],
+    "E13_agent_any_of": [
+      "OPENAI_API_KEY",
+      "ANTHROPIC_API_KEY",
+      "OPENROUTER_API_KEY"
+    ],
+    "E13_managed_environment": [
+      "OPENREWARD_API_KEY"
+    ],
+    "E4_native_verifier": [
+      "GEMINI_API_KEY"
+    ],
+    "E5_agent_and_judge_any_of": [
+      "OPENAI_API_KEY",
+      "GOOGLE_API_KEY",
+      "ANTHROPIC_API_KEY"
+    ],
+    "E7_harbor_agent_any_of": [
+      "ANTHROPIC_API_KEY",
+      "OPENROUTER_API_KEY"
+    ],
+    "E9_kaggle": [
+      "KAGGLE_USERNAME",
+      "KAGGLE_KEY"
+    ],
+    "core_tracking": [
+      "TINKER_API_KEY",
+      "WANDB_API_KEY",
+      "HF_TOKEN"
+    ]
+  },
+  "is_model_score": false,
+  "lane": "SHARED",
+  "packages": {
+    "huggingface_hub": "1.27.0",
+    "tinker": "0.24.1",
+    "wandb": "0.21.0"
+  },
+  "receipt_sha256": "02b59cc26d41b3057a0484383f42d8d7dc450455c626d4b7194c286935df30ed",
+  "recorded_at": "2026-08-16T11:28:35.269921Z",
+  "schema_version": "pavlov-modal-shared-stack-v1",
+  "scientific_evidence": false,
+  "score": null,
+  "status": "SHARED_STACK_READY"
+}

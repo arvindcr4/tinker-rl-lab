@@ -1,0 +1,9 @@
+Slides 1-11: visible copy is updated from the 14 Aug snapshot to evidence recorded or actively verified on 22 Aug 2026.
+Slide 5: status words change, but the inherited two-column scoreboard geometry is preserved.
+Slide 6: the former E11-smoke focus becomes the E1 exact-suite focus; the same metric-and-two-column evidence layout is preserved.
+Slide 7: the inherited training-source chart remains an archived calibration and is explicitly excluded from E1-E14 score totals.
+Slide 9: the former publication slide becomes the Tinker-plus-Modal execution slide using the same metric strip and three-step hierarchy.
+No new shapes, charts, images, or layout geometry are introduced.
+Slides 4, 5, 8, 9, and 11 record E7 as one bounded exact native task at 0.0 because the required output file was absent; the E7 suite score remains null.
+Slides 8-11 show the authorized USD 10.00 persistent bridge cap, USD 5.57 charged, and USD 4.43 remaining; E2 remains one bounded exact task at 0.7284 with 8/8 hidden correctness checks and suite score null.
+Slide 3 rule copy and slide 5 E9 badge copy were shortened during visual QA to fit inherited frames without changing evidence scope.

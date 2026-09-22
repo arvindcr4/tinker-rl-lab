@@ -1,0 +1,157 @@
+{
+  "schema_version": "e3-e14-external-unblocking-v1",
+  "recorded_at": "2026-08-24T06:36:00Z",
+  "status": "ONE_STALE_BLOCK_CLEARED_FOUR_PROVIDER_REQUESTS_OPENED_AWAITING_PROVIDER_REPLIES",
+  "inbox_follow_up": {
+    "query_scope": "Replies after 2026-08-21 from the five provider addresses recorded in the 2026-08-22 acquisition receipt",
+    "matching_replies": 0,
+    "checked_at": "2026-08-24T02:59:14Z",
+    "source_receipt": "outputs/E3_E14_EXTERNAL_ACQUISITION_RECEIPT_2026-08-22.json"
+  },
+  "live_public_repository_checks": [
+    {
+      "lane": "E10",
+      "repository": "ai-safety-institute/AgentHarm",
+      "repository_type": "dataset",
+      "revision": "e23b3fe60a0da9037314b88e5ee3a0c054970dad",
+      "file_count": 8,
+      "private_split_present": false,
+      "method": "authenticated Hugging Face CLI dry-run pinned to the immutable revision"
+    },
+    {
+      "lane": "E12",
+      "repository": "AfterQuery/App-Bench",
+      "repository_type": "dataset",
+      "revision": "de80d5bcd404adee5307311571e512b5c37e6112",
+      "file_count": 2,
+      "official_deployment_or_grader_present": false,
+      "method": "authenticated Hugging Face CLI dry-run pinned to the immutable revision"
+    }
+  ],
+  "cleared_blocks": [
+    {
+      "lane": "E9",
+      "cleared": "Kaggle per-competition user terms",
+      "accepted_count": 75,
+      "remaining_unaccepted": 0,
+      "receipt": "outputs/e9_mle_bench/kaggle_rule_acceptance_receipt_2026-08-22.json",
+      "replacement_status": "PARTIAL_EXACT",
+      "native_graded_competitions": 6,
+      "suite_score": null
+    }
+  ],
+  "opened_provider_requests": [
+    {
+      "lane": "E8",
+      "provider": "OpenAI LifeSciBench team via contact sales",
+      "route": "official OpenAI contact-sales form",
+      "url": "https://openai.com/contact-sales/",
+      "submitted_at": "2026-08-24T06:16:59Z",
+      "status": "submitted",
+      "confirmation": "Thank you. Our sales team is looking forward to connecting with you. You’ll hear from us soon!",
+      "receipt": "outputs/e8_lifescibench/contact_sales_submission_receipt_2026-08-24.json",
+      "score": null
+    },
+    {
+      "lane": "E10",
+      "provider": "UK AI Security Institute",
+      "route": "Hugging Face dataset discussion",
+      "discussion_number": 9,
+      "url": "https://huggingface.co/datasets/ai-safety-institute/AgentHarm/discussions/9",
+      "status": "open",
+      "requested": [
+        "official held-out test_private evaluation or hosted run",
+        "approved policy-grader identity",
+        "immutable access or score receipt"
+      ],
+      "score": null
+    },
+    {
+      "lane": "E6",
+      "provider": "Halluminate",
+      "route": "public follow-up on the official WebBench ground-truth issue",
+      "discussion_number": 2,
+      "comment_id": 5391445280,
+      "url": "https://github.com/Halluminate/WebBench/issues/2#issuecomment-5391445280",
+      "submitted_at": "2026-08-24T06:18:29Z",
+      "status": "open",
+      "requested": [
+        "authoritative ground truth and native scorer",
+        "live browser environment and reset procedure",
+        "credential and write-authorization scopes",
+        "provider-hosted evaluation option"
+      ],
+      "receipt": "outputs/e6_webbench/github_access_request_receipt_2026-08-24.json",
+      "score": null
+    },
+    {
+      "lane": "E12",
+      "provider": "AfterQuery",
+      "route": "Hugging Face dataset discussion",
+      "discussion_number": 2,
+      "url": "https://huggingface.co/datasets/AfterQuery/App-Bench/discussions/2",
+      "submitted_at": "2026-08-24T06:18:48Z",
+      "status": "open",
+      "requested": [
+        "written evaluation and publication licence",
+        "official immutable deployment harness and reset procedure",
+        "artifact verification and two-grader protocol",
+        "provider-hosted evaluation terms and pricing"
+      ],
+      "receipt": "outputs/e12_appbench/hf_access_request_receipt_2026-08-24.json",
+      "score": null
+    }
+  ],
+  "remaining_external_blocks": [
+    {"lane": "E3", "state": "AWAITING_PROVIDER_REPLY", "request_sent": true},
+    {"lane": "E6", "state": "AWAITING_PROVIDER_REPLY_TO_EMAIL_AND_GITHUB_ISSUE_2", "request_sent": true},
+    {"lane": "E8", "state": "AWAITING_OPENAI_REPLY_TO_CONTACT_SALES_SUBMISSION", "request_sent": true},
+    {"lane": "E10", "state": "AWAITING_PROVIDER_REPLY_TO_DISCUSSION_9", "request_sent": true},
+    {"lane": "E12", "state": "AWAITING_PROVIDER_REPLY_TO_EMAIL_AND_HF_DISCUSSION_2_AND_POSSIBLE_GRADER_BUDGET", "request_sent": true},
+    {"lane": "E13", "state": "OPENREWARD_GOOGLE_CHOOSER_REQUIRES_ONE_MANUAL_ACCOUNT_SELECTION", "request_sent": true},
+    {"lane": "E14", "state": "AWAITING_PROVIDER_REPLY_AND_POSSIBLE_HOSTED_EVALUATION_BUDGET", "request_sent": true}
+  ],
+  "staged_routes": [
+    {
+      "lane": "E13",
+      "route": "OpenReward sign-in via Google",
+      "state": "account chooser open and marked for manual handoff",
+      "approved_identity": "arvindcr4@gmail.com",
+      "account_creation_confirmation_received": true,
+      "next_action": "manually select the approved Google identity because the Google chooser rejected browser input dispatch; then verify the OpenReward account page",
+      "performed": false,
+      "api_key_created": false,
+      "spend_started": false
+    },
+    {
+      "lane": "E14",
+      "route": "Epoch AI consultation form",
+      "state": "reviewed but not submitted",
+      "reason": "the consultation route incorporates separate legal terms, restricts use of outputs, may require payment, and is less suitable than the direct evaluation email already sent",
+      "performed": false
+    }
+  ],
+  "browser_control": {
+    "browser_control_extension_status": "UNAVAILABLE_EXTENSION_DISCONNECTED",
+    "fallback": "Codex in-app browser",
+    "status": "E8_OFFICIAL_FORM_SUBMITTED_E13_ACCOUNT_CHOOSER_STAGED",
+    "url": "https://openai.com/contact-sales/",
+    "required_fields": [
+      "product interest",
+      "work email",
+      "company size",
+      "company name",
+      "first name",
+      "last name",
+      "phone number",
+      "business needs"
+    ],
+    "fields_transmitted": 8,
+    "sensitive_values_stored_in_receipt": false,
+    "submitted": true,
+    "submitted_at": "2026-08-24T06:16:59Z",
+    "confirmation": "Thank you. Our sales team is looking forward to connecting with you. You’ll hear from us soon!",
+    "effect": "E6, E8, E10, and E12 have live official requests and are awaiting provider replies; E13 is staged before account creation"
+  },
+  "claim_boundary": "A sent request, a public repository check, or accepted competition terms is not provider access or a benchmark score. All incomplete suite scores remain null."
+}

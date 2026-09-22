@@ -1,0 +1,43 @@
+{
+ "answer": {
+  "claims_consistent": {
+   "noul": 0.85,
+   "type": "noul"
+  },
+  "summary_faithful": {
+   "choice": "total_only_no_breakdown",
+   "confidence": 0.93,
+   "probabilities": {
+    "component_breakdown_present": 0.03,
+    "contradictory_numbers": 0.01,
+    "total_only_no_breakdown": 0.96
+   },
+   "type": "choice"
+  }
+ },
+ "input": {
+  "questions": {
+   "claims_consistent": {
+    "instructions": "Do the component counts 67/156 and 62/156 sum to the reported total 129/312 as stated?",
+    "type": "noul"
+   },
+   "summary_faithful": {
+    "choices": [
+     "component_breakdown_present",
+     "total_only_no_breakdown",
+     "contradictory_numbers"
+    ],
+    "instructions": "Which summary best describes the evidence quality for the canonical score claim in this state?",
+    "type": "choice"
+   }
+  }
+ },
+ "kind": "ask",
+ "label": "demo_selftest",
+ "model": "jev-latest",
+ "recorded_at": "2026-09-19T13:09:53.215866+00:00",
+ "schema_version": "jev-judgment-receipt-v1",
+ "state_inline": "{\n \"canonical_score\": \"129/312 = 41.35% pass@1\",\n \"code_completion\": \"67/156\",\n \"experiment\": \"E11 VerilogEval\",\n \"spec_to_rtl\": \"62/156\"\n}",
+ "state_sha256": "1802c2e1e1fe8fa78bae7724129a1570ce7c3fe89b3350423ef0aa5de6ffa36c",
+ "state_truncated": false
+}

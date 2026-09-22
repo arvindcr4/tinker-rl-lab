@@ -1,0 +1,28 @@
+{
+  "schema_version": "jev-receipt-v1-manual-fallback",
+  "label": "e4_closeout_terminal_state_faithfulness",
+  "recorded_at": "2026-09-19T14:02:13Z",
+  "member": "e4-closeout",
+  "pattern": "U1 fast-path/fallback via usecases.judged() with AbstainPolicy(0.35, 0.65)",
+  "question": "Is the E4 terminal_state_2026-09-19.json CLOSED_PARTIAL closure record faithful to its evidence (no overstated claims, no suite score claimed, missing archive honestly disclosed, verdict not wrongly denying an executable completion path)?",
+  "state_summary": {
+    "record": "outputs/PES_Phase2_Review_2026-09-12/finish/e4_completion/terminal_state_2026-09-19.json",
+    "verdict_claimed": "CLOSED_PARTIAL",
+    "key_claims_judged": [
+      "suite_score null; 0.3115 labeled recovery_evaluation/replayed_model_artifact",
+      "restored benchmark hash-verified today (manifest 9fda047e, tasks.jsonl 18f132d9 = HF LFS oid, 100 task dirs, gandalf wheel 486cff42)",
+      "pass3 trajectory + all 5 pass16 artifacts confirmed absent today; only TINKER_BRIDGE.json survives",
+      "99/100 UUIDs no-attempt-observed, not proven never-started",
+      "unlimited budget removes cap blocker but no payable action completes the historical campaign; fresh rerun = new experiment",
+      "$59.45 = $0.5054929 x (15054/128), grader-only, not a bound"
+    ]
+  },
+  "result": {
+    "decision": "FALLBACK_OUTAGE",
+    "noul": null,
+    "note": "healthcheck failed {'healthy': False, 'yes_probe': 0.3, 'no_probe': 0.23, 'checked_at': '2026-09-19T14:02:13.255615+00:00'}"
+  },
+  "routing": "Per U1 fallback semantics: no machine judgment recorded; the closure record stands on its hash-verified evidence and the orchestrator/human root remains the arbiter of faithfulness. The outage itself is the evidence.",
+  "paid_calls": 0,
+  "main_deliverable_blocked": false
+}

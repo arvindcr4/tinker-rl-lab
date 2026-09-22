@@ -1,0 +1,37 @@
+Advisor update — architecture, goals, and week ending 22 August 2026
+
+Slide 1 — What changed this week
+The Tinker RL Lab is a receipt-first system for evaluating agentic reinforcement learning across fourteen benchmark lanes. This week we closed two exact suites, E1 and E11; expanded E5 to a fixed eleven-task exact prefix; and completed bounded native task runs for E2 and E7. E2 earned 0.7284 on one FrontierSWE task with all eight hidden correctness checks passing. E7 reached its native verifier and correctly recorded a zero because the required output file was missing. These are task results, not suite scores.
+
+Slide 2 — High-level goals
+The scientific goal is trustworthy capability evidence without substitute scores. The engineering goal is portable, resumable execution across GPU, Modal, and Tinker. The integrity goal is to bind the source revision, task split, model, W&B run, immutable Hugging Face checkpoint, evaluator, and final receipt. The operational goal is to gate cost, side effects, private data, licenses, and provider access before launch.
+
+Slide 3 — End-to-end architecture
+The first layer is the benchmark contract: immutable source, task, split, license, and native grader. The second is the E1-to-E14 adapter layer for launch, resume, asset caching, and terminal-state preservation. The third is the compute and model plane: GPU or Modal hosts execution, while Tinker provides gated model calls and W&B plus Hugging Face bind provenance. The fourth is the benchmark-owned evaluator. Only that evaluator can create a scientific score.
+
+Slide 4 — Evidence flow
+An immutable task and grader enter the adapter. The adapter provisions the official environment and runs it remotely. Model calls pass through the authenticated, fail-closed Tinker bridge. Tools, artifacts, tracking identity, and checkpoint revisions are preserved. The native evaluator then produces a result and final receipt. Execution, generation, and preflight success are progress, but they are not scores.
+
+Slide 5 — Current scoreboard
+E1 and E11 are full-suite scored. E1 resolved 2 of 731, or 0.2736 percent. E11 passed 129 of 312, or 41.35 percent canonical raw pass at one. E5 attempted indices zero through ten without cherry-picking: seven native-scored, three unscored failures, and one interrupted. Its failure-as-zero prefix mean is 0.0505, but the 480-task suite score remains null. E2 has one native task reward of 0.7284 with eight of eight correctness checks. E7 has one native task reward of zero because its required output was absent. E4 remains recovery evidence. All partial-suite scores remain null.
+
+Slide 6 — E1 result
+E1 demonstrates the full evidence chain. All 731 terminal generation states were preserved: 713 generated candidates, 14 generation failures, and 4 lost artifacts. We did not resample failures. The native evaluator resolved 2 of 731 tasks. The score is low, but it is reproducible and scientifically admissible.
+
+Slide 7 — Calibration boundary
+The local training-source portfolio result is useful for model development and calibration, but it is not held-out E1-to-E14 evidence. It stays outside the exact-suite score totals.
+
+Slide 8 — Why other lanes remain blocked
+Every lane is terminal for locally authorized work, but some cannot become scored through local engineering alone. E3, E8, E10, and E14 require private or hosted provider access. E6 requires an official live environment and authorization for side effects. E9 requires acceptance of Kaggle competition terms. E12 needs licensed deployment and two human graders. E13 lacks a provider-defined immutable held-out suite. These remain score-null rather than receiving substitutes.
+
+Slide 9 — Modal and Tinker architecture
+The heavy local Docker VM is no longer required for supported task execution. Modal hosts official environments in isolated sandboxes, and Tinker sits behind an authenticated bridge with a persistent ten-dollar fail-closed cap. The ledger ended at 5.5684 dollars charged, including 3.4806 dollars added by this authorization, leaving 4.4316 dollars under the cap. W&B was online before Tinker calls, and the Hugging Face checkpoint is immutable. Each receipt preserves the task, model, environment, grader outcome, and terminal status.
+
+Slide 10 — Next decisions
+The locally authorized engineering work is packaged. E2 and E7 now have native task receipts, and E5 has a bounded eleven-task prefix. The remaining decisions are external: Kaggle term acceptance for E9, provider access priority among E3, E10, and E14, an official environment for E6, and whether to fund licensed human evaluation for E12. None of those suites should receive a substitute score.
+
+Slide 11 — Close
+The project now has a clear four-layer architecture, two closed exact-suite results, bounded exact evidence for E2, E5, and E7, and a terminal evidence packet for every E1-to-E14 lane. The next milestone is not to relabel blocked work; it is to obtain the missing provider authority, licensed assets, hosted evaluation, or human graders required for another admissible suite result.
+
+Thirty-second summary
+This week we closed E1 at 2 of 731 and E11 at 129 of 312. We added one exact FrontierSWE task at 0.7284 with eight of eight hidden correctness checks, one BinaryAudit task at native reward zero, and an eleven-task E5 exact prefix. The architecture separates immutable benchmark contracts, adapters, Modal or GPU execution with Tinker model calls, and native evaluation. The current persistent bridge cap is ten dollars; 5.5684 dollars is charged and 4.4316 remains. Partial and externally blocked suites stay score-null until their required native evidence exists.

@@ -1,0 +1,1707 @@
+{
+  "cost": {
+    "billed_tinker_usd_before": 1.638457,
+    "estimated_actual_usd": 0.454528,
+    "operational_cap_usd": 16.5,
+    "projection": {
+      "function_cap_usd": 0.6,
+      "problem_count": 312,
+      "projected_output_tokens": 319488,
+      "projected_prefill_tokens": 69421,
+      "projected_usd": 0.464004,
+      "prompt_chars": 208264,
+      "within_function_cap": true
+    },
+    "prompt_tokens": 68847,
+    "protected_reserve_usd": 1.5,
+    "response_tokens": 312622
+  },
+  "dataset": {
+    "license": "apache-2.0",
+    "problem_count": 312,
+    "repo": "NVlabs/verilog-eval",
+    "revision": "c498220d0a52248f8e3fdffe279075215bde2da6",
+    "task_framings": [
+      "code-complete-iccad2023",
+      "spec-to-rtl"
+    ]
+  },
+  "decontamination": {
+    "boundary": "All task-bearing fields from every row in both pinned training-source snapshots were compared against every E11 prompt and reference.",
+    "launch_gate_sha256": "e067e0cb465adb4133d0b1c6ec2f44d3ab4441e81e6c59f2f546fb8c89f013c7",
+    "receipt_id": "ddc32a42a42ec6ecebfbbf6335ba16ecddbe3c89",
+    "receipt_sha256": "14efebaacc6c93de74e477fc785a1fc9ff3759417dc2609615b8e369f4665bc0",
+    "status": "verified"
+  },
+  "amendment": {
+    "recorded_at": "2026-08-22T10:03:54Z",
+    "original_file_sha256": "d78e615298d35401d7266064d6d7d8386daaf20f9d4e69ed28562e70299e0bae",
+    "reason": "Make the raw 129/312 result canonical because no immutable benchmark-level justification was captured for excluding Prob099_m2014_q6c. Bind deterministic log aggregation and W&B-before-Tinker execution-order evidence without changing samples or native verifier logs.",
+    "samples_or_verifier_artifacts_changed": false
+  },
+  "evidence_class": "primary_evaluation/pass@1",
+  "is_model_score": true,
+  "lane": "E11",
+  "modal": {
+    "app": "pavlov-e1-e14",
+    "cpu_count": 24,
+    "function_call_id": null,
+    "memory_request_mib": 32768,
+    "task_id": "ta-01M0M2CP6BFQW9P1G5SR1935RR"
+  },
+  "model": {
+    "hf_commit": "64444133c55d88c3f1bf0df8a2f5d7ac646125c8",
+    "hf_repo": "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6",
+    "hf_revision": "checkpoint-seed809-stepfinal-9f777c4018b6",
+    "model_id": "Qwen/Qwen3.6-35B-A3B",
+    "model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "sampler_path": "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler_weights/seed809_final"
+  },
+  "outstanding_blockers": [],
+  "pass_at_1": {
+    "corrected": {
+      "canonical": false,
+      "denominator": 311,
+      "excluded": [
+        "verilog_eval/spec-to-rtl/Prob099_m2014_q6c"
+      ],
+      "justification_status": "insufficient_for_canonical_exclusion",
+      "pass_at_1": 0.41479099678456594,
+      "passes": 129,
+      "reporting_role": "secondary_sensitivity_only"
+    },
+    "raw": {
+      "canonical": true,
+      "denominator": 312,
+      "pass_at_1": 0.41346153846153844,
+      "passes": 129
+    },
+    "reporting_rule": "Raw 129/312 is canonical. The 129/311 corrected value is retained only as a noncanonical sensitivity because the exclusion lacks immutable benchmark-level justification."
+  },
+  "receipt_sha256": "17ff63c8e2e1b774e1e4f779bc08e6339446de03689dcc37f2485d829a790c7a",
+  "recorded_at": "2026-08-22T06:28:14.657499Z",
+  "sampling": {
+    "extraction_failures": 150,
+    "max_tokens": 1024,
+    "new_samples": 0,
+    "resumed_samples": 312,
+    "retries_per_problem": 0,
+    "samples_per_problem": 1,
+    "seed": 1816,
+    "temperature": 0.2,
+    "top_p": 0.95
+  },
+  "schema_version": "e11-modal-full-pass-at-1-receipt-v2-amended",
+  "score": 0.41346153846153844,
+  "status": "SCORED",
+  "suite_id": "verilog_eval",
+  "suite_role": "primary_eval",
+  "verifier": {
+    "aggregation": {
+      "deterministic": true,
+      "direct_result_count": 312,
+      "method": "For each pinned problem id, read its single sample01 sv-iv-test log and mark PASS only when the log contains a full-line 'Mismatches: 0 in <n> samples' verdict; missing or nonmatching logs are FAIL.",
+      "source_function": "zvf-program/flagship/modal_e1_e14.py::_e11_run_harness",
+      "source_sha256": "811ed1364308fc349e1ca58a007089aef2218c33c987580fa70e23f5d0df29f4",
+      "summary_csv_required": false,
+      "summary_csv_status": "not used; upstream analyzer failed on a missing optional langchain dependency"
+    },
+    "identity": "NVlabs/verilog-eval sv-iv-test",
+    "iverilog_revision": "4fd5291632232fbe1ba49b2c26bb6b2bf1c6c9cf",
+    "iverilog_version": "12.0",
+    "receipts": {
+      "code-complete-iccad2023": {
+        "analyze_exit": 0,
+        "analyze_output_tail": "b004_vector2 Prob005_notgate Prob006_vectorr Prob007_wire Prob008_m2014_q4h Prob009_popcount3 Prob010_mt2015_q4a Prob011_norgate Prob012_xnorgate Prob013_m2014_q4e Prob014_andgate Prob015_vector1 Prob016_m2014_q4j Prob017_mux2to1v Prob018_mux256to1 Prob019_m2014_q4f Prob020_mt2015_eq2 Prob021_mux256to1v Prob022_mux2to1 Prob023_vector100r Prob024_hadd Prob025_reduction Prob026_alwaysblock1 Prob027_fadd Prob028_m2014_q4a Prob029_m2014_q4g Prob030_popcount255 Prob031_dff Prob032_vector0 Prob033_ece241_2014_q1c Prob034_dff8 Prob035_count1to10 Prob036_ringer Prob037_review2015_count1k Prob038_count15 Prob039_always_if Prob040_count10 Prob041_dff8r Prob042_vector4 Prob043_vector5 Prob044_vectorgates Prob045_edgedetect2 Prob046_dff8p Prob047_dff8ar Prob048_m2014_q4c Prob049_m2014_q4b Prob050_kmap1 Prob051_gates4 Prob052_gates100 Prob053_m2014_q4d Prob054_edgedetect Prob055_conditional Prob056_ece241_2013_q7 Prob057_kmap2 Prob058_alwaysblock2 Prob059_wire4 Prob060_m2014_q4k Prob061_2014_q4a Prob062_bugs_mux2 Prob063_review2015_shiftcount Prob064_vector3 Prob065_7420 Prob066_edgecapture Prob067_countslow Prob068_countbcd Prob069_truthtable1 Prob070_ece241_2013_q2 Prob071_always_casez Prob072_thermostat Prob073_dff16e Prob074_ece241_2014_q4 Prob075_counter_2bc Prob076_always_case Prob077_wire_decl Prob078_dualedge Prob079_fsm3onehot Prob080_timer Prob081_7458 Prob082_lfsr32 Prob083_mt2015_q4b Prob084_ece241_2013_q12 Prob085_shift4 Prob086_lfsr5 Prob087_gates Prob088_ece241_2014_q5b Prob089_ece241_2014_q5a Prob090_circuit1 Prob091_2012_q2b Prob092_gatesv100 Prob093_ece241_2014_q3 Prob094_gatesv Prob095_review2015_fsmshift Prob096_review2015_fsmseq Prob097_mux9to1v Prob098_circuit7 Prob099_m2014_q6c Prob100_fsm3comb Prob101_circuit4 Prob102_circuit3 Prob103_circuit2 Prob104_mt2015_muxdff Prob105_rotate100 Prob106_always_nolatches Prob107_fsm1s Prob108_rule90 Prob109_fsm1 Prob110_fsm2 Prob111_fsm2s Prob112_always_case2 Prob113_2012_q1g Prob114_bugs_case Prob115_shift18 Prob116_m2014_q3 Prob117_circuit9 Prob118_history_shift Prob119_fsm3 Prob120_fsm3s Prob121_2014_q3bfsm Prob122_kmap4 Prob123_bugs_addsubz Prob124_rule110 Prob125_kmap3 Prob126_circuit6 Prob127_lemmings1 Prob128_fsm_ps2 Prob129_ece241_2013_q8 Prob130_circuit5 Prob131_mt2015_q4 Prob132_always_if2 Prob133_2014_q3fsm Prob134_2014_q3c Prob135_m2014_q6b Prob136_m2014_q6 Prob137_fsm_serial Prob138_2012_q2fsm Prob139_2013_q2bfsm Prob140_fsm_hdlc Prob141_count_clock Prob142_lemmings2 Prob143_fsm_onehot Prob144_conwaylife Prob145_circuit8 Prob146_fsm_serialdata Prob147_circuit10 Prob148_2013_q2afsm Prob149_ece241_2013_q4 Prob150_review2015_fsmonehot Prob151_review2015_fsm Prob152_lemmings3 Prob153_gshare Prob154_fsm_ps2data Prob155_lemmings4 Prob156_review2015_fancytimer  | tee summary.txt\nTraceback (most recent call last):\n  File \"/opt/verilog-eval/scripts/sv-iv-analyze\", line 30, in <module>\n    from langchain.schema   import SystemMessage, HumanMessage\nModuleNotFoundError: No module named 'langchain'\n",
+        "log_receipts": {
+          "Prob001_zero": {
+            "present": true,
+            "sha256": "438c399102eb1f978a3101efd1bd29cbc7dc9cb618547b7b683852eb16f3de1b",
+            "verdict": "PASS"
+          },
+          "Prob002_m2014_q4i": {
+            "present": true,
+            "sha256": "67e1793ff9ecef3b17c317a727c11b4b98e3fcbef15d269fedf2cc24880d18cf",
+            "verdict": "PASS"
+          },
+          "Prob003_step_one": {
+            "present": true,
+            "sha256": "c20c84eaa6c88d6925ac335a4a9c1fd03c67ec5506f2802096dcd489b588cef8",
+            "verdict": "PASS"
+          },
+          "Prob004_vector2": {
+            "present": true,
+            "sha256": "81fb2b969957940398742b918306c499f6a68ed3fc8d8ccfdf71c4e381052fc8",
+            "verdict": "FAIL"
+          },
+          "Prob005_notgate": {
+            "present": true,
+            "sha256": "e53a7db48fe125758af5a60d9004454d9fede1aaa4f7efbdd67e32a10e6fe130",
+            "verdict": "PASS"
+          },
+          "Prob006_vectorr": {
+            "present": true,
+            "sha256": "2cd1e616c5ceefe1fba01645a819d4542280efa0dacc36bcc2bc5912207ff4c6",
+            "verdict": "PASS"
+          },
+          "Prob007_wire": {
+            "present": true,
+            "sha256": "cbcc10d6a7d258a2beb5bfece7498d0bf8280935958bbaac4f658fb520f649df",
+            "verdict": "PASS"
+          },
+          "Prob008_m2014_q4h": {
+            "present": true,
+            "sha256": "aebddc189ebd42b427b0b05f81ed625cda0c4117fb14b45df174b0723ebb7929",
+            "verdict": "PASS"
+          },
+          "Prob009_popcount3": {
+            "present": true,
+            "sha256": "9e58dc8be388c7efdadfb55dcb120b43a14c3eefcd70bae6ead62fe599f389b8",
+            "verdict": "FAIL"
+          },
+          "Prob010_mt2015_q4a": {
+            "present": true,
+            "sha256": "0e4db96a10f0e15850e873a51a6a69aff7d4f6cae92c88c6ca97e0ca47a6d9b7",
+            "verdict": "FAIL"
+          },
+          "Prob011_norgate": {
+            "present": true,
+            "sha256": "e1b3e781f747474c2fd302aaca6ef37abecb608cf10e20c175ea1e3a6a908ff2",
+            "verdict": "PASS"
+          },
+          "Prob012_xnorgate": {
+            "present": true,
+            "sha256": "7f6c190f2d6d18ec7289e061d7964de6dd793037d6ef5a97352231060702ecae",
+            "verdict": "PASS"
+          },
+          "Prob013_m2014_q4e": {
+            "present": true,
+            "sha256": "c1ad28575d9d29d5a74ccae5c1508a4a19055fdecea2a2d69a99213703cd6005",
+            "verdict": "PASS"
+          },
+          "Prob014_andgate": {
+            "present": true,
+            "sha256": "c9e6fc66c6c6a11d8652f8002f2ae91e4eee87ba0105ce46176afff173592cfa",
+            "verdict": "PASS"
+          },
+          "Prob015_vector1": {
+            "present": true,
+            "sha256": "ea8d93fdb07c5f788e62f15105b61976b324ee86b39f5524ec23fb3590e2d24c",
+            "verdict": "PASS"
+          },
+          "Prob016_m2014_q4j": {
+            "present": true,
+            "sha256": "8913bda9b6f60a4ff00701341d7e88c7b93d9661bcd25049b4402561322f09ac",
+            "verdict": "FAIL"
+          },
+          "Prob017_mux2to1v": {
+            "present": true,
+            "sha256": "95dda3c5e73071311a1b24e68fd34d67ef3b55b6ab75c15ce35deb1c411db2a8",
+            "verdict": "PASS"
+          },
+          "Prob018_mux256to1": {
+            "present": true,
+            "sha256": "443928cda204a42b32c385d4879b11c0175e7a47d576eba2bfc6560e5b9f44bd",
+            "verdict": "PASS"
+          },
+          "Prob019_m2014_q4f": {
+            "present": true,
+            "sha256": "f010ff8798a7717caa4a7b499cd8357a7256921f6be314d58cd36452a8def210",
+            "verdict": "PASS"
+          },
+          "Prob020_mt2015_eq2": {
+            "present": true,
+            "sha256": "327bd5eeb4004de761fbe5aec703c3b244a2b1859eb5d951599c888d1f655f3d",
+            "verdict": "PASS"
+          },
+          "Prob021_mux256to1v": {
+            "present": true,
+            "sha256": "604c3f203422dd2f19a2977a0e99c66cf1a95a7616a2d8b4ef9e04bab6cfa686",
+            "verdict": "PASS"
+          },
+          "Prob022_mux2to1": {
+            "present": true,
+            "sha256": "1e1769e5df82273dac881f3a32ad8528cb758ac512c6a559cfe63cee1aa88504",
+            "verdict": "PASS"
+          },
+          "Prob023_vector100r": {
+            "present": true,
+            "sha256": "477b13b0d248b7bf4105f3f91aa8ff813b4bc2bb07f0d82941ec6baa62eabef2",
+            "verdict": "PASS"
+          },
+          "Prob024_hadd": {
+            "present": true,
+            "sha256": "4618b981f5619b9c731f52d4d8e7d17e362abc0827d2f03ee3f24207da2c6961",
+            "verdict": "PASS"
+          },
+          "Prob025_reduction": {
+            "present": true,
+            "sha256": "fe1116d8b5e549f8a3bfd511f1d1254746f5ad1c1c0a0ff02043fd0470fa3a9f",
+            "verdict": "PASS"
+          },
+          "Prob026_alwaysblock1": {
+            "present": true,
+            "sha256": "5a57e73a3d64b6b6fd9fa7bf55edc6615fd53572a976a12723dffec555c71830",
+            "verdict": "PASS"
+          },
+          "Prob027_fadd": {
+            "present": true,
+            "sha256": "3889a6b519ee0c66514daa066838d561ca5a012c2b33ee42c556fc6f77c94051",
+            "verdict": "PASS"
+          },
+          "Prob028_m2014_q4a": {
+            "present": true,
+            "sha256": "d53f2070a49ef9722a6f594cc011154656499b9d8c3032f762a921755d5996c9",
+            "verdict": "PASS"
+          },
+          "Prob029_m2014_q4g": {
+            "present": true,
+            "sha256": "8675ad91cfc30ca9ad96e326e174b3fa0d1e3c92bc4bf01585eefcea94ff7947",
+            "verdict": "PASS"
+          },
+          "Prob030_popcount255": {
+            "present": true,
+            "sha256": "9c26457b7fdab0d7fc833fcabb696b93409ab9edb45df278f303b67d064adb95",
+            "verdict": "PASS"
+          },
+          "Prob031_dff": {
+            "present": true,
+            "sha256": "1300ecd53e0e91fbd217075af2b53da9321992374ff7fdd46b458980dabccef0",
+            "verdict": "PASS"
+          },
+          "Prob032_vector0": {
+            "present": true,
+            "sha256": "e4a4640fb3046669171298b443cd578054c04626f6cdcb083ec78e227652cad4",
+            "verdict": "PASS"
+          },
+          "Prob033_ece241_2014_q1c": {
+            "present": true,
+            "sha256": "efc7ad76ac896aecb179e0fc5f5aa12b35a8b821a01b1a566fb345acc893bdce",
+            "verdict": "FAIL"
+          },
+          "Prob034_dff8": {
+            "present": true,
+            "sha256": "b5f56455902c9775f4fb3416cb760c13dcccc16acaf6f1e8b79e48c6ef7fb460",
+            "verdict": "PASS"
+          },
+          "Prob035_count1to10": {
+            "present": true,
+            "sha256": "99037bc1e7c10c9c6f6e330d259c231d972500f1aeabc77b40c4404984cfbeba",
+            "verdict": "PASS"
+          },
+          "Prob036_ringer": {
+            "present": true,
+            "sha256": "eed102a8ea1f1f4a976d90eed3cc620dc708e030e6214ee6f1e98d7c6c76b533",
+            "verdict": "PASS"
+          },
+          "Prob037_review2015_count1k": {
+            "present": true,
+            "sha256": "def3ef06f4e5ee37d9bbfab3d863f13f398bf0250ba174a016a97ca68f6e95b1",
+            "verdict": "PASS"
+          },
+          "Prob038_count15": {
+            "present": true,
+            "sha256": "d7d43e4775a5ceb4a749d77af31bdac9947fb5199a0013d4aaea3d53fa046f60",
+            "verdict": "PASS"
+          },
+          "Prob039_always_if": {
+            "present": true,
+            "sha256": "fcfde0f2ceb1ae43534b345b6da5b72379bc4fe52620971dbb3da48c6346f343",
+            "verdict": "PASS"
+          },
+          "Prob040_count10": {
+            "present": true,
+            "sha256": "d43b8292787127d4b67626af8b791ef951f87d4c0cd5a494dd09cda0d6bec507",
+            "verdict": "PASS"
+          },
+          "Prob041_dff8r": {
+            "present": true,
+            "sha256": "f86816ee0fa67483d2aa4c963e2d8643a27683a32ac0dadc00d8c7735fa4decf",
+            "verdict": "PASS"
+          },
+          "Prob042_vector4": {
+            "present": true,
+            "sha256": "fbbbd1cc359ea0284c6163f2bb4c8fb1df101b579d2c91340d6b33dfbf997018",
+            "verdict": "FAIL"
+          },
+          "Prob043_vector5": {
+            "present": true,
+            "sha256": "51a4b8fc9a4bfee4af3a8750d81fb438f2ef1b3ac9f6bf667f43950dbf13fdb8",
+            "verdict": "FAIL"
+          },
+          "Prob044_vectorgates": {
+            "present": true,
+            "sha256": "01ec7176976f356ee0937fbbce935efaee88c7b86d5e22de4662b9f5a9809205",
+            "verdict": "PASS"
+          },
+          "Prob045_edgedetect2": {
+            "present": true,
+            "sha256": "96eedb48e581e5b90b0cf18b82efd05782c7204300ca5b133de94abcdb0cf2fa",
+            "verdict": "FAIL"
+          },
+          "Prob046_dff8p": {
+            "present": true,
+            "sha256": "6f7fff80958160291e103ef026c933c1ed1240707521a87e2f4468025db243a5",
+            "verdict": "PASS"
+          },
+          "Prob047_dff8ar": {
+            "present": true,
+            "sha256": "4100cb77ef737c1b59120d9966e6c3a1b1be69a9227cd7c09febe0de8cd20d54",
+            "verdict": "PASS"
+          },
+          "Prob048_m2014_q4c": {
+            "present": true,
+            "sha256": "a9823e084734a37c2c3d1b8004afc37d8caf48d3934c06c64e3490047930f339",
+            "verdict": "PASS"
+          },
+          "Prob049_m2014_q4b": {
+            "present": true,
+            "sha256": "80465841d86bbb83fb99f32c236fb3cd6ff8f95a807747136ff3d6a2ede1c8e7",
+            "verdict": "PASS"
+          },
+          "Prob050_kmap1": {
+            "present": true,
+            "sha256": "6c5541ba4bc97346726e1efea9e303fc2ff88904e84b92e38dad04c8af7f4a3c",
+            "verdict": "FAIL"
+          },
+          "Prob051_gates4": {
+            "present": true,
+            "sha256": "cc3dc254381c921aaf6fd1ba4fb875c13e7798732d2b3327e48559f15477681e",
+            "verdict": "PASS"
+          },
+          "Prob052_gates100": {
+            "present": true,
+            "sha256": "8494abc01da55fd89ff739bfa7075e3b13af15847753b971c65f016207dddb2e",
+            "verdict": "PASS"
+          },
+          "Prob053_m2014_q4d": {
+            "present": true,
+            "sha256": "d02dddbfdd99c44b4705d5ffc70c2350676556466bed64eb76aa4a94b161ca56",
+            "verdict": "FAIL"
+          },
+          "Prob054_edgedetect": {
+            "present": true,
+            "sha256": "efa6195dde3e0fe940b22323b145a755769b5a13f5cdb5809933b279e9126246",
+            "verdict": "FAIL"
+          },
+          "Prob055_conditional": {
+            "present": true,
+            "sha256": "fbf0c600f91cba91626f592ca463733ac8dcf2cd5014087d6abde72b7fcfc73f",
+            "verdict": "PASS"
+          },
+          "Prob056_ece241_2013_q7": {
+            "present": true,
+            "sha256": "07b7f57220d384e43fa81d54c8b2b10357298c356f064960795a932b605188ee",
+            "verdict": "PASS"
+          },
+          "Prob057_kmap2": {
+            "present": true,
+            "sha256": "a2455a51102a92ac037bf40062199acb09f8e7aa88b6f17e693046ff1cd0db33",
+            "verdict": "FAIL"
+          },
+          "Prob058_alwaysblock2": {
+            "present": true,
+            "sha256": "a2ada1730c299661b80e8b67efb777858648c98fd4471534ca5752b6f0e6c2be",
+            "verdict": "PASS"
+          },
+          "Prob059_wire4": {
+            "present": true,
+            "sha256": "631cf3183e7fdd4dbe6de808eef36614c0a0c8724f3243c6218a83ba8032045b",
+            "verdict": "PASS"
+          },
+          "Prob060_m2014_q4k": {
+            "present": true,
+            "sha256": "d07dda3d1eba05884ed51fab817502807eca33ebd6a4b5c317b8cc423f0828c2",
+            "verdict": "PASS"
+          },
+          "Prob061_2014_q4a": {
+            "present": true,
+            "sha256": "106934239bc08aa32162fed8181cdfa5b0a1175fde2db3a23540bddf516538c2",
+            "verdict": "PASS"
+          },
+          "Prob062_bugs_mux2": {
+            "present": true,
+            "sha256": "8aa55f2f24fc02b65f6f7ef6579ddb796d602046cd2aa865a25278e1dc3aec2e",
+            "verdict": "FAIL"
+          },
+          "Prob063_review2015_shiftcount": {
+            "present": true,
+            "sha256": "528b6369bd9ab6e2e5035eeb9db4e95cbeb4257d7b61272a486e2d625d363afb",
+            "verdict": "FAIL"
+          },
+          "Prob064_vector3": {
+            "present": true,
+            "sha256": "9f04ce24655c55cf980ec322ff34cceab558a73a50db66298935f111da2e4fc3",
+            "verdict": "FAIL"
+          },
+          "Prob065_7420": {
+            "present": true,
+            "sha256": "f247fe7dec8ad990d7cd791c740a1b9c83381343892f40df22f182a07e08d8c3",
+            "verdict": "PASS"
+          },
+          "Prob066_edgecapture": {
+            "present": true,
+            "sha256": "87070449ea780756bd3fb90de39c2a3879ed99284a84a125c791ac32637f812f",
+            "verdict": "FAIL"
+          },
+          "Prob067_countslow": {
+            "present": true,
+            "sha256": "c2cae31d8c16f3e17d6460f4a04ba5940af594735cf9bbb632b72adb796a2eb4",
+            "verdict": "PASS"
+          },
+          "Prob068_countbcd": {
+            "present": true,
+            "sha256": "8b429a62d7555deb84ee2b8d9838dee710887962ea74e67442fbc3ff424bc488",
+            "verdict": "FAIL"
+          },
+          "Prob069_truthtable1": {
+            "present": true,
+            "sha256": "26147fab7ee5ef76150059595bfa40aa39aaf787fce21e7dc2ae73ba5a390f4e",
+            "verdict": "FAIL"
+          },
+          "Prob070_ece241_2013_q2": {
+            "present": true,
+            "sha256": "abcea843b692dc8f398b1ac7bf7df59a2bc44f33486c71203b1cac6f5c86cbf4",
+            "verdict": "FAIL"
+          },
+          "Prob071_always_casez": {
+            "present": true,
+            "sha256": "7ed919cd17905793a0f20daabe576e13eaf75be8bba9bbc36e8974f924a9f8bd",
+            "verdict": "PASS"
+          },
+          "Prob072_thermostat": {
+            "present": true,
+            "sha256": "e7b00e26b5b496db8d4671b4bf5ad30f02f5f7268b40a83c7b1bbd9160262b1d",
+            "verdict": "PASS"
+          },
+          "Prob073_dff16e": {
+            "present": true,
+            "sha256": "ce453bcacf39bc3371b7f36f9a0eba10da5116a11675b8e862b7c9dff5b7bdfa",
+            "verdict": "FAIL"
+          },
+          "Prob074_ece241_2014_q4": {
+            "present": true,
+            "sha256": "ab5c2343f848d11b050217b85b2dbebe464b021795deb3e8676d1862f6ed4e99",
+            "verdict": "FAIL"
+          },
+          "Prob075_counter_2bc": {
+            "present": true,
+            "sha256": "1d6cf27827c68ebe5cbf3236cb68340722e2aa0f0df2267b7254d6c5b25926d7",
+            "verdict": "PASS"
+          },
+          "Prob076_always_case": {
+            "present": true,
+            "sha256": "64e6f2697f47303a19e326d8941fafe2d35f9ecd707f5a159f3bee28125b5640",
+            "verdict": "FAIL"
+          },
+          "Prob077_wire_decl": {
+            "present": true,
+            "sha256": "8bbba0bb67d1ada5b3e74c63f86d49703d40d6a6268ed221e6ca7aab428cd63a",
+            "verdict": "PASS"
+          },
+          "Prob078_dualedge": {
+            "present": true,
+            "sha256": "444c7d9929bd5be1248849c9b9aacd2ef6ca6a032f994f293c102d0b070f177f",
+            "verdict": "PASS"
+          },
+          "Prob079_fsm3onehot": {
+            "present": true,
+            "sha256": "17e5e311924e77bdd8f90ff7215abd5dab56c68143107675a8f8684038cd9ac1",
+            "verdict": "FAIL"
+          },
+          "Prob080_timer": {
+            "present": true,
+            "sha256": "85c8ebfd2db0409fb00cd4298bb76db27a3079c0f174338d8496b86ef1598090",
+            "verdict": "PASS"
+          },
+          "Prob081_7458": {
+            "present": true,
+            "sha256": "94291aa9e7e768c027f51bb7a01143d5a0c54faddac89d94e6eec1962bae092b",
+            "verdict": "PASS"
+          },
+          "Prob082_lfsr32": {
+            "present": true,
+            "sha256": "8fd9af986830cbb075299c0e6431df3a2135d87782905447c3a767eb4b455bf0",
+            "verdict": "FAIL"
+          },
+          "Prob083_mt2015_q4b": {
+            "present": true,
+            "sha256": "7c34513aae02f2fdffe2cf85b6392adda6c5649ec610aa45d28a7f1e27a0cbaf",
+            "verdict": "FAIL"
+          },
+          "Prob084_ece241_2013_q12": {
+            "present": true,
+            "sha256": "402adc03ab455813e7d03cb919d386554883d380c41e14b509f01b6e5b9ff4f3",
+            "verdict": "FAIL"
+          },
+          "Prob085_shift4": {
+            "present": true,
+            "sha256": "d983bdc53830306bb0b77a92a65c405550d5f8e776e1ae3a3ffaf3c0535ecdda",
+            "verdict": "PASS"
+          },
+          "Prob086_lfsr5": {
+            "present": true,
+            "sha256": "ccd207ca89ff81cb4e8eb4bf2cd3459e281b79c2ab623cd74fc4f84ed1667c54",
+            "verdict": "FAIL"
+          },
+          "Prob087_gates": {
+            "present": true,
+            "sha256": "39b4a7b078c49082d38de499c469ce9cbbe991d0101df92ccc62cff20128c4e5",
+            "verdict": "PASS"
+          },
+          "Prob088_ece241_2014_q5b": {
+            "present": true,
+            "sha256": "8a9c8b6db7b979e8d293753196efb354853900cc396c862c77e64f34982d6607",
+            "verdict": "FAIL"
+          },
+          "Prob089_ece241_2014_q5a": {
+            "present": true,
+            "sha256": "67b1a9b1c2f628f31201db6f5d4d6157e8196f24f7d7750e3c8a07b35bed1560",
+            "verdict": "FAIL"
+          },
+          "Prob090_circuit1": {
+            "present": true,
+            "sha256": "9b6e6005c3c30f77dff430d8d4717b83aaf2140422eca4ee98a80c09ab1bcc44",
+            "verdict": "PASS"
+          },
+          "Prob091_2012_q2b": {
+            "present": true,
+            "sha256": "5dcba906ddcd244315cfd4f7d387952f4ae35b81785066766087023f168499b1",
+            "verdict": "FAIL"
+          },
+          "Prob092_gatesv100": {
+            "present": true,
+            "sha256": "999c270b6d5a0c3c09d5060798cc880bb8c8fdc01b5d95a2fe998420e743cb88",
+            "verdict": "FAIL"
+          },
+          "Prob093_ece241_2014_q3": {
+            "present": true,
+            "sha256": "1ce7b5aeb9eae58745c3565ba0a9099242c41ea1b3ef5785d26e7f9dfa795b78",
+            "verdict": "FAIL"
+          },
+          "Prob094_gatesv": {
+            "present": true,
+            "sha256": "ea5616a19e7bd61175522f45ef2e2baa55867adeb640fb03e3127cfc6d672aa3",
+            "verdict": "FAIL"
+          },
+          "Prob095_review2015_fsmshift": {
+            "present": true,
+            "sha256": "ec230a1eddb2f625b2edb225aa65d9d84513d02a88e9410e7a19a338581fdd65",
+            "verdict": "FAIL"
+          },
+          "Prob096_review2015_fsmseq": {
+            "present": true,
+            "sha256": "6ea090fde27a5a0a4c830c383c60bafd065d9d5edece102f7b0a4d24dae30169",
+            "verdict": "FAIL"
+          },
+          "Prob097_mux9to1v": {
+            "present": true,
+            "sha256": "cdf2067ad6d879dbfbd3b980d0751e5710f41ea688407bd509d640f7df2a6749",
+            "verdict": "PASS"
+          },
+          "Prob098_circuit7": {
+            "present": true,
+            "sha256": "dfaebd280ea6c291413e7beff3d4f5f0b627513400f40b38d8b5b6252aedec8a",
+            "verdict": "FAIL"
+          },
+          "Prob099_m2014_q6c": {
+            "present": true,
+            "sha256": "4e82652e48c52e9ac97329396e34631c4c848c12404dc8ea6c6040a950b0fa96",
+            "verdict": "FAIL"
+          },
+          "Prob100_fsm3comb": {
+            "present": true,
+            "sha256": "1c89e11102e76be94e8e9d9ba20fc597e8336cc42b7d2a08ca9989ae401b1ff9",
+            "verdict": "FAIL"
+          },
+          "Prob101_circuit4": {
+            "present": true,
+            "sha256": "4c4c235d28fe77f2bb6eedfef46f1c9873ca51588d60aad59c88b15b78fe7a39",
+            "verdict": "FAIL"
+          },
+          "Prob102_circuit3": {
+            "present": true,
+            "sha256": "4308c92a839b3d417b1a7ebf8c9f92486a52245af138587f054f9a3de49d1705",
+            "verdict": "FAIL"
+          },
+          "Prob103_circuit2": {
+            "present": true,
+            "sha256": "46a65ca331bffd5ec014f73c9909b8b9affb25b37b472158b3806ee40e0a9777",
+            "verdict": "FAIL"
+          },
+          "Prob104_mt2015_muxdff": {
+            "present": true,
+            "sha256": "7afc3bc969430c74c447199aa89627812d529d53556554a1e438bb528713733b",
+            "verdict": "FAIL"
+          },
+          "Prob105_rotate100": {
+            "present": true,
+            "sha256": "fe41069190c54b8ce4d3cfdd9aafbfd6332e63ec7cce87a6206a26a52c3f4fe4",
+            "verdict": "PASS"
+          },
+          "Prob106_always_nolatches": {
+            "present": true,
+            "sha256": "32917f01cfd190c74c4e3ca855b5387a179e5a6a23fcb635d70f13db917d1416",
+            "verdict": "PASS"
+          },
+          "Prob107_fsm1s": {
+            "present": true,
+            "sha256": "c71057348279181d0f69f4e64c9393305f6c1efe226d55750fe49bc21642af93",
+            "verdict": "FAIL"
+          },
+          "Prob108_rule90": {
+            "present": true,
+            "sha256": "f6f4fd825f6b74b32ad510c43a9bc6b979a3a8a1da8a0713ca1a574ffbfa4e6b",
+            "verdict": "FAIL"
+          },
+          "Prob109_fsm1": {
+            "present": true,
+            "sha256": "0d844b984f4bed104158ba427bd4656fa93d368ed4c4ea3c22adad8ff466a18c",
+            "verdict": "FAIL"
+          },
+          "Prob110_fsm2": {
+            "present": true,
+            "sha256": "138642a1a7ff7dc209cb823183629b177c1d832f98dd71241c202c62cb502098",
+            "verdict": "PASS"
+          },
+          "Prob111_fsm2s": {
+            "present": true,
+            "sha256": "e66dcd74de7046d353b54cbf436175ed96589ea12b404af0c41699fbf169c596",
+            "verdict": "FAIL"
+          },
+          "Prob112_always_case2": {
+            "present": true,
+            "sha256": "073f9029433df6d8b0625c1ccb92d6c2782241c3555434c1161cd2585f9f1d29",
+            "verdict": "FAIL"
+          },
+          "Prob113_2012_q1g": {
+            "present": true,
+            "sha256": "80465bc1c2b24effefcaa4d7a7974570bed02358e9daa8d4b1bdaf8f62633069",
+            "verdict": "FAIL"
+          },
+          "Prob114_bugs_case": {
+            "present": true,
+            "sha256": "f413f6f6be96f0648929bcfa82a49cf2dbf99d14febafe738c4a6965e27e981f",
+            "verdict": "PASS"
+          },
+          "Prob115_shift18": {
+            "present": true,
+            "sha256": "3db84cc1d567411d761bd46a29fa93781c1f1d08c5c053f8bbf6685eb241f4b3",
+            "verdict": "FAIL"
+          },
+          "Prob116_m2014_q3": {
+            "present": true,
+            "sha256": "8f79a3e58e2a31365c80bff61aecdebb19927f150f5cd5bd7c38dc9f08e1e661",
+            "verdict": "FAIL"
+          },
+          "Prob117_circuit9": {
+            "present": true,
+            "sha256": "c867f5bbac3f3488b91caef5099c5744463b39de76cde5cc9ceaf7272e0e242b",
+            "verdict": "FAIL"
+          },
+          "Prob118_history_shift": {
+            "present": true,
+            "sha256": "8d22506b5d1e5696cfbf024836d863442eba780a57f43b36184f6bc6d6eef089",
+            "verdict": "FAIL"
+          },
+          "Prob119_fsm3": {
+            "present": true,
+            "sha256": "427608ec9029c233b73a521257ce175ec7bfe76009df30a776916241feab98b8",
+            "verdict": "FAIL"
+          },
+          "Prob120_fsm3s": {
+            "present": true,
+            "sha256": "ea6740967360a90c67cf0ea8aed51dcba4ce3b0e52d34f06136b9a0bdf742560",
+            "verdict": "PASS"
+          },
+          "Prob121_2014_q3bfsm": {
+            "present": true,
+            "sha256": "e2c41d669025e51b19d3e9d888af53be3fe352d62a9638244ecb7cb4d78e6526",
+            "verdict": "FAIL"
+          },
+          "Prob122_kmap4": {
+            "present": true,
+            "sha256": "5db064735bba682b96d6269df56e1c2040d1e37bbfd2a027d2daad8e7ef80f27",
+            "verdict": "FAIL"
+          },
+          "Prob123_bugs_addsubz": {
+            "present": true,
+            "sha256": "1d6902276e60f52403bd11fc7d27891be84f0d0f06f64241f175043891b63656",
+            "verdict": "FAIL"
+          },
+          "Prob124_rule110": {
+            "present": true,
+            "sha256": "4a3c36e4e2ca9292856b5dae70ced12325e50e751128214971ec2436443e3149",
+            "verdict": "FAIL"
+          },
+          "Prob125_kmap3": {
+            "present": true,
+            "sha256": "b5af9f58d3fbc3c2d2e602324bf6be9bc1342d50794eddcc0986582ec0a74852",
+            "verdict": "FAIL"
+          },
+          "Prob126_circuit6": {
+            "present": true,
+            "sha256": "b98097a09b13b8398d729bdace2d67c3da473208e24bd4e81c23fb376014379b",
+            "verdict": "FAIL"
+          },
+          "Prob127_lemmings1": {
+            "present": true,
+            "sha256": "2e1aef0631c2e1278a6ff67fb510e1371679d175b0096ed7db21780304129a6b",
+            "verdict": "FAIL"
+          },
+          "Prob128_fsm_ps2": {
+            "present": true,
+            "sha256": "f37acd1bdc2bcce05ae4bd9c245ec92efd7ceb42997aee7d69b84cbfc4ef7121",
+            "verdict": "FAIL"
+          },
+          "Prob129_ece241_2013_q8": {
+            "present": true,
+            "sha256": "9b9e4b1fb4bd97dc99bfef1a3c3113c7e6cb488a10c00909c6096766f3f7969d",
+            "verdict": "FAIL"
+          },
+          "Prob130_circuit5": {
+            "present": true,
+            "sha256": "1a9a8f13bb00c8a756bb016b4c00489c1f959f30b8bd606229925f494f204673",
+            "verdict": "FAIL"
+          },
+          "Prob131_mt2015_q4": {
+            "present": true,
+            "sha256": "e10a7d5cfbf82d48cd8d4865ef18ac42950c5dc25ded252bc8f47153e5d8fa20",
+            "verdict": "FAIL"
+          },
+          "Prob132_always_if2": {
+            "present": true,
+            "sha256": "60be220c2f5b41adbab650c63b8688d95ad0fe9c314deb6b0b04a868b1411417",
+            "verdict": "FAIL"
+          },
+          "Prob133_2014_q3fsm": {
+            "present": true,
+            "sha256": "292d679cb403b23e5c173eff15ff8afd86fce93ded4c76c87b7c9c4f467e42b4",
+            "verdict": "FAIL"
+          },
+          "Prob134_2014_q3c": {
+            "present": true,
+            "sha256": "57bc6635ed43e79c8a224474d701d0dbfd9918697d3534e2fd49d577daaf145d",
+            "verdict": "FAIL"
+          },
+          "Prob135_m2014_q6b": {
+            "present": true,
+            "sha256": "0c1787773d698a1fe7cf2f0ee8b5bf4adeea7cd51d8e14a9a87253c61f6f608e",
+            "verdict": "FAIL"
+          },
+          "Prob136_m2014_q6": {
+            "present": true,
+            "sha256": "1b098bd6744fd9eb28fa858f1c32f9e9f59110529e11edb87f59c2cf38636388",
+            "verdict": "FAIL"
+          },
+          "Prob137_fsm_serial": {
+            "present": true,
+            "sha256": "fb1b394a87766ca82f2d11b1a8e0dbab70a7ac7e7d23c2962f588203f1a0dfd3",
+            "verdict": "FAIL"
+          },
+          "Prob138_2012_q2fsm": {
+            "present": true,
+            "sha256": "7f0c63b287c19b551be00f5d0d5f49da56166d01da9334f28008ba618434a30c",
+            "verdict": "FAIL"
+          },
+          "Prob139_2013_q2bfsm": {
+            "present": true,
+            "sha256": "051d181f05a6f7bf0179f6a2e8bac7683d17b223d62543872d5952954a7080ba",
+            "verdict": "FAIL"
+          },
+          "Prob140_fsm_hdlc": {
+            "present": true,
+            "sha256": "ee760c8220de2bcc9a7ae28a91263a275899c0b0f979fc722f54027e370b4a1f",
+            "verdict": "FAIL"
+          },
+          "Prob141_count_clock": {
+            "present": true,
+            "sha256": "a7e0c665bd37b5ebb2656c3befd4c6e96c8daa3e34b12cc205946c271c21329a",
+            "verdict": "FAIL"
+          },
+          "Prob142_lemmings2": {
+            "present": true,
+            "sha256": "0f9978e172e00006766567a7b88e1317e3462c6de8158b99ef5d8e9a314cdbc8",
+            "verdict": "FAIL"
+          },
+          "Prob143_fsm_onehot": {
+            "present": true,
+            "sha256": "9a871a3b327b256ba7ffed8948fff620a0911129f9c644f1f9c144e59f266fae",
+            "verdict": "FAIL"
+          },
+          "Prob144_conwaylife": {
+            "present": true,
+            "sha256": "ef19b60d8a1774e75022724fd279b3d8a01531ae0033148641be7aff1f63a12e",
+            "verdict": "FAIL"
+          },
+          "Prob145_circuit8": {
+            "present": true,
+            "sha256": "9b6a083d92ed402a4a56576ecb2c19a40f0e92ab01caa7233f1a0cb51ba7fa71",
+            "verdict": "FAIL"
+          },
+          "Prob146_fsm_serialdata": {
+            "present": true,
+            "sha256": "c7a89eaf4c8a82a241452ce55ba3410328a4d5b0f61a8d03a8144a28d9396ba4",
+            "verdict": "FAIL"
+          },
+          "Prob147_circuit10": {
+            "present": true,
+            "sha256": "6b514df2053146fac9f404f829730912ad3ce2839a6c51123b585dba76029690",
+            "verdict": "FAIL"
+          },
+          "Prob148_2013_q2afsm": {
+            "present": true,
+            "sha256": "240a6c1d2476e5a60ef29de579f1e45b3c172d6edc38d25a43555c1685c99f0f",
+            "verdict": "FAIL"
+          },
+          "Prob149_ece241_2013_q4": {
+            "present": true,
+            "sha256": "d68757f4cc423103de4a81150f318115771af40b8208b6f1270eaf63a9d2c95c",
+            "verdict": "FAIL"
+          },
+          "Prob150_review2015_fsmonehot": {
+            "present": true,
+            "sha256": "a2d4f4fc13c6b749d8f11f6ec50e6e90b99bd39b00fca4d6b2b6f14f00d21f0d",
+            "verdict": "FAIL"
+          },
+          "Prob151_review2015_fsm": {
+            "present": true,
+            "sha256": "c8a8b50a0a3c6965ec915fe4690dd86083fdc0c01c33173f527e3014a4cf7f6a",
+            "verdict": "FAIL"
+          },
+          "Prob152_lemmings3": {
+            "present": true,
+            "sha256": "03844e8c282844249edcea6b2978010eb5eed393d8426fbc34c621a417b6f1d8",
+            "verdict": "FAIL"
+          },
+          "Prob153_gshare": {
+            "present": true,
+            "sha256": "e541e88cbd99ead28a154cc09a6f6ebd75a7c5752ca646b8de94d446ae965e4d",
+            "verdict": "FAIL"
+          },
+          "Prob154_fsm_ps2data": {
+            "present": true,
+            "sha256": "459dfdd45aaf6f70291b656587ff0706b7e5eeb7f9ed9380ef9defeed7ee98a5",
+            "verdict": "FAIL"
+          },
+          "Prob155_lemmings4": {
+            "present": true,
+            "sha256": "f8b65bb9918066650668b0759c7969c9470e3c4fae89f61dbefc2fce261a6fdb",
+            "verdict": "FAIL"
+          },
+          "Prob156_review2015_fancytimer": {
+            "present": true,
+            "sha256": "e995cdd1297c44ea27d7ed1a43290b8f2b66949e600c0b26ff8be6fb8ad95100",
+            "verdict": "FAIL"
+          }
+        },
+        "summary_csv_present": false,
+        "summary_csv_sha256": null,
+        "test_exit": 0,
+        "test_output_tail": "2014_q3c_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob135_m2014_q6b/Prob135_m2014_q6b_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob136_m2014_q6/Prob136_m2014_q6_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob137_fsm_serial/Prob137_fsm_serial_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob138_2012_q2fsm/Prob138_2012_q2fsm_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob139_2013_q2bfsm/Prob139_2013_q2bfsm_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob140_fsm_hdlc/Prob140_fsm_hdlc_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob141_count_clock/Prob141_count_clock_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob142_lemmings2/Prob142_lemmings2_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob143_fsm_onehot/Prob143_fsm_onehot_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob144_conwaylife/Prob144_conwaylife_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob145_circuit8/Prob145_circuit8_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob146_fsm_serialdata/Prob146_fsm_serialdata_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob147_circuit10/Prob147_circuit10_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob148_2013_q2afsm/Prob148_2013_q2afsm_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob149_ece241_2013_q4/Prob149_ece241_2013_q4_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob150_review2015_fsmonehot/Prob150_review2015_fsmonehot_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob151_review2015_fsm/Prob151_review2015_fsm_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob152_lemmings3/Prob152_lemmings3_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob153_gshare/Prob153_gshare_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob154_fsm_ps2data/Prob154_fsm_ps2data_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob155_lemmings4/Prob155_lemmings4_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob156_review2015_fancytimer/Prob156_review2015_fancytimer_sample01-sv-iv-test.log] Error 2 (ignored)\n"
+      },
+      "spec-to-rtl": {
+        "analyze_exit": 0,
+        "analyze_output_tail": "b004_vector2 Prob005_notgate Prob006_vectorr Prob007_wire Prob008_m2014_q4h Prob009_popcount3 Prob010_mt2015_q4a Prob011_norgate Prob012_xnorgate Prob013_m2014_q4e Prob014_andgate Prob015_vector1 Prob016_m2014_q4j Prob017_mux2to1v Prob018_mux256to1 Prob019_m2014_q4f Prob020_mt2015_eq2 Prob021_mux256to1v Prob022_mux2to1 Prob023_vector100r Prob024_hadd Prob025_reduction Prob026_alwaysblock1 Prob027_fadd Prob028_m2014_q4a Prob029_m2014_q4g Prob030_popcount255 Prob031_dff Prob032_vector0 Prob033_ece241_2014_q1c Prob034_dff8 Prob035_count1to10 Prob036_ringer Prob037_review2015_count1k Prob038_count15 Prob039_always_if Prob040_count10 Prob041_dff8r Prob042_vector4 Prob043_vector5 Prob044_vectorgates Prob045_edgedetect2 Prob046_dff8p Prob047_dff8ar Prob048_m2014_q4c Prob049_m2014_q4b Prob050_kmap1 Prob051_gates4 Prob052_gates100 Prob053_m2014_q4d Prob054_edgedetect Prob055_conditional Prob056_ece241_2013_q7 Prob057_kmap2 Prob058_alwaysblock2 Prob059_wire4 Prob060_m2014_q4k Prob061_2014_q4a Prob062_bugs_mux2 Prob063_review2015_shiftcount Prob064_vector3 Prob065_7420 Prob066_edgecapture Prob067_countslow Prob068_countbcd Prob069_truthtable1 Prob070_ece241_2013_q2 Prob071_always_casez Prob072_thermostat Prob073_dff16e Prob074_ece241_2014_q4 Prob075_counter_2bc Prob076_always_case Prob077_wire_decl Prob078_dualedge Prob079_fsm3onehot Prob080_timer Prob081_7458 Prob082_lfsr32 Prob083_mt2015_q4b Prob084_ece241_2013_q12 Prob085_shift4 Prob086_lfsr5 Prob087_gates Prob088_ece241_2014_q5b Prob089_ece241_2014_q5a Prob090_circuit1 Prob091_2012_q2b Prob092_gatesv100 Prob093_ece241_2014_q3 Prob094_gatesv Prob095_review2015_fsmshift Prob096_review2015_fsmseq Prob097_mux9to1v Prob098_circuit7 Prob099_m2014_q6c Prob100_fsm3comb Prob101_circuit4 Prob102_circuit3 Prob103_circuit2 Prob104_mt2015_muxdff Prob105_rotate100 Prob106_always_nolatches Prob107_fsm1s Prob108_rule90 Prob109_fsm1 Prob110_fsm2 Prob111_fsm2s Prob112_always_case2 Prob113_2012_q1g Prob114_bugs_case Prob115_shift18 Prob116_m2014_q3 Prob117_circuit9 Prob118_history_shift Prob119_fsm3 Prob120_fsm3s Prob121_2014_q3bfsm Prob122_kmap4 Prob123_bugs_addsubz Prob124_rule110 Prob125_kmap3 Prob126_circuit6 Prob127_lemmings1 Prob128_fsm_ps2 Prob129_ece241_2013_q8 Prob130_circuit5 Prob131_mt2015_q4 Prob132_always_if2 Prob133_2014_q3fsm Prob134_2014_q3c Prob135_m2014_q6b Prob136_m2014_q6 Prob137_fsm_serial Prob138_2012_q2fsm Prob139_2013_q2bfsm Prob140_fsm_hdlc Prob141_count_clock Prob142_lemmings2 Prob143_fsm_onehot Prob144_conwaylife Prob145_circuit8 Prob146_fsm_serialdata Prob147_circuit10 Prob148_2013_q2afsm Prob149_ece241_2013_q4 Prob150_review2015_fsmonehot Prob151_review2015_fsm Prob152_lemmings3 Prob153_gshare Prob154_fsm_ps2data Prob155_lemmings4 Prob156_review2015_fancytimer  | tee summary.txt\nTraceback (most recent call last):\n  File \"/opt/verilog-eval/scripts/sv-iv-analyze\", line 30, in <module>\n    from langchain.schema   import SystemMessage, HumanMessage\nModuleNotFoundError: No module named 'langchain'\n",
+        "log_receipts": {
+          "Prob001_zero": {
+            "present": true,
+            "sha256": "f3e994819abe8b628531c563eb691d826770c20380988cde662d7067dbc3d2f5",
+            "verdict": "PASS"
+          },
+          "Prob002_m2014_q4i": {
+            "present": true,
+            "sha256": "6bfd7f71c93da6522e7b35eb630061adc6087cfbdea8c1e25f7c701ee6ae4180",
+            "verdict": "PASS"
+          },
+          "Prob003_step_one": {
+            "present": true,
+            "sha256": "84856f961f42d8f3d9d452f78484543d95260afcb7a5fb2adc4dade4114ec661",
+            "verdict": "PASS"
+          },
+          "Prob004_vector2": {
+            "present": true,
+            "sha256": "8b8eceeda27cba555468f5e3dab810051e720ad14dcf5eb8074aa4a05736da38",
+            "verdict": "PASS"
+          },
+          "Prob005_notgate": {
+            "present": true,
+            "sha256": "ee4da6af6468a3bb764b67c0ba93d077983f9d0cceada8688cc42485401174ba",
+            "verdict": "PASS"
+          },
+          "Prob006_vectorr": {
+            "present": true,
+            "sha256": "695964cf6e267249bca332d1229b77d1a872c960d920855d0510ecea24a96011",
+            "verdict": "PASS"
+          },
+          "Prob007_wire": {
+            "present": true,
+            "sha256": "011b6e00eda20af2bff9124205a6b61c9afa4e9eebea51679aafc06f6da8b247",
+            "verdict": "PASS"
+          },
+          "Prob008_m2014_q4h": {
+            "present": true,
+            "sha256": "e5d383cc75de883ac32fd988b49910387e989e6ac9178f8e36cef2a430a48469",
+            "verdict": "PASS"
+          },
+          "Prob009_popcount3": {
+            "present": true,
+            "sha256": "077aca3e07c5d7be060ae420f6eaf22f77a6677a4d6a65a687bd2d3b4122c785",
+            "verdict": "PASS"
+          },
+          "Prob010_mt2015_q4a": {
+            "present": true,
+            "sha256": "41ebe74d52f15923860b35be81eb942af00738aad22dd40f9e54fc273bbc8aa3",
+            "verdict": "PASS"
+          },
+          "Prob011_norgate": {
+            "present": true,
+            "sha256": "f12660b9ffe6ccc60347074a497a13853a670e6bfa6b337b9ebfa5d831edaa2d",
+            "verdict": "PASS"
+          },
+          "Prob012_xnorgate": {
+            "present": true,
+            "sha256": "4e87379104b3ca450897e66304e0b5ce9a098aee6dd97ed7ff7cd3fe54fb7124",
+            "verdict": "PASS"
+          },
+          "Prob013_m2014_q4e": {
+            "present": true,
+            "sha256": "1626cac15dc225403b4ac7233ec8837c17878a8958990e06e94c91280a958830",
+            "verdict": "PASS"
+          },
+          "Prob014_andgate": {
+            "present": true,
+            "sha256": "7ba066f3106835e918d943de65825f77a3467bd558a6acc711f7703627a1ccc6",
+            "verdict": "PASS"
+          },
+          "Prob015_vector1": {
+            "present": true,
+            "sha256": "2f7f6cb286e6650fa2d1de4c5074a86512f8940135a65023eb80b366ebb0805e",
+            "verdict": "PASS"
+          },
+          "Prob016_m2014_q4j": {
+            "present": true,
+            "sha256": "44e537ea37dbd62c3a6c12e6cd0c55d98ea43ded2be55dc7fcc1942aba469cd6",
+            "verdict": "FAIL"
+          },
+          "Prob017_mux2to1v": {
+            "present": true,
+            "sha256": "b6bd5438766f9a5fa0b1b1ff69e0e3d0a84561c346cb79fa523add38f65a5e2f",
+            "verdict": "PASS"
+          },
+          "Prob018_mux256to1": {
+            "present": true,
+            "sha256": "6572b6e5e3e0b094c2b970e4d8d0b0fba0952b78059bbe880d9de794d356ef60",
+            "verdict": "PASS"
+          },
+          "Prob019_m2014_q4f": {
+            "present": true,
+            "sha256": "f939c807393f5ba6791481d5d57e79d9d02f3ba1b0c4c168c9d7e7b005106433",
+            "verdict": "PASS"
+          },
+          "Prob020_mt2015_eq2": {
+            "present": true,
+            "sha256": "a3abc20d64c9bc9fb0d190456547e54dddfc2ff054cbb7776efbe384aea6287c",
+            "verdict": "PASS"
+          },
+          "Prob021_mux256to1v": {
+            "present": true,
+            "sha256": "175e87646c212919c80f0c757d801d9bc9dd2caf528eb0e40735f7823fe55328",
+            "verdict": "FAIL"
+          },
+          "Prob022_mux2to1": {
+            "present": true,
+            "sha256": "b19d379f82324a23a60698a117fbca8c082f2e3b53b4a7d783ea12febebf1f93",
+            "verdict": "PASS"
+          },
+          "Prob023_vector100r": {
+            "present": true,
+            "sha256": "44d022e0d395e5b90b0b268fff637fa13d5f6f6269698773087ed90cae17ddc3",
+            "verdict": "FAIL"
+          },
+          "Prob024_hadd": {
+            "present": true,
+            "sha256": "add24bf797abea0fb23a9ad3d933e56368ea8f7632a411ef068193d53b99282d",
+            "verdict": "PASS"
+          },
+          "Prob025_reduction": {
+            "present": true,
+            "sha256": "bc2e2aee7360f25f3e182164d32447e3b166da0dd4e32be31d12132fe0fc01c9",
+            "verdict": "PASS"
+          },
+          "Prob026_alwaysblock1": {
+            "present": true,
+            "sha256": "7b605a837a39b50f3ce32430339f425836ca54428d0fa26959004f2d19bd49f6",
+            "verdict": "FAIL"
+          },
+          "Prob027_fadd": {
+            "present": true,
+            "sha256": "7f231e962cb9cce50c5d61cc61179381bb85e32d86c84edde3506e5a8554e34f",
+            "verdict": "PASS"
+          },
+          "Prob028_m2014_q4a": {
+            "present": true,
+            "sha256": "5ace9b7ae77b0e31a18697861662277bd71fd7d78e644581768194fe0212c8dd",
+            "verdict": "PASS"
+          },
+          "Prob029_m2014_q4g": {
+            "present": true,
+            "sha256": "f3647526376a9de12c53c51eef5198f563c8018325eeccc810172cb48b09967d",
+            "verdict": "PASS"
+          },
+          "Prob030_popcount255": {
+            "present": true,
+            "sha256": "ba7adada1f26d3bcd1b03a16c5a5413bf60879da7d6a9cd4f50e51cff6a340d5",
+            "verdict": "PASS"
+          },
+          "Prob031_dff": {
+            "present": true,
+            "sha256": "925b2e76a02365460e6930a03bf3722d45c22974b60624ccec8f6dc78d08266e",
+            "verdict": "FAIL"
+          },
+          "Prob032_vector0": {
+            "present": true,
+            "sha256": "f49aa6a1d498497ffd69575b88c9350523d29da16848e1b49ab23bca31b09d19",
+            "verdict": "FAIL"
+          },
+          "Prob033_ece241_2014_q1c": {
+            "present": true,
+            "sha256": "be5363298f3f5bfaed8a24e9490de9946c82ac9c98674db66574fce7a8767a42",
+            "verdict": "FAIL"
+          },
+          "Prob034_dff8": {
+            "present": true,
+            "sha256": "a7a347a076d16a5ca3452ee6e3635d4849576676c96d4aac98bf385f7ac7d938",
+            "verdict": "FAIL"
+          },
+          "Prob035_count1to10": {
+            "present": true,
+            "sha256": "1d48e3c2e194460ca675cac212bb8f94588665168282c529aa66910964ec5f74",
+            "verdict": "PASS"
+          },
+          "Prob036_ringer": {
+            "present": true,
+            "sha256": "7a33a48e7a0564e77bb016f64a09ea556e1263c59b532b20061e32316979d24d",
+            "verdict": "PASS"
+          },
+          "Prob037_review2015_count1k": {
+            "present": true,
+            "sha256": "7f643dacf8bda032e59ec6ddb7d9cb84499e6aa5ec36aa9a44f59335508d5f79",
+            "verdict": "PASS"
+          },
+          "Prob038_count15": {
+            "present": true,
+            "sha256": "a5ad32eb39eec74bbe5ce77715dab28e3ec5ec30c779cc3b339be35946db1671",
+            "verdict": "FAIL"
+          },
+          "Prob039_always_if": {
+            "present": true,
+            "sha256": "e326188e8c9f392e9f087846c10e84cc07a0dbfc36876e4209fe7eee95e95d30",
+            "verdict": "FAIL"
+          },
+          "Prob040_count10": {
+            "present": true,
+            "sha256": "c0cd7cb40cbac4bb71c6daed2e27827b8a48715110715511438353122a2e1af6",
+            "verdict": "PASS"
+          },
+          "Prob041_dff8r": {
+            "present": true,
+            "sha256": "74ecabd51f4f071c92e28ecb4ce9b8947bc30a456504bd44fccd70b78ddcc7bb",
+            "verdict": "FAIL"
+          },
+          "Prob042_vector4": {
+            "present": true,
+            "sha256": "fbbbd1cc359ea0284c6163f2bb4c8fb1df101b579d2c91340d6b33dfbf997018",
+            "verdict": "FAIL"
+          },
+          "Prob043_vector5": {
+            "present": true,
+            "sha256": "0e194201973c74b01da7f195dde6854821e02b7d679b72ba02b2d594fe937556",
+            "verdict": "FAIL"
+          },
+          "Prob044_vectorgates": {
+            "present": true,
+            "sha256": "32ed9ca2dfa7bceada5df1b2f25ccef68be01d2d7396b82cf5a883e25a9ebd61",
+            "verdict": "PASS"
+          },
+          "Prob045_edgedetect2": {
+            "present": true,
+            "sha256": "0293cb07a4e1506a9d5835ff5dfffde1c8b92143f706ef67805abca88d211785",
+            "verdict": "FAIL"
+          },
+          "Prob046_dff8p": {
+            "present": true,
+            "sha256": "1223fa331aad08b0ddfd92d2e04dc439a6e3f160f69336999e3adb30453b2183",
+            "verdict": "PASS"
+          },
+          "Prob047_dff8ar": {
+            "present": true,
+            "sha256": "94ed2f306e1c555daebca81d475713fb36155230bf09073b7cd564dcd8757d05",
+            "verdict": "PASS"
+          },
+          "Prob048_m2014_q4c": {
+            "present": true,
+            "sha256": "18372aeb26a4757fffd0dafeac802346180e6459c3445465385b57413c3cdd5b",
+            "verdict": "PASS"
+          },
+          "Prob049_m2014_q4b": {
+            "present": true,
+            "sha256": "99cd0b65db8886d084b0103c4f0b390cd857c3810f7fc5e868910a99b589d2aa",
+            "verdict": "FAIL"
+          },
+          "Prob050_kmap1": {
+            "present": true,
+            "sha256": "9dd6c9ec3b046baf6ca8a01d9a7f5a0ef41f1301606b045261f848c4b2970ec7",
+            "verdict": "FAIL"
+          },
+          "Prob051_gates4": {
+            "present": true,
+            "sha256": "be9940de4145343f8a4dd08128405153eeb51d78d7b50837a659c58300ff908e",
+            "verdict": "PASS"
+          },
+          "Prob052_gates100": {
+            "present": true,
+            "sha256": "58be82e6da82ea506e5148c7019d9a80fcc1d7bd15ff7b3a210257c84653d597",
+            "verdict": "PASS"
+          },
+          "Prob053_m2014_q4d": {
+            "present": true,
+            "sha256": "ef484309762839bf056ebaf2689336d2fbc0106d015a16e246541d9496910afe",
+            "verdict": "FAIL"
+          },
+          "Prob054_edgedetect": {
+            "present": true,
+            "sha256": "f6460a0d245ea163ad7b17ede0fc39f016da9deccfaa9a448bb46a3ad7e489c0",
+            "verdict": "FAIL"
+          },
+          "Prob055_conditional": {
+            "present": true,
+            "sha256": "c24f577d4120d772bbed8a7b42d4858fcad6099d3ec84afcbd23afe5adf20a3e",
+            "verdict": "PASS"
+          },
+          "Prob056_ece241_2013_q7": {
+            "present": true,
+            "sha256": "0f8dd14e9e9ce704c65633cf63e5f84773b8da11929fc76ca7187db358386d3c",
+            "verdict": "PASS"
+          },
+          "Prob057_kmap2": {
+            "present": true,
+            "sha256": "c81e89fde731cdb49feb2d0c0f0c2a2af5ba58ffac2b3843574429edd063867e",
+            "verdict": "FAIL"
+          },
+          "Prob058_alwaysblock2": {
+            "present": true,
+            "sha256": "9e510421cbc259c39dceb3bb05f7837ed845b20aaedc9e52a259d01697d46107",
+            "verdict": "FAIL"
+          },
+          "Prob059_wire4": {
+            "present": true,
+            "sha256": "433c2ef304c10255f76ed52254c74cf8cb04b13668ccad40b04ef2d85b7f23e2",
+            "verdict": "PASS"
+          },
+          "Prob060_m2014_q4k": {
+            "present": true,
+            "sha256": "11cd431f925bc172025a7786967f08e41f54cb1f2c4286b8900592c06b393377",
+            "verdict": "PASS"
+          },
+          "Prob061_2014_q4a": {
+            "present": true,
+            "sha256": "4d794273b334258d4fb2b1ab28b6cb7738bb82bcc1d521955ace1b4807784309",
+            "verdict": "PASS"
+          },
+          "Prob062_bugs_mux2": {
+            "present": true,
+            "sha256": "8158a05db9b4777e4c0c2cd3baa94ac4355e41217135c8b798710bd4725fd9cb",
+            "verdict": "FAIL"
+          },
+          "Prob063_review2015_shiftcount": {
+            "present": true,
+            "sha256": "3d488cea85db683de3e3c080bf36c6cfadea70bf6fd314862fd7870dd1d6ebae",
+            "verdict": "FAIL"
+          },
+          "Prob064_vector3": {
+            "present": true,
+            "sha256": "9db2c10aa0c2310c79d89ebcaa39fad475215d010a52f87e0d7b0d85d8de86f3",
+            "verdict": "FAIL"
+          },
+          "Prob065_7420": {
+            "present": true,
+            "sha256": "f44a720414a3350b3c8570592d55724362d8a118c89efc51ec0c05173f0e37d6",
+            "verdict": "PASS"
+          },
+          "Prob066_edgecapture": {
+            "present": true,
+            "sha256": "9a128055fd5fc6b128222134946c58c84a624c8d64be6b363ecf8df6295a8d59",
+            "verdict": "FAIL"
+          },
+          "Prob067_countslow": {
+            "present": true,
+            "sha256": "984a340381a5b0afc6a5da1bff969de197ed1345d617708dce7c40229b45d9df",
+            "verdict": "PASS"
+          },
+          "Prob068_countbcd": {
+            "present": true,
+            "sha256": "b415b542c6b51232220cebe0dd0b509531aebcdf8c638787324ddec7e244f9bc",
+            "verdict": "FAIL"
+          },
+          "Prob069_truthtable1": {
+            "present": true,
+            "sha256": "654f348dbbf5481ab353a6a723dd932af794b62670fe1901c1563cd59184c368",
+            "verdict": "FAIL"
+          },
+          "Prob070_ece241_2013_q2": {
+            "present": true,
+            "sha256": "2aa1db7f23032b71b64e331051863438883522cd4d68f443d409ef354544e296",
+            "verdict": "FAIL"
+          },
+          "Prob071_always_casez": {
+            "present": true,
+            "sha256": "82ddc9c94fa5725740f43d22bc73275dda30ccbf0d4135b1bb0aa08e7c6a5760",
+            "verdict": "FAIL"
+          },
+          "Prob072_thermostat": {
+            "present": true,
+            "sha256": "27cd9a098aaef0aa1df6e1cff97a1b30b3df9881965ae46e809a4610aa9f43eb",
+            "verdict": "PASS"
+          },
+          "Prob073_dff16e": {
+            "present": true,
+            "sha256": "3936af7dd1e2f65669b8de847f02e3d5d14a53d379535d2b1506464a72071e4c",
+            "verdict": "PASS"
+          },
+          "Prob074_ece241_2014_q4": {
+            "present": true,
+            "sha256": "41b6cd8cfa36ac8bc6e24ce65adde846efac928cbebeb6e5e7cfdc1b86ce21d7",
+            "verdict": "FAIL"
+          },
+          "Prob075_counter_2bc": {
+            "present": true,
+            "sha256": "7237a2120c4d385bbd12015be1022c6569705f7827d9d4f0408d5e519a3b485e",
+            "verdict": "PASS"
+          },
+          "Prob076_always_case": {
+            "present": true,
+            "sha256": "20029a62959f4f7649e14d46a205c9bf4e574dce0a58102c4042b07331f21bd4",
+            "verdict": "PASS"
+          },
+          "Prob077_wire_decl": {
+            "present": true,
+            "sha256": "f29a54f37d4f2dcfde7e7aed72e3cd387162fb5eb2093f9cf6aa6e488c928b59",
+            "verdict": "PASS"
+          },
+          "Prob078_dualedge": {
+            "present": true,
+            "sha256": "59387e106781540980cf1dcbf09c40d8ae312cd7cdc8c137bd8b9df87714906c",
+            "verdict": "PASS"
+          },
+          "Prob079_fsm3onehot": {
+            "present": true,
+            "sha256": "81d0aef29a65bafbadc0d25669cee003fd8290003f61a92a084dcd320f1ec68d",
+            "verdict": "FAIL"
+          },
+          "Prob080_timer": {
+            "present": true,
+            "sha256": "4968f71571e6c6b000baf4dfc23586dce07342affd254b0c72014310bc0163a6",
+            "verdict": "PASS"
+          },
+          "Prob081_7458": {
+            "present": true,
+            "sha256": "3fc871ca8b5f8df1ab0d58fa96a8a73100d888283ffabf844596de655f17a4e2",
+            "verdict": "PASS"
+          },
+          "Prob082_lfsr32": {
+            "present": true,
+            "sha256": "7251438ce3d952b4cdc6663e5a723888e12e4b38393ad99a4b25d385ce8805de",
+            "verdict": "FAIL"
+          },
+          "Prob083_mt2015_q4b": {
+            "present": true,
+            "sha256": "ad4d2d3ef5ce89ff9afbd9cdafd6fa6401389826c16a24b50ef716169c1f7eee",
+            "verdict": "PASS"
+          },
+          "Prob084_ece241_2013_q12": {
+            "present": true,
+            "sha256": "38db1b6aac0a618ea060b51a35f316578d7e4bacb789266bbe38a8a6e35a23eb",
+            "verdict": "FAIL"
+          },
+          "Prob085_shift4": {
+            "present": true,
+            "sha256": "f2d5b3fc425f563445c2acc978c7230339ecdd04ed5855f4ef8250a3692088ef",
+            "verdict": "PASS"
+          },
+          "Prob086_lfsr5": {
+            "present": true,
+            "sha256": "e698ec9e727273a67bdc726e0f419b85033d22c98a9a1dd23a14abed3107d0f7",
+            "verdict": "FAIL"
+          },
+          "Prob087_gates": {
+            "present": true,
+            "sha256": "0d7a3ea49c2dc66aa062316217a4ad3b4d2194907f336708a4684964fa5de4fb",
+            "verdict": "PASS"
+          },
+          "Prob088_ece241_2014_q5b": {
+            "present": true,
+            "sha256": "ee93b6da06938610b05dd050cba5e7baf6aab5eb8112fe345f82dc5146e11e65",
+            "verdict": "PASS"
+          },
+          "Prob089_ece241_2014_q5a": {
+            "present": true,
+            "sha256": "214200c46f51aa4861b1c113703640f0e94772539a190d12f48c886fd055a8e0",
+            "verdict": "FAIL"
+          },
+          "Prob090_circuit1": {
+            "present": true,
+            "sha256": "3981bb05990d6d3abbe1db5159633b2d80803370791669943dfcb45c19402a88",
+            "verdict": "PASS"
+          },
+          "Prob091_2012_q2b": {
+            "present": true,
+            "sha256": "368ad2577f16021b8ac38440035bf8dc569fe20be61004dfed5e313b239fca2e",
+            "verdict": "FAIL"
+          },
+          "Prob092_gatesv100": {
+            "present": true,
+            "sha256": "afc1e237caac0ed71a8d5d9a93611197a17c50209b0982c6756511cb0f84e5dc",
+            "verdict": "FAIL"
+          },
+          "Prob093_ece241_2014_q3": {
+            "present": true,
+            "sha256": "47a7cc2c5224ac27a8a3b631aeaf0b30979de09aed90a799bfccb10d638d71a5",
+            "verdict": "FAIL"
+          },
+          "Prob094_gatesv": {
+            "present": true,
+            "sha256": "31a2f45593789e875ad1e14abdc0f826c818187d9c2711a85467fb771fd8126c",
+            "verdict": "FAIL"
+          },
+          "Prob095_review2015_fsmshift": {
+            "present": true,
+            "sha256": "edfe97ee984313601f6034bea2733446013f07108c4b0b173fc3ed86a5df4c15",
+            "verdict": "FAIL"
+          },
+          "Prob096_review2015_fsmseq": {
+            "present": true,
+            "sha256": "df3582e954f7afe04a5ea98bead7b958f33f1c4444f8d6ecf47095767014b0c4",
+            "verdict": "FAIL"
+          },
+          "Prob097_mux9to1v": {
+            "present": true,
+            "sha256": "6e44dcfbf543bec1edf5199d843004531a5e8be9d4b9e54c5a13e08fdc01475c",
+            "verdict": "PASS"
+          },
+          "Prob098_circuit7": {
+            "present": true,
+            "sha256": "7c72f6f47c409437f94e90b1c7c6f319f49bd4a203356d8b5b4d7ffb00d61fb2",
+            "verdict": "FAIL"
+          },
+          "Prob099_m2014_q6c": {
+            "present": true,
+            "sha256": "2527ea221a2a3ca3be3ee76eca0e617d5e925a779961f762d90a5066e6fe2c4f",
+            "verdict": "FAIL"
+          },
+          "Prob100_fsm3comb": {
+            "present": true,
+            "sha256": "dfdd609af9e566bccb92254b5a2ad65f2d1e2197be9438771622d9dcc729d859",
+            "verdict": "FAIL"
+          },
+          "Prob101_circuit4": {
+            "present": true,
+            "sha256": "cad3a3b4f8292159a4d06cf0c9d8be2ad9cb073da09133fd766fa47fa88e3b9b",
+            "verdict": "FAIL"
+          },
+          "Prob102_circuit3": {
+            "present": true,
+            "sha256": "cbf6335d7866c5ce2549e54a5aa78b2f156a82c80fd379b8037481c03b5e392f",
+            "verdict": "FAIL"
+          },
+          "Prob103_circuit2": {
+            "present": true,
+            "sha256": "8104fc863417e8637464b370ade3d5a8e8fac480df3ed202c1a2bf25ff300924",
+            "verdict": "FAIL"
+          },
+          "Prob104_mt2015_muxdff": {
+            "present": true,
+            "sha256": "985f107b7fdc8e1cf1f25850c014aafd273ae7c9dc134689549fde14e132b540",
+            "verdict": "FAIL"
+          },
+          "Prob105_rotate100": {
+            "present": true,
+            "sha256": "2d18eeb936db8e4277a1e0944a8aeb2f40c584107490a83077d1d497b8d054ef",
+            "verdict": "PASS"
+          },
+          "Prob106_always_nolatches": {
+            "present": true,
+            "sha256": "232e3eedb7ec7f646db6d8d001ced246811a3c79ebf6f58f92ebc97e94e66220",
+            "verdict": "PASS"
+          },
+          "Prob107_fsm1s": {
+            "present": true,
+            "sha256": "c6d603bff82fcad89dfe57a3fc0c09bc1a5808c5afc2ea04a722c4d31db6ee84",
+            "verdict": "FAIL"
+          },
+          "Prob108_rule90": {
+            "present": true,
+            "sha256": "53782b917e884891f4bd23b4fa30e7141da7970e19733fa23c081dcd676d047e",
+            "verdict": "FAIL"
+          },
+          "Prob109_fsm1": {
+            "present": true,
+            "sha256": "853866ac26f13898b1f80a44f4d13e6c1d5dd7d6f89f2cb7252fa59b1931f9a1",
+            "verdict": "FAIL"
+          },
+          "Prob110_fsm2": {
+            "present": true,
+            "sha256": "769a964c73eea40d2ee463c5bce7e2fe0d4911a9e3625eeb36df956ea8793bbc",
+            "verdict": "PASS"
+          },
+          "Prob111_fsm2s": {
+            "present": true,
+            "sha256": "33ef43449640ee93f72504493fa05e7f3d56b800b3f9d27997759adb1b83dd6e",
+            "verdict": "FAIL"
+          },
+          "Prob112_always_case2": {
+            "present": true,
+            "sha256": "b2195bf50af4b3a4a710f0350d0f0a00af412ca2f0f8de00a83968852561c0b4",
+            "verdict": "FAIL"
+          },
+          "Prob113_2012_q1g": {
+            "present": true,
+            "sha256": "490677181b67ca3b897b6bbeab3cff1d1c16a17dfbb42d49bdd4245ef9fc208a",
+            "verdict": "FAIL"
+          },
+          "Prob114_bugs_case": {
+            "present": true,
+            "sha256": "9b457cfb18473a57f3c87a07058e407912e2f2ac70c73a21eb0a338003c225de",
+            "verdict": "PASS"
+          },
+          "Prob115_shift18": {
+            "present": true,
+            "sha256": "6348596456bafa32e56ca311527e04daa0636f2f33e96023019506db67991394",
+            "verdict": "FAIL"
+          },
+          "Prob116_m2014_q3": {
+            "present": true,
+            "sha256": "6492b075888b79306b80de44bef557f7983a5fa1f8f3cfd0e77251cd53e9d32d",
+            "verdict": "FAIL"
+          },
+          "Prob117_circuit9": {
+            "present": true,
+            "sha256": "e492797841035c1965e7d5055140ca9bef16dc7ec7c446c8181d572beeb9fda3",
+            "verdict": "FAIL"
+          },
+          "Prob118_history_shift": {
+            "present": true,
+            "sha256": "974c970b1fe7068ae00374667aeec59e22b88c1dd884e74687f37e6121ede8d9",
+            "verdict": "PASS"
+          },
+          "Prob119_fsm3": {
+            "present": true,
+            "sha256": "1029905de80e728326810c5cd233f0d92401ef3f34d6d91fd5459f83d19a65e3",
+            "verdict": "FAIL"
+          },
+          "Prob120_fsm3s": {
+            "present": true,
+            "sha256": "ef272d2b44f223eb9dace603b1d4de7b98e408d2d1d63caf3f039a7c50e49dfe",
+            "verdict": "FAIL"
+          },
+          "Prob121_2014_q3bfsm": {
+            "present": true,
+            "sha256": "29d8a1343c5d211afdc379f3b4534e4cd8603cc3afb000b4bbcb8a2c0c3aa208",
+            "verdict": "FAIL"
+          },
+          "Prob122_kmap4": {
+            "present": true,
+            "sha256": "1afb4f27846f37b8f7ad8d3e6fc6a1e0ab014e6a75e1049814d8153d621fe0b6",
+            "verdict": "FAIL"
+          },
+          "Prob123_bugs_addsubz": {
+            "present": true,
+            "sha256": "e9e4fb9b1c511b71e4dec37a0febc0be39ef074a63e0dbf960ca4e892abc0e0e",
+            "verdict": "FAIL"
+          },
+          "Prob124_rule110": {
+            "present": true,
+            "sha256": "1cc61e1bd1ddbe7ef16c5392b21aba46edc835ea8cb36445665b209a98510fa4",
+            "verdict": "FAIL"
+          },
+          "Prob125_kmap3": {
+            "present": true,
+            "sha256": "cdba938b2c7b1add4299d7324ecc2117212480fbd1a51e9be7d0236ec1e7cc62",
+            "verdict": "FAIL"
+          },
+          "Prob126_circuit6": {
+            "present": true,
+            "sha256": "b07e283e1e77a115471443b93bb63606ec5ebb10b691a7de569d1576fca49d80",
+            "verdict": "FAIL"
+          },
+          "Prob127_lemmings1": {
+            "present": true,
+            "sha256": "62add3fa4580d06d42ce9807817ef421641ffa173ecd4ee23e3fcd24973c0128",
+            "verdict": "FAIL"
+          },
+          "Prob128_fsm_ps2": {
+            "present": true,
+            "sha256": "81e7ade0a316f0e506b3e6f5076e6a8ff3e74f010fe1ea2937ab6998f6d2a6ea",
+            "verdict": "FAIL"
+          },
+          "Prob129_ece241_2013_q8": {
+            "present": true,
+            "sha256": "a4f7dfbb6ed85a47161364591706e5c5e4cf9a85d039bfab6e2eb3ea62ff1a7e",
+            "verdict": "FAIL"
+          },
+          "Prob130_circuit5": {
+            "present": true,
+            "sha256": "f11eaaf3c2b0a0e29a04e9899089bbcc685192a8d3998e40eab4111ef4259068",
+            "verdict": "FAIL"
+          },
+          "Prob131_mt2015_q4": {
+            "present": true,
+            "sha256": "9f5a3c833d0dc5e3ae0e8d6a9207ddbae4a7a14097db9ffdc4c973686c7c5b3e",
+            "verdict": "FAIL"
+          },
+          "Prob132_always_if2": {
+            "present": true,
+            "sha256": "fd9bfa442f2751f11738e53cfaae7bff86cc485407820210ff27fc36a730c0f3",
+            "verdict": "FAIL"
+          },
+          "Prob133_2014_q3fsm": {
+            "present": true,
+            "sha256": "3fddc9f91979f12766ebba0215a18743b621dd7a1cbfc34c70cacd170daa5f63",
+            "verdict": "FAIL"
+          },
+          "Prob134_2014_q3c": {
+            "present": true,
+            "sha256": "adda1e1a5c0e6604663bdaef32dbf563e5b28697e33d0cec1892758793569eba",
+            "verdict": "FAIL"
+          },
+          "Prob135_m2014_q6b": {
+            "present": true,
+            "sha256": "a4da9774fb9b21d59f15aa1ef1191bcbcfa37e07221f7f5cf1514e0d07c08d4c",
+            "verdict": "FAIL"
+          },
+          "Prob136_m2014_q6": {
+            "present": true,
+            "sha256": "5bd16c09557d08eeb34697a790530f2edd511cc82a97299663c658330dcc7a68",
+            "verdict": "FAIL"
+          },
+          "Prob137_fsm_serial": {
+            "present": true,
+            "sha256": "022f87690ab90b5c4606dd4e7bd4dd95a4341d904541313ef4392f582f555f6b",
+            "verdict": "FAIL"
+          },
+          "Prob138_2012_q2fsm": {
+            "present": true,
+            "sha256": "def38765187f912ba33568d55aacdf4e3cc58943ad6d8664d1ed1883d496089b",
+            "verdict": "FAIL"
+          },
+          "Prob139_2013_q2bfsm": {
+            "present": true,
+            "sha256": "4b68ed2aa32696b51c4e5ac169e47f569715c5fb7b1dade657c4af0dd801dc35",
+            "verdict": "FAIL"
+          },
+          "Prob140_fsm_hdlc": {
+            "present": true,
+            "sha256": "47e3872a91fda7f2042a98cba524639ae6482249058a1285b551b101b4929189",
+            "verdict": "FAIL"
+          },
+          "Prob141_count_clock": {
+            "present": true,
+            "sha256": "8aea04a757018a570efa701c7d4fa9b54681727c305a841229d138419bf21f7a",
+            "verdict": "FAIL"
+          },
+          "Prob142_lemmings2": {
+            "present": true,
+            "sha256": "cbcccb73a750d0dbfd2c83c17c264ab194afea8e37f1529399ae520d04577efe",
+            "verdict": "FAIL"
+          },
+          "Prob143_fsm_onehot": {
+            "present": true,
+            "sha256": "a2263390327be35b48057bf0f3189b133c8962fcde21a9cdd97cdd6aa9be58c7",
+            "verdict": "FAIL"
+          },
+          "Prob144_conwaylife": {
+            "present": true,
+            "sha256": "e14c11d6c56aec2bd0f3d6a05c6de091378769315251460ee10da11ac5167483",
+            "verdict": "FAIL"
+          },
+          "Prob145_circuit8": {
+            "present": true,
+            "sha256": "8ec31d17df5cc0659b21091bedbe23fd2cc73ef59d805e495b28759c177ec15b",
+            "verdict": "FAIL"
+          },
+          "Prob146_fsm_serialdata": {
+            "present": true,
+            "sha256": "965371457edee9a11aa4cc69a295a5995dd7f3a5d17358a6049c95a93763ae57",
+            "verdict": "FAIL"
+          },
+          "Prob147_circuit10": {
+            "present": true,
+            "sha256": "699c565df9e56a007b644d4643d91cddc7b21b2a4bd5f5dbd4ed91e07558c624",
+            "verdict": "FAIL"
+          },
+          "Prob148_2013_q2afsm": {
+            "present": true,
+            "sha256": "61f13209f9d2bd9ee92fd318c175a3adeb13d96b713793efa98319568a936136",
+            "verdict": "FAIL"
+          },
+          "Prob149_ece241_2013_q4": {
+            "present": true,
+            "sha256": "991e6a9e047335e6ec6330f59fb4a8fbc48a0fdd90b1b1df75795c20f94c0670",
+            "verdict": "FAIL"
+          },
+          "Prob150_review2015_fsmonehot": {
+            "present": true,
+            "sha256": "fff04c88d55b04c43fd1d4ae07e16c8f66ac860f54aa1169b6bc8671964e2ec0",
+            "verdict": "FAIL"
+          },
+          "Prob151_review2015_fsm": {
+            "present": true,
+            "sha256": "de69e7eaec93f0bf9c20e8b73e502f6b0ed1095f2375b23d1b029c73b4a53033",
+            "verdict": "FAIL"
+          },
+          "Prob152_lemmings3": {
+            "present": true,
+            "sha256": "87656c04f98007f5170e94ec016e872140ddb0dda791bc8ae706f7604fce08ee",
+            "verdict": "FAIL"
+          },
+          "Prob153_gshare": {
+            "present": true,
+            "sha256": "b75717bf252197f034106ce5c9cee84170a79233cbe527c9f13c656cf09260b5",
+            "verdict": "FAIL"
+          },
+          "Prob154_fsm_ps2data": {
+            "present": true,
+            "sha256": "8cfe73fddb3549530ec1c4e6fcc033bf1bbde89c7d73972e1e16aa7a1327b4a6",
+            "verdict": "FAIL"
+          },
+          "Prob155_lemmings4": {
+            "present": true,
+            "sha256": "62366ff4788f1d91e1d40919b7b9d427261b6d792b9165b75cae7913ca0f095f",
+            "verdict": "FAIL"
+          },
+          "Prob156_review2015_fancytimer": {
+            "present": true,
+            "sha256": "6810a92b75094a12b58ed297e577cef54f52e828a795e8c80c2188ac3dd75215",
+            "verdict": "FAIL"
+          }
+        },
+        "summary_csv_present": false,
+        "summary_csv_sha256": null,
+        "test_exit": 0,
+        "test_output_tail": "ways_if2_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob135_m2014_q6b/Prob135_m2014_q6b_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob136_m2014_q6/Prob136_m2014_q6_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob137_fsm_serial/Prob137_fsm_serial_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob138_2012_q2fsm/Prob138_2012_q2fsm_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob139_2013_q2bfsm/Prob139_2013_q2bfsm_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob140_fsm_hdlc/Prob140_fsm_hdlc_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob141_count_clock/Prob141_count_clock_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob142_lemmings2/Prob142_lemmings2_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob143_fsm_onehot/Prob143_fsm_onehot_sample01-sv-iv-test.log] Error 2 (ignored)\ngmake: [Makefile:190: Prob144_conwaylife/Prob144_conwaylife_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob145_circuit8/Prob145_circuit8_sample01-sv-iv-test.log] Error 2 (ignored)\ngmake: [Makefile:190: Prob146_fsm_serialdata/Prob146_fsm_serialdata_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob147_circuit10/Prob147_circuit10_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob148_2013_q2afsm/Prob148_2013_q2afsm_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob149_ece241_2013_q4/Prob149_ece241_2013_q4_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob150_review2015_fsmonehot/Prob150_review2015_fsmonehot_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob151_review2015_fsm/Prob151_review2015_fsm_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob152_lemmings3/Prob152_lemmings3_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob153_gshare/Prob153_gshare_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob154_fsm_ps2data/Prob154_fsm_ps2data_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob155_lemmings4/Prob155_lemmings4_sample01-sv-iv-test.log] Error 2 (ignored)\n/bin/sh: 1: Bad substitution\ngmake: [Makefile:190: Prob156_review2015_fancytimer/Prob156_review2015_fancytimer_sample01-sv-iv-test.log] Error 2 (ignored)\n"
+      }
+    }
+  },
+  "wandb": {
+    "execution_order_evidence": {
+      "guard": "wandb.init(mode='online') must return a run id before importing tinker, constructing ServiceClient, or creating the sampling client",
+      "initialized_before_tinker": true,
+      "source_function": "zvf-program/flagship/modal_e1_e14.py::run_e11_full",
+      "source_sha256": "811ed1364308fc349e1ca58a007089aef2218c33c987580fa70e23f5d0df29f4"
+    },
+    "mode": "online",
+    "project": "tinker-rl-lab-pavlov",
+    "run_id": "l87gbfeu",
+    "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/l87gbfeu"
+  }
+}

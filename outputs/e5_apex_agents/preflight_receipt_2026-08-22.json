@@ -1,0 +1,309 @@
+{
+  "benchmark": {
+    "dataset_id": "mercor/apex-agents",
+    "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+    "license": "cc-by-4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "native_verifier_repository": "https://github.com/Mercor-Intelligence/archipelago",
+    "native_verifier_revision": "1c3dcd4694b313020cd626699c9c7cc1c0a2fc58"
+  },
+  "config": {
+    "benchmark": {
+      "dataset_id": "mercor/apex-agents",
+      "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+      "license": "cc-by-4.0",
+      "native_verifier": {
+        "path": "grading",
+        "repository": "https://github.com/Mercor-Intelligence/archipelago",
+        "revision": "1c3dcd4694b313020cd626699c9c7cc1c0a2fc58"
+      }
+    },
+    "budget": {
+      "errors": [],
+      "hard_cap_usd": "18.00",
+      "max_prompt_tokens": 8192,
+      "max_response_tokens": 512,
+      "max_steps": 50,
+      "maximum_tinker_spend_usd": "0.50",
+      "operational_cap_usd": "16.50",
+      "projected_maximum_usd": "0.25536",
+      "safety_reserve_usd": "1.50"
+    },
+    "campaign": "pavlov-18usd",
+    "dataset_access_status": "PASS",
+    "exact_benchmark_only": true,
+    "limits": {
+      "max_prompt_tokens": 8192,
+      "max_response_tokens": 512,
+      "max_steps": 50,
+      "tasks": 1,
+      "timeout_seconds": 3600
+    },
+    "model": {
+      "base_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+      "hf_checkpoint_repo": null,
+      "hf_checkpoint_revision": null,
+      "id": "Qwen/Qwen3.6-35B-A3B",
+      "mode": "base_model",
+      "sampler_path": null
+    },
+    "provenance": {
+      "dataset_id": "mercor/apex-agents",
+      "dataset_license": "cc-by-4.0",
+      "dataset_license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+      "evaluated_hf_checkpoint": null,
+      "model_id": "Qwen/Qwen3.6-35B-A3B",
+      "model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+      "native_verifier_repository": "https://github.com/Mercor-Intelligence/archipelago",
+      "native_verifier_revision": "1c3dcd4694b313020cd626699c9c7cc1c0a2fc58",
+      "native_verifier_tree_sha256": "5b5f627d90b55a1e9ca9fd7b3ee6dc23e387d1df95ffd7fc63912efa6e8d7d89",
+      "split_manifest_sha256": "ad6ccd9882f8fe36a71d2bcaed46704068114981ec408bf169820dda05bb6809",
+      "task_id_sha256": "84554ff84bc44e2566fae0b7c341d4621cfa50d0b96f8d461393cc3b6fd60fea"
+    },
+    "schema_version": "pavlov-e5-apex-agents-config-v1",
+    "stage": "primary-evaluation",
+    "substitutions": [],
+    "suite_id": "apex_agents_eval",
+    "suite_role": "primary_eval",
+    "task_selection": {
+      "disjoint": true,
+      "evaluation_task_ids": [
+        "task_0b9134a634c14f24a6c256d034a6c130"
+      ],
+      "split_manifest": {
+        "dataset_id": "mercor/apex-agents",
+        "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+        "evaluation_task_ids": [
+          "task_0b9134a634c14f24a6c256d034a6c130"
+        ],
+        "suite_id": "apex_agents_eval",
+        "training_scope": "none (eval-only)",
+        "training_task_ids": []
+      },
+      "split_manifest_sha256": "ad6ccd9882f8fe36a71d2bcaed46704068114981ec408bf169820dda05bb6809",
+      "task_id_sha256": "84554ff84bc44e2566fae0b7c341d4621cfa50d0b96f8d461393cc3b6fd60fea",
+      "training_scope": "none (eval-only)",
+      "training_task_ids": []
+    },
+    "wandb": {
+      "entity": "arvindcr4-pes-university",
+      "group": "pavlov-e5-apex-agents",
+      "mode": "online",
+      "project": "tinker-rl-lab-pavlov"
+    }
+  },
+  "config_sha256": "39b583f521db45b3cae983dbfa76da0cd55b0f46c3f0021f9b1d2254b139cbfc",
+  "created_at": "2026-08-22T07:27:26.750035+00:00",
+  "gates": [
+    {
+      "details": {
+        "dataset_id": "mercor/apex-agents",
+        "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+        "disabled": false,
+        "error": null,
+        "error_code": null,
+        "file_count": 319,
+        "gated": "auto",
+        "gating_mode": "auto",
+        "gating_unblock": "log in to Hugging Face and accept the dataset terms; access is granted automatically, with no human review",
+        "http_status": 200,
+        "license": "cc-by-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "private": false,
+        "response_sha256": "e2594100219bda2b8545414c3b2a88bae40fa3d7cb8a070daeb05b5d6f6020cd",
+        "url": "https://huggingface.co/api/datasets/mercor/apex-agents"
+      },
+      "name": "benchmark_metadata",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "dataset_dir": "outputs/e5_apex_agents/hf_dataset",
+        "dataset_id": "mercor/apex-agents",
+        "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+        "files": {
+          "eval.yaml": {
+            "bytes": 522,
+            "path": "outputs/e5_apex_agents/hf_dataset/eval.yaml",
+            "recorded_commit": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+            "sha256": "231993cb91ab18596fb6c24c9fbb33fba2975dcea605de5696cf4c4245ec8151"
+          },
+          "tasks_and_rubrics.json": {
+            "bytes": 1080670,
+            "path": "outputs/e5_apex_agents/hf_dataset/tasks_and_rubrics.json",
+            "recorded_commit": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+            "sha256": "94a85655bb983bb8bfff693182026f05f1df41ff17b2cd4589dd42a071531cb6"
+          },
+          "world_descriptions.json": {
+            "bytes": 45846,
+            "path": "outputs/e5_apex_agents/hf_dataset/world_descriptions.json",
+            "recorded_commit": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+            "sha256": "3836f308d122b7204a463ce43d23ec63fb27460f36f6bd5ac32d724183a3fdd8"
+          }
+        },
+        "revision_proof": "hf cache metadata commit hash matches the pin",
+        "source": "local_dataset_dir"
+      },
+      "name": "benchmark_access",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "count_warnings": [],
+        "dataset_id": "mercor/apex-agents",
+        "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+        "errors": [],
+        "expected_task_count": 480,
+        "expected_world_count": 33,
+        "task_count": 480,
+        "task_id_sha256": "0467d071bd800a9875e787a958c2d125f3a0748d7c058703035d57c6cb78f8c4",
+        "valid": true,
+        "world_count": 33,
+        "world_id_sha256": "4dda01d4cf5116f939e27714ea58b6657f0d08f803b323cd5425b2dc5a313558"
+      },
+      "name": "dataset_schema",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "disjoint": true,
+        "evaluation_task_ids": [
+          "task_0b9134a634c14f24a6c256d034a6c130"
+        ],
+        "split_manifest": {
+          "dataset_id": "mercor/apex-agents",
+          "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+          "evaluation_task_ids": [
+            "task_0b9134a634c14f24a6c256d034a6c130"
+          ],
+          "suite_id": "apex_agents_eval",
+          "training_scope": "none (eval-only)",
+          "training_task_ids": []
+        },
+        "split_manifest_sha256": "ad6ccd9882f8fe36a71d2bcaed46704068114981ec408bf169820dda05bb6809",
+        "task_id_sha256": "84554ff84bc44e2566fae0b7c341d4621cfa50d0b96f8d461393cc3b6fd60fea",
+        "training_scope": "none (eval-only)",
+        "training_task_ids": []
+      },
+      "name": "task_split",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "grading_tree_sha256": "5b5f627d90b55a1e9ca9fd7b3ee6dc23e387d1df95ffd7fc63912efa6e8d7d89",
+        "license": "Apache-2.0",
+        "repository": "https://github.com/Mercor-Intelligence/archipelago",
+        "revision": "1c3dcd4694b313020cd626699c9c7cc1c0a2fc58",
+        "verifier_path": "grading"
+      },
+      "name": "native_verifier",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "archipelago_environment": "outputs/e5_apex_agents/sprint.8cEFaN/archipelago/environment",
+        "environment_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex/e5/venv",
+        "global_python_mutation": false,
+        "python313": "/opt/homebrew/opt/python@3.13/bin/python3.13",
+        "worktree_root": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab"
+      },
+      "name": "isolated_runtime",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "base_model": "Qwen/Qwen3.6-35B-A3B",
+        "base_model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+        "checkpoint_binding": "immutable base-model revision (no compatible completed sampler checkpoint supplied)",
+        "mode": "base_model"
+      },
+      "name": "model_identity",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "errors": [],
+        "hard_cap_usd": "18.00",
+        "max_prompt_tokens": 8192,
+        "max_response_tokens": 512,
+        "max_steps": 50,
+        "maximum_tinker_spend_usd": "0.50",
+        "operational_cap_usd": "16.50",
+        "projected_maximum_usd": "0.25536",
+        "safety_reserve_usd": "1.50"
+      },
+      "name": "budget",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "api_key_present": false,
+        "credential_source": "netrc:api.wandb.ai",
+        "entity": "arvindcr4-pes-university",
+        "errors": [],
+        "group": "pavlov-e5-apex-agents",
+        "import_error": null,
+        "importable": true,
+        "project": "tinker-rl-lab-pavlov",
+        "required_mode": "online",
+        "tinker_calls_allowed_before_run": false
+      },
+      "name": "wandb_online_before_tinker",
+      "status": "PENDING_RUNTIME_ONLINE_HANDSHAKE"
+    },
+    {
+      "details": {
+        "api_key_present": true,
+        "calls_made": false,
+        "import_error": null,
+        "importable": true
+      },
+      "name": "tinker_access",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "provider_key_present": "OPENAI_API_KEY"
+      },
+      "name": "native_grader_credentials",
+      "status": "PASS"
+    }
+  ],
+  "invocation": {
+    "global_python_mutation": false,
+    "launch_requested": false,
+    "worktree": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab"
+  },
+  "launch": {
+    "score": null,
+    "score_status": "not_run",
+    "tinker_calls": 0
+  },
+  "model": {
+    "base_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "hf_checkpoint_repo": null,
+    "hf_checkpoint_revision": null,
+    "id": "Qwen/Qwen3.6-35B-A3B",
+    "mode": "base_model",
+    "sampler_path": null
+  },
+  "no_score_claim": true,
+  "required_external_receipts": [],
+  "schema_version": "pavlov-e5-apex-agents-receipt-v1",
+  "source_urls": {
+    "archipelago": "https://github.com/Mercor-Intelligence/archipelago",
+    "dataset_card": "https://huggingface.co/datasets/mercor/apex-agents",
+    "dataset_metadata": "https://huggingface.co/api/datasets/mercor/apex-agents",
+    "model_metadata": "https://huggingface.co/api/models/Qwen/Qwen3.6-35B-A3B"
+  },
+  "status": "BLOCKED",
+  "suite_id": "apex_agents_eval",
+  "task_selection": {
+    "count": 1,
+    "disjoint": true,
+    "selected_task_ids": [
+      "task_0b9134a634c14f24a6c256d034a6c130"
+    ]
+  }
+}

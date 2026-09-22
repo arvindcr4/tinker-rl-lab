@@ -1,0 +1,62 @@
+{
+  "schema_version": "pavlov-terminal-lane-receipt-v1",
+  "observed_at": "2026-08-22T00:00:00+05:30",
+  "lane": "E13",
+  "suite_id": "openreward_games_eval",
+  "status": "BLOCKED",
+  "terminal_for_current_inputs": true,
+  "is_model_score": false,
+  "score": null,
+  "model_episodes_executed": 0,
+  "cost_usd": 0.0,
+  "source": {
+    "environment": "GeneralReasoning/Wordle",
+    "repo": "https://github.com/EnvCommons/wordle",
+    "revision": "92bea32efa102e86275dedd2e0367e86d3754754",
+    "wrapper_license_file_present": false,
+    "provider_defined_suite_named_openreward_games_eval_found": false
+  },
+  "verified_local_layers": {
+    "train_tasks": 200,
+    "eval_tasks": 200,
+    "train_manifest_sha256": "64270965e8acbc2b279c8ca67c99a3d61e598651507c899bcbc56cde081c96eb",
+    "eval_manifest_sha256": "3a62745869a12f4ac77e5b72565cf8fef427684160d77f137a7e8f1a586dde97",
+    "shared_instances": 0,
+    "shared_seeds": 0,
+    "seed_separation_holds": true,
+    "native_gold_episode_harness_validation": "3/3 accepted; not a model score",
+    "manifest_validation_receipt_sha256": "d6019a9077d8aaafebc15d097fbe7271e7b168852393ffc32239a5f209f9c32f",
+    "focused_runner_tests_passed": 39,
+    "focused_train_guard_tests_passed": 39,
+    "focused_tests_failed": 0
+  },
+  "local_runtime_recheck_2026_08_22": {
+    "environment": "isolated mktemp Python 3.13 virtual environment",
+    "dependencies": [
+      "openreward==0.1.152",
+      "textarena==0.7.4"
+    ],
+    "provider_credentials_used": false,
+    "test_split_task_count": 200,
+    "first_task_id": "Wordle-v0_seed10000",
+    "prompt_chars": 748,
+    "first_action": "SLATE",
+    "first_action_reward": 0.0,
+    "first_action_finished": false,
+    "smoke_test_status": "PASS",
+    "is_model_score": false
+  },
+  "blockers": [
+    "No provider-defined immutable held-out suite named openreward_games_eval exists; the 74-environment inventory and Wordle lane are local selections.",
+    "The EnvCommons Wordle wrapper contains no LICENSE file at the pinned revision; its card's inherited TextArena license is not an explicit grant for the wrapper.",
+    "The public test seeds are not hidden from model training, so receipt-proven held-out status is false.",
+    "No authorized paid model rollout, online W&B run, Tinker receipt, or immutable evaluated checkpoint exists."
+  ],
+  "smallest_external_action": "GR Inc. or EnvCommons must publish an explicit license and a provider-defined immutable held-out games suite. A scored model run then needs an explicit budget plus W&B-before-Tinker and Hugging Face checkpoint receipts.",
+  "safety": {
+    "substitution_used": false,
+    "paid_call_made": false,
+    "wandb_run_created": false,
+    "hf_write_made": false
+  }
+}

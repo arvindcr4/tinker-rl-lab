@@ -1,0 +1,65 @@
+{
+  "schema_version": "pavlov-e5-apex-agents-sequential-prefix-v1",
+  "recorded_at": "2026-08-22T13:38:42Z",
+  "lane": "E5",
+  "suite_id": "apex_agents_eval",
+  "benchmark_status": "PARTIAL_EXACT",
+  "work_status": "TERMINAL_WITH_PROTOCOL_BLOCKER",
+  "dataset": {
+    "id": "mercor/apex-agents",
+    "revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+    "official_suite_tasks": 480
+  },
+  "native_verifier": {
+    "repository": "https://github.com/Mercor-Intelligence/archipelago",
+    "revision": "1c3dcd4694b313020cd626699c9c7cc1c0a2fc58"
+  },
+  "model": {
+    "alias": "pavlov-qwen36-tinker",
+    "hf_revision": "64444133c55d88c3f1bf0df8a2f5d7ac646125c8",
+    "same_model_judge": true
+  },
+  "selection": {
+    "kind": "fixed_sequential_prefix",
+    "indices": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "sequential": true,
+    "cherry_picked": false,
+    "attempted_tasks": 11,
+    "native_scored_tasks": 7,
+    "native_unscored_failures": 3,
+    "operator_interrupted_tasks": 1
+  },
+  "metrics": {
+    "native_score_sum": 0.5555555555555556,
+    "attempt_prefix_mean_failure_as_zero": 0.05050505050505051,
+    "scored_receipt_mean": 0.07936507936507936,
+    "suite_score": null,
+    "score_claim_boundary": "The prefix means summarize only indices 0-10. Neither value is the official 480-task suite score."
+  },
+  "tasks": [
+    {"index": 0, "task_id": "task_0b9134a634c14f24a6c256d034a6c130", "task_name": "world416_BB_01", "domain": "Law", "status": "COMPLETED", "native_score": 0.3333333333333333, "wandb_run_id": "n2wnplms", "receipt": "outputs/e5_apex_agents/official_modal_zeroarg_fix_receipt_2026-08-22.json", "receipt_sha256": "bd17de93da4957b12ba6ade65c80fbe9a1e251707c1f7a148a67a9e2d10925c7"},
+    {"index": 1, "task_id": "task_0097f20dd1744647a5a6e76db215a467", "task_name": "World416_JS_02", "domain": "Law", "status": "COMPLETED", "native_score": 0.0, "wandb_run_id": "vvu7z2ws", "receipt": "outputs/e5_apex_agents/official_modal_task_index_1_receipt_2026-08-22.json", "receipt_sha256": "376308b0aafdd5e85beb24f7d49c55f3f4f6c353852e06207ce75a7ac7770560"},
+    {"index": 2, "task_id": "task_5eec5f9ff1234067859443ab0a6c402d", "task_name": "World416_TK_04", "domain": "Law", "status": "BLOCKED", "native_score": null, "wandb_run_id": "6rngq1lx", "receipt": "outputs/e5_apex_agents/official_modal_task_index_2_receipt_2026-08-22.json", "receipt_sha256": "e9aa4376c186f43ab67bf4e7f9c4a8719eb1d0865ae1ede5f61cff1a91c3c96c"},
+    {"index": 3, "task_id": "task_2b5df2b5a0eb423e998099a9fcd8e262", "task_name": "World416_JS_01", "domain": "Law", "status": "COMPLETED", "native_score": 0.0, "wandb_run_id": "tj4sl6bk", "receipt": "outputs/e5_apex_agents/official_modal_task_index_3_receipt_2026-08-22.json", "receipt_sha256": "6ee3b03d9ce4ff30f24249fa6ebd90687515e70b378d6a1b7083f68fa86077f8"},
+    {"index": 4, "task_id": "task_68bcf4d7fc5045b58045dc9f2f23ce5c", "task_name": "World416_DM_01", "domain": "Law", "status": "COMPLETED", "native_score": 0.0, "wandb_run_id": "cu8bvexb", "receipt": "outputs/e5_apex_agents/official_modal_task_index_4_receipt_2026-08-22.json", "receipt_sha256": "8fb49c6aa6ef4b739505b846b6dce8ae3b8dc83529aa43b96a2bf8d9fbe6d2e3"},
+    {"index": 5, "task_id": "task_bf18a6d6ff44489daf0b1c80b5d4a3a8", "task_name": "Task ymtecb81", "domain": "Law", "status": "COMPLETED", "native_score": 0.2222222222222222, "wandb_run_id": "nec1fo80", "receipt": "outputs/e5_apex_agents/official_modal_task_index_5_receipt_2026-08-22.json", "receipt_sha256": "cc6daec4bd70f8e0b096d09f56f06b3ecf403ff1fe9f64abb8be78c2648a86a4"},
+    {"index": 6, "task_id": "task_58d04f83ddee4c01bf89a4a1ca0b933a", "task_name": "World416_JS_03", "domain": "Law", "status": "COMPLETED", "native_score": 0.0, "wandb_run_id": "6eyip0wm", "receipt": "outputs/e5_apex_agents/official_modal_task_index_6_receipt_2026-08-22.json", "receipt_sha256": "116547c1c5139d40b122fa41d9f2573cc00d68f842ae602ebe5a68f34f740276"},
+    {"index": 7, "task_id": "task_3a57257634404d0584a5bd7ce7846b89", "task_name": "World416_TK_02", "domain": "Law", "status": "COMPLETED", "native_score": 0.0, "wandb_run_id": "4bl2ymbd", "receipt": "outputs/e5_apex_agents/official_modal_task_index_7_receipt_2026-08-22.json", "receipt_sha256": "fc06a4a4ad3e9953e85d2f1a78b8f910d5f75ec2045a9c28bc6631b6edd3a112"},
+    {"index": 8, "task_id": "task_6fa5694c8bbe434e944d76e6782369b1", "task_name": "WORLD246_HL_01", "domain": "Investment Banking", "status": "BLOCKED", "native_score": null, "wandb_run_id": "0vbhtveh", "receipt": "outputs/e5_apex_agents/official_modal_task_index_8_retry_receipt_2026-08-22.json", "receipt_sha256": "3f598f7aa06739ad9e7d06548b93948230582f60729f2287ef785a20e596f7e0", "prior_infrastructure_attempt": "outputs/e5_apex_agents/official_modal_task_index_8_receipt_2026-08-22.json"},
+    {"index": 9, "task_id": "task_68a8fbc9544640cf9a20db80dd845d85", "task_name": "World246_RL_01", "domain": "Investment Banking", "status": "BLOCKED", "native_score": null, "wandb_run_id": "38gm55u6", "receipt": "outputs/e5_apex_agents/official_modal_task_index_9_receipt_2026-08-22.json", "receipt_sha256": "85b4bb7794f1ee88c548bf008e1a9b585ee63eabb7cfc6c5dccee02da1791be1"},
+    {"index": 10, "task_id": "task_16c0324b442841ec86f8ae24cbde119e", "task_name": "World246_ML_01", "domain": "Investment Banking", "status": "INTERRUPTED", "native_score": null, "wandb_run_id": "5zh4z7q4", "receipt": "outputs/e5_apex_agents/official_modal_task_index_10_interrupted_receipt_2026-08-22.json", "receipt_sha256": "6000d6ae6c771d40fc4cbdd8cb5c56c3f6317c65d96d3c0c6a01efc0bfcbe0d5"}
+  ],
+  "bridge_budget": {
+    "maximum_usd": 2.25,
+    "charged_usd_at_recording": 2.08777938,
+    "reserved_usd_at_recording": 0.0,
+    "remaining_usd_at_recording": 0.16222062,
+    "continuation_stop_reason": "Task index 10 produced 92 duplicate filesystem calls in one step; continuing the same protocol had sharply diminishing value."
+  },
+  "evidence_boundary": {
+    "full_suite_complete": false,
+    "suite_score": null,
+    "unscored_attempts_are_not_native_zero_scores": true,
+    "external_or_protocol_blocker": "pathological duplicate tool fanout after two consecutive non-finalized Investment Banking tasks"
+  }
+}

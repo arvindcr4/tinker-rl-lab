@@ -1,0 +1,30 @@
+[
+  {
+    "file": "outputs/e9_mle_bench/modal_streaming/detecting-insults-in-social-commentary-3c81ecb58f42/native_grade.json",
+    "method": "byte-exact serialization of embedded native grade",
+    "new_evaluation": false,
+    "sha256": "6262dd88e4f315b47c31b8a0da926d666134d2f4aa2f644464bfff4ace3023e4",
+    "source": "outputs/e9_mle_bench/modal_streaming/detecting-insults-in-social-commentary-3c81ecb58f42/receipt.json"
+  },
+  {
+    "file": "outputs/e9_mle_bench/modal_streaming/spooky-author-identification-92a9c2022e7e/native_grade.json",
+    "method": "byte-exact serialization of embedded native grade",
+    "new_evaluation": false,
+    "sha256": "27e14133c91a22c8d8f10289cd415809a827dd76e35a93a67b37129a9f2659a5",
+    "source": "outputs/e9_mle_bench/modal_streaming/spooky-author-identification-92a9c2022e7e/receipt.json"
+  },
+  {
+    "file": "outputs/e9_mle_bench/modal_streaming/spooky-author-identification-df30738f5cc3/native_grade.json",
+    "method": "byte-exact serialization of embedded native grade",
+    "new_evaluation": false,
+    "sha256": "296573bae8d83d46747ff5dfec29ebf0332808e96f2ea6023a753ac750e1d8af",
+    "source": "outputs/e9_mle_bench/modal_streaming/spooky-author-identification-df30738f5cc3/receipt.json"
+  },
+  {
+    "file": "outputs/e9_mle_bench/modal_streaming/text-normalization-challenge-russian-language-regrade-c14b6e950259/solution.py",
+    "method": "byte-exact copy of original saved program",
+    "new_evaluation": false,
+    "sha256": "b5c244ab130d84b3d5b9a1581737289c7d7f9a06595673742707f288dd73f368",
+    "source": "outputs/e9_mle_bench/modal_streaming/text-normalization-challenge-russian-language-fcf621c3dc0d/solution.py"
+  }
+]

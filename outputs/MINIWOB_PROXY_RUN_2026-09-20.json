@@ -1,0 +1,56 @@
+{
+ "proxy": "MiniWoB++-subset",
+ "model": "qwen3:8b",
+ "tasks": [
+  "click-button",
+  "enter-text"
+ ],
+ "episodes": 6,
+ "successes": 6,
+ "success_rate": 1.0,
+ "note": "Own-benchmark proxy number only; never an E6/WebBench score.",
+ "results": [
+  {
+   "task": "click-button",
+   "ep": 0,
+   "reward": 0.9145,
+   "steps": 1,
+   "success": true
+  },
+  {
+   "task": "click-button",
+   "ep": 1,
+   "reward": 0.94,
+   "steps": 1,
+   "success": true
+  },
+  {
+   "task": "click-button",
+   "ep": 2,
+   "reward": 0.9455,
+   "steps": 1,
+   "success": true
+  },
+  {
+   "task": "enter-text",
+   "ep": 0,
+   "reward": 0.9326,
+   "steps": 1,
+   "success": true
+  },
+  {
+   "task": "enter-text",
+   "ep": 1,
+   "reward": 0.9343,
+   "steps": 1,
+   "success": true
+  },
+  {
+   "task": "enter-text",
+   "ep": 2,
+   "reward": 0.9357,
+   "steps": 1,
+   "success": true
+  }
+ ]
+}

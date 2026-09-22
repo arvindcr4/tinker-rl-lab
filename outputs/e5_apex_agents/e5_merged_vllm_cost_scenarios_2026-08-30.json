@@ -1,0 +1,100 @@
+{
+  "schema_version": "e5-apex-agents-merged-vllm-cost-scenarios-v1",
+  "recorded_at": "2026-08-30T12:18:10Z",
+  "mode": "READ_ONLY_SCENARIO_CALCULATION_NO_LAUNCH_NO_SPEND",
+  "suite_id": "apex_agents_eval",
+  "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+  "execution_arm_boundary": "A merged-vLLM implementation would be a new execution arm. It cannot be combined with the 11-task Tinker-backed prefix and is not a completion or score receipt.",
+  "local_data_state": {
+    "task_and_rubric_bundle_present": true,
+    "task_count": 480,
+    "split_manifest_present": true,
+    "split_manifest": "outputs/e5_apex_agents/split_manifest_480.json",
+    "split_manifest_sha256": "782a9e68451696353e1b85a154707dfeeee69d3cfd62490a47543189db3b2fda",
+    "split_manifest_hash_scope": "Live full 480-task split_manifest_480.json file; the ad6ccd98 preflight hash is a separate one-task selection manifest and is not used here.",
+    "auxiliary_task_and_gold_assets_fully_materialized": false,
+    "runner_required_auxiliary_bytes": 9026327402,
+    "asset_inventory_receipt": "outputs/e5_apex_agents/e5_asset_inventory_2026-08-30.json",
+    "upstream_access_condition": "Hugging Face repository metadata remains gated; authenticated access was previously unblocked after accepting the dataset terms.",
+    "evidence": [
+      "outputs/e5_apex_agents/preflight_receipt_2026-08-09.json",
+      "outputs/e5_apex_agents/evidence/authenticated_access_probe.json",
+      "outputs/e5_apex_agents/evidence/hf_dataset_meta.json"
+    ]
+  },
+  "gpu_scenarios": {
+    "configured_calls": {
+      "tasks": 480,
+      "maximum_agent_steps_per_task": 8,
+      "calls": 3840,
+      "source": "outputs/e5_apex_agents/official_modal_zeroarg_fix_receipt_2026-08-22.json"
+    },
+    "a100_rate_usd_per_second": 0.000694,
+    "rate_source": "https://modal.com/pricing",
+    "one_observed_model_load_seconds": 598.972769,
+    "one_observed_model_load_usd": 0.415687101686,
+    "model_load_source": "outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/gpu_backend_receipt.json",
+    "same_model_observed_generation_seconds": [
+      53.595006,
+      63.203797,
+      94.003142,
+      108.218184,
+      120.848153,
+      141.668524,
+      159.635205
+    ],
+    "generation_receipt_glob": "outputs/e9_mle_bench/merged_vllm/*/receipt.json",
+    "fastest_observed_call_scenario": {
+      "formula": "480 * 8 * 53.595006 * 0.000694 + 598.972769 * 0.000694",
+      "gpu_usd": 143.24423429144597
+    },
+    "median_observed_call_scenario": {
+      "formula": "480 * 8 * 108.218184 * 0.000694 + 598.972769 * 0.000694",
+      "gpu_usd": 288.812818734326
+    },
+    "excluded_costs": [
+      "CPU, memory, and volume charges",
+      "Modal sandbox and environment execution",
+      "dataset and asset downloads",
+      "native judge calls"
+    ]
+  },
+  "judge_scenarios": {
+    "provider_model": "Gemini 2.5 Flash paid tier",
+    "input_rate_usd_per_million_tokens": 0.3,
+    "output_rate_usd_per_million_tokens": 2.5,
+    "rate_source": "https://ai.google.dev/gemini-api/docs/pricing",
+    "grading_calls": 1948,
+    "artifact_selection_calls_floor": 322,
+    "artifact_selection_calls_ceiling": 1948,
+    "grading_input_tokens_per_call": 4280,
+    "grading_output_tokens_per_call": 300,
+    "artifact_selection_input_tokens_per_call": 1187,
+    "artifact_selection_output_tokens_per_call": 150,
+    "token_assumption_sources": [
+      "outputs/e5_apex_agents/project_full_run_cost.py",
+      "outputs/e5_apex_agents/full_run_cost_projection.json",
+      "outputs/e5_apex_agents/official_modal_zeroarg_fix_receipt_2026-08-22.json"
+    ],
+    "floor": {
+      "input_tokens": 8719654,
+      "output_tokens": 632700,
+      "formula": "8719654 / 1000000 * 0.30 + 632700 / 1000000 * 2.50",
+      "judge_usd": 4.1976462
+    },
+    "ceiling": {
+      "input_tokens": 10649716,
+      "output_tokens": 876600,
+      "formula": "10649716 / 1000000 * 0.30 + 876600 / 1000000 * 2.50",
+      "judge_usd": 5.3864148
+    },
+    "lower_bound_note": "Artifact excerpt tokens are intentionally unmodeled, so these judge scenarios are lower bounds rather than invoices."
+  },
+  "budget": {
+    "incremental_cap_usd": 50.0,
+    "counted_incremental_spend_usd": 5.630100981793,
+    "remaining_incremental_spend_usd": 44.369899018207,
+    "full_suite_route_within_remaining_cap": false
+  },
+  "claim_boundary": "These are transparent scenario estimates derived from existing receipts and current public rate cards. They are not provider invoices, execution evidence, native grades, or a benchmark score."
+}

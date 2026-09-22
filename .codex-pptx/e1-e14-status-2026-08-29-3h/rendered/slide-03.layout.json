@@ -1,0 +1,1828 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/aosxbk",
+    "id": "aosxbk",
+    "slide": 3,
+    "layoutId": "8772769a-aa6f-4b70-ae3b-03e82fa7ef78",
+    "layoutName": "Title Slide",
+    "layoutType": "title",
+    "masterLayoutId": "5ea29bb1-2f5e-4baf-a0c2-d91d40dedaf0",
+    "masterLayoutName": "Master",
+    "backgroundColor": "#FFFFFF",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "ChatGPT",
+    "colors": {
+      "accent1": "#156082",
+      "accent2": "#E97132",
+      "accent3": "#196B24",
+      "accent4": "#0F9ED5",
+      "accent5": "#A02B93",
+      "accent6": "#4EA72E",
+      "bg1": "#FFFFFF",
+      "bg2": "#000000",
+      "tx1": "#1F1F1F",
+      "tx2": "#FFFFFF",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#0E2841",
+      "lt2": "#E8E8E8",
+      "hlink": "#467886",
+      "folHlink": "#96607D"
+    },
+    "typefaces": [
+      "Helvetica Neue"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "8772769a-aa6f-4b70-ae3b-03e82fa7ef78",
+      "name": "Title Slide",
+      "type": "title",
+      "parentLayoutId": "5ea29bb1-2f5e-4baf-a0c2-d91d40dedaf0",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "5ea29bb1-2f5e-4baf-a0c2-d91d40dedaf0",
+      "name": "Master",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ixcnupw7",
+      "id": "1",
+      "name": "kicker",
+      "bbox": [
+        42,
+        30,
+        500,
+        24
+      ],
+      "geometry": "rect",
+      "text": "RESEARCH CONCEPTS",
+      "textPreview": "RESEARCH CONCEPTS",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 13,
+        "typeface": "Helvetica Neue",
+        "color": "#2764E7",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "RESEARCH CONCEPTS"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "RESEARCH CONCEPTS",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "typeface": "Helvetica Neue",
+            "color": "#2764E7",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "RESEARCH CONCEPTS",
+              "fontSize": 13,
+              "typeface": "Helvetica Neue",
+              "color": "#2764E7",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/503654vi",
+      "id": "2",
+      "name": "title",
+      "bbox": [
+        42,
+        58,
+        1120,
+        64
+      ],
+      "geometry": "rect",
+      "text": "What the evaluation portfolio actually tests",
+      "textPreview": "What the evaluation portfolio actually tests",
+      "resolvedFontSize": 39,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 39,
+        "typeface": "Helvetica Neue",
+        "color": "#0A0A0A",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "What the evaluation portfolio actually tests"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "What the evaluation portfolio actually tests",
+          "resolvedTextStyle": {
+            "fontSize": 39,
+            "typeface": "Helvetica Neue",
+            "color": "#0A0A0A",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "What the evaluation portfolio actually tests",
+              "fontSize": 39,
+              "typeface": "Helvetica Neue",
+              "color": "#0A0A0A",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/4zu5wzex",
+      "id": "3",
+      "bbox": [
+        42,
+        132,
+        1196,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#0A0A0A",
+      "lineWidth": 1
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/val4zudg",
+      "id": "4",
+      "name": "slide-number",
+      "bbox": [
+        1184,
+        675,
+        54,
+        18
+      ],
+      "geometry": "rect",
+      "text": "03",
+      "textPreview": "03",
+      "resolvedFontSize": 13,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 13,
+        "typeface": "Helvetica Neue",
+        "color": "#5E6673",
+        "alignment": "right",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "03"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "03",
+          "resolvedTextStyle": {
+            "fontSize": 13,
+            "typeface": "Helvetica Neue",
+            "color": "#5E6673",
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "03",
+              "fontSize": 13,
+              "typeface": "Helvetica Neue",
+              "color": "#5E6673",
+              "alignment": "right"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/u9snqpwv",
+      "id": "5",
+      "name": "box",
+      "bbox": [
+        42,
+        164,
+        374,
+        190
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#E8F0FF",
+      "lineColor": "#E8F0FF",
+      "lineWidth": 1
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/hc3m14vm",
+      "id": "6",
+      "name": "text",
+      "bbox": [
+        64,
+        182,
+        330,
+        38
+      ],
+      "geometry": "rect",
+      "text": "Software engineering",
+      "textPreview": "Software engineering",
+      "resolvedFontSize": 23,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 23,
+        "typeface": "Helvetica Neue",
+        "color": "#0A0A0A",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Software engineering"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Software engineering",
+          "resolvedTextStyle": {
+            "fontSize": 23,
+            "typeface": "Helvetica Neue",
+            "color": "#0A0A0A",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Software engineering",
+              "fontSize": 23,
+              "typeface": "Helvetica Neue",
+              "color": "#0A0A0A",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wbu5sze1",
+      "id": "7",
+      "name": "text",
+      "bbox": [
+        64,
+        228,
+        330,
+        62
+      ],
+      "geometry": "rect",
+      "text": "Repair real repositories and reason over long code trajectories",
+      "textPreview": "Repair real repositories and reason over long code trajectories",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 17,
+        "typeface": "Helvetica Neue",
+        "color": "#5E6673",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Repair real repositories and reason over"
+          },
+          {
+            "index": 2,
+            "text": "long code trajectories"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Repair real repositories and reason over long code trajectories",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Helvetica Neue",
+            "color": "#5E6673",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Repair real repositories and reason over long code trajectories",
+              "fontSize": 17,
+              "typeface": "Helvetica Neue",
+              "color": "#5E6673",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 8,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/f65obedk",
+      "id": "8",
+      "bbox": [
+        64,
+        300,
+        330,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#2764E7",
+      "lineWidth": 2
+    },
+    {
+      "order": 9,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/e5wn29wz",
+      "id": "9",
+      "name": "text",
+      "bbox": [
+        64,
+        310,
+        330,
+        30
+      ],
+      "geometry": "rect",
+      "text": "SWE-bench Pro · FrontierSWE · SDAB",
+      "textPreview": "SWE-bench Pro · FrontierSWE · SDAB",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 14,
+        "typeface": "Helvetica Neue",
+        "color": "#2764E7",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "SWE-bench Pro · FrontierSWE · SDAB"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "SWE-bench Pro · FrontierSWE · SDAB",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "Helvetica Neue",
+            "color": "#2764E7",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "SWE-bench Pro · FrontierSWE · SDAB",
+              "fontSize": 14,
+              "typeface": "Helvetica Neue",
+              "color": "#2764E7",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 10,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ojmlsni9",
+      "id": "10",
+      "name": "box",
+      "bbox": [
+        448,
+        164,
+        374,
+        190
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#E7F6EF",
+      "lineColor": "#E7F6EF",
+      "lineWidth": 1
+    },
+    {
+      "order": 11,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/pkv2lsju",
+      "id": "11",
+      "name": "text",
+      "bbox": [
+        470,
+        182,
+        330,
+        38
+      ],
+      "geometry": "rect",
+      "text": "Tool-using agents",
+      "textPreview": "Tool-using agents",
+      "resolvedFontSize": 23,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 23,
+        "typeface": "Helvetica Neue",
+        "color": "#0A0A0A",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Tool-using agents"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Tool-using agents",
+          "resolvedTextStyle": {
+            "fontSize": 23,
+            "typeface": "Helvetica Neue",
+            "color": "#0A0A0A",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Tool-using agents",
+              "fontSize": 23,
+              "typeface": "Helvetica Neue",
+              "color": "#0A0A0A",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 12,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/2hk3qd0j",
+      "id": "12",
+      "name": "text",
+      "bbox": [
+        470,
+        228,
+        330,
+        62
+      ],
+      "geometry": "rect",
+      "text": "Operate browsers, APIs, finance tools, and enterprise workflows",
+      "textPreview": "Operate browsers, APIs, finance tools, and enterprise workflows",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 17,
+        "typeface": "Helvetica Neue",
+        "color": "#5E6673",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Operate browsers, APIs, finance tools, and"
+          },
+          {
+            "index": 2,
+            "text": "enterprise workflows"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Operate browsers, APIs, finance tools, and enterprise workflows",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Helvetica Neue",
+            "color": "#5E6673",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Operate browsers, APIs, finance tools, and enterprise workflows",
+              "fontSize": 17,
+              "typeface": "Helvetica Neue",
+              "color": "#5E6673",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 13,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/nidkji14",
+      "id": "13",
+      "bbox": [
+        470,
+        300,
+        330,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#157A55",
+      "lineWidth": 2
+    },
+    {
+      "order": 14,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/0f2lonid",
+      "id": "14",
+      "name": "text",
+      "bbox": [
+        470,
+        310,
+        330,
+        30
+      ],
+      "geometry": "rect",
+      "text": "BankerToolBench · APEX-Agents · WebBench",
+      "textPreview": "BankerToolBench · APEX-Agents · WebBench",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 14,
+        "typeface": "Helvetica Neue",
+        "color": "#157A55",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "BankerToolBench · APEX-Agents · WebBench"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "BankerToolBench · APEX-Agents · WebBench",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "Helvetica Neue",
+            "color": "#157A55",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "BankerToolBench · APEX-Agents · WebBench",
+              "fontSize": 14,
+              "typeface": "Helvetica Neue",
+              "color": "#157A55",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 15,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/1gb2hsjy",
+      "id": "15",
+      "name": "box",
+      "bbox": [
+        854,
+        164,
+        374,
+        190
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#FFF1D8",
+      "lineColor": "#FFF1D8",
+      "lineWidth": 1
+    },
+    {
+      "order": 16,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/edk3md07",
+      "id": "16",
+      "name": "text",
+      "bbox": [
+        876,
+        182,
+        330,
+        38
+      ],
+      "geometry": "rect",
+      "text": "Scientific problem solving",
+      "textPreview": "Scientific problem solving",
+      "resolvedFontSize": 23,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 23,
+        "typeface": "Helvetica Neue",
+        "color": "#0A0A0A",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Scientific problem solving"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Scientific problem solving",
+          "resolvedTextStyle": {
+            "fontSize": 23,
+            "typeface": "Helvetica Neue",
+            "color": "#0A0A0A",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Scientific problem solving",
+              "fontSize": 23,
+              "typeface": "Helvetica Neue",
+              "color": "#0A0A0A",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 17,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/fetkfi1s",
+      "id": "17",
+      "name": "text",
+      "bbox": [
+        876,
+        228,
+        330,
+        62
+      ],
+      "geometry": "rect",
+      "text": "Run end-to-end ML and life-science investigations",
+      "textPreview": "Run end-to-end ML and life-science investigations",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 17,
+        "typeface": "Helvetica Neue",
+        "color": "#5E6673",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Run end-to-end ML and life-science"
+          },
+          {
+            "index": 2,
+            "text": "investigations"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Run end-to-end ML and life-science investigations",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Helvetica Neue",
+            "color": "#5E6673",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Run end-to-end ML and life-science investigations",
+              "fontSize": 17,
+              "typeface": "Helvetica Neue",
+              "color": "#5E6673",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 18,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/sr2lk32h",
+      "id": "18",
+      "bbox": [
+        876,
+        300,
+        330,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#A45B00",
+      "lineWidth": 2
+    },
+    {
+      "order": 19,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/dsb2d8jm",
+      "id": "19",
+      "name": "text",
+      "bbox": [
+        876,
+        310,
+        330,
+        30
+      ],
+      "geometry": "rect",
+      "text": "MLE-bench · LifeSciBench",
+      "textPreview": "MLE-bench · LifeSciBench",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 14,
+        "typeface": "Helvetica Neue",
+        "color": "#A45B00",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "MLE-bench · LifeSciBench"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "MLE-bench · LifeSciBench",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "Helvetica Neue",
+            "color": "#A45B00",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "MLE-bench · LifeSciBench",
+              "fontSize": 14,
+              "typeface": "Helvetica Neue",
+              "color": "#A45B00",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 20,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/9wja107e",
+      "id": "20",
+      "name": "box",
+      "bbox": [
+        42,
+        384,
+        374,
+        190
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#E8F0FF",
+      "lineColor": "#E8F0FF",
+      "lineWidth": 1
+    },
+    {
+      "order": 21,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/8va9svqt",
+      "id": "21",
+      "name": "text",
+      "bbox": [
+        64,
+        402,
+        330,
+        38
+      ],
+      "geometry": "rect",
+      "text": "Safety under action",
+      "textPreview": "Safety under action",
+      "resolvedFontSize": 23,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 23,
+        "typeface": "Helvetica Neue",
+        "color": "#0A0A0A",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Safety under action"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Safety under action",
+          "resolvedTextStyle": {
+            "fontSize": 23,
+            "typeface": "Helvetica Neue",
+            "color": "#0A0A0A",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Safety under action",
+              "fontSize": 23,
+              "typeface": "Helvetica Neue",
+              "color": "#0A0A0A",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 22,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/7a1szap8",
+      "id": "22",
+      "name": "text",
+      "bbox": [
+        64,
+        448,
+        330,
+        62
+      ],
+      "geometry": "rect",
+      "text": "Resist harmful objectives while using tools and code",
+      "textPreview": "Resist harmful objectives while using tools and code",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 17,
+        "typeface": "Helvetica Neue",
+        "color": "#5E6673",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Resist harmful objectives while using tools"
+          },
+          {
+            "index": 2,
+            "text": "and code"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Resist harmful objectives while using tools and code",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Helvetica Neue",
+            "color": "#5E6673",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Resist harmful objectives while using tools and code",
+              "fontSize": 17,
+              "typeface": "Helvetica Neue",
+              "color": "#5E6673",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 23,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/m98rq58n",
+      "id": "23",
+      "bbox": [
+        64,
+        520,
+        330,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#2764E7",
+      "lineWidth": 2
+    },
+    {
+      "order": 24,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/l8zax07i",
+      "id": "24",
+      "name": "text",
+      "bbox": [
+        64,
+        530,
+        330,
+        30
+      ],
+      "geometry": "rect",
+      "text": "AgentHarm · BinaryAudit",
+      "textPreview": "AgentHarm · BinaryAudit",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 14,
+        "typeface": "Helvetica Neue",
+        "color": "#2764E7",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "AgentHarm · BinaryAudit"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "AgentHarm · BinaryAudit",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "Helvetica Neue",
+            "color": "#2764E7",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "AgentHarm · BinaryAudit",
+              "fontSize": 14,
+              "typeface": "Helvetica Neue",
+              "color": "#2764E7",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 25,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/k7q9ovqx",
+      "id": "25",
+      "name": "box",
+      "bbox": [
+        448,
+        384,
+        374,
+        190
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#E7F6EF",
+      "lineColor": "#E7F6EF",
+      "lineWidth": 1
+    },
+    {
+      "order": 26,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/z6h8vqpc",
+      "id": "26",
+      "name": "text",
+      "bbox": [
+        470,
+        402,
+        330,
+        38
+      ],
+      "geometry": "rect",
+      "text": "Artifact creation",
+      "textPreview": "Artifact creation",
+      "resolvedFontSize": 23,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 23,
+        "typeface": "Helvetica Neue",
+        "color": "#0A0A0A",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Artifact creation"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Artifact creation",
+          "resolvedTextStyle": {
+            "fontSize": 23,
+            "typeface": "Helvetica Neue",
+            "color": "#0A0A0A",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Artifact creation",
+              "fontSize": 23,
+              "typeface": "Helvetica Neue",
+              "color": "#0A0A0A",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 27,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/y58rml8r",
+      "id": "27",
+      "name": "text",
+      "bbox": [
+        470,
+        448,
+        330,
+        62
+      ],
+      "geometry": "rect",
+      "text": "Produce verifiable hardware and visual applications",
+      "textPreview": "Produce verifiable hardware and visual applications",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 17,
+        "typeface": "Helvetica Neue",
+        "color": "#5E6673",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Produce verifiable hardware and visual"
+          },
+          {
+            "index": 2,
+            "text": "applications"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Produce verifiable hardware and visual applications",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Helvetica Neue",
+            "color": "#5E6673",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Produce verifiable hardware and visual applications",
+              "fontSize": 17,
+              "typeface": "Helvetica Neue",
+              "color": "#5E6673",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 28,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/543a9k7m",
+      "id": "28",
+      "bbox": [
+        470,
+        520,
+        330,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#157A55",
+      "lineWidth": 2
+    },
+    {
+      "order": 29,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/43u90fq1",
+      "id": "29",
+      "name": "text",
+      "bbox": [
+        470,
+        530,
+        330,
+        30
+      ],
+      "geometry": "rect",
+      "text": "VerilogEval · AppBench",
+      "textPreview": "VerilogEval · AppBench",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 14,
+        "typeface": "Helvetica Neue",
+        "color": "#157A55",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "VerilogEval · AppBench"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "VerilogEval · AppBench",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "Helvetica Neue",
+            "color": "#157A55",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "VerilogEval · AppBench",
+              "fontSize": 14,
+              "typeface": "Helvetica Neue",
+              "color": "#157A55",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 30,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/2947uhoj",
+      "id": "30",
+      "name": "box",
+      "bbox": [
+        854,
+        384,
+        374,
+        190
+      ],
+      "geometry": "roundRect",
+      "fillColor": "#FFF1D8",
+      "lineColor": "#FFF1D8",
+      "lineWidth": 1
+    },
+    {
+      "order": 31,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/naxo3m54",
+      "id": "31",
+      "name": "text",
+      "bbox": [
+        876,
+        402,
+        330,
+        38
+      ],
+      "geometry": "rect",
+      "text": "Long-horizon reasoning",
+      "textPreview": "Long-horizon reasoning",
+      "resolvedFontSize": 23,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 23,
+        "typeface": "Helvetica Neue",
+        "color": "#0A0A0A",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Long-horizon reasoning"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Long-horizon reasoning",
+          "resolvedTextStyle": {
+            "fontSize": 23,
+            "typeface": "Helvetica Neue",
+            "color": "#0A0A0A",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Long-horizon reasoning",
+              "fontSize": 23,
+              "typeface": "Helvetica Neue",
+              "color": "#0A0A0A",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 32,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ob6pwr6p",
+      "id": "32",
+      "name": "text",
+      "bbox": [
+        876,
+        448,
+        330,
+        62
+      ],
+      "geometry": "rect",
+      "text": "Plan through games and hard mathematical problems",
+      "textPreview": "Plan through games and hard mathematical problems",
+      "resolvedFontSize": 17,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 17,
+        "typeface": "Helvetica Neue",
+        "color": "#5E6673",
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Plan through games and hard"
+          },
+          {
+            "index": 2,
+            "text": "mathematical problems"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Plan through games and hard mathematical problems",
+          "resolvedTextStyle": {
+            "fontSize": 17,
+            "typeface": "Helvetica Neue",
+            "color": "#5E6673",
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Plan through games and hard mathematical problems",
+              "fontSize": 17,
+              "typeface": "Helvetica Neue",
+              "color": "#5E6673",
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 33,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/pcf65wna",
+      "id": "33",
+      "bbox": [
+        876,
+        520,
+        330,
+        0
+      ],
+      "geometry": "line",
+      "lineColor": "#A45B00",
+      "lineWidth": 2
+    },
+    {
+      "order": 34,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/e547qho7",
+      "id": "34",
+      "name": "text",
+      "bbox": [
+        876,
+        530,
+        330,
+        30
+      ],
+      "geometry": "rect",
+      "text": "OpenReward Games · FrontierMath",
+      "textPreview": "OpenReward Games · FrontierMath",
+      "resolvedFontSize": 14,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 14,
+        "typeface": "Helvetica Neue",
+        "color": "#A45B00",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "OpenReward Games · FrontierMath"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "OpenReward Games · FrontierMath",
+          "resolvedTextStyle": {
+            "fontSize": 14,
+            "typeface": "Helvetica Neue",
+            "color": "#A45B00",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "OpenReward Games · FrontierMath",
+              "fontSize": 14,
+              "typeface": "Helvetica Neue",
+              "color": "#A45B00",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    },
+    {
+      "order": 35,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/f6dozm5s",
+      "id": "35",
+      "name": "text",
+      "bbox": [
+        42,
+        622,
+        1170,
+        34
+      ],
+      "geometry": "rect",
+      "text": "The common question: can one trained policy produce valid, reproducible outcomes across very different interactive domains?",
+      "textPreview": "The common question: can one trained policy produce valid, reproducible outcomes across very different interactive domains?",
+      "resolvedFontSize": 18,
+      "resolvedTextStyle": {
+        "anchor": 2,
+        "fontSize": 18,
+        "typeface": "Helvetica Neue",
+        "color": "#0A0A0A",
+        "bold": true,
+        "alignment": "left",
+        "verticalAlignment": "middle",
+        "autoFit": "shrinkText",
+        "autoFitScale": 1,
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "The common question: can one trained policy produce valid, reproducible outcomes across very different interactive domains?"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "The common question: can one trained policy produce valid, reproducible outcomes across very different interactive domains?",
+          "resolvedTextStyle": {
+            "fontSize": 18,
+            "typeface": "Helvetica Neue",
+            "color": "#0A0A0A",
+            "bold": true,
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "The common question: can one trained policy produce valid, reproducible outcomes across very different interactive domains?",
+              "fontSize": 18,
+              "typeface": "Helvetica Neue",
+              "color": "#0A0A0A",
+              "bold": true,
+              "alignment": "left"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ],
+      "lineWidth": 0
+    }
+  ],
+  "composeRuns": []
+}

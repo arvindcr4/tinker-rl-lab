@@ -1,0 +1,4 @@
+{"claim": "The Tinker-hosted sampler route is dead because the weights were deleted server-side",
+ "type": "noul", "noul": 0.56,
+ "reading": "Weak confirmation: weight deletion is API-proven, but 'dead' overstates permanence; retraining or HF-mirror serving can revive the route.",
+ "evidence": ["bridge boot tinker.NotFoundError on sampler_weights/seed809_final", "20 training runs, zero sampler checkpoints", "cf0ad8c1 run 404", "HF mirror commit 64444133 exists"]}

@@ -1,0 +1,66 @@
+Tinker RL Lab — cross-domain agent reliability briefing
+Talking transcript for 29 August 2026
+
+Slide 1 — How reliable are RL-trained agents?
+
+This project asks one broad scientific question: can a reinforcement-learning program produce reliable outcomes across real software, tools, science, safety, hardware, games, and mathematics? We test that question with fourteen named benchmarks. The E1 through E14 labels are only internal audit identifiers; the actual story is about capabilities, evidence, and reproducibility.
+
+The portfolio spans six concept families. Software engineering tests code repair over long repository trajectories. Tool use tests browsers, APIs, finance, and enterprise workflows. Scientific problem solving covers end-to-end machine learning and life science. Safety evaluates harmful actions and security reasoning. Artifact creation covers hardware and visual applications. Long-horizon reasoning covers games and frontier mathematics.
+
+Slide 2 — The scientific outcome
+
+Two benchmarks currently have complete native full-suite evidence: SWE-bench Pro and VerilogEval. Five more have useful but partial evidence. Seven require provider-controlled assets or evaluation access before a scientific score can exist.
+
+MLE-bench now has native grades for forty of seventy-five competitions, but that is coverage, not an aggregate score. Conservatively counted incremental spend is about one dollar and forty-one cents against the authorized fifty-dollar cap. If the official denominator and native receipts are incomplete, the suite score stays null.
+
+Slide 3 — What the portfolio tests
+
+The software benchmarks ask whether an agent can repair real repositories, operate over long code histories, and produce a verifiable patch. The tool-use benchmarks ask whether it can plan, call the right tools, maintain state, and complete workflows with real consequences. These are harder than static question answering because success depends on the environment and sequence of actions.
+
+The science benchmarks require an approach, executable code, an experiment, and an artifact accepted by an official grader. The safety benchmarks test whether useful tool use remains controlled under harmful objectives. Verilog and app design test whether generated artifacts function, not merely whether their text looks plausible. Games and mathematics test long-horizon planning and exact reasoning.
+
+The common research question is cross-domain reliability: does improvement transfer across these forms of interaction, or remain narrow and benchmark-specific?
+
+Slide 4 — Benchmark register and evidence boundary
+
+This slide names all fourteen benchmarks so the internal E-codes do not hide the substance. SWE-bench Pro, FrontierSWE, and SDAB cover software engineering. BankerToolBench, APEX-Agents, and WebBench cover tool-mediated enterprise work. BinaryAudit and AgentHarm cover security and alignment. LifeSciBench and MLE-bench cover scientific work. VerilogEval and AppBench cover artifact creation. OpenReward Games and FrontierMath cover long-horizon reasoning.
+
+Green means the official full-suite denominator and native evaluation are complete. Amber means the evidence is real but incomplete. Red means the exact task, environment, grader, license, or hosted endpoint is controlled by a provider. A preflight, prefix, fixture, public sample, or local harness can validate engineering, but it cannot replace the contracted benchmark.
+
+Slide 5 — Why native receipts matter
+
+MLE-bench contains seventy-five Kaggle-style machine-learning competitions. A valid result requires more than code that runs. The agent must create a valid submission, the official competition-specific verifier must grade it, and the final claim must preserve the full denominator.
+
+We currently have ninety-seven receipts across fifty competition identifiers and forty unique native grades. Thirty-five competitions still lack a native grade: ten have only failed receipts and twenty-five have no receipt. The latest confirmed recovery is Freesound Audio Tagging 2019 at zero point one two four nine seven, where higher is better. It is a valid native competition score, but it is not a seventy-five-competition MLE-bench score.
+
+Four recoverable zero-generation replays ran from saved solutions. Plant Pathology and Jigsaw each materialized an execution-failure receipt after the archived program reached its eighteen-hundred-second limit, so neither changed coverage. Smartphone Decimeter used an exact guarded timestamp, feature, and trip-identifier repair. Freesound Audio Tagging used an exact guarded archive-streaming and multilabel-schema repair. The official native graders accepted both submissions, increasing coverage by two. This distinction prevents a common research error: treating a terminal script, plausible CSV, or partial set of grades as a benchmark result.
+
+Slide 6 — Two complete evaluations
+
+SWE-bench Pro asks whether the agent can resolve real software issues in real repositories. The run reached terminal generation state for all seven hundred thirty-one items and produced seven hundred thirteen native evaluations. The exact full-suite score is zero point zero zero two seven three six.
+
+VerilogEval asks whether the agent can synthesize functionally correct register-transfer-level hardware descriptions. The native result is one hundred twenty-nine correct out of three hundred twelve canonical problems, or zero point four one three four six.
+
+These scores answer different questions and should not be averaged. Each preserves its native task definition, denominator, verifier, and receipt.
+
+Slide 7 — Reproducibility and artifact continuity
+
+Reliable agent research depends on an artifact chain. The original Tinker sampler checkpoint is no longer available, so fresh generations from that sampler cannot be claimed. However, the immutable Hugging Face adapter, merged checkpoint pointer, saved submissions, and native receipts remain preserved.
+
+That chain enables deterministic replay and native-only regrading while recording where reproducibility stops. A saved output can be re-evaluated; it does not recreate a missing training service. Checkpoint identity, dataset revision, environment version, submission artifact, and grader receipt all belong in the scientific record.
+
+Slide 8 — Why external blockers cannot be bypassed
+
+SDAB needs its private bundle, runtime, grader, and license. WebBench needs the live environment, reset semantics, ground truth, and native scorer. LifeSciBench needs the official task package and grader. AgentHarm needs private held-out tasks and an official grader. AppBench needs its licensed deployment and grading protocol. OpenReward Games lacks a provider-defined immutable held-out suite. FrontierMath remains a private hosted evaluation.
+
+These are not merely download problems. An unofficial substitute can change the task distribution, interaction semantics, or scoring rule and therefore answer a different research question. We exhausted the documented official no-cost routes checked today, including new AppBench and Wordle/OpenReward public requests. Alternatives remain access routes, not benchmark replacements, unless the provider confirms equivalence.
+
+Slide 9 — Completion decisions and conference target
+
+Four actions move this work toward a publishable study. First, obtain the exact assets, licenses, native graders, and hosted endpoints. Second, preserve or restore MLE-bench data continuity through saved submissions or a sampler-compatible checkpoint. Third, make a separate compute-budget decision for a full APEX-Agents pass, whose projected cost exceeds the current cap. Fourth, keep the evidence discipline unchanged: complete results as complete, partial results with exact denominators, and missing aggregates as null.
+
+The next conference target is ICLR 2027. Its abstract deadline is September eighteenth and its paper deadline is September twenty-fifth, both Anywhere on Earth. Because ICLR and NeurIPS prohibit substantially similar papers under parallel review, this route requires formally withdrawing the overlapping NeurIPS submission before the ICLR abstract deadline. If we keep the NeurIPS review, the safe fallback is rolling TMLR after that review ends. The paper should be framed as a careful study of cross-domain agent reliability, evidence completeness, and reproducible evaluation under real infrastructure constraints.
+
+Short closing
+
+We tested six capability families across fourteen benchmarks. Two evaluations are complete, five provide bounded partial evidence, and seven identify exact provider dependencies. MLE-bench recovery reached forty of seventy-five native grades. We preserved the artifact chain, stayed far below the authorized budget, and refused to convert missing native evidence into invented scores. That makes the work narrower than a headline leaderboard result, but stronger as reproducible research.

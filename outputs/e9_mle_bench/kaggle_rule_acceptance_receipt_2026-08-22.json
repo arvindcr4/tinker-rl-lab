@@ -1,0 +1,38 @@
+{
+  "schema_version": "e9-kaggle-rule-acceptance-v1",
+  "observed_at": "2026-08-22T16:44:39Z",
+  "lane": "E9",
+  "suite_id": "mle_bench_eval",
+  "account_display_name": "Arvind CR",
+  "split": {
+    "path": "outputs/e9_mle_bench/mle-bench-source/experiments/splits/split75.txt",
+    "count": 75,
+    "sha256": "aa6a4dbfd19fee0536235be78361968603c84f0d4e06d4ed0ddc9bb212023057",
+    "task_ids_sha256": "440ecb5c6a13bc54e0d671e19eb532ee33c8305cca862e4d5b2af49f3d44f85b"
+  },
+  "result": {
+    "accepted_count": 75,
+    "remaining_unaccepted": 0,
+    "gated_download_preflight_ok": 75,
+    "gated_download_preflight_failed": 0
+  },
+  "verification": {
+    "method": "Authenticated Kaggle DownloadDataFiles authorization request for every split competition",
+    "success_condition": "Kaggle returned a signed storage redirect instead of HTTP 403",
+    "metadata_endpoint_not_used_as_proof": true,
+    "dataset_bodies_downloaded": false,
+    "browser_flow": "Rules accepted through the signed-in Codex browser; legacy competitions were joined from their Data pages when their Rules-page CTA did not activate.",
+    "initial_wave": {
+      "gated_ok": 63,
+      "rate_limited": 10,
+      "metadata_rate_limited_or_empty": 2
+    },
+    "retry_wave": {
+      "gated_ok": 12,
+      "gated_failed": 0
+    }
+  },
+  "claim_boundary": "This receipt proves authenticated competition-data authorization only. It is not a model run, submission, grade, or benchmark score.",
+  "score": null,
+  "is_model_score": false
+}

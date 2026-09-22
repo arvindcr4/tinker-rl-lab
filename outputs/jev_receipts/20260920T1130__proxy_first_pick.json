@@ -1,0 +1,48 @@
+{
+  "E2_proxy": {
+    "type": "choice",
+    "choice": "NO_RUNNABLE_PROXY",
+    "confidence": 0.45,
+    "probabilities": {
+      "RUN_EFFIBENCH": 0.28,
+      "NO_RUNNABLE_PROXY": 0.72
+    }
+  },
+  "E3_proxy": {
+    "type": "choice",
+    "choice": "RUN_TERMINAL_BENCH",
+    "confidence": 0.69,
+    "probabilities": {
+      "RUN_MULTI_SWE_BENCH": 0.16,
+      "RUN_TERMINAL_BENCH": 0.84
+    }
+  },
+  "E6_proxy": {
+    "type": "choice",
+    "choice": "RUN_MINIWOB",
+    "confidence": 0.98,
+    "probabilities": {
+      "RUN_WEBARENA": 0.01,
+      "RUN_MINIWOB": 0.99
+    }
+  },
+  "E9_proxy": {
+    "type": "choice",
+    "choice": "RUN_KERNELBENCH",
+    "confidence": 0.1,
+    "probabilities": {
+      "RUN_DSBENCH": 0.45,
+      "RUN_KERNELBENCH": 0.55
+    }
+  },
+  "E14_proxy": {
+    "type": "choice",
+    "choice": "RUN_OMNIMATH",
+    "confidence": 0.82,
+    "probabilities": {
+      "RUN_MINIF2F": 0.12,
+      "RUN_OMNIMATH": 0.88,
+      "RUN_PUTNAMBENCH": 0.0
+    }
+  }
+}

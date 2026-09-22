@@ -1,0 +1,34 @@
+PPTX QA ledger — 2026-08-29
+
+Artifact
+- outputs/Tinker_RL_E1_E14_Completion_Update_2026-08-29.pptx
+
+Pre-terminal build
+- 9 slides exported with @oai/artifact-tool.
+- 9 slide PNGs and 9 layout JSON files generated.
+- 9 speaker-note records; every note contains a [Sources] block.
+- Editable-object inspection: 108 native shapes and 202 text boxes.
+- slides_test.py: PASS, no slide-canvas overflow.
+- Full-size visual inspection completed for slides 1-9.
+- Slide 8 access-route update is legible with no clipping or overlap.
+- Slide 9 names TMLR as the next venue and keeps the overlapping NeurIPS review isolated.
+
+Final-build gate
+- COMPLETE at 2026-08-29T11:48:42Z after the detached Plant replay stopped without a new receipt.
+- E9 remains 38/75; the Plant attempt is labeled non-score infrastructure evidence.
+- Spend is reconciled at $1.016133398793 of the authorized $50 cap.
+- Final deck rebuilt from the terminal audit; 9 slides, 9 notes, and 9 source blocks inspected.
+- slides_test.py: PASS, no slide-canvas overflow.
+- Full-size visual review completed for slides 1-9; a clipped slide-9 title was repaired and rechecked.
+- Final content is concept-first: benchmark names and research concepts lead; E1-E14 remain only as audit labels.
+Freesound terminal reconciliation
+- COMPLETE at 2026-08-29T14:15:37Z.
+- Freesound Audio Tagging 2019 produced a valid native competition score of 0.12497; higher is better. This is not an E9 suite score.
+- E9 now has 40/75 unique native grades: 97 receipts across 50 competition IDs, 41 graded receipts, and 35 competitions without a native grade.
+- Conservative counted incremental spend is $1.40509693079288; $48.59490306920712 remains under the authorized $50 cap; no incremental Tinker charge occurred.
+- Collector control metadata was reconciled from immutable returned evidence: scientific status NATIVE_SINGLE_COMPETITION_GRADED, competition score 0.12497, coverage increment 1, suite score null.
+- Focused validation: 66 executable checks passed; 9 system-Python skips were covered in the Modal SDK environment; no failures or errors. Ruff, format check, and py_compile passed.
+- Deck rebuilt: 9 slides, 9 speaker-note source blocks, and slides_test PASS with no overflow.
+- Full-size visual review completed for updated or decision-critical slides 2, 4, 5, 7, and 9.
+- Deck SHA-256: ccffea3eabc876fb953f0dc79aa6ef7a77e4d8f48bd1a39ce25e87211de9dfe3.
+- Transcript SHA-256: f3c6e9f4b9aac55147a1f141e531b2705d884fe70136297372b11a690b3387e4.

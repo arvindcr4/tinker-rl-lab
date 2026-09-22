@@ -1,0 +1,32 @@
+{
+  "schema_version": "e3-sdab-external-access-route-check-v1",
+  "recorded_at": "2026-08-29T07:56:51Z",
+  "lane": "E3",
+  "suite_id": "sdab_eval",
+  "status": "BLOCKED",
+  "score": null,
+  "live_provider_check": {
+    "url": "https://emulated.so/sdab",
+    "checked_at": "2026-08-29T07:56:51Z",
+    "observed_access_route": "founders@emulated.so",
+    "observed_route_text": "If you're interested in partnering, evaluating your models, or contributing environments, reach out to founders@emulated.so. Samples available upon request.",
+    "observed_public_release": false,
+    "observed_hosted_submission_or_api": false,
+    "observed_official_repository": false
+  },
+  "outbound_follow_up": {
+    "sent_at": "2026-08-29T03:30:45Z",
+    "recipient": "founders@emulated.so",
+    "gmail_thread_id": "1a02a44e1cead5f0",
+    "request_scope": "immutable 80-task bundle, live runtime, native grader, and licence or permission receipt",
+    "provider_reply_observed_at_check": false
+  },
+  "unresolved_requirements": [
+    "immutable evaluation bundle and task-ID manifest",
+    "licence or written access grant",
+    "provider-native live runtime with deterministic reset",
+    "provider-native behavioral and rubric grader"
+  ],
+  "safe_next_action": "Wait for a provider response on the documented channel; do not use samples or reconstruct the native evaluation boundary.",
+  "claim_boundary": "This records a live access-route check and an unanswered outbound follow-up. It is not a provider grant, native execution, or SDAB score."
+}

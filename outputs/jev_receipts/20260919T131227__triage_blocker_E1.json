@@ -1,0 +1,41 @@
+{
+ "answer": {
+  "first_uncleared_blocker": {
+   "choice": "NO_NEW_RESULT_NEEDED",
+   "confidence": 0.6,
+   "probabilities": {
+    "CODE_REIMPLEMENTATION_THEN_SPEND": 0.05,
+    "EXTERNAL_PARTY_GRANT": 0.03,
+    "LOCAL_FREE_STEPS_ONLY": 0.19,
+    "NO_NEW_RESULT_NEEDED": 0.68,
+    "USER_POLICY_AMENDMENT_THEN_SPEND": 0.01,
+    "USER_SPEND_AUTHORIZATION": 0.04
+   },
+   "type": "choice"
+  }
+ },
+ "input": {
+  "questions": {
+   "first_uncleared_blocker": {
+    "choices": [
+     "NO_NEW_RESULT_NEEDED",
+     "LOCAL_FREE_STEPS_ONLY",
+     "USER_SPEND_AUTHORIZATION",
+     "USER_POLICY_AMENDMENT_THEN_SPEND",
+     "CODE_REIMPLEMENTATION_THEN_SPEND",
+     "EXTERNAL_PARTY_GRANT"
+    ],
+    "instructions": "Lane E1 (SWE-bench Pro (original) + Multilingual replacement). Using only `facts` and `class_definitions`, and applying `selection_rule`, pick the first uncleared blocker between this lane and a NEW native suite result.",
+    "type": "choice"
+   }
+  }
+ },
+ "kind": "ask",
+ "label": "triage_blocker_E1",
+ "model": "jev-latest",
+ "recorded_at": "2026-09-19T13:12:27.398489+00:00",
+ "schema_version": "jev-judgment-receipt-v1",
+ "state_inline": "{\n \"class_definitions\": {\n  \"CODE_REIMPLEMENTATION_THEN_SPEND\": \"The prepared execution source was lost and must be re-created and re-reviewed before a launch the user must then authorize.\",\n  \"EXTERNAL_PARTY_GRANT\": \"A private dataset, hosted evaluation, or credentials from an outside party is required; money and local work alone cannot produce the result.\",\n  \"LOCAL_FREE_STEPS_ONLY\": \"A new native result (or required verification of an existing one) is achievable now on this machine at zero cost with no user decision.\",\n  \"NO_NEW_RESULT_NEEDED\": \"The lane's declared replacement scope already has full verified coverage; a further native result adds nothing required.\",\n  \"USER_POLICY_AMENDMENT_THEN_SPEND\": \"A self-imposed lifecycle/contract gate blocks any launch; the user must first accept a drafted amendment, then authorize spend.\",\n  \"USER_SPEND_AUTHORIZATION\": \"Everything technical is ready; the only missing item is the user's explicit authorization to spend (quota/capacity may also be pending).\"\n },\n \"context\": \"PES University capstone (Tinker RL Lab) E1-E14 benchmark campaign, restarted 2026-09-19 after a clean halt on 2026-09-12. Remaining recorded spend cap ~$44; several envelopes ($16 E1, $80 E5, $4 E2, $8 E13) await user authorization. Phase-2 college review delivered 2026-09-12.\",\n \"facts\": {\n  \"name\": \"SWE-bench Pro (original) + Multilingual replacement\",\n  \"replacement_state\": \"Multilingual run 35/300 graded; wave10 recovery request v6 sealed ($16, 16 tasks, 10/10 targeted tests passed) BUT executable controller source was deleted with .codex-run cleanup; launch requires re-implementation + re-review + spend authorization\",\n  \"source\": \"outputs/e1_e14_results_2026-09-05/results.json lane E1; outputs/PES_Phase2_Review_2026-09-12/finish/e1_recovery_v6/*\",\n  \"verified_result\": \"2/731 = 0.274% pass@1 (single-seed, 713 native evaluations; 14 generation failures + 4 artifact losses stay in denominator)\"\n },\n \"lane\": \"E1\",\n \"selection_rule\": \"Pick the FIRST blocker in this causal chain that is not already cleared: external party grant -> code reimplementation -> policy amendment -> spend authorization -> local free steps -> none needed.\"\n}",
+ "state_sha256": "b51945646944c3a934c3df1c592909123d7412cce54817d6667f81ae2ef4cd83",
+ "state_truncated": false
+}

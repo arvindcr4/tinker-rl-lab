@@ -1,0 +1,40 @@
+{
+  "schema_version": "pavlov-e5-apex-agents-interrupted-receipt-v1",
+  "recorded_at": "2026-08-22T13:38:42Z",
+  "status": "INTERRUPTED",
+  "suite_id": "apex_agents_eval",
+  "task_index": 10,
+  "task_id": "task_16c0324b442841ec86f8ae24cbde119e",
+  "task_name": "World246_ML_01",
+  "domain": "Investment Banking",
+  "world_id": "world_5970ed13783a463181bdf38337f0cad1",
+  "dataset_revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+  "archipelago_revision": "1c3dcd4694b313020cd626699c9c7cc1c0a2fc58",
+  "model_hf_revision": "64444133c55d88c3f1bf0df8a2f5d7ac646125c8",
+  "environment_backend": "modal-sandbox",
+  "wandb": {
+    "mode": "online",
+    "run_id": "5zh4z7q4",
+    "run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/5zh4z7q4"
+  },
+  "interruption": {
+    "reason": "pathological duplicate tool fanout",
+    "observed_step": 6,
+    "duplicate_filesystem_calls_requested": 92,
+    "operator_action": "SIGINT through the attached PTY after preserving the retained log",
+    "scientific_interpretation": "operator-interrupted attempt; not a native score and not a benchmark failure score"
+  },
+  "evidence": {
+    "log_path": "outputs/e5_apex_agents/official_modal_task_index_10_run_2026-08-22/official_run.log",
+    "log_sha256": "50eaf8d0446cb83601d776eb560425c2ef10c87e60ee49188ef6f3d0c2041517",
+    "modal_processes_remaining_after_interrupt": 0,
+    "wandb_finished": true
+  },
+  "launch": {
+    "score": null,
+    "score_status": "not_run",
+    "tinker_calls": "one_or_more_before_operator_interrupt"
+  },
+  "no_score_claim": true,
+  "suite_score": null
+}

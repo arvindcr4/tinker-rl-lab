@@ -1,0 +1,432 @@
+{"kind":"slide","id":"y90nupkv","slide":1,"title":"Source slide 1"}
+{"kind":"textbox","id":"sh/547294r6","slide":1,"name":"TextBox 1","text":"TINKER RL LAB  ·  WEEKLY UPDATE","textPreview":"TINKER RL LAB  ·  WEEKLY UPDATE","bbox":[62.4,46.08,672,23.04]}
+{"kind":"textbox","id":"sh/k3yl0zql","slide":1,"name":"TextBox 2","text":"This week: 14 lanes,\none tiny score","textPreview":"This week: 14 lanes, | one tiny score","bbox":[62.4,100.8,825.6,177.6]}
+{"kind":"textbox","id":"sh/7qp4be9c","slide":1,"name":"TextBox 3","text":"I stood up Pavlov E1–E14, scored one smoke test, and kept every other suite blocked until the real evidence exists.","textPreview":"I stood up Pavlov E1–E14, scored one smoke test, and kept every other suite blocked until the real evidence exists.","bbox":[66.24,299.52,787.2,59.52]}
+{"kind":"textbox","id":"sh/65g3298r","slide":1,"name":"TextBox 4","text":"03 — 14 AUG 2026   /   ON MAIN TODAY","textPreview":"03 — 14 AUG 2026   /   ON MAIN TODAY","bbox":[66.24,370.56,614.4,23.04]}
+{"kind":"shape","id":"sh/ts7md4r2","slide":1,"name":"Connector 5","bbox":[69.12,520.32,1126.08,0]}
+{"kind":"shape","id":"sh/sryl4zqx","slide":1,"name":"Oval 6","bbox":[100.8,503.04,34.56,34.56]}
+{"kind":"textbox","id":"sh/fu94fe98","slide":1,"name":"TextBox 7","text":"03–08 AUG","textPreview":"03–08 AUG","bbox":[62.4,554.88,115.2,21.12]}
+{"kind":"textbox","id":"sh/utg3698n","slide":1,"name":"TextBox 8","text":"Lane\ninfrastructure","textPreview":"Lane | infrastructure","bbox":[48,579.84,144,46.08]}
+{"kind":"shape","id":"sh/wn6dc7eh","slide":1,"name":"Oval 9","bbox":[388.8,503.04,34.56,34.56]}
+{"kind":"textbox","id":"sh/hofulsf2","slide":1,"name":"TextBox 10","text":"09 AUG","textPreview":"09 AUG","bbox":[350.4,554.88,115.2,21.12]}
+{"kind":"textbox","id":"sh/ul4vaxgb","slide":1,"name":"TextBox 11","text":"Receipts +\nNeurIPS deck","textPreview":"Receipts + | NeurIPS deck","bbox":[336,579.84,144,46.08]}
+{"kind":"shape","id":"sh/vmdcj2xw","slide":1,"name":"Oval 12","bbox":[676.8,503.04,34.56,34.56]}
+{"kind":"textbox","id":"sh/4r6dg7et","slide":1,"name":"TextBox 13","text":"09–13 AUG","textPreview":"09–13 AUG","bbox":[638.4,554.88,115.2,21.12]}
+{"kind":"textbox","id":"sh/5sfepcfe","slide":1,"name":"TextBox 14","text":"E5, datasets,\nE11 smoke","textPreview":"E5, datasets, | E11 smoke","bbox":[624,579.84,144,46.08]}
+{"kind":"shape","id":"sh/ipovexwn","slide":1,"name":"Oval 15","bbox":[964.8,503.04,34.56,34.56]}
+{"kind":"textbox","id":"sh/3qxwn2x8","slide":1,"name":"TextBox 16","text":"14 AUG","textPreview":"14 AUG","bbox":[926.4,554.88,115.2,21.12]}
+{"kind":"textbox","id":"sh/sfqdkrep","slide":1,"name":"TextBox 17","text":"Ledger on\nmain","textPreview":"Ledger on | main","bbox":[912,579.84,144,46.08]}
+{"kind":"textbox","id":"sh/dgzetcfa","slide":1,"name":"TextBox 18","text":"The short version: the map is built. Usefulness is not proven.","textPreview":"The short version: the map is built. Usefulness is not proven.","bbox":[66.24,660.48,1132.8,21.12]}
+{"kind":"slide","id":"hwbqtkby","slide":2,"title":"Source slide 2"}
+{"kind":"textbox","id":"sh/9072xkry","slide":2,"name":"TextBox 1","text":"THE SHORT VERSION","textPreview":"THE SHORT VERSION","bbox":[52.8,24.96,624,21.12]}
+{"kind":"textbox","id":"sh/ozy1ofad","slide":2,"name":"TextBox 2","text":"What I did since 2 Aug","textPreview":"What I did since 2 Aug","bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/b29kza94","slide":2,"name":"TextBox 3","text":"02","textPreview":"02","bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/a10jqpsj","slide":2,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"textbox","id":"sh/x4r21kru","slide":2,"name":"TextBox 5","text":"I moved from a math-only checklist to fourteen real-work evaluation lanes — and I refused to fill empty score cells.","textPreview":"I moved from a math-only checklist to fourteen real-work evaluation lanes — and I refused to fill empty score cells.","bbox":[62.4,126.72,1152,34.56]}
+{"kind":"shape","id":"sh/w3i1sfa9","slide":2,"name":"Rounded Rectangle 6","bbox":[62.4,182.4,257.28,340.8]}
+{"kind":"shape","id":"sh/r65knqtk","slide":2,"name":"Rectangle 7","bbox":[62.4,182.4,257.28,7.68]}
+{"kind":"textbox","id":"sh/q5wjelsz","slide":2,"name":"TextBox 8","text":"FINISHED","textPreview":"FINISHED","bbox":[79.68,205.44,220.8,21.12]}
+{"kind":"textbox","id":"sh/ove9o7yd","slide":2,"name":"TextBox 9","text":"14-lane map","textPreview":"14-lane map","bbox":[79.68,236.16,220.8,52.8]}
+{"kind":"textbox","id":"sh/9wnqhczy","slide":2,"name":"TextBox 10","text":"Every E1–E14 suite now has a receipt, a blocker list, and a next action.","textPreview":"Every E1–E14 suite now has a receipt, a blocker list, and a next action.","bbox":[79.68,301.44,220.8,129.6]}
+{"kind":"shape","id":"sh/mtwrmxg7","slide":2,"name":"Rounded Rectangle 11","bbox":[79.68,468.48,110.4,24.96]}
+{"kind":"textbox","id":"sh/nu58f2hs","slide":2,"name":"TextBox 12","text":"DONE","textPreview":"DONE","bbox":[79.68,469.44,110.4,23.04]}
+{"kind":"shape","id":"sh/wjy9sry9","slide":2,"name":"Rounded Rectangle 13","bbox":[362.88,182.4,257.28,340.8]}
+{"kind":"shape","id":"sh/xk7qlczu","slide":2,"name":"Rectangle 14","bbox":[362.88,182.4,257.28,7.68]}
+{"kind":"textbox","id":"sh/ahwrqhgj","slide":2,"name":"TextBox 15","text":"FINISHED","textPreview":"FINISHED","bbox":[380.16,205.44,220.8,21.12]}
+{"kind":"textbox","id":"sh/bip8jmho","slide":2,"name":"TextBox 16","text":"NeurIPS rewrite","textPreview":"NeurIPS rewrite","bbox":[380.16,236.16,220.8,52.8]}
+{"kind":"textbox","id":"sh/cnupgny5","slide":2,"name":"TextBox 17","text":"12 ideas narrowed. Two paper directions kept. Weak claims pulled.","textPreview":"12 ideas narrowed. Two paper directions kept. Weak claims pulled.","bbox":[380.16,301.44,220.8,129.6]}
+{"kind":"shape","id":"sh/do3q9szq","slide":2,"name":"Rounded Rectangle 18","bbox":[380.16,468.48,110.4,24.96]}
+{"kind":"textbox","id":"sh/t8byxkn2","slide":2,"name":"TextBox 19","text":"DONE","textPreview":"DONE","bbox":[380.16,469.44,110.4,23.04]}
+{"kind":"shape","id":"sh/s72xofmh","slide":2,"name":"Rounded Rectangle 20","bbox":[663.36,182.4,257.28,340.8]}
+{"kind":"shape","id":"sh/76twva5c","slide":2,"name":"Rectangle 21","bbox":[663.36,182.4,257.28,7.68]}
+{"kind":"textbox","id":"sh/65kfmpor","slide":2,"name":"TextBox 22","text":"SCORED","textPreview":"SCORED","bbox":[680.64,205.44,220.8,21.12]}
+{"kind":"textbox","id":"sh/hcvy14ne","slide":2,"name":"TextBox 23","text":"E11 smoke","textPreview":"E11 smoke","bbox":[680.64,236.16,220.8,52.8]}
+{"kind":"textbox","id":"sh/gbmxszmt","slide":2,"name":"TextBox 24","text":"4/4 pass@1 on the two easiest Verilog problems. Cost $0.004.","textPreview":"4/4 pass@1 on the two easiest Verilog problems. Cost $0.004.","bbox":[680.64,301.44,220.8,129.6]}
+{"kind":"shape","id":"sh/fadgzu58","slide":2,"name":"Rounded Rectangle 25","bbox":[680.64,468.48,110.4,24.96]}
+{"kind":"textbox","id":"sh/u94fqp4n","slide":2,"name":"TextBox 26","text":"DONE","textPreview":"DONE","bbox":[680.64,469.44,110.4,23.04]}
+{"kind":"shape","id":"sh/p0vy54na","slide":2,"name":"Rounded Rectangle 27","bbox":[963.84,182.4,257.28,340.8]}
+{"kind":"shape","id":"sh/4zmxwzmp","slide":2,"name":"Rectangle 28","bbox":[963.84,182.4,257.28,7.68]}
+{"kind":"textbox","id":"sh/mlgvq147","slide":2,"name":"TextBox 29","text":"WAITING","textPreview":"WAITING","bbox":[981.12,205.44,220.8,21.12]}
+{"kind":"textbox","id":"sh/nmpcj6ls","slide":2,"name":"TextBox 30","text":"13 exact scores","textPreview":"13 exact scores","bbox":[981.12,236.16,220.8,52.8]}
+{"kind":"textbox","id":"sh/onydsbmd","slide":2,"name":"TextBox 31","text":"License, private data, or keys still block a real suite number.","textPreview":"License, private data, or keys still block a real suite number.","bbox":[981.12,301.44,220.8,129.6]}
+{"kind":"shape","id":"sh/9o7ulg3y","slide":2,"name":"Rounded Rectangle 32","bbox":[981.12,468.48,122.88,24.96]}
+{"kind":"textbox","id":"sh/a9gvulkj","slide":2,"name":"TextBox 33","text":"BLOCKED","textPreview":"BLOCKED","bbox":[981.12,469.44,122.88,23.04]}
+{"kind":"textbox","id":"sh/ba9cn6l4","slide":2,"name":"TextBox 34","text":"Harness PASS is plumbing. It is not a model score.","textPreview":"Harness PASS is plumbing. It is not a model score.","bbox":[65.28,547.2,1152,28.8]}
+{"kind":"textbox","id":"sh/wbidwb29","slide":2,"name":"TextBox 35","text":"Ledger status PARTIAL: 1 of 14 suites scored. 13 blocked before a model score.","textPreview":"Ledger status PARTIAL: 1 of 14 suites scored. 13 blocked before a model score.","bbox":[65.28,587.52,1152,26.88]}
+{"kind":"shape","id":"sh/xcrupg3u","slide":2,"name":"Connector 36","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/id0vylkf","slide":2,"name":"TextBox 37","text":"Sources: outputs/pavlov_portfolio_eval/e1_e14_trained_eval_ledger_2026-08-09.json; NeurIPS_Review_12_Ideas_E1_E14_ELI12_Dark_2026-08-09.pptx","textPreview":"Sources: outputs/pavlov_portfolio_eval/e1_e14_trained_eval_ledger_2026-08-09.json; NeurIPS_Review_12_Ideas_E1_E14_ELI12_Dark_2026-08-09.pptx","bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"slide","id":"ofy9wn61","slide":3,"title":"Source slide 3"}
+{"kind":"textbox","id":"sh/cza94vmx","slide":3,"name":"TextBox 1","text":"TIMELINE","textPreview":"TIMELINE","bbox":[52.8,24.96,624,21.12]}
+{"kind":"textbox","id":"sh/d0jax03i","slide":3,"name":"TextBox 2","text":"What happened when","textPreview":"What happened when","bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/298ryl4v","slide":3,"name":"TextBox 3","text":"03","textPreview":"03","bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/3ah8rqlg","slide":3,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"textbox","id":"sh/obq90bml","slide":3,"name":"TextBox 5","text":"Each day made the next claim harder to fake.","textPreview":"Each day made the next claim harder to fake.","bbox":[62.4,124.8,1094.4,26.88]}
+{"kind":"shape","id":"sh/pcjqtg36","slide":3,"name":"Connector 6","bbox":[168,184.32,0,425.28]}
+{"kind":"shape","id":"sh/m5cra54z","slide":3,"name":"Oval 7","bbox":[149.76,190.08,36.48,36.48]}
+{"kind":"textbox","id":"sh/n6ls3alk","slide":3,"name":"TextBox 8","text":"03–08 AUG","textPreview":"03–08 AUG","bbox":[26.88,193.92,115.2,24.96]}
+{"kind":"textbox","id":"sh/n2l4fq98","slide":3,"name":"TextBox 9","text":"Build the lanes","textPreview":"Build the lanes","bbox":[208.32,178.56,614.4,26.88]}
+{"kind":"textbox","id":"sh/m1c3mlsn","slide":3,"name":"TextBox 10","text":"Pavlov contract, Tinker-only model policy, and per-lane receipts so a missing score stays null.","textPreview":"Pavlov contract, Tinker-only model policy, and per-lane receipts so a missing score stays null.","bbox":[208.32,211.2,806.4,49.92]}
+{"kind":"shape","id":"sh/943mhgre","slide":3,"name":"Oval 11","bbox":[149.76,297.6,36.48,36.48]}
+{"kind":"textbox","id":"sh/83ulovat","slide":3,"name":"TextBox 12","text":"09 AUG","textPreview":"09 AUG","bbox":[26.88,301.44,115.2,24.96]}
+{"kind":"textbox","id":"sh/v6l4jq94","slide":3,"name":"TextBox 13","text":"Run the sprint","textPreview":"Run the sprint","bbox":[208.32,286.08,614.4,26.88]}
+{"kind":"textbox","id":"sh/a5c3ql8z","slide":3,"name":"TextBox 14","text":"Fourteen independent lane sessions. NeurIPS 12-idea deck and read-aloud transcript.","textPreview":"Fourteen independent lane sessions. NeurIPS 12-idea deck and read-aloud transcript.","bbox":[208.32,318.72,806.4,49.92]}
+{"kind":"shape","id":"sh/x8nml0ra","slide":3,"name":"Oval 15","bbox":[149.76,405.12,36.48,36.48]}
+{"kind":"textbox","id":"sh/w7ulsvqp","slide":3,"name":"TextBox 16","text":"09–13 AUG","textPreview":"09–13 AUG","bbox":[26.88,408.96,115.2,24.96]}
+{"kind":"textbox","id":"sh/ja54na9g","slide":3,"name":"TextBox 17","text":"Land the evidence","textPreview":"Land the evidence","bbox":[208.32,393.6,614.4,26.88]}
+{"kind":"textbox","id":"sh/i9w3u58v","slide":3,"name":"TextBox 18","text":"API-Bank + SWE-Gym sources, E5 480-task list, E11 trained smoke, trained-eval ledger.","textPreview":"API-Bank + SWE-Gym sources, E5 480-task list, E11 trained smoke, trained-eval ledger.","bbox":[208.32,426.24,806.4,49.92]}
+{"kind":"shape","id":"sh/e10f2twf","slide":3,"name":"Oval 19","bbox":[149.76,512.64,36.48,36.48]}
+{"kind":"textbox","id":"sh/f29gbyx0","slide":3,"name":"TextBox 20","text":"14 AUG","textPreview":"14 AUG","bbox":[26.88,516.48,115.2,24.96]}
+{"kind":"textbox","id":"sh/03ix43e5","slide":3,"name":"TextBox 21","text":"Put it on main","textPreview":"Put it on main","bbox":[208.32,501.12,614.4,26.88]}
+{"kind":"textbox","id":"sh/14ryd8fq","slide":3,"name":"TextBox 22","text":"Fast-forwarded origin and upstream main to 3315631f. Working copy is now the public record.","textPreview":"Fast-forwarded origin and upstream main to 3315631f. Working copy is now the public record.","bbox":[208.32,533.76,806.4,49.92]}
+{"kind":"shape","id":"sh/6d0fytg3","slide":3,"name":"Rounded Rectangle 23","bbox":[1051.2,180.48,168,427.2]}
+{"kind":"textbox","id":"sh/re9g7yxo","slide":3,"name":"TextBox 24","text":"MY RULE","textPreview":"MY RULE","bbox":[1067.52,203.52,136.32,26.88]}
+{"kind":"textbox","id":"sh/sfix03y9","slide":3,"name":"TextBox 25","text":"A blocked receipt is a result. A guessed score is not.","textPreview":"A blocked receipt is a result. A guessed score is not.","bbox":[1065.6,259.2,140.16,201.6]}
+{"kind":"textbox","id":"sh/tgry9ofu","slide":3,"name":"TextBox 26","text":"null stays null","textPreview":"null stays null","bbox":[1065.6,532.8,140.16,38.4]}
+{"kind":"shape","id":"sh/a9kfadwn","slide":3,"name":"Connector 27","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/batgjixs","slide":3,"name":"TextBox 28","text":"Sources: git log 2026-08-03..3315631f; outputs/PAVLOV_E1_E14_LOCAL_SPRINT_2026-08-09.md","textPreview":"Sources: git log 2026-08-03..3315631f; outputs/PAVLOV_E1_E14_LOCAL_SPRINT_2026-08-09.md","bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"slide","id":"jyx0ra1s","slide":4,"title":"Source slide 4"}
+{"kind":"textbox","id":"sh/1cj2d8b6","slide":4,"name":"TextBox 1","text":"WHAT I FINISHED","textPreview":"WHAT I FINISHED","bbox":[52.8,24.96,624,21.12]}
+{"kind":"textbox","id":"sh/0ba143al","slide":4,"name":"TextBox 2","text":"The map is in the repo. The scores are not.","textPreview":"The map is in the repo. The scores are not.","bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/rm1k7yt4","slide":4,"name":"TextBox 3","text":"04","textPreview":"04","bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/ql8jytsj","slide":4,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"shape","id":"sh/doj29oba","slide":4,"name":"Rounded Rectangle 5","bbox":[62.4,134.4,225.6,126.72]}
+{"kind":"shape","id":"sh/sna103ap","slide":4,"name":"Rectangle 6","bbox":[62.4,134.4,5.76,126.72]}
+{"kind":"textbox","id":"sh/3ihk3et8","slide":4,"name":"TextBox 7","text":"9","textPreview":"9","bbox":[81.6,147.84,194.88,40.32]}
+{"kind":"textbox","id":"sh/ih8ju9sn","slide":4,"name":"TextBox 8","text":"commits this window","textPreview":"commits this window","bbox":[81.6,188.16,194.88,23.04]}
+{"kind":"textbox","id":"sh/kbm987y5","slide":4,"name":"TextBox 9","text":"03 Aug → 14 Aug on main","textPreview":"03 Aug → 14 Aug on main","bbox":[81.6,213.12,194.88,38.4]}
+{"kind":"shape","id":"sh/5cva1cfq","slide":4,"name":"Rounded Rectangle 10","bbox":[302.4,134.4,225.6,126.72]}
+{"kind":"shape","id":"sh/i94r6xgz","slide":4,"name":"Rectangle 11","bbox":[302.4,134.4,5.76,126.72]}
+{"kind":"textbox","id":"sh/jadsz2xk","slide":4,"name":"TextBox 12","text":"14","textPreview":"14","bbox":[321.6,147.84,194.88,40.32]}
+{"kind":"textbox","id":"sh/w72947yt","slide":4,"name":"TextBox 13","text":"evaluation lanes","textPreview":"evaluation lanes","bbox":[321.6,188.16,194.88,23.04]}
+{"kind":"textbox","id":"sh/x8vaxsfe","slide":4,"name":"TextBox 14","text":"each with a dated receipt","textPreview":"each with a dated receipt","bbox":[321.6,213.12,194.88,38.4]}
+{"kind":"shape","id":"sh/a5kr2xg3","slide":4,"name":"Rounded Rectangle 15","bbox":[542.4,134.4,225.6,126.72]}
+{"kind":"shape","id":"sh/v6tsv2xo","slide":4,"name":"Rectangle 16","bbox":[542.4,134.4,5.76,126.72]}
+{"kind":"textbox","id":"sh/g36tgryd","slide":4,"name":"TextBox 17","text":"1 / 14","textPreview":"1 / 14","bbox":[561.6,147.84,194.88,40.32]}
+{"kind":"textbox","id":"sh/h4fa9wfy","slide":4,"name":"TextBox 18","text":"model scores","textPreview":"model scores","bbox":[561.6,188.16,194.88,23.04]}
+{"kind":"textbox","id":"sh/p0batw72","slide":4,"name":"TextBox 19","text":"only E11, and it is a smoke","textPreview":"only E11, and it is a smoke","bbox":[561.6,213.12,194.88,38.4]}
+{"kind":"shape","id":"sh/oz29krqh","slide":4,"name":"Rounded Rectangle 20","bbox":[782.4,134.4,225.6,126.72]}
+{"kind":"shape","id":"sh/3ytsrmpw","slide":4,"name":"Rectangle 21","bbox":[782.4,134.4,5.76,126.72]}
+{"kind":"textbox","id":"sh/2xkrih8b","slide":4,"name":"TextBox 22","text":"13","textPreview":"13","bbox":[801.6,147.84,194.88,40.32]}
+{"kind":"textbox","id":"sh/1wbapc7q","slide":4,"name":"TextBox 23","text":"still blocked","textPreview":"still blocked","bbox":[801.6,188.16,194.88,23.04]}
+{"kind":"textbox","id":"sh/gv29g7q5","slide":4,"name":"TextBox 24","text":"before any suite number","textPreview":"before any suite number","bbox":[801.6,213.12,194.88,38.4]}
+{"kind":"shape","id":"sh/fu9sn2p0","slide":4,"name":"Rounded Rectangle 25","bbox":[1022.4,134.4,196.8,126.72]}
+{"kind":"shape","id":"sh/et0reh8f","slide":4,"name":"Rectangle 26","bbox":[1022.4,134.4,5.76,126.72]}
+{"kind":"textbox","id":"sh/tsrqlc7u","slide":4,"name":"TextBox 27","text":"752","textPreview":"752","bbox":[1041.6,147.84,166.08,40.32]}
+{"kind":"textbox","id":"sh/sri9s7q9","slide":4,"name":"TextBox 28","text":"Pavlov tests","textPreview":"Pavlov tests","bbox":[1041.6,188.16,166.08,23.04]}
+{"kind":"textbox","id":"sh/ilwf69kv","slide":4,"name":"TextBox 29","text":"plus 20 focused E11 tests","textPreview":"plus 20 focused E11 tests","bbox":[1041.6,213.12,166.08,38.4]}
+{"kind":"textbox","id":"sh/jm5gze1g","slide":4,"name":"TextBox 30","text":"What that actually means","textPreview":"What that actually means","bbox":[65.28,288,528,28.8]}
+{"kind":"shape","id":"sh/knex8j21","slide":4,"name":"Oval 31","bbox":[67.2,337.92,10.56,10.56]}
+{"kind":"textbox","id":"sh/5ony1oj6","slide":4,"name":"TextBox 32","text":"I can point to every missing license, key, and private split.","textPreview":"I can point to every missing license, key, and private split.","bbox":[88.32,328.32,574.08,40.32]}
+{"kind":"shape","id":"sh/axcf29kj","slide":4,"name":"Oval 33","bbox":[67.2,384,10.56,10.56]}
+{"kind":"textbox","id":"sh/vy5gbe14","slide":4,"name":"TextBox 34","text":"I trained Qwen3.6-35B-A3B on API-Bank + SWE-Gym and saved the checkpoint.","textPreview":"I trained Qwen3.6-35B-A3B on API-Bank + SWE-Gym and saved the checkpoint.","bbox":[88.32,374.4,574.08,40.32]}
+{"kind":"shape","id":"sh/wzex4z2p","slide":4,"name":"Oval 35","bbox":[67.2,430.08,10.56,10.56]}
+{"kind":"textbox","id":"sh/xknyx4ja","slide":4,"name":"TextBox 36","text":"I did not promote gold-patch, fixture, or mock harness runs to scores.","textPreview":"I did not promote gold-patch, fixture, or mock harness runs to scores.","bbox":[88.32,420.48,574.08,40.32]}
+{"kind":"shape","id":"sh/mtcfypkn","slide":4,"name":"Oval 37","bbox":[67.2,476.16,10.56,10.56]}
+{"kind":"textbox","id":"sh/nulw7u18","slide":4,"name":"TextBox 38","text":"NeurIPS #36320 corrections and the 12-idea deck are ready to present.","textPreview":"NeurIPS #36320 corrections and the 12-idea deck are ready to present.","bbox":[88.32,466.56,574.08,40.32]}
+{"kind":"shape","id":"sh/fm5c3q54","slide":4,"name":"Rounded Rectangle 39","bbox":[691.2,288,528,334.08]}
+{"kind":"textbox","id":"sh/elwba54j","slide":4,"name":"TextBox 40","text":"The honest takeaway","textPreview":"The honest takeaway","bbox":[718.08,309.12,480,26.88]}
+{"kind":"textbox","id":"sh/18nu50nu","slide":4,"name":"TextBox 41","text":"Standing up fourteen lanes is infrastructure.\n\nIt is not evidence that the model is useful at software, finance, browsers, science, or safety.","textPreview":"Standing up fourteen lanes is infrastructure. |  | It is not evidence that the model is useful at software, finance, browsers, science, o...","bbox":[718.08,347.52,475.2,163.2]}
+{"kind":"textbox","id":"sh/0netcvm9","slide":4,"name":"TextBox 42","text":"I will not average 13 nulls with one smoke test.","textPreview":"I will not average 13 nulls with one smoke test.","bbox":[718.08,547.2,475.2,40.32]}
+{"kind":"shape","id":"sh/rilczq5s","slide":4,"name":"Connector 43","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/qhcb6l47","slide":4,"name":"TextBox 44","text":"Sources: ledger summary; PAVLOV_E1_E14_LOCAL_SPRINT_2026-08-09.md; git rev-list --since=2026-08-03","textPreview":"Sources: ledger summary; PAVLOV_E1_E14_LOCAL_SPRINT_2026-08-09.md; git rev-list --since=2026-08-03","bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"slide","id":"i107q5of","slide":5,"title":"Source slide 5"}
+{"kind":"textbox","id":"sh/dgbulwnm","slide":5,"name":"TextBox 1","text":"E1–E14 SCOREBOARD","textPreview":"E1–E14 SCOREBOARD","bbox":[52.8,24.96,624,21.12]}
+{"kind":"textbox","id":"sh/cf2tcr61","slide":5,"name":"TextBox 2","text":"One scored cell. Thirteen honest blanks.","textPreview":"One scored cell. Thirteen honest blanks.","bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/z2tcnm5s","slide":5,"name":"TextBox 3","text":"05","textPreview":"05","bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/yhkbe1o7","slide":5,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"textbox","id":"sh/l4bupwny","slide":5,"name":"TextBox 5","text":"SCORED = trained-model number.  HARNESS = plumbing only.  BLOCKED = cannot run the exact suite.","textPreview":"SCORED = trained-model number.  HARNESS = plumbing only.  BLOCKED = cannot run the exact suite.","bbox":[62.4,120.96,1152,23.04]}
+{"kind":"shape","id":"sh/032tgr6d","slide":5,"name":"Rounded Rectangle 6","bbox":[52.8,155.52,561.6,65.28]}
+{"kind":"textbox","id":"sh/n6dcr65o","slide":5,"name":"TextBox 7","text":"E1","textPreview":"E1","bbox":[64.32,163.2,52.8,23.04]}
+{"kind":"textbox","id":"sh/m5kbi1oj","slide":5,"name":"TextBox 8","text":"SWE-bench Pro","textPreview":"SWE-bench Pro","bbox":[118.08,161.28,321.6,23.04]}
+{"kind":"textbox","id":"sh/w32dkbuh","slide":5,"name":"TextBox 9","text":"Hard repo repair  ·  Gold patch ran. No model patch.","textPreview":"Hard repo repair  ·  Gold patch ran. No model patch.","bbox":[118.08,188.16,355.2,24.96]}
+{"kind":"shape","id":"sh/x4vedgvm","slide":5,"name":"Rounded Rectangle 10","bbox":[477.12,174.72,122.88,24.96]}
+{"kind":"textbox","id":"sh/ahkvi1cb","slide":5,"name":"TextBox 11","text":"HARNESS","textPreview":"HARNESS","bbox":[477.12,175.68,122.88,23.04]}
+{"kind":"shape","id":"sh/v2twb6dw","slide":5,"name":"Rounded Rectangle 12","bbox":[52.8,226.56,561.6,65.28]}
+{"kind":"textbox","id":"sh/k7mxovud","slide":5,"name":"TextBox 13","text":"E2","textPreview":"E2","bbox":[64.32,234.24,52.8,23.04]}
+{"kind":"textbox","id":"sh/58vehgvy","slide":5,"name":"TextBox 14","text":"Frontier SWE","textPreview":"Frontier SWE","bbox":[118.08,232.32,321.6,23.04]}
+{"kind":"textbox","id":"sh/i54fmlc7","slide":5,"name":"TextBox 15","text":"Frontier code / ML  ·  No license. amd64 image on ARM.","textPreview":"Frontier code / ML  ·  No license. amd64 image on ARM.","bbox":[118.08,259.2,355.2,24.96]}
+{"kind":"shape","id":"sh/j6dwfqds","slide":5,"name":"Rounded Rectangle 16","bbox":[477.12,245.76,122.88,24.96]}
+{"kind":"textbox","id":"sh/sb6xsvu9","slide":5,"name":"TextBox 17","text":"BLOCKED","textPreview":"BLOCKED","bbox":[477.12,246.72,122.88,23.04]}
+{"kind":"shape","id":"sh/tcfel0vu","slide":5,"name":"Rounded Rectangle 18","bbox":[52.8,297.6,561.6,65.28]}
+{"kind":"textbox","id":"sh/hgrmpwj2","slide":5,"name":"TextBox 19","text":"E3","textPreview":"E3","bbox":[64.32,305.28,52.8,23.04]}
+{"kind":"textbox","id":"sh/gfi5grih","slide":5,"name":"TextBox 20","text":"SDAB","textPreview":"SDAB","bbox":[118.08,303.36,321.6,23.04]}
+{"kind":"textbox","id":"sh/fe94nm1w","slide":5,"name":"TextBox 21","text":"Live enterprise systems  ·  80-task bundle is private.","textPreview":"Live enterprise systems  ·  80-task bundle is private.","bbox":[118.08,330.24,355.2,24.96]}
+{"kind":"shape","id":"sh/ud0ne10b","slide":5,"name":"Rounded Rectangle 22","bbox":[477.12,316.8,122.88,24.96]}
+{"kind":"textbox","id":"sh/pkr6tgjy","slide":5,"name":"TextBox 23","text":"BLOCKED","textPreview":"BLOCKED","bbox":[477.12,317.76,122.88,23.04]}
+{"kind":"shape","id":"sh/4ji5kbid","slide":5,"name":"Rounded Rectangle 24","bbox":[52.8,368.64,561.6,65.28]}
+{"kind":"textbox","id":"sh/3i94r61s","slide":5,"name":"TextBox 25","text":"E4","textPreview":"E4","bbox":[64.32,376.32,52.8,23.04]}
+{"kind":"textbox","id":"sh/2h0ni107","slide":5,"name":"TextBox 26","text":"BankerToolBench","textPreview":"BankerToolBench","bbox":[118.08,374.4,321.6,23.04]}
+{"kind":"textbox","id":"sh/5o7mhcju","slide":5,"name":"TextBox 27","text":"Finance tools  ·  Harbor + paid keys missing.","textPreview":"Finance tools  ·  Harbor + paid keys missing.","bbox":[118.08,401.28,355.2,24.96]}
+{"kind":"shape","id":"sh/kny587i9","slide":5,"name":"Rounded Rectangle 28","bbox":[477.12,387.84,122.88,24.96]}
+{"kind":"textbox","id":"sh/atcjidg7","slide":5,"name":"TextBox 29","text":"BLOCKED","textPreview":"BLOCKED","bbox":[477.12,388.8,122.88,23.04]}
+{"kind":"shape","id":"sh/vu5kbihc","slide":5,"name":"Rounded Rectangle 30","bbox":[52.8,439.68,561.6,65.28]}
+{"kind":"textbox","id":"sh/wve1knyx","slide":5,"name":"TextBox 31","text":"E5","textPreview":"E5","bbox":[64.32,447.36,52.8,23.04]}
+{"kind":"textbox","id":"sh/xwn2dszi","slide":5,"name":"TextBox 32","text":"APEX Agents","textPreview":"APEX Agents","bbox":[118.08,445.44,321.6,23.04]}
+{"kind":"textbox","id":"sh/ihw3mxg3","slide":5,"name":"TextBox 33","text":"Long professional work  ·  480-task list. Verifier fixture only.","textPreview":"Long professional work  ·  480-task list. Verifier fixture only.","bbox":[118.08,472.32,355.2,24.96]}
+{"kind":"shape","id":"sh/ji5kf2ho","slide":5,"name":"Rounded Rectangle 34","bbox":[477.12,458.88,122.88,24.96]}
+{"kind":"textbox","id":"sh/kjelony9","slide":5,"name":"TextBox 35","text":"HARNESS","textPreview":"HARNESS","bbox":[477.12,459.84,122.88,23.04]}
+{"kind":"shape","id":"sh/5kn2hszu","slide":5,"name":"Rounded Rectangle 36","bbox":[52.8,510.72,561.6,65.28]}
+{"kind":"textbox","id":"sh/e1sjatgz","slide":5,"name":"TextBox 37","text":"E6","textPreview":"E6","bbox":[64.32,518.4,52.8,23.04]}
+{"kind":"textbox","id":"sh/zmlk3yhk","slide":5,"name":"TextBox 38","text":"WebBench","textPreview":"WebBench","bbox":[118.08,516.48,321.6,23.04]}
+{"kind":"textbox","id":"sh/fid07u98","slide":5,"name":"TextBox 39","text":"Live browser use  ·  Needs Halluminate environment.","textPreview":"Live browser use  ·  Needs Halluminate environment.","bbox":[118.08,543.36,355.2,24.96]}
+{"kind":"shape","id":"sh/ehkzepsn","slide":5,"name":"Rounded Rectangle 40","bbox":[477.12,529.92,122.88,24.96]}
+{"kind":"textbox","id":"sh/1kvi94re","slide":5,"name":"TextBox 41","text":"BLOCKED","textPreview":"BLOCKED","bbox":[477.12,530.88,122.88,23.04]}
+{"kind":"shape","id":"sh/gjmhgzqt","slide":5,"name":"Rounded Rectangle 42","bbox":[52.8,581.76,561.6,65.28]}
+{"kind":"textbox","id":"sh/3md0bu94","slide":5,"name":"TextBox 43","text":"E7","textPreview":"E7","bbox":[64.32,589.44,52.8,23.04]}
+{"kind":"textbox","id":"sh/2l4zip8j","slide":5,"name":"TextBox 44","text":"BinaryAudit","textPreview":"BinaryAudit","bbox":[118.08,587.52,321.6,23.04]}
+{"kind":"textbox","id":"sh/povid4ra","slide":5,"name":"TextBox 45","text":"Security binaries  ·  Nop Harbor loop. No license.","textPreview":"Security binaries  ·  Nop Harbor loop. No license.","bbox":[118.08,614.4,355.2,24.96]}
+{"kind":"shape","id":"sh/onmhkzqp","slide":5,"name":"Rounded Rectangle 46","bbox":[477.12,600.96,122.88,24.96]}
+{"kind":"textbox","id":"sh/bqx0fe9g","slide":5,"name":"TextBox 47","text":"HARNESS","textPreview":"HARNESS","bbox":[477.12,601.92,122.88,23.04]}
+{"kind":"shape","id":"sh/qp4jm98v","slide":5,"name":"Rounded Rectangle 48","bbox":[667.2,155.52,561.6,65.28]}
+{"kind":"textbox","id":"sh/8f6hcj6t","slide":5,"name":"TextBox 49","text":"E8","textPreview":"E8","bbox":[678.72,163.2,52.8,23.04]}
+{"kind":"textbox","id":"sh/9gfy5o7e","slide":5,"name":"TextBox 50","text":"LifeSciBench","textPreview":"LifeSciBench","bbox":[732.48,161.28,321.6,23.04]}
+{"kind":"textbox","id":"sh/mdoza9o3","slide":5,"name":"TextBox 51","text":"Life-science workflows  ·  No task package or license.","textPreview":"Life-science workflows  ·  No task package or license.","bbox":[732.48,188.16,355.2,24.96]}
+{"kind":"shape","id":"sh/nexg3epo","slide":5,"name":"Rounded Rectangle 52","bbox":[1091.52,174.72,122.88,24.96]}
+{"kind":"textbox","id":"sh/0r6h8z6x","slide":5,"name":"TextBox 53","text":"BLOCKED","textPreview":"BLOCKED","bbox":[1091.52,175.68,122.88,23.04]}
+{"kind":"shape","id":"sh/lcfy147i","slide":5,"name":"Rounded Rectangle 54","bbox":[667.2,226.56,561.6,65.28]}
+{"kind":"textbox","id":"sh/yp4z69or","slide":5,"name":"TextBox 55","text":"E9","textPreview":"E9","bbox":[678.72,234.24,52.8,23.04]}
+{"kind":"textbox","id":"sh/zqxgzupc","slide":5,"name":"TextBox 56","text":"MLE-bench","textPreview":"MLE-bench","bbox":[732.48,232.32,321.6,23.04]}
+{"kind":"textbox","id":"sh/cnmh4z61","slide":5,"name":"TextBox 57","text":"Build ML systems  ·  No competition data or digest.","textPreview":"Build ML systems  ·  No competition data or digest.","bbox":[732.48,259.2,355.2,24.96]}
+{"kind":"shape","id":"sh/dovyx476","slide":5,"name":"Rounded Rectangle 58","bbox":[1091.52,245.76,122.88,24.96]}
+{"kind":"textbox","id":"sh/t8n6lwvy","slide":5,"name":"TextBox 59","text":"HARNESS","textPreview":"HARNESS","bbox":[1091.52,246.72,122.88,23.04]}
+{"kind":"shape","id":"sh/s7u5crud","slide":5,"name":"Rounded Rectangle 60","bbox":[667.2,297.6,561.6,65.28]}
+{"kind":"textbox","id":"sh/r6lojmds","slide":5,"name":"TextBox 61","text":"E10","textPreview":"E10","bbox":[678.72,305.28,52.8,23.04]}
+{"kind":"textbox","id":"sh/65cnahc7","slide":5,"name":"TextBox 62","text":"AgentHarm","textPreview":"AgentHarm","bbox":[732.48,303.36,321.6,23.04]}
+{"kind":"textbox","id":"sh/5436hcv2","slide":5,"name":"TextBox 63","text":"Safety under tools  ·  Public mock only. Held-out gated.","textPreview":"Safety under tools  ·  Public mock only. Held-out gated.","bbox":[732.48,330.24,355.2,24.96]}
+{"kind":"shape","id":"sh/43u587uh","slide":5,"name":"Rounded Rectangle 64","bbox":[1091.52,316.8,122.88,24.96]}
+{"kind":"textbox","id":"sh/j2lofmdw","slide":5,"name":"TextBox 65","text":"HARNESS","textPreview":"HARNESS","bbox":[1091.52,317.76,122.88,23.04]}
+{"kind":"shape","id":"sh/i1cn6hcb","slide":5,"name":"Rounded Rectangle 66","bbox":[667.2,368.64,561.6,65.28]}
+{"kind":"textbox","id":"sh/p076tgv6","slide":5,"name":"TextBox 67","text":"E11","textPreview":"E11","bbox":[678.72,376.32,52.8,23.04]}
+{"kind":"textbox","id":"sh/ozepkbul","slide":5,"name":"TextBox 68","text":"VerilogEval","textPreview":"VerilogEval","bbox":[732.48,374.4,321.6,23.04]}
+{"kind":"textbox","id":"sh/m583eds3","slide":5,"name":"TextBox 69","text":"Chip-design HDL  ·  4/4 on two easiest problems.","textPreview":"Chip-design HDL  ·  4/4 on two easiest problems.","bbox":[732.48,401.28,355.2,24.96]}
+{"kind":"shape","id":"sh/76hk7ito","slide":5,"name":"Rounded Rectangle 70","bbox":[1091.52,387.84,122.88,24.96]}
+{"kind":"textbox","id":"sh/87qlgna9","slide":5,"name":"TextBox 71","text":"SCORED","textPreview":"SCORED","bbox":[1091.52,388.8,122.88,23.04]}
+{"kind":"shape","id":"sh/98z298bu","slide":5,"name":"Rounded Rectangle 72","bbox":[667.2,439.68,561.6,65.28]}
+{"kind":"textbox","id":"sh/yho3atsr","slide":5,"name":"TextBox 73","text":"E12","textPreview":"E12","bbox":[678.72,447.36,52.8,23.04]}
+{"kind":"textbox","id":"sh/zihk3ytc","slide":5,"name":"TextBox 74","text":"AppBench","textPreview":"AppBench","bbox":[732.48,445.44,321.6,23.04]}
+{"kind":"textbox","id":"sh/kjqlc3ax","slide":5,"name":"TextBox 75","text":"Build usable apps  ·  No license. No official runner.","textPreview":"Build usable apps  ·  No license. No official runner.","bbox":[732.48,472.32,355.2,24.96]}
+{"kind":"shape","id":"sh/lkz258bi","slide":5,"name":"Rounded Rectangle 76","bbox":[1091.52,458.88,122.88,24.96]}
+{"kind":"textbox","id":"sh/ids3mxsb","slide":5,"name":"TextBox 77","text":"BLOCKED","textPreview":"BLOCKED","bbox":[1091.52,459.84,122.88,23.04]}
+{"kind":"shape","id":"sh/je14f2tw","slide":5,"name":"Rounded Rectangle 78","bbox":[667.2,510.72,561.6,65.28]}
+{"kind":"textbox","id":"sh/ruxkz2l0","slide":5,"name":"TextBox 79","text":"E13","textPreview":"E13","bbox":[678.72,518.4,52.8,23.04]}
+{"kind":"textbox","id":"sh/qto36xkf","slide":5,"name":"TextBox 80","text":"OpenReward Games","textPreview":"OpenReward Games","bbox":[732.48,516.48,321.6,23.04]}
+{"kind":"textbox","id":"sh/dwz21s36","slide":5,"name":"TextBox 81","text":"Game-world planning  ·  No license. Hosted eval.","textPreview":"Game-world planning  ·  No license. Hosted eval.","bbox":[732.48,543.36,355.2,24.96]}
+{"kind":"shape","id":"sh/sv6l8n2l","slide":5,"name":"Rounded Rectangle 82","bbox":[1091.52,529.92,122.88,24.96]}
+{"kind":"textbox","id":"sh/3qxkvilo","slide":5,"name":"TextBox 83","text":"BLOCKED","textPreview":"BLOCKED","bbox":[1091.52,530.88,122.88,23.04]}
+{"kind":"shape","id":"sh/ipo32dk3","slide":5,"name":"Rounded Rectangle 84","bbox":[667.2,581.76,561.6,65.28]}
+{"kind":"textbox","id":"sh/5sf2xs3u","slide":5,"name":"TextBox 85","text":"E14","textPreview":"E14","bbox":[678.72,589.44,52.8,23.04]}
+{"kind":"textbox","id":"sh/4r6l4n29","slide":5,"name":"TextBox 86","text":"FrontierMath","textPreview":"FrontierMath","bbox":[732.48,587.52,321.6,23.04]}
+{"kind":"textbox","id":"sh/v2dkrils","slide":5,"name":"TextBox 87","text":"Private hard math  ·  Never released. Epoch-hosted.","textPreview":"Private hard math  ·  Never released. Epoch-hosted.","bbox":[732.48,614.4,355.2,24.96]}
+{"kind":"shape","id":"sh/u14jydk7","slide":5,"name":"Rounded Rectangle 88","bbox":[1091.52,600.96,122.88,24.96]}
+{"kind":"textbox","id":"sh/0vi9cfet","slide":5,"name":"TextBox 89","text":"BLOCKED","textPreview":"BLOCKED","bbox":[1091.52,601.92,122.88,23.04]}
+{"kind":"shape","id":"sh/lwrqlkfe","slide":5,"name":"Connector 90","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/yt0ra5wn","slide":5,"name":"TextBox 91","text":"Source: e1_e14_trained_eval_ledger_2026-08-09.json. Claim boundary: only is_model_score=true rows are benchmark results.","textPreview":"Source: e1_e14_trained_eval_ledger_2026-08-09.json. Claim boundary: only is_model_score=true rows are benchmark results.","bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"slide","id":"x8f69ofe","slide":6,"title":"Source slide 6"}
+{"kind":"textbox","id":"sh/yhg7epsj","slide":6,"name":"TextBox 1","text":"THE ONE SCORED LANE","textPreview":"THE ONE SCORED LANE","bbox":[52.8,24.96,624,21.12]}
+{"kind":"textbox","id":"sh/zi98nu94","slide":6,"name":"TextBox 2","text":"E11 passed. The suite is 312 problems. I ran 4.","textPreview":"E11 passed. The suite is 312 problems. I ran 4.","bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/87ipkzal","slide":6,"name":"TextBox 3","text":"06","textPreview":"06","bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/98rqt4r6","slide":6,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"shape","id":"sh/ml07i9sv","slide":6,"name":"Rounded Rectangle 5","bbox":[62.4,132.48,278.4,148.8]}
+{"kind":"shape","id":"sh/7m98ru9g","slide":6,"name":"Rectangle 6","bbox":[62.4,132.48,5.76,148.8]}
+{"kind":"textbox","id":"sh/oryp8fah","slide":6,"name":"TextBox 7","text":"4 / 4","textPreview":"4 / 4","bbox":[81.6,145.92,247.68,40.32]}
+{"kind":"textbox","id":"sh/pc76hkr2","slide":6,"name":"TextBox 8","text":"pass@1","textPreview":"pass@1","bbox":[81.6,186.24,247.68,23.04]}
+{"kind":"textbox","id":"sh/h4bupgn6","slide":6,"name":"TextBox 9","text":"2 tracks × 2 problems · $0.0041","textPreview":"2 tracks × 2 problems · $0.0041","bbox":[81.6,211.2,247.68,60.48]}
+{"kind":"shape","id":"sh/w32twb6l","slide":6,"name":"Rounded Rectangle 10","bbox":[360,132.48,278.4,148.8]}
+{"kind":"shape","id":"sh/v2tcn650","slide":6,"name":"Rectangle 11","bbox":[360,132.48,5.76,148.8]}
+{"kind":"textbox","id":"sh/u1kbu1ov","slide":6,"name":"TextBox 12","text":"2","textPreview":"2","bbox":[379.2,145.92,247.68,40.32]}
+{"kind":"textbox","id":"sh/5svutgni","slide":6,"name":"TextBox 13","text":"easiest problems","textPreview":"easiest problems","bbox":[379.2,186.24,247.68,23.04]}
+{"kind":"textbox","id":"sh/47mt0b6x","slide":6,"name":"TextBox 14","text":"Prob001_zero, Prob002_m2014_q4i","textPreview":"Prob001_zero, Prob002_m2014_q4i","bbox":[379.2,211.2,247.68,60.48]}
+{"kind":"shape","id":"sh/j6dcr65c","slide":6,"name":"Rounded Rectangle 15","bbox":[657.6,132.48,278.4,148.8]}
+{"kind":"shape","id":"sh/i54bylor","slide":6,"name":"Rectangle 16","bbox":[657.6,132.48,5.76,148.8]}
+{"kind":"textbox","id":"sh/twfux0ne","slide":6,"name":"TextBox 17","text":"312","textPreview":"312","bbox":[676.8,145.92,247.68,40.32]}
+{"kind":"textbox","id":"sh/svmt4v6t","slide":6,"name":"TextBox 18","text":"full VerilogEval","textPreview":"full VerilogEval","bbox":[676.8,186.24,247.68,23.04]}
+{"kind":"textbox","id":"sh/cbe5g3ih","slide":6,"name":"TextBox 19","text":"Icarus 12.0 native verifier","textPreview":"Icarus 12.0 native verifier","bbox":[676.8,211.2,247.68,60.48]}
+{"kind":"shape","id":"sh/dcnm98zm","slide":6,"name":"Rounded Rectangle 20","bbox":[955.2,132.48,264,148.8]}
+{"kind":"shape","id":"sh/qpwnet0b","slide":6,"name":"Rectangle 21","bbox":[955.2,132.48,5.76,148.8]}
+{"kind":"textbox","id":"sh/bq547yhw","slide":6,"name":"TextBox 22","text":"OPEN","textPreview":"OPEN","bbox":[974.4,145.92,233.28,40.32]}
+{"kind":"textbox","id":"sh/0fy5k3id","slide":6,"name":"TextBox 23","text":"decontamination","textPreview":"decontamination","bbox":[974.4,186.24,233.28,23.04]}
+{"kind":"textbox","id":"sh/lg76d8zy","slide":6,"name":"TextBox 24","text":"split receipt still missing","textPreview":"split receipt still missing","bbox":[974.4,211.2,233.28,60.48]}
+{"kind":"shape","id":"sh/ydgnit07","slide":6,"name":"Rounded Rectangle 25","bbox":[62.4,305.28,580.8,318.72]}
+{"kind":"textbox","id":"sh/zep4byhs","slide":6,"name":"TextBox 26","text":"What I can say","textPreview":"What I can say","bbox":[88.32,326.4,528,26.88]}
+{"kind":"shape","id":"sh/gju58ji9","slide":6,"name":"Oval 27","bbox":[88.32,376.32,10.56,10.56]}
+{"kind":"textbox","id":"sh/1k3mhozu","slide":6,"name":"TextBox 28","text":"The trained step-40 sampler produced HDL that the official test benches accepted.","textPreview":"The trained step-40 sampler produced HDL that the official test benches accepted.","bbox":[109.44,366.72,506.88,52.8]}
+{"kind":"shape","id":"sh/jet8nm1c","slide":6,"name":"Oval 29","bbox":[88.32,433.92,10.56,10.56]}
+{"kind":"textbox","id":"sh/idk7ehkr","slide":6,"name":"TextBox 30","text":"Both code-complete and spec-to-rtl tracks were scored.","textPreview":"Both code-complete and spec-to-rtl tracks were scored.","bbox":[109.44,424.32,506.88,48]}
+{"kind":"shape","id":"sh/50bqpcj2","slide":6,"name":"Oval 31","bbox":[88.32,487.68,10.56,10.56]}
+{"kind":"textbox","id":"sh/4f2pgr2h","slide":6,"name":"TextBox 32","text":"W&B run and HF checkpoint are bound on the receipt.","textPreview":"W&B run and HF checkpoint are bound on the receipt.","bbox":[109.44,478.08,506.88,48]}
+{"kind":"shape","id":"sh/va98j210","slide":6,"name":"Rounded Rectangle 33","bbox":[667.2,305.28,552,318.72]}
+{"kind":"textbox","id":"sh/u907axkf","slide":6,"name":"TextBox 34","text":"What I cannot say","textPreview":"What I cannot say","bbox":[693.12,326.4,499.2,26.88]}
+{"kind":"shape","id":"sh/hcrqlcj6","slide":6,"name":"Oval 35","bbox":[693.12,376.32,10.56,10.56]}
+{"kind":"textbox","id":"sh/wbipc72l","slide":6,"name":"TextBox 36","text":"This is not VerilogEval pass@1. The first two problems are the easiest in the set.","textPreview":"This is not VerilogEval pass@1. The first two problems are the easiest in the set.","bbox":[714.24,366.72,478.08,52.8]}
+{"kind":"shape","id":"sh/7698f214","slide":6,"name":"Oval 37","bbox":[693.12,433.92,10.56,10.56]}
+{"kind":"textbox","id":"sh/m5076xkj","slide":6,"name":"TextBox 38","text":"I do not have a decontamination receipt for the split.","textPreview":"I do not have a decontamination receipt for the split.","bbox":[714.24,424.32,478.08,48]}
+{"kind":"shape","id":"sh/2dkbalg3","slide":6,"name":"Oval 39","bbox":[693.12,487.68,10.56,10.56]}
+{"kind":"textbox","id":"sh/netcjqxo","slide":6,"name":"TextBox 40","text":"A 100% on four easy items is a smoke, not a chip-design result.","textPreview":"A 100% on four easy items is a smoke, not a chip-design result.","bbox":[714.24,478.08,478.08,48]}
+{"kind":"shape","id":"sh/of2tcvy9","slide":6,"name":"Connector 41","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/pgbul0fu","slide":6,"name":"TextBox 42","text":"Source: outputs/e11_verilog_eval/e11_trained_step40_receipt.json · sampler tinker://…/step_seed809_40 · W&B wh8xzm2b","textPreview":"Source: outputs/e11_verilog_eval/e11_trained_step40_receipt.json · sampler tinker://…/step_seed809_40 · W&B wh8xzm2b","bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"slide","id":"gnmp4jqx","slide":7,"title":"Source slide 7"}
+{"kind":"textbox","id":"sh/cb2tkvap","slide":7,"name":"TextBox 1","text":"LOCAL PORTFOLIO CHECK","textPreview":"LOCAL PORTFOLIO CHECK","bbox":[52.8,24.96,624,21.12]}
+{"kind":"textbox","id":"sh/dcbud0ra","slide":7,"name":"TextBox 2","text":"Reward went up on 32 examples. This is not E1–E14.","textPreview":"Reward went up on 32 examples. This is not E1–E14.","bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/ydkbm5sv","slide":7,"name":"TextBox 3","text":"07","textPreview":"07","bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/zedcfa9g","slide":7,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"textbox","id":"sh/kzmdova1","slide":7,"name":"TextBox 5","text":"Same 32 API-Bank + SWE-Gym prompts. Base Qwen3.6-35B-A3B vs trained step 40. Labelled is_e1_e14_score=false.","textPreview":"Same 32 API-Bank + SWE-Gym prompts. Base Qwen3.6-35B-A3B vs trained step 40. Labelled is_e1_e14_score=false.","bbox":[62.4,122.88,1152,24.96]}
+{"kind":"textbox","id":"sh/l0vuh0rm","slide":7,"name":"TextBox 6","text":"All 32\nmean reward","textPreview":"All 32 | mean reward","bbox":[81.6,517.44,182.4,46.08]}
+{"kind":"shape","id":"sh/eh0ba1sr","slide":7,"name":"Rounded Rectangle 7","bbox":[98.88,382.42,65.28,129.26]}
+{"kind":"textbox","id":"sh/fi9c369c","slide":7,"name":"TextBox 8","text":"0.40","textPreview":"0.40","bbox":[91.2,357.46,80.64,21.12]}
+{"kind":"shape","id":"sh/baxkjqlk","slide":7,"name":"Rounded Rectangle 9","bbox":[173.76,316.19,65.28,195.49]}
+{"kind":"textbox","id":"sh/a9ojq5kz","slide":7,"name":"TextBox 10","text":"0.60","textPreview":"0.60","bbox":[166.08,291.23,80.64,21.12]}
+{"kind":"shape","id":"sh/xcz2l03q","slide":7,"name":"Connector 11","bbox":[91.2,511.68,163.2,0]}
+{"kind":"textbox","id":"sh/cbq1sv25","slide":7,"name":"TextBox 12","text":"API-Bank\n16 items","textPreview":"API-Bank | 16 items","bbox":[288,517.44,182.4,46.08]}
+{"kind":"shape","id":"sh/n6x0fqlo","slide":7,"name":"Rounded Rectangle 13","bbox":[305.28,313.12,65.28,198.56]}
+{"kind":"textbox","id":"sh/25ojml43","slide":7,"name":"TextBox 14","text":"0.61","textPreview":"0.61","bbox":[297.6,288.16,80.64,21.12]}
+{"kind":"shape","id":"sh/p8fih03e","slide":7,"name":"Rounded Rectangle 15","bbox":[380.16,200.68,65.28,311]}
+{"kind":"textbox","id":"sh/o761ov2t","slide":7,"name":"TextBox 16","text":"0.95","textPreview":"0.95","bbox":[372.48,175.72,80.64,21.12]}
+{"kind":"shape","id":"sh/f2d0b6lc","slide":7,"name":"Connector 17","bbox":[297.6,511.68,163.2,0]}
+{"kind":"textbox","id":"sh/eh4jil4r","slide":7,"name":"TextBox 18","text":"SWE-Gym\n16 items","textPreview":"SWE-Gym | 16 items","bbox":[494.4,517.44,182.4,46.08]}
+{"kind":"shape","id":"sh/id4ju1oz","slide":7,"name":"Rounded Rectangle 19","bbox":[511.68,451.73,65.28,59.95]}
+{"kind":"textbox","id":"sh/jedkn654","slide":7,"name":"TextBox 20","text":"0.18","textPreview":"0.18","bbox":[504,426.77,80.64,21.12]}
+{"kind":"shape","id":"sh/4fm1wb6p","slide":7,"name":"Rounded Rectangle 21","bbox":[586.56,431.7,65.28,79.98]}
+{"kind":"textbox","id":"sh/50v2pgna","slide":7,"name":"TextBox 22","text":"0.25","textPreview":"0.25","bbox":[578.88,406.74,80.64,21.12]}
+{"kind":"shape","id":"sh/q143ylov","slide":7,"name":"Connector 23","bbox":[504,511.68,163.2,0]}
+{"kind":"textbox","id":"sh/r2dkrq5g","slide":7,"name":"TextBox 24","text":"dark = base     colour = trained step 40","textPreview":"dark = base     colour = trained step 40","bbox":[81.6,580.8,614.4,21.12]}
+{"kind":"shape","id":"sh/s3ml0v61","slide":7,"name":"Rounded Rectangle 25","bbox":[739.2,170.88,484.8,451.2]}
+{"kind":"textbox","id":"sh/d4f2t0nm","slide":7,"name":"TextBox 26","text":"+51% mean reward","textPreview":"+51% mean reward","bbox":[766.08,193.92,436.8,38.4]}
+{"kind":"textbox","id":"sh/e5o32lor","slide":7,"name":"TextBox 27","text":"0.396  →  0.599 on the 32-item check","textPreview":"0.396  →  0.599 on the 32-item check","bbox":[766.08,238.08,436.8,24.96]}
+{"kind":"textbox","id":"sh/f6xkvq5c","slide":7,"name":"TextBox 28","text":"Exact match","textPreview":"Exact match","bbox":[766.08,280.32,436.8,23.04]}
+{"kind":"textbox","id":"sh/p0zmlk7u","slide":7,"name":"TextBox 29","text":"28%  →  34% overall. API-Bank 9/16 → 11/16. SWE-Gym still 0/16.","textPreview":"28%  →  34% overall. API-Bank 9/16 → 11/16. SWE-Gym still 0/16.","bbox":[766.08,307.2,436.8,67.2]}
+{"kind":"textbox","id":"sh/ozq5szq9","slide":7,"name":"TextBox 30","text":"Why this is not a suite win","textPreview":"Why this is not a suite win","bbox":[766.08,382.08,436.8,23.04]}
+{"kind":"textbox","id":"sh/nyh4jupo","slide":7,"name":"TextBox 31","text":"These prompts come from the training sources. They are not SWE-bench Pro, not APEX, not WebBench. A higher train-source reward does not move any E1–E14 cell.","textPreview":"These prompts come from the training sources. They are not SWE-bench Pro, not APEX, not WebBench. A higher train-source reward does not m...","bbox":[766.08,410.88,436.8,163.2]}
+{"kind":"shape","id":"sh/2x8nqp83","slide":7,"name":"Connector 32","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/x4j6p47q","slide":7,"name":"TextBox 33","text":"Sources: base_reasoning_stripped_seed1810.json; trained_step40_seed1810.json · W&B fcsr357r / u9v7kh9w","textPreview":"Sources: base_reasoning_stripped_seed1810.json; trained_step40_seed1810.json · W&B fcsr357r / u9v7kh9w","bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"slide","id":"fu1gfa1s","slide":8,"title":"Source slide 8"}
+{"kind":"textbox","id":"sh/18byd4zy","slide":8,"name":"TextBox 1","text":"WHY THIRTEEN LANES ARE BLANK","textPreview":"WHY THIRTEEN LANES ARE BLANK","bbox":[52.8,24.96,624,21.12]}
+{"kind":"textbox","id":"sh/g72x4zyd","slide":8,"name":"TextBox 2","text":"The next score is gated by other people, not by more code.","textPreview":"The next score is gated by other people, not by more code.","bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/ri9g7uhw","slide":8,"name":"TextBox 3","text":"08","textPreview":"08","bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/6h0fypgb","slide":8,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"shape","id":"sh/tkby9kzm","slide":8,"name":"Rounded Rectangle 5","bbox":[62.4,136.32,580.8,228.48]}
+{"kind":"shape","id":"sh/sjix0zy1","slide":8,"name":"Rectangle 6","bbox":[62.4,136.32,7.68,228.48]}
+{"kind":"textbox","id":"sh/je9g3ahk","slide":8,"name":"TextBox 7","text":"LICENSE","textPreview":"LICENSE","bbox":[89.28,153.6,528,26.88]}
+{"kind":"textbox","id":"sh/id0fu50z","slide":8,"name":"TextBox 8","text":"E1 · E2 · E7 · E12 · E13","textPreview":"E1 · E2 · E7 · E12 · E13","bbox":[89.28,186.24,528,26.88]}
+{"kind":"textbox","id":"sh/o7ydoret","slide":8,"name":"TextBox 9","text":"No SPDX / LICENSE at the pinned revision. I will not download or score without a grant.","textPreview":"No SPDX / LICENSE at the pinned revision. I will not download or score without a grant.","bbox":[89.28,224.64,528,110.4]}
+{"kind":"shape","id":"sh/98rehwve","slide":8,"name":"Rounded Rectangle 10","bbox":[667.2,136.32,580.8,228.48]}
+{"kind":"shape","id":"sh/m5gvmhwn","slide":8,"name":"Rectangle 11","bbox":[667.2,136.32,7.68,228.48]}
+{"kind":"textbox","id":"sh/n6pwfmd8","slide":8,"name":"TextBox 12","text":"PRIVATE DATA","textPreview":"PRIVATE DATA","bbox":[694.08,153.6,528,26.88]}
+{"kind":"textbox","id":"sh/0jydkreh","slide":8,"name":"TextBox 13","text":"E3 · E5 · E6 · E8 · E10 · E14","textPreview":"E3 · E5 · E6 · E8 · E10 · E14","bbox":[694.08,186.24,528,26.88]}
+{"kind":"textbox","id":"sh/1k7edwv2","slide":8,"name":"TextBox 14","text":"SDAB, APEX, Halluminate, LifeSci, AISI held-out, and FrontierMath are not public suites.","textPreview":"SDAB, APEX, Halluminate, LifeSci, AISI held-out, and FrontierMath are not public suites.","bbox":[694.08,224.64,528,110.4]}
+{"kind":"shape","id":"sh/ehgvihwr","slide":8,"name":"Rounded Rectangle 15","bbox":[62.4,381.12,580.8,228.48]}
+{"kind":"shape","id":"sh/zipwbmdc","slide":8,"name":"Rectangle 16","bbox":[62.4,381.12,7.68,228.48]}
+{"kind":"textbox","id":"sh/kfixwbe1","slide":8,"name":"TextBox 17","text":"KEYS / COST","textPreview":"KEYS / COST","bbox":[89.28,398.4,528,26.88]}
+{"kind":"textbox","id":"sh/lgbepgvm","slide":8,"name":"TextBox 18","text":"E4 · E5 · E7 · E9","textPreview":"E4 · E5 · E7 · E9","bbox":[89.28,431.04,528,26.88]}
+{"kind":"textbox","id":"sh/tw7e9gnq","slide":8,"name":"TextBox 19","text":"Full APEX pass@1 is about $122.57 against a $15 remainder. I will not start that run.","textPreview":"Full APEX pass@1 is about $122.57 against a $15 remainder. I will not start that run.","bbox":[89.28,469.44,528,110.4]}
+{"kind":"shape","id":"sh/svydgb65","slide":8,"name":"Rounded Rectangle 20","bbox":[667.2,381.12,580.8,228.48]}
+{"kind":"shape","id":"sh/7u5w765k","slide":8,"name":"Rectangle 21","bbox":[667.2,381.12,7.68,228.48]}
+{"kind":"textbox","id":"sh/6twve1oz","slide":8,"name":"TextBox 22","text":"MACHINE","textPreview":"MACHINE","bbox":[694.08,398.4,528,26.88]}
+{"kind":"textbox","id":"sh/5sne5wne","slide":8,"name":"TextBox 23","text":"E1 · E2","textPreview":"E1 · E2","bbox":[694.08,431.04,528,26.88]}
+{"kind":"textbox","id":"sh/kredcr6t","slide":8,"name":"TextBox 24","text":"Official images are linux/amd64. This host is ARM. QEMU timed out or core-dumped.","textPreview":"Official images are linux/amd64. This host is ARM. QEMU timed out or core-dumped.","bbox":[694.08,469.44,528,110.4]}
+{"kind":"shape","id":"sh/jq5w365o","slide":8,"name":"Connector 25","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/i5wva1o3","slide":8,"name":"TextBox 26","text":"Sources: per-lane receipts under outputs/e1_…e14_*; E5 full_run_cost_projection.json; LANE_BRIEF.md","textPreview":"Sources: per-lane receipts under outputs/e1_…e14_*; E5 full_run_cost_projection.json; LANE_BRIEF.md","bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"slide","id":"udsvah03","slide":9,"title":"Source slide 9"}
+{"kind":"textbox","id":"sh/1cfmhgne","slide":9,"name":"TextBox 1","text":"PUBLICATION THIS WEEK","textPreview":"PUBLICATION THIS WEEK","bbox":[52.8,24.96,624,21.12]}
+{"kind":"textbox","id":"sh/0b65obm9","slide":9,"name":"TextBox 2","text":"The review forced smaller claims and a larger test.","textPreview":"The review forced smaller claims and a larger test.","bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/nex4jq5k","slide":9,"name":"TextBox 3","text":"09","textPreview":"09","bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/mdonql4z","slide":9,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"textbox","id":"sh/9gzml0nq","slide":9,"name":"TextBox 5","text":"NeurIPS #36320 liked the problem and did not trust the story. I treated that as a bug report.","textPreview":"NeurIPS #36320 liked the problem and did not trust the story. I treated that as a bug report.","bbox":[62.4,124.8,1152,26.88]}
+{"kind":"shape","id":"sh/ofq5svm5","slide":9,"name":"Rounded Rectangle 6","bbox":[62.4,170.88,278.4,122.88]}
+{"kind":"shape","id":"sh/bih4na5w","slide":9,"name":"Rectangle 7","bbox":[62.4,170.88,5.76,122.88]}
+{"kind":"textbox","id":"sh/ah8nu54b","slide":9,"name":"TextBox 8","text":"12","textPreview":"12","bbox":[81.6,184.32,247.68,40.32]}
+{"kind":"textbox","id":"sh/oza1gfyh","slide":9,"name":"TextBox 9","text":"ideas narrowed","textPreview":"ideas narrowed","bbox":[81.6,224.64,247.68,23.04]}
+{"kind":"textbox","id":"sh/p0ji9kf2","slide":9,"name":"TextBox 10","text":"not 12 equal submissions","textPreview":"not 12 equal submissions","bbox":[81.6,249.6,247.68,34.56]}
+{"kind":"shape","id":"sh/2xsjepgb","slide":9,"name":"Rounded Rectangle 11","bbox":[360,170.88,278.4,122.88]}
+{"kind":"shape","id":"sh/3y107axw","slide":9,"name":"Rectangle 12","bbox":[360,170.88,5.76,122.88]}
+{"kind":"textbox","id":"sh/cnu1kzyd","slide":9,"name":"TextBox 13","text":"2","textPreview":"2","bbox":[379.2,184.32,247.68,40.32]}
+{"kind":"textbox","id":"sh/do3id4fy","slide":9,"name":"TextBox 14","text":"paper directions","textPreview":"paper directions","bbox":[379.2,224.64,247.68,23.04]}
+{"kind":"textbox","id":"sh/qlcjipgn","slide":9,"name":"TextBox 15","text":"treatment audit + TRIAGE-RL","textPreview":"treatment audit + TRIAGE-RL","bbox":[379.2,249.6,247.68,34.56]}
+{"kind":"shape","id":"sh/bml0buxs","slide":9,"name":"Rounded Rectangle 16","bbox":[657.6,170.88,278.4,122.88]}
+{"kind":"shape","id":"sh/0ru1ozyp","slide":9,"name":"Rectangle 17","bbox":[657.6,170.88,5.76,122.88]}
+{"kind":"textbox","id":"sh/lsn2h4fa","slide":9,"name":"TextBox 18","text":"0","textPreview":"0","bbox":[676.8,184.32,247.68,40.32]}
+{"kind":"textbox","id":"sh/98ji147e","slide":9,"name":"TextBox 19","text":"new venue claims","textPreview":"new venue claims","bbox":[676.8,224.64,247.68,23.04]}
+{"kind":"textbox","id":"sh/87a18zqt","slide":9,"name":"TextBox 20","text":"NeurIPS overlap stays frozen","textPreview":"NeurIPS overlap stays frozen","bbox":[676.8,249.6,247.68,34.56]}
+{"kind":"shape","id":"sh/76h0zup8","slide":9,"name":"Rounded Rectangle 21","bbox":[955.2,170.88,264,122.88]}
+{"kind":"shape","id":"sh/ml8j6p8n","slide":9,"name":"Rectangle 22","bbox":[955.2,170.88,5.76,122.88]}
+{"kind":"textbox","id":"sh/hcji5o7a","slide":9,"name":"TextBox 23","text":"11","textPreview":"11","bbox":[974.4,184.32,233.28,40.32]}
+{"kind":"textbox","id":"sh/wba1cjqp","slide":9,"name":"TextBox 24","text":"slide ELI12 deck","textPreview":"slide ELI12 deck","bbox":[974.4,224.64,233.28,23.04]}
+{"kind":"textbox","id":"sh/va103ep4","slide":9,"name":"TextBox 25","text":"plus 6–7 min read-aloud","textPreview":"plus 6–7 min read-aloud","bbox":[974.4,249.6,233.28,34.56]}
+{"kind":"shape","id":"sh/u9sja98z","slide":9,"name":"Oval 26","bbox":[69.12,314.88,55.68,55.68]}
+{"kind":"textbox","id":"sh/xgzitk76","slide":9,"name":"TextBox 27","text":"1","textPreview":"1","bbox":[69.12,328.32,55.68,26.88]}
+{"kind":"textbox","id":"sh/cf6h0fql","slide":9,"name":"TextBox 28","text":"KEEP","textPreview":"KEEP","bbox":[145.92,312.96,129.6,21.12]}
+{"kind":"textbox","id":"sh/2l4faloj","slide":9,"name":"TextBox 29","text":"Frozen NeurIPS file","textPreview":"Frozen NeurIPS file","bbox":[145.92,336,1036.8,26.88]}
+{"kind":"textbox","id":"sh/nmdg3q54","slide":9,"name":"TextBox 30","text":"Do not submit a second overlapping paper while the review is open.","textPreview":"Do not submit a second overlapping paper while the review is open.","bbox":[145.92,364.8,1036.8,30.72]}
+{"kind":"shape","id":"sh/onmxcv69","slide":9,"name":"Oval 31","bbox":[69.12,420.48,55.68,55.68]}
+{"kind":"textbox","id":"sh/pofy50nu","slide":9,"name":"TextBox 32","text":"2","textPreview":"2","bbox":[69.12,433.92,55.68,26.88]}
+{"kind":"textbox","id":"sh/apofe5of","slide":9,"name":"TextBox 33","text":"READY","textPreview":"READY","bbox":[145.92,418.56,129.6,21.12]}
+{"kind":"textbox","id":"sh/bqxg7q50","slide":9,"name":"TextBox 34","text":"Paper A — verify the treatment","textPreview":"Paper A — verify the treatment","bbox":[145.92,441.6,1036.8,26.88]}
+{"kind":"textbox","id":"sh/cr6xgv6l","slide":9,"name":"TextBox 35","text":"Bind every number to the exact stack. This is the defensible methods paper.","textPreview":"Bind every number to the exact stack. This is the defensible methods paper.","bbox":[145.92,470.4,1036.8,30.72]}
+{"kind":"shape","id":"sh/xcfy90n6","slide":9,"name":"Oval 36","bbox":[69.12,526.08,55.68,55.68]}
+{"kind":"textbox","id":"sh/qtkf21ob","slide":9,"name":"TextBox 37","text":"3","textPreview":"3","bbox":[69.12,539.52,55.68,26.88]}
+{"kind":"textbox","id":"sh/rutwv65w","slide":9,"name":"TextBox 38","text":"GATED","textPreview":"GATED","bbox":[145.92,524.16,129.6,21.12]}
+{"kind":"textbox","id":"sh/7y14jyd8","slide":9,"name":"TextBox 39","text":"Paper B — TRIAGE-RL","textPreview":"Paper B — TRIAGE-RL","bbox":[145.92,547.2,1036.8,26.88]}
+{"kind":"textbox","id":"sh/mdsnatcn","slide":9,"name":"TextBox 40","text":"Only if a matched-budget experiment wins. Still a proposal.","textPreview":"Only if a matched-budget experiment wins. Still a proposal.","bbox":[145.92,576,1036.8,30.72]}
+{"kind":"shape","id":"sh/903ml8be","slide":9,"name":"Connector 41","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/8zu5c3ut","slide":9,"name":"TextBox 42","text":"Sources: REVIEWER_36320_CORRECTION_MANIFEST.md; outputs/NeurIPS_Review_12_Ideas_E1_E14_ELI12_Dark_2026-08-09.pptx","textPreview":"Sources: REVIEWER_36320_CORRECTION_MANIFEST.md; outputs/NeurIPS_Review_12_Ideas_E1_E14_ELI12_Dark_2026-08-09.pptx","bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"slide","id":"m90b6t0r","slide":10,"title":"Source slide 10"}
+{"kind":"textbox","id":"sh/xc3mho32","slide":10,"name":"TextBox 1","text":"NEXT WEEK","textPreview":"NEXT WEEK","bbox":[52.8,24.96,624,21.12]}
+{"kind":"textbox","id":"sh/cbu58j2h","slide":10,"name":"TextBox 2","text":"Three decisions, in order","textPreview":"Three decisions, in order","bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/zelojyl8","slide":10,"name":"TextBox 3","text":"10","textPreview":"10","bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/ydcnatkn","slide":10,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"textbox","id":"sh/l036l83y","slide":10,"name":"TextBox 5","text":"I will not spend the remaining budget just because the harness is green.","textPreview":"I will not spend the remaining budget just because the harness is green.","bbox":[62.4,124.8,1104,26.88]}
+{"kind":"shape","id":"sh/kzu5c32t","slide":10,"name":"Oval 6","bbox":[69.12,174.72,65.28,65.28]}
+{"kind":"textbox","id":"sh/725onyl4","slide":10,"name":"TextBox 7","text":"01","textPreview":"01","bbox":[69.12,192,65.28,26.88]}
+{"kind":"textbox","id":"sh/m1cnetkj","slide":10,"name":"TextBox 8","text":"Unblock one real suite","textPreview":"Unblock one real suite","bbox":[161.28,172.8,844.8,30.72]}
+{"kind":"textbox","id":"sh/s7yt4b21","slide":10,"name":"TextBox 9","text":"Pick one: license grant (E2/E7/E12) or provider access (E6/E10). One exact native score beats fourteen more receipts.","textPreview":"Pick one: license grant (E2/E7/E12) or provider access (E6/E10). One exact native score beats fourteen more receipts.","bbox":[161.28,211.2,854.4,59.52]}
+{"kind":"shape","id":"sh/d87uxg3m","slide":10,"name":"Connector 10","bbox":[101.76,243.84,0,55.68]}
+{"kind":"shape","id":"sh/q5gb21kb","slide":10,"name":"Oval 11","bbox":[69.12,307.2,65.28,65.28]}
+{"kind":"textbox","id":"sh/r6pcv6lw","slide":10,"name":"TextBox 12","text":"02","textPreview":"02","bbox":[69.12,324.48,65.28,26.88]}
+{"kind":"textbox","id":"sh/0bit8b2d","slide":10,"name":"TextBox 13","text":"Do not scale the E11 smoke","textPreview":"Do not scale the E11 smoke","bbox":[161.28,305.28,844.8,30.72]}
+{"kind":"textbox","id":"sh/1cru1g3y","slide":10,"name":"TextBox 14","text":"If we continue Verilog, run a pre-registered harder slice — not Prob001 again. Record decontamination first.","textPreview":"If we continue Verilog, run a pre-registered harder slice — not Prob001 again. Record decontamination first.","bbox":[161.28,343.68,854.4,59.52]}
+{"kind":"shape","id":"sh/e9gb61k7","slide":10,"name":"Connector 15","bbox":[101.76,376.32,0,55.68]}
+{"kind":"shape","id":"sh/fapcz6ls","slide":10,"name":"Oval 16","bbox":[69.12,439.68,65.28,65.28]}
+{"kind":"textbox","id":"sh/ozitcv29","slide":10,"name":"TextBox 17","text":"03","textPreview":"03","bbox":[69.12,456.96,65.28,26.88]}
+{"kind":"textbox","id":"sh/p0ru503u","slide":10,"name":"TextBox 18","text":"Keep NeurIPS frozen","textPreview":"Keep NeurIPS frozen","bbox":[161.28,437.76,844.8,30.72]}
+{"kind":"textbox","id":"sh/xwnupgvy","slide":10,"name":"TextBox 19","text":"No second overlapping submission. Paper A waits for the review. Paper B waits for a matched-budget win.","textPreview":"No second overlapping submission. Paper A waits for the review. Paper B waits for a matched-budget win.","bbox":[161.28,476.16,854.4,59.52]}
+{"kind":"shape","id":"sh/wvetgbud","slide":10,"name":"Rounded Rectangle 20","bbox":[1051.2,174.72,168,403.2]}
+{"kind":"textbox","id":"sh/bu5cnqd8","slide":10,"name":"TextBox 21","text":"ASK","textPreview":"ASK","bbox":[1067.52,199.68,136.32,23.04]}
+{"kind":"textbox","id":"sh/atwbelcn","slide":10,"name":"TextBox 22","text":"Which one suite should I unblock first?","textPreview":"Which one suite should I unblock first?","bbox":[1063.68,240,144,230.4]}
+{"kind":"shape","id":"sh/lk7ut0va","slide":10,"name":"Connector 23","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/kjytkvup","slide":10,"name":"TextBox 24","text":"Sources: LANE_BRIEF.md immediate next actions; E5 cost projection; E11 outstanding_blockers","textPreview":"Sources: LANE_BRIEF.md immediate next actions; E5 cost projection; E11 outstanding_blockers","bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"slide","id":"jetc3ut0","slide":11,"title":"Source slide 11"}
+{"kind":"textbox","id":"sh/xcryxg7y","slide":11,"name":"TextBox 1","text":"BOTTOM LINE","textPreview":"BOTTOM LINE","bbox":[52.8,24.96,624,21.12]}
+{"kind":"textbox","id":"sh/wbih4b6d","slide":11,"name":"TextBox 2","text":"I built the usefulness test. I have not passed it.","textPreview":"I built the usefulness test. I have not passed it.","bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/n69grmpw","slide":11,"name":"TextBox 3","text":"11","textPreview":"11","bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/250zy18b","slide":11,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"textbox","id":"sh/98rytw72","slide":11,"name":"TextBox 5","text":"Fourteen lanes, one smoke, and a higher score on the training sources. That is progress. It is not a usefulness result.","textPreview":"Fourteen lanes, one smoke, and a higher score on the training sources. That is progress. It is not a usefulness result.","bbox":[65.28,130.56,1152,52.8]}
+{"kind":"shape","id":"sh/o7ih0r6h","slide":11,"name":"Rounded Rectangle 6","bbox":[62.4,206.4,379.2,273.6]}
+{"kind":"textbox","id":"sh/72t03qp0","slide":11,"name":"TextBox 7","text":"DONE","textPreview":"DONE","bbox":[85.44,226.56,326.4,24.96]}
+{"kind":"shape","id":"sh/61kzalof","slide":11,"name":"Oval 8","bbox":[89.28,274.56,11.52,11.52]}
+{"kind":"textbox","id":"sh/ofqtgnyt","slide":11,"name":"TextBox 9","text":"14 lane receipts","textPreview":"14 lane receipts","bbox":[112.32,264.96,302.4,30.72]}
+{"kind":"shape","id":"sh/9gza9sze","slide":11,"name":"Oval 10","bbox":[89.28,327.36,11.52,11.52]}
+{"kind":"textbox","id":"sh/mdobedg3","slide":11,"name":"TextBox 11","text":"NeurIPS 12-idea deck","textPreview":"NeurIPS 12-idea deck","bbox":[112.32,317.76,302.4,30.72]}
+{"kind":"shape","id":"sh/nehs7iho","slide":11,"name":"Oval 12","bbox":[89.28,380.16,11.52,11.52]}
+{"kind":"textbox","id":"sh/0b6tc3yx","slide":11,"name":"TextBox 13","text":"Checkpoint + W&B bound","textPreview":"Checkpoint + W&B bound","bbox":[112.32,370.56,302.4,30.72]}
+{"kind":"shape","id":"sh/1cfa58zi","slide":11,"name":"Rounded Rectangle 14","bbox":[463.68,206.4,379.2,273.6]}
+{"kind":"textbox","id":"sh/epobatgr","slide":11,"name":"TextBox 15","text":"SCORED","textPreview":"SCORED","bbox":[486.72,226.56,326.4,24.96]}
+{"kind":"shape","id":"sh/zaxs3yhc","slide":11,"name":"Oval 16","bbox":[490.56,274.56,11.52,11.52]}
+{"kind":"textbox","id":"sh/cn6t83y1","slide":11,"name":"TextBox 17","text":"E11 4/4 smoke","textPreview":"E11 4/4 smoke","bbox":[513.6,264.96,302.4,30.72]}
+{"kind":"shape","id":"sh/dofa18z6","slide":11,"name":"Oval 18","bbox":[490.56,327.36,11.52,11.52]}
+{"kind":"textbox","id":"sh/tsnip0ny","slide":11,"name":"TextBox 19","text":"32-item portfolio check","textPreview":"32-item portfolio check","bbox":[513.6,317.76,302.4,30.72]}
+{"kind":"shape","id":"sh/87ehgv6d","slide":11,"name":"Oval 20","bbox":[490.56,380.16,11.52,11.52]}
+{"kind":"textbox","id":"sh/7650nq5s","slide":11,"name":"TextBox 21","text":"API-Bank up; SWE-Gym exact 0","textPreview":"API-Bank up; SWE-Gym exact 0","bbox":[513.6,370.56,302.4,30.72]}
+{"kind":"shape","id":"sh/65wzelo7","slide":11,"name":"Rounded Rectangle 22","bbox":[864.96,206.4,379.2,273.6]}
+{"kind":"textbox","id":"sh/l43ilgn2","slide":11,"name":"TextBox 23","text":"OPEN","textPreview":"OPEN","bbox":[888,226.56,326.4,24.96]}
+{"kind":"shape","id":"sh/k3uhcb6h","slide":11,"name":"Oval 24","bbox":[891.84,274.56,11.52,11.52]}
+{"kind":"textbox","id":"sh/j2lgjq5w","slide":11,"name":"TextBox 25","text":"13 exact suite scores","textPreview":"13 exact suite scores","bbox":[914.88,264.96,302.4,30.72]}
+{"kind":"shape","id":"sh/y1czalob","slide":11,"name":"Oval 26","bbox":[891.84,327.36,11.52,11.52]}
+{"kind":"textbox","id":"sh/p07ixkn6","slide":11,"name":"TextBox 27","text":"Licenses and providers","textPreview":"Licenses and providers","bbox":[914.88,317.76,302.4,30.72]}
+{"kind":"shape","id":"sh/4zyhofml","slide":11,"name":"Oval 28","bbox":[891.84,380.16,11.52,11.52]}
+{"kind":"textbox","id":"sh/m58fih43","slide":11,"name":"TextBox 29","text":"No new paper claim","textPreview":"No new paper claim","bbox":[914.88,370.56,302.4,30.72]}
+{"kind":"textbox","id":"sh/n61wbmlo","slide":11,"name":"TextBox 30","text":"Thank you","textPreview":"Thank you","bbox":[65.28,508.8,384,40.32]}
+{"kind":"textbox","id":"sh/o7axk7m9","slide":11,"name":"TextBox 31","text":"Questions  ·  which suite first?","textPreview":"Questions  ·  which suite first?","bbox":[65.28,554.88,528,24.96]}
+{"kind":"textbox","id":"sh/98jedc3u","slide":11,"name":"TextBox 32","text":"Project: Tinker RL Lab","textPreview":"Project: Tinker RL Lab","bbox":[710.4,516.48,508.8,21.12]}
+{"kind":"textbox","id":"sh/eh8fex47","slide":11,"name":"TextBox 33","text":"14 Aug 2026  ·  main @ 3315631f","textPreview":"14 Aug 2026  ·  main @ 3315631f","bbox":[710.4,545.28,508.8,21.12]}
+{"kind":"textbox","id":"sh/z2hw72lc","slide":11,"name":"TextBox 34","text":"Backup: NeurIPS ELI12 deck · 09 Aug","textPreview":"Backup: NeurIPS ELI12 deck · 09 Aug","bbox":[710.4,574.08,508.8,21.12]}
+{"kind":"shape","id":"sh/03qxg7mx","slide":11,"name":"Connector 35","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/14ze9c3i","slide":11,"name":"TextBox 36","text":"Primary references: e1_e14_trained_eval_ledger_2026-08-09.json; e11_trained_step40_receipt.json; trained_step40_seed1810.json","textPreview":"Primary references: e1_e14_trained_eval_ledger_2026-08-09.json; e11_trained_step40_receipt.json; trained_step40_seed1810.json","bbox":[55.68,689.28,1123.2,16.32]}

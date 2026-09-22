@@ -1,0 +1,577 @@
+{
+  "as_of_utc": "2026-09-06T09:30:11.334425+00:00",
+  "budget": {
+    "authorized_incremental_usd": 50.0,
+    "boundary": "Historical conservative accounting, not a refreshed invoice or Colab balance. No new paid allocation in this task.",
+    "counted_incremental_usd": 5.630100981793,
+    "ledger_recorded_at": "2026-08-30T02:14:48Z",
+    "recorded_remaining_usd": 44.369899018207
+  },
+  "caveats": [
+    "Two full-suite single-seed outcomes do not complete the broader multi-seed research program.",
+    "Partial and recovery outcomes are never interpreted as full-suite scores.",
+    "E9 legacy Tinker and merged-vLLM arms remain separate; heterogeneous competition scores are not averaged.",
+    "The first Spooky Author run retains only a submission preview; its complete submission is missing. A later same-program run has its complete submission.",
+    "Colab source-pin preflight for the alternative public portfolio does not evaluate the contracted E1-E14 suites.",
+    "Historical Colab canaries failed with out-of-memory and CUDA illegal-memory-access errors; they produced no suite result.",
+    "Provider trust, licenses, decontamination, full-suite execution and checkpoint gates still apply before any paid continuation."
+  ],
+  "complete_exact_suite_results": 2,
+  "e9_arms": {
+    "merged_vllm": {
+      "attempted_competition_ids": [
+        "alaska2-image-steganalysis",
+        "h-and-m-personalized-fashion-recommendations",
+        "hotel-id-2021-fgvc8",
+        "hubmap-kidney-segmentation",
+        "imet-2020-fgvc7",
+        "predict-volcanic-eruptions-ingv-oe",
+        "vesuvius-challenge-ink-detection"
+      ],
+      "graded_competition_ids": [
+        "h-and-m-personalized-fashion-recommendations"
+      ],
+      "local_artifact_gaps": [],
+      "native_graded_competitions": 1,
+      "receipt_count": 7,
+      "score": null,
+      "status_counts": {
+        "NATIVE_SINGLE_COMPETITION_GRADED": 1,
+        "NATIVE_SINGLE_COMPETITION_INVALID": 6
+      },
+      "unique_competitions": 7
+    },
+    "modal_streaming": {
+      "attempted_competition_ids": [
+        "AI4Code",
+        "aerial-cactus-identification",
+        "aptos2019-blindness-detection",
+        "billion-word-imputation",
+        "bms-molecular-translation",
+        "cassava-leaf-disease-classification",
+        "chaii-hindi-and-tamil-question-answering",
+        "champs-scalar-coupling",
+        "denoising-dirty-documents",
+        "detecting-insults-in-social-commentary",
+        "dog-breed-identification",
+        "dogs-vs-cats-redux-kernels-edition",
+        "facebook-recruiting-iii-keyword-extraction",
+        "freesound-audio-tagging-2019",
+        "google-quest-challenge",
+        "histopathologic-cancer-detection",
+        "hms-harmful-brain-activity-classification",
+        "jigsaw-toxic-comment-classification-challenge",
+        "jigsaw-unintended-bias-in-toxicity-classification",
+        "kuzushiji-recognition",
+        "leaf-classification",
+        "learning-agency-lab-automated-essay-scoring-2",
+        "lmsys-chatbot-arena",
+        "mlsp-2013-birds",
+        "multi-modal-gesture-recognition",
+        "new-york-city-taxi-fare-prediction",
+        "nfl-player-contact-detection",
+        "nomad2018-predict-transparent-conductors",
+        "osic-pulmonary-fibrosis-progression",
+        "petfinder-pawpularity-score",
+        "plant-pathology-2020-fgvc7",
+        "plant-pathology-2021-fgvc8",
+        "random-acts-of-pizza",
+        "smartphone-decimeter-2022",
+        "spooky-author-identification",
+        "stanford-covid-vaccine",
+        "statoil-iceberg-classifier-challenge",
+        "tabular-playground-series-dec-2021",
+        "tabular-playground-series-may-2022",
+        "tensorflow-speech-recognition-challenge",
+        "tensorflow2-question-answering",
+        "text-normalization-challenge-english-language",
+        "text-normalization-challenge-russian-language",
+        "tgs-salt-identification-challenge",
+        "the-icml-2013-whale-challenge-right-whale-redux",
+        "tweet-sentiment-extraction",
+        "us-patent-phrase-to-phrase-matching",
+        "uw-madison-gi-tract-image-segmentation",
+        "ventilator-pressure-prediction",
+        "whale-categorization-playground"
+      ],
+      "graded_competition_ids": [
+        "AI4Code",
+        "aerial-cactus-identification",
+        "aptos2019-blindness-detection",
+        "bms-molecular-translation",
+        "cassava-leaf-disease-classification",
+        "chaii-hindi-and-tamil-question-answering",
+        "champs-scalar-coupling",
+        "denoising-dirty-documents",
+        "detecting-insults-in-social-commentary",
+        "dog-breed-identification",
+        "dogs-vs-cats-redux-kernels-edition",
+        "freesound-audio-tagging-2019",
+        "google-quest-challenge",
+        "histopathologic-cancer-detection",
+        "jigsaw-toxic-comment-classification-challenge",
+        "leaf-classification",
+        "learning-agency-lab-automated-essay-scoring-2",
+        "lmsys-chatbot-arena",
+        "mlsp-2013-birds",
+        "new-york-city-taxi-fare-prediction",
+        "nomad2018-predict-transparent-conductors",
+        "osic-pulmonary-fibrosis-progression",
+        "petfinder-pawpularity-score",
+        "plant-pathology-2020-fgvc7",
+        "random-acts-of-pizza",
+        "smartphone-decimeter-2022",
+        "spooky-author-identification",
+        "stanford-covid-vaccine",
+        "statoil-iceberg-classifier-challenge",
+        "tabular-playground-series-dec-2021",
+        "tabular-playground-series-may-2022",
+        "tensorflow-speech-recognition-challenge",
+        "tensorflow2-question-answering",
+        "text-normalization-challenge-russian-language",
+        "the-icml-2013-whale-challenge-right-whale-redux",
+        "tweet-sentiment-extraction",
+        "us-patent-phrase-to-phrase-matching",
+        "uw-madison-gi-tract-image-segmentation",
+        "ventilator-pressure-prediction",
+        "whale-categorization-playground"
+      ],
+      "local_artifact_gaps": [
+        {
+          "file": "submission.csv",
+          "reason": "local file absent",
+          "receipt": "outputs/e9_mle_bench/modal_streaming/spooky-author-identification-92a9c2022e7e/receipt.json"
+        }
+      ],
+      "native_graded_competitions": 40,
+      "receipt_count": 97,
+      "score": null,
+      "status_counts": {
+        "AGENT_EXECUTION_FAILED": 51,
+        "NATIVE_SINGLE_COMPETITION_GRADED": 41,
+        "NATIVE_SINGLE_COMPETITION_INVALID": 5
+      },
+      "unique_competitions": 50
+    }
+  },
+  "experiment_completion_claimed": false,
+  "externally_blocked_lanes": 7,
+  "lanes": [
+    {
+      "benchmark_status": "SCORED_EXACT_SUITE",
+      "lane": "E1",
+      "name": "SWE-bench Pro",
+      "receipt": "outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/receipt.json",
+      "remaining_requirement": "None for this recorded single-seed evaluation; 18 failed/lost generations remain unresolved in the denominator.",
+      "result": "2/731 = 0.274% pass@1",
+      "scope": "731/731 terminal generations; 713 native evaluations; 14 generation failures; 4 artifact losses",
+      "score": 0.0027359781121751026,
+      "work_status": "LOCALLY_TERMINAL"
+    },
+    {
+      "benchmark_status": "PARTIAL_EXACT",
+      "blocker": "The official pin 422b9bb95deb8efe436becb0ed3c44be23611e10 has no controlling root licence or evaluation authorization, and no official hosted signed-result route was found. The other 16 tasks therefore remain unavailable for an authorized exact full-suite run.",
+      "lane": "E2",
+      "latest_correctness": "8/8 hidden scenes",
+      "latest_native_task_reward": 0.725611,
+      "name": "FrontierSWE",
+      "receipt": "outputs/e2_frontier_swe/e2_terminal_attempt_receipt_2026-08-22.json",
+      "recovery_normalized_task_score": 0.8628,
+      "remaining_requirement": "Revision-bound benchmark authorization and 16 remaining tasks; original Tinker checkpoint unavailable.",
+      "result": "1/17 tasks; replay normalized score 0.8628",
+      "scope": "1/17 official tasks",
+      "score": null,
+      "work_status": "LOCAL_SETUP_READY_PROVIDER_INPUT_REQUIRED"
+    },
+    {
+      "benchmark_status": "BLOCKED_EXTERNAL",
+      "blocker": "Private 80-task bundle, provider runtime/reset contract, native grader, and license are absent.",
+      "followup_message_id": "1a04b91dc27b4469",
+      "lane": "E3",
+      "name": "SDAB",
+      "remaining_requirement": "Private 80-task bundle, runtime/reset contract and native grader.",
+      "result": "No exact-suite result",
+      "score": null,
+      "work_status": "WAITING_PROVIDER"
+    },
+    {
+      "attempt_metric": 0.3115,
+      "benchmark_status": "PARTIAL_RECOVERY",
+      "blocker": "The exact public checkout, dataset, and 100/100 generated task artifacts are restored and passed 1,175 manifest checks with zero failures. Exact execution remains blocked: the receipt-based native-grader lower bound is approximately $59.45, above the remaining $44.369899018207 cap, and any future model/verifier run still requires the campaign W&B, immutable-checkpoint, native-verifier, provider, and hard-budget gates.",
+      "lane": "E4",
+      "name": "BankerToolBench",
+      "receipt": "outputs/modal_e1_e14/2026-08-16/e4_recovery_evidence_boundary_2026-08-22.json",
+      "remaining_requirement": "Working model/verifier endpoint and budget: the prior native-grader-only estimate exceeds the recorded remaining cap.",
+      "restoration_receipt": "outputs/e4_banker_toolbench/e4_public_restoration_receipt_2026-08-30.json",
+      "result": "1/100 tasks; recovery metric 0.3115",
+      "scope": "1/100 official tasks; the single replayed artifact met 37/128 task criteria",
+      "score": null,
+      "work_status": "LOCALLY_TERMINAL_FOR_AVAILABLE_ARTIFACT"
+    },
+    {
+      "alternative_route_cost_receipt": "outputs/e5_apex_agents/e5_merged_vllm_cost_scenarios_2026-08-30.json",
+      "asset_inventory_receipt": "outputs/e5_apex_agents/e5_asset_inventory_2026-08-30.json",
+      "attempt_prefix_mean_failure_as_zero": 0.05050505050505051,
+      "benchmark_status": "PARTIAL_EXACT",
+      "blocker": "The pinned 480-task task/rubric bundle and sealed manifest are present, but the full auxiliary task/gold asset payload is not materialized locally; repository metadata remains gated although authenticated access was previously unblocked. Merged vLLM would be a separate execution arm and cannot be combined with the 11-task Tinker prefix. The local Mac lacks CUDA and storage; same-model A100 scenarios are approximately $143 to $289 before environments, with native judging adding a $4.20 to $5.39 lower bound, all above the remaining $44.369899018207 cap.",
+      "lane": "E5",
+      "name": "APEX-Agents",
+      "receipt": "outputs/e5_apex_agents/e5_exact_sequential_prefix_aggregate_2026-08-22.json",
+      "remaining_requirement": "Working inference runtime, full auxiliary assets, sufficient budget and a declared execution protocol.",
+      "result": "11/480 attempted; 7 native-scored; prefix mean 0.050505",
+      "scope": "11/480 sequential tasks attempted; 7 native-scored, 3 unscored failures, 1 operator-interrupted",
+      "score": null,
+      "scored_receipt_mean": 0.07936507936507936,
+      "work_status": "LOCALLY_TERMINAL_UNDER_CURRENT_CAP"
+    },
+    {
+      "access_request": "https://github.com/Halluminate/WebBench/issues/2#issuecomment-5460052427",
+      "benchmark_status": "BLOCKED_EXTERNAL",
+      "blocker": "Official live environment/reset, ground truth, native scorer, and write authorization are absent.",
+      "followup_message_id": "1a04b91dfda3af97",
+      "lane": "E6",
+      "name": "WebBench",
+      "remaining_requirement": "Official live environment, reset procedure, ground truth and native scorer.",
+      "result": "No exact-suite result",
+      "score": null,
+      "work_status": "LOCAL_SETUP_READY_PROVIDER_INPUT_REQUIRED"
+    },
+    {
+      "attempt_reward": 0.0,
+      "benchmark_status": "PARTIAL_EXACT",
+      "blocker": "The official pin cbd86c7cd8519f01ae6b7ad7db7fdb653ea54f23 has no revision-controlled licence artifact: repository licence metadata is null, the licence endpoint is 404, and the README's Apache-2.0 claim points to a missing LICENSE file. No hosted signed-result route was found for an authorized complete 46-task run.",
+      "lane": "E7",
+      "name": "BinaryAudit",
+      "receipt": "outputs/e7_binaryaudit/2026-08-22_e7_paid_attempt_receipt.json",
+      "remaining_requirement": "Revision-bound benchmark authorization, working model runtime and the remaining 45 tasks.",
+      "result": "1/46 tasks; verifier reward 0.0 after agent error",
+      "scope": "1/46 official tasks; native verifier completed for the task, while the agent terminated at the paid bridge boundary",
+      "score": null,
+      "work_status": "LOCALLY_TERMINAL_FOR_AVAILABLE_TASK"
+    },
+    {
+      "access_request_receipt": "outputs/e8_lifescibench/contact_sales_submission_receipt_2026-08-24.json",
+      "benchmark_status": "BLOCKED_EXTERNAL",
+      "blocker": "Official task package, license, and native grader are absent.",
+      "lane": "E8",
+      "name": "LifeSciBench",
+      "remaining_requirement": "Official task package and native grader.",
+      "result": "0/750 tasks",
+      "scope": "0/750 official tasks",
+      "score": null,
+      "work_status": "WAITING_PROVIDER"
+    },
+    {
+      "benchmark_status": "PARTIAL_EXACT",
+      "blocker": "35 legacy competitions still lack native grades. Seven separate fresh merged-vLLM pilots produced one valid native single-competition grade and six invalid receipts; all are terminal no-resample evidence with zero legacy coverage increment. The original Tinker sampler checkpoint is deleted. The 75-competition primary aggregate, multi-seed mean/SEM, and training-contamination receipt remain incomplete.",
+      "continuation_recovery_receipts": [
+        "outputs/e9_mle_bench/modal_streaming/plant-pathology-2021-fgvc8-1afc1ef65a3a/receipt.json",
+        "outputs/e9_mle_bench/modal_streaming/jigsaw-unintended-bias-in-toxicity-classification-be21ca31edd2/receipt.json",
+        "outputs/e9_mle_bench/modal_streaming/smartphone-decimeter-2022-1207910d9504/receipt.json",
+        "outputs/e9_mle_bench/modal_streaming/freesound-audio-tagging-2019-c160e87615be/receipt.json"
+      ],
+      "fresh_merged_vllm_arm": {
+        "arm_id": "e9_merged_vllm_seed809_v1",
+        "attempted_or_terminal_union_count": 58,
+        "claim_boundary": "These are fresh one-competition pilots from a separate merged-vLLM arm. Their scores are not unioned with the legacy Tinker-sampled 40/75 coverage and do not constitute an E9 suite score.",
+        "is_full_suite_score": false,
+        "legacy_tinker_coverage_increment": 0,
+        "local_hardening": {
+          "controller_and_arm_tests_passed": 46,
+          "fresh_sol_review_verdict": "ship",
+          "full_v3_success_path_complete": true,
+          "legacy_streaming_tests_passed": 57,
+          "modal_sdk_tests_passed": 12,
+          "paid_launch_enabled": false,
+          "remote_source_gpu_generation_enabled": false,
+          "reviewed_file_hashes": {
+            "e9_merged_vllm_arm.py": "15c1522fbea6227e3dab67d73248fdcb9a02a3bbae127a9f1774962afca18394",
+            "e9_merged_vllm_pilot_control.py": "3af91e5dd449a013b267e0d9ea1e7c32c0e780467606cbefe04b2d48f8b5d3ee",
+            "modal_e9_mle_bench_streaming.py": "088876ba2550c45889689de7fd94a20cad65a58cd5961b400531fd5a2fb462ce",
+            "test_e9_merged_vllm_arm.py": "1beba09e9b9f88c4807e2fb81618e35aeff35e0bde412c5b474a5ded380ac23e",
+            "test_e9_merged_vllm_pilot_control.py": "d8c1313b6b86fd8b1c1ae05ab58a0f8fabe7ba4cdac8be263b4e552f0e66f9e9",
+            "test_modal_e9_mle_bench_streaming.py": "672d8f730b669e20e445439655610eaef31513176d0ce71b1f6457e2cb5d3686"
+          },
+          "status": "REVIEW_PASS_FULL_V3_LOCAL_UNDEPLOYED_FROZEN",
+          "tests_passed": 115
+        },
+        "pilot_count": 7,
+        "remaining_unattempted_union_count": 17,
+        "score": null,
+        "terminal_receipts": [
+          {
+            "competition_id": "hotel-id-2021-fgvc8",
+            "competition_score": null,
+            "receipt": "outputs/e9_mle_bench/merged_vllm/hotel-id-2021-fgvc8-ed92df9f6c44/receipt.json",
+            "status": "NATIVE_SINGLE_COMPETITION_INVALID"
+          },
+          {
+            "competition_id": "imet-2020-fgvc7",
+            "competition_score": null,
+            "receipt": "outputs/e9_mle_bench/merged_vllm/imet-2020-fgvc7-9e3b7fa50417/receipt.json",
+            "status": "NATIVE_SINGLE_COMPETITION_INVALID"
+          },
+          {
+            "competition_id": "predict-volcanic-eruptions-ingv-oe",
+            "competition_score": null,
+            "receipt": "outputs/e9_mle_bench/merged_vllm/predict-volcanic-eruptions-ingv-oe-06379fb32587/receipt.json",
+            "status": "NATIVE_SINGLE_COMPETITION_INVALID"
+          },
+          {
+            "competition_id": "alaska2-image-steganalysis",
+            "competition_score": null,
+            "receipt": "outputs/e9_mle_bench/merged_vllm/alaska2-image-steganalysis-16967d82beeb/receipt.json",
+            "status": "NATIVE_SINGLE_COMPETITION_INVALID"
+          },
+          {
+            "competition_id": "hubmap-kidney-segmentation",
+            "competition_score": null,
+            "receipt": "outputs/e9_mle_bench/merged_vllm/hubmap-kidney-segmentation-6e08e20ea6d4/receipt.json",
+            "status": "NATIVE_SINGLE_COMPETITION_INVALID"
+          },
+          {
+            "above_median": false,
+            "competition_id": "h-and-m-personalized-fashion-recommendations",
+            "competition_score": 0.02132,
+            "receipt": "outputs/e9_mle_bench/merged_vllm/h-and-m-personalized-fashion-recommendations-33d90f35410c/receipt.json",
+            "status": "NATIVE_SINGLE_COMPETITION_GRADED",
+            "valid_submission": true
+          },
+          {
+            "competition_id": "vesuvius-challenge-ink-detection",
+            "competition_score": null,
+            "receipt": "outputs/e9_mle_bench/merged_vllm/vesuvius-challenge-ink-detection-83d8678a457b/receipt.json",
+            "status": "NATIVE_SINGLE_COMPETITION_INVALID"
+          }
+        ]
+      },
+      "lane": "E9",
+      "latest_execution_control_receipt": "outputs/e9_mle_bench/modal_streaming/_pending/plant-pathology-2021-fgvc8-fc-01M16YC7QCNDSS0MPSY0YTYKG2-cancellation-receipt.json",
+      "latest_legacy_competition": {
+        "above_median": false,
+        "any_medal": false,
+        "competition_id": "freesound-audio-tagging-2019",
+        "deterministic_repair": "streamed_unique_freesound_wavs_with_ordered_multilabel_logloss_submission",
+        "is_lower_better": false,
+        "receipt": "outputs/e9_mle_bench/modal_streaming/freesound-audio-tagging-2019-c160e87615be/receipt.json",
+        "receipt_embedded_sha256": "8e07fee28c1e53ef7f62520cb13c6610ff464835a67b7f3fd0759634344fe94f",
+        "receipt_sha256": "844cf17b430d2e6a84d6f2810fb095c6e2a74c6bbff1bf9de81a4c0abf370f19",
+        "score": 0.12497,
+        "valid_submission": true
+      },
+      "name": "MLE-bench",
+      "native_grade_coverage": "40/75 unique competitions",
+      "receipt_inventory": "97 receipts across 50 competition IDs; 41 graded receipts representing 40 unique competitions",
+      "remaining_breakdown": "10 competition IDs have only failed receipts and no saved submission; 25 competition IDs have no run receipt",
+      "remaining_requirement": "35 legacy competitions lack native grades; original sampler unavailable; separate merged arm is frozen.",
+      "remaining_without_native_grade": 35,
+      "result": "40/75 competitions with native grades; suite score unavailable",
+      "score": null,
+      "terms_receipt": "outputs/e9_mle_bench/kaggle_rule_acceptance_receipt_2026-08-22.json",
+      "work_status": "LOCALLY_RECONCILED_FOR_CURRENT_COMPLETION_WINDOW"
+    },
+    {
+      "access_request": "https://huggingface.co/datasets/ai-safety-institute/AgentHarm/discussions/9#6a9251ec206b2a11e4b13108",
+      "benchmark_status": "BLOCKED_EXTERNAL",
+      "blocker": "Private AgentHarm tasks and official native grader are absent.",
+      "lane": "E10",
+      "name": "AgentHarm",
+      "remaining_requirement": "Private held-out task files and authorized native grading route.",
+      "result": "No private-suite result",
+      "score": null,
+      "work_status": "WAITING_PROVIDER"
+    },
+    {
+      "benchmark_status": "SCORED_EXACT_SUITE",
+      "lane": "E11",
+      "name": "VerilogEval",
+      "receipt": "outputs/modal_e1_e14/2026-08-16/e11_full_receipt.json",
+      "remaining_requirement": "None for this recorded single-seed evaluation; 129/311 is noncanonical sensitivity only.",
+      "result": "129/312 = 41.35% pass@1",
+      "scope": "129/312 canonical raw",
+      "score": 0.41346153846153844,
+      "work_status": "LOCALLY_TERMINAL"
+    },
+    {
+      "access_request": "https://huggingface.co/datasets/AfterQuery/App-Bench/discussions/2#6a9251eccd8eaaf580d376b6",
+      "additional_access_request": "https://github.com/AfterQuery/appbench.ai-docs/issues/1",
+      "benchmark_status": "BLOCKED_EXTERNAL",
+      "blocker": "Official deployment, task artifacts, licence, provider trust root, and signed native result remain absent. The local intake now validates the six-task, best-of-three, dual-grader plus adjudication protocol and accepts a finite score only from a fully bound provider-signed result.",
+      "followup_message_id": "1a04b91e262745b6",
+      "lane": "E12",
+      "name": "AppBench",
+      "remaining_requirement": "Official deployment, task artifacts and native grading route.",
+      "result": "No exact-suite result",
+      "score": null,
+      "signed_result_collector": "zvf-program/flagship/pavlov_appbench_openreward_games_adapter.py",
+      "work_status": "WAITING_PROVIDER"
+    },
+    {
+      "additional_access_request": "https://github.com/EnvCommons/wordle/issues/3",
+      "benchmark_status": "BLOCKED_EXTERNAL",
+      "blocker": "The provider-defined immutable held-out OpenReward Games suite remains absent. Account onboarding is complete, but the authenticated 381-environment registry returned zero matches. Canonical score-null request construction and provider-signed result intake are now implemented; no runnable provider suite, trust root, native grading contract, or signed result has been granted.",
+      "followup_message_id": "1a04c1472eafad91",
+      "lane": "E13",
+      "name": "OpenReward Games",
+      "openreward_profile": "https://openreward.ai/arvindcr4",
+      "openreward_state": "PROFILE_ACTIVE",
+      "openreward_username": "arvindcr4",
+      "remaining_requirement": "Provider-defined immutable held-out games suite and grading contract.",
+      "result": "No exact-suite result",
+      "score": null,
+      "signed_result_collector": "zvf-program/flagship/e13_openreward_games_local_runner.py",
+      "work_status": "LOCAL_SETUP_READY_PROVIDER_INPUT_REQUIRED"
+    },
+    {
+      "benchmark_status": "BLOCKED_EXTERNAL",
+      "blocker": "The private hosted Epoch FrontierMath evaluation is unavailable.",
+      "followup_message_id": "1a04b91eb88ae0a6",
+      "lane": "E14",
+      "name": "FrontierMath",
+      "remaining_requirement": "Authorized hosted/private Epoch evaluation.",
+      "result": "No private-suite result",
+      "score": null,
+      "work_status": "WAITING_PROVIDER"
+    }
+  ],
+  "live_checks": {
+    "checked_at_utc": "2026-09-06T09:30:01.234661+00:00",
+    "colab_sessions": {
+      "exit_code": 0,
+      "output": "[colab] No active sessions found on server."
+    },
+    "hf_adapter": {
+      "commit": "64444133c55d88c3f1bf0df8a2f5d7ac646125c8",
+      "files": [
+        {
+          "bytes": 953,
+          "name": "adapter_config.json"
+        },
+        {
+          "bytes": 2245975768,
+          "name": "adapter_model.safetensors"
+        }
+      ],
+      "repo": "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6",
+      "status": "PIN_AND_FILE_METADATA_VERIFIED",
+      "weight_redownload_performed": false
+    },
+    "mail_check": {
+      "after": "2026-08-30",
+      "matching_non_self_messages": 1,
+      "method": "Gmail connector, read-only",
+      "note": "Only an unrelated AI newsletter matched; no email was sent.",
+      "provider_access_grants_found": 0,
+      "query_scope": [
+        "SDAB",
+        "WebBench",
+        "LifeSciBench",
+        "AgentHarm",
+        "AppBench",
+        "OpenReward",
+        "FrontierMath"
+      ]
+    },
+    "modal_apps": [
+      {
+        "app_id": "ap-EMnfdTwXzcPwAwVzP4ONyG",
+        "created_at": "2026-08-16 14:10:42+05:30",
+        "description": "pavlov-e1-swe-bench-pro",
+        "state": "deployed",
+        "stopped_at": null,
+        "tasks": "0"
+      },
+      {
+        "app_id": "ap-Jp9xtm3vsk7nMeNhARfvFI",
+        "created_at": "2026-08-16 23:38:32+05:30",
+        "description": "pavlov-e1-swe-bench-pro-full-native",
+        "state": "deployed",
+        "stopped_at": null,
+        "tasks": "0"
+      },
+      {
+        "app_id": "ap-mZ7F0ZKFUH24EuC3Z0gdOv",
+        "created_at": "2026-08-22 12:58:26+05:30",
+        "description": "__harbor__",
+        "state": "deployed",
+        "stopped_at": null,
+        "tasks": "0"
+      },
+      {
+        "app_id": "ap-VhlFccO5n0Vp1fr5ZpSOlc",
+        "created_at": "2026-08-22 12:59:58+05:30",
+        "description": "swe-bench-pro-eval",
+        "state": "deployed",
+        "stopped_at": null,
+        "tasks": "0"
+      },
+      {
+        "app_id": "ap-9WyfGx9kZCTRPuUD4L8vgA",
+        "created_at": "2026-08-22 16:40:25+05:30",
+        "description": "pavlov-e5-apex-environment",
+        "state": "deployed",
+        "stopped_at": null,
+        "tasks": "0"
+      },
+      {
+        "app_id": "ap-rWDFlUp4ZRyOinWm09dFhR",
+        "created_at": "2026-08-29 17:32:41+05:30",
+        "description": "pavlov-e9-mle-bench-streaming",
+        "state": "deployed",
+        "stopped_at": null,
+        "tasks": "0"
+      }
+    ],
+    "new_experiment_launches": 0,
+    "new_model_calls": 0,
+    "new_paid_compute_allocations": 0,
+    "public_access_requests": [
+      {
+        "comments": [
+          {
+            "created_at": "2026-08-24T06:18:29Z",
+            "user": "arvindcr4"
+          },
+          {
+            "created_at": "2026-08-29T03:28:43Z",
+            "user": "arvindcr4"
+          }
+        ],
+        "non_owner_comments": 0,
+        "query_succeeded": true,
+        "url": "https://github.com/Halluminate/WebBench/issues/2"
+      },
+      {
+        "comments": [],
+        "non_owner_comments": 0,
+        "query_succeeded": true,
+        "url": "https://github.com/AfterQuery/appbench.ai-docs/issues/1"
+      },
+      {
+        "comments": [],
+        "non_owner_comments": 0,
+        "query_succeeded": true,
+        "url": "https://github.com/EnvCommons/wordle/issues/3"
+      }
+    ],
+    "tinker_checkpoint": {
+      "exit_code": 1,
+      "output": "Error: Checkpoint not found: tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler_weights/seed809_final"
+    },
+    "tinker_checkpoint_list": {
+      "exit_code": 0,
+      "output": "{\n  \"run_id\": \"cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0\",\n  \"checkpoints\": []\n}"
+    }
+  },
+  "overall_status": "INCOMPLETE_BLOCKED",
+  "partial_lanes": 5,
+  "results_origin": "Historical native execution receipts rechecked locally on 2026-09-05; no new benchmark execution.",
+  "schema_version": "e1-e14-results-reconciliation-v1",
+  "source_status_recorded_at": "2026-08-30T20:54:54Z",
+  "validation": {
+    "checks_passed": 394,
+    "completion_gate_unit_tests_passed": 15,
+    "failed_checks": 0,
+    "recovered_files": 4
+  }
+}

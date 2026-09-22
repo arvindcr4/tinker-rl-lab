@@ -1,0 +1,23 @@
+{
+  "schema_version": "pavlov-e4-recovery-evidence-boundary-v1",
+  "recorded_at": "2026-08-22T10:03:54Z",
+  "lane": "E4",
+  "status": "RECOVERY",
+  "score": null,
+  "is_model_score": false,
+  "evidence_class": "attempt_level_recovery/replayed_model_artifact",
+  "claim_boundary": "The immutable 2026-08-16 receipt records a native 0.3115 verifier metric for one replayed model artifact. It is not a clean campaign or suite score, so the E4 lane score remains null.",
+  "attempt_metric": {
+    "name": "native_recovery_verifier_metric",
+    "value": 0.3115,
+    "task_id": "btb-707cba99",
+    "criteria_met": 37,
+    "criteria_total": 128,
+    "new_model_samples": 0
+  },
+  "immutable_source_receipt": {
+    "path": "outputs/modal_e1_e14/2026-08-16/e4_recovery_pass16_receipt.json",
+    "sha256": "37f59d97d32bbf4d6f41da1bfaa45ae2bdd333cf43944402b5b88a0186963257",
+    "preservation_note": "The original receipt is retained byte-for-byte; this dated overlay narrows its lane-level scientific claim."
+  }
+}

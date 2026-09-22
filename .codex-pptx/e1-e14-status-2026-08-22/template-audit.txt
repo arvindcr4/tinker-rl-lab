@@ -1,0 +1,7 @@
+Source: outputs/Tinker_RL_Progress_Update_2026-08-14.pptx
+Slides: 11, dark weekly-update design, 16:9.
+Structure: slide-local editable shapes over an inherited dark master; no external raster assets.
+Typography: Aptos and Calibri; preserve every source text box's font size, weight, insets, alignment, and vertical anchor.
+Reusable patterns: title/timeline, four-card status summary, metric strip, two-column lane scoreboard, evidence comparison, blocker grid, and three-step decision flow.
+Insertion contract: duplicate source slides 1-11 in order and rewrite inherited text objects only. No new primitives, no overlays, and no master or layout changes.
+Known source issue: slide 10 title clips at the left edge; use shorter copy in the same inherited title box.

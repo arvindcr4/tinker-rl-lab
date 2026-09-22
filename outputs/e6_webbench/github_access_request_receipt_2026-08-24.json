@@ -1,0 +1,17 @@
+{
+  "schema_version": "external-access-request-receipt-v1",
+  "lane": "E6",
+  "benchmark": "Halluminate/WebBench",
+  "provider": "Halluminate",
+  "route": "GitHub issue comment",
+  "issue": 2,
+  "comment_id": 5391445280,
+  "url": "https://github.com/Halluminate/WebBench/issues/2#issuecomment-5391445280",
+  "submitted_at": "2026-08-24T06:18:29Z",
+  "requester": "arvindcr4",
+  "status": "open",
+  "access_received": false,
+  "native_verifier_received": false,
+  "score": null,
+  "claim_boundary": "A public provider request is not environment access, verifier access, authorization for live writes, or a benchmark score."
+}

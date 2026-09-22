@@ -1,0 +1,115 @@
+{
+ "proxy": "Omni-MATH-test-subset",
+ "model": "qwen3:8b",
+ "n": 10,
+ "subset": "difficulty<=7.0, first-n",
+ "accuracy": 0.1,
+ "correct": 1,
+ "note": "Own-benchmark proxy number only; never an E14/FrontierMath score.",
+ "results": [
+  {
+   "i": 0,
+   "domain": [
+    "Mathematics -> Geometry -> Plane Geometry -> Triangulations"
+   ],
+   "difficulty": 7.0,
+   "pred": "1",
+   "gold": "1",
+   "correct": true
+  },
+  {
+   "i": 1,
+   "domain": [
+    "Mathematics -> Discrete Mathematics -> Graph Theory"
+   ],
+   "difficulty": 7.0,
+   "pred": "n-1",
+   "gold": "\\lceil\\log_2n\\rceil",
+   "correct": false
+  },
+  {
+   "i": 2,
+   "domain": [
+    "Mathematics -> Algebra -> Abstract Algebra -> Group Theory"
+   ],
+   "difficulty": 7.0,
+   "pred": "(p^2)!",
+   "gold": "2(p!)^2",
+   "correct": false
+  },
+  {
+   "i": 3,
+   "domain": [
+    "Mathematics -> Discrete Mathematics -> Algorithms"
+   ],
+   "difficulty": 7.0,
+   "pred": "\\text{yes",
+   "gold": "\\text{no}",
+   "correct": false
+  },
+  {
+   "i": 4,
+   "domain": [
+    "Mathematics -> Geometry -> Plane Geometry -> Other",
+    "Mathematics -> Discrete Mathematics -> Combinatorics",
+    "Mathematics -> Discrete Mathematics -> Graph Theory"
+   ],
+   "difficulty": 7.0,
+   "pred": "1080",
+   "gold": "3750",
+   "correct": false
+  },
+  {
+   "i": 5,
+   "domain": [
+    "Mathematics -> Geometry -> Plane Geometry -> Polygons",
+    "Mathematics -> Number Theory -> Other"
+   ],
+   "difficulty": 7.0,
+   "pred": "8012",
+   "gold": "561",
+   "correct": false
+  },
+  {
+   "i": 6,
+   "domain": [
+    "Mathematics -> Discrete Mathematics -> Graph Theory"
+   ],
+   "difficulty": 7.0,
+   "pred": "5",
+   "gold": "6",
+   "correct": false
+  },
+  {
+   "i": 7,
+   "domain": [
+    "Mathematics -> Geometry -> Plane Geometry -> Polygons"
+   ],
+   "difficulty": 6.0,
+   "pred": "3",
+   "gold": "n\\neq5",
+   "correct": false
+  },
+  {
+   "i": 8,
+   "domain": [
+    "Mathematics -> Geometry -> Plane Geometry -> Triangles -> Other",
+    "Mathematics -> Geometry -> Plane Geometry -> Angles"
+   ],
+   "difficulty": 6.5,
+   "pred": "\\frac{1",
+   "gold": "\\frac{2}{3}",
+   "correct": false
+  },
+  {
+   "i": 9,
+   "domain": [
+    "Mathematics -> Discrete Mathematics -> Graph Theory"
+   ],
+   "difficulty": 7.0,
+   "pred": "62527",
+   "gold": "127009",
+   "correct": false
+  }
+ ]
+}

@@ -1,0 +1,29 @@
+{
+  "schema_version": "e1-e14-terminal-status-v1",
+  "recorded_at": "2026-08-24T16:52:19Z",
+  "work_status": "DONE",
+  "evidence_rule": "DONE means every locally runnable action is terminal. It does not convert an external-access blocker or a partial attempt into a suite score.",
+  "local_validation": {
+    "status": "PASS",
+    "tests_run": 421,
+    "failures": 0,
+    "errors": 0,
+    "receipt": "outputs/E2_E14_Local_Completion_Validation_2026-08-22.json"
+  },
+  "lanes": [
+    {"lane":"E1","work_status":"DONE","benchmark_status":"SCORED_EXACT_SUITE","score":0.0027359781121751026,"scope":"731/731 terminal generations; 713 native evaluations; 14 generation failures; 4 artifact losses"},
+    {"lane":"E2","work_status":"DONE","benchmark_status":"PARTIAL_EXACT","score":null,"recovery_normalized_task_score":0.8628,"latest_native_task_reward":0.7284,"latest_correctness":"8/8 hidden scenes","scope":"1/17 official tasks","aggregate_receipt":"outputs/e2_e7_paid_execution_receipt_2026-08-22.json"},
+    {"lane":"E3","work_status":"DONE","benchmark_status":"BLOCKED_EXTERNAL","score":null,"blocker":"Private 80-task bundle, runtime/reset and native grader absent"},
+    {"lane":"E4","work_status":"DONE","benchmark_status":"PARTIAL_RECOVERY","score":null,"attempt_metric":0.3115,"scope":"37/128 criteria"},
+    {"lane":"E5","work_status":"DONE","benchmark_status":"PARTIAL_EXACT","score":null,"attempt_prefix_mean_failure_as_zero":0.05050505050505051,"scored_receipt_mean":0.07936507936507936,"scope":"11/480 sequential tasks attempted; 7 native-scored, 3 unscored failures, 1 operator-interrupted","blocker":"Task index 10 emitted 92 duplicate filesystem calls in one step after two consecutive non-finalized Investment Banking tasks; suite score remains null","aggregate_receipt":"outputs/e5_apex_agents/e5_exact_sequential_prefix_aggregate_2026-08-22.json"},
+    {"lane":"E6","work_status":"DONE","benchmark_status":"BLOCKED_EXTERNAL","score":null,"blocker":"Official live environment/reset, ground truth and native scorer absent; writes require authorization; provider follow-up open","access_request":"https://github.com/Halluminate/WebBench/issues/2#issuecomment-5391445280"},
+    {"lane":"E7","work_status":"DONE","benchmark_status":"PARTIAL_EXACT","score":null,"attempt_reward":0.0,"scope":"one exact task; native verifier completed without infrastructure exception","aggregate_receipt":"outputs/e2_e7_paid_execution_receipt_2026-08-22.json"},
+    {"lane":"E8","work_status":"DONE","benchmark_status":"BLOCKED_EXTERNAL","score":null,"blocker":"Official task package, license and native grader absent; official OpenAI request submitted","access_request_receipt":"outputs/e8_lifescibench/contact_sales_submission_receipt_2026-08-24.json"},
+    {"lane":"E9","work_status":"IN_PROGRESS","benchmark_status":"PARTIAL_EXACT","score":null,"scope":"35/75 competitions have native model grades; 5 additional terminal paid competitions were ungraded; all 75 Kaggle rule sets accepted","blocker":"40 competitions lack native grades; full production agent image and contamination/disjointness receipt remain absent","terms_receipt":"outputs/e9_mle_bench/kaggle_rule_acceptance_receipt_2026-08-22.json"},
+    {"lane":"E10","work_status":"DONE","benchmark_status":"BLOCKED_EXTERNAL","score":null,"blocker":"Private AgentHarm test_private split absent; official access request open with AISI","access_request":"https://huggingface.co/datasets/ai-safety-institute/AgentHarm/discussions/9"},
+    {"lane":"E11","work_status":"DONE","benchmark_status":"SCORED_EXACT_SUITE","score":0.41346153846153844,"scope":"129/312 canonical raw"},
+    {"lane":"E12","work_status":"DONE","benchmark_status":"BLOCKED_EXTERNAL","score":null,"blocker":"License, deployment and human two-grader protocol absent; official public request open","access_request":"https://huggingface.co/datasets/AfterQuery/App-Bench/discussions/2"},
+    {"lane":"E13","work_status":"DONE","benchmark_status":"BLOCKED_EXTERNAL","score":null,"blocker":"Provider-defined immutable held-out OpenReward Games suite absent"},
+    {"lane":"E14","work_status":"DONE","benchmark_status":"BLOCKED_EXTERNAL","score":null,"blocker":"Private hosted Epoch FrontierMath evaluation"}
+  ]
+}

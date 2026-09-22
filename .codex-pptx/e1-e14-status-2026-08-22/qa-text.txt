@@ -1,0 +1,9 @@
+Final QA completed 2026-08-25 (Asia/Kolkata).
+- Rebuilt all 11 slides from the receipt-aware artifact-tool source.
+- Rendered and inspected slides 1-11 individually at 1920x1080.
+- Corrected slide 3 rule copy and slide 5 E9 badge copy after visual fit defects were found.
+- Final rerender: no unintended overlap, clipping, or unexpected wrapping observed.
+- slides_test.py: pass; no canvas overflow detected.
+- check_template_fidelity.mjs: pass; zero issues.
+- PPTX archive integrity: pass; 11 slides and 11 [Sources] speaker-note blocks.
+- Evidence boundary preserved: E1 and E11 are exact-suite scores; E2, E5, E7, and E9 remain bounded partial evidence with suite score null.

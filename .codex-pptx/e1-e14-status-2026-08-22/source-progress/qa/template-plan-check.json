@@ -1,0 +1,10 @@
+{
+  "status": "pass",
+  "checkedAt": "2026-08-22T04:23:39.250Z",
+  "workspace": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress",
+  "mapPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/template-frame-map.json",
+  "inspectPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-inspect/template-inspect.ndjson",
+  "sourceSlideCount": 11,
+  "issueCount": 0,
+  "issues": []
+}

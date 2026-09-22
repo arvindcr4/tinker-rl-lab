@@ -1,0 +1,134 @@
+{
+  "sourcePptx": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/Tinker_RL_Progress_Update_2026-08-14.pptx",
+  "mapPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/template-frame-map.json",
+  "output": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter.pptx",
+  "outputBytes": 88726,
+  "sourceSlideCount": 11,
+  "slideCount": 11,
+  "previewDir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-preview",
+  "layoutDir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-layout",
+  "contactSheet": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-contact-sheet.png",
+  "slides": [
+    {
+      "outputSlide": 1,
+      "sourceSlide": 1,
+      "narrativeRole": "opening status thesis",
+      "reuseMode": "duplicate-slide",
+      "editTargetCount": 1,
+      "previewPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-preview/starter-slide-01.png",
+      "previewRelativePath": "template-starter-preview/starter-slide-01.png",
+      "layoutPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-layout/starter-slide-01.layout.json",
+      "layoutRelativePath": "template-starter-layout/starter-slide-01.layout.json"
+    },
+    {
+      "outputSlide": 2,
+      "sourceSlide": 2,
+      "narrativeRole": "current progress summary",
+      "reuseMode": "duplicate-slide",
+      "editTargetCount": 1,
+      "previewPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-preview/starter-slide-02.png",
+      "previewRelativePath": "template-starter-preview/starter-slide-02.png",
+      "layoutPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-layout/starter-slide-02.layout.json",
+      "layoutRelativePath": "template-starter-layout/starter-slide-02.layout.json"
+    },
+    {
+      "outputSlide": 3,
+      "sourceSlide": 3,
+      "narrativeRole": "execution timeline",
+      "reuseMode": "duplicate-slide",
+      "editTargetCount": 1,
+      "previewPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-preview/starter-slide-03.png",
+      "previewRelativePath": "template-starter-preview/starter-slide-03.png",
+      "layoutPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-layout/starter-slide-03.layout.json",
+      "layoutRelativePath": "template-starter-layout/starter-slide-03.layout.json"
+    },
+    {
+      "outputSlide": 4,
+      "sourceSlide": 4,
+      "narrativeRole": "evidence metrics",
+      "reuseMode": "duplicate-slide",
+      "editTargetCount": 1,
+      "previewPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-preview/starter-slide-04.png",
+      "previewRelativePath": "template-starter-preview/starter-slide-04.png",
+      "layoutPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-layout/starter-slide-04.layout.json",
+      "layoutRelativePath": "template-starter-layout/starter-slide-04.layout.json"
+    },
+    {
+      "outputSlide": 5,
+      "sourceSlide": 5,
+      "narrativeRole": "E1-E14 status map",
+      "reuseMode": "duplicate-slide",
+      "editTargetCount": 1,
+      "previewPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-preview/starter-slide-05.png",
+      "previewRelativePath": "template-starter-preview/starter-slide-05.png",
+      "layoutPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-layout/starter-slide-05.layout.json",
+      "layoutRelativePath": "template-starter-layout/starter-slide-05.layout.json"
+    },
+    {
+      "outputSlide": 6,
+      "sourceSlide": 6,
+      "narrativeRole": "E1 full-suite evidence",
+      "reuseMode": "duplicate-slide",
+      "editTargetCount": 1,
+      "previewPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-preview/starter-slide-06.png",
+      "previewRelativePath": "template-starter-preview/starter-slide-06.png",
+      "layoutPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-layout/starter-slide-06.layout.json",
+      "layoutRelativePath": "template-starter-layout/starter-slide-06.layout.json"
+    },
+    {
+      "outputSlide": 7,
+      "sourceSlide": 7,
+      "narrativeRole": "E2 and E4 evidence comparison",
+      "reuseMode": "duplicate-slide",
+      "editTargetCount": 1,
+      "previewPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-preview/starter-slide-07.png",
+      "previewRelativePath": "template-starter-preview/starter-slide-07.png",
+      "layoutPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-layout/starter-slide-07.layout.json",
+      "layoutRelativePath": "template-starter-layout/starter-slide-07.layout.json"
+    },
+    {
+      "outputSlide": 8,
+      "sourceSlide": 8,
+      "narrativeRole": "remaining blocker analysis",
+      "reuseMode": "duplicate-slide",
+      "editTargetCount": 1,
+      "previewPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-preview/starter-slide-08.png",
+      "previewRelativePath": "template-starter-preview/starter-slide-08.png",
+      "layoutPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-layout/starter-slide-08.layout.json",
+      "layoutRelativePath": "template-starter-layout/starter-slide-08.layout.json"
+    },
+    {
+      "outputSlide": 9,
+      "sourceSlide": 9,
+      "narrativeRole": "Tinker and Modal execution summary",
+      "reuseMode": "duplicate-slide",
+      "editTargetCount": 1,
+      "previewPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-preview/starter-slide-09.png",
+      "previewRelativePath": "template-starter-preview/starter-slide-09.png",
+      "layoutPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-layout/starter-slide-09.layout.json",
+      "layoutRelativePath": "template-starter-layout/starter-slide-09.layout.json"
+    },
+    {
+      "outputSlide": 10,
+      "sourceSlide": 10,
+      "narrativeRole": "next-action decision flow",
+      "reuseMode": "duplicate-slide",
+      "editTargetCount": 1,
+      "previewPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-preview/starter-slide-10.png",
+      "previewRelativePath": "template-starter-preview/starter-slide-10.png",
+      "layoutPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-layout/starter-slide-10.layout.json",
+      "layoutRelativePath": "template-starter-layout/starter-slide-10.layout.json"
+    },
+    {
+      "outputSlide": 11,
+      "sourceSlide": 11,
+      "narrativeRole": "bottom-line synthesis",
+      "reuseMode": "duplicate-slide",
+      "editTargetCount": 1,
+      "previewPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-preview/starter-slide-11.png",
+      "previewRelativePath": "template-starter-preview/starter-slide-11.png",
+      "layoutPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-layout/starter-slide-11.layout.json",
+      "layoutRelativePath": "template-starter-layout/starter-slide-11.layout.json"
+    }
+  ]
+}

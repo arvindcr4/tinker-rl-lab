@@ -1,0 +1,13 @@
+{
+  "status": "pass",
+  "checkedAt": "2026-08-25T02:36:32.038Z",
+  "workspace": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22",
+  "finalPptx": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/Tinker_RL_Progress_Update_2026-08-22.pptx",
+  "starterPptx": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter.pptx",
+  "mapPath": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/template-frame-map.json",
+  "starterLayoutDir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/source-progress/template-starter-layout",
+  "finalLayoutDir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22/final-layout",
+  "editDir": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/.codex-pptx/e1-e14-status-2026-08-22",
+  "issueCount": 0,
+  "issues": []
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "recorded_at_utc": "2026-08-22T14:21:55Z",
+  "authorization_source": "user_message",
+  "authorized_incremental_spend_usd": 10.0,
+  "scope": ["E2", "E4", "E7", "E9", "E13"],
+  "execution_policy": {
+    "cumulative_incremental_spend_must_not_exceed_usd": 10.0,
+    "require_online_wandb_before_tinker": true,
+    "require_immutable_hugging_face_checkpoint_receipt": true,
+    "do_not_spend_on_provider_or_license_blocked_lane": true,
+    "do_not_convert_partial_or_recovery_evidence_into_suite_score": true
+  },
+  "preflight_snapshot": {
+    "bridge_status": "READY",
+    "bridge_model": "pavlov-qwen36-tinker",
+    "bridge_model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "bridge_hf_commit": "64444133c55d88c3f1bf0df8a2f5d7ac646125c8",
+    "bridge_wandb_run_id": "mu503wz0",
+    "bridge_existing_lifetime_maximum_usd": 2.25,
+    "bridge_existing_lifetime_charged_usd": 2.08777938,
+    "bridge_existing_reserved_usd": 0.0
+  },
+  "notes": [
+    "This receipt records a new user-authorized incremental cap; it is not a benchmark result.",
+    "The existing bridge ledger is preserved. Raising its lifetime maximum to 10.00 permits at most 7.91222062 additional bridge spend, which is below the newly authorized 10.00 incremental cap.",
+    "E4 recovery replay is expected to be non-Tinker verification work; E9 and E13 remain fail-closed unless their exact-suite gates become runnable."
+  ],
+  "score": null
+}

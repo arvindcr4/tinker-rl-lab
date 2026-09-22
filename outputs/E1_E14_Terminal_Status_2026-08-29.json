@@ -1,0 +1,339 @@
+{
+  "schema_version": "e1-e14-terminal-status-v2",
+  "recorded_at": "2026-08-30T20:54:54Z",
+  "work_status": "LOCALLY_RECONCILED_EXTERNAL_BLOCKERS_OPEN",
+  "evidence_rule": "A locally terminal lane can still be externally blocked or only partially evaluated. Partial tasks, repaired replays, public samples, and harness checks never become a suite score.",
+  "authorization": {
+    "additional_cap_usd": 50.0,
+    "receipt": "outputs/e1_e14_paid_authorization_2026-08-29.json",
+    "counted_incremental_spend_usd": 5.630100981793,
+    "remaining_incremental_cap_usd": 44.369899018207,
+    "spend_ledger": "outputs/e1_e14_incremental_spend_ledger_2026-08-29.json"
+  },
+  "current_validation": {
+    "status": "LOCAL_V3_SUCCESS_AND_CRASH_RECOVERY_REVIEW_PASS_UNDEPLOYED_FROZEN",
+    "scope": "Legacy v1/v2 compatibility plus an end-to-end local v3 producer/collector contract with signed prompt-specific allocation attestations, strict-v7/deployment/source/W&B/Hugging-Face bindings, durable pre-spawn intent, fail-closed unknown-spawn recovery, CPU preparation-failure receipts, idempotent spend reconciliation, and no-resample terminal evidence. Both production launch freezes remain closed and no deployed-v3 claim is made.",
+    "tests_run": 115,
+    "tests_passed": 115,
+    "pytest_crosscheck_run": 58,
+    "pytest_crosscheck_passed": 58,
+    "tests_skipped": 0,
+    "failures": 0,
+    "errors": 0,
+    "review_findings": [],
+    "review_verdict": "SHIP_LOCAL_V3_CONTROL_PATH",
+    "residual_risks": [
+      "The six reviewed implementation and test files are untracked and undeployed.",
+      "The deployed Modal app remains the older revision and the reviewed v3 source is not deployed.",
+      "The provider-side signing secret and key pair have not been live-verified; the remote path fails closed before preparation if they are absent or mismatched.",
+      "E9 remains a partial benchmark with score null."
+    ],
+    "commands": [
+      "python3 -m pytest -q test_e9_merged_vllm_arm.py test_e9_merged_vllm_pilot_control.py (46 passed)",
+      "PYTHONPATH=zvf-program python3 -m unittest flagship.test_e9_mle_bench_streaming (57 passed)",
+      "uv run --with modal --with cryptography==44.0.3 --with pytest python3 -m pytest -q test_modal_e9_mle_bench_streaming.py (12 passed)",
+      "ruff check on the six merged-vLLM arm/controller/Modal/test files",
+      "python3 -m py_compile on the six merged-vLLM arm/controller/Modal/test files",
+      "git diff --check"
+    ]
+  },
+  "unfinished_lane_setup": {
+    "status": "LOCAL_SETUP_COMPLETE_PROVIDER_TRUST_ROOTS_AND_INPUTS_REQUIRED",
+    "completion_gate_receipt": "outputs/E2_E14_COMPLETION_GATE_2026-08-30.json",
+    "included_lanes": ["E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9", "E10", "E12", "E13", "E14"],
+    "excluded_exact_complete_lanes": ["E1", "E11"],
+    "provider_access_granted": false,
+    "trusted_provider_roots_installed": false,
+    "launch_or_spend_performed": false,
+    "scores_changed": false,
+    "local_setup": {
+      "E2_E4_E5_E7": "Existing exact adapters, manifests, runners, and fail-closed partial-result boundaries verified. E4's exact 100-task data, Harbor environment, and native grader are available but require provider/verifier credentials and a projected $700 to $4,500; E2 and E7 still need revision-bound licence authorization, and E5 remains gated and over budget.",
+      "E3": "Provider bundle and runtime-manifest intake now requires an explicit lane-scoped trust-root document plus an Ed25519 grant bound to its root hash and key fingerprint, suite, licence, runtime, reset contract, grader, and immutable hashes.",
+      "E6": "Live WebBench grants now require an explicit lane-scoped trust-root document plus Ed25519 verification bound to its root hash and key fingerprint and exact environment, reset, verifier, and write-scope bindings; historical receipts remain unlaunchable.",
+      "E8": "Strict LifeSciBench package intake and hosted execution-request paths now require an explicit lane-scoped trust-root document and bind its root hash and key fingerprint, provider grant, package, licence, runtime, verifier, deployment, and pinned boundary while remaining unscored.",
+      "E9": "The full local v3 producer/collector, signed attestation, durable spawn intent, fail-closed orphan recovery, and trusted artifact/budget bindings are review-passed; both production launch freezes remain closed.",
+      "E10": "AgentHarm direct scoring is disabled; only a signed provider result verified through an explicit lane-scoped trust-root document and bound to its root hash, key fingerprint, grant, request, private split, grader, runtime, model, artifacts, metric, and time can complete.",
+      "E12": "AppBench provider handoff now requires an explicit lane-scoped trust-root document and a verified grant binding its root hash, key fingerprint, licence, deployment/reset, two-grader protocol, heldout artifacts, runtime, and verifier; paid launch stays closed.",
+      "E13": "OpenReward intake requires an explicit lane-scoped trust-root document, provider-defined immutable suite, and signed grant bound to the root hash, key fingerprint, and validity window; execute emits only a provider request, cannot launch locally, and local outcome receipts are permanently score-null.",
+      "E14": "FrontierMath public samples remain permanently unscored; hosted offers/results require an explicit lane-scoped Epoch trust-root document, root-hash and key-fingerprint binding, request/model/methodology/metric/time binding, a provider-signed exact full-suite task count, and replay-safe fingerprints."
+    },
+    "verification": {
+      "focused_tests_passed": 474,
+      "failures": 0,
+      "errors": 0,
+      "ruff": "PASS",
+      "py_compile": "PASS",
+      "diff_check": "PASS",
+      "fresh_sol_cross_review": "SHIP"
+    },
+    "claim_boundary": "This completes local setup and fail-closed provider intake; it does not supply provider trust roots, private suites, licences, runtimes, graders, deployment access, or additional budget, and it does not convert any partial or blocked lane into a benchmark score."
+  },
+  "external_followup": {
+    "receipt": "outputs/E3_E14_EXTERNAL_FOLLOWUP_RECEIPT_2026-08-29.json",
+    "provider_access_granted": false,
+    "official_access_route_checks": 7,
+    "last_continuation_recheck": "2026-08-30T20:54:54Z",
+    "new_public_requests": [
+      "https://github.com/AfterQuery/appbench.ai-docs/issues/1",
+      "https://github.com/EnvCommons/wordle/issues/3"
+    ],
+    "openreward_state": "PROFILE_ACTIVE",
+    "openreward_profile": "https://openreward.ai/arvindcr4"
+  },
+  "external_access_validation": {
+    "status": "PASS",
+    "scope": "E12 AppBench and E13 OpenReward boundary and local-run guards",
+    "tests_run": 56,
+    "failures": 0,
+    "errors": 0,
+    "command": "PYTHONPATH=zvf-program/flagship python3 -m unittest -q test_pavlov_appbench_openreward_games_adapter test_e13_openreward_games_local_runner"
+  },
+  "model_artifact_continuity": {
+    "tinker_sampler_checkpoint": {
+      "path": "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler_weights/seed809_final",
+      "current_state": "PROVIDER_404_DELETED",
+      "training_run_checkpoint_listing": "EMPTY"
+    },
+    "hugging_face_adapter": {
+      "repository": "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6",
+      "commit": "64444133c55d88c3f1bf0df8a2f5d7ac646125c8",
+      "state": "INTACT"
+    },
+    "modal_merged_checkpoint": {
+      "receipt": "/cache/e1-qwen36-seed809-merged-pointer.json",
+      "wandb_run_id": "b8q9k749",
+      "shards": 26,
+      "bytes": 71903776776,
+      "state": "RECEIPT_VERIFIED_AND_USED_BY_SEPARATE_MERGED_VLLM_ARM"
+    },
+    "future_v2_pre_allocation_gate": {
+      "state": "DEPLOYED_IDLE_NOT_LAUNCH_SAFE",
+      "safe_to_launch": false,
+      "modal_function": "preflight_merged_vllm_allocation",
+      "prompt_template_version": "e9_hard_bounded_collections_v7",
+      "prompt_template_version_enforcement": "CONFIGURED_V7_BUT_NOT_REQUIRED_BY_V2_RETURNED_RESULT_VALIDATION",
+      "deployed_at": "2026-08-30T02:35:57Z",
+      "provider_tasks_after_deploy": 0,
+      "boundary": "The deployed v2 path carries a self-hashed CPU preflight object and rechecks checkpoint evidence after A100 allocation, but the object is not independently authenticated, has no freshness, competition-id, or launch-nonce binding, and v2 returned-result validation does not require e9_hard_bounded_collections_v7. No future v2 launch is evidence-safe until these defects are corrected, adversarially verified, and redeployed.",
+      "historical_v1_boundary": "The seven existing v1 receipts prove W&B before model load and sampling plus exact checkpoint identity, but do not prove or claim pre-A100 allocation ordering. They remain historical v1 single-competition or terminal evidence under their original score boundaries; the v2 gate defects do not invalidate them, and they are not rewritten to imply v2 guarantees."
+    }
+  },
+  "lanes": [
+    {
+      "lane": "E1",
+      "work_status": "LOCALLY_TERMINAL",
+      "benchmark_status": "SCORED_EXACT_SUITE",
+      "score": 0.0027359781121751026,
+      "scope": "731/731 terminal generations; 713 native evaluations; 14 generation failures; 4 artifact losses"
+    },
+    {
+      "lane": "E2",
+      "work_status": "LOCAL_SETUP_READY_PROVIDER_INPUT_REQUIRED",
+      "benchmark_status": "PARTIAL_EXACT",
+      "score": null,
+      "recovery_normalized_task_score": 0.8628,
+      "latest_native_task_reward": 0.725611,
+      "latest_correctness": "8/8 hidden scenes",
+      "scope": "1/17 official tasks",
+      "blocker": "The official pin 422b9bb95deb8efe436becb0ed3c44be23611e10 has no controlling root licence or evaluation authorization, and no official hosted signed-result route was found. The other 16 tasks therefore remain unavailable for an authorized exact full-suite run.",
+      "receipt": "outputs/e2_frontier_swe/e2_terminal_attempt_receipt_2026-08-22.json"
+    },
+    {
+      "lane": "E3",
+      "work_status": "WAITING_PROVIDER",
+      "benchmark_status": "BLOCKED_EXTERNAL",
+      "score": null,
+      "blocker": "Private 80-task bundle, provider runtime/reset contract, native grader, and license are absent.",
+      "followup_message_id": "1a04b91dc27b4469"
+    },
+    {
+      "lane": "E4",
+      "work_status": "LOCALLY_TERMINAL_FOR_AVAILABLE_ARTIFACT",
+      "benchmark_status": "PARTIAL_RECOVERY",
+      "score": null,
+      "attempt_metric": 0.3115,
+      "scope": "1/100 official tasks; the single replayed artifact met 37/128 task criteria",
+      "blocker": "The exact public checkout, dataset, and 100/100 generated task artifacts are restored and passed 1,175 manifest checks with zero failures. Exact execution remains blocked: the receipt-based native-grader lower bound is approximately $59.45, above the remaining $44.369899018207 cap, and any future model/verifier run still requires the campaign W&B, immutable-checkpoint, native-verifier, provider, and hard-budget gates.",
+      "receipt": "outputs/modal_e1_e14/2026-08-16/e4_recovery_evidence_boundary_2026-08-22.json",
+      "restoration_receipt": "outputs/e4_banker_toolbench/e4_public_restoration_receipt_2026-08-30.json"
+    },
+    {
+      "lane": "E5",
+      "work_status": "LOCALLY_TERMINAL_UNDER_CURRENT_CAP",
+      "benchmark_status": "PARTIAL_EXACT",
+      "score": null,
+      "attempt_prefix_mean_failure_as_zero": 0.05050505050505051,
+      "scored_receipt_mean": 0.07936507936507936,
+      "scope": "11/480 sequential tasks attempted; 7 native-scored, 3 unscored failures, 1 operator-interrupted",
+      "blocker": "The pinned 480-task task/rubric bundle and sealed manifest are present, but the full auxiliary task/gold asset payload is not materialized locally; repository metadata remains gated although authenticated access was previously unblocked. Merged vLLM would be a separate execution arm and cannot be combined with the 11-task Tinker prefix. The local Mac lacks CUDA and storage; same-model A100 scenarios are approximately $143 to $289 before environments, with native judging adding a $4.20 to $5.39 lower bound, all above the remaining $44.369899018207 cap.",
+      "receipt": "outputs/e5_apex_agents/e5_exact_sequential_prefix_aggregate_2026-08-22.json",
+      "alternative_route_cost_receipt": "outputs/e5_apex_agents/e5_merged_vllm_cost_scenarios_2026-08-30.json",
+      "asset_inventory_receipt": "outputs/e5_apex_agents/e5_asset_inventory_2026-08-30.json"
+    },
+    {
+      "lane": "E6",
+      "work_status": "LOCAL_SETUP_READY_PROVIDER_INPUT_REQUIRED",
+      "benchmark_status": "BLOCKED_EXTERNAL",
+      "score": null,
+      "blocker": "Official live environment/reset, ground truth, native scorer, and write authorization are absent.",
+      "access_request": "https://github.com/Halluminate/WebBench/issues/2#issuecomment-5460052427",
+      "followup_message_id": "1a04b91dfda3af97"
+    },
+    {
+      "lane": "E7",
+      "work_status": "LOCALLY_TERMINAL_FOR_AVAILABLE_TASK",
+      "benchmark_status": "PARTIAL_EXACT",
+      "score": null,
+      "attempt_reward": 0.0,
+      "scope": "1/46 official tasks; native verifier completed for the task, while the agent terminated at the paid bridge boundary",
+      "blocker": "The official pin cbd86c7cd8519f01ae6b7ad7db7fdb653ea54f23 has no revision-controlled licence artifact: repository licence metadata is null, the licence endpoint is 404, and the README's Apache-2.0 claim points to a missing LICENSE file. No hosted signed-result route was found for an authorized complete 46-task run.",
+      "receipt": "outputs/e7_binaryaudit/2026-08-22_e7_paid_attempt_receipt.json"
+    },
+    {
+      "lane": "E8",
+      "work_status": "WAITING_PROVIDER",
+      "benchmark_status": "BLOCKED_EXTERNAL",
+      "score": null,
+      "scope": "0/750 official tasks",
+      "blocker": "Official task package, license, and native grader are absent.",
+      "access_request_receipt": "outputs/e8_lifescibench/contact_sales_submission_receipt_2026-08-24.json"
+    },
+    {
+      "lane": "E9",
+      "work_status": "LOCALLY_RECONCILED_FOR_CURRENT_COMPLETION_WINDOW",
+      "benchmark_status": "PARTIAL_EXACT",
+      "score": null,
+      "native_grade_coverage": "40/75 unique competitions",
+      "receipt_inventory": "97 receipts across 50 competition IDs; 41 graded receipts representing 40 unique competitions",
+      "remaining_without_native_grade": 35,
+      "remaining_breakdown": "10 competition IDs have only failed receipts and no saved submission; 25 competition IDs have no run receipt",
+      "latest_legacy_competition": {
+        "competition_id": "freesound-audio-tagging-2019",
+        "score": 0.12497,
+        "valid_submission": true,
+        "any_medal": false,
+        "above_median": false,
+        "is_lower_better": false,
+        "deterministic_repair": "streamed_unique_freesound_wavs_with_ordered_multilabel_logloss_submission",
+        "receipt": "outputs/e9_mle_bench/modal_streaming/freesound-audio-tagging-2019-c160e87615be/receipt.json",
+        "receipt_sha256": "844cf17b430d2e6a84d6f2810fb095c6e2a74c6bbff1bf9de81a4c0abf370f19",
+        "receipt_embedded_sha256": "8e07fee28c1e53ef7f62520cb13c6610ff464835a67b7f3fd0759634344fe94f"
+      },
+      "fresh_merged_vllm_arm": {
+        "arm_id": "e9_merged_vllm_seed809_v1",
+        "pilot_count": 7,
+        "attempted_or_terminal_union_count": 58,
+        "remaining_unattempted_union_count": 17,
+        "legacy_tinker_coverage_increment": 0,
+        "score": null,
+        "is_full_suite_score": false,
+        "terminal_receipts": [
+          {"competition_id": "hotel-id-2021-fgvc8", "status": "NATIVE_SINGLE_COMPETITION_INVALID", "competition_score": null, "receipt": "outputs/e9_mle_bench/merged_vllm/hotel-id-2021-fgvc8-ed92df9f6c44/receipt.json"},
+          {"competition_id": "imet-2020-fgvc7", "status": "NATIVE_SINGLE_COMPETITION_INVALID", "competition_score": null, "receipt": "outputs/e9_mle_bench/merged_vllm/imet-2020-fgvc7-9e3b7fa50417/receipt.json"},
+          {"competition_id": "predict-volcanic-eruptions-ingv-oe", "status": "NATIVE_SINGLE_COMPETITION_INVALID", "competition_score": null, "receipt": "outputs/e9_mle_bench/merged_vllm/predict-volcanic-eruptions-ingv-oe-06379fb32587/receipt.json"},
+          {"competition_id": "alaska2-image-steganalysis", "status": "NATIVE_SINGLE_COMPETITION_INVALID", "competition_score": null, "receipt": "outputs/e9_mle_bench/merged_vllm/alaska2-image-steganalysis-16967d82beeb/receipt.json"},
+          {"competition_id": "hubmap-kidney-segmentation", "status": "NATIVE_SINGLE_COMPETITION_INVALID", "competition_score": null, "receipt": "outputs/e9_mle_bench/merged_vllm/hubmap-kidney-segmentation-6e08e20ea6d4/receipt.json"},
+          {"competition_id": "h-and-m-personalized-fashion-recommendations", "status": "NATIVE_SINGLE_COMPETITION_GRADED", "competition_score": 0.02132, "valid_submission": true, "above_median": false, "receipt": "outputs/e9_mle_bench/merged_vllm/h-and-m-personalized-fashion-recommendations-33d90f35410c/receipt.json"},
+          {"competition_id": "vesuvius-challenge-ink-detection", "status": "NATIVE_SINGLE_COMPETITION_INVALID", "competition_score": null, "receipt": "outputs/e9_mle_bench/merged_vllm/vesuvius-challenge-ink-detection-83d8678a457b/receipt.json"}
+        ],
+        "local_hardening": {
+          "status": "REVIEW_PASS_FULL_V3_LOCAL_UNDEPLOYED_FROZEN",
+          "paid_launch_enabled": false,
+          "remote_source_gpu_generation_enabled": false,
+          "tests_passed": 115,
+          "controller_and_arm_tests_passed": 46,
+          "legacy_streaming_tests_passed": 57,
+          "modal_sdk_tests_passed": 12,
+          "fresh_sol_review_verdict": "ship",
+          "full_v3_success_path_complete": true,
+          "reviewed_file_hashes": {
+            "e9_merged_vllm_arm.py": "15c1522fbea6227e3dab67d73248fdcb9a02a3bbae127a9f1774962afca18394",
+            "test_e9_merged_vllm_arm.py": "1beba09e9b9f88c4807e2fb81618e35aeff35e0bde412c5b474a5ded380ac23e",
+            "e9_merged_vllm_pilot_control.py": "3af91e5dd449a013b267e0d9ea1e7c32c0e780467606cbefe04b2d48f8b5d3ee",
+            "test_e9_merged_vllm_pilot_control.py": "d8c1313b6b86fd8b1c1ae05ab58a0f8fabe7ba4cdac8be263b4e552f0e66f9e9",
+            "modal_e9_mle_bench_streaming.py": "088876ba2550c45889689de7fd94a20cad65a58cd5961b400531fd5a2fb462ce",
+            "test_modal_e9_mle_bench_streaming.py": "672d8f730b669e20e445439655610eaef31513176d0ce71b1f6457e2cb5d3686"
+          }
+        },
+        "claim_boundary": "These are fresh one-competition pilots from a separate merged-vLLM arm. Their scores are not unioned with the legacy Tinker-sampled 40/75 coverage and do not constitute an E9 suite score."
+      },
+      "blocker": "35 legacy competitions still lack native grades. Seven separate fresh merged-vLLM pilots produced one valid native single-competition grade and six invalid receipts; all are terminal no-resample evidence with zero legacy coverage increment. The original Tinker sampler checkpoint is deleted. The 75-competition primary aggregate, multi-seed mean/SEM, and training-contamination receipt remain incomplete.",
+      "latest_execution_control_receipt": "outputs/e9_mle_bench/modal_streaming/_pending/plant-pathology-2021-fgvc8-fc-01M16YC7QCNDSS0MPSY0YTYKG2-cancellation-receipt.json",
+      "continuation_recovery_receipts": [
+        "outputs/e9_mle_bench/modal_streaming/plant-pathology-2021-fgvc8-1afc1ef65a3a/receipt.json",
+        "outputs/e9_mle_bench/modal_streaming/jigsaw-unintended-bias-in-toxicity-classification-be21ca31edd2/receipt.json",
+        "outputs/e9_mle_bench/modal_streaming/smartphone-decimeter-2022-1207910d9504/receipt.json",
+        "outputs/e9_mle_bench/modal_streaming/freesound-audio-tagging-2019-c160e87615be/receipt.json"
+      ],
+      "terms_receipt": "outputs/e9_mle_bench/kaggle_rule_acceptance_receipt_2026-08-22.json"
+    },
+    {
+      "lane": "E10",
+      "work_status": "WAITING_PROVIDER",
+      "benchmark_status": "BLOCKED_EXTERNAL",
+      "score": null,
+      "blocker": "Private AgentHarm tasks and official native grader are absent.",
+      "access_request": "https://huggingface.co/datasets/ai-safety-institute/AgentHarm/discussions/9#6a9251ec206b2a11e4b13108"
+    },
+    {
+      "lane": "E11",
+      "work_status": "LOCALLY_TERMINAL",
+      "benchmark_status": "SCORED_EXACT_SUITE",
+      "score": 0.41346153846153844,
+      "scope": "129/312 canonical raw",
+      "receipt": "outputs/modal_e1_e14/2026-08-16/e11_full_receipt.json"
+    },
+    {
+      "lane": "E12",
+      "work_status": "WAITING_PROVIDER",
+      "benchmark_status": "BLOCKED_EXTERNAL",
+      "score": null,
+      "blocker": "Official deployment, task artifacts, licence, provider trust root, and signed native result remain absent. The local intake now validates the six-task, best-of-three, dual-grader plus adjudication protocol and accepts a finite score only from a fully bound provider-signed result.",
+      "signed_result_collector": "zvf-program/flagship/pavlov_appbench_openreward_games_adapter.py",
+      "access_request": "https://huggingface.co/datasets/AfterQuery/App-Bench/discussions/2#6a9251eccd8eaaf580d376b6",
+      "additional_access_request": "https://github.com/AfterQuery/appbench.ai-docs/issues/1",
+      "followup_message_id": "1a04b91e262745b6"
+    },
+    {
+      "lane": "E13",
+      "work_status": "LOCAL_SETUP_READY_PROVIDER_INPUT_REQUIRED",
+      "benchmark_status": "BLOCKED_EXTERNAL",
+      "score": null,
+      "blocker": "The provider-defined immutable held-out OpenReward Games suite remains absent. Account onboarding is complete, but the authenticated 381-environment registry returned zero matches. Canonical score-null request construction and provider-signed result intake are now implemented; no runnable provider suite, trust root, native grading contract, or signed result has been granted.",
+      "signed_result_collector": "zvf-program/flagship/e13_openreward_games_local_runner.py",
+      "openreward_state": "PROFILE_ACTIVE",
+      "openreward_username": "arvindcr4",
+      "openreward_profile": "https://openreward.ai/arvindcr4",
+      "additional_access_request": "https://github.com/EnvCommons/wordle/issues/3",
+      "followup_message_id": "1a04c1472eafad91"
+    },
+    {
+      "lane": "E14",
+      "work_status": "WAITING_PROVIDER",
+      "benchmark_status": "BLOCKED_EXTERNAL",
+      "score": null,
+      "blocker": "The private hosted Epoch FrontierMath evaluation is unavailable.",
+      "followup_message_id": "1a04b91eb88ae0a6"
+    }
+  ],
+  "latest_automation_recheck": {
+    "checked_at_utc": "2026-08-30T08:07:41Z",
+    "provider_reply_count": 0,
+    "provider_access_granted": false,
+    "newly_runnable_exact_suites": [],
+    "modal_e9_active_tasks": 0,
+    "duplicate_launch_performed": false,
+    "spend_performed": false,
+    "scores_changed": false,
+    "followup_receipt": "outputs/E3_E14_EXTERNAL_FOLLOWUP_RECEIPT_2026-08-29.json"
+  },
+  "latest_alternative_route_audit": {
+    "recorded_at": "2026-08-30T15:38:09Z",
+    "receipt": "outputs/E2_E14_ALTERNATIVE_ROUTE_AUDIT_2026-08-30.json",
+    "actionable_exact_lanes": [],
+    "launch_or_spend_performed": false,
+    "scores_changed": false
+  },
+  "external_terminal_condition": "Provider-blocked lanes can continue only after a provider supplies the named suite/runtime/grader/license. E4 and E5 full-suite execution each need a cap far larger than the current remaining $44.369899018207 authorization.",
+  "claim_boundary": "The only exact full-suite scores in this record are E1 and E11. Every other lane score remains null."
+}

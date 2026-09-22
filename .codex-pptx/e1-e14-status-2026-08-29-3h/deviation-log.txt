@@ -1,0 +1,10 @@
+Intentional refresh deviations from the inspected nine-slide source deck
+
+- Slide 2: update E9 coverage and counted spend from the terminal audit.
+- Slide 4: update the MLE-bench register row through dynamic audit data.
+- Slide 5: update the recovery funnel, latest native competition, failed-only count, and continuation receipt summary.
+- Slide 8: replace prospective access language with the second verified no-reply provider audit.
+- Slide 9: correct the venue recommendation to a conditional ICLR 2027 conference target, with NeurIPS withdrawal and TMLR fallback policy.
+- Speaker transcript: synchronize all figures, replay outcomes, and venue language.
+
+The nine-slide visual system, typography, hierarchy, color semantics, and editable-object construction are preserved.

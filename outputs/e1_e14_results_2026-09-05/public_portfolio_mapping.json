@@ -1,0 +1,104 @@
+{
+  "status": "OPEN_SOURCE_PORTFOLIO_DEFINED_NOT_EXECUTED",
+  "claim_boundary": "This overlay defines a new, non-comparable open-source evaluation portfolio. Historical E1-E14 results remain attached to their original suite IDs. A replacement has no score until its pinned native evaluator runs on its declared public split and writes a native receipt.",
+  "lanes": [
+    {
+      "historical_lane": "E1",
+      "historical_suite": "swe_bench_pro_eval",
+      "open_portfolio_suite": "swe_bench_multilingual_eval",
+      "status": "NOT_YET_INTEGRATED",
+      "new_portfolio_score": null
+    },
+    {
+      "historical_lane": "E2",
+      "historical_suite": "frontier_swe_eval",
+      "open_portfolio_suite": "core_bench_eval",
+      "status": "NOT_YET_INTEGRATED",
+      "new_portfolio_score": null
+    },
+    {
+      "historical_lane": "E3",
+      "historical_suite": "sdab_eval",
+      "open_portfolio_suite": "mlagentbench_eval",
+      "status": "NOT_YET_INTEGRATED",
+      "new_portfolio_score": null
+    },
+    {
+      "historical_lane": "E4",
+      "historical_suite": "banker_toolbench_eval",
+      "open_portfolio_suite": "banker_toolbench_eval",
+      "status": "RETAINED_SUITE_REQUIRES_SEPARATE_RUN_PROVENANCE",
+      "new_portfolio_score": null
+    },
+    {
+      "historical_lane": "E5",
+      "historical_suite": "apex_agents_eval",
+      "open_portfolio_suite": "tau3_banking_eval",
+      "status": "NOT_YET_INTEGRATED",
+      "new_portfolio_score": null
+    },
+    {
+      "historical_lane": "E6",
+      "historical_suite": "webbench_eval",
+      "open_portfolio_suite": "webarena_eval",
+      "status": "NOT_YET_INTEGRATED",
+      "new_portfolio_score": null
+    },
+    {
+      "historical_lane": "E7",
+      "historical_suite": "binaryaudit_eval",
+      "open_portfolio_suite": "cybergym_eval",
+      "status": "NOT_YET_INTEGRATED",
+      "new_portfolio_score": null
+    },
+    {
+      "historical_lane": "E8",
+      "historical_suite": "lifescibench_eval",
+      "open_portfolio_suite": "lab_bench_public_eval",
+      "status": "NOT_YET_INTEGRATED",
+      "new_portfolio_score": null
+    },
+    {
+      "historical_lane": "E9",
+      "historical_suite": "mle_bench_eval",
+      "open_portfolio_suite": "ml_dev_bench_eval",
+      "status": "NOT_YET_INTEGRATED",
+      "new_portfolio_score": null
+    },
+    {
+      "historical_lane": "E10",
+      "historical_suite": "agentharm_eval",
+      "open_portfolio_suite": "agentdojo_eval",
+      "status": "NOT_YET_INTEGRATED",
+      "new_portfolio_score": null
+    },
+    {
+      "historical_lane": "E11",
+      "historical_suite": "verilog_eval",
+      "open_portfolio_suite": "verilog_eval",
+      "status": "RETAINED_SUITE_REQUIRES_SEPARATE_RUN_PROVENANCE",
+      "new_portfolio_score": null
+    },
+    {
+      "historical_lane": "E12",
+      "historical_suite": "appbench_eval",
+      "open_portfolio_suite": "visual_agent_bench_eval",
+      "status": "NOT_YET_INTEGRATED",
+      "new_portfolio_score": null
+    },
+    {
+      "historical_lane": "E13",
+      "historical_suite": "openreward_games_eval",
+      "open_portfolio_suite": "balrog_eval",
+      "status": "NOT_YET_INTEGRATED",
+      "new_portfolio_score": null
+    },
+    {
+      "historical_lane": "E14",
+      "historical_suite": "frontiermath_eval",
+      "open_portfolio_suite": "omni_math_eval",
+      "status": "NOT_YET_INTEGRATED",
+      "new_portfolio_score": null
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "schema_version": "e1-wave10-runtime-recovery-v1",
+  "recorded_at": "2026-09-19T14:35:00Z",
+  "directive": "outputs/PES_Phase2_Review_2026-09-12/finish/ROOT_DIRECTIVE_FINISH_ALL_2026-09-19.json",
+  "method": "Read from inside the immutable prebuilt Modal images via CPU-only functions (no GPU dispatch, no builds); bytes transferred base64 in 24KB chunks; in-container sha256 compared to local sha256 before writing; both must match.",
+  "actor_image": {
+    "image_id": "im-zlxeznMWhqWsbSBR3KkFWT",
+    "recovered_files": {
+      "public_colab_runtime_fast.py": {"bytes": 44697, "sha256": "968462cee08c2089b7aec016ba52836505ad898dcf6b7a553b5e0cb1970818dd", "local_path": "zvf-program/e1_wave10/recovered/public_colab_runtime_fast.py"},
+      "core.py": {"bytes": 15054, "sha256": "728f6792122b5c8cf16aca50b7b723c70c0b83761dbe686d2539f4c600517edb", "local_path": "zvf-program/e1_wave10/recovered/core.py"},
+      "fast_source.py": {"bytes": 21795, "sha256": "1f1c1b6b78c74a25a6e3927094540767ec5511f3a627e9456fc6e58a073a3232", "local_path": "zvf-program/e1_wave10/recovered/fast_source.py"}
+    },
+    "notes": "public_colab_runtime_fast.py is the actor serving runtime (vLLM 0.28.0, streaming LoRA-delta-merged BF16, OpenAI-compatible, budget journaling). core.py is the fail-closed transport + reservation validator (exact $8/3600s profile; unlimited campaign mode supported). fast_source.py is the Modal app wrapper for the fast runtime."
+  },
+  "native_image": {
+    "image_id": "im-pAVtHHKH6EXHe7tlbHI7kb",
+    "inspection": "/native/.venv complete swebench 5.0.2 editable environment (4243 .py files under site-packages); datasets/predictions mount at /e1 per recorded native intents; no extraction needed beyond confirmation.",
+    "native_command_shape": ["/native/.venv/bin/swebench", "eval", "/e1/<wave>_native_dataset.jsonl", "-p", "/e1/<wave>_predictions.jsonl", "--run-id", "<run>", "--split", "test", "-j", "4", "--timeout", "1800", "--report-dir", "/e1/reports"]
+  },
+  "hashes_verified": true,
+  "squad_note": "Member e1-runtime was rate-limited; recovery completed by lead using the same method already proven in preflight probes."
+}

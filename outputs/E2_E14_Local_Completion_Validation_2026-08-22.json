@@ -1,0 +1,88 @@
+{
+  "schema_version": "e2-e14-local-completion-validation-v1",
+  "recorded_at": "2026-08-22T14:15:18Z",
+  "status": "PASS",
+  "score": null,
+  "is_model_score": false,
+  "scope": ["E2", "E3", "E4", "E6", "E7", "E8", "E9", "E10", "E12", "E13", "E14"],
+  "interpretation": "All locally executable adapter, manifest, verifier-boundary, claim-boundary, and runner tests pass. This closes local engineering work but does not create benchmark scores where exact external inputs are absent.",
+  "focused_test_run": {
+    "framework": "python unittest",
+    "tests_run": 421,
+    "failures": 0,
+    "errors": 0,
+    "duration_seconds": 0.611,
+    "pythonpath": "zvf-program:zvf-program/flagship",
+    "modules": [
+      "flagship.test_frontier_swe_eval",
+      "flagship.test_pavlov_frontier_swe_eval_adapter",
+      "flagship.test_eval_pavlov_sdab",
+      "flagship.test_pavlov_sdab_eval_adapter",
+      "flagship.test_pavlov_banker_toolbench_eval_adapter",
+      "flagship.test_pavlov_banker_toolbench_harbor_rerun",
+      "flagship.test_pavlov_webbench_eval_adapter",
+      "flagship.test_pavlov_binaryaudit_eval_adapter",
+      "flagship.test_pavlov_lifescibench_eval_adapter",
+      "flagship.test_mle_bench_eval",
+      "flagship.test_pavlov_agentharm_frontiermath_adapter",
+      "flagship.test_pavlov_appbench_openreward_games_adapter",
+      "flagship.test_pavlov_openreward_schema",
+      "flagship.test_e13_openreward_games_local_runner",
+      "flagship.test_e13_openreward_games_tinker_train",
+      "flagship.test_e14_frontiermath_public_samples"
+    ]
+  },
+  "live_external_gate_recheck": {
+    "checked_at": "2026-08-22T14:15:18Z",
+    "E6": {
+      "source": "https://github.com/Halluminate/WebBench/issues/2",
+      "state": "open",
+      "finding": "The official ground-truth issue remains open; no native public scoring artifact is available."
+    },
+    "E8": {
+      "source": "https://openai.com/index/introducing-life-sci-bench/",
+      "finding": "The official page describes 750 tasks and rubric methodology but does not publish the immutable task package or native grader."
+    },
+    "E10": {
+      "source": "https://huggingface.co/api/datasets/ai-safety-institute/AgentHarm/tree/main/benchmark",
+      "published_files": [
+        "benchmark/benign_behaviors_test_public.json",
+        "benchmark/benign_behaviors_validation.json",
+        "benchmark/chat_public_test.json",
+        "benchmark/chat_validation.json",
+        "benchmark/harmful_behaviors_test_public.json",
+        "benchmark/harmful_behaviors_validation.json"
+      ],
+      "finding": "The three required test_private files remain absent."
+    },
+    "E12": {
+      "source": "https://huggingface.co/api/datasets/AfterQuery/App-Bench/tree/main",
+      "published_files": [".gitattributes", "AppBench vExternal.csv"],
+      "finding": "No license, official deployment runner, or native/human-grader artifact is published."
+    },
+    "E13": {
+      "source": "https://github.com/EnvCommons/wordle",
+      "repository_license": null,
+      "license_endpoint_status": 404,
+      "finding": "The public wrapper still has no repository license and no provider-defined held-out suite binding."
+    },
+    "E14": {
+      "source": "https://epoch.ai/benchmarks/frontiermath-tiers-1-3-v2",
+      "finding": "Official scores remain based on Epoch's private sets; local public samples are not the benchmark."
+    }
+  },
+  "remaining_non_local_requirements": {
+    "E2": "Sixteen additional model-produced candidate artifacts plus native verification and an explicitly authorized paid budget.",
+    "E3": "Provider-issued 80-task bundle, deterministic runtime/reset, license, and native grader.",
+    "E4": "A clean non-recovery model run under a newly authorized budget; the preserved 0.3115 is attempt-level recovery evidence.",
+    "E6": "Halluminate environment, ground truth, native scorer, credential scope, and write-task authorization.",
+    "E7": "A new paid bridge authorization for retry; the prior USD 1.50 cap is exhausted and the exact attempt ended with reward 0.0.",
+    "E8": "Official LifeSciBench task package, access grant/license, artifacts, interface, and rubric grader.",
+    "E9": "Account-holder acceptance for the remaining Kaggle competitions, a model submission, immutable execution environment, and contamination receipt.",
+    "E10": "AISI test_private files and approved judge policy/budget.",
+    "E12": "Written license, official deployment artifacts, contamination proof, and two qualified human graders.",
+    "E13": "Explicit wrapper license, provider-defined immutable held-out suite, and paid model-run authorization.",
+    "E14": "An Epoch-hosted evaluation or purchased verifier engagement."
+  },
+  "claim_boundary": "No external-access blocker, user-terms gate, human-grader requirement, or paid-budget gate is converted into a score by this validation."
+}

@@ -1,0 +1,99 @@
+{
+ "proxy_omnimath": {
+  "proxy": "Omni-MATH-test-subset-modal",
+  "model": "Qwen/Qwen3-8B",
+  "n": 20,
+  "accuracy": 0.05,
+  "note": "Own-benchmark proxy number only; never an E14/FrontierMath score.",
+  "results": [
+   {
+    "i": 0,
+    "correct": false
+   },
+   {
+    "i": 1,
+    "correct": false
+   },
+   {
+    "i": 2,
+    "correct": false
+   },
+   {
+    "i": 3,
+    "correct": false
+   },
+   {
+    "i": 4,
+    "correct": false
+   },
+   {
+    "i": 5,
+    "correct": false
+   },
+   {
+    "i": 6,
+    "correct": false
+   },
+   {
+    "i": 7,
+    "correct": false
+   },
+   {
+    "i": 8,
+    "correct": false
+   },
+   {
+    "i": 9,
+    "correct": false
+   },
+   {
+    "i": 10,
+    "correct": false
+   },
+   {
+    "i": 11,
+    "correct": false
+   },
+   {
+    "i": 12,
+    "correct": false
+   },
+   {
+    "i": 13,
+    "correct": true
+   },
+   {
+    "i": 14,
+    "correct": false
+   },
+   {
+    "i": 15,
+    "correct": false
+   },
+   {
+    "i": 16,
+    "correct": false
+   },
+   {
+    "i": 17,
+    "correct": false
+   },
+   {
+    "i": 18,
+    "correct": false
+   },
+   {
+    "i": 19,
+    "correct": false
+   }
+  ]
+ },
+ "proxy_litqa": {
+  "proxy": "LAB-Bench-LitQA2-subset-modal",
+  "model": "Qwen/Qwen3-8B",
+  "n": 0,
+  "accuracy": 0.0,
+  "note": "Own-benchmark proxy number only; never an E8/LifeSciBench score.",
+  "results": []
+ }
+}

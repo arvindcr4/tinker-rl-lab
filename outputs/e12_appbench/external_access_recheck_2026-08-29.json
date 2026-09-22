@@ -1,0 +1,74 @@
+{
+  "schema_version": "pavlov-external-access-recheck-v1",
+  "lane": "E12",
+  "suite_id": "appbench_eval",
+  "checked_at": "2026-08-29T07:56:15Z",
+  "status": "BLOCKED",
+  "score": null,
+  "is_model_score": false,
+  "authoritative_observations": {
+    "dataset_api": "https://huggingface.co/api/datasets/AfterQuery/App-Bench/revision/de80d5bcd404adee5307311571e512b5c37e6112",
+    "dataset_private": false,
+    "dataset_gated": false,
+    "dataset_card_data": null,
+    "dataset_files": [
+      ".gitattributes",
+      "AppBench vExternal.csv"
+    ],
+    "dataset_discussion": {
+      "url": "https://huggingface.co/datasets/AfterQuery/App-Bench/discussions/2",
+      "status": "open",
+      "last_event_at": "2026-08-29T03:28:44Z",
+      "last_event_author": "arvindcr4",
+      "provider_response_observed": false
+    },
+    "official_public_code_search": {
+      "command": "gh api 'search/code?q=org%3AAfterQuery+App-Bench'",
+      "total_count": 0,
+      "checked_at": "2026-08-29T07:56:15Z"
+    }
+  },
+  "safe_access_route_added": {
+    "route": "official public documentation repository issue",
+    "url": "https://github.com/AfterQuery/appbench.ai-docs/issues/1",
+    "created_at": "2026-08-29T07:57:48Z",
+    "request_file": "outputs/e12_appbench/GITHUB_REPRODUCIBILITY_REQUEST_2026-08-29.md",
+    "requested": [
+      "written evaluation licence or permission",
+      "official deployment/reset runner or provider-hosted evaluation",
+      "artifact and side-effect verification",
+      "two-grader protocol and provider-run service availability",
+      "held-out and contamination policy"
+    ],
+    "no_credentials_requested": true,
+    "no_paid_evaluation_started": true
+  },
+  "prospective_only_routes": [
+    {
+      "name": "AfterQuery/harbor-aq",
+      "url": "https://github.com/AfterQuery/harbor-aq",
+      "observed_at": "2026-08-29T07:56:15Z",
+      "finding": "A newly updated official-org repository describes generic Harbor agent evaluation and names Terminal-Bench 2.0 as its example dataset; no App-Bench code-search match or App-Bench dataset binding was found.",
+      "equivalence_status": "Not an AppBench runner or approved substitute. It is only a possible provider contact route if AfterQuery confirms support."
+    }
+  ],
+  "remaining_external_requirements": [
+    "Provider-written licence or evaluation permission",
+    "Official deployment/reset and artifact/side-effect verification path",
+    "Qualified two-grader and re-adjudication protocol",
+    "Held-out/contamination evidence for the requested model"
+  ],
+  "local_guard_verification": {
+    "command": "PYTHONPATH=zvf-program/flagship python3 -m unittest test_pavlov_appbench_openreward_games_adapter test_e13_openreward_games_local_runner -v",
+    "passed": 56,
+    "failed": 0,
+    "checked_at": "2026-08-29T07:57:00Z"
+  },
+  "safety": {
+    "substitution_used": false,
+    "paid_call_made": false,
+    "grader_appointed": false,
+    "credentials_used": false,
+    "score_claimed": false
+  }
+}

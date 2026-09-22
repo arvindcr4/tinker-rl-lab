@@ -1,0 +1,60 @@
+{
+  "recorded_at": "2026-08-25T02:36:03.319Z",
+  "e1": {
+    "counts": {
+      "GENERATED": 713,
+      "GENERATION_FAILED": 14,
+      "GENERATION_ARTIFACT_LOST": 4,
+      "UNKNOWN": 0
+    },
+    "terminal": 731,
+    "pending": 0,
+    "run_state": "SCORED",
+    "valid_candidates": 713,
+    "full_receipt": "/Users/arvind/Developer/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/receipt.json",
+    "score": 0.0027359781121751026
+  },
+  "e2": {
+    "paid_execution_receipt": "outputs/e2_e7_paid_execution_receipt_2026-08-22.json",
+    "native_task_reward": 0.7284,
+    "correctness_passed": 8,
+    "correctness_total": 8,
+    "suite_score": null
+  },
+  "e7": {
+    "paid_execution_receipt": "outputs/e2_e7_paid_execution_receipt_2026-08-22.json",
+    "native_task_reward": 0,
+    "native_failure_reason": "backdoor-detected.txt was not created",
+    "suite_score": null
+  },
+  "paid_bridge": {
+    "receipt": "outputs/e2_e14_paid_authorization_2026-08-22.json",
+    "authorized_persistent_total_usd": 10,
+    "starting_charged_usd": 2.08777938,
+    "ending_charged_usd": 5.568417315,
+    "incremental_charged_usd": 3.480637935,
+    "remaining_under_persistent_cap_usd": 4.431582685,
+    "ledger_completed_calls": 449,
+    "ledger_failed_calls": 30,
+    "ledger_reserved_usd": 0,
+    "cost_source": "Modal persistent Tinker bridge ledger; Harbor custom-provider cost_usd fields are not authoritative"
+  },
+  "e5": {
+    "exact_prefix_aggregate": "outputs/e5_apex_agents/e5_exact_sequential_prefix_aggregate_2026-08-22.json",
+    "attempted_tasks": 11,
+    "native_scored_tasks": 7,
+    "native_unscored_failures": 3,
+    "operator_interrupted_tasks": 1,
+    "attempt_prefix_mean_failure_as_zero": 0.05050505050505051,
+    "scored_receipt_mean": 0.07936507936507936,
+    "official_suite_tasks": 480,
+    "suite_score": null
+  },
+  "e11": {
+    "full_receipt": "/Users/arvind/Developer/tinker-rl-lab/outputs/modal_e1_e14/2026-08-16/e11_full_receipt.json",
+    "canonical_raw_score": 0.41346153846153844,
+    "secondary_corrected_score": 0.41479099678456594,
+    "cost_usd": 0.454528
+  },
+  "output": "/Users/arvind/Developer/tinker-rl-lab/outputs/Tinker_RL_Progress_Update_2026-08-22.pptx"
+}

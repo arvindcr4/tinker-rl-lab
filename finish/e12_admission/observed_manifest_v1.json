@@ -1,0 +1,23 @@
+{
+  "schema_version": "e12-offline-admission-v1",
+  "suite_id": "appbench_eval",
+  "dataset_revision": "de80d5bcd404adee5307311571e512b5c37e6112",
+  "scope": "original_heldout",
+  "model": null,
+  "attempt": null,
+  "assets": {
+    "csv": {
+      "path": "outputs/e12_appbench/hf_dataset/AppBench vExternal.csv",
+      "sha256": "b28b74959e81602f0a8b7e8985547915cf3de98822b87f736bc86269518900ba"
+    },
+    "split": {
+      "path": "outputs/e12_appbench/split_manifest.json",
+      "sha256": "ee9de54f596322d8eced32a26917bffe1ee38c962721be1c5e69ae9d126f0415"
+    },
+    "disjointness": {
+      "path": "outputs/e12_appbench/disjointness_proof.json",
+      "sha256": "ed3f86ec71477d420d5d82b98beb43679bdd0c4c0c1175f84793f8b62e3bc0e6"
+    }
+  },
+  "note": "Observed source artifacts only. Parent has not allocated a model or attempt; missing evidence is intentionally absent."
+}

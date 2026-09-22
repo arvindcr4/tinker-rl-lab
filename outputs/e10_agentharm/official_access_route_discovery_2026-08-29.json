@@ -1,0 +1,43 @@
+{
+  "schema_version": "official-access-route-discovery-v1",
+  "lane": "E10",
+  "benchmark": "ai-safety-institute/AgentHarm",
+  "checked_at": "2026-08-29T07:57:33Z",
+  "status": "AWAITING_PROVIDER_RESPONSE",
+  "score": null,
+  "routes": [
+    {
+      "route": "official Hugging Face dataset discussion",
+      "url": "https://huggingface.co/datasets/ai-safety-institute/AgentHarm/discussions/9",
+      "finding": "The discussion is open and contains the original access request plus one campaign follow-up, both authored by arvindcr4; no provider-authored reply or grant is present.",
+      "already_exercised": true,
+      "action_now": "Await an AISI-authored grant, a provider-hosted test_private offer, or a supervised-run invitation."
+    },
+    {
+      "route": "official Inspect Evals issue tracker",
+      "url": "https://github.com/UKGovernmentBEIS/inspect_evals/issues",
+      "finding": "The tracker explicitly states that new issue creation is restricted.",
+      "availability": "not an available escalation channel",
+      "action_now": "Do not attempt to bypass issue restrictions or use an unrelated bug report for private-split access."
+    },
+    {
+      "route": "UK AI Security Institute public site",
+      "url": "https://www.aisi.gov.uk/",
+      "finding": "The public site describes research and grants and links official social accounts, but provides no AgentHarm held-out-data application, hosted-evaluation intake, or private-split contact form.",
+      "availability": "no documented dataset-access route found",
+      "action_now": "Do not treat general social or grants links as permission to request or receive private benchmark material."
+    }
+  ],
+  "checked_public_state": {
+    "dataset_revision": "e23b3fe60a0da9037314b88e5ee3a0c054970dad",
+    "dataset_tree_endpoint": "https://huggingface.co/api/datasets/ai-safety-institute/AgentHarm/tree/e23b3fe60a0da9037314b88e5ee3a0c054970dad/benchmark?recursive=true&expand=false",
+    "required_test_private_files_published": false,
+    "provider_reply_present": false
+  },
+  "rejected_as_non_equivalent": [
+    "test_public or validation evaluation",
+    "third-party AgentHarm mirrors",
+    "a public OpenAI judge in place of the AISI-approved private-split policy grader"
+  ],
+  "safety_boundary": "No private material was requested through an unapproved channel, acquired, run, mirrored, or scored. No paid judge call, model call, or terms acceptance occurred."
+}

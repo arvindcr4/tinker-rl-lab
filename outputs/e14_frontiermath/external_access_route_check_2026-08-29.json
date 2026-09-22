@@ -1,0 +1,38 @@
+{
+  "schema_version": "e14-frontiermath-external-access-route-check-v1",
+  "recorded_at": "2026-08-29T07:56:51Z",
+  "lane": "E14",
+  "suite_id": "frontiermath_eval",
+  "status": "BLOCKED",
+  "score": null,
+  "tiers_1_to_4_live_check": {
+    "url": "https://epoch.ai/frontiermath/tiers-1-4/about",
+    "checked_at": "2026-08-29T07:56:51Z",
+    "provider_contact": "math_evals@epoch.ai",
+    "provider_retains_evaluation_right": true,
+    "private_problem_set_and_verifier_released": false
+  },
+  "outbound_follow_up": {
+    "sent_at": "2026-08-29T03:30:49Z",
+    "recipient": "math_evals@epoch.ai",
+    "gmail_thread_id": "1a02a44e4360638c",
+    "request_scope": "whether externally initiated hosted Tiers 1-4 evaluation is accepted, access route, methodology and cost",
+    "provider_reply_observed_at_check": false
+  },
+  "prospective_non_equivalent_route": {
+    "name": "FrontierMath: Open Problems",
+    "url": "https://epoch.ai/frontiermath/open-problems",
+    "provider_published_terms": "Verifier access is available for purchase by any party through an inquiry to math@epoch.ai.",
+    "is_equivalent_to_contracted_suite": false,
+    "status": "PROSPECTIVE_SEPARATE_BENCHMARK",
+    "action_taken": "none; route may require payment and separate terms"
+  },
+  "unresolved_requirements": [
+    "Epoch-hosted Tiers 1-4 evaluation acceptance",
+    "provider-approved model-access route",
+    "methodology and reporting receipt",
+    "cost and terms approval if an engagement is offered"
+  ],
+  "safe_next_action": "Await Epoch's response to the already-sent Tiers 1-4 follow-up. Open Problems may be considered only as a separately contracted prospective benchmark after explicit budget and terms authorization.",
+  "claim_boundary": "Neither the public samples nor FrontierMath: Open Problems is used as a Tiers 1-4 score or substitute. This receipt proves route availability and unanswered outreach only."
+}

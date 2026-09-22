@@ -1,0 +1,18 @@
+{
+  "schema": "e6e9-status-jev-receipts-v1",
+  "recorded_at": "2026-09-19",
+  "judgments": {
+    "E6": {
+      "decision": "FALLBACK_OUTAGE",
+      "noul": null,
+      "receipt_path": null,
+      "note": "healthcheck failed {'healthy': False, 'yes_probe': 0.33, 'no_probe': 0.22, 'checked_at': '2026-09-19T14:02:28.594278+00:00'}"
+    },
+    "E9": {
+      "decision": "FALLBACK_OUTAGE",
+      "noul": null,
+      "receipt_path": null,
+      "note": "healthcheck failed {'healthy': False, 'yes_probe': 0.32, 'no_probe': 0.22, 'checked_at': '2026-09-19T14:02:30.922164+00:00'}"
+    }
+  }
+}

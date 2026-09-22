@@ -1,0 +1,15 @@
+lane,name,benchmark_status,score,result,remaining_requirement
+E1,SWE-bench Pro,SCORED_EXACT_SUITE,0.0027359781121751026,2/731 = 0.274% pass@1,None for this recorded single-seed evaluation; 18 failed/lost generations remain unresolved in the denominator.
+E2,FrontierSWE,PARTIAL_EXACT,,1/17 tasks; replay normalized score 0.8628,Revision-bound benchmark authorization and 16 remaining tasks; original Tinker checkpoint unavailable.
+E3,SDAB,BLOCKED_EXTERNAL,,No exact-suite result,"Private 80-task bundle, runtime/reset contract and native grader."
+E4,BankerToolBench,PARTIAL_RECOVERY,,1/100 tasks; recovery metric 0.3115,Working model/verifier endpoint and budget: the prior native-grader-only estimate exceeds the recorded remaining cap.
+E5,APEX-Agents,PARTIAL_EXACT,,11/480 attempted; 7 native-scored; prefix mean 0.050505,"Working inference runtime, full auxiliary assets, sufficient budget and a declared execution protocol."
+E6,WebBench,BLOCKED_EXTERNAL,,No exact-suite result,"Official live environment, reset procedure, ground truth and native scorer."
+E7,BinaryAudit,PARTIAL_EXACT,,1/46 tasks; verifier reward 0.0 after agent error,"Revision-bound benchmark authorization, working model runtime and the remaining 45 tasks."
+E8,LifeSciBench,BLOCKED_EXTERNAL,,0/750 tasks,Official task package and native grader.
+E9,MLE-bench,PARTIAL_EXACT,,40/75 competitions with native grades; suite score unavailable,35 legacy competitions lack native grades; original sampler unavailable; separate merged arm is frozen.
+E10,AgentHarm,BLOCKED_EXTERNAL,,No private-suite result,Private held-out task files and authorized native grading route.
+E11,VerilogEval,SCORED_EXACT_SUITE,0.41346153846153844,129/312 = 41.35% pass@1,None for this recorded single-seed evaluation; 129/311 is noncanonical sensitivity only.
+E12,AppBench,BLOCKED_EXTERNAL,,No exact-suite result,"Official deployment, task artifacts and native grading route."
+E13,OpenReward Games,BLOCKED_EXTERNAL,,No exact-suite result,Provider-defined immutable held-out games suite and grading contract.
+E14,FrontierMath,BLOCKED_EXTERNAL,,No private-suite result,Authorized hosted/private Epoch evaluation.

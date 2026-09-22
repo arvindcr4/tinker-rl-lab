@@ -1,0 +1,91 @@
+{
+  "schema_version": "e4-banker-toolbench-public-restoration-v1",
+  "recorded_at": "2026-08-30T15:35:57Z",
+  "lane": "E4",
+  "suite_id": "banker_toolbench_eval",
+  "status": "RESTORED_PREFLIGHT_ONLY",
+  "terminal_status": "BLOCKED",
+  "evidence_scope": "Reconstructed the pinned public checkout, public dataset payload, and generated Harbor task artifacts. This is preflight/provenance evidence only: no Harbor job, Docker environment build, agent/model invocation, verifier invocation, W&B run, Tinker call, or benchmark score occurred.",
+  "source": {
+    "official_repository": "https://github.com/Handshake-AI-Research/bankertoolbench",
+    "official_repository_revision": "ff6db552a44632643df20393065056e5f1f0092c",
+    "dataset": "https://huggingface.co/datasets/handshake-ai-research/bankertoolbench",
+    "dataset_revision": "2c63d3b6d429687d2c29550e820dd136baafee95",
+    "dataset_license": "CC-BY-4.0",
+    "repository_license": "Apache-2.0"
+  },
+  "restored_checkout": {
+    "path": "outputs/e4_banker_toolbench/official_repo_ff6db552",
+    "git_head": "ff6db552a44632643df20393065056e5f1f0092c",
+    "size_human": "13G",
+    "job_yaml_sha256": "60029ecbae22cf63fd274ed424b5baa63941226e29c67752a23aa909fa595580",
+    "job_smoke_yaml_sha256": "982cdefd43a8675fe5392535d3ad422dfcf9fd0ed695a64312674b1f445b48e7"
+  },
+  "restored_public_assets": {
+    "tasks_jsonl": {
+      "path": "outputs/e4_banker_toolbench/official_repo_ff6db552/btb-data/tasks.jsonl",
+      "sha256": "18f132d929c898d319ea1cc229f523bd8bb799406c9c037355b8ceac6930199a",
+      "expected_hf_lfs_oid": "18f132d929c898d319ea1cc229f523bd8bb799406c9c037355b8ceac6930199a"
+    },
+    "full_split": {
+      "task_count": 100,
+      "unique_task_count": 100,
+      "sorted_task_id_list_sha256": "6373b69234ae938a31943cbe3657cdc49ac3dbe89859469edb0603a7e70ff051",
+      "generated_task_directory_count": 100,
+      "adapter_result": "100 generated; 100 with input files; 0 skipped"
+    },
+    "shared_tools": {
+      "sec_edgar_file_count": 66172,
+      "vdr_file_count": 17067,
+      "logos_file_count": 997
+    }
+  },
+  "manifest_verification": {
+    "manifest_path": "outputs/e4_banker_toolbench/split_manifest_100.json",
+    "manifest_sha256": "9fda047e501b68db09bf87b2013f85b78bd95da0a7b5cd77e0f613634835459c",
+    "checks_total": 1175,
+    "checks_failed": 0,
+    "checks_covered": [
+      "manifest file SHA-256",
+      "tasks.jsonl SHA-256 and 100 sorted task identifiers",
+      "all 100 source final-prompt hashes",
+      "all 100 source aggregated-rubric hashes",
+      "all manifest-recorded source input-file hashes",
+      "all 100 generated task.toml, rubric.json, grader.toml, instruction.md, docker-compose.yaml, and Dockerfile hashes"
+    ],
+    "selected_task": {
+      "task_id": "707cba99-59a7-47bd-bc4d-7f36212e99f3",
+      "harbor_task_id": "btb-707cba99",
+      "task_toml_sha256": "33b29382c541f10ee1ea2c531c564319c94388842e4599892f467527017c01d7",
+      "grader_toml_sha256": "3c57654c718f8d4ab53308e3f9ea124a30676650d809b83cb7b155c6307ca4e5",
+      "docker_compose_sha256": "4fb70f3b488ef8383bca1087d5746d6dd1e49e1bd889f062575e2fc1cdc806be"
+    }
+  },
+  "commands_executed": [
+    "git clone and detached checkout at the pinned official repository revision",
+    "BTB_HF_REVISION=2c63d3b6d429687d2c29550e820dd136baafee95 uv run python scripts/download_from_hf.py",
+    "BTB_HF_REVISION=2c63d3b6d429687d2c29550e820dd136baafee95 uv run python -m adapters.btb.run_adapter --dry-run",
+    "BTB_HF_REVISION=2c63d3b6d429687d2c29550e820dd136baafee95 uv run python -m adapters.btb.run_adapter"
+  ],
+  "execution": {
+    "harbor_invoked": false,
+    "docker_environment_build_invoked": false,
+    "agent_or_model_invoked": false,
+    "native_verifier_invoked": false,
+    "wandb_initialized": false,
+    "tinker_called": false,
+    "paid_calls": 0,
+    "incremental_spend_usd": 0.0,
+    "score": null,
+    "result_claims": null
+  },
+  "remaining_blockers": [
+    "The exact native full run remains unauthorized under the current cap: the receipt-based grader lower bound is approximately USD 59.45, above the USD 44.369899018207 remaining incremental budget.",
+    "Any future model or verifier run requires the campaign's W&B-before-provider, immutable checkpoint, native-verifier, and budget gates."
+  ],
+  "disk_safety": {
+    "free_1024_blocks_after_restore": 39602956,
+    "minimum_free_bytes_required": 21474836480,
+    "floor_maintained": true
+  }
+}

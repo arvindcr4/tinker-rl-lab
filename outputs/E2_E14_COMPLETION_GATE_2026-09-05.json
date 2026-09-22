@@ -1,0 +1,453 @@
+{
+  "claim_boundary": "E11 is the only complete exact lane inside the E2--E14 gate; E1 is also complete exact but is outside this gate's scope. This receipt reports readiness constraints only and all included scores are null.",
+  "excluded_complete_lanes": [
+    "E11"
+  ],
+  "included_lanes": [
+    "E2",
+    "E3",
+    "E4",
+    "E5",
+    "E6",
+    "E7",
+    "E8",
+    "E9",
+    "E10",
+    "E12",
+    "E13",
+    "E14"
+  ],
+  "lanes": [
+    {
+      "blocker": "The official pin 422b9bb95deb8efe436becb0ed3c44be23611e10 has no controlling root licence or evaluation authorization, and no official hosted signed-result route was found. The other 16 tasks therefore remain unavailable for an authorized exact full-suite run.",
+      "claim_boundary": "No partial, recovery, public, harness, readiness, or package-validation evidence is converted into a suite score.",
+      "evidence_class": "PARTIAL_EXACT",
+      "historical_benchmark_status": "PARTIAL_EXACT",
+      "historical_work_status": "LOCAL_SETUP_READY_PROVIDER_INPUT_REQUIRED",
+      "lane": "E2",
+      "local_surfaces": [
+        {
+          "exists": true,
+          "kind": "adapter",
+          "path": "zvf-program/flagship/pavlov_frontier_swe_eval_adapter.py"
+        },
+        {
+          "exists": true,
+          "kind": "runner",
+          "path": "zvf-program/flagship/frontier_swe_eval.py"
+        },
+        {
+          "exists": true,
+          "kind": "test",
+          "path": "zvf-program/flagship/test_pavlov_frontier_swe_eval_adapter.py"
+        }
+      ],
+      "required_inputs": [
+        "immutable task bundle",
+        "applicable license",
+        "pinned native runtime",
+        "native grader",
+        "sufficient budget"
+      ],
+      "score": null,
+      "suite_id": "frontier_swe_eval"
+    },
+    {
+      "blocker": "Private 80-task bundle, provider runtime/reset contract, native grader, and license are absent.",
+      "claim_boundary": "No partial, recovery, public, harness, readiness, or package-validation evidence is converted into a suite score.",
+      "evidence_class": "BLOCKED_EXTERNAL",
+      "historical_benchmark_status": "BLOCKED_EXTERNAL",
+      "historical_work_status": "WAITING_PROVIDER",
+      "lane": "E3",
+      "local_surfaces": [
+        {
+          "exists": true,
+          "kind": "adapter",
+          "path": "zvf-program/flagship/pavlov_sdab_eval_adapter.py"
+        },
+        {
+          "exists": true,
+          "kind": "runner",
+          "path": "zvf-program/flagship/eval_pavlov_sdab.py"
+        },
+        {
+          "exists": true,
+          "kind": "test",
+          "path": "zvf-program/flagship/test_pavlov_sdab_eval_adapter.py"
+        }
+      ],
+      "required_inputs": [
+        "private immutable 80-task bundle",
+        "provider license",
+        "provider runtime/reset contract",
+        "native grader",
+        "sufficient budget"
+      ],
+      "score": null,
+      "suite_id": "sdab_eval"
+    },
+    {
+      "blocker": "The exact public checkout, dataset, and 100/100 generated task artifacts are restored and passed 1,175 manifest checks with zero failures. Exact execution remains blocked: the receipt-based native-grader lower bound is approximately $59.45, above the remaining $44.369899018207 cap, and any future model/verifier run still requires the campaign W&B, immutable-checkpoint, native-verifier, provider, and hard-budget gates.",
+      "claim_boundary": "No partial, recovery, public, harness, readiness, or package-validation evidence is converted into a suite score.",
+      "evidence_class": "PARTIAL_RECOVERY",
+      "historical_benchmark_status": "PARTIAL_RECOVERY",
+      "historical_work_status": "LOCALLY_TERMINAL_FOR_AVAILABLE_ARTIFACT",
+      "lane": "E4",
+      "local_surfaces": [
+        {
+          "exists": true,
+          "kind": "adapter",
+          "path": "zvf-program/flagship/pavlov_banker_toolbench_eval_adapter.py"
+        },
+        {
+          "exists": true,
+          "kind": "runner",
+          "path": "zvf-program/flagship/run_harbor_via_tinker_bridge.py"
+        },
+        {
+          "exists": true,
+          "kind": "test",
+          "path": "zvf-program/flagship/test_pavlov_banker_toolbench_eval_adapter.py"
+        }
+      ],
+      "required_inputs": [
+        "immutable full task bundle",
+        "applicable license",
+        "pinned Harbor runtime",
+        "native grader",
+        "sufficient budget"
+      ],
+      "score": null,
+      "suite_id": "banker_toolbench_eval"
+    },
+    {
+      "blocker": "The pinned 480-task task/rubric bundle and sealed manifest are present, but the full auxiliary task/gold asset payload is not materialized locally; repository metadata remains gated although authenticated access was previously unblocked. Merged vLLM would be a separate execution arm and cannot be combined with the 11-task Tinker prefix. The local Mac lacks CUDA and storage; same-model A100 scenarios are approximately $143 to $289 before environments, with native judging adding a $4.20 to $5.39 lower bound, all above the remaining $44.369899018207 cap.",
+      "claim_boundary": "No partial, recovery, public, harness, readiness, or package-validation evidence is converted into a suite score.",
+      "evidence_class": "PARTIAL_EXACT",
+      "historical_benchmark_status": "PARTIAL_EXACT",
+      "historical_work_status": "LOCALLY_TERMINAL_UNDER_CURRENT_CAP",
+      "lane": "E5",
+      "local_surfaces": [
+        {
+          "exists": true,
+          "kind": "adapter",
+          "path": "zvf-program/flagship/pavlov_apex_agents_eval_adapter.py"
+        },
+        {
+          "exists": true,
+          "kind": "runner",
+          "path": "zvf-program/flagship/eval_apex_agents.py"
+        },
+        {
+          "exists": true,
+          "kind": "test",
+          "path": "zvf-program/flagship/test_pavlov_apex_agents_eval_adapter.py"
+        }
+      ],
+      "required_inputs": [
+        "immutable full task bundle",
+        "applicable license",
+        "pinned runtime",
+        "native grader",
+        "budget for full suite and judges"
+      ],
+      "score": null,
+      "suite_id": "apex_agents_eval"
+    },
+    {
+      "blocker": "Official live environment/reset, ground truth, native scorer, and write authorization are absent.",
+      "claim_boundary": "No partial, recovery, public, harness, readiness, or package-validation evidence is converted into a suite score.",
+      "evidence_class": "BLOCKED_EXTERNAL",
+      "historical_benchmark_status": "BLOCKED_EXTERNAL",
+      "historical_work_status": "LOCAL_SETUP_READY_PROVIDER_INPUT_REQUIRED",
+      "lane": "E6",
+      "local_surfaces": [
+        {
+          "exists": true,
+          "kind": "adapter",
+          "path": "zvf-program/flagship/pavlov_webbench_eval_adapter.py"
+        },
+        {
+          "exists": true,
+          "kind": "runner",
+          "path": "zvf-program/flagship/webbench_eval.py"
+        },
+        {
+          "exists": true,
+          "kind": "test",
+          "path": "zvf-program/flagship/test_pavlov_webbench_eval_adapter.py"
+        }
+      ],
+      "required_inputs": [
+        "official live environment",
+        "provider license/write authorization",
+        "reset and ground-truth contract",
+        "native grader",
+        "sufficient budget"
+      ],
+      "score": null,
+      "suite_id": "webbench_eval"
+    },
+    {
+      "blocker": "The official pin cbd86c7cd8519f01ae6b7ad7db7fdb653ea54f23 has no revision-controlled licence artifact: repository licence metadata is null, the licence endpoint is 404, and the README's Apache-2.0 claim points to a missing LICENSE file. No hosted signed-result route was found for an authorized complete 46-task run.",
+      "claim_boundary": "No partial, recovery, public, harness, readiness, or package-validation evidence is converted into a suite score.",
+      "evidence_class": "PARTIAL_EXACT",
+      "historical_benchmark_status": "PARTIAL_EXACT",
+      "historical_work_status": "LOCALLY_TERMINAL_FOR_AVAILABLE_TASK",
+      "lane": "E7",
+      "local_surfaces": [
+        {
+          "exists": true,
+          "kind": "adapter",
+          "path": "zvf-program/flagship/pavlov_binaryaudit_eval_adapter.py"
+        },
+        {
+          "exists": true,
+          "kind": "runner",
+          "path": "zvf-program/flagship/modal_non_e11_readiness.py"
+        },
+        {
+          "exists": true,
+          "kind": "test",
+          "path": "zvf-program/flagship/test_pavlov_binaryaudit_eval_adapter.py"
+        }
+      ],
+      "required_inputs": [
+        "immutable full task split/assets",
+        "applicable license",
+        "pinned amd64 reverse-engineering runtime",
+        "native verifier",
+        "sufficient budget"
+      ],
+      "score": null,
+      "suite_id": "binaryaudit_eval"
+    },
+    {
+      "blocker": "Official task package, license, and native grader are absent.",
+      "claim_boundary": "No partial, recovery, public, harness, readiness, or package-validation evidence is converted into a suite score.",
+      "evidence_class": "BLOCKED_EXTERNAL",
+      "historical_benchmark_status": "BLOCKED_EXTERNAL",
+      "historical_work_status": "WAITING_PROVIDER",
+      "lane": "E8",
+      "local_surfaces": [
+        {
+          "exists": true,
+          "kind": "adapter",
+          "path": "zvf-program/flagship/pavlov_lifescibench_eval_adapter.py"
+        },
+        {
+          "exists": true,
+          "kind": "runner",
+          "path": "zvf-program/flagship/pavlov_lifescibench_eval_adapter.py"
+        },
+        {
+          "exists": true,
+          "kind": "test",
+          "path": "zvf-program/flagship/test_pavlov_lifescibench_eval_adapter.py"
+        }
+      ],
+      "required_inputs": [
+        "official immutable task package",
+        "provider license",
+        "pinned runtime",
+        "native grader",
+        "sufficient budget"
+      ],
+      "score": null,
+      "suite_id": "lifescibench_eval"
+    },
+    {
+      "blocker": "35 legacy competitions still lack native grades. Seven separate fresh merged-vLLM pilots produced one valid native single-competition grade and six invalid receipts; all are terminal no-resample evidence with zero legacy coverage increment. The original Tinker sampler checkpoint is deleted. The 75-competition primary aggregate, multi-seed mean/SEM, and training-contamination receipt remain incomplete.",
+      "claim_boundary": "No partial, recovery, public, harness, readiness, or package-validation evidence is converted into a suite score.",
+      "evidence_class": "PARTIAL_EXACT",
+      "historical_benchmark_status": "PARTIAL_EXACT",
+      "historical_work_status": "LOCALLY_RECONCILED_FOR_CURRENT_COMPLETION_WINDOW",
+      "lane": "E9",
+      "local_surfaces": [
+        {
+          "exists": true,
+          "kind": "adapter",
+          "path": "zvf-program/flagship/e9_mle_bench_streaming.py"
+        },
+        {
+          "exists": true,
+          "kind": "runner",
+          "path": "zvf-program/flagship/modal_e9_mle_bench_streaming.py"
+        },
+        {
+          "exists": true,
+          "kind": "test",
+          "path": "zvf-program/flagship/test_e9_mle_bench_streaming.py"
+        }
+      ],
+      "required_inputs": [
+        "immutable competition/task registry",
+        "accepted competition terms",
+        "pinned benchmark runtime",
+        "native competition grades",
+        "budget for missing coverage"
+      ],
+      "score": null,
+      "suite_id": "mle_bench_eval"
+    },
+    {
+      "blocker": "Private AgentHarm tasks and official native grader are absent.",
+      "claim_boundary": "No partial, recovery, public, harness, readiness, or package-validation evidence is converted into a suite score.",
+      "evidence_class": "BLOCKED_EXTERNAL",
+      "historical_benchmark_status": "BLOCKED_EXTERNAL",
+      "historical_work_status": "WAITING_PROVIDER",
+      "lane": "E10",
+      "local_surfaces": [
+        {
+          "exists": true,
+          "kind": "adapter",
+          "path": "zvf-program/flagship/pavlov_agentharm_frontiermath_adapter.py"
+        },
+        {
+          "exists": true,
+          "kind": "runner",
+          "path": "zvf-program/flagship/pavlov_agentharm_frontiermath_adapter.py"
+        },
+        {
+          "exists": true,
+          "kind": "test",
+          "path": "zvf-program/flagship/test_pavlov_agentharm_frontiermath_adapter.py"
+        }
+      ],
+      "required_inputs": [
+        "private held-out tasks",
+        "provider license",
+        "pinned runtime",
+        "official native grader",
+        "sufficient budget"
+      ],
+      "score": null,
+      "suite_id": "agentharm_eval"
+    },
+    {
+      "blocker": "Official deployment, task artifacts, licence, provider trust root, and signed native result remain absent. The local intake now validates the six-task, best-of-three, dual-grader plus adjudication protocol and accepts a finite score only from a fully bound provider-signed result.",
+      "claim_boundary": "No partial, recovery, public, harness, readiness, or package-validation evidence is converted into a suite score.",
+      "evidence_class": "BLOCKED_EXTERNAL",
+      "historical_benchmark_status": "BLOCKED_EXTERNAL",
+      "historical_work_status": "WAITING_PROVIDER",
+      "lane": "E12",
+      "local_surfaces": [
+        {
+          "exists": true,
+          "kind": "adapter",
+          "path": "zvf-program/flagship/pavlov_appbench_openreward_games_adapter.py"
+        },
+        {
+          "exists": true,
+          "kind": "runner",
+          "path": "zvf-program/flagship/pavlov_appbench_openreward_games_adapter.py"
+        },
+        {
+          "exists": true,
+          "kind": "test",
+          "path": "zvf-program/flagship/test_pavlov_appbench_openreward_games_adapter.py"
+        }
+      ],
+      "required_inputs": [
+        "official deployment/task artifacts",
+        "provider license",
+        "deployment/runtime receipt",
+        "native grading protocol",
+        "sufficient budget"
+      ],
+      "score": null,
+      "suite_id": "appbench_eval"
+    },
+    {
+      "blocker": "The provider-defined immutable held-out OpenReward Games suite remains absent. Account onboarding is complete, but the authenticated 381-environment registry returned zero matches. Canonical score-null request construction and provider-signed result intake are now implemented; no runnable provider suite, trust root, native grading contract, or signed result has been granted.",
+      "claim_boundary": "No partial, recovery, public, harness, readiness, or package-validation evidence is converted into a suite score.",
+      "evidence_class": "BLOCKED_EXTERNAL",
+      "historical_benchmark_status": "BLOCKED_EXTERNAL",
+      "historical_work_status": "LOCAL_SETUP_READY_PROVIDER_INPUT_REQUIRED",
+      "lane": "E13",
+      "local_surfaces": [
+        {
+          "exists": true,
+          "kind": "adapter",
+          "path": "zvf-program/flagship/pavlov_appbench_openreward_games_adapter.py"
+        },
+        {
+          "exists": true,
+          "kind": "runner",
+          "path": "zvf-program/flagship/e13_openreward_games_local_runner.py"
+        },
+        {
+          "exists": true,
+          "kind": "test",
+          "path": "zvf-program/flagship/test_e13_openreward_games_local_runner.py"
+        }
+      ],
+      "required_inputs": [
+        "provider-defined immutable held-out suite",
+        "provider license",
+        "provider runtime/deployment receipt",
+        "native grading contract",
+        "API/billing budget"
+      ],
+      "score": null,
+      "suite_id": "openreward_games_eval"
+    },
+    {
+      "blocker": "The private hosted Epoch FrontierMath evaluation is unavailable.",
+      "claim_boundary": "No partial, recovery, public, harness, readiness, or package-validation evidence is converted into a suite score.",
+      "evidence_class": "BLOCKED_EXTERNAL",
+      "historical_benchmark_status": "BLOCKED_EXTERNAL",
+      "historical_work_status": "WAITING_PROVIDER",
+      "lane": "E14",
+      "local_surfaces": [
+        {
+          "exists": true,
+          "kind": "adapter",
+          "path": "zvf-program/flagship/pavlov_agentharm_frontiermath_adapter.py"
+        },
+        {
+          "exists": true,
+          "kind": "runner",
+          "path": "zvf-program/flagship/e14_frontiermath_public_samples.py"
+        },
+        {
+          "exists": true,
+          "kind": "test",
+          "path": "zvf-program/flagship/test_e14_frontiermath_public_samples.py"
+        }
+      ],
+      "required_inputs": [
+        "private hosted evaluation bundle",
+        "provider license",
+        "hosted runtime receipt",
+        "native grader",
+        "sufficient budget"
+      ],
+      "score": null,
+      "suite_id": "frontiermath_eval"
+    }
+  ],
+  "mode": "READ_ONLY_AUDIT_NO_NETWORK_NO_SPEND_NO_LAUNCH",
+  "provider_access_granted": false,
+  "recorded_at": "2026-09-05T02:40:46Z",
+  "schema_version": "e1-e14-completion-gate-v1",
+  "supported_evidence_classes": [
+    "BLOCKED_EXTERNAL",
+    "COMPLETE_EXACT",
+    "LOCAL_SETUP_READY_PROVIDER_INPUT_REQUIRED",
+    "PARTIAL_EXACT",
+    "PARTIAL_RECOVERY"
+  ],
+  "verified_exact_source_lanes": [
+    {
+      "benchmark_status": "SCORED_EXACT_SUITE",
+      "lane": "E1",
+      "score": 0.0027359781121751026
+    },
+    {
+      "benchmark_status": "SCORED_EXACT_SUITE",
+      "lane": "E11",
+      "score": 0.41346153846153844
+    }
+  ]
+}

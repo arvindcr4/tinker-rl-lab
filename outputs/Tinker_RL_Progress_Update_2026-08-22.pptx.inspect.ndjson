@@ -1,0 +1,456 @@
+{"kind":"deck","id":"pr/t1pr98","name":"Deck"}
+{"kind":"layout","layoutId":"/ppt/slideMasters/slideMaster1.xml","name":"","type":"master","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"body","type":"body","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"dateTime","type":"dateTime","textPreview":"1/27/13"},{"name":"footer","type":"footer"},{"name":"slideNumber","type":"slideNumber","textPreview":"‹#›"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout1.xml","name":"Title Slide","type":"title","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"subtitle","type":"subtitle","textPreview":"Click to edit Master subtitle style"},{"name":"dateTime","type":"dateTime","textPreview":"1/27/13"},{"name":"footer","type":"footer"},{"name":"slideNumber","type":"slideNumber","textPreview":"‹#›"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout2.xml","name":"Title and Content","type":"obj","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"content placeholder 2","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"dateTime","type":"dateTime","textPreview":"1/27/13"},{"name":"footer","type":"footer"},{"name":"slideNumber","type":"slideNumber","textPreview":"‹#›"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout3.xml","name":"Section Header","type":"secHead","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"body","type":"body","textPreview":"Click to edit Master text styles"},{"name":"dateTime","type":"dateTime","textPreview":"1/27/13"},{"name":"footer","type":"footer"},{"name":"slideNumber","type":"slideNumber","textPreview":"‹#›"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout4.xml","name":"Two Content","type":"twoObj","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"content placeholder 2","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"content placeholder 3","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"dateTime","type":"dateTime","textPreview":"1/27/13"},{"name":"footer","type":"footer"},{"name":"slideNumber","type":"slideNumber","textPreview":"‹#›"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout5.xml","name":"Comparison","type":"twoTxTwoObj","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"body","type":"body","textPreview":"Click to edit Master text styles"},{"name":"content placeholder 3","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"body","type":"body","textPreview":"Click to edit Master text styles"},{"name":"content placeholder 5","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"dateTime","type":"dateTime","textPreview":"1/27/13"},{"name":"footer","type":"footer"},{"name":"slideNumber","type":"slideNumber","textPreview":"‹#›"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout6.xml","name":"Title Only","type":"titleOnly","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"dateTime","type":"dateTime","textPreview":"1/27/13"},{"name":"footer","type":"footer"},{"name":"slideNumber","type":"slideNumber","textPreview":"‹#›"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout7.xml","name":"Blank","type":"blank","placeholders":[{"name":"dateTime","type":"dateTime","textPreview":"1/27/13"},{"name":"footer","type":"footer"},{"name":"slideNumber","type":"slideNumber","textPreview":"‹#›"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout8.xml","name":"Content with Caption","type":"objTx","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"content placeholder 2","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"body","type":"body","textPreview":"Click to edit Master text styles"},{"name":"dateTime","type":"dateTime","textPreview":"1/27/13"},{"name":"footer","type":"footer"},{"name":"slideNumber","type":"slideNumber","textPreview":"‹#›"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout9.xml","name":"Picture with Caption","type":"picTx","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"picture","type":"picture"},{"name":"body","type":"body","textPreview":"Click to edit Master text styles"},{"name":"dateTime","type":"dateTime","textPreview":"1/27/13"},{"name":"footer","type":"footer"},{"name":"slideNumber","type":"slideNumber","textPreview":"‹#›"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout10.xml","name":"Title and Vertical Text","type":"vertTx","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"body","type":"body","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"dateTime","type":"dateTime","textPreview":"1/27/13"},{"name":"footer","type":"footer"},{"name":"slideNumber","type":"slideNumber","textPreview":"‹#›"}]}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout11.xml","name":"Vertical Title and Text","type":"vertTitleAndTx","placeholders":[{"name":"title","type":"title","textPreview":"Click to edit Master title style"},{"name":"body","type":"body","textPreview":"Click to edit Master text styles | Second level | Third level | Fourth level | Fifth level"},{"name":"dateTime","type":"dateTime","textPreview":"1/27/13"},{"name":"footer","type":"footer"},{"name":"slideNumber","type":"slideNumber","textPreview":"‹#›"}]}
+{"kind":"slide","id":"sl/y90nupkv","slide":1,"title":"TINKER RL LAB  ·  ADVISOR UPDATE","textShapes":13}
+{"kind":"textbox","id":"sh/547294r6","slide":1,"name":"TextBox 1","text":"TINKER RL LAB  ·  ADVISOR UPDATE","textPreview":"TINKER RL LAB  ·  ADVISOR UPDATE","textChars":32,"textLines":1,"bbox":[62.4,46.08,672,25.28]}
+{"kind":"textbox","id":"sh/k3yl0zql","slide":1,"name":"TextBox 2","text":"Architecture, goals &\nthis week's evidence","textPreview":"Architecture, goals & | this week's evidence","textChars":42,"textLines":2,"bbox":[62.4,100.8,825.6,177.6]}
+{"kind":"textbox","id":"sh/7qp4be9c","slide":1,"name":"TextBox 3","text":"A receipt-first system for evaluating and improving agentic RL across 14 exact benchmark lanes.","textPreview":"A receipt-first system for evaluating and improving agentic RL across 14 exact benchmark lanes.","textChars":95,"textLines":1,"bbox":[66.24,299.52,787.2,59.52]}
+{"kind":"textbox","id":"sh/65g3298r","slide":1,"name":"TextBox 4","text":"22 AUG 2026   /   LIVE RECEIPT SNAPSHOT","textPreview":"22 AUG 2026   /   LIVE RECEIPT SNAPSHOT","textChars":39,"textLines":1,"bbox":[66.24,370.56,614.4,25.28]}
+{"kind":"shape","id":"sh/ts7md4r2","slide":1,"name":"Connector 5","bbox":[69.12,520.32,1126.08,0]}
+{"kind":"shape","id":"sh/sryl4zqx","slide":1,"name":"Oval 6","bbox":[100.8,503.04,34.56,34.56]}
+{"kind":"textbox","id":"sh/fu94fe98","slide":1,"name":"TextBox 7","text":"14 AUG","textPreview":"14 AUG","textChars":6,"textLines":1,"bbox":[62.4,554.88,115.2,21.12]}
+{"kind":"textbox","id":"sh/utg3698n","slide":1,"name":"TextBox 8","text":"Define\nexact contracts","textPreview":"Define | exact contracts","textChars":22,"textLines":2,"bbox":[48,579.84,144,46.08]}
+{"kind":"shape","id":"sh/wn6dc7eh","slide":1,"name":"Oval 9","bbox":[388.8,503.04,34.56,34.56]}
+{"kind":"textbox","id":"sh/hofulsf2","slide":1,"name":"TextBox 10","text":"16 AUG","textPreview":"16 AUG","textChars":6,"textLines":1,"bbox":[350.4,554.88,115.2,21.12]}
+{"kind":"textbox","id":"sh/ul4vaxgb","slide":1,"name":"TextBox 11","text":"Build\nportable runners","textPreview":"Build | portable runners","textChars":22,"textLines":2,"bbox":[336,579.84,144,46.08]}
+{"kind":"shape","id":"sh/vmdcj2xw","slide":1,"name":"Oval 12","bbox":[676.8,503.04,34.56,34.56]}
+{"kind":"textbox","id":"sh/4r6dg7et","slide":1,"name":"TextBox 13","text":"17 AUG","textPreview":"17 AUG","textChars":6,"textLines":1,"bbox":[638.4,554.88,115.2,21.12]}
+{"kind":"textbox","id":"sh/5sfepcfe","slide":1,"name":"TextBox 14","text":"Gate provenance\n+ spend","textPreview":"Gate provenance | + spend","textChars":23,"textLines":2,"bbox":[624,579.84,144,46.08]}
+{"kind":"shape","id":"sh/ipovexwn","slide":1,"name":"Oval 15","bbox":[964.8,503.04,34.56,34.56]}
+{"kind":"textbox","id":"sh/3qxwn2x8","slide":1,"name":"TextBox 16","text":"22 AUG","textPreview":"22 AUG","textChars":6,"textLines":1,"bbox":[926.4,554.88,115.2,21.12]}
+{"kind":"textbox","id":"sh/sfqdkrep","slide":1,"name":"TextBox 17","text":"Score natively\n+ scale remotely","textPreview":"Score natively | + scale remotely","textChars":31,"textLines":2,"bbox":[912,579.84,144,46.08]}
+{"kind":"textbox","id":"sh/dgzetcfa","slide":1,"name":"TextBox 18","text":"First understand what the system must prove; then review what this week closed.","textPreview":"First understand what the system must prove; then review what this week closed.","textChars":79,"textLines":1,"bbox":[66.24,660.48,1132.8,23.68]}
+{"kind":"notes","id":"nt/y90nupkv","slide":1,"text":"[Sources]\n- zvf-program/flagship/pavlovs_domain_contract.json\n- zvf-program/flagship/eval_apex_agents.py\n- zvf-program/flagship/modal_tinker_openai_bridge.py\n- zvf-program/flagship/e1_swe_bench_pro_full_eval.py\n- outputs/modal_e1_e14/2026-08-16/e11_full_receipt.json\n[/Sources]"}
+{"kind":"slide","id":"sl/hwbqtkby","slide":2,"title":"CONTEXT  ·  HIGH-LEVEL GOALS","textShapes":23}
+{"kind":"textbox","id":"sh/9072xkry","slide":2,"name":"TextBox 1","text":"CONTEXT  ·  HIGH-LEVEL GOALS","textPreview":"CONTEXT  ·  HIGH-LEVEL GOALS","textChars":28,"textLines":1,"bbox":[52.8,24.96,624,21.28]}
+{"kind":"textbox","id":"sh/ozy1ofad","slide":2,"name":"TextBox 2","text":"Four goals shape the research system","textPreview":"Four goals shape the research system","textChars":36,"textLines":1,"bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/b29kza94","slide":2,"name":"TextBox 3","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/a10jqpsj","slide":2,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"textbox","id":"sh/x4r21kru","slide":2,"name":"TextBox 5","text":"The project is designed to produce trustworthy capability evidence—not merely more runs.","textPreview":"The project is designed to produce trustworthy capability evidence—not merely more runs.","textChars":88,"textLines":1,"bbox":[62.4,126.72,1152,34.56]}
+{"kind":"shape","id":"sh/w3i1sfa9","slide":2,"name":"Rounded Rectangle 6","bbox":[62.4,182.4,257.28,340.8]}
+{"kind":"shape","id":"sh/r65knqtk","slide":2,"name":"Rectangle 7","bbox":[62.4,182.4,257.28,7.68]}
+{"kind":"textbox","id":"sh/q5wjelsz","slide":2,"name":"TextBox 8","text":"SCIENCE","textPreview":"SCIENCE","textChars":7,"textLines":1,"bbox":[79.68,205.44,220.8,21.44]}
+{"kind":"textbox","id":"sh/ove9o7yd","slide":2,"name":"TextBox 9","text":"Reliable evidence","textPreview":"Reliable evidence","textChars":17,"textLines":1,"bbox":[79.68,236.16,220.8,62.08]}
+{"kind":"textbox","id":"sh/9wnqhczy","slide":2,"name":"TextBox 10","text":"Evaluate exact suites without surrogate or substituted scores.","textPreview":"Evaluate exact suites without surrogate or substituted scores.","textChars":62,"textLines":1,"bbox":[79.68,301.44,220.8,129.6]}
+{"kind":"shape","id":"sh/mtwrmxg7","slide":2,"name":"Rounded Rectangle 11","bbox":[79.68,468.48,110.4,24.96]}
+{"kind":"textbox","id":"sh/nu58f2hs","slide":2,"name":"TextBox 12","text":"[PRIMARY OUTCOME]","textPreview":"[PRIMARY OUTCOME]","textChars":17,"textLines":1,"bbox":[79.68,469.44,110.4,24.32]}
+{"kind":"shape","id":"sh/wjy9sry9","slide":2,"name":"Rounded Rectangle 13","bbox":[362.88,182.4,257.28,340.8]}
+{"kind":"shape","id":"sh/xk7qlczu","slide":2,"name":"Rectangle 14","bbox":[362.88,182.4,257.28,7.68]}
+{"kind":"textbox","id":"sh/ahwrqhgj","slide":2,"name":"TextBox 15","text":"ENGINEERING","textPreview":"ENGINEERING","textChars":11,"textLines":1,"bbox":[380.16,205.44,220.8,21.44]}
+{"kind":"textbox","id":"sh/bip8jmho","slide":2,"name":"TextBox 16","text":"Portable execution","textPreview":"Portable execution","textChars":18,"textLines":1,"bbox":[380.16,236.16,220.8,62.08]}
+{"kind":"textbox","id":"sh/cnupgny5","slide":2,"name":"TextBox 17","text":"Launch and resume on Modal, GPU, or Tinker without one local VM.","textPreview":"Launch and resume on Modal, GPU, or Tinker without one local VM.","textChars":64,"textLines":1,"bbox":[380.16,301.44,220.8,129.6]}
+{"kind":"shape","id":"sh/do3q9szq","slide":2,"name":"Rounded Rectangle 18","bbox":[380.16,468.48,110.4,24.96]}
+{"kind":"textbox","id":"sh/t8byxkn2","slide":2,"name":"TextBox 19","text":"[SYSTEM GOAL]","textPreview":"[SYSTEM GOAL]","textChars":13,"textLines":1,"bbox":[380.16,469.44,110.4,24.32]}
+{"kind":"shape","id":"sh/s72xofmh","slide":2,"name":"Rounded Rectangle 20","bbox":[663.36,182.4,257.28,340.8]}
+{"kind":"shape","id":"sh/76twva5c","slide":2,"name":"Rectangle 21","bbox":[663.36,182.4,257.28,7.68]}
+{"kind":"textbox","id":"sh/65kfmpor","slide":2,"name":"TextBox 22","text":"EVIDENCE","textPreview":"EVIDENCE","textChars":8,"textLines":1,"bbox":[680.64,205.44,220.8,21.44]}
+{"kind":"textbox","id":"sh/hcvy14ne","slide":2,"name":"TextBox 23","text":"Reproducible claims","textPreview":"Reproducible claims","textChars":19,"textLines":1,"bbox":[680.64,236.16,220.8,62.08]}
+{"kind":"textbox","id":"sh/gbmxszmt","slide":2,"name":"TextBox 24","text":"Bind source, split, model, tracking, evaluator, and final receipt.","textPreview":"Bind source, split, model, tracking, evaluator, and final receipt.","textChars":66,"textLines":1,"bbox":[680.64,301.44,220.8,129.6]}
+{"kind":"shape","id":"sh/fadgzu58","slide":2,"name":"Rounded Rectangle 25","bbox":[680.64,468.48,110.4,24.96]}
+{"kind":"textbox","id":"sh/u94fqp4n","slide":2,"name":"TextBox 26","text":"[RESEARCH INTEGRITY]","textPreview":"[RESEARCH INTEGRITY]","textChars":20,"textLines":1,"bbox":[680.64,469.44,110.4,24.32]}
+{"kind":"shape","id":"sh/p0vy54na","slide":2,"name":"Rounded Rectangle 27","bbox":[963.84,182.4,257.28,340.8]}
+{"kind":"shape","id":"sh/4zmxwzmp","slide":2,"name":"Rectangle 28","bbox":[963.84,182.4,257.28,7.68]}
+{"kind":"textbox","id":"sh/mlgvq147","slide":2,"name":"TextBox 29","text":"COST / ACCESS","textPreview":"COST / ACCESS","textChars":13,"textLines":1,"bbox":[981.12,205.44,220.8,21.44]}
+{"kind":"textbox","id":"sh/nmpcj6ls","slide":2,"name":"TextBox 30","text":"Controlled execution","textPreview":"Controlled execution","textChars":20,"textLines":1,"bbox":[981.12,236.16,220.8,62.08]}
+{"kind":"textbox","id":"sh/onydsbmd","slide":2,"name":"TextBox 31","text":"Gate paid calls, side effects, and provider access before launch.","textPreview":"Gate paid calls, side effects, and provider access before launch.","textChars":65,"textLines":1,"bbox":[981.12,301.44,220.8,129.6]}
+{"kind":"shape","id":"sh/9o7ulg3y","slide":2,"name":"Rounded Rectangle 32","bbox":[981.12,468.48,122.88,24.96]}
+{"kind":"textbox","id":"sh/a9gvulkj","slide":2,"name":"TextBox 33","text":"[OPERATING RULE]","textPreview":"[OPERATING RULE]","textChars":16,"textLines":1,"bbox":[981.12,469.44,122.88,24.32]}
+{"kind":"textbox","id":"sh/ba9cn6l4","slide":2,"name":"TextBox 34","text":"PROJECT THESIS","textPreview":"PROJECT THESIS","textChars":14,"textLines":1,"bbox":[65.28,547.2,1152,31.68]}
+{"kind":"textbox","id":"sh/wbidwb29","slide":2,"name":"TextBox 35","text":"Build a trustworthy evaluation system—not just a leaderboard","textPreview":"Build a trustworthy evaluation system—not just a leaderboard","textChars":60,"textLines":1,"bbox":[65.28,587.52,1152,28.48]}
+{"kind":"shape","id":"sh/xcrupg3u","slide":2,"name":"Connector 36","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/id0vylkf","slide":2,"name":"TextBox 37","text":"Validity → reproducibility → portability → controlled cost and access.","textPreview":"Validity → reproducibility → portability → controlled cost and access.","textChars":70,"textLines":1,"bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"notes","id":"nt/hwbqtkby","slide":2,"text":"[Sources]\n- zvf-program/flagship/pavlovs_domain_contract.json\n- zvf-program/flagship/eval_apex_agents.py\n- zvf-program/flagship/modal_tinker_openai_bridge.py\n- zvf-program/flagship/e1_swe_bench_pro_full_eval.py\n- outputs/modal_e1_e14/2026-08-16/e11_full_receipt.json\n[/Sources]"}
+{"kind":"slide","id":"sl/ofy9wn61","slide":3,"title":"ARCHITECTURE  ·  END-TO-END FLOW","textShapes":20}
+{"kind":"textbox","id":"sh/cza94vmx","slide":3,"name":"TextBox 1","text":"ARCHITECTURE  ·  END-TO-END FLOW","textPreview":"ARCHITECTURE  ·  END-TO-END FLOW","textChars":32,"textLines":1,"bbox":[52.8,24.96,624,21.28]}
+{"kind":"textbox","id":"sh/d0jax03i","slide":3,"name":"TextBox 2","text":"The architecture separates execution from evidence","textPreview":"The architecture separates execution from evidence","textChars":50,"textLines":1,"bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/298ryl4v","slide":3,"name":"TextBox 3","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/3ah8rqlg","slide":3,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"textbox","id":"sh/obq90bml","slide":3,"name":"TextBox 5","text":"Four layers turn an official benchmark task into an auditable result.","textPreview":"Four layers turn an official benchmark task into an auditable result.","textChars":69,"textLines":1,"bbox":[62.4,124.8,1094.4,30.88]}
+{"kind":"shape","id":"sh/pcjqtg36","slide":3,"name":"Connector 6","bbox":[168,184.32,0,425.28]}
+{"kind":"shape","id":"sh/m5cra54z","slide":3,"name":"Oval 7","bbox":[149.76,190.08,36.48,36.48]}
+{"kind":"textbox","id":"sh/n6ls3alk","slide":3,"name":"TextBox 8","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[26.88,193.92,115.2,24.96]}
+{"kind":"textbox","id":"sh/n2l4fq98","slide":3,"name":"TextBox 9","text":"1 · BENCHMARK CONTRACT","textPreview":"1 · BENCHMARK CONTRACT","textChars":22,"textLines":1,"bbox":[208.32,178.56,614.4,31.68]}
+{"kind":"textbox","id":"sh/m1c3mlsn","slide":3,"name":"TextBox 10","text":"Immutable source, task, split, license, and grader identity define what counts.","textPreview":"Immutable source, task, split, license, and grader identity define what counts.","textChars":79,"textLines":1,"bbox":[208.32,211.2,806.4,49.92]}
+{"kind":"shape","id":"sh/943mhgre","slide":3,"name":"Oval 11","bbox":[149.76,297.6,36.48,36.48]}
+{"kind":"textbox","id":"sh/83ulovat","slide":3,"name":"TextBox 12","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[26.88,301.44,115.2,24.96]}
+{"kind":"textbox","id":"sh/v6l4jq94","slide":3,"name":"TextBox 13","text":"2 · ADAPTER + ORCHESTRATOR","textPreview":"2 · ADAPTER + ORCHESTRATOR","textChars":26,"textLines":1,"bbox":[208.32,286.08,614.4,31.68]}
+{"kind":"textbox","id":"sh/a5c3ql8z","slide":3,"name":"TextBox 14","text":"Per-lane wrappers launch, resume, cache, and preserve terminal state.","textPreview":"Per-lane wrappers launch, resume, cache, and preserve terminal state.","textChars":69,"textLines":1,"bbox":[208.32,318.72,806.4,49.92]}
+{"kind":"shape","id":"sh/x8nml0ra","slide":3,"name":"Oval 15","bbox":[149.76,405.12,36.48,36.48]}
+{"kind":"textbox","id":"sh/w7ulsvqp","slide":3,"name":"TextBox 16","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[26.88,408.96,115.2,24.96]}
+{"kind":"textbox","id":"sh/ja54na9g","slide":3,"name":"TextBox 17","text":"3 · COMPUTE + MODEL PLANE","textPreview":"3 · COMPUTE + MODEL PLANE","textChars":25,"textLines":1,"bbox":[208.32,393.6,614.4,31.68]}
+{"kind":"textbox","id":"sh/i9w3u58v","slide":3,"name":"TextBox 18","text":"Modal/GPU hosts environments; Tinker provides gated model calls; W&B/HF bind provenance.","textPreview":"Modal/GPU hosts environments; Tinker provides gated model calls; W&B/HF bind provenance.","textChars":88,"textLines":1,"bbox":[208.32,426.24,806.4,49.92]}
+{"kind":"shape","id":"sh/e10f2twf","slide":3,"name":"Oval 19","bbox":[149.76,512.64,36.48,36.48]}
+{"kind":"textbox","id":"sh/f29gbyx0","slide":3,"name":"TextBox 20","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[26.88,516.48,115.2,24.96]}
+{"kind":"textbox","id":"sh/03ix43e5","slide":3,"name":"TextBox 21","text":"4 · NATIVE EVALUATOR","textPreview":"4 · NATIVE EVALUATOR","textChars":20,"textLines":1,"bbox":[208.32,501.12,614.4,31.68]}
+{"kind":"textbox","id":"sh/14ryd8fq","slide":3,"name":"TextBox 22","text":"The benchmark-owned verifier converts artifacts into a score and final receipt.","textPreview":"The benchmark-owned verifier converts artifacts into a score and final receipt.","textChars":79,"textLines":1,"bbox":[208.32,533.76,806.4,49.92]}
+{"kind":"shape","id":"sh/6d0fytg3","slide":3,"name":"Rounded Rectangle 23","bbox":[1051.2,180.48,168,427.2]}
+{"kind":"textbox","id":"sh/re9g7yxo","slide":3,"name":"TextBox 24","text":"INVARIANT","textPreview":"INVARIANT","textChars":9,"textLines":1,"bbox":[1067.52,203.52,136.32,26.88]}
+{"kind":"textbox","id":"sh/sfix03y9","slide":3,"name":"TextBox 25","text":"No receipt,\nno score","textPreview":"No receipt, | no score","textChars":20,"textLines":2,"bbox":[1065.6,259.2,140.16,201.6]}
+{"kind":"textbox","id":"sh/tgry9ofu","slide":3,"name":"TextBox 26","text":"Failures remain data; partial outputs remain score:null.","textPreview":"Failures remain data; partial outputs remain score:null.","textChars":56,"textLines":1,"bbox":[1065.6,532.8,140.16,71.68]}
+{"kind":"shape","id":"sh/a9kfadwn","slide":3,"name":"Connector 27","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/batgjixs","slide":3,"name":"TextBox 28","text":"Sources: domain contract; adapters; Modal/Tinker bridge; native receipts","textPreview":"Sources: domain contract; adapters; Modal/Tinker bridge; native receipts","textChars":72,"textLines":1,"bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"notes","id":"nt/ofy9wn61","slide":3,"text":"[Sources]\n- zvf-program/flagship/pavlovs_domain_contract.json\n- zvf-program/flagship/eval_apex_agents.py\n- zvf-program/flagship/modal_tinker_openai_bridge.py\n- zvf-program/flagship/e1_swe_bench_pro_full_eval.py\n- outputs/modal_e1_e14/2026-08-16/e11_full_receipt.json\n[/Sources]"}
+{"kind":"slide","id":"sl/jyx0ra1s","slide":4,"title":"ARCHITECTURE  ·  COMPONENT ROLES","textShapes":27}
+{"kind":"textbox","id":"sh/1cj2d8b6","slide":4,"name":"TextBox 1","text":"ARCHITECTURE  ·  COMPONENT ROLES","textPreview":"ARCHITECTURE  ·  COMPONENT ROLES","textChars":32,"textLines":1,"bbox":[52.8,24.96,624,21.28]}
+{"kind":"textbox","id":"sh/0ba143al","slide":4,"name":"TextBox 2","text":"A run becomes a result only after native evaluation","textPreview":"A run becomes a result only after native evaluation","textChars":51,"textLines":1,"bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/rm1k7yt4","slide":4,"name":"TextBox 3","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/ql8jytsj","slide":4,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"shape","id":"sh/doj29oba","slide":4,"name":"Rounded Rectangle 5","bbox":[62.4,134.4,225.6,126.72]}
+{"kind":"shape","id":"sh/sna103ap","slide":4,"name":"Rectangle 6","bbox":[62.4,134.4,5.76,126.72]}
+{"kind":"textbox","id":"sh/3ihk3et8","slide":4,"name":"TextBox 7","text":"14","textPreview":"14","textChars":2,"textLines":1,"bbox":[81.6,147.84,194.88,46.08]}
+{"kind":"textbox","id":"sh/ih8ju9sn","slide":4,"name":"TextBox 8","text":"BENCHMARK SUITES","textPreview":"BENCHMARK SUITES","textChars":16,"textLines":1,"bbox":[81.6,188.16,194.88,24.48]}
+{"kind":"textbox","id":"sh/kbm987y5","slide":4,"name":"TextBox 9","text":"Official tasks, splits, licenses, and graders define admissible work.","textPreview":"Official tasks, splits, licenses, and graders define admissible work.","textChars":69,"textLines":1,"bbox":[81.6,213.12,194.88,48]}
+{"kind":"shape","id":"sh/5cva1cfq","slide":4,"name":"Rounded Rectangle 10","bbox":[302.4,134.4,225.6,126.72]}
+{"kind":"shape","id":"sh/i94r6xgz","slide":4,"name":"Rectangle 11","bbox":[302.4,134.4,5.76,126.72]}
+{"kind":"textbox","id":"sh/jadsz2xk","slide":4,"name":"TextBox 12","text":"E1–E14","textPreview":"E1–E14","textChars":6,"textLines":1,"bbox":[321.6,147.84,194.88,46.08]}
+{"kind":"textbox","id":"sh/w72947yt","slide":4,"name":"TextBox 13","text":"LANE ADAPTERS","textPreview":"LANE ADAPTERS","textChars":13,"textLines":1,"bbox":[321.6,188.16,194.88,24.48]}
+{"kind":"textbox","id":"sh/x8vaxsfe","slide":4,"name":"TextBox 14","text":"Launch, resume, isolate, cache, and preserve terminal state.","textPreview":"Launch, resume, isolate, cache, and preserve terminal state.","textChars":60,"textLines":1,"bbox":[321.6,213.12,194.88,38.4]}
+{"kind":"shape","id":"sh/a5kr2xg3","slide":4,"name":"Rounded Rectangle 15","bbox":[542.4,134.4,225.6,126.72]}
+{"kind":"shape","id":"sh/v6tsv2xo","slide":4,"name":"Rectangle 16","bbox":[542.4,134.4,5.76,126.72]}
+{"kind":"textbox","id":"sh/g36tgryd","slide":4,"name":"TextBox 17","text":"MODAL","textPreview":"MODAL","textChars":5,"textLines":1,"bbox":[561.6,147.84,194.88,46.08]}
+{"kind":"textbox","id":"sh/h4fa9wfy","slide":4,"name":"TextBox 18","text":"COMPUTE PLANE","textPreview":"COMPUTE PLANE","textChars":13,"textLines":1,"bbox":[561.6,188.16,194.88,24.48]}
+{"kind":"textbox","id":"sh/p0batw72","slide":4,"name":"TextBox 19","text":"Hosts official environments and heavy native evaluators remotely.","textPreview":"Hosts official environments and heavy native evaluators remotely.","textChars":65,"textLines":1,"bbox":[561.6,213.12,194.88,38.4]}
+{"kind":"shape","id":"sh/oz29krqh","slide":4,"name":"Rounded Rectangle 20","bbox":[782.4,134.4,225.6,126.72]}
+{"kind":"shape","id":"sh/3ytsrmpw","slide":4,"name":"Rectangle 21","bbox":[782.4,134.4,5.76,126.72]}
+{"kind":"textbox","id":"sh/2xkrih8b","slide":4,"name":"TextBox 22","text":"TINKER","textPreview":"TINKER","textChars":6,"textLines":1,"bbox":[801.6,147.84,194.88,46.08]}
+{"kind":"textbox","id":"sh/1wbapc7q","slide":4,"name":"TextBox 23","text":"MODEL PLANE","textPreview":"MODEL PLANE","textChars":11,"textLines":1,"bbox":[801.6,188.16,194.88,24.48]}
+{"kind":"textbox","id":"sh/gv29g7q5","slide":4,"name":"TextBox 24","text":"Gated model inference or training through a capped bridge.","textPreview":"Gated model inference or training through a capped bridge.","textChars":58,"textLines":1,"bbox":[801.6,213.12,194.88,38.4]}
+{"kind":"shape","id":"sh/fu9sn2p0","slide":4,"name":"Rounded Rectangle 25","bbox":[1022.4,134.4,196.8,126.72]}
+{"kind":"shape","id":"sh/et0reh8f","slide":4,"name":"Rectangle 26","bbox":[1022.4,134.4,5.76,126.72]}
+{"kind":"textbox","id":"sh/tsrqlc7u","slide":4,"name":"TextBox 27","text":"W&B + HF","textPreview":"W&B + HF","textChars":8,"textLines":1,"bbox":[1041.6,147.84,166.08,46.08]}
+{"kind":"textbox","id":"sh/sri9s7q9","slide":4,"name":"TextBox 28","text":"PROVENANCE","textPreview":"PROVENANCE","textChars":10,"textLines":1,"bbox":[1041.6,188.16,166.08,24.48]}
+{"kind":"textbox","id":"sh/ilwf69kv","slide":4,"name":"TextBox 29","text":"Online run identity plus immutable model and checkpoint receipts.","textPreview":"Online run identity plus immutable model and checkpoint receipts.","textChars":65,"textLines":1,"bbox":[1041.6,213.12,166.08,48]}
+{"kind":"textbox","id":"sh/jm5gze1g","slide":4,"name":"TextBox 30","text":"End-to-end control flow","textPreview":"End-to-end control flow","textChars":23,"textLines":1,"bbox":[65.28,288,528,33.28]}
+{"kind":"shape","id":"sh/knex8j21","slide":4,"name":"Oval 31","bbox":[67.2,337.92,10.56,10.56]}
+{"kind":"textbox","id":"sh/5ony1oj6","slide":4,"name":"TextBox 32","text":"1. Select an immutable benchmark task and native grader.","textPreview":"1. Select an immutable benchmark task and native grader.","textChars":56,"textLines":1,"bbox":[88.32,328.32,574.08,40.32]}
+{"kind":"shape","id":"sh/axcf29kj","slide":4,"name":"Oval 33","bbox":[67.2,384,10.56,10.56]}
+{"kind":"textbox","id":"sh/vy5gbe14","slide":4,"name":"TextBox 34","text":"2. Adapter provisions the official environment and routes model calls.","textPreview":"2. Adapter provisions the official environment and routes model calls.","textChars":70,"textLines":1,"bbox":[88.32,374.4,574.08,49.28]}
+{"kind":"shape","id":"sh/wzex4z2p","slide":4,"name":"Oval 35","bbox":[67.2,430.08,10.56,10.56]}
+{"kind":"textbox","id":"sh/xknyx4ja","slide":4,"name":"TextBox 36","text":"3. Modal/GPU executes; Tinker, tools, W&B, and HF emit provenance.","textPreview":"3. Modal/GPU executes; Tinker, tools, W&B, and HF emit provenance.","textChars":66,"textLines":1,"bbox":[88.32,420.48,574.08,49.28]}
+{"kind":"shape","id":"sh/mtcfypkn","slide":4,"name":"Oval 37","bbox":[67.2,476.16,10.56,10.56]}
+{"kind":"textbox","id":"sh/nulw7u18","slide":4,"name":"TextBox 38","text":"4. Native evaluator grades artifacts; only its receipt promotes the lane.","textPreview":"4. Native evaluator grades artifacts; only its receipt promotes the lane.","textChars":73,"textLines":1,"bbox":[88.32,466.56,574.08,49.28]}
+{"kind":"shape","id":"sh/fm5c3q54","slide":4,"name":"Rounded Rectangle 39","bbox":[691.2,288,528,334.08]}
+{"kind":"textbox","id":"sh/elwba54j","slide":4,"name":"TextBox 40","text":"ARCHITECTURE PRINCIPLE","textPreview":"ARCHITECTURE PRINCIPLE","textChars":22,"textLines":1,"bbox":[718.08,309.12,480,31.68]}
+{"kind":"textbox","id":"sh/18nu50nu","slide":4,"name":"TextBox 41","text":"Tasks enter; artifacts and provenance leave.\n\nOnly the native evaluator creates a scientific score.","textPreview":"Tasks enter; artifacts and provenance leave. |  | Only the native evaluator creates a scientific score.","textChars":99,"textLines":3,"bbox":[718.08,347.52,475.2,163.2]}
+{"kind":"textbox","id":"sh/0netcvm9","slide":4,"name":"TextBox 42","text":"Execution is not evidence until evaluation closes.","textPreview":"Execution is not evidence until evaluation closes.","textChars":50,"textLines":1,"bbox":[718.08,547.2,475.2,40.32]}
+{"kind":"shape","id":"sh/rilczq5s","slide":4,"name":"Connector 43","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/qhcb6l47","slide":4,"name":"TextBox 44","text":"Sources: domain contract; adapters; Modal/Tinker bridge; W&B/HF and native receipts","textPreview":"Sources: domain contract; adapters; Modal/Tinker bridge; W&B/HF and native receipts","textChars":83,"textLines":1,"bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"notes","id":"nt/jyx0ra1s","slide":4,"text":"[Sources]\n- zvf-program/flagship/pavlovs_domain_contract.json\n- zvf-program/flagship/eval_apex_agents.py\n- zvf-program/flagship/modal_tinker_openai_bridge.py\n- zvf-program/flagship/e1_swe_bench_pro_full_eval.py\n- outputs/modal_e1_e14/2026-08-16/e11_full_receipt.json\n[/Sources]"}
+{"kind":"slide","id":"sl/i107q5of","slide":5,"title":"STATUS  ·  E1–E14 SCOREBOARD","textShapes":61}
+{"kind":"textbox","id":"sh/dgbulwnm","slide":5,"name":"TextBox 1","text":"STATUS  ·  E1–E14 SCOREBOARD","textPreview":"STATUS  ·  E1–E14 SCOREBOARD","textChars":28,"textLines":1,"bbox":[52.8,24.96,624,21.28]}
+{"kind":"textbox","id":"sh/cf2tcr61","slide":5,"name":"TextBox 2","text":"Every lane keeps its evidence label","textPreview":"Every lane keeps its evidence label","textChars":35,"textLines":1,"bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/z2tcnm5s","slide":5,"name":"TextBox 3","text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/yhkbe1o7","slide":5,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"textbox","id":"sh/l4bupwny","slide":5,"name":"TextBox 5","text":"Operational progress is visible, but only receipt-backed exact evaluation becomes a score.","textPreview":"Operational progress is visible, but only receipt-backed exact evaluation becomes a score.","textChars":90,"textLines":1,"bbox":[62.4,120.96,1152,27.68]}
+{"kind":"shape","id":"sh/032tgr6d","slide":5,"name":"Rounded Rectangle 6","bbox":[52.8,155.52,561.6,65.28]}
+{"kind":"textbox","id":"sh/n6dcr65o","slide":5,"name":"TextBox 7","text":"E1","textPreview":"E1","textChars":2,"textLines":1,"bbox":[64.32,163.2,52.8,23.04]}
+{"kind":"textbox","id":"sh/m5kbi1oj","slide":5,"name":"TextBox 8","text":"SWE-bench Pro","textPreview":"SWE-bench Pro","textChars":13,"textLines":1,"bbox":[118.08,161.28,321.6,23.04]}
+{"kind":"textbox","id":"sh/w32dkbuh","slide":5,"name":"TextBox 9","text":"SCORED","textPreview":"SCORED","textChars":6,"textLines":1,"bbox":[118.08,188.16,355.2,24.96]}
+{"kind":"shape","id":"sh/x4vedgvm","slide":5,"name":"Rounded Rectangle 10","bbox":[477.12,174.72,122.88,24.96]}
+{"kind":"textbox","id":"sh/ahkvi1cb","slide":5,"name":"TextBox 11","text":"0.2736% · 2/731 resolved","textPreview":"0.2736% · 2/731 resolved","textChars":24,"textLines":1,"bbox":[477.12,175.68,122.88,23.04]}
+{"kind":"shape","id":"sh/v2twb6dw","slide":5,"name":"Rounded Rectangle 12","bbox":[52.8,226.56,561.6,65.28]}
+{"kind":"textbox","id":"sh/k7mxovud","slide":5,"name":"TextBox 13","text":"E2","textPreview":"E2","textChars":2,"textLines":1,"bbox":[64.32,234.24,52.8,23.04]}
+{"kind":"textbox","id":"sh/58vehgvy","slide":5,"name":"TextBox 14","text":"Frontier-SWE","textPreview":"Frontier-SWE","textChars":12,"textLines":1,"bbox":[118.08,232.32,321.6,28.48]}
+{"kind":"textbox","id":"sh/i54fmlc7","slide":5,"name":"TextBox 15","text":"RECOVERY","textPreview":"RECOVERY","textChars":8,"textLines":1,"bbox":[118.08,259.2,355.2,24.96]}
+{"kind":"shape","id":"sh/j6dwfqds","slide":5,"name":"Rounded Rectangle 16","bbox":[477.12,245.76,122.88,24.96]}
+{"kind":"textbox","id":"sh/sb6xsvu9","slide":5,"name":"TextBox 17","text":"0.8628 · 1/17 · suite score:null","textPreview":"0.8628 · 1/17 · suite score:null","textChars":32,"textLines":1,"bbox":[477.12,246.72,122.88,24.32]}
+{"kind":"shape","id":"sh/tcfel0vu","slide":5,"name":"Rounded Rectangle 18","bbox":[52.8,297.6,561.6,65.28]}
+{"kind":"textbox","id":"sh/hgrmpwj2","slide":5,"name":"TextBox 19","text":"E3","textPreview":"E3","textChars":2,"textLines":1,"bbox":[64.32,305.28,52.8,23.04]}
+{"kind":"textbox","id":"sh/gfi5grih","slide":5,"name":"TextBox 20","text":"SDAB","textPreview":"SDAB","textChars":4,"textLines":1,"bbox":[118.08,303.36,321.6,23.04]}
+{"kind":"textbox","id":"sh/fe94nm1w","slide":5,"name":"TextBox 21","text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[118.08,330.24,355.2,24.96]}
+{"kind":"shape","id":"sh/ud0ne10b","slide":5,"name":"Rounded Rectangle 22","bbox":[477.12,316.8,122.88,24.96]}
+{"kind":"textbox","id":"sh/pkr6tgjy","slide":5,"name":"TextBox 23","text":"Private 80 tasks + runtime/grader","textPreview":"Private 80 tasks + runtime/grader","textChars":33,"textLines":1,"bbox":[477.12,317.76,122.88,24.32]}
+{"kind":"shape","id":"sh/4ji5kbid","slide":5,"name":"Rounded Rectangle 24","bbox":[52.8,368.64,561.6,65.28]}
+{"kind":"textbox","id":"sh/3i94r61s","slide":5,"name":"TextBox 25","text":"E4","textPreview":"E4","textChars":2,"textLines":1,"bbox":[64.32,376.32,52.8,23.04]}
+{"kind":"textbox","id":"sh/2h0ni107","slide":5,"name":"TextBox 26","text":"Banker ToolBench","textPreview":"Banker ToolBench","textChars":16,"textLines":1,"bbox":[118.08,374.4,321.6,28.48]}
+{"kind":"textbox","id":"sh/5o7mhcju","slide":5,"name":"TextBox 27","text":"RECOVERY","textPreview":"RECOVERY","textChars":8,"textLines":1,"bbox":[118.08,401.28,355.2,24.96]}
+{"kind":"shape","id":"sh/kny587i9","slide":5,"name":"Rounded Rectangle 28","bbox":[477.12,387.84,122.88,24.96]}
+{"kind":"textbox","id":"sh/atcjidg7","slide":5,"name":"TextBox 29","text":"0.3115 attempt metric · suite score:null","textPreview":"0.3115 attempt metric · suite score:null","textChars":40,"textLines":1,"bbox":[477.12,388.8,122.88,24.32]}
+{"kind":"shape","id":"sh/vu5kbihc","slide":5,"name":"Rounded Rectangle 30","bbox":[52.8,439.68,561.6,65.28]}
+{"kind":"textbox","id":"sh/wve1knyx","slide":5,"name":"TextBox 31","text":"E5","textPreview":"E5","textChars":2,"textLines":1,"bbox":[64.32,447.36,52.8,23.04]}
+{"kind":"textbox","id":"sh/xwn2dszi","slide":5,"name":"TextBox 32","text":"Apex Agents","textPreview":"Apex Agents","textChars":11,"textLines":1,"bbox":[118.08,445.44,321.6,28.48]}
+{"kind":"textbox","id":"sh/ihw3mxg3","slide":5,"name":"TextBox 33","text":"EXECUTING","textPreview":"EXECUTING","textChars":9,"textLines":1,"bbox":[118.08,472.32,355.2,24.96]}
+{"kind":"shape","id":"sh/ji5kf2ho","slide":5,"name":"Rounded Rectangle 34","bbox":[477.12,458.88,122.88,24.96]}
+{"kind":"textbox","id":"sh/kjelony9","slide":5,"name":"TextBox 35","text":"Official Modal task executing","textPreview":"Official Modal task executing","textChars":29,"textLines":1,"bbox":[477.12,459.84,122.88,24.32]}
+{"kind":"shape","id":"sh/5kn2hszu","slide":5,"name":"Rounded Rectangle 36","bbox":[52.8,510.72,561.6,65.28]}
+{"kind":"textbox","id":"sh/e1sjatgz","slide":5,"name":"TextBox 37","text":"E6","textPreview":"E6","textChars":2,"textLines":1,"bbox":[64.32,518.4,52.8,23.04]}
+{"kind":"textbox","id":"sh/zmlk3yhk","slide":5,"name":"TextBox 38","text":"WebBench","textPreview":"WebBench","textChars":8,"textLines":1,"bbox":[118.08,516.48,321.6,23.04]}
+{"kind":"textbox","id":"sh/fid07u98","slide":5,"name":"TextBox 39","text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[118.08,543.36,355.2,24.96]}
+{"kind":"shape","id":"sh/ehkzepsn","slide":5,"name":"Rounded Rectangle 40","bbox":[477.12,529.92,122.88,24.96]}
+{"kind":"textbox","id":"sh/1kvi94re","slide":5,"name":"TextBox 41","text":"Official env + ground truth","textPreview":"Official env + ground truth","textChars":27,"textLines":1,"bbox":[477.12,530.88,122.88,24.32]}
+{"kind":"shape","id":"sh/gjmhgzqt","slide":5,"name":"Rounded Rectangle 42","bbox":[52.8,581.76,561.6,65.28]}
+{"kind":"textbox","id":"sh/3md0bu94","slide":5,"name":"TextBox 43","text":"E7","textPreview":"E7","textChars":2,"textLines":1,"bbox":[64.32,589.44,52.8,23.04]}
+{"kind":"textbox","id":"sh/2l4zip8j","slide":5,"name":"TextBox 44","text":"BinaryAudit","textPreview":"BinaryAudit","textChars":11,"textLines":1,"bbox":[118.08,587.52,321.6,23.04]}
+{"kind":"textbox","id":"sh/povid4ra","slide":5,"name":"TextBox 45","text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[118.08,614.4,355.2,24.96]}
+{"kind":"shape","id":"sh/onmhkzqp","slide":5,"name":"Rounded Rectangle 46","bbox":[477.12,600.96,122.88,24.96]}
+{"kind":"textbox","id":"sh/bqx0fe9g","slide":5,"name":"TextBox 47","text":"Exact task reward 0.0 · agent error · score:null","textPreview":"Exact task reward 0.0 · agent error · score:null","textChars":48,"textLines":1,"bbox":[477.12,601.92,122.88,24.32]}
+{"kind":"shape","id":"sh/qp4jm98v","slide":5,"name":"Rounded Rectangle 48","bbox":[667.2,155.52,561.6,65.28]}
+{"kind":"textbox","id":"sh/8f6hcj6t","slide":5,"name":"TextBox 49","text":"E8","textPreview":"E8","textChars":2,"textLines":1,"bbox":[678.72,163.2,52.8,23.04]}
+{"kind":"textbox","id":"sh/9gfy5o7e","slide":5,"name":"TextBox 50","text":"LifeSciBench","textPreview":"LifeSciBench","textChars":12,"textLines":1,"bbox":[732.48,161.28,321.6,23.04]}
+{"kind":"textbox","id":"sh/mdoza9o3","slide":5,"name":"TextBox 51","text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[732.48,188.16,355.2,24.96]}
+{"kind":"shape","id":"sh/nexg3epo","slide":5,"name":"Rounded Rectangle 52","bbox":[1091.52,174.72,122.88,24.96]}
+{"kind":"textbox","id":"sh/0r6h8z6x","slide":5,"name":"TextBox 53","text":"Official package + license + grader","textPreview":"Official package + license + grader","textChars":35,"textLines":1,"bbox":[1091.52,175.68,122.88,24.32]}
+{"kind":"shape","id":"sh/lcfy147i","slide":5,"name":"Rounded Rectangle 54","bbox":[667.2,226.56,561.6,65.28]}
+{"kind":"textbox","id":"sh/yp4z69or","slide":5,"name":"TextBox 55","text":"E9","textPreview":"E9","textChars":2,"textLines":1,"bbox":[678.72,234.24,52.8,23.04]}
+{"kind":"textbox","id":"sh/zqxgzupc","slide":5,"name":"TextBox 56","text":"MLE-bench","textPreview":"MLE-bench","textChars":9,"textLines":1,"bbox":[732.48,232.32,321.6,23.04]}
+{"kind":"textbox","id":"sh/cnmh4z61","slide":5,"name":"TextBox 57","text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[732.48,259.2,355.2,24.96]}
+{"kind":"shape","id":"sh/dovyx476","slide":5,"name":"Rounded Rectangle 58","bbox":[1091.52,245.76,122.88,24.96]}
+{"kind":"textbox","id":"sh/t8n6lwvy","slide":5,"name":"TextBox 59","text":"Agent artifact + 74 rule acceptances","textPreview":"Agent artifact + 74 rule acceptances","textChars":36,"textLines":1,"bbox":[1091.52,246.72,122.88,24.32]}
+{"kind":"shape","id":"sh/s7u5crud","slide":5,"name":"Rounded Rectangle 60","bbox":[667.2,297.6,561.6,65.28]}
+{"kind":"textbox","id":"sh/r6lojmds","slide":5,"name":"TextBox 61","text":"E10","textPreview":"E10","textChars":3,"textLines":1,"bbox":[678.72,305.28,52.8,23.04]}
+{"kind":"textbox","id":"sh/65cnahc7","slide":5,"name":"TextBox 62","text":"AgentHarm","textPreview":"AgentHarm","textChars":9,"textLines":1,"bbox":[732.48,303.36,321.6,23.04]}
+{"kind":"textbox","id":"sh/5436hcv2","slide":5,"name":"TextBox 63","text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[732.48,330.24,355.2,24.96]}
+{"kind":"shape","id":"sh/43u587uh","slide":5,"name":"Rounded Rectangle 64","bbox":[1091.52,316.8,122.88,24.96]}
+{"kind":"textbox","id":"sh/j2lofmdw","slide":5,"name":"TextBox 65","text":"Private split + policy grader","textPreview":"Private split + policy grader","textChars":29,"textLines":1,"bbox":[1091.52,317.76,122.88,24.32]}
+{"kind":"shape","id":"sh/i1cn6hcb","slide":5,"name":"Rounded Rectangle 66","bbox":[667.2,368.64,561.6,65.28]}
+{"kind":"textbox","id":"sh/p076tgv6","slide":5,"name":"TextBox 67","text":"E11","textPreview":"E11","textChars":3,"textLines":1,"bbox":[678.72,376.32,52.8,23.04]}
+{"kind":"textbox","id":"sh/ozepkbul","slide":5,"name":"TextBox 68","text":"VerilogEval","textPreview":"VerilogEval","textChars":11,"textLines":1,"bbox":[732.48,374.4,321.6,23.04]}
+{"kind":"textbox","id":"sh/m583eds3","slide":5,"name":"TextBox 69","text":"SCORED","textPreview":"SCORED","textChars":6,"textLines":1,"bbox":[732.48,401.28,355.2,24.96]}
+{"kind":"shape","id":"sh/76hk7ito","slide":5,"name":"Rounded Rectangle 70","bbox":[1091.52,387.84,122.88,24.96]}
+{"kind":"textbox","id":"sh/87qlgna9","slide":5,"name":"TextBox 71","text":"41.3% canonical raw · 129/312","textPreview":"41.3% canonical raw · 129/312","textChars":29,"textLines":1,"bbox":[1091.52,388.8,122.88,24.32]}
+{"kind":"shape","id":"sh/98z298bu","slide":5,"name":"Rounded Rectangle 72","bbox":[667.2,439.68,561.6,65.28]}
+{"kind":"textbox","id":"sh/yho3atsr","slide":5,"name":"TextBox 73","text":"E12","textPreview":"E12","textChars":3,"textLines":1,"bbox":[678.72,447.36,52.8,23.04]}
+{"kind":"textbox","id":"sh/zihk3ytc","slide":5,"name":"TextBox 74","text":"AppBench","textPreview":"AppBench","textChars":8,"textLines":1,"bbox":[732.48,445.44,321.6,23.04]}
+{"kind":"textbox","id":"sh/kjqlc3ax","slide":5,"name":"TextBox 75","text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[732.48,472.32,355.2,24.96]}
+{"kind":"shape","id":"sh/lkz258bi","slide":5,"name":"Rounded Rectangle 76","bbox":[1091.52,458.88,122.88,24.96]}
+{"kind":"textbox","id":"sh/ids3mxsb","slide":5,"name":"TextBox 77","text":"License + deployment/human graders","textPreview":"License + deployment/human graders","textChars":34,"textLines":1,"bbox":[1091.52,459.84,122.88,36.48]}
+{"kind":"shape","id":"sh/je14f2tw","slide":5,"name":"Rounded Rectangle 78","bbox":[667.2,510.72,561.6,65.28]}
+{"kind":"textbox","id":"sh/ruxkz2l0","slide":5,"name":"TextBox 79","text":"E13","textPreview":"E13","textChars":3,"textLines":1,"bbox":[678.72,518.4,52.8,23.04]}
+{"kind":"textbox","id":"sh/qto36xkf","slide":5,"name":"TextBox 80","text":"OpenReward Games","textPreview":"OpenReward Games","textChars":16,"textLines":1,"bbox":[732.48,516.48,321.6,23.04]}
+{"kind":"textbox","id":"sh/dwz21s36","slide":5,"name":"TextBox 81","text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[732.48,543.36,355.2,24.96]}
+{"kind":"shape","id":"sh/sv6l8n2l","slide":5,"name":"Rounded Rectangle 82","bbox":[1091.52,529.92,122.88,24.96]}
+{"kind":"textbox","id":"sh/3qxkvilo","slide":5,"name":"TextBox 83","text":"Licensed provider holdout absent","textPreview":"Licensed provider holdout absent","textChars":32,"textLines":1,"bbox":[1091.52,530.88,122.88,24.32]}
+{"kind":"shape","id":"sh/ipo32dk3","slide":5,"name":"Rounded Rectangle 84","bbox":[667.2,581.76,561.6,65.28]}
+{"kind":"textbox","id":"sh/5sf2xs3u","slide":5,"name":"TextBox 85","text":"E14","textPreview":"E14","textChars":3,"textLines":1,"bbox":[678.72,589.44,52.8,23.04]}
+{"kind":"textbox","id":"sh/4r6l4n29","slide":5,"name":"TextBox 86","text":"FrontierMath","textPreview":"FrontierMath","textChars":12,"textLines":1,"bbox":[732.48,587.52,321.6,23.04]}
+{"kind":"textbox","id":"sh/v2dkrils","slide":5,"name":"TextBox 87","text":"BLOCKED","textPreview":"BLOCKED","textChars":7,"textLines":1,"bbox":[732.48,614.4,355.2,24.96]}
+{"kind":"shape","id":"sh/u14jydk7","slide":5,"name":"Rounded Rectangle 88","bbox":[1091.52,600.96,122.88,24.96]}
+{"kind":"textbox","id":"sh/0vi9cfet","slide":5,"name":"TextBox 89","text":"Hosted Epoch evaluation only","textPreview":"Hosted Epoch evaluation only","textChars":28,"textLines":1,"bbox":[1091.52,601.92,122.88,24.32]}
+{"kind":"shape","id":"sh/lwrqlkfe","slide":5,"name":"Connector 90","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/yt0ra5wn","slide":5,"name":"TextBox 91","text":"Sources: outputs/modal_e1_e14/2026-08-16 and today's live run receipts","textPreview":"Sources: outputs/modal_e1_e14/2026-08-16 and today's live run receipts","textChars":70,"textLines":1,"bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"notes","id":"nt/i107q5of","slide":5,"text":"[Sources]\n- outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818\n- outputs/modal_e1_e14/2026-08-16/e11_full_receipt.json\n- outputs/e5_apex_agents/preflight_modal_2026-08-22.json\n- outputs/e5_apex_agents/official_modal_retry_run_2026-08-22/official_run.log\n- https://github.com/Mercor-Intelligence/archipelago\n- Snapshot: 2026-08-22 Asia/Kolkata\n[/Sources]"}
+{"kind":"slide","id":"sl/x8f69ofe","slide":6,"title":"E1 FOCUS  ·  SWE-BENCH PRO","textShapes":24}
+{"kind":"textbox","id":"sh/yhg7epsj","slide":6,"name":"TextBox 1","text":"E1 FOCUS  ·  SWE-BENCH PRO","textPreview":"E1 FOCUS  ·  SWE-BENCH PRO","textChars":26,"textLines":1,"bbox":[52.8,24.96,624,21.28]}
+{"kind":"textbox","id":"sh/zi98nu94","slide":6,"name":"TextBox 2","text":"E1 full suite: 2/731 resolved","textPreview":"E1 full suite: 2/731 resolved","textChars":29,"textLines":1,"bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/87ipkzal","slide":6,"name":"TextBox 3","text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/98rqt4r6","slide":6,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"shape","id":"sh/ml07i9sv","slide":6,"name":"Rounded Rectangle 5","bbox":[62.4,132.48,278.4,148.8]}
+{"kind":"shape","id":"sh/7m98ru9g","slide":6,"name":"Rectangle 6","bbox":[62.4,132.48,5.76,148.8]}
+{"kind":"textbox","id":"sh/oryp8fah","slide":6,"name":"TextBox 7","text":"731/731","textPreview":"731/731","textChars":7,"textLines":1,"bbox":[81.6,145.92,247.68,46.08]}
+{"kind":"textbox","id":"sh/pc76hkr2","slide":6,"name":"TextBox 8","text":"TERMINAL","textPreview":"TERMINAL","textChars":8,"textLines":1,"bbox":[81.6,186.24,247.68,24.48]}
+{"kind":"textbox","id":"sh/h4bupgn6","slide":6,"name":"TextBox 9","text":"Generation receipts at snapshot","textPreview":"Generation receipts at snapshot","textChars":31,"textLines":1,"bbox":[81.6,211.2,247.68,60.48]}
+{"kind":"shape","id":"sh/w32twb6l","slide":6,"name":"Rounded Rectangle 10","bbox":[360,132.48,278.4,148.8]}
+{"kind":"shape","id":"sh/v2tcn650","slide":6,"name":"Rectangle 11","bbox":[360,132.48,5.76,148.8]}
+{"kind":"textbox","id":"sh/u1kbu1ov","slide":6,"name":"TextBox 12","text":"713","textPreview":"713","textChars":3,"textLines":1,"bbox":[379.2,145.92,247.68,46.08]}
+{"kind":"textbox","id":"sh/5svutgni","slide":6,"name":"TextBox 13","text":"GENERATED","textPreview":"GENERATED","textChars":9,"textLines":1,"bbox":[379.2,186.24,247.68,24.48]}
+{"kind":"textbox","id":"sh/47mt0b6x","slide":6,"name":"TextBox 14","text":"Candidate patches preserved","textPreview":"Candidate patches preserved","textChars":27,"textLines":1,"bbox":[379.2,211.2,247.68,60.48]}
+{"kind":"shape","id":"sh/j6dcr65c","slide":6,"name":"Rounded Rectangle 15","bbox":[657.6,132.48,278.4,148.8]}
+{"kind":"shape","id":"sh/i54bylor","slide":6,"name":"Rectangle 16","bbox":[657.6,132.48,5.76,148.8]}
+{"kind":"textbox","id":"sh/twfux0ne","slide":6,"name":"TextBox 17","text":"18","textPreview":"18","textChars":2,"textLines":1,"bbox":[676.8,145.92,247.68,46.08]}
+{"kind":"textbox","id":"sh/svmt4v6t","slide":6,"name":"TextBox 18","text":"FAILED / LOST","textPreview":"FAILED / LOST","textChars":13,"textLines":1,"bbox":[676.8,186.24,247.68,24.48]}
+{"kind":"textbox","id":"sh/cbe5g3ih","slide":6,"name":"TextBox 19","text":"Terminal states are not resampled","textPreview":"Terminal states are not resampled","textChars":33,"textLines":1,"bbox":[676.8,211.2,247.68,60.48]}
+{"kind":"shape","id":"sh/dcnm98zm","slide":6,"name":"Rounded Rectangle 20","bbox":[955.2,132.48,264,148.8]}
+{"kind":"shape","id":"sh/qpwnet0b","slide":6,"name":"Rectangle 21","bbox":[955.2,132.48,5.76,148.8]}
+{"kind":"textbox","id":"sh/bq547yhw","slide":6,"name":"TextBox 22","text":"0","textPreview":"0","textChars":1,"textLines":1,"bbox":[974.4,145.92,233.28,46.08]}
+{"kind":"textbox","id":"sh/0fy5k3id","slide":6,"name":"TextBox 23","text":"PENDING","textPreview":"PENDING","textChars":7,"textLines":1,"bbox":[974.4,186.24,233.28,24.48]}
+{"kind":"textbox","id":"sh/lg76d8zy","slide":6,"name":"TextBox 24","text":"Exact evaluation complete","textPreview":"Exact evaluation complete","textChars":25,"textLines":1,"bbox":[974.4,211.2,233.28,60.48]}
+{"kind":"shape","id":"sh/ydgnit07","slide":6,"name":"Rounded Rectangle 25","bbox":[62.4,305.28,580.8,318.72]}
+{"kind":"textbox","id":"sh/zep4byhs","slide":6,"name":"TextBox 26","text":"WHAT WE CAN SAY","textPreview":"WHAT WE CAN SAY","textChars":15,"textLines":1,"bbox":[88.32,326.4,528,30.08]}
+{"kind":"shape","id":"sh/gju58ji9","slide":6,"name":"Oval 27","bbox":[88.32,376.32,10.56,10.56]}
+{"kind":"textbox","id":"sh/1k3mhozu","slide":6,"name":"TextBox 28","text":"The exact 731-task dataset and native evaluator are pinned.","textPreview":"The exact 731-task dataset and native evaluator are pinned.","textChars":59,"textLines":1,"bbox":[109.44,366.72,506.88,52.8]}
+{"kind":"shape","id":"sh/jet8nm1c","slide":6,"name":"Oval 29","bbox":[88.32,433.92,10.56,10.56]}
+{"kind":"textbox","id":"sh/idk7ehkr","slide":6,"name":"TextBox 30","text":"All existing terminal receipts are preserved; W&B is online before generation.","textPreview":"All existing terminal receipts are preserved; W&B is online before generation.","textChars":78,"textLines":1,"bbox":[109.44,424.32,506.88,49.28]}
+{"kind":"shape","id":"sh/50bqpcj2","slide":6,"name":"Oval 31","bbox":[88.32,487.68,10.56,10.56]}
+{"kind":"textbox","id":"sh/4f2pgr2h","slide":6,"name":"TextBox 32","text":"The exact-suite receipt reports 0.2736% pass@1 (2/731).","textPreview":"The exact-suite receipt reports 0.2736% pass@1 (2/731).","textChars":55,"textLines":1,"bbox":[109.44,478.08,506.88,48]}
+{"kind":"shape","id":"sh/va98j210","slide":6,"name":"Rounded Rectangle 33","bbox":[667.2,305.28,552,318.72]}
+{"kind":"textbox","id":"sh/u907axkf","slide":6,"name":"TextBox 34","text":"WHAT WE CANNOT SAY","textPreview":"WHAT WE CANNOT SAY","textChars":18,"textLines":1,"bbox":[693.12,326.4,499.2,30.08]}
+{"kind":"shape","id":"sh/hcrqlcj6","slide":6,"name":"Oval 35","bbox":[693.12,376.32,10.56,10.56]}
+{"kind":"textbox","id":"sh/wbipc72l","slide":6,"name":"TextBox 36","text":"The earlier one-task 0.0 is not the 731-task suite result.","textPreview":"The earlier one-task 0.0 is not the 731-task suite result.","textChars":58,"textLines":1,"bbox":[714.24,366.72,478.08,52.8]}
+{"kind":"shape","id":"sh/7698f214","slide":6,"name":"Oval 37","bbox":[693.12,433.92,10.56,10.56]}
+{"kind":"textbox","id":"sh/m5076xkj","slide":6,"name":"TextBox 38","text":"713 generated patches do not mean 713 resolved tasks; only 2 passed.","textPreview":"713 generated patches do not mean 713 resolved tasks; only 2 passed.","textChars":68,"textLines":1,"bbox":[714.24,424.32,478.08,49.28]}
+{"kind":"shape","id":"sh/2dkbalg3","slide":6,"name":"Oval 39","bbox":[693.12,487.68,10.56,10.56]}
+{"kind":"textbox","id":"sh/netcjqxo","slide":6,"name":"TextBox 40","text":"No missing or failed task is silently replaced by a new sample.","textPreview":"No missing or failed task is silently replaced by a new sample.","textChars":63,"textLines":1,"bbox":[714.24,478.08,478.08,49.28]}
+{"kind":"shape","id":"sh/of2tcvy9","slide":6,"name":"Connector 41","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/pgbul0fu","slide":6,"name":"TextBox 42","text":"Source: e1_swe_bench_pro_full/seed1818 receipts and run state","textPreview":"Source: e1_swe_bench_pro_full/seed1818 receipts and run state","textChars":61,"textLines":1,"bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"notes","id":"nt/x8f69ofe","slide":6,"text":"[Sources]\n- outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818\n- Snapshot date: 2026-08-22 (Asia/Kolkata)\n- Evidence rule: operational/preflight receipts are not scientific scores unless a native exact-suite result receipt is present.\n[/Sources]"}
+{"kind":"slide","id":"sl/gnmp4jqx","slide":7,"title":"RESULT  ·  PORTFOLIO CHECK","textShapes":21}
+{"kind":"textbox","id":"sh/cb2tkvap","slide":7,"name":"TextBox 1","text":"RESULT  ·  PORTFOLIO CHECK","textPreview":"RESULT  ·  PORTFOLIO CHECK","textChars":26,"textLines":1,"bbox":[52.8,24.96,624,21.28]}
+{"kind":"textbox","id":"sh/dcbud0ra","slide":7,"name":"TextBox 2","text":"The training-source gain is calibration, not E1–E14","textPreview":"The training-source gain is calibration, not E1–E14","textChars":51,"textLines":1,"bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/ydkbm5sv","slide":7,"name":"TextBox 3","text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/zedcfa9g","slide":7,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"textbox","id":"sh/kzmdova1","slide":7,"name":"TextBox 5","text":"AS OF 22 AUG 2026","textPreview":"AS OF 22 AUG 2026","textChars":17,"textLines":1,"bbox":[62.4,122.88,1152,28.48]}
+{"kind":"textbox","id":"sh/l0vuh0rm","slide":7,"name":"TextBox 6","text":"All 32\nmean reward","textPreview":"All 32 | mean reward","textChars":18,"textLines":2,"bbox":[81.6,517.44,182.4,46.08]}
+{"kind":"shape","id":"sh/eh0ba1sr","slide":7,"name":"Rounded Rectangle 7","bbox":[98.88,382.42,65.28,129.26]}
+{"kind":"textbox","id":"sh/fi9c369c","slide":7,"name":"TextBox 8","text":"0.40","textPreview":"0.40","textChars":4,"textLines":1,"bbox":[91.2,357.46,80.64,21.12]}
+{"kind":"shape","id":"sh/baxkjqlk","slide":7,"name":"Rounded Rectangle 9","bbox":[173.76,316.19,65.28,195.49]}
+{"kind":"textbox","id":"sh/a9ojq5kz","slide":7,"name":"TextBox 10","text":"0.60","textPreview":"0.60","textChars":4,"textLines":1,"bbox":[166.08,291.23,80.64,21.12]}
+{"kind":"shape","id":"sh/xcz2l03q","slide":7,"name":"Connector 11","bbox":[91.2,511.68,163.2,0]}
+{"kind":"textbox","id":"sh/cbq1sv25","slide":7,"name":"TextBox 12","text":"API-Bank\n16 items","textPreview":"API-Bank | 16 items","textChars":17,"textLines":2,"bbox":[288,517.44,182.4,46.08]}
+{"kind":"shape","id":"sh/n6x0fqlo","slide":7,"name":"Rounded Rectangle 13","bbox":[305.28,313.12,65.28,198.56]}
+{"kind":"textbox","id":"sh/25ojml43","slide":7,"name":"TextBox 14","text":"0.61","textPreview":"0.61","textChars":4,"textLines":1,"bbox":[297.6,288.16,80.64,21.12]}
+{"kind":"shape","id":"sh/p8fih03e","slide":7,"name":"Rounded Rectangle 15","bbox":[380.16,200.68,65.28,311]}
+{"kind":"textbox","id":"sh/o761ov2t","slide":7,"name":"TextBox 16","text":"0.95","textPreview":"0.95","textChars":4,"textLines":1,"bbox":[372.48,175.72,80.64,21.12]}
+{"kind":"shape","id":"sh/f2d0b6lc","slide":7,"name":"Connector 17","bbox":[297.6,511.68,163.2,0]}
+{"kind":"textbox","id":"sh/eh4jil4r","slide":7,"name":"TextBox 18","text":"SWE-Gym\n16 items","textPreview":"SWE-Gym | 16 items","textChars":16,"textLines":2,"bbox":[494.4,517.44,182.4,46.08]}
+{"kind":"shape","id":"sh/id4ju1oz","slide":7,"name":"Rounded Rectangle 19","bbox":[511.68,451.73,65.28,59.95]}
+{"kind":"textbox","id":"sh/jedkn654","slide":7,"name":"TextBox 20","text":"0.18","textPreview":"0.18","textChars":4,"textLines":1,"bbox":[504,426.77,80.64,21.12]}
+{"kind":"shape","id":"sh/4fm1wb6p","slide":7,"name":"Rounded Rectangle 21","bbox":[586.56,431.7,65.28,79.98]}
+{"kind":"textbox","id":"sh/50v2pgna","slide":7,"name":"TextBox 22","text":"0.25","textPreview":"0.25","textChars":4,"textLines":1,"bbox":[578.88,406.74,80.64,21.12]}
+{"kind":"shape","id":"sh/q143ylov","slide":7,"name":"Connector 23","bbox":[504,511.68,163.2,0]}
+{"kind":"textbox","id":"sh/r2dkrq5g","slide":7,"name":"TextBox 24","text":"dark = base     colour = trained step 40","textPreview":"dark = base     colour = trained step 40","textChars":40,"textLines":1,"bbox":[81.6,580.8,614.4,21.12]}
+{"kind":"shape","id":"sh/s3ml0v61","slide":7,"name":"Rounded Rectangle 25","bbox":[739.2,170.88,484.8,451.2]}
+{"kind":"textbox","id":"sh/d4f2t0nm","slide":7,"name":"TextBox 26","text":"INTERPRETATION","textPreview":"INTERPRETATION","textChars":14,"textLines":1,"bbox":[766.08,193.92,436.8,42.88]}
+{"kind":"textbox","id":"sh/e5o32lor","slide":7,"name":"TextBox 27","text":"Useful calibration","textPreview":"Useful calibration","textChars":18,"textLines":1,"bbox":[766.08,238.08,436.8,28.48]}
+{"kind":"textbox","id":"sh/f6xkvq5c","slide":7,"name":"TextBox 28","text":"Training-source behavior only","textPreview":"Training-source behavior only","textChars":29,"textLines":1,"bbox":[766.08,280.32,436.8,26.88]}
+{"kind":"textbox","id":"sh/p0zmlk7u","slide":7,"name":"TextBox 29","text":"The local portfolio check does not substitute for held-out E1–E14 native evaluation.","textPreview":"The local portfolio check does not substitute for held-out E1–E14 native evaluation.","textChars":84,"textLines":1,"bbox":[766.08,307.2,436.8,67.2]}
+{"kind":"textbox","id":"sh/ozq5szq9","slide":7,"name":"TextBox 30","text":"Evidence boundary","textPreview":"Evidence boundary","textChars":17,"textLines":1,"bbox":[766.08,382.08,436.8,26.88]}
+{"kind":"textbox","id":"sh/nyh4jupo","slide":7,"name":"TextBox 31","text":"Keep it out of exact-suite score totals. [LOCAL DIAGNOSTIC · NOT PRIMARY EVAL]","textPreview":"Keep it out of exact-suite score totals. [LOCAL DIAGNOSTIC · NOT PRIMARY EVAL]","textChars":78,"textLines":1,"bbox":[766.08,410.88,436.8,163.2]}
+{"kind":"shape","id":"sh/2x8nqp83","slide":7,"name":"Connector 32","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/x4j6p47q","slide":7,"name":"TextBox 33","text":"Source: archived local portfolio check from the prior status deck","textPreview":"Source: archived local portfolio check from the prior status deck","textChars":65,"textLines":1,"bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"notes","id":"nt/gnmp4jqx","slide":7,"text":"[Sources]\n- outputs/Tinker_RL_Progress_Update_2026-08-14.pptx\n- Snapshot date: 2026-08-22 (Asia/Kolkata)\n- Evidence rule: operational/preflight receipts are not scientific scores unless a native exact-suite result receipt is present.\n[/Sources]"}
+{"kind":"slide","id":"sl/fu1gfa1s","slide":8,"title":"GATES  ·  WHY OTHER LANES STAY BLOCKED","textShapes":16}
+{"kind":"textbox","id":"sh/18byd4zy","slide":8,"name":"TextBox 1","text":"GATES  ·  WHY OTHER LANES STAY BLOCKED","textPreview":"GATES  ·  WHY OTHER LANES STAY BLOCKED","textChars":38,"textLines":1,"bbox":[52.8,24.96,624,21.28]}
+{"kind":"textbox","id":"sh/g72x4zyd","slide":8,"name":"TextBox 2","text":"External evidence—not engineering—is now the main blocker","textPreview":"External evidence—not engineering—is now the main blocker","textChars":57,"textLines":1,"bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/ri9g7uhw","slide":8,"name":"TextBox 3","text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/6h0fypgb","slide":8,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"shape","id":"sh/tkby9kzm","slide":8,"name":"Rounded Rectangle 5","bbox":[62.4,136.32,580.8,228.48]}
+{"kind":"shape","id":"sh/sjix0zy1","slide":8,"name":"Rectangle 6","bbox":[62.4,136.32,7.68,228.48]}
+{"kind":"textbox","id":"sh/je9g3ahk","slide":8,"name":"TextBox 7","text":"PRIVATE ASSETS","textPreview":"PRIVATE ASSETS","textChars":14,"textLines":1,"bbox":[89.28,153.6,528,30.08]}
+{"kind":"textbox","id":"sh/id0fu50z","slide":8,"name":"TextBox 8","text":"E3 · E8 · E10 · E14","textPreview":"E3 · E8 · E10 · E14","textChars":19,"textLines":1,"bbox":[89.28,186.24,528,28.48]}
+{"kind":"textbox","id":"sh/o7ydoret","slide":8,"name":"TextBox 9","text":"Private provider bundles, held-out data, safety access, or hosted evaluators are still missing.","textPreview":"Private provider bundles, held-out data, safety access, or hosted evaluators are still missing.","textChars":95,"textLines":1,"bbox":[89.28,224.64,528,110.4]}
+{"kind":"shape","id":"sh/98rehwve","slide":8,"name":"Rounded Rectangle 10","bbox":[667.2,136.32,580.8,228.48]}
+{"kind":"shape","id":"sh/m5gvmhwn","slide":8,"name":"Rectangle 11","bbox":[667.2,136.32,7.68,228.48]}
+{"kind":"textbox","id":"sh/n6pwfmd8","slide":8,"name":"TextBox 12","text":"MANUAL / HUMAN GATES","textPreview":"MANUAL / HUMAN GATES","textChars":20,"textLines":1,"bbox":[694.08,153.6,528,30.08]}
+{"kind":"textbox","id":"sh/0jydkreh","slide":8,"name":"TextBox 13","text":"E6 · E9 · E12","textPreview":"E6 · E9 · E12","textChars":13,"textLines":1,"bbox":[694.08,186.24,528,28.48]}
+{"kind":"textbox","id":"sh/1k7edwv2","slide":8,"name":"TextBox 14","text":"WebBench needs authorized side effects; MLE-bench needs manual Kaggle terms; AppBench needs licensed deployment and two graders.","textPreview":"WebBench needs authorized side effects; MLE-bench needs manual Kaggle terms; AppBench needs licensed deployment and two graders.","textChars":128,"textLines":1,"bbox":[694.08,224.64,528,110.4]}
+{"kind":"shape","id":"sh/ehgvihwr","slide":8,"name":"Rounded Rectangle 15","bbox":[62.4,381.12,580.8,228.48]}
+{"kind":"shape","id":"sh/zipwbmdc","slide":8,"name":"Rectangle 16","bbox":[62.4,381.12,7.68,228.48]}
+{"kind":"textbox","id":"sh/kfixwbe1","slide":8,"name":"TextBox 17","text":"PARTIAL RECEIPTS","textPreview":"PARTIAL RECEIPTS","textChars":16,"textLines":1,"bbox":[89.28,398.4,528,30.08]}
+{"kind":"textbox","id":"sh/lgbepgvm","slide":8,"name":"TextBox 18","text":"E2 · E4 · E7","textPreview":"E2 · E4 · E7","textChars":12,"textLines":1,"bbox":[89.28,431.04,528,28.48]}
+{"kind":"textbox","id":"sh/tw7e9gnq","slide":8,"name":"TextBox 19","text":"One-task or recovery receipts exist, but none is a full-suite native score.","textPreview":"One-task or recovery receipts exist, but none is a full-suite native score.","textChars":75,"textLines":1,"bbox":[89.28,469.44,528,110.4]}
+{"kind":"shape","id":"sh/svydgb65","slide":8,"name":"Rounded Rectangle 20","bbox":[667.2,381.12,580.8,228.48]}
+{"kind":"shape","id":"sh/7u5w765k","slide":8,"name":"Rectangle 21","bbox":[667.2,381.12,7.68,228.48]}
+{"kind":"textbox","id":"sh/6twve1oz","slide":8,"name":"TextBox 22","text":"OPERATIONAL / PENDING","textPreview":"OPERATIONAL / PENDING","textChars":21,"textLines":1,"bbox":[694.08,398.4,528,30.08]}
+{"kind":"textbox","id":"sh/5sne5wne","slide":8,"name":"TextBox 23","text":"E5 · E13","textPreview":"E5 · E13","textChars":8,"textLines":1,"bbox":[694.08,431.04,528,28.48]}
+{"kind":"textbox","id":"sh/kredcr6t","slide":8,"name":"TextBox 24","text":"E5 is executing officially on Modal; E13 still lacks a provider-defined immutable held-out suite.","textPreview":"E5 is executing officially on Modal; E13 still lacks a provider-defined immutable held-out suite.","textChars":97,"textLines":1,"bbox":[694.08,469.44,528,110.4]}
+{"kind":"shape","id":"sh/jq5w365o","slide":8,"name":"Connector 25","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/i5wva1o3","slide":8,"name":"TextBox 26","text":"Sources: dated 2026-08-22 terminal receipts for E3, E5, E6, E8–E10, E12–E14","textPreview":"Sources: dated 2026-08-22 terminal receipts for E3, E5, E6, E8–E10, E12–E14","textChars":75,"textLines":1,"bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"notes","id":"nt/fu1gfa1s","slide":8,"text":"[Sources]\n- outputs/e3_sdab/terminal_receipt_2026-08-22.json\n- outputs/e6_webbench/terminal_receipt_2026-08-22.json\n- outputs/e8_lifescibench/terminal_receipt_2026-08-22.json\n- outputs/e9_mle_bench/terminal_receipt_2026-08-22.json\n- outputs/e10_agentharm/terminal_receipt_2026-08-22.json\n- outputs/e12_appbench/terminal_receipt_2026-08-22.json\n- outputs/e13_openreward_games/terminal_receipt_2026-08-22.json\n- outputs/e14_frontiermath/terminal_receipt_2026-08-22.json\n[/Sources]"}
+{"kind":"slide","id":"sl/udsvah03","slide":9,"title":"EXECUTION  ·  TINKER ALONGSIDE MODAL","textShapes":29}
+{"kind":"textbox","id":"sh/1cfmhgne","slide":9,"name":"TextBox 1","text":"EXECUTION  ·  TINKER ALONGSIDE MODAL","textPreview":"EXECUTION  ·  TINKER ALONGSIDE MODAL","textChars":36,"textLines":1,"bbox":[52.8,24.96,624,21.28]}
+{"kind":"textbox","id":"sh/0b65obm9","slide":9,"name":"TextBox 2","text":"Modal runs the environment; Tinker stays behind hard gates","textPreview":"Modal runs the environment; Tinker stays behind hard gates","textChars":58,"textLines":1,"bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/nex4jq5k","slide":9,"name":"TextBox 3","text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/mdonql4z","slide":9,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"textbox","id":"sh/9gzml0nq","slide":9,"name":"TextBox 5","text":"E5 now combines the official Archipelago task, an authenticated Modal sandbox, online W&B, and a capped Tinker bridge.","textPreview":"E5 now combines the official Archipelago task, an authenticated Modal sandbox, online W&B, and a capped Tinker bridge.","textChars":118,"textLines":1,"bbox":[62.4,124.8,1152,30.88]}
+{"kind":"shape","id":"sh/ofq5svm5","slide":9,"name":"Rounded Rectangle 6","bbox":[62.4,170.88,278.4,122.88]}
+{"kind":"shape","id":"sh/bih4na5w","slide":9,"name":"Rectangle 7","bbox":[62.4,170.88,5.76,122.88]}
+{"kind":"textbox","id":"sh/ah8nu54b","slide":9,"name":"TextBox 8","text":"DATASET","textPreview":"DATASET","textChars":7,"textLines":1,"bbox":[81.6,184.32,247.68,46.08]}
+{"kind":"textbox","id":"sh/oza1gfyh","slide":9,"name":"TextBox 9","text":"480","textPreview":"480","textChars":3,"textLines":1,"bbox":[81.6,224.64,247.68,24.48]}
+{"kind":"textbox","id":"sh/p0ji9kf2","slide":9,"name":"TextBox 10","text":"exact tasks pinned","textPreview":"exact tasks pinned","textChars":18,"textLines":1,"bbox":[81.6,249.6,247.68,34.56]}
+{"kind":"shape","id":"sh/2xsjepgb","slide":9,"name":"Rounded Rectangle 11","bbox":[360,170.88,278.4,122.88]}
+{"kind":"shape","id":"sh/3y107axw","slide":9,"name":"Rectangle 12","bbox":[360,170.88,5.76,122.88]}
+{"kind":"textbox","id":"sh/cnu1kzyd","slide":9,"name":"TextBox 13","text":"MODAL","textPreview":"MODAL","textChars":5,"textLines":1,"bbox":[379.2,184.32,247.68,46.08]}
+{"kind":"textbox","id":"sh/do3id4fy","slide":9,"name":"TextBox 14","text":"LIVE","textPreview":"LIVE","textChars":4,"textLines":1,"bbox":[379.2,224.64,247.68,24.48]}
+{"kind":"textbox","id":"sh/qlcjipgn","slide":9,"name":"TextBox 15","text":"official task sandbox","textPreview":"official task sandbox","textChars":21,"textLines":1,"bbox":[379.2,249.6,247.68,34.56]}
+{"kind":"shape","id":"sh/bml0buxs","slide":9,"name":"Rounded Rectangle 16","bbox":[657.6,170.88,278.4,122.88]}
+{"kind":"shape","id":"sh/0ru1ozyp","slide":9,"name":"Rectangle 17","bbox":[657.6,170.88,5.76,122.88]}
+{"kind":"textbox","id":"sh/lsn2h4fa","slide":9,"name":"TextBox 18","text":"TINKER","textPreview":"TINKER","textChars":6,"textLines":1,"bbox":[676.8,184.32,247.68,46.08]}
+{"kind":"textbox","id":"sh/98ji147e","slide":9,"name":"TextBox 19","text":"GATED","textPreview":"GATED","textChars":5,"textLines":1,"bbox":[676.8,224.64,247.68,24.48]}
+{"kind":"textbox","id":"sh/87a18zqt","slide":9,"name":"TextBox 20","text":"model alias fixed; spend fails closed","textPreview":"model alias fixed; spend fails closed","textChars":37,"textLines":1,"bbox":[676.8,249.6,247.68,34.56]}
+{"kind":"shape","id":"sh/76h0zup8","slide":9,"name":"Rounded Rectangle 21","bbox":[955.2,170.88,264,122.88]}
+{"kind":"shape","id":"sh/ml8j6p8n","slide":9,"name":"Rectangle 22","bbox":[955.2,170.88,5.76,122.88]}
+{"kind":"textbox","id":"sh/hcji5o7a","slide":9,"name":"TextBox 23","text":"MCP","textPreview":"MCP","textChars":3,"textLines":1,"bbox":[974.4,184.32,233.28,46.08]}
+{"kind":"textbox","id":"sh/wba1cjqp","slide":9,"name":"TextBox 24","text":"37","textPreview":"37","textChars":2,"textLines":1,"bbox":[974.4,224.64,233.28,24.48]}
+{"kind":"textbox","id":"sh/va103ep4","slide":9,"name":"TextBox 25","text":"tools loaded in sandbox","textPreview":"tools loaded in sandbox","textChars":23,"textLines":1,"bbox":[974.4,249.6,233.28,34.56]}
+{"kind":"shape","id":"sh/u9sja98z","slide":9,"name":"Oval 26","bbox":[69.12,314.88,55.68,55.68]}
+{"kind":"textbox","id":"sh/xgzitk76","slide":9,"name":"TextBox 27","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[69.12,328.32,55.68,30.08]}
+{"kind":"textbox","id":"sh/cf6h0fql","slide":9,"name":"TextBox 28","text":"GATED","textPreview":"GATED","textChars":5,"textLines":1,"bbox":[145.92,312.96,129.6,23.68]}
+{"kind":"textbox","id":"sh/2l4faloj","slide":9,"name":"TextBox 29","text":"Gate first","textPreview":"Gate first","textChars":10,"textLines":1,"bbox":[145.92,336,1036.8,33.28]}
+{"kind":"textbox","id":"sh/nmdg3q54","slide":9,"name":"TextBox 30","text":"Online W&B starts before the Tinker bridge; the dataset and official repo revisions are immutable.","textPreview":"Online W&B starts before the Tinker bridge; the dataset and official repo revisions are immutable.","textChars":98,"textLines":1,"bbox":[145.92,364.8,1036.8,30.72]}
+{"kind":"shape","id":"sh/onmxcv69","slide":9,"name":"Oval 31","bbox":[69.12,420.48,55.68,55.68]}
+{"kind":"textbox","id":"sh/pofy50nu","slide":9,"name":"TextBox 32","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[69.12,433.92,55.68,30.08]}
+{"kind":"textbox","id":"sh/apofe5of","slide":9,"name":"TextBox 33","text":"PARALLEL","textPreview":"PARALLEL","textChars":8,"textLines":1,"bbox":[145.92,418.56,129.6,23.68]}
+{"kind":"textbox","id":"sh/bqxg7q50","slide":9,"name":"TextBox 34","text":"Run remotely","textPreview":"Run remotely","textChars":12,"textLines":1,"bbox":[145.92,441.6,1036.8,33.28]}
+{"kind":"textbox","id":"sh/cr6xgv6l","slide":9,"name":"TextBox 35","text":"Modal replaces the local Docker VM for E5 and isolates the official task environment without changing evidence rules.","textPreview":"Modal replaces the local Docker VM for E5 and isolates the official task environment without changing evidence rules.","textChars":117,"textLines":1,"bbox":[145.92,470.4,1036.8,49.28]}
+{"kind":"shape","id":"sh/xcfy90n6","slide":9,"name":"Oval 36","bbox":[69.12,526.08,55.68,55.68]}
+{"kind":"textbox","id":"sh/qtkf21ob","slide":9,"name":"TextBox 37","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[69.12,539.52,55.68,30.08]}
+{"kind":"textbox","id":"sh/rutwv65w","slide":9,"name":"TextBox 38","text":"RECEIPT","textPreview":"RECEIPT","textChars":7,"textLines":1,"bbox":[145.92,524.16,129.6,23.68]}
+{"kind":"textbox","id":"sh/7y14jyd8","slide":9,"name":"TextBox 39","text":"Promote by receipt","textPreview":"Promote by receipt","textChars":18,"textLines":1,"bbox":[145.92,547.2,1036.8,33.28]}
+{"kind":"textbox","id":"sh/mdsnatcn","slide":9,"name":"TextBox 40","text":"E5 remains score:null until the native task receipt closes.","textPreview":"E5 remains score:null until the native task receipt closes.","textChars":59,"textLines":1,"bbox":[145.92,576,1036.8,30.72]}
+{"kind":"shape","id":"sh/903ml8be","slide":9,"name":"Connector 41","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/8zu5c3ut","slide":9,"name":"TextBox 42","text":"Sources: E1 GPU resume preflight, E11 launch preflight, W&B/HF receipts","textPreview":"Sources: E1 GPU resume preflight, E11 launch preflight, W&B/HF receipts","textChars":71,"textLines":1,"bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"notes","id":"nt/udsvah03","slide":9,"text":"[Sources]\n- outputs/e5_apex_agents/preflight_modal_2026-08-22.json\n- outputs/e5_apex_agents/official_modal_retry_run_2026-08-22/official_run.log\n- zvf-program/flagship/eval_apex_agents.py\n- zvf-program/flagship/modal_tinker_openai_bridge.py\n[/Sources]"}
+{"kind":"slide","id":"sl/m90b6t0r","slide":10,"title":"NEXT  ·  ORDERED ACTIONS","textShapes":16}
+{"kind":"textbox","id":"sh/xc3mho32","slide":10,"name":"TextBox 1","text":"NEXT  ·  ORDERED ACTIONS","textPreview":"NEXT  ·  ORDERED ACTIONS","textChars":24,"textLines":1,"bbox":[52.8,24.96,624,21.28]}
+{"kind":"textbox","id":"sh/cbu58j2h","slide":10,"name":"TextBox 2","text":"Three advisor decisions unlock the next exact runs","textPreview":"Three advisor decisions unlock the next exact runs","textChars":50,"textLines":1,"bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/zelojyl8","slide":10,"name":"TextBox 3","text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/ydcnatkn","slide":10,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"textbox","id":"sh/l036l83y","slide":10,"name":"TextBox 5","text":"These choices determine where new access, compute, and evaluation effort should go.","textPreview":"These choices determine where new access, compute, and evaluation effort should go.","textChars":83,"textLines":1,"bbox":[62.4,124.8,1104,30.88]}
+{"kind":"shape","id":"sh/kzu5c32t","slide":10,"name":"Oval 6","bbox":[69.12,174.72,65.28,65.28]}
+{"kind":"textbox","id":"sh/725onyl4","slide":10,"name":"TextBox 7","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[69.12,192,65.28,26.88]}
+{"kind":"textbox","id":"sh/m1cnetkj","slide":10,"name":"TextBox 8","text":"Set E5 evaluation policy","textPreview":"Set E5 evaluation policy","textChars":24,"textLines":1,"bbox":[161.28,172.8,844.8,36.48]}
+{"kind":"textbox","id":"sh/s7yt4b21","slide":10,"name":"TextBox 9","text":"Decide whether the Tinker same-model judge is exploratory only or fund the canonical judge.","textPreview":"Decide whether the Tinker same-model judge is exploratory only or fund the canonical judge.","textChars":91,"textLines":1,"bbox":[161.28,211.2,854.4,59.52]}
+{"kind":"shape","id":"sh/d87uxg3m","slide":10,"name":"Connector 10","bbox":[101.76,243.84,0,55.68]}
+{"kind":"shape","id":"sh/q5gb21kb","slide":10,"name":"Oval 11","bbox":[69.12,307.2,65.28,65.28]}
+{"kind":"textbox","id":"sh/r6pcv6lw","slide":10,"name":"TextBox 12","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[69.12,324.48,65.28,26.88]}
+{"kind":"textbox","id":"sh/0bit8b2d","slide":10,"name":"TextBox 13","text":"Authorize E9 data access","textPreview":"Authorize E9 data access","textChars":24,"textLines":1,"bbox":[161.28,305.28,844.8,36.48]}
+{"kind":"textbox","id":"sh/1cru1g3y","slide":10,"name":"TextBox 14","text":"Manually accept Kaggle terms and approve the data/compute envelope for MLE-bench.","textPreview":"Manually accept Kaggle terms and approve the data/compute envelope for MLE-bench.","textChars":81,"textLines":1,"bbox":[161.28,343.68,854.4,59.52]}
+{"kind":"shape","id":"sh/e9gb61k7","slide":10,"name":"Connector 15","bbox":[101.76,376.32,0,55.68]}
+{"kind":"shape","id":"sh/fapcz6ls","slide":10,"name":"Oval 16","bbox":[69.12,439.68,65.28,65.28]}
+{"kind":"textbox","id":"sh/ozitcv29","slide":10,"name":"TextBox 17","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[69.12,456.96,65.28,26.88]}
+{"kind":"textbox","id":"sh/p0ru503u","slide":10,"name":"TextBox 18","text":"Prioritize external access","textPreview":"Prioritize external access","textChars":26,"textLines":1,"bbox":[161.28,437.76,844.8,36.48]}
+{"kind":"textbox","id":"sh/xwnupgvy","slide":10,"name":"TextBox 19","text":"Choose provider outreach priority: E3/E10/E14, plus licensed human grading for E12.","textPreview":"Choose provider outreach priority: E3/E10/E14, plus licensed human grading for E12.","textChars":83,"textLines":1,"bbox":[161.28,476.16,854.4,59.52]}
+{"kind":"shape","id":"sh/wvetgbud","slide":10,"name":"Rounded Rectangle 20","bbox":[1051.2,174.72,168,403.2]}
+{"kind":"textbox","id":"sh/bu5cnqd8","slide":10,"name":"TextBox 21","text":"EVIDENCE RULE","textPreview":"EVIDENCE RULE","textChars":13,"textLines":1,"bbox":[1067.52,199.68,136.32,23.04]}
+{"kind":"textbox","id":"sh/atwbelcn","slide":10,"name":"TextBox 22","text":"No access decision may be replaced by a surrogate score.","textPreview":"No access decision may be replaced by a surrogate score.","textChars":56,"textLines":1,"bbox":[1063.68,240,144,230.4]}
+{"kind":"shape","id":"sh/lk7ut0va","slide":10,"name":"Connector 23","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/kjytkvup","slide":10,"name":"TextBox 24","text":"Source: today's run state plus canonical preflight blockers","textPreview":"Source: today's run state plus canonical preflight blockers","textChars":59,"textLines":1,"bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"notes","id":"nt/m90b6t0r","slide":10,"text":"[Sources]\n- outputs/modal_e1_e14/2026-08-16/PROGRESS.md\n- Snapshot date: 2026-08-22 (Asia/Kolkata)\n- Evidence rule: operational/preflight receipts are not scientific scores unless a native exact-suite result receipt is present.\n[/Sources]"}
+{"kind":"slide","id":"sl/jetc3ut0","slide":11,"title":"CLOSE  ·  22 AUG 2026","textShapes":22}
+{"kind":"textbox","id":"sh/xcryxg7y","slide":11,"name":"TextBox 1","text":"CLOSE  ·  22 AUG 2026","textPreview":"CLOSE  ·  22 AUG 2026","textChars":21,"textLines":1,"bbox":[52.8,24.96,624,21.28]}
+{"kind":"textbox","id":"sh/wbih4b6d","slide":11,"name":"TextBox 2","text":"Two suites are scored; E5 is now executable","textPreview":"Two suites are scored; E5 is now executable","textChars":43,"textLines":1,"bbox":[52.8,48,1142.4,49.92]}
+{"kind":"textbox","id":"sh/n69grmpw","slide":11,"name":"TextBox 3","text":"11","textPreview":"11","textChars":2,"textLines":1,"bbox":[1177.92,26.88,43.2,24]}
+{"kind":"shape","id":"sh/250zy18b","slide":11,"name":"Connector 4","bbox":[52.8,107.52,1174.08,0]}
+{"kind":"textbox","id":"sh/98rytw72","slide":11,"name":"TextBox 5","text":"WEEKLY ADVISOR STATUS","textPreview":"WEEKLY ADVISOR STATUS","textChars":21,"textLines":1,"bbox":[65.28,130.56,1152,52.8]}
+{"kind":"shape","id":"sh/o7ih0r6h","slide":11,"name":"Rounded Rectangle 6","bbox":[62.4,206.4,379.2,273.6]}
+{"kind":"textbox","id":"sh/72t03qp0","slide":11,"name":"TextBox 7","text":"E1","textPreview":"E1","textChars":2,"textLines":1,"bbox":[85.44,226.56,326.4,25.28]}
+{"kind":"shape","id":"sh/61kzalof","slide":11,"name":"Oval 8","bbox":[89.28,274.56,11.52,11.52]}
+{"kind":"textbox","id":"sh/ofqtgnyt","slide":11,"name":"TextBox 9","text":"SCORED","textPreview":"SCORED","textChars":6,"textLines":1,"bbox":[112.32,264.96,302.4,30.72]}
+{"kind":"shape","id":"sh/9gza9sze","slide":11,"name":"Oval 10","bbox":[89.28,327.36,11.52,11.52]}
+{"kind":"textbox","id":"sh/mdobedg3","slide":11,"name":"TextBox 11","text":"0.2736% exact · 2/731 resolved","textPreview":"0.2736% exact · 2/731 resolved","textChars":30,"textLines":1,"bbox":[112.32,317.76,302.4,50.88]}
+{"kind":"shape","id":"sh/nehs7iho","slide":11,"name":"Oval 12","bbox":[89.28,380.16,11.52,11.52]}
+{"kind":"textbox","id":"sh/0b6tc3yx","slide":11,"name":"TextBox 13","text":"Exact receipt available","textPreview":"Exact receipt available","textChars":23,"textLines":1,"bbox":[112.32,370.56,302.4,30.72]}
+{"kind":"shape","id":"sh/1cfa58zi","slide":11,"name":"Rounded Rectangle 14","bbox":[463.68,206.4,379.2,273.6]}
+{"kind":"textbox","id":"sh/epobatgr","slide":11,"name":"TextBox 15","text":"E11","textPreview":"E11","textChars":3,"textLines":1,"bbox":[486.72,226.56,326.4,25.28]}
+{"kind":"shape","id":"sh/zaxs3yhc","slide":11,"name":"Oval 16","bbox":[490.56,274.56,11.52,11.52]}
+{"kind":"textbox","id":"sh/cn6t83y1","slide":11,"name":"TextBox 17","text":"SCORED","textPreview":"SCORED","textChars":6,"textLines":1,"bbox":[513.6,264.96,302.4,30.72]}
+{"kind":"shape","id":"sh/dofa18z6","slide":11,"name":"Oval 18","bbox":[490.56,327.36,11.52,11.52]}
+{"kind":"textbox","id":"sh/tsnip0ny","slide":11,"name":"TextBox 19","text":"41.3% canonical raw · 129/312 passed","textPreview":"41.3% canonical raw · 129/312 passed","textChars":36,"textLines":1,"bbox":[513.6,317.76,302.4,50.88]}
+{"kind":"shape","id":"sh/87ehgv6d","slide":11,"name":"Oval 20","bbox":[490.56,380.16,11.52,11.52]}
+{"kind":"textbox","id":"sh/7650nq5s","slide":11,"name":"TextBox 21","text":"Exact receipt available","textPreview":"Exact receipt available","textChars":23,"textLines":1,"bbox":[513.6,370.56,302.4,30.72]}
+{"kind":"shape","id":"sh/65wzelo7","slide":11,"name":"Rounded Rectangle 22","bbox":[864.96,206.4,379.2,273.6]}
+{"kind":"textbox","id":"sh/l43ilgn2","slide":11,"name":"TextBox 23","text":"E5 + PORTFOLIO","textPreview":"E5 + PORTFOLIO","textChars":14,"textLines":1,"bbox":[888,226.56,326.4,25.28]}
+{"kind":"shape","id":"sh/k3uhcb6h","slide":11,"name":"Oval 24","bbox":[891.84,274.56,11.52,11.52]}
+{"kind":"textbox","id":"sh/j2lgjq5w","slide":11,"name":"TextBox 25","text":"14/14 MAPPED","textPreview":"14/14 MAPPED","textChars":12,"textLines":1,"bbox":[914.88,264.96,302.4,30.72]}
+{"kind":"shape","id":"sh/y1czalob","slide":11,"name":"Oval 26","bbox":[891.84,327.36,11.52,11.52]}
+{"kind":"textbox","id":"sh/p07ixkn6","slide":11,"name":"TextBox 27","text":"E5 official Modal task live; partial lanes stay score:null","textPreview":"E5 official Modal task live; partial lanes stay score:null","textChars":58,"textLines":1,"bbox":[914.88,317.76,302.4,50.88]}
+{"kind":"shape","id":"sh/4zyhofml","slide":11,"name":"Oval 28","bbox":[891.84,380.16,11.52,11.52]}
+{"kind":"textbox","id":"sh/m58fih43","slide":11,"name":"TextBox 29","text":"External assets and decisions now dominate remaining blockers","textPreview":"External assets and decisions now dominate remaining blockers","textChars":61,"textLines":1,"bbox":[914.88,370.56,302.4,50.88]}
+{"kind":"textbox","id":"sh/n61wbmlo","slide":11,"name":"TextBox 30","text":"NEXT CHECK","textPreview":"NEXT CHECK","textChars":10,"textLines":1,"bbox":[65.28,508.8,384,49.28]}
+{"kind":"textbox","id":"sh/o7axk7m9","slide":11,"name":"TextBox 31","text":"Close E5 receipt; act on advisor priorities","textPreview":"Close E5 receipt; act on advisor priorities","textChars":43,"textLines":1,"bbox":[65.28,554.88,528,30.08]}
+{"kind":"textbox","id":"sh/98jedc3u","slide":11,"name":"TextBox 32","text":"Update the evidence table only from closed native receipts.","textPreview":"Update the evidence table only from closed native receipts.","textChars":59,"textLines":1,"bbox":[710.4,516.48,508.8,25.28]}
+{"kind":"textbox","id":"sh/eh8fex47","slide":11,"name":"TextBox 33","text":"OWNER","textPreview":"OWNER","textChars":5,"textLines":1,"bbox":[710.4,545.28,508.8,25.28]}
+{"kind":"textbox","id":"sh/z2hw72lc","slide":11,"name":"TextBox 34","text":"Tinker RL Lab","textPreview":"Tinker RL Lab","textChars":13,"textLines":1,"bbox":[710.4,574.08,508.8,23.68]}
+{"kind":"shape","id":"sh/03qxg7mx","slide":11,"name":"Connector 35","bbox":[52.8,685.44,1174.08,0]}
+{"kind":"textbox","id":"sh/14ze9c3i","slide":11,"name":"TextBox 36","text":"Source: live campaign ledger and immutable receipts","textPreview":"Source: live campaign ledger and immutable receipts","textChars":51,"textLines":1,"bbox":[55.68,689.28,1123.2,16.32]}
+{"kind":"notes","id":"nt/jetc3ut0","slide":11,"text":"[Sources]\n- outputs/modal_e1_e14/2026-08-16\n- outputs/modal_e1_e14/2026-08-16/e11_full_receipt.json\n- Snapshot date: 2026-08-22 (Asia/Kolkata)\n- Evidence rule: operational/preflight receipts are not scientific scores unless a native exact-suite result receipt is present.\n[/Sources]"}

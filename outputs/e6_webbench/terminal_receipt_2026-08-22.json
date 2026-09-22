@@ -1,0 +1,30 @@
+{
+  "schema_version": "pavlov-lane-terminal-receipt-v1",
+  "recorded_at": "2026-08-22T07:30:07Z",
+  "lane": "E6",
+  "suite_id": "webbench_eval",
+  "status": "BLOCKED",
+  "score": null,
+  "is_model_score": false,
+  "tasks_executed": 0,
+  "paid_calls": 0,
+  "what_finished": {
+    "preflight": "7 of 8 gates PASS; only the official native environment and verifier gate is BLOCKED",
+    "focused_tests": "35 passed",
+    "public_dataset": "pinned source, license, task hashes, empty training manifest, and disjointness proof all validate"
+  },
+  "evidence": {
+    "preflight_receipt": "outputs/e6_webbench/preflight_receipt_2026-08-22.json",
+    "preflight_receipt_sha256": "cc3d72da43dca09b201d5952401c7ed22a5b2dffa2d62b9d9d32f4a93c3e4830",
+    "official_repository": "https://github.com/Halluminate/WebBench",
+    "ground_truth_issue": "https://github.com/Halluminate/WebBench/issues/2",
+    "live_check": "Issue #2 remained open on 2026-08-22 and still asked whether ground truth or a scoring script was public."
+  },
+  "blockers": [
+    "the public CSV has no ground truth or native scoring script",
+    "the official live browser environment, reset contract, credentials, screenshot/DOM capture, and verifier receipt are absent",
+    "1,010 write-class tasks require explicit allowed-task and side-effect authorization; repository MIT licensing is not authorization to mutate third-party services"
+  ],
+  "smallest_external_action": "Contact jerry@halluminate.ai, the benchmark contact listed in the official repository, with ACCESS_REQUEST_HALLUMINATE_2026-08-09.md and request environment, verifier, ground-truth, and task-authorization receipts.",
+  "claim_boundary": "A local browser substitute would not be webbench_eval. No exact task was launched and no score exists."
+}

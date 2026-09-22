@@ -1,0 +1,2031 @@
+{
+  "caveats": [
+    "Two full-suite single-seed outcomes do not complete the broader multi-seed research program.",
+    "Partial and recovery outcomes are never interpreted as full-suite scores.",
+    "E9 legacy Tinker and merged-vLLM arms remain separate; heterogeneous competition scores are not averaged.",
+    "The first Spooky Author run retains only a submission preview; its complete submission is missing. A later same-program run has its complete submission.",
+    "Colab source-pin preflight for the alternative public portfolio does not evaluate the contracted E1-E14 suites.",
+    "Historical Colab canaries failed with out-of-memory and CUDA illegal-memory-access errors; they produced no suite result.",
+    "Provider trust, licenses, decontamination, full-suite execution and checkpoint gates still apply before any paid continuation."
+  ],
+  "checks": [
+    {
+      "check": "E1 full denominator",
+      "detail": {
+        "full_results": 731,
+        "native_result_rows": 713,
+        "resolved": 2
+      },
+      "passed": true
+    },
+    {
+      "check": "E1 pass at one",
+      "detail": {
+        "attempted_generations": 731,
+        "complete": true,
+        "expected_tasks": 731,
+        "generation_artifact_losses": 4,
+        "generation_failures": 14,
+        "native_evaluations": 713,
+        "resolved": 2,
+        "unresolved": 729,
+        "valid_generated_patches": 713
+      },
+      "passed": true
+    },
+    {
+      "check": "E1 pinned image manifest",
+      "detail": "outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/image_manifest.json",
+      "passed": true
+    },
+    {
+      "check": "E11 canonical raw denominator",
+      "detail": {
+        "FAIL": 183,
+        "PASS": 129
+      },
+      "passed": true
+    },
+    {
+      "check": "E11 pass at one",
+      "detail": {
+        "corrected": {
+          "canonical": false,
+          "denominator": 311,
+          "excluded": [
+            "verilog_eval/spec-to-rtl/Prob099_m2014_q6c"
+          ],
+          "justification_status": "insufficient_for_canonical_exclusion",
+          "pass_at_1": 0.41479099678456594,
+          "passes": 129,
+          "reporting_role": "secondary_sensitivity_only"
+        },
+        "raw": {
+          "canonical": true,
+          "denominator": 312,
+          "pass_at_1": 0.41346153846153844,
+          "passes": 129
+        },
+        "reporting_rule": "Raw 129/312 is canonical. The 129/311 corrected value is retained only as a noncanonical sensitivity because the exclusion lacks immutable benchmark-level justification."
+      },
+      "passed": true
+    },
+    {
+      "check": "E5 prefix arithmetic",
+      "detail": {
+        "attempts": 11,
+        "native_scored": 7,
+        "score_sum": 0.5555555555555556
+      },
+      "passed": true
+    },
+    {
+      "check": "E5 task 0 receipt",
+      "detail": "outputs/e5_apex_agents/official_modal_zeroarg_fix_receipt_2026-08-22.json",
+      "passed": true
+    },
+    {
+      "check": "E5 task 1 receipt",
+      "detail": "outputs/e5_apex_agents/official_modal_task_index_1_receipt_2026-08-22.json",
+      "passed": true
+    },
+    {
+      "check": "E5 task 2 receipt",
+      "detail": "outputs/e5_apex_agents/official_modal_task_index_2_receipt_2026-08-22.json",
+      "passed": true
+    },
+    {
+      "check": "E5 task 3 receipt",
+      "detail": "outputs/e5_apex_agents/official_modal_task_index_3_receipt_2026-08-22.json",
+      "passed": true
+    },
+    {
+      "check": "E5 task 4 receipt",
+      "detail": "outputs/e5_apex_agents/official_modal_task_index_4_receipt_2026-08-22.json",
+      "passed": true
+    },
+    {
+      "check": "E5 task 5 receipt",
+      "detail": "outputs/e5_apex_agents/official_modal_task_index_5_receipt_2026-08-22.json",
+      "passed": true
+    },
+    {
+      "check": "E5 task 6 receipt",
+      "detail": "outputs/e5_apex_agents/official_modal_task_index_6_receipt_2026-08-22.json",
+      "passed": true
+    },
+    {
+      "check": "E5 task 7 receipt",
+      "detail": "outputs/e5_apex_agents/official_modal_task_index_7_receipt_2026-08-22.json",
+      "passed": true
+    },
+    {
+      "check": "E5 task 8 receipt",
+      "detail": "outputs/e5_apex_agents/official_modal_task_index_8_retry_receipt_2026-08-22.json",
+      "passed": true
+    },
+    {
+      "check": "E5 task 9 receipt",
+      "detail": "outputs/e5_apex_agents/official_modal_task_index_9_receipt_2026-08-22.json",
+      "passed": true
+    },
+    {
+      "check": "E5 task 10 receipt",
+      "detail": "outputs/e5_apex_agents/official_modal_task_index_10_interrupted_receipt_2026-08-22.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt AI4Code-cf0179ecc807",
+      "detail": "outputs/e9_mle_bench/modal_streaming/AI4Code-cf0179ecc807/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary AI4Code-cf0179ecc807",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade AI4Code-cf0179ecc807",
+      "detail": 0.60314,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact AI4Code-cf0179ecc807/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/AI4Code-cf0179ecc807/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact AI4Code-cf0179ecc807/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/AI4Code-cf0179ecc807/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact AI4Code-cf0179ecc807/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/AI4Code-cf0179ecc807/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt aerial-cactus-identification-93422ea5a6ef",
+      "detail": "outputs/e9_mle_bench/modal_streaming/aerial-cactus-identification-93422ea5a6ef/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary aerial-cactus-identification-93422ea5a6ef",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade aerial-cactus-identification-93422ea5a6ef",
+      "detail": 0.5,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact aerial-cactus-identification-93422ea5a6ef/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/aerial-cactus-identification-93422ea5a6ef/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact aerial-cactus-identification-93422ea5a6ef/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/aerial-cactus-identification-93422ea5a6ef/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact aerial-cactus-identification-93422ea5a6ef/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/aerial-cactus-identification-93422ea5a6ef/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt aptos2019-blindness-detection-98c605855240",
+      "detail": "outputs/e9_mle_bench/modal_streaming/aptos2019-blindness-detection-98c605855240/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary aptos2019-blindness-detection-98c605855240",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt aptos2019-blindness-detection-dd169d6e3ae1",
+      "detail": "outputs/e9_mle_bench/modal_streaming/aptos2019-blindness-detection-dd169d6e3ae1/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary aptos2019-blindness-detection-dd169d6e3ae1",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade aptos2019-blindness-detection-dd169d6e3ae1",
+      "detail": 0.0,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact aptos2019-blindness-detection-dd169d6e3ae1/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/aptos2019-blindness-detection-dd169d6e3ae1/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact aptos2019-blindness-detection-dd169d6e3ae1/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/aptos2019-blindness-detection-dd169d6e3ae1/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact aptos2019-blindness-detection-dd169d6e3ae1/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/aptos2019-blindness-detection-dd169d6e3ae1/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt billion-word-imputation-29d0cdf64322",
+      "detail": "outputs/e9_mle_bench/modal_streaming/billion-word-imputation-29d0cdf64322/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary billion-word-imputation-29d0cdf64322",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt bms-molecular-translation-7ffcd9d6180c",
+      "detail": "outputs/e9_mle_bench/modal_streaming/bms-molecular-translation-7ffcd9d6180c/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary bms-molecular-translation-7ffcd9d6180c",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade bms-molecular-translation-7ffcd9d6180c",
+      "detail": 83.24016,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact bms-molecular-translation-7ffcd9d6180c/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/bms-molecular-translation-7ffcd9d6180c/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact bms-molecular-translation-7ffcd9d6180c/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/bms-molecular-translation-7ffcd9d6180c/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact bms-molecular-translation-7ffcd9d6180c/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/bms-molecular-translation-7ffcd9d6180c/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt cassava-leaf-disease-classification-6b09d324d903",
+      "detail": "outputs/e9_mle_bench/modal_streaming/cassava-leaf-disease-classification-6b09d324d903/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary cassava-leaf-disease-classification-6b09d324d903",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade cassava-leaf-disease-classification-6b09d324d903",
+      "detail": 0.62145,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact cassava-leaf-disease-classification-6b09d324d903/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/cassava-leaf-disease-classification-6b09d324d903/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact cassava-leaf-disease-classification-6b09d324d903/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/cassava-leaf-disease-classification-6b09d324d903/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact cassava-leaf-disease-classification-6b09d324d903/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/cassava-leaf-disease-classification-6b09d324d903/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt chaii-hindi-and-tamil-question-answering-c7928ad6b928",
+      "detail": "outputs/e9_mle_bench/modal_streaming/chaii-hindi-and-tamil-question-answering-c7928ad6b928/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary chaii-hindi-and-tamil-question-answering-c7928ad6b928",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade chaii-hindi-and-tamil-question-answering-c7928ad6b928",
+      "detail": 0.00618,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact chaii-hindi-and-tamil-question-answering-c7928ad6b928/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/chaii-hindi-and-tamil-question-answering-c7928ad6b928/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact chaii-hindi-and-tamil-question-answering-c7928ad6b928/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/chaii-hindi-and-tamil-question-answering-c7928ad6b928/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact chaii-hindi-and-tamil-question-answering-c7928ad6b928/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/chaii-hindi-and-tamil-question-answering-c7928ad6b928/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt champs-scalar-coupling-b734ca6d0b29",
+      "detail": "outputs/e9_mle_bench/modal_streaming/champs-scalar-coupling-b734ca6d0b29/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary champs-scalar-coupling-b734ca6d0b29",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt champs-scalar-coupling-e5b128918511",
+      "detail": "outputs/e9_mle_bench/modal_streaming/champs-scalar-coupling-e5b128918511/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary champs-scalar-coupling-e5b128918511",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade champs-scalar-coupling-e5b128918511",
+      "detail": 3.98269,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact champs-scalar-coupling-e5b128918511/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/champs-scalar-coupling-e5b128918511/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact champs-scalar-coupling-e5b128918511/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/champs-scalar-coupling-e5b128918511/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact champs-scalar-coupling-e5b128918511/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/champs-scalar-coupling-e5b128918511/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt denoising-dirty-documents-3c650e9f6ee9",
+      "detail": "outputs/e9_mle_bench/modal_streaming/denoising-dirty-documents-3c650e9f6ee9/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary denoising-dirty-documents-3c650e9f6ee9",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt denoising-dirty-documents-6a97cbd47b38",
+      "detail": "outputs/e9_mle_bench/modal_streaming/denoising-dirty-documents-6a97cbd47b38/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary denoising-dirty-documents-6a97cbd47b38",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt denoising-dirty-documents-9dde5d24da63",
+      "detail": "outputs/e9_mle_bench/modal_streaming/denoising-dirty-documents-9dde5d24da63/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary denoising-dirty-documents-9dde5d24da63",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt denoising-dirty-documents-ec618151b1d7",
+      "detail": "outputs/e9_mle_bench/modal_streaming/denoising-dirty-documents-ec618151b1d7/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary denoising-dirty-documents-ec618151b1d7",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade denoising-dirty-documents-ec618151b1d7",
+      "detail": 203.592,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact denoising-dirty-documents-ec618151b1d7/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/denoising-dirty-documents-ec618151b1d7/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact denoising-dirty-documents-ec618151b1d7/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/denoising-dirty-documents-ec618151b1d7/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact denoising-dirty-documents-ec618151b1d7/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/denoising-dirty-documents-ec618151b1d7/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt detecting-insults-in-social-commentary-3c81ecb58f42",
+      "detail": "outputs/e9_mle_bench/modal_streaming/detecting-insults-in-social-commentary-3c81ecb58f42/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary detecting-insults-in-social-commentary-3c81ecb58f42",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade detecting-insults-in-social-commentary-3c81ecb58f42",
+      "detail": 0.87426,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact detecting-insults-in-social-commentary-3c81ecb58f42/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/detecting-insults-in-social-commentary-3c81ecb58f42/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact detecting-insults-in-social-commentary-3c81ecb58f42/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/detecting-insults-in-social-commentary-3c81ecb58f42/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact detecting-insults-in-social-commentary-3c81ecb58f42/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/detecting-insults-in-social-commentary-3c81ecb58f42/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt dog-breed-identification-023030ffba88",
+      "detail": "outputs/e9_mle_bench/modal_streaming/dog-breed-identification-023030ffba88/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary dog-breed-identification-023030ffba88",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade dog-breed-identification-023030ffba88",
+      "detail": 4.63268,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact dog-breed-identification-023030ffba88/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/dog-breed-identification-023030ffba88/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact dog-breed-identification-023030ffba88/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/dog-breed-identification-023030ffba88/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact dog-breed-identification-023030ffba88/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/dog-breed-identification-023030ffba88/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt dog-breed-identification-02a86ebb17c7",
+      "detail": "outputs/e9_mle_bench/modal_streaming/dog-breed-identification-02a86ebb17c7/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary dog-breed-identification-02a86ebb17c7",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt dog-breed-identification-84ae0f70bca6",
+      "detail": "outputs/e9_mle_bench/modal_streaming/dog-breed-identification-84ae0f70bca6/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary dog-breed-identification-84ae0f70bca6",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt dogs-vs-cats-redux-kernels-edition-64afe753f533",
+      "detail": "outputs/e9_mle_bench/modal_streaming/dogs-vs-cats-redux-kernels-edition-64afe753f533/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary dogs-vs-cats-redux-kernels-edition-64afe753f533",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade dogs-vs-cats-redux-kernels-edition-64afe753f533",
+      "detail": 0.62233,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact dogs-vs-cats-redux-kernels-edition-64afe753f533/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/dogs-vs-cats-redux-kernels-edition-64afe753f533/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact dogs-vs-cats-redux-kernels-edition-64afe753f533/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/dogs-vs-cats-redux-kernels-edition-64afe753f533/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact dogs-vs-cats-redux-kernels-edition-64afe753f533/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/dogs-vs-cats-redux-kernels-edition-64afe753f533/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt facebook-recruiting-iii-keyword-extraction-72acd3275ce6",
+      "detail": "outputs/e9_mle_bench/modal_streaming/facebook-recruiting-iii-keyword-extraction-72acd3275ce6/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary facebook-recruiting-iii-keyword-extraction-72acd3275ce6",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt freesound-audio-tagging-2019-41fd84bf84d5",
+      "detail": "outputs/e9_mle_bench/modal_streaming/freesound-audio-tagging-2019-41fd84bf84d5/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary freesound-audio-tagging-2019-41fd84bf84d5",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt freesound-audio-tagging-2019-c160e87615be",
+      "detail": "outputs/e9_mle_bench/modal_streaming/freesound-audio-tagging-2019-c160e87615be/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary freesound-audio-tagging-2019-c160e87615be",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade freesound-audio-tagging-2019-c160e87615be",
+      "detail": 0.12497,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact freesound-audio-tagging-2019-c160e87615be/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/freesound-audio-tagging-2019-c160e87615be/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact freesound-audio-tagging-2019-c160e87615be/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/freesound-audio-tagging-2019-c160e87615be/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact freesound-audio-tagging-2019-c160e87615be/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/freesound-audio-tagging-2019-c160e87615be/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt google-quest-challenge-71335d95ce21",
+      "detail": "outputs/e9_mle_bench/modal_streaming/google-quest-challenge-71335d95ce21/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary google-quest-challenge-71335d95ce21",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade google-quest-challenge-71335d95ce21",
+      "detail": 0.25726,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact google-quest-challenge-71335d95ce21/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/google-quest-challenge-71335d95ce21/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact google-quest-challenge-71335d95ce21/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/google-quest-challenge-71335d95ce21/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact google-quest-challenge-71335d95ce21/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/google-quest-challenge-71335d95ce21/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt histopathologic-cancer-detection-bcc92aa8e4cf",
+      "detail": "outputs/e9_mle_bench/modal_streaming/histopathologic-cancer-detection-bcc92aa8e4cf/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary histopathologic-cancer-detection-bcc92aa8e4cf",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade histopathologic-cancer-detection-bcc92aa8e4cf",
+      "detail": 0.5012,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact histopathologic-cancer-detection-bcc92aa8e4cf/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/histopathologic-cancer-detection-bcc92aa8e4cf/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact histopathologic-cancer-detection-bcc92aa8e4cf/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/histopathologic-cancer-detection-bcc92aa8e4cf/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact histopathologic-cancer-detection-bcc92aa8e4cf/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/histopathologic-cancer-detection-bcc92aa8e4cf/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt hms-harmful-brain-activity-classification-45c8ea4c5a4c",
+      "detail": "outputs/e9_mle_bench/modal_streaming/hms-harmful-brain-activity-classification-45c8ea4c5a4c/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary hms-harmful-brain-activity-classification-45c8ea4c5a4c",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt jigsaw-toxic-comment-classification-challenge-1338bfc1da6c",
+      "detail": "outputs/e9_mle_bench/modal_streaming/jigsaw-toxic-comment-classification-challenge-1338bfc1da6c/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary jigsaw-toxic-comment-classification-challenge-1338bfc1da6c",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade jigsaw-toxic-comment-classification-challenge-1338bfc1da6c",
+      "detail": 0.97424,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact jigsaw-toxic-comment-classification-challenge-1338bfc1da6c/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/jigsaw-toxic-comment-classification-challenge-1338bfc1da6c/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact jigsaw-toxic-comment-classification-challenge-1338bfc1da6c/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/jigsaw-toxic-comment-classification-challenge-1338bfc1da6c/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact jigsaw-toxic-comment-classification-challenge-1338bfc1da6c/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/jigsaw-toxic-comment-classification-challenge-1338bfc1da6c/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt jigsaw-unintended-bias-in-toxicity-classification-13ef8b898e03",
+      "detail": "outputs/e9_mle_bench/modal_streaming/jigsaw-unintended-bias-in-toxicity-classification-13ef8b898e03/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary jigsaw-unintended-bias-in-toxicity-classification-13ef8b898e03",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt jigsaw-unintended-bias-in-toxicity-classification-2b5aec66fae2",
+      "detail": "outputs/e9_mle_bench/modal_streaming/jigsaw-unintended-bias-in-toxicity-classification-2b5aec66fae2/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary jigsaw-unintended-bias-in-toxicity-classification-2b5aec66fae2",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt jigsaw-unintended-bias-in-toxicity-classification-4d7abbb3ba89",
+      "detail": "outputs/e9_mle_bench/modal_streaming/jigsaw-unintended-bias-in-toxicity-classification-4d7abbb3ba89/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary jigsaw-unintended-bias-in-toxicity-classification-4d7abbb3ba89",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt jigsaw-unintended-bias-in-toxicity-classification-be21ca31edd2",
+      "detail": "outputs/e9_mle_bench/modal_streaming/jigsaw-unintended-bias-in-toxicity-classification-be21ca31edd2/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary jigsaw-unintended-bias-in-toxicity-classification-be21ca31edd2",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt kuzushiji-recognition-72bbaeb8c306",
+      "detail": "outputs/e9_mle_bench/modal_streaming/kuzushiji-recognition-72bbaeb8c306/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary kuzushiji-recognition-72bbaeb8c306",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt kuzushiji-recognition-ca53dcc29f54",
+      "detail": "outputs/e9_mle_bench/modal_streaming/kuzushiji-recognition-ca53dcc29f54/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary kuzushiji-recognition-ca53dcc29f54",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt kuzushiji-recognition-d3435b28fdb8",
+      "detail": "outputs/e9_mle_bench/modal_streaming/kuzushiji-recognition-d3435b28fdb8/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary kuzushiji-recognition-d3435b28fdb8",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt kuzushiji-recognition-f06baafdbb53",
+      "detail": "outputs/e9_mle_bench/modal_streaming/kuzushiji-recognition-f06baafdbb53/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary kuzushiji-recognition-f06baafdbb53",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt leaf-classification-0ff61340316b",
+      "detail": "outputs/e9_mle_bench/modal_streaming/leaf-classification-0ff61340316b/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary leaf-classification-0ff61340316b",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt leaf-classification-bdf29643b3d4",
+      "detail": "outputs/e9_mle_bench/modal_streaming/leaf-classification-bdf29643b3d4/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary leaf-classification-bdf29643b3d4",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade leaf-classification-bdf29643b3d4",
+      "detail": 0.88567,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact leaf-classification-bdf29643b3d4/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/leaf-classification-bdf29643b3d4/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact leaf-classification-bdf29643b3d4/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/leaf-classification-bdf29643b3d4/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact leaf-classification-bdf29643b3d4/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/leaf-classification-bdf29643b3d4/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt leaf-classification-e59838dcbdb9",
+      "detail": "outputs/e9_mle_bench/modal_streaming/leaf-classification-e59838dcbdb9/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary leaf-classification-e59838dcbdb9",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt learning-agency-lab-automated-essay-scoring-2-19945cd4c6b0",
+      "detail": "outputs/e9_mle_bench/modal_streaming/learning-agency-lab-automated-essay-scoring-2-19945cd4c6b0/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary learning-agency-lab-automated-essay-scoring-2-19945cd4c6b0",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade learning-agency-lab-automated-essay-scoring-2-19945cd4c6b0",
+      "detail": 0.62867,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact learning-agency-lab-automated-essay-scoring-2-19945cd4c6b0/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/learning-agency-lab-automated-essay-scoring-2-19945cd4c6b0/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact learning-agency-lab-automated-essay-scoring-2-19945cd4c6b0/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/learning-agency-lab-automated-essay-scoring-2-19945cd4c6b0/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact learning-agency-lab-automated-essay-scoring-2-19945cd4c6b0/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/learning-agency-lab-automated-essay-scoring-2-19945cd4c6b0/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt learning-agency-lab-automated-essay-scoring-2-83dc16f5ee73",
+      "detail": "outputs/e9_mle_bench/modal_streaming/learning-agency-lab-automated-essay-scoring-2-83dc16f5ee73/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary learning-agency-lab-automated-essay-scoring-2-83dc16f5ee73",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt lmsys-chatbot-arena-2cfdd30613c2",
+      "detail": "outputs/e9_mle_bench/modal_streaming/lmsys-chatbot-arena-2cfdd30613c2/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary lmsys-chatbot-arena-2cfdd30613c2",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade lmsys-chatbot-arena-2cfdd30613c2",
+      "detail": 1.09861,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact lmsys-chatbot-arena-2cfdd30613c2/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/lmsys-chatbot-arena-2cfdd30613c2/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact lmsys-chatbot-arena-2cfdd30613c2/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/lmsys-chatbot-arena-2cfdd30613c2/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact lmsys-chatbot-arena-2cfdd30613c2/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/lmsys-chatbot-arena-2cfdd30613c2/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt mlsp-2013-birds-2779b16d1f7b",
+      "detail": "outputs/e9_mle_bench/modal_streaming/mlsp-2013-birds-2779b16d1f7b/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary mlsp-2013-birds-2779b16d1f7b",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt mlsp-2013-birds-80010f930736",
+      "detail": "outputs/e9_mle_bench/modal_streaming/mlsp-2013-birds-80010f930736/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary mlsp-2013-birds-80010f930736",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt mlsp-2013-birds-9390d5dc46d2",
+      "detail": "outputs/e9_mle_bench/modal_streaming/mlsp-2013-birds-9390d5dc46d2/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary mlsp-2013-birds-9390d5dc46d2",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt mlsp-2013-birds-b865b4ad5299",
+      "detail": "outputs/e9_mle_bench/modal_streaming/mlsp-2013-birds-b865b4ad5299/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary mlsp-2013-birds-b865b4ad5299",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade mlsp-2013-birds-b865b4ad5299",
+      "detail": 0.6225,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact mlsp-2013-birds-b865b4ad5299/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/mlsp-2013-birds-b865b4ad5299/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact mlsp-2013-birds-b865b4ad5299/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/mlsp-2013-birds-b865b4ad5299/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact mlsp-2013-birds-b865b4ad5299/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/mlsp-2013-birds-b865b4ad5299/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt mlsp-2013-birds-b8d78b250b21",
+      "detail": "outputs/e9_mle_bench/modal_streaming/mlsp-2013-birds-b8d78b250b21/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary mlsp-2013-birds-b8d78b250b21",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt mlsp-2013-birds-e60afc3a6b2e",
+      "detail": "outputs/e9_mle_bench/modal_streaming/mlsp-2013-birds-e60afc3a6b2e/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary mlsp-2013-birds-e60afc3a6b2e",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt multi-modal-gesture-recognition-2e2b43689bed",
+      "detail": "outputs/e9_mle_bench/modal_streaming/multi-modal-gesture-recognition-2e2b43689bed/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary multi-modal-gesture-recognition-2e2b43689bed",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt new-york-city-taxi-fare-prediction-6a1dcfa9b83b",
+      "detail": "outputs/e9_mle_bench/modal_streaming/new-york-city-taxi-fare-prediction-6a1dcfa9b83b/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary new-york-city-taxi-fare-prediction-6a1dcfa9b83b",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt new-york-city-taxi-fare-prediction-860134c097ea",
+      "detail": "outputs/e9_mle_bench/modal_streaming/new-york-city-taxi-fare-prediction-860134c097ea/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary new-york-city-taxi-fare-prediction-860134c097ea",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade new-york-city-taxi-fare-prediction-860134c097ea",
+      "detail": 4.58718,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact new-york-city-taxi-fare-prediction-860134c097ea/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/new-york-city-taxi-fare-prediction-860134c097ea/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact new-york-city-taxi-fare-prediction-860134c097ea/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/new-york-city-taxi-fare-prediction-860134c097ea/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact new-york-city-taxi-fare-prediction-860134c097ea/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/new-york-city-taxi-fare-prediction-860134c097ea/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt nfl-player-contact-detection-caef191fd2da",
+      "detail": "outputs/e9_mle_bench/modal_streaming/nfl-player-contact-detection-caef191fd2da/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary nfl-player-contact-detection-caef191fd2da",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt nomad2018-predict-transparent-conductors-52b5301c552a",
+      "detail": "outputs/e9_mle_bench/modal_streaming/nomad2018-predict-transparent-conductors-52b5301c552a/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary nomad2018-predict-transparent-conductors-52b5301c552a",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade nomad2018-predict-transparent-conductors-52b5301c552a",
+      "detail": 0.0678,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact nomad2018-predict-transparent-conductors-52b5301c552a/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/nomad2018-predict-transparent-conductors-52b5301c552a/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact nomad2018-predict-transparent-conductors-52b5301c552a/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/nomad2018-predict-transparent-conductors-52b5301c552a/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact nomad2018-predict-transparent-conductors-52b5301c552a/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/nomad2018-predict-transparent-conductors-52b5301c552a/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt osic-pulmonary-fibrosis-progression-7441511e017b",
+      "detail": "outputs/e9_mle_bench/modal_streaming/osic-pulmonary-fibrosis-progression-7441511e017b/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary osic-pulmonary-fibrosis-progression-7441511e017b",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade osic-pulmonary-fibrosis-progression-7441511e017b",
+      "detail": -9.92125,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact osic-pulmonary-fibrosis-progression-7441511e017b/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/osic-pulmonary-fibrosis-progression-7441511e017b/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact osic-pulmonary-fibrosis-progression-7441511e017b/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/osic-pulmonary-fibrosis-progression-7441511e017b/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact osic-pulmonary-fibrosis-progression-7441511e017b/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/osic-pulmonary-fibrosis-progression-7441511e017b/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt petfinder-pawpularity-score-e21af4986cea",
+      "detail": "outputs/e9_mle_bench/modal_streaming/petfinder-pawpularity-score-e21af4986cea/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary petfinder-pawpularity-score-e21af4986cea",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade petfinder-pawpularity-score-e21af4986cea",
+      "detail": 20.17751,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact petfinder-pawpularity-score-e21af4986cea/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/petfinder-pawpularity-score-e21af4986cea/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact petfinder-pawpularity-score-e21af4986cea/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/petfinder-pawpularity-score-e21af4986cea/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact petfinder-pawpularity-score-e21af4986cea/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/petfinder-pawpularity-score-e21af4986cea/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt plant-pathology-2020-fgvc7-8341fcafc069",
+      "detail": "outputs/e9_mle_bench/modal_streaming/plant-pathology-2020-fgvc7-8341fcafc069/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary plant-pathology-2020-fgvc7-8341fcafc069",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade plant-pathology-2020-fgvc7-8341fcafc069",
+      "detail": 0.63166,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact plant-pathology-2020-fgvc7-8341fcafc069/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/plant-pathology-2020-fgvc7-8341fcafc069/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact plant-pathology-2020-fgvc7-8341fcafc069/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/plant-pathology-2020-fgvc7-8341fcafc069/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact plant-pathology-2020-fgvc7-8341fcafc069/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/plant-pathology-2020-fgvc7-8341fcafc069/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt plant-pathology-2020-fgvc7-db5b660ef96a",
+      "detail": "outputs/e9_mle_bench/modal_streaming/plant-pathology-2020-fgvc7-db5b660ef96a/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary plant-pathology-2020-fgvc7-db5b660ef96a",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt plant-pathology-2021-fgvc8-1afc1ef65a3a",
+      "detail": "outputs/e9_mle_bench/modal_streaming/plant-pathology-2021-fgvc8-1afc1ef65a3a/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary plant-pathology-2021-fgvc8-1afc1ef65a3a",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt plant-pathology-2021-fgvc8-2accc1cf7208",
+      "detail": "outputs/e9_mle_bench/modal_streaming/plant-pathology-2021-fgvc8-2accc1cf7208/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary plant-pathology-2021-fgvc8-2accc1cf7208",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt plant-pathology-2021-fgvc8-391a0141a545",
+      "detail": "outputs/e9_mle_bench/modal_streaming/plant-pathology-2021-fgvc8-391a0141a545/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary plant-pathology-2021-fgvc8-391a0141a545",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt plant-pathology-2021-fgvc8-79ef25f39bcc",
+      "detail": "outputs/e9_mle_bench/modal_streaming/plant-pathology-2021-fgvc8-79ef25f39bcc/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary plant-pathology-2021-fgvc8-79ef25f39bcc",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt random-acts-of-pizza-1c178b67f0d9",
+      "detail": "outputs/e9_mle_bench/modal_streaming/random-acts-of-pizza-1c178b67f0d9/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary random-acts-of-pizza-1c178b67f0d9",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt random-acts-of-pizza-7ebdb299a489",
+      "detail": "outputs/e9_mle_bench/modal_streaming/random-acts-of-pizza-7ebdb299a489/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary random-acts-of-pizza-7ebdb299a489",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt random-acts-of-pizza-cc109c6bfc00",
+      "detail": "outputs/e9_mle_bench/modal_streaming/random-acts-of-pizza-cc109c6bfc00/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary random-acts-of-pizza-cc109c6bfc00",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade random-acts-of-pizza-cc109c6bfc00",
+      "detail": 0.60535,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact random-acts-of-pizza-cc109c6bfc00/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/random-acts-of-pizza-cc109c6bfc00/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact random-acts-of-pizza-cc109c6bfc00/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/random-acts-of-pizza-cc109c6bfc00/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact random-acts-of-pizza-cc109c6bfc00/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/random-acts-of-pizza-cc109c6bfc00/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt smartphone-decimeter-2022-1207910d9504",
+      "detail": "outputs/e9_mle_bench/modal_streaming/smartphone-decimeter-2022-1207910d9504/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary smartphone-decimeter-2022-1207910d9504",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade smartphone-decimeter-2022-1207910d9504",
+      "detail": 165.85732,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact smartphone-decimeter-2022-1207910d9504/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/smartphone-decimeter-2022-1207910d9504/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact smartphone-decimeter-2022-1207910d9504/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/smartphone-decimeter-2022-1207910d9504/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact smartphone-decimeter-2022-1207910d9504/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/smartphone-decimeter-2022-1207910d9504/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt smartphone-decimeter-2022-3de801aee652",
+      "detail": "outputs/e9_mle_bench/modal_streaming/smartphone-decimeter-2022-3de801aee652/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary smartphone-decimeter-2022-3de801aee652",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt spooky-author-identification-92a9c2022e7e",
+      "detail": "outputs/e9_mle_bench/modal_streaming/spooky-author-identification-92a9c2022e7e/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary spooky-author-identification-92a9c2022e7e",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade spooky-author-identification-92a9c2022e7e",
+      "detail": 0.43405,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact spooky-author-identification-92a9c2022e7e/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/spooky-author-identification-92a9c2022e7e/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact spooky-author-identification-92a9c2022e7e/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/spooky-author-identification-92a9c2022e7e/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt spooky-author-identification-df30738f5cc3",
+      "detail": "outputs/e9_mle_bench/modal_streaming/spooky-author-identification-df30738f5cc3/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary spooky-author-identification-df30738f5cc3",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade spooky-author-identification-df30738f5cc3",
+      "detail": 0.43391,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact spooky-author-identification-df30738f5cc3/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/spooky-author-identification-df30738f5cc3/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact spooky-author-identification-df30738f5cc3/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/spooky-author-identification-df30738f5cc3/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact spooky-author-identification-df30738f5cc3/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/spooky-author-identification-df30738f5cc3/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt stanford-covid-vaccine-557b219238eb",
+      "detail": "outputs/e9_mle_bench/modal_streaming/stanford-covid-vaccine-557b219238eb/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary stanford-covid-vaccine-557b219238eb",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt stanford-covid-vaccine-7b4c2e4562e4",
+      "detail": "outputs/e9_mle_bench/modal_streaming/stanford-covid-vaccine-7b4c2e4562e4/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary stanford-covid-vaccine-7b4c2e4562e4",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade stanford-covid-vaccine-7b4c2e4562e4",
+      "detail": 0.42804,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact stanford-covid-vaccine-7b4c2e4562e4/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/stanford-covid-vaccine-7b4c2e4562e4/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact stanford-covid-vaccine-7b4c2e4562e4/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/stanford-covid-vaccine-7b4c2e4562e4/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact stanford-covid-vaccine-7b4c2e4562e4/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/stanford-covid-vaccine-7b4c2e4562e4/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt stanford-covid-vaccine-b9529b489199",
+      "detail": "outputs/e9_mle_bench/modal_streaming/stanford-covid-vaccine-b9529b489199/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary stanford-covid-vaccine-b9529b489199",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt stanford-covid-vaccine-f8ad6f6ba610",
+      "detail": "outputs/e9_mle_bench/modal_streaming/stanford-covid-vaccine-f8ad6f6ba610/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary stanford-covid-vaccine-f8ad6f6ba610",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt statoil-iceberg-classifier-challenge-65cdb3830e2a",
+      "detail": "outputs/e9_mle_bench/modal_streaming/statoil-iceberg-classifier-challenge-65cdb3830e2a/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary statoil-iceberg-classifier-challenge-65cdb3830e2a",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade statoil-iceberg-classifier-challenge-65cdb3830e2a",
+      "detail": 0.33831,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact statoil-iceberg-classifier-challenge-65cdb3830e2a/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/statoil-iceberg-classifier-challenge-65cdb3830e2a/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact statoil-iceberg-classifier-challenge-65cdb3830e2a/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/statoil-iceberg-classifier-challenge-65cdb3830e2a/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact statoil-iceberg-classifier-challenge-65cdb3830e2a/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/statoil-iceberg-classifier-challenge-65cdb3830e2a/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt statoil-iceberg-classifier-challenge-d9f80b17eea4",
+      "detail": "outputs/e9_mle_bench/modal_streaming/statoil-iceberg-classifier-challenge-d9f80b17eea4/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary statoil-iceberg-classifier-challenge-d9f80b17eea4",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt tabular-playground-series-dec-2021-cb3e13ef7452",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tabular-playground-series-dec-2021-cb3e13ef7452/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary tabular-playground-series-dec-2021-cb3e13ef7452",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade tabular-playground-series-dec-2021-cb3e13ef7452",
+      "detail": 0.96075,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact tabular-playground-series-dec-2021-cb3e13ef7452/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tabular-playground-series-dec-2021-cb3e13ef7452/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact tabular-playground-series-dec-2021-cb3e13ef7452/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tabular-playground-series-dec-2021-cb3e13ef7452/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact tabular-playground-series-dec-2021-cb3e13ef7452/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tabular-playground-series-dec-2021-cb3e13ef7452/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt tabular-playground-series-dec-2021-e29dbd36116a",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tabular-playground-series-dec-2021-e29dbd36116a/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary tabular-playground-series-dec-2021-e29dbd36116a",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt tabular-playground-series-may-2022-4d87d361aacd",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tabular-playground-series-may-2022-4d87d361aacd/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary tabular-playground-series-may-2022-4d87d361aacd",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade tabular-playground-series-may-2022-4d87d361aacd",
+      "detail": 0.71992,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact tabular-playground-series-may-2022-4d87d361aacd/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tabular-playground-series-may-2022-4d87d361aacd/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact tabular-playground-series-may-2022-4d87d361aacd/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tabular-playground-series-may-2022-4d87d361aacd/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact tabular-playground-series-may-2022-4d87d361aacd/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tabular-playground-series-may-2022-4d87d361aacd/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt tensorflow-speech-recognition-challenge-a4c45d403e3f",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tensorflow-speech-recognition-challenge-a4c45d403e3f/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary tensorflow-speech-recognition-challenge-a4c45d403e3f",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade tensorflow-speech-recognition-challenge-a4c45d403e3f",
+      "detail": 0.08018,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact tensorflow-speech-recognition-challenge-a4c45d403e3f/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tensorflow-speech-recognition-challenge-a4c45d403e3f/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact tensorflow-speech-recognition-challenge-a4c45d403e3f/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tensorflow-speech-recognition-challenge-a4c45d403e3f/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact tensorflow-speech-recognition-challenge-a4c45d403e3f/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tensorflow-speech-recognition-challenge-a4c45d403e3f/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt tensorflow2-question-answering-0773d2f7a759",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tensorflow2-question-answering-0773d2f7a759/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary tensorflow2-question-answering-0773d2f7a759",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade tensorflow2-question-answering-0773d2f7a759",
+      "detail": 0.57117,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact tensorflow2-question-answering-0773d2f7a759/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tensorflow2-question-answering-0773d2f7a759/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact tensorflow2-question-answering-0773d2f7a759/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tensorflow2-question-answering-0773d2f7a759/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact tensorflow2-question-answering-0773d2f7a759/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tensorflow2-question-answering-0773d2f7a759/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt tensorflow2-question-answering-230f1aee25f3",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tensorflow2-question-answering-230f1aee25f3/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary tensorflow2-question-answering-230f1aee25f3",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt tensorflow2-question-answering-f8cbfea2bd07",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tensorflow2-question-answering-f8cbfea2bd07/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary tensorflow2-question-answering-f8cbfea2bd07",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt text-normalization-challenge-english-language-62017f7d83f4",
+      "detail": "outputs/e9_mle_bench/modal_streaming/text-normalization-challenge-english-language-62017f7d83f4/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary text-normalization-challenge-english-language-62017f7d83f4",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt text-normalization-challenge-english-language-9bb52c24bcb9",
+      "detail": "outputs/e9_mle_bench/modal_streaming/text-normalization-challenge-english-language-9bb52c24bcb9/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary text-normalization-challenge-english-language-9bb52c24bcb9",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt text-normalization-challenge-russian-language-374a32967d4b",
+      "detail": "outputs/e9_mle_bench/modal_streaming/text-normalization-challenge-russian-language-374a32967d4b/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary text-normalization-challenge-russian-language-374a32967d4b",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt text-normalization-challenge-russian-language-8f8940a840d7",
+      "detail": "outputs/e9_mle_bench/modal_streaming/text-normalization-challenge-russian-language-8f8940a840d7/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary text-normalization-challenge-russian-language-8f8940a840d7",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt text-normalization-challenge-russian-language-dee2c787f610",
+      "detail": "outputs/e9_mle_bench/modal_streaming/text-normalization-challenge-russian-language-dee2c787f610/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary text-normalization-challenge-russian-language-dee2c787f610",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt text-normalization-challenge-russian-language-fcf621c3dc0d",
+      "detail": "outputs/e9_mle_bench/modal_streaming/text-normalization-challenge-russian-language-fcf621c3dc0d/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary text-normalization-challenge-russian-language-fcf621c3dc0d",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt text-normalization-challenge-russian-language-regrade-c14b6e950259",
+      "detail": "outputs/e9_mle_bench/modal_streaming/text-normalization-challenge-russian-language-regrade-c14b6e950259/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary text-normalization-challenge-russian-language-regrade-c14b6e950259",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade text-normalization-challenge-russian-language-regrade-c14b6e950259",
+      "detail": 0.97348,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact text-normalization-challenge-russian-language-regrade-c14b6e950259/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/text-normalization-challenge-russian-language-regrade-c14b6e950259/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact text-normalization-challenge-russian-language-regrade-c14b6e950259/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/text-normalization-challenge-russian-language-regrade-c14b6e950259/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact text-normalization-challenge-russian-language-regrade-c14b6e950259/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/text-normalization-challenge-russian-language-regrade-c14b6e950259/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt tgs-salt-identification-challenge-4f79f37bea6e",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tgs-salt-identification-challenge-4f79f37bea6e/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary tgs-salt-identification-challenge-4f79f37bea6e",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt the-icml-2013-whale-challenge-right-whale-redux-55f3cc5db8a8",
+      "detail": "outputs/e9_mle_bench/modal_streaming/the-icml-2013-whale-challenge-right-whale-redux-55f3cc5db8a8/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary the-icml-2013-whale-challenge-right-whale-redux-55f3cc5db8a8",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt the-icml-2013-whale-challenge-right-whale-redux-8b39a9f70fae",
+      "detail": "outputs/e9_mle_bench/modal_streaming/the-icml-2013-whale-challenge-right-whale-redux-8b39a9f70fae/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary the-icml-2013-whale-challenge-right-whale-redux-8b39a9f70fae",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade the-icml-2013-whale-challenge-right-whale-redux-8b39a9f70fae",
+      "detail": 0.5,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact the-icml-2013-whale-challenge-right-whale-redux-8b39a9f70fae/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/the-icml-2013-whale-challenge-right-whale-redux-8b39a9f70fae/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact the-icml-2013-whale-challenge-right-whale-redux-8b39a9f70fae/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/the-icml-2013-whale-challenge-right-whale-redux-8b39a9f70fae/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact the-icml-2013-whale-challenge-right-whale-redux-8b39a9f70fae/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/the-icml-2013-whale-challenge-right-whale-redux-8b39a9f70fae/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt tweet-sentiment-extraction-1b56f9d73fdc",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tweet-sentiment-extraction-1b56f9d73fdc/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary tweet-sentiment-extraction-1b56f9d73fdc",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt tweet-sentiment-extraction-9d3132e24230",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tweet-sentiment-extraction-9d3132e24230/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary tweet-sentiment-extraction-9d3132e24230",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade tweet-sentiment-extraction-9d3132e24230",
+      "detail": 0.59324,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact tweet-sentiment-extraction-9d3132e24230/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tweet-sentiment-extraction-9d3132e24230/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact tweet-sentiment-extraction-9d3132e24230/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tweet-sentiment-extraction-9d3132e24230/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact tweet-sentiment-extraction-9d3132e24230/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/tweet-sentiment-extraction-9d3132e24230/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt us-patent-phrase-to-phrase-matching-1379ca868af6",
+      "detail": "outputs/e9_mle_bench/modal_streaming/us-patent-phrase-to-phrase-matching-1379ca868af6/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary us-patent-phrase-to-phrase-matching-1379ca868af6",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade us-patent-phrase-to-phrase-matching-1379ca868af6",
+      "detail": 0.43676,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact us-patent-phrase-to-phrase-matching-1379ca868af6/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/us-patent-phrase-to-phrase-matching-1379ca868af6/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact us-patent-phrase-to-phrase-matching-1379ca868af6/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/us-patent-phrase-to-phrase-matching-1379ca868af6/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact us-patent-phrase-to-phrase-matching-1379ca868af6/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/us-patent-phrase-to-phrase-matching-1379ca868af6/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt uw-madison-gi-tract-image-segmentation-30a339f2e177",
+      "detail": "outputs/e9_mle_bench/modal_streaming/uw-madison-gi-tract-image-segmentation-30a339f2e177/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary uw-madison-gi-tract-image-segmentation-30a339f2e177",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt uw-madison-gi-tract-image-segmentation-3b792bfe9102",
+      "detail": "outputs/e9_mle_bench/modal_streaming/uw-madison-gi-tract-image-segmentation-3b792bfe9102/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary uw-madison-gi-tract-image-segmentation-3b792bfe9102",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt uw-madison-gi-tract-image-segmentation-b114091c0a03",
+      "detail": "outputs/e9_mle_bench/modal_streaming/uw-madison-gi-tract-image-segmentation-b114091c0a03/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary uw-madison-gi-tract-image-segmentation-b114091c0a03",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade uw-madison-gi-tract-image-segmentation-b114091c0a03",
+      "detail": 0.24608,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact uw-madison-gi-tract-image-segmentation-b114091c0a03/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/uw-madison-gi-tract-image-segmentation-b114091c0a03/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact uw-madison-gi-tract-image-segmentation-b114091c0a03/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/uw-madison-gi-tract-image-segmentation-b114091c0a03/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact uw-madison-gi-tract-image-segmentation-b114091c0a03/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/uw-madison-gi-tract-image-segmentation-b114091c0a03/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt ventilator-pressure-prediction-8eb00d0ff8f6",
+      "detail": "outputs/e9_mle_bench/modal_streaming/ventilator-pressure-prediction-8eb00d0ff8f6/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary ventilator-pressure-prediction-8eb00d0ff8f6",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade ventilator-pressure-prediction-8eb00d0ff8f6",
+      "detail": 2.18084,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact ventilator-pressure-prediction-8eb00d0ff8f6/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/ventilator-pressure-prediction-8eb00d0ff8f6/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact ventilator-pressure-prediction-8eb00d0ff8f6/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/ventilator-pressure-prediction-8eb00d0ff8f6/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact ventilator-pressure-prediction-8eb00d0ff8f6/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/ventilator-pressure-prediction-8eb00d0ff8f6/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt whale-categorization-playground-7556a5cbe2dd",
+      "detail": "outputs/e9_mle_bench/modal_streaming/whale-categorization-playground-7556a5cbe2dd/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary whale-categorization-playground-7556a5cbe2dd",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade whale-categorization-playground-7556a5cbe2dd",
+      "detail": 0.17932,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact whale-categorization-playground-7556a5cbe2dd/solution.py",
+      "detail": "outputs/e9_mle_bench/modal_streaming/whale-categorization-playground-7556a5cbe2dd/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact whale-categorization-playground-7556a5cbe2dd/submission.csv",
+      "detail": "outputs/e9_mle_bench/modal_streaming/whale-categorization-playground-7556a5cbe2dd/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact whale-categorization-playground-7556a5cbe2dd/native_grade.json",
+      "detail": "outputs/e9_mle_bench/modal_streaming/whale-categorization-playground-7556a5cbe2dd/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt alaska2-image-steganalysis-16967d82beeb",
+      "detail": "outputs/e9_mle_bench/merged_vllm/alaska2-image-steganalysis-16967d82beeb/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary alaska2-image-steganalysis-16967d82beeb",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt h-and-m-personalized-fashion-recommendations-33d90f35410c",
+      "detail": "outputs/e9_mle_bench/merged_vllm/h-and-m-personalized-fashion-recommendations-33d90f35410c/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary h-and-m-personalized-fashion-recommendations-33d90f35410c",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 finite native grade h-and-m-personalized-fashion-recommendations-33d90f35410c",
+      "detail": 0.02132,
+      "passed": true
+    },
+    {
+      "check": "E9 artifact h-and-m-personalized-fashion-recommendations-33d90f35410c/solution.py",
+      "detail": "outputs/e9_mle_bench/merged_vllm/h-and-m-personalized-fashion-recommendations-33d90f35410c/solution.py",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact h-and-m-personalized-fashion-recommendations-33d90f35410c/submission.csv",
+      "detail": "outputs/e9_mle_bench/merged_vllm/h-and-m-personalized-fashion-recommendations-33d90f35410c/submission.csv",
+      "passed": true
+    },
+    {
+      "check": "E9 artifact h-and-m-personalized-fashion-recommendations-33d90f35410c/native_grade.json",
+      "detail": "outputs/e9_mle_bench/merged_vllm/h-and-m-personalized-fashion-recommendations-33d90f35410c/native_grade.json",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt hotel-id-2021-fgvc8-ed92df9f6c44",
+      "detail": "outputs/e9_mle_bench/merged_vllm/hotel-id-2021-fgvc8-ed92df9f6c44/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary hotel-id-2021-fgvc8-ed92df9f6c44",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt hubmap-kidney-segmentation-6e08e20ea6d4",
+      "detail": "outputs/e9_mle_bench/merged_vllm/hubmap-kidney-segmentation-6e08e20ea6d4/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary hubmap-kidney-segmentation-6e08e20ea6d4",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt imet-2020-fgvc7-9e3b7fa50417",
+      "detail": "outputs/e9_mle_bench/merged_vllm/imet-2020-fgvc7-9e3b7fa50417/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary imet-2020-fgvc7-9e3b7fa50417",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt predict-volcanic-eruptions-ingv-oe-06379fb32587",
+      "detail": "outputs/e9_mle_bench/merged_vllm/predict-volcanic-eruptions-ingv-oe-06379fb32587/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary predict-volcanic-eruptions-ingv-oe-06379fb32587",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 receipt vesuvius-challenge-ink-detection-83d8678a457b",
+      "detail": "outputs/e9_mle_bench/merged_vllm/vesuvius-challenge-ink-detection-83d8678a457b/receipt.json",
+      "passed": true
+    },
+    {
+      "check": "E9 score boundary vesuvius-challenge-ink-detection-83d8678a457b",
+      "detail": "single-competition receipt",
+      "passed": true
+    },
+    {
+      "check": "E9 legacy unique coverage",
+      "detail": {
+        "AGENT_EXECUTION_FAILED": 51,
+        "NATIVE_SINGLE_COMPETITION_GRADED": 41,
+        "NATIVE_SINGLE_COMPETITION_INVALID": 5
+      },
+      "passed": true
+    },
+    {
+      "check": "E9 separate arm coverage",
+      "detail": {
+        "NATIVE_SINGLE_COMPETITION_GRADED": 1,
+        "NATIVE_SINGLE_COMPETITION_INVALID": 6
+      },
+      "passed": true
+    }
+  ],
+  "status": "PASS_WITH_DOCUMENTED_LIMITATIONS"
+}

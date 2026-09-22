@@ -1,0 +1,63 @@
+{
+ "checks": [
+  {
+   "check": "E1_receipt_score_equals_2_of_731",
+   "detail": "score=0.0027359781121751026 status=SCORED 2/731=0.0027359781121751026",
+   "status": "PASS"
+  },
+  {
+   "check": "E9_modal_streaming_40_unique_graded_of_75",
+   "detail": "graded_rows=41 unique_competitions=40 (denominator 75)",
+   "status": "PASS"
+  },
+  {
+   "check": "E9_merged_vllm_arm_separate_with_1_grade",
+   "detail": "merged_vllm graded rows=1",
+   "status": "PASS"
+  },
+  {
+   "check": "E11_canonical_129_of_312_with_sensitivity",
+   "detail": "raw=129/312 corrected=129/311",
+   "status": "PASS"
+  },
+  {
+   "check": "E11_component_split_sums_67_plus_62_equals_129",
+   "detail": "code-completion 67/156 + spec-to-RTL 62/156 = 129/312",
+   "status": "PASS"
+  },
+  {
+   "check": "E14_recheck_4426_of_4428_accuracy_0_5131",
+   "detail": "accepted=4426/4428 skipped=2 acc=0.5131043831902395",
+   "status": "PASS"
+  },
+  {
+   "check": "E8_labbench_1967_of_1967_all_categories_complete",
+   "detail": "categories=8 evaluated_sum=1967",
+   "status": "PASS"
+  },
+  {
+   "check": "strict_completed_suites_are_E8_E10_E11",
+   "detail": "strict_completed_suites=['E8', 'E10', 'E11']",
+   "status": "PASS"
+  },
+  {
+   "check": "E1_v6_sealed_request_hash_matches_validation",
+   "detail": "sha256=7adc6e2616f61bc7...",
+   "status": "PASS"
+  },
+  {
+   "check": "E1_v6_fixture_receipt_hash_matches_validation",
+   "detail": "sha256=b9aae82360a1577a...",
+   "status": "PASS"
+  },
+  {
+   "check": "codex_run_execution_sources_absent",
+   "detail": "probed=4 still_present=[]",
+   "status": "PASS"
+  }
+ ],
+ "failed": 0,
+ "passed": 11,
+ "recorded_at": "2026-09-19",
+ "schema_version": "ledger-code-check-v1"
+}

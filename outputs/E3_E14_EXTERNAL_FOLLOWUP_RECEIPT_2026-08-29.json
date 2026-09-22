@@ -1,0 +1,1161 @@
+{
+  "schema_version": "e3-e14-external-followup-v1",
+  "recorded_at": "2026-08-30T20:54:54Z",
+  "status": "PUBLIC_AND_EMAIL_PROVIDER_FOLLOWUPS_SENT_OFFICIAL_ACCESS_ROUTES_RECHECKED_OPENREWARD_PROFILE_ACTIVE",
+  "public_followups": [
+    {
+      "lane": "E6",
+      "provider": "Halluminate WebBench",
+      "route": "GitHub issue comment",
+      "url": "https://github.com/Halluminate/WebBench/issues/2#issuecomment-5460052427",
+      "comment_id": 5460052427,
+      "submitted_at": "2026-08-29T03:28:43Z",
+      "author": "arvindcr4",
+      "status": "submitted"
+    },
+    {
+      "lane": "E10",
+            "provider": "UK AI Security Institute AgentHarm",
+            "route": "Hugging Face dataset discussion comment",
+            "discussion": 9,
+            "url": "https://huggingface.co/datasets/ai-safety-institute/AgentHarm/discussions/9#6a9251ec206b2a11e4b13108",
+            "comment_id": "6a9251ec206b2a11e4b13108",
+      "submitted_at": "2026-08-29T03:28:44Z",
+      "author": "arvindcr4",
+      "status": "submitted"
+    },
+    {
+      "lane": "E12",
+            "provider": "AfterQuery AppBench",
+            "route": "Hugging Face dataset discussion comment",
+            "discussion": 2,
+            "url": "https://huggingface.co/datasets/AfterQuery/App-Bench/discussions/2#6a9251eccd8eaaf580d376b6",
+            "comment_id": "6a9251eccd8eaaf580d376b6",
+      "submitted_at": "2026-08-29T03:28:44Z",
+      "author": "arvindcr4",
+      "status": "submitted"
+    },
+    {
+      "lane": "E12",
+      "provider": "AfterQuery AppBench",
+      "route": "GitHub documentation repository issue",
+      "url": "https://github.com/AfterQuery/appbench.ai-docs/issues/1",
+      "submitted_at": "2026-08-29T07:57:48Z",
+      "author": "arvindcr4",
+      "status": "submitted",
+      "request_file": "outputs/e12_appbench/GITHUB_REPRODUCIBILITY_REQUEST_2026-08-29.md"
+    },
+    {
+      "lane": "E13",
+      "provider": "EnvCommons Wordle / OpenReward",
+      "route": "GitHub source repository issue",
+      "url": "https://github.com/EnvCommons/wordle/issues/3",
+      "submitted_at": "2026-08-29T07:57:31Z",
+      "author": "arvindcr4",
+      "status": "submitted",
+      "request_file": "outputs/e13_openreward_games/GITHUB_LICENSE_REQUEST_2026-08-29.md"
+    }
+  ],
+  "email_followups": [
+    {
+      "lane": "E3",
+      "provider": "Emulated SDAB",
+      "recipient": "founders@emulated.so",
+      "thread_id": "1a02a44e1cead5f0",
+      "in_reply_to": "1a02a44e1cead5f0",
+      "message_id": "1a04b91dc27b4469",
+      "submitted_at": "2026-08-29T03:30:55Z",
+      "status": "sent"
+    },
+    {
+      "lane": "E6",
+      "provider": "Halluminate WebBench",
+      "recipient": "jerry@halluminate.ai",
+      "thread_id": "1a02a44e8fcd9b98",
+      "in_reply_to": "1a02a44e8fcd9b98",
+      "message_id": "1a04b91dfda3af97",
+      "submitted_at": "2026-08-29T03:30:55Z",
+      "status": "sent"
+    },
+    {
+      "lane": "E12",
+      "provider": "AfterQuery AppBench",
+      "recipient": "research@afterquery.com",
+      "thread_id": "1a02a44f01f7532e",
+      "in_reply_to": "1a02a44f01f7532e",
+      "message_id": "1a04b91e262745b6",
+      "submitted_at": "2026-08-29T03:30:55Z",
+      "status": "sent"
+    },
+    {
+      "lane": "E13",
+      "provider": "OpenReward",
+      "recipient": "hello@openreward.ai",
+      "thread_id": "1a02a44ec28c86d2",
+      "in_reply_to": "1a02a44ec28c86d2",
+      "message_id": "1a04b91e64683418",
+      "submitted_at": "2026-08-29T03:30:55Z",
+      "status": "sent"
+    },
+    {
+      "lane": "E13",
+      "provider": "OpenReward",
+      "recipient": "hello@openreward.ai",
+      "thread_id": "1a02a44ec28c86d2",
+      "in_reply_to": "1a04b91e64683418",
+      "message_id": "1a04c1472eafad91",
+      "submitted_at": "2026-08-29T05:53:27Z",
+      "status": "sent",
+      "purpose": "Report active arvindcr4 profile and request the exact immutable E13 suite, split, deployment attestations, grader protocol, licence, and API or billing enablement."
+    },
+    {
+      "lane": "E14",
+      "provider": "Epoch AI FrontierMath",
+      "recipient": "math_evals@epoch.ai",
+      "thread_id": "1a02a44e4360638c",
+      "in_reply_to": "1a02a44e4360638c",
+      "message_id": "1a04b91eb88ae0a6",
+      "submitted_at": "2026-08-29T03:30:55Z",
+      "status": "sent"
+    }
+  ],
+  "openreward": {
+    "lane": "E13",
+    "identity_selected": "arvindcr4@gmail.com",
+    "oauth_identity_fields_disclosed": [
+      "name",
+      "profile_picture",
+      "email_address"
+    ],
+    "current_state": "PROFILE_ACTIVE",
+    "terms_accepted": true,
+    "terms_accepted_at": "2026-08-29T03:37:10Z",
+    "account_created": true,
+    "username_claimed": true,
+    "username": "arvindcr4",
+    "username_claimed_at": "2026-08-29T05:48:50Z",
+    "profile_url": "https://openreward.ai/arvindcr4",
+    "profile_verification": "Authenticated public profile rendered with title 'arvindcr4 | OpenReward', username arvindcr4, and Joined today.",
+    "environment_catalog_check": {
+      "checked_at": "2026-08-29T05:49:27Z",
+      "authenticated_catalog_size": 381,
+      "query": "OpenReward Games",
+      "matching_environments": 0,
+      "interpretation": "No public environment matching the contracted E13 suite name is discoverable in the authenticated registry."
+    },
+    "api_key_created": false,
+        "spend_started": false,
+    "next_action": "Provider must supply or identify the immutable held-out OpenReward Games evaluation suite before E13 can run."
+    },
+  "provider_response_check": {
+    "checked_at": "2026-08-29T07:57:33Z",
+    "email": {
+      "checked_at": "2026-08-29T07:16:24Z",
+      "query": "in:inbox after:2026/08/28 {from:founders@emulated.so from:jerry@halluminate.ai from:research@afterquery.com from:hello@openreward.ai from:math_evals@epoch.ai}",
+            "provider_replies_found": [],
+            "access_grants_found": []
+        },
+        "public_threads": [
+            {
+                "lane": "E6",
+                "route": "GitHub issue 2 comments API",
+                "checked_at": "2026-08-29T07:56:05Z",
+                "status": "no_provider_reply_after_followup"
+            },
+            {
+                "lane": "E10",
+                "route": "Hugging Face discussion 9 API",
+                "checked_at": "2026-08-29T07:56:05Z",
+                "status": "no_provider_reply_after_followup"
+            },
+      {
+        "lane": "E12",
+        "route": "Hugging Face discussion 2 API",
+        "checked_at": "2026-08-29T07:56:15Z",
+        "status": "no_provider_reply_after_followup"
+      }
+        ],
+    "provider_access_granted": false
+  },
+  "final_terminal_response_check": {
+    "checked_at": "2026-08-29T11:52:49Z",
+    "email": {
+      "source": "macOS Mail iCloud INBOX",
+      "provider_addresses": [
+        "founders@emulated.so",
+        "jerry@halluminate.ai",
+        "research@afterquery.com",
+        "hello@openreward.ai",
+        "math_evals@epoch.ai"
+      ],
+      "matching_provider_messages": []
+    },
+    "public_routes": {
+      "halluminate_webbench_issue_2_provider_replies_after_followup": [],
+      "agentharm_hugging_face_discussion_9_provider_replies_after_followup": [],
+      "appbench_hugging_face_discussion_2_provider_replies_after_followup": [],
+      "appbench_docs_issue_1_provider_replies": [],
+      "wordle_issue_3_provider_replies": []
+    },
+    "provider_access_granted": false,
+    "claim_boundary": "The absence of a reply in the checked inbox and public routes is not evidence that access will never be granted; it only establishes that no grant was available at terminal audit time."
+  },
+  "official_access_route_checks": [
+    {
+      "lane": "E3",
+      "receipt": "outputs/e3_sdab/external_access_route_check_2026-08-29.json",
+      "result": "official partnership/evaluation contact route only; no public exact bundle, runtime, or grader"
+    },
+    {
+      "lane": "E6",
+      "receipt": "outputs/e6_webbench/official_access_route_discovery_2026-08-29.json",
+      "result": "official email, issue, and leaderboard routes identified; no provider grant"
+    },
+    {
+      "lane": "E8",
+      "receipt": "outputs/e8_lifescibench/external_access_route_check_2026-08-29.json",
+      "result": "official contributor and GPT-Rosalind routes found; no benchmark package or native grader"
+    },
+    {
+      "lane": "E10",
+      "receipt": "outputs/e10_agentharm/official_access_route_discovery_2026-08-29.json",
+      "result": "no additional sanctioned private-split intake route found"
+    },
+    {
+      "lane": "E12",
+      "receipt": "outputs/e12_appbench/external_access_recheck_2026-08-29.json",
+      "result": "new official documentation-repository access request filed; provider grant still absent"
+    },
+    {
+      "lane": "E13",
+      "receipt": "outputs/e13_openreward_games/external_access_recheck_2026-08-29.json",
+      "result": "new official source-repository licence and deployment-attestation request filed; exact suite still absent"
+    },
+    {
+      "lane": "E14",
+      "receipt": "outputs/e14_frontiermath/external_access_route_check_2026-08-29.json",
+      "result": "Tiers 1-4 remains provider-hosted; Open Problems is separate, paid, and non-equivalent"
+    }
+  ],
+  "continuation_window_recheck": {
+    "checked_at": "2026-08-29T12:12:59Z",
+    "email": {
+      "source": "macOS Mail V10 Envelope Index queried read-only",
+      "since": "2026-08-28T00:00:00Z",
+      "provider_addresses": [
+        "founders@emulated.so",
+        "jerry@halluminate.ai",
+        "research@afterquery.com",
+        "hello@openreward.ai",
+        "math_evals@epoch.ai"
+      ],
+      "matching_provider_messages": []
+    },
+    "public_routes": {
+      "halluminate_webbench_issue_2": {
+        "comment_count": 2,
+        "provider_reply_count": 0
+      },
+      "agentharm_hugging_face_discussion_9": {
+        "event_count": 2,
+        "provider_reply_count": 0
+      },
+      "appbench_hugging_face_discussion_2": {
+        "event_count": 2,
+        "provider_reply_count": 0
+      },
+      "appbench_docs_issue_1": {
+        "comment_count": 0,
+        "provider_reply_count": 0
+      },
+      "wordle_issue_3": {
+        "comment_count": 0,
+        "provider_reply_count": 0
+      }
+    },
+    "provider_access_granted": false,
+    "newly_runnable_exact_suites": [],
+    "claim_boundary": "No checked provider route or inbox message supplied an immutable access grant. Absence of a reply is only a point-in-time observation."
+  },
+  "second_continuation_window_recheck": {
+    "checked_at": "2026-08-29T13:05:19Z",
+    "verification_mode": "Read-only GitHub API, Hugging Face API, and macOS Mail V10 Envelope Index checks using the previously documented provider routes.",
+    "lanes": [
+      {
+        "lane": "E3",
+        "status": "BLOCKED_EXTERNAL",
+        "score": null,
+        "provider_reply_verified": false,
+        "access_grant_verified": false,
+        "observation": "No message from founders@emulated.so was present in the checked local Mail index."
+      },
+      {
+        "lane": "E6",
+        "status": "BLOCKED_EXTERNAL",
+        "score": null,
+        "provider_reply_verified": false,
+        "access_grant_verified": false,
+        "observation": "Halluminate/WebBench issue 2 contained two comments, both authored by arvindcr4, and no message from jerry@halluminate.ai was present in the checked local Mail index."
+      },
+      {
+        "lane": "E8",
+        "status": "BLOCKED_EXTERNAL",
+        "score": null,
+        "provider_reply_verified": false,
+        "access_grant_verified": false,
+        "observation": "No LifeSciBench, 750-task, OpenAI sales, or @openai.com message since 2026-08-22 was present in the checked local Mail index."
+      },
+      {
+        "lane": "E10",
+        "status": "BLOCKED_EXTERNAL",
+        "score": null,
+        "provider_reply_verified": false,
+        "access_grant_verified": false,
+        "observation": "AgentHarm discussion 9 contained two events, both authored by arvindcr4; the pinned benchmark tree still exposed six public or validation files and zero test_private files."
+      },
+      {
+        "lane": "E12",
+        "status": "BLOCKED_EXTERNAL",
+        "score": null,
+        "provider_reply_verified": false,
+        "access_grant_verified": false,
+        "observation": "App-Bench discussion 2 contained two events, both authored by arvindcr4; documentation issue 1 had zero comments; the current dataset tree contained only .gitattributes and AppBench vExternal.csv; no message from research@afterquery.com was present in the checked local Mail index."
+      },
+      {
+        "lane": "E13",
+        "status": "BLOCKED_EXTERNAL",
+        "score": null,
+        "provider_reply_verified": false,
+        "access_grant_verified": false,
+        "observation": "EnvCommons/wordle issue 3 had zero comments, and no message from hello@openreward.ai was present in the checked local Mail index."
+      },
+      {
+        "lane": "E14",
+        "status": "BLOCKED_EXTERNAL",
+        "score": null,
+        "provider_reply_verified": false,
+        "access_grant_verified": false,
+        "observation": "No message from math_evals@epoch.ai was present in the checked local Mail index."
+      }
+    ],
+    "public_route_counts": {
+      "halluminate_webbench_issue_2": {
+        "comment_count": 2,
+        "provider_reply_count": 0
+      },
+      "agentharm_hugging_face_discussion_9": {
+        "event_count": 2,
+        "provider_reply_count": 0
+      },
+      "appbench_hugging_face_discussion_2": {
+        "event_count": 2,
+        "provider_reply_count": 0
+      },
+      "appbench_docs_issue_1": {
+        "comment_count": 0,
+        "provider_reply_count": 0
+      },
+      "wordle_issue_3": {
+        "comment_count": 0,
+        "provider_reply_count": 0
+      }
+    },
+    "dataset_surface_checks": {
+      "agentharm_pinned_benchmark_tree": {
+        "published_public_or_validation_file_count": 6,
+        "test_private_file_count": 0
+      },
+      "appbench_current_dataset_tree": {
+        "file_count": 2,
+        "files": [
+          ".gitattributes",
+          "AppBench vExternal.csv"
+        ]
+      }
+    },
+    "mail_index": {
+      "source": "macOS Mail V10 Envelope Index queried read-only",
+      "provider_address_match_count": 0,
+      "lifescibench_or_openai_sales_match_count_since_2026_08_22": 0
+    },
+    "provider_access_granted": false,
+    "newly_runnable_exact_suites": [],
+    "claim_boundary": "This second continuation recheck verified no provider-authored reply or access grant. E3, E6, E8, E10, E12, E13, and E14 remain BLOCKED_EXTERNAL with score null; point-in-time non-response is not evidence that access will never be granted."
+  },
+  "third_continuation_window_recheck": {
+    "checked_from_utc": "2026-08-29T13:34:49Z",
+    "checked_to_utc": "2026-08-29T13:35:04Z",
+    "verification_mode": "Read-only GitHub API, Hugging Face API, and macOS Mail V10 Envelope Index checks using the documented official provider routes.",
+    "public_route_counts": {
+      "halluminate_webbench_issue_2": {
+        "comment_count": 2,
+        "provider_reply_count": 0
+      },
+      "agentharm_hugging_face_discussion_9": {
+        "event_count": 2,
+        "provider_reply_count": 0
+      },
+      "appbench_hugging_face_discussion_2": {
+        "event_count": 2,
+        "provider_reply_count": 0
+      },
+      "appbench_docs_issue_1": {
+        "comment_count": 0,
+        "provider_reply_count": 0
+      },
+      "wordle_issue_3": {
+        "comment_count": 0,
+        "provider_reply_count": 0
+      }
+    },
+    "dataset_surface_checks": {
+      "agentharm_pinned_benchmark_tree": {
+        "published_public_or_validation_file_count": 6,
+        "test_private_file_count": 0
+      },
+      "appbench_current_dataset_tree": {
+        "file_count": 2,
+        "files": [
+          ".gitattributes",
+          "AppBench vExternal.csv"
+        ]
+      }
+    },
+    "mail_index": {
+      "source": "macOS Mail V10 Envelope Index queried read-only",
+      "provider_address_match_count": 0,
+      "lifescibench_or_openai_sales_match_count_since_2026_08_22": 0
+    },
+    "lanes_rechecked": [
+      "E3",
+      "E6",
+      "E8",
+      "E10",
+      "E12",
+      "E13",
+      "E14"
+    ],
+    "provider_access_granted": false,
+    "newly_runnable_exact_suites": [],
+    "result": "All seven lanes remain BLOCKED_EXTERNAL with score null.",
+    "claim_boundary": "This third continuation recheck verified no provider-authored reply, access grant, or new exact-suite surface. Point-in-time non-response is not evidence that access will never be granted."
+  },
+  "fourth_continuation_window_recheck": {
+    "checked_at": "2026-08-29T14:03:58Z",
+    "verification_mode": "Read-only GitHub API, Hugging Face API, and macOS Mail V10 Envelope Index checks using the documented official provider routes.",
+    "public_route_counts": {
+      "halluminate_webbench_issue_2": {"comment_count": 2, "provider_reply_count": 0},
+      "agentharm_hugging_face_discussion_9": {"event_count": 2, "provider_reply_count": 0},
+      "appbench_hugging_face_discussion_2": {"event_count": 2, "provider_reply_count": 0},
+      "appbench_docs_issue_1": {"comment_count": 0, "provider_reply_count": 0},
+      "wordle_issue_3": {"comment_count": 0, "provider_reply_count": 0}
+    },
+    "dataset_surface_checks": {
+      "agentharm_pinned_benchmark_tree": {
+        "published_public_or_validation_file_count": 6,
+        "test_private_file_count": 0
+      },
+      "appbench_current_dataset_tree": {
+        "file_count": 2,
+        "files": [".gitattributes", "AppBench vExternal.csv"]
+      }
+    },
+    "mail_index": {
+      "source": "macOS Mail V10 Envelope Index queried read-only",
+      "provider_address_match_count": 0,
+      "lifescibench_or_openai_sales_match_count_since_2026_08_22": 0
+    },
+    "lanes_rechecked": ["E3", "E6", "E8", "E10", "E12", "E13", "E14"],
+    "provider_access_granted": false,
+    "newly_runnable_exact_suites": [],
+    "result": "All seven lanes remain BLOCKED_EXTERNAL with score null.",
+    "claim_boundary": "This fourth continuation recheck verified no provider-authored reply, access grant, or new exact-suite surface. Point-in-time non-response is not evidence that access will never be granted."
+  },
+  "fifth_continuation_window_recheck": {
+    "checked_at": "2026-08-30T00:00:37Z",
+    "verification_mode": "Read-only authenticated Gmail search plus GitHub and Hugging Face provider-thread APIs using the documented official routes.",
+    "email": {
+      "query": "in:inbox after:2026/08/29 {from:founders@emulated.so from:jerry@halluminate.ai from:research@afterquery.com from:hello@openreward.ai from:math_evals@epoch.ai}",
+      "provider_address_match_count": 0,
+      "lifescibench_keyword_matches": 3,
+      "lifescibench_provider_matches": 0,
+      "lifescibench_match_interpretation": "All three keyword matches were self-authored Tinker RL Lab transcript messages, not provider replies or access grants."
+    },
+    "public_route_counts": {
+      "halluminate_webbench_issue_2": {"comment_count": 2, "provider_reply_count": 0},
+      "agentharm_hugging_face_discussion_9": {"event_count": 2, "provider_reply_count": 0},
+      "appbench_hugging_face_discussion_2": {"event_count": 2, "provider_reply_count": 0},
+      "appbench_docs_issue_1": {"comment_count": 0, "provider_reply_count": 0},
+      "wordle_issue_3": {"comment_count": 0, "provider_reply_count": 0}
+    },
+    "lanes_rechecked": ["E3", "E6", "E8", "E10", "E12", "E13", "E14"],
+    "provider_access_granted": false,
+    "newly_runnable_exact_suites": [],
+    "result": "All seven lanes remain BLOCKED_EXTERNAL with score null.",
+    "claim_boundary": "This fifth continuation recheck found no provider-authored reply or access grant. Point-in-time non-response is not evidence that access will never be granted."
+  },
+  "sixth_continuation_window_recheck": {
+    "checked_from_utc": "2026-08-30T02:12:09Z",
+    "checked_to_utc": "2026-08-30T02:12:20Z",
+    "verification_mode": "Read-only authenticated Gmail search plus GitHub and Hugging Face provider-thread and dataset-tree APIs using the documented official routes.",
+    "email": {
+      "query": "in:inbox after:2026/08/29 {from:founders@emulated.so from:jerry@halluminate.ai from:research@afterquery.com from:hello@openreward.ai from:math_evals@epoch.ai}",
+      "provider_address_match_count": 0,
+      "lifescibench_keyword_matches": 3,
+      "lifescibench_provider_matches": 0,
+      "lifescibench_match_interpretation": "All three keyword matches were self-authored transcript messages, not provider replies or access grants."
+    },
+    "public_route_counts": {
+      "halluminate_webbench_issue_2": {"comment_count": 2, "provider_reply_count": 0},
+      "agentharm_hugging_face_discussion_9": {"event_count": 2, "provider_reply_count": 0, "test_private_file_count": 0},
+      "appbench_hugging_face_discussion_2": {"event_count": 2, "provider_reply_count": 0, "current_dataset_file_count": 2},
+      "appbench_docs_issue_1": {"comment_count": 0, "provider_reply_count": 0},
+      "wordle_issue_3": {"comment_count": 0, "provider_reply_count": 0}
+    },
+    "lanes_rechecked": ["E3", "E6", "E8", "E10", "E12", "E13", "E14"],
+    "provider_access_granted": false,
+    "newly_runnable_exact_suites": [],
+    "result": "All seven lanes remain BLOCKED_EXTERNAL with score null.",
+    "claim_boundary": "This sixth continuation recheck found no provider-authored reply, access grant, or newly runnable exact suite. Point-in-time non-response is not evidence that access will never be granted."
+  },
+  "seventh_continuation_window_recheck": {
+    "checked_at_utc": "2026-08-30T02:38:03Z",
+    "verification_mode": "Read-only authenticated Gmail search plus GitHub and Hugging Face provider-thread and dataset-tree APIs using the documented official routes.",
+    "email": {
+      "query": "in:inbox after:2026/08/29 {from:founders@emulated.so from:jerry@halluminate.ai from:research@afterquery.com from:hello@openreward.ai from:math_evals@epoch.ai}",
+      "provider_address_match_count": 0,
+      "lifescibench_keyword_matches": 3,
+      "lifescibench_provider_matches": 0,
+      "lifescibench_match_interpretation": "All three keyword matches were self-authored transcript messages, not provider replies or access grants."
+    },
+    "public_route_counts": {
+      "halluminate_webbench_issue_2": {"comment_count": 2, "provider_reply_count": 0},
+      "agentharm_hugging_face_discussion_9": {"event_count": 2, "provider_reply_count": 0, "test_private_file_count": 0},
+      "appbench_hugging_face_discussion_2": {"event_count": 2, "provider_reply_count": 0, "current_dataset_file_count": 2},
+      "appbench_docs_issue_1": {"comment_count": 0, "provider_reply_count": 0},
+      "wordle_issue_3": {"comment_count": 0, "provider_reply_count": 0}
+    },
+    "lanes_rechecked": ["E3", "E6", "E8", "E10", "E12", "E13", "E14"],
+    "provider_access_granted": false,
+    "newly_runnable_exact_suites": [],
+    "result": "All seven lanes remain BLOCKED_EXTERNAL with score null.",
+    "claim_boundary": "This seventh continuation recheck found no provider-authored reply, access grant, private test payload, or newly runnable exact suite. Point-in-time non-response is not evidence that access will never be granted."
+  },
+  "eighth_continuation_window_recheck": {
+    "checked_at_utc": "2026-08-30T05:31:16Z",
+    "verification_mode": "Read-only authenticated Gmail search plus GitHub and Hugging Face provider-thread and dataset-tree APIs using the documented official routes.",
+    "email": {
+      "query": "in:inbox after:2026/08/28 {from:founders@emulated.so from:jerry@halluminate.ai from:research@afterquery.com from:hello@openreward.ai from:math_evals@epoch.ai}",
+      "provider_address_match_count": 0,
+      "suite_keyword_match_count": 4,
+      "provider_suite_match_count": 0,
+      "suite_match_interpretation": "The suite-name matches were self-authored transcript messages or unrelated mail, not provider replies or access grants."
+    },
+    "public_route_counts": {
+      "halluminate_webbench_issue_2": {"comment_count": 2, "provider_reply_count": 0},
+      "agentharm_hugging_face_discussion_9": {"event_count": 2, "provider_reply_count": 0, "test_private_file_count": 0},
+      "appbench_hugging_face_discussion_2": {"event_count": 2, "provider_reply_count": 0, "current_dataset_file_count": 2},
+      "appbench_docs_issue_1": {"comment_count": 0, "provider_reply_count": 0},
+      "wordle_issue_3": {"comment_count": 0, "provider_reply_count": 0}
+    },
+    "lanes_rechecked": ["E3", "E6", "E8", "E10", "E12", "E13", "E14"],
+    "provider_access_granted": false,
+    "newly_runnable_exact_suites": [],
+    "result": "All seven lanes remain BLOCKED_EXTERNAL with score null.",
+    "claim_boundary": "This eighth continuation recheck found no provider-authored reply, access grant, private test payload, or newly runnable exact suite. Point-in-time non-response is not evidence that access will never be granted."
+  },
+  "ninth_continuation_window_recheck": {
+    "checked_at_utc": "2026-08-30T07:55:47Z",
+    "verification_mode": "Read-only authenticated Gmail search, GitHub and Hugging Face provider-thread APIs, and Modal app-state inspection using the documented official routes.",
+    "email": {
+      "query": "newer_than:3d excluding self-authored messages for SDAB, WebBench, LifeSciBench, AgentHarm, AppBench, OpenReward, and FrontierMath provider terms",
+      "provider_reply_count": 0,
+      "access_grant_count": 0
+    },
+    "public_route_counts": {
+      "halluminate_webbench_issue_2": {"comment_count": 2, "provider_reply_count": 0},
+      "agentharm_hugging_face_discussion_9": {"event_count": 2, "provider_reply_count": 0},
+      "appbench_hugging_face_discussion_2": {"event_count": 2, "provider_reply_count": 0},
+      "appbench_docs_issue_1": {"comment_count": 0, "provider_reply_count": 0},
+      "wordle_issue_3": {"comment_count": 0, "provider_reply_count": 0}
+    },
+    "live_worker_state": {
+      "modal_e9_app": "pavlov-e9-mle-bench-streaming",
+      "state": "deployed",
+      "active_tasks": 0,
+      "duplicate_launch_performed": false
+    },
+    "lanes_rechecked": ["E3", "E6", "E8", "E10", "E12", "E13", "E14"],
+    "provider_access_granted": false,
+    "newly_runnable_exact_suites": [],
+    "result": "All seven provider-dependent lanes remain BLOCKED_EXTERNAL with score null; no worker was launched.",
+    "claim_boundary": "This ninth continuation recheck found no provider-authored reply, access grant, private test payload, or newly runnable exact suite. Point-in-time non-response is not evidence that access will never be granted."
+  },
+  "tenth_continuation_window_recheck": {
+    "checked_at_utc": "2026-08-30T08:07:41Z",
+    "verification_mode": "Read-only authenticated Gmail search, GitHub and Hugging Face provider-thread APIs, and Modal app-state inspection using the documented official routes.",
+    "email": {
+      "query": "in:inbox newer_than:3d for the five named provider sender addresses",
+      "provider_reply_count": 0,
+      "access_grant_count": 0
+    },
+    "public_route_counts": {
+      "halluminate_webbench_issue_2": {"comment_count": 2, "provider_reply_count": 0},
+      "agentharm_hugging_face_discussion_9": {"event_count": 2, "provider_reply_count": 0},
+      "appbench_hugging_face_discussion_2": {"event_count": 2, "provider_reply_count": 0},
+      "appbench_docs_issue_1": {"comment_count": 0, "provider_reply_count": 0},
+      "wordle_issue_3": {"comment_count": 0, "provider_reply_count": 0}
+    },
+    "live_worker_state": {
+      "modal_e9_app": "pavlov-e9-mle-bench-streaming",
+      "state": "deployed",
+      "active_tasks": 0,
+      "duplicate_launch_performed": false
+    },
+    "provider_access_granted": false,
+    "newly_runnable_exact_suites": [],
+    "result": "No external or worker-state change since the ninth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+    "claim_boundary": "This tenth continuation recheck found no provider-authored reply, access grant, private test payload, or newly runnable exact suite. Point-in-time non-response is not evidence that access will never be granted."
+  },
+    "eleventh_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T16:05:23Z",
+        "verification_mode": "Read-only authenticated Gmail search, GitHub and Hugging Face provider-thread APIs, canonical receipt audit, and Modal app-state inspection using the documented official routes.",
+        "email": {
+            "query": "in:inbox newer_than:3d for the five named provider sender addresses",
+            "provider_reply_count": 0,
+            "access_grant_count": 0
+        },
+        "public_route_counts": {
+            "halluminate_webbench_issue_2": {
+                "comment_count": 2,
+                "provider_reply_count": 0
+            },
+            "agentharm_hugging_face_discussion_9": {
+                "event_count": 2,
+                "provider_reply_count": 0
+            },
+            "appbench_hugging_face_discussion_2": {
+                "event_count": 2,
+                "provider_reply_count": 0
+            },
+            "appbench_docs_issue_1": {
+                "comment_count": 0,
+                "provider_reply_count": 0
+            },
+            "wordle_issue_3": {
+                "comment_count": 0,
+                "provider_reply_count": 0
+            }
+        },
+        "live_worker_state": {
+            "modal_e9_app": "pavlov-e9-mle-bench-streaming",
+            "state": "deployed",
+            "active_tasks": 0,
+            "duplicate_launch_performed": false
+        },
+        "canonical_score_boundary": {
+            "exact_scored_lanes": [
+                "E1",
+                "E11"
+            ],
+            "e9_score": null,
+            "all_unfinished_lane_scores_null": true
+        },
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the prior recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "This eleventh continuation recheck found no provider-authored reply, access grant, private test payload, or newly runnable exact suite. Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "twelfth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T16:16:53Z",
+        "verification_mode": "Read-only authenticated Gmail search, GitHub and Hugging Face provider-thread APIs, canonical receipt audit, and Modal app-state inspection using the documented official routes.",
+        "email": {
+            "query": "in:inbox newer_than:3d for the five named provider sender addresses",
+            "provider_reply_count": 0,
+            "access_grant_count": 0
+        },
+        "public_route_counts": {
+            "halluminate_webbench_issue_2": {
+                "comment_count": 2,
+                "provider_reply_count": 0
+            },
+            "agentharm_hugging_face_discussion_9": {
+                "event_count": 2,
+                "provider_reply_count": 0
+            },
+            "appbench_hugging_face_discussion_2": {
+                "event_count": 2,
+                "provider_reply_count": 0
+            },
+            "appbench_docs_issue_1": {
+                "comment_count": 0,
+                "provider_reply_count": 0
+            },
+            "wordle_issue_3": {
+                "comment_count": 0,
+                "provider_reply_count": 0
+            }
+        },
+        "live_worker_state": {
+            "modal_e9_app": "pavlov-e9-mle-bench-streaming",
+            "state": "deployed",
+            "active_tasks": 0,
+            "duplicate_launch_performed": false
+        },
+        "canonical_score_boundary": {
+            "exact_scored_lanes": [
+                "E1",
+                "E11"
+            ],
+            "e9_score": null,
+            "all_unfinished_lane_scores_null": true
+        },
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the eleventh recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "This twelfth continuation recheck found no provider-authored reply, access grant, private test payload, or newly runnable exact suite. Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "thirteenth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T16:28:53Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "live_worker_state": {
+            "modal_e9_app": "pavlov-e9-mle-bench-streaming",
+            "state": "deployed",
+            "active_tasks": 0,
+            "duplicate_launch_performed": false
+        },
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the twelfth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "fourteenth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T16:40:23Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the thirteenth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "fifteenth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T16:51:23Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the fourteenth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "sixteenth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T17:02:53Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the fifteenth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "seventeenth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T17:13:53Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the sixteenth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "eighteenth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T17:24:53Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the seventeenth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "nineteenth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T17:36:23Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the eighteenth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "twentieth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T17:47:23Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the nineteenth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "twenty_first_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T17:58:23Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the twentieth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "twenty_second_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T18:09:23Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the twenty-first recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "twenty_third_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T18:20:23Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the twenty-second recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "twenty_fourth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T18:31:24Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the twenty-third recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "twenty_fifth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T18:42:23Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the twenty-fourth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "twenty_sixth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T18:53:23Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the twenty-fifth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "twenty_seventh_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T19:04:23Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the twenty-sixth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "twenty_eighth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T19:15:24Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the twenty-seventh recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "twenty_ninth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T19:26:24Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the twenty-eighth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "thirtieth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T19:37:24Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the twenty-ninth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "thirty_first_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T19:48:24Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the thirtieth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "thirty_second_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T19:59:24Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the thirty-first recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "thirty_third_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T20:10:54Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the thirty-second recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "thirty_fourth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T20:21:54Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the thirty-third recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "thirty_fifth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T20:32:54Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the thirty-fourth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "thirty_sixth_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T20:43:54Z",
+        "verification_mode": "Read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "result": "No external, score, or worker-state change since the thirty-fifth recheck; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted."
+    },
+    "thirty_seventh_continuation_window_recheck": {
+        "checked_at_utc": "2026-08-30T20:54:54Z",
+        "verification_mode": "Final read-only authenticated Gmail, GitHub, Hugging Face, canonical receipt, and Modal state checks for the requested continuation window.",
+        "email_provider_reply_count": 0,
+        "public_provider_reply_count": 0,
+        "modal_e9_active_tasks": 0,
+        "exact_scored_lanes": [
+            "E1",
+            "E11"
+        ],
+        "e9_score": null,
+        "provider_access_granted": false,
+        "newly_runnable_exact_suites": [],
+        "launch_or_spend_performed": false,
+        "monitoring_window_complete": true,
+        "result": "The requested continuation window ended with no external, score, or worker-state change; all provider-dependent lanes remain BLOCKED_EXTERNAL with score null.",
+        "claim_boundary": "Point-in-time non-response is not evidence that access will never be granted, and externally blocked lanes are not complete."
+    },
+    "official_alternative_route_audit": {
+    "checked_at_utc": "2026-08-30T15:38:09Z",
+    "receipt": "outputs/E2_E14_ALTERNATIVE_ROUTE_AUDIT_2026-08-30.json",
+    "provider_dependent_lanes_rechecked": ["E2", "E3", "E4", "E5", "E6", "E7", "E8", "E10", "E12", "E13", "E14"],
+    "newly_discovered_runnable_exact_routes": [],
+    "provider_access_granted": false,
+    "result": "No provider granted a new exact suite, controlling licence, hosted native evaluator, trust root, or signed result. Local readiness advanced without score or spend: E4 public artifacts are restored and fully hash-verified; E12 now has provider-signed result intake; E13 now has canonical request and provider-signed result intake. E4's grader lower bound and E5's same-model Modal scenarios still exceed the remaining cap.",
+    "claim_boundary": "Public datasets, leaderboard descriptions, contributor forms, product access, environment cards, and separate benchmark products are not provider grants or exact native result evidence."
+  },
+  "claim_boundary": "Provider followups and an active OpenReward profile are not access grants to a runnable immutable held-out suite or benchmark results. All blocked suite scores remain null."
+}

@@ -1,0 +1,105 @@
+{
+ "allocations": [
+  {
+   "cpu": 4,
+   "function_timeout_seconds": 3540,
+   "gpu": "H200",
+   "gpu_count": 1,
+   "id": "public0921-e1-actor12",
+   "image_builds": 0,
+   "image_id": "im-zlxeznMWhqWsbSBR3KkFWT",
+   "max_containers": 1,
+   "max_requests": 18,
+   "max_wall_seconds": 3600,
+   "memory_limit_mib": 131072,
+   "memory_mib": 131072,
+   "provider": "modal",
+   "reserved_usd": 8,
+   "retry_count": 0,
+   "scope": "E1 wave10 v6 recovery only; 16 sealed task generations (gson x9, terraform x5, immutable-js x2) plus 2 smokes; H200 BF16; one container; 3600s maximum; retries=0",
+   "smokes": 2,
+   "status": "DRAFT_NOT_RESERVED",
+   "task_requests": 16
+  },
+  {
+   "cpu": 4,
+   "gpu_count": 0,
+   "id": "public0921-e1-runtime12",
+   "image_builds": 0,
+   "image_id": "im-pAVtHHKH6EXHe7tlbHI7kb",
+   "max_wall_seconds": 10800,
+   "memory_limit_mib": 16384,
+   "memory_mib": 16384,
+   "native_outer_wall_seconds": 7500,
+   "native_workers": 4,
+   "per_task_timeout_seconds": 1800,
+   "provider": "modal",
+   "reserved_usd": 8,
+   "retry_count": 0,
+   "scope": "E1 wave10 v6 recovery only; 16 native evaluations; 4 CPU, 16 GiB; one sandbox; 10800s maximum; 4 native workers; 1800s per task; 7500s outer native wall",
+   "status": "DRAFT_NOT_RESERVED"
+  }
+ ],
+ "authorization_cap_usd": null,
+ "authorization_ref": {
+  "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/PES_Phase2_Review_2026-09-12/finish/authorization_unlimited_v1.json",
+  "sha256": "a58bcbd4f3ebe8ebf85ba8bedf9b3c5d939becf380b714661bfdf42e16e330ad"
+ },
+ "budget_mode": "unlimited",
+ "created_at_utc": "2026-09-21T00:35:00Z",
+ "created_epoch": 1789948500,
+ "dispatch_policy": "Lead-only dispatch after the README preflight checklist passes. This receipt reserves funds under the unlimited-mode authorization chained above and dispatches nothing. No automatic retry, resume, or replay; UNKNOWN native outcomes stay UNKNOWN.",
+ "draft_notice": "DRAFT hold for lead seal ONLY. No dispatch, no spend. Sealing requires: fresh authorization receipt, live actor endpoint binding, W&B online run, and driver --execute preflight green.",
+ "drafted_by": "agent unblock session (no seal authority)",
+ "expires_at_utc": "TO_BE_ANCHORED_AT_SEAL",
+ "expires_epoch": "TO_BE_ANCHORED_AT_SEAL",
+ "no_cloud_activity_at_reservation": {
+  "no_admission_calls": true,
+  "no_image_builds": true,
+  "no_model_calls": true,
+  "no_paid_launches": true,
+  "no_price_or_image_queries": true
+ },
+ "no_replay": true,
+ "requested_usd": 16,
+ "reservation_ids": [
+  "public0921-e1-actor12",
+  "public0921-e1-runtime12"
+ ],
+ "root_directive_ref": {
+  "directive_date": "2026-09-19",
+  "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/PES_Phase2_Review_2026-09-12/finish/ROOT_DIRECTIVE_FINISH_ALL_2026-09-19.json",
+  "sha256": "d8712f452a15e163489cee282ad5c01762a3befec40b5702eb7e7589a389c3ae",
+  "user_directive": "finish all expts"
+ },
+ "schema": "public-portfolio-budget-v3",
+ "sealed_selection_ref": {
+  "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/PES_Phase2_Review_2026-09-12/finish/e1_recovery_v6/resource_request_v6.json",
+  "sha256": "7adc6e2616f61bc7ef4d08533422a5df83ed1253f2fea507ce831890b2bb972a"
+ },
+ "selection": {
+  "count": 16,
+  "task_ids": [
+   "google__gson-1014",
+   "google__gson-1093",
+   "google__gson-1100",
+   "google__gson-2024",
+   "google__gson-2061",
+   "google__gson-2134",
+   "google__gson-2158",
+   "google__gson-2311",
+   "google__gson-2479",
+   "hashicorp__terraform-34580",
+   "hashicorp__terraform-34814",
+   "hashicorp__terraform-34900",
+   "hashicorp__terraform-35543",
+   "hashicorp__terraform-35611",
+   "immutable-js__immutable-js-2005",
+   "immutable-js__immutable-js-2006"
+  ]
+ },
+ "status": "DRAFT_NOT_RESERVED",
+ "supersedes": "reservation_wave10.json (expired 2026-09-20T14:06:55Z)",
+ "supersedes_note": "Fresh 2026-09-19 reservation replacing the expired public0912-e1-wave10-recovery-v1 holds referenced by the sealed v6 request; technical chain and sealed selection unchanged.",
+ "unit": "USD"
+}

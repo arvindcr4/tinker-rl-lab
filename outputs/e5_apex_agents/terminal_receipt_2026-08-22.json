@@ -1,0 +1,34 @@
+{
+  "schema_version": "pavlov-lane-terminal-receipt-v1",
+  "recorded_at": "2026-08-22T07:30:07Z",
+  "lane": "E5",
+  "suite_id": "apex_agents_eval",
+  "status": "BLOCKED",
+  "score": null,
+  "is_model_score": false,
+  "paid_calls": 0,
+  "what_finished": {
+    "isolated_runtime": ".codex/e5/venv with tinker==0.24.1 and wandb==0.21.0",
+    "preflight": "dataset, schema, split, native verifier, isolated runtime, model identity, budget, Tinker access, and grader credential gates pass; W&B is pending the required online runtime handshake",
+    "focused_tests": "43 passed",
+    "real_gold_native_grader_validation": "12 real APEX tasks across 3 domains; all 36 positive/swap/sentinel controls matched",
+    "synthetic_harness_validation": "native Archipelago grading runner completed with all expected verifier values"
+  },
+  "evidence": {
+    "preflight_receipt": "outputs/e5_apex_agents/preflight_receipt_2026-08-22.json",
+    "preflight_receipt_sha256": "a484b278d34c3e70cb18f291076eecc9ae55242c13359a2329f56d599d2df432",
+    "gold_validation_receipt": "outputs/e5_apex_agents/harness_validation/gold_out/gold_response_validation_receipt.json",
+    "gold_validation_receipt_sha256": "87896b7901f5f313c8e4ee076d3a700d771cfa0cf9cdc3170926988c6439883d",
+    "harness_validation_receipt": "outputs/e5_apex_agents/harness_validation/out/harness_validation_receipt.json",
+    "harness_validation_receipt_sha256": "2c394f7681131502467f25785a74e7f649227e25c45b614a3a5a236a34e07320",
+    "official_runner": "https://github.com/Mercor-Intelligence/archipelago/tree/1c3dcd4694b313020cd626699c9c7cc1c0a2fc58/examples/hugging_face_task"
+  },
+  "blockers": [
+    "the local launch adapter is explicitly disabled in eval_apex_agents.py, so the exact Tinker OpenAI-compatible runtime cannot yet be handed to Archipelago",
+    "the online W&B handshake must complete before the first Tinker call",
+    "the current E5 cap supports only a pre-registered one-task slice (projected maximum $0.25536); the measured 480-task pass@1 Tinker ceiling is about $122.57 before judge spend"
+  ],
+  "smallest_local_action": "Implement and test the exact Tinker-to-Archipelago launch adapter, including a durable W&B-before-Tinker handshake and pinned Hugging Face downloads.",
+  "smallest_budget_action": "Authorize a separately pre-registered one-task slice at the existing $0.50 E5 cap, or explicitly authorize the much larger full-suite and judge budget; never report a slice as a 480-task suite score.",
+  "claim_boundary": "Both validation receipts are harness evidence only. No model rollout or native APEX rubric score was produced."
+}

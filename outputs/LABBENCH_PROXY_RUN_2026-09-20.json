@@ -1,0 +1,81 @@
+{
+ "proxy": "LAB-Bench-LitQA2-subset",
+ "model": "qwen3:8b",
+ "n": 10,
+ "subset": "train random seed 20260920",
+ "accuracy": 0.1,
+ "correct": 1,
+ "note": "Own-benchmark proxy number only; never an E8/LifeSciBench score.",
+ "results": [
+  {
+   "i": 0,
+   "id": "bace5737-ba26-422a-8706-0fb1e92b689f",
+   "pred": "A",
+   "gold": "E",
+   "correct": false
+  },
+  {
+   "i": 1,
+   "id": "9088251a-99fe-4b91-b6a9-375154ec4f58",
+   "pred": "A",
+   "gold": "B",
+   "correct": false
+  },
+  {
+   "i": 2,
+   "id": "4a6705b5-85e5-44c1-8444-65be30192802",
+   "pred": "A",
+   "gold": "D",
+   "correct": false
+  },
+  {
+   "i": 3,
+   "id": "0e53a08c-4252-4a84-962b-5b396f9740aa",
+   "pred": "D",
+   "gold": "A",
+   "correct": false
+  },
+  {
+   "i": 4,
+   "id": "eda34fde-798e-43a1-a9d3-a804d3d8ee4e",
+   "pred": "A",
+   "gold": "A",
+   "correct": true
+  },
+  {
+   "i": 5,
+   "id": "230dec20-cd02-4613-a7b1-e28058ed46fe",
+   "pred": "A",
+   "gold": "C",
+   "correct": false
+  },
+  {
+   "i": 6,
+   "id": "1f1b07d7-39ce-4665-9b70-4ab77e3c87aa",
+   "pred": "A",
+   "gold": "D",
+   "correct": false
+  },
+  {
+   "i": 7,
+   "id": "0b1d5537-db47-420c-984b-9b56d38e6d98",
+   "pred": "A",
+   "gold": "B",
+   "correct": false
+  },
+  {
+   "i": 8,
+   "id": "85c67ef3-322c-42b4-b745-c05e07e7b8ac",
+   "pred": "A",
+   "gold": "B",
+   "correct": false
+  },
+  {
+   "i": 9,
+   "id": "ce6dd5f7-0706-41dd-a383-9b0d22ef00a1",
+   "pred": "A",
+   "gold": "B",
+   "correct": false
+  }
+ ]
+}

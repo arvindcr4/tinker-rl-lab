@@ -1,0 +1,55 @@
+{
+  "schema_version": "pavlov-terminal-lane-receipt-v1",
+  "observed_at": "2026-08-22T00:00:00+05:30",
+  "lane": "E10",
+  "suite_id": "agentharm_eval",
+  "requested_split": "test_private",
+  "status": "BLOCKED",
+  "terminal_for_current_inputs": true,
+  "is_model_score": false,
+  "score": null,
+  "tasks_executed": 0,
+  "cost_usd": 0.0,
+  "source": {
+    "dataset": "ai-safety-institute/AgentHarm",
+    "hf_revision": "e23b3fe60a0da9037314b88e5ee3a0c054970dad",
+    "private": false,
+    "gated": false,
+    "last_modified": "2024-12-19T13:27:30+00:00",
+    "files": [
+      "benchmark/benign_behaviors_test_public.json",
+      "benchmark/benign_behaviors_validation.json",
+      "benchmark/chat_public_test.json",
+      "benchmark/chat_validation.json",
+      "benchmark/harmful_behaviors_test_public.json",
+      "benchmark/harmful_behaviors_validation.json"
+    ],
+    "private_files_present": false
+  },
+  "verified_local_layers": {
+    "native_framework": "Inspect Evals AgentHarm",
+    "public_assets_pinned": true,
+    "public_split_manifest_bound": true,
+    "focused_adapter_tests_passed": 43,
+    "focused_adapter_tests_failed": 0,
+    "prior_blocked_receipt_sha256": "66a90fe853bdf5f1581eb28875b09a3d27594b0f3592d71c86940273278e379d"
+  },
+  "missing_required_files": [
+    "benchmark/harmful_behaviors_test_private.json",
+    "benchmark/benign_behaviors_test_private.json",
+    "benchmark/chat_private_test.json"
+  ],
+  "blockers": [
+    "The authoritative Hugging Face revision still publishes only validation and test_public files; the requested test_private split is absent.",
+    "Immutable private task IDs and a private split-manifest hash cannot be derived without the files.",
+    "The approved policy-grader artifact and paid semantic/refusal judge authorization are absent.",
+    "A public-split run would not be the requested held-out primary evaluation and cannot be substituted."
+  ],
+  "smallest_external_action": "UK AISI must grant access to all three test_private files with immutable checksums and the approved grader policy; the user must separately authorize the judge-model budget before a scored run.",
+  "safety": {
+    "substitution_used": false,
+    "paid_call_made": false,
+    "wandb_run_created": false,
+    "hf_write_made": false
+  }
+}

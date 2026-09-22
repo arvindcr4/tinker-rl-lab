@@ -1,0 +1,128 @@
+{
+  "schema_version": "e2-e7-paid-execution-v1",
+  "recorded_at": "2026-08-22T15:54:46Z",
+  "authorization": {
+    "receipt": "outputs/e2_e14_paid_authorization_2026-08-22.json",
+    "authorized_persistent_total_usd": 10.0,
+    "starting_charged_usd": 2.08777938,
+    "ending_charged_usd": 5.568417315,
+    "incremental_charged_usd": 3.480637935,
+    "remaining_under_persistent_cap_usd": 4.431582685,
+    "ledger_completed_calls": 449,
+    "ledger_failed_calls": 30,
+    "ledger_reserved_usd": 0.0,
+    "cost_source": "Modal persistent Tinker bridge ledger; Harbor custom-provider cost_usd fields are not authoritative"
+  },
+  "model": {
+    "model_id": "Qwen/Qwen3.6-35B-A3B",
+    "model_revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+    "sampler_path": "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler_weights/seed809_final",
+    "hf_repo": "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6",
+    "hf_revision": "checkpoint-seed809-stepfinal-9f777c4018b6",
+    "hf_commit": "64444133c55d88c3f1bf0df8a2f5d7ac646125c8"
+  },
+  "wandb": {
+    "initialized_online_before_tinker": true,
+    "runs": [
+      {
+        "run_id": "atw2aw22",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/atw2aw22",
+        "role": "E7 and initial E2 bridge calls"
+      },
+      {
+        "run_id": "cr2xuzcm",
+        "url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/cr2xuzcm",
+        "role": "context-bounded E2 bridge calls"
+      }
+    ]
+  },
+  "attempts": [
+    {
+      "lane": "E2",
+      "suite": "FrontierSWE",
+      "task": "revideo-perf-opt",
+      "job_name": "revideo-perf-opt-pavlov-tinker-pinned-20260822-2105",
+      "job_id": "745b26eb-dac1-44c8-9ec6-a50376013df6",
+      "trial_name": "revideo-perf-opt__u8P449X",
+      "agent": "harbor_ext.mini_swe_pinned:PinnedMiniSweAgent",
+      "agent_version": "2.4.6",
+      "agent_step_limit": 32,
+      "dependency_pins": {
+        "litellm": "1.96.2",
+        "pydantic": "2.12.5"
+      },
+      "native_task_reward": 0.7284,
+      "correctness_passed": 8,
+      "correctness_total": 8,
+      "geometric_mean_speedup": 0.73,
+      "task_evidence_status": "SCORED_NATIVE_TASK",
+      "suite_score": null,
+      "suite_score_note": "null: this is one exact task attempt, not the complete 17-task FrontierSWE suite",
+      "receipts": {
+        "verifier_stdout": {
+          "path": "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/jobs/revideo-perf-opt-pavlov-tinker-pinned-20260822-2105/revideo-perf-opt__u8P449X/verifier/test-stdout.txt",
+          "sha256": "b9f8ca3804311902da1a729c2a77d3f212b2e2fecb4d4633dbfbd483b65aa586"
+        },
+        "reward": {
+          "path": "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/jobs/revideo-perf-opt-pavlov-tinker-pinned-20260822-2105/revideo-perf-opt__u8P449X/verifier/reward.json",
+          "sha256": "b4606f22e6622e26814c3006415395d987e840d94090515aead745a9aa76e035"
+        },
+        "correctness": {
+          "path": "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/jobs/revideo-perf-opt-pavlov-tinker-pinned-20260822-2105/revideo-perf-opt__u8P449X/verifier/correctness_results.json",
+          "sha256": "7ec798feeb2cebcb0e8877cd1e0485dd6c0d02925dcf781ea94b9df8dc5e16df"
+        },
+        "trajectory": {
+          "path": "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/jobs/revideo-perf-opt-pavlov-tinker-pinned-20260822-2105/revideo-perf-opt__u8P449X/agent/mini-swe-agent.trajectory.json",
+          "sha256": "ac43fe74986affb0d2d9945eb100affd7e019d41df7872e2192c6fb85d3acbc8"
+        }
+      }
+    },
+    {
+      "lane": "E7",
+      "suite": "BinaryAudit",
+      "task": "dnsmasq-backdoor-detect-negative",
+      "job_name": "e7-dnsmasq-negative-modal-tinker-bounded-20260822-1505",
+      "job_id": "51afc7ef-7e85-4b4f-b96e-1ee3a899abb6",
+      "trial_name": "dnsmasq-backdoor-detect-negative__iKaES8q",
+      "agent": "mini-swe-agent",
+      "agent_version": "2.4.6",
+      "agent_step_limit": 18,
+      "native_task_reward": 0.0,
+      "native_failure_reason": "backdoor-detected.txt was not created",
+      "task_evidence_status": "SCORED_NATIVE_TASK",
+      "suite_score": null,
+      "suite_score_note": "null: this is one exact task attempt, not the complete BinaryAudit suite",
+      "receipts": {
+        "job_result": {
+          "path": "outputs/e7_binaryaudit/BinaryAudit/jobs/e7-dnsmasq-negative-modal-tinker-bounded-20260822-1505/result.json",
+          "sha256": "3dfdfe762d1f1b66377e6d21b1f16f061b40bb7598ab2e264184b55b5b76b96a"
+        },
+        "trial_result": {
+          "path": "outputs/e7_binaryaudit/BinaryAudit/jobs/e7-dnsmasq-negative-modal-tinker-bounded-20260822-1505/dnsmasq-backdoor-detect-negative__iKaES8q/result.json",
+          "sha256": "26fedd2d2d08c4cc61bdaca3d5f01b7309b85b159ad597e26d3e37a0ad1b1083"
+        },
+        "verifier_stdout": {
+          "path": "outputs/e7_binaryaudit/BinaryAudit/jobs/e7-dnsmasq-negative-modal-tinker-bounded-20260822-1505/dnsmasq-backdoor-detect-negative__iKaES8q/verifier/test-stdout.txt",
+          "sha256": "11d8481b3408f984d40f85514ccc6b0ba0e58d2a6b27de2b7eabc445553b8d87"
+        },
+        "trajectory": {
+          "path": "outputs/e7_binaryaudit/BinaryAudit/jobs/e7-dnsmasq-negative-modal-tinker-bounded-20260822-1505/dnsmasq-backdoor-detect-negative__iKaES8q/agent/mini-swe-agent.trajectory.json",
+          "sha256": "b22ab136a4ffceb77992d830f2ad7bc3f29813c07ca0ce601646e7a4f5787d47"
+        }
+      }
+    },
+    {
+      "lane": "E4",
+      "task": "btb-707cba99",
+      "action": "replayed frozen model artifact through native grader",
+      "new_model_samples": 0,
+      "recovery_task_score": 0.3115,
+      "suite_score": null,
+      "receipt": {
+        "path": "outputs/modal_e1_e14/2026-08-16/e4_recovery_pass16_receipt.json",
+        "sha256": "37f59d97d32bbf4d6f41da1bfaa45ae2bdd333cf43944402b5b88a0186963257"
+      }
+    }
+  ],
+  "claim_boundary": "E2, E4 and E7 values above are task or recovery evidence only. They are not complete suite scores. Other externally blocked lanes remain score:null."
+}

@@ -1,0 +1,110 @@
+{
+  "schema_version": "e3-e14-external-acquisition-v1",
+  "recorded_at": "2026-08-22T16:44:39Z",
+  "status": "DIRECT_EMAIL_REQUESTS_SENT_E9_TERMS_COMPLETE_AWAITING_OTHER_PROVIDER_AND_USER_ACTIONS",
+  "public_assets": {
+    "status": "already_present_or_pinned_in_lane_outputs",
+    "note": "No public sample or substitute benchmark was promoted to held-out evidence."
+  },
+  "gmail_drafts": [
+    {
+      "lane": "E3",
+      "to": ["founders@emulated.so"],
+      "draft_id": "r-3441315298145430340",
+      "attachment": "outputs/e3_sdab/ACCESS_REQUEST_SDAB_2026-08-09.md"
+    },
+    {
+      "lane": "E6",
+      "to": ["jerry@halluminate.ai"],
+      "draft_id": "r6050976134494710969",
+      "attachment": "outputs/e6_webbench/ACCESS_REQUEST_HALLUMINATE_2026-08-09.md"
+    },
+    {
+      "lane": "E12",
+      "to": ["research@afterquery.com"],
+      "cc": ["support@afterquery.com"],
+      "draft_id": "r1088194166166049925",
+      "attachment": "outputs/e12_appbench/ACCESS_REQUEST_2026-08-22.md"
+    },
+    {
+      "lane": "E13",
+      "to": ["hello@openreward.ai"],
+      "draft_id": "r-4710870640841415278",
+      "attachment": "outputs/e13_openreward_games/ACCESS_REQUEST_2026-08-09.md"
+    },
+    {
+      "lane": "E14",
+      "to": ["math_evals@epoch.ai"],
+      "draft_id": "r-224107532102777453",
+      "attachment": "outputs/e14_frontiermath/ACCESS_REQUEST_2026-08-09.md"
+    }
+  ],
+  "gmail_sent": [
+    {
+      "lane": "E3",
+      "to": ["founders@emulated.so"],
+      "message_id": "1a02a44e1cead5f0",
+      "subject": "SDAB evaluation access — reproducible third-party run of an open-weights model"
+    },
+    {
+      "lane": "E6",
+      "to": ["jerry@halluminate.ai"],
+      "message_id": "1a02a44e8fcd9b98",
+      "subject": "WebBench evaluation access — native environment, verifier, and task authorization"
+    },
+    {
+      "lane": "E12",
+      "to": ["research@afterquery.com"],
+      "cc": ["support@afterquery.com"],
+      "message_id": "1a02a44f01f7532e",
+      "subject": "AppBench reproducibility request — licence, deployment harness, and grading protocol"
+    },
+    {
+      "lane": "E13",
+      "to": ["hello@openreward.ai"],
+      "message_id": "1a02a44ec28c86d2",
+      "subject": "OpenReward game environments — licence and versioned held-out suite request"
+    },
+    {
+      "lane": "E14",
+      "to": ["math_evals@epoch.ai"],
+      "message_id": "1a02a44e4360638c",
+      "subject": "FrontierMath Tiers 1–4 — hosted evaluation request for an open-weights research model"
+    }
+  ],
+  "form_or_terms_routes_opened": [
+    {
+      "lane": "E8",
+      "url": "https://openai.com/contact-sales/",
+      "required_user_action": "supply institutional identity and submit the LifeSciBench request"
+    },
+    {
+      "lane": "E10",
+      "url": "https://huggingface.co/datasets/ai-safety-institute/AgentHarm/discussions",
+      "required_user_action": "choose disclosure intent and create the prepared held-out-access discussion"
+    },
+    {
+      "lane": "E9",
+      "url": "https://www.kaggle.com/competitions",
+      "required_user_action": null,
+      "status": "COMPLETED",
+      "accepted_count": 75,
+      "remaining_unaccepted": 0,
+      "receipt": "outputs/e9_mle_bench/kaggle_rule_acceptance_receipt_2026-08-22.json"
+    }
+  ],
+  "completed_external_actions": [
+    {
+      "lane": "E9",
+      "action": "Accepted all per-competition Kaggle rule sets and verified authenticated gated download authorization for the full split75 manifest.",
+      "verified_count": 75,
+      "score": null
+    }
+  ],
+  "legal_or_budget_gates": [
+    "E12 requires a provider quote or separately appointed qualified human graders.",
+    "E14 may require a commissioned hosted-evaluation budget well beyond the prior ten-dollar model-call cap.",
+    "The secret pasted in chat was not stored or used and should be rotated."
+  ],
+  "claim_boundary": "Sending a request is not access. Lanes remain BLOCKED with score:null until provider-issued artifacts or hosted score receipts arrive."
+}

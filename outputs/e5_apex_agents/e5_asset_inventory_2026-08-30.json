@@ -1,0 +1,88 @@
+{
+  "schema_version": "e5-apex-agents-asset-inventory-v1",
+  "recorded_at": "2026-08-30T15:29:29Z",
+  "mode": "READ_ONLY_PINNED_ASSET_INVENTORY_NO_DOWNLOAD_NO_LAUNCH_NO_SPEND",
+  "suite_id": "apex_agents_eval",
+  "dataset": {
+    "repository": "mercor/apex-agents",
+    "revision": "92c86856cf1b11f9833a8a076b3a45a63afa3929",
+    "repository_file_count": 319,
+    "repository_bytes": 9042238301,
+    "repository_gib": 8.42124,
+    "metadata_receipt": "outputs/e5_apex_agents/evidence/hf_dataset_meta.json"
+  },
+  "local_control_bundle": {
+    "path": "outputs/e5_apex_agents/hf_dataset",
+    "bytes_including_cache_metadata": 1136232,
+    "task_and_rubric_bundle_present": true,
+    "world_descriptions_present": true,
+    "split_manifest_present": true,
+    "files": {
+      "tasks_and_rubrics.json": {
+        "bytes": 1080670,
+        "sha256": "94a85655bb983bb8bfff693182026f05f1df41ff17b2cd4589dd42a071531cb6"
+      },
+      "world_descriptions.json": {
+        "bytes": 45846,
+        "sha256": "3836f308d122b7204a463ce43d23ec63fb27460f36f6bd5ac32d724183a3fdd8"
+      },
+      "eval.yaml": {
+        "bytes": 522,
+        "sha256": "231993cb91ab18596fb6c24c9fbb33fba2975dcea605de5696cf4c4245ec8151"
+      },
+      "split_manifest_480.json": {
+        "path": "outputs/e5_apex_agents/split_manifest_480.json",
+        "sha256": "782a9e68451696353e1b85a154707dfeeee69d3cfd62490a47543189db3b2fda"
+      }
+    }
+  },
+  "missing_auxiliary_assets": {
+    "world_snapshots": {
+      "present": 0,
+      "expected": 33,
+      "bytes": 8902962427
+    },
+    "task_input_files": {
+      "present": 0,
+      "expected_files": 221,
+      "covered_tasks": 141,
+      "bytes": 123364975
+    },
+    "gold_deliverables": {
+      "present": 0,
+      "expected": 58,
+      "bytes": 13934637,
+      "required_by_current_native_runner": false
+    }
+  },
+  "runner_required_materialization": {
+    "asset_groups": [
+      "world snapshots",
+      "task input files"
+    ],
+    "bytes": 9026327402,
+    "gib": 8.4064,
+    "gold_deliverables_excluded": true,
+    "sanctioned_cache_path": ".codex/e5/dataset-cache"
+  },
+  "smallest_next_sequential_asset": {
+    "task_index": 11,
+    "task_id_prefix": "task_1fb",
+    "world_id_prefix": "world_5970",
+    "world_zip_bytes": 738039509,
+    "additional_task_input_files": 0
+  },
+  "storage_snapshot": {
+    "available_kib": 53655228,
+    "runner_required_materialization_fits": true,
+    "model_plus_assets_fit_local_host": false,
+    "note": "The 71.9 GB merged checkpoint plus runner-required assets does not fit the available local storage and this Apple Silicon host has no CUDA runtime."
+  },
+  "execution_boundary": {
+    "assets_materialized": false,
+    "materialization_unblocks_exact_run": false,
+    "reason": "The historical E5 Tinker prefix is terminal under its bridge/protocol boundary, and the evidence-backed merged-vLLM full-suite cost scenarios exceed the remaining campaign cap.",
+    "cost_receipt": "outputs/e5_apex_agents/e5_merged_vllm_cost_scenarios_2026-08-30.json"
+  },
+  "claim_boundary": "This inventory is not an asset download, launch authorization, native evaluation receipt, or benchmark score."
+}

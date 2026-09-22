@@ -1,0 +1,123 @@
+# Project Inventory Summary
+
+- root: `/Users/arvind/Developer/agentic_repos/tinker-rl-lab`
+- files seen: 20000
+- bytes seen: 2922141645
+- truncated: True
+
+## Categories
+- code: 1000 recorded
+- data_candidates: 25 recorded
+- docs: 500 recorded
+- environment_files: 26 recorded
+- images: 300 recorded
+- pdfs: 9 recorded
+- reports: 7 recorded
+- result_log_candidates: 500 recorded
+- simulator_candidates: 179 recorded
+
+## Top Directories
+- `.claude`: 1059
+- `output`: 47
+- `.codex-pptx`: 36
+- `autoresearch`: 20
+- `archive`: 14
+- `platform_local`: 7
+- `platform_modal`: 7
+- `platform_hf_spaces`: 5
+- `platform_colab`: 4
+- `research`: 4
+- `.serena`: 4
+- `.hyperresearch`: 3
+- `analysis`: 2
+- `checkpoints`: 2
+- `.gemini`: 1
+- `tools`: 1
+- `cache`: 1
+- `.codebase-memory`: 1
+- `tinkerrl.egg-info`: 1
+- `tests`: 1
+
+## Metric Clues
+- `upload_tinker_to_wandb.py`: r"\s*(\d+)/(\d+)\s*\|\s*loss=([\-\d.]+)\s*\|\s*reward=([\d.]+)\s*\|\s*acc=([\d.]+)%"
+- `upload_tinker_to_wandb.py`: REWARD_TRACE_RE = re.compile(r"Reward trace:\s*\[(.+)\]")
+- `upload_tinker_to_wandb.py`: reward_trace = None
+- `upload_tinker_to_wandb.py`: "loss": float(m.group(3)),
+- `upload_tinker_to_wandb.py`: "reward": float(m.group(4)),
+- `upload_tinker_to_wandb.py`: "accuracy": float(m.group(5)),
+- `upload_tinker_to_wandb.py`: m = REWARD_TRACE_RE.search(line)
+- `upload_tinker_to_wandb.py`: reward_trace = [float(x.strip()) for x in m.group(1).split(",")]
+- `upload_tinker_to_wandb.py`: return steps, run_id, config, reward_trace
+- `upload_tinker_to_wandb.py`: steps, run_id, config, reward_trace = parse_log(path)
+- `upload_tinker_to_wandb.py`: # TODO: Calculate and log ZVF (Zero-Variance Fraction) from reward_trace to measure gradient saturation
+- `upload_tinker_to_wandb.py`: if reward_trace:
+- `upload_tinker_to_wandb.py`: config["reward_trace"] = reward_trace
+- `upload_tinker_to_wandb.py`: "train/loss": s["loss"],
+- `upload_tinker_to_wandb.py`: "train/reward_mean": s["reward"],
+- `upload_tinker_to_wandb.py`: "train/accuracy": s["accuracy"],
+- `upload_tinker_to_wandb.py`: last10 = [s["reward"] for s in steps[-10:]]
+- `upload_tinker_to_wandb.py`: run.summary["final_accuracy"] = steps[-1]["accuracy"]
+- `upload_tinker_to_wandb.py`: run.summary["final_reward"] = steps[-1]["reward"]
+- `upload_tinker_to_wandb.py`: run.summary["peak_accuracy"] = max(s["accuracy"] for s in steps)
+- `upload_tinker_to_wandb.py`: run.summary["mean_last10_reward"] = sum(last10) / len(last10)
+- `upload_tinker_to_wandb.py`: # TODO: Evaluate and log held-out test set accuracy to prove true generalization
+- `upload_tinker_to_wandb.py`: print(f"  OK {name}: {len(steps)} steps, final_acc={steps[-1]['accuracy']:.1f}%")
+- `verify_cat10.py`: reward = - (x_next**2 + 0.1 * action**2)
+- `verify_cat10.py`: return list(self.state), reward, done
+- `verify_cat10.py`: msg = f"Discrepancy detected at step {t}: state_diff={max_diff:.5f}, reward_diff={abs(r1-r2):.5f}, done_match={d1==d2}"
+- `FINAL_HANDOFF.md`: | `REVIEWER_README.md` | `3553adadcc314a40de5c5a2496fddf15485e46ea844162b77358ebdca7317ffe` |
+- `LICENSE`: Work (including but not limited to damages for loss of goodwill,
+- `LICENSE`: other commercial damages or losses), even if such Contributor
+- `refactor.py`: # ── reward helpers""", """except ImportError:
+- `refactor.py`: # ── reward helpers""")
+- `refactor.py`: # 6. make_reward_fn replacement
+- `refactor.py`: old_make_reward = """def make_reward_fn(group_size: int, evaluation_mode: str = "static"):
+- `refactor.py`: \"\"\"Return a reward function compatible with TRL GRPOTrainer.\"\"\"
+- `refactor.py`: def reward_fn(completions: List[str], prompts=None, **kwargs) -> List[float]:
+- `refactor.py`: rewards = []
+- `refactor.py`: # Outcome Reward Model (ORM) based on Evaluation Mode
+- `refactor.py`: base_reward = _generative_score_response(prompt_text, comp_text, gold)
+- `refactor.py`: base_reward = _execution_score_response(comp_text, gold)
+- `refactor.py`: base_reward = _score_response(comp_text, gold)
+
+## Command Clues
+- `FINAL_HANDOFF.md`: SHA-256 `4d432d2214a7110980f3df623607d0856295ad9e8149d4652d70e689a0a33f29`
+- `FINAL_HANDOFF.md`: python3 scripts/integration_audit.py     # 7/7 pass
+- `FINAL_HANDOFF.md`: python3 reproducibility/check_qwen3_8b_claim.py  # PPO + GRPO both pass
+- `refactor.py`: shutil.copy2(config_path, os.path.join(final_dir, "training_config.yaml"))
+- `refactor.py`: shutil.copy2(csv_path, os.path.join(final_dir, "reward_log.csv"))
+- `refactor.py`: shutil.copy2(config_path, os.path.join(final_dir, "training_config.yaml"))
+- `refactor.py`: shutil.copy2(csv_path, os.path.join(final_dir, "reward_log.csv"))
+- `requirements.txt`: uvicorn>=0.32.0,<0.33.0
+- `execution-notes.md`: Python 3.11 CPU environment with `torch==2.4.0` and
+- `execution-notes.md`: 1/5 `MATERIAL_DIFFERENCE` (4 `NOT_TESTED`) — the central S1
+- `Dockerfile`: PYTHONUNBUFFERED=1 \
+- `Dockerfile`: PYTHONHASHSEED=42 \
+- `Dockerfile`: PIP_DISABLE_PIP_VERSION_CHECK=1 \
+- `Dockerfile`: PIP_NO_CACHE_DIR=1 \
+- `Dockerfile`: python3.12 python3.12-venv python3.12-dev \
+- `Dockerfile`: python -m ensurepip --upgrade
+- `Dockerfile`: pip install -r requirements.txt
+- `Dockerfile`: pip install -e atropos/ 2>/dev/null || true
+- `Makefile`: UV ?= uv
+- `Makefile`: PYTHON ?= $(UV) run --no-sync python
+- `pyproject.toml`: pythonpath = ["."]
+- `FRONTIER_INSIGHTS.md`: Sharp falsifiable claim: Estimator-Equivalence Principle.
+- `FRONTIER_INSIGHTS.md`: Sharp Research Questions:
+- `ARTIFACT.md`: python grpo_gsm8k_base.py \
+- `README.md`: python3 -m venv tinker-env
+- `README.md`: pip install tinker tinker-cookbook atropos
+- `README.md`: pip install -r requirements.txt
+- `README.md`: python -m tinker_cookbook.recipes.math_rl.train \
+- `README.md`: python -m tinker_cookbook.recipes.chat_sl.train \
+- `README.md`: python platform_tinker/atropos/launch_training.py --config platform_tinker/atropos/configs/default.yaml
+- `README.md`: python platform_tinker/atropos/tinker_atropos/environments/gsm8k_tinker.py serve \
+- `README.md`: uv run --extra gpu --extra tinker -m skyrl.tinker.api \
+- `README.md`: python -m tinker_cookbook.recipes.math_rl.train base_url=$TINKER_BASE_URL ...
+- `README.md`: ./vast_run.sh --model Qwen/Qwen2.5-1.5B-Instruct
+- `README.md`: python -m platform_local.unified --framework skyrl --model Qwen/Qwen2.5-1.5B-Instruct
+- `README.md`: python -m platform_local.unified --framework trl --model Qwen/Qwen2.5-1.5B-Instruct --algorithm grpo
+- `README.md`: python -m platform_local.unified --framework verl --model Qwen/Qwen2.5-1.5B-Instruct --algorithm ppo
+- `README.md`: python -m platform_local.unified --framework openrlhf --model Qwen/Qwen2.5-1.5B-Instruct
+- `README.md`: make bootstrap
+- `README.md`: make check

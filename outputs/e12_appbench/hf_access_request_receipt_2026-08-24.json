@@ -1,0 +1,17 @@
+{
+  "schema_version": "external-access-request-receipt-v1",
+  "lane": "E12",
+  "benchmark": "AfterQuery/App-Bench",
+  "provider": "AfterQuery",
+  "route": "Hugging Face dataset discussion",
+  "discussion": 2,
+  "url": "https://huggingface.co/datasets/AfterQuery/App-Bench/discussions/2",
+  "submitted_at": "2026-08-24T06:18:48Z",
+  "requester": "arvindcr4",
+  "status": "open",
+  "licence_received": false,
+  "official_harness_received": false,
+  "grader_protocol_received": false,
+  "score": null,
+  "claim_boundary": "A public provider request is not a licence grant, official evaluation access, a grading receipt, or a benchmark score."
+}

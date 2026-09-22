@@ -1,0 +1,46 @@
+{
+  "schema_version": "pavlov-terminal-lane-receipt-v1",
+  "observed_at": "2026-08-22T00:00:00+05:30",
+  "lane": "E12",
+  "suite_id": "appbench_eval",
+  "status": "BLOCKED",
+  "terminal_for_current_inputs": true,
+  "is_model_score": false,
+  "score": null,
+  "tasks_executed": 0,
+  "cost_usd": 0.0,
+  "source": {
+    "dataset": "AfterQuery/App-Bench",
+    "hf_revision": "de80d5bcd404adee5307311571e512b5c37e6112",
+    "private": false,
+    "gated": false,
+    "files": [
+      ".gitattributes",
+      "AppBench vExternal.csv"
+    ],
+    "license_metadata_present": false,
+    "task_count": 6
+  },
+  "verified_local_layers": {
+    "source_csv_sha256": "b28b74959e81602f0a8b7e8985547915cf3de98822b87f736bc86269518900ba",
+    "split_manifest_sha256": "ee9de54f596322d8eced32a26917bffe1ee38c962721be1c5e69ae9d126f0415",
+    "disjointness_proof_sha256": "ed3f86ec71477d420d5d82b98beb43679bdd0c4c0c1175f84793f8b62e3bc0e6",
+    "split_hash": "ee8bb522e82505a1b9690c0b691c36a2bb73a524023ab15dff670fe7cc34601d",
+    "manifest_verification": "PASS",
+    "focused_manifest_tests_passed": 30,
+    "focused_manifest_tests_failed": 0
+  },
+  "blockers": [
+    "The dataset revision still contains no license, dataset-card license grant, terms file, or notice.",
+    "No official AppBench deployment runner, Supabase/Next.js environment image, artifact verifier, or side-effect verifier is published or present locally.",
+    "The official score requires two qualified human full-stack graders and re-adjudication; no reproducible automated verifier can replace that protocol.",
+    "The six tasks are public, so contamination-free held-out status is not proven for the requested model."
+  ],
+  "smallest_external_action": "AfterQuery must provide a written license or permission grant. A scored run additionally needs the official deployment artifacts and two qualified human graders following the published protocol.",
+  "safety": {
+    "substitution_used": false,
+    "paid_call_made": false,
+    "wandb_run_created": false,
+    "hf_write_made": false
+  }
+}

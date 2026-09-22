@@ -1,0 +1,45 @@
+{
+  "schema_version": "official-access-route-discovery-v1",
+  "lane": "E6",
+  "benchmark": "Halluminate/WebBench",
+  "checked_at": "2026-08-29T07:57:33Z",
+  "status": "AWAITING_PROVIDER_RESPONSE",
+  "score": null,
+  "routes": [
+    {
+      "route": "official benchmark contact",
+      "source_url": "https://github.com/Halluminate/WebBench#readme",
+      "source_statement": "To benchmark your browser agent, please contact jerry@halluminate.ai.",
+      "already_exercised": true,
+      "current_campaign_evidence": "outputs/E3_E14_EXTERNAL_FOLLOWUP_RECEIPT_2026-08-29.json records a follow-up to jerry@halluminate.ai at 2026-08-29T03:28:42Z.",
+      "action_now": "No duplicate same-day email sent. Await a provider-issued access record or reply."
+    },
+    {
+      "route": "official WebBench leaderboard",
+      "url": "https://www.webbench.ai/",
+      "source_url": "https://github.com/Halluminate/WebBench#readme",
+      "finding": "The README links the official leaderboard, but the public page exposes no submission form, environment access mechanism, scorer download, or authorization terms.",
+      "equivalence": "unconfirmed; this is an access lead, not a native-evaluation substitute",
+      "action_now": "Request a provider-hosted evaluation or receipt through the official contact/issue rather than submitting a self-generated score."
+    },
+    {
+      "route": "Halluminate organisation contact",
+      "source_url": "https://github.com/Halluminate",
+      "contact": "wyatt@halluminate.ai",
+      "finding": "The organisation profile displays this address, but does not describe it as a WebBench evaluation-access programme.",
+      "equivalence": "unconfirmed",
+      "action_now": "Hold as a documented escalation route; do not send a duplicate same-day request while the benchmark-designated contact has an open follow-up."
+    }
+  ],
+  "checked_public_state": {
+    "ground_truth_issue": "https://github.com/Halluminate/WebBench/issues/2",
+    "issue_state": "open",
+    "provider_reply_present": false
+  },
+  "rejected_as_non_equivalent": [
+    "READ-only public CSV replays",
+    "text-only third-party LLM judging",
+    "BrowserGym, WebArena, MiniWoB, or a local Playwright harness"
+  ],
+  "safety_boundary": "No benchmark task, credentials, live-site action, terms acceptance, paid service, or new provider message was initiated during route discovery."
+}

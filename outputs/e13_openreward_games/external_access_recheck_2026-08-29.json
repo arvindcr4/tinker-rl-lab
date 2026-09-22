@@ -1,0 +1,65 @@
+{
+  "schema_version": "pavlov-external-access-recheck-v1",
+  "lane": "E13",
+  "suite_id": "openreward_games_eval",
+  "checked_at": "2026-08-29T07:56:15Z",
+  "status": "BLOCKED",
+  "score": null,
+  "is_model_score": false,
+  "authoritative_observations": {
+    "pinned_wrapper_repository": "https://github.com/EnvCommons/wordle",
+    "pinned_wrapper_revision": "92bea32efa102e86275dedd2e0367e86d3754754",
+    "repository_license": null,
+    "repository_pushed_at": "2026-07-30T23:08:28Z",
+    "pinned_tree_license_like_files": [],
+    "hosted_environment_api": "https://api.openreward.ai/v1/environments/GeneralReasoning/Wordle",
+    "hosted_environment_original_github_url": "https://github.com/EnvCommons/wordle",
+    "hosted_environment_deploy_revision": null,
+    "hosted_environment_license": null,
+    "public_contact": "mailto:hello@openreward.ai"
+  },
+  "safe_access_route_added": {
+    "route": "official source-repository issue",
+    "url": "https://github.com/EnvCommons/wordle/issues/3",
+    "created_at": "2026-08-29T07:57:31Z",
+    "request_file": "outputs/e13_openreward_games/GITHUB_LICENSE_REQUEST_2026-08-29.md",
+    "requested": [
+      "explicit wrapper-code licence",
+      "hosted environment to pinned-source revision attestation",
+      "provider-defined evaluation-split confirmation"
+    ],
+    "no_credentials_requested": true,
+    "no_paid_session_started": true
+  },
+  "prospective_only_routes": [
+    {
+      "name": "OpenReward environment cards with explicit licences and provider-published evaluation splits",
+      "examples": [
+        "https://openreward.ai/GeneralReasoning/tau2bench",
+        "https://openreward.ai/GeneralReasoning/SECQUE"
+      ],
+      "observed_at": "2026-08-29T07:56:15Z",
+      "finding": "Some provider cards expose a licence and suite/split information, demonstrating a publication pattern that could satisfy parts of the missing evidence if applied to Wordle.",
+      "equivalence_status": "Not an E13 substitute and not an E13 score source unless the provider defines it as part of the contracted openreward_games_eval suite."
+    }
+  ],
+  "remaining_external_requirements": [
+    "Explicit licence or written permission for the Wordle OpenReward wrapper",
+    "Provider-defined immutable openreward_games_eval suite",
+    "Hosted deployment revision binding or attestation",
+    "A separately authorized model rollout with W&B-before-Tinker and immutable evaluated checkpoint receipts"
+  ],
+  "local_guard_verification": {
+    "command": "PYTHONPATH=zvf-program/flagship python3 -m unittest test_pavlov_appbench_openreward_games_adapter test_e13_openreward_games_local_runner -v",
+    "passed": 56,
+    "failed": 0,
+    "checked_at": "2026-08-29T07:57:00Z"
+  },
+  "safety": {
+    "substitution_used": false,
+    "paid_call_made": false,
+    "terms_accepted": false,
+    "credentials_used": false,
+    "score_claimed": false
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "schema_version": "e2-e14-alternative-route-audit-v1",
+  "recorded_at": "2026-08-30T15:38:09Z",
+  "mode": "READ_ONLY_OFFICIAL_SOURCE_AUDIT_NO_CONTACT_NO_LAUNCH_NO_SPEND",
+  "incremental_spend_cap_usd": 50.0,
+  "counted_incremental_spend_usd": 5.630100981793,
+  "remaining_incremental_spend_usd": 44.369899018207,
+  "actionable_exact_lanes": [],
+  "lanes": {
+    "E2": {
+      "status": "BLOCKED_EXTERNAL_AUTHORIZATION",
+      "finding": "The official pin 422b9bb95deb8efe436becb0ed3c44be23611e10 has no controlling root licence or evaluation authorization: repository licence metadata is null, the licence endpoint is 404, and neither the public leaderboard nor Prime Intellect environment documents a hosted signed-result route. Vendored component licences do not authorize the FrontierSWE task bundle or the remaining 16 tasks.",
+      "official_sources": [
+        "https://github.com/Proximal-Labs/frontier-swe/commit/422b9bb95deb8efe436becb0ed3c44be23611e10",
+        "https://www.frontierswe.com/",
+        "https://raw.githubusercontent.com/Proximal-Labs/frontier-swe/main/SCORING.md"
+      ]
+    },
+    "E3": {
+      "status": "BLOCKED_EXTERNAL",
+      "finding": "The official leaderboard exposes no submission API, immutable suite bundle, runtime/reset contract, native grader, price, or turnaround; the existing provider email remains the only sanctioned route.",
+      "official_sources": ["https://emulated.so/sdab"]
+    },
+    "E4": {
+      "status": "BLOCKED_BUDGET_AND_PROVIDER_EXECUTION_GATES",
+      "finding": "The exact public checkout, pinned dataset, and 100/100 generated task artifacts are restored. Verification passed 1,175 manifest checks with zero failures, including all task IDs, prompts, rubrics, source inputs, and generated contract files. This restores preflight eligibility only: the receipt-based native-grader lower bound is approximately $59.45 for 15,054 criteria, already above the remaining cap, and the W&B, immutable-checkpoint, model endpoint, provider, native-verifier, and hard-budget gates remain closed.",
+      "restoration_receipt": "outputs/e4_banker_toolbench/e4_public_restoration_receipt_2026-08-30.json",
+      "official_sources": [
+        "https://github.com/Handshake-AI-Research/bankertoolbench",
+        "https://huggingface.co/datasets/handshake-ai-research/bankertoolbench"
+      ]
+    },
+    "E5": {
+      "status": "BLOCKED_ASSET_MATERIALIZATION_BUDGET_AND_NEW_EXECUTION_ARM",
+      "finding": "The pinned 480-task task/rubric bundle and sealed manifest are present. The full auxiliary task/gold asset payload is not materialized locally; repository metadata remains gated although authenticated access was previously unblocked after accepting the dataset terms. The current 11-task prefix is Tinker-backed, so merged vLLM requires a new provenance mode and must remain a separate arm. This Mac has no CUDA and insufficient free storage for the 71.9 GB merged model plus auxiliary assets. Same-model A100 receipts project approximately $143 at the fastest observed call or $289 at median behavior for the configured 480 by 8-step ceiling, before environments; the native judge lower bound is $4.20 to $5.39 excluding artifact excerpts. A one-turn-per-task assumption is not supported by the exact protocol and is not launch-safe.",
+      "calculation_receipt": "outputs/e5_apex_agents/e5_merged_vllm_cost_scenarios_2026-08-30.json",
+      "asset_inventory_receipt": "outputs/e5_apex_agents/e5_asset_inventory_2026-08-30.json",
+      "official_sources": [
+        "https://huggingface.co/datasets/mercor/apex-agents",
+        "https://github.com/Mercor-Intelligence/archipelago",
+        "https://modal.com/pricing",
+        "https://ai.google.dev/gemini-api/docs/pricing"
+      ]
+    },
+    "E6": {
+      "status": "BLOCKED_EXTERNAL",
+      "finding": "The public MIT task CSV is not the live native evaluation; no provider reply, reset contract, ground truth, scorer, credentials, or write authorization is available.",
+      "official_sources": [
+        "https://github.com/Halluminate/WebBench",
+        "https://huggingface.co/datasets/Halluminate/WebBench",
+        "https://github.com/Halluminate/WebBench/issues/2"
+      ]
+    },
+    "E7": {
+      "status": "BLOCKED_LICENSE_AUTHORIZATION",
+      "finding": "The official pin cbd86c7cd8519f01ae6b7ad7db7fdb653ea54f23 has no licence artifact: repository licence metadata is null, the licence endpoint is 404, and the README's Apache-2.0 claim points to a missing LICENSE file. The public benchmark page documents local Harbor execution but no hosted evaluator or signed-result endpoint; public visibility and separately licensed dependencies do not authorize exact benchmark-asset or injected-binary evaluation use.",
+      "official_sources": [
+        "https://github.com/QuesmaOrg/BinaryAudit/commit/cbd86c7cd8519f01ae6b7ad7db7fdb653ea54f23",
+        "https://quesma.com/benchmarks/binaryaudit/"
+      ]
+    },
+    "E8": {
+      "status": "BLOCKED_EXTERNAL",
+      "finding": "The contributor form concerns future evaluations and GPT-Rosalind product access is not LifeSciBench benchmark access; no package, rubric, hosted score route, price, or turnaround is published.",
+      "official_sources": ["https://openai.com/index/introducing-life-sci-bench/"]
+    },
+    "E9": {
+      "status": "PARTIAL_EXACT_NO_MATERIAL_SAFE_LAUNCH",
+      "finding": "The 17 union-unattempted competitions begin at approximately 46.68 GB. A fresh merged-vLLM pilot would remain a separate arm and would not repair the incomplete legacy 75-competition aggregate; both production launch freezes remain closed.",
+      "score": null
+    },
+    "E10": {
+      "status": "BLOCKED_EXTERNAL",
+      "finding": "The provider tree still lacks the three private test files and the official discussion has no provider reply; an AISI-hosted or supervised signed result remains admissible.",
+      "official_sources": [
+        "https://huggingface.co/datasets/ai-safety-institute/AgentHarm",
+        "https://huggingface.co/datasets/ai-safety-institute/AgentHarm/discussions/9"
+      ]
+    },
+    "E12": {
+      "status": "BLOCKED_EXTERNAL",
+      "finding": "The public revision still lacks a licence, deployment/reset harness, submission API, provider trust root, and signed result. The local signed-result collector is now complete and enforces six tasks, best of three attempts, two graders with adjudication, immutable execution receipts, and a fully bound provider signature before any score can be returned.",
+      "local_setup": "SIGNED_RESULT_COLLECTOR_READY_PROVIDER_INPUT_REQUIRED",
+      "official_sources": [
+        "https://www.afterquery.com/leaderboard/app-bench",
+        "https://github.com/AfterQuery/appbench.ai-docs/issues/1"
+      ]
+    },
+    "E13": {
+      "status": "BLOCKED_EXTERNAL",
+      "finding": "The public Wordle environment is not the contracted immutable OpenReward Games suite and lacks source/deployment revision and wrapper licence. Canonical score-null request construction and provider-signed result intake are now implemented locally, but no provider-defined signed suite, trust root, grading contract, or result is available.",
+      "local_setup": "SIGNED_REQUEST_AND_RESULT_INTAKE_READY_PROVIDER_INPUT_REQUIRED",
+      "official_sources": [
+        "https://docs.openreward.ai/environments/environment-cards",
+        "https://github.com/EnvCommons/wordle/issues/3"
+      ]
+    },
+    "E14": {
+      "status": "BLOCKED_EXTERNAL",
+      "finding": "The only admissible route remains an Epoch-run or supervised Tiers 1-4 evaluation with a provider trust root and signed result. FrontierMath Open Problems verifier access is a separate non-equivalent product.",
+      "official_sources": [
+        "https://epoch.ai/frontiermath/tiers-1-4/about",
+        "https://epoch.ai/frontiermath/open-problems/about/faq"
+      ]
+    }
+  },
+  "claim_boundary": "This is a read-only access and cost audit. It does not grant licences, install provider trust roots, create runnable exact suites, launch work, spend funds, or convert any partial or blocked evidence into a benchmark score."
+}

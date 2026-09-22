@@ -1,0 +1,132 @@
+{
+  "accounting_boundary": "Conservative campaign accounting from the 2026-08-29 authorization. Estimated Modal compute and an explicit unmetered-build allowance are counted; no new Tinker charge occurred.",
+  "authorization_receipt": "outputs/e1_e14_paid_authorization_2026-08-29.json",
+  "authorized_incremental_spend_usd": 50.0,
+  "claim_boundary": "Estimated spend is not a provider invoice. No unexecuted projection, blocked suite, or partial benchmark result is represented as completed work.",
+  "modal_e9_merged_vllm_pilots": [
+    {
+      "arm_id": "e9_merged_vllm_seed809_v1",
+      "competition_id": "hotel-id-2021-fgvc8",
+      "estimated_actual_compute_usd": 0.451549522,
+      "receipt": "outputs/e9_mle_bench/merged_vllm/hotel-id-2021-fgvc8-ed92df9f6c44/receipt.json",
+      "reservation_usd": 1.754352,
+      "run_id": "hotel-id-2021-fgvc8-ed92df9f6c44",
+      "scientific_boundary": "Separate fresh merged-vLLM arm; never added to legacy Tinker E9 coverage."
+    },
+    {
+      "arm_id": "e9_merged_vllm_seed809_v1",
+      "competition_id": "imet-2020-fgvc7",
+      "estimated_actual_compute_usd": 0.462298846,
+      "receipt": "outputs/e9_mle_bench/merged_vllm/imet-2020-fgvc7-9e3b7fa50417/receipt.json",
+      "reservation_usd": 1.754352,
+      "run_id": "imet-2020-fgvc7-9e3b7fa50417",
+      "scientific_boundary": "Separate fresh merged-vLLM arm; never added to legacy Tinker E9 coverage."
+    },
+    {
+      "arm_id": "e9_merged_vllm_seed809_v1",
+      "competition_id": "predict-volcanic-eruptions-ingv-oe",
+      "estimated_actual_compute_usd": 0.353316658,
+      "receipt": "outputs/e9_mle_bench/merged_vllm/predict-volcanic-eruptions-ingv-oe-06379fb32587/receipt.json",
+      "reservation_usd": 1.754352,
+      "run_id": "predict-volcanic-eruptions-ingv-oe-06379fb32587",
+      "scientific_boundary": "Separate fresh merged-vLLM arm; never added to legacy Tinker E9 coverage."
+    },
+    {
+      "arm_id": "e9_merged_vllm_seed809_v1",
+      "competition_id": "alaska2-image-steganalysis",
+      "estimated_actual_compute_usd": 1.295659586,
+      "receipt": "outputs/e9_mle_bench/merged_vllm/alaska2-image-steganalysis-16967d82beeb/receipt.json",
+      "reservation_usd": 1.754352,
+      "run_id": "alaska2-image-steganalysis-16967d82beeb",
+      "scientific_boundary": "Separate fresh merged-vLLM arm; never added to legacy Tinker E9 coverage."
+    },
+    {
+      "arm_id": "e9_merged_vllm_seed809_v1",
+      "competition_id": "hubmap-kidney-segmentation",
+      "estimated_actual_compute_usd": 0.861221414,
+      "receipt": "outputs/e9_mle_bench/merged_vllm/hubmap-kidney-segmentation-6e08e20ea6d4/receipt.json",
+      "reservation_usd": 1.754352,
+      "run_id": "hubmap-kidney-segmentation-6e08e20ea6d4",
+      "scientific_boundary": "Separate fresh merged-vLLM arm; never added to legacy Tinker E9 coverage."
+    },
+    {
+      "arm_id": "e9_merged_vllm_seed809_v1",
+      "competition_id": "h-and-m-personalized-fashion-recommendations",
+      "estimated_actual_compute_usd": 0.341075778,
+      "receipt": "outputs/e9_mle_bench/merged_vllm/h-and-m-personalized-fashion-recommendations-33d90f35410c/receipt.json",
+      "reservation_usd": 1.754352,
+      "run_id": "h-and-m-personalized-fashion-recommendations-33d90f35410c",
+      "scientific_boundary": "Separate fresh merged-vLLM arm; never added to legacy Tinker E9 coverage."
+    },
+    {
+      "arm_id": "e9_merged_vllm_seed809_v1",
+      "competition_id": "vesuvius-challenge-ink-detection",
+      "estimated_actual_compute_usd": 0.444306727,
+      "receipt": "outputs/e9_mle_bench/merged_vllm/vesuvius-challenge-ink-detection-83d8678a457b/receipt.json",
+      "reservation_usd": 1.754352,
+      "run_id": "vesuvius-challenge-ink-detection-83d8678a457b",
+      "scientific_boundary": "Separate fresh merged-vLLM arm; never added to legacy Tinker E9 coverage."
+    }
+  ],
+  "modal_e9_tasks": {
+    "cancellation_receipt": "outputs/e9_mle_bench/modal_streaming/plant-pathology-2021-fgvc8-2accc1cf7208/replay_control_channel_cancellations_2026-08-29.json",
+    "completed_elapsed_seconds": [
+      1436.181,
+      1683.865,
+      1542.587,
+      86.499,
+      882.678,
+      843.937,
+      1862.507,
+      2094.744,
+      1839.281,
+      793.701,
+      816.224
+    ],
+    "completed_elapsed_seconds_total": 13882.204,
+    "counted_billable_seconds_total": 18823.723643,
+    "counted_incremental_modal_spend_usd": 1.42067245079288,
+    "detached_terminal_without_local_receipt": "outputs/e9_mle_bench/modal_streaming/plant-pathology-2021-fgvc8-2accc1cf7208/detached_terminal_without_receipt_2026-08-29.json",
+    "detached_terminal_without_local_receipt_wall_seconds": [
+      2265.519643
+    ],
+    "duplicate_replay_cancellation_receipt": "outputs/e9_mle_bench/modal_streaming/_pending/plant-pathology-2021-fgvc8-fc-01M16YC7QCNDSS0MPSY0YTYKG2-cancellation-receipt.json",
+    "estimated_task_compute_usd": 1.32067245079288,
+    "estimation_note": "The task estimate multiplies elapsed wall time by the configured CPU and memory rates. The additional allowance intentionally overcounts image-build and shell work that lacks a task-level billing receipt. This is conservative campaign control, not an invoice.",
+    "official_unit_rates_usd_per_second": {
+      "combined_for_configuration": 7.016e-05,
+      "cpu_per_physical_core": 1.31e-05,
+      "memory_per_gib": 2.22e-06
+    },
+    "resource_configuration": {
+      "memory_gib": 8,
+      "physical_cpu_cores": 4
+    },
+    "terminal_control_channel_cancellation_wall_seconds": [
+      2213,
+      241,
+      222
+    ],
+    "terminal_control_channel_cancellation_wall_seconds_total": 2676,
+    "unmetered_image_build_and_shell_allowance_usd": 0.1
+  },
+  "paid_execution_outcome": "Four saved E9 solutions or submissions were regraded or deterministically replayed without model generation: Russian text normalization scored 0.97348, TensorFlow 2 Question Answering scored 0.57117, Smartphone Decimeter 2022 produced a valid native score of 165.85732, and Freesound Audio Tagging 2019 produced a valid native score of 0.12497 after an exact archive-streaming and multilabel-schema repair. Recoverable deployed Plant Pathology and Jigsaw toxicity replays returned and materialized AGENT_EXECUTION_FAILED native-bound receipts after the archived programs timed out at 1800 seconds. A third identical Plant replay was detected by repaired-solution hash and cancelled after 221.77 observed wall seconds; it is execution-control evidence only. All replay work used zero Tinker generation. Smartphone and Freesound each add one unique native grade, moving E9 coverage to 40/75; the E9 full-suite score remains null.",
+  "recorded_at_utc": "2026-08-30T02:14:48Z",
+  "remaining_authorized_incremental_spend_usd": 44.369899018207,
+  "schema_version": "e1-e14-incremental-spend-ledger-v1",
+  "tinker_bridge": {
+    "baseline_charged_usd": 5.90605173,
+    "baseline_committed_usd": 5.91445263,
+    "baseline_reserved_usd": 0.0084009,
+    "completed_calls": 506,
+    "current_charged_usd": 5.90605173,
+    "current_committed_usd": 5.91445263,
+    "current_reserved_usd": 0.0084009,
+    "failed_calls": 30,
+    "incremental_charge_usd": 0.0,
+    "persistent_total_ceiling_usd": 55.91445263,
+    "source": "Modal Dict pavlov-tinker-bridge-ledger final read 2026-08-29T11:48:42Z; charged_usd 5.90605173, reserved_usd 0.0084009, completed_calls 506, failed_calls 30; no new Tinker calls or charges observed"
+  },
+  "total_counted_incremental_spend_usd": 5.630100981793,
+  "within_cap": true
+}

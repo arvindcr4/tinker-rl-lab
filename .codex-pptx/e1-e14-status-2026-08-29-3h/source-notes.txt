@@ -1,0 +1,20 @@
+Deck refresh sources — 2026-08-29 continuation
+
+Authoritative local evidence
+- outputs/E1_E14_Terminal_Status_2026-08-29.json
+- outputs/e1_e14_incremental_spend_ledger_2026-08-29.json
+- outputs/E3_E14_EXTERNAL_FOLLOWUP_RECEIPT_2026-08-29.json
+- outputs/e9_mle_bench/modal_streaming/smartphone-decimeter-2022-1207910d9504/receipt.json
+- outputs/e9_mle_bench/modal_streaming/freesound-audio-tagging-2019-c160e87615be/receipt.json
+- outputs/e9_mle_bench/modal_streaming/plant-pathology-2021-fgvc8-1afc1ef65a3a/receipt.json
+- outputs/e9_mle_bench/modal_streaming/jigsaw-unintended-bias-in-toxicity-classification-be21ca31edd2/receipt.json
+
+Official external sources
+- https://github.com/openai/mle-bench
+- https://arxiv.org/abs/2410.07095
+- https://iclr.cc/Conferences/2027/CallForPapers
+- https://iclr.cc/Conferences/2027/AuthorGuidelines
+- https://neurips.cc/Conferences/2026/MainTrackHandbook
+- https://jmlr.org/tmlr/editorial-policies.html
+
+No externally sourced images are used. All visual elements are editable native presentation objects.

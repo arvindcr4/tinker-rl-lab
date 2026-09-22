@@ -1,0 +1,41 @@
+{
+  "schema_version": "e8-lifescibench-external-access-route-check-v1",
+  "recorded_at": "2026-08-29T07:56:51Z",
+  "lane": "E8",
+  "suite_id": "lifescibench_eval",
+  "status": "BLOCKED",
+  "score": null,
+  "live_provider_check": {
+    "url": "https://openai.com/index/introducing-life-sci-bench/",
+    "checked_at": "2026-08-29T07:56:51Z",
+    "published_benchmark_scope": "750 expert-authored tasks and 1,062 task artifacts",
+    "get_involved_routes": [
+      {
+        "label": "Join as a contributor",
+        "purpose": "contributing to future benchmark work, not evaluation-material access"
+      },
+      {
+        "label": "Request access",
+        "purpose": "GPT-Rosalind access, not LifeSciBench evaluation-material access"
+      }
+    ],
+    "observed_public_evaluation_package": false,
+    "observed_public_native_grader_or_repository": false
+  },
+  "prior_request_and_reply_check": {
+    "submitted_at": "2026-08-24T06:16:59Z",
+    "route": "https://openai.com/contact-sales/",
+    "request_receipt": "outputs/e8_lifescibench/contact_sales_submission_receipt_2026-08-24.json",
+    "gmail_reply_query_checked_at": "2026-08-29T07:56:51Z",
+    "gmail_reply_query": "after:2026/08/22 (LifeSciBench OR 750-task OR OpenAI sales OR from:openai.com)",
+    "provider_reply_observed": false
+  },
+  "unresolved_requirements": [
+    "immutable 750-task package and artifact revision",
+    "licence or written access grant",
+    "native evaluation interface and rubric grader revision",
+    "immutable task manifest and held-out/disjointness statement"
+  ],
+  "safe_next_action": "Await a response to the submitted contact-sales request; do not use contributor or GPT-Rosalind access forms as a benchmark-data request and do not substitute a different life-science benchmark.",
+  "claim_boundary": "This records a live route check and no observed reply. It is not access to LifeSciBench, a model run, or a benchmark score."
+}

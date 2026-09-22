@@ -1,0 +1,41 @@
+{
+ "answer": {
+  "first_uncleared_blocker": {
+   "choice": "NO_NEW_RESULT_NEEDED",
+   "confidence": 0.42,
+   "probabilities": {
+    "CODE_REIMPLEMENTATION_THEN_SPEND": 0.13,
+    "EXTERNAL_PARTY_GRANT": 0.05,
+    "LOCAL_FREE_STEPS_ONLY": 0.22,
+    "NO_NEW_RESULT_NEEDED": 0.52,
+    "USER_POLICY_AMENDMENT_THEN_SPEND": 0.02,
+    "USER_SPEND_AUTHORIZATION": 0.06
+   },
+   "type": "choice"
+  }
+ },
+ "input": {
+  "questions": {
+   "first_uncleared_blocker": {
+    "choices": [
+     "NO_NEW_RESULT_NEEDED",
+     "LOCAL_FREE_STEPS_ONLY",
+     "USER_SPEND_AUTHORIZATION",
+     "USER_POLICY_AMENDMENT_THEN_SPEND",
+     "CODE_REIMPLEMENTATION_THEN_SPEND",
+     "EXTERNAL_PARTY_GRANT"
+    ],
+    "instructions": "Lane E6 (WebBench (original) + WebArena replacement). Using only `facts` and `class_definitions`, and applying `selection_rule`, pick the first uncleared blocker between this lane and a NEW native suite result.",
+    "type": "choice"
+   }
+  }
+ },
+ "kind": "ask",
+ "label": "triage_blocker_E6",
+ "model": "jev-latest",
+ "recorded_at": "2026-09-19T13:12:32.535490+00:00",
+ "schema_version": "jev-judgment-receipt-v1",
+ "state_inline": "{\n \"class_definitions\": {\n  \"CODE_REIMPLEMENTATION_THEN_SPEND\": \"The prepared execution source was lost and must be re-created and re-reviewed before a launch the user must then authorize.\",\n  \"EXTERNAL_PARTY_GRANT\": \"A private dataset, hosted evaluation, or credentials from an outside party is required; money and local work alone cannot produce the result.\",\n  \"LOCAL_FREE_STEPS_ONLY\": \"A new native result (or required verification of an existing one) is achievable now on this machine at zero cost with no user decision.\",\n  \"NO_NEW_RESULT_NEEDED\": \"The lane's declared replacement scope already has full verified coverage; a further native result adds nothing required.\",\n  \"USER_POLICY_AMENDMENT_THEN_SPEND\": \"A self-imposed lifecycle/contract gate blocks any launch; the user must first accept a drafted amendment, then authorize spend.\",\n  \"USER_SPEND_AUTHORIZATION\": \"Everything technical is ready; the only missing item is the user's explicit authorization to spend (quota/capacity may also be pending).\"\n },\n \"context\": \"PES University capstone (Tinker RL Lab) E1-E14 benchmark campaign, restarted 2026-09-19 after a clean halt on 2026-09-12. Remaining recorded spend cap ~$44; several envelopes ($16 E1, $80 E5, $4 E2, $8 E13) await user authorization. Phase-2 college review delivered 2026-09-12.\",\n \"facts\": {\n  \"blocker\": \"AWS EC2 Standard On-Demand quota 1 vCPU vs 16 needed (case CASE_OPENED in us-east-2); two m6a.2xlarge + 2x1000GiB plan, $12 parent reservation; readiness checker requires quota headroom + fresh termination evidence\",\n  \"name\": \"WebBench (original) + WebArena replacement\",\n  \"source\": \"outputs/PES_Phase2_Review_2026-09-12/finish/e6_continuation/REPORT_v1.md\",\n  \"verified_result\": \"No exact-suite result; WebArena 0/812, canonical inventory verified (65 source files + ordered IDs 0-811)\"\n },\n \"lane\": \"E6\",\n \"selection_rule\": \"Pick the FIRST blocker in this causal chain that is not already cleared: external party grant -> code reimplementation -> policy amendment -> spend authorization -> local free steps -> none needed.\"\n}",
+ "state_sha256": "9bdf257bfa874f1e58d8f7e77c259814267ae6b90b1daf0250b068a8c2efb038",
+ "state_truncated": false
+}

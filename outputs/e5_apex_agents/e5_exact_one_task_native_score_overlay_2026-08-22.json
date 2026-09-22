@@ -1,0 +1,43 @@
+{
+  "schema_version": "e5-apex-agents-evidence-boundary-v1",
+  "recorded_at": "2026-08-22T12:09:09Z",
+  "lane": "E5",
+  "benchmark": "APEX Agents",
+  "work_status": "DONE",
+  "benchmark_status": "PARTIAL_EXACT",
+  "score": null,
+  "suite_score": null,
+  "attempt_score": 0.3333333333333333,
+  "attempt_score_fraction": "1/3 rubric criteria",
+  "scope": {
+    "task_id": "task_0b9134a634c14f24a6c256d034a6c130",
+    "evaluated_tasks": 1,
+    "official_suite_tasks": 480,
+    "coverage": "1/480"
+  },
+  "evidence_boundary": "The native Archipelago grader completed for one exact official APEX task. This is an attempt-level result, not the 480-task suite score.",
+  "execution": {
+    "environment_backend": "modal-sandbox",
+    "local_docker_used": false,
+    "sandbox_id": "sb-2aQy9NuHpU8KV3GgJXgHmh",
+    "sandbox_terminated": true,
+    "judge_model": "openai/pavlov-qwen36-tinker",
+    "same_model_judge": true,
+    "wandb_run_id": "n2wnplms",
+    "wandb_run_url": "https://wandb.ai/arvindcr4-pes-university/tinker-rl-lab-pavlov/runs/n2wnplms",
+    "hf_checkpoint_revision": "64444133c55d88c3f1bf0df8a2f5d7ac646125c8"
+  },
+  "native_grader": {
+    "repository_revision": "1c3dcd4694b313020cd626699c9c7cc1c0a2fc58",
+    "grading_run_id": "gr_df27d62f",
+    "status": "completed"
+  },
+  "receipt": {
+    "path": "outputs/e5_apex_agents/official_modal_zeroarg_fix_receipt_2026-08-22.json",
+    "sha256": "bd17de93da4957b12ba6ade65c80fbe9a1e251707c1f7a148a67a9e2d10925c7"
+  },
+  "grades": {
+    "path": "outputs/e5_apex_agents/official_modal_zeroarg_fix_run_2026-08-22/output/task_0b9134a634c14f24a6c256d034a6c130/grades.json",
+    "sha256": "2a092bc8cb16c57da9fb4e2622caa06570f32170156f644a2047993265fe8119"
+  }
+}

@@ -1,0 +1,4344 @@
+{
+  "sources": [
+    {
+      "path": "/Users/arvind/Developer/tinker-rl-lab/outputs/PES_Phase2_Review_2026-09-12/finish/e5_funding_probe_response01.json",
+      "sha256": "fcad783f3915070bee967c123f1bd68e7977a8665e072528425710a344946ced"
+    },
+    {
+      "path": "/Users/arvind/Developer/tinker-rl-lab/outputs/PES_Phase2_Review_2026-09-12/finish/e9_recovery/feasibility_20260912.md",
+      "sha256": "a434f9adddb456755d7a47a12099f4371b65b742b8d140c36366f4104eb53f68"
+    },
+    {
+      "path": "/Users/arvind/Developer/tinker-rl-lab/outputs/PES_Phase2_Review_2026-09-12/finish/e5_runtime/both_attempts_terminal_summary.json",
+      "sha256": "a9790883c39dc2bb36307b6a66337195a4151e521f36223064b22c6b465d295e"
+    },
+    {
+      "path": "/Users/arvind/Developer/tinker-rl-lab/outputs/PES_Phase2_Review_2026-09-12/finish/e13_control/E13-native-20260912-01-final-partial-termination.json",
+      "sha256": "4ea75884f22a797a14fb315fa5ab3fdf8ffc6722652ff783422282cb6407a276"
+    },
+    {
+      "path": "/Users/arvind/Developer/tinker-rl-lab/outputs/PES_Phase2_Review_2026-09-12/finish/e14/native_input_review_v4.json",
+      "sha256": "773fed4911450873f3e4d982a6959c6095f8093627ce10d2f31e9880c6f19927"
+    },
+    {
+      "path": "/Users/arvind/Developer/tinker-rl-lab/outputs/public_portfolio_2026-09-05/presentation/E1_E14_Public_Research_Update_v15.pptx",
+      "sha256": "10ab6f3bfe7783e5ee96c0dd339116078e33a5d3228e72dc3617528e358c0286"
+    },
+    {
+      "path": "/Users/arvind/Developer/tinker-rl-lab/outputs/PES_Phase2_Review_2026-09-12/e14_scoring_recheck.json",
+      "sha256": "cb17f0c3c55bc10637bf00118d66ac1b1bbaf64c067ba13e62dab96ab9db7d6f"
+    },
+    {
+      "path": "/Users/arvind/Developer/tinker-rl-lab/outputs/PES_Phase2_Review_2026-09-12/e1_metadata_recheck.json",
+      "sha256": "81273a71cbfda0ab58c24b120f117b3bc376276816c66084a4188bab76450bcd"
+    },
+    {
+      "path": "/Users/arvind/Developer/tinker-rl-lab/outputs/public_portfolio_2026-09-05/results.json",
+      "sha256": "1467dd3e67095bc4d41ef64370bf5f6b9e327987a5c178f12f24a7b83111e8aa"
+    }
+  ],
+  "changed": [
+    1,
+    3,
+    4,
+    5,
+    9,
+    10,
+    12,
+    13
+  ],
+  "scripts": [
+    [
+      "Evaluated model",
+      "Good morning sir. This is my Phase 2 progress review. I evaluated Qwen3.6-35B-A3B with the final Pavlov adapter trained through Tinker, using seed 809. The current work covers fourteen public benchmarks. I will show the results, the evaluation conditions, and the work still pending."
+    ],
+    [
+      "ZVF and research context",
+      "The research starts with a simple observation: when every answer in a training group receives the same reward, subtracting the group average leaves no reward contrast. The ZVF work studies that condition. This context relates to NeurIPS 2026 submission 36320. The earlier Qwen3-8B study and today’s larger adapted model are separate experiments. No submission outcome or causal capability gain is asserted."
+    ],
+    [
+      "Verified results",
+      "There are three strictly complete suites and one additional official result with parser exclusions. LAB-Bench is 450 out of 1,967, or 22.88 percent. AgentDojo benign utility is 88 out of 97, or 90.72 percent. VerilogEval is 129 out of 312, or 41.35 percent. Omni-MATH is 2,271 out of 4,426 accepted reports, or 51.31 percent. Two reports were excluded by the original parser, so the strict 4,428-report score remains unavailable."
+    ],
+    [
+      "E1 to E7",
+      "Today I resolved the remaining six SWE-bench Multilingual image configurations. All 300 metadata records now pass the original strict audit. This completes image metadata recovery, while image execution and model patches remain pending. CORE-Bench has one of 45 original capsules prepared. MLAgentBench still needs its released evaluator and weights. BankerToolBench needs the actual banking deliverables and grading. Tau3 Banking has all 698 documents indexed and all 97 native initializations checked. Two native attempts, including one with a replacement key, each received three OpenAI credit-exhaustion errors. No episode completed. After the credit reload, the native GPT-4.1 provider returned a successful availability response. Full native evaluation remains pending. WebArena still needs its live sites. CyberGym still needs the native task payload and verifier."
+    ],
+    [
+      "E8 to E14",
+      "This table covers the remaining public suites. LAB-Bench, AgentDojo and VerilogEval have complete native results. Omni-MATH now has an official result with two parser exclusions. MLDevBench has all 374 released files. Twelve of its fourteen previously unbound starting states use native directory creation. One generates random logs and one still needs a runtime workspace prerequisite checked. Runtime validation and all 34 native runs remain pending. VisualAgentBench lacks 284 original task assets. BALROG completed 13 of 255 episodes with the exact trained BF16 actor and verified native environments. The native run stopped after an action call failed all five retries. Some model responses exhausted the native token limit without a final action. This is a partial run, so the full-suite score remains unavailable."
+    ],
+    [
+      "LAB-Bench",
+      "The model answered 450 of 1,967 questions correctly: 22.88 percent native accuracy. The chart shows complete category results. Saved diagnostics include answer formatting and length limits, but they do not establish a quantified causal explanation for the errors."
+    ],
+    [
+      "AgentDojo",
+      "The model passed 88 of 97 benign utility episodes: 90.72 percent. This measures ordinary user-task completion, not prompt-injection security. The final result preserves the original attempts and a documented continuation that completed the remaining episodes."
+    ],
+    [
+      "Verilog",
+      "The retained result passed 129 of 312 native checks: 41.35 percent. It was generated with the original Tinker sampler. The chart separates two 156-task framings. No new Verilog samples were taken, and this result does not establish an improvement over an unmeasured baseline."
+    ],
+    [
+      "Omni-MATH",
+      "Omni-MATH has 4,428 fixed policy answers and 4,428 saved judge responses. The original Omni-Judge parser accepts 4,426 reports and excludes two truncated reports. It marks 2,271 accepted answers correct, giving 51.31 percent. Today I reran the unchanged native scorer, checked the saved file hashes, and matched every one of the 4,428 saved task dispositions. I did not retry the excluded reports or change their grades. The expanded native-input audit now verifies 42,408 files. Historical budget references resolve to byte-identical saved snapshots; unrelated temporary log archives remain explicitly labeled as non-input historical records. The strict full-suite score remains unavailable."
+    ],
+    [
+      "Model and execution provenance",
+      "The policy is the exact Qwen3.6 base with the final Pavlov adapter. LAB-Bench, AgentDojo and Omni-MATH answers used the merged BF16 weights. VerilogEval used the original Tinker sampler. Omni-Judge is the separate math grader, with the later grading campaign on Modal A100. A fresh metadata request today still returns checkpoint not found for the original sampler. No numerical parity between serving backends is claimed."
+    ],
+    [
+      "Evaluation conditions",
+      "LAB-Bench combined 240 eager-serving responses, 1,504 graph-serving responses at 32,768-token context, and 223 at 65,536-token context. Original answers were retained. The source-overlap checks cover a defined source envelope, not images, semantic similarity or universal pretraining exposure."
+    ],
+    [
+      "What the measurements mean",
+      "Each score has its own meaning and denominator. LAB-Bench measures question accuracy. AgentDojo measures benign task completion. VerilogEval measures pass at one over two task framings. Omni-MATH uses the separate judge and its accepted-report denominator. These scores should not be averaged or interpreted as improvement over an unmeasured baseline."
+    ],
+    [
+      "Runtime repairs and remaining execution",
+      "The main update is that the original Omni-MATH scoring now reproduces locally, and SWE-bench image metadata recovery is complete for all 300 tasks. Three suites meet the full strict requirements. Omni-MATH has an official result with two exclusions. The other ten public suites still need model execution or missing native assets. BALROG completed 13 of 255 episodes after runtime recovery, then stopped on a native action failure. Tau3 API funding is now available and its full native evaluation remains pending. The full scores for these suites remain unavailable. The remaining work is to complete native execution and recover the missing original assets."
+    ]
+  ],
+  "score": {
+    "checked_at": "2026-09-12T02:36:02.257943+00:00",
+    "status": "NATIVE_SCORER_AND_4428_DISPOSITIONS_REPRODUCED",
+    "attempted": 4428,
+    "accepted": 4426,
+    "correct": 2271,
+    "skipped": 2,
+    "official_accuracy": 0.5131043831902395,
+    "strict_score": null,
+    "official_stdout": "Total Accuracy:0.5131043831902395\n",
+    "per_task_checks": 4428,
+    "groups": {
+      "domain": {
+        "['Mathematics -> Algebra -> Other']": {
+          "attempted": 8,
+          "accepted": 8,
+          "correct": 4
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations']": {
+          "attempted": 156,
+          "accepted": 156,
+          "correct": 70
+        },
+        "['Mathematics -> Discrete Mathematics -> Graph Theory']": {
+          "attempted": 36,
+          "accepted": 36,
+          "correct": 12
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 140,
+          "accepted": 140,
+          "correct": 80
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Group Theory']": {
+          "attempted": 26,
+          "accepted": 26,
+          "correct": 17
+        },
+        "['Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 17,
+          "accepted": 17,
+          "correct": 9
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Discrete Mathematics -> Graph Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Number Theory -> Greatest Common Divisors (GCD)']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 154,
+          "accepted": 154,
+          "correct": 76
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Precalculus -> Trigonometric Functions']": {
+          "attempted": 6,
+          "accepted": 6,
+          "correct": 2
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations']": {
+          "attempted": 261,
+          "accepted": 261,
+          "correct": 133
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Other', 'Mathematics -> Applied Mathematics -> Probability -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangles -> Other', 'Mathematics -> Geometry -> Plane Geometry -> Angles']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 395,
+          "accepted": 393,
+          "correct": 133
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Inequalities', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 62,
+          "accepted": 62,
+          "correct": 30
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers']": {
+          "attempted": 27,
+          "accepted": 27,
+          "correct": 16
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Angles']": {
+          "attempted": 51,
+          "accepted": 51,
+          "correct": 20
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Discrete Mathematics -> Logic']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 15,
+          "accepted": 15,
+          "correct": 7
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 62,
+          "accepted": 62,
+          "correct": 30
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 17,
+          "accepted": 17,
+          "correct": 6
+        },
+        "['Mathematics -> Number Theory -> Divisibility -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Prealgebra -> Integers']": {
+          "attempted": 6,
+          "accepted": 6,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Ring Theory']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 3
+        },
+        "['Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 77,
+          "accepted": 77,
+          "correct": 43
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Algebra -> Abstract Algebra -> Group Theory']": {
+          "attempted": 10,
+          "accepted": 10,
+          "correct": 5
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Inequalities', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 20,
+          "accepted": 20,
+          "correct": 6
+        },
+        "['Mathematics -> Number Theory -> Divisibility -> Other', 'Mathematics -> Number Theory -> Greatest Common Divisors (GCD)']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 8,
+          "accepted": 8,
+          "correct": 2
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Matrices', 'Mathematics -> Discrete Mathematics -> Graph Theory', 'Mathematics -> Algebra -> Other (Matrix-related optimization) -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Solid Geometry -> 3D Shapes']": {
+          "attempted": 72,
+          "accepted": 72,
+          "correct": 45
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Inequalities', 'Mathematics -> Precalculus -> Limits']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Angles', 'Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Number Theory -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives']": {
+          "attempted": 7,
+          "accepted": 7,
+          "correct": 3
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 7,
+          "accepted": 7,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 12,
+          "accepted": 12,
+          "correct": 6
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Number Theory -> Greatest Common Divisors (GCD)']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Permutations and Combinations -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 15,
+          "accepted": 15,
+          "correct": 9
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Field Theory']": {
+          "attempted": 38,
+          "accepted": 38,
+          "correct": 28
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Other']": {
+          "attempted": 11,
+          "accepted": 11,
+          "correct": 5
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Algebra -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 16,
+          "accepted": 16,
+          "correct": 6
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 7,
+          "accepted": 7,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 62,
+          "accepted": 62,
+          "correct": 39
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Discrete Mathematics -> Graph Theory']": {
+          "attempted": 9,
+          "accepted": 9,
+          "correct": 5
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 7,
+          "accepted": 7,
+          "correct": 5
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Precalculus -> Functions', 'Mathematics -> Algebra -> Abstract Algebra -> Group Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 15,
+          "accepted": 15,
+          "correct": 8
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Inequalities', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Geometry -> Plane Geometry -> Angles']": {
+          "attempted": 20,
+          "accepted": 20,
+          "correct": 5
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 17,
+          "accepted": 17,
+          "correct": 8
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Other']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 2
+        },
+        "['Mathematics -> Number Theory -> Greatest Common Divisors (GCD)', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Precalculus -> Functions', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 2
+        },
+        "['Mathematics -> Number Theory -> Divisibility -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 11,
+          "accepted": 11,
+          "correct": 5
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Geometry -> Plane Geometry -> Angles']": {
+          "attempted": 16,
+          "accepted": 16,
+          "correct": 7
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Functional Equations -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Ring Theory', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 8,
+          "accepted": 8,
+          "correct": 5
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 47,
+          "accepted": 47,
+          "correct": 24
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 155,
+          "accepted": 155,
+          "correct": 99
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Inequalities']": {
+          "attempted": 19,
+          "accepted": 19,
+          "correct": 12
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Other', 'Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 8,
+          "accepted": 8,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Algebra -> Abstract Algebra -> Group Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 10,
+          "accepted": 10,
+          "correct": 5
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Linear Transformations', 'Mathematics -> Algebra -> Abstract Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 11,
+          "accepted": 11,
+          "correct": 4
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Area', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Other', 'Mathematics -> Discrete Mathematics -> Logic']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 3
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Circles']": {
+          "attempted": 28,
+          "accepted": 28,
+          "correct": 14
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Quadratic Functions', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Other', 'Mathematics -> Number Theory -> Congruences', 'Mathematics -> Geometry -> Plane Geometry -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 16,
+          "accepted": 16,
+          "correct": 5
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Abstract Algebra -> Group Theory']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 3
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 7,
+          "accepted": 7,
+          "correct": 4
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 6,
+          "accepted": 6,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Single-variable']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 2
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 13,
+          "accepted": 13,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Sequences and Series', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Geometry -> Plane Geometry -> Triangulations']": {
+          "attempted": 12,
+          "accepted": 12,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Geometry -> Plane Geometry -> Angles', 'Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 8,
+          "accepted": 8,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Precalculus -> Trigonometric Functions']": {
+          "attempted": 14,
+          "accepted": 14,
+          "correct": 9
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Number Theory -> Congruences (due to use of properties of roots of unity) -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Algebra -> Intermediate Algebra -> Inequalities']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Number Theory -> Congruences', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 6,
+          "accepted": 6,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Geometry -> Plane Geometry -> Angles']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Other']": {
+          "attempted": 44,
+          "accepted": 44,
+          "correct": 18
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Other', 'Mathematics -> Algebra -> Equations and Inequalities -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Other', 'Mathematics -> Algebra -> Other']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 7,
+          "accepted": 7,
+          "correct": 2
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Functional Analysis']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Discrete Mathematics -> Graph Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Sequences and Series -> Other']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 4
+        },
+        "['Mathematics -> Precalculus -> Functions']": {
+          "attempted": 12,
+          "accepted": 12,
+          "correct": 8
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Discrete Mathematics -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Abstract Algebra -> Group Theory']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Other', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 17,
+          "accepted": 17,
+          "correct": 5
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Recursive Sequences -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Abstract Algebra -> Field Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Algorithms', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Algebra -> Abstract Algebra -> Other', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Sequences -> Other']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Group Theory', 'Mathematics -> Number Theory -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Angles', 'Mathematics -> Geometry -> Plane Geometry -> Triangulations']": {
+          "attempted": 13,
+          "accepted": 13,
+          "correct": 6
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Abstract Algebra -> Group Theory (related to permutations) -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Other']": {
+          "attempted": 40,
+          "accepted": 40,
+          "correct": 26
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Algebra -> Intermediate Algebra -> Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Circles', 'Mathematics -> Geometry -> Plane Geometry -> Triangulations']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Permutations', 'Mathematics -> Number Theory -> Perfect Squares -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Number Theory -> Divisibility -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Geometry -> Plane Geometry -> Area']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives', 'Mathematics -> Algebra -> Intermediate Algebra -> Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions']": {
+          "attempted": 39,
+          "accepted": 39,
+          "correct": 32
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Linear Transformations']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Other', 'Mathematics -> Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Matrices', 'Mathematics -> Algebra -> Abstract Algebra -> Ring Theory']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 2
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 21,
+          "accepted": 21,
+          "correct": 8
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Matrices']": {
+          "attempted": 12,
+          "accepted": 12,
+          "correct": 5
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 6,
+          "accepted": 6,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Discrete Mathematics -> Logic']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 4
+        },
+        "['Mathematics -> Discrete Mathematics -> Graph Theory', 'Mathematics -> Geometry -> Plane Geometry -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Integers']": {
+          "attempted": 118,
+          "accepted": 118,
+          "correct": 90
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Number Theory -> Congruences', 'Mathematics -> Algebra -> Prealgebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Other', 'Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Number Theory -> Other']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions', 'Mathematics -> Number Theory -> Congruences', 'Mathematics -> Precalculus -> Limits']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Word Problems -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Algorithms', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Algebra -> Prealgebra -> Integers']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other']": {
+          "attempted": 99,
+          "accepted": 99,
+          "correct": 50
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Probability -> Other']": {
+          "attempted": 38,
+          "accepted": 38,
+          "correct": 18
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other', 'Mathematics -> Algebra -> Differential Equations -> Partial Differential Equations (PDEs)', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Discrete Mathematics -> Set Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Quadratic Functions']": {
+          "attempted": 14,
+          "accepted": 14,
+          "correct": 11
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Fractions']": {
+          "attempted": 50,
+          "accepted": 50,
+          "correct": 41
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Calculus -> Differential Calculus -> Derivatives']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Algebra -> Combinatorics -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Prealgebra -> Integers']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Quadratic Fields -> Other', 'Mathematics -> Algebra -> Abstract Algebra -> Ring Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Circles', 'Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Techniques of Integration -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Differential Calculus -> Series -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Applications of Integrals', 'Mathematics -> Geometry -> Plane Geometry -> Circles']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Solid Geometry -> 3D Shapes', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Geometry -> Plane Geometry -> Area']": {
+          "attempted": 9,
+          "accepted": 9,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 6,
+          "accepted": 6,
+          "correct": 2
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Algebra -> Equations and Inequalities -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Discrete Mathematics -> Graph Theory']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Area']": {
+          "attempted": 25,
+          "accepted": 25,
+          "correct": 14
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Algebra -> Prealgebra -> Integers']": {
+          "attempted": 7,
+          "accepted": 7,
+          "correct": 2
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Other', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Other']": {
+          "attempted": 30,
+          "accepted": 30,
+          "correct": 16
+        },
+        "['Mathematics -> Number Theory -> Other', 'Mathematics -> Algebra -> Prealgebra -> Integers']": {
+          "attempted": 7,
+          "accepted": 7,
+          "correct": 4
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 9,
+          "accepted": 9,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Calculus -> Differential Calculus -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Algebra -> Abstract Algebra -> Other (Inequalities) -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Math Word Problems']": {
+          "attempted": 141,
+          "accepted": 141,
+          "correct": 100
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Single-variable', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 7,
+          "accepted": 7,
+          "correct": 3
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Angles', 'Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Geometry -> Plane Geometry -> Triangulations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Geometry -> Plane Geometry -> Angles']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Algebra -> Prealgebra -> Integers']": {
+          "attempted": 11,
+          "accepted": 11,
+          "correct": 5
+        },
+        "['Mathematics -> Number Theory -> Divisors -> Other']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 3
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions']": {
+          "attempted": 6,
+          "accepted": 6,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Circles', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Vectors', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Sequences and Series']": {
+          "attempted": 12,
+          "accepted": 12,
+          "correct": 6
+        },
+        "['Mathematics -> Discrete Mathematics -> Graph Theory', 'Mathematics -> Algebra -> Abstract Algebra -> Other (Recurrence Relations) -> Other', 'Mathematics -> Algebra -> Other (Number Theory - Divisibility) -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Other', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Solid Geometry -> 3D Shapes', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Permutations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Geometry -> Solid Geometry -> 3D Shapes']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangles -> Other', 'Mathematics -> Geometry -> Plane Geometry -> Circles']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Other', 'Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives']": {
+          "attempted": 6,
+          "accepted": 6,
+          "correct": 3
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Prealgebra -> Simple Equations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Other', 'Mathematics -> Discrete Mathematics -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Circles', 'Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Circles', 'Mathematics -> Geometry -> Plane Geometry -> Triangles -> Other']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Sequences and Series', 'Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Partial Fractions -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 6,
+          "accepted": 6,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Algebra -> Intermediate Algebra -> Logarithmic Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Series -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Number Theory -> Greatest Common Divisors (GCD)']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Single-variable', 'Mathematics -> Algebra -> Intermediate Algebra -> Series -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Inequalities', 'Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other', 'Mathematics -> Applied Mathematics -> Statistics -> Mathematical Statistics']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Solid Geometry -> 3D Shapes', 'Mathematics -> Geometry -> Plane Geometry -> Triangulations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Other (since the context of \\\\( A \\\\) is necessary but unspecified here, the question relates to determining and summing all divisors of an integer) -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Prealgebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Precalculus -> Trigonometric Functions']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Applied Mathematics -> Probability -> Other', 'Mathematics -> Calculus -> Integral Calculus -> Applications of Integrals']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Least Common Multiples (LCM)', 'Mathematics -> Number Theory -> Greatest Common Divisors (GCD)']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Circles', 'Mathematics -> Algebra -> Linear Algebra -> Vectors']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Curves -> Other']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 2
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Intermediate Algebra -> Quadratic Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions', 'Mathematics -> Calculus -> Integral Calculus -> Applications of Integrals']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Exponents and Powers -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Distance -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebraic Expressions -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Simple Equations']": {
+          "attempted": 144,
+          "accepted": 144,
+          "correct": 130
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Differential Calculus -> Derivatives']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Function Theory -> Other', 'Mathematics -> Algebra -> Equations and Inequalities -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Other', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Fractions', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Solid Geometry -> Volume', 'Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Multi-variable', 'Mathematics -> Applied Mathematics -> Math Word Problems']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Circles', 'Mathematics -> Calculus -> Differential Calculus -> Related Rates']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Algebra -> Prealgebra -> Simple Equations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Number Theory -> Congruences', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Geometry -> Plane Geometry -> Circles']": {
+          "attempted": 6,
+          "accepted": 6,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Geometry -> Solid Geometry -> 3D Shapes']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Number Theory -> Greatest Common Divisors (GCD)']": {
+          "attempted": 21,
+          "accepted": 21,
+          "correct": 12
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Curves -> Other', 'Mathematics -> Algebra -> Equations and Inequalities -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Geometry -> Plane Geometry -> Other (Chessboard problems) -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Absolute Values -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Logic', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Number Theory -> Divisibility -> Other', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Single-variable', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Solid Geometry -> 3D Shapes', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Decimal Operations -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Cubic Functions -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Algebra -> Equations and Inequalities -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Solid Geometry -> Volume']": {
+          "attempted": 8,
+          "accepted": 8,
+          "correct": 5
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Other']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 3
+        },
+        "['Mathematics -> Applied Mathematics -> Probability -> Other', 'Mathematics -> Geometry -> Plane Geometry -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 3
+        },
+        "['Mathematics -> Applied Mathematics -> Math Word Problems', 'Mathematics -> Algebra -> Prealgebra -> Integers']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Arithmetic Sequences -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other', 'Mathematics -> Algebra -> Intermediate Algebra -> Logarithmic Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Field Theory', 'Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Angles', 'Mathematics -> Precalculus -> Trigonometric Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Single-variable']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Other', 'Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Algebra -> Intermediate Algebra -> Quadratic Functions']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 10,
+          "accepted": 10,
+          "correct": 5
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Precalculus -> Trigonometric Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 8,
+          "accepted": 8,
+          "correct": 6
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Modular Arithmetic -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Set Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Divisor Functions -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Logarithmic Functions']": {
+          "attempted": 13,
+          "accepted": 13,
+          "correct": 9
+        },
+        "['Mathematics -> Applied Mathematics -> Probability -> Other', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 2
+        },
+        "['Mathematics -> Number Theory -> Other', 'Mathematics -> Algebra -> Prealgebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Multi-variable']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Quadratic Functions', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Precalculus -> Trigonometric Functions']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Fraction Series -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Single-variable']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 2
+        },
+        "['Mathematics -> Geometry -> Solid Geometry -> 3D Shapes', 'Mathematics -> Calculus -> Integral Calculus -> Applications of Integrals']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other', 'Mathematics -> Algebra -> Prealgebra -> Simple Equations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Area', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 4
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions', 'Mathematics -> Algebra -> Intermediate Algebra -> Logarithmic Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Applied Mathematics -> Probability -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Functions and Sequences -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Factorials -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Geometry -> Differential Geometry -> Curvature']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Precalculus -> Trigonometric Functions', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions', 'Mathematics -> Algebra -> Abstract Algebra -> Group Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Logic']": {
+          "attempted": 9,
+          "accepted": 9,
+          "correct": 2
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Circles', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Decimals', 'Mathematics -> Geometry -> Solid Geometry -> 3D Shapes']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Geometry -> Plane Geometry -> Angles']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Algebra -> Abstract Algebra -> Field Theory (due to the use of cubic plane curves and intricate properties of these algebraic structures) -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Sequences -> Other', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Area', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions', 'Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Graph Theory', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Precalculus -> Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Precalculus -> Limits', 'Mathematics -> Algebra -> Prealgebra -> Fractions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Geometry -> Plane Geometry -> Angles', 'Mathematics -> Geometry -> Plane Geometry -> Triangulations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Circles', 'Mathematics -> Precalculus -> Trigonometric Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Probability -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 2
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 4
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Binary Fractions -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Applied Mathematics -> Probability -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Permutations', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Expressions and Inequalities -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Field Theory', 'Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Applied Mathematics -> Math Word Problems']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions', 'Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Series Expansion -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Polynomial Operations -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Algebra -> Prealgebra -> Integers']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Calculus -> Integral Calculus -> Series -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Group Theory', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Applied Mathematics -> Probability -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Least Common Multiples (LCM)']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 3
+        },
+        "['Mathematics -> Applied Mathematics -> Math Word Problems', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other', 'Mathematics -> Geometry -> Plane Geometry -> Area']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Number Theory -> Greatest Common Divisors (GCD)']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Geometry -> Plane Geometry -> Circles']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Algebra -> Intermediate Algebra -> Inequalities']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Digit Sums -> Other', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Multi-variable', 'Mathematics -> Algebra -> Algebra -> Sequences and Series']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Rational Functions -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Math Word Problems', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Applied Mathematics -> Math Word Problems', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 3
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Geometry -> Plane Geometry -> Other']": {
+          "attempted": 8,
+          "accepted": 8,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Numbers -> Other', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Greatest Common Divisors (GCD)', 'Mathematics -> Algebra -> Prealgebra -> Integers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Polynomials -> Other', 'Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other', 'Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Single-variable']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangles -> Other']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Least Common Multiples (LCM)', 'Mathematics -> Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Modular Arithmetic -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Precalculus -> Trigonometric Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Geometry -> Plane Geometry -> Angles']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Field Theory', 'Mathematics -> Number Theory -> Congruences', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Algebra -> Abstract Algebra -> Field Theory']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 3
+        },
+        "['Mathematics -> Precalculus -> Trigonometric Functions', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Applied Mathematics -> Statistics -> Mathematical Statistics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Algorithms', 'Mathematics -> Applied Mathematics -> Math Word Problems']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Quadratic Functions', 'Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives (finite differences and interpolation) -> Other', 'Mathematics -> Precalculus -> Trigonometric Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Linear Algebra -> Matrices']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Mathematical Statistics']": {
+          "attempted": 6,
+          "accepted": 6,
+          "correct": 2
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Number Theory -> Greatest Common Divisors (GCD)']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Algebra -> Prealgebra -> Factorials -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Applied Mathematics -> Probability -> Other']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Precalculus -> Limits', 'Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Geometry -> Plane Geometry -> Angles', 'Mathematics -> Precalculus -> Trigonometric Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Vectors', 'Mathematics -> Algebra -> Abstract Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Precalculus -> Trigonometric Functions', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Algebra -> Sequences and Series', 'Mathematics -> Number Theory -> Divisibility -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Intermediate Algebra -> Inequalities']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Sequences and Series', 'Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Solid Geometry -> 3D Shapes', 'Mathematics -> Discrete Mathematics -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Precalculus -> Trigonometric Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Calculus -> Applications of Derivatives (for optimization purposes) -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Precalculus -> Functions', 'Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives', 'Mathematics -> Algebra -> Abstract Algebra -> Group Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Probability -> Other', 'Mathematics -> Geometry -> Solid Geometry -> 3D Shapes']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Other', 'Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Algebra -> Abstract Algebra -> Ring Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Geometry -> Plane Geometry -> Circles']": {
+          "attempted": 6,
+          "accepted": 6,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Algebra -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Number Theory -> Perfect Squares -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Other', 'Mathematics -> Algebra -> Abstract Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Single-variable', 'Mathematics -> Algebra -> Algebraic Expressions -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Vectors']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 6,
+          "accepted": 6,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Algebra -> Linear Algebra -> Vectors']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Algebra -> Abstract Algebra -> Field Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 8,
+          "accepted": 8,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Number Theory -> Diophantine Equations -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Single-variable']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Field Theory', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Solid Geometry -> 3D Shapes', 'Mathematics -> Precalculus -> Trigonometric Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Other', 'Mathematics -> Algebra -> Intermediate Algebra -> Logarithmic Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Geometry -> Plane Geometry -> Triangulations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Abstract Algebra -> Other']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Math Word Problems', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Precalculus -> Trigonometric Functions', 'Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Algebra -> Intermediate Algebra -> Quadratic Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Solid Geometry -> 3D Shapes', 'Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Precalculus -> Functions', 'Mathematics -> Discrete Mathematics -> Logic']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Multi-variable', 'Mathematics -> Algebra -> Differential Equations -> Ordinary Differential Equations (ODEs)']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 6,
+          "accepted": 6,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Multi-variable']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Geometry -> Solid Geometry -> 3D Shapes']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Differential Equations -> Ordinary Differential Equations (ODEs)']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Precalculus -> Trigonometric Functions']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 2
+        },
+        "['Mathematics -> Discrete Mathematics -> Algorithms', 'Mathematics -> Geometry -> Plane Geometry -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Solid Geometry -> 3D Shapes', 'Mathematics -> Discrete Mathematics -> Graph Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Precalculus -> Functions', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Algebra -> Sequences and Series']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Circles', 'Mathematics -> Geometry -> Plane Geometry -> Angles']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives', 'Mathematics -> Precalculus -> Trigonometric Functions']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Applied Mathematics -> Probability -> Other', 'Mathematics -> Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Permutations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Single-variable', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 6,
+          "accepted": 6,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangles -> Other', 'Mathematics -> Precalculus -> Trigonometric Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Algebra -> Intermediate Algebra -> Logarithmic Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other', 'Mathematics -> Algebra -> Algebraic Expressions -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Series -> Other', 'Mathematics -> Algebra -> Intermediate Algebra -> Logarithmic Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Permutations', 'Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Applied Mathematics -> Math Word Problems']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Quadratic Functions', 'Mathematics -> Geometry -> Plane Geometry -> Triangles -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Digits and Sums -> Other', 'Mathematics -> Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Greatest Common Divisors (GCD)', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Permutations']": {
+          "attempted": 7,
+          "accepted": 7,
+          "correct": 3
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Area', 'Mathematics -> Calculus -> Integral Calculus -> Series -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Other']": {
+          "attempted": 7,
+          "accepted": 7,
+          "correct": 3
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 10,
+          "accepted": 10,
+          "correct": 8
+        },
+        "['Mathematics -> Algebra -> Other', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 3
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Applications of Integrals', 'Mathematics -> Calculus -> Integral Calculus -> Applications of Integrals']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Math Word Problems', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 3
+        },
+        "['Mathematics -> Number Theory -> Greatest Common Divisors (GCD)', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Graph Theory', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Other', 'Mathematics -> Algebra -> Other', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Solid Geometry -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Algebra -> Algebraic Expressions -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Math Word Problems', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Algebra -> Intermediate Algebra -> Quadratic Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Areas -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Geometry -> Plane Geometry -> Distances -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Algorithms', 'Mathematics -> Applied Mathematics -> Math Word Problems', 'Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangles -> Other', 'Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Number Theory -> Divisor Function -> Other', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Other', 'Mathematics -> Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Applications of Integrals', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Calculus -> Integral Calculus -> Applications of Integrals']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Factorials -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Divisibility -> Other', 'Mathematics -> Algebra -> Prealgebra -> Simple Equations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Number Theory -> Divisibility -> Other', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "[]": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Base Representations -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other', 'Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 3
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Geometry -> Solid Geometry -> 3D Shapes']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Math Word Problems', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Math Word Problems', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Precalculus -> Trigonometric Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Number Theory -> Greatest Common Divisors (GCD)']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Geometry -> Plane Geometry -> Areas -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Angles', 'Mathematics -> Number Theory -> Greatest Common Divisors (GCD)']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Systems of Equations -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Algebra -> Intermediate Algebra -> Other (counting integer solutions) -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Algebra -> Prealgebra -> Integers']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Precalculus -> Trigonometric Functions', 'Mathematics -> Geometry -> Plane Geometry -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Multi-variable']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Linear Equations -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Algorithms', 'Mathematics -> Discrete Mathematics -> Graph Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Angles', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Divisibility -> Other', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Differential Calculus -> Derivatives', 'Mathematics -> Precalculus -> Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Other', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Circles', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Other', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Area', 'Mathematics -> Algebra -> Intermediate Algebra -> Rational Functions -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Sequences and Series', 'Mathematics -> Calculus -> Applications of Integrals -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Quadratic Functions', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives', 'Mathematics -> Algebra -> Intermediate Algebra -> Functional Analysis']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Other', 'Mathematics -> Precalculus -> Trigonometric Functions', 'Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Geometry -> Plane Geometry -> Angles']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Angles', 'Mathematics -> Geometry -> Plane Geometry -> Area']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Geometry -> Plane Geometry -> Angles']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Vectors', 'Mathematics -> Algebra -> Linear Algebra -> Matrices', 'Mathematics -> Algebra -> Intermediate Algebra -> Other (Inequalities and Eigenvalues Analysis) -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Group Theory', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Quadratic Functions', 'Mathematics -> Algebra -> Prealgebra -> Simple Equations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Conic Sections -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Single-variable', 'Mathematics -> Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Precalculus -> Trigonometric Functions', 'Mathematics -> Geometry -> Plane Geometry -> Angles']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Geometry -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Geometry -> Plane Geometry -> Triangles -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Rational Functions -> Other', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Matrices', 'Mathematics -> Algebra -> Linear Algebra -> Eigenvalues -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Matrices', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Exponentiation -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Applications of Integrals', 'Mathematics -> Geometry -> Solid Geometry -> Surface Area']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Calculus -> Integral Calculus -> Applications of Integrals', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Area', 'Mathematics -> Geometry -> Plane Geometry -> Circles']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Math Word Problems', 'Mathematics -> Geometry -> Plane Geometry -> Angles']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Number Theory -> Congruences', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Simple Equations', 'Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Angles', 'Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Geometry -> Plane Geometry -> Triangulations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Sequences and Series', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Algebra -> Prealgebra -> Simple Equations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Applied Mathematics -> Probability -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Calculus -> Differential Calculus -> Series -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Inequalities', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Algebra -> Prealgebra -> Fractions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Number Theory -> Other', 'Mathematics -> Algebra -> Prealgebra -> Integers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Single-variable']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Geometry -> Differential Geometry -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Algebra -> Recurrence Relations -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Applications of Integrals']": {
+          "attempted": 6,
+          "accepted": 6,
+          "correct": 4
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Distance Problems -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Radical Equations -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Algebra -> Sequences and Series -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Group Theory', 'Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Applied Mathematics -> Statistics -> Mathematical Statistics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Math Word Problems', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Precalculus -> Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Simple Equations', 'Mathematics -> Geometry -> Plane Geometry -> Area']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Field Theory', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Precalculus -> Trigonometric Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Modular Arithmetic -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Precalculus -> Functions', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Precalculus -> Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Discrete Mathematics -> Logic', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Solid Geometry -> Surface Area']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Fractions', 'Mathematics -> Geometry -> Plane Geometry -> Area']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Math Word Problems', 'Mathematics -> Algebra -> Prealgebra -> Ratios -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Lines -> Other', 'Mathematics -> Algebra -> Prealgebra -> Simple Equations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Solid Geometry -> Surface Area', 'Mathematics -> Geometry -> Solid Geometry -> Volume']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Quadratic Functions', 'Mathematics -> Geometry -> Plane Geometry -> Triangulations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Sequences and series -> Other', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Exponents -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Applied Mathematics -> Math Word Problems', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Determinants']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Algebra -> Intermediate Algebra -> Quadratic Functions', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Ratios -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Series and Sequences -> Other', 'Mathematics -> Algebra -> Prealgebra -> Simple Equations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Algebra -> Prealgebra -> Simple Equations']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 5
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Simple Equations', 'Mathematics -> Number Theory -> Integer Factorization -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Decimals']": {
+          "attempted": 10,
+          "accepted": 10,
+          "correct": 8
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Simple Equations', 'Mathematics -> Applied Mathematics -> Math Word Problems']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Algebra -> Prealgebra -> Simple Equations']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Applied Mathematics -> Math Word Problems']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Simple Equations', 'Mathematics -> Geometry -> Plane Geometry -> Perimeter']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Sequences -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Arithmetic -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Sequences -> Other']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Simple Equations', 'Mathematics -> Geometry -> Plane Geometry -> Angles']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Equations -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Simple Equations', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Simple Equations', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Circular and Triangular Relationships -> Other', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Least Common Multiples (LCM)', 'Mathematics -> Algebra -> Prealgebra -> Integers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Simple Equations', 'Mathematics -> Algebra -> Prealgebra -> Integers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other', 'Mathematics -> Algebra -> Prealgebra -> Integers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Precalculus -> Limits', 'Mathematics -> Calculus -> Infinite Series -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Number Theory -> Perfect Squares -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives', 'Mathematics -> Algebra -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Divisors -> Other', 'Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Other', 'Mathematics -> Algebra -> Complex Numbers -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Algebra -> Floor Function -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Other', 'Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Precalculus -> Limits']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Math Word Problems', 'Mathematics -> Algebra -> Prealgebra -> Fractions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Abstract Algebra -> Field Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Area', 'Mathematics -> Algebra -> Prealgebra -> Fractions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Averages -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Precalculus -> Functions', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Multi-variable', 'Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Solid Geometry -> 3D Shapes', 'Mathematics -> Number Theory -> Perfect Numbers (as the problem contextually involves understanding integer conditions and perfect squares indirectly) -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Multi-variable', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Series and Sequences -> Other', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Applications of Integrals', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Applications of Integrals', 'Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Multi-variable']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Group Theory', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Differential Calculus -> Derivatives', 'Mathematics -> Algebra -> Equations and Inequalities -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Matrices', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Group Theory', 'Mathematics -> Number Theory -> Congruences']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 2
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Field Theory', 'Mathematics -> Number Theory -> Congruences', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives', 'Mathematics -> Calculus -> Differential Calculus -> Derivatives']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives', 'Mathematics -> Algebra -> Abstract Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Other', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Binary Representation -> Other', 'Mathematics -> Number Theory -> Modular Arithmetic -> Other', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Techniques of Integration -> Single-variable', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Polygons', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives', 'Mathematics -> Algebra -> Intermediate Algebra -> Quadratic Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Group Theory', 'Mathematics -> Geometry -> Plane Geometry -> Angles', 'Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Logarithmic Functions', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Circles', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Calculus -> Techniques of Integration -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Logarithmic Functions', 'Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Angles', 'Mathematics -> Algebra -> Linear Algebra -> Vectors']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Number Theory -> Other', 'Mathematics -> Algebra -> Polynomial Operations -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Algorithms', 'Mathematics -> Geometry -> Plane Geometry -> Angles']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Algorithms', 'Mathematics -> Algebra -> Abstract Algebra -> Group Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives (for understanding the inverse tangent) -> Other', 'Mathematics -> Number Theory -> Other (for comparing transcendental numbers) -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Other', 'Mathematics -> Applied Mathematics -> Math Word Problems']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Calculus -> Integral Calculus -> Applications of Integrals']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Percentages -> Other']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Geometry -> Plane Geometry -> Polygons']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Math Word Problems', 'Mathematics -> Geometry -> Plane Geometry -> Perimeter']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Prealgebra -> Simple Equations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Ratios and Proportions -> Other', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Percentages -> Other', 'Mathematics -> Algebra -> Prealgebra -> Simple Equations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Percentages -> Other', 'Mathematics -> Applied Mathematics -> Math Word Problems']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Differential Geometry -> Curvature']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Precalculus -> Limits', 'Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Geometry -> Plane Geometry -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Determinants', 'Mathematics -> Discrete Mathematics -> Game Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Applications of Integrals', 'Mathematics -> Algebra -> Polynomial Operations -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Divisibility -> Other', 'Mathematics -> Algebra -> Equations and Inequalities -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Complex Numbers', 'Mathematics -> Discrete Mathematics -> Logic']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Exponential Equations -> Other', 'Mathematics -> Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Equations and Inequalities -> Other']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Other', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Calculus -> Real Numbers -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Divisor Functions -> Other', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Geometry -> Plane Geometry -> Circle -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Number Theory -> Factorization', 'Mathematics -> Number Theory -> Prime Numbers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Ring Theory', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Radical Expressions -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Greatest Common Divisors (GCD)', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Algebra -> Equations and Inequalities -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Greatest Common Divisors (GCD)', 'Mathematics -> Number Theory -> Least Common Multiples (LCM)']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Discrete Mathematics -> Logic']": {
+          "attempted": 5,
+          "accepted": 5,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Field Theory', 'Mathematics -> Algebra -> Equations and Inequalities -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Number Theory -> Prime Numbers (due to considerations involving perfect squares and integer properties) -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Divisibility -> Other', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Other', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Discrete Mathematics -> Logic']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Sequences and Series', 'Mathematics -> Algebra -> Equations and Inequalities -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Differential Geometry -> Curvature', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Inequalities', 'Mathematics -> Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Other', 'Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Matrices', 'Mathematics -> Algebra -> Linear Algebra -> Determinants']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Sequences -> Other', 'Mathematics -> Algebra -> Prealgebra -> Integers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Coordinates -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Other', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Equations and Inequalities -> Other']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Other', 'Mathematics -> Precalculus -> Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Number Theory -> Diophantine Equations -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Field Theory', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Sequences -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Algorithms', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 2
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Group Theory', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Applied Mathematics -> Probability -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Field Theory', 'Mathematics -> Number Theory -> Factorization']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Other', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Other', 'Mathematics -> Algebra -> Abstract Algebra -> Field Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Algebra -> Abstract Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Precalculus -> Functions', 'Mathematics -> Algebra -> Equations and Inequalities -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Calculus -> Optimization -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Geometry -> Plane Geometry -> Triangulations']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Integral Calculus -> Applications of Integrals', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Combinations', 'Mathematics -> Geometry -> Plane Geometry -> Triangulations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Greatest Common Divisors (GCD)', 'Mathematics -> Number Theory -> Least Common Multiples (LCM)', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Other', 'Mathematics -> Algebra -> Algebraic Expressions -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Other', 'Mathematics -> Geometry -> Plane Geometry -> Angles', 'Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Sequences and Series', 'Mathematics -> Algebra -> Intermediate Algebra -> Functional Analysis']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Other', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 3
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Algebra -> Abstract Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Group Theory', 'Mathematics -> Algebra -> Equations and Inequalities -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Sequences -> Other', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Precalculus -> Functions', 'Mathematics -> Algebra -> Algebraic Expressions -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Calculus -> Differential Calculus -> Derivatives', 'Mathematics -> Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Other', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Field Theory', 'Mathematics -> Discrete Mathematics -> Logic']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Graph Theory', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Field Theory', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Intermediate Algebra -> Sequences -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Sequences -> Other', 'Mathematics -> Number Theory -> Rational Numbers -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Number Theory -> Divisibility -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Divisors -> Other', 'Mathematics -> Algebra -> Sequences and Series -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Other', 'Mathematics -> Algebra -> Prealgebra -> Fractions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Other', 'Mathematics -> Discrete Mathematics -> Logic']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Number Theory -> Congruences', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Discrete Mathematics -> Game Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Discrete Mathematics -> Logic']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Other', 'Mathematics -> Discrete Mathematics -> Combinatorics']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Math Word Problems', 'Mathematics -> Discrete Mathematics -> Logic']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Number Theory -> Congruences', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Functional Equations -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Permutations', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Other', 'Mathematics -> Calculus -> Single-variable -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Group Theory', 'Mathematics -> Number Theory -> Rational Numbers -> Other', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Number Theory -> Factorization', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Other', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Sequences and Series', 'Mathematics -> Number Theory -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Discrete Mathematics -> Algorithms', 'Mathematics -> Algebra -> Prealgebra -> Integers']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Algebraic Expressions', 'Mathematics -> Calculus -> Differential Calculus -> Derivatives']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Geometry -> Plane Geometry -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Inequalities', 'Mathematics -> Geometry -> Plane Geometry -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Number Theory -> Greatest Common Divisors (GCD)']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Elementary Functions -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Field Theory', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Number Theory -> Integer Solutions -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Prealgebra -> Integers', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Number Theory -> Divisibility -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Geometry -> Plane Geometry -> Triangulations', 'Mathematics -> Algebra -> Abstract Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Discrete Mathematics -> Game Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Sequences and Series', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Sequences and Series -> Other', 'Mathematics -> Number Theory -> Divisibility -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Abstract Algebra -> Field Theory', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Precalculus -> Functions', 'Mathematics -> Geometry -> Plane Geometry -> Triangulations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Divisibility -> Other', 'Mathematics -> Algebra -> Algebra -> Polynomial Operations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Applied Mathematics -> Statistics -> Probability -> Counting Methods -> Permutations']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Number Theory -> Prime Numbers (since factoring may be involved in recognizing perfect squares or constraints) -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Rational Approximations -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Algebra -> Prealgebra -> Fractions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Quadratic Functions', 'Mathematics -> Calculus -> Differential Calculus -> Applications of Derivatives']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Algebra -> Prealgebra -> Other', 'Mathematics -> Discrete Mathematics -> Logic']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Inequalities', 'Mathematics -> Algebra -> Intermediate Algebra -> Functional Analysis']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Calculus -> Differential Calculus -> Other', 'Mathematics -> Algebra -> Intermediate Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Factorization', 'Mathematics -> Algebra -> Abstract Algebra -> Ring Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Integer Solutions -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Linear Algebra -> Matrices', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Abstract Algebra -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Game Theory']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Greatest Common Divisors (GCD)', 'Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Diophantine Equations -> Other']": {
+          "attempted": 2,
+          "accepted": 2,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Geometry -> Plane Geometry -> Segments -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Polynomial Operations', 'Mathematics -> Geometry -> Plane Geometry -> Intersections -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Discrete Mathematics -> Logic']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Applied Mathematics -> Probability -> Other', 'Mathematics -> Geometry -> Plane Geometry -> Other', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Number Theory -> Prime Numbers', 'Mathematics -> Algebra -> Quadratic Functions -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Algebra -> Algebra -> Sequences and Series', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Algebra -> Equations and Inequalities', 'Mathematics -> Number Theory -> Other', 'Mathematics -> Algebra -> Algebra -> Algebraic Expressions']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Congruences', 'Mathematics -> Discrete Mathematics -> Algorithms']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "['Mathematics -> Discrete Mathematics -> Combinatorics', 'Mathematics -> Algebra -> Equations and Inequalities -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Number Theory -> Greatest Common Divisors (GCD)', 'Mathematics -> Algebra -> Algebra -> Equations and Inequalities']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "['Mathematics -> Algebra -> Intermediate Algebra -> Exponential Functions', 'Mathematics -> Number Theory -> Divisibility -> Other']": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        }
+      },
+      "difficulty": {
+        "8.0": {
+          "attempted": 265,
+          "accepted": 265,
+          "correct": 123
+        },
+        "7.0": {
+          "attempted": 387,
+          "accepted": 387,
+          "correct": 173
+        },
+        "8.5": {
+          "attempted": 13,
+          "accepted": 13,
+          "correct": 8
+        },
+        "9.0": {
+          "attempted": 157,
+          "accepted": 157,
+          "correct": 78
+        },
+        "6.0": {
+          "attempted": 259,
+          "accepted": 259,
+          "correct": 107
+        },
+        "6.5": {
+          "attempted": 106,
+          "accepted": 106,
+          "correct": 50
+        },
+        "7.5": {
+          "attempted": 77,
+          "accepted": 77,
+          "correct": 34
+        },
+        "8.25": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 1
+        },
+        "5.5": {
+          "attempted": 158,
+          "accepted": 158,
+          "correct": 66
+        },
+        "5.0": {
+          "attempted": 890,
+          "accepted": 889,
+          "correct": 386
+        },
+        "4.5": {
+          "attempted": 398,
+          "accepted": 398,
+          "correct": 178
+        },
+        "5.25": {
+          "attempted": 232,
+          "accepted": 232,
+          "correct": 65
+        },
+        "3.5": {
+          "attempted": 200,
+          "accepted": 200,
+          "correct": 144
+        },
+        "4.0": {
+          "attempted": 543,
+          "accepted": 542,
+          "correct": 287
+        },
+        "3.0": {
+          "attempted": 21,
+          "accepted": 21,
+          "correct": 11
+        },
+        "4.75": {
+          "attempted": 12,
+          "accepted": 12,
+          "correct": 9
+        },
+        "3.75": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 0
+        },
+        "4.25": {
+          "attempted": 3,
+          "accepted": 3,
+          "correct": 3
+        },
+        "2.0": {
+          "attempted": 166,
+          "accepted": 166,
+          "correct": 127
+        },
+        "2.5": {
+          "attempted": 173,
+          "accepted": 173,
+          "correct": 122
+        },
+        "4.375": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        },
+        "6.25": {
+          "attempted": 7,
+          "accepted": 7,
+          "correct": 4
+        },
+        "1.5": {
+          "attempted": 209,
+          "accepted": 209,
+          "correct": 174
+        },
+        "1.0": {
+          "attempted": 126,
+          "accepted": 126,
+          "correct": 112
+        },
+        "2.25": {
+          "attempted": 4,
+          "accepted": 4,
+          "correct": 3
+        },
+        "9.5": {
+          "attempted": 16,
+          "accepted": 16,
+          "correct": 6
+        },
+        "6.75": {
+          "attempted": 1,
+          "accepted": 1,
+          "correct": 0
+        }
+      }
+    },
+    "source_hashes": {
+      "scorer": {
+        "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/public_portfolio_2026-09-05/omni_setup/native_source/Omni-Judge_eval/get_result.py",
+        "sha256": "dd7928ac30dd3aabef26f4d8be9eac52462224817af70f27cd44f174e1fd3a90"
+      },
+      "rows": {
+        "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/public_portfolio_2026-09-05/native_finish_v5/e14_official_collector/official_result01/native_judged_rows.jsonl",
+        "sha256": "64e42c5230c79914675e0c80b643afdc527b80690c45b682176d1973c3a38540"
+      },
+      "dispositions": {
+        "path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/public_portfolio_2026-09-05/native_finish_v5/e14_official_collector/official_result01/native_dispositions.jsonl",
+        "sha256": "85478b0f7e61d3db25addbde0137796a5de22691e51ad1f8764aa1bebea651ae"
+      }
+    },
+    "model_calls": 0,
+    "provider_calls": 0,
+    "limitation": "Full transitive archive re-audit is blocked by a missing historical temporary artifacts.zip. This check reproduces original native scoring and validates every saved disposition; it does not claim the full archive audit passed."
+  }
+}

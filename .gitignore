@@ -140,3 +140,11 @@ outputs/e14_frontiermath/*.zip
 outputs/e6_webbench/lane.*/
 outputs/e3_sdab/local_sprint_*/venv.*/
 .squad/
+.chart-data-*/
+.codebase-memory/
+outputs/.advisor_*/
+outputs/PES_Phase2_Review_2026-09-12/
+outputs/e9_mle_bench/modal_streaming/
+outputs/e9_mle_bench/merged_vllm/
+outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/evaluation/instance_*
+outputs/public_portfolio_2026-09-05/

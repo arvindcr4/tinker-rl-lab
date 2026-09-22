@@ -1,0 +1,43 @@
+{
+  "schema_version": "pavlov-terminal-lane-receipt-v1",
+  "observed_at": "2026-08-22T00:00:00+05:30",
+  "lane": "E8",
+  "suite_id": "lifescibench_eval",
+  "status": "BLOCKED",
+  "terminal_for_current_inputs": true,
+  "is_model_score": false,
+  "score": null,
+  "tasks_executed": 0,
+  "cost_usd": 0.0,
+  "source": {
+    "name": "LifeSciBench",
+    "owner": "OpenAI",
+    "url": "https://openai.com/index/introducing-life-sci-bench/",
+    "officially_reported_tasks": 750,
+    "public_page_observed_at": "2026-08-22",
+    "public_task_package_found": false,
+    "public_native_runner_found": false,
+    "public_native_verifier_found": false
+  },
+  "verified_local_layers": {
+    "boundary_adapter": "zvf-program/flagship/pavlov_lifescibench_eval_adapter.py",
+    "adapter_result": "BLOCKED_METADATA_ONLY",
+    "focused_tests_passed": 25,
+    "focused_tests_failed": 0,
+    "prior_blocked_receipt_sha256": "7f5adb6eba9a31bba5076ab9e78b3655043882f6341743a06ef667bb40467995"
+  },
+  "blockers": [
+    "No immutable official 750-task package revision is available locally or from the official public source.",
+    "No explicit task-package license or written access grant is present.",
+    "No immutable native environment, artifact interface, rubric grader, or verifier receipt is present.",
+    "No task-ID manifest or train/evaluation disjointness receipt is available.",
+    "Because the exact task package is absent, W&B, Tinker, and Hugging Face run receipts cannot be created without fabricating an experiment boundary."
+  ],
+  "smallest_external_action": "OpenAI must provide the official LifeSciBench task package with an immutable revision, license or written grant, task IDs, native interface and grader revisions, and held-out policy receipt.",
+  "safety": {
+    "substitution_used": false,
+    "paid_call_made": false,
+    "wandb_run_created": false,
+    "hf_write_made": false
+  }
+}

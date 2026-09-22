@@ -1,0 +1,145 @@
+{
+  "candidate_reconstruction": {
+    "byte_identical_full_snapshot": false,
+    "delta_file_sha256": "a9c6a66fe07a1bbc0ed20ce6c52cdf70442259a41f42737bbcd5e552996763a0",
+    "mode": "fresh official image plus frozen trajectory file delta",
+    "official_image": "ghcr.io/proximal-labs/frontier-swe/revideo-perf-opt:v4",
+    "official_image_digest": "sha256:675d298493278f891a50e41ed31ffdb71590d4583dfc1987385a48d872f25103",
+    "restored_files": [
+      {
+        "bytes": 14568,
+        "relative_path": "node_modules/@types/dom-webcodecs/webcodecs.generated.d.ts",
+        "sha256": "a9c6a66fe07a1bbc0ed20ce6c52cdf70442259a41f42737bbcd5e552996763a0",
+        "source_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/jobs/revideo-perf-opt-pavlov-tinker-pass1-v10/revideo-perf-opt__LPQjQkC/artifacts/app/revideo/node_modules/@types/dom-webcodecs/webcodecs.generated.d.ts",
+        "target_path": "/app/revideo/node_modules/@types/dom-webcodecs/webcodecs.generated.d.ts"
+      }
+    ],
+    "why_delta_is_sufficient": "The audited trajectory contains exactly two mutating agent tool calls, both edits of the same file. The native verifier rebuilds the candidate packages before measurement; post-verifier hidden-scene files in the downloaded full snapshot were deliberately not replayed."
+  },
+  "created_at": "2026-08-22T07:36:15.294274+00:00",
+  "evidence_classification": "attempt_level_recovery/native_verifier_replay",
+  "evidence_boundary": "Complete, verified E2 attempt for revideo-perf-opt. Not a FrontierSWE suite result and not evidence for the other 16 official tasks.",
+  "failed_pre_execution_launches": [
+    {
+      "agent_started": false,
+      "environment_started": false,
+      "job_name": "revideo-perf-opt-frozen-artifact-replay-20260822",
+      "model_calls": 0,
+      "reason": "custom agent import missing from PYTHONPATH",
+      "verifier_started": false
+    },
+    {
+      "agent_started": false,
+      "environment_started": false,
+      "job_name": "revideo-perf-opt-frozen-artifact-replay-20260822-v2",
+      "model_calls": 0,
+      "reason": "Harbor output-directory mkdir/chmod ordering bug",
+      "verifier_started": false
+    }
+  ],
+  "frozen_source_attempt": {
+    "finished_at": "2026-08-16T13:53:17.239096Z",
+    "mutating_tool_calls": [
+      {
+        "file_path": "/app/revideo/node_modules/@types/dom-webcodecs/webcodecs.generated.d.ts",
+        "function_name": "edit",
+        "step_id": 19
+      },
+      {
+        "file_path": "/app/revideo/node_modules/@types/dom-webcodecs/webcodecs.generated.d.ts",
+        "function_name": "edit",
+        "step_id": 26
+      }
+    ],
+    "original_failure_boundary": "native verifier completed, but Harbor rejected rich non-numeric diagnostic values in reward.json",
+    "result_path": "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/jobs/revideo-perf-opt-pavlov-tinker-pass1-v10/revideo-perf-opt__LPQjQkC/result.json",
+    "result_sha256": "63af527835b4c558d0d111c63f507e8174d55c56c7322d3fe38b471f82ec5f90",
+    "started_at": "2026-08-16T13:22:19.540937Z",
+    "task_checksum": "3a117ea2f39648d4d5aa072308f805d6edc0d2b3fd09ec0736ca5bb480c09354",
+    "trajectory_path": "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/jobs/revideo-perf-opt-pavlov-tinker-pass1-v10/revideo-perf-opt__LPQjQkC/agent/trajectory.json",
+    "trajectory_sha256": "fc4cea022e04c0ce5cef5aa1a2785ffc1c43d67d3a7c5ef7e629b2e3d8e648f3",
+    "trial_id": "148a7d25-ceb9-4a6e-a839-d4192435341e",
+    "trial_name": "revideo-perf-opt__LPQjQkC"
+  },
+  "lane": "E2",
+  "provenance": {
+    "files": {
+      "outputs/e2_frontier_swe/frontier-swe/harbor_ext/artifact_replay.py": "994d6b4b86579e5f64ecf22c335613073031424ed090f0c8ef4f0e1681d14bee",
+      "outputs/e2_frontier_swe/frontier-swe/scripts/score_from_reward.py": "24d18f3a2e1729dd7a56e9c8abd2eb42364b6bd3a38a29679d86148132b20feb",
+      "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/job-artifact-replay.yaml": "9dd9ab514ced811f19972c89f8ca95968ac45f6544c4ed1d451a5942b4ef1285",
+      "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/jobs/revideo-perf-opt-frozen-artifact-replay-20260822-v3/revideo-perf-opt__7rYxH3L/agent/artifact-replay.json": "4a0345ffd7ea70838c75456008be0956e1f3d1057cd2556c0665bc704e117f4a",
+      "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/jobs/revideo-perf-opt-frozen-artifact-replay-20260822-v3/revideo-perf-opt__7rYxH3L/result.json": "ef80082502ef3ef899f06a0d8ae71be19fe634d4a59058936a820533846038a3",
+      "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/jobs/revideo-perf-opt-frozen-artifact-replay-20260822-v3/revideo-perf-opt__7rYxH3L/verifier/correctness_results.json": "7ec798feeb2cebcb0e8877cd1e0485dd6c0d02925dcf781ea94b9df8dc5e16df",
+      "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/jobs/revideo-perf-opt-frozen-artifact-replay-20260822-v3/revideo-perf-opt__7rYxH3L/verifier/info.json": "b60bd09d8ef6ef0c09c37565bbb0e71d979ebc8b74894f1f54dda9af4320958b",
+      "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/jobs/revideo-perf-opt-frozen-artifact-replay-20260822-v3/revideo-perf-opt__7rYxH3L/verifier/reward.json": "cc376c018e80d44008c9aeb9a0a869fa7b5e9bbf40398919db84778ad6dd8198",
+      "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/tests/compute_reward.py": "3d309e5951742eefe15d601096ac2f385b0704981ac7dc0fabb4d78f7d6e7243",
+      "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/tests/hidden-scenes.tar.gz": "4cb4a332ad02782f07d374304f764cedfa2993f2ee0ae0ea5db82415af9991df",
+      "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/tests/prep_build.py": "f09a7bfb32b529ef4a5c4c16c8e7a1185014eddc8ee4732dbcc2e70685ccb595",
+      "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/tests/test.sh": "e77b3e48fec45685c15ceaaef79f1d26cbe35c509a12f3bdccdb5d362905ae90"
+    },
+    "frontier_swe_checkout_commit": "422b9bb95deb8efe436becb0ed3c44be23611e10",
+    "frontier_swe_checkout_tree": "cf29dbbec20fe3f95de4c902d354742c6933eb02"
+  },
+  "result": {
+    "correctness_ok": true,
+    "geometric_mean_speedup": 0.7256,
+    "harbor_reward": 0.725611,
+    "hard_fail_reasons": [],
+    "hidden_scenes": 8,
+    "leaderboard_command": "python3 scripts/score_from_reward.py --task revideo-perf-opt tasks/revideo-perf-opt/jobs/revideo-perf-opt-frozen-artifact-replay-20260822-v3/revideo-perf-opt__7rYxH3L/verifier/info.json",
+    "leaderboard_command_output": {
+      "category": "performance",
+      "correctness": 1.0,
+      "score": 0.8628,
+      "speedup": 0.7256
+    },
+    "leaderboard_normalized_task_score": 0.8628,
+    "native_task_reward": 0.725611,
+    "speedups_computed": 8,
+    "timing_variance_note": "The original verifier artifacts measured reward 0.753697; the fresh ABBA replay measured 0.725611. Both independently rendered and passed 8/8 hidden scenes. Performance timing is remeasured, not copied."
+  },
+  "schema_version": "e2-frozen-artifact-verifier-replay-v1",
+  "score": null,
+  "scope": {
+    "level": "attempt",
+    "official_suite_task_count": 17,
+    "suite": "FrontierSWE",
+    "suite_score": null,
+    "suite_score_note": "null: this receipt closes one frozen task attempt only; it is not a 17-task FrontierSWE suite run",
+    "task_id": "revideo-perf-opt",
+    "tasks_executed": 1
+  },
+  "status": "COMPLETE",
+  "status_scope": "attempt_completion_only",
+  "validation": {
+    "harbor_command": "PYTHONPATH=. harbor run --config tasks/revideo-perf-opt/job-artifact-replay.yaml --job-name revideo-perf-opt-frozen-artifact-replay-20260822-v3 --yes",
+    "harbor_exception_count": 0,
+    "tests_command": "/Users/arvind/.local/share/uv/tools/harbor/bin/python -m unittest -v harbor_ext.test_artifact_replay tasks.revideo-perf-opt.tests.test_compute_reward_schema",
+    "tests_failed": 0,
+    "tests_passed": 3
+  },
+  "verifier_replay": {
+    "agent_execution_seconds": 1.803501,
+    "exception": null,
+    "finished_at": "2026-08-22T07:34:28.007203Z",
+    "job_name": "revideo-perf-opt-frozen-artifact-replay-20260822-v3",
+    "model_calls": 0,
+    "model_info": null,
+    "model_name": null,
+    "result_path": "outputs/e2_frontier_swe/frontier-swe/tasks/revideo-perf-opt/jobs/revideo-perf-opt-frozen-artifact-replay-20260822-v3/revideo-perf-opt__7rYxH3L/result.json",
+    "schema_repair": {
+      "behavior": "reward.json contains only Harbor's numeric reward map; info.json preserves the unchanged rich native diagnostics",
+      "compute_reward_diff": "9 insertions, 0 deletions, serialization only",
+      "reward_json": {
+        "reward": 0.725611
+      }
+    },
+    "started_at": "2026-08-22T07:29:17.288642Z",
+    "task_checksum": "816ddbd27acb2f4deac2a20e63edb9c5ff7142ae3bdb28b626435665169ffdc9",
+    "tinker_calls": 0,
+    "tinker_cost_usd": 0.0,
+    "trial_id": "4c51a05b-1101-49fe-a1df-b7b57bfd4df8",
+    "trial_name": "revideo-perf-opt__7rYxH3L",
+    "verifier_execution_seconds": 272.115049
+  }
+}

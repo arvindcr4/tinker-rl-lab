@@ -1,0 +1,4 @@
+To: math_evals@epoch.ai
+Subject: Follow-up: hosted FrontierMath Tiers 1-4 evaluation request
+
+Following up on the hosted FrontierMath Tiers 1–4 evaluation request for open-weights model Qwen/Qwen3.6-35B-A3B. To be explicit: I'm not requesting the problem set, only an Epoch-run evaluation under your holdout discipline, including fully blind. Could you confirm whether externally-initiated evaluations are accepted, and if so your preferred access mode, cost, and reporting terms — or a direct no if the eligible set is limited to models you select? If Tiers 1–4 isn't available, I'd appreciate a pointer to Open Problems verifier terms instead.

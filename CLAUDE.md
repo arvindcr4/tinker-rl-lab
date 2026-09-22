@@ -97,3 +97,8 @@ Summaries must be specific — "Mamba achieves linear-time sequence modeling via
 - After editing `.md` files directly, run `/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch sync` to update the index
 - Run `/Users/arvind/.local/share/uv/tools/hyperresearch/bin/hyperresearch --help` for the full command list
 <!-- hyperresearch:end -->
+
+## Squad Collaboration
+
+This project uses squad for multi-agent collaboration. Run `squad help` for all commands and usage guide.
+

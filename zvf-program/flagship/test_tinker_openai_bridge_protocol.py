@@ -5,10 +5,14 @@ import unittest
 
 from flagship.tinker_openai_bridge_protocol import (
     bearer_token,
+    build_responses_object,
     estimate_tinker_usd,
+    iter_responses_sse_events,
     normalise_openai_messages_for_qwen,
     openai_chat_stream_events,
     parse_qwen_tool_calls,
+    responses_input_to_chat_messages,
+    responses_tools_to_chat_tools,
 )
 
 
@@ -49,12 +53,17 @@ class TinkerOpenAIBridgeProtocolTests(unittest.TestCase):
 
     def test_native_qwen_xml_plain_string_parameter(self) -> None:
         _, calls = parse_qwen_tool_calls(
-            "<tool_call><function=bash><parameter=command>pwd</parameter>"
-            "</function></tool_call>"
+            "<tool_call><function=bash><parameter=command>pwd</parameter></function></tool_call>"
         )
-        self.assertEqual(
-            json.loads(calls[0]["function"]["arguments"]), {"command": "pwd"}
+        self.assertEqual(json.loads(calls[0]["function"]["arguments"]), {"command": "pwd"})
+
+    def test_accepts_native_qwen_zero_argument_tool_call(self) -> None:
+        content, calls = parse_qwen_tool_calls(
+            "<tool_call><function=toolbelt_list_tools></function></tool_call>"
         )
+        self.assertIsNone(content)
+        self.assertEqual(calls[0]["function"]["name"], "toolbelt_list_tools")
+        self.assertEqual(json.loads(calls[0]["function"]["arguments"]), {})
 
     def test_invalid_tool_call_remains_non_executable_content(self) -> None:
         text = '<tool_call>{"name":"shell","arguments":"not-json"}</tool_call>'
@@ -130,9 +139,7 @@ class TinkerOpenAIBridgeProtocolTests(unittest.TestCase):
             normalised[0]["tool_calls"][0]["function"]["arguments"],
             {"command": "pwd"},
         )
-        self.assertIsInstance(
-            source[0]["tool_calls"][0]["function"]["arguments"], str
-        )
+        self.assertIsInstance(source[0]["tool_calls"][0]["function"]["arguments"], str)
 
     def test_rejects_non_object_tool_arguments(self) -> None:
         with self.assertRaises(ValueError):
@@ -140,12 +147,84 @@ class TinkerOpenAIBridgeProtocolTests(unittest.TestCase):
                 [
                     {
                         "role": "assistant",
-                        "tool_calls": [
-                            {"function": {"name": "bash", "arguments": "[]"}}
-                        ],
+                        "tool_calls": [{"function": {"name": "bash", "arguments": "[]"}}],
                     }
                 ]
             )
+
+
+class ResponsesConversionTests(unittest.TestCase):
+    def test_string_input_becomes_user_message(self) -> None:
+        self.assertEqual(
+            responses_input_to_chat_messages("hello"),
+            [{"role": "user", "content": "hello"}])
+
+    def test_item_list_maps_messages_and_tool_outputs(self) -> None:
+        messages = responses_input_to_chat_messages([
+            {"type": "message", "role": "user",
+             "content": [{"type": "input_text", "text": "run it"}]},
+            {"type": "function_call", "call_id": "call_1",
+             "name": "shell", "arguments": "{}"},
+            {"type": "function_call_output", "call_id": "call_1",
+             "output": "done"},
+        ])
+        self.assertEqual(messages[0], {"role": "user", "content": "run it"})
+        self.assertEqual(messages[1], {"role": "tool", "tool_call_id": "call_1",
+                                       "content": "done"})
+        self.assertEqual(len(messages), 2)  # history call skipped
+
+    def test_empty_input_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            responses_input_to_chat_messages([])
+        with self.assertRaises(ValueError):
+            responses_input_to_chat_messages([
+                {"type": "function_call", "call_id": "c", "name": "x",
+                 "arguments": "{}"}])
+
+    def test_tools_mapping(self) -> None:
+        self.assertIsNone(responses_tools_to_chat_tools(None))
+        self.assertIsNone(responses_tools_to_chat_tools([]))
+        chat = responses_tools_to_chat_tools([
+            {"type": "function", "name": "shell",
+             "description": "run", "parameters": {"type": "object"}},
+            {"type": "web_search"},
+        ])
+        self.assertEqual(len(chat), 1)
+        self.assertEqual(chat[0]["function"]["name"], "shell")
+
+    def test_object_shape_with_tool_call(self) -> None:
+        response = build_responses_object(
+            response_id="resp_1", model="openai/m", content="hi",
+            tool_calls=[{"id": "call_9", "type": "function",
+                         "function": {"name": "shell",
+                                      "arguments": "{\"cmd\":\"pwd\"}"}}],
+            prompt_tokens=10, completion_tokens=3, created_at=7)
+        self.assertEqual(response["object"], "response")
+        self.assertEqual(response["status"], "completed")
+        kinds = [item["type"] for item in response["output"]]
+        self.assertEqual(kinds, ["message", "function_call"])
+        call = response["output"][1]
+        self.assertEqual(call["call_id"], "call_9")
+        self.assertEqual(call["arguments"], "{\"cmd\":\"pwd\"}")
+        self.assertEqual(response["usage"]["total_tokens"], 13)
+
+    def test_sse_replays_text_and_calls_in_order(self) -> None:
+        response = build_responses_object(
+            response_id="resp_2", model="openai/m", content="ab",
+            tool_calls=[{"id": "call_9", "type": "function",
+                         "function": {"name": "shell", "arguments": "{}"}}],
+            prompt_tokens=1, completion_tokens=1, created_at=7)
+        events = list(iter_responses_sse_events(response, text_chunk_size=1))
+        types = [json.loads(e.split("data: ", 1)[1])["type"]
+                 for e in events]
+        self.assertEqual(types[0], "response.created")
+        self.assertEqual(types[-1], "response.completed")
+        deltas = [json.loads(e.split("data: ", 1)[1])["delta"]
+                  for e in events
+                  if json.loads(e.split("data: ", 1)[1])["type"]
+                  == "response.output_text.delta"]
+        self.assertEqual("".join(deltas), "ab")
+        self.assertIn("response.output_item.done", types)
 
 
 if __name__ == "__main__":

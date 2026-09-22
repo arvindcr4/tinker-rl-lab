@@ -7,3 +7,8 @@ Issues and PRDs live as GitHub issues on `pes-llm-research/tinker-rl-lab` (via t
 ### Triage labels
 
 Default canonical vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`.
+
+## Squad Collaboration
+
+This project uses squad for multi-agent collaboration. Run `squad help` for all commands and usage guide.
+

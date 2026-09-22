@@ -55,6 +55,7 @@ class HarborBridgeLaunchGateTests(unittest.TestCase):
         env = bridge.build_harbor_env("secret-value", lane)
         self.assertEqual(env["OPENAI_API_KEY"], "secret-value")
         self.assertEqual(env["OPENAI_BASE_URL"], bridge.BRIDGE_API_BASE)
+        self.assertEqual(env["OPENAI_API_BASE"], bridge.BRIDGE_API_BASE)
         self.assertIn(str(lane.checkout), env["PYTHONPATH"].split(os.pathsep))
         self.assertIn(str(bridge.HARBOR_EXT_ROOT), env["PYTHONPATH"].split(os.pathsep))
         if before_gemini is None:

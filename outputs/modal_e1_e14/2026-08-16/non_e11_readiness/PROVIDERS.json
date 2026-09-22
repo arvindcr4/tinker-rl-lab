@@ -12,8 +12,8 @@
       "package": "2.45.0"
     }
   },
-  "receipt_sha256": "1f412f2af1275ac1e63364cb6b6541e439adc359ccdfab95db41b81170e33dc8",
-  "recorded_at": "2026-08-16T11:22:24.168018Z",
+  "receipt_sha256": "c4eb38b498161e940012b2e64db06343c93e0162f77bffb0304fc31db303a118",
+  "recorded_at": "2026-08-22T05:47:32.405132Z",
   "schema_version": "pavlov-modal-provider-auth-v1",
   "scientific_evidence": false,
   "score": null,

@@ -15,11 +15,16 @@ non-substitutes.
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import re
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
+from datetime import datetime, timezone
+from pathlib import Path
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from typing import Any, Mapping, Sequence
 
 try:  # Package import used by the flagship test suite.
@@ -204,6 +209,11 @@ REQUIRED_RECEIPT_FIELDS = (
     "claim_boundary",
     "receipt_hash",
 )
+PACKAGE_INTAKE_SCHEMA_VERSION = "pavlov-lifescibench-e8-provider-package-intake-v1"
+EXECUTION_REQUEST_SCHEMA_VERSION = "pavlov-lifescibench-e8-hosted-execution-request-v1"
+LIFESCIBENCH_GRANT_LANE = "e8_lifescibench"
+LIFESCIBENCH_PROVIDER_ID = "openai-lifescibench"
+LIFESCIBENCH_TRUST_ROOT_SCHEMA_VERSION = "pavlov-provider-trust-root-v1"
 
 
 class LifeSciBenchSchemaError(ValueError):
@@ -225,6 +235,55 @@ def _canonical_json(value: Any) -> str:
 
 def sha256_json(value: Any) -> str:
     return hashlib.sha256(_canonical_json(value).encode("utf-8")).hexdigest()
+
+
+def load_lifescibench_trust_root(document: Any) -> dict[str, str]:
+    """Validate an externally installed, lane-scoped E8 Ed25519 trust root."""
+    if not isinstance(document, Mapping):
+        raise LifeSciBenchSchemaError("E8 provider trust roots must be a JSON object")
+    data = dict(document)
+    required = {
+        "schema_version", "provider_id", "lane", "suite_id", "key_id",
+        "key_fingerprint", "public_key_b64", "signature_algorithm",
+        "issued_at", "expires_at",
+    }
+    if set(data) != required:
+        raise LifeSciBenchSchemaError("E8 provider trust-root document has an invalid schema")
+    if (
+        data.get("schema_version") != LIFESCIBENCH_TRUST_ROOT_SCHEMA_VERSION
+        or data.get("provider_id") != LIFESCIBENCH_PROVIDER_ID
+        or data.get("lane") != LIFESCIBENCH_GRANT_LANE
+        or data.get("suite_id") != SUITE_ID
+        or data.get("signature_algorithm") != "ed25519"
+        or not isinstance(data.get("key_id"), str)
+        or not data["key_id"].strip()
+        or not isinstance(data.get("key_fingerprint"), str)
+        or not re.fullmatch(r"[0-9a-f]{64}", data["key_fingerprint"])
+    ):
+        raise LifeSciBenchSchemaError("E8 provider trust-root binding is invalid")
+    try:
+        public_key = base64.b64decode(data["public_key_b64"], validate=True)
+        issued = datetime.fromisoformat(str(data["issued_at"]).replace("Z", "+00:00"))
+        expires = datetime.fromisoformat(str(data["expires_at"]).replace("Z", "+00:00"))
+        now = datetime.now(timezone.utc)
+        if (
+            len(public_key) != 32
+            or issued.tzinfo is None
+            or expires.tzinfo is None
+            or issued > now
+            or expires <= now
+            or expires <= issued
+            or hashlib.sha256(public_key).hexdigest() != data["key_fingerprint"]
+        ):
+            raise ValueError
+    except (KeyError, TypeError, ValueError):
+        raise LifeSciBenchSchemaError("E8 provider trust-root key or validity window is invalid") from None
+    return {
+        "trust_root_sha256": sha256_json(data),
+        "key_id": data["key_id"],
+        "key_fingerprint": data["key_fingerprint"],
+        "public_key_b64": data["public_key_b64"],
+    }
 
 
 def _is_mapping(value: Any) -> bool:
@@ -1470,6 +1529,183 @@ def validate_e8_receipt(
     return ReceiptValidationResult(not errors, tuple(errors), metrics, receipt_hash)
 
 
+def _strict_object(value: Any, allowed: set[str], label: str, errors: list[str]) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        errors.append(f"{label} must be an object")
+        return {}
+    data = dict(value)
+    unknown = sorted(set(data) - allowed)
+    if unknown:
+        errors.append(f"{label} has unknown fields: {','.join(unknown)}")
+    return data
+
+
+def _verify_e8_provider_grant(
+    grant: Any,
+    *,
+    binding: Mapping[str, Any],
+    trust_root: Mapping[str, Any] | None,
+    errors: list[str],
+) -> dict[str, str] | None:
+    try:
+        root = load_lifescibench_trust_root(trust_root)
+    except LifeSciBenchSchemaError as exc:
+        errors.append(str(exc))
+        return None
+    data = _strict_object(grant, {"lane", "suite_id", "key_id", "key_fingerprint", "trust_root_sha256", "signature_algorithm", "issued_at", "expires_at", "binding", "detached_signature"}, "provider_grant", errors)
+    if (
+        data.get("lane") != LIFESCIBENCH_GRANT_LANE
+        or data.get("suite_id") != SUITE_ID
+        or data.get("key_id") != root["key_id"]
+        or data.get("key_fingerprint") != root["key_fingerprint"]
+        or data.get("trust_root_sha256") != root["trust_root_sha256"]
+        or data.get("signature_algorithm") != "ed25519"
+        or data.get("binding") != dict(binding)
+    ):
+        errors.append("provider_grant does not bind the supplied E8 lane, suite, trust root, and package")
+        return None
+    try:
+        issued = datetime.fromisoformat(str(data["issued_at"]).replace("Z", "+00:00")); expires = datetime.fromisoformat(str(data["expires_at"]).replace("Z", "+00:00")); now = datetime.now(timezone.utc)
+        if issued.tzinfo is None or expires.tzinfo is None or issued > now or expires <= now or expires <= issued: raise ValueError
+        signed = {key: value for key, value in data.items() if key != "detached_signature"}
+        Ed25519PublicKey.from_public_bytes(
+            base64.b64decode(root["public_key_b64"], validate=True)
+        ).verify(base64.b64decode(data["detached_signature"], validate=True), _canonical_json(signed).encode("utf-8"))
+    except (KeyError, ValueError, TypeError, InvalidSignature):
+        errors.append("provider_grant signature or time window does not verify against the supplied E8 trust root")
+        return None
+    return root
+
+
+def validate_provider_package_intake(
+    package: Mapping[str, Any], *, boundary: Mapping[str, Any], trust_root: Mapping[str, Any] | None = None
+) -> ReceiptValidationResult:
+    """Validate an access-gated E8 package without reading task content.
+
+    This is a metadata-only intake.  It deliberately accepts neither task text
+    nor a result/score and pins every supplied package identity to the E8
+    boundary before any hosted provider request can be formed.
+    """
+    errors: list[str] = []
+    if not _is_mapping(package):
+        return ReceiptValidationResult(False, ("provider package must be an object",), {})
+    if contains_synthetic_marker(package):
+        errors.append(SYNTHETIC_REJECTION_ERROR)
+    boundary_result = validate_e8_boundary(boundary)
+    if not boundary_result.ok:
+        errors.append("provider package requires a pinned protocol-valid E8 boundary")
+    data = _strict_object(package, {"schema_version", "suite_id", "package_revision", "package_sha256", "license_id", "license_sha256", "grant_sha256", "boundary_sha256", "container_digest", "runtime_digest", "verifier_revision", "deployment_attestation", "provider_grant"}, "provider package", errors)
+    required = (
+        "schema_version", "suite_id", "package_revision", "package_sha256", "license_id",
+        "license_sha256", "grant_sha256", "boundary_sha256", "container_digest", "runtime_digest",
+        "verifier_revision", "deployment_attestation",
+    )
+    for field_name in required:
+        if field_name not in data:
+            errors.append(f"missing provider package field: {field_name}")
+    if data.get("schema_version") != PACKAGE_INTAKE_SCHEMA_VERSION:
+        errors.append("provider package schema_version is not E8 intake")
+    if data.get("suite_id") != SUITE_ID:
+        errors.append("provider package suite_id is not lifescibench_eval")
+    _immutable_revision(data.get("package_revision"), "provider package_revision", errors)
+    for field_name in ("package_sha256", "license_sha256", "grant_sha256", "boundary_sha256", "container_digest", "runtime_digest"):
+        _digest(data.get(field_name), f"provider {field_name}", errors)
+    _nonempty(data.get("license_id"), "provider license_id", errors)
+    _immutable_revision(data.get("verifier_revision"), "provider verifier_revision", errors)
+    try:
+        expected_boundary_hash = sha256_json(dict(boundary))
+    except LifeSciBenchSchemaError as exc:
+        errors.append(f"boundary cannot be pinned: {exc}")
+    else:
+        if data.get("boundary_sha256") != expected_boundary_hash:
+            errors.append("provider boundary_sha256 does not bind the supplied boundary")
+    dataset = boundary.get("dataset") if _is_mapping(boundary) else None
+    verifier = boundary.get("native_verifier") if _is_mapping(boundary) else None
+    package_contract = boundary.get("provider_package_contract") if _is_mapping(boundary) else None
+    if not isinstance(package_contract, Mapping):
+        errors.append("pinned boundary must contain provider_package_contract")
+        package_contract = {}
+    else:
+        package_contract = _strict_object(package_contract, {"package_sha256", "license_sha256", "grant_sha256", "container_digest", "runtime_digest", "verifier_revision", "deployment_attestation_sha256"}, "provider_package_contract", errors)
+    if isinstance(dataset, Mapping) and data.get("license_id") != dataset.get("license_id"):
+        errors.append("provider license_id differs from pinned boundary")
+    if data.get("package_sha256") != package_contract.get("package_sha256"):
+        errors.append("provider package_sha256 differs from pinned boundary")
+    if data.get("license_sha256") != package_contract.get("license_sha256"):
+        errors.append("provider license_sha256 differs from pinned boundary")
+    if data.get("grant_sha256") != package_contract.get("grant_sha256"):
+        errors.append("provider grant_sha256 differs from pinned boundary")
+    if data.get("container_digest") != package_contract.get("container_digest"):
+        errors.append("provider container_digest differs from pinned boundary")
+    if data.get("runtime_digest") != package_contract.get("runtime_digest"):
+        errors.append("provider runtime_digest differs from pinned boundary")
+    if data.get("verifier_revision") != package_contract.get("verifier_revision") or (isinstance(verifier, Mapping) and data.get("verifier_revision") != verifier.get("revision")):
+        errors.append("provider verifier_revision differs from pinned boundary")
+    attestation = _strict_object(data.get("deployment_attestation"), {"provider_id", "deployment_id", "issued_at", "attestation_sha256"}, "deployment_attestation", errors)
+    if attestation:
+        for field_name in ("provider_id", "deployment_id", "issued_at", "attestation_sha256"):
+            if not isinstance(attestation.get(field_name), str) or not attestation[field_name].strip():
+                errors.append(f"deployment_attestation.{field_name} is required")
+        _digest(attestation.get("attestation_sha256"), "deployment_attestation.attestation_sha256", errors)
+        try:
+            parsed = datetime.fromisoformat(str(attestation.get("issued_at", "")).replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                raise ValueError
+        except ValueError:
+            errors.append("deployment_attestation.issued_at must be timezone-aware ISO-8601")
+        if attestation.get("attestation_sha256") != package_contract.get("deployment_attestation_sha256"):
+            errors.append("deployment attestation differs from pinned boundary")
+    grant_binding = {"suite_id": SUITE_ID, "lane": LIFESCIBENCH_GRANT_LANE, "package_sha256": data.get("package_sha256"), "grant_sha256": data.get("grant_sha256"), "boundary_sha256": data.get("boundary_sha256"), "container_digest": data.get("container_digest"), "runtime_digest": data.get("runtime_digest"), "verifier_revision": data.get("verifier_revision")}
+    verified_root = _verify_e8_provider_grant(
+        data.get("provider_grant"), binding=grant_binding, trust_root=trust_root, errors=errors
+    )
+    for forbidden in ("score", "metric", "result", "task_text", "tasks", "rubric"):
+        if forbidden in data:
+            errors.append(f"provider package must not contain {forbidden}; intake is not an evaluation result")
+    metrics = {
+        "schema_valid": not errors,
+        "package_intake": True,
+        "score": None,
+        "paid_launch_authorized": False,
+        "trust_root_sha256": verified_root["trust_root_sha256"] if verified_root else None,
+        "trust_root_key_fingerprint": verified_root["key_fingerprint"] if verified_root else None,
+    }
+    return ReceiptValidationResult(not errors, tuple(errors), metrics, "")
+
+
+def build_hosted_execution_request(
+    package: Mapping[str, Any], *, boundary: Mapping[str, Any], trust_root: Mapping[str, Any] | None = None
+) -> dict[str, Any]:
+    """Emit a provider execution request, never a score or execution result."""
+    result = validate_provider_package_intake(package, boundary=boundary, trust_root=trust_root)
+    if not result.ok:
+        raise LifeSciBenchSchemaError("provider package intake rejected: " + "; ".join(result.errors))
+    data = dict(package)
+    request = {
+        "schema_version": EXECUTION_REQUEST_SCHEMA_VERSION,
+        "suite_id": SUITE_ID,
+        "mode": "hosted_submit",
+        "boundary_sha256": data["boundary_sha256"],
+        "package_sha256": data["package_sha256"],
+        "license_sha256": data["license_sha256"],
+        "grant_sha256": data["grant_sha256"],
+        "container_digest": data["container_digest"],
+        "runtime_digest": data["runtime_digest"],
+        "verifier_revision": data["verifier_revision"],
+        "deployment_attestation_sha256": data["deployment_attestation"]["attestation_sha256"],
+        "trust_root_sha256": result.metrics["trust_root_sha256"],
+        "trust_root_key_fingerprint": result.metrics["trust_root_key_fingerprint"],
+        "execution_requested": True,
+        "execution_performed": False,
+        "score": None,
+        "is_model_score": False,
+        "network_accessed": False,
+        "paid_calls_executed": False,
+    }
+    request["request_sha256"] = sha256_json(request)
+    return request
+
+
 def _cli_payload() -> dict[str, Any]:
     boundary = build_offline_e8_boundary()
     return {"boundary": boundary, "validation": validate_e8_boundary(boundary).to_dict()}
@@ -1478,7 +1714,33 @@ def _cli_payload() -> dict[str, Any]:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", action="store_true", help="emit the blocked offline E8 boundary")
+    parser.add_argument("--boundary", type=Path, help="pinned E8 boundary JSON")
+    parser.add_argument("--intake-package", type=Path, help="provider package metadata JSON")
+    parser.add_argument(
+        "--trust-roots",
+        type=Path,
+        help="external lane-scoped E8 provider trust-root JSON document",
+    )
+    parser.add_argument("--hosted-submit", action="store_true", help="emit a local hosted execution request; never submit it")
     args = parser.parse_args(argv)
+    if args.intake_package is not None or args.hosted_submit:
+        if args.intake_package is None or args.boundary is None or args.trust_roots is None:
+            parser.error("--intake-package, --boundary, and --trust-roots are required for provider package intake")
+        try:
+            package = json.loads(args.intake_package.read_text(encoding="utf-8"))
+            boundary = json.loads(args.boundary.read_text(encoding="utf-8"))
+            trust_root = json.loads(args.trust_roots.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            print(_canonical_json({"status": "ERROR", "errors": [f"malformed JSON: {exc}"]}))
+            return 1
+        intake = validate_provider_package_intake(package, boundary=boundary, trust_root=trust_root)
+        output: dict[str, Any] = {"intake": intake.to_dict(), "score": None, "paid_calls_executed": False}
+        if intake.ok and args.hosted_submit:
+            output["execution_request"] = build_hosted_execution_request(
+                package, boundary=boundary, trust_root=trust_root
+            )
+        print(_canonical_json(output))
+        return 0 if intake.ok else 1
     payload = _cli_payload()
     if args.json:
         print(_canonical_json(payload))

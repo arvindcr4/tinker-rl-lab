@@ -54,8 +54,8 @@
     "tinker": "0.24.1",
     "wandb": "0.21.0"
   },
-  "receipt_sha256": "02b59cc26d41b3057a0484383f42d8d7dc450455c626d4b7194c286935df30ed",
-  "recorded_at": "2026-08-16T11:28:35.269921Z",
+  "receipt_sha256": "966f08ddbeb492e39243a3fbdc9350cfa27b25a1366879f2c8123df72f7d91db",
+  "recorded_at": "2026-08-22T05:47:25.189962Z",
   "schema_version": "pavlov-modal-shared-stack-v1",
   "scientific_evidence": false,
   "score": null,

@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 import json
+import base64
+import hashlib
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from datetime import datetime, timedelta, timezone
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
 from flagship.pavlov_webbench_eval_adapter import (
     WEBBENCH_CATEGORIES,
@@ -32,7 +37,7 @@ from flagship.pavlov_webbench_eval_adapter import (
     split_manifest_hash,
     task_digest,
     task_ids_hash,
-    validate_webbench_manifest,
+    validate_webbench_manifest as _validate_webbench_manifest,
     write_split_artifacts,
 )
 
@@ -46,6 +51,32 @@ RUNNER_TASK_ID_HASH = "22afbdd3cc47e6dba1e3c57ddbe5f762b54be5d2af6ac76bbd206c19e
 RUNNER_MANIFEST_HASH = "66da44a04ec48fe356b3b0d1c420c40679faa1a7ac650728e254b625bb674a07"
 
 CSV_HEADER = "ID,Starting URL,Category,Task\n"
+_E6_TEST_PRIVATE_KEY_B64 = "xPRVwba6NQ4VhWLwCBr6el1kJhCHohse0elI09LXf5w="
+
+
+def _e6_test_trust_root() -> dict[str, str]:
+    key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(_E6_TEST_PRIVATE_KEY_B64))
+    public_key = key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+    return {
+        "schema_version": "pavlov-provider-trust-root-v1",
+        "provider_id": "halluminate-webbench",
+        "lane": "e6_webbench",
+        "suite_id": WEBBENCH_SUITE_ID,
+        "key_id": "e6-test-root-1",
+        "key_fingerprint": hashlib.sha256(public_key).hexdigest(),
+        "public_key_b64": base64.b64encode(public_key).decode("ascii"),
+        "signature_algorithm": "ed25519",
+        "issued_at": (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat(),
+        "expires_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+    }
+
+
+_E6_TEST_TRUST_ROOT = _e6_test_trust_root()
+
+
+def validate_webbench_manifest(manifest: object) -> dict[str, object]:
+    """Test-only wrapper: production callers must supply --trust-roots/root input."""
+    return _validate_webbench_manifest(manifest, trust_root=_E6_TEST_TRUST_ROOT)
 
 
 def _csv(rows: list[tuple[int, str, str, str]], header: str = CSV_HEADER) -> str:
@@ -157,6 +188,41 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
             6,
             {"verifier_revision": environment["verifier_contract"]["verifier_revision"]},
         )
+        write_scope = {
+            "operations": ["CREATE", "DELETE", "FILE_MANIPULATION", "READ", "UPDATE"],
+            "allowed_domains": ["example-webbench-provider.test"],
+        }
+        provider_grant = {
+            "receipt_id": "9" * 40,
+            "historical": False,
+            "unlaunchable": False,
+            "issued_at": (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat(),
+            "expires_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+            "provider_identity": {
+                "provider_id": "halluminate-webbench",
+                "key_id": "8" * 40,
+                "url": "https://github.com/Halluminate/WebBench",
+            },
+            "binding": {
+                "suite_id": WEBBENCH_SUITE_ID,
+                "lane": "e6_webbench",
+                "revision": manifest["source"]["revision"],
+                "container_digest": environment["container_digest"],
+                "runtime_digest": environment["runtime_digest"],
+                "verifier_revision": environment["verifier_contract"]["verifier_revision"],
+                "reset_contract_digest": "7" * 64,
+                "write_scope_digest": sha256_hex(write_scope),
+            },
+            "write_scope": write_scope,
+            "signature_algorithm": "ed25519",
+            "key_id": _E6_TEST_TRUST_ROOT["key_id"],
+            "key_fingerprint": _E6_TEST_TRUST_ROOT["key_fingerprint"],
+            "trust_root_sha256": sha256_hex(_E6_TEST_TRUST_ROOT),
+        }
+        signing_key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(_E6_TEST_PRIVATE_KEY_B64))
+        signed = {key: value for key, value in provider_grant.items() if key != "detached_signature"}
+        provider_grant["detached_signature"] = base64.b64encode(signing_key.sign(json.dumps(signed, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))).decode("ascii")
+        manifest["provider_access_receipt"] = provider_grant
         return manifest
 
     def _with_heldout_receipts(self, manifest: dict[str, object]) -> dict[str, object]:
@@ -220,6 +286,11 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
         self.assertFalse(report["receipt_proven_heldout"])
         self.assertEqual(report["status"], "READY_PRIMARY_EVAL_PENDING_RECEIPTS")
 
+    def test_live_grant_without_external_trust_root_fails_closed(self) -> None:
+        report = _validate_webbench_manifest(self._manifest())
+        self.assertFalse(report["boundary_valid"])
+        self.assertIn("provider_access_receipt_invalid", report["blocker_codes"])
+
     def test_complete_receipts_prove_heldout_results(self) -> None:
         report = validate_webbench_manifest(self._with_heldout_receipts(self._manifest()))
 
@@ -245,6 +316,37 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
 
         self.assertFalse(report["boundary_valid"])
         self.assertIn("heldout_status_without_receipts", report["blocker_codes"])
+
+    def test_provider_grant_binds_the_immutable_runtime_and_write_scope(self) -> None:
+        manifest = self._manifest()
+        manifest["provider_access_receipt"]["binding"]["runtime_digest"] = "f" * 64
+        report = validate_webbench_manifest(manifest)
+        self.assertFalse(report["boundary_valid"])
+        self.assertIn("provider_access_receipt_invalid", report["blocker_codes"])
+
+        manifest = self._manifest()
+        manifest["provider_access_receipt"]["write_scope"]["operations"] = []
+        report = validate_webbench_manifest(manifest)
+        self.assertFalse(report["boundary_valid"])
+        self.assertIn("provider_access_receipt_invalid", report["blocker_codes"])
+
+    def test_only_explicit_historical_unlaunchable_receipts_are_compatible(self) -> None:
+        manifest = self._manifest()
+        manifest["provider_access_receipt"] = {
+            "historical": True,
+            "unlaunchable": True,
+            "receipt_id": "old-provider-ticket",
+            "issued_at": "2025-01-01T00:00:00+00:00",
+            "provider_identity": "Halluminate archive",
+            "note": "Historical access request; not launch authority.",
+        }
+        report = validate_webbench_manifest(manifest)
+        self.assertTrue(report["boundary_valid"], report["blockers"])
+
+        manifest["provider_access_receipt"]["unlaunchable"] = False
+        report = validate_webbench_manifest(manifest)
+        self.assertFalse(report["boundary_valid"])
+        self.assertIn("provider_access_receipt_invalid", report["blocker_codes"])
 
     def test_authoritative_source_identity_rejects_xlam_and_related_benchmarks(self) -> None:
         manifest = self._manifest()
@@ -393,11 +495,14 @@ class PavlovWebBenchBoundaryTests(unittest.TestCase):
 
     def test_cli_is_offline_and_returns_json(self) -> None:
         script = Path(__file__).with_name("pavlov_webbench_eval_adapter.py")
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8") as handle:
-            json.dump(self._manifest(), handle)
-            handle.flush()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest_path = root / "manifest.json"
+            trust_root_path = root / "trust-root.json"
+            manifest_path.write_text(json.dumps(self._manifest()), encoding="utf-8")
+            trust_root_path.write_text(json.dumps(_E6_TEST_TRUST_ROOT), encoding="utf-8")
             process = subprocess.run(
-                [sys.executable, str(script), "--manifest", handle.name],
+                [sys.executable, str(script), "--manifest", str(manifest_path), "--trust-roots", str(trust_root_path)],
                 check=False,
                 capture_output=True,
                 text=True,

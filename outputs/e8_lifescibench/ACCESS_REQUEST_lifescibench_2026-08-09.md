@@ -2,6 +2,14 @@
 
 Prepared 2026-08-09. Send as-is; fill the bracketed fields before sending.
 
+Submitted 2026-08-24 through the official OpenAI contact-sales form using the
+request text below, the campaign identity `Arvind CR / Tinker RL Lab independent
+research campaign`, product interest `API for Enterprise`, and company size
+`1–50`. The page returned: “Thank you. Our sales team is looking forward to
+connecting with you. You’ll hear from us soon!” The separately supplied phone
+number is intentionally not stored in this repository. See
+`outputs/e8_lifescibench/contact_sales_submission_receipt_2026-08-24.json`.
+
 ---
 
 ## Routing note (read before sending)

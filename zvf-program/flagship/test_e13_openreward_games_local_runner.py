@@ -37,14 +37,22 @@ VARIANTS = ("DoNotScore-v0", "DoNotScore-v0-hardcore")
 PER_VARIANT = 5
 
 
-def synthetic_manifest(split: str, *, offset: int, environment: str = SYNTHETIC_ENV,
-                       revision: str = SYNTHETIC_REV, variants=VARIANTS) -> dict:
+def synthetic_manifest(
+    split: str,
+    *,
+    offset: int,
+    environment: str = SYNTHETIC_ENV,
+    revision: str = SYNTHETIC_REV,
+    variants=VARIANTS,
+) -> dict:
     """Build a synthetic split manifest mirroring the upstream seed convention."""
     tasks = []
     for variant in variants:
         for idx in range(PER_VARIANT):
             seed = idx + offset
-            tasks.append({"id": f"{variant}_seed{seed}", "env_id": variant, "seed": seed, "variant": variant})
+            tasks.append(
+                {"id": f"{variant}_seed{seed}", "env_id": variant, "seed": seed, "variant": variant}
+            )
     return {
         "environment": environment,
         "split": split,
@@ -127,7 +135,9 @@ class SplitManifestSchemaTests(unittest.TestCase):
         mutated = json.loads(json.dumps(base))
         mutated["tasks"][0]["seed"] = 9999
         mutated["tasks"][0]["id"] = "DoNotScore-v0_seed9999"
-        self.assertNotEqual(parse_split_manifest(base).digest(), parse_split_manifest(mutated).digest())
+        self.assertNotEqual(
+            parse_split_manifest(base).digest(), parse_split_manifest(mutated).digest()
+        )
 
 
 class SeedSeparationTests(unittest.TestCase):
@@ -181,7 +191,9 @@ class SeedSeparationTests(unittest.TestCase):
         self.assertFalse(prove_seed_separation(train, evaluation).holds)
 
 
-TASK = GameTaskSpec(id="DoNotScore-v0_seed10000", env_id="DoNotScore-v0", seed=10000, variant="DoNotScore-v0")
+TASK = GameTaskSpec(
+    id="DoNotScore-v0_seed10000", env_id="DoNotScore-v0", seed=10000, variant="DoNotScore-v0"
+)
 
 
 class VerifierTests(unittest.TestCase):
@@ -189,21 +201,29 @@ class VerifierTests(unittest.TestCase):
         self.verifier = ProgrammaticRewardVerifier()
 
     def test_accepts_a_terminal_in_band_reward(self):
-        outcome = self.verifier.verify(EpisodeRecord(task=TASK, steps=4, finished=True, terminal_reward=1.0))
+        outcome = self.verifier.verify(
+            EpisodeRecord(task=TASK, steps=4, finished=True, terminal_reward=1.0)
+        )
         self.assertTrue(outcome.accepted)
         self.assertEqual(outcome.reward, 1.0)
 
     def test_rejects_unfinished_episode(self):
-        outcome = self.verifier.verify(EpisodeRecord(task=TASK, steps=6, finished=False, terminal_reward=0.5))
+        outcome = self.verifier.verify(
+            EpisodeRecord(task=TASK, steps=6, finished=False, terminal_reward=0.5)
+        )
         self.assertFalse(outcome.accepted)
         self.assertIsNone(outcome.reward)
 
     def test_rejects_missing_reward(self):
-        outcome = self.verifier.verify(EpisodeRecord(task=TASK, steps=6, finished=True, terminal_reward=None))
+        outcome = self.verifier.verify(
+            EpisodeRecord(task=TASK, steps=6, finished=True, terminal_reward=None)
+        )
         self.assertFalse(outcome.accepted)
 
     def test_rejects_out_of_band_reward(self):
-        outcome = self.verifier.verify(EpisodeRecord(task=TASK, steps=1, finished=True, terminal_reward=7.5))
+        outcome = self.verifier.verify(
+            EpisodeRecord(task=TASK, steps=1, finished=True, terminal_reward=7.5)
+        )
         self.assertFalse(outcome.accepted)
         self.assertTrue(any("outside declared band" in r for r in outcome.reasons))
 
@@ -214,7 +234,9 @@ class VerifierTests(unittest.TestCase):
         self.assertFalse(outcome.accepted)
 
     def test_rejects_zero_step_episode(self):
-        outcome = self.verifier.verify(EpisodeRecord(task=TASK, steps=0, finished=True, terminal_reward=1.0))
+        outcome = self.verifier.verify(
+            EpisodeRecord(task=TASK, steps=0, finished=True, terminal_reward=1.0)
+        )
         self.assertFalse(outcome.accepted)
 
     def test_verify_episodes_maps_over_the_batch(self):
@@ -239,9 +261,14 @@ class ReceiptTests(unittest.TestCase):
 
     def test_harness_validation_never_carries_a_score(self):
         receipt = build_receipt(
-            lane="E13", suite="openreward_games_eval", status="PARTIAL",
-            separation=self.proof, outcomes=self.accepted,
-            run_kind="harness_validation", is_model_score=False, synthetic=True,
+            lane="E13",
+            suite="openreward_games_eval",
+            status="PARTIAL",
+            separation=self.proof,
+            outcomes=self.accepted,
+            run_kind="harness_validation",
+            is_model_score=False,
+            synthetic=True,
         )
         self.assertIsNone(receipt["score"])
         self.assertFalse(receipt["is_model_score"])
@@ -250,18 +277,27 @@ class ReceiptTests(unittest.TestCase):
 
     def test_blocked_status_withholds_score(self):
         receipt = build_receipt(
-            lane="E13", suite="openreward_games_eval", status="BLOCKED",
-            separation=self.proof, outcomes=self.accepted,
-            run_kind="model_rollout", is_model_score=True, synthetic=False,
+            lane="E13",
+            suite="openreward_games_eval",
+            status="BLOCKED",
+            separation=self.proof,
+            outcomes=self.accepted,
+            run_kind="model_rollout",
+            is_model_score=True,
+            synthetic=False,
         )
         self.assertIsNone(receipt["score"])
         self.assertIn("status is BLOCKED", receipt["score_withheld_because"])
 
     def test_missing_separation_proof_withholds_score(self):
         receipt = build_receipt(
-            lane="E13", suite="openreward_games_eval", status="RUNNING",
-            separation=None, outcomes=self.accepted,
-            run_kind="model_rollout", is_model_score=True,
+            lane="E13",
+            suite="openreward_games_eval",
+            status="RUNNING",
+            separation=None,
+            outcomes=self.accepted,
+            run_kind="model_rollout",
+            is_model_score=True,
         )
         self.assertIsNone(receipt["score"])
         self.assertIn("no seed-separation proof supplied", receipt["score_withheld_because"])
@@ -271,9 +307,13 @@ class ReceiptTests(unittest.TestCase):
             self.train, parse_split_manifest(synthetic_manifest("test", offset=0))
         )
         receipt = build_receipt(
-            lane="E13", suite="openreward_games_eval", status="RUNNING",
-            separation=bad, outcomes=self.accepted,
-            run_kind="model_rollout", is_model_score=True,
+            lane="E13",
+            suite="openreward_games_eval",
+            status="RUNNING",
+            separation=bad,
+            outcomes=self.accepted,
+            run_kind="model_rollout",
+            is_model_score=True,
         )
         self.assertIsNone(receipt["score"])
 
@@ -282,59 +322,108 @@ class ReceiptTests(unittest.TestCase):
             EpisodeRecord(task=TASK, steps=3, finished=False, terminal_reward=1.0)
         )
         receipt = build_receipt(
-            lane="E13", suite="openreward_games_eval", status="RUNNING",
-            separation=self.proof, outcomes=(rejected,),
-            run_kind="model_rollout", is_model_score=True,
+            lane="E13",
+            suite="openreward_games_eval",
+            status="RUNNING",
+            separation=self.proof,
+            outcomes=(rejected,),
+            run_kind="model_rollout",
+            is_model_score=True,
         )
         self.assertIsNone(receipt["score"])
 
-    def test_all_gates_passing_yields_a_score(self):
+    def test_all_local_gates_passing_remains_blocked_and_unscored(self):
         receipt = build_receipt(
-            lane="E13", suite="openreward_games_eval", status="RUNNING",
-            separation=self.proof, outcomes=self.accepted,
-            run_kind="model_rollout", is_model_score=True, synthetic=False,
+            lane="E13",
+            suite="openreward_games_eval",
+            status="RUNNING",
+            separation=self.proof,
+            outcomes=self.accepted,
+            run_kind="model_rollout",
+            is_model_score=True,
+            synthetic=False,
         )
-        self.assertEqual(receipt["score"], 1.0)
-        self.assertEqual(receipt["score_withheld_because"], [])
+        self.assertIsNone(receipt["score"])
+        self.assertIn(
+            "local verifier outcomes are not a provider-signed native OpenReward result",
+            receipt["score_withheld_because"],
+        )
 
     def test_is_model_score_requires_model_rollout(self):
         with self.assertRaises(ReceiptIntegrityError):
             build_receipt(
-                lane="E13", suite="openreward_games_eval", status="RUNNING",
-                separation=self.proof, outcomes=self.accepted,
-                run_kind="harness_validation", is_model_score=True,
+                lane="E13",
+                suite="openreward_games_eval",
+                status="RUNNING",
+                separation=self.proof,
+                outcomes=self.accepted,
+                run_kind="harness_validation",
+                is_model_score=True,
             )
 
     def test_synthetic_run_cannot_be_a_model_score(self):
         with self.assertRaises(ReceiptIntegrityError):
             build_receipt(
-                lane="E13", suite="openreward_games_eval", status="RUNNING",
-                separation=self.proof, outcomes=self.accepted,
-                run_kind="model_rollout", is_model_score=True, synthetic=True,
+                lane="E13",
+                suite="openreward_games_eval",
+                status="RUNNING",
+                separation=self.proof,
+                outcomes=self.accepted,
+                run_kind="model_rollout",
+                is_model_score=True,
+                synthetic=True,
             )
 
     def test_invalid_status_is_rejected(self):
         with self.assertRaises(ReceiptIntegrityError):
             build_receipt(
-                lane="E13", suite="openreward_games_eval", status="DONE",
-                separation=self.proof, outcomes=(),
+                lane="E13",
+                suite="openreward_games_eval",
+                status="DONE",
+                separation=self.proof,
+                outcomes=(),
             )
 
     def test_emit_refuses_a_tampered_receipt(self):
         receipt = build_receipt(
-            lane="E13", suite="openreward_games_eval", status="PARTIAL",
-            separation=self.proof, outcomes=self.accepted,
-            run_kind="harness_validation", is_model_score=False, synthetic=True,
+            lane="E13",
+            suite="openreward_games_eval",
+            status="PARTIAL",
+            separation=self.proof,
+            outcomes=self.accepted,
+            run_kind="harness_validation",
+            is_model_score=False,
+            synthetic=True,
         )
         receipt["score"] = 0.99  # hand-edited after the fact
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaises(ReceiptIntegrityError):
                 emit_receipt(Path(tmp) / "receipt.json", receipt)
 
+    def test_emit_refuses_caller_supplied_local_model_score(self):
+        receipt = build_receipt(
+            lane="E13",
+            suite="openreward_games_eval",
+            status="RUNNING",
+            separation=self.proof,
+            outcomes=self.accepted,
+            run_kind="model_rollout",
+            is_model_score=True,
+            synthetic=False,
+        )
+        receipt["score"] = 1.0
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(ReceiptIntegrityError):
+                emit_receipt(Path(tmp) / "receipt.json", receipt)
+
     def test_emit_writes_a_clean_receipt(self):
         receipt = build_receipt(
-            lane="E13", suite="openreward_games_eval", status="BLOCKED",
-            separation=self.proof, outcomes=(), synthetic=True,
+            lane="E13",
+            suite="openreward_games_eval",
+            status="BLOCKED",
+            separation=self.proof,
+            outcomes=(),
+            synthetic=True,
         )
         with tempfile.TemporaryDirectory() as tmp:
             path = emit_receipt(Path(tmp) / "nested" / "receipt.json", receipt)
@@ -355,7 +444,9 @@ class CliTests(unittest.TestCase):
             train = self._write(d, "train.json", synthetic_manifest("train", offset=0))
             evaluation = self._write(d, "test.json", synthetic_manifest("test", offset=10000))
             out = str(d / "receipt.json")
-            self.assertEqual(main(["--train-manifest", train, "--eval-manifest", evaluation, "--out", out]), 0)
+            self.assertEqual(
+                main(["--train-manifest", train, "--eval-manifest", evaluation, "--out", out]), 0
+            )
             receipt = json.loads(Path(out).read_text())
         self.assertIsNone(receipt["score"])
         self.assertTrue(receipt["seed_separation"]["holds"])
@@ -366,7 +457,9 @@ class CliTests(unittest.TestCase):
             train = self._write(d, "train.json", synthetic_manifest("train", offset=0))
             evaluation = self._write(d, "test.json", synthetic_manifest("test", offset=0))
             out = str(d / "receipt.json")
-            self.assertEqual(main(["--train-manifest", train, "--eval-manifest", evaluation, "--out", out]), 1)
+            self.assertEqual(
+                main(["--train-manifest", train, "--eval-manifest", evaluation, "--out", out]), 1
+            )
             receipt = json.loads(Path(out).read_text())
         self.assertIsNone(receipt["score"])
         self.assertEqual(receipt["status"], "BLOCKED")

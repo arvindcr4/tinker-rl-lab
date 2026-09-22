@@ -145,7 +145,7 @@
     "skipped_tasks": 0,
     "tasks_with_input_files": 100,
     "manifest_path": "outputs/e4_banker_toolbench/split_manifest_100.json",
-    "manifest_sha256": "d2af8d467315077f3264b52440c4c05d9da7b62df51c84333f993d298870ecef",
+    "manifest_sha256": "9fda047e501b68db09bf87b2013f85b78bd95da0a7b5cd77e0f613634835459c",
     "sorted_task_id_list_sha256": "6373b69234ae938a31943cbe3657cdc49ac3dbe89859469edb0603a7e70ff051",
     "generated_dataset_tree_sha256": "d326bf41c79830b801b1fec4e31a86f5114d41dbaa656abe6affccd85188d642",
     "adapter_flags": {
@@ -306,6 +306,6 @@
     "evidence/preflight_pass.log": "15576143a186eae77f9375df86fe765908d0ba1f4325fab426ea7f209cd6a244",
     "evidence/run_adapter_dryrun.log": "8967bc68df489e75ec89592e899f719539d007081c630a365bd513f75e6e62ab",
     "evidence/run_adapter_full.log": "437125774773cece186c674465dc75d129a8645c89c5b3a0c5da244709b270a7",
-    "split_manifest_100.json": "d2af8d467315077f3264b52440c4c05d9da7b62df51c84333f993d298870ecef"
+    "split_manifest_100.json": "9fda047e501b68db09bf87b2013f85b78bd95da0a7b5cd77e0f613634835459c"
   }
 }

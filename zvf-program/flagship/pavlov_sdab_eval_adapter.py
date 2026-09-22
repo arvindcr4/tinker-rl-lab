@@ -18,14 +18,17 @@ Related benchmarks and xLAM are never accepted as SDAB substitutes.
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import math
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Mapping, Sequence
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 
 SUITE_ID = "sdab_eval"
@@ -42,6 +45,9 @@ OFFICIAL_CATEGORIES = (
     "observability_and_incident_response",
     "distributed_systems",
 )
+SDAB_GRANT_LANE = "e3_sdab"
+SDAB_PROVIDER_ID = "emulated-sdab"
+SDAB_TRUST_ROOT_SCHEMA_VERSION = "pavlov-provider-trust-root-v1"
 
 REQUIRED_HELDOUT_RECEIPTS = (
     "split",
@@ -208,6 +214,60 @@ def canonical_json(value: Any) -> str:
 
 def sha256_digest(value: Any) -> str:
     return "sha256:" + hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()
+
+
+def load_sdab_trust_root(document: Any) -> dict[str, str]:
+    """Validate an explicitly installed E3 provider trust-root document.
+
+    The document is an external configuration input, never a provider key
+    compiled into this adapter.  Its digest is propagated into every manifest
+    that relies on it so a later receipt cannot be replayed under another root.
+    """
+    if not isinstance(document, Mapping):
+        raise SdabBundleError("E3 provider trust roots must be a JSON object")
+    data = dict(document)
+    required = {
+        "schema_version", "provider_id", "lane", "suite_id", "key_id",
+        "key_fingerprint", "public_key_b64", "signature_algorithm",
+        "issued_at", "expires_at",
+    }
+    if set(data) != required:
+        raise SdabBundleError("E3 provider trust-root document has an invalid schema")
+    if (
+        data["schema_version"] != SDAB_TRUST_ROOT_SCHEMA_VERSION
+        or data["provider_id"] != SDAB_PROVIDER_ID
+        or data["lane"] != SDAB_GRANT_LANE
+        or data["suite_id"] != SUITE_ID
+        or data["signature_algorithm"] != "ed25519"
+        or not isinstance(data["key_id"], str)
+        or not data["key_id"].strip()
+        or not isinstance(data["key_fingerprint"], str)
+        or not re.fullmatch(r"[0-9a-f]{64}", data["key_fingerprint"])
+    ):
+        raise SdabBundleError("E3 provider trust-root binding is invalid")
+    try:
+        public_key = base64.b64decode(data["public_key_b64"], validate=True)
+        issued = datetime.fromisoformat(str(data["issued_at"]).replace("Z", "+00:00"))
+        expires = datetime.fromisoformat(str(data["expires_at"]).replace("Z", "+00:00"))
+        now = datetime.now(timezone.utc)
+        if (
+            len(public_key) != 32
+            or issued.tzinfo is None
+            or expires.tzinfo is None
+            or issued > now
+            or expires <= now
+            or expires <= issued
+            or hashlib.sha256(public_key).hexdigest() != data["key_fingerprint"]
+        ):
+            raise ValueError
+    except (KeyError, TypeError, ValueError):
+        raise SdabBundleError("E3 provider trust-root key or validity window is invalid") from None
+    return {
+        "trust_root_sha256": sha256_digest(data),
+        "key_id": data["key_id"],
+        "key_fingerprint": data["key_fingerprint"],
+        "public_key_b64": data["public_key_b64"],
+    }
 
 
 def _normalise_provider(value: Any, field: str) -> str:
@@ -543,7 +603,7 @@ def validate_sdab_boundary(spec: Mapping[str, Any]) -> list[str]:
 
     try:
         build_sdab_boundary(spec)
-    except SdabBoundaryError as exc:
+    except (SdabBoundaryError, SdabBundleError) as exc:
         return [str(exc)]
     return []
 
@@ -1345,6 +1405,44 @@ def build_boundary_spec_from_bundle(
     return spec
 
 
+def _verify_provider_grant(
+    grant: Any, *, binding: Mapping[str, Any], trust_root: Mapping[str, Any]
+) -> tuple[str, dict[str, str]]:
+    """Verify an E3 provider grant against an explicitly supplied trust root."""
+    root = load_sdab_trust_root(trust_root)
+    if not isinstance(grant, Mapping):
+        raise SdabBundleError("runtime manifest requires a provider grant object")
+    data = dict(grant)
+    if data.get("lane") != SDAB_GRANT_LANE or data.get("suite_id") != SUITE_ID:
+        raise SdabBundleError("provider grant lane/suite binding is invalid")
+    if (
+        data.get("key_id") != root["key_id"]
+        or data.get("key_fingerprint") != root["key_fingerprint"]
+        or data.get("trust_root_sha256") != root["trust_root_sha256"]
+        or data.get("signature_algorithm") != "ed25519"
+    ):
+        raise SdabBundleError("provider grant does not bind the supplied E3 trust root")
+    if not isinstance(data.get("binding"), Mapping) or dict(data["binding"]) != dict(binding):
+        raise SdabBundleError("provider grant binding does not match runtime manifest")
+    try:
+        issued = datetime.fromisoformat(str(data["issued_at"]).replace("Z", "+00:00"))
+        expires = datetime.fromisoformat(str(data["expires_at"]).replace("Z", "+00:00"))
+        now = datetime.now(timezone.utc)
+        if issued.tzinfo is None or expires.tzinfo is None or issued > now or expires <= now or expires <= issued:
+            raise ValueError
+    except (KeyError, ValueError):
+        raise SdabBundleError("provider grant has an invalid issue/expiry window") from None
+    signature = data.get("detached_signature")
+    signed = {key: value for key, value in data.items() if key != "detached_signature"}
+    try:
+        Ed25519PublicKey.from_public_bytes(
+            base64.b64decode(root["public_key_b64"], validate=True)
+        ).verify(base64.b64decode(signature, validate=True), canonical_json(signed).encode("utf-8"))
+    except (InvalidSignature, TypeError, ValueError):
+        raise SdabBundleError("provider grant signature does not verify against the supplied E3 trust root") from None
+    return sha256_digest(data), root
+
+
 def build_runtime_manifest(
     ingest_report: Mapping[str, Any],
     *,
@@ -1354,6 +1452,9 @@ def build_runtime_manifest(
     verifier_identity: str,
     adapter_entrypoint: str,
     disjointness_receipt: str,
+    reset_contract: str = "provider-native-reset-required",
+    provider_grant: Mapping[str, Any] | None = None,
+    trust_root: Mapping[str, Any] | None = None,
     license_id: str | None = None,
     license_receipt: str | None = None,
 ) -> dict[str, Any]:
@@ -1384,6 +1485,15 @@ def build_runtime_manifest(
             if isinstance(license_identity, str)
             else license_identity.get("spdx_id") or license_identity.get("name")
         )
+    grant_binding = {
+        "suite_id": SUITE_ID, "lane": SDAB_GRANT_LANE, "benchmark_revision": bundle["revision"],
+        "container_digest": container_digest, "environment_digest": environment_digest,
+        "verifier_sha256": verifier_sha256, "reset_contract": reset_contract,
+        "license_id": resolved_license,
+    }
+    grant_hash, verified_root = _verify_provider_grant(
+        provider_grant, binding=grant_binding, trust_root=trust_root
+    )
     manifest = {
         "schema_version": RUNTIME_MANIFEST_SCHEMA_VERSION,
         "suite_id": SUITE_ID,
@@ -1420,6 +1530,21 @@ def build_runtime_manifest(
         "native_verifier": True,
         "stateful": True,
         "artifact_or_side_effect": True,
+        # These are deliberately metadata-only provider obligations.  They do
+        # not claim that a runtime is available; they make a later manifest
+        # unusable unless the provider pins reset and grader identities.
+        "provider_runtime": {
+            "provider": "Emulated",
+            "runtime_digest": _digest(environment_digest, "runtime_manifest.environment_digest"),
+            "container_digest": _digest(container_digest, "runtime_manifest.container_digest"),
+            "reset_contract": _immutable_string(reset_contract, "runtime_manifest.reset_contract"),
+            "grader_identity": _immutable_string(verifier_identity, "runtime_manifest.verifier_identity"),
+            "license_id": _immutable_string(resolved_license, "runtime_manifest.license_id"),
+            "provider_grant_sha256": grant_hash,
+            "provider_trust_root_sha256": verified_root["trust_root_sha256"],
+            "provider_key_id": verified_root["key_id"],
+            "provider_key_fingerprint": verified_root["key_fingerprint"],
+        },
     }
     forbidden = sorted(set(manifest) & set(RAW_CONTENT_KEYS))
     if forbidden:
@@ -1591,6 +1716,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("--source-revision-digest")
     parser.add_argument("--container-digest")
+    parser.add_argument(
+        "--runtime-manifest",
+        action="store_true",
+        help="emit a fail-closed provider runtime manifest from an authoritative bundle",
+    )
+    parser.add_argument("--environment-digest")
+    parser.add_argument("--verifier-sha256")
+    parser.add_argument("--verifier-identity")
+    parser.add_argument("--adapter-entrypoint")
+    parser.add_argument("--disjointness-receipt")
+    parser.add_argument("--reset-contract")
+    parser.add_argument("--provider-grant", type=Path)
+    parser.add_argument(
+        "--trust-roots",
+        type=Path,
+        help="external lane-scoped E3 provider trust-root JSON document",
+    )
     parser.add_argument("--out", type=Path, help="write the ingest receipt to this path")
     args = parser.parse_args(argv)
     if args.bundle is None and args.boundary is None:
@@ -1630,6 +1772,47 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             output["ingest"] = ingest
             output["ingest_receipt"] = receipt
+            if args.runtime_manifest:
+                required = {
+                    "--container-digest": args.container_digest,
+                    "--environment-digest": args.environment_digest,
+                    "--verifier-sha256": args.verifier_sha256,
+                    "--verifier-identity": args.verifier_identity,
+                    "--adapter-entrypoint": args.adapter_entrypoint,
+                    "--disjointness-receipt": args.disjointness_receipt,
+                    "--reset-contract": args.reset_contract,
+                    "--provider-grant": args.provider_grant,
+                    "--trust-roots": args.trust_roots,
+                }
+                missing = [name for name, value in required.items() if not value]
+                if missing:
+                    raise SdabBoundaryError(
+                        "--runtime-manifest requires " + ", ".join(missing)
+                    )
+                if ingest["synthetic"] or not ingest["authoritative"]:
+                    raise SdabBundleError(
+                        "synthetic or harness-validation ingest can never produce a runtime manifest"
+                    )
+                runtime = build_runtime_manifest(
+                    ingest,
+                    container_digest=args.container_digest,
+                    environment_digest=args.environment_digest,
+                    verifier_sha256=args.verifier_sha256,
+                    verifier_identity=args.verifier_identity,
+                    adapter_entrypoint=args.adapter_entrypoint,
+                    disjointness_receipt=args.disjointness_receipt,
+                    reset_contract=args.reset_contract,
+                    provider_grant=_load_json(args.provider_grant, "provider grant"),
+                    trust_root=_load_json(args.trust_roots, "provider trust roots"),
+                )
+                # Exercise the runner gate before emitting anything.  This is
+                # a local schema check, never an environment launch.
+                try:
+                    from .eval_pavlov_sdab import validate_native_manifest
+                except ImportError:
+                    from eval_pavlov_sdab import validate_native_manifest
+                validate_native_manifest(runtime, required_tasks=1)
+                output["runtime_manifest"] = runtime
             if args.out is not None:
                 args.out.parent.mkdir(parents=True, exist_ok=True)
                 args.out.write_text(

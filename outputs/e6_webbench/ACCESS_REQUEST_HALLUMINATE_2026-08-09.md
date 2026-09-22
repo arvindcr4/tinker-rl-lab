@@ -1,5 +1,10 @@
 # Access request — Halluminate WebBench live environment, native verifier, held-out split
 
+**Status update (2026-08-24):** The detailed request was emailed to the provider
+on 2026-08-22. A public follow-up was posted on the official ground-truth issue
+on 2026-08-24: <https://github.com/Halluminate/WebBench/issues/2#issuecomment-5391445280>.
+No access, verifier, or score has been received yet.
+
 **Send to:** Halluminate (WebBench maintainers). Suggested channels, in order:
 1. An issue or discussion on `https://github.com/Halluminate/WebBench` referencing
    the open ground-truth issue `https://github.com/Halluminate/WebBench/issues/2`.

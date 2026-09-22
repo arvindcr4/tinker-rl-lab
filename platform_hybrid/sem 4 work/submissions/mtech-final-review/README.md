@@ -81,10 +81,9 @@ Every number on a slide is pulled from a repository file:
 
 ## Notes / unverified
 
-- **`<SRN>`** is a placeholder — no student ID was found in the repo.
-- The **date "July 2026"** on the title slide is derived from the current review
-  window (workshop PDF compiled 2026-07-10); it is not a fixed submission date in
-  the repo.
+- **SRN** is `PES2PGE24DS140`, shown on the title and closing slides.
+- The **date "September 2026"** on the title slide is the final-review
+  submission window.
 - The task referenced a `thesis_demo` notebook. No file named `thesis_demo.ipynb`
   exists; the demo artifacts that do exist are the HuggingFace Space, the
   `submission/demo/demo.sh` runbook (`reports/esa_phase1/CODE_WALKTHROUGH.md`),

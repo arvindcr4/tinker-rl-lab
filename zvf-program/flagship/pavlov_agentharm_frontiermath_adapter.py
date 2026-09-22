@@ -12,6 +12,11 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import argparse
+import os
+import base64
+from datetime import datetime, timezone
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -133,6 +138,10 @@ _VALID_TINKER_COST_STATUS = {
     "finished",
 }
 _VALID_EVIDENCE_STATUS = {"prospective", "observed", "admissible", "rejected", "pending"}
+AGENTHARM_GRANT_SCHEMA = "agentharm-provider-grant-v1"
+AGENTHARM_REQUEST_SCHEMA = "agentharm-provider-execution-request-v1"
+AGENTHARM_RESULT_SCHEMA = "agentharm-provider-signed-result-v1"
+AGENTHARM_TRUST_ROOT_SCHEMA = "provider-lane-trust-root-v1"
 
 _NATIVE_CONTRACT = {
     "agentharm_eval": {
@@ -453,9 +462,7 @@ def _validate_native_contract(suite_id: str, contract: Mapping[str, Any]) -> lis
                     f"{suite_id}: native_contract.environment.artifact_required must be boolean"
                 )
             elif observed.get("artifact_required") != bool(spec.get("artifact_required")):
-                errors.append(
-                    f"{suite_id}: native_contract.environment.artifact_required mismatch"
-                )
+                errors.append(f"{suite_id}: native_contract.environment.artifact_required mismatch")
 
         expected_digest = _native_contract_signature(spec)
         if _placeholder(observed.get(digest_key)):
@@ -635,7 +642,9 @@ def _validate_receipt_fields(suite_id: str, receipt: Mapping[str, Any]) -> list[
 
             for field in ("repo_url", "url"):
                 if not _is_url(checkpoint.get(field)):
-                    errors.append(f"{suite_id}: hf_checkpoints[{index}].{field} must be public HTTPS URL")
+                    errors.append(
+                        f"{suite_id}: hf_checkpoints[{index}].{field} must be public HTTPS URL"
+                    )
 
             visibility = checkpoint.get("visibility")
             if visibility not in {"public", "private"}:
@@ -656,7 +665,9 @@ def _validate_receipt_fields(suite_id: str, receipt: Mapping[str, Any]) -> list[
             cp_url = str(checkpoint.get("url", ""))
             cp_identity = (repo_url, cp_revision, cp_url)
             if cp_identity in seen_cp_identities:
-                errors.append(f"{suite_id}: hf_checkpoints[{index}] duplicates an existing checkpoint entry")
+                errors.append(
+                    f"{suite_id}: hf_checkpoints[{index}] duplicates an existing checkpoint entry"
+                )
             else:
                 seen_cp_identities.add(cp_identity)
 
@@ -740,7 +751,9 @@ def validate_boundary(boundary: Mapping[str, Any]) -> list[str]:
     if suite.get("role") != "primary_eval":
         return [f"{suite_id}: contract role must be primary_eval"]
 
-    if tuple(boundary.get("domains", ())) != tuple(sorted({str(v) for v in suite.get("domains", ())})):
+    if tuple(boundary.get("domains", ())) != tuple(
+        sorted({str(v) for v in suite.get("domains", ())})
+    ):
         return [f"{suite_id}: domains must match contract"]
 
     if bool(boundary.get("stateful")) != bool(suite.get("stateful")):
@@ -823,11 +836,13 @@ def evaluate_bundle(bundle: Mapping[str, Any]) -> dict[str, Any]:
             if not isinstance(boundary, Mapping):
                 continue
             suite_id = str(boundary.get("suite_id"))
-            receipt = boundary.get("receipts", {}) if isinstance(boundary.get("receipts"), Mapping) else {}
-            heldout = bool(boundary.get("heldout"))
-            heldout_proven = (not heldout) or not _validate_heldout_receipt(
-                suite_id, receipt
+            receipt = (
+                boundary.get("receipts", {})
+                if isinstance(boundary.get("receipts"), Mapping)
+                else {}
             )
+            heldout = bool(boundary.get("heldout"))
+            heldout_proven = (not heldout) or not _validate_heldout_receipt(suite_id, receipt)
             primary_eval_claim_allowed = bool(boundary.get("primary_eval")) and bool(heldout_proven)
             suite_readiness[suite_id] = {
                 "structural_heldout": heldout,
@@ -884,8 +899,7 @@ AGENTHARM_SPLIT_FILES: Mapping[str, Mapping[str, str]] = {
 
 #: The three files that must be present before any AgentHarm score may be emitted.
 AGENTHARM_HELDOUT_FILES: tuple[str, ...] = tuple(
-    AGENTHARM_SPLIT_FILES[AGENTHARM_HELDOUT_SPLIT][name]
-    for name in ("harmful", "benign", "chat")
+    AGENTHARM_SPLIT_FILES[AGENTHARM_HELDOUT_SPLIT][name] for name in ("harmful", "benign", "chat")
 )
 
 #: Source files whose content defines the AgentHarm grader.  Hashing all of them
@@ -1034,9 +1048,7 @@ def build_agentharm_split_manifest(
         "complete": not missing,
         "task_count": len(task_id_hashes),
         "task_id_hashes": task_id_hashes,
-        "split_task_id_hash": aggregate_task_id_hashes(task_id_hashes)
-        if task_id_hashes
-        else None,
+        "split_task_id_hash": aggregate_task_id_hashes(task_id_hashes) if task_id_hashes else None,
     }
     # The manifest hash covers everything except the local filesystem path and the
     # hash field itself, so it is reproducible on a different machine.
@@ -1144,9 +1156,10 @@ def _score_blockers(
         blockers.append("split manifest carries no task_id_hashes")
     elif len(set(task_hashes)) != len(task_hashes):
         blockers.append("split manifest task_id_hashes are not unique")
-    elif aggregate_task_id_hashes(task_hashes) != str(
-        split_manifest.get("split_task_id_hash", "")
-    ).lower():
+    elif (
+        aggregate_task_id_hashes(task_hashes)
+        != str(split_manifest.get("split_task_id_hash", "")).lower()
+    ):
         blockers.append("split_task_id_hash does not match task_id_hashes")
 
     if not verifier_identity.get("complete"):
@@ -1186,6 +1199,7 @@ def emit_agentharm_score(
     verifier_identity: Mapping[str, Any],
     heldout_availability: Mapping[str, Any],
     run: Mapping[str, Any],
+    provider_grant: Mapping[str, Any] | None = None,
     raise_on_block: bool = False,
 ) -> dict[str, Any]:
     """Fail-closed AgentHarm score emitter.
@@ -1204,6 +1218,15 @@ def emit_agentharm_score(
         heldout_availability=heldout_availability,
         run=run,
     )
+    try:
+        grant = validate_agentharm_provider_grant(provider_grant or {})
+        if grant["private_split"]["dataset_revision"] != split_manifest.get(
+            "dataset_revision"
+        ) or grant["verifier"]["sha256"] != verifier_identity.get("verifier_hash"):
+            blockers.append("verified provider grant is not bound to the split/verifier")
+    except HeldoutSplitUnavailable:
+        blockers.append("verified provider grant is required for an AgentHarm score")
+    blockers.append("direct score emission is prohibited; use collect_agentharm_signed_result")
 
     label = str(run.get("label") or ("agentharm_heldout" if not blockers else "harness_validation"))
     if blockers and raise_on_block:
@@ -1235,6 +1258,311 @@ def emit_agentharm_score(
     return receipt
 
 
+def _load_agentharm_trust_root(trust_root: Mapping[str, Any] | str | Path | None) -> dict[str, str]:
+    """Load an explicit provider-issued E10 trust root; no embedded key is trusted."""
+    try:
+        raw = json.loads(Path(trust_root).read_text()) if isinstance(trust_root, (str, Path)) else trust_root
+        required = {"schema_version", "lane", "suite_id", "provider", "key_id", "public_key_hex"}
+        if not isinstance(raw, Mapping) or set(raw) != required or not all(isinstance(raw[key], str) for key in required):
+            raise ValueError("trust-root schema")
+        root = {key: str(value) for key, value in raw.items()}
+        if (root["schema_version"], root["lane"], root["suite_id"], root["provider"]) != (
+            AGENTHARM_TRUST_ROOT_SCHEMA, "E10", AGENTHARM_SUITE_ID, "AISI"
+        ) or not root["key_id"] or not re.fullmatch(r"[0-9a-f]{64}", root["public_key_hex"]):
+            raise ValueError("trust-root identity")
+        Ed25519PublicKey.from_public_bytes(bytes.fromhex(root["public_key_hex"]))
+        root["document_sha256"] = sha256_text(canonical_json(dict(raw)))
+        root["key_fingerprint"] = hashlib.sha256(bytes.fromhex(root["public_key_hex"])).hexdigest()
+        return root
+    except Exception as exc:
+        raise HeldoutSplitUnavailable("explicit valid E10 provider trust root is required") from exc
+
+
+def _verify_e10_signature(payload: Mapping[str, Any], trust_root: Mapping[str, Any] | str | Path | None) -> dict[str, str]:
+    try:
+        root = _load_agentharm_trust_root(trust_root)
+        if payload.get("signature_key_id") != root["key_id"]:
+            raise ValueError("wrong trust root")
+        signature = base64.b64decode(str(payload["signature"]), validate=True)
+        body = canonical_json({k: v for k, v in payload.items() if k != "signature"}).encode()
+        Ed25519PublicKey.from_public_bytes(
+            bytes.fromhex(root["public_key_hex"])
+        ).verify(signature, body)
+        issued = _parse_e10_utc(payload["issued_at"], field="issued_at")
+        expires = _parse_e10_utc(payload["expires_at"], field="expires_at")
+        if (
+            issued.tzinfo is None
+            or expires.tzinfo is None
+            or issued > datetime.now(timezone.utc)
+            or expires <= datetime.now(timezone.utc)
+        ):
+            raise ValueError("invalid validity window")
+        return root
+    except Exception as exc:
+        raise HeldoutSplitUnavailable("grant trust-root signature or timestamp is invalid") from exc
+
+
+def _parse_e10_utc(value: Any, *, field: str) -> datetime:
+    if not isinstance(value, str) or not re.fullmatch(
+        r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", value
+    ):
+        raise ValueError(f"{field} must be canonical UTC")
+    return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+
+
+def validate_agentharm_provider_grant(
+    grant: Mapping[str, Any], *, trust_root: Mapping[str, Any] | str | Path | None = None
+) -> dict[str, Any]:
+    """Validate a provider-issued private-split grant offline and fail closed."""
+    required = {
+        "schema_version",
+        "suite_id",
+        "provider",
+        "issued_at",
+        "expires_at",
+        "grant_id",
+        "license",
+        "private_split",
+        "runtime",
+        "verifier",
+        "execution",
+        "signature_key_id",
+        "signature",
+    }
+    if not isinstance(grant, Mapping) or set(grant) != required:
+        raise HeldoutSplitUnavailable("grant has missing or unknown fields")
+    data = dict(grant)
+    if (
+        data["schema_version"] != AGENTHARM_GRANT_SCHEMA
+        or data["suite_id"] != AGENTHARM_SUITE_ID
+        or data["provider"] != "AISI"
+        or not all(isinstance(data[k], str) and data[k] for k in ("issued_at", "grant_id"))
+    ):
+        raise HeldoutSplitUnavailable("grant identity or suite is invalid")
+    root = _verify_e10_signature(data, trust_root)
+    license_data, split, runtime, verifier, execution = (
+        data["license"],
+        data["private_split"],
+        data["runtime"],
+        data["verifier"],
+        data["execution"],
+    )
+    if (
+        not isinstance(license_data, Mapping)
+        or set(license_data) != {"approved", "receipt_id", "sha256"}
+        or license_data.get("approved") is not True
+        or not _is_sha256(license_data.get("sha256"))
+        or not license_data.get("receipt_id")
+    ):
+        raise HeldoutSplitUnavailable("approved pinned license receipt is required")
+    if (
+        not isinstance(split, Mapping)
+        or set(split) != {"dataset_revision", "manifest_sha256", "task_count", "files"}
+        or not _is_hex40(split.get("dataset_revision"))
+        or not _is_sha256(split.get("manifest_sha256"))
+        or not isinstance(split.get("task_count"), int)
+        or split["task_count"] <= 0
+        or set(split.get("files", ())) != set(AGENTHARM_HELDOUT_FILES)
+    ):
+        raise HeldoutSplitUnavailable("immutable complete private split is required")
+    if (
+        not isinstance(runtime, Mapping)
+        or set(runtime) != {"revision", "container_digest", "endpoint"}
+        or not _is_hex40(runtime.get("revision"))
+        or not _is_sha256(runtime.get("container_digest"))
+        or not _is_url(runtime.get("endpoint"))
+    ):
+        raise HeldoutSplitUnavailable("immutable provider runtime is required")
+    if (
+        not isinstance(verifier, Mapping)
+        or set(verifier) != {"approval_id", "revision", "sha256", "command"}
+        or not _is_hex40(verifier.get("revision"))
+        or not _is_sha256(verifier.get("sha256"))
+        or not verifier.get("approval_id")
+        or not isinstance(verifier.get("command"), list)
+        or not verifier["command"]
+    ):
+        raise HeldoutSplitUnavailable("approved immutable policy grader is required")
+    if (
+        not isinstance(execution, Mapping)
+        or set(execution) != {"provider_approved", "receipt_url"}
+        or execution.get("provider_approved") is not True
+        or not _is_url(execution.get("receipt_url"))
+    ):
+        raise HeldoutSplitUnavailable("provider-approved execution receipt URL is required")
+    data["grant_fingerprint"] = sha256_text(canonical_json(data))
+    data["trust_root_sha256"] = root["document_sha256"]
+    data["trust_root_key_fingerprint"] = root["key_fingerprint"]
+    return data
+
+
+def build_agentharm_execution_request(
+    grant: Mapping[str, Any], *, budget_receipt: Mapping[str, Any], trust_root: Mapping[str, Any] | str | Path | None = None
+) -> dict[str, Any]:
+    data = validate_agentharm_provider_grant(grant, trust_root=trust_root)
+    if not isinstance(budget_receipt, Mapping) or budget_receipt.get("authorized") is not True:
+        raise HeldoutSplitUnavailable("authorized budget receipt is required")
+    return {
+        "schema_version": AGENTHARM_REQUEST_SCHEMA,
+        "status": "PROVIDER_EXECUTION_REQUIRED",
+        "suite_id": AGENTHARM_SUITE_ID,
+        "grant_fingerprint": data["grant_fingerprint"],
+        "trust_root_sha256": data["trust_root_sha256"],
+        "trust_root_key_fingerprint": data["trust_root_key_fingerprint"],
+        "model_id": MODEL_ID,
+        "model_revision": MODEL_REVISION,
+        "private_split": data["private_split"],
+        "runtime": data["runtime"],
+        "verifier": data["verifier"],
+        "wandb_before_tinker": True,
+        "immutable_hf_checkpoints_required": True,
+        "budget_receipt": dict(budget_receipt),
+        "score": None,
+    }
+
+
+def collect_agentharm_signed_result(
+    grant: Mapping[str, Any], request: Mapping[str, Any], result: Mapping[str, Any], *, trust_root: Mapping[str, Any] | str | Path | None = None
+) -> dict[str, Any]:
+    """The sole E10 completion path; validates a signed provider collection receipt."""
+    verified = validate_agentharm_provider_grant(grant, trust_root=trust_root)
+    request_required = {
+        "schema_version",
+        "status",
+        "suite_id",
+        "grant_fingerprint",
+        "trust_root_sha256",
+        "trust_root_key_fingerprint",
+        "model_id",
+        "model_revision",
+        "private_split",
+        "runtime",
+        "verifier",
+        "wandb_before_tinker",
+        "immutable_hf_checkpoints_required",
+        "budget_receipt",
+        "score",
+    }
+    if (
+        set(request) != request_required
+        or request.get("schema_version") != AGENTHARM_REQUEST_SCHEMA
+        or request.get("status") != "PROVIDER_EXECUTION_REQUIRED"
+        or request.get("suite_id") != AGENTHARM_SUITE_ID
+        or request.get("grant_fingerprint") != verified["grant_fingerprint"]
+        or request.get("trust_root_sha256") != verified["trust_root_sha256"]
+        or request.get("trust_root_key_fingerprint") != verified["trust_root_key_fingerprint"]
+        or request.get("model_id") != MODEL_ID
+        or request.get("model_revision") != MODEL_REVISION
+        or request.get("private_split") != verified["private_split"]
+        or request.get("runtime") != verified["runtime"]
+        or request.get("verifier") != verified["verifier"]
+        or request.get("wandb_before_tinker") is not True
+        or request.get("immutable_hf_checkpoints_required") is not True
+        or not isinstance(request.get("budget_receipt"), Mapping)
+        or request["budget_receipt"].get("authorized") is not True
+        or request.get("score") is not None
+    ):
+        raise HeldoutSplitUnavailable("request is not an exact verified provider execution request")
+    required = {
+        "schema_version",
+        "suite_id",
+        "provider",
+        "issued_at",
+        "expires_at",
+        "signature_key_id",
+        "signature",
+        "grant_fingerprint",
+        "request_fingerprint",
+        "private_manifest_sha256",
+        "task_count",
+        "verifier_sha256",
+        "runtime_digest",
+        "deployment_revision",
+        "model_revision",
+        "artifact_sha256",
+        "metric",
+        "score",
+        "completed_at",
+    }
+    if not isinstance(result, Mapping) or set(result) != required:
+        raise HeldoutSplitUnavailable("result has missing or unknown fields")
+    payload = dict(result)
+    result_root = _verify_e10_signature(payload, trust_root)
+    if (
+        payload["grant_fingerprint"] != verified["grant_fingerprint"]
+        or result_root["document_sha256"] != verified["trust_root_sha256"]
+        or payload["issued_at"] != verified["issued_at"]
+        or payload["expires_at"] != verified["expires_at"]
+        or payload["schema_version"] != AGENTHARM_RESULT_SCHEMA
+        or payload["suite_id"] != AGENTHARM_SUITE_ID
+        or payload["provider"] != "AISI"
+        or payload["request_fingerprint"] != sha256_text(canonical_json(request))
+        or payload["private_manifest_sha256"] != verified["private_split"]["manifest_sha256"]
+        or payload["task_count"] != verified["private_split"]["task_count"]
+        or isinstance(payload["task_count"], bool)
+        or payload["verifier_sha256"] != verified["verifier"]["sha256"]
+        or payload["runtime_digest"] != verified["runtime"]["container_digest"]
+        or payload["deployment_revision"] != verified["runtime"]["revision"]
+        or payload["model_revision"] != MODEL_REVISION
+        or not _is_sha256(payload["artifact_sha256"])
+        or payload["metric"] != "agentharm_safety_score"
+        or isinstance(payload["score"], bool)
+        or not isinstance(payload["score"], (int, float))
+        or not 0.0 <= float(payload["score"]) <= 1.0
+    ):
+        raise HeldoutSplitUnavailable("result binding or bounded metric is invalid")
+    try:
+        completed = _parse_e10_utc(payload["completed_at"], field="completed_at")
+        issued = _parse_e10_utc(verified["issued_at"], field="issued_at")
+        expires = _parse_e10_utc(verified["expires_at"], field="expires_at")
+    except ValueError as exc:
+        raise HeldoutSplitUnavailable("result completion timestamp is invalid") from exc
+    if (
+        completed.tzinfo is None
+        or completed < issued
+        or completed > expires
+        or completed > datetime.now(timezone.utc)
+    ):
+        raise HeldoutSplitUnavailable("result completion time is invalid")
+    return {
+        "status": "COMPLETE",
+        "suite_id": AGENTHARM_SUITE_ID,
+        "score": float(payload["score"]),
+        "metric": payload["metric"],
+        "task_count": payload["task_count"],
+        "artifact_sha256": payload["artifact_sha256"],
+        "provider_signed": True,
+    }
+
+
+def _atomic_json(path: str | Path, value: Mapping[str, Any]) -> None:
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    tmp = target.with_suffix(target.suffix + ".tmp")
+    tmp.write_text(json.dumps(value, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    os.replace(tmp, target)
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Offline E10 provider-grant request builder")
+    parser.add_argument("--grant", type=Path, required=True)
+    parser.add_argument("--trust-root", type=Path, required=True)
+    parser.add_argument("--budget", type=Path, required=True)
+    parser.add_argument("--out", type=Path, required=True)
+    args = parser.parse_args(argv)
+    try:
+        payload = build_agentharm_execution_request(
+            json.loads(args.grant.read_text()), budget_receipt=json.loads(args.budget.read_text()),
+            trust_root=args.trust_root,
+        )
+        _atomic_json(args.out, payload)
+        print(json.dumps(payload, sort_keys=True))
+        return 0
+    except (ValueError, OSError, json.JSONDecodeError, HeldoutSplitUnavailable) as exc:
+        print(json.dumps({"status": "BLOCKED", "score": None, "errors": [str(exc)]}))
+        return 2
+
+
 __all__ = [
     "SCHEMA_VERSION",
     "ADAPTER_ID",
@@ -1259,6 +1587,9 @@ __all__ = [
     "agentharm_verifier_identity",
     "check_heldout_split_available",
     "emit_agentharm_score",
+    "validate_agentharm_provider_grant",
+    "build_agentharm_execution_request",
+    "collect_agentharm_signed_result",
     "build_boundary_receipts",
     "update_bundle_signature",
     "generate_boundary_bundle",
@@ -1266,3 +1597,6 @@ __all__ = [
     "validate_adapter_bundle",
     "evaluate_bundle",
 ]
+
+if __name__ == "__main__":
+    raise SystemExit(main())

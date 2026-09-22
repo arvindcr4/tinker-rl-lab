@@ -13,7 +13,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import unittest
+from unittest import mock
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -155,9 +157,7 @@ class WorldRecordSchemaTests(unittest.TestCase):
 class ReferentialIntegrityTests(unittest.TestCase):
     def test_resolvable_world_reference(self):
         tasks = [synthetic_task("a")]
-        self.assertEqual(
-            runner.validate_dataset_references(tasks, [synthetic_world()]), []
-        )
+        self.assertEqual(runner.validate_dataset_references(tasks, [synthetic_world()]), [])
 
     def test_dangling_world_reference_is_reported(self):
         tasks = [synthetic_task("a", world_id="world_missing")]
@@ -180,18 +180,14 @@ class IngestionReportTests(unittest.TestCase):
         self.assertEqual(report["task_id_sha256"], reordered["task_id_sha256"])
 
     def test_task_id_hash_changes_when_the_set_changes(self):
-        base = runner.dataset_ingestion_report(
-            [synthetic_task("a")], [synthetic_world()]
-        )
+        base = runner.dataset_ingestion_report([synthetic_task("a")], [synthetic_world()])
         grown = runner.dataset_ingestion_report(
             [synthetic_task("a"), synthetic_task("b")], [synthetic_world()]
         )
         self.assertNotEqual(base["task_id_sha256"], grown["task_id_sha256"])
 
     def test_count_mismatch_warns_but_does_not_invalidate(self):
-        report = runner.dataset_ingestion_report(
-            [synthetic_task("a")], [synthetic_world()]
-        )
+        report = runner.dataset_ingestion_report([synthetic_task("a")], [synthetic_world()])
         self.assertTrue(report["valid"])
         self.assertTrue(report["count_warnings"])
         self.assertIn("480", " ".join(report["count_warnings"]))
@@ -221,6 +217,24 @@ class RequiredAssetTests(unittest.TestCase):
         paths = runner.required_task_assets(task)
         self.assertIn(f"task_files/{task['task_id']}", paths)
 
+    def test_official_runtime_downloads_are_pinned(self):
+        source = (
+            'HF_DATASET = "mercor/apex-agents"\n'
+            "    zip_path = hf_hub_download(\n"
+            '        HF_DATASET, f"world_files_zipped/{world_id}.zip", repo_type="dataset"\n'
+            "    )\n"
+            "        snapshot_dir = snapshot_download(\n"
+            '            HF_DATASET, repo_type="dataset", allow_patterns=[f"{task_prefix}/**"]\n'
+            "        )\n"
+        )
+        adapted = runner._pin_official_hf_downloads(source)
+        self.assertIn("APEX_HF_DATASET_REVISION", adapted)
+        self.assertEqual(adapted.count("revision=HF_DATASET_REVISION"), 2)
+
+    def test_official_runtime_download_pin_fails_closed_on_source_drift(self):
+        with self.assertRaisesRegex(RuntimeError, "seam drifted"):
+            runner._pin_official_hf_downloads('HF_DATASET = "mercor/apex-agents"\n')
+
 
 class DatasetSchemaGateTests(unittest.TestCase):
     def _write(self, directory: Path, tasks: list, worlds: list) -> dict:
@@ -238,9 +252,7 @@ class DatasetSchemaGateTests(unittest.TestCase):
 
     def test_gate_passes_on_a_schema_valid_synthetic_dataset(self):
         with TemporaryDirectory() as tmp:
-            downloaded = self._write(
-                Path(tmp), [synthetic_task("a")], [synthetic_world()]
-            )
+            downloaded = self._write(Path(tmp), [synthetic_task("a")], [synthetic_world()])
             gate = runner._dataset_schema_gate(downloaded)
         self.assertEqual(gate.status, "PASS")
         self.assertTrue(gate.details["valid"])
@@ -257,9 +269,61 @@ class DatasetSchemaGateTests(unittest.TestCase):
         self.assertEqual(gate.required_receipt["kind"], "dataset_schema_mismatch")
 
     def test_gate_is_required_for_launch(self):
-        self.assertFalse(
-            runner._all_launch_gates_pass([runner._dataset_schema_gate(None)])
+        self.assertFalse(runner._all_launch_gates_pass([runner._dataset_schema_gate(None)]))
+
+    def test_runtime_wandb_handshake_is_the_only_deferred_launch_gate(self):
+        required = (
+            "benchmark_metadata",
+            "benchmark_access",
+            "dataset_schema",
+            "task_split",
+            "native_verifier",
+            "isolated_runtime",
+            "model_identity",
+            "budget",
+            "tinker_access",
+            "native_grader_credentials",
         )
+        gates = [runner.Gate(name, "PASS", {}) for name in required]
+        gates.append(
+            runner.Gate(
+                "wandb_online_before_tinker",
+                "PENDING_RUNTIME_ONLINE_HANDSHAKE",
+                {},
+            )
+        )
+        self.assertTrue(runner._all_launch_gates_pass(gates))
+        gates[-1] = runner.Gate("wandb_online_before_tinker", "BLOCKED", {})
+        self.assertFalse(runner._all_launch_gates_pass(gates))
+
+
+class JudgeCredentialGateTests(unittest.TestCase):
+    def test_judge_key_must_match_selected_provider(self):
+        with mock.patch.dict(os.environ, {"OPENAI_API_KEY": "present"}, clear=True):
+            self.assertEqual(runner._judge_key_gate("openai/gpt-4.1-mini").status, "PASS")
+            self.assertEqual(
+                runner._judge_key_gate("vertex_ai/gemini-2.5-flash").status,
+                "BLOCKED",
+            )
+
+    def test_tinker_same_model_judge_uses_bridge_credential_boundary(self):
+        gate = runner._judge_key_gate(f"openai/{runner.TINKER_BRIDGE_MODEL_ALIAS}")
+        self.assertEqual(gate.status, "PASS")
+        self.assertTrue(gate.details["same_model_judge"])
+        self.assertEqual(
+            gate.details["provider_key_present"],
+            "TINKER_BRIDGE_API_KEY_OR_KEYCHAIN",
+        )
+
+
+class BridgeCredentialGateTests(unittest.TestCase):
+    def test_non_macos_preflight_fails_closed_without_raising(self):
+        with (
+            mock.patch.dict(os.environ, {}, clear=True),
+            mock.patch.object(runner.shutil, "which", return_value=None),
+        ):
+            self.assertEqual(runner._resolve_bridge_credential(), (None, None))
+            self.assertEqual(runner._tinker_gate().status, "BLOCKED")
 
 
 class LocalDatasetGateTests(unittest.TestCase):

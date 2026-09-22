@@ -21,8 +21,6 @@ import os
 import re
 import shutil
 import subprocess
-import sys
-import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -46,6 +44,19 @@ ARCHIPELAGO_LICENSE = "Apache-2.0"
 MODEL_ID = "Qwen/Qwen3.6-35B-A3B"
 MODEL_REVISION = "995ad96eacd98c81ed38be0c5b274b04031597b0"
 MODEL_API_URL = "https://huggingface.co/api/models/Qwen/Qwen3.6-35B-A3B"
+TINKER_BRIDGE_BASE_URL = (
+    "https://arvindcr4--pavlov-tinker-openai-bridge-tinkeropenaibridge-web.modal.run"
+)
+TINKER_BRIDGE_API_BASE = f"{TINKER_BRIDGE_BASE_URL}/v1"
+TINKER_BRIDGE_MODEL_ALIAS = "pavlov-qwen36-tinker"
+TINKER_SAMPLER_PATH = (
+    "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler_weights/seed809_final"
+)
+TINKER_HF_REPO = (
+    "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6"
+)
+TINKER_HF_COMMIT = "64444133c55d88c3f1bf0df8a2f5d7ac646125c8"
+DEFAULT_JUDGE_MODEL = "vertex_ai/gemini-2.5-flash"
 WANDB_ENTITY = "arvindcr4-pes-university"
 WANDB_PROJECT = "tinker-rl-lab-pavlov"
 WANDB_GROUP = "pavlov-e5-apex-agents"
@@ -327,7 +338,7 @@ def _dataset_metadata_gate(
         ), None
     observed_id = metadata.get("id")
     observed_sha = metadata.get("sha")
-    license_value = ((metadata.get("cardData") or {}).get("license"))
+    license_value = (metadata.get("cardData") or {}).get("license")
     errors: list[str] = []
     if observed_id != DATASET_ID:
         errors.append(f"dataset id mismatch: {observed_id!r}")
@@ -343,7 +354,13 @@ def _dataset_metadata_gate(
         return Gate(
             "benchmark_metadata",
             "BLOCKED",
-            {**record, "dataset_id": observed_id, "dataset_revision": observed_sha, "license": license_value, "errors": errors},
+            {
+                **record,
+                "dataset_id": observed_id,
+                "dataset_revision": observed_sha,
+                "license": license_value,
+                "errors": errors,
+            },
             {
                 "kind": "immutable_benchmark_metadata",
                 "action": "resolve the metadata mismatch against Mercor's official release",
@@ -641,13 +658,9 @@ def dataset_ingestion_report(tasks: Any, worlds: Any) -> dict[str, Any]:
     world_count = len(worlds) if isinstance(worlds, list) else 0
     warnings: list[str] = []
     if task_count != APEX_EXPECTED_TASK_COUNT:
-        warnings.append(
-            f"task count {task_count} != documented {APEX_EXPECTED_TASK_COUNT}"
-        )
+        warnings.append(f"task count {task_count} != documented {APEX_EXPECTED_TASK_COUNT}")
     if world_count != APEX_EXPECTED_WORLD_COUNT:
-        warnings.append(
-            f"world count {world_count} != documented {APEX_EXPECTED_WORLD_COUNT}"
-        )
+        warnings.append(f"world count {world_count} != documented {APEX_EXPECTED_WORLD_COUNT}")
 
     task_ids = sorted(
         str(record["task_id"])
@@ -686,6 +699,111 @@ def required_task_assets(task: Mapping[str, Any]) -> list[str]:
     return paths
 
 
+def _pin_official_hf_downloads(source: str) -> str:
+    """Bind the upstream example's runtime asset downloads to our dataset pin."""
+
+    dataset_needle = 'HF_DATASET = "mercor/apex-agents"\n'
+    dataset_replacement = dataset_needle + (
+        "HF_DATASET_REVISION = os.environ['APEX_HF_DATASET_REVISION']\n"
+    )
+    world_needle = '        HF_DATASET, f"world_files_zipped/{world_id}.zip", repo_type="dataset"\n'
+    world_replacement = (
+        '        HF_DATASET, f"world_files_zipped/{world_id}.zip", '
+        'repo_type="dataset", revision=HF_DATASET_REVISION\n'
+    )
+    task_needle = (
+        '            HF_DATASET, repo_type="dataset", allow_patterns=[f"{task_prefix}/**"]\n'
+    )
+    task_replacement = (
+        '            HF_DATASET, repo_type="dataset", revision=HF_DATASET_REVISION, '
+        'allow_patterns=[f"{task_prefix}/**"]\n'
+    )
+    for label, needle in (
+        ("dataset constant", dataset_needle),
+        ("world asset download", world_needle),
+        ("task asset download", task_needle),
+    ):
+        if source.count(needle) != 1:
+            raise RuntimeError(f"official Archipelago {label} seam drifted")
+    return (
+        source.replace(dataset_needle, dataset_replacement)
+        .replace(world_needle, world_replacement)
+        .replace(task_needle, task_replacement)
+    )
+
+
+def _prefetch_exact_task_assets(*, args: argparse.Namespace, task_id: str) -> list[dict[str, Any]]:
+    """Populate the offline runner cache from the immutable dataset revision."""
+
+    if args.dataset_dir is None:
+        raise RuntimeError("exact task asset prefetch requires --dataset-dir")
+    tasks_path = args.dataset_dir / "tasks_and_rubrics.json"
+    tasks = _load_json_file(tasks_path, "tasks_and_rubrics.json")
+    task = next(
+        (row for row in tasks if isinstance(row, Mapping) and row.get("task_id") == task_id),
+        None,
+    )
+    if not isinstance(task, Mapping):
+        raise RuntimeError(f"selected task is absent from the pinned dataset: {task_id}")
+    try:
+        from huggingface_hub import hf_hub_download, snapshot_download
+    except ImportError as exc:
+        raise RuntimeError("huggingface_hub is unavailable for exact asset prefetch") from exc
+
+    cache_dir = args.cache_dir.resolve()
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    receipts: list[dict[str, Any]] = []
+    world_filename = APEX_WORLD_ZIP_TEMPLATE.format(world_id=task["world_id"])
+    world_path = Path(
+        hf_hub_download(
+            repo_id=DATASET_ID,
+            filename=world_filename,
+            repo_type="dataset",
+            revision=DATASET_REVISION,
+            cache_dir=str(cache_dir),
+        )
+    )
+    receipts.append(
+        {
+            "kind": "world_snapshot",
+            "filename": world_filename,
+            "revision": DATASET_REVISION,
+            "sha256": sha256_bytes(world_path.read_bytes()),
+            "bytes": world_path.stat().st_size,
+        }
+    )
+    if task.get("task_input_files"):
+        prefix = APEX_TASK_FILES_TEMPLATE.format(task_id=task_id)
+        snapshot_path = Path(
+            snapshot_download(
+                repo_id=DATASET_ID,
+                repo_type="dataset",
+                revision=DATASET_REVISION,
+                allow_patterns=[f"{prefix}/**"],
+                cache_dir=str(cache_dir),
+            )
+        )
+        files = sorted(path for path in (snapshot_path / prefix).rglob("*") if path.is_file())
+        receipts.append(
+            {
+                "kind": "task_files",
+                "prefix": prefix,
+                "revision": DATASET_REVISION,
+                "file_count": len(files),
+                "tree_sha256": sha256_json(
+                    [
+                        {
+                            "path": str(path.relative_to(snapshot_path)),
+                            "sha256": sha256_bytes(path.read_bytes()),
+                        }
+                        for path in files
+                    ]
+                ),
+            }
+        )
+    return receipts
+
+
 def _dataset_schema_gate(downloaded: Mapping[str, Path] | None) -> Gate:
     if downloaded is None:
         return Gate(
@@ -695,8 +813,7 @@ def _dataset_schema_gate(downloaded: Mapping[str, Path] | None) -> Gate:
                 "reason": "exact dataset content was not acquired",
                 "validated": False,
                 "contract_source": (
-                    "archipelago/examples/hugging_face_task/main.py"
-                    f" @ {ARCHIPELAGO_REVISION}"
+                    f"archipelago/examples/hugging_face_task/main.py @ {ARCHIPELAGO_REVISION}"
                 ),
                 "required_task_fields": list(APEX_TASK_REQUIRED_FIELDS),
                 "required_rubric_fields": list(APEX_RUBRIC_REQUIRED_FIELDS),
@@ -916,8 +1033,15 @@ def _native_verifier_gate(archipelago_dir: Path) -> Gate:
     )
 
 
-def _runtime_gate(archipelago_dir: Path, worktree_root: Path) -> Gate:
-    missing_commands = [name for name in ("docker", "uv", "git") if shutil.which(name) is None]
+def _runtime_gate(
+    archipelago_dir: Path,
+    worktree_root: Path,
+    environment_backend: str = "modal",
+) -> Gate:
+    required_commands = (
+        ("docker", "uv", "git") if environment_backend == "local-docker" else ("uv", "git")
+    )
+    missing_commands = [name for name in required_commands if shutil.which(name) is None]
     try:
         python313 = subprocess.check_output(
             ["uv", "python", "find", "3.13"], text=True, stderr=subprocess.STDOUT
@@ -925,8 +1049,18 @@ def _runtime_gate(archipelago_dir: Path, worktree_root: Path) -> Gate:
     except (OSError, subprocess.CalledProcessError) as exc:
         python313 = None
         missing_commands.append(f"python3.13 ({exc})")
-    if not (archipelago_dir / "environment" / "docker-compose.yml").is_file():
+    required_environment_file = (
+        archipelago_dir / "environment" / "docker-compose.yml"
+        if environment_backend == "local-docker"
+        else archipelago_dir / "environment" / "Dockerfile"
+    )
+    if not required_environment_file.is_file():
         missing_commands.append("official Archipelago environment")
+    if environment_backend == "modal":
+        try:
+            import modal  # noqa: F401 - presence is the preflight condition
+        except ImportError:
+            missing_commands.append("modal Python client")
     if missing_commands:
         return Gate(
             "isolated_runtime",
@@ -934,11 +1068,12 @@ def _runtime_gate(archipelago_dir: Path, worktree_root: Path) -> Gate:
             {
                 "worktree_root": str(worktree_root),
                 "required_environment": str(worktree_root / ".codex" / "e5" / "venv"),
+                "environment_backend": environment_backend,
                 "missing": missing_commands,
             },
             {
                 "kind": "isolated_runtime_receipt",
-                "action": "create the per-worktree Python 3.13 environment and verify Docker/UV",
+                "action": "create the per-worktree Python 3.13 environment and verify the selected runtime",
                 "environment_path": str(worktree_root / ".codex" / "e5" / "venv"),
             },
         )
@@ -950,6 +1085,8 @@ def _runtime_gate(archipelago_dir: Path, worktree_root: Path) -> Gate:
             "python313": python313,
             "environment_path": str(worktree_root / ".codex" / "e5" / "venv"),
             "archipelago_environment": str(archipelago_dir / "environment"),
+            "environment_backend": environment_backend,
+            "local_docker_required": environment_backend == "local-docker",
             "global_python_mutation": False,
         },
     )
@@ -994,22 +1131,42 @@ def _model_gate(
         return Gate(
             "model_identity",
             "BLOCKED",
-            {**_probe_record(probe, MODEL_API_URL), "model": MODEL_ID, "observed_revision": observed_sha, "expected_revision": MODEL_REVISION},
-            {"kind": "model_metadata", "action": "resolve the exact public model commit", "url": MODEL_API_URL},
+            {
+                **_probe_record(probe, MODEL_API_URL),
+                "model": MODEL_ID,
+                "observed_revision": observed_sha,
+                "expected_revision": MODEL_REVISION,
+            },
+            {
+                "kind": "model_metadata",
+                "action": "resolve the exact public model commit",
+                "url": MODEL_API_URL,
+            },
         )
     if sampler_path:
-        if not (_nonempty(hf_checkpoint_repo) and hf_checkpoint_revision and _HEX40_RE.fullmatch(hf_checkpoint_revision)):
+        if not (
+            _nonempty(hf_checkpoint_repo)
+            and hf_checkpoint_revision
+            and _HEX40_RE.fullmatch(hf_checkpoint_revision)
+        ):
             return Gate(
                 "model_identity",
                 "BLOCKED",
-                {"mode": "eval_only_sampler", "sampler_path": sampler_path, "hf_checkpoint_repo": hf_checkpoint_repo, "hf_checkpoint_revision": hf_checkpoint_revision},
+                {
+                    "mode": "eval_only_sampler",
+                    "sampler_path": sampler_path,
+                    "hf_checkpoint_repo": hf_checkpoint_repo,
+                    "hf_checkpoint_revision": hf_checkpoint_revision,
+                },
                 {
                     "kind": "hf_checkpoint_commit",
                     "action": "bind the evaluated sampler to a public Hugging Face repository commit",
                     "required": ["repo_url", "40-hex revision", "commit URL"],
                 },
             )
-        checkpoint_url = f"https://huggingface.co/{hf_checkpoint_repo}/commit/{hf_checkpoint_revision}"
+        checkpoint_url = (
+            f"https://huggingface.co/{hf_checkpoint_repo}/commit/{hf_checkpoint_revision}"
+        )
         return Gate(
             "model_identity",
             "PASS",
@@ -1038,7 +1195,12 @@ def _model_gate(
 
 
 def _budget_gate(
-    *, task_count: int, max_steps: int, max_prompt_tokens: int, max_response_tokens: int, maximum_tinker_spend_usd: Decimal
+    *,
+    task_count: int,
+    max_steps: int,
+    max_prompt_tokens: int,
+    max_response_tokens: int,
+    maximum_tinker_spend_usd: Decimal,
 ) -> Gate:
     projected = max_tinker_cost(
         task_count=task_count,
@@ -1050,7 +1212,9 @@ def _budget_gate(
     if maximum_tinker_spend_usd != MAX_TINKER_SPEND_USD:
         errors.append(f"E5 maximum must be exactly ${MAX_TINKER_SPEND_USD}")
     if projected > maximum_tinker_spend_usd:
-        errors.append(f"projected ceiling ${projected} exceeds E5 maximum ${maximum_tinker_spend_usd}")
+        errors.append(
+            f"projected ceiling ${projected} exceeds E5 maximum ${maximum_tinker_spend_usd}"
+        )
     if OPERATIONAL_CAP_USD + SAFETY_RESERVE_USD != HARD_CAP_USD:
         errors.append("shared operational cap/reserve no longer sum to $18.00")
     details = {
@@ -1067,7 +1231,12 @@ def _budget_gate(
         "budget",
         "BLOCKED" if errors else "PASS",
         {**details, "errors": errors},
-        {"kind": "budget_authorization", "action": "retain the $0.50 E5 ceiling, $16.50 operational cap, and $1.50 reserve"} if errors else None,
+        {
+            "kind": "budget_authorization",
+            "action": "retain the $0.50 E5 ceiling, $16.50 operational cap, and $1.50 reserve",
+        }
+        if errors
+        else None,
     )
 
 
@@ -1133,49 +1302,101 @@ def _tracking_gate() -> Gate:
             "kind": "wandb_online_run",
             "action": "install wandb in the per-worktree environment, supply a W&B credential (WANDB_API_KEY or ~/.netrc), and retain a verified online run_id/run_url initialized before Tinker",
             "required": ["mode=online", "run_id", "run_url", "config acknowledged"],
-        } if errors else None,
+        }
+        if errors
+        else None,
     )
 
 
-def _tinker_gate() -> Gate:
-    importable = True
-    import_error = None
+def _resolve_bridge_credential() -> tuple[str | None, str | None]:
+    value = os.environ.get("TINKER_BRIDGE_API_KEY")
+    if value:
+        return value, "environment"
+    security_cli = shutil.which("security")
+    if security_cli is None:
+        return None, None
     try:
-        __import__("tinker")
-    except Exception as exc:  # pragma: no cover - exercised in the live receipt
-        importable = False
-        import_error = f"{type(exc).__name__}: {exc}"
+        account = subprocess.run(
+            ["id", "-un"], check=False, capture_output=True, text=True
+        ).stdout.strip()
+        if not account:
+            return None, None
+        key_result = subprocess.run(
+            [
+                security_cli,
+                "find-generic-password",
+                "-a",
+                account,
+                "-s",
+                "pavlov-tinker-openai-bridge",
+                "-w",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return None, None
+    value = key_result.stdout.strip()
+    return (value, "macos_keychain") if value else (None, None)
+
+
+def _tinker_gate() -> Gate:
+    bridge_key, credential_source = _resolve_bridge_credential()
     errors = []
-    if not importable:
-        errors.append("tinker dependency is unavailable in the isolated runtime")
-    if not os.environ.get("TINKER_API_KEY"):
-        errors.append("TINKER_API_KEY is missing")
+    if not bridge_key:
+        errors.append("Tinker bridge credential is unavailable")
     return Gate(
         "tinker_access",
         "BLOCKED" if errors else "PASS",
         {
-            "importable": importable,
-            "import_error": import_error,
-            "api_key_present": bool(os.environ.get("TINKER_API_KEY")),
+            "transport": "authenticated_modal_openai_bridge",
+            "bridge_credential_present": bool(bridge_key),
+            "credential_source": credential_source,
+            "local_tinker_client_required": False,
             "calls_made": False,
         },
         {
             "kind": "tinker_access",
-            "action": "install the pinned Tinker client in the isolated runtime and provide TINKER_API_KEY",
-            "required": ["Tinker client import", "authenticated ServiceClient", "estimated cost <= $0.50"],
-        } if errors else None,
+            "action": "provide the authenticated Pavlov Tinker bridge credential",
+            "required": ["bridge credential", "READY bridge health", "estimated cost <= $0.50"],
+        }
+        if errors
+        else None,
     )
 
 
-def _judge_key_gate() -> Gate:
-    keys = ("OPENAI_API_KEY", "GOOGLE_API_KEY", "ANTHROPIC_API_KEY")
+def _judge_key_gate(judge_model: str = DEFAULT_JUDGE_MODEL) -> Gate:
+    if judge_model == f"openai/{TINKER_BRIDGE_MODEL_ALIAS}":
+        return Gate(
+            "native_grader_credentials",
+            "PASS",
+            {
+                "judge_model": judge_model,
+                "provider_key_present": "TINKER_BRIDGE_API_KEY_OR_KEYCHAIN",
+                "same_model_judge": True,
+            },
+        )
+    provider = judge_model.split("/", 1)[0].lower()
+    if provider in {"vertex_ai", "gemini"}:
+        keys = ("GOOGLE_API_KEY", "GEMINI_API_KEY")
+    elif provider == "openai":
+        keys = ("OPENAI_API_KEY",)
+    elif provider == "anthropic":
+        keys = ("ANTHROPIC_API_KEY",)
+    else:
+        keys = ("OPENAI_API_KEY", "GOOGLE_API_KEY", "GEMINI_API_KEY", "ANTHROPIC_API_KEY")
     present = [name for name in keys if os.environ.get(name)]
     if present:
-        return Gate("native_grader_credentials", "PASS", {"provider_key_present": present[0]})
+        return Gate(
+            "native_grader_credentials",
+            "PASS",
+            {"judge_model": judge_model, "provider_key_present": present[0]},
+        )
     return Gate(
         "native_grader_credentials",
         "BLOCKED",
-        {"provider_key_present": None},
+        {"judge_model": judge_model, "provider_key_present": None},
         {
             "kind": "archipelago_grading_credentials",
             "action": "provide one official Archipelago grading-provider key for the native rubric judge",
@@ -1245,7 +1466,18 @@ def _make_config(
             "timeout_seconds": args.timeout_seconds,
         },
         "budget": budget_gate.details,
-        "wandb": {"entity": WANDB_ENTITY, "project": WANDB_PROJECT, "group": WANDB_GROUP, "mode": "online"},
+        "wandb": {
+            "entity": WANDB_ENTITY,
+            "project": WANDB_PROJECT,
+            "group": WANDB_GROUP,
+            "mode": "online",
+        },
+        "judge": {"model": getattr(args, "judge_model", DEFAULT_JUDGE_MODEL)},
+        "environment": {
+            "backend": getattr(args, "environment_backend", "modal"),
+            "local_docker_required": getattr(args, "environment_backend", "modal")
+            == "local-docker",
+        },
         "provenance": provenance,
         "exact_benchmark_only": True,
         "substitutions": [],
@@ -1287,7 +1519,9 @@ def _build_receipt(
         "task_selection": {
             "selected_task_ids": [str(row.get("task_id")) for row in selected_tasks],
             "count": len(selected_tasks),
-            "disjoint": next((gate.details.get("disjoint") for gate in gates if gate.name == "task_split"), False),
+            "disjoint": next(
+                (gate.details.get("disjoint") for gate in gates if gate.name == "task_split"), False
+            ),
         },
         "config_sha256": sha256_json(config),
         "config": config,
@@ -1327,7 +1561,100 @@ def _all_launch_gates_pass(gates: Sequence[Gate]) -> bool:
         "tinker_access",
         "native_grader_credentials",
     }
-    return all(gate.status == "PASS" for gate in gates if gate.name in required)
+    allowed = {
+        "wandb_online_before_tinker": {"PASS", "PENDING_RUNTIME_ONLINE_HANDSHAKE"},
+    }
+    return all(
+        gate.status in allowed.get(gate.name, {"PASS"}) for gate in gates if gate.name in required
+    )
+
+
+def _wait_for_modal_environment(url: str, token: str, timeout_seconds: int = 600) -> None:
+    """Wait for an authenticated Archipelago health response from Modal."""
+
+    deadline = time.monotonic() + timeout_seconds
+    request = urllib.request.Request(
+        f"{url.rstrip('/')}/health",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    last_error: Exception | None = None
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen(request, timeout=20) as response:
+                if response.status == 200 and response.read().decode("utf-8").strip() == "OK":
+                    return
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as exc:
+            last_error = exc
+        time.sleep(2)
+    raise RuntimeError(f"Modal Archipelago environment failed its health check: {last_error}")
+
+
+def _start_modal_environment(
+    archipelago_dir: Path,
+    *,
+    task_id: str,
+    timeout_seconds: int,
+) -> tuple[Any, str, str, Mapping[str, Any]]:
+    """Build and start the pinned Archipelago Dockerfile as a Modal Sandbox."""
+
+    try:
+        import modal
+    except ImportError as exc:
+        raise RuntimeError("Modal client is unavailable in the isolated E5 runtime") from exc
+
+    dockerfile = archipelago_dir / "environment" / "Dockerfile"
+    if not dockerfile.is_file():
+        raise RuntimeError(f"official Archipelago Dockerfile is absent: {dockerfile}")
+
+    app = modal.App.lookup("pavlov-e5-apex-environment", create_if_missing=True)
+    image = modal.Image.from_dockerfile(
+        dockerfile,
+        context_dir=archipelago_dir,
+    )
+    sandbox = None
+    try:
+        with modal.enable_output():
+            sandbox = modal.Sandbox.create(
+                app=app,
+                name=f"e5-{task_id[-8:]}-{int(time.time())}",
+                tags={
+                    "campaign": "pavlov-18usd",
+                    "suite": SUITE_ID,
+                    "task_id": task_id,
+                    "archipelago_revision": ARCHIPELAGO_REVISION,
+                },
+                image=image,
+                timeout=max(timeout_seconds + 3600, 7200),
+                cpu=8.0,
+                memory=16384,
+                encrypted_ports=[8080],
+            )
+            # Waiting for tunnel metadata also waits for the image/container startup.
+            sandbox.tunnels(timeout=1800)
+        credentials = sandbox.create_connect_token(
+            user_metadata={"campaign": "pavlov-18usd", "task_id": task_id},
+            port=8080,
+        )
+        url = credentials.url.rstrip("/")
+        _wait_for_modal_environment(url, credentials.token)
+        return (
+            sandbox,
+            url,
+            credentials.token,
+            {
+                "backend": "modal-sandbox",
+                "sandbox_id": sandbox.object_id,
+                "app_name": "pavlov-e5-apex-environment",
+                "port": 8080,
+                "connect_token_present": True,
+                "connect_token_recorded": False,
+                "local_docker_used": False,
+            },
+        )
+    except Exception:
+        if sandbox is not None:
+            sandbox.terminate(wait=True)
+        raise
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -1352,19 +1679,33 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--launch", action="store_true")
     parser.add_argument("--base-model", default=MODEL_ID)
     parser.add_argument("--base-model-revision", default=MODEL_REVISION)
-    parser.add_argument("--sampler-path")
-    parser.add_argument("--hf-checkpoint-repo")
-    parser.add_argument("--hf-checkpoint-revision")
+    parser.add_argument("--sampler-path", default=TINKER_SAMPLER_PATH)
+    parser.add_argument("--hf-checkpoint-repo", default=TINKER_HF_REPO)
+    parser.add_argument("--hf-checkpoint-revision", default=TINKER_HF_COMMIT)
     parser.add_argument("--maximum-tinker-spend-usd", default=str(MAX_TINKER_SPEND_USD))
     parser.add_argument("--max-steps", type=int, default=DEFAULT_MAX_STEPS)
     parser.add_argument("--max-prompt-tokens", type=int, default=DEFAULT_MAX_PROMPT_TOKENS)
     parser.add_argument("--max-response-tokens", type=int, default=DEFAULT_MAX_RESPONSE_TOKENS)
     parser.add_argument("--timeout-seconds", type=int, default=DEFAULT_TIMEOUT_SECONDS)
     parser.add_argument("--wandb-name", default="apex-agents-e5")
+    parser.add_argument("--judge-model", default=DEFAULT_JUDGE_MODEL)
+    parser.add_argument(
+        "--environment-backend",
+        choices=("modal", "local-docker"),
+        default="modal",
+        help="run the official environment in an authenticated Modal Sandbox (default) or local Docker",
+    )
+    parser.add_argument(
+        "--run-dir",
+        type=Path,
+        help="retained directory for the official Archipelago configs and artifacts",
+    )
     return parser
 
 
-def run_preflight(args: argparse.Namespace, *, opener: Callable[..., Any] | None = None) -> dict[str, Any]:
+def run_preflight(
+    args: argparse.Namespace, *, opener: Callable[..., Any] | None = None
+) -> dict[str, Any]:
     """Run all local/network gates and return the receipt (never launches)."""
 
     if args.dataset_revision != DATASET_REVISION:
@@ -1398,7 +1739,11 @@ def run_preflight(args: argparse.Namespace, *, opener: Callable[..., Any] | None
         limit=args.limit,
     )
     native_gate = _native_verifier_gate(args.archipelago_dir)
-    runtime_gate = _runtime_gate(args.archipelago_dir, Path.cwd())
+    runtime_gate = _runtime_gate(
+        args.archipelago_dir,
+        Path.cwd(),
+        getattr(args, "environment_backend", "modal"),
+    )
     model_gate = _model_gate(
         token=os.environ.get("HF_TOKEN"),
         base_model=args.base_model,
@@ -1417,7 +1762,7 @@ def run_preflight(args: argparse.Namespace, *, opener: Callable[..., Any] | None
     )
     tracking_gate = _tracking_gate()
     tinker_gate = _tinker_gate()
-    judge_gate = _judge_key_gate()
+    judge_gate = _judge_key_gate(getattr(args, "judge_model", DEFAULT_JUDGE_MODEL))
     gates = [
         metadata_gate,
         access_gate,
@@ -1452,7 +1797,9 @@ def run_preflight(args: argparse.Namespace, *, opener: Callable[..., Any] | None
     )
 
 
-def _launch_official_archipelago(args: argparse.Namespace, receipt: Mapping[str, Any]) -> Mapping[str, Any]:
+def _launch_official_archipelago(
+    args: argparse.Namespace, receipt: Mapping[str, Any]
+) -> Mapping[str, Any]:
     """Launch one exact task through the pinned upstream example.
 
     This path is intentionally reached only after every gate passes.  The
@@ -1461,11 +1808,319 @@ def _launch_official_archipelago(args: argparse.Namespace, receipt: Mapping[str,
     temporary config so the upstream environment/grader remains untouched.
     """
 
-    if not receipt.get("task_selection", {}).get("selected_task_ids"):
+    selected_task_ids = receipt.get("task_selection", {}).get("selected_task_ids")
+    if not selected_task_ids:
         raise PreflightError("cannot launch without one selected exact APEX task")
-    raise RuntimeError(
-        "Archipelago launch adapter is not enabled in this checkout: the exact E5 path requires the Tinker OpenAI-compatible server and its online W&B handshake"
+    task_id = str(selected_task_ids[0])
+
+    bridge_key, _ = _resolve_bridge_credential()
+    if not bridge_key:
+        raise RuntimeError("Tinker bridge credential is unavailable")
+
+    health_request = urllib.request.Request(
+        f"{TINKER_BRIDGE_BASE_URL}/health",
+        headers={"Authorization": f"Bearer {bridge_key}"},
     )
+    try:
+        with urllib.request.urlopen(health_request, timeout=300) as response:
+            health = json.load(response)
+    except (urllib.error.HTTPError, urllib.error.URLError) as exc:
+        raise RuntimeError(f"Tinker bridge health check failed: {exc}") from exc
+    if health.get("status") != "READY":
+        raise RuntimeError("Tinker bridge is not READY")
+    if health.get("model") != TINKER_BRIDGE_MODEL_ALIAS:
+        raise RuntimeError("Tinker bridge model alias drifted")
+    if health.get("hf_commit") != TINKER_HF_COMMIT:
+        raise RuntimeError("Tinker bridge Hugging Face checkpoint drifted")
+    bridge_wandb_url = health.get("wandb_url")
+    if not isinstance(bridge_wandb_url, str) or not bridge_wandb_url.startswith(
+        "https://wandb.ai/"
+    ):
+        raise RuntimeError("Tinker bridge has no online W&B receipt")
+
+    budget = health.get("budget")
+    if not isinstance(budget, Mapping):
+        raise RuntimeError("Tinker bridge budget receipt is absent")
+    maximum = _decimal("bridge.maximum_usd", str(budget.get("maximum_usd")))
+    charged = _decimal("bridge.charged_usd", str(budget.get("charged_usd", 0)))
+    reserved = _decimal("bridge.reserved_usd", str(budget.get("reserved_usd", 0)))
+    projected = _decimal(
+        "projected_maximum_usd",
+        str(receipt.get("config", {}).get("budget", {}).get("projected_maximum_usd")),
+    )
+    remaining = maximum - charged - reserved
+    if remaining < projected:
+        raise RuntimeError(
+            "Tinker bridge budget is insufficient for the sealed one-task cap: "
+            f"remaining ${remaining:.6f}, required ${projected:.6f}"
+        )
+
+    archipelago_dir = args.archipelago_dir.resolve()
+    source_example = archipelago_dir / "examples" / "hugging_face_task"
+    source_main = source_example / "main.py"
+    if not source_main.is_file():
+        raise RuntimeError(f"official Archipelago example is absent: {source_main}")
+    run_dir = (args.run_dir or (args.out.parent / "official_run")).resolve()
+    run_dir.mkdir(parents=True, exist_ok=True)
+    static_files = (
+        "agent_config.json",
+        "scoring_config.json",
+        "mcp_config_all_oss_servers.json",
+        "grading_settings.json",
+        "eval_configs.json",
+    )
+    for name in static_files:
+        shutil.copy2(source_example / name, run_dir / name)
+    (run_dir / "orchestrator_config.json").write_text(
+        json.dumps(
+            {
+                "model": f"openai/{TINKER_BRIDGE_MODEL_ALIAS}",
+                "extra_args": {"max_tokens": args.max_response_tokens},
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    agent_config_path = run_dir / "agent_config.json"
+    agent_config = json.loads(agent_config_path.read_text(encoding="utf-8"))
+    agent_config["agent_config_values"]["timeout"] = args.timeout_seconds
+    agent_config["agent_config_values"]["max_steps"] = args.max_steps
+    agent_config_path.write_text(
+        json.dumps(agent_config, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    grading_path = run_dir / "grading_settings.json"
+    grading_settings = json.loads(grading_path.read_text(encoding="utf-8"))
+    grading_settings["llm_judge_model"] = args.judge_model
+    grading_path.write_text(
+        json.dumps(grading_settings, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+
+    # The upstream example uses one inherited environment for both trajectory
+    # and grading.  Scope the Tinker proxy variables to the agent subprocess so
+    # the independent native rubric judge retains its own provider credentials.
+    adapted_main = source_main.read_text(encoding="utf-8")
+    transport_needle = 'ENV_URL = os.environ.get("ENV_URL", "http://localhost:8080")\n'
+    transport_replacement = transport_needle + (
+        "APEX_ENV_AUTH_TOKEN = os.environ.get('APEX_ENV_AUTH_TOKEN')\n"
+        "_APEX_HTTPX_GET = httpx.get\n"
+        "_APEX_HTTPX_POST = httpx.post\n"
+        "_APEX_HTTPX_STREAM = httpx.stream\n\n"
+        "def _apex_env_auth_kwargs(kwargs):\n"
+        "    if APEX_ENV_AUTH_TOKEN:\n"
+        "        kwargs = dict(kwargs)\n"
+        "        headers = dict(kwargs.get('headers') or {})\n"
+        "        headers.setdefault('Authorization', f'Bearer {APEX_ENV_AUTH_TOKEN}')\n"
+        "        kwargs['headers'] = headers\n"
+        "    return kwargs\n\n"
+        "def _apex_httpx_get(*args, **kwargs):\n"
+        "    return _APEX_HTTPX_GET(*args, **_apex_env_auth_kwargs(kwargs))\n\n"
+        "def _apex_httpx_post(*args, **kwargs):\n"
+        "    return _APEX_HTTPX_POST(*args, **_apex_env_auth_kwargs(kwargs))\n\n"
+        "def _apex_httpx_stream(*args, **kwargs):\n"
+        "    return _APEX_HTTPX_STREAM(*args, **_apex_env_auth_kwargs(kwargs))\n\n"
+        "httpx.get = _apex_httpx_get\n"
+        "httpx.post = _apex_httpx_post\n"
+        "httpx.stream = _apex_httpx_stream\n"
+    )
+    if adapted_main.count(transport_needle) != 1:
+        raise RuntimeError("official Archipelago environment URL seam drifted")
+    adapted_main = adapted_main.replace(transport_needle, transport_replacement)
+    adapted_main = _pin_official_hf_downloads(adapted_main)
+    environment_start_needle = "    start_environment()\n"
+    environment_start_replacement = (
+        "    if os.environ.get('APEX_SKIP_LOCAL_ENVIRONMENT') == '1':\n"
+        "        log('Using authenticated Modal Sandbox environment...')\n"
+        "        if not wait_for_health(ENV_URL):\n"
+        "            log('ERROR: Modal Sandbox environment failed health check')\n"
+        "            sys.exit(1)\n"
+        "    else:\n"
+        "        start_environment()\n"
+    )
+    if adapted_main.count(environment_start_needle) != 1:
+        raise RuntimeError("official Archipelago environment start seam drifted")
+    adapted_main = adapted_main.replace(
+        environment_start_needle,
+        environment_start_replacement,
+    )
+    needle = "result = subprocess.run(agent_cmd, cwd=AGENTS_DIR)"
+    replacement = (
+        "agent_env = os.environ.copy()\n"
+        "    agent_env['LITELLM_PROXY_API_BASE'] = os.environ['APEX_TINKER_BRIDGE_BASE']\n"
+        "    agent_env['LITELLM_PROXY_API_KEY'] = os.environ['APEX_TINKER_BRIDGE_KEY']\n"
+        "    result = subprocess.run(agent_cmd, cwd=AGENTS_DIR, env=agent_env)"
+    )
+    if adapted_main.count(needle) != 1:
+        raise RuntimeError("official Archipelago agent launch seam drifted")
+    adapted_main = adapted_main.replace(needle, replacement)
+    agent_auth_needle = "    # Add extra args if present\n"
+    agent_auth_replacement = (
+        "    if APEX_ENV_AUTH_TOKEN:\n"
+        "        agent_cmd.extend(['--mcp-gateway-auth-token', APEX_ENV_AUTH_TOKEN])\n\n"
+        + agent_auth_needle
+    )
+    if adapted_main.count(agent_auth_needle) != 1:
+        raise RuntimeError("official Archipelago agent auth seam drifted")
+    adapted_main = adapted_main.replace(agent_auth_needle, agent_auth_replacement)
+    grading_needle = "result = subprocess.run(grading_cmd, cwd=GRADING_DIR)"
+    grading_replacement = (
+        "grading_env = os.environ.copy()\n"
+        "        if os.environ.get('APEX_JUDGE_VIA_TINKER') == '1':\n"
+        "            grading_env['LITELLM_PROXY_API_BASE'] = os.environ['APEX_TINKER_BRIDGE_BASE']\n"
+        "            grading_env['LITELLM_PROXY_API_KEY'] = os.environ['APEX_TINKER_BRIDGE_KEY']\n"
+        "        result = subprocess.run(grading_cmd, cwd=GRADING_DIR, env=grading_env)"
+    )
+    if adapted_main.count(grading_needle) != 1:
+        raise RuntimeError("official Archipelago grading launch seam drifted")
+    adapted_main = adapted_main.replace(grading_needle, grading_replacement)
+    adapted_main_path = run_dir / "main.py"
+    adapted_main_path.write_text(adapted_main, encoding="utf-8")
+
+    asset_receipts = _prefetch_exact_task_assets(args=args, task_id=task_id)
+
+    try:
+        import wandb
+    except ImportError as exc:
+        raise RuntimeError("wandb is unavailable in the isolated E5 runtime") from exc
+    wandb_run = wandb.init(
+        entity=WANDB_ENTITY,
+        project=WANDB_PROJECT,
+        group=WANDB_GROUP,
+        job_type="primary-evaluation",
+        name=args.wandb_name,
+        mode="online",
+        config=dict(receipt.get("config", {})),
+        reinit=True,
+    )
+    if wandb_run is None or not getattr(wandb_run, "id", None):
+        raise RuntimeError("online W&B initialization failed before Tinker")
+
+    log_path = run_dir / "official_run.log"
+    commands = (
+        (["uv", "sync", "--locked"], archipelago_dir / "agents"),
+        (["uv", "sync", "--locked"], archipelago_dir / "grading"),
+        (
+            ["uv", "run", "python", str(adapted_main_path), task_id],
+            archipelago_dir / "agents",
+        ),
+    )
+    return_code = 0
+    score = None
+    grades_path = run_dir / "output" / task_id / "grades.json"
+    modal_sandbox = None
+    environment_receipt: dict[str, Any] = {
+        "backend": "local-docker",
+        "local_docker_used": True,
+    }
+    try:
+        environment_url = "http://localhost:8080"
+        environment_token = ""
+        if getattr(args, "environment_backend", "modal") == "modal":
+            (
+                modal_sandbox,
+                environment_url,
+                environment_token,
+                modal_details,
+            ) = _start_modal_environment(
+                archipelago_dir,
+                task_id=task_id,
+                timeout_seconds=args.timeout_seconds,
+            )
+            environment_receipt = dict(modal_details)
+
+        env = os.environ.copy()
+        env.update(
+            {
+                "EXAMPLE_DIR": str(run_dir),
+                "ARCHIPELAGO_DIR": str(archipelago_dir),
+                "ENVIRONMENT_DIR": str(archipelago_dir / "environment"),
+                "AGENTS_DIR": str(archipelago_dir / "agents"),
+                "GRADING_DIR": str(archipelago_dir / "grading"),
+                "HF_HUB_CACHE": str(args.cache_dir.resolve()),
+                "HF_HUB_OFFLINE": "1",
+                "APEX_HF_DATASET_REVISION": DATASET_REVISION,
+                "APEX_TINKER_BRIDGE_BASE": TINKER_BRIDGE_API_BASE,
+                "APEX_TINKER_BRIDGE_KEY": bridge_key,
+                "APEX_JUDGE_VIA_TINKER": (
+                    "1" if args.judge_model == f"openai/{TINKER_BRIDGE_MODEL_ALIAS}" else "0"
+                ),
+                "ENV_URL": environment_url,
+                "APEX_ENV_AUTH_TOKEN": environment_token,
+                "APEX_SKIP_LOCAL_ENVIRONMENT": (
+                    "1" if getattr(args, "environment_backend", "modal") == "modal" else "0"
+                ),
+            }
+        )
+        with log_path.open("w", encoding="utf-8") as log:
+            for command, cwd in commands:
+                completed = subprocess.run(
+                    command,
+                    cwd=cwd,
+                    env=env,
+                    stdout=log,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    timeout=args.timeout_seconds + 1800,
+                    check=False,
+                )
+                return_code = completed.returncode
+                if return_code != 0:
+                    break
+        grades = (
+            json.loads(grades_path.read_text(encoding="utf-8")) if grades_path.is_file() else None
+        )
+        score = (
+            grades.get("scoring_results", {}).get("final_score")
+            if isinstance(grades, Mapping)
+            else None
+        )
+        wandb_run.log(
+            {
+                "e5/return_code": return_code,
+                "e5/score": score,
+                "e5/environment_backend": environment_receipt["backend"],
+            }
+        )
+    finally:
+        if modal_sandbox is not None:
+            try:
+                environment_receipt["termination_exit_code"] = modal_sandbox.terminate(wait=True)
+                environment_receipt["terminated"] = True
+            except Exception as exc:  # preserve the primary evaluation failure
+                environment_receipt["terminated"] = False
+                environment_receipt["termination_error"] = type(exc).__name__
+        wandb_run.finish()
+    if return_code != 0 or score is None:
+        raise RuntimeError(
+            f"official Archipelago run did not produce a native score; see {log_path}"
+        )
+    return {
+        "tinker_calls": "one_or_more",
+        "score": score,
+        "score_status": "native_archipelago_grader",
+        "judge_model": args.judge_model,
+        "same_model_judge": args.judge_model == f"openai/{TINKER_BRIDGE_MODEL_ALIAS}",
+        "task_id": task_id,
+        "run_dir": str(run_dir),
+        "log_path": str(log_path),
+        "grades_path": str(grades_path),
+        "environment": environment_receipt,
+        "wandb": {"run_id": wandb_run.id, "run_url": wandb_run.url, "mode": "online"},
+        "bridge": {
+            "model": TINKER_BRIDGE_MODEL_ALIAS,
+            "hf_commit": TINKER_HF_COMMIT,
+            "wandb_url": bridge_wandb_url,
+            "budget_remaining_before_usd": str(remaining),
+        },
+        "provenance": {
+            "official_main_sha256": sha256_bytes(source_main.read_bytes()),
+            "adapted_main_sha256": sha256_bytes(adapted_main_path.read_bytes()),
+            "dataset_revision": DATASET_REVISION,
+            "archipelago_revision": ARCHIPELAGO_REVISION,
+            "prefetched_assets": asset_receipts,
+        },
+    }
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -1481,7 +2136,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             "suite_id": SUITE_ID,
             "error": str(exc),
             "no_score_claim": True,
-            "required_external_receipts": [{"kind": "corrected_preflight_inputs", "action": str(exc)}],
+            "required_external_receipts": [
+                {"kind": "corrected_preflight_inputs", "action": str(exc)}
+            ],
             "launch": {"tinker_calls": 0, "score": None, "score_status": "not_run"},
         }
         _write_receipt(args.out, receipt)
@@ -1497,7 +2154,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         except Exception as exc:
             receipt = dict(receipt)
             receipt["status"] = "BLOCKED"
-            receipt["launch"] = {"tinker_calls": 0, "score": None, "score_status": "not_run", "error": str(exc)}
+            receipt["launch"] = {
+                "tinker_calls": "unknown_after_launch_failure",
+                "score": None,
+                "score_status": "not_run",
+                "error": str(exc),
+            }
             receipt["no_score_claim"] = True
             _write_receipt(args.out, receipt)
             print(json.dumps(receipt, indent=2, sort_keys=True))

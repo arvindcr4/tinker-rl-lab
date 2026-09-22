@@ -38,12 +38,10 @@ RUN_DATE = "2026-08-16"
 MODEL_ID = "Qwen/Qwen3.6-35B-A3B"
 MODEL_REVISION = "995ad96eacd98c81ed38be0c5b274b04031597b0"
 FINAL_SAMPLER_PATH = (
-    "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/"
-    "sampler_weights/seed809_final"
+    "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler_weights/seed809_final"
 )
 FINAL_HF_REPO = (
-    "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-"
-    "tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6"
+    "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6"
 )
 FINAL_HF_REVISION = "checkpoint-seed809-stepfinal-9f777c4018b6"
 FINAL_HF_COMMIT = "64444133c55d88c3f1bf0df8a2f5d7ac646125c8"
@@ -267,9 +265,7 @@ def _receipt_launch_allowed(receipt: dict[str, Any]) -> bool:
         receipt.get("launch_allowed"),
         receipt.get("paid_launch_allowed"),
         launch.get("allowed") if isinstance(launch, dict) else None,
-        authorization.get("launch_authorized")
-        if isinstance(authorization, dict)
-        else None,
+        authorization.get("launch_authorized") if isinstance(authorization, dict) else None,
     )
     return any(value is True for value in candidates)
 
@@ -354,7 +350,11 @@ def _run_tests(modules: tuple[str, ...]) -> dict[str, Any]:
     )
     combined = "\n".join(part for part in (result.stdout, result.stderr) if part)
     summary = next(
-        (line.strip() for line in reversed(combined.splitlines()) if line.strip() in {"OK"} or line.startswith("FAILED")),
+        (
+            line.strip()
+            for line in reversed(combined.splitlines())
+            if line.strip() in {"OK"} or line.startswith("FAILED")
+        ),
         None,
     )
     ran = next(
@@ -452,8 +452,7 @@ if modal.is_local():
             copy=True,
         )
         .add_local_file(
-            _repo_root()
-            / "outputs/modal_e1_e14/2026-08-16/e11/launch_preflight_receipt.json",
+            _repo_root() / "outputs/modal_e1_e14/2026-08-16/e11/launch_preflight_receipt.json",
             "/root/project/outputs/modal_e1_e14/2026-08-16/e11/launch_preflight_receipt.json",
             copy=True,
         )
@@ -606,6 +605,8 @@ def _e11_project_cost(prompts: dict[str, list[tuple[str, str]]], max_tokens: int
 
 def _e11_configure(dataset: str, build: Path) -> None:
     build.mkdir(parents=True, exist_ok=True)
+    env = os.environ.copy()
+    env["PATH"] = "/opt/iverilog/bin:/usr/local/bin:/usr/bin:/bin"
     command = [
         "/opt/verilog-eval/configure",
         f"--with-task={dataset}",
@@ -615,7 +616,14 @@ def _e11_configure(dataset: str, build: Path) -> None:
         "--with-temperature=0",
         "--with-top-p=0.01",
     ]
-    result = subprocess.run(command, cwd=build, capture_output=True, text=True, timeout=300)
+    result = subprocess.run(
+        command,
+        cwd=build,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
     if result.returncode:
         raise RuntimeError(f"E11 configure failed for {dataset}: {result.stderr[-2000:]}")
 
@@ -722,8 +730,7 @@ def run_e11_full(
     """Run one resumable, full, final-checkpoint E11 pass@1 evaluation."""
 
     launch_gate_path = (
-        REMOTE_ROOT
-        / "outputs/modal_e1_e14/2026-08-16/e11/launch_preflight_receipt.json"
+        REMOTE_ROOT / "outputs/modal_e1_e14/2026-08-16/e11/launch_preflight_receipt.json"
     )
     launch_gate_bytes = launch_gate_path.read_bytes()
     launch_gate = json.loads(launch_gate_bytes)
@@ -871,7 +878,9 @@ def run_e11_full(
                     "sampled_at": _utc_now(),
                 }
                 checkpoint.parent.mkdir(parents=True, exist_ok=True)
-                checkpoint.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+                checkpoint.write_text(
+                    json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+                )
                 new_samples += 1
                 if new_samples % 8 == 0:
                     results_volume.commit()
@@ -1033,9 +1042,7 @@ def main(
     preflights: list[dict[str, Any]] = []
     if mode in {"non_e11", "preflight", "all"}:
         selected_lanes = (
-            [lane for lane in LANES if lane != "E11"]
-            if mode == "non_e11"
-            else list(LANES)
+            [lane for lane in LANES if lane != "E11"] if mode == "non_e11" else list(LANES)
         )
         preflights = list(run_lane_preflight.map(selected_lanes, order_outputs=True))
         for receipt in preflights:
@@ -1049,33 +1056,24 @@ def main(
         adapter_ready = [
             item["lane"]
             for item in preflights
-            if item["adapter_tests"]["passed"]
-            and item["authoritative_source_probe"]["reachable"]
+            if item["adapter_tests"]["passed"] and item["authoritative_source_probe"]["reachable"]
         ]
         summary = {
             "schema_version": "pavlov-modal-e1-e14-summary-v1",
             "recorded_at": _utc_now(),
             "status": "PARTIAL" if ready or recorded else "BLOCKED",
-            "adapter_status": (
-                "READY"
-                if len(adapter_ready) == len(preflights)
-                else "PARTIAL"
-            ),
+            "adapter_status": ("READY" if len(adapter_ready) == len(preflights) else "PARTIAL"),
             "score": None,
             "is_model_score": False,
             "lane_count": len(preflights),
             "adapter_ready": adapter_ready,
             "ready_for_full_modal_eval": ready,
             "recorded_model_results": recorded,
-            "readiness_classes": {
-                item["lane"]: item["readiness_class"] for item in preflights
-            },
+            "readiness_classes": {item["lane"]: item["readiness_class"] for item in preflights},
             "locally_improvable": [
                 item["lane"]
                 for item in preflights
-                if (item.get("actionability") or {}).get(
-                    "can_improve_without_external_input"
-                )
+                if (item.get("actionability") or {}).get("can_improve_without_external_input")
             ],
             "blocked": [item["lane"] for item in preflights if item["status"] == "BLOCKED"],
             "receipts": {item["lane"]: item["receipt_sha256"] for item in preflights},

@@ -19,39 +19,66 @@ from typing import Any
 
 import modal
 
-from tinker_openai_bridge_protocol import (
-    bearer_token,
-    estimate_tinker_usd,
-    normalise_openai_messages_for_qwen,
-    openai_chat_stream_events,
-    parse_qwen_tool_calls,
-)
+try:
+    from .tinker_openai_bridge_protocol import (
+        bearer_token,
+        build_responses_object,
+        estimate_tinker_usd,
+        iter_responses_sse_events,
+        normalise_openai_messages_for_qwen,
+        openai_chat_stream_events,
+        parse_qwen_tool_calls,
+        responses_input_to_chat_messages,
+        responses_tools_to_chat_tools,
+    )
+except ImportError:  # Modal deploy imports this file as a top-level module.
+    from tinker_openai_bridge_protocol import (
+        bearer_token,
+        build_responses_object,
+        estimate_tinker_usd,
+        iter_responses_sse_events,
+        normalise_openai_messages_for_qwen,
+        openai_chat_stream_events,
+        parse_qwen_tool_calls,
+        responses_input_to_chat_messages,
+        responses_tools_to_chat_tools,
+    )
 
 
 APP_NAME = "pavlov-tinker-openai-bridge"
 MODEL_ALIAS = "pavlov-qwen36-tinker"
 MODEL_ID = "Qwen/Qwen3.6-35B-A3B"
 MODEL_REVISION = "995ad96eacd98c81ed38be0c5b274b04031597b0"
-SAMPLER_PATH = (
-    "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/"
-    "sampler_weights/seed809_final"
-)
+SAMPLER_PATH = "tinker://cf0ad8c1-1f1b-5ff3-8bd7-2a0bf232657b:train:0/sampler_weights/seed809_final"
 HF_REPO = (
-    "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-"
-    "tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6"
+    "arvindcr4/pavlov-portfolio-qwen36-seed809-stepfinal-tinker-cf0ad8c1-1f1b-5ff-9f777c4018b6"
 )
 HF_REVISION = "checkpoint-seed809-stepfinal-9f777c4018b6"
 HF_COMMIT = "64444133c55d88c3f1bf0df8a2f5d7ac646125c8"
 DEFAULT_MAX_USD = Decimal("0.00")
 MAX_COMPLETION_TOKENS = 16_384
+MODEL_CONTEXT_TOKENS = 65_536
+CONTEXT_PREFIX_TOKENS = 8_192
 SOURCE_DIR = Path(__file__).resolve().parent
+
+
+def is_supported_request_model(model: str) -> bool:
+    """Accept only the pinned model identities and LiteLLM routing forms."""
+
+    return model in {
+        MODEL_ALIAS,
+        MODEL_ID,
+        f"openai/{MODEL_ALIAS}",
+        f"openai/{MODEL_ID}",
+    }
+
 
 bridge_image = (
     modal.Image.debian_slim(python_version="3.13")
     .pip_install(
         "fastapi[standard]==0.116.1",
         "huggingface-hub==1.27.0",
-        "tinker==0.24.1",
+        "tinker==0.30.0",
         "transformers==5.5.4",
         "wandb==0.21.0",
     )
@@ -115,7 +142,7 @@ class TinkerOpenAIBridge:
                 "evidence_class": "infrastructure_not_model_score",
                 "model_id": MODEL_ID,
                 "model_revision": MODEL_REVISION,
-                "sampler_path": SAMPLER_PATH,
+                "sampler_path_configured": SAMPLER_PATH,
                 "hf_repo": HF_REPO,
                 "hf_revision": HF_REVISION,
                 "hf_commit": HF_COMMIT,
@@ -125,13 +152,35 @@ class TinkerOpenAIBridge:
         )
         if self.wandb_run is None or not getattr(self.wandb_run, "id", None):
             raise RuntimeError("W&B online initialization failed before Tinker setup")
-        self.sampling_client = tinker.ServiceClient(
+        # Sampler weights: explicit SAMPLER_PATH env wins (fine-tuned route);
+        # empty/unset means BASE-MODEL serving via a zero-initialized LoRA
+        # snapshot (== base model sampling; no training steps, no weight
+        # reuse). The resolved path is recorded in W&B config below so the
+        # served weights are always auditable. Never silently fall back: a
+        # configured-but-missing path raises instead of serving base.
+        sampler_path = os.environ.get("SAMPLER_PATH", "").strip()
+        svc = tinker.ServiceClient(
             user_metadata={
                 "campaign": "pavlov-e1-e14-modal",
                 "component": "openai-compatible-bridge",
                 "wandb_run_id": self.wandb_run.id,
             }
-        ).create_sampling_client(model_path=SAMPLER_PATH)
+        )
+        if sampler_path:
+            self.sampler_path_resolved = sampler_path
+        else:
+            trainer = svc.create_lora_training_client(
+                base_model=MODEL_ID, rank=4)
+            initial = trainer.save_weights_for_sampler(name="pool0").result()
+            self.sampler_path_resolved = initial.path
+        self.sampling_client = svc.create_sampling_client(
+            model_path=self.sampler_path_resolved)
+        self.wandb_run.config.update(
+            {"sampler_path_resolved": self.sampler_path_resolved,
+             "serving_mode": ("fine-tuned" if sampler_path
+                              else "base-zero-init")},
+            allow_val_change=True,
+        )
 
     @modal.exit()
     def shutdown(self) -> None:
@@ -187,6 +236,114 @@ class TinkerOpenAIBridge:
             ledger["charged_usd"] = float(charged + projected_usd)
             ledger["failed_calls"] = int(ledger.get("failed_calls", 0)) + 1
 
+    async def _complete(self, *, messages: list[dict[str, Any]],
+                        tools: list[dict[str, Any]] | None,
+                        max_tokens: int, temperature: float, top_p: float,
+                        stop: list[str] | str | None, seed: int | None,
+                        enable_thinking: bool) -> dict[str, Any]:
+        """Shared sampling core for chat/completions and responses.
+
+        Identical budgeting (reserve/settle), W&B accounting, truncation,
+        and tool-call parsing on both paths. Returns content, tool_calls,
+        and token counts. Raises HTTPException (lazy fastapi import) on bad
+        input or sampling failure.
+        """
+        from fastapi import HTTPException
+
+        template_kwargs: dict[str, Any] = {
+            "tokenize": False,
+            "add_generation_prompt": True,
+            "enable_thinking": enable_thinking,
+        }
+        if tools:
+            template_kwargs["tools"] = tools
+        try:
+            template_messages = normalise_openai_messages_for_qwen(messages)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        prompt_text = await asyncio.to_thread(
+            self.tokenizer.apply_chat_template,
+            template_messages,
+            **template_kwargs,
+        )
+        prompt_tokens = await asyncio.to_thread(
+            self.tokenizer.encode,
+            prompt_text,
+            add_special_tokens=False,
+        )
+        original_prompt_tokens = len(prompt_tokens)
+        prompt_budget = MODEL_CONTEXT_TOKENS - max_tokens
+        truncated_prompt_tokens = 0
+        if len(prompt_tokens) > prompt_budget:
+            # Agent frameworks normally compact their own conversation, but
+            # a failed compaction can still submit an overlong prompt. Keep
+            # the system/tool prefix and the newest working context so the
+            # request remains usable while failing closed on the model's
+            # fixed context limit.
+            prefix_tokens = min(CONTEXT_PREFIX_TOKENS, prompt_budget // 2)
+            suffix_tokens = prompt_budget - prefix_tokens
+            truncated_prompt_tokens = len(prompt_tokens) - prompt_budget
+            prompt_tokens = prompt_tokens[:prefix_tokens] + prompt_tokens[-suffix_tokens:]
+        projected_usd = Decimal(str(estimate_tinker_usd(len(prompt_tokens), max_tokens)))
+        self._reserve(projected_usd)
+        started = time.monotonic()
+
+        try:
+            import tinker.types as T
+
+            stops = [stop] if isinstance(stop, str) else stop or []
+
+            def sample():
+                return self.sampling_client.sample(
+                    T.ModelInput.from_ints(prompt_tokens),
+                    num_samples=1,
+                    sampling_params=T.SamplingParams(
+                        max_tokens=max_tokens,
+                        temperature=temperature,
+                        top_p=top_p,
+                        stop=stops,
+                        seed=seed,
+                    ),
+                ).result()
+
+            result = await asyncio.to_thread(sample)
+            output_tokens = list(result.sequences[0].tokens)
+            output_text = await asyncio.to_thread(
+                self.tokenizer.decode,
+                output_tokens,
+                skip_special_tokens=True,
+            )
+            content, tool_calls = parse_qwen_tool_calls(output_text)
+            actual_usd = Decimal(
+                str(estimate_tinker_usd(len(prompt_tokens), len(output_tokens)))
+            )
+            self._settle(projected_usd, actual_usd)
+            self.wandb_run.log(
+                {
+                    "bridge/prompt_tokens": len(prompt_tokens),
+                    "bridge/original_prompt_tokens": original_prompt_tokens,
+                    "bridge/truncated_prompt_tokens": truncated_prompt_tokens,
+                    "bridge/completion_tokens": len(output_tokens),
+                    "bridge/actual_usd": float(actual_usd),
+                    "bridge/tool_call_count": len(tool_calls),
+                    "bridge/latency_seconds": time.monotonic() - started,
+                }
+            )
+        except Exception as exc:
+            self._charge_failed_reservation(projected_usd)
+            self.wandb_run.log(
+                {
+                    "bridge/request_failed": 1,
+                    "bridge/conservative_charged_usd": float(projected_usd),
+                }
+            )
+            raise HTTPException(status_code=500, detail="Tinker sampling failed") from exc
+        return {"content": content, "tool_calls": tool_calls,
+                "prompt_tokens": len(prompt_tokens),
+                "completion_tokens": len(output_tokens),
+                "original_prompt_tokens": original_prompt_tokens,
+                "truncated_prompt_tokens": truncated_prompt_tokens}
+
     @modal.asgi_app()
     def web(self):
         from fastapi import Body, FastAPI, Header, HTTPException
@@ -211,6 +368,7 @@ class TinkerOpenAIBridge:
             seed: int | None = None
             n: int = Field(default=1, ge=1)
             stream: bool = False
+            enable_thinking: bool = True
 
         @web_app.get("/health")
         async def health(authorization: str | None = Header(default=None)) -> dict[str, Any]:
@@ -246,89 +404,37 @@ class TinkerOpenAIBridge:
         ) -> Any:
             bridge._authorize(authorization)
             request = ChatCompletionRequest.model_validate(payload)
-            if request.model not in {MODEL_ALIAS, MODEL_ID}:
+            # LiteLLM retains the provider prefix in the OpenAI-compatible
+            # request body even when api_base targets this private bridge.
+            # Accept only the two pinned identities, with or without that
+            # routing prefix; every other model still fails closed.
+            if not is_supported_request_model(request.model):
                 raise HTTPException(status_code=404, detail="unknown model")
             if request.n != 1:
-                raise HTTPException(status_code=400, detail="only n=1 pass@1 requests are supported")
+                raise HTTPException(
+                    status_code=400, detail="only n=1 pass@1 requests are supported"
+                )
             max_tokens = request.max_completion_tokens or request.max_tokens or 4096
             if max_tokens > MAX_COMPLETION_TOKENS:
                 raise HTTPException(
                     status_code=400,
                     detail=f"max completion tokens exceeds {MAX_COMPLETION_TOKENS}",
                 )
-
-            template_kwargs: dict[str, Any] = {
-                "tokenize": False,
-                "add_generation_prompt": True,
-            }
-            if request.tools:
-                template_kwargs["tools"] = request.tools
-            try:
-                template_messages = normalise_openai_messages_for_qwen(request.messages)
-            except ValueError as exc:
-                raise HTTPException(status_code=400, detail=str(exc)) from exc
-            prompt_text = await asyncio.to_thread(
-                bridge.tokenizer.apply_chat_template,
-                template_messages,
-                **template_kwargs,
+            out = await bridge._complete(
+                messages=request.messages,
+                tools=request.tools,
+                max_tokens=max_tokens,
+                temperature=request.temperature,
+                top_p=request.top_p,
+                stop=request.stop,
+                seed=request.seed,
+                enable_thinking=request.enable_thinking,
             )
-            prompt_tokens = await asyncio.to_thread(
-                bridge.tokenizer.encode,
-                prompt_text,
-                add_special_tokens=False,
-            )
-            projected_usd = Decimal(str(estimate_tinker_usd(len(prompt_tokens), max_tokens)))
-            bridge._reserve(projected_usd)
-            started = time.monotonic()
+            content = out["content"]
+            tool_calls = out["tool_calls"]
+            prompt_count = out["prompt_tokens"]
+            completion_count = out["completion_tokens"]
 
-            try:
-                import tinker.types as T
-
-                stops = [request.stop] if isinstance(request.stop, str) else request.stop or []
-
-                def sample():
-                    return bridge.sampling_client.sample(
-                        T.ModelInput.from_ints(prompt_tokens),
-                        num_samples=1,
-                        sampling_params=T.SamplingParams(
-                            max_tokens=max_tokens,
-                            temperature=request.temperature,
-                            top_p=request.top_p,
-                            stop=stops,
-                            seed=request.seed,
-                        ),
-                    ).result()
-
-                result = await asyncio.to_thread(sample)
-                output_tokens = list(result.sequences[0].tokens)
-                output_text = await asyncio.to_thread(
-                    bridge.tokenizer.decode,
-                    output_tokens,
-                    skip_special_tokens=True,
-                )
-                content, tool_calls = parse_qwen_tool_calls(output_text)
-                actual_usd = Decimal(
-                    str(estimate_tinker_usd(len(prompt_tokens), len(output_tokens)))
-                )
-                bridge._settle(projected_usd, actual_usd)
-                bridge.wandb_run.log(
-                    {
-                        "bridge/prompt_tokens": len(prompt_tokens),
-                        "bridge/completion_tokens": len(output_tokens),
-                        "bridge/actual_usd": float(actual_usd),
-                        "bridge/tool_call_count": len(tool_calls),
-                        "bridge/latency_seconds": time.monotonic() - started,
-                    }
-                )
-            except Exception as exc:
-                bridge._charge_failed_reservation(projected_usd)
-                bridge.wandb_run.log(
-                    {
-                        "bridge/request_failed": 1,
-                        "bridge/conservative_charged_usd": float(projected_usd),
-                    }
-                )
-                raise HTTPException(status_code=500, detail="Tinker sampling failed") from exc
 
             completion_id = f"chatcmpl-{uuid.uuid4().hex}"
             created = int(time.time())
@@ -341,8 +447,8 @@ class TinkerOpenAIBridge:
                             model=MODEL_ALIAS,
                             content=content,
                             tool_calls=tool_calls,
-                            prompt_tokens=len(prompt_tokens),
-                            completion_tokens=len(output_tokens),
+                            prompt_tokens=prompt_count,
+                            completion_tokens=completion_count,
                         )
                     ),
                     media_type="text/event-stream",
@@ -368,10 +474,75 @@ class TinkerOpenAIBridge:
                     }
                 ],
                 "usage": {
-                    "prompt_tokens": len(prompt_tokens),
-                    "completion_tokens": len(output_tokens),
-                    "total_tokens": len(prompt_tokens) + len(output_tokens),
+                    "prompt_tokens": prompt_count,
+                    "completion_tokens": completion_count,
+                    "total_tokens": prompt_count + completion_count,
                 },
             }
+
+        @web_app.post("/v1/responses")
+        async def create_response(
+            payload: dict[str, Any] = Body(...),
+            authorization: str | None = Header(default=None),
+        ) -> Any:
+            bridge._authorize(authorization)
+            model = payload.get("model", MODEL_ALIAS)
+            if not is_supported_request_model(model):
+                raise HTTPException(status_code=404, detail="unknown model")
+            if payload.get("background"):
+                raise HTTPException(
+                    status_code=400,
+                    detail="background responses are not supported",
+                )
+            if payload.get("previous_response_id"):
+                raise HTTPException(
+                    status_code=400,
+                    detail="previous_response_id is not supported: "
+                    "this bridge keeps no server-side conversation state",
+                )
+            max_tokens = (payload.get("max_output_tokens")
+                          or payload.get("max_completion_tokens") or 4096)
+            if max_tokens > MAX_COMPLETION_TOKENS:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"max completion tokens exceeds {MAX_COMPLETION_TOKENS}",
+                )
+            try:
+                messages = responses_input_to_chat_messages(payload.get("input"))
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
+            instructions = payload.get("instructions")
+            if instructions:
+                messages = [{"role": "system", "content": str(instructions)}
+                            ] + messages
+            out = await bridge._complete(
+                messages=messages,
+                tools=responses_tools_to_chat_tools(payload.get("tools")),
+                max_tokens=max_tokens,
+                temperature=payload.get("temperature", 0.2),
+                top_p=payload.get("top_p", 0.95),
+                stop=None,
+                seed=None,
+                enable_thinking=True,
+            )
+            response = build_responses_object(
+                response_id=f"resp-{uuid.uuid4().hex}",
+                model=MODEL_ALIAS,
+                content=out["content"],
+                tool_calls=out["tool_calls"],
+                prompt_tokens=out["prompt_tokens"],
+                completion_tokens=out["completion_tokens"],
+                created_at=int(time.time()),
+            )
+            if payload.get("stream"):
+                return StreamingResponse(
+                    iter_responses_sse_events(response),
+                    media_type="text/event-stream",
+                    headers={
+                        "Cache-Control": "no-cache",
+                        "X-Accel-Buffering": "no",
+                    },
+                )
+            return response
 
         return web_app

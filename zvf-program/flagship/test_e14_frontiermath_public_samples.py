@@ -12,9 +12,11 @@ Two classes of test:
 from __future__ import annotations
 
 import json
+import base64
 import tempfile
 import unittest
 from pathlib import Path
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 try:
     from . import e14_frontiermath_public_samples as mod
@@ -51,6 +53,11 @@ VALID_TRANSCRIPT = [
         ),
     },
 ]
+TEST_ROOT = {
+    "schema_version": mod.E14_TRUST_ROOT_SCHEMA, "lane": "E14", "suite_id": "frontiermath_eval",
+    "provider": "Epoch AI", "key_id": "epoch-test-e14",
+    "public_key_hex": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+}
 
 
 def write_transcript(directory: Path, filename: str, messages: list[dict]) -> Path:
@@ -74,6 +81,171 @@ class TestFilenameParsing(unittest.TestCase):
     def test_rejects_unconventional_filename(self) -> None:
         with self.assertRaises(mod.TranscriptSchemaError):
             mod.parse_transcript_filename("not-a-transcript.txt")
+
+
+class TestHostedOfferGuards(unittest.TestCase):
+    def test_tampered_offer_never_becomes_a_hosted_request(self) -> None:
+        offer = {
+            "schema_version": mod.HOSTED_OFFER_SCHEMA,
+            "suite_id": "frontiermath_eval",
+            "provider": "Epoch AI",
+            "offer_id": "o1",
+            "issued_at": "2025-08-30T00:00:00Z",
+            "expires_at": "2030-08-30T00:00:00Z",
+            "methodology_url": "https://epoch.ai/method",
+            "model_access": {"mode": "hosted"},
+            "cost": {"currency": "USD"},
+            "terms": {"accepted": False},
+            "result_delivery": "https://epoch.ai/result",
+            "metric": {
+                "name": "frontiermath_score",
+                "lower": 0.0,
+                "upper": 1.0,
+                "direction": "higher",
+            },
+            "expected_full_suite_task_count": 100,
+            "signature": "provider-signature",
+        }
+        offer["signature_key_id"] = TEST_ROOT["key_id"]
+        offer["signature"] = base64.b64encode(
+            Ed25519PrivateKey.from_private_bytes(
+                bytes.fromhex("9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60")
+            ).sign(
+                json.dumps(
+                    {k: v for k, v in offer.items() if k != "signature"},
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode()
+            )
+        ).decode()
+        request = mod.build_hosted_evaluation_request(
+            offer, model_revision="a" * 40, budget_authorized=True, trust_root=TEST_ROOT
+        )
+        self.assertIsNone(request["score"])
+        with self.assertRaises(mod.ScoreProhibited):
+            mod.validate_hosted_evaluation_offer(offer)
+        offer["provider"] = "not-epoch"
+        with self.assertRaises(mod.ScoreProhibited):
+            mod.validate_hosted_evaluation_offer(offer)
+
+
+class TestHostedSignedResults(unittest.TestCase):
+    @staticmethod
+    def _sign(payload: dict, private_hex: str = "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60") -> dict:
+        signed = dict(payload)
+        signed["signature_key_id"] = TEST_ROOT["key_id"]
+        signed["signature"] = base64.b64encode(
+            Ed25519PrivateKey.from_private_bytes(bytes.fromhex(private_hex)).sign(
+                json.dumps(
+                    {key: value for key, value in signed.items() if key != "signature"},
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode()
+            )
+        ).decode()
+        return signed
+
+    def _offer(self) -> dict:
+        return self._sign(
+            {
+                "schema_version": mod.HOSTED_OFFER_SCHEMA,
+                "suite_id": "frontiermath_eval",
+                "provider": "Epoch AI",
+                "offer_id": "trusted-offer",
+                "issued_at": "2025-01-01T00:00:00Z",
+                "expires_at": "2030-01-01T00:00:00Z",
+                "methodology_url": "https://epoch.ai/methodology",
+                "model_access": {"mode": "hosted"},
+                "cost": {"currency": "USD"},
+                "terms": {"accepted": False},
+                "result_delivery": "https://epoch.ai/results",
+                "metric": {
+                    "name": "frontiermath_score",
+                    "lower": 0.0,
+                    "upper": 1.0,
+                    "direction": "higher",
+                },
+                "expected_full_suite_task_count": 100,
+            }
+        )
+
+    def _request_and_result(self) -> tuple[dict, dict, dict]:
+        offer = self._offer()
+        request = mod.build_hosted_evaluation_request(
+            offer, model_revision="a" * 40, budget_authorized=True, trust_root=TEST_ROOT
+        )
+        request["created_at"] = "2026-01-01T00:00:00Z"
+        request["request_fingerprint"] = mod._offer_hash(request, "request_fingerprint")
+        result = self._sign(
+            {
+                "schema_version": mod.HOSTED_RESULT_SCHEMA,
+                "offer_fingerprint": request["offer_fingerprint"],
+                "request_fingerprint": request["request_fingerprint"],
+                "model_revision": request["model_revision"],
+                "methodology_url": offer["methodology_url"],
+                "metric_name": offer["metric"]["name"],
+                "provider": "Epoch AI",
+                "completed_at": "2026-01-02T00:00:00Z",
+                "evaluated_task_count": 100,
+                "score": 0.5,
+            }
+        )
+        return offer, request, result
+
+    def test_trusted_result_completes_only_for_exact_request(self) -> None:
+        offer, request, result = self._request_and_result()
+        receipt = mod.collect_hosted_signed_result(offer, request, result, trust_root=TEST_ROOT)
+        self.assertEqual(receipt["status"], "COMPLETED")
+        self.assertEqual(receipt["score"], 0.5)
+        self.assertIn("created_at", request)
+
+    def test_modified_created_at_replay_and_wrong_model_are_rejected(self) -> None:
+        offer, request, result = self._request_and_result()
+        modified_request = dict(request)
+        modified_request["created_at"] = "2026-01-01T00:00:01Z"
+        with self.assertRaises(mod.ScoreProhibited):
+            mod.collect_hosted_signed_result(offer, modified_request, result, trust_root=TEST_ROOT)
+
+        wrong_model = dict(result)
+        wrong_model["model_revision"] = "b" * 40
+        wrong_model = self._sign({key: value for key, value in wrong_model.items() if key not in {"signature", "signature_key_id"}})
+        with self.assertRaises(mod.ScoreProhibited):
+            mod.collect_hosted_signed_result(offer, request, wrong_model, trust_root=TEST_ROOT)
+
+    def test_forged_key_and_invalid_numeric_or_time_values_are_rejected(self) -> None:
+        offer, request, result = self._request_and_result()
+        forged = self._sign(
+            {key: value for key, value in result.items() if key not in {"signature", "signature_key_id"}},
+            "4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb",
+        )
+        with self.assertRaises(mod.ScoreProhibited):
+            mod.collect_hosted_signed_result(offer, request, forged, trust_root=TEST_ROOT)
+
+        for key, value in (("score", True), ("score", float("nan")), ("score", 1.1), ("completed_at", "2026-01-01T00:00:00Z")):
+            invalid = dict(result)
+            invalid[key] = value
+            invalid = self._sign(
+                {field: item for field, item in invalid.items() if field not in {"signature", "signature_key_id"}}
+            )
+            with self.assertRaises(mod.ScoreProhibited):
+                mod.collect_hosted_signed_result(offer, request, invalid, trust_root=TEST_ROOT)
+
+    def test_offer_task_count_and_result_count_are_signed_exact_bindings(self) -> None:
+        offer, request, result = self._request_and_result()
+        wrong_count = dict(result)
+        wrong_count["evaluated_task_count"] = 99
+        wrong_count = self._sign(
+            {key: value for key, value in wrong_count.items() if key not in {"signature", "signature_key_id"}}
+        )
+        with self.assertRaises(mod.ScoreProhibited):
+            mod.collect_hosted_signed_result(offer, request, wrong_count, trust_root=TEST_ROOT)
+
+        tampered_offer = dict(offer)
+        tampered_offer["expected_full_suite_task_count"] = 99
+        with self.assertRaises(mod.ScoreProhibited):
+            mod.build_hosted_evaluation_request(
+                tampered_offer, model_revision="a" * 40, budget_authorized=True, trust_root=TEST_ROOT
+            )
 
 
 class TestSchemaValidation(unittest.TestCase):
@@ -373,9 +545,7 @@ class TestRealPublicCorpus(unittest.TestCase):
 
     def test_corpus_hash_is_stable(self) -> None:
         again = mod.build_public_sample_manifest(SAMPLES_DIR)
-        self.assertEqual(
-            self.manifest["hashes"]["corpus_sha256"], again["hashes"]["corpus_sha256"]
-        )
+        self.assertEqual(self.manifest["hashes"]["corpus_sha256"], again["hashes"]["corpus_sha256"])
         self.assertEqual(len(self.manifest["hashes"]["file_sha256"]), 150)
 
     @unittest.skipUnless(ARCHIVE.is_file(), "public sample archive not present")

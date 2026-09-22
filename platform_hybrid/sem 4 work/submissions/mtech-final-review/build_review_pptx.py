@@ -358,7 +358,7 @@ def slide_01_title(prs):
           color=INK, align=PP_ALIGN.CENTER, space_after=2)
     _para(tf, "PES University, Bengaluru", size=15, color=INK,
           align=PP_ALIGN.CENTER, space_after=10)
-    _para(tf, "July 2026", size=14, color=MUTED, align=PP_ALIGN.CENTER)
+    _para(tf, "September 2026", size=14, color=MUTED, align=PP_ALIGN.CENTER)
 
 
 def slide_02_agenda(prs, n):
@@ -881,7 +881,7 @@ def slide_21_thanks(prs, n):
           align=PP_ALIGN.CENTER, space_after=10, first=True)
     _para(tf, "Questions & Discussion", size=24, color=RGBColor(0xCF, 0xDE, 0xF0),
           align=PP_ALIGN.CENTER, space_after=24)
-    _para(tf, "Arvind C R  ·  SRN <SRN>  ·  M.Tech Data Science & AI, PES University",
+    _para(tf, "Arvind C R  ·  SRN PES2PGE24DS140  ·  M.Tech Data Science & AI, PES University",
           size=15, color=WHITE, align=PP_ALIGN.CENTER, space_after=4)
     _para(tf, "Guide: Ramesh Prakash Guledgudd  ·  github.com/arvindcr4/tinker-rl-lab",
           size=14, color=RGBColor(0xCF, 0xDE, 0xF0), align=PP_ALIGN.CENTER)

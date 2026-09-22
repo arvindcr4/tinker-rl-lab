@@ -22,10 +22,7 @@ from typing import Any, Sequence
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-BRIDGE_BASE_URL = (
-    "https://arvindcr4--pavlov-tinker-openai-bridge-"
-    "tinkeropenaibridge-web.modal.run"
-)
+BRIDGE_BASE_URL = "https://arvindcr4--pavlov-tinker-openai-bridge-tinkeropenaibridge-web.modal.run"
 BRIDGE_API_BASE = f"{BRIDGE_BASE_URL}/v1"
 MODEL_ALIAS = "pavlov-qwen36-tinker"
 HF_COMMIT = "64444133c55d88c3f1bf0df8a2f5d7ac646125c8"
@@ -50,9 +47,14 @@ LANES = {
         config=Path("job-tinker-bridge.yaml"),
         env_defaults=(("GEMINI_API_KEY", "modal-secret-injected"),),
     ),
+    "E4-smoke": Lane(
+        checkout=REPO_ROOT / "outputs/e4_banker_toolbench/official_repo_ff6db552",
+        config=Path("job-smoke-tinker-bridge.yaml"),
+        env_defaults=(("GEMINI_API_KEY", "modal-secret-injected"),),
+    ),
     "E7": Lane(
         checkout=REPO_ROOT / "outputs/e7_binaryaudit/BinaryAudit",
-        config=Path("configs/tinker-bridge-dnsmasq-docker.yaml"),
+        config=Path("configs/tinker-bridge-dnsmasq-negative-mini.yaml"),
     ),
 }
 
@@ -161,9 +163,7 @@ def validate_execute_budget(payload: dict[str, Any], authorized_total: Decimal) 
     if authorized_total <= 0:
         raise LaunchGateError("authorized total must be positive")
     if maximum.quantize(Decimal("0.01")) != authorized_total.quantize(Decimal("0.01")):
-        raise LaunchGateError(
-            "authorized total must exactly match the persistent bridge maximum"
-        )
+        raise LaunchGateError("authorized total must exactly match the persistent bridge maximum")
     if charged + reserved >= maximum:
         raise LaunchGateError("bridge has no remaining authorized budget")
 
@@ -172,6 +172,10 @@ def build_harbor_env(api_key: str, lane: Lane) -> dict[str, str]:
     env = os.environ.copy()
     env["OPENAI_API_KEY"] = api_key
     env["OPENAI_BASE_URL"] = BRIDGE_API_BASE
+    # Harbor's Python-native mini-swe-agent wrapper forwards OPENAI_API_BASE,
+    # while OpenCode consumes OPENAI_BASE_URL. Keep both pinned to the local
+    # authenticated bridge so neither agent can fall back to api.openai.com.
+    env["OPENAI_API_BASE"] = BRIDGE_API_BASE
     for key, value in lane.env_defaults:
         env.setdefault(key, value)
     python_paths = [str(lane.checkout), str(HARBOR_EXT_ROOT)]
@@ -195,6 +199,13 @@ def parser() -> argparse.ArgumentParser:
         help="required with --execute",
     )
     result.add_argument(
+        "--n-concurrent",
+        type=int,
+        default=None,
+        help="forwarded to harbor run -n: cap concurrent trials "
+        "(recommended 2 on disk-constrained local Docker)",
+    )
+    result.add_argument(
         "--authorized-total-usd",
         type=Decimal,
         help="required with --execute and must match the server-side total cap",
@@ -216,6 +227,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     health = fetch_health(api_key)
     validate_health(health)
     command = [*lane.harbor_command, "run", "-c", str(lane.config)]
+    # Non-interactive: the launcher's own --acknowledge-paid-run gate carries
+    # consent; forward it so Harbor never blocks on a TTY prompt mid-run.
+    command.append("--yes")
+    if args.n_concurrent is not None:
+        # Bounded parallelism: each trial builds/caches a multi-GB image,
+        # so unbounded concurrency can fill the container disk mid-run.
+        if args.n_concurrent < 1:
+            raise LaunchGateError("--n-concurrent must be >= 1")
+        command.extend(["-n", str(args.n_concurrent)])
     if args.execute:
         if not args.acknowledge_paid_run or args.authorized_total_usd is None:
             raise LaunchGateError(

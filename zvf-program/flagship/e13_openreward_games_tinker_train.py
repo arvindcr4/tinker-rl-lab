@@ -44,7 +44,7 @@ import re
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Iterable, Mapping, Sequence
+from typing import Any, Callable, Mapping, Sequence
 
 try:  # package import (PYTHONPATH=zvf-program, `python -m flagship....`)
     from flagship.e13_openreward_games_local_runner import (
@@ -53,6 +53,8 @@ try:  # package import (PYTHONPATH=zvf-program, `python -m flagship....`)
         ProgrammaticRewardVerifier,
         SplitManifest,
         VerifierOutcome,
+        build_e13_provider_execution_request,
+        validate_provider_suite_grant,
         parse_split_manifest,
         prove_seed_separation,
     )
@@ -64,6 +66,8 @@ except ImportError:  # direct import with the flagship dir itself on sys.path
         ProgrammaticRewardVerifier,
         SplitManifest,
         VerifierOutcome,
+        build_e13_provider_execution_request,
+        validate_provider_suite_grant,
         parse_split_manifest,
         prove_seed_separation,
     )
@@ -129,9 +133,7 @@ def license_record(record_path: Path = LICENSE_RISK_RECORD) -> dict[str, Any]:
         )
     text = record_path.read_text(encoding="utf-8")
     if "EnvCommons" not in text:
-        raise LicenseRecordError(
-            f"{record_path} does not cover EnvCommons; refusing to proceed."
-        )
+        raise LicenseRecordError(f"{record_path} does not cover EnvCommons; refusing to proceed.")
     return {
         "asset": "EnvCommons/wordle",
         "pinned_revision": "92bea32efa102e86275dedd2e0367e86d3754754",
@@ -245,7 +247,7 @@ def normalize_group_rewards(rewards: Sequence[float]) -> list[float]:
         return [0.0] * len(rewards)
     mean = sum(usable) / len(usable)
     var = sum((r - mean) ** 2 for r in usable) / len(usable)
-    std = var ** 0.5
+    std = var**0.5
     if std < 1e-8:
         return [0.0] * len(rewards)
     return [0.0 if r is None else (r - mean) / std for r in rewards]
@@ -264,8 +266,8 @@ class E13TrainConfig:
     seed: int = 1337
 
     steps: int = 20
-    batch_size: int = 4          # tasks per update
-    group_size: int = 4          # samples per task (GRPO group)
+    batch_size: int = 4  # tasks per update
+    group_size: int = 4  # samples per task (GRPO group)
     lr: float = 1e-5
 
     max_prompt_tokens: int = 4096
@@ -279,7 +281,7 @@ class E13TrainConfig:
     wandb_group: str | None = "e13-openreward-games"
     wandb_tags: tuple[str, ...] = ("e13", "openreward", "wordle", "grpo", "lora")
 
-    eval_tasks: int = 20         # held-out tasks sampled for eval/reward
+    eval_tasks: int = 20  # held-out tasks sampled for eval/reward
     eval_every: int = 10
 
     environment: str = "GeneralReasoning/Wordle"
@@ -311,8 +313,9 @@ def _chars_to_tokens(chars: float) -> int:
     return int(chars / CHARS_PER_TOKEN + 0.5)
 
 
-def project_episode_tokens(cfg: E13TrainConfig,
-                           profile: Mapping[str, Any] = MEASURED_EPISODE_PROFILE) -> dict[str, int]:
+def project_episode_tokens(
+    cfg: E13TrainConfig, profile: Mapping[str, Any] = MEASURED_EPISODE_PROFILE
+) -> dict[str, int]:
     """Token accounting for ONE episode, charged conservatively.
 
     Every turn re-sends the whole conversation as uncached prefill and is
@@ -333,8 +336,10 @@ def project_episode_tokens(cfg: E13TrainConfig,
         sample += cfg.max_response_tokens
 
     # Training sees the final full sequence once per sampled trajectory.
-    train_tokens = min(prompt_tokens + obs_tokens_total, cfg.max_prompt_tokens) \
+    train_tokens = (
+        min(prompt_tokens + obs_tokens_total, cfg.max_prompt_tokens)
         + cfg.max_response_tokens * turns
+    )
     return {
         "turns": turns,
         "prefill_tokens": prefill,
@@ -343,11 +348,13 @@ def project_episode_tokens(cfg: E13TrainConfig,
     }
 
 
-def project_cost(cfg: E13TrainConfig,
-                 *,
-                 episodes_sampled: int,
-                 episodes_trained: int,
-                 budget: Mapping[str, Any] | None = None) -> dict[str, Any]:
+def project_cost(
+    cfg: E13TrainConfig,
+    *,
+    episodes_sampled: int,
+    episodes_trained: int,
+    budget: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
     """Project USD for a given number of sampled and trained episodes."""
 
     b = dict(budget or load_budget())
@@ -379,10 +386,12 @@ def project_cost(cfg: E13TrainConfig,
     }
 
 
-def assert_within_cap(projection: Mapping[str, Any],
-                      *,
-                      already_spent_usd: float = 0.0,
-                      budget: Mapping[str, Any] | None = None) -> None:
+def assert_within_cap(
+    projection: Mapping[str, Any],
+    *,
+    already_spent_usd: float = 0.0,
+    budget: Mapping[str, Any] | None = None,
+) -> None:
     b = dict(budget or load_budget())
     cap = float(b["operational_cap_usd"])
     reserve = float(b["safety_reserve_usd"])
@@ -508,11 +517,14 @@ def build_checkpoint_record(
                 f"python outputs/e11_verilog_eval/e11_paid_run_driver.py "
                 f"--sampler-path {sampler_path} --hf-repo {hf_repo} "
                 f"--hf-revision {hf_revision} --hf-commit {hf_commit}"
-            ) if e11_ready else None,
-            "blocker": None if e11_ready else
-                "HF_TOKEN is absent, so the sampler cannot be published to an "
-                "immutable HF revision; --hf-repo/--hf-revision/--hf-commit "
-                "cannot be supplied.",
+            )
+            if e11_ready
+            else None,
+            "blocker": None
+            if e11_ready
+            else "HF_TOKEN is absent, so the sampler cannot be published to an "
+            "immutable HF revision; --hf-repo/--hf-revision/--hf-commit "
+            "cannot be supplied.",
         },
     }
     return record
@@ -572,6 +584,7 @@ def _guess_params(env: Any, action: str) -> Any:
     """Build the env's own tool-parameter model, whatever it is called."""
     module = type(env).__module__
     import importlib
+
     mod = importlib.import_module(module)
     for name in ("GuessParams",):
         if hasattr(mod, name):
@@ -598,17 +611,21 @@ def plan(cfg: E13TrainConfig, firewall: SplitFirewall) -> dict[str, Any]:
 
     pilot_sampled = cfg.steps * cfg.batch_size * cfg.group_size
     pilot_eval = cfg.eval_tasks * max(1, cfg.steps // max(cfg.eval_every, 1))
-    pilot = project_cost(cfg,
-                         episodes_sampled=pilot_sampled + pilot_eval,
-                         episodes_trained=pilot_sampled,
-                         budget=budget)
+    pilot = project_cost(
+        cfg,
+        episodes_sampled=pilot_sampled + pilot_eval,
+        episodes_trained=pilot_sampled,
+        budget=budget,
+    )
 
     n_train = len(firewall.train.tasks)
     full_sampled = n_train * cfg.group_size
-    full = project_cost(cfg,
-                        episodes_sampled=full_sampled + cfg.eval_tasks,
-                        episodes_trained=full_sampled,
-                        budget=budget)
+    full = project_cost(
+        cfg,
+        episodes_sampled=full_sampled + cfg.eval_tasks,
+        episodes_trained=full_sampled,
+        budget=budget,
+    )
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -623,15 +640,25 @@ def plan(cfg: E13TrainConfig, firewall: SplitFirewall) -> dict[str, Any]:
         "measured_episode_profile": MEASURED_EPISODE_PROFILE,
         "projections": {
             "one_smoke_episode": smoke,
-            "short_pilot": dict(pilot, shape={
-                "updates": cfg.steps, "batch_size": cfg.batch_size,
-                "group_size": cfg.group_size,
-                "train_episodes": pilot_sampled, "eval_episodes": pilot_eval,
-            }),
-            "full_pass_200_train_tasks": dict(full, shape={
-                "train_tasks": n_train, "group_size": cfg.group_size,
-                "train_episodes": full_sampled, "eval_episodes": cfg.eval_tasks,
-            }),
+            "short_pilot": dict(
+                pilot,
+                shape={
+                    "updates": cfg.steps,
+                    "batch_size": cfg.batch_size,
+                    "group_size": cfg.group_size,
+                    "train_episodes": pilot_sampled,
+                    "eval_episodes": pilot_eval,
+                },
+            ),
+            "full_pass_200_train_tasks": dict(
+                full,
+                shape={
+                    "train_tasks": n_train,
+                    "group_size": cfg.group_size,
+                    "train_episodes": full_sampled,
+                    "eval_episodes": cfg.eval_tasks,
+                },
+            ),
         },
         "budget": {
             "operational_cap_usd": budget["operational_cap_usd"],
@@ -654,15 +681,31 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("--batch-size", type=int, default=E13TrainConfig.batch_size)
     ap.add_argument("--group-size", type=int, default=E13TrainConfig.group_size)
     ap.add_argument("--out", type=Path, default=None, help="write the plan/receipt JSON here")
-    ap.add_argument("--execute", action="store_true",
-                    help="PAID. Construct a Tinker client and train. Requires --i-accept-spend.")
-    ap.add_argument("--i-accept-spend", action="store_true",
-                    help="explicit spend acknowledgement; required with --execute")
+    ap.add_argument(
+        "--execute",
+        action="store_true",
+        help="PAID. Construct a Tinker client and train. Requires --i-accept-spend.",
+    )
+    ap.add_argument(
+        "--i-accept-spend",
+        action="store_true",
+        help="explicit spend acknowledgement; required with --execute",
+    )
+    ap.add_argument(
+        "--provider-grant", type=Path, help="signed OpenReward suite/deployment grant JSON"
+    )
+    ap.add_argument("--trust-root", type=Path, help="provider-issued E13 trust-root JSON")
+    ap.add_argument(
+        "--model-revision",
+        help="immutable provider-bound 40-hex model revision; required for --execute request handoff",
+    )
     args = ap.parse_args(argv)
 
     cfg = E13TrainConfig(
-        model=args.model, steps=args.steps,
-        batch_size=args.batch_size, group_size=args.group_size,
+        model=args.model,
+        steps=args.steps,
+        batch_size=args.batch_size,
+        group_size=args.group_size,
     )
     firewall = SplitFirewall(_load(args.train_manifest), _load(args.eval_manifest))
     result = plan(cfg, firewall)
@@ -671,9 +714,36 @@ def main(argv: Sequence[str] | None = None) -> int:
         if not args.i_accept_spend:
             print("REFUSED: --execute requires --i-accept-spend.")
             return 2
+        if args.provider_grant is None:
+            print("REFUSED: --execute requires --provider-grant.")
+            return 2
+        if args.trust_root is None:
+            print("REFUSED: --execute requires --trust-root.")
+            return 2
+        if args.model_revision is None:
+            print("REFUSED: --execute requires --model-revision.")
+            return 2
+        grant = validate_provider_suite_grant(
+            json.loads(args.provider_grant.read_text(encoding="utf-8")),
+            firewall.train,
+            firewall.evaluation,
+            trust_root=args.trust_root,
+        )
         assert_within_cap(result["projections"]["short_pilot"])
-        print("Gates passed. The paid path is intentionally not wired in this build; "
-              "enable it only under an explicit spend authorization.")
+        request = build_e13_provider_execution_request(
+            grant,
+            firewall.train,
+            firewall.evaluation,
+            model_revision=args.model_revision,
+            trust_root=args.trust_root,
+        )
+        if args.out:
+            target = args.out
+            target.parent.mkdir(parents=True, exist_ok=True)
+            tmp = target.with_suffix(target.suffix + ".tmp")
+            tmp.write_text(json.dumps(request, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+            os.replace(tmp, target)
+        print(json.dumps(request, sort_keys=True))
         return 3
 
     payload = json.dumps(result, indent=2)
@@ -684,13 +754,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     p = result["projections"]
     print(f"model              : {result['model']}")
     print(f"separation holds   : {result['split_firewall']['separation_proof']['holds']}")
-    print(f"license            : {result['license']['observed_state']} "
-          f"(claimed_spdx={result['license']['claimed_spdx']})")
+    print(
+        f"license            : {result['license']['observed_state']} "
+        f"(claimed_spdx={result['license']['claimed_spdx']})"
+    )
     print(f"smoke  (1 episode) : ${p['one_smoke_episode']['usd']['total']:.4f}")
-    print(f"pilot              : ${p['short_pilot']['usd']['total']:.2f}  "
-          f"({p['short_pilot']['shape']['updates']} updates x "
-          f"{p['short_pilot']['shape']['batch_size']} batch x "
-          f"{p['short_pilot']['shape']['group_size']} group)")
+    print(
+        f"pilot              : ${p['short_pilot']['usd']['total']:.2f}  "
+        f"({p['short_pilot']['shape']['updates']} updates x "
+        f"{p['short_pilot']['shape']['batch_size']} batch x "
+        f"{p['short_pilot']['shape']['group_size']} group)"
+    )
     print(f"full 200-task pass : ${p['full_pass_200_train_tasks']['usd']['total']:.2f}")
     print(f"spendable          : ${result['budget']['spendable_usd']:.2f}")
     print(f"SPENT THIS RUN     : ${result['spent_usd']:.2f}")

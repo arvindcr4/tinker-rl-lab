@@ -4,12 +4,14 @@
 from __future__ import annotations
 
 import copy
+import base64
 import json
 import shutil
 import tempfile
 import unittest
 from pathlib import Path
 from typing import Any
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from flagship import pavlov_agentharm_frontiermath_adapter as adapter
 
@@ -178,7 +180,10 @@ class PavlovAgentharmFrontiermathAdapterTests(unittest.TestCase):
             errors,
         )
         self.assertTrue(any("hf_checkpoints[0].revision" in error for error in errors), errors)
-        self.assertTrue(any("container_runtime_digest must be a SHA-256 digest" in error for error in errors), errors)
+        self.assertTrue(
+            any("container_runtime_digest must be a SHA-256 digest" in error for error in errors),
+            errors,
+        )
 
     def test_validate_rejects_zeroed_task_and_manifest_hashes(self) -> None:
         broken = self._with_complete_receipts()
@@ -191,14 +196,18 @@ class PavlovAgentharmFrontiermathAdapterTests(unittest.TestCase):
             any("task_id_hashes[0] must be a SHA-256 digest" in error for error in errors),
             errors,
         )
-        self.assertTrue(any("split_task_id_hash must be a SHA-256 digest" in error for error in errors), errors)
-        self.assertTrue(any("split_manifest_hash must be a SHA-256 digest" in error for error in errors), errors)
+        self.assertTrue(
+            any("split_task_id_hash must be a SHA-256 digest" in error for error in errors), errors
+        )
+        self.assertTrue(
+            any("split_manifest_hash must be a SHA-256 digest" in error for error in errors), errors
+        )
 
     def test_validate_rejects_duplicate_task_hashes(self) -> None:
         broken = self._with_complete_receipts()
         broken["boundaries"][0]["receipts"]["task_id_hashes"] = ["f" * 64, "f" * 64]
-        broken["boundaries"][0]["receipts"]["split_task_id_hash"] = adapter.aggregate_task_id_hashes(
-            ["f" * 64, "f" * 64]
+        broken["boundaries"][0]["receipts"]["split_task_id_hash"] = (
+            adapter.aggregate_task_id_hashes(["f" * 64, "f" * 64])
         )
         self._with_resigned_bundle(broken)
         errors = adapter.validate_adapter_bundle(broken)
@@ -206,12 +215,17 @@ class PavlovAgentharmFrontiermathAdapterTests(unittest.TestCase):
 
     def test_validate_rejects_authoritative_source_mismatch(self) -> None:
         broken = self._with_complete_receipts()
-        broken["boundaries"][0]["authoritative_source"]["source_url"] = "https://github.com/UKGovernmentBEIS/inspect_evals"
+        broken["boundaries"][0]["authoritative_source"]["source_url"] = (
+            "https://github.com/UKGovernmentBEIS/inspect_evals"
+        )
         broken["boundaries"][0]["authoritative_source"]["source_id"] = "uk/inspect-evals"
         self._with_resigned_bundle(broken)
         errors = adapter.validate_adapter_bundle(broken)
         self.assertTrue(
-            any("authoritative_source.source_url must equal contract url" in error for error in errors),
+            any(
+                "authoritative_source.source_url must equal contract url" in error
+                for error in errors
+            ),
             errors,
         )
 
@@ -385,12 +399,8 @@ class AgentharmSplitBindingTests(unittest.TestCase):
     # -- task ID hashes ------------------------------------------------------
 
     def test_task_id_hash_is_deterministic_and_domain_separated(self) -> None:
-        first = adapter.agentharm_task_id_hash(
-            "1-1", dataset_name="harmful", split="test_public"
-        )
-        again = adapter.agentharm_task_id_hash(
-            "1-1", dataset_name="harmful", split="test_public"
-        )
+        first = adapter.agentharm_task_id_hash("1-1", dataset_name="harmful", split="test_public")
+        again = adapter.agentharm_task_id_hash("1-1", dataset_name="harmful", split="test_public")
         self.assertEqual(first, again)
         self.assertRegex(first, r"^[0-9a-f]{64}$")
 
@@ -538,9 +548,7 @@ class AgentharmSplitBindingTests(unittest.TestCase):
             split_manifest=adapter.build_agentharm_split_manifest(self.root, "test_private"),
             verifier_identity=adapter.agentharm_verifier_identity(self.package_root),
             heldout_availability=adapter.check_heldout_split_available(self.root),
-            run=self._run(
-                label="harness_validation", is_model_score=False, raw_score=1.0
-            ),
+            run=self._run(label="harness_validation", is_model_score=False, raw_score=1.0),
         )
         self.assertIsNone(receipt["score"])
         self.assertEqual("BLOCKED", receipt["status"])
@@ -597,9 +605,7 @@ class AgentharmSplitBindingTests(unittest.TestCase):
     def test_emitter_raises_when_asked_to_fail_loudly(self) -> None:
         with self.assertRaises(adapter.HeldoutSplitUnavailable):
             adapter.emit_agentharm_score(
-                split_manifest=adapter.build_agentharm_split_manifest(
-                    self.root, "test_private"
-                ),
+                split_manifest=adapter.build_agentharm_split_manifest(self.root, "test_private"),
                 verifier_identity=adapter.agentharm_verifier_identity(self.package_root),
                 heldout_availability=adapter.check_heldout_split_available(self.root),
                 run=self._run(),
@@ -614,13 +620,147 @@ class AgentharmSplitBindingTests(unittest.TestCase):
             heldout_availability=adapter.check_heldout_split_available(self.root),
             run=self._run(),
         )
-        self.assertEqual([], receipt["blockers"])
-        self.assertEqual("COMPLETE", receipt["status"])
-        self.assertTrue(receipt["is_model_score"])
-        self.assertEqual(0.37, receipt["score"])
+        self.assertIn("verified provider grant is required", "; ".join(receipt["blockers"]))
+        self.assertEqual("BLOCKED", receipt["status"])
+        self.assertFalse(receipt["is_model_score"])
+        self.assertIsNone(receipt["score"])
         self.assertEqual("test_private", receipt["split"])
         self.assertEqual(3, receipt["task_count"])
 
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AgentHarmProviderGrantTests(unittest.TestCase):
+    TEST_ROOT = {
+        "schema_version": adapter.AGENTHARM_TRUST_ROOT_SCHEMA, "lane": "E10",
+        "suite_id": adapter.AGENTHARM_SUITE_ID, "provider": "AISI", "key_id": "aisi-test-e10",
+        "public_key_hex": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+    }
+    @staticmethod
+    def _sign(payload: dict, private_hex: str = "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60") -> dict:
+        signed = dict(payload)
+        signed["signature_key_id"] = AgentHarmProviderGrantTests.TEST_ROOT["key_id"]
+        signed["signature"] = base64.b64encode(
+            Ed25519PrivateKey.from_private_bytes(bytes.fromhex(private_hex)).sign(
+                adapter.canonical_json(signed).encode()
+            )
+        ).decode()
+        return signed
+
+    def _grant(self) -> dict:
+        return self._sign(
+            {
+                "schema_version": adapter.AGENTHARM_GRANT_SCHEMA,
+                "suite_id": "agentharm_eval",
+                "provider": "AISI",
+                "issued_at": "2025-08-30T00:00:00Z",
+                "expires_at": "2030-08-30T00:00:00Z",
+                "grant_id": "g1",
+                "license": {"approved": True, "receipt_id": "l1", "sha256": "a" * 64},
+                "private_split": {
+                    "dataset_revision": "b" * 40,
+                    "manifest_sha256": "c" * 64,
+                    "task_count": 3,
+                    "files": list(adapter.AGENTHARM_HELDOUT_FILES),
+                },
+                "runtime": {
+                    "revision": "d" * 40,
+                    "container_digest": "e" * 64,
+                    "endpoint": "https://provider.example/run",
+                },
+                "verifier": {
+                    "approval_id": "v1",
+                    "revision": "f" * 40,
+                    "sha256": "1" * 64,
+                    "command": ["provider-grade"],
+                },
+                "execution": {
+                    "provider_approved": True,
+                    "receipt_url": "https://provider.example/receipt",
+                },
+            }
+        )
+
+    def test_only_trusted_signed_result_can_complete(self) -> None:
+        grant = self._grant()
+        with self.assertRaises(adapter.HeldoutSplitUnavailable):
+            adapter.validate_agentharm_provider_grant(grant)
+        request = adapter.build_agentharm_execution_request(
+            grant, budget_receipt={"authorized": True, "receipt_id": "budget-1"}, trust_root=self.TEST_ROOT
+        )
+        verified = adapter.validate_agentharm_provider_grant(grant, trust_root=self.TEST_ROOT)
+        result = self._sign(
+            {
+                "schema_version": adapter.AGENTHARM_RESULT_SCHEMA,
+                "suite_id": adapter.AGENTHARM_SUITE_ID,
+                "provider": "AISI",
+                "issued_at": grant["issued_at"],
+                "expires_at": grant["expires_at"],
+                "grant_fingerprint": verified["grant_fingerprint"],
+                "request_fingerprint": adapter.sha256_text(adapter.canonical_json(request)),
+                "private_manifest_sha256": grant["private_split"]["manifest_sha256"],
+                "task_count": 3,
+                "verifier_sha256": grant["verifier"]["sha256"],
+                "runtime_digest": grant["runtime"]["container_digest"],
+                "deployment_revision": grant["runtime"]["revision"],
+                "model_revision": adapter.MODEL_REVISION,
+                "artifact_sha256": "2" * 64,
+                "metric": "agentharm_safety_score",
+                "score": 0.5,
+                "completed_at": "2026-08-01T00:00:00Z",
+            }
+        )
+        receipt = adapter.collect_agentharm_signed_result(grant, request, result, trust_root=self.TEST_ROOT)
+        self.assertEqual(receipt["status"], "COMPLETE")
+        self.assertEqual(receipt["score"], 0.5)
+
+        forged = self._sign(
+            {key: value for key, value in result.items() if key not in {"signature", "signature_key_id"}},
+            "4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb",
+        )
+        with self.assertRaises(adapter.HeldoutSplitUnavailable):
+            adapter.collect_agentharm_signed_result(grant, request, forged, trust_root=self.TEST_ROOT)
+
+    def test_rejects_tampered_or_public_split_grant(self) -> None:
+        grant = {
+            "schema_version": adapter.AGENTHARM_GRANT_SCHEMA,
+            "suite_id": "agentharm_eval",
+            "provider": "AISI",
+            "issued_at": "2025-08-30T00:00:00Z",
+            "expires_at": "2030-08-30T00:00:00Z",
+            "grant_id": "g1",
+            "license": {"approved": True, "receipt_id": "l1", "sha256": "a" * 64},
+            "private_split": {
+                "dataset_revision": "b" * 40,
+                "manifest_sha256": "c" * 64,
+                "task_count": 3,
+                "files": list(adapter.AGENTHARM_HELDOUT_FILES),
+            },
+            "runtime": {
+                "revision": "d" * 40,
+                "container_digest": "e" * 64,
+                "endpoint": "https://provider.example/run",
+            },
+            "verifier": {
+                "approval_id": "v1",
+                "revision": "f" * 40,
+                "sha256": "1" * 64,
+                "command": ["provider-grade"],
+            },
+            "execution": {
+                "provider_approved": True,
+                "receipt_url": "https://provider.example/receipt",
+            },
+        }
+        grant["signature_key_id"] = self.TEST_ROOT["key_id"]
+        grant["signature"] = base64.b64encode(
+            Ed25519PrivateKey.from_private_bytes(
+                bytes.fromhex("9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60")
+            ).sign(adapter.canonical_json(grant).encode())
+        ).decode()
+        self.assertEqual(adapter.validate_agentharm_provider_grant(grant, trust_root=self.TEST_ROOT)["grant_id"], "g1")
+        grant["private_split"]["files"] = ["benchmark/chat_public_test.json"]
+        with self.assertRaises(adapter.HeldoutSplitUnavailable):
+            adapter.validate_agentharm_provider_grant(grant, trust_root=self.TEST_ROOT)

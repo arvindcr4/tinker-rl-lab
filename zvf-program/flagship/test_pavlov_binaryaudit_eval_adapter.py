@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import copy
+import io
 import json
+import subprocess
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 from flagship.pavlov_binaryaudit_eval_adapter import (
@@ -30,11 +33,7 @@ from flagship.pavlov_binaryaudit_eval_adapter import (
 
 
 REPO_TASKS_ROOT = (
-    Path(__file__).resolve().parents[2]
-    / "outputs"
-    / "e7_binaryaudit"
-    / "BinaryAudit"
-    / "tasks"
+    Path(__file__).resolve().parents[2] / "outputs" / "e7_binaryaudit" / "BinaryAudit" / "tasks"
 )
 PINNED_REVISION = "cbd86c7cd8519f01ae6b7ad7db7fdb653ea54f23"
 
@@ -153,8 +152,12 @@ def _receipt(role: str = PRIMARY_EVAL) -> dict[str, object]:
 class HashAndBoundaryTests(unittest.TestCase):
     def test_hashes_and_task_ids_are_deterministic(self) -> None:
         boundary = _boundary()
-        self.assertEqual(boundary["task_id_manifest_sha256"], task_id_manifest_sha256(boundary["task_ids"]))
-        self.assertEqual(boundary["split_manifest_sha256"], split_manifest_sha256(boundary["split_manifest"]))
+        self.assertEqual(
+            boundary["task_id_manifest_sha256"], task_id_manifest_sha256(boundary["task_ids"])
+        )
+        self.assertEqual(
+            boundary["split_manifest_sha256"], split_manifest_sha256(boundary["split_manifest"])
+        )
         first = deterministic_task_id("raw-1", SOURCE_REVISION)
         second = deterministic_task_id("raw-1", SOURCE_REVISION)
         self.assertEqual(first, second)
@@ -171,16 +174,24 @@ class HashAndBoundaryTests(unittest.TestCase):
     def test_mutable_revision_license_and_hash_drift_fail_closed(self) -> None:
         for mutation, expected in (
             (lambda item: item["source_identity"].update(revision="main"), "mutable tag/branch"),
-            (lambda item: item["source_identity"].update(license_text_sha256="not-a-hash"), "license_text_sha256"),
+            (
+                lambda item: item["source_identity"].update(license_text_sha256="not-a-hash"),
+                "license_text_sha256",
+            ),
             (lambda item: item.update(task_id_manifest_sha256="0" * 64), "does not match task_ids"),
-            (lambda item: item.update(split_manifest_sha256="0" * 64), "does not match split_manifest"),
+            (
+                lambda item: item.update(split_manifest_sha256="0" * 64),
+                "does not match split_manifest",
+            ),
         ):
             with self.subTest(expected=expected):
                 item = _boundary()
                 mutation(item)
                 with self.assertRaises(BinaryAuditBoundaryError) as raised:
                     validate_binaryaudit_boundary(item)
-                self.assertTrue(any(expected in message for message in raised.exception.diagnostics))
+                self.assertTrue(
+                    any(expected in message for message in raised.exception.diagnostics)
+                )
 
     def test_related_benchmarks_and_xlam_are_not_substitutes(self) -> None:
         for mutation in (
@@ -198,7 +209,9 @@ class HashAndBoundaryTests(unittest.TestCase):
         item["split_manifest"]["primary_eval"] = ["task-102", "task-101"]  # type: ignore[index]
         with self.assertRaises(BinaryAuditBoundaryError) as raised:
             validate_binaryaudit_boundary(item)
-        self.assertTrue(any("lexically sorted" in message for message in raised.exception.diagnostics))
+        self.assertTrue(
+            any("lexically sorted" in message for message in raised.exception.diagnostics)
+        )
 
         item = _boundary()
         item["split_manifest"]["primary_eval"] = ["task-001", "task-101"]  # type: ignore[index]
@@ -206,7 +219,9 @@ class HashAndBoundaryTests(unittest.TestCase):
         item["task_id_manifest_sha256"] = task_id_manifest_sha256(item["task_ids"])  # type: ignore[arg-type]
         with self.assertRaises(BinaryAuditBoundaryError) as raised:
             validate_binaryaudit_boundary(item)
-        self.assertTrue(any("overlapping IDs" in message for message in raised.exception.diagnostics))
+        self.assertTrue(
+            any("overlapping IDs" in message for message in raised.exception.diagnostics)
+        )
 
 
 class ReceiptBoundaryTests(unittest.TestCase):
@@ -234,7 +249,9 @@ class ReceiptBoundaryTests(unittest.TestCase):
         del receipt["heldout_proof"]
         with self.assertRaises(BinaryAuditBoundaryError) as raised:
             validate_binaryaudit_result_receipt(_boundary(), receipt)
-        self.assertTrue(any("requires heldout_proof" in message for message in raised.exception.diagnostics))
+        self.assertTrue(
+            any("requires heldout_proof" in message for message in raised.exception.diagnostics)
+        )
 
     def test_related_receipt_and_wrong_split_are_rejected(self) -> None:
         for mutation, expected in (
@@ -246,15 +263,23 @@ class ReceiptBoundaryTests(unittest.TestCase):
                 receipt = _receipt()
                 mutation(receipt)
                 if "task_ids" in receipt:
-                    receipt["task_id_manifest_sha256"] = task_id_manifest_sha256(receipt["task_ids"])
+                    receipt["task_id_manifest_sha256"] = task_id_manifest_sha256(
+                        receipt["task_ids"]
+                    )
                 with self.assertRaises(BinaryAuditBoundaryError) as raised:
                     validate_binaryaudit_result_receipt(_boundary(), receipt)
-                self.assertTrue(any(expected in message for message in raised.exception.diagnostics))
+                self.assertTrue(
+                    any(expected in message for message in raised.exception.diagnostics)
+                )
 
     def test_missing_or_unsafe_tracking_receipts_fail_closed(self) -> None:
         for key, mutation, expected in (
             ("wandb", lambda item: item["wandb"].update(mode="offline"), "W&B receipt mode"),
-            ("tinker", lambda item: item["tinker"].update(status="failed"), "Tinker receipt status"),
+            (
+                "tinker",
+                lambda item: item["tinker"].update(status="failed"),
+                "Tinker receipt status",
+            ),
             ("hf", lambda item: item["hf"].update(visibility="public"), "visibility"),
         ):
             with self.subTest(key=key):
@@ -262,13 +287,17 @@ class ReceiptBoundaryTests(unittest.TestCase):
                 mutation(receipt)
                 with self.assertRaises(BinaryAuditBoundaryError) as raised:
                     validate_binaryaudit_result_receipt(_boundary(), receipt)
-                self.assertTrue(any(expected in message for message in raised.exception.diagnostics))
+                self.assertTrue(
+                    any(expected in message for message in raised.exception.diagnostics)
+                )
 
         receipt = _receipt()
         del receipt["hf"]
         with self.assertRaises(BinaryAuditBoundaryError) as raised:
             validate_binaryaudit_result_receipt(_boundary(), receipt)
-        self.assertTrue(any("missing Hugging Face" in message for message in raised.exception.diagnostics))
+        self.assertTrue(
+            any("missing Hugging Face" in message for message in raised.exception.diagnostics)
+        )
 
     def test_native_artifact_and_verifier_drift_is_rejected(self) -> None:
         receipt = _receipt()
@@ -283,17 +312,27 @@ class ReceiptBoundaryTests(unittest.TestCase):
         self.assertIn("verifier receipt revision differs", diagnostics)
 
 
-def _write_task(root: Path, name: str, *, marker: str | None = None, pytest_verifier: bool = False,
-                script: str = "echo 1 > /logs/verifier/reward.txt\n") -> Path:
+def _write_task(
+    root: Path,
+    name: str,
+    *,
+    marker: str | None = None,
+    pytest_verifier: bool = False,
+    script: str = "echo 1 > /logs/verifier/reward.txt\n",
+) -> Path:
     task = root / name
     (task / "tests").mkdir(parents=True)
     (task / "environment").mkdir()
     (task / "instruction.md").write_text(f"# {name}\n", encoding="utf-8")
     (task / "task.toml").write_text('version = "1.0"\n', encoding="utf-8")
-    (task / "environment" / "Dockerfile").write_text("FROM binaryaudit-base:latest\n", encoding="utf-8")
+    (task / "environment" / "Dockerfile").write_text(
+        "FROM binaryaudit-base:latest\n", encoding="utf-8"
+    )
     (task / "tests" / "test.sh").write_text(script, encoding="utf-8")
     if pytest_verifier:
-        (task / "tests" / "test_outputs.py").write_text("def test_x():\n    pass\n", encoding="utf-8")
+        (task / "tests" / "test_outputs.py").write_text(
+            "def test_x():\n    pass\n", encoding="utf-8"
+        )
     if marker:
         (task / marker).write_text("upstream status\n", encoding="utf-8")
     return task
@@ -303,9 +342,14 @@ class BinaryAuditSplitManifestTests(unittest.TestCase):
     def _synthetic_root(self, stack: tempfile.TemporaryDirectory) -> Path:
         root = Path(stack.name) / "tasks"
         root.mkdir()
-        _write_task(root, "lighttpd-backdoor-detect",
-                    script='EXPECTED_FUNC_START="0x1"\nEXPECTED_FUNC_END="0x2"\n')
-        _write_task(root, "lighttpd-backdoor-detect-negative", script='if [ "$A" = "NO" ]; then :; fi\n')
+        _write_task(
+            root,
+            "lighttpd-backdoor-detect",
+            script='EXPECTED_FUNC_START="0x1"\nEXPECTED_FUNC_END="0x2"\n',
+        )
+        _write_task(
+            root, "lighttpd-backdoor-detect-negative", script='if [ "$A" = "NO" ]; then :; fi\n'
+        )
         _write_task(root, "dnsmasq-backdoor-detect", script='EXPECTED_FUNC_START="0x1"\n')
         _write_task(root, "sozu-timebomb-multiple-binaries-detect", pytest_verifier=True)
         _write_task(root, "caddy-backdoor-simple-detect")
@@ -324,7 +368,9 @@ class BinaryAuditSplitManifestTests(unittest.TestCase):
             self.assertEqual(first, hash_task_directory(task))
             self.assertEqual(first["file_count"], 4)
             (task / "instruction.md").write_text("# changed\n", encoding="utf-8")
-            self.assertNotEqual(first["content_sha256"], hash_task_directory(task)["content_sha256"])
+            self.assertNotEqual(
+                first["content_sha256"], hash_task_directory(task)["content_sha256"]
+            )
 
     def test_hash_task_directory_rejects_missing_and_empty(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -339,17 +385,25 @@ class BinaryAuditSplitManifestTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             stack = type("S", (), {"name": tmp})()
             root = self._synthetic_root(stack)  # type: ignore[arg-type]
-            records = {r["raw_task_id"]: r for r in enumerate_binaryaudit_tasks(root, PINNED_REVISION)}
+            records = {
+                r["raw_task_id"]: r for r in enumerate_binaryaudit_tasks(root, PINNED_REVISION)
+            }
             self.assertEqual(len(records), 9)
 
             self.assertEqual(records["dnsmasq-backdoor-detect"]["target"], "dnsmasq")
             self.assertEqual(records["dnsmasq-backdoor-detect"]["target_language"], "C")
             self.assertEqual(records["dnsmasq-backdoor-detect"]["category"], "backdoor_detect")
-            self.assertEqual(records["dnsmasq-backdoor-detect"]["verifier_kind"], "bash_address_range")
+            self.assertEqual(
+                records["dnsmasq-backdoor-detect"]["verifier_kind"], "bash_address_range"
+            )
             self.assertEqual(records["dnsmasq-backdoor-detect"]["split"], PRIMARY_EVAL)
 
-            self.assertEqual(records["lighttpd-backdoor-detect-negative"]["category"], "negative_control")
-            self.assertEqual(records["lighttpd-backdoor-detect-negative"]["verifier_kind"], "bash_exact_no")
+            self.assertEqual(
+                records["lighttpd-backdoor-detect-negative"]["category"], "negative_control"
+            )
+            self.assertEqual(
+                records["lighttpd-backdoor-detect-negative"]["verifier_kind"], "bash_exact_no"
+            )
 
             timebomb = records["sozu-timebomb-multiple-binaries-detect"]
             self.assertEqual(timebomb["category"], "timebomb")
@@ -364,12 +418,16 @@ class BinaryAuditSplitManifestTests(unittest.TestCase):
                 ("pingora-backdoor-detect", "STATUS_NOT_FINISHED.md"),
             ):
                 self.assertEqual(records[quarantined]["split"], NOT_SCORED_SPLIT)
-                self.assertEqual(records[quarantined]["split_rule"], "R1_upstream_quarantine_marker")
+                self.assertEqual(
+                    records[quarantined]["split_rule"], "R1_upstream_quarantine_marker"
+                )
                 self.assertEqual(records[quarantined]["upstream_status_markers"], [marker])
                 self.assertFalse(records[quarantined]["scored"])
 
             # Quarantine outranks the language rule: caddy is Go but is not held out.
-            self.assertEqual(records["caddy-backdoor-simple-detect"]["split"], RECEIPT_PROVEN_HELDOUT)
+            self.assertEqual(
+                records["caddy-backdoor-simple-detect"]["split"], RECEIPT_PROVEN_HELDOUT
+            )
 
     def test_task_ids_are_revision_bound(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -380,7 +438,9 @@ class BinaryAuditSplitManifestTests(unittest.TestCase):
             here = enumerate_binaryaudit_tasks(root, PINNED_REVISION)[0]["task_id"]
             there = enumerate_binaryaudit_tasks(root, other)[0]["task_id"]
             self.assertNotEqual(here, there)
-            self.assertEqual(here, deterministic_task_id("dnsmasq-backdoor-detect", PINNED_REVISION))
+            self.assertEqual(
+                here, deterministic_task_id("dnsmasq-backdoor-detect", PINNED_REVISION)
+            )
 
     def test_enumeration_rejects_unknown_target_family(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -407,7 +467,9 @@ class BinaryAuditSplitManifestTests(unittest.TestCase):
             manifest = build_binaryaudit_split_manifest(root, PINNED_REVISION)
 
             self.assertEqual(manifest["schema_version"], SPLIT_MANIFEST_SCHEMA_VERSION)
-            self.assertEqual(manifest["manifest_provenance"], "lane_constructed_not_upstream_official")
+            self.assertEqual(
+                manifest["manifest_provenance"], "lane_constructed_not_upstream_official"
+            )
 
             proof = manifest["disjointness_proof"]
             self.assertTrue(proof["pairwise_disjoint"])
@@ -451,8 +513,26 @@ class BinaryAuditSplitManifestTests(unittest.TestCase):
 class BinaryAuditPinnedCheckoutTests(unittest.TestCase):
     """Pins the real 46-task manifest so an upstream change is loud, not silent."""
 
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls._pinned_checkout = tempfile.TemporaryDirectory()
+        repository = REPO_TASKS_ROOT.parent
+        archive = subprocess.run(
+            ["git", "archive", "--format=zip", PINNED_REVISION, "tasks"],
+            cwd=repository,
+            check=True,
+            capture_output=True,
+        ).stdout
+        with zipfile.ZipFile(io.BytesIO(archive)) as bundle:
+            bundle.extractall(cls._pinned_checkout.name)
+        cls.tasks_root = Path(cls._pinned_checkout.name) / "tasks"
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls._pinned_checkout.cleanup()
+
     def test_pinned_revision_yields_forty_six_disjoint_tasks(self) -> None:
-        manifest = build_binaryaudit_split_manifest(REPO_TASKS_ROOT, PINNED_REVISION)
+        manifest = build_binaryaudit_split_manifest(self.tasks_root, PINNED_REVISION)
         proof = manifest["disjointness_proof"]
         self.assertEqual(proof["total_tasks"], 46)
         self.assertEqual(
@@ -475,7 +555,7 @@ class BinaryAuditPinnedCheckoutTests(unittest.TestCase):
         )
 
     def test_quarantined_tasks_are_never_scored(self) -> None:
-        manifest = build_binaryaudit_split_manifest(REPO_TASKS_ROOT, PINNED_REVISION)
+        manifest = build_binaryaudit_split_manifest(self.tasks_root, PINNED_REVISION)
         quarantined = {
             record["raw_task_id"]
             for record in manifest["tasks"]
@@ -492,8 +572,12 @@ class BinaryAuditPinnedCheckoutTests(unittest.TestCase):
         if not path.is_file():
             self.skipTest("split_manifest.json not generated yet")
         on_disk = json.loads(path.read_text(encoding="utf-8"))
-        fresh = build_binaryaudit_split_manifest(REPO_TASKS_ROOT, PINNED_REVISION)
-        for key in ("task_id_manifest_sha256", "split_manifest_sha256", "task_content_manifest_sha256"):
+        fresh = build_binaryaudit_split_manifest(self.tasks_root, PINNED_REVISION)
+        for key in (
+            "task_id_manifest_sha256",
+            "split_manifest_sha256",
+            "task_content_manifest_sha256",
+        ):
             self.assertEqual(on_disk[key], fresh[key])
         self.assertEqual(on_disk["split_manifest"], fresh["split_manifest"])
 

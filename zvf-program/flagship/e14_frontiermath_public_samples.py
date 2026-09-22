@@ -31,13 +31,21 @@ import argparse
 import hashlib
 import json
 import re
+import os
+import base64
+from datetime import datetime, timezone
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 import sys
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Mapping
 
 SCHEMA_VERSION = "e14-frontiermath-public-samples-v1"
+HOSTED_OFFER_SCHEMA = "e14-frontiermath-hosted-offer-v1"
+HOSTED_REQUEST_SCHEMA = "e14-frontiermath-hosted-request-v1"
+HOSTED_RESULT_SCHEMA = "e14-frontiermath-hosted-result-v1"
+E14_TRUST_ROOT_SCHEMA = "provider-lane-trust-root-v1"
 MODULE_ID = "e14-frontiermath-public-sample-parser"
 
 # --------------------------------------------------------------------------
@@ -429,7 +437,9 @@ def analyze_transcript(path: str | Path) -> TranscriptFacts:
         identity=identity,
         sha256=sha256_file(path),
         message_count=len(messages),
-        assistant_turns=sum(1 for m in messages if isinstance(m, dict) and m.get("role") == "assistant"),
+        assistant_turns=sum(
+            1 for m in messages if isinstance(m, dict) and m.get("role") == "assistant"
+        ),
         user_turns=sum(1 for m in messages if isinstance(m, dict) and m.get("role") == "user"),
         harness_turn_kinds=dict(harness_kinds),
         code_block_count=code_blocks,
@@ -582,10 +592,7 @@ def compute_frontiermath_score(*_args: Any, **_kwargs: Any) -> float:
     and traceably instead of silently inventing one from the sample corpus.
     """
     raise ScoreProhibited(
-        "Refusing to emit a FrontierMath score. "
-        + ARTIFACT_DISCLAIMER
-        + " "
-        + NOT_A_SUBSTITUTE
+        "Refusing to emit a FrontierMath score. " + ARTIFACT_DISCLAIMER + " " + NOT_A_SUBSTITUTE
     )
 
 
@@ -684,6 +691,261 @@ def build_blocked_receipt(
 # --------------------------------------------------------------------------
 
 
+def _offer_hash(value: dict[str, Any], field: str) -> str:
+    return hashlib.sha256(
+        json.dumps(
+            {k: v for k, v in value.items() if k != field}, sort_keys=True, separators=(",", ":")
+        ).encode()
+    ).hexdigest()
+
+
+def _parse_canonical_utc(value: Any, *, field: str) -> datetime:
+    """Accept only canonical UTC instants, never offsets or ambiguous strings."""
+    if not isinstance(value, str) or not re.fullmatch(
+        r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", value
+    ):
+        raise ScoreProhibited(f"{field} must be canonical UTC")
+    try:
+        return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except ValueError as exc:
+        raise ScoreProhibited(f"{field} must be a valid UTC timestamp") from exc
+
+
+def _load_e14_trust_root(trust_root: Mapping[str, Any] | str | Path | None) -> dict[str, str]:
+    try:
+        raw = json.loads(Path(trust_root).read_text()) if isinstance(trust_root, (str, Path)) else trust_root
+        required = {"schema_version", "lane", "suite_id", "provider", "key_id", "public_key_hex"}
+        if not isinstance(raw, Mapping) or set(raw) != required or not all(isinstance(raw[key], str) for key in required):
+            raise ValueError("trust-root schema")
+        root = {key: str(value) for key, value in raw.items()}
+        if (root["schema_version"], root["lane"], root["suite_id"], root["provider"]) != (
+            E14_TRUST_ROOT_SCHEMA, "E14", "frontiermath_eval", "Epoch AI"
+        ) or not root["key_id"] or not re.fullmatch(r"[0-9a-f]{64}", root["public_key_hex"]):
+            raise ValueError("trust-root identity")
+        Ed25519PublicKey.from_public_bytes(bytes.fromhex(root["public_key_hex"]))
+        root["document_sha256"] = sha256_bytes(canonical_json(raw).encode())
+        root["key_fingerprint"] = sha256_bytes(bytes.fromhex(root["public_key_hex"]))
+        return root
+    except Exception as exc:
+        raise ScoreProhibited("explicit valid E14 provider trust root is required") from exc
+
+
+def canonical_json(value: Any) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"))
+
+
+def _verify_epoch_signature(
+    value: dict[str, Any], trust_root: Mapping[str, Any] | str | Path | None
+) -> dict[str, str]:
+    try:
+        root = _load_e14_trust_root(trust_root)
+        if value.get("signature_key_id") != root["key_id"]:
+            raise ValueError
+        Ed25519PublicKey.from_public_bytes(bytes.fromhex(root["public_key_hex"])).verify(
+            base64.b64decode(str(value["signature"]), validate=True),
+            json.dumps(
+                {k: v for k, v in value.items() if k != "signature"},
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode(),
+        )
+        return root
+    except Exception as exc:
+        raise ScoreProhibited("Epoch trust-root signature is invalid") from exc
+
+
+def validate_hosted_evaluation_offer(
+    offer: dict[str, Any], *, trust_root: Mapping[str, Any] | str | Path | None = None
+) -> dict[str, Any]:
+    """Validate an Epoch-hosted offer; never accepts private problems locally."""
+    required = {
+        "schema_version",
+        "suite_id",
+        "provider",
+        "offer_id",
+        "issued_at",
+        "expires_at",
+        "methodology_url",
+        "model_access",
+        "cost",
+        "terms",
+        "result_delivery",
+        "metric",
+        "expected_full_suite_task_count",
+        "signature",
+        "signature_key_id",
+    }
+    if (
+        set(offer) != required
+        or offer.get("schema_version") != HOSTED_OFFER_SCHEMA
+        or offer.get("suite_id") != "frontiermath_eval"
+        or offer.get("provider") != "Epoch AI"
+        or not isinstance(offer.get("offer_id"), str)
+        or not offer["offer_id"]
+    ):
+        raise ScoreProhibited("invalid hosted FrontierMath offer")
+    if not isinstance(offer.get("signature"), str) or not offer["signature"]:
+        raise ScoreProhibited("offer signature is invalid")
+    root = _verify_epoch_signature(offer, trust_root)
+    issued = _parse_canonical_utc(offer["issued_at"], field="offer.issued_at")
+    expires = _parse_canonical_utc(offer["expires_at"], field="offer.expires_at")
+    if issued > datetime.now(timezone.utc) or expires <= datetime.now(timezone.utc):
+        raise ScoreProhibited("offer validity window is invalid")
+    metric = offer["metric"]
+    if (
+        not isinstance(metric, dict)
+        or set(metric) != {"name", "lower", "upper", "direction"}
+        or not isinstance(metric["lower"], (int, float))
+        or isinstance(metric["lower"], bool)
+        or not isinstance(metric["upper"], (int, float))
+        or isinstance(metric["upper"], bool)
+        or not isinstance(metric["name"], str)
+        or not metric["name"]
+        or not float("-inf") < float(metric["lower"]) <= float(metric["upper"]) < float("inf")
+        or metric["direction"] not in {"higher", "lower"}
+    ):
+        raise ScoreProhibited("offer metric bounds/direction are invalid")
+    if not all(
+        isinstance(offer[k], str) and offer[k].startswith("https://")
+        for k in ("methodology_url", "result_delivery")
+    ):
+        raise ScoreProhibited("offer URLs must be HTTPS")
+    if offer["model_access"] != {"mode": "hosted"}:
+        raise ScoreProhibited("offer must use the hosted-only access mode")
+    if set(offer["cost"]) != {"currency"} or not isinstance(offer["cost"]["currency"], str):
+        raise ScoreProhibited("offer cost schema is invalid")
+    if offer["terms"] != {"accepted": False}:
+        raise ScoreProhibited("offer terms schema is invalid")
+    expected_count = offer["expected_full_suite_task_count"]
+    if (
+        not isinstance(expected_count, int)
+        or isinstance(expected_count, bool)
+        or expected_count <= 0
+    ):
+        raise ScoreProhibited("offer expected_full_suite_task_count must be a positive integer")
+    data = dict(offer)
+    data["trust_root_sha256"] = root["document_sha256"]
+    data["trust_root_key_fingerprint"] = root["key_fingerprint"]
+    return data
+
+
+def build_hosted_evaluation_request(
+    offer: dict[str, Any], *, model_revision: str, budget_authorized: bool,
+    trust_root: Mapping[str, Any] | str | Path | None = None
+) -> dict[str, Any]:
+    data = validate_hosted_evaluation_offer(offer, trust_root=trust_root)
+    if (
+        not re.fullmatch(r"[0-9a-f]{40}|sha256:[0-9a-f]{64}", model_revision)
+        or budget_authorized is not True
+    ):
+        raise ScoreProhibited("immutable model revision and budget authorization are required")
+    request = {
+        "schema_version": HOSTED_REQUEST_SCHEMA,
+        "status": "PROVIDER_EXECUTION_REQUIRED",
+        "suite_id": "frontiermath_eval",
+        "offer_fingerprint": _offer_hash(data, "signature"),
+        "offer_key_id": data["signature_key_id"],
+        "trust_root_sha256": data["trust_root_sha256"],
+        "trust_root_key_fingerprint": data["trust_root_key_fingerprint"],
+        "model_revision": model_revision,
+        "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "private_dataset_requested": False,
+        "local_grader_requested": False,
+        "score": None,
+    }
+    request["request_fingerprint"] = _offer_hash(request, "request_fingerprint")
+    return request
+
+
+def collect_hosted_signed_result(
+    offer: dict[str, Any], request: dict[str, Any], result: dict[str, Any], *,
+    trust_root: Mapping[str, Any] | str | Path | None = None
+) -> dict[str, Any]:
+    data = validate_hosted_evaluation_offer(offer, trust_root=trust_root)
+    request_required = {
+        "schema_version", "status", "suite_id", "offer_fingerprint", "offer_key_id",
+        "trust_root_sha256", "trust_root_key_fingerprint",
+        "model_revision", "created_at", "private_dataset_requested", "local_grader_requested",
+        "score", "request_fingerprint",
+    }
+    if (
+        set(request) != request_required
+        or request.get("schema_version") != HOSTED_REQUEST_SCHEMA
+        or request.get("status") != "PROVIDER_EXECUTION_REQUIRED"
+        or request.get("suite_id") != "frontiermath_eval"
+        or request.get("offer_fingerprint") != _offer_hash(data, "signature")
+        or request.get("offer_key_id") != data["signature_key_id"]
+        or request.get("trust_root_sha256") != data["trust_root_sha256"]
+        or request.get("trust_root_key_fingerprint") != data["trust_root_key_fingerprint"]
+        or not re.fullmatch(r"[0-9a-f]{40}|sha256:[0-9a-f]{64}", str(request.get("model_revision")))
+        or request.get("private_dataset_requested") is not False
+        or request.get("local_grader_requested") is not False
+        or request.get("score") is not None
+        or request.get("request_fingerprint") != _offer_hash(request, "request_fingerprint")
+    ):
+        raise ScoreProhibited("request is not an exact immutable hosted request")
+    created = _parse_canonical_utc(request["created_at"], field="request.created_at")
+    required = {
+        "schema_version",
+        "offer_fingerprint",
+        "request_fingerprint",
+        "model_revision",
+        "methodology_url",
+        "metric_name",
+        "provider",
+        "completed_at",
+        "evaluated_task_count",
+        "score",
+        "signature",
+        "signature_key_id",
+    }
+    if (
+        set(result) != required
+        or result.get("schema_version") != HOSTED_RESULT_SCHEMA
+        or result.get("offer_fingerprint") != _offer_hash(data, "signature")
+        or result.get("request_fingerprint") != request["request_fingerprint"]
+        or result.get("model_revision") != request.get("model_revision")
+        or result.get("methodology_url") != data.get("methodology_url")
+        or result.get("metric_name") != data["metric"]["name"]
+        or result.get("provider") != "Epoch AI"
+        or not isinstance(result.get("evaluated_task_count"), int)
+        or isinstance(result.get("evaluated_task_count"), bool)
+        or result["evaluated_task_count"]
+        != data["expected_full_suite_task_count"]
+        or isinstance(result.get("score"), bool)
+        or not isinstance(result.get("score"), (int, float))
+        or not float("-inf") < float(result["score"]) < float("inf")
+        or not float(data["metric"]["lower"])
+        <= float(result["score"])
+        <= float(data["metric"]["upper"])
+        or not isinstance(result.get("signature"), str)
+        or not result["signature"]
+    ):
+        raise ScoreProhibited("invalid hosted signed result")
+    result_root = _verify_epoch_signature(result, trust_root)
+    if result_root["document_sha256"] != data["trust_root_sha256"]:
+        raise ScoreProhibited("result is not bound to the selected provider trust root")
+    completed = _parse_canonical_utc(result["completed_at"], field="result.completed_at")
+    issued = _parse_canonical_utc(data["issued_at"], field="offer.issued_at")
+    expires = _parse_canonical_utc(data["expires_at"], field="offer.expires_at")
+    if (
+        created < issued
+        or completed <= created
+        or completed > expires
+        or completed > datetime.now(timezone.utc)
+    ):
+        raise ScoreProhibited("result completion time is outside offer validity")
+    return {
+        "status": "COMPLETED",
+        "suite_id": "frontiermath_eval",
+        "provider_hosted": True,
+        "evaluated_task_count": result["evaluated_task_count"],
+        "score": result["score"],
+        "offer_fingerprint": result["offer_fingerprint"],
+        "signature": result["signature"],
+    }
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="e14_frontiermath_public_samples",
@@ -695,12 +957,14 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--samples-dir",
-        required=True,
+        required=False,
         help="directory holding the extracted sample_question_transcripts/*.jsonl",
     )
     parser.add_argument("--manifest-out", help="write the full manifest JSON here")
     parser.add_argument("--receipt-out", help="write the BLOCKED receipt JSON here")
-    parser.add_argument("--archive", help="path to frontiermath_public_samples.zip (hashed if given)")
+    parser.add_argument(
+        "--archive", help="path to frontiermath_public_samples.zip (hashed if given)"
+    )
     parser.add_argument("--recorded-at", default="", help="ISO date stamped on the receipt")
     parser.add_argument("--checkout", default=str(Path.cwd()), help="repo checkout path")
     parser.add_argument("--commit", default="", help="git commit recorded on the receipt")
@@ -709,11 +973,38 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="print the summary without the per-transcript facts array",
     )
+    parser.add_argument("--hosted-offer", type=Path)
+    parser.add_argument("--trust-root", type=Path)
+    parser.add_argument("--model-revision")
+    parser.add_argument("--budget-authorized", action="store_true")
+    parser.add_argument("--hosted-request-out", type=Path)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
+    if args.hosted_offer:
+        try:
+            if not args.model_revision or not args.hosted_request_out or not args.trust_root:
+                raise ScoreProhibited("hosted offer requires model revision, trust root, and output")
+            request = build_hosted_evaluation_request(
+                json.loads(args.hosted_offer.read_text(encoding="utf-8")),
+                model_revision=args.model_revision,
+                budget_authorized=args.budget_authorized,
+                trust_root=args.trust_root,
+            )
+            target = args.hosted_request_out
+            target.parent.mkdir(parents=True, exist_ok=True)
+            tmp = target.with_suffix(target.suffix + ".tmp")
+            tmp.write_text(json.dumps(request, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+            os.replace(tmp, target)
+            print(json.dumps(request))
+            return 0
+        except (OSError, ValueError, json.JSONDecodeError, ScoreProhibited) as exc:
+            print(json.dumps({"status": "BLOCKED", "score": None, "errors": [str(exc)]}))
+            return 2
+    if not args.samples_dir:
+        raise SystemExit("--samples-dir is required unless --hosted-offer is used")
     manifest = build_public_sample_manifest(args.samples_dir)
 
     archive_sha = sha256_file(args.archive) if args.archive else None

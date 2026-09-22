@@ -1,7 +1,9 @@
 # AgentHarm held-out split — access request to the UK AI Security Institute
 
-Prepared 2026-08-09 by lane E10. Send as-is once the three `[[ ]]` identity fields
-are filled.
+Prepared 2026-08-09 by lane E10. Sent 2026-08-24 as
+[AgentHarm discussion #9](https://huggingface.co/datasets/ai-safety-institute/AgentHarm/discussions/9)
+using the campaign identity and publication-with-review disclosure intent already
+recorded in the provider-request email campaign.
 
 ## Where to send it
 
@@ -152,8 +154,8 @@ Regards,
 
 ## Checklist before sending
 
-- [ ] Fill the three `[[ ]]` fields
-- [ ] Decide and state the disclosure intent in section 1
+- [x] Fill the three `[[ ]]` fields in the submitted discussion
+- [x] Decide and state the disclosure intent in section 1
 - [ ] Confirm you can honour the no-logging condition, or lean on option (d)
-- [ ] Record the thread/issue URL in `receipt_2026-08-09.json` under
+- [x] Record the thread/issue URL in the 2026-08-24 external-unblocking receipt under
       blocker `E10-HELDOUT-SPLIT` once sent

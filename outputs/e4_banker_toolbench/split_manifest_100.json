@@ -22,7 +22,7 @@
     "arxiv": "2604.11304"
   },
   "manifest_integrity": {
-    "tasks_jsonl_local_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/native-data/tasks.jsonl",
+    "tasks_jsonl_local_path": "/Users/arvind/Developer/agentic_repos/tinker-rl-lab/outputs/e4_banker_toolbench/official_repo_ff6db552/btb-data/tasks.jsonl",
     "tasks_jsonl_sha256": "18f132d929c898d319ea1cc229f523bd8bb799406c9c037355b8ceac6930199a",
     "tasks_jsonl_hf_lfs_oid": "18f132d929c898d319ea1cc229f523bd8bb799406c9c037355b8ceac6930199a",
     "tasks_jsonl_sha256_matches_hf_lfs_oid": true,

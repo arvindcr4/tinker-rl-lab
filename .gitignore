@@ -139,3 +139,4 @@ outputs/e14_frontiermath/public_samples/
 outputs/e14_frontiermath/*.zip
 outputs/e6_webbench/lane.*/
 outputs/e3_sdab/local_sprint_*/venv.*/
+.squad/

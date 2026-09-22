@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 import copy
+import base64
+import hashlib
 import io
 import json
 import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
+from datetime import datetime, timedelta, timezone
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
 from .pavlov_sdab_eval_adapter import (
     BENCHMARK_ID,
@@ -28,6 +33,7 @@ from .pavlov_sdab_eval_adapter import (
     build_split_manifest,
     canonical_json,
     ingest_task_bundle,
+    load_sdab_trust_root,
     main,
     newline_task_id_sha256,
     prove_split_disjointness,
@@ -41,6 +47,41 @@ from .eval_pavlov_sdab import task_ids_sha256, validate_native_manifest
 
 def _digest(character: str) -> str:
     return "sha256:" + character * 64
+
+
+_E3_TEST_PRIVATE_KEY_B64 = "Q2W8ar7/VibUaLbi8IDGRi6at7lq2gdb8d7BllvCsio="
+
+
+def _e3_test_trust_root() -> dict:
+    key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(_E3_TEST_PRIVATE_KEY_B64))
+    public_key = key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+    return {
+        "schema_version": "pavlov-provider-trust-root-v1",
+        "provider_id": "emulated-sdab",
+        "lane": "e3_sdab",
+        "suite_id": SUITE_ID,
+        "key_id": "e3-test-root-1",
+        "key_fingerprint": hashlib.sha256(public_key).hexdigest(),
+        "public_key_b64": base64.b64encode(public_key).decode("ascii"),
+        "signature_algorithm": "ed25519",
+        "issued_at": (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat(),
+        "expires_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+    }
+
+
+def _e3_provider_grant(binding: dict, trust_root: dict) -> dict:
+    grant = {
+        "lane": "e3_sdab", "suite_id": SUITE_ID,
+        "key_id": trust_root["key_id"],
+        "key_fingerprint": trust_root["key_fingerprint"],
+        "trust_root_sha256": sha256_digest(trust_root),
+        "signature_algorithm": "ed25519", "issued_at": (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat(),
+        "expires_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(), "binding": binding,
+    }
+    key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(_E3_TEST_PRIVATE_KEY_B64))
+    signed = json.dumps(grant, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    grant["detached_signature"] = base64.b64encode(key.sign(signed)).decode("ascii")
+    return grant
 
 
 def _boundary_spec(task_ids: tuple[str, ...] = ("task-001", "task-002")) -> dict:
@@ -766,6 +807,10 @@ class SdabBundleIngestTests(unittest.TestCase):
 
 
 class SdabRuntimeManifestTests(unittest.TestCase):
+    def test_missing_external_trust_root_fails_closed(self) -> None:
+        with self.assertRaises(SdabBundleError):
+            load_sdab_trust_root(None)
+
     def _authoritative_ingest(self) -> dict:
         return ingest_task_bundle(
             _shape_only_bundle(),
@@ -776,6 +821,8 @@ class SdabRuntimeManifestTests(unittest.TestCase):
         )
 
     def _manifest(self, ingest: dict) -> dict:
+        binding = {"suite_id": SUITE_ID, "lane": "e3_sdab", "benchmark_revision": ingest["bundle"]["revision"], "container_digest": _digest("b"), "environment_digest": _digest("1"), "verifier_sha256": "f" * 64, "reset_contract": "provider-native-reset-required", "license_id": "LicenseRef-SDAB-Evaluation"}
+        trust_root = _e3_test_trust_root()
         return build_runtime_manifest(
             ingest,
             container_digest=_digest("b"),
@@ -784,6 +831,8 @@ class SdabRuntimeManifestTests(unittest.TestCase):
             verifier_identity="emulated-native-sdab-verifier",
             adapter_entrypoint="emulated_sdab.runtime:create_runtime",
             disjointness_receipt="provider://sdab/split-receipt-1",
+            provider_grant=_e3_provider_grant(binding, trust_root),
+            trust_root=trust_root,
         )
 
     def test_runtime_manifest_is_accepted_by_the_runner_gate(self) -> None:
@@ -811,6 +860,64 @@ class SdabRuntimeManifestTests(unittest.TestCase):
         )
         with self.assertRaises(SdabBundleError):
             self._manifest(synthetic)
+
+    def test_cli_emits_runner_valid_runtime_manifest_only_for_authoritative_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            bundle_path = root / "bundle.json"
+            train_path = root / "train.json"
+            grant_path = root / "grant.json"
+            trust_root_path = root / "trust-root.json"
+            bundle_path.write_text(json.dumps(_shape_only_bundle()), encoding="utf-8")
+            train_path.write_text(json.dumps(_shape_only_train_ids()), encoding="utf-8")
+            trust_root = _e3_test_trust_root()
+            grant_path.write_text(json.dumps(_e3_provider_grant({"suite_id": SUITE_ID, "lane": "e3_sdab", "benchmark_revision": _shape_only_bundle()["revision"], "container_digest": _digest("b"), "environment_digest": _digest("1"), "verifier_sha256": "f" * 64, "reset_contract": "emulated.reset.v1", "license_id": "LicenseRef-SDAB-Evaluation"}, trust_root)), encoding="utf-8")
+            trust_root_path.write_text(json.dumps(trust_root), encoding="utf-8")
+            output = io.StringIO()
+            with redirect_stdout(output):
+                exit_code = main([
+                    "--bundle", str(bundle_path), "--train-task-ids", str(train_path),
+                    "--source-revision-digest", _digest("a"),
+                    "--container-digest", _digest("b"), "--runtime-manifest",
+                    "--environment-digest", _digest("1"), "--verifier-sha256", "f" * 64,
+                    "--verifier-identity", "emulated-native-sdab-verifier",
+                    "--adapter-entrypoint", "emulated_sdab.runtime:create_runtime",
+                    "--disjointness-receipt", "provider://sdab/split-receipt-1",
+                    "--reset-contract", "emulated.reset.v1",
+                    "--provider-grant", str(grant_path),
+                    "--trust-roots", str(trust_root_path),
+                ])
+            self.assertEqual(exit_code, 0)
+            manifest = json.loads(output.getvalue())["runtime_manifest"]
+            self.assertEqual(manifest["provider_runtime"]["reset_contract"], "emulated.reset.v1")
+            self.assertEqual(manifest["provider_runtime"]["grader_identity"], manifest["verifier_identity"])
+            self.assertEqual(validate_native_manifest(manifest, required_tasks=1)["task_count"], OFFICIAL_TASK_COUNT)
+
+    def test_cli_runtime_manifest_rejects_synthetic_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            bundle_path = root / "synthetic.json"
+            train_path = root / "train.json"
+            grant_path = root / "grant.json"
+            trust_root_path = root / "trust-root.json"
+            bundle_path.write_text(json.dumps(synthetic_bundle()), encoding="utf-8")
+            train_path.write_text(json.dumps(synthetic_train_task_ids()), encoding="utf-8")
+            grant_path.write_text(json.dumps({}), encoding="utf-8")
+            trust_root_path.write_text(json.dumps(_e3_test_trust_root()), encoding="utf-8")
+            output = io.StringIO()
+            with redirect_stdout(output):
+                exit_code = main([
+                    "--bundle", str(bundle_path), "--train-task-ids", str(train_path),
+                    "--mode", "harness_validation", "--runtime-manifest",
+                    "--container-digest", _digest("b"), "--environment-digest", _digest("1"),
+                    "--verifier-sha256", "f" * 64, "--verifier-identity", "emulated-native-sdab-verifier",
+                    "--adapter-entrypoint", "emulated_sdab.runtime:create_runtime",
+                    "--disjointness-receipt", "provider://sdab/split-receipt-1", "--reset-contract", "reset.v1",
+                    "--provider-grant", str(grant_path),
+                    "--trust-roots", str(trust_root_path),
+                ])
+            self.assertEqual(exit_code, 1)
+            self.assertIn("synthetic", json.loads(output.getvalue())["errors"][0])
 
 
 class SdabIngestReceiptTests(unittest.TestCase):

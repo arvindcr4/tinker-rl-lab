@@ -23,6 +23,7 @@ The module has two halves:
 from __future__ import annotations
 
 import argparse
+import base64
 import csv
 import hashlib
 import json
@@ -30,9 +31,12 @@ import math
 import re
 import statistics
 from collections import Counter
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 from urllib.parse import urlsplit
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 
 SCHEMA_VERSION = "pavlov-webbench-eval-boundary-v1"
@@ -53,6 +57,9 @@ WEBBENCH_RECEIPT_FIELDS = (
 RESULT_RECEIPT_FIELDS = ("wandb", "tinker", "hf")
 HEX40_RE = re.compile(r"^[0-9a-f]{40}$")
 HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
+WEBBENCH_GRANT_LANE = "e6_webbench"
+WEBBENCH_PROVIDER_ID = "halluminate-webbench"
+WEBBENCH_TRUST_ROOT_SCHEMA_VERSION = "pavlov-provider-trust-root-v1"
 
 # ---------------------------------------------------------------------------
 # Pinned public-dataset facts.  These describe the MIT-licensed task CSV only.
@@ -111,6 +118,55 @@ def sha256_hex(value: Any) -> str:
     """Hash canonical JSON, used for deterministic task/split manifests."""
 
     return hashlib.sha256(_canonical_json(value).encode("utf-8")).hexdigest()
+
+
+def load_webbench_trust_root(document: Any) -> dict[str, str]:
+    """Validate an externally installed, lane-scoped E6 Ed25519 trust root."""
+    if not isinstance(document, Mapping):
+        raise WebBenchDatasetError("E6 provider trust roots must be a JSON object")
+    data = dict(document)
+    required = {
+        "schema_version", "provider_id", "lane", "suite_id", "key_id",
+        "key_fingerprint", "public_key_b64", "signature_algorithm",
+        "issued_at", "expires_at",
+    }
+    if set(data) != required:
+        raise WebBenchDatasetError("E6 provider trust-root document has an invalid schema")
+    if (
+        data.get("schema_version") != WEBBENCH_TRUST_ROOT_SCHEMA_VERSION
+        or data.get("provider_id") != WEBBENCH_PROVIDER_ID
+        or data.get("lane") != WEBBENCH_GRANT_LANE
+        or data.get("suite_id") != WEBBENCH_SUITE_ID
+        or data.get("signature_algorithm") != "ed25519"
+        or not isinstance(data.get("key_id"), str)
+        or not data["key_id"].strip()
+        or not isinstance(data.get("key_fingerprint"), str)
+        or not re.fullmatch(r"[0-9a-f]{64}", data["key_fingerprint"])
+    ):
+        raise WebBenchDatasetError("E6 provider trust-root binding is invalid")
+    try:
+        public_key = base64.b64decode(data["public_key_b64"], validate=True)
+        issued = datetime.fromisoformat(str(data["issued_at"]).replace("Z", "+00:00"))
+        expires = datetime.fromisoformat(str(data["expires_at"]).replace("Z", "+00:00"))
+        now = datetime.now(timezone.utc)
+        if (
+            len(public_key) != 32
+            or issued.tzinfo is None
+            or expires.tzinfo is None
+            or issued > now
+            or expires <= now
+            or expires <= issued
+            or hashlib.sha256(public_key).hexdigest() != data["key_fingerprint"]
+        ):
+            raise ValueError
+    except (KeyError, TypeError, ValueError):
+        raise WebBenchDatasetError("E6 provider trust-root key or validity window is invalid") from None
+    return {
+        "trust_root_sha256": sha256_hex(data),
+        "key_id": data["key_id"],
+        "key_fingerprint": data["key_fingerprint"],
+        "public_key_b64": data["public_key_b64"],
+    }
 
 
 def task_ids_hash(task_ids: Sequence[str]) -> str:
@@ -453,6 +509,117 @@ def _validate_environment(manifest: Mapping[str, Any], blockers: list[dict[str, 
     return good
 
 
+def _validate_provider_access_grant(
+    manifest: Mapping[str, Any],
+    blockers: list[dict[str, Any]],
+    *,
+    trust_root: Mapping[str, Any] | None,
+) -> tuple[bool, dict[str, str] | None]:
+    """Require a provider-authenticated, immutable grant before readiness.
+
+    A non-empty ticket ID or an HTTPS link is only a claim.  A live grant must
+    bind this exact suite/revision/runtime/reset/verifier/write-scope tuple and
+    carry either a detached signature or a recomputable trusted digest.  The
+    one legacy exception is explicitly historical *and unlaunchable* evidence.
+    """
+    grant = manifest.get("provider_access_receipt")
+    if not isinstance(grant, Mapping):
+        _add(blockers, "provider_access_receipt_invalid", "WebBench requires an authenticated provider access receipt.", reason="not_object")
+        return False, None
+    data = dict(grant)
+    historical = data.get("historical") is True
+    if historical:
+        allowed = {"historical", "unlaunchable", "receipt_id", "issued_at", "provider_identity", "note"}
+        if set(data) - allowed or data.get("unlaunchable") is not True:
+            _add(blockers, "provider_access_receipt_invalid", "Historical provider evidence is accepted only when explicitly unlaunchable.", reason="historical_contract")
+            return False, None
+        if not isinstance(data.get("receipt_id"), str) or not data["receipt_id"].strip() or not isinstance(data.get("note"), str) or not data["note"].strip():
+            _add(blockers, "provider_access_receipt_invalid", "Historical evidence needs a stable receipt ID and explanatory note.", reason="historical_identity")
+            return False, None
+        return True, None
+    required = {"provider_identity", "issued_at", "binding", "write_scope", "receipt_id"}
+    if not required.issubset(data):
+        _add(blockers, "provider_access_receipt_invalid", "Provider access receipt is missing immutable identity, issue time, or binding fields.", reason="missing_fields")
+        return False, None
+    if data.get("historical") is not False or data.get("unlaunchable") is not False or not _strict_hex(data.get("receipt_id"), 40):
+        _add(blockers, "provider_access_receipt_invalid", "A live provider receipt must be explicitly launchable and use an immutable receipt ID.", reason="launchability")
+        return False, None
+    identity = data.get("provider_identity")
+    if not isinstance(identity, Mapping) or identity.get("provider_id") != "halluminate-webbench" or not _strict_hex(identity.get("key_id"), 40):
+        _add(blockers, "provider_access_receipt_invalid", "Provider identity must be the pinned Halluminate key identity.", reason="provider_identity")
+        return False, None
+    valid_url, reason = _authoritative_url(identity.get("url"), "github.com")
+    if not valid_url or "/Halluminate/" not in str(identity.get("url")):
+        _add(blockers, "provider_access_receipt_invalid", "Provider identity URL is not authoritative.", reason=reason)
+        return False, None
+    try:
+        issued = datetime.fromisoformat(str(data["issued_at"]).replace("Z", "+00:00"))
+        if issued.tzinfo is None:
+            raise ValueError
+    except ValueError:
+        _add(blockers, "provider_access_receipt_invalid", "Provider receipt issued_at must be timezone-aware ISO-8601.", reason="issued_at")
+        return False, None
+    try:
+        expires = datetime.fromisoformat(str(data.get("expires_at", "")).replace("Z", "+00:00"))
+        now = datetime.now(timezone.utc)
+        if expires.tzinfo is None or issued > now or expires <= now or expires <= issued:
+            raise ValueError
+    except ValueError:
+        _add(blockers, "provider_access_receipt_invalid", "Provider receipt must have non-expired, non-future issued/expires timestamps.", reason="time_window")
+        return False, None
+    environment = manifest.get("environment")
+    source = manifest.get("source")
+    verifier = environment.get("verifier_contract") if isinstance(environment, Mapping) else None
+    expected = {
+        "suite_id": WEBBENCH_SUITE_ID,
+        "lane": WEBBENCH_GRANT_LANE,
+        "revision": source.get("revision") if isinstance(source, Mapping) else None,
+        "container_digest": environment.get("container_digest") if isinstance(environment, Mapping) else None,
+        "runtime_digest": environment.get("runtime_digest") if isinstance(environment, Mapping) else None,
+        "verifier_revision": verifier.get("verifier_revision") if isinstance(verifier, Mapping) else None,
+    }
+    binding = data.get("binding")
+    if not isinstance(binding, Mapping) or any(binding.get(key) != value for key, value in expected.items()):
+        _add(blockers, "provider_access_receipt_invalid", "Provider receipt must bind suite, revision, container, runtime, and verifier exactly.", reason="binding")
+        return False, None
+    if not _strict_hex(binding.get("reset_contract_digest"), 64) or not _strict_hex(binding.get("write_scope_digest"), 64):
+        _add(blockers, "provider_access_receipt_invalid", "Provider receipt must bind reset and write-scope hashes.", reason="reset_or_scope")
+        return False, None
+    scope = data.get("write_scope")
+    if not isinstance(scope, Mapping) or not isinstance(scope.get("operations"), list) or not scope["operations"] or not isinstance(scope.get("allowed_domains"), list) or not scope["allowed_domains"]:
+        _add(blockers, "provider_access_receipt_invalid", "Provider receipt write scope must be explicit and non-empty.", reason="write_scope")
+        return False, None
+    if binding["write_scope_digest"] != sha256_hex(dict(scope)):
+        _add(blockers, "provider_access_receipt_invalid", "Provider receipt write scope digest does not recompute.", reason="write_scope_digest")
+        return False, None
+    try:
+        root = load_webbench_trust_root(trust_root)
+    except WebBenchDatasetError as exc:
+        _add(blockers, "provider_access_receipt_invalid", str(exc), reason="trust_root")
+        return False, None
+    if (
+        data.get("key_id") != root["key_id"]
+        or data.get("key_fingerprint") != root["key_fingerprint"]
+        or data.get("trust_root_sha256") != root["trust_root_sha256"]
+        or data.get("signature_algorithm") != "ed25519"
+    ):
+        _add(blockers, "provider_access_receipt_invalid", "Provider receipt does not bind the supplied E6 trust root.", reason="trust_root")
+        return False, None
+    signature = data.get("detached_signature")
+    if not isinstance(signature, str):
+        _add(blockers, "provider_access_receipt_invalid", "Provider receipt needs an Ed25519 detached signature.", reason="signature")
+        return False, None
+    signed = {key: value for key, value in data.items() if key != "detached_signature"}
+    try:
+        Ed25519PublicKey.from_public_bytes(
+            base64.b64decode(root["public_key_b64"], validate=True)
+        ).verify(base64.b64decode(signature, validate=True), _canonical_json(signed).encode("utf-8"))
+    except (InvalidSignature, ValueError, TypeError):
+        _add(blockers, "provider_access_receipt_invalid", "Provider receipt signature does not verify against the supplied E6 trust root.", reason="signature")
+        return False, None
+    return True, root
+
+
 def _validate_result_receipts(manifest: Mapping[str, Any], blockers: list[dict[str, Any]]) -> tuple[bool, bool]:
     """Return (any_result_material, all_result_receipts_valid)."""
 
@@ -519,7 +686,9 @@ def _scan_substitution_text(value: Any) -> bool:
     return False
 
 
-def validate_webbench_manifest(manifest: Any) -> dict[str, Any]:
+def validate_webbench_manifest(
+    manifest: Any, *, trust_root: Mapping[str, Any] | None = None
+) -> dict[str, Any]:
     """Validate a WebBench boundary without running or fabricating evaluation."""
 
     blockers: list[dict[str, Any]] = []
@@ -544,6 +713,9 @@ def validate_webbench_manifest(manifest: Any) -> dict[str, Any]:
     source_ok = _validate_source(manifest, blockers)
     tasks_ok = _validate_tasks_and_split(manifest, blockers)
     environment_ok = _validate_environment(manifest, blockers)
+    provider_access_ok, verified_root = _validate_provider_access_grant(
+        manifest, blockers, trust_root=trust_root
+    )
     provenance = manifest.get("receipts")
     provenance_complete = True
     if not isinstance(provenance, Mapping):
@@ -602,8 +774,15 @@ def validate_webbench_manifest(manifest: Any) -> dict[str, Any]:
             "source": source_ok,
             "tasks_and_split": tasks_ok,
             "environment": environment_ok,
+            "provider_access": provider_access_ok,
             "provenance_receipts_complete": provenance_complete,
         },
+        "provider_trust_root_sha256": (
+            verified_root["trust_root_sha256"] if verified_root else None
+        ),
+        "provider_trust_root_key_fingerprint": (
+            verified_root["key_fingerprint"] if verified_root else None
+        ),
         "zero_cost": True,
         "network_accessed": False,
         "paid_calls_executed": False,
@@ -1143,6 +1322,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, help="boundary manifest to validate")
     parser.add_argument(
+        "--trust-roots",
+        type=Path,
+        help="external lane-scoped E6 provider trust-root JSON document",
+    )
+    parser.add_argument(
         "--build-split",
         action="store_true",
         help="derive the offline task index, split manifest, and disjointness proof",
@@ -1187,7 +1371,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         report = _report(False, False, [{"code": "manifest_input_error", "message": str(exc), "details": {}}])
         print(json.dumps(report, indent=2, sort_keys=True))
         return 1
-    report = validate_webbench_manifest(manifest)
+    if args.trust_roots is None:
+        parser.error("--trust-roots is required when validating a WebBench manifest")
+    try:
+        trust_root = json.loads(args.trust_roots.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        report = _report(False, False, [{"code": "trust_root_input_error", "message": str(exc), "details": {}}])
+        print(json.dumps(report, indent=2, sort_keys=True))
+        return 1
+    report = validate_webbench_manifest(manifest, trust_root=trust_root)
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0 if report["boundary_valid"] else 1
 

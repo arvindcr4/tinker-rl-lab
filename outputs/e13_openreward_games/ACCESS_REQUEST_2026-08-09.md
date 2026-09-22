@@ -1,7 +1,15 @@
 # E13 — OpenReward game environments — access request
 
-**Prepared 2026-08-09. Not sent.** Sending it, creating an OpenReward account,
-and accepting the platform terms are the user's actions, not the agent's.
+**Status update (2026-08-24):** The provider request was sent to
+`hello@openreward.ai` on 2026-08-22. The self-serve sign-in flow is now staged at
+the Google account chooser. No OpenReward account has been created in this run,
+no platform terms have been accepted, no API key has been minted, and no spend
+has started.
+
+The user approved selecting `arvindcr4@gmail.com` on 2026-08-24. Google exposed
+that exact account but rejected automated input dispatch at the chooser, so the
+tab is marked for a one-click manual handoff. Verification will resume after
+that selection; API-key creation and spend remain outside this approval.
 
 ## Read this first: most of what E13 needs is already public
 
@@ -110,8 +118,8 @@ A short written confirmation is sufficient. No data transfer is required.
 The hosted path needs no approval — it is sign-up plus a key:
 
 1. Create an account at `https://openreward.ai/` and accept the platform terms.
-   **User action.** Sign-up is Clerk-hosted; the agent must not create accounts
-   or accept terms.
+   Sign-up is Clerk-hosted and requires explicit confirmation before the final
+   account-creation action.
 2. Mint an API key and export `OPENREWARD_API_KEY`.
 3. `orwd whoami` to confirm, then `orwd list -o json` for the authoritative
    environment list.

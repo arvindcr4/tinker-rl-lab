@@ -9,8 +9,8 @@
     "observed_state": "absent_at_pinned_revision",
     "proceeding_under": "outputs/_setup/LICENSE_RISK_ACCEPTANCE_2026-08-09.md"
   },
-  "receipt_sha256": "c6aa6573633c7870e6e4dd79226dd5bfe967b6ff9538db31c32829b359b6b5a5",
-  "recorded_at": "2026-08-16T09:20:00.578035Z",
+  "receipt_sha256": "d30b91554fbcedb21e33d2744a780ebedcb3143086edf4d5694d7882ef1c5933",
+  "recorded_at": "2026-08-22T05:47:17.492598Z",
   "remaining_external_inputs": [
     "an agent-model credential supported by Harbor, or a Tinker-compatible interactive agent bridge"
   ],

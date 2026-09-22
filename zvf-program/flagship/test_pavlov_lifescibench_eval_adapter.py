@@ -3,7 +3,17 @@
 from __future__ import annotations
 
 import copy
+import io
+import json
+import base64
+import hashlib
+import tempfile
 import unittest
+from contextlib import redirect_stdout
+from pathlib import Path
+from datetime import datetime, timedelta, timezone
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
 try:
     from flagship import pavlov_lifescibench_eval_adapter as e8
@@ -32,7 +42,65 @@ def _synthetic_ready_boundary() -> dict:
     value["task_manifest"] = [task]
     value["eval_split_manifest_hash"] = e8.task_manifest_hash([task])
     value["train_split_manifest_hash"] = "b" * 64
+    value["provider_package_contract"] = {
+        "package_sha256": "1" * 64,
+        "license_sha256": "2" * 64,
+        "grant_sha256": "3" * 64,
+        "container_digest": "4" * 64,
+        "runtime_digest": "5" * 64,
+        "verifier_revision": revision,
+        "deployment_attestation_sha256": "6" * 64,
+    }
     return value
+
+
+_E8_TEST_PRIVATE_KEY_B64 = "vhS+4MmwVhFK1IYloOm5YT9HzA+g1h9PhlAmgnueiWk="
+
+
+def _e8_test_trust_root() -> dict:
+    key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(_E8_TEST_PRIVATE_KEY_B64))
+    public_key = key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
+    return {
+        "schema_version": "pavlov-provider-trust-root-v1",
+        "provider_id": "openai-lifescibench",
+        "lane": "e8_lifescibench",
+        "suite_id": e8.SUITE_ID,
+        "key_id": "e8-test-root-1",
+        "key_fingerprint": hashlib.sha256(public_key).hexdigest(),
+        "public_key_b64": base64.b64encode(public_key).decode("ascii"),
+        "signature_algorithm": "ed25519",
+        "issued_at": (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat(),
+        "expires_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+    }
+
+
+def _provider_package(boundary: dict, trust_root: dict) -> dict:
+    contract = boundary["provider_package_contract"]
+    package = {
+        "schema_version": e8.PACKAGE_INTAKE_SCHEMA_VERSION,
+        "suite_id": e8.SUITE_ID,
+        "package_revision": "b" * 40,
+        "package_sha256": contract["package_sha256"],
+        "license_id": boundary["dataset"]["license_id"],
+        "license_sha256": contract["license_sha256"],
+        "grant_sha256": contract["grant_sha256"],
+        "boundary_sha256": e8.sha256_json(boundary),
+        "container_digest": contract["container_digest"],
+        "runtime_digest": contract["runtime_digest"],
+        "verifier_revision": contract["verifier_revision"],
+        "deployment_attestation": {
+            "provider_id": "openai-lifescibench",
+            "deployment_id": "provider-deployment-001",
+            "issued_at": "2026-08-30T00:00:00+00:00",
+            "attestation_sha256": contract["deployment_attestation_sha256"],
+        },
+    }
+    binding = {"suite_id": e8.SUITE_ID, "lane": "e8_lifescibench", "package_sha256": package["package_sha256"], "grant_sha256": package["grant_sha256"], "boundary_sha256": package["boundary_sha256"], "container_digest": package["container_digest"], "runtime_digest": package["runtime_digest"], "verifier_revision": package["verifier_revision"]}
+    grant = {"lane": "e8_lifescibench", "suite_id": e8.SUITE_ID, "key_id": trust_root["key_id"], "key_fingerprint": trust_root["key_fingerprint"], "trust_root_sha256": e8.sha256_json(trust_root), "signature_algorithm": "ed25519", "issued_at": (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat(), "expires_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(), "binding": binding}
+    key = Ed25519PrivateKey.from_private_bytes(base64.b64decode(_E8_TEST_PRIVATE_KEY_B64))
+    grant["detached_signature"] = base64.b64encode(key.sign(json.dumps(grant, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))).decode("ascii")
+    package["provider_grant"] = grant
+    return package
 
 
 def _synthetic_receipt() -> dict:
@@ -645,6 +713,46 @@ class LifeSciBenchLocalBuilderTests(unittest.TestCase):
             "train_split_manifest_hash",
         ):
             self.assertIn(expected, joined)
+
+    def test_provider_package_intake_and_hosted_request_are_scoreless_and_pinned(self) -> None:
+        boundary = _synthetic_ready_boundary()
+        trust_root = _e8_test_trust_root()
+        package = _provider_package(boundary, trust_root)
+        missing_root = e8.validate_provider_package_intake(package, boundary=boundary)
+        self.assertFalse(missing_root.ok)
+        result = e8.validate_provider_package_intake(package, boundary=boundary, trust_root=trust_root)
+        self.assertTrue(result.ok, result.errors)
+        request = e8.build_hosted_execution_request(package, boundary=boundary, trust_root=trust_root)
+        self.assertEqual(request["mode"], "hosted_submit")
+        self.assertIsNone(request["score"])
+        self.assertFalse(request["execution_performed"])
+        self.assertFalse(request["paid_calls_executed"])
+
+        package["grant_sha256"] = "f" * 64
+        rejected = e8.validate_provider_package_intake(package, boundary=boundary, trust_root=trust_root)
+        self.assertFalse(rejected.ok)
+        self.assertTrue(any("grant_sha256" in error for error in rejected.errors))
+
+    def test_package_intake_cli_never_submits_or_fabricates_score(self) -> None:
+        boundary = _synthetic_ready_boundary()
+        trust_root = _e8_test_trust_root()
+        package = _provider_package(boundary, trust_root)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            boundary_path = root / "boundary.json"
+            package_path = root / "package.json"
+            trust_root_path = root / "trust-root.json"
+            boundary_path.write_text(json.dumps(boundary), encoding="utf-8")
+            package_path.write_text(json.dumps(package), encoding="utf-8")
+            trust_root_path.write_text(json.dumps(trust_root), encoding="utf-8")
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = e8.main(["--boundary", str(boundary_path), "--intake-package", str(package_path), "--trust-roots", str(trust_root_path), "--hosted-submit"])
+            self.assertEqual(code, 0)
+            output = json.loads(stdout.getvalue())
+            self.assertTrue(output["intake"]["ok"])
+            self.assertIsNone(output["score"])
+            self.assertFalse(output["execution_request"]["execution_performed"])
 
 
 if __name__ == "__main__":  # pragma: no cover

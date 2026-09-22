@@ -6,8 +6,8 @@
     "authenticated": true,
     "model_count": 50
   },
-  "receipt_sha256": "8721064a291a782e00376131eb00d91d00b77b629eba2a6531dac22ef693e1a5",
-  "recorded_at": "2026-08-16T11:29:17.100112Z",
+  "receipt_sha256": "45aa77a162053b14bbf71bbb3481c13cd4223915fb7e3d326f03bf0f7a4a71da",
+  "recorded_at": "2026-08-22T05:47:36.532627Z",
   "schema_version": "pavlov-modal-gemini-auth-v1",
   "scientific_evidence": false,
   "score": null,

@@ -2,6 +2,13 @@
 
 **Date:** 2026-08-09 · **Lane:** E14 `frontiermath_eval` · **Status:** BLOCKED, terminal
 
+**Status update (2026-08-24):** The hosted-evaluation request was sent to
+`math_evals@epoch.ai` on 2026-08-22. Epoch's consultation route was reviewed on
+2026-08-24 but not submitted: it incorporates separate consultation terms,
+restricts use of consultation outputs, and may require payment. The direct math
+evaluation email remains the appropriate open route. No evaluation or score has
+been received.
+
 ---
 
 ## 0. Read this before you send anything

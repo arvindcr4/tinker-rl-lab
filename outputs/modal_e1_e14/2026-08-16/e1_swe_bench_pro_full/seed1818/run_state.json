@@ -1,7 +1,6 @@
 {
-  "generation_backend": "modal_gpu_vllm_merged_peft",
-  "gpu_type": "A100-80GB",
-  "pending_generations": 255,
-  "status": "GPU_GENERATING",
-  "updated_at": "2026-08-17T04:03:28.391713Z"
+  "receipt": "outputs/modal_e1_e14/2026-08-16/e1_swe_bench_pro_full/seed1818/receipt.json",
+  "score": 0.0027359781121751026,
+  "status": "SCORED",
+  "updated_at": "2026-08-22T08:40:20.202551Z"
 }

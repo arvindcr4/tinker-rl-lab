@@ -64,6 +64,11 @@ Thumbs.db
 *.pdf
 *.pptx
 *.xlsx
+
+# Exception: the Phase 2 Third Review thesis deliverable is versioned with its
+# source so the committed PDF never silently goes stale against frontmatter.tex
+# and the chapter markdown. Rebuild it with build_thesis.py after editing source.
+!outputs/PES_Phase2_Third_Review_2026-09-24/thesis/Thesis_Report_ArvindCR.pdf
 temp.json
 *.db
 slack.har

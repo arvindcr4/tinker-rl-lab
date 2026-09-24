@@ -26,6 +26,34 @@
 \definecolor{complete}{RGB}{30,125,79}
 \definecolor{partial}{RGB}{176,106,0}
 \definecolor{blocked}{RGB}{166,43,43}
+% ---------------------------------------------------------------------------
+% fig_coverage_vs_score -- coverage (fraction of the declared suite executed
+% and natively graded) vs. availability of a quotable native score, all 14 lanes.
+%
+% Data sources (real, read from repo):
+%   outputs/E1_E14_FINAL_RESULTS_2026-09-19.md
+%       -> the final lane ledger; every x value and every annotation string
+%   outputs/verification/LEDGER_CODE_CHECK_2026-09-19.json
+%       -> machine check 11/11 PASS: E1 2/731, E8 1967/1967, E11 129/312
+%          (129/311 sensitivity), E14 4426/4428 acc 0.5131043831902395,
+%          E9 40 unique competitions of 75
+%   primary receipts:
+%       outputs/e4_banker_toolbench/official_repo_ff6db552/jobs/
+%         btb-banking-tasks-tinker-bridge/result.json  -> 100/100 trials,
+%         metrics mean 0.0 (all 100 in the 0.0 reward bucket)
+%       outputs/e5_apex_agents/e5_exact_sequential_prefix_aggregate_2026-08-22.json
+%         -> 7 natively scored of 480 (PARTIAL_EXACT, fixed prefix 0-10)
+%       outputs/e7_binaryaudit/2026-08-22_e7_paid_attempt_receipt.json +
+%         split_manifest.json -> 1 attempted of 46 constructed rows
+%       outputs/public_portfolio_2026-09-05/canonical_before_report_v15/results.json
+%         -> E8 1967, E10 97, E11 312, E6 0/812
+%   E13 provenance note: "13/255 episodes" is ledger text; its named source
+%   (outputs/PES_Phase2_Review_2026-09-12/finish/e13_continuation/decision_v11/
+%   DECISION.md) records 13 completed episodes among 29 started exclusions with
+%   full-255 scoring disabled, while the 2026-09-05 v15 portfolio records
+%   0/255 model episodes.  Either way the lane carries no native score, which
+%   is where the point is plotted.
+% ---------------------------------------------------------------------------
 \begin{document}
 \begin{tikzpicture}
 \begin{axis}[
@@ -91,7 +119,7 @@
 \node[font=\scriptsize, anchor=west, color=blocked] at (axis cs:5.2,-0.44)
   {E7 BinaryAudit --- $1/46$ attempted};
 \node[font=\scriptsize, anchor=west, color=blocked] at (axis cs:8.2,-0.62)
-  {E13 BALROG --- $13/255$ episodes};
+  {E13 BALROG --- $13/255$ episodes, no native score};
 \node[font=\scriptsize, anchor=west, align=left, color=blocked, text width=5.6cm]
   at (axis cs:57.0,0.42)
   {E9 MLE-bench: $40/75$ competitions graded\\ ($53.3\%$ of the suite), suite score \textbf{null}};

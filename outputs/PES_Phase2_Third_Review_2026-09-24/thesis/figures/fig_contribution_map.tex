@@ -2,7 +2,8 @@
 \usepackage{tikz}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
-\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc,decorations.pathreplacing,patterns,pgfplots.groupplots}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds,calc,decorations.pathreplacing,patterns}
+\usetikzlibrary{pgfplots.groupplots}
 \tikzset{
   blk/.style={rectangle, rounded corners=2pt, draw=black!70, thick, fill=blue!6,
               minimum height=8mm, minimum width=20mm, align=center, font=\small},
@@ -26,112 +27,165 @@
 \definecolor{complete}{RGB}{30,125,79}
 \definecolor{partial}{RGB}{176,106,0}
 \definecolor{blocked}{RGB}{166,43,43}
-% --- figure-local styles -------------------------------------------------
-\tikzset{
-  hdrL/.style={rectangle, rounded corners=2pt, draw=black!65, thick, fill=black!62,
-               text=white, font=\small\bfseries, align=center, inner sep=3.2pt,
-               text width=6.30cm},
-  hdrR/.style={hdrL, draw=pesblue, fill=pesblue},
-  sub/.style={font=\scriptsize\itshape, text=black!62, align=center,
-              text width=6.30cm, inner sep=1pt},
-  itL/.style={rectangle, rounded corners=2pt, draw=black!50, thick, fill=black!3,
-              align=left, font=\scriptsize, inner sep=3.2pt, text width=6.30cm},
-  itR/.style={itL, draw=pesblue!70, fill=pesblue!5},
-  foot/.style={rectangle, rounded corners=2pt, draw=black!55, thick, fill=black!4,
-               align=left, font=\scriptsize, inner sep=4.2pt, text width=14.0cm},
-  bnd/.style={dashed, thick, draw=black!60},
-  hdlbl/.style={font=\scriptsize\itshape, text=black!65, align=center,
-                text width=1.70cm, inner sep=1.6pt, fill=white},
-}
 \begin{document}
-\begin{tikzpicture}
+\begin{tikzpicture}[x=1cm,y=1cm,
+  hdt/.style={font=\small\bfseries, text=pesblue, align=center, inner sep=1pt},
+  hds/.style={font=\scriptsize\itshape, text=black!60, align=center, inner sep=1pt},
+  colhl/.style={font=\small\bfseries, text=black!75, align=center, inner sep=1pt},
+  colhr/.style={font=\small\bfseries, text=pesblue, align=center, inner sep=1pt},
+  cols/.style={font=\scriptsize\itshape, text=black!60, align=left,
+               anchor=north west, text width=8.30cm, inner sep=1pt},
+  rowchipL/.style={rectangle, rounded corners=1pt, draw=black!45, thick, fill=white,
+                   font=\scriptsize\bfseries, text=black!70, inner sep=2pt,
+                   minimum width=0.42cm, align=center},
+  rowchipR/.style={rectangle, rounded corners=1pt, draw=pesblue!60, thick, fill=white,
+                   font=\scriptsize\bfseries, text=pesblue, inner sep=2pt,
+                   minimum width=0.42cm, align=center},
+  rowttl/.style={anchor=west, font=\scriptsize\bfseries, text=black!85, inner sep=1pt},
+  bodyL/.style={anchor=north west, font=\scriptsize,
+                text=black!80, align=left, inner sep=1pt, text width=8.20cm},
+  bodyR/.style={anchor=north west, font=\scriptsize,
+                text=black!85, align=left, inner sep=1pt, text width=8.20cm},
+  cardL/.style={draw=black!35, thick, rounded corners=2.5pt, fill=black!3},
+  cardR/.style={draw=pesblue!50, thick, rounded corners=2.5pt, fill=pesblue!5},
+  bnd/.style={font=\scriptsize\bfseries, text=black!75, fill=white, inner sep=2.5pt,
+              align=center},
+  pnote/.style={font=\scriptsize,
+                align=left, inner sep=2pt, anchor=north west},
+]
+\hyphenpenalty=10000\relax\exhyphenpenalty=10000\relax
+% invisible path: fixes the bounding box
+\draw[opacity=0] (-9.60,5.45) rectangle (9.60,-9.15);
 
-% ============================ column headers ============================
-\node[hdrL, anchor=north] (hL) at (-4.25,0)
-  {SEMESTER 3 $\cdot$ GROUP 6\\INHERITED FOUNDATION};
-\node[hdrR, anchor=north] (hR) at ( 4.25,0)
-  {SEMESTER 4 $\cdot$ INDIVIDUAL\\NEW CONTRIBUTION};
+% ================= HEADER =================
+\node[hdt] at (0,5.18) {The inherited record and the solo contribution};
+\node[hds, text width=18.60cm] at (0,4.86)
+  {two columns at the Semester-3 boundary; every item is drawn from the repository's own
+   provenance record};
 
-\node[sub, below=1.4mm of hL] (sL)
-  {Six-student team $\cdot$ guides Anwesh Reddy Paduri and Narayana Darapaneni
-   $\cdot$ frozen at tag \texttt{capstone-final-2026-04-25} (23 Apr 2026)};
-\node[sub, below=1.4mm of hR] (sR)
-  {Solo author Arvind C R $\cdot$ guide Ramesh Prakash Guledgudd
-   $\cdot$ work after the boundary, Apr--Sep 2026};
+% ================= COLUMN HEADERS =================
+\filldraw[fill=black!6, draw=black!45, thick, rounded corners=3pt]
+  (-9.40,4.58) rectangle (-0.60,3.36);
+\node[colhl] at (-5.00,4.34) {Semester 3 --- inherited (group project)};
+\node[cols] at (-9.05,4.10)
+  {Group 6: six students, guides A.\ R.\ Paduri and N.\ Darapaneni; the candidate was a
+   member of that group.};
 
-% ============================ left column: inherited ====================
-\node[itL, below=2.6mm of sL] (L1)
-  {\textbf{Multi-framework RL post-training repository}\\Tinker and SkyRL runs behind
-   one harness, with the group's shared rollout, reward and logging paths.};
-\node[itL, below=2.2mm of L1] (L2)
-  {\textbf{Baseline integrations}\\SFT-with-LoRA and DPO pipelines and their
-   checkpoints, wired into the shared runner.};
-\node[itL, below=2.2mm of L2] (L3)
-  {\textbf{Initial GRPO experiments}\\The first Tinker and SkyRL GRPO runs, with run
-   tracking and saved checkpoints.};
-\node[itL, below=2.2mm of L3] (L4)
-  {\textbf{Literature foundation}\\The group's survey of the
-   RLHF $\rightarrow$ PPO $\rightarrow$ GRPO line and the problem framing.};
-\node[itL, below=2.2mm of L4] (L5)
-  {\textbf{Evaluation and reproducibility scaffolding}\\The first benchmark harness,
-   metric code and reproduction scripts.};
-\node[itL, below=2.2mm of L5] (L6)
-  {\textbf{Group deliverables}\\The Group 6 capstone report (Apr 2026) and the
-   NeurIPS main-track submission.};
+\filldraw[fill=pesblue!8, draw=pesblue!45, thick, rounded corners=3pt]
+  (0.60,4.58) rectangle (9.40,3.36);
+\node[colhr] at (5.00,4.34) {Semester 4 --- the candidate's own work};
+\node[cols] at (0.90,4.10)
+  {solo continuation under guide R.\ P.\ Guledgudd; the research direction, the
+   experiments and the papers are the candidate's own.};
 
-% ============================ right column: individual ==================
-\node[itR, below=2.6mm of sR] (R1)
-  {\textbf{New research direction}\\Factor-isolated studies on the inherited stack:
-   vary one factor, hold the rest fixed, report the confound.};
-\node[itR, below=2.2mm of R1] (R2)
-  {\textbf{P1--P8 paper series}\\Eight papers under the explicit solo author block
-   (commit \texttt{282e6b4f}, 7 Jul 2026), each mapped to its own evidence directory.};
-\node[itR, below=2.2mm of R2] (R3)
-  {\textbf{Expanded analyses}\\206 recorded analysis iterations, Berkeley-course-derived
-   audits and prototypes, expanded statistical analysis.};
-\node[itR, below=2.2mm of R3] (R4)
-  {\textbf{Reporting standard and registry}\\P5's minimum reporting standard for
-   stack-conditioned results; P6's machine-readable GRPO stack registry.};
-\node[itR, below=2.2mm of R4] (R5)
-  {\textbf{ZVF controller}\\P7 turns the signal-starvation diagnostic into an adaptive
-   group-size intervention.};
-\node[itR, below=2.2mm of R5] (R6)
-  {\textbf{Fraud study}\\P8 sets a language model against gradient-boosted trees in
-   credit-card fraud detection.};
-\node[itR, below=2.2mm of R6] (R7)
-  {\textbf{E1--E14 held-out campaign}\\One Tinker-trained actor against fourteen suites
-   under receipt, budget and decontamination governance.};
-\node[itR, below=2.2mm of R7] (R8)
-  {\textbf{Semester 4 submissions}\\The NeurIPS workshop variant (Jun 2026) and the
-   PES M.Tech Phase-1 report (UE20CS971).};
+% =======================================================================
+% ROW 1 -- research direction
+% =======================================================================
+\draw[cardL] (-9.40,2.80) rectangle (-0.60,1.10);
+\node[rowchipL] at (-9.04,2.49) {1};
+\node[rowttl]  at (-8.64,2.49) {Research direction};
+\node[bodyL] at (-9.10,2.20)
+  {A multi-framework benchmark: one post-training recipe run across libraries, so that
+   the libraries themselves can be compared.};
 
-% ============================ footer band ===============================
-\node[fit=(L6)(R8), inner sep=0pt] (lowest) {};
-\node[foot, below=4.0mm of lowest] (FOOT)
-  {\textbf{Shared runtime, not split.} Semester 4 reuses the inherited code in place:
-   the repository, its imports and its \LaTeX\ references were not relocated, and the
-   papers cite their canonical evidence directories rather than duplicating them. The
-   division above records academic contribution and deliverable ownership, not file
-   ownership.\\[2pt]
-   \textit{Sources:} \texttt{platform\_hybrid/sem 3 work/README.md};
-   \texttt{platform\_hybrid/sem 4 work/README.md};
-   \texttt{platform\_hybrid/sem 4 work/PROVENANCE.md};
-   \texttt{platform\_hybrid/sem 4 work/EXPERIMENTS.md}.};
+\draw[cardR] (0.60,2.80) rectangle (9.40,1.10);
+\node[rowchipR] at (0.96,2.49) {1};
+\node[rowttl]  at (1.36,2.49) {Research direction};
+\node[bodyR] at (0.90,2.20)
+  {A new direction of the candidate's own: measure when the group-relative signal
+   vanishes, and establish what a stack-conditioned result must report before it can be
+   attributed.};
 
-% ============================ boundary ==================================
-\begin{scope}[on background layer]
-  \node[fit=(hL)(hR)(FOOT), inner sep=3pt, draw=none, fill=none] (ALL) {};
-  \draw[bnd] (ALL.north) -- (ALL.south);
-\end{scope}
+% =======================================================================
+% ROW 2 -- repository and tooling
+% =======================================================================
+\draw[cardL] (-9.40,0.94) rectangle (-0.60,-0.76);
+\node[rowchipL] at (-9.04,0.63) {2};
+\node[rowttl]  at (-8.64,0.63) {Repository and tooling};
+\node[bodyL] at (-9.10,0.34)
+  {The multi-framework repository and its baseline integrations, the shared runtime code,
+   and the Tinker, TRL, veRL and OpenRLHF adapters.};
 
-\node[rotate=90, font=\scriptsize, text=black!65, inner sep=1pt, align=center]
-  at ($(ALL.north)!0.5!(ALL.south) + (-0.46,0)$)
-  {\textbf{git boundary} $\cdot$ tag \texttt{capstone-final-2026-04-25}
-   $\cdot$ commit \texttt{21a99ef7} $\cdot$ 23 Apr 2026};
+\draw[cardR] (0.60,0.94) rectangle (9.40,-0.76);
+\node[rowchipR] at (0.96,0.63) {2};
+\node[rowttl]  at (1.36,0.63) {Repository and tooling};
+\node[bodyR] at (0.90,0.34)
+  {Instrumentation and analysis built on that code: new GRPO diagnostics and controllers,
+   the reporting and registry work, and the Berkeley-course-inspired audits and
+   prototypes.};
 
-% ============================ handover arrow ============================
-\draw[ar] (hL.east) -- (hR.west);
-\node[hdlbl] at ($(hL.east)!0.5!(hR.west) + (0,-0.56)$) {individual continuation};
+% =======================================================================
+% ROW 3 -- experiments and evidence
+% =======================================================================
+\draw[cardL] (-9.40,-0.92) rectangle (-0.60,-2.62);
+\node[rowchipL] at (-9.04,-1.23) {3};
+\node[rowttl]  at (-8.64,-1.23) {Experiments and evidence};
+\node[bodyL] at (-9.10,-1.52)
+  {The initial Tinker, SkyRL and GRPO experiments, the group literature foundation, and
+   the early benchmark and evaluation scaffolding.};
+
+\draw[cardR] (0.60,-0.92) rectangle (9.40,-2.62);
+\node[rowchipR] at (0.96,-1.23) {3};
+\node[rowttl]  at (1.36,-1.23) {Experiments and evidence};
+\node[bodyR] at (0.90,-1.52)
+  {The post-capstone experiment and audit expansion: the scaling, ZVF, group-size,
+   length-bias, fraud and statistical analyses, spanning 206 recorded analysis
+   iterations.};
+
+% =======================================================================
+% ROW 4 -- outputs and authorship
+% =======================================================================
+\draw[cardL] (-9.40,-2.78) rectangle (-0.60,-4.48);
+\node[rowchipL] at (-9.04,-3.09) {4};
+\node[rowttl]  at (-8.64,-3.09) {Outputs and authorship};
+\node[bodyL] at (-9.10,-3.38)
+  {The Semester-3 record as the group left it, frozen on 23 April 2026 at the capstone
+   tag.};
+
+\draw[cardR] (0.60,-2.78) rectangle (9.40,-4.48);
+\node[rowchipR] at (0.96,-3.09) {4};
+\node[rowttl]  at (1.36,-3.09) {Outputs and authorship};
+\node[bodyR] at (0.90,-3.38)
+  {The eight standalone P1--P8 papers and their current authorship, the NeurIPS workshop
+   variant, and this thesis and its figures.};
+
+% =======================================================================
+% THE BOUNDARY SPINE
+% =======================================================================
+\draw[draw=black!65, very thick, dashed] (0,4.58) -- (0,-4.48);
+\node[bnd] at (0,3.08) {23 April 2026 $\cdot$ the Semester-3 boundary};
+
+% =======================================================================
+% BOUNDARY PANEL
+% =======================================================================
+\draw[draw=black!55, thick, rounded corners=3pt, fill=black!2]
+  (-9.40,-4.78) rectangle (9.40,-7.90);
+\node[hdt] at (0,-5.04) {Where the boundary is drawn};
+
+\node[pnote, text width=8.80cm] at (-9.20,-5.40)
+  {\textbf{The boundary and the record}\\[3pt]
+   $\bullet$ Semester-3 tag \texttt{capstone-final-2026-04-25}; boundary commit
+   \texttt{21a99ef7}, dated 23 April 2026.\\[2pt]
+   $\bullet$ The post-capstone span holds 584 commits and 5,050 changed files, and the
+   continuation adds 206 recorded analysis iterations.\\[2pt]
+   $\bullet$ The split is recorded at paper level in commit \texttt{282e6b4f}, 7 July
+   2026.};
+
+\node[pnote, text width=8.80cm] at (0.10,-5.40)
+  {\textbf{How to read the two columns}\\[3pt]
+   $\bullet$ Left is what the group project produced; right is what the candidate added
+   on top of it in Semester 4.\\[2pt]
+   $\bullet$ The repository's own caveat: \textit{``This distinction is about academic
+   contribution. It does not duplicate or relocate the shared runtime code.''}\\[2pt]
+   $\bullet$ The changed-file count measures activity; it should not be read as a direct
+   measure of academic contribution.};
+
+\node[font=\scriptsize\itshape, text=black!60,
+      align=left, text width=18.60cm, anchor=north west, inner sep=2pt] at (-9.20,-8.14)
+  {Both columns are drawn from the repository's own provenance record --- the Semester-3
+   tag and boundary commit, the post-boundary commit and file counts, the solo-authorship
+   commit, and the Semester-4 README with its paper-to-evidence map. Where the record does
+   not settle a claim, the claim is left out of the figure rather than inferred.};
 
 \end{tikzpicture}
 \end{document}
